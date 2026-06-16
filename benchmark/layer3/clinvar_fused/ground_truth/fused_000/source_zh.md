@@ -1,376 +1,214 @@
-# Challenges to Assessing the Prevalence of Cystic Fibrosis in the Caribbean
+# 加勒比地区评估囊性纤维化患病率的挑战
 
-## Abstract
+## 摘要  
+囊性纤维化（Cystic Fibrosis, CF）在加勒比地区可能被低估了，原因包括：用于筛查囊性纤维化跨膜传导调节因子（CFTR）变异的检测方法不够全面；新生儿筛查项目有限；以及医疗资源分配存在结构性障碍。2022年的数据显示，波多黎各（140万人口，占比42.7%）和多米尼加共和国（140万人口，占比57.9%）中具有欧洲血统的人群比例较高，但整个加勒比地区的实际CF患病率仍缺乏准确数据。现有诊断体系主要基于欧洲人群的CFTR变异分布，未能准确反映加勒比地区的真实患病情况，从而导致患病率被低估，以及诊断延误或漏诊。  
 
-ABSTRACT 囊性纤维化 (Cystic fibrosis, CF) 在加勒比人群中可能存在漏诊，原因包括针对囊性纤维化跨膜传导调节蛋白 (CFTR) 变异的筛查面板未能代表当地变异谱、有限的新生儿筛查项目以及结构性医疗障碍。2022 年的数据表明，波多黎各 (Puerto Rico, PR) 和多米尼加共和国 (Dominican Republic, DR) 存在大量具有欧洲血统的人口（分别为 140 万，42.7%；和 140 万，57.9%），但更广泛加勒比地区的 CF 真实负担仍大多未被记录在案。工作假设 目前的诊断框架主要基于欧洲来源的 CFTR 变异分布，未能捕捉加勒比人群中 CF 的真实负担，导致患病率被低估并造成诊断延误或漏诊。目标 综合登记、临床和已发表的数据以识别准确评估加勒比地区 CF 患病率的障碍。研究设计与方法 本叙述性文献综述整合了 CF 登记处、关于 CFTR 变异分布的已发表数据、人口血统数据，以及来自波多黎各和多米尼加共和国 CF 中心的临床观察。临床见解来自在波多黎各 Pediatric Rare Lung and Asthma Institute 评估的儿科患者以及多米尼加共和国 Robert Reid Cabral Children's Hospital 的 CF 门诊。结果 CFTR 变异模式与美国不同，罕见变异（如 p.Ala559Thr）频率较高。标准筛查面板可能漏检这些变异，从而促成漏诊。有限的新生儿筛查、误诊以及 CFTR 调节剂治疗的获取受限进一步加剧了差异。结论 结构性、诊断性和遗传学因素阻碍了在加勒比地区对 CF 患病率的准确估计，强调需要针对该地区的研究、改进筛查并扩大治疗可及性。
+## 目标  
+本研究旨在整合登记数据、临床资料及已发表的研究成果，以分析影响加勒比地区CF患病率准确评估的各种因素。  
 
-## Introduction
+## 研究设计与方法  
+本研究采用文献综述的方法，结合了波多黎各和多米尼加共和国的CF登记数据、CFTR变异分布信息以及临床观察结果。临床数据来自波多黎各儿科罕见肺病与哮喘研究所和多米尼加共和国罗伯特·里德·卡布拉尔儿童医院的CF诊所。  
 
-囊性纤维化 (Cystic fibrosis, CF) 是一种进行性、常染色体隐性遗传疾病，累及肺、胰腺和胃肠道 [ 1 ]。其由 CFTR 基因的突变引起，导致氯离子和碳酸氢根离子转运受损，引发黏液脱水、气道阻塞、感染和炎症 [ 2 , 3 ]。已鉴定出 2000 多种 CFTR 变异 [ 3 ]。这些变异根据其对蛋白合成、折叠和功能的影响被划分为多种功能组，指导靶向治疗 [ 4 , 5 ]。尽管在美国和欧洲记录了约 90,000 例 CF 病例，但全球负担可能被低估，尤其是在像加勒比这样代表性不足、登记系统和诊断能力缺乏的地区（补充信息 S1: 图1）[ 6 ]。CF 也影响非洲、原住民和混血血统的个体，但数据有限且常依赖主要基于欧洲队列构建的基因筛查面板，意味着这些人群中的许多 CFTR 变异尚未得到充分表征，增加了筛查不足和诊断延误的风险。
+## 结果  
+加勒比地区的CFTR变异模式与美国存在差异，其中某些罕见变异（如p.Ala559Thr）的频率较高。现有的筛查方法可能无法检测到这些变异，从而导致漏诊。新生儿筛查覆盖率低、误诊情况普遍，以及CFTR调节剂治疗的可及性受限，进一步加剧了这些健康不平等现象。  
 
-美国囊性纤维化基金会患者登记 (US CF Foundation Patient Registry, CFFPR) 在 2023 年包含 33,288 名参与者，然而这不包括自 1917 年起成为美国领土的波多黎各 (PR) 的数据 [ 7 , 8 ]。美国 CF 人群从 2013 年的 27,991 人增长到 2023 年接近 40,000 人，全球已知病例约为 105,000 例 [ 9 ]。过去 15 年中，美国的西班牙裔 (Hispanic) CF 患者比例从 6.7% 增至 10.3%，波多黎各和多米尼加血统者受影响尤为明显（图1）[ 10 ]。2020 年美国人口普查的统计数据显示，加勒比西班牙裔，包括 560 万波多黎各人和 220 万多米尼加人，占美国西班牙裔人口的 16.3%（补充信息 S1: 图2）[ 11 ]。这些人口统计数据表明，尽管在国家登记和研究中代表性不足，CF 可能对加勒比血统个体产生显著影响。对加勒比队列的研究已在波多黎各和多米尼加患者中识别出异质的 CFTR 变异谱，许多个体，尤其是在多米尼加共和国 (DR)，即使在测序后也缺乏两个可检测的致病变异，强调了遗传多样性以及现有诊断方法的局限性。
+## 结论  
+加勒比地区在CF患病率评估方面面临诸多挑战，包括医疗体系结构、诊断技术及遗传因素的制约。因此，亟需开展针对该地区的专项研究，改进筛查方法，并扩大患者获得治疗的机会。  
 
-2016 年，加利福尼亚一项为期 20 年、包含 63 名西班牙裔和 412 名非西班牙裔 CF 患者的队列研究发现，西班牙裔患者的死亡率几乎高出 3 倍，这促使对与美国关系密切的其他西班牙裔社区（尤其是加勒比地区）中的 CF 特异性健康不平等进行探讨 [ 12 , 13 ]。2022 年的一项全球流行病学综述估计，在 49 个国家中约有 57,000 人仍未被诊断为 CF，仅有 65% 的已知患者被诊断出并且仅 12% 接受 CF 特异性治疗，凸显在低收入和中等收入地区存在大量漏报 [ 14 ]。最初，我们的研究集中在波多黎各和多米尼加共和国 (DR)，但由于数据有限，我们将研究范围扩展至海地和巴哈马，涵盖 300 英里加勒比半径内的地区（补充信息 S1: 图3）。
+## 引言  
+囊性纤维化是一种进行性的常染色体隐性遗传疾病，主要影响肺部、胰腺和胃肠道[1]。该病由CFTR基因突变引起，这些突变会干扰氯离子和碳酸氢盐离子的运输，进而导致黏液浓缩、气道阻塞、感染和炎症[2, 3]。目前已发现超过2000种CFTR变异类型[3]，这些变异根据其对蛋白质合成、折叠和功能的影响被分为不同的功能组，为针对性治疗提供了依据[4, 5]。尽管美国和欧洲记录的CF病例约为9万例，但全球实际患病率可能被低估，尤其是在加勒比地区——该地区的登记系统和诊断能力较为薄弱[支持信息S1：图1]。加勒比地区的患者中不仅包括非洲血统和原住民血统的人群，也有混血人群；但由于相关数据有限，且现有检测方法主要基于欧洲人群设计，许多CFTR变异尚未得到充分研究，这增加了漏诊的风险。  
 
-本综述整合流行病学、遗传学、医疗保健和政策数据，以：
+美国囊性纤维化基金会患者登记系统（CFFPR）2023年共收录了33,288名患者，但其中未包含自1917年起就属于美国领土的波多黎各的数据[7, 8]。美国CF患者人数从2013年的27,991人增加到2023年的近40,000人，全球范围内已知病例总数约为10.5万例[9]。过去15年中，美国西班牙裔CF患者比例从6.7%上升至10.3%，其中波多黎各和多米尼加血统的患者占比尤为突出[10]。2020年美国人口普查数据显示，加勒比裔西班牙裔（包括560万波多黎各人和220万多米尼加人）占美国西班牙裔总人口的16.3%[支持信息S1：图2][11]。这些数据表明，尽管加勒比裔患者在国家登记系统和研究中的代表性不足，但他们仍可能受到CF的严重影响。针对加勒比地区患者的研究发现，该地区的CFTR变异具有高度异质性；尤其是在多米尼加共和国，许多患者即使经过基因检测仍缺乏两种关键的致病变异，这凸显了现有诊断方法的局限性。  
 
-描述加勒比地区已报告的 CF 病例和诊断实践，并识别在这些环境中准确评估 CF 患病率的障碍。 1. 评估诊断检测和 CFTR 调节剂治疗的可及性。 2. 分析 CFTR 变异模式及其对加勒比人群诊断和靶向治疗的影响。 3. 检视影响结局并促成漏诊和治疗延迟的卫生系统障碍。 4. 提出政策建议以应对结构性不平等并改善该地区的 CF 识别和护理。
+2016年的一项加州研究对比了63名西班牙裔患者和412名非西班牙裔患者（研究时间跨度为20年），发现西班牙裔患者的死亡率几乎是非西班牙裔患者的3倍，这提示了与美国密切相关的其他西班牙裔社区（尤其是加勒比地区）在CF诊疗方面存在显著的健康不平等[12, 13]。2022年的一项全球流行病学调查显示，全球仍有约5.7万名CF患者未被诊断出来，其中仅65%的患者接受了针对性治疗，低收入和中等收入地区的诊断率尤为低下[14]。最初，我们的研究重点集中在波多黎各和多米尼加共和国，但由于数据有限，后来将研究范围扩展到了海地和巴哈马（研究区域覆盖半径为300英里，见支持信息S1：图3）。  
 
-囊性纤维化 (Cystic fibrosis, CF) 是一种进行性、常染色体隐性遗传疾病，累及肺、胰腺和胃肠道 [ 1 ]。其由 CFTR 基因的突变引起，导致氯离子和碳酸氢根离子转运受损，引发黏液脱水、气道阻塞、感染和炎症 [ 2 , 3 ]。已鉴定出 2000 多种 CFTR 变异 [ 3 ]。这些变异根据其对蛋白合成、折叠和功能的影响被划分为多种功能组，指导靶向治疗 [ 4 , 5 ]。尽管在美国和欧洲记录了约 90,000 例 CF 病例，但全球负担可能被低估，尤其是在像加勒比这样代表性不足、登记系统和诊断能力缺乏的地区（补充信息 S1: 图1）[ 6 ]。CF 也影响非洲、原住民和混血血统的个体，但数据有限且常依赖主要基于欧洲队列构建的基因筛查面板，意味着这些人群中的许多 CFTR 变异尚未得到充分表征，增加了筛查不足和诊断延误的风险。
+本研究通过整合流行病学、遗传学、医疗保健及政策数据，旨在：  
+1. 描述加勒比地区的CF病例报告情况与诊断实践；  
+2. 评估患者获得诊断检测和CFTR调节剂治疗的途径；  
+3. 分析CFTR变异模式及其对加勒比地区患者诊断和治疗的影响；  
+4. 探讨影响诊疗效果的医疗体系障碍，并提出改善该地区CF检测和治疗的政策建议。
 
-美国囊性纤维化基金会患者登记 (US CF Foundation Patient Registry, CFFPR) 在 2023 年包含 33,288 名参与者，然而这不包括自 1917 年起成为美国领土的波多黎各 (PR) 的数据 [ 7 , 8 ]。美国 CF 人群从 2013 年的 27,991 人增长到 2023 年接近 40,000 人，全球已知病例约为 105,000 例 [ 9 ]。过去 15 年中，美国的西班牙裔 (Hispanic) CF 患者比例从 6.7% 增至 10.3%，波多黎各和多米尼加血统者受影响尤为明显（图1）[ 10 ]。2020 年美国人口普查的统计数据显示，加勒比西班牙裔，包括 560 万波多黎各人和 220 万多米尼加人，占美国西班牙裔人口的 16.3%（补充信息 S1: 图2）[ 11 ]。这些人口统计数据表明，尽管在国家登记和研究中代表性不足，CF 可能对加勒比血统个体产生显著影响。对加勒比队列的研究已在波多黎各和多米尼加患者中识别出异质的 CFTR 变异谱，许多个体，尤其是在多米尼加共和国 (DR)，即使在测序后也缺乏两个可检测的致病变异，强调了遗传多样性以及现有诊断方法的局限性。
+## 方法  
+本研究结合了文献综述以及对来自波多黎各（PR）和多米尼加共和国（DR）的登记数据和临床数据的二次分析。  
 
+### 伦理委员会批准  
+对去标识化临床数据的分析是在机构伦理监督下进行的。波多黎各大学医学科学校区的机构审查委员会（IRB）已批准对该数据的分析（协议编号：2408271847），罗伯特·里德·卡布拉尔儿童医院的伦理委员会也无异议地授权了对多米尼加共和国数据的分析。所有数据均按照有关使用去标识化临床信息进行研究的机构和国家法规进行了处理。  
 
-*西班牙裔人群中 CF 个体比例上升。该图示显示 2007 年至 2022 年期间，图中蓝色表示的西班牙裔（任何种族）人群中 CF 患者所占百分比 (%) 增加，而同期美国白人人口中 CF 患者所占百分比 (%) 下降。2007 年，西班牙裔个体在美国 24,594 名 CF 总患者中占 1,598 人（6.5%），而白人占 23,019 人（93.6%）。近年来这一种族分布发生了变化，西班牙裔 CF 患者的比例在 2022 年增加到 3,322 人（10.3%），占当年 32,261 名 CF 总患者中的比例 [ 11 ]。*
+### 文献和登记数据来源  
+我们使用了2023年的CFFPR（Cystic Fibrosis Foundation Puerto Rico）数据来研究波多黎各和多米尼加共和国的囊性纤维化（CF）情况。此外，我们还从ProQuest、PubMed、WHO和PAHO数据库中获取了额外数据，以及2022年的CFF指南（CFF Guidelines）和Macrotrends报告，同时还参考了美国卫生与公共服务部（US Department of Health and Human Services）、疾病控制与预防中心（CDC）及美国人口普查局（US Census Bureau）的政府报告。这些资料被用于对加勒比地区囊性纤维化的流行病学、卫生系统及资金情况的描述性分析，以及在现有登记数据基础上进行的进一步研究。  
 
-2016 年，加利福尼亚一项为期 20 年、包含 63 名西班牙裔和 412 名非西班牙裔 CF 患者的队列研究发现，西班牙裔患者的死亡率几乎高出 3 倍，这促使对与美国关系密切的其他西班牙裔社区（尤其是加勒比地区）中的 CF 特异性健康不平等进行探讨 [ 12 , 13 ]。2022 年的一项全球流行病学综述估计，在 49 个国家中约有 57,000 人仍未被诊断为 CF，仅有 65% 的已知患者被诊断出并且仅 12% 接受 CF 特异性治疗，凸显在低收入和中等收入地区存在大量漏报 [ 14 ]。最初，我们的研究集中在波多黎各和多米尼加共和国 (DR)，但由于数据有限，我们将研究范围扩展至海地和巴哈马，涵盖 300 英里加勒比半径内的地区（补充信息 S1: 图3）。
+### 来自合作机构的临床数据  
+我们使用了波多黎各儿科罕见肺病与哮喘研究所（Pediatric Rare Lung and Asthma Institute）以及多米尼加共和国罗伯特·里德·卡布拉尔儿童医院（Dr. Robert Reid Cabral Children’s Hospital）的CF诊所提供的去标识化基因型数据，对这些数据进行了描述性分析，以了解波多黎各和多米尼加共和国地区CFTR基因变异的分布及诊断模式。所分析的数据涵盖了2023至2024年间的相关研究，包括英文和西班牙文文献。  
 
-本综述整合流行病学、遗传学、医疗保健和政策数据，以：
+### 证据质量  
+所有研究资料的可靠性均通过“证据金字塔模型”（Evidence Pyramid Model）和Cochrane偏倚风险评估工具（Supporting Information S1：图4）进行了评估。原始研究占所有审查材料的33.8%。  
 
-描述加勒比地区已报告的 CF 病例和诊断实践，并识别在这些环境中准确评估 CF 患病率的障碍。 1. 评估诊断检测和 CFTR 调节剂治疗的可及性。 2. 分析 CFTR 变异模式及其对加勒比人群诊断和靶向治疗的影响。 3. 检视影响结局并促成漏诊和治疗延迟的卫生系统障碍。 4. 提出政策建议以应对结构性不平等并改善该地区的 CF 识别和护理。
+### 搜索策略与筛选标准  
+本研究采用了一种非系统性的文献综述方法，通过在ProQuest、PubMed和Google Scholar平台上进行预定义的搜索来收集资料，并结合了相关登记数据和临床数据。在ProQuest平台上，我们使用了其65个数据库，并使用了以下关键词：“Cystic Fibrosis”（囊性纤维化）、“PR”（波多黎各）和“Caribbean”（加勒比地区）；搜索结果仅限于2014至2023年间发表的同行评审期刊文章、年度报告、案例研究和文献综述。在PubMed平台上，我们分别使用了不同的关键词组合进行搜索：  
+- 组A：“cystic fibrosis”（囊性纤维化），“CFTR”（CFTR基因）和“Puerto Rico”（波多黎各）；  
+- 组B：“cystic fibrosis”（囊性纤维化），“Dominican Republic”（多米尼加共和国），“Bahamas”（巴哈马）和“Haiti”（海地）；  
+- 组C：“cystic fibrosis”（囊性纤维化），“Non-white”（非白人），“Hispanic”（西班牙裔）和“Latino”（拉丁裔）；  
+- 组D：“CFTR variant”（CFTR基因变异）和“CFTR ion channel”（CFTR离子通道）；  
+- 组E：“epidemiology”（流行病学）和“CFTR modulator”（CFTR调节因子）；  
+- 组F：“cystic fibrosis”（囊性纤维化），“newborn screening”（新生儿筛查）和“sweat test”（汗液检测）。我们还通过Google Scholar搜索和参考文献列表发现了1938年至2023年间发表的相关文章。所有被纳入研究的文章均为英文或西班牙文版本。  
 
-## 方法
+### 研究纳入标准  
+我们纳入了符合以下标准的研究：  
+- 1938年至2023年间发表的、以英文或西班牙文撰写的、关于美国、波多黎各、多米尼加共和国或巴哈马地区囊性纤维化患者的同行评审期刊文章、年度报告、案例研究或文献综述。  
 
-本研究结合叙述性文献综述与来自波多黎各 (PR) 和多米尼加共和国 (DR) 的登记数据库及机构临床数据的二次分析。
+### 研究对象  
+在符合条件的研究中，我们重点关注了来自美国、波多黎各、多米尼加共和国、海地和巴哈马地区的欧洲裔或西班牙裔婴儿、儿童及成年人的数据（Supporting Information S1：图3）。研究对象包括任何种族的西班牙裔个体，且这些个体均被医生诊断为囊性纤维化，并表现出呼吸急促、咳嗽以及黏液分泌增多的症状。  
 
-本研究结合叙述性文献综述与来自波多黎各 (PR) 和多米尼加共和国 (DR) 的登记数据库及机构临床数据的二次分析。
+### CFTR基因变异与加勒比地区的相关性  
+囊性纤维化的发生与CFTR基因两个拷贝中的致病性变异有关，这些变异会损害CFTR离子通道的合成、运输、稳定性或功能[1, 15]。目前已鉴定出超过2000种CFTR基因变异，这些变异被分为不同的功能类别，这些类别有助于判断患者对CFTR调节剂治疗的反应性。然而，关于加勒比地区CFTR基因变异的数据仍然有限；其中一些在波多黎各和多米尼加患者中较为常见的变异在治疗方法的研发中未能得到充分重视，这导致了该地区患者诊断和治疗的困难。  
+Zeiger等人在2017年的一项研究发现，全球最常见的F508del变异在波多黎各患者中的检出率为33%，在多米尼加患者中的检出率为9.8%[16]；而像p.Ile507del、p.Arg334Trp、p.Arg1066Cys和p.Ala559Thr这样的罕见变异在这些群体中更为常见，但在治疗方法的研发中却未得到足够重视[16]。因此，进一步针对这些特定变异的研究对于改善加勒比地区囊性纤维化患者的诊断和治疗效果至关重要。
 
+## 结果与讨论
 
-### 伦理委员会批准
+### 加勒比地区的 population 减少与婴儿死亡率
 
-对经去标识化的临床数据的分析在机构伦理监督下进行。来自波多黎各的数据分析已获得波多黎各大学医学院机构审查委员会（Institutional Review Board, IRB）的 IRB 豁免裁定（协议编号 #2408271847），Dr. Robert Reid Cabral 儿童医院的伦理委员会已无异议地授权对来自多米尼加共和国的数据进行分析。所有数据的分析均遵循关于使用去标识化临床信息进行研究的机构及国家法规。
+根据美国人口普查局的数据，2017年至2018年间，波多黎各的人口减少了142,000人（减少了4.4%），同时有30%的人口迁移到了美国。这一现象可能对医疗服务的可及性和数据解读产生影响，尤其是在治疗囊性纤维化（CF）等慢性疾病以及婴儿死亡率指标方面[17]。然而，这种人口外流可能会干扰婴儿死亡率的统计数据，因为减少了岛上出生的婴儿数量和死亡的婴儿数量，同时也改变了当地医疗系统为剩余人口提供护理的能力。波多黎各和其他加勒比国家面临着日益严重的婴儿死亡率问题：2017年至2021年间，波多黎各的婴儿死亡率约为0.6%，高于美国白人的0.4%和西班牙裔美国人的0.5%；而居住在美国的多米尼加人的婴儿死亡率为每1000个活产婴儿中有3例[18]。这些差异很可能反映了医疗基础设施、医疗服务的可及性以及更广泛的社会健康决定因素的差异，这些因素也影响了在生命早期检测和诊断囊性纤维化的能力[18]。
 
-对经去标识化的临床数据的分析在机构伦理监督下进行。来自波多黎各的数据分析已获得波多黎各大学医学院机构审查委员会（Institutional Review Board, IRB）的 IRB 豁免裁定（协议编号 #2408271847），Dr. Robert Reid Cabral 儿童医院的伦理委员会已无异议地授权对来自多米尼加共和国的数据进行分析。所有数据的分析均遵循关于使用去标识化临床信息进行研究的机构及国家法规。
+### 加勒比地区的结果与讨论
 
+#### 加勒比地区的 population 减少与婴儿死亡率
 
-### 文献与登记数据来源
+根据美国人口普查局的数据，2017年至2018年间，波多黎各的人口减少了142,000人（减少了4.4%），同时有30%的人口迁移到了美国。这一现象可能对医疗服务的可及性和数据解读产生影响，尤其是在治疗囊性纤维化（CF）等慢性疾病以及婴儿死亡率指标方面[17]。然而，这种人口外流可能会干扰婴儿死亡率的统计数据，因为减少了岛上出生的婴儿数量和死亡的婴儿数量，同时也改变了当地医疗系统为剩余人口提供护理的能力。波多黎各和其他加勒比国家面临着日益严重的婴儿死亡率问题：2017年至2021年间，波多黎各的婴儿死亡率约为0.6%，高于美国白人的0.4%和西班牙裔美国人的0.5%；而居住在美国的多米尼加人的婴儿死亡率为每1000个活产婴儿中有3例[18]。这些差异很可能反映了医疗基础设施、医疗服务的可及性以及更广泛的社会健康决定因素的差异，这些因素也影响了在生命早期检测和诊断囊性纤维化的能力[18]。
 
-我们使用 2023 年 CFFPR 调查了囊性纤维化 (Cystic Fibrosis, CF) 在波多黎各 (PR) 和多米尼加共和国 (DR) 的情况。补充数据来自 ProQuest、PubMed、世界卫生组织 (WHO) 与泛美卫生组织 (PAHO) 数据库、2022 年 CFF 指南、Macrotrends，以及美国卫生与公众服务部、疾病控制与预防中心 (CDC) 和美国人口普查局的政府报告。上述资料用于对加勒比地区囊性纤维化的流行病学、卫生系统和资助情况进行叙述性综合，并在可得情况下对登记级别数据进行描述性分析。
+*活产婴儿数量、婴儿死亡数量及死亡率：2017–2021年美国白人人口、波多黎各人口及多米尼加人口*
 
-我们使用 2023 年 CFFPR 调查了囊性纤维化 (Cystic Fibrosis, CF) 在波多黎各 (PR) 和多米尼加共和国 (DR) 的情况。补充数据来自 ProQuest、PubMed、世界卫生组织 (WHO) 与泛美卫生组织 (PAHO) 数据库、2022 年 CFF 指南、Macrotrends，以及美国卫生与公众服务部、疾病控制与预防中心 (CDC) 和美国人口普查局的政府报告。上述资料用于对加勒比地区囊性纤维化的流行病学、卫生系统和资助情况进行叙述性综合，并在可得情况下对登记级别数据进行描述性分析。
+**年份与种族** | **活产婴儿数量** | **每1000个活产婴儿的婴儿死亡数量**
+**活产婴儿数量** | **婴儿死亡数量**
+美国白人人口
+2021年 | 1,887,656 | 8,236 | 4.36
+2020年 | 1,843,432 | 8,115 | 4.40
+2019年 | 1,915,912 | 8,603 | 4.49
+2018年 | 1,956,413 | 9,059 | 4.63
+2017年 | 1,992,461 | 9,306 | 4.67
+美国西班牙裔人口（所有种族） |
+2021年 | 885,916 | 4,246 | 4.79
+2020年 | 866,713 | 4,063 | 4.69
+2019年 | 886,467 | 4,462 | 5.03
+2018年 | 886,210 | 4,303 | 4.86
+2017年 | 898,764 | 4,583 | 5.10
+波多黎各人口 |
+2021年 | 70,729 | 428 | 6.05
+2020年 | 69,763 | 437 | 6.26
+2019年 | 70,950 | 438 | 6.17
+2018年 | 71,614 | 402 | 5.61
+2017年 | 70,813 | 459 | 6.48
+多米尼加人口 |
+2021年 | 33,373 | 109 | 3.27
+2020年 | 31,596 | 143 | 4.53
+2019年 | 32,483 | 153 | 4.71
 
 
-### 合作机构的临床数据
+### 波多黎各和多米尼加共和国的囊性纤维化病例报告与诊断能力
 
-来自波多黎各 Pediatric Rare Lung and Asthma Institute 的去标识化基因型数据和来自多米尼加共和国 Dr. Robert Reid Cabral 儿童医院 CF 门诊的去标识化基因型数据用于对波多黎各和多米尼加共和国 CFTR 变异分布及诊断模式进行描述性汇总。数据访问时间为 2023 至 2024 年，纳入了英语和西班牙语发表的资料。
+20世纪60至80年代的早期囊性纤维化患病率估计主要基于西欧和北美的相对稳定人口，通常排除了未登记的患者、少数族裔群体以及未被诊断的个体[19]。在波多黎各，囊性纤维化的登记数据仍然有限，这阻碍了确诊病例的准确追踪；波多黎各卫生部在2012至2018年间仅报告了8例病例，凸显了诊断不足的问题[20, 21]。因此，目前的病例数几乎肯定低估了波多黎各实际患有囊性纤维化的患者人数。由于登记覆盖范围有限、诊断能力不足以及缺乏新生儿筛查（NBS），这些因素限制了准确估计患病率的能力。
 
-来自波多黎各 Pediatric Rare Lung and Asthma Institute 的去标识化基因型数据和来自多米尼加共和国 Dr. Robert Reid Cabral 儿童医院 CF 门诊的去标识化基因型数据用于对波多黎各和多米尼加共和国 CFTR 变异分布及诊断模式进行描述性汇总。数据访问时间为 2023 至 2024 年，纳入了英语和西班牙语发表的资料。
+波多黎各的儿科肺病中心是一家获得CAP认证的机构，拥有25年的经验，该中心使用Gibson和Cook汗液测试方法，并遵循CFF指南[22]。2023年，该中心进行了162次汗液测试，确诊了2例囊性纤维化病例，并发现了5例边缘病例（汗液氯化物浓度为40–60 mmol/L）。尽管CFF在2017年发布了关于新生儿筛查和汗液测试的扩展建议，但由于资源和基础设施的限制，这些措施在波多黎各和整个加勒比地区的全面实施仍然受到限制。因此，加强质量保证和提高婴儿检测的可及性对于提高囊性纤维化的早期检测率以及减少该地区疾病负担的低估至关重要[23]。
 
+波多黎各的儿科罕见肺病和哮喘研究所成立于2018年，2022年开始使用ChloroChek Chloridometer和Macroduct系统进行囊性纤维化汗液测试。Wilfredo De Jesús-Rojas博士在394名受试者中发现了9例新的囊性纤维化病例（年龄在2周至21岁之间），所有病例的汗液氯化物浓度均≥60 mmol/L。通过Invitae进行的基因检测，根据人类基因组变异协会（HGVS）的命名标准，发现了该囊性纤维化群体中的常见致病性CFTR变异，包括内含子8的TG-T变异c.1210-34TG[11]T[5]（TG12-5T）、p.Val201Met和p.Phe508del（图2）。虽然TG11-5T变异在该群体中最常见，但它被认为是一种低渗透性的CFTR变异，与典型的囊性纤维化相关，仅凭其存在可能不足以确诊囊性纤维化，需要结合临床和功能数据。另有18名患者符合当地CFTR相关代谢综合征/CFSPID的诊断标准，这些患者的汗液氯化物浓度处于中间水平（40–60 mmol/L），且CFTR变异谱型与典型囊性纤维化不完全一致。值得注意的是，使用Invitae进行的基因检测还在被诊断为胰腺炎的CRMS患者中发现了致病性CFTR变异，包括p.Asp443Tyr、p.Val201Met、p.Phe508del和p.Phe1052Val（表2）。CRMS是通过新生儿筛查在汗液氯化物浓度处于中间水平且/或CFTR基因变异具有不确定临床意义的婴儿中发现的，这表明他们有较高的轻度CFTR相关表现风险，但无法确诊。与2014–2018年的报告相比，这些病例数量增加了33%，与2012–2015年相比增加了280%，这表明扩展的汗液测试和基因检测可以发现以前未被识别的囊性纤维化和CFTR相关疾病，同时也揭示了以往诊断基础设施的局限性。
 
-### 证据质量
+### 波多黎各和多米尼加共和国的囊性纤维化病例报告与诊断能力
 
-采用证据金字塔模型和 Cochrane 偏倚风险评估工具对来源进行评估（Supporting Information S1: Figure 4）。原始研究占所审阅资料的 33.8%。
+20世纪60至80年代的早期囊性纤维化患病率估计主要基于西欧和北美的相对稳定人口，通常排除了未登记的患者、少数族裔群体以及未被诊断的个体[19]。在波多黎各，囊性纤维化的登记数据仍然有限，这阻碍了确诊病例的准确追踪；波多黎各卫生部在2012至2018年间仅报告了8例病例，凸显了诊断不足的问题[20, 21]。因此，目前的病例数几乎肯定低估了波多黎各实际患有囊性纤维化的患者人数。由于登记覆盖范围有限、诊断能力不足以及缺乏新生儿筛查（NBS），这些因素限制了准确估计患病率的能力。
 
-采用证据金字塔模型和 Cochrane 偏倚风险评估工具对来源进行评估（Supporting Information S1: Figure 4）。原始研究占所审阅资料的 33.8%。
+波多黎各的儿科肺病中心是一家获得CAP认证的机构，拥有25年的经验，该中心使用Gibson和Cook汗液测试方法，并遵循CFF指南[22]。2023年，该中心进行了162次汗液测试，确诊了2例囊性纤维化病例，并发现了5例边缘病例（汗液氯化物浓度为40–60 mmol/L）。尽管CFF在2017年发布了关于新生儿筛查和汗液测试的扩展建议，但由于资源和基础设施的限制，这些措施在波多黎各和整个加勒比地区的全面实施仍然受到限制。因此，加强质量保证和提高婴儿检测的可及性对于提高囊性纤维化的早期检测率以及减少该地区疾病负担的低估至关重要[23]。
 
+波多黎各的儿科罕见肺病和哮喘研究所成立于2018年，2022年开始使用ChloroChek Chloridometer和Macroduct系统进行囊性纤维化汗液测试。Wilfredo De Jesús-Rojas博士在394名受试者中发现了9例新的囊性纤维化病例（年龄在2周至21岁之间），所有病例的汗液氯化物浓度均≥60 mmol/L。通过Invitae进行的基因检测，根据人类基因组变异协会（HGVS）的命名标准，发现了该囊性纤维化群体中的常见致病性CFTR变异，包括内含子8的TG-T变异c.1210-34TG[11]T[5]（TG12-5T）、p.Val201Met和p.Phe508del（图2）。虽然TG11-5T变异在该群体中最常见，但它被认为是一种低渗透性的CFTR变异，与典型的囊性纤维化相关，仅凭其存在可能不足以确诊囊性纤维化，需要结合临床和功能数据。另有18名患者符合当地CFTR相关代谢综合征/CFSPID的诊断标准，这些患者的汗液氯化物浓度处于中间水平（40–60 mmol/L），且CFTR变异谱型与典型囊性纤维不完全一致。值得注意的是，使用Invitae进行的基因检测还在被诊断为胰腺炎的CRMS患者中发现了致病性CFTR变异，包括p.Asp443Tyr、p.Val201Met、p.Phe508del和p.Phe1052Val（表2）。CRMS是通过新生儿筛查在汗液氯化物浓度处于中间水平且/或CFTR基因变异具有不确定临床意义的婴儿中发现的，这表明他们有较高的轻度CFTR相关表现风险，但无法确诊。与2014–2018年的报告相比，这些病例数量增加了33%，与2012–2015年相比增加了280%，这表明扩展的汗液测试和基因检测可以发现以前未被识别的囊性纤维化和CFTR相关疾病，同时也揭示了以往诊断基础设施的局限性。
 
-### 检索策略与选择标准
+### 波多黎各和多米尼加共和国的囊性纤维化病例报告与诊断能力
 
-本研究为叙述性（非系统性）文献综述，遵循预先定义的在 ProQuest、PubMed 和 Google Scholar 的检索策略，并辅以登记数据库和机构临床数据。在 ProQuest 平台上，我们使用其 65 个数据库，检索关键词：“Cystic Fibrosis”、“PR” 和 “Caribbean”，将结果限制为 2014 年至 2023 年间发表的同行评审期刊文章、年报、病例研究和文献综述。另在 PubMed（2013–2023）进行的独立检索使用分组关键词：Group A: “cystic fibrosis,” “ CFTR ,” and “Puerto Rico.” Group B: “cystic fibrosis,” “Dominican Republic,” “Bahamas,” and “Haiti.” Group C: “cystic fibrosis,” “Non‐white,” “Hispanic,” and “Latino.” Group D: “ CFTR variant” and “ CFTR ion channel.” Group E: “epidemiology” and “CFTR modulator.” Group F: “cystic fibrosis,” “newborn screening,” and “sweat test.”我们审阅了临床试验、荟萃分析、随机对照试验、文献综述及关于人类研究的系统综述。通过 Google Scholar 检索和参考文献列表，还识别出 1938 年至 2023 年间发表的其他相关文章。纳入了以英语和西班牙语发表的文章。
+*波多黎各和多米尼加共和国患者中检测到的CFTR变异。图表显示了在210名囊性纤维化患者中检测到的CFTR变异。*
 
-本研究为叙述性（非系统性）文献综述，遵循预先定义的在 ProQuest、PubMed 和 Google Scholar 的检索策略，并辅以登记数据库和机构临床数据。在 ProQuest 平台上，我们使用其 65 个数据库，检索关键词：“Cystic Fibrosis”、“PR” 和 “Caribbean”，将结果限制为 2014 年至 2023 年间发表的同行评审期刊文章、年报、病例研究和文献综述。另在 PubMed（2013–2023）进行的独立检索使用分组关键词：Group A: “cystic fibrosis,” “ CFTR ,” and “Puerto Rico.” Group B: “cystic fibrosis,” “Dominican Republic,” “Bahamas,” and “Haiti.” Group C: “cystic fibrosis,” “Non‐white,” “Hispanic,” and “Latino.” Group D: “ CFTR variant” and “ CFTR ion channel.” Group E: “epidemiology” and “CFTR modulator.” Group F: “cystic fibrosis,” “newborn screening,” and “sweat test.”我们审阅了临床试验、荟萃分析、随机对照试验、文献综述及关于人类研究的系统综述。通过 Google Scholar 检索和参考文献列表，还识别出 1938 年至 2023 年间发表的其他相关文章。纳入了以英语和西班牙语发表的文章。
+*波多黎各被诊断为胰腺炎的患者中的CFTR变异。*
 
+**受试者** | **年龄** | **CFTR变异** | **蛋白质变化** | **分类**
+1 | 20 | c.1327 G > T | p.Asp443Tyr | 致病性
+2 | 12 | c.601 G > A | p.Val201Met | 致病性
+3 | 13 | c.1521_1523del | p.Phe508del | 致病性
+4 | 8 | c.3154 T > G | p.Phe1052Val | VUS
+5 | 9 | 未检测到基因 | 未检测到基因 | 未检测到基因
+6 | 13 | 未检测到基因 | 未检测到基因 | 未检测到基因
+7 | 12 | 未检测到基因 | 未检测到基因 | 未检测到基因
+8 | 12 | 未检测到基因 | 未检测到基因 | 未检测到基因
 
-### 研究纳入标准
+在多米尼加共和国，Leandra Cordero Oñate博士在Robert Reid Cabral儿童医院的团队对57名囊性纤维化患者进行了CFTR测序。所有57名患者都进行了CFTR基因分型，在这个群体中发现了20种不同的CFTR变异（表3）。在多米尼加患者中，最常见的致病性变异是p.Phe508del和p.Ala559Thr（c.1675 G > A；占群体的12%）（表3）。有趣的是，根据Genome Aggregation Database（gnomAD）的数据，p.Ala559Thr是一种罕见的错义CFTR变异，全球频率低于0.01%。另一个罕见的致病性无义CFTR变异p.Arg553Ter（c.1657 C > T；占群体的5%）也在这个群体中被发现。这种模式反映了加勒比地区CFTR变异的多样性，同时也凸显了当前诊断工具和数据库的局限性，以及需要针对特定地区定制的诊断方法和更广泛的基因检测服务。这些发现强调了加勒比地区CFTR变异的多样性，以及需要针对特定地区定制的诊断方法、更广泛的基因检测服务和个性化治疗方案。
 
-纳入满足以下条件的研究：关于美国、波多黎各、 多米尼加共和国或巴哈马中人类囊性纤维化患者的数据的同行评审期刊文章、年报、病例研究或文献综述（Supporting Information S1: Figure 3），发表时间为 1938 年至 2023 年，且以英语或西班牙语发表。
+尽管国际指南将CRMS定义为新生儿筛查呈阳性但诊断结果不确定的情况，但波多黎各目前缺乏普遍的囊性纤维化新生儿筛查（NBS）。因此，“CFMS”这一诊断标签实际上是实用性地应用于那些汗液氯化物浓度处于临界值且CFTR基因型非典型的儿童，这些儿童需要长期随访。由于波多黎各的NBS实施并不普遍，其可及性和检测方法可能因地区而异，包括使用生化筛查以及不同程度的基于DNA的二级检测。此外，尽管我们报告了波多黎各和多米尼加共和国的CFTR变异详细分布，但这些数据并未总是伴随全面的临床信息（如肺功能或长期结果），因此我们推测可能存在较轻或非典型的囊性纤维化表型，这可能导致这些表型被低估或误分类，进一步加剧了加勒比地区囊性纤维化负担的低估。
 
-纳入满足以下条件的研究：关于美国、波多黎各、 多米尼加共和国或巴哈马中人类囊性纤维化患者的数据的同行评审期刊文章、年报、病例研究或文献综述（Supporting Information S1: Figure 3），发表时间为 1938 年至 2023 年，且以英语或西班牙语发表。
+### 加勒比地区囊性纤维化患者的预期寿命与差异
 
+三十年前，囊性纤维化患者的预期寿命显著较低，男性约为28岁，女性约为25岁[24]。虽然目前尚无治愈方法，但多学科护理和CFTR调节剂疗法的进步提高了生存率，目前美国的平均预期寿命约为男性48岁，女性43岁[25]。对于2019年至2023年间出生的患者，预计有一半的人能活过61岁，而2014年至2018年间出生的患者这一比例为45岁[8]。然而，那些不符合CFTR调节剂治疗条件的囊性纤维化患者（通常是因为他们缺乏响应调节剂的变异或生活在无法获得这些治疗的地区）可能会面临超过十年的预期寿命缩短[8, 10]。
 
-### 关注的人群与状况
+最常见的CFTR变异p.Phe508del在西班牙裔囊性纤维化患者中的比例低于非西班牙裔白人患者，这对调节剂治疗的适用性有重大影响。在加勒比地区，调节剂的获取仍然有限，许多患者缺乏常见的、历史上优先考虑的可治疗变异（如p.Phe508del，仅在大约三分之一的西班牙裔囊性纤维化患者中存在，而在非西班牙裔白人患者中这一比例接近一半），相反，他们携带较少见的变异，如p.Arg1066Cys[26]。尽管现已证明p.Arg1066Cys对elexacaftor/tezacaftor/ivacaftor（ETI）治疗有反应，并被FDA列为响应变异，但在加勒比地区，携带这种和其他罕见变异的患者在获取ETI方面仍面临诸多障碍，包括成本、监管批准和医疗系统能力的限制。Zeiger等人的研究表明，在82名加勒比地区囊性纤维化患者中，只有5人符合调节剂治疗的条件，这表明变异分布、监管批准和成本共同限制了这一地区的获取途径[16]。
 
-在符合条件的研究中，我们重点关注来自美国、波多黎各、 多米尼加共和国、海地和巴哈马的欧洲血统和/或西班牙裔血统的婴儿、儿童和成人的数据（Supporting Information S1: Figure 3）。纳入任何种族的西班牙裔个体。我们考虑由医生诊断为囊性纤维化且出现诸如呼吸短促、咳嗽和黏稠痰液增多等症状的受试者。
+CFTR调节剂旨在针对CFTR基因中的特定突变，因此患者必须携带至少一种对该疗法有效的变异才能符合条件。由于这些变异的分布因种族而异，尤其是波多黎各或多米尼加血统的患者，符合调节剂治疗条件的患者比例低于非西班牙裔白人患者，而在检测和药物供应有限的加勒比地区，这种效应更为明显。历史上，囊性纤维化研究和药物开发主要关注欧洲人群中的常见变异，这反映了高收入国家的人口统计现实和基因组研究中的长期不平等。随着拉丁裔人口的增长，特别是在波多黎各
 
-在符合条件的研究中，我们重点关注来自美国、波多黎各、 多米尼加共和国、海地和巴哈马的欧洲血统和/或西班牙裔血统的婴儿、儿童和成人的数据（Supporting Information S1: Figure 3）。纳入任何种族的西班牙裔个体。我们考虑由医生诊断为囊性纤维化且出现诸如呼吸短促、咳嗽和黏稠痰液增多等症状的受试者。
+## 结论  
 
+在波多黎各（PR）、多米尼加共和国（DR）及邻近加勒比国家开展囊性纤维化（CF）相关研究，对于了解该地区疾病的真实负担、CFTR基因变异的地域分布以及患者所面临的特定挑战至关重要。本综述指出，由于登记系统不完善、诊断手段不足以及医疗资源分配不均等问题，这些因素严重阻碍了对该地区CF患病率及治疗结果的准确评估。现有证据揭示了多种相互影响的障碍因素，包括筛查率低、误诊以及治疗手段的可及性差等，这些问题亟需通过针对当地实际情况的研究和针对性干预措施来加以解决（见表4）。  
 
-### CFTR 变异类别及其加勒比地区相关性
+**加勒比国家与高收入国家之间囊性纤维化医疗服务的比较分析：**  
 
-囊性纤维化由 CFTR 基因两拷贝的致病性变异导致，这些变异可损害通道的合成、运输、稳定性或功能 [ 1 , 15 ]。已鉴定出 2000 多种变异，并被分为多个功能类别，用以指导对 CFTR 调节剂疗法的反应性评估。然而，加勒比地区的 CFTR 变异数据仍然有限，且在波多黎各和多米尼加患者中富集的若干变异在治疗开发中代表性不足，这使该区域的诊断与治疗通路更加复杂。
+| 国家        | 波多黎各    | 多米尼加共和国 | 海地      | 巴哈马     | 高收入国家（如美国、英国） |
+|------------|---------|-----------|----------|-----------|
+| 估计的CF病例数    | 约300–500例 | 数据有限；估计100–200例 | 不详      | 不详      | 33,288例 [59] | 11,318例 [60] |
+| 常见CFTR基因变异   | F508del、p.Arg1066Cys | p.Ile507del   | 1521_1523del | 1675G>A     | 不详      | F508del、3120+1G>A [59] | F508del、p.Arg117His [60] |
+| 可用的CFTR调节剂   | 可用（但获取有限） | 无        | 无        | 无        | 可用（如Trikafta、Orkambi）[59] | 可用（如Kaftrio）[60] |
+| CF治疗的保险覆盖情况 | CF治疗的保险覆盖有限；部分公共卫生保险仅覆盖基本治疗，高级调节剂可能不在覆盖范围内 | 无普遍的保险覆盖；私人保险可能部分覆盖，但通常不足以支付全部治疗费用 | 几乎无保险覆盖；大部分治疗费用需自付或依赖慈善援助 | CF治疗的保险覆盖有限；医疗服务费用昂贵，且特定治疗可能不在保险范围内 | 大多数情况下有全面保险覆盖（尤其是通过私人保险和政府项目如Medicaid和Medicare）；CFTR调节剂如Trikafta和Orkambi广泛可用 |
+| CFTR调节剂的自付费用 | 如果没有保险，自付费用极高（每年可达30万美元）[61] | 自付费用极高；多数治疗费用（包括Trikafta）超出多数人的承受能力 [61] | 自付费用极高；即使有保险，也可能无法负担（每年费用可达30万美元）[61] | 自付费用较高；Trikafta等调节剂的费用可能高达每年30万美元 | 对于有保险的患者，费用取决于保险计划 |
+| 治疗的主要障碍    | 1. 高级CFTR调节剂获取困难；2. 治疗费用高昂；3. 农村地区医疗基础设施薄弱；4. 医护人员对CF认识不足；5. 专科医疗资源分配不均 | 1. 缺乏普遍的医疗保险覆盖；2. 特定治疗（如CFTR调节剂）难以获得 | 3. 医疗基础设施差，缺乏CF专科中心；4. 对CF的认识和宣传不足 | 1. 医疗服务极度有限；2. 缺乏CF治疗药物；3. 由于诊断不足和治疗选择有限，死亡率较高 | 1. 专科医疗资源有限；2. 治疗费用高昂；3. 新生儿筛查和早期诊断项目不足 | 1. 保险状况和地理位置影响治疗机会；2. 无保险患者的自付费用较高 | 3. 种族和族裔差异影响CF诊断和治疗 |
+| CF诊断的相关政策   | 有相关筛查政策 | 无        | 无        | 无        | 有相关筛查政策 | 有相关筛查政策 |
+| 宣传和教育需求   | 需要广泛宣传和教育   | 需要广泛宣传和教育 | 需要高度关注和教育 | 需要适度宣传和教育 | 需要持续的教育措施 |
 
-Zeiger 等人在 2017 年的一项研究发现，F508del（全球最常见的变异）仅在 33% 的波多黎各患者和 9.8% 的多米尼加患者中出现 [ 16 ]。像 p.Ile507del、p.Arg334Trp、p.Arg1066Cys 和 p.Ala559Thr 这样的罕见变异在这些群体中更为常见，但在治疗开发中代表性不足 [ 16 ]。为改善加勒比地区 CF 患者的诊断并扩大有效疗法的可及性，亟需开展更多针对具体变异的研究。
+## CF诊断与管理的差异  
 
-囊性纤维化由 CFTR 基因两拷贝的致病性变异导致，这些变异可损害通道的合成、运输、稳定性或功能 [ 1 , 15 ]。已鉴定出 2000 多种变异，并被分为多个功能类别，用以指导对 CFTR 调节剂疗法的反应性评估。然而，加勒比地区的 CFTR 变异数据仍然有限，且在波多黎各和多米尼加患者中富集的若干变异在治疗开发中代表性不足，这使该区域的诊断与治疗通路更加复杂。
+加勒比地区人群在现有CF登记系统中的数据代表性不足，这凸显了对该地区CF真实患病率和影响认知上的重大空白。在波多黎各，有限的CF相关数据可能反映了诊断不足和报告不足的问题，这主要是由于诊断资源有限以及医护人员对CF的认识不足所致。因此，亟需扩大新生儿筛查（NBS）范围，并提高确认性检测（如汗液氯化物分析和CFTR基因变异检测）的普及率。2015年，波多黎各根据法律129实施了强制性新生儿筛查计划；多米尼加共和国随后也发布了相关法令（Decree 380-15 [41, 42]）。尽管波多黎各已将CF筛查纳入临床实践，但在多米尼加共和国，该政策的实施仍较为有限——该国首家CF诊所仅对少数转诊病例进行检测，而非所有新生儿。因此，2015年之前在多米尼加共和国出生的婴儿以及波多黎各的许多婴儿可能未接受CF筛查，从而增加了漏诊或延误诊断的风险。截至2021年，海地和巴哈马尚未将CF筛查纳入国家新生儿筛查计划（参见支持信息S1：图5A [43]）。尽管拉丁美洲整体上取得了一定进展，但许多加勒比国家仍缺乏针对CF的专门筛查机制，导致早期发现和治疗的差距持续存在（参见支持信息S1：图5B,C [44, 45]）。  
 
-Zeiger 等人在 2017 年的一项研究发现，F508del（全球最常见的变异）仅在 33% 的波多黎各患者和 9.8% 的多米尼加患者中出现 [ 16 ]。像 p.Ile507del、p.Arg334Trp、p.Arg1066Cys 和 p.Ala559Thr 这样的罕见变异在这些群体中更为常见，但在治疗开发中代表性不足 [ 16 ]。为改善加勒比地区 CF 患者的诊断并扩大有效疗法的可及性，亟需开展更多针对具体变异的研究。
+## 基因变异与CFTR基因变异的分布  
 
-[TRANSLATION FAILED: Request timed out.]
+我们对CFTR基因变异的研究发现，加勒比地区人群的基因特征与北美和欧洲人群存在显著差异。例如，p.Arg1066Cys和p.Ile507del等基因变异在波多黎各患者中的出现频率高于美国整体CF患者群体，尽管这些变异并非加勒比地区所特有。  
 
-## Results and Discussion
+这种基因多样性给CF的诊断和治疗带来了挑战，因为现有的筛查方法和CFTR调节剂临床试验大多基于欧洲血统人群中的常见变异（尤其是p.Phe508del）。值得注意的是，尽管p.Arg1066Cys在全球范围内较为罕见，但在加勒比地区却较为普遍；根据体外实验和临床数据，该变异对某些治疗方法具有响应性，并已被FDA列为具有治疗效果的变异之一。然而，由于药物成本、监管限制以及医疗系统的制约，携带该变异的患者难以获得相应的治疗手段。同样，如c.1675G>A这样的变异在多米尼加患者中较为罕见，相关临床试验也对其治疗效果了解不足，进一步限制了治疗选择。这些情况表明，需要开发更全面的基因变异检测方法，系统地记录加勒比地区人群的CFTR基因型，并持续投资于罕见变异的功能研究和治疗开发。
 
+## 健康差异与医疗资源的获取  
 
-### Population Declines and Infant Mortality Rates in the Caribbean
+加勒比地区囊性纤维化（CF）患者的预期寿命可能明显低于美国和欧洲，这主要是由于诊断延迟以及患者难以获得全面的多学科诊疗和CFTR调节剂治疗。即使在高收入国家，由于国家卫生与护理卓越研究所（NICE）等机构的成本效益评估和报销政策，患者也难以获得ivacaftor、lumacaftor/ivacaftor或ETI等治疗药物——尽管这些药物已被证明具有临床疗效（见表4）。在加勒比地区，这些挑战还因医疗基础设施薄弱、患者自付医疗费用高昂以及医疗体系分散而变得更加严重。此外，该地区还存在较高的婴儿死亡率和人口下降现象，这些现象反映了更广泛的系统性不平等问题。要解决这些差异，不仅需要增加资金投入，还需要进行政策改革、实现更早和更准确的诊断，并确保所有CF患者都能公平地获得延长生命的治疗。
 
-According to the US Census Bureau, Puerto Rico's population declined by 142,000 (4.4%) between 2017 and 2018, with a 30% increase in migration to the US, with potential implications for healthcare access and data interpretation, particularly for chronic conditions like CF and infant mortality metrics [ 17 ]. However, this out‐migration may confound infant mortality data, by reducing the number of births and infant deaths counted on the island while also altering the capacity of the local health system to care for those who remain. PR and other Caribbean countries face a growing infant mortality problem.: from 2017 to 2021, PR's infant mortality rate was approximately 0.6%, higher than that of US Whites (0.4%) and US Hispanics (0.5%), whereas Dominicans residing in the US had a lower rate of 3 deaths per 1000 live births (Table 1 ) [ 18 ]. These differences likely reflect disparities in healthcare infrastructure, access, and broader social determinants of health, which also shape the ability to detect and diagnose CF in early life (Table 1 ).
+## 对全面、包容性研究的迫切需求  
 
-According to the US Census Bureau, Puerto Rico's population declined by 142,000 (4.4%) between 2017 and 2018, with a 30% increase in migration to the US, with potential implications for healthcare access and data interpretation, particularly for chronic conditions like CF and infant mortality metrics [ 17 ]. However, this out‐migration may confound infant mortality data, by reducing the number of births and infant deaths counted on the island while also altering the capacity of the local health system to care for those who remain. PR and other Caribbean countries face a growing infant mortality problem.: from 2017 to 2021, PR's infant mortality rate was approximately 0.6%, higher than that of US Whites (0.4%) and US Hispanics (0.5%), whereas Dominicans residing in the US had a lower rate of 3 deaths per 1000 live births (Table 1 ) [ 18 ]. These differences likely reflect disparities in healthcare infrastructure, access, and broader social determinants of health, which also shape the ability to detect and diagnose CF in early life (Table 1 ).
+加勒比地区人群在囊性纤维化相关登记系统、基因组数据集和临床试验中的代表性不足，限制了针对不同遗传背景患者定制的治疗方案的开发和评估。本综述指出，西班牙裔CF患者在调节剂治疗试验及其他干预性研究中的参与度较低，这进一步凸显了提高研究包容性的必要性。建立区域性的研究及试验能力（例如在加勒比地区设立专门的CF临床研究中心）将有助于招募波多黎各、多米尼加、海地和巴哈马的患者参与多中心研究，提升当地在治疗和生物标志物研究方面的专业水平，并确保研究数据能够涵盖所有患者群体（包括目前被忽视的遗传变异患者）。
 
+## 应对经济障碍与提升医疗能力
 
-*Live births, infant deaths, and mortality rates: US White population, PR, and the DR 2017−2021.*
+尽管加勒比地区的囊性纤维化（CF）患者往往难以获得CFTR调节剂治疗，但这些疗法在高收入国家也并非普遍可及，因为价格和报销政策会限制患者的用药范围。由于CFTR调节剂对某些特定基因突变（如F508del）最为有效，而这类突变在欧洲血统人群中更为常见，因此加勒比地区携带罕见或地区特异性基因突变的患者面临着双重困境：他们的基因突变长期以来未受到足够的关注；即便这些突变被证实对调节剂治疗有反应（例如p.Arg1066Cys和ETI突变），患者仍因高昂的费用和医疗系统的限制而无法获得治疗。扩大保险覆盖范围，并为必要的诊断检查（如汗液检测、全面的CFTR基因分型）以及有证据表明有效的调节剂治疗提供公共资金，将有助于提高患者的生存率并提升医疗系统的效率，从而减少住院次数和病情恶化情况（见表5A、B [46]）。
 
+为支持这些努力，建立多学科的CF护理团队（例如提议中的波多黎各心肺联盟）可以在资源匮乏的地区提升临床诊疗水平。这些团队将包括专业临床医生、辅助医疗人员以及研究人员，他们将通过区域性的合作网络共享知识，以标准化诊疗流程并改善治疗效果（见表5C）。同时，加强诊断基础设施、确保关键检查项目的覆盖范围，并提升医护人员的专业素养，将有助于更早地发现CF及相关疾病（见表5D–F [47]）。推进加勒比地区的CF护理工作还需要持续的投资，特别是在针对特定人群的研究和数据共享方面。通过多中心登记系统的区域合作以及在同行评审期刊上发表本地研究成果，可以更清晰地了解波多黎各、多米尼加共和国、海地和巴哈马等地CF的临床和遗传特征（见表5G）。建立这样的证据基础对于制定精准医疗策略、推动相关监管政策的制定至关重要，最终有助于消除目前阻碍对加勒比地区CF患者真实患病率和疾病负担认知的诊断和治疗不平等现象。
 
-**Year and race** | **Number** | **Infant deaths per 1000 live births**
-**Live births** | **Infant deaths**
- US Caucasian population 
-2021 | 1,887,656 | 8236 | 4.36
-2020 | 1,843,432 | 8115 | 4.40
-2019 | 1,915,912 | 8603 | 4.49
-2018 | 1,956,413 | 9059 | 4.63
-2017 | 1,992,461 | 9306 | 4.67
- US Hispanic population (any race) 
-2021 | 885,916 | 4246 | 4.79
-2020 | 866,713 | 4063 | 4.69
-2019 | 886,467 | 4462 | 5.03
-2018 | 886,210 | 4303 | 4.86
-2017 | 898,764 | 4583 | 5.10
- Puerto Rican  |  |  | 
-2021 | 70,729 | 428 | 6.05
-2020 | 69,763 | 437 | 6.26
-2019 | 70,950 | 438 | 6.17
-2018 | 71,614 | 402 | 5.61
-2017 | 70,813 | 459 | 6.48
- Dominican 
-2021 | 33,373 | 109 | 3.27
-2020 | 31,596 | 143 | 4.53
-2019 | 32,483 | 153 | 4.71
-
-
-### Reported CF Cases and Diagnostic Capacity in Puerto Rico and the Dominican Republic
-
-Early CF prevalence estimates from the 1960s–1980s focused on relatively stable populations in Western Europe and North America, often excluding unregistered patients, minority groups, and undiagnosed individuals [ 19 ]. In PR, CF registry data remain limited, impeding accurate tracking of diagnosed cases; the PR Health Department reported only eight cases between 2012 and 2018, highlighting substantial underdiagnosis [ 20 , 21 ]. As a result, current case counts almost certainly underestimate the true number of individuals with CF in PR, where constrained registry coverage, limited diagnostic capacity, and lack of newborn screening (NBS) hinder accurate prevalence estimates.
-
-The Center for Pediatric Pneumology, a CAP‐certified facility with 25 years of experience, uses the Gibson and Cook sweat test method in alignment with CFF guidelines [ 22 ]. In 2023, this center performed 162 sweat tests, diagnosing two confirmed CF cases and identifying five borderline cases (sweat chloride 40–60 mmol/L). Despite CFF's 2017 guidelines, which expanded recommendations for NBS and sweat testing, full implementation in PR and the broader Caribbean remains limited by resource and infrastructure constraints. Strengthening quality assurance and access to infant testing is therefore essential to improve early CF detection and reduce underestimation of disease burden across the region [ 23 ].
-
-The Pediatric Rare Lung and Asthma Institute in Puerto Rico, established in 2018, began CF sweat testing in 2022 using the ChloroChek Chloridometer and Macroduct system. Dr. Wilfredo De Jesús‐Rojas identified 9 new CF cases (ages 2 weeks to 21 years) among 394 tested individuals, all with sweat chloride ≥ 60 mmol/L. Genetic testing via Invitae following Human Genome Variation Society (HGVS) nomenclature standards revealed common pathogenic CFTR variants in this CF cohort, including the intron 8 TG‐T variant c.1210‐34TG[11]T[5] (TG12‐5T), p.Val201Met, and p.Phe508del (Figure 2 ). While the TG11‐5T variant was the most frequently identified in our cohort, it is considered a low‐penetrance CFTR variant associated with CFTR‐related disorders rather than classic CF, and its presence alone may be insufficient to establish a CF diagnosis without supporting clinical and functional data. An additional 18 patients met local criteria for CFTR‑related metabolic syndrome/CF screen positive, inconclusive diagnosis (CRMS/CFSPID), based on intermediate sweat chloride values (40–60 mmol/L) and CFTR variant profiles not fully consistent with classic CF. Notably, genetic testing using Invitae also revealed pathogenic CFTR variants in CRMS patients diagnosed with pancreatitis, including p.Asp443Tyr, p.Val201Met, p.Phe508del, and p.Phe1052Val (Table 2 ). CRMS is identified through NBS in infants with intermediate sweat chloride levels and/or variants of uncertain clinical significance in the CFTR gene who do not meet diagnostic criteria for classic CF, indicating an increased risk for mild CFTR‐related manifestations but not a definitive diagnosis. These diagnoses represent a 33% increase in CF and CFMS cases compared to PR's 2014–2018 reports and a 280% increase over 2012–2015, underscoring how expanded sweat testing and genetic evaluation can uncover previously unrecognized CF and CFTR‐related disease and illustrating how limited diagnostic infrastructure has obscured the true CF burden in prior years. Cases were reported across both eastern and western PR, indicating that CF is not geographically restricted within the island.
-
-In the DR, Dr. Leandra Cordero Oñate's team at Dr. Robert Reid Cabral Children's Hospital performed CFTR sequencing in n = 57 patients with CF. CFTR genotyping was available for all 57 patients, and across this cohort, 20 distinct CFTR variants were identified (Table 3 ). The most frequent known disease‑causing variants in Dominican patients were p.Phe508del and p.Ala559Thr (c.1675 G > A; 12% of cohort) (Table 3 ). Interestingly, p.Ala559Thr is a rare missense CFTR variant with <0.01% global frequency according to the Genome Aggregation Database (gnomAD). P.Arg553Ter (c.1657 C > T; 5% of cohort), another rare pathogenic nonsense CFTR variant was also identified in this cohort. This pattern reflects both substantial genetic diversity and limitations of current diagnostic panels and databases for this population. These findings underscore the heterogeneity of CFTR variants in Caribbean cohorts and highlight the need for region‑specific diagnostics, expanded access to comprehensive genetic testing, and population‑tailored therapies. These findings underscore the heterogeneity of CFTR variants in Caribbean populations and highlight the need for region‐specific diagnostics, expanded access to comprehensive genetic testing, and population‐tailored therapies.
-
-Although international guidelines define CRMS in the context of a positive CF newborn screen with inconclusive diagnostic results, PR currently lacks universal CF NBS, and the CFMS designation is applied pragmatically to children with borderline sweat chloride values and non‑classic CFTR genotypes who require longitudinal follow‑up. Given that the implementation of NBS in PR is not fully universal, it may vary in access and testing methodology, including the use of biochemical screening with variable incorporation of DNA‐based second‐tier testing. Moreover, although we report detailed CFTR variant distributions from PR and the DR, these data were not uniformly accompanied by comprehensive clinical information (e.g., lung function or longitudinal outcomes), so we infer the possibility of milder or atypical CF phenotypes from genotype patterns rather than directly observed clinical trajectories Such non‐classical presentations are more likely to be underdiagnosed or misclassified, further contributing to underestimation of CF burden in Caribbean populations and complication efforts to accurately assess prevalence.
-
-Early CF prevalence estimates from the 1960s–1980s focused on relatively stable populations in Western Europe and North America, often excluding unregistered patients, minority groups, and undiagnosed individuals [ 19 ]. In PR, CF registry data remain limited, impeding accurate tracking of diagnosed cases; the PR Health Department reported only eight cases between 2012 and 2018, highlighting substantial underdiagnosis [ 20 , 21 ]. As a result, current case counts almost certainly underestimate the true number of individuals with CF in PR, where constrained registry coverage, limited diagnostic capacity, and lack of newborn screening (NBS) hinder accurate prevalence estimates.
-
-The Center for Pediatric Pneumology, a CAP‐certified facility with 25 years of experience, uses the Gibson and Cook sweat test method in alignment with CFF guidelines [ 22 ]. In 2023, this center performed 162 sweat tests, diagnosing two confirmed CF cases and identifying five borderline cases (sweat chloride 40–60 mmol/L). Despite CFF's 2017 guidelines, which expanded recommendations for NBS and sweat testing, full implementation in PR and the broader Caribbean remains limited by resource and infrastructure constraints. Strengthening quality assurance and access to infant testing is therefore essential to improve early CF detection and reduce underestimation of disease burden across the region [ 23 ].
-
-The Pediatric Rare Lung and Asthma Institute in Puerto Rico, established in 2018, began CF sweat testing in 2022 using the ChloroChek Chloridometer and Macroduct system. Dr. Wilfredo De Jesús‐Rojas identified 9 new CF cases (ages 2 weeks to 21 years) among 394 tested individuals, all with sweat chloride ≥ 60 mmol/L. Genetic testing via Invitae following Human Genome Variation Society (HGVS) nomenclature standards revealed common pathogenic CFTR variants in this CF cohort, including the intron 8 TG‐T variant c.1210‐34TG[11]T[5] (TG12‐5T), p.Val201Met, and p.Phe508del (Figure 2 ). While the TG11‐5T variant was the most frequently identified in our cohort, it is considered a low‐penetrance CFTR variant associated with CFTR‐related disorders rather than classic CF, and its presence alone may be insufficient to establish a CF diagnosis without supporting clinical and functional data. An additional 18 patients met local criteria for CFTR‑related metabolic syndrome/CF screen positive, inconclusive diagnosis (CRMS/CFSPID), based on intermediate sweat chloride values (40–60 mmol/L) and CFTR variant profiles not fully consistent with classic CF. Notably, genetic testing using Invitae also revealed pathogenic CFTR variants in CRMS patients diagnosed with pancreatitis, including p.Asp443Tyr, p.Val201Met, p.Phe508del, and p.Phe1052Val (Table 2 ). CRMS is identified through NBS in infants with intermediate sweat chloride levels and/or variants of uncertain clinical significance in the CFTR gene who do not meet diagnostic criteria for classic CF, indicating an increased risk for mild CFTR‐related manifestations but not a definitive diagnosis. These diagnoses represent a 33% increase in CF and CFMS cases compared to PR's 2014–2018 reports and a 280% increase over 2012–2015, underscoring how expanded sweat testing and genetic evaluation can uncover previously unrecognized CF and CFTR‐related disease and illustrating how limited diagnostic infrastructure has obscured the true CF burden in prior years. Cases were reported across both eastern and western PR, indicating that CF is not geographically restricted within the island.
+### 改善波多黎各、多米尼加共和国及其他加勒比国家CF患者治疗结果的建议
 
+| **挑战** | **应对措施** | **预期效果** |
+| --- | --- | --- |
+| A. 由于缺乏CFTR调节剂治疗，疾病管理不善 | 推广价格合理且易于获取的CFTR调节剂；建立加勒比地区CFTR突变数据库；研究该地区常见的CFTR突变，以便制定有效的治疗策略。 | 改善加勒比地区CF患者的治疗效果，减少因疾病管理不善导致的急性肺病发作和医疗费用；提高患者获得个性化治疗的机会。 |
+| B. 波多黎各及其他加勒比国家缺乏经过认证的CF诊疗中心 | 建立经IRB（独立审查委员会）批准的CF患者登记系统。 | 形成关于这些地区CF患者健康状况的准确数据，为后续的统计和分析研究提供依据。 |
+| C. 社区和医疗人员对CF的认识不足 | 通过研讨会和医学会议向公众和医护人员普及CF知识；在学校推广CF筛查，并将疑似CF患者转诊进行CFTR检测。 | 提高加勒比地区公众和医护人员的CF认知水平。 |
+| D. CF未被及时诊断 | 在强制实施CF筛查后，为患者提供医疗保险覆盖。 | 提高人们对CF患病率的了解，从而改善患者的健康状况。 |
+| E. 加勒比国家缺乏CF筛查项目 | 制定并实施CF筛查方案；参照更新的CFF（囊性纤维化基金会）指南，将汗液检测纳入筛查流程。 | 使医生和医护人员能够更有效地识别CF病例。 |
+| F. 由于哮喘等类似疾病导致CF误诊 | 根据更新的CFF指南，对哮喘患者进行重新评估；改进CF的诊断方法。 | 提高儿童和成人CF的诊断准确性，实现早期干预，减少误诊。 |
+| G. 加勒比地区缺乏研究CF的资金支持 | 鼓励政府投资CF相关研究；将CF研究纳入波多黎各的科研优先事项；与其他国家的知名CF研究机构和组织建立合作。 | 促进CF研究的创新，为安全有效的疗法提供资金支持。 |
 
-* CFTR variants identified in patients with CF in Puerto Rico. The graph illustrates the CFTR variants identified among n = 210 individuals with CF.*
+### 作者贡献
 
+Krystal L. Rivera-Figueroa：概念构思、方法设计、软件开发、数据管理、研究实施、验证、初稿撰写及数据分析。  
+Cole L. Martin：初稿撰写、方法设计、概念构思、研究实施、验证。  
+Christina A. Le：方法设计、软件使用、审稿编辑、数据分析与可视化。  
+Wilfredo De Jesús Rojas：审稿编辑、数据管理、验证及资源协调。  
+Leandra Cordero Oñate：审稿编辑、数据管理、验证及资源协调。  
+Stephen G. Aller：项目监督、初稿撰写、项目管理、资金争取及概念构思。  
 
-* CFTR variants in patients diagnosed with pancreatitis in Puerto Rico.*
+### 利益冲突
 
-
-**Subject** | **Age** | **CFTR variant** | **Protein change** | **Classification**
-1 | 20 | c.1327 G > T | p.Asp443Tyr | PATHOGENIC
-2 | 12 | c.601 G > A | p.Val201Met | PATHOGENIC
-3 | 13 | c.1521_1523del | p.Phe508del | PATHOGENIC
-4 | 8 | c.3154 T > G | p.Phe1052Val | VUS
-5 | 9 | No gene identified | No gene identified | No gene identified
-6 | 13 | No gene identified | No gene identified | No gene identified
-7 | 12 | No gene identified | No gene identified | No gene identified
-
-In the DR, Dr. Leandra Cordero Oñate's team at Dr. Robert Reid Cabral Children's Hospital performed CFTR sequencing in n = 57 patients with CF. CFTR genotyping was available for all 57 patients, and across this cohort, 20 distinct CFTR variants were identified (Table 3 ). The most frequent known disease‑causing variants in Dominican patients were p.Phe508del and p.Ala559Thr (c.1675 G > A; 12% of cohort) (Table 3 ). Interestingly, p.Ala559Thr is a rare missense CFTR variant with <0.01% global frequency according to the Genome Aggregation Database (gnomAD). P.Arg553Ter (c.1657 C > T; 5% of cohort), another rare pathogenic nonsense CFTR variant was also identified in this cohort. This pattern reflects both substantial genetic diversity and limitations of current diagnostic panels and databases for this population. These findings underscore the heterogeneity of CFTR variants in Caribbean cohorts and highlight the need for region‑specific diagnostics, expanded access to comprehensive genetic testing, and population‑tailored therapies. These findings underscore the heterogeneity of CFTR variants in Caribbean populations and highlight the need for region‐specific diagnostics, expanded access to comprehensive genetic testing, and population‐tailored therapies.
-
-
-* CFTR variant burden distribution in the Dominican Republic.*
-
-
-**Patient ID** | **Age** | ** CFTR variants**
-# | Years | 1 | 2 | 3
-1 | 1 | c.1521_1523del | c.1675 G > A (p.Ala559Thr) | 
-2 | 4 | c.1521_1523del |  | 
-3 | 12 | c.1521_1523del | c.1657 C > T (p.Arg.553Ter) | 
-4 | 15 | c.1450 C > T |  | 
-5 | 6 | c.1521_1523del | c.1521_1523del | 
-6 | 12 | c.1465_1469del | c.2988 + 1 G > A | 
-7 | 24 | c.1210‐34TG |  | 
-8 | 7 | c.1521_1523del | c.1465_1496del | 
-9 | 20 | c.1210‐34TG | c.1766 G > A | 
-10 | 6 | c.1521_1523del |  | 
-11 | 16 | c.1521_1523del | c.1675 G > A | c.3473 G > A
-12 | 9 | c.1040 G > A |  | 
-13 | 20 | c.1210‐34TG |  | 
-14 | 16 | c.1521_1523del | c.1521_1523del | 
-15 | 8 | c.1521_1523del |  | 
-16 | 14 | c.1052 C > G |  | 
-17 | 28 | c.1521_1523del | c.1521_1523del | 
-18 | 29 | c.2988 + 1 G > A | c.3983 T > C | c.4121 C > G
-19 | 14 | c.1000 C > T | c.2988 + 1 G > A | 
-20 | 7 | c.1521_1523del | c.3120 + 1 G > A | 
-21 | 23 | Delation Exon 2‐3 | Delation Exon 2‐3 | 
-22 | 8 | c.1521_1523del | c.1521_1523del | 
-23 | 8 | c.1521_1523del | c.2988 + 1 G > A | 
-24 | 7 | c.4056 G > T | c.1093 G > A | 
-25 | 10 | c.2988 + 1 G > A |  | 
-26 | 2 | c.3454 G > C |  | 
-27 | 18 | c.3041 A > G |  | 
-28 | 5 | c.2988 + 1 G > A | c.3983 T > C | c.4121 C > G
-29 | 14 | c.1521_1523del | c.2125 C > T | 
-30 | 29 | c.1521_1523del | c.1675 G > A | c.3473 G > A
-31 | 3 | c.1521_1523del | c.1521_1523del | 
-32 | 7 | c.1521_1523del | c.1657 C > T | 
-33 | 6 | c.1521_1523del | c.1521_1523del | 
-34 | 6 | c.1521_1523del | c.2657 + 5 G > A | 
-35 | 12 | c.1210‐7_1210‐6del |  | 
-36 | 25 | c.1521_1523del | 3120 + 1 G > A | 
-37 | 37 | c.1521_1523del |  | 
-38 | 10 | c.1210‐7_1210‐6del |  | 
-39 | 3 | c.1521_1523del | N1303K | 
-40 | 40 | c.1521_1523del |  | 
-41 | 11 | c.1210‐34TG |  | 
-42 | 34 | c.3983>C | c.4121>G | 
-43 | 1 | c.1521_1523del | c.1657 C > T | 
-44 | 10 | c.1521_1523del | c.1521_1523del | 
-45 | 41 | c.2988 + 1 G > A |  | 
-46 | 7 | c.1657 C > T | c.1675 G > A | 
-47 | 29 | c.1521_1523del | c.1521_1523del | 
-48 | 7 | c.1521_1523del | c.1210‐34TG | c.326 A > G
-49 | 8 | c.1521_1523del | c.1521_1523del | c.1521_1523delCTT
-50 | 22 | c.1521_1523del | c.1521_1523del | 
-51 | 2 | c.1210‐33_1210‐6GT |  | 
-52 | 26 | c.1521_1523del |  | 
-53 | 10 | c.1521_1523del | c.1675 G > A | 
-54 | 11 | c.1521_1523del | c.1521_1523del | 
-55 | 19 | c.1521_1523del | c.442delA | 
-56 | 17 | c.1210‐34TG |  | 
-57 | 23 | c.1210‐34TG |  | 
-
-Although international guidelines define CRMS in the context of a positive CF newborn screen with inconclusive diagnostic results, PR currently lacks universal CF NBS, and the CFMS designation is applied pragmatically to children with borderline sweat chloride values and non‑classic CFTR genotypes who require longitudinal follow‑up. Given that the implementation of NBS in PR is not fully universal, it may vary in access and testing methodology, including the use of biochemical screening with variable incorporation of DNA‐based second‐tier testing. Moreover, although we report detailed CFTR variant distributions from PR and the DR, these data were not uniformly accompanied by comprehensive clinical information (e.g., lung function or longitudinal outcomes), so we infer the possibility of milder or atypical CF phenotypes from genotype patterns rather than directly observed clinical trajectories Such non‐classical presentations are more likely to be underdiagnosed or misclassified, further contributing to underestimation of CF burden in Caribbean populations and complication efforts to accurately assess prevalence.
-
-
-### Life Expectancy and Disparities in CF Individuals of Caribbean Regions
-
-Thirty years ago, the median life expectancy for individuals with CF was significantly lower, at approximately 28 years for males and 25 years for females [ 24 ]. While there is still no cure, advances in multidisciplinary care and CFTR modulator therapies have improved survival, with current US averages around 48 years for males and 43 years for females [ 25 ], and for individuals born between 2019 and 2023, half are projected to live beyond 61 years, compared to 45 years among those born between 2014 and 2018 [ 8 ]. However, CF patients who do not qualify for CFTR modulator therapies, often because they lack modulator‐responsive variants or live in regions without access, may experience reductions in life expectancy of more than a decade [ 8 , 10 ].
-
-The most common CFTR variant, p.Phe508del, is proportionally underrepresented in Hispanic patients with CF compared with non‑Hispanic Whites, which has major implications for modulator eligibility. Modulator access remains limited in the Caribbean, where many patients lack common, historically prioritized treatable variants like p.Phe508del (present in only about one‑third of Hispanic CF patients versus nearly half of non‑Hispanic White patients) and instead harbor less frequent variants such as p.Arg1066Cys [ 26 ]. Although p.Arg1066Cys has now been shown to respond to elexacaftor/tezacaftor/ivacaftor (ETI) and is included among FDA‑recognized responsive variants, patients carrying this and other rare variants in Caribbean settings still face substantial barriers to accessing ETI, including cost, regulatory coverage, and constrained health system capacity. In the study by Zeiger et al. only 5 of 82 Caribbean CF patients qualified for modulator therapy, illustrating how variant distribution, regulatory approvals, and cost jointly restricted access in this region [ 16 ].
-
-CFTR modulators are designed to target specific mutations in the CFTR gene, so patients must carry at least one variant known to be amenable to the given therapy to qualify. Because the distribution of these variants varies by ancestry, fewer Latino patients, particularly those of Puerto Rican or Dominican descent, meet modulator eligibility criteria compared with non‐Hispanic White patients, and this effect is magnified in Caribbean settings with limited testing and drug availability. Historically, CF research and drug development have focused on variants common in European populations, reflecting both demographic realities in high‐income countries and longstanding inequities in genome research. As the Latino population grows, especially in areas with large Puerto Rican and Dominican communities, there is increasing recognition of the need for treatments that address distinct and population‐specific variants in these groups, yet clinical trials for CF pharmacology have had persistently low participation from Hispanic individuals [ 27 ].
-
-In a 16‐year analysis, McGarry and McColley found that only 16 (3.9%) of participants in CFTR modulator heterozygote clinical trials were Hispanic, despite Hispanics comprising roughly 16% of the US population, highlighting a striking underrepresentation of racial and ethnic minority groups in these pivotal studies [ 28 , 29 ]. All individuals with CF, regardless of ancestry, should have the opportunity to participate in clinical research, but multiple factors including, including language barriers, mistrust of the healthcare system, limited access to specialty centers, and cultural or socioeconomic constraints, likely contribute to this disparity. Based on CFTR genotypes, modulator eligibility rates are highest in non‐Hispanic White individuals (92.4%), compared with 75.6% in Hispanics and 69.7% in Black individuals [ 28 ], and those excluded who are ineligible often have worse lung function and shorter life expectancy, reinforcing existing health inequities [ 30 , 31 . These disparities in variant distributions, modulator eligibility, and trial inclusion not only drive unequal outcomes but also mean that Caribbean CF populations are under‐represented in datasets used to infer CF prevalence and burden, further obscuring the true impact of CF in this region.
-
-Thirty years ago, the median life expectancy for individuals with CF was significantly lower, at approximately 28 years for males and 25 years for females [ 24 ]. While there is still no cure, advances in multidisciplinary care and CFTR modulator therapies have improved survival, with current US averages around 48 years for males and 43 years for females [ 25 ], and for individuals born between 2019 and 2023, half are projected to live beyond 61 years, compared to 45 years among those born between 2014 and 2018 [ 8 ]. However, CF patients who do not qualify for CFTR modulator therapies, often because they lack modulator‐responsive variants or live in regions without access, may experience reductions in life expectancy of more than a decade [ 8 , 10 ].
-
-The most common CFTR variant, p.Phe508del, is proportionally underrepresented in Hispanic patients with CF compared with non‑Hispanic Whites, which has major implications for modulator eligibility. Modulator access remains limited in the Caribbean, where many patients lack common, historically prioritized treatable variants like p.Phe508del (present in only about one‑third of Hispanic CF patients versus nearly half of non‑Hispanic White patients) and instead harbor less frequent variants such as p.Arg1066Cys [ 26 ]. Although p.Arg1066Cys has now been shown to respond to elexacaftor/tezacaftor/ivacaftor (ETI) and is included among FDA‑recognized responsive variants, patients carrying this and other rare variants in Caribbean settings still face substantial barriers to accessing ETI, including cost, regulatory coverage, and constrained health system capacity. In the study by Zeiger et al. only 5 of 82 Caribbean CF patients qualified for modulator therapy, illustrating how variant distribution, regulatory approvals, and cost jointly restricted access in this region [ 16 ].
-
-CFTR modulators are designed to target specific mutations in the CFTR gene, so patients must carry at least one variant known to be amenable to the given therapy to qualify. Because the distribution of these variants varies by ancestry, fewer Latino patients, particularly those of Puerto Rican or Dominican descent, meet modulator eligibility criteria compared with non‐Hispanic White patients, and this effect is magnified in Caribbean settings with limited testing and drug availability. Historically, CF research and drug development have focused on variants common in European populations, reflecting both demographic realities in high‐income countries and longstanding inequities in genome research. As the Latino population grows, especially in areas with large Puerto Rican and Dominican communities, there is increasing recognition of the need for treatments that address distinct and population‐specific variants in these groups, yet clinical trials for CF pharmacology have had persistently low participation from Hispanic individuals [ 27 ].
-
-In a 16‐year analysis, McGarry and McColley found that only 16 (3.9%) of participants in CFTR modulator heterozygote clinical trials were Hispanic, despite Hispanics comprising roughly 16% of the US population, highlighting a striking underrepresentation of racial and ethnic minority groups in these pivotal studies [ 28 , 29 ]. All individuals with CF, regardless of ancestry, should have the opportunity to participate in clinical research, but multiple factors including, including language barriers, mistrust of the healthcare system, limited access to specialty centers, and cultural or socioeconomic constraints, likely contribute to this disparity. Based on CFTR genotypes, modulator eligibility rates are highest in non‐Hispanic White individuals (92.4%), compared with 75.6% in Hispanics and 69.7% in Black individuals [ 28 ], and those excluded who are ineligible often have worse lung function and shorter life expectancy, reinforcing existing health inequities [ 30 , 31 . These disparities in variant distributions, modulator eligibility, and trial inclusion not only drive unequal outcomes but also mean that Caribbean CF populations are under‐represented in datasets used to infer CF prevalence and burden, further obscuring the true impact of CF in this region.
-
-
-### Healthcare Government Intervention for Individuals with CF in Puerto Rico and the Dominican Republic
-
-The latest CDC summary report documents $96,394,488 in grants and cooperative agreements awarded to healthcare departments, universities, and public and private agencies in PR during the 2021‐2022 fiscal year (FY) [ 32 ]. Only about 2% of this total ($2,457,745) was designated for Immunization and Respiratory Diseases, suggesting that respiratory conditions, including CF, receive a relatively small share of federal support compared with other public health priorities [ 32 ]. This imbalance may reflect competing demands such as infectious diseases and emergent crises, but it also raises questions about how well funding aligns with the chronic disease burden in PR. According to the US Government Tracking Accountability in Government Grants System (TAGGS), CDC funding to the PR Health Department decreased by 78% between 2020 and 2024 (Figure 3D ), while the Centers for Medicare & Medicaid Services (CMS) increased financial support to the PR Health Department by 46% over the same period (Figure 3D ) [ 33 ].
-
-Between FYs 2020 and 2023, the PR Health Department's budget allocation for clinical laboratory services rose by 90%, from $2875 to $5458 (Figure 3A–C ) [ 34 ]. In contrast, Medicaid public healthcare funding decreased by 32% during the 2022−2023, from $207,574 to $141,127, likely reflecting expiration of temporary pandemic‐related increases, shifting priorities toward COVID‐19, changes in eligibility and enrollment, and broader fiscal constraints (Figure 3A−C ) [ 34 ]. For context, large US states such as California spent approximately $405.5 billion on healthcare in 2020 (about $10,000 per capita) [ 35 ], while smaller states like Wyoming, with less than 600,000 residents, had among the highest per capita healthcare spending (about $13,000 per capita), despite much smaller total budgets [ 36 ]. These comparisons highlight how larger, wealthier states can allocate more substantial resources to chronic disease care, including CF, whereas smaller of fiscally constrained jurisdictions like PR face structural limitations that restrict specialized services. CF care and Access to advanced diagnostics and therapies in PR remain limited despite some recent funding increases, and this same constrained environment hampers the development of robust registries and screening programs, making it difficult to generate accurate CF prevalence estimates.
-
-In the DR, the Dominican CF Foundation has played a key role in expanding CF care by supporting the CF clinic at Dr. Robert Reid Cabral's Children's Hospital, improving access to medications, medical supplies, diagnostic testing, and structured patient management while also advancing research and education. Nonetheless, many individuals with confirmed or suspected CF still face barriers to comprehensive, high‐quality care. In 2021, the World Health Organization's (WHO) health expenditure profile of the DR showed that 45.7% of total health expenditure came from government sources, 44.6% from out‐of‐pocket payments, 7.9% from voluntary pre‐payment, and 1.8% from other external sources [ 37 ]. Household out‐of‐pocket health expenditure in the DR totaled roughly 1.1 billion US dollars, [56] representing a substantial burden for families managing chronic conditions such as CF [ 38 ].
-
-A similar pattern exists in PR, where most healthcare funding is derived from public programs like Medicaid and Medicare, but federal healthcare funding is capped and significantly lower than in the mainland US, leading to heavy reliance on private insurance, which is unevenly available and affordable. Consequently, access to CF diagnostics and care often depends on a combination of public coverage and direct out‐of‐pocket spending, which can delay diagnosis, limit follow‐up, and reduce access to advanced therapies [ 39 ]. The Dominican Republic's National Strategic Health Plan 2030 aims to reduce financial barriers and expand access to healthcare services, including for chronic diseases [ 40 ]. In PR, the government healthcare system, Mi Salud, covers a large portion of the population but does not fully meet the needs of individuals with complex chronic conditions like CF, particularly regarding specialized centers, genetic testing, and CFTR modulators. Limited coverage, economic instability, and a strained healthcare infrastructure continue to hinder equitable access to CF care in both PR and DR.
-
-Overall, these funding and system constraints not only limit timely diagnosis and comprehensive management of CF but also restrict the establishment of robust registries and NBS programs. And longitudinal follow‐up is needed to generate accurate CF prevalence and burden estimates in Caribbean populations.
-
-The latest CDC summary report documents $96,394,488 in grants and cooperative agreements awarded to healthcare departments, universities, and public and private agencies in PR during the 2021‐2022 fiscal year (FY) [ 32 ]. Only about 2% of this total ($2,457,745) was designated for Immunization and Respiratory Diseases, suggesting that respiratory conditions, including CF, receive a relatively small share of federal support compared with other public health priorities [ 32 ]. This imbalance may reflect competing demands such as infectious diseases and emergent crises, but it also raises questions about how well funding aligns with the chronic disease burden in PR. According to the US Government Tracking Accountability in Government Grants System (TAGGS), CDC funding to the PR Health Department decreased by 78% between 2020 and 2024 (Figure 3D ), while the Centers for Medicare & Medicaid Services (CMS) increased financial support to the PR Health Department by 46% over the same period (Figure 3D ) [ 33 ].
-
-
-*Decreased healthcare budget and increased US Government funding towards the Puerto Rico Department of Health. (A) Healthcare budget allocation of the Puerto Rico Health Department Budget between for the 2022−2023 FY considering the Health Institutions (light purple) Intellectual Disability (purple), University Hospitals (gray), the Special Supplemental Nutrition Program for Women, Infants, and Children WIC (orange), Clinical Laboratories (dark red), Demographic Registry (dark blue), Health Professionals (yellow), Health Facility Accreditations (dark gray), Environmental Health (light blue), Health Promotion (green), Medicaid (red). (B) The table shows the categories of the Puerto Rico Health Department Budget represented in Figure 7A in counterclockwise order, with the amount of funds allocated for the 2022‐2023 FY. (C) Bar graph shows the decreased Puerto Rico Health Department Budget between 2020 and 2023, considering the Health Institutions (red), Clinical Laboratories (blue), and Medicaid (yellow) categories. (D) Bar graph shows the increased US Government funding towards the Puerto Rico Health Department between 2020 and 2024, considering the Centers for Disease Control and Prevention (CDC) (red) and the Centers for Medicare and Medicaid Services (CMS) (blue).*
-
-Between FYs 2020 and 2023, the PR Health Department's budget allocation for clinical laboratory services rose by 90%, from $2875 to $5458 (Figure 3A–C ) [ 34 ]. In contrast, Medicaid public healthcare funding decreased by 32% during the 2022−2023, from $207,574 to $141,127, likely reflecting expiration of temporary pandemic‐related increases, shifting priorities toward COVID‐19, changes in eligibility and enrollment, and broader fiscal constraints (Figure 3A−C ) [ 34 ]. For context, large US states such as California spent approximately $405.5 billion on healthcare in 2020 (about $10,000 per capita) [ 35 ], while smaller states like Wyoming, with less than 600,000 residents, had among the highest per capita healthcare spending (about $13,000 per capita), despite much smaller total budgets [ 36 ]. These comparisons highlight how larger, wealthier states can allocate more substantial resources to chronic disease care, including CF, whereas smaller of fiscally constrained jurisdictions like PR face structural limitations that restrict specialized services. CF care and Access to advanced diagnostics and therapies in PR remain limited despite some recent funding increases, and this same constrained environment hampers the development of robust registries and screening programs, making it difficult to generate accurate CF prevalence estimates.
-
-In the DR, the Dominican CF Foundation has played a key role in expanding CF care by supporting the CF clinic at Dr. Robert Reid Cabral's Children's Hospital, improving access to medications, medical supplies, diagnostic testing, and structured patient management while also advancing research and education. Nonetheless, many individuals with confirmed or suspected CF still face barriers to comprehensive, high‐quality care. In 2021, the World Health Organization's (WHO) health expenditure profile of the DR showed that 45.7% of total health expenditure came from government sources, 44.6% from out‐of‐pocket payments, 7.9% from voluntary pre‐payment, and 1.8% from other external sources [ 37 ]. Household out‐of‐pocket health expenditure in the DR totaled roughly 1.1 billion US dollars, [56] representing a substantial burden for families managing chronic conditions such as CF [ 38 ].
-
-A similar pattern exists in PR, where most healthcare funding is derived from public programs like Medicaid and Medicare, but federal healthcare funding is capped and significantly lower than in the mainland US, leading to heavy reliance on private insurance, which is unevenly available and affordable. Consequently, access to CF diagnostics and care often depends on a combination of public coverage and direct out‐of‐pocket spending, which can delay diagnosis, limit follow‐up, and reduce access to advanced therapies [ 39 ]. The Dominican Republic's National Strategic Health Plan 2030 aims to reduce financial barriers and expand access to healthcare services, including for chronic diseases [ 40 ]. In PR, the government healthcare system, Mi Salud, covers a large portion of the population but does not fully meet the needs of individuals with complex chronic conditions like CF, particularly regarding specialized centers, genetic testing, and CFTR modulators. Limited coverage, economic instability, and a strained healthcare infrastructure continue to hinder equitable access to CF care in both PR and DR.
-
-Overall, these funding and system constraints not only limit timely diagnosis and comprehensive management of CF but also restrict the establishment of robust registries and NBS programs. And longitudinal follow‐up is needed to generate accurate CF prevalence and burden estimates in Caribbean populations.
-
-
-
-## Conclusion
-
-在波多黎各 (Puerto Rico, PR)、多米尼加共和国 (Dominican Republic, DR) 以及邻近加勒比国家对囊性纤维化 (cystic fibrosis, CF) 的研究，对于理解疾病的真实负担、区域性 CFTR 变体多样性以及对患者个体化挑战至关重要。本综述强调了登记数据有限、诊断缺口和结构性不平等如何阻碍对该地区 CF 患病率和结局的准确评估。所呈现的证据指出存在多种相互作用的障碍，从筛查不足和误诊到治疗无法获得，这些都需要本地化研究和区域特定的干预措施（Table 4）。
-
-在波多黎各 (Puerto Rico, PR)、多米尼加共和国 (Dominican Republic, DR) 以及邻近加勒比国家对囊性纤维化 (cystic fibrosis, CF) 的研究，对于理解疾病的真实负担、区域性 CFTR 变体多样性以及对患者个体化挑战至关重要。本综述强调了登记数据有限、诊断缺口和结构性不平等如何阻碍对该地区 CF 患病率和结局的准确评估。所呈现的证据指出存在多种相互作用的障碍，从筛查不足和误诊到治疗无法获得，这些都需要本地化研究和区域特定的干预措施（Table 4）。
-
-*加勒比国家与高收入国家之间囊性纤维化护理的比较分析。*
-
-**Category** | **Puerto Rico** | **Dominican republic** | **Haiti** | **Bahamas** | **High‐income countries**
-**US** | **UK**
-Estimated CF cases | Approximately 300−500 | Limited data; estimated 100−200 | unclear | unclear | 33,288 [59] | 11,318 [60]
-Common CFTR variants |  F508del,  p.Arg1066Cys  p.Ile507del  |  1521_1523del  1675 G > A  1210‐34TG  | unclear | unclear |  F508del  3120 + 1G‐ > A [59]  |  F508del  p.Arg117His [60] 
-CFTR modulators available | Yes (limited access) | No | No | No | Yes, widely available (e.g., Trikafta, Orkambi) [59] | Yes, available (e.g., Kaftrio) [60]
-Insurance coverage for CF treatments | Limited insurance coverage for CF treatments; Some public health insurance covers basic treatments, but advanced CFTR modulators may not be fully covered. Access to treatments is often limited by economic factors. | No universal insurance coverage for CF treatment. Private insurance may offer some coverage, but it's often inadequate for the full range of CF treatments, especially CFTR modulators. | Very limited or no insurance coverage for CF treatments. Most treatment costs must be covered out‐of‐pocket or through charity support. | Limited insurance coverage for CF treatments; Healthcare services are often expensive, and CF‐specific treatments may not be covered by public or private insurance plans. | Comprehensive insurance coverage for CF treatment in most cases, especially through private insurance and government programs like Medicaid and Medicare. CFTR modulators such as Trikafta and Orkambi are widely available. | Comprehensive coverage for CF treatment through the National Health Service (NHS). CFTR modulators like Kaftrio are widely available, with national access through the NHS.
-Out‐of‐pocket costs for CFTR modulators | High out‐of‐pocket costs are significant, especially if not covered by insurance. Trikafta can cost up to $300,000 per year without insurance. [61] | Very high; most CF treatments, including CFTR modulators like Trikafta, which can cost upwards of $300,000 annually, are often unaffordable. [61] | Extremely high; no insurance coverage and no access to CFTR modulators, so families may need to rely on external funding, with costs exceeding $300,000 annually if available. 61] | High; limited access to CFTR modulators, with prices for treatments like Trikafta reaching up to $300,000 per year, if available. [61] | High for uninsured patients; Trikafta and other CFTR modulators may cost up to $300,000 per year without insurance. For insured patients, coverage depends on their plan. [62] | For most patients, low to no cost as CFTR modulators like Kaftrio are covered under NHS. However, waiting times and access may vary regionally. [63]
-Key barriers to treatment |   1. Limited access to advanced CFTR modulators. 2. High cost of treatments and medications. 3. Limited healthcare infrastructure in rural areas. 4. Lack of awareness about CF among healthcare providers. 5. Disparities in access to specialized CF care.   |   1. Lack of universal healthcare coverage. 2. Limited access to CF‐specific treatments like CFTR modulators.    3. Poor healthcare infrastructure and lack of CF specialist centers. 4. Insufficient awareness and education about CF. 5. High out‐of‐pocket costs for families.   |   1. Extremely limited access to healthcare services. 2. Lack of availability of CF treatments and CFTR modulators. 3. High mortality rates due to underdiagnosis and lack of treatment options. 4. Lack of medical infrastructure, especially for rare diseases. 5. Economic barriers preventing treatment access.   |   1. Limited availability of specialized CF care. 2. High treatment costs and limited insurance coverage. 3. Lack of newborn screening and early diagnosis programs. 4. Economic constraints affecting access to medications. 5. Limited access to CFTR modulators.   |   1. Disparities in access to healthcare depending on insurance status and geographic location. 2. High out‐of‐pocket costs for patients without insurance. 3. Racial and ethnic disparities in CF diagnosis and care. 4. 4. Some rural or under‐resourced areas face barriers to accessing specialized CF care.   |   1. Waiting times for some treatments and services in certain regions. 2. Potential access issues for patients outside urban centers. 3. Limited access to some experimental treatments. 4. Socioeconomic disparities in access to specialized CF care. 5. Some regional variability in care due to the NHS regional health service distribution  
-NBS programs for CF diagnostics | Yes | No | No | No | Yes | Yes
-Need for awareness & education | High | High | Very high | High | Moderate; ongoing education initiatives | Moderate; ongoing education initiatives
-
-
-
-## Disparities in CF Diagnosis and Management
-
-加勒比人群在现有 CF 登记中代表性不足，突显了该地区对 CF 真实患病率和影响理解的重大缺口。在波多黎各，有限的针对 CF 的数据很可能反映了漏诊与漏报并存，这主要由受限的诊断资源和医疗提供者认识不足所驱动。这一情况强调了扩展新生儿筛查 (NBS) 以及更广泛获得确证性检测（如汗氯试验和 CFTR 变体检测）的必要性。2015 年，波多黎各根据法案 129 实施了强制性新生儿筛查计划，多米尼加共和国随后通过法令 380‐15 [41, 42]。然而，尽管波多黎各已将 CF 筛查引入临床实践，多米尼加共和国的实施仍然有限；该国首家 CF 门诊于 2020 年建立，目前仅评估少量转诊病例，而非面向一般新生儿群体。因此，多米尼加共和国出生的大多数婴儿以及 2015 年之前在波多黎各出生的婴儿很可能未接受 CF 筛查，增加了漏诊或延迟诊断的风险。截至 2021 年，海地和巴哈马尚未在国家新生儿筛查方案中纳入 CF 筛查（Supporting Information S1: Figure 5A）[43]。尽管拉丁美洲取得了有限进展，许多加勒比国家仍缺乏针对 CF 的新生儿筛查，造成早期发现与护理的持续空白（Supporting Information S1: Figure 5B,C）[44, 45]。
-
-加勒比人群在现有 CF 登记中代表性不足，突显了该地区对 CF 真实患病率和影响理解的重大缺口。在波多黎各，有限的针对 CF 的数据很可能反映了漏诊与漏报并存，这主要由受限的诊断资源和医疗提供者认识不足所驱动。这一情况强调了扩展新生儿筛查 (NBS) 以及更广泛获得确证性检测（如汗氯试验和 CFTR 变体检测）的必要性。2015 年，波多黎各根据法案 129 实施了强制性新生儿筛查计划，多米尼加共和国随后通过法令 380‐15 [41, 42]。然而，尽管波多黎各已将 CF 筛查引入临床实践，多米尼加共和国的实施仍然有限；该国首家 CF 门诊于 2020 年建立，目前仅评估少量转诊病例，而非面向一般新生儿群体。因此，多米尼加共和国出生的大多数婴儿以及 2015 年之前在波多黎各出生的婴儿很可能未接受 CF 筛查，增加了漏诊或延迟诊断的风险。截至 2021 年，海地和巴哈马尚未在国家新生儿筛查方案中纳入 CF 筛查（Supporting Information S1: Figure 5A）[43]。尽管拉丁美洲取得了有限进展，许多加勒比国家仍缺乏针对 CF 的新生儿筛查，造成早期发现与护理的持续空白（Supporting Information S1: Figure 5B,C）[44, 45]。
-
-## Genetic Variability and CFTR Variant Distribution
-
-我们对 CFTR 变体的审查显示，加勒比人群在遗传模式上与北美和欧洲队列存在显著差异。诸如 p.Arg1066Cys 和 p.Ile507del 等变体在波多黎各患者中的相对频率高于美国总体 CF 人群，尽管这些变体并非加勒比地区独有。
-
-这种遗传异质性使得诊断和治疗更加复杂，因为许多现有的筛查面板和 CFTR 调节剂试验是基于欧洲血统个体中常见的变体设计的，特别是 p.Phe508del。
-
-重要的是，p.Arg1066Cys 虽在全球相对少见，但在加勒比队列中富集，并且现已有体外和临床数据表明其对 elexacaftor/tezacaftor/ivacaftor (ETI) 有反应，且被纳入美国食品药品监督管理局 (FDA) 认可的对 ETI 有反应的变体名单中。尽管如此，在加勒比地区，携带 p.Arg1066Cys 及其他较少见变体的患者获得 ETI 的可能性仍受到药物费用、监管覆盖和卫生系统限制的制约。同样，在多米尼加患者中观察到的诸如 c.1675 G > A 等变体也较为罕见，在临床试验中尚缺乏充分表征，进一步缩小了可用治疗选择。这些模式强调了制定更具包容性的变体筛查面板、系统性报告来自加勒比人群的 CFTR 基因分型数据，以及对罕见和人群特异性变体进行功能学研究和治疗研发的持续投入的必要性。
-
-我们对 CFTR 变体的审查显示，加勒比人群在遗传模式上与北美和欧洲队列存在显著差异。诸如 p.Arg1066Cys 和 p.Ile507del 等变体在波多黎各患者中的相对频率高于美国总体 CF 人群，尽管这些变体并非加勒比地区独有。
-
-这种遗传异质性使得诊断和治疗更加复杂，因为许多现有的筛查面板和 CFTR 调节剂试验是基于欧洲血统个体中常见的变体设计的，特别是 p.Phe508del。
-
-重要的是，p.Arg1066Cys 虽在全球相对少见，但在加勒比队列中富集，并且现已有体外和临床数据表明其对 elexacaftor/tezacaftor/ivacaftor (ETI) 有反应，且被纳入美国食品药品监督管理局 (FDA) 认可的对 ETI 有反应的变体名单中。尽管如此，在加勒比地区，携带 p.Arg1066Cys 及其他较少见变体的患者获得 ETI 的可能性仍受到药物费用、监管覆盖和卫生系统限制的制约。同样，在多米尼加患者中观察到的诸如 c.1675 G > A 等变体也较为罕见，在临床试验中尚缺乏充分表征，进一步缩小了可用治疗选择。这些模式强调了制定更具包容性的变体筛查面板、系统性报告来自加勒比人群的 CFTR 基因分型数据，以及对罕见和人群特异性变体进行功能学研究和治疗研发的持续投入的必要性。
-
-## 健康差异与医疗服务可及性
-
-加勒比地区的囊性纤维化（cystic fibrosis, CF）患者的预期寿命很可能显著低于美国和欧洲，这主要是由于诊断延迟以及获得综合多学科护理和CFTR调节剂治疗的机会有限。即便在高收入国家，对像 ivacaftor、lumacaftor/ivacaftor 和 ETI 等调节剂的获得也受到成本效益评估和诸如英国国家卫生与临床卓越研究所（National Institute for Health and Care Excellence，NICE）及各国卫生体系的报销决策的限制，这些决策可能在临床获益已被证实的情况下仍延迟或限制其使用（表4）。在加勒比地区，这些挑战因有限的卫生基础设施、高额自付费用和碎片化的护理体系而加剧，且发生在包括高婴儿死亡率和人口减少在内的更广泛系统性不平等的背景下。为了解决这些差异，不仅需要增加资金，还需要进行政策改革、更早更准确的诊断，以及在整个地区为CF患者提供公平获得延长生命治疗的机会。
-
-加勒比地区的囊性纤维化（cystic fibrosis, CF）患者的预期寿命很可能显著低于美国和欧洲，这主要是由于诊断延迟以及获得综合多学科护理和CFTR调节剂治疗的机会有限。即便在高收入国家，对像 ivacaftor、lumacaftor/ivacaftor 和 ETI 等调节剂的获得也受到成本效益评估和诸如英国国家卫生与临床卓越研究所（National Institute for Health and Care Excellence，NICE）及各国卫生体系的报销决策的限制，这些决策可能在临床获益已被证实的情况下仍延迟或限制其使用（表4）。在加勒比地区，这些挑战因有限的卫生基础设施、高额自付费用和碎片化的护理体系而加剧，且发生在包括高婴儿死亡率和人口减少在内的更广泛系统性不平等的背景下。为了解决这些差异，不仅需要增加资金，还需要进行政策改革、更早更准确的诊断，以及在整个地区为CF患者提供公平获得延长生命治疗的机会。
-
-
-
-## 需要全面且包容的研究
-
-加勒比人群在CF登记、基因组数据集和临床试验中的代表性不足，限制了针对多样遗传背景定制和评估治疗方法的发展。本综述强调了西班牙裔CF患者在调节剂试验和其他干预性研究中的参与率低，进一步表明如果未来的治疗要反映加勒比地区的遗传和人口学现实，就需要提高包容性。在该地区建立区域性研究与试验能力，例如在加勒比建立专门的CF临床研究中心，将有助于在多中心研究中招募波多黎各、多米尼加、海地和巴哈马的患者，增强本地在治疗和生物标志物开发方面的专长，并确保针对特定变体的证据涵盖当前被排除的人群。
-
-加勒比人群在CF登记、基因组数据集和临床试验中的代表性不足，限制了针对多样遗传背景定制和评估治疗方法的发展。本综述强调了西班牙裔CF患者在调节剂试验和其他干预性研究中的参与率低，进一步表明如果未来的治疗要反映加勒比地区的遗传和人口学现实，就需要提高包容性。在该地区建立区域性研究与试验能力，例如在加勒比建立专门的CF临床研究中心，将有助于在多中心研究中招募波多黎各、多米尼加、海地和巴哈马的患者，增强本地在治疗和生物标志物开发方面的专长，并确保针对特定变体的证据涵盖当前被排除的人群。
-
-## Addressing Economic Barriers and Building Capacity
-
-尽管加勒比地区的囊性纤维化（Cystic Fibrosis, CF）患者通常面临显著减少的 CFTR 调节剂可及性，但这些疗法在高收入国家也并非普遍可及，定价和报销决策可能限制覆盖范围。鉴于调节剂对如 F508del 这类在欧洲血统人群中更为常见的变体最为有效，加勒比地区携带罕见或特定人群变体的个体面临双重负担：其变体历来获得的研究关注较少，即便某些变体被证明对调节剂有反应（如 p.Arg1066Cys 和 ETI（elexacaftor–tezacaftor–ivacaftor，以下简称 ETI）），由于费用和卫生系统能力的限制，获取仍然受限。在证据支持获益的情况下，扩大保险覆盖和公共资助以保障必要诊断（汗氯试验、扩展 CFTR 基因分型）和调节剂治疗，将通过减少住院和急性加重改善生存率并提升卫生系统效率（Table 5A,B ）[ 46 ]。
-
-为支持这些努力，建立多学科的 CF 诊疗团队，例如拟议的波多黎各心肺联盟，可以在资源有限的环境中扩展临床专长。这些团队将包含专科临床医师、辅助卫生专业人员和参与协调质量改进举措的研究人员，通过区域中心网络共享知识以标准化诊疗路径并提升结局（Table 5C）。同时，加强诊断基础设施、确保对必要检测的覆盖并改进医务人员教育，将有助于更早发现并更准确地分类囊性纤维化及 CFTR 相关疾病（Table 5D–F ）[ 47 ]。推进加勒比地区的 CF 护理还需要对特定人群研究的持续投资和透明的数据共享。通过多中心登记的区域合作以及在同行评审期刊上发表本地研究结果，可以更清晰地界定波多黎各 (PR)、多米尼加共和国 (DR)、海地和巴哈马的 CF 临床与遗传特征（Table 5G）。建立这一证据基础对于开发精准医学策略、支持监管层面对罕见变体的认可，以及最终减少目前掩盖加勒比人群中 CF 实际患病率和负担的诊断与治疗不平等至关重要。
-
-尽管加勒比地区的囊性纤维化（Cystic Fibrosis, CF）患者通常面临显著减少的 CFTR 调节剂可及性，但这些疗法在高收入国家也并非普遍可及，定价和报销决策可能限制覆盖范围。鉴于调节剂对如 F508del 这类在欧洲血统人群中更为常见的变体最为有效，加勒比地区携带罕见或特定人群变体的个体面临双重负担：其变体历来获得的研究关注较少，即便某些变体被证明对调节剂有反应（如 p.Arg1066Cys 和 ETI（elexacaftor–tezacaftor–ivacaftor，以下简称 ETI）），由于费用和卫生系统能力的限制，获取仍然受限。在证据支持获益的情况下，扩大保险覆盖和公共资助以保障必要诊断（汗氯试验、扩展 CFTR 基因分型）和调节剂治疗，将通过减少住院和急性加重改善生存率并提升卫生系统效率（Table 5A,B ）[ 46 ]。
-
-*改善波多黎各、多米尼加共和国及其他加勒比国家 CF 患者结局的建议。*
-
-**Challenge** | **Action** | **Predicted outcomes**
-  A. Poor disease management due to the unavailability of CFTR modulator pharmacotherapies   | Implement affordable and accessible CFTR modulator pharmacotherapies. Begin a Caribbean population CFTR mutation database. Research common CFTR variants in the Caribbean to implement useful CFTR modulator pharmacotherapies. | Improve disease management and health outcomes of CF individuals in the Caribbean. Reduce hospitalizations and medical costs due to frequent CF acute pulmonary exacerbations that result from poor disease management. Enhance access to specialized treatment options and therapies tailored to the unique needs of CF individuals in these regions.
-  B. Absence of an accredited CF center in Puerto Rico and other Caribbean nations   | Establish an IRB‐approved patient registry for the children and adults with CF in the Caribbean population. | Establish accurate reports on the health status of CF individuals among this target population. Track disease management success to perform statistical and observational studies.
-  C. Decreased awareness about CF among the general community and medical providers   | Share the narratives of individuals with CF with the community and engage healthcare professionals in ongoing education about CF, such as webinars and medical conferences. Promote CF screening in schools and referral of individuals with CF symptoms for CFTR testing. | Update the status of CF in Puerto Rico and other Caribbean countries to the community and medical providers. Increase CF training and medical expertise in the Caribbean.
-  D. CF undiagnosed   | Provide health insurance coverage for the sweat test post‐mandatory CF NBS. | Broad knowledge of the prevalence of CF among this population. Promotes better health outcomes of CF individuals.
-  E. Lack of CF NBS programs in Caribbean countries   | Development and implementation of CF NBS. Leveraging the updated CFF guidelines for sweat tests and incorporating them into NBS programs. | Effective identification of CF cases by physicians and healthcare providers. Improving detection and diagnosis of CF in this population.
-  F. Misdiagnose of CF due to common CF‐like diseases such as asthma   | Refer asthma patients and implement better CF detection methods upon NBS programs according to the updated CFF guidelines for sweat tests. | Include more accurate and timely diagnosis of CF in both children and adults, leading to early intervention and improved management of the disease and reduce the misdiagnose of CF as asthma.
-  G. Limited funding opportunities to study CF in the Caribbean   | Encourage government contracts and funding resources to study CF in Puerto Rico and other Caribbean countries. Propose to include CF as part of Puerto Rico's research funding priorities to the Puerto Rico Health Department. Enhance collaboration and partnerships with renowned CF centers, organizations, and research institutions in other countries.[71] | Help ensure innovation in CF research and a well‐resourced administration to advance therapies that are safe and effective for CF individuals. We can address the shortage of specialized areas by investing in research and medical knowledge specific to CF.
-
-为支持这些努力，建立多学科的 CF 诊疗团队，例如拟议的波多黎各心肺联盟，可以在资源有限的环境中扩展临床专长。这些团队将包含专科临床医师、辅助卫生专业人员和参与协调质量改进举措的研究人员，通过区域中心网络共享知识以标准化诊疗路径并提升结局（Table 5C）。同时，加强诊断基础设施、确保对必要检测的覆盖并改进医务人员教育，将有助于更早发现并更准确地分类囊性纤维化及 CFTR 相关疾病（Table 5D–F ）[ 47 ]。推进加勒比地区的 CF 护理还需要对特定人群研究的持续投资和透明的数据共享。通过多中心登记的区域合作以及在同行评审期刊上发表本地研究结果，可以更清晰地界定波多黎各 (PR)、多米尼加共和国 (DR)、海地和巴哈马的 CF 临床与遗传特征（Table 5G）。建立这一证据基础对于开发精准医学策略、支持监管层面对罕见变体的认可，以及最终减少目前掩盖加勒比人群中 CF 实际患病率和负担的诊断与治疗不平等至关重要。
-
-## Author Contributions
-
- Krystal L. Rivera‐Figueroa: conceptualization, methodology, software, data curation, investigation, validation, writing–original draft, formal analysis. Cole L. Martin: writing – original draft, methodology, conceptualization, investigation, validation. Christina A. Le: methodology, software, writing – review and editing, formal analysis, visualization. Wilfredo De Jesús Rojas: writing – review and editing, data curation, validation, resources. Leandra Cordero Oñate: writing – review and editing, data curation, validation, resources. Stephen G. Aller: supervision, writing – original draft, project administration, funding acquisition, conceptualization.
-
- Krystal L. Rivera‐Figueroa: conceptualization, methodology, software, data curation, investigation, validation, writing–original draft, formal analysis. Cole L. Martin: writing – original draft, methodology, conceptualization, investigation, validation. Christina A. Le: methodology, software, writing – review and editing, formal analysis, visualization. Wilfredo De Jesús Rojas: writing – review and editing, data curation, validation, resources. Leandra Cordero Oñate: writing – review and editing, data curation, validation, resources. Stephen G. Aller: supervision, writing – original draft, project administration, funding acquisition, conceptualization.
-
-## Conflicts of Interest
-
-作者声明无利益冲突。
-
-作者声明无利益冲突。
-
-## Supporting information
+作者声明不存在任何利益冲突。
