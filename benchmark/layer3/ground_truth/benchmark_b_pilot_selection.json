@@ -1,9 +1,9 @@
 {
   "evaluation_id": "benchmark_b_pilot_selection",
-  "timestamp": "2026-06-15T19:37:49",
+  "timestamp": "2026-06-16T13:03:28",
   "config": {
-    "selection_path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/selection.json",
-    "source_corpus_root": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth",
+    "selection_path": "/data/[redacted-user]/.config/superpowers/worktrees/01_ACMG_Lingua/feature/bibm-multilingual-source-strategy/benchmark/layer3/ground_truth/selection.json",
+    "source_corpus_root": "/data/[redacted-user]/.config/superpowers/worktrees/01_ACMG_Lingua/feature/bibm-multilingual-source-strategy/benchmark/pipeline/input",
     "target_size": 10
   },
   "summary": {
@@ -29,31 +29,31 @@
       "source_files": [
         {
           "language": "de",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/de/case_report/clingen_000.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/de/case_report/clingen_000.pdf"
         },
         {
           "language": "en",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/en/case_report/clingen_000.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/en/case_report/clingen_000.pdf"
         },
         {
           "language": "es",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/es/case_report/clingen_000.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/es/case_report/clingen_000.pdf"
         },
         {
           "language": "fr",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/fr/case_report/clingen_000.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/fr/case_report/clingen_000.pdf"
         },
         {
           "language": "ja",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ja/case_report/clingen_000.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ja/case_report/clingen_000.pdf"
         },
         {
           "language": "ko",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ko/case_report/clingen_000.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ko/case_report/clingen_000.pdf"
         },
         {
           "language": "zh",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/zh/case_report/clingen_000.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/zh/case_report/clingen_000.pdf"
         }
       ],
       "non_english_source_count": 6
@@ -72,31 +72,31 @@
       "source_files": [
         {
           "language": "de",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/de/case_report/clingen_001.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/de/case_report/clingen_001.pdf"
         },
         {
           "language": "en",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/en/case_report/clingen_001.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/en/case_report/clingen_001.pdf"
         },
         {
           "language": "es",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/es/case_report/clingen_001.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/es/case_report/clingen_001.pdf"
         },
         {
           "language": "fr",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/fr/case_report/clingen_001.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/fr/case_report/clingen_001.pdf"
         },
         {
           "language": "ja",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ja/case_report/clingen_001.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ja/case_report/clingen_001.pdf"
         },
         {
           "language": "ko",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ko/case_report/clingen_001.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ko/case_report/clingen_001.pdf"
         },
         {
           "language": "zh",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/zh/case_report/clingen_001.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/zh/case_report/clingen_001.pdf"
         }
       ],
       "non_english_source_count": 6
@@ -115,31 +115,31 @@
       "source_files": [
         {
           "language": "de",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/de/case_report/clingen_002.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/de/case_report/clingen_002.pdf"
         },
         {
           "language": "en",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/en/case_report/clingen_002.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/en/case_report/clingen_002.pdf"
         },
         {
           "language": "es",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/es/case_report/clingen_002.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/es/case_report/clingen_002.pdf"
         },
         {
           "language": "fr",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/fr/case_report/clingen_002.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/fr/case_report/clingen_002.pdf"
         },
         {
           "language": "ja",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ja/case_report/clingen_002.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ja/case_report/clingen_002.pdf"
         },
         {
           "language": "ko",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ko/case_report/clingen_002.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ko/case_report/clingen_002.pdf"
         },
         {
           "language": "zh",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/zh/case_report/clingen_002.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/zh/case_report/clingen_002.pdf"
         }
       ],
       "non_english_source_count": 6
@@ -158,31 +158,31 @@
       "source_files": [
         {
           "language": "de",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/de/case_report/clingen_003.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/de/case_report/clingen_003.pdf"
         },
         {
           "language": "en",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/en/case_report/clingen_003.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/en/case_report/clingen_003.pdf"
         },
         {
           "language": "es",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/es/case_report/clingen_003.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/es/case_report/clingen_003.pdf"
         },
         {
           "language": "fr",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/fr/case_report/clingen_003.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/fr/case_report/clingen_003.pdf"
         },
         {
           "language": "ja",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ja/case_report/clingen_003.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ja/case_report/clingen_003.pdf"
         },
         {
           "language": "ko",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ko/case_report/clingen_003.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ko/case_report/clingen_003.pdf"
         },
         {
           "language": "zh",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/zh/case_report/clingen_003.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/zh/case_report/clingen_003.pdf"
         }
       ],
       "non_english_source_count": 6
@@ -201,31 +201,31 @@
       "source_files": [
         {
           "language": "de",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/de/case_report/clingen_004.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/de/case_report/clingen_004.pdf"
         },
         {
           "language": "en",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/en/case_report/clingen_004.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/en/case_report/clingen_004.pdf"
         },
         {
           "language": "es",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/es/case_report/clingen_004.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/es/case_report/clingen_004.pdf"
         },
         {
           "language": "fr",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/fr/case_report/clingen_004.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/fr/case_report/clingen_004.pdf"
         },
         {
           "language": "ja",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ja/case_report/clingen_004.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ja/case_report/clingen_004.pdf"
         },
         {
           "language": "ko",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ko/case_report/clingen_004.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ko/case_report/clingen_004.pdf"
         },
         {
           "language": "zh",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/zh/case_report/clingen_004.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/zh/case_report/clingen_004.pdf"
         }
       ],
       "non_english_source_count": 6
@@ -244,31 +244,31 @@
       "source_files": [
         {
           "language": "de",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/de/case_report/clingen_005.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/de/case_report/clingen_005.pdf"
         },
         {
           "language": "en",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/en/case_report/clingen_005.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/en/case_report/clingen_005.pdf"
         },
         {
           "language": "es",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/es/case_report/clingen_005.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/es/case_report/clingen_005.pdf"
         },
         {
           "language": "fr",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/fr/case_report/clingen_005.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/fr/case_report/clingen_005.pdf"
         },
         {
           "language": "ja",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ja/case_report/clingen_005.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ja/case_report/clingen_005.pdf"
         },
         {
           "language": "ko",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ko/case_report/clingen_005.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ko/case_report/clingen_005.pdf"
         },
         {
           "language": "zh",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/zh/case_report/clingen_005.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/zh/case_report/clingen_005.pdf"
         }
       ],
       "non_english_source_count": 6
@@ -287,31 +287,31 @@
       "source_files": [
         {
           "language": "de",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/de/case_report/clingen_006.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/de/case_report/clingen_006.pdf"
         },
         {
           "language": "en",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/en/case_report/clingen_006.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/en/case_report/clingen_006.pdf"
         },
         {
           "language": "es",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/es/case_report/clingen_006.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/es/case_report/clingen_006.pdf"
         },
         {
           "language": "fr",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/fr/case_report/clingen_006.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/fr/case_report/clingen_006.pdf"
         },
         {
           "language": "ja",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ja/case_report/clingen_006.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ja/case_report/clingen_006.pdf"
         },
         {
           "language": "ko",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ko/case_report/clingen_006.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ko/case_report/clingen_006.pdf"
         },
         {
           "language": "zh",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/zh/case_report/clingen_006.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/zh/case_report/clingen_006.pdf"
         }
       ],
       "non_english_source_count": 6
@@ -330,31 +330,31 @@
       "source_files": [
         {
           "language": "de",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/de/case_report/clingen_007.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/de/case_report/clingen_007.pdf"
         },
         {
           "language": "en",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/en/case_report/clingen_007.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/en/case_report/clingen_007.pdf"
         },
         {
           "language": "es",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/es/case_report/clingen_007.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/es/case_report/clingen_007.pdf"
         },
         {
           "language": "fr",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/fr/case_report/clingen_007.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/fr/case_report/clingen_007.pdf"
         },
         {
           "language": "ja",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ja/case_report/clingen_007.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ja/case_report/clingen_007.pdf"
         },
         {
           "language": "ko",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ko/case_report/clingen_007.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ko/case_report/clingen_007.pdf"
         },
         {
           "language": "zh",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/zh/case_report/clingen_007.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/zh/case_report/clingen_007.pdf"
         }
       ],
       "non_english_source_count": 6
@@ -373,31 +373,31 @@
       "source_files": [
         {
           "language": "de",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/de/case_report/clingen_008.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/de/case_report/clingen_008.pdf"
         },
         {
           "language": "en",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/en/case_report/clingen_008.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/en/case_report/clingen_008.pdf"
         },
         {
           "language": "es",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/es/case_report/clingen_008.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/es/case_report/clingen_008.pdf"
         },
         {
           "language": "fr",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/fr/case_report/clingen_008.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/fr/case_report/clingen_008.pdf"
         },
         {
           "language": "ja",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ja/case_report/clingen_008.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ja/case_report/clingen_008.pdf"
         },
         {
           "language": "ko",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ko/case_report/clingen_008.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ko/case_report/clingen_008.pdf"
         },
         {
           "language": "zh",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/zh/case_report/clingen_008.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/zh/case_report/clingen_008.pdf"
         }
       ],
       "non_english_source_count": 6
@@ -416,35 +416,37 @@
       "source_files": [
         {
           "language": "de",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/de/case_report/clingen_009.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/de/case_report/clingen_009.pdf"
         },
         {
           "language": "en",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/en/case_report/clingen_009.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/en/case_report/clingen_009.pdf"
         },
         {
           "language": "es",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/es/case_report/clingen_009.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/es/case_report/clingen_009.pdf"
         },
         {
           "language": "fr",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/fr/case_report/clingen_009.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/fr/case_report/clingen_009.pdf"
         },
         {
           "language": "ja",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ja/case_report/clingen_009.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ja/case_report/clingen_009.pdf"
         },
         {
           "language": "ko",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/ko/case_report/clingen_009.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ko/case_report/clingen_009.pdf"
         },
         {
           "language": "zh",
-          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ground_truth/zh/case_report/clingen_009.pdf"
+          "path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input/zh/case_report/clingen_009.pdf"
         }
       ],
       "non_english_source_count": 6
     }
   ],
-  "warnings": []
+  "warnings": [
+    "source_corpus_root fallback: using /data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/pipeline/input because /data/[redacted-user]/.config/superpowers/worktrees/01_ACMG_Lingua/feature/bibm-multilingual-source-strategy/benchmark/pipeline/input was missing"
+  ]
 }
