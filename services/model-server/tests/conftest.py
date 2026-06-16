@@ -19,12 +19,6 @@ def _install_optional_dependency_stubs() -> None:
         vllm_stub.LLM = _MissingOptionalDependency  # type: ignore[attr-defined]
         sys.modules["vllm"] = vllm_stub
 
-    if "mineru_vl_utils" not in sys.modules:
-        mineru_stub = ModuleType("mineru_vl_utils")
-        mineru_stub.MinerUClient = _MissingOptionalDependency  # type: ignore[attr-defined]
-        mineru_stub.MinerULogitsProcessor = _MissingOptionalDependency  # type: ignore[attr-defined]
-        sys.modules["mineru_vl_utils"] = mineru_stub
-
 
 class _MissingOptionalDependency:
     """Fail clearly if a test uses an optional dependency without patching it."""

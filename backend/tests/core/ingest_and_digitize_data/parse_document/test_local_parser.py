@@ -1,7 +1,6 @@
 """Tests for local parser module."""
 from __future__ import annotations
 
-
 from src.core.ingest_and_digitize_data.parse_document.local.parser import MinerULocalParser
 
 
@@ -14,21 +13,18 @@ def test_mineru_local_parser_name():
 def test_mineru_local_parser_initialization():
     """Test parser initialization with config."""
     parser = MinerULocalParser(
-        model_server_url="http://localhost:8002",
-        model_id="test-model",
-        timeout=60.0,
-        dpi=150,
+        api_url="http://mineru:30000",
+        timeout=300.0,
+        backend="pipeline",
     )
-    assert parser._base_url == "http://localhost:8002"
-    assert parser._model_id == "test-model"
-    assert parser._timeout == 60.0
-    assert parser._dpi == 150
+    assert parser._api_url == "http://mineru:30000"
+    assert parser._timeout == 300.0
+    assert parser._backend == "pipeline"
 
 
 def test_mineru_local_parser_default_values():
     """Test parser default values."""
     parser = MinerULocalParser()
-    assert parser._base_url == "http://localhost:8001"
-    assert parser._model_id == "opendatalab/MinerU2.5-Pro-2604-1.2B"
-    assert parser._timeout == 120.0
-    assert parser._dpi == 200
+    assert parser._api_url == "http://localhost:8001"
+    assert parser._timeout == 600.0
+    assert parser._backend == "vlm"

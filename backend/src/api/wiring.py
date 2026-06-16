@@ -114,10 +114,9 @@ def wire_dependencies() -> None:
         max_poll_attempts=pd_cfg.mineru_remote_max_poll_attempts,
     )
     local_parser = MinerULocalParser(
-        model_server_url=pd_cfg.mineru_local_model_server_url,
-        model_id=pd_cfg.mineru_local_model_id,
+        api_url=pd_cfg.mineru_local_api_url,
         timeout=pd_cfg.mineru_local_timeout,
-        dpi=pd_cfg.mineru_local_dpi,
+        backend=pd_cfg.mineru_local_backend,
     )
     parse_orchestrator = DocumentParseOrchestrator(remote=remote_parser, local=local_parser)
     parse_service = ParseDocumentService(parse_orchestrator)

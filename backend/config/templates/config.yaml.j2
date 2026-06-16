@@ -60,10 +60,9 @@ mineru:
   api_token: {{ mineru.api_token | default('') }}
   remote_poll_interval: {{ mineru.remote_poll_interval }}
   remote_max_poll_attempts: {{ mineru.remote_max_poll_attempts }}
-  local_model_server_url: {{ mineru.local_model_server_url }}
-  local_model_id: {{ mineru.local_model_id }}
+  local_api_url: {{ mineru.local_api_url }}
   local_timeout: {{ mineru.local_timeout }}
-  local_dpi: {{ mineru.local_dpi }}
+  local_backend: {{ mineru.local_backend }}
 
 # ── Model Server ────────────────────────────────────────────────────────
 model_server_url: http://{{ api_host if api_host != '0.0.0.0' else 'localhost' }}:{{ model_server_port | default(8001) }}
@@ -98,10 +97,3 @@ web_search:
 network:
   proxy: {{ network.proxy | default('') }}
   no_proxy: "{{ network.no_proxy | default('') }}"
-
-# ── Model Server GPU settings ──────────────────────────────────────────
-doc_parse_model_id: "{{ doc_parse_model_id | default('') }}"
-embedding_gpu_memory_utilization: {{ embedding_gpu_memory_utilization | default(0.35) }}
-embedding_max_model_len: {{ embedding_max_model_len | default(4096) }}
-rerank_gpu_memory_utilization: {{ rerank_gpu_memory_utilization | default(0.2) }}
-doc_parse_gpu_memory_utilization: {{ doc_parse_gpu_memory_utilization | default(0.5) }}

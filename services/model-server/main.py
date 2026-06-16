@@ -17,11 +17,11 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from fastapi import FastAPI
 
-from app.api import embedding, health, rerank, vlm
+from app.api import embedding, file_parse, health, rerank
 from app.config import get_config
+from app.domain.doc_parse import DocParseService
 from app.domain.embedding import EmbeddingService
 from app.domain.rerank import RerankService
-from app.domain.vlm import VLMService
 from app.utils.logger import get_logger, request_monitor_middleware_factory, setup_logging
 
 setup_logging()
@@ -40,23 +40,23 @@ _rerank_svc = RerankService(
     model_id=cfg.rerank_model_id,
     gpu_memory_utilization=cfg.rerank_gpu_memory_utilization,
 )
-_vlm_svc = VLMService(
-    model_id=cfg.doc_parse_model_id,
-    gpu_memory_utilization=cfg.doc_parse_gpu_memory_utilization,
-    image_analysis=cfg.doc_parse_image_analysis,
-) if cfg.doc_parse_model_id else None
 
 # Wire services into API routes
 embedding.bind(_embedding_svc)
 rerank.bind(_rerank_svc)
-if _vlm_svc:
-    vlm.bind(_vlm_svc)
+
+_doc_parse_svc = DocParseService(
+    backend=cfg.doc_parse_backend,
+    gpu_memory_utilization=cfg.doc_parse_gpu_memory_utilization,
+    model_path=cfg.doc_parse_model_path,
+)
+file_parse.bind(_doc_parse_svc)
 
 # Register services for health checks
 health.register_services({
     "embedding": _embedding_svc,
     "rerank": _rerank_svc,
-    **({"vlm": _vlm_svc} if _vlm_svc else {}),
+    "doc_parse": _doc_parse_svc,
 })
 
 # ── Assemble FastAPI app ─────────────────────────────────────────────────
@@ -64,9 +64,6 @@ health.register_services({
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
-    # Free GPU memory on shutdown
-    if _vlm_svc is not None:
-        _vlm_svc.unload()
 
 
 app = FastAPI(title="Cross Evidence Model Server", version="1.0.0", lifespan=lifespan)
@@ -74,8 +71,7 @@ app.add_middleware(request_monitor_middleware_factory())
 
 app.include_router(embedding.router)
 app.include_router(rerank.router)
-if _vlm_svc:
-    app.include_router(vlm.router)
+app.include_router(file_parse.router)
 app.include_router(health.router)
 
 # ── Run ──────────────────────────────────────────────────────────────────
@@ -91,5 +87,5 @@ if __name__ == "__main__":
     logger.info("Starting model server on {host}:{port}", host=args.host, port=args.port)
     logger.info("  Embedding : {id}", id=cfg.embedding_model_id)
     logger.info("  Rerank    : {id}", id=cfg.rerank_model_id)
-    logger.info("  VLM       : {id}", id=cfg.doc_parse_model_id or "(not configured)")
+    logger.info("  DocParse  : {backend}", backend=cfg.doc_parse_backend)
     uvicorn.run(app, host=args.host, port=args.port, log_level=cfg.log_level)
