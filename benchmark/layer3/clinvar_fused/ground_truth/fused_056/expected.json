@@ -1,0 +1,165 @@
+{
+  "entry_id": "fused_056",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "MT-CYB",
+    "hgnc_id": "HGNC:7427",
+    "disease_label": "mitochondrial disease",
+    "mondo_id": "MONDO:0044970",
+    "moi": "MT",
+    "classification": "Definitive",
+    "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+    "classification_date": "2024-03-04T17:00:00.000Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7ee50909-c576-4998-81bc-09980529cbb2-2024-03-04T170000.000Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 9680,
+      "hgvs_name": "NC_012920.1(MT-CYB):m.15242G>A",
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs207459999",
+      "phenotype_ids": "MONDO:MONDO:0004675,MedGen:C0162666|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+      "phenotype_list": "Mitochondrial encephalomyopathy|Leigh syndrome|Mitochondrial disease|Primary Mitochondrial Disorders"
+    },
+    {
+      "variation_id": 9681,
+      "hgvs_name": "NC_012920.1(MT-CYB):m.15150G>A",
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs207460000",
+      "phenotype_ids": "Human Phenotype Ontology:HP:0003546,MedGen:C0424551|MONDO:MONDO:0010780,MedGen:C3151898,OMIM:500009,Orphanet:254864|Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+      "phenotype_list": "Exercise intolerance|Mitochondrial myopathy with reversible cytochrome C oxidase deficiency|Leber optic atrophy|Mitochondrial disease"
+    },
+    {
+      "variation_id": 9686,
+      "hgvs_name": "NC_012920.1(MT-CYB):m.14783TTAA[1]",
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "variant_type": "other",
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs207460005",
+      "phenotype_ids": "MedGen:C4016600|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+      "phenotype_list": "Parkinsonism/MELAS overlap syndrome|Mitochondrial disease"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MT-CYB",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "mitochondrial disease",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "MT",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "other"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Likely pathogenic",
+      "candidates": [
+        "Likely pathogenic",
+        "Likely pathogenic",
+        "Likely pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:7427",
+    "disease": "MONDO:0044970",
+    "variant_candidates": [
+      "ClinVarVariation:9680",
+      "ClinVarVariation:9681",
+      "ClinVarVariation:9686"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "MT-CYB",
+      "hgnc_id": "HGNC:7427"
+    },
+    "disease": {
+      "text": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970"
+    },
+    "variants": [
+      {
+        "text": "NC_012920.1(MT-CYB):m.15242G>A",
+        "variation_id": "ClinVarVariation:9680",
+        "rsid": "rs207459999"
+      },
+      {
+        "text": "NC_012920.1(MT-CYB):m.15150G>A",
+        "variation_id": "ClinVarVariation:9681",
+        "rsid": "rs207460000"
+      },
+      {
+        "text": "NC_012920.1(MT-CYB):m.14783TTAA[1]",
+        "variation_id": "ClinVarVariation:9686",
+        "rsid": "rs207460005"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": "39940884",
+  "source_pmc": "PMC11817157",
+  "source_pdf_url": "https://europepmc.org/article/PMC/11817157?pdf=render",
+  "source_title": "Adult Leigh Syndrome Associated with the m.15635T&gt;C Mitochondrial DNA Variant Affecting the Cytochrome &lt;i&gt;b&lt;/i&gt; (&lt;i&gt;MT-CYB&lt;/i&gt;) Gene.",
+  "source_journal": "",
+  "source_year": "2025",
+  "notes": "",
+  "literature_search_strategy": "\"MT-CYB\" AND \"mitochondrial disease\" AND OPEN_ACCESS:y"
+}
