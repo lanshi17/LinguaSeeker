@@ -21,8 +21,6 @@ dependencies = [
     "requests[socks]>=2.33.1",
     "pysocks>=1.7.1",
     "torch>=2.11.0",
-    "crawl4ai>=0.8.6",
-    "selectolax>=0.4.8",
     "loguru>=0.7.0",
     "mineru_vl_utils",
     "tokenizers>=0.22.0,<=0.23.0",
@@ -44,6 +42,7 @@ dependencies = [
     "weasyprint>=69.0",
     "markdown>=3.10.2",
     "fpdf2>=2.8.7",
+    "pyjstage-py312>=0.1.1",
 ]
 
 [project.optional-dependencies]

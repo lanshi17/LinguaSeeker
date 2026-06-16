@@ -336,9 +336,65 @@ def _failure_result(provider: str, error: Exception, action: str = "search") -> 
         source_trace=[trace],
     )
 
+async def _search_jstage_via_pyjstage(
+    request: OnlineAcquisitionGatewayRequest,
+) -> OnlineAcquisitionGatewayResult:
+    """Search J-STAGE using pyjstage-py312 library (bypasses broken Rust endpoint)."""
+    start = _time.monotonic()
+    try:
+        from pyjstage.pyjstage import Pyjstage
+
+        pj = Pyjstage()
+        query = (request.query or "").strip()
+        if not query:
+            return _failure_result("jstage", ValueError("empty query"), "search")
+
+        limit = min(request.limit or 20, 100)
+        result = pj.search(article=query, count=limit)
+
+        items: list[dict[str, Any]] = []
+        for entry in result.entries:
+            items.append({
+                "article_title_en": (entry.article_title or {}).get("en", ""),
+                "article_title_ja": (entry.article_title or {}).get("ja", ""),
+                "material_title_en": (entry.material_title or {}).get("en", ""),
+                "material_title_ja": (entry.material_title or {}).get("ja", ""),
+                "doi": entry.doi or "",
+                "link": entry.link or "",
+                "issn": entry.issn or "",
+                "eissn": entry.eissn or "",
+                "pubyear": entry.pubyear or "",
+            })
+
+        elapsed = (_time.monotonic() - start) * 1000
+        get_health_tracker().record("jstage", success=True, latency_ms=elapsed)
+        trace = OnlineAcquisitionSourceTraceEntry(
+            provider="jstage", attempt=1, action="search",
+            success=True, items_count=len(items),
+            downloads_count=0, warnings=[],
+        )
+        return OnlineAcquisitionGatewayResult(
+            provider="jstage", success=True, items=items,
+            downloads=[], warnings=[],
+            source_trace=[trace],
+        )
+    except Exception as exc:
+        elapsed = (_time.monotonic() - start) * 1000
+        get_health_tracker().record("jstage", success=False, latency_ms=elapsed)
+        logger.warning("pyjstage search failed: {}", exc)
+        return _failure_result("jstage", exc, "search")
+
 
 async def call_provider(request: OnlineAcquisitionGatewayRequest) -> OnlineAcquisitionGatewayResult:
-    """Call a single provider via net_io.fetch_one."""
+    """Call a single provider via net_io.fetch_one.
+
+    J-STAGE search is routed through pyjstage-py312 in Python because the
+    Rust provider hits a broken HTML endpoint.  Download still goes through
+    Rust (pdf_candidates logic is correct).
+    """
+    if request.provider == "jstage" and request.action == "search":
+        return await _search_jstage_via_pyjstage(request)
+
     start = _time.monotonic()
     if net_io is None:
         elapsed = (_time.monotonic() - start) * 1000
