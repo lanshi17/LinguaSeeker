@@ -59,6 +59,7 @@ database/config/database/config/.env.*
 
 # Worktrees
 .worktrees/
+worktrees/
 e2e_output
 .codex/*
 backend/output/*
