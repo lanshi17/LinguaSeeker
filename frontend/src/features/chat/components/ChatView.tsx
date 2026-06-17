@@ -235,6 +235,13 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     () => new Map<string, ReturnType<typeof createAcmgChatProvider>>(),
   );
 
+  // Track the previous session's provider so we can abort its stream
+  // reliably during session switches — useXChat's abort reference can
+  // already point to the new provider by the time the switch effect runs.
+  const prevProviderRef = useRef<ReturnType<typeof createAcmgChatProvider> | null>(
+    null,
+  );
+
   const getProvider = useCallback(
     (key: string) => {
       if (!providerCache.has(key)) {
@@ -352,23 +359,26 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   // re-render stale bubbles until its async defaultMessages resolved.
   useEffect(() => {
     let cancelled = false;
-    if (!activeConversationKey) {
-      setMessages?.([]);
-      return;
+
+    // Abort the *previous* session's provider directly.  We track the
+    // previous provider in a ref because `useXChat` re-binds to the new
+    // provider during the render that triggers this effect — by the time
+    // the effect body runs, any abort closure from `useXChat` already
+    // points at the *new* provider and cannot cancel the old stream.
+    const prevProvider = prevProviderRef.current;
+    if (prevProvider) {
+      try {
+        prevProvider.abort();
+      } catch {
+        // Swallow — abort is idempotent; if it throws the stream was
+        // already gone or the provider is in a terminal state.
+      }
     }
 
-    // Abort any in-flight SSE stream from the previous session so
-    // its updateMessage calls don't write into the now-stale store.
-    // Guarded on activeProvider *and* wrapped in try/catch: the SDK's
-    // abort closure can throw when invoked during a provider transition
-    // (the internal conversation lookup returns undefined mid-swap).
-    if (activeProvider) {
-      try {
-        abort?.();
-      } catch {
-        // Swallow — the previous stream is already gone or the provider
-        // is transitioning; either way there is nothing to abort.
-      }
+    if (!activeConversationKey) {
+      setMessages?.([]);
+      prevProviderRef.current = null;
+      return;
     }
 
     // Clear the visible list synchronously so no previous-session bubble
@@ -389,13 +399,31 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         setMessages?.([]);
       });
 
+    // Remember the current provider as the "previous" for the next switch.
+    prevProviderRef.current = activeProvider ?? null;
+
     return () => {
       cancelled = true;
     };
     // activeProvider is derived from activeConversationKey + a stable cache
-    // and is included so the provider-guard inside the effect never closes
-    // over a stale (possibly undefined) provider reference.
-  }, [abort, activeConversationKey, activeProvider, setMessages]);
+    // and is included so prevProviderRef is updated correctly when the
+    // provider reference changes (e.g. after cache miss → create).
+  }, [activeConversationKey, activeProvider, setMessages]);
+
+  // Abort any in-flight stream when the FullChatView unmounts entirely
+  // (e.g. user navigates away from the chat page).
+  useEffect(() => {
+    return () => {
+      const current = prevProviderRef.current;
+      if (current) {
+        try {
+          current.abort();
+        } catch {
+          // No-op on unmount — best-effort cleanup.
+        }
+      }
+    };
+  }, []);
 
   // ── Per-session ephemeral UI state ──
   const [sessionUI, setSessionUI] = useState<Record<string, PerSessionUIState>>(
@@ -905,10 +933,18 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
             style={{ padding: 16 }}
             loading={isRequesting}
             onCancel={() => {
+              // Cancel via the provider's own AbortController for
+              // for reliable fetch termination. Also try the SDK's
+              // abort as a secondary cleanup for internal state.
+              try {
+                activeProvider?.abort();
+              } catch {
+                  // noop
+              }
               try {
                 abort?.();
               } catch {
-                // See effect comment above.
+                  // noop
               }
             }}
             onSubmit={handleSubmitAndClear}
@@ -941,12 +977,15 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
   const abort = xChat?.abort;
   const setMessages = xChat?.setMessages;
 
-  // Explicit message hydration on mount (same pattern as FullChatView)
+  // Explicit message hydration on mount (same pattern as FullChatView).
+  // Also aborts any in-flight stream when sessionId changes or on unmount.
+  // `provider` is stable (memoized on sessionId) so the cleanup closure
+  // captures the correct instance for each session.
   useEffect(() => {
     let cancelled = false;
-    
+
     setMessages?.([]);
-    
+
     listMessages(sessionId)
       .then((history) => {
         if (cancelled) return;
@@ -958,11 +997,18 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
         if (cancelled) return;
         setMessages?.([]);
       });
-    
+
     return () => {
       cancelled = true;
+      // Abort the SSE stream when the single-session view unmounts
+      // (e.g. user navigates away, or sessionId changes).
+      try {
+        provider.abort();
+      } catch {
+        // No-op on unmount — best-effort cleanup.
+      }
     };
-  }, [sessionId, setMessages]);
+  }, [sessionId, setMessages, provider]);
 
   const handleQuickAction = useCallback(
     (message: string) => {
@@ -1070,10 +1116,18 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
           style={{ padding: 16 }}
           loading={isRequesting}
           onCancel={() => {
+            // Cancel via the provider's own AbortController for
+            // reliable fetch termination. Also try the SDK's abort
+            // as a secondary cleanup for internal state.
+            try {
+              provider.abort();
+            } catch {
+                // noop
+            }
             try {
               abort?.();
             } catch {
-              // See FullChatView effect comment.
+                // noop
             }
           }}
           onSubmit={handleSingleSessionSubmit}
