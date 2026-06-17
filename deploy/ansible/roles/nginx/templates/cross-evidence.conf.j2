@@ -41,6 +41,22 @@ server {
     ssl_session_cache   shared:SSL:10m;
     ssl_session_timeout 10m;
 
+    # ── Security headers ──────────────────────────────────────────────────
+    # HSTS: 1 year, include subdomains, allow preload
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+    # Prevent MIME-type sniffing
+    add_header X-Content-Type-Options "nosniff" always;
+    # Prevent clickjacking
+    add_header X-Frame-Options "DENY" always;
+    # Control referrer information leakage
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    # Restrict browser features (camera, mic, geolocation, etc.)
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=()" always;
+    # Content Security Policy — restrictive baseline
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+    # Legacy XSS protection header (redundant with CSP but harmless)
+    add_header X-XSS-Protection "1; mode=block" always;
+
     # ── API → Backend ─────────────────────────────────────────────────────
     location /api/ {
         proxy_pass http://backend;
