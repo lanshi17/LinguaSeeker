@@ -17,6 +17,108 @@ def _write_json(path: Path, payload: object) -> Path:
 
 
 def _manifest_report(path: Path) -> Path:
+    return _manifest_report_with_extras(path, alignment=True, augmentation=True, runtime=True)
+
+
+def _alignment_report(path: Path) -> Path:
+    return _write_json(
+        path,
+        {
+            "overall": {
+                "alignment": {
+                    "alignment_accuracy": 0.95,
+                    "support_label_accuracy": 0.94,
+                    "drift_detection_f1": 0.81,
+                    "conflict_detection_f1": 0.72,
+                }
+            },
+            "by_field": {},
+            "counts": {"total": 40},
+        },
+    )
+
+
+def _augmentation_report(path: Path) -> Path:
+    return _write_json(
+        path,
+        {
+            "overall": {
+                "evidence_coverage_gain": 0.12,
+                "non_english_evidence_yield": 0.08,
+                "unique_evidence_gain": 3,
+                "traceable_augmentation_rate": 0.25,
+                "interpretation_relevant_evidence_gain": 0.11,
+                "reviewer_burden": 0.04,
+            },
+            "per_case": [{"matrix": {"non_english_added_evidence_count": 2}}],
+        },
+    )
+
+
+def _runtime_report(path: Path) -> Path:
+    return _write_json(
+        path,
+        {
+            "runtime_summary": {
+                "attempted_samples": 12,
+                "phase2_completed": 10,
+                "timeout_count": 1,
+                "failed_count": 1,
+                "completed_queue_ids": [
+                    "clingen_000:ja",
+                    "clingen_000:ko",
+                    "clingen_000:zh",
+                    "clingen_001:ja",
+                    "clingen_001:ko",
+                    "clingen_001:zh",
+                    "clingen_002:ja",
+                    "clingen_003:ko",
+                    "clingen_003:zh",
+                    "clingen_004:ja",
+                ],
+                "failed_queue_ids": ["clingen_005:ja"],
+                "incomplete_queue_ids": ["clingen_006:ko"],
+                "attempted_distinct_entries": [
+                    "clingen_000",
+                    "clingen_001",
+                    "clingen_002",
+                    "clingen_003",
+                    "clingen_004",
+                    "clingen_005",
+                    "clingen_006",
+                ],
+                "attempted_languages": ["ja", "ko", "zh"],
+                "completed_distinct_entries": [
+                    "clingen_000",
+                    "clingen_001",
+                    "clingen_002",
+                    "clingen_003",
+                    "clingen_004",
+                ],
+                "completed_languages": ["ja", "ko", "zh"],
+            },
+            "per_case": [],
+        },
+    )
+
+
+def _manifest_report_with_extras(
+    path: Path,
+    *,
+    alignment: bool,
+    augmentation: bool,
+    runtime: bool,
+) -> Path:
+    reports_root = path.parent
+    alignment_path = reports_root / "alignment_metrics_20260616_144749.json"
+    augmentation_path = reports_root / "evidence_augmentation_metrics_20260616_124445.json"
+    runtime_path = reports_root / "benchmark_b_phase2_runtime_metrics_20260616_161809.json"
+    if alignment:
+        _alignment_report(alignment_path)
+    if augmentation:
+        _augmentation_report(augmentation_path)
+    if runtime:
+        _runtime_report(runtime_path)
     return _write_json(
         path,
         {
@@ -29,6 +131,9 @@ def _manifest_report(path: Path) -> Path:
                 "traceability_report": "benchmark/layer3/reports/traceability_context_verifier_reconcile_20260614_213054.json",
                 "benchmark_a_readiness_report": "benchmark/layer3/reports/benchmark_readiness_20260615_180000.json",
                 "benchmark_b_pilot_selection_report": "benchmark/layer3/reports/benchmark_b_pilot_selection.json",
+                "alignment_report": str(alignment_path) if alignment else None,
+                "evidence_augmentation_report": str(augmentation_path) if augmentation else None,
+                "benchmark_b_runtime_report": str(runtime_path) if runtime else None,
                 "baseline_reports": [
                     "benchmark/layer3/reports/baseline_b0_20260613_031120.json",
                 ],
@@ -104,6 +209,91 @@ def test_main_paper_tables_uses_frozen_manifest_and_reports(tmp_path: Path) -> N
     assert payload["tables"]["Table 4 Traceability metrics"][0]["strategy_or_baseline_id"] == "context_verifier_reconcile"
     assert payload["tables"]["Table 5 Error breakdown"][0]["root_cause"] == "wrong_relationship_semantics"
     assert payload["tables"]["Table 6 Benchmark readiness and pilot selection"][0]["status"] == "report-available"
+
+
+def test_main_paper_tables_includes_alignment_evidence_and_runtime_tables(tmp_path: Path) -> None:
+    manifest_path = _manifest_report(tmp_path / "manifest.json")
+
+    tables = build_main_paper_tables(manifest_path=manifest_path)
+    payload = main_paper_tables_to_payload(tables)
+
+    alignment_rows = payload["tables"]["Table 7 Alignment and drift/conflict detection"]
+    overall = next(row for row in alignment_rows if row["scope"] == "overall")
+    assert overall["alignment_accuracy"] == 0.95
+    assert overall["support_accuracy"] == 0.94
+    assert overall["drift_detection_f1"] == 0.81
+    assert overall["conflict_detection_f1"] == 0.72
+    assert overall["N"] == 40
+
+    augmentation_rows = payload["tables"]["Table 8 Evidence augmentation metrics"]
+    aug_overall = next(row for row in augmentation_rows if row["scope"] == "overall")
+    assert aug_overall["evidence_coverage_gain"] == 0.12
+    assert aug_overall["traceable_augmentation_rate"] == 0.25
+    assert aug_overall["N"] == 1
+
+    runtime_rows = payload["tables"]["Table 9 Benchmark B runtime pilot"]
+    runtime_overall = next(row for row in runtime_rows if row["scope"] == "overall")
+    assert runtime_overall["attempted_samples"] == 12
+    assert runtime_overall["phase2_completed"] == 10
+    assert runtime_overall["timeout_count"] == 1
+    assert runtime_overall["failed_count"] == 1
+    assert runtime_overall["attempted_distinct_entries"] == 7
+    assert runtime_overall["attempted_languages"] == "ja,ko,zh"
+    assert runtime_overall["completed_distinct_entries"] == 5
+    assert runtime_overall["completed_languages"] == "ja,ko,zh"
+
+
+def test_main_paper_tables_emits_status_row_when_report_is_missing(tmp_path: Path) -> None:
+    manifest_path = _manifest_report_with_extras(
+        tmp_path / "manifest.json",
+        alignment=False,
+        augmentation=False,
+        runtime=False,
+    )
+
+    tables = build_main_paper_tables(manifest_path=manifest_path)
+    payload = main_paper_tables_to_payload(tables)
+
+    alignment_rows = payload["tables"]["Table 7 Alignment and drift/conflict detection"]
+    assert alignment_rows[0]["alignment_accuracy"] is None
+
+    augmentation_rows = payload["tables"]["Table 8 Evidence augmentation metrics"]
+    assert augmentation_rows[0]["status"] == "not-yet-reportable"
+
+    runtime_rows = payload["tables"]["Table 9 Benchmark B runtime pilot"]
+    assert runtime_rows[0]["status"] == "not-yet-reportable"
+    assert runtime_rows[0]["attempted_distinct_entries"] is None
+    assert runtime_rows[0]["completed_distinct_entries"] is None
+
+
+def test_main_paper_tables_prefers_manifest_path_over_glob(tmp_path: Path) -> None:
+    manifest_path = _manifest_report(tmp_path / "manifest.json")
+    stale_alignment = tmp_path / "alignment_metrics_20200101_000000.json"
+    _write_json(
+        stale_alignment,
+        {
+            "overall": {
+                "alignment": {
+                    "alignment_accuracy": 0.01,
+                    "support_label_accuracy": 0.01,
+                    "drift_detection_f1": 0.01,
+                    "conflict_detection_f1": 0.01,
+                }
+            },
+            "by_field": {},
+            "counts": {"total": 1},
+        },
+    )
+
+    tables = build_main_paper_tables(manifest_path=manifest_path)
+    payload = main_paper_tables_to_payload(tables)
+
+    overall = next(
+        row
+        for row in payload["tables"]["Table 7 Alignment and drift/conflict detection"]
+        if row["scope"] == "overall"
+    )
+    assert overall["alignment_accuracy"] == 0.95
 
 
 def test_write_main_paper_tables_persists_md_and_csv(tmp_path: Path) -> None:

@@ -239,7 +239,9 @@ Our internal baselines are designed to cover the major architectural design dime
 
 **Limitations.** First, we acknowledge the absence of direct head-to-head comparison with published external systems. This reflects a genuine gap in the field: no existing system covers our full task definition, and adapting external systems to the 138-field schema with citation validation is substantial engineering work that we prioritize as future work. Second, the frozen benchmark contains 30 entries, suitable for controlled method analysis and paired statistics but not for broad claims of general biomedical IE superiority. Third, the margin over the strongest matched B0-B4 baseline is +0.0188 F1, below the pre-declared +0.03 strong-superiority threshold. Fourth, the B6-B10 prompt-only frontier sweep is tied to exact provider aliases and a same-release-window cohort; hosted model behavior may change over time. Fifth, some gene-disease relationship labels reflect external ClinGen validity curation not fully visible in article-local evidence. Finally, CrossEvidence extracts, grounds, and reconciles evidence fields for expert review; it is not an autonomous clinical decision-support or ACMG classification system.
 
-The current benchmark-readiness artifacts are conservative by design: Benchmark A is only reportable once valid `alignment_annotations.json` files exist for the frozen N=30 set, and Benchmark B is a frozen multilingual pilot selection rather than a measured evidence-yield experiment. Those artifacts support planning and curation, not result claims.
+The current benchmark-readiness artifacts are conservative by design: Benchmark A is only reportable once valid `alignment_annotations.json` files exist for the frozen N=30 set, and Benchmark B is reported as a small multilingual runtime pilot (10 attempted zh/ja/ko samples, 3 completed with per-case metrics reused from the frozen baseline report, 4 failed, 3 timed out) rather than a measured autonomous-classification experiment. Those artifacts support planning and curation, not result claims about clinical classification accuracy.
+
+In this pilot, we report runtime completion/failure accounting for the dual-track multilingual extraction pipeline and reuse frozen baseline per-case metrics for completed queue_ids where available. We do not claim that the pilot improves evidence coverage or classification accuracy, and we deliberately do not promote the pilot into a claim of autonomous ACMG/ClinGen classification accuracy.
 
 Future work should expand the benchmark, add citation-generating direct LLM and RAG baselines for direct HCR comparison, and build a native multilingual biomedical genetics gold set. Curated ClinGen context could also be tested as a separate external-knowledge ablation, but it should not be mixed into source-only extraction without disclosure.
 
@@ -259,5 +261,6 @@ CrossEvidence frames cross-lingual biomedical evidence extraction as traceabilit
 - Error diagnosis: `benchmark/layer3/reports/contextual_reconcile_diagnosis_20260615_011335.json`
 - Benchmark A readiness: `benchmark/layer3/reports/benchmark_readiness_20260615_193750.json`
 - Benchmark B pilot selection: `benchmark/layer3/ground_truth/benchmark_b_pilot_selection.json`
+- Benchmark B runtime pilot: `benchmark/layer3/reports/benchmark_b_phase2_runtime_metrics_*.json` (manifest-declared)
 - Main paper tables: `benchmark/layer3/reports/main_paper_tables_20260615_194001.md`
 - Main paper manifest: `benchmark/layer3/reports/main_paper_rescue_manifest_20260615_193945.json`
