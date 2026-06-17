@@ -1,7 +1,6 @@
 """Entity reference resolution: match gene/disease mentions to known entities."""
 from __future__ import annotations
 
-from dataclasses import replace
 
 from ..contracts import ExtractedEvidence
 
