@@ -1,7 +1,7 @@
 """Catalog extraction stage — structured field extraction using the 10-category catalog.
 
-Uses parallel catalog groups to reduce per-call output tokens: the 138-field
-catalog is split into 2 balanced groups (~63 and ~75 fields) that are extracted
+Uses parallel catalog groups to reduce per-call output tokens: the 134-field
+catalog is split into 2 balanced groups (~62 and ~72 fields) that are extracted
 concurrently per chunk, cutting output token demand roughly in half.
 """
 from __future__ import annotations
