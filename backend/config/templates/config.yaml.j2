@@ -94,6 +94,19 @@ web_search:
   timeout: {{ web_search.timeout }}
   max_results: {{ web_search.max_results }}
 
+# ── Literature Acquisition Providers ────────────────────────────────────
+unpaywall:
+  email: {{ unpaywall.email | default('') }}
+
+pubmed:
+  api_key: {{ pubmed.api_key | default('') }}
+
+base:
+  api_key: {{ base.api_key | default('') }}
+
+core:
+  api_key: {{ core.api_key | default('') }}
+
 # ── Network / Proxy ────────────────────────────────────────────────────
 network:
   proxy: {{ network.proxy | default('') }}
