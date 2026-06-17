@@ -40,6 +40,11 @@ class DocParseService:
         self._available: bool | None = None
 
     @property
+    def backend(self) -> str:
+        """Return the configured MinerU backend identifier."""
+        return self._backend
+
+    @property
     def ready(self) -> bool:
         """Whether MinerU is importable and ready for parsing."""
         return self.is_available()
