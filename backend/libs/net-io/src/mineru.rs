@@ -100,8 +100,17 @@ pub async fn upload_local_files(
         )));
     }
 
-    for (upload_url, file_path) in urls.iter().zip(file_paths) {
-        upload_local_file(client, upload_url, file_path, None).await?;
+    let upload_futures: Vec<_> = urls
+        .iter()
+        .zip(file_paths)
+        .map(|(upload_url, file_path)| {
+            upload_local_file(client, upload_url, file_path, None)
+        })
+        .collect();
+
+    let results = futures::future::join_all(upload_futures).await;
+    for result in results {
+        result?;
     }
 
     Ok(response)
@@ -114,7 +123,7 @@ pub async fn upload_local_file(
     file_path: &str,
     content_type: Option<&str>,
 ) -> Result<(), GatewayError> {
-    let bytes = std::fs::read(file_path)?;
+    let bytes = tokio::fs::read(file_path).await?;
     client.put_bytes(upload_url, bytes, content_type).await?;
     Ok(())
 }
