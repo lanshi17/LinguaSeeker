@@ -45,8 +45,25 @@ class AcmgChatProvider extends AbstractChatProvider<
   SSEOutput
 > {
   private sessionId: string;
+  /** Abort the in-flight SSE stream, if any. Safe to call at any time. */
+  abort: () => void;
+  /** Whether a stream request is currently in flight. */
+  get isStreaming(): boolean {
+    // Implemented via instance getter defined in constructor.
+    // (TypeScript needs this declaration to know the property exists.)
+    return false;
+  }
 
   constructor(sessionId: string) {
+    // Closure variables for abort state.  We use closures rather than
+    // instance fields so that the fetch function (defined before super())
+    // can reference them without needing `this` — derived classes cannot
+    // access `this` before super() is called, but closure variables are
+    // valid from declaration onward.
+    let abortController: AbortController | null = null;
+    let streaming = false;
+    let streamAborted = false;
+
     // Create an XRequest that points to the stream endpoint.
     // The actual POST happens in ChatView before XRequest runs.
     const baseURL = `/api/v1/chat/sessions/${sessionId}/stream`;
@@ -63,16 +80,76 @@ class AcmgChatProvider extends AbstractChatProvider<
         const streamUrl = new URL(url.toString(), window.location.origin);
         streamUrl.searchParams.set("user_message", latestMessage);
 
-        return fetch(streamUrl, {
+        // Create a fresh AbortController for each request so that
+        // abort() can reliably cancel the in-flight fetch.
+        abortController = new AbortController();
+        streaming = true;
+        streamAborted = false;
+
+        // Combine our controller's signal with the SDK's signal so that
+        // both our abort() and the SDK's internal abort work.
+        const signals: AbortSignal[] = [abortController.signal];
+        if (options.signal) {
+          signals.push(options.signal);
+          options.signal.addEventListener(
+            "abort",
+            () => {
+              streamAborted = true;
+            },
+            { once: true },
+          );
+        }
+        const combinedSignal =
+          signals.length > 1
+            ? AbortSignal.any(signals)
+            : signals[0];
+
+        const doFetch = fetch(streamUrl, {
           method: "GET",
           headers: options.headers,
-          signal: options.signal,
+          signal: combinedSignal,
         });
+
+        // Reset streaming state when the request settles.
+        doFetch.finally(() => {
+          streaming = false;
+          abortController = null;
+        });
+
+        return doFetch;
       },
     });
 
     super({ request });
     this.sessionId = sessionId;
+
+    // Define instance-level abort method and isStreaming getter,
+    // both backed by the closure variables above.
+    this.abort = () => {
+      streamAborted = true;
+      if (abortController) {
+        abortController.abort();
+        abortController = null;
+      }
+      streaming = false;
+    };
+
+    Object.defineProperty(this, "isStreaming", {
+      get: () => streaming,
+      enumerable: true,
+      configurable: true,
+    });
+
+    Object.defineProperty(this, "_isStreamAborted", {
+      get: () => streamAborted,
+      enumerable: true,
+      configurable: true,
+    });
+  }
+
+  /** Exposed via Object.defineProperty in constructor (closure-backed). */
+  get _isStreamAborted(): boolean {
+    return false;
   }
 
   /**
@@ -98,6 +175,9 @@ class AcmgChatProvider extends AbstractChatProvider<
   transformMessage(
     info: TransformMessage<ChatBubbleMessage, SSEOutput>,
   ): ChatBubbleMessage {
+    if (this._isStreamAborted) {
+      return info.originMessage ?? { role: "assistant", content: "" };
+    }
     return appendAssistantChunk(info.originMessage, info.chunk);
   }
 }
