@@ -18,7 +18,7 @@ ExecStart=/home/deploy/.local/bin/uv run uvicorn app.main:app \
     --log-level {{ backend_log_level }} \
     --access-log \
     --proxy-headers \
-    --forwarded-allow-ips='*'
+    --forwarded-allow-ips='127.0.0.1'
 Restart=always
 RestartSec=5
 StartLimitBurst=3

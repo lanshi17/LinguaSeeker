@@ -21,6 +21,7 @@ from src.utils.logger import get_logger, setup_logging
 
 from src.api.rate_limit import init_limiter
 from src.utils.middleware import add_request_monitoring
+from src.utils.security_headers import SecurityHeadersMiddleware, SecurityHeadersMiddlewareHSTS
 
 
 class ErrorDetail(TypedDict, total=False):
@@ -250,6 +251,12 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     add_request_monitoring(_app)
+
+    # ── Security headers (applied to every response) ────────────────
+    if cfg.is_production:
+        _app.add_middleware(SecurityHeadersMiddlewareHSTS)
+    else:
+        _app.add_middleware(SecurityHeadersMiddleware)
 
     # ── Body size limit (before ASGI reads body into memory) ──────────
     from src.api.body_size_limit import BodySizeLimitMiddleware
