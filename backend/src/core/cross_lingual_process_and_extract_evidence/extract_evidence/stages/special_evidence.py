@@ -7,7 +7,6 @@ from loguru import logger
 from pydantic import ValidationError
 
 from ..chunking import (
-    DEFAULT_INPUT_BUDGET_TOKENS,
     STRONG_TIER_INPUT_BUDGET_TOKENS,
     build_block_prompt_chunks,
     merge_special_evidence_records,
