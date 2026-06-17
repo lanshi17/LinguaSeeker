@@ -69,7 +69,7 @@ class RerankResponse(BaseModel):
 
 # ── Chat / LLM (placeholder for future local LLM — Task 10) ─────────────
 # These schemas are reserved for a future text-based LLM chat endpoint.
-# Currently unused.
+# Currently unused — VLM extraction uses VLMExtractRequest/Response below.
 
 
 class ChatMessage(BaseModel):
@@ -105,3 +105,91 @@ class ChatResponse(BaseModel):
     usage: ChatUsage = Field(default_factory=ChatUsage)
 
 
+# ── VLM / MinerU Extraction ─────────────────────────────────────────────
+
+
+class VLMDocumentMetadata(BaseModel):
+    """Document-level metadata from VLM extraction."""
+
+    total_pages: int = 1
+    title: str | None = None
+    authors: list[str] = Field(default_factory=list)
+    abstract_text: str | None = None
+
+
+class VLMFigurePosition(BaseModel):
+    """Position of a figure within the document."""
+
+    page: int = Field(ge=1)
+    index: int = Field(ge=1)
+    caption: str | None = None
+
+
+class VLMTableStructure(BaseModel):
+    """Structured table data extracted by VLM."""
+
+    page: int = Field(ge=1)
+    index: int = Field(ge=1)
+    headers: list[str] = Field(default_factory=list)
+    rows: list[list[str]] = Field(default_factory=list)
+
+
+class VLMPageContent(BaseModel):
+    """Content of a single page extracted by VLM."""
+
+    page_number: int = Field(ge=1)
+    markdown: str
+    figures: list[VLMFigurePosition] = Field(default_factory=list)
+    tables: list[VLMTableStructure] = Field(default_factory=list)
+
+
+class VLMImageUrl(BaseModel):
+    """Image URL in OpenAI multimodal content part."""
+
+    url: str
+
+
+class VLMContentPart(BaseModel):
+    """A single content part in an OpenAI multimodal message."""
+
+    type: str  # "text" | "image_url"
+    text: str | None = None
+    image_url: VLMImageUrl | None = None
+
+
+class VLMMessage(BaseModel):
+    """OpenAI multimodal chat message."""
+
+    role: str
+    content: str | list[VLMContentPart]
+
+
+class VLMExtractRequest(BaseModel):
+    """OpenAI-compatible multimodal chat request for VLM extraction."""
+
+    model: str = ""
+    messages: list[VLMMessage]
+    max_tokens: int = 4096
+    temperature: float = 0.0
+
+
+class VLMUsage(BaseModel):
+    """Token usage for VLM extraction."""
+
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+
+
+class VLMExtractResponse(BaseModel):
+    """Structured extraction response from VLM."""
+
+    id: str = ""
+    object: str = "vlm.extraction"
+    model: str
+    metadata: VLMDocumentMetadata = Field(default_factory=VLMDocumentMetadata)
+    pages: list[VLMPageContent] = Field(default_factory=list)
+    full_markdown: str = ""
+    # OpenAI-compatible passthrough — choice object shape not yet finalized
+    choices: list[dict] = Field(default_factory=list)
+    usage: VLMUsage = Field(default_factory=VLMUsage)

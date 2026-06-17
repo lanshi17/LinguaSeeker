@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.auth import require_api_key
 from app.models import RerankRequest, RerankResponse, RerankResult, RerankUsage
 from app.utils.logger import get_logger
 
@@ -24,7 +25,10 @@ def bind(service: RerankService) -> None:
 
 
 @router.post("/v1/rerank", response_model=RerankResponse)
-def create_rerank(req: RerankRequest):
+def create_rerank(
+    req: RerankRequest,
+    _api_key: str | None = Depends(require_api_key),
+):
     assert _service is not None, "RerankService not registered"
 
     scores = _service.infer(req.query, req.documents)
