@@ -31,12 +31,13 @@ impl PmcProvider {
 
         // Step 1: esearch to get IDs
         let esearch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
-        let esearch_params = serde_json::json!({
+        let mut esearch_params = serde_json::json!({
             "db": "pmc",
             "term": search_term,
             "retmax": limit,
             "retmode": "json",
         });
+        insert_api_key(&mut esearch_params);
 
         let esearch_json = client.get_json(esearch_url, &esearch_params).await?;
         let ids = extract_ids(&esearch_json);
@@ -69,12 +70,13 @@ impl PmcProvider {
     async fn fetch_by_pmcid(client: &HttpClient, pmcid: &str) -> Result<FetchResult, GatewayError> {
         let clean_id = pmcid.strip_prefix("PMC").unwrap_or(pmcid);
         let esearch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
-        let esearch_params = serde_json::json!({
+        let mut esearch_params = serde_json::json!({
             "db": "pmc",
             "term": format!("{}[uid]", clean_id),
             "retmax": 1,
             "retmode": "json",
         });
+        insert_api_key(&mut esearch_params);
 
         let esearch_json = client.get_json(esearch_url, &esearch_params).await?;
         let ids = extract_ids(&esearch_json);
@@ -105,12 +107,13 @@ impl PmcProvider {
 
     async fn fetch_by_pmid(client: &HttpClient, pmid: &str) -> Result<FetchResult, GatewayError> {
         let esearch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
-        let esearch_params = serde_json::json!({
+        let mut esearch_params = serde_json::json!({
             "db": "pmc",
             "term": format!("{}[uid]", pmid),
             "retmax": 1,
             "retmode": "json",
         });
+        insert_api_key(&mut esearch_params);
 
         let esearch_json = client.get_json(esearch_url, &esearch_params).await?;
         let ids = extract_ids(&esearch_json);
@@ -145,11 +148,12 @@ impl PmcProvider {
     ) -> Result<Vec<serde_json::Value>, GatewayError> {
         let id_list = ids.join(",");
         let esummary_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi";
-        let esummary_params = serde_json::json!({
+        let mut esummary_params = serde_json::json!({
             "db": "pmc",
             "id": id_list,
             "retmode": "json",
         });
+        insert_api_key(&mut esummary_params);
 
         let json = client.get_json(esummary_url, &esummary_params).await?;
 
@@ -176,6 +180,26 @@ impl PmcProvider {
         }
 
         Ok(items)
+    }
+}
+
+/// Read the NCBI API key from the `PUBMED_API_KEY` environment variable.
+///
+/// When present, NCBI E-utilities raise the per-IP rate limit from 3 to 10
+/// requests/second. The key is optional — without it the API still works but
+/// is subject to the lower limit.
+fn ncbi_api_key() -> Option<String> {
+    std::env::var("PUBMED_API_KEY")
+        .ok()
+        .filter(|k| !k.is_empty())
+}
+
+/// Insert `api_key` into an E-utilities query params object if available.
+fn insert_api_key(params: &mut serde_json::Value) {
+    if let Some(key) = ncbi_api_key() {
+        if let Some(obj) = params.as_object_mut() {
+            obj.insert("api_key".into(), serde_json::Value::String(key));
+        }
     }
 }
 

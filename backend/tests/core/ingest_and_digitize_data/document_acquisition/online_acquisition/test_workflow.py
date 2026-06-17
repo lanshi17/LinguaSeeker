@@ -6,7 +6,6 @@ import pytest
 
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
     _download_candidates,
-    _ensure_unpaywall_email,
     _extract_identifiers,
     online_acquisition_workflow,
 )
@@ -191,15 +190,163 @@ class TestDownloadCandidatesPmcidRouting:
         assert any("ncbi.nlm.nih.gov/pmc/articles/PMC8440630" in u for u in tried_urls)
 
 
-class TestEnsureUnpaywallEmail:
-    def test_sets_default_when_unset(self, monkeypatch):
-        monkeypatch.delenv("UNPAYWALL_EMAIL", raising=False)
-        _ensure_unpaywall_email()
-        import os
-        assert os.environ["UNPAYWALL_EMAIL"]
+class TestDownloadCandidatesDoiRouting:
+    """DOI download routing — unpaywall OA resolution."""
 
-    def test_preserves_existing_value(self, monkeypatch):
-        monkeypatch.setenv("UNPAYWALL_EMAIL", "[redacted-email]")
-        _ensure_unpaywall_email()
-        import os
-        assert os.environ["UNPAYWALL_EMAIL"] == "[redacted-email]"
+    @pytest.mark.asyncio
+    async def test_doi_unpaywall_success(self, tmp_path):
+        """DOI route calls unpaywall and downloads the resolved OA URL."""
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
+            DownloadResult,
+            OnlineAcquisitionGatewayResult,
+        )
+
+        mock_gateway_result = OnlineAcquisitionGatewayResult(
+            provider="unpaywall",
+            success=True,
+            items=[],
+            downloads=[{"pdf_url": "https://oa.example.com/paper.pdf"}],
+            warnings=[],
+            raw=None,
+            meta=None,
+            source_trace=[],
+        )
+        download_calls: list[str] = []
+
+        async def fake_download(url, download_path, filename_stem):
+            download_calls.append(url)
+            return str(tmp_path / "out.pdf"), url, []
+
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
+            new_callable=AsyncMock,
+            return_value=mock_gateway_result,
+        ), patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+            new_callable=AsyncMock,
+            side_effect=fake_download,
+        ):
+            downloads = await _download_candidates(
+                [{"doi": "10.1234/test", "title": "T"}],
+                str(tmp_path),
+            )
+
+        assert len(downloads) == 1
+        assert isinstance(downloads[0], DownloadResult)
+        assert downloads[0].source == "unpaywall"
+        assert download_calls == ["https://oa.example.com/paper.pdf"]
+
+    @pytest.mark.asyncio
+    async def test_doi_unpaywall_no_oa_falls_through_to_pmcid(self, tmp_path):
+        """When unpaywall returns no OA URL, PMCID route is tried if available."""
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
+            OnlineAcquisitionGatewayResult,
+        )
+
+        mock_gateway_result = OnlineAcquisitionGatewayResult(
+            provider="unpaywall",
+            success=True,
+            items=[],
+            downloads=[],  # no OA URL
+            warnings=["no_oa_location"],
+            raw=None,
+            meta=None,
+            source_trace=[],
+        )
+        tried_urls: list[str] = []
+
+        async def fake_download(url, download_path, filename_stem):
+            tried_urls.append(url)
+            if "europepmc.org/articles" in url:
+                return str(tmp_path / "out.pdf"), url, []
+            return None, None, []
+
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
+            new_callable=AsyncMock,
+            return_value=mock_gateway_result,
+        ), patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+            new_callable=AsyncMock,
+            side_effect=fake_download,
+        ):
+            downloads = await _download_candidates(
+                [{"doi": "10.1234/test", "pmcid": "PMC123", "title": "T"}],
+                str(tmp_path),
+            )
+
+        assert len(downloads) == 1
+        assert downloads[0].source == "pmc"
+        assert any("europepmc.org/articles/PMC123" in u for u in tried_urls)
+
+    @pytest.mark.asyncio
+    async def test_doi_unpaywall_exception_falls_through_to_url(self, tmp_path):
+        """An unpaywall exception is caught; download continues to direct URL route."""
+        async def fake_download(url, download_path, filename_stem):
+            return str(tmp_path / "out.pdf"), url, []
+
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
+            new_callable=AsyncMock,
+            side_effect=RuntimeError("unpaywall down"),
+        ), patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+            new_callable=AsyncMock,
+            side_effect=fake_download,
+        ):
+            downloads = await _download_candidates(
+                [{"doi": "10.1234/test", "url": "https://example.com/paper.pdf", "title": "T"}],
+                str(tmp_path),
+            )
+
+        # Falls through to direct URL route
+        assert len(downloads) == 1
+        assert downloads[0].source == "direct"
+
+
+class TestDownloadCandidatesDirectUrlRouting:
+    """Direct URL download routing — route 3."""
+
+    @pytest.mark.asyncio
+    async def test_direct_url_download(self, tmp_path):
+        """Candidate with only a URL downloads via the direct route."""
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
+            DownloadResult,
+        )
+
+        async def fake_download(url, download_path, filename_stem):
+            if url == "https://example.com/paper.pdf":
+                return str(tmp_path / "out.pdf"), url, []
+            return None, None, []
+
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+            new_callable=AsyncMock,
+            side_effect=fake_download,
+        ):
+            downloads = await _download_candidates(
+                [{"url": "https://example.com/paper.pdf", "title": "T", "_source_provider": "crossref"}],
+                str(tmp_path),
+            )
+
+        assert len(downloads) == 1
+        assert isinstance(downloads[0], DownloadResult)
+        assert downloads[0].source == "crossref"
+
+    @pytest.mark.asyncio
+    async def test_no_identifiers_no_download(self, tmp_path):
+        """Candidate with no DOI/PMCID/URL produces no downloads."""
+        async def fake_download(url, download_path, filename_stem):
+            return str(tmp_path / "out.pdf"), url, []
+
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+            new_callable=AsyncMock,
+            side_effect=fake_download,
+        ):
+            downloads = await _download_candidates(
+                [{"title": "T"}],
+                str(tmp_path),
+            )
+
+        assert downloads == []
