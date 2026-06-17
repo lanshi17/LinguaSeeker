@@ -59,7 +59,6 @@ EVIDENCE_FIELD_SPECS: tuple[EvidenceFieldSpec, ...] = (
     EvidenceFieldSpec("B.testing_method", "B", "Case/Phenotype Information", "Variant testing method", "Variant testing method", (), ("segregation",)),
     EvidenceFieldSpec("B.sequencing_method_quality", "B", "Case/Phenotype Information", "Sequencing method quality", "Sequencing method quality", (), ("segregation",)),
     EvidenceFieldSpec("B.healthy_adult_status", "B", "Case/Phenotype Information", "Healthy adult observation", "Healthy adult observation", ("BS2",), ("variant_evidence",)),
-    EvidenceFieldSpec("B.case_notes", "B", "Case/Phenotype Information", "Case notes", "Case notes", (), ("phenotype_consistency",)),
 
     # Category C: Segregation/Family Information
     EvidenceFieldSpec("C.family_id", "C", "Segregation/Family Information", "Family identifier", "Family identifier", ("PP1", "BS4"), ("segregation",)),
@@ -100,7 +99,6 @@ EVIDENCE_FIELD_SPECS: tuple[EvidenceFieldSpec, ...] = (
     EvidenceFieldSpec("E.conservation_score", "E", "Computational/Prediction Evidence", "Conservation score", "Conservation score", ("PP3", "BP4"), ("computational",)),
     EvidenceFieldSpec("E.in_silico_consensus", "E", "Computational/Prediction Evidence", "In silico consensus", "In silico consensus", ("PP3", "BP4"), ("computational",)),
     EvidenceFieldSpec("E.prediction_conflict", "E", "Computational/Prediction Evidence", "Computational prediction conflict", "Computational prediction conflict", ("PP3", "BP4"), ("computational",)),
-    EvidenceFieldSpec("E.computational_evidence_notes", "E", "Computational/Prediction Evidence", "Computational evidence notes", "Computational evidence notes", ("PP3", "BP4"), ("computational",)),
 
     # Category F: Functional Evidence
     EvidenceFieldSpec("F.assay_id", "F", "Functional Evidence", "Functional assay identifier", "Functional assay identifier", ("PS3", "BS3"), ("functional_alteration",)),
@@ -145,7 +143,6 @@ EVIDENCE_FIELD_SPECS: tuple[EvidenceFieldSpec, ...] = (
     EvidenceFieldSpec("H.negative_functional_result", "H", "Contradiction/Exclusion Evidence", "Negative functional result", "Negative functional result", ("BS3",), ("contradiction",)),
     EvidenceFieldSpec("H.negative_case_control_result", "H", "Contradiction/Exclusion Evidence", "Negative case-control result", "Negative case-control result", (), ("contradiction",)),
     EvidenceFieldSpec("H.animal_model_no_phenotype", "H", "Contradiction/Exclusion Evidence", "Animal model no phenotype", "Animal model no phenotype", (), ("contradiction",)),
-    EvidenceFieldSpec("H.contradiction_notes", "H", "Contradiction/Exclusion Evidence", "Other contradiction notes", "Other contradiction notes", ("BP5", "BS4"), ("contradiction",)),
 
     # Category I: Gene Function/Experimental Evidence
     EvidenceFieldSpec("I.gene_function_biochemical", "I", "Gene Function/Experimental Evidence", "Biochemical gene function evidence", "Biochemical gene function evidence", (), ("function",)),
@@ -165,7 +162,6 @@ EVIDENCE_FIELD_SPECS: tuple[EvidenceFieldSpec, ...] = (
     EvidenceFieldSpec("I.cell_rescue_experiment", "I", "Gene Function/Experimental Evidence", "Cell rescue experiment", "Cell rescue experiment", (), ("rescue",)),
     EvidenceFieldSpec("I.rescue_result", "I", "Gene Function/Experimental Evidence", "Rescue result", "Rescue result", (), ("rescue",)),
     EvidenceFieldSpec("I.experimental_replication", "I", "Gene Function/Experimental Evidence", "Experimental replication", "Experimental replication", (), ("function",)),
-    EvidenceFieldSpec("I.gene_level_experimental_notes", "I", "Gene Function/Experimental Evidence", "Gene-level experimental notes", "Gene-level experimental notes", (), ("function",)),
 
     # Category J: Authority/Time Validity
     EvidenceFieldSpec("J.clinvar_assertion", "J", "Authority/Time Validity", "ClinVar assertion", "ClinVar assertion", ("PP5", "BP6"), ("time_validity",)),
@@ -185,11 +181,11 @@ def get_field_spec(field_id: str) -> EvidenceFieldSpec:
 
 
 # ── Catalog groups for parallel extraction ─────────────────────────────
-# Split 138 fields into 2 balanced groups to reduce per-call output tokens
+# Split 134 fields into 2 balanced groups to reduce per-call output tokens
 # and enable concurrent STRONG-tier LLM calls.
 _CATALOG_GROUP_CATEGORIES = {
-    "high_signal": ("A", "B", "D", "E", "J"),   # 63 fields: variant, case, population, prediction, authority
-    "supporting":  ("C", "F", "G", "H", "I"),    # 75 fields: segregation, functional, case-control, contradiction, gene
+    "high_signal": ("A", "B", "D", "E", "J"),   # 61 fields: variant, case, population, prediction, authority
+    "supporting":  ("C", "F", "G", "H", "I"),    # 73 fields: segregation, functional, case-control, contradiction, gene
 }
 
 CATALOG_GROUPS: dict[str, tuple[EvidenceFieldSpec, ...]] = {}

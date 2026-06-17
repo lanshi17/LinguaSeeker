@@ -471,7 +471,7 @@ def test_special_evidence_stage_keeps_non_g_case_control_when_document_text_is_t
         {
             "record_type": "case_control",
             "description": "A retrospective analysis reported Fabry disease progression rates.",
-            "evidence_field_ids": ["B.disease_diagnosis", "B.case_notes"],
+            "evidence_field_ids": ["B.disease_diagnosis", "B.clinical_phenotypes"],
             "source": {
                 "span_id": "disc-2",
                 "page": 1,
@@ -504,11 +504,11 @@ def test_special_evidence_stage_keeps_non_g_case_control_when_document_text_is_t
             ),
         ),
         EvidenceItem(
-            field_id="B.case_notes",
+            field_id="B.clinical_phenotypes",
             category="B",
-            field_name="Case notes",
+            field_name="Key clinical phenotypes",
             status=EvidenceStatus.FOUND,
-            value="retrospective analysis mentioned",
+            value="Fabry disease",
             confidence=0.9,
             source=SourceLocation(
                 span_id="p1",

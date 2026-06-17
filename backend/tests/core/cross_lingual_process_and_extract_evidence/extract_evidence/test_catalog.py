@@ -11,14 +11,14 @@ def test_catalog_has_expected_category_counts():
 
     assert counts == {
         "A": 18,
-        "B": 22,
+        "B": 21,
         "C": 18,
         "D": 9,
-        "E": 8,
+        "E": 7,
         "F": 17,
         "G": 12,
-        "H": 10,
-        "I": 18,
+        "H": 9,
+        "I": 17,
         "J": 6,
     }
 
