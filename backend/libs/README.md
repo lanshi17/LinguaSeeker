@@ -70,6 +70,9 @@ Each crate has its own `Cargo.lock` (not a workspace). After adding/updating dep
 | Variable | Used by | Description |
 |----------|---------|-------------|
 | `UNPAYWALL_EMAIL` | `net-io` (Unpaywall) | Required for Unpaywall API |
+| `PUBMED_API_KEY` | `net-io` (PMC) + Python `pubmed_service` | Optional; raises NCBI E-utilities rate limit 3→10 req/s |
+| `BASE_API_KEY` | `net-io` (BASE) | Optional; BASE academic search API key |
+| `CORE_API_KEY` | `net-io` (CORE) | Optional; CORE search API key |
 | `AWS_ACCESS_KEY_ID` | `files-io` (S3) | AWS credential chain (optional if passed explicitly) |
 | `AWS_SECRET_ACCESS_KEY` | `files-io` (S3) | AWS credential chain |
 | `AWS_REGION` | `files-io` (S3) | Default `us-east-1` |

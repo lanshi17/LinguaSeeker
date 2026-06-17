@@ -59,11 +59,11 @@ redis:
   db: {{ redis_db }}
   max_connections: {{ redis_max_connections }}
 
-# ── Web Search ───────────────────────────────────────────────────────────
-web_search:
-  base_url: "{{ web_search_base_url }}"
-  timeout: {{ web_search_timeout }}
-  max_results: {{ web_search_max_results }}
+# ── Literature Acquisition ───────────────────────────────────────────────
+# Unpaywall requires a contact email (not secret).
+# API keys (pubmed/base/core) are in vault-production.yaml.
+unpaywall:
+  email: "{{ unpaywall_email }}"
 
 # ── Network ──────────────────────────────────────────────────────────────
 network:
