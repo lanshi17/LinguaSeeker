@@ -1,0 +1,208 @@
+{
+  "entry_id": "rett_006",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Rett syndrome",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": "10.7499/j.issn.1008-8830.2014.04.017",
+  "source_title": "Rett综合征的临床特点及MECP2基因突变分析",
+  "source_journal": "中国当代儿科杂志 (Chinese Journal of Contemporary Pediatrics)",
+  "source_year": "2014",
+  "source_language": "zh",
+  "source_pdf_path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_Clinical_features_and_MECP2_mutations_in_children_with_Rett_syndrome.pdf",
+  "variants": [
+    {
+      "hgvs_c": "c.316C>T",
+      "hgvs_p": "p.R106W",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "3",
+      "domain": "MBD"
+    },
+    {
+      "hgvs_c": "c.1126C>T",
+      "hgvs_p": "p.P376S",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "4",
+      "domain": "CTS"
+    },
+    {
+      "hgvs_c": "c.808C>T",
+      "hgvs_p": "p.R270X",
+      "variant_type": "nonsense",
+      "clinical_significance": "",
+      "exon": "4",
+      "domain": "TRD"
+    },
+    {
+      "hgvs_c": "c.502C>T",
+      "hgvs_p": "p.R168X",
+      "variant_type": "nonsense",
+      "clinical_significance": "",
+      "exon": "4",
+      "domain": "outside functional domains"
+    },
+    {
+      "hgvs_c": "c.913insT",
+      "hgvs_p": "p.K305fs",
+      "variant_type": "frameshift",
+      "clinical_significance": "novel",
+      "exon": "4",
+      "domain": "TRD"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.316C>T",
+      "candidates": [
+        "c.316C>T",
+        "c.1126C>T",
+        "c.808C>T",
+        "c.502C>T",
+        "c.913insT"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.R106W",
+      "candidates": [
+        "p.R106W",
+        "p.P376S",
+        "p.R270X",
+        "p.R168X",
+        "p.K305fs"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "nonsense",
+        "nonsense",
+        "frameshift"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "MBD",
+      "candidates": [
+        "MBD",
+        "CTS",
+        "TRD",
+        "outside functional domains",
+        "TRD"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001263; HP:0001250; HP:0002072; HP:0001344; HP:0002194",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "语言功能降低或丧失（reduced or lost language function）; 手的技能降低（loss of hand skills）; 单一模式手的刻板动作（hand stereotypies, e.g. finger-playing, hair-grabbing）; 坐和走的功能受限（impaired sitting and walking / motor development）; 脑电图异常、癎性放电（abnormal EEG with epileptiform discharges）; 发育落后于同龄儿童（developmental delay）",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "5-42 months",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "de novo",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "",
+  "classification": "Rett real-data",
+  "gcep": "Rett literature benchmark"
+}

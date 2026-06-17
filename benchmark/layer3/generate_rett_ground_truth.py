@@ -50,7 +50,7 @@ def export_rett_ground_truth(
 
         normalized_expected = _normalize_expected(expected, meta)
         _write_json(target_entry_dir / "expected.json", normalized_expected)
-        shutil.copy2(source_md_path, target_entry_dir / "source.md")
+        _copy_markdown_source(source_md_path, target_entry_dir / "source.md")
 
         source_pdf_path = source_entry_dir / "source.pdf"
         if source_pdf_path.exists():
@@ -80,6 +80,11 @@ def _load_optional_json(path: Path) -> dict[str, Any]:
 
 def _write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _copy_markdown_source(source_path: Path, target_path: Path) -> None:
+    text = source_path.read_text(encoding="utf-8").replace("\x00", "")
+    target_path.write_text(text, encoding="utf-8")
 
 
 def _normalize_expected(expected: dict[str, Any], meta: dict[str, Any]) -> dict[str, Any]:
