@@ -294,24 +294,6 @@ def _merge_and_dedupe(
 # ── Phase 2: Download ───────────────────────────────────────────────────
 
 
-# Default contact email used for provider APIs that require one
-# (Unpaywall, NCBI EUtils). Overridable via the UNPAYWALL_EMAIL env var.
-_DEFAULT_PROVIDER_EMAIL = "yhvguk@stu.hunau.edu.cn"
-
-
-def _ensure_unpaywall_email() -> None:
-    """Ensure ``UNPAYWALL_EMAIL`` is set for the Rust unpaywall provider.
-
-    The Rust ``net_io`` unpaywall provider reads the email from
-    ``std::env::var("UNPAYWALL_EMAIL")`` at request time and refuses to
-    query the API when it is unset, returning a ``unpaywall_requires_email``
-    warning instead. Set it once from the default contact address if the
-    operator has not provided one.
-    """
-    if not os.environ.get("UNPAYWALL_EMAIL"):
-        os.environ["UNPAYWALL_EMAIL"] = _DEFAULT_PROVIDER_EMAIL
-
-
 async def _download_candidates(
     candidates: List[Dict[str, Any]],
     download_path: str,
@@ -320,6 +302,8 @@ async def _download_candidates(
 
     Routing:
     - DOI → unpaywall OA resolution → download
+      (requires ``UNPAYWALL_EMAIL`` env var, set via
+      ``backend/config/environments/<env>.yaml`` → ``unpaywall.email``)
     - PMCID → EuropePMC render endpoint → PMC direct PDF URL fallback
     - Direct URL → HTTP download (with HTML→PDF redirect handling)
 
@@ -329,7 +313,6 @@ async def _download_candidates(
     EuropePMC's render endpoint (``europepmc.org/articles/PMC{x}?pdf=render``)
     streams the actual PDF and is tried first.
     """
-    _ensure_unpaywall_email()
 
     async def _download_one(candidate: Dict[str, Any]) -> Optional[DownloadResult]:
         doi = _coerce_str(candidate.get("doi") or candidate.get("DOI")).strip() or None

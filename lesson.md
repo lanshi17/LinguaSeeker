@@ -2980,9 +2980,10 @@ field, which layered config never populates in the dev environment. The actual k
 
 ### 解决方案
 - 在 `_download_candidates` 的 PMCID 路由中，先尝试 EuropePMC render endpoint（`europepmc.org/articles/PMC{x}?pdf=render`，会 302 到 `europepmc.org/api/getPdf?pmcid=PMC{x}` 并流式返回真 PDF），失败再回退到 PMC 直链。
-- 新增 `_ensure_unpaywall_email()` helper，在下载前确保 `UNPAYWALL_EMAIL` 环境变量已设置（若未设置则用默认联系邮箱）。
+- `UNPAYWALL_EMAIL` 通过现有配置基础设施注入：`backend/config/environments/<env>.yaml` → `unpaywall.email` → config_loader 展平为 `UNPAYWALL_EMAIL` 环境变量 → Rust unpaywall provider 读取。将 `development.yaml` 中的占位符 `your-email@example.com` 改为实际联系邮箱 `yhvguk@stu.hunau.edu.cn`。业务代码不触碰环境变量。
 
 ### 预防措施
 - 当某个下载 URL 返回非 PDF 内容时，应在 warnings 中记录 final_url 和 content-type，便于诊断 JS interstitial 类问题。
-- 对依赖环境变量的 Rust provider（unpaywall），应在 Python 侧调用前显式确保环境变量存在，而非静默失败。
+- provider contact identity（email、api_key）属于运行配置，必须通过 `backend/config/` 分层 YAML 注入，禁止在业务代码中硬编码或在请求路径中修改 `os.environ`。
 - EuropePMC render endpoint 是比 PMC 直链更可靠的 OA PDF 来源，应作为 PMCID 下载的首选。
+- 配置文件中的占位符值（如 `your-email@example.com`）会导致外部 API 返回 422 等错误，应在环境初始化时替换为真实值。

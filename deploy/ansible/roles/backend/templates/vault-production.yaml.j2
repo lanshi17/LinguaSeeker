@@ -13,6 +13,19 @@ mineru:
 web_search:
   api_key: "{{ vault_web_search_api_key }}"
 
+# ── Literature Acquisition API Keys ──────────────────────────────────────
+#   PUBMED_API_KEY -> NCBI E-utilities (3→10 req/s); applies to pmc + pubmed_service
+#   BASE_API_KEY   -> BASE (Bielefeld Academic Search Engine)
+#   CORE_API_KEY   -> CORE (core.ac.uk)
+pubmed:
+  api_key: "{{ vault_pubmed_api_key }}"
+
+base:
+  api_key: "{{ vault_base_api_key }}"
+
+core:
+  api_key: "{{ vault_core_api_key }}"
+
 postgres:
   user: "{{ postgres_user }}"
   password: "{{ vault_postgres_password }}"
