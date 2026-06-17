@@ -2987,3 +2987,25 @@ field, which layered config never populates in the dev environment. The actual k
 - provider contact identity（email、api_key）属于运行配置，必须通过 `backend/config/` 分层 YAML 注入，禁止在业务代码中硬编码或在请求路径中修改 `os.environ`。
 - EuropePMC render endpoint 是比 PMC 直链更可靠的 OA PDF 来源，应作为 PMCID 下载的首选。
 - 配置文件中的占位符值（如 `your-email@example.com`）会导致外部 API 返回 422 等错误，应在环境初始化时替换为真实值。
+
+## 2026-06-17 — Phase 1 "Full-text PDF unavailable" when online source has query but no identifiers
+
+### 问题描述
+对 online source 仅提供 query（无 identifiers）运行流水线，Phase 1 报错 "Full-text PDF unavailable for the given identifier"。Acquisition service 返回 success=True 但 downloads 为空。
+
+### 排查过程
+1. 从日志定位：`acquire:54` 报 `success=True`，但 `_execute_phase:168` 抛 PermanentPhaseError "Full-text PDF unavailable"。
+2. phase_1_adapter.py:116-140 逻辑：success=True 且 downloads 为空 → 抛 PermanentPhaseError。
+3. 追踪 success=True 的来源：`pipeline.py:310-316` 在无 identifiers 时设 `action="search"`。
+4. workflow.py:623-632：`action=="search"` 时提前返回 items 但不下载 PDF，success=bool(items)。
+5. 因此 pipeline 拿到 success=True、downloads=[]，Phase 1 必然失败。
+
+### 根因分析
+`pipeline.py` 错误地根据有无 identifiers 区分 "search" 和 "download" action。流水线始终需要下载文档才能解析（Phase 1 output 需要 pdf_path）。"search" action 仅返回元数据不下载，适用于独立的 `/literature/search` 端点，不适用于流水线。
+
+### 解决方案
+`pipeline.py` 中 `source_type=="online"` 时始终使用 `action="download"`。"download" action 内部包含搜索+下载两个阶段（link acquisition + PDF download），无论输入是 query 还是 identifiers 都能正常工作。
+
+### 预防措施
+- Pipeline 入口设置 action 时应考虑下游需求：Phase 1 需要下载的 PDF，不能用仅搜索的 action。
+- "search" action 是只读元数据操作，不应用于需要文件的处理流程。
