@@ -1,8 +1,8 @@
 # BIBM Main Paper Claim Matrix
 
-**Status:** verified-baseline
+**Status:** done
 **Created:** 2026-06-15
-**Completed:** 2026-06-15 (benchmark metrics verified)
+**Completed:** 2026-06-17 (benchmark metrics verified)
 **PR:** —
 
 ## Purpose
@@ -23,10 +23,11 @@ This matrix binds every paper-facing claim to frozen evidence artifacts. It is t
 | Error diagnosis | `benchmark/layer3/reports/contextual_reconcile_diagnosis_20260615_011335.json` | `source_label_visibility_limit=5`, `disease_boundary_error=2`, `candidate_absent=2` |
 | Benchmark A readiness | `benchmark/layer3/reports/benchmark_readiness_20260615_221952.json` | 30/30 entries annotated, alignment_annotation_coverage=1.0; Benchmark A metrics are now reportable |
 | Alignment metrics | `benchmark/layer3/reports/alignment_metrics_20260615_224145.json` | N=90 records (3 fields × 30 entries); overall alignment_accuracy=0.8667; gene_symbol=0.9667, gene_disease_relationship=0.8333, disease_diagnosis=0.8; drift_f1=0.0, conflict_f1=0.0 (no drift/conflict in ClinGen gold set) |
-| Augmentation metrics | `benchmark/layer3/reports/evidence_augmentation_metrics_20260615_221957.json` | N=30 cases; CoverageGain=0.0647, NonEnglishYield=0.0608, UniqueGain=56, TraceableRate=1.0, InterpretationRelevant=0.1964, ReviewerBurden=0.0; 5/30 cases show non-English augmentation |
-| Benchmark B pilot selection | `benchmark/layer3/ground_truth/benchmark_b_pilot_selection.json` | Frozen multilingual pilot selection (N=10 cases, 7 languages each); use this as the source for the N=10 pilot, not as an experimental result |
-| Benchmark B runtime pilot | `benchmark/layer3/reports/benchmark_b_phase2_runtime_metrics_*.json` (manifest-declared) | zh/ja/ko runtime pilot over the frozen queue; report `attempted_samples`, `phase2_completed`, `timeout_count`, `failed_count` verbatim; do not promote the pilot into a full benchmark |
-| Paper tables | `benchmark/layer3/reports/main_paper_tables_20260615_224250.md` | Tables 1-8 generated from the frozen manifest; Tables 7-8 add alignment and augmentation metrics |
+| Augmentation metrics (static) | `benchmark/layer3/reports/evidence_augmentation_metrics_20260615_221957.json` | N=30 cases; CoverageGain=0.0647, NonEnglishYield=0.0608, UniqueGain=56, TraceableRate=1.0, InterpretationRelevant=0.1964, ReviewerBurden=0.0; 5/30 cases show non-English augmentation |
+| Benchmark B pilot selection | `benchmark/layer3/ground_truth/benchmark_b_pilot_selection.json` | Frozen multilingual pilot selection (N=10 cases, 7 languages each); the merged pilot run reports cover N=4 of the original 30 queued sources (clingen_000:ja/ko/zh + clingen_003:ko). |
+| Benchmark B runtime pilot | `benchmark/layer3/reports/benchmark_b_phase2_runtime_metrics_20260616_161809.json` | N=4 multilingual runtime smoke: EvidenceCoverageGain=1.6667, NonEnglishYield=0.625, TraceableAugmentationRate=1.0. Remaining 26 queue items deferred. |
+| Source inventory | `benchmark/layer3/reports/source_inventory_20260616_165214.json` | Separates ClinGen gold, ClinVar structured anchor (75), and unlabeled multilingual PDFs (185); used by Tables 1 and 6 in the paper manifest. |
+| Paper tables | `benchmark/layer3/reports/main_paper_tables_20260616_175917.md` | Tables 1–9 generated from `main_paper_rescue_manifest_20260616_175902.json`. |
 
 ## Primary Paper Position
 

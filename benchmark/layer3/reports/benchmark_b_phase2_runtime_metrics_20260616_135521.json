@@ -1,0 +1,59 @@
+{
+  "evaluation_id": "benchmark_b_phase2_runtime_20260616_135521",
+  "timestamp": "2026-06-16T13:55:21",
+  "config": {
+    "sample_report_paths": [
+      "benchmark/layer3/reports/benchmark_b_phase2_sample_20260616_111030.json",
+      "benchmark/layer3/reports/benchmark_b_phase2_sample_20260616_132959.json"
+    ],
+    "reports_dir": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/feature/bibm-multilingual-source-strategy/benchmark/layer3/reports"
+  },
+  "overall": {
+    "evidence_coverage_gain": 1.0,
+    "non_english_evidence_yield": 0.5,
+    "unique_evidence_gain": 6,
+    "traceable_augmentation_rate": 1.0,
+    "interpretation_relevant_evidence_gain": 0.1667,
+    "reviewer_burden": 0.0
+  },
+  "per_case": [
+    {
+      "queue_id": "clingen_000:ja",
+      "entry_id": "clingen_000",
+      "article_language": "ja",
+      "target_gene": "AARS1",
+      "target_disease": "Charcot-Marie-Tooth disease axonal type 2N",
+      "processing_run_id": "d2f073b3-f5a9-41b8-83aa-783f8a8178a8",
+      "source_document_id": "2993bf3a-3c5d-4c29-9ef7-760333ed89bb",
+      "pipeline_status": "running",
+      "phase2_status": "completed",
+      "source_pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/pipeline/input/ja/case_report/clingen_000.pdf",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/feature/bibm-multilingual-source-strategy/backend/data/pipeline/d2f073b3-f5a9-41b8-83aa-783f8a8178a8/phase_2/extraction_result.json",
+      "artifact_exists": true,
+      "original_count": 15,
+      "translated_count": 6,
+      "reconciled_count": 12,
+      "matrix": {
+        "english_only_evidence_count": 6,
+        "multilingual_evidence_count": 12,
+        "non_english_added_evidence_count": 6,
+        "unknown_language_evidence_count": 0,
+        "duplicated_evidence_count": 0,
+        "conflicting_evidence_count": 0,
+        "traceable_added_evidence_count": 6,
+        "potential_acmg_evidence_type_counts": {
+          "phenotype/case evidence": 1
+        }
+      },
+      "metrics": {
+        "evidence_coverage_gain": 1.0,
+        "non_english_evidence_yield": 0.5,
+        "unique_evidence_gain": 6,
+        "traceable_augmentation_rate": 1.0,
+        "interpretation_relevant_evidence_gain": 0.1667,
+        "reviewer_burden": 0.0
+      }
+    }
+  ],
+  "warnings": []
+}

@@ -1,0 +1,184 @@
+{
+  "generated_at": "2026-06-16T16:09:54+0800",
+  "git_commit": "d3932325ae20de054fc6982836ceac3fda519114",
+  "source_reports": {
+    "coverage_report": "benchmark/layer3/reports/phase2_artifact_coverage_20260613_192024.json",
+    "ablation_report": "benchmark/layer3/reports/reconcile_ablation_20260615_010725.json",
+    "g2_report": "benchmark/layer3/reports/g2_statistics_20260615_010748.json",
+    "traceability_report": "benchmark/layer3/reports/traceability_context_verifier_reconcile_20260615_011414.json",
+    "benchmark_a_readiness_report": "benchmark/layer3/reports/benchmark_readiness_20260616_124611.json",
+    "benchmark_b_pilot_selection_report": "benchmark/layer3/ground_truth/benchmark_b_pilot_selection.json",
+    "alignment_report": "benchmark/layer3/reports/alignment_metrics_20260616_144749.json",
+    "evidence_augmentation_report": "benchmark/layer3/reports/evidence_augmentation_metrics_20260616_124445.json",
+    "benchmark_b_runtime_report": "benchmark/layer3/reports/benchmark_b_phase2_runtime_metrics_20260616_160406.json",
+    "baseline_reports": [
+      "benchmark/layer3/reports/baseline_b0_20260613_013114.json",
+      "benchmark/layer3/reports/baseline_b1_20260613_014535.json",
+      "benchmark/layer3/reports/baseline_b2_20260613_020025.json",
+      "benchmark/layer3/reports/baseline_b3_20260613_021408.json",
+      "benchmark/layer3/reports/baseline_b4_20260613_031120.json"
+    ]
+  },
+  "reproducibility": {
+    "git_commit": "d3932325ae20de054fc6982836ceac3fda519114",
+    "entry_ids": [
+      "clingen_000",
+      "clingen_001",
+      "clingen_002",
+      "clingen_003",
+      "clingen_004",
+      "clingen_005",
+      "clingen_006",
+      "clingen_007",
+      "clingen_008",
+      "clingen_009",
+      "clingen_010",
+      "clingen_011",
+      "clingen_012",
+      "clingen_013",
+      "clingen_014",
+      "clingen_015",
+      "clingen_016",
+      "clingen_017",
+      "clingen_018",
+      "clingen_019",
+      "clingen_020",
+      "clingen_021",
+      "clingen_022",
+      "clingen_023",
+      "clingen_024",
+      "clingen_025",
+      "clingen_026",
+      "clingen_027",
+      "clingen_028",
+      "clingen_029"
+    ],
+    "generated_reports": [
+      "benchmark/layer3/reports/phase2_artifact_coverage_20260613_192024.json",
+      "benchmark/layer3/reports/reconcile_ablation_20260615_010725.json",
+      "benchmark/layer3/reports/g2_statistics_20260615_010748.json",
+      "benchmark/layer3/reports/traceability_context_verifier_reconcile_20260615_011414.json",
+      "benchmark/layer3/reports/benchmark_readiness_20260616_124611.json",
+      "benchmark/layer3/ground_truth/benchmark_b_pilot_selection.json",
+      "benchmark/layer3/reports/alignment_metrics_20260616_144749.json",
+      "benchmark/layer3/reports/evidence_augmentation_metrics_20260616_124445.json",
+      "benchmark/layer3/reports/benchmark_b_phase2_runtime_metrics_20260616_160406.json",
+      "benchmark/layer3/reports/baseline_b0_20260613_013114.json",
+      "benchmark/layer3/reports/baseline_b1_20260613_014535.json",
+      "benchmark/layer3/reports/baseline_b2_20260613_020025.json",
+      "benchmark/layer3/reports/baseline_b3_20260613_021408.json",
+      "benchmark/layer3/reports/baseline_b4_20260613_031120.json"
+    ],
+    "commands": {
+      "coverage": "PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.layer3.analysis.phase2_artifact_coverage --write",
+      "ablation": "PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.layer3.analysis.reconcile_ablation --write",
+      "baselines": "PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.layer3.analysis.diagnose_baselines --write",
+      "benchmark_a_readiness": "PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.layer3.analysis.benchmark_readiness --write",
+      "benchmark_b_pilot_selection": "PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.layer3.analysis.select_benchmark_b_pilot --write",
+      "benchmark_b_runtime": "PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.layer3.analysis.benchmark_b_phase2_runtime_metrics --sample-report benchmark/layer3/reports/benchmark_b_phase2_sample_20260616_111030.json --sample-report benchmark/layer3/reports/benchmark_b_phase2_sample_20260616_132959.json --write",
+      "g2_statistics": "PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.layer3.analysis.g2_statistics --report benchmark/layer3/reports/reconcile_ablation_20260615_010725.json --baseline-strategy grounded_hard_rule --candidate-strategy context_verifier_reconcile --write",
+      "manifest": "PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.layer3.analysis.main_paper_rescue_manifest --coverage-report benchmark/layer3/reports/phase2_artifact_coverage_20260613_192024.json --ablation-report benchmark/layer3/reports/reconcile_ablation_20260615_010725.json --g2-report benchmark/layer3/reports/g2_statistics_20260615_010748.json --traceability-report benchmark/layer3/reports/traceability_context_verifier_reconcile_20260615_011414.json --benchmark-a-readiness-report benchmark/layer3/reports/benchmark_readiness_20260616_124611.json --benchmark-b-pilot-selection-report benchmark/layer3/ground_truth/benchmark_b_pilot_selection.json --alignment-report benchmark/layer3/reports/alignment_metrics_20260616_144749.json --evidence-augmentation-report benchmark/layer3/reports/evidence_augmentation_metrics_20260616_124445.json --benchmark-b-runtime-report benchmark/layer3/reports/benchmark_b_phase2_runtime_metrics_20260616_160406.json --baseline-report benchmark/layer3/reports/baseline_b0_20260613_013114.json --baseline-report benchmark/layer3/reports/baseline_b1_20260613_014535.json --baseline-report benchmark/layer3/reports/baseline_b2_20260613_020025.json --baseline-report benchmark/layer3/reports/baseline_b3_20260613_021408.json --baseline-report benchmark/layer3/reports/baseline_b4_20260613_031120.json --write"
+    }
+  },
+  "no_leakage": {
+    "uses_expected_fields_at_runtime": false,
+    "uses_clingen_classification_at_runtime": false,
+    "allowed_runtime_context": [
+      "source article text and metadata",
+      "runtime extraction artifacts",
+      "ontology and context-pack metadata",
+      "report-level evaluation outputs for analysis only"
+    ]
+  },
+  "coverage": {
+    "total_entries": 30,
+    "covered_count": 30,
+    "needs_pipeline_count": 0
+  },
+  "strategies": [
+    {
+      "strategy": "dual_union",
+      "total_entries": 30,
+      "precision": 0.7935,
+      "recall": 0.9733,
+      "f1": 0.8743
+    },
+    {
+      "strategy": "grounded_hard_rule",
+      "total_entries": 30,
+      "precision": 0.8068,
+      "recall": 0.9726,
+      "f1": 0.882
+    },
+    {
+      "strategy": "source_grounded_reconcile",
+      "total_entries": 30,
+      "precision": 0.8182,
+      "recall": 0.973,
+      "f1": 0.8889
+    },
+    {
+      "strategy": "context_verifier_reconcile",
+      "total_entries": 30,
+      "precision": 0.9205,
+      "recall": 0.9759,
+      "f1": 0.9474
+    }
+  ],
+  "g2_statistics": {
+    "source_report_path": "benchmark/layer3/reports/reconcile_ablation_20260615_010725.json",
+    "baseline_strategy": "grounded_hard_rule",
+    "candidate_strategy": "context_verifier_reconcile",
+    "sample_size": 30,
+    "baseline_f1": 0.882,
+    "candidate_f1": 0.9474,
+    "delta_f1": 0.0654,
+    "bootstrap_ci_low": 0.0302,
+    "bootstrap_ci_high": 0.106,
+    "sign_test_p": 0.0039,
+    "significant": true,
+    "main_paper_ready": true
+  },
+  "baselines": [
+    {
+      "label": "B0",
+      "report_path": "benchmark/layer3/reports/baseline_b0_20260613_013114.json",
+      "total_entries": 30,
+      "precision": 0.9398,
+      "recall": 0.9176,
+      "f1": 0.9286
+    },
+    {
+      "label": "B1",
+      "report_path": "benchmark/layer3/reports/baseline_b1_20260613_014535.json",
+      "total_entries": 30,
+      "precision": 0.9136,
+      "recall": 0.8916,
+      "f1": 0.9024
+    },
+    {
+      "label": "B2",
+      "report_path": "benchmark/layer3/reports/baseline_b2_20260613_020025.json",
+      "total_entries": 30,
+      "precision": 0.9125,
+      "recall": 0.8795,
+      "f1": 0.8957
+    },
+    {
+      "label": "B3",
+      "report_path": "benchmark/layer3/reports/baseline_b3_20260613_021408.json",
+      "total_entries": 30,
+      "precision": 0.9367,
+      "recall": 0.8706,
+      "f1": 0.9024
+    },
+    {
+      "label": "B4",
+      "report_path": "benchmark/layer3/reports/baseline_b4_20260613_031120.json",
+      "total_entries": 30,
+      "precision": 0.9277,
+      "recall": 0.9167,
+      "f1": 0.9222
+    }
+  ]
+}
