@@ -642,8 +642,11 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
           source_type: data.sourceType,
           mode: "full",
         };
-        if (data.sourceType === "online" && data.query) {
-          body.query = data.query;
+        if (data.sourceType === "online") {
+          if (data.query) body.query = data.query;
+          if (data.identifiers && data.identifiers.length > 0) {
+            body.identifiers = data.identifiers;
+          }
         } else if (data.sourceType === "local" && data.file) {
           body.content_base64 = await readFileAsBase64(data.file);
           body.filename = data.file.name;
@@ -749,11 +752,21 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         variant: "borderless" as const,
         contentRender: () => (
           <PipelineStartForm
-            key={`${activeForm}:${activeFormSlots?.query ?? ""}`}
-            defaultSourceType={activeForm === "upload-pdf" ? "local" : "online"}
+            key={`${activeForm}:${activeFormSlots?.query ?? ""}:${activeFormSlots?.identifiers ?? ""}`}
+            defaultSourceType={
+              activeForm === "upload-pdf"
+                ? "local"
+                : (activeFormSlots?.source_type as "online" | "local") ??
+                  "online"
+            }
             defaultQuery={
               activeForm === "start-pipeline"
                 ? activeFormSlots?.query ?? undefined
+                : undefined
+            }
+            defaultIdentifiers={
+              activeForm === "start-pipeline"
+                ? activeFormSlots?.identifiers ?? undefined
                 : undefined
             }
             onSubmit={handlePipelineSubmit}

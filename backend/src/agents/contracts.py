@@ -142,6 +142,7 @@ _VALID_PHASE_TRANSITIONS: dict[PhaseStatus, frozenset[PhaseStatus]] = {
     PhaseStatus.RUNNING: frozenset({
         PhaseStatus.COMPLETED,
         PhaseStatus.FAILED,
+        PhaseStatus.SKIPPED,
     }),
     PhaseStatus.COMPLETED: frozenset({
         PhaseStatus.PENDING,  # phase rerun

@@ -612,6 +612,7 @@ async def evaluate_one(
     entry: dict,
     sf,
     semaphore: asyncio.Semaphore,
+    ground_truth_dir: Path = GROUND_TRUTH_DIR,
     mondo: Any | None = None,
 ) -> EntryMetrics:
     """Evaluate one ground truth entry."""
@@ -629,7 +630,7 @@ async def evaluate_one(
     )
 
     # Check for source text
-    source_path = GROUND_TRUTH_DIR / entry_id / "source.md"
+    source_path = ground_truth_dir / entry_id / "source.md"
     if not source_path.exists():
         metrics.pipeline_status = "no_source"
         mark_expected_fields_missing(metrics, entry, mondo=mondo)
@@ -642,7 +643,7 @@ async def evaluate_one(
         return metrics
 
     # Check for preprocessed Phase 1+2 data
-    preprocessed_path = GROUND_TRUTH_DIR / entry_id / "preprocessed" / "phase_2" / "extraction_result.json"
+    preprocessed_path = ground_truth_dir / entry_id / "preprocessed" / "phase_2" / "extraction_result.json"
     use_preprocessed = preprocessed_path.exists()
 
     if use_preprocessed:
@@ -960,6 +961,7 @@ async def run_evaluation(
     concurrency: int,
     limit: int | None = None,
     entry_ids: list[str] | None = None,
+    ground_truth_root: Path = GROUND_TRUTH_DIR,
 ):
     """Main evaluation orchestrator."""
     logger.remove()
@@ -967,10 +969,10 @@ async def run_evaluation(
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     # Load ground truth
-    selection_path = GROUND_TRUTH_DIR / "selection.json"
+    selection_path = ground_truth_root / "selection.json"
     entries = json.loads(selection_path.read_text(encoding="utf-8"))
     # Only entries with source text
-    entries = [e for e in entries if (GROUND_TRUTH_DIR / e["entry_id"] / "source.md").exists()]
+    entries = [e for e in entries if (ground_truth_root / e["entry_id"] / "source.md").exists()]
     if entry_ids:
         id_set = set(entry_ids)
         entries = [e for e in entries if e["entry_id"] in id_set]
@@ -1000,7 +1002,15 @@ async def run_evaluation(
 
     async with httpx.AsyncClient(**transport_kwargs) as client:
         for entry in entries:
-            m = await evaluate_one(client, base_url, entry, sf, semaphore, mondo=mondo)
+            m = await evaluate_one(
+                client,
+                base_url,
+                entry,
+                sf,
+                semaphore,
+                ground_truth_dir=ground_truth_root,
+                mondo=mondo,
+            )
             all_metrics.append(m)
             status_icon = "✓" if m.pipeline_status in ("awaiting_review", "completed") else "✗"
             tp = sum(1 for f in m.field_matches if f.matched)
@@ -1096,5 +1106,19 @@ if __name__ == "__main__":
     parser.add_argument("--concurrency", type=int, default=1)
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--entries", nargs="+", default=None, help="Specific entry IDs to evaluate")
+    parser.add_argument(
+        "--ground-truth-root",
+        type=Path,
+        default=GROUND_TRUTH_DIR,
+        help="Ground truth root containing selection.json and entry directories",
+    )
     args = parser.parse_args()
-    asyncio.run(run_evaluation(args.base_url, args.concurrency, args.limit, args.entries))
+    asyncio.run(
+        run_evaluation(
+            args.base_url,
+            args.concurrency,
+            args.limit,
+            args.entries,
+            ground_truth_root=args.ground_truth_root,
+        )
+    )

@@ -145,8 +145,29 @@ class PipelineOrchestrator:
         - RetryablePhaseError: retried by RetryablePhaseExecutor
         - PermanentPhaseError: caught here, marks phase as FAILED
 
-        State is persisted after each phase (success or failure).
+        State is persisted at phase entry (PENDING -> RUNNING) and exit
+        (RUNNING -> COMPLETED/FAILED/SKIPPED). The entry save is what
+        makes the persistence-layer transition guard happy: without it
+        the guard would see PENDING -> COMPLETED and reject the save.
         """
+        # Phase entry: mark RUNNING and persist so the transition guard
+        # observes a legal PENDING -> RUNNING step before the adapter
+        # produces a terminal status.
+        phase_num = int(phase_name.rsplit("_", 1)[-1])
+        phase_attr = f"phase_{phase_num}_status"
+        current_detail = getattr(state, phase_attr)
+        if current_detail.status == PhaseStatus.PENDING:
+            setattr(
+                state,
+                phase_attr,
+                PhaseStatusDetail(
+                    status=PhaseStatus.RUNNING,
+                    started_at=datetime.now().isoformat(),
+                ),
+            )
+            await self._persistence.save(state)
+            self._notify(state)
+
         try:
             result = await self._retry.execute_with_retry(
                 operation=adapter.run,

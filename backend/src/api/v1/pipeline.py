@@ -307,13 +307,12 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         async with aiofiles.open(upload_file_path, "wb") as f:
             await f.write(content_bytes)
 
-    # Determine online acquisition action
-    online_action = None
-    if body.source_type == "online":
-        if body.identifiers:
-            online_action = "download"
-        else:
-            online_action = "search"
+    # The pipeline always needs a downloaded document to parse.
+    # The "download" action encompasses both search and download
+    # (link acquisition + PDF download). The "search" action only
+    # returns metadata and is used by the separate /literature/search
+    # endpoint — using it here would leave Phase 1 without a PDF.
+    online_action = "download" if body.source_type == "online" else None
 
     initial_state = PipelineGraphState(
         processing_run_id=processing_run_id,
