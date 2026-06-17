@@ -33,7 +33,12 @@ export function useAuth() {
     mutationFn: (body: RegisterRequest) => registerApi(body),
   });
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Ignore — cookie will expire eventually
+    }
     localStorage.removeItem("access_token");
     localStorage.removeItem("auth_email");
     setUser(null);

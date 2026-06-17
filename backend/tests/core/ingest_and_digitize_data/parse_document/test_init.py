@@ -15,9 +15,10 @@ def test_create_parse_service():
         mock_cfg.return_value.parse_document.mineru_remote_api_token = "test-token"
         mock_cfg.return_value.parse_document.mineru_remote_poll_interval = 2.0
         mock_cfg.return_value.parse_document.mineru_remote_max_poll_attempts = 150
-        mock_cfg.return_value.parse_document.mineru_local_api_url = "http://localhost:8000"
-        mock_cfg.return_value.parse_document.mineru_local_timeout = 600.0
-        mock_cfg.return_value.parse_document.mineru_local_backend = "vlm"
+        mock_cfg.return_value.parse_document.mineru_local_model_server_url = "http://localhost:8001"
+        mock_cfg.return_value.parse_document.mineru_local_model_id = "test-model"
+        mock_cfg.return_value.parse_document.mineru_local_timeout = 120.0
+        mock_cfg.return_value.parse_document.mineru_local_dpi = 200
 
         service = create_parse_service()
         assert isinstance(service, ParseDocumentService)
@@ -29,7 +30,7 @@ def test_create_parse_service_with_config():
 
     config = ParseDocumentConfig(
         mineru_remote_api_token="custom-token",
-        mineru_local_api_url="http://localhost:8002",
+        mineru_local_model_server_url="http://localhost:8002",
     )
 
     service = create_parse_service(config=config)
