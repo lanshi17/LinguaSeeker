@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import crypto from "node:crypto";
 
 const SESSION_COOKIE = "ce_session";
 const SESSION_DURATION_SEC = 60 * 60 * 8; // 8 hours
@@ -26,30 +25,60 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Constant-time comparison
-    const inputBuf = Buffer.from(password);
-    const storedBuf = Buffer.from(adminPassword);
-    const match =
-      inputBuf.length === storedBuf.length &&
-      crypto.timingSafeEqual(inputBuf, storedBuf);
+    const encoder = new TextEncoder();
+    const inputBytes = encoder.encode(password);
+    const storedBytes = encoder.encode(adminPassword);
 
-    if (!match) {
+    if (inputBytes.length !== storedBytes.length) {
       return NextResponse.json(
         { error: "Invalid password" },
         { status: 401 },
       );
     }
 
-    // Create a signed session token (HMAC)
+    let result = 0;
+    for (let i = 0; i < inputBytes.length; i++) {
+      result |= inputBytes[i] ^ storedBytes[i];
+    }
+    if (result !== 0) {
+      return NextResponse.json(
+        { error: "Invalid password" },
+        { status: 401 },
+      );
+    }
+
     const sessionSecret = process.env.SESSION_SECRET || adminPassword;
     const expiresAt = Math.floor(Date.now() / 1000) + SESSION_DURATION_SEC;
-    const payload = Buffer.from(JSON.stringify({ exp: expiresAt })).toString(
-      "base64url",
+    const payload = btoa(JSON.stringify({ exp: expiresAt }))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=/g, "");
+
+    const keyData = encoder.encode(sessionSecret);
+    const key = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
     );
-    const signature = crypto
-      .createHmac("sha256", sessionSecret)
-      .update(payload)
-      .digest("base64url");
+
+    const signatureBytes = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      encoder.encode(payload)
+    );
+
+    const bytes = new Uint8Array(signatureBytes);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const signature = btoa(binary)
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=/g, "");
+
     const token = `${payload}.${signature}`;
 
     const response = NextResponse.json({ success: true });
