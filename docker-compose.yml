@@ -20,7 +20,7 @@ services:
       - redis
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/cross_evidence
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-dev-redis-password}@redis:6379/0
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - POSTGRES_DB=cross_evidence
@@ -28,8 +28,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-dev-redis-password}
-      - API_KEY=${API_KEY:-dev-api-key}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - API_KEY=${API_KEY:-}
 
   postgres:
     image: postgres:16-alpine
@@ -46,7 +46,7 @@ services:
     image: redis:8.0-alpine
     ports:
       - "127.0.0.1:6379:6379"
-    command: redis-server --requirepass ${REDIS_PASSWORD:-dev-redis-password} --appendonly yes
+    command: redis-server --requirepass ${REDIS_PASSWORD:-} --appendonly yes
 
 volumes:
   postgres_data:
