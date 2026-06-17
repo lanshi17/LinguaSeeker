@@ -1,10 +1,12 @@
 [project]
 name = "cross-evidence-model-server"
 version = "0.1.0"
-description = "Standalone FastAPI inference service (Embedding, Rerank) for Cross Evidence"
+description = "Standalone FastAPI inference service (Embedding, Rerank, VLM) for Cross Evidence"
 requires-python = ">=3.12"
 dependencies = [
     "acmg-config-loader",
+    "vllm>=0.8.0",
+    "mineru_vl_utils",
     "numpy>=1.26.0",
     "fastapi>=0.111.0",
     "pydantic>=2.7.0",
@@ -12,13 +14,10 @@ dependencies = [
     "loguru>=0.7.0",
     "pyyaml>=6.0.0",
     "uvicorn>=0.30.0",
-    "python-multipart>=0.0.9",
+    "pillow>=10.0.0",
 ]
 
 [project.optional-dependencies]
-parse = [
-    "mineru[vlm]>=3.3.0",
-]
 dev = [
     "pytest>=8.2.0",
     "pytest-asyncio>=0.23.0",
@@ -51,7 +50,7 @@ acmg-config-loader = { path = "../../libs/config-loader", editable = true }
 
 [tool.pytest.ini_options]
 markers = [
-    "integration: tests that require external services (live inference)",
+    "integration: tests that require external services (VLM live inference)",
 ]
 testpaths = ["tests"]
 

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.auth import require_api_key
 from app.models import EmbeddingObject, EmbeddingRequest, EmbeddingResponse, EmbeddingUsage
 from app.utils.logger import get_logger
 
@@ -24,7 +25,10 @@ def bind(service: EmbeddingService) -> None:
 
 
 @router.post("/v1/embeddings", response_model=EmbeddingResponse)
-def create_embeddings(req: EmbeddingRequest):
+def create_embeddings(
+    req: EmbeddingRequest,
+    _api_key: str | None = Depends(require_api_key),
+):
     assert _service is not None, "EmbeddingService not registered"
 
     texts = [req.input] if isinstance(req.input, str) else req.input

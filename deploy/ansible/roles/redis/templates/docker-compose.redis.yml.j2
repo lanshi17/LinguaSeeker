@@ -5,7 +5,11 @@ services:
     container_name: cross-evidence-redis
     restart: unless-stopped
     ports:
-      - "{{ redis_port }}:6379"
+      - "127.0.0.1:{{ redis_port }}:6379"
+    environment:
+{% if vault_redis_password is defined and vault_redis_password | length > 0 %}
+      REDISCLI_AUTH: "{{ vault_redis_password }}"
+{% endif %}
     command:
       - "redis-server"
       - "--maxmemory"
