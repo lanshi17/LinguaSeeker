@@ -15,7 +15,14 @@ from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from src.agents.contracts import PhaseStatus, PipelineGraphState, PipelineStatus
+from src.agents.contracts import (
+    InvalidStateTransitionError,
+    PhaseStatus,
+    PipelineGraphState,
+    PipelineStatus,
+    validate_all_phase_transitions,
+    validate_pipeline_status_transition,
+)
 from src.dao.postgresql.models import PipelineRunState, SourceDocument
 
 
@@ -58,6 +65,18 @@ class DirectStatePersistence:
         existing = await self._session.get(
             PipelineRunState, UUID(state.processing_run_id)
         )
+        # ── State transition guard ──
+        if existing is not None:
+            old_state = PipelineGraphState.model_validate(existing.state_json)
+            ctx = f"run={state.processing_run_id}"
+            validate_pipeline_status_transition(
+                old_state.pipeline_status,
+                state.pipeline_status,
+                context=ctx,
+            )
+            validate_all_phase_transitions(old_state, state, context=ctx)
+        # ── End state transition guard ──
+
         state_json = state.model_dump(mode="json")
         if existing:
             existing.state_json = state_json
@@ -144,6 +163,24 @@ class SessionBoundStatePersistence:
                 .on_conflict_do_nothing(index_elements=["source_document_id"])
             )
             await session.execute(sd_upsert)
+
+            # ── State transition guard ──
+            # Load existing state (if any) to validate the transition is legal.
+            # This is an extra read per save, but correctness in a medical
+            # pipeline is worth the cost.
+            existing = await session.get(
+                PipelineRunState, UUID(state.processing_run_id)
+            )
+            if existing is not None:
+                old_state = PipelineGraphState.model_validate(existing.state_json)
+                ctx = f"run={state.processing_run_id}"
+                validate_pipeline_status_transition(
+                    old_state.pipeline_status,
+                    state.pipeline_status,
+                    context=ctx,
+                )
+                validate_all_phase_transitions(old_state, state, context=ctx)
+            # ── End state transition guard ──
 
             state_json = state.model_dump(mode="json")
             upsert_set: dict[str, object] = {

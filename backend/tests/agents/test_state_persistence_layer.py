@@ -110,11 +110,16 @@ async def test_save_preserves_structured_errors(
 
 @pytest.mark.asyncio
 async def test_session_bound_save_uses_upsert():
-    """SessionBoundStatePersistence.save() should use INSERT ON CONFLICT
-    rather than SELECT then conditional INSERT/UPDATE to avoid race conditions."""
+    """SessionBoundStatePersistence.save() uses INSERT ON CONFLICT for writes.
+
+    Note: save() now reads the existing state first for the state transition
+    guard (one extra SELECT), but the write path still uses upsert for atomicity.
+    """
     mock_session = AsyncMock()
     mock_session.execute = AsyncMock()
     mock_session.commit = AsyncMock()
+    # Transition guard reads existing state — return None (new run)
+    mock_session.get = AsyncMock(return_value=None)
 
     mock_factory = MagicMock()
     mock_factory.return_value.__aenter__ = AsyncMock(return_value=mock_session)
@@ -132,10 +137,11 @@ async def test_session_bound_save_uses_upsert():
 
     await persistence.save(state)
 
-    # Verify execute was called (INSERT ... ON CONFLICT) rather than
-    # session.get + session.add pattern
+    # Verify execute was called (INSERT ... ON CONFLICT upsert)
     mock_session.execute.assert_awaited()
-    mock_session.get.assert_not_awaited()
+    # session.get is called for the state transition guard
+    mock_session.get.assert_awaited()
+    # session.add is NOT used — writes go through upsert
     mock_session.add.assert_not_called()
 
 

@@ -87,6 +87,166 @@ class PermanentPhaseError(PhaseError):
     pass
 
 
+class InvalidStateTransitionError(Exception):
+    """Raised when an invalid pipeline or phase status transition is attempted.
+
+    This is a programming / data-corruption guard: it should never be raised
+    in normal operation. If it is, either the orchestrator logic is broken or
+    the database state has been corrupted.
+    """
+
+    def __init__(self, from_status: str, to_status: str, context: str = ""):
+        msg = f"Invalid state transition: {from_status} -> {to_status}"
+        if context:
+            msg += f" ({context})"
+        super().__init__(msg)
+        self.from_status = from_status
+        self.to_status = to_status
+        self.context = context
+
+
+# ── State transition guards ──────────────────────────────────────────────────
+
+# Valid transitions for PipelineStatus.
+# Phase reruns allow any terminal state to return to PENDING.
+_VALID_PIPELINE_TRANSITIONS: dict[PipelineStatus, frozenset[PipelineStatus]] = {
+    PipelineStatus.PENDING: frozenset({
+        PipelineStatus.RUNNING,
+        PipelineStatus.FAILED,
+    }),
+    PipelineStatus.RUNNING: frozenset({
+        PipelineStatus.AWAITING_REVIEW,
+        PipelineStatus.FAILED,
+    }),
+    PipelineStatus.AWAITING_REVIEW: frozenset({
+        PipelineStatus.COMPLETED,
+        PipelineStatus.FAILED,  # e.g. review rejection triggers re-failure
+        PipelineStatus.PENDING,  # phase rerun
+    }),
+    PipelineStatus.FAILED: frozenset({
+        PipelineStatus.PENDING,  # phase rerun / retry
+    }),
+    PipelineStatus.COMPLETED: frozenset({
+        PipelineStatus.PENDING,  # phase rerun (unusual but allowed)
+    }),
+}
+
+# Valid transitions for PhaseStatus.
+# Phase reruns allow terminal states to return to PENDING.
+_VALID_PHASE_TRANSITIONS: dict[PhaseStatus, frozenset[PhaseStatus]] = {
+    PhaseStatus.PENDING: frozenset({
+        PhaseStatus.RUNNING,
+        PhaseStatus.SKIPPED,
+        PhaseStatus.FAILED,
+    }),
+    PhaseStatus.RUNNING: frozenset({
+        PhaseStatus.COMPLETED,
+        PhaseStatus.FAILED,
+    }),
+    PhaseStatus.COMPLETED: frozenset({
+        PhaseStatus.PENDING,  # phase rerun
+    }),
+    PhaseStatus.SKIPPED: frozenset({
+        PhaseStatus.PENDING,  # phase rerun
+    }),
+    PhaseStatus.FAILED: frozenset({
+        PhaseStatus.PENDING,  # phase rerun / retry
+    }),
+}
+
+
+def validate_pipeline_status_transition(
+    from_status: PipelineStatus,
+    to_status: PipelineStatus,
+    *,
+    context: str = "",
+) -> None:
+    """Validate that a pipeline status transition is allowed.
+
+    Raises InvalidStateTransitionError if the transition is not in the
+    valid transition table. No-op (identity transition) is always allowed
+    so that saves which only update metadata (not status) pass through.
+
+    Args:
+        from_status: Current pipeline status.
+        to_status: Target pipeline status.
+        context: Optional context string for error messages (e.g. run_id).
+
+    Raises:
+        InvalidStateTransitionError: If the transition is invalid.
+    """
+    if from_status == to_status:
+        return
+    allowed = _VALID_PIPELINE_TRANSITIONS.get(from_status, frozenset())
+    if to_status not in allowed:
+        raise InvalidStateTransitionError(
+            from_status=from_status.value,
+            to_status=to_status.value,
+            context=context,
+        )
+
+
+def validate_phase_status_transition(
+    from_status: PhaseStatus,
+    to_status: PhaseStatus,
+    *,
+    context: str = "",
+) -> None:
+    """Validate that a per-phase status transition is allowed.
+
+    Identity transition is always allowed (metadata-only saves).
+
+    Args:
+        from_status: Current phase status.
+        to_status: Target phase status.
+        context: Optional context string for error messages (e.g. "phase_1").
+
+    Raises:
+        InvalidStateTransitionError: If the transition is invalid.
+    """
+    if from_status == to_status:
+        return
+    allowed = _VALID_PHASE_TRANSITIONS.get(from_status, frozenset())
+    if to_status not in allowed:
+        raise InvalidStateTransitionError(
+            from_status=from_status.value,
+            to_status=to_status.value,
+            context=context,
+        )
+
+
+def validate_all_phase_transitions(
+    old_state: "PipelineGraphState",
+    new_state: "PipelineGraphState",
+    *,
+    context: str = "",
+) -> None:
+    """Validate all per-phase status transitions between two states.
+
+    Checks all three phases and raises on the first invalid transition.
+
+    Args:
+        old_state: Previous pipeline state.
+        new_state: New pipeline state being saved.
+        context: Optional context for error messages.
+
+    Raises:
+        InvalidStateTransitionError: If any phase has an invalid transition.
+    """
+    for phase_num in (1, 2, 3):
+        old_detail = getattr(old_state, f"phase_{phase_num}_status")
+        new_detail = getattr(new_state, f"phase_{phase_num}_status")
+        if old_detail.status != new_detail.status:
+            ctx = f"phase_{phase_num}"
+            if context:
+                ctx = f"{context}, phase {phase_num}"
+            validate_phase_status_transition(
+                old_detail.status,
+                new_detail.status,
+                context=ctx,
+            )
+
+
 def build_retryable_errors() -> tuple[type, ...]:
     """Build the shared tuple of retryable error types.
 
