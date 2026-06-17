@@ -5,7 +5,7 @@ services:
     container_name: cross-evidence-postgres
     restart: unless-stopped
     ports:
-      - "{{ postgres_port }}:5432"
+      - "127.0.0.1:{{ postgres_port }}:5432"
     environment:
       POSTGRES_DB: "{{ postgres_db }}"
       POSTGRES_USER: "{{ postgres_user }}"
