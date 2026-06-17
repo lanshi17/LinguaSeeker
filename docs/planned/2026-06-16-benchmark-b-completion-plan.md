@@ -2,8 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Status:** planned
+**Status:** done-with-partial-pilot
 **Created:** 2026-06-16
+**Execution note (2026-06-16, final):** Task 1 verified merged dev (63/63 pytest, Ruff clean). Task 2 reran `clingen_001:ja` successfully against a fresh `:8002` backend after discovering the previously-running `:8000` backend was serving pre-merge code (AttributeError on `EvidenceItemNormalizer._KNOWN_CONTEXT_TYPES`). Task 3 attempted 10 samples total but provider `linxi.chat` instability (translate/full + system_prompt_gen connection errors and 60 s request timeouts) produced only 3 checkout-verifiable completions; 4 samples failed permanently; 3 samples hit `phase2_completed` in backend logs but their extraction artifacts were cleaned up before the runtime aggregator could read them, so they are reported as timeouts. Task 4 added Table 9 and switched Tables 7/8 to manifest-path resolution with glob fallback. Table 9 now exposes both attempted and completed distinct-entry/language breadth so failed attempts are visible in the paper. Task 5 regenerated manifest (20260616_231029) and tables 1-9 (20260616_231030) against an honest checkout-local runtime report (20260616_231000). Task 6 updated claim matrix and manuscript draft with conservative N=10-attempted / 3-completed wording.
 **Goal:** Turn the current multilingual Benchmark B smoke run into a reportable pilot result over zh/ja/ko while keeping ClinGen 30 and ClinVar fused as separate evaluation layers.
 
 **Architecture:** Keep the existing orchestrated vertical slice boundaries. Benchmark code stays under `benchmark/layer3/analysis/`, pipeline behavior stays under `backend/src/core/cross_lingual_process_and_extract_evidence/`, and paper-facing outputs must flow through explicit manifest paths rather than timestamp discovery.
