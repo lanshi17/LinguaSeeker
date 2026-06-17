@@ -1,0 +1,189 @@
+{
+  "entry_id": "fused_018",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "F9",
+    "hgnc_id": "HGNC:3551",
+    "disease_label": "hemophilia B",
+    "mondo_id": "MONDO:0010604",
+    "moi": "XL",
+    "classification": "Definitive",
+    "gcep": "Hemostasis/Thrombosis Gene Curation Expert Panel",
+    "classification_date": "2019-05-22T19:02:26.728Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3d56d08d-48d0-4523-b433-dbd44c5b9e45-2019-05-22T190226.728Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 10572,
+      "hgvs_name": "NM_000133.4(F9):c.223C>T (p.Arg75Ter)",
+      "hgvs_c": "c.223C>T",
+      "hgvs_p": "p.Arg75Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs137852227",
+      "phenotype_ids": "MONDO:MONDO:0010604,MeSH:D002836,MedGen:C0008533,OMIM:306900,Orphanet:98879|MONDO:MONDO:0010432,MedGen:C2749016,OMIM:300807;MONDO:MONDO:0010604,MeSH:D002836,MedGen:C0008533,OMIM:306900,Orphanet:98879|MedGen:C3661900",
+      "phenotype_list": "Hereditary factor IX deficiency disease|Thrombophilia, X-linked, due to factor 9 defect;Hereditary factor IX deficiency disease|not provided"
+    },
+    {
+      "variation_id": 10573,
+      "hgvs_name": "NM_000133.4(F9):c.224G>A (p.Arg75Gln)",
+      "hgvs_c": "c.224G>A",
+      "hgvs_p": "p.Arg75Gln",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs137852228",
+      "phenotype_ids": "MONDO:MONDO:0010604,MeSH:D002836,MedGen:C0008533,OMIM:306900,Orphanet:98879|MedGen:C3661900|MONDO:MONDO:0010602,MedGen:C0019069,OMIM:306700,Orphanet:98878|MONDO:MONDO:0010432,MedGen:C2749016,OMIM:300807;MONDO:MONDO:0010604,MeSH:D002836,MedGen:C0008533,OMIM:306900,Orphanet:98879|MedGen:C5393318,OMIM:301052;MONDO:MONDO:0010432,MedGen:C2749016,OMIM:300807;MONDO:MONDO:0010604,MeSH:D002836,MedGen:C0008533,OMIM:306900,Orphanet:98879",
+      "phenotype_list": "Hereditary factor IX deficiency disease|not provided|Hereditary factor VIII deficiency disease|Thrombophilia, X-linked, due to factor 9 defect;Hereditary factor IX deficiency disease|Warfarin sensitivity, X-linked;Thrombophilia, X-linked, due to factor 9 defect;Hereditary factor IX deficiency disease"
+    },
+    {
+      "variation_id": 10579,
+      "hgvs_name": "NM_000133.4(F9):c.316G>A (p.Gly106Ser)",
+      "hgvs_c": "c.316G>A",
+      "hgvs_p": "p.Gly106Ser",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs137852233",
+      "phenotype_ids": "MONDO:MONDO:0010604,MeSH:D002836,MedGen:C0008533,OMIM:306900,Orphanet:98879|MONDO:MONDO:0010432,MedGen:C2749016,OMIM:300807;MONDO:MONDO:0010604,MeSH:D002836,MedGen:C0008533,OMIM:306900,Orphanet:98879|MONDO:MONDO:0010432,MedGen:C2749016,OMIM:300807|MedGen:C3661900|MONDO:MONDO:0010432,MedGen:C2749016,OMIM:300807;MONDO:MONDO:0010604,MeSH:D002836,MedGen:C0008533,OMIM:306900,Orphanet:98879;MedGen:C5393318,OMIM:301052|",
+      "phenotype_list": "Hereditary factor IX deficiency disease|Thrombophilia, X-linked, due to factor 9 defect;Hereditary factor IX deficiency disease|Thrombophilia, X-linked, due to factor 9 defect|not provided|Thrombophilia, X-linked, due to factor 9 defect;Hereditary factor IX deficiency disease;Warfarin sensitivity, X-linked|F9-related disorder"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "F9",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "hemophilia B",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XL",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.223C>T",
+      "candidates": [
+        "c.223C>T",
+        "c.224G>A",
+        "c.316G>A"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg75Ter",
+      "candidates": [
+        "p.Arg75Ter",
+        "p.Arg75Gln",
+        "p.Gly106Ser"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:3551",
+    "disease": "MONDO:0010604",
+    "variant_candidates": [
+      "ClinVarVariation:10572",
+      "ClinVarVariation:10573",
+      "ClinVarVariation:10579"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "F9",
+      "hgnc_id": "HGNC:3551"
+    },
+    "disease": {
+      "text": "hemophilia B",
+      "mondo_id": "MONDO:0010604"
+    },
+    "variants": [
+      {
+        "text": "c.223C>T",
+        "variation_id": "ClinVarVariation:10572",
+        "rsid": "rs137852227"
+      },
+      {
+        "text": "c.224G>A",
+        "variation_id": "ClinVarVariation:10573",
+        "rsid": "rs137852228"
+      },
+      {
+        "text": "c.316G>A",
+        "variation_id": "ClinVarVariation:10579",
+        "rsid": "rs137852233"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": "39268837",
+  "source_pmc": "PMC11393770",
+  "source_pdf_url": "https://europepmc.org/article/PMC/11393770?pdf=render",
+  "source_title": "The genetic analysis of eight families with hemophilia B in Mongolia: Identification of two novel mutation.",
+  "source_journal": "",
+  "source_year": "2024",
+  "notes": "",
+  "literature_search_strategy": "\"F9\" AND \"c.223C>T\" AND OPEN_ACCESS:y"
+}

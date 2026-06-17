@@ -1,0 +1,189 @@
+{
+  "entry_id": "fused_009",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "BRCA1",
+    "hgnc_id": "HGNC:1100",
+    "disease_label": "BRCA1-related cancer predisposition",
+    "mondo_id": "MONDO:0700268",
+    "moi": "AD",
+    "classification": "Definitive",
+    "gcep": "Hereditary Cancer Gene Curation Expert Panel",
+    "classification_date": "2024-08-29T17:00:00.000Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0f31f200-3b65-4cfd-80c8-bd7d3cc216b8-2024-08-29T170000.000Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 17661,
+      "hgvs_name": "NM_007294.4(BRCA1):c.181T>G (p.Cys61Gly)",
+      "hgvs_c": "c.181T>G",
+      "hgvs_p": "p.Cys61Gly",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs28897672",
+      "phenotype_ids": "MONDO:MONDO:0011450,MedGen:C2676676,OMIM:604370,Orphanet:145|MONDO:MONDO:0003582,MeSH:D061325,MedGen:C0677776,Orphanet:145|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MONDO:MONDO:0016419,MedGen:C0346153,OMIM:114480,Orphanet:227535|Human Phenotype Ontology:HP:0003002,MONDO:MONDO:0004989,MedGen:C0678222|Human Phenotype Ontology:HP:0010623,Human Phenotype Ontology:HP:0100013,MONDO:MONDO:0021100,MeSH:D001943,MedGen:C1458155|Human Phenotype Ontology:HP:0100615,MONDO:MONDO:0021068,MeSH:D010051,MedGen:C0919267|MedGen:CN221562|MONDO:MONDO:0700268,MedGen:CN377757|MONDO:MONDO:0011450,MedGen:C2676676,OMIM:604370,Orphanet:145;MONDO:MONDO:0054748,MedGen:C4554406,OMIM:617883;MONDO:MONDO:0013685,MedGen:C3280442,OMIM:614320,Orphanet:1333|",
+      "phenotype_list": "Breast-ovarian cancer, familial, susceptibility to, 1|Hereditary breast ovarian cancer syndrome|Hereditary cancer-predisposing syndrome|not provided|Familial cancer of breast|Breast carcinoma|Breast neoplasm|Ovarian neoplasm|Breast and/or ovarian cancer|BRCA1-related cancer predisposition|Breast-ovarian cancer, familial, susceptibility to, 1;Fanconi anemia, complementation group S;Pancreatic cancer, susceptibility to, 4|Inherited ovarian cancer (without breast cancer)"
+    },
+    {
+      "variation_id": 17662,
+      "hgvs_name": "NM_007294.4(BRCA1):c.68_69del (p.Glu23fs)",
+      "hgvs_c": "c.68_69del",
+      "hgvs_p": "p.Glu23fs",
+      "variant_type": "other",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs80357914",
+      "phenotype_ids": "MONDO:MONDO:0011450,MedGen:C2676676,OMIM:604370,Orphanet:145|MONDO:MONDO:0013685,MedGen:C3280442,OMIM:614320,Orphanet:1333|MONDO:MONDO:0003582,MeSH:D061325,MedGen:C0677776,Orphanet:145|MONDO:MONDO:0016419,MedGen:C0346153,OMIM:114480,Orphanet:227535|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MedGen:CN221562|Human Phenotype Ontology:HP:0100615,MONDO:MONDO:0021068,MeSH:D010051,MedGen:C0919267|MONDO:MONDO:0007254,MedGen:C0006142||Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089|MedGen:C3539878||MONDO:MONDO:0700268,MedGen:CN377757|MONDO:MONDO:0013685,MedGen:C3280442,OMIM:614320,Orphanet:1333;MONDO:MONDO:0011450,MedGen:C2676676,OMIM:604370,Orphanet:145;MONDO:MONDO:0054748,MedGen:C4554406,OMIM:617883|MONDO:MONDO:0054748,MedGen:C4554406,OMIM:617883||",
+      "phenotype_list": "Breast-ovarian cancer, familial, susceptibility to, 1|Pancreatic cancer, susceptibility to, 4|Hereditary breast ovarian cancer syndrome|Familial cancer of breast|Hereditary cancer-predisposing syndrome|not provided|Breast and/or ovarian cancer|Ovarian neoplasm|Malignant tumor of breast|Invasive medullary breast carcinoma|Endometrial carcinoma|Triple-negative breast cancer|BRCA1-related disorder|BRCA1-related cancer predisposition|Pancreatic cancer, susceptibility to, 4;Breast-ovarian cancer, familial, susceptibility to, 1;Fanconi anemia, complementation group S|Fanconi anemia, complementation group S|Inherited ovarian cancer (without breast cancer)|Inherited breast cancer and ovarian cancer"
+    },
+    {
+      "variation_id": 17665,
+      "hgvs_name": "NM_007294.4(BRCA1):c.1175_1214del (p.Leu392fs)",
+      "hgvs_c": "c.1175_1214del",
+      "hgvs_p": "p.Leu392fs",
+      "variant_type": "deletion",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs80359874",
+      "phenotype_ids": "MONDO:MONDO:0011450,MedGen:C2676676,OMIM:604370,Orphanet:145|MONDO:MONDO:0003582,MeSH:D061325,MedGen:C0677776,Orphanet:145|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MedGen:CN169374|MONDO:MONDO:0007254,MedGen:C0006142|MedGen:CN221562|MONDO:MONDO:0700268,MedGen:CN377757",
+      "phenotype_list": "Breast-ovarian cancer, familial, susceptibility to, 1|Hereditary breast ovarian cancer syndrome|Hereditary cancer-predisposing syndrome|not provided|not specified|Malignant tumor of breast|Breast and/or ovarian cancer|BRCA1-related cancer predisposition"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "BRCA1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "BRCA1-related cancer predisposition",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.181T>G",
+      "candidates": [
+        "c.181T>G",
+        "c.68_69del",
+        "c.1175_1214del"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Cys61Gly",
+      "candidates": [
+        "p.Cys61Gly",
+        "p.Glu23fs",
+        "p.Leu392fs"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "other",
+        "deletion"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:1100",
+    "disease": "MONDO:0700268",
+    "variant_candidates": [
+      "ClinVarVariation:17661",
+      "ClinVarVariation:17662",
+      "ClinVarVariation:17665"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "BRCA1",
+      "hgnc_id": "HGNC:1100"
+    },
+    "disease": {
+      "text": "BRCA1-related cancer predisposition",
+      "mondo_id": "MONDO:0700268"
+    },
+    "variants": [
+      {
+        "text": "c.181T>G",
+        "variation_id": "ClinVarVariation:17661",
+        "rsid": "rs28897672"
+      },
+      {
+        "text": "c.68_69del",
+        "variation_id": "ClinVarVariation:17662",
+        "rsid": "rs80357914"
+      },
+      {
+        "text": "c.1175_1214del",
+        "variation_id": "ClinVarVariation:17665",
+        "rsid": "rs80359874"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": "42015116",
+  "source_pmc": "PMC13238077",
+  "source_pdf_url": "https://europepmc.org/article/PMC/13238077?pdf=render",
+  "source_title": "Prevalence of recurrent and non-recurrent BRCA1 and BRCA2 pathogenic variants in Polish breast cancer patients: insights from a regional genetic testing cohort from Lower Silesia.",
+  "source_journal": "",
+  "source_year": "2026",
+  "notes": "",
+  "literature_search_strategy": "\"BRCA1\" AND \"c.181T>G\" AND OPEN_ACCESS:y"
+}

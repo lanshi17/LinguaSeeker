@@ -1,0 +1,188 @@
+{
+  "entry_id": "fused_049",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "MSH2",
+    "hgnc_id": "HGNC:7325",
+    "disease_label": "mismatch repair cancer syndrome 1",
+    "mondo_id": "MONDO:0010159",
+    "moi": "AR",
+    "classification": "Definitive",
+    "gcep": "Hereditary Cancer Gene Curation Expert Panel",
+    "classification_date": "2018-10-09T14:44:00.302Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7ce2b2b9-9b04-4a47-b6fa-b85c60ba1c08-2018-10-09T144400.302Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 1755,
+      "hgvs_name": "NM_000251.3(MSH2):c.1216C>T (p.Arg406Ter)",
+      "hgvs_c": "c.1216C>T",
+      "hgvs_p": "p.Arg406Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs63751108",
+      "phenotype_ids": "MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144|MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0002032,MedGen:C0699790|MONDO:MONDO:0008018,MedGen:C1321489,OMIM:158320,Orphanet:587;MONDO:MONDO:0010159,MedGen:C5399763,OMIM:276300,Orphanet:252202;MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144|Human Phenotype Ontology:HP:0012126,MONDO:MONDO:0001056,MeSH:D013274,MedGen:C0024623,OMIM:613659",
+      "phenotype_list": "Lynch syndrome 1|Lynch syndrome|Hereditary cancer-predisposing syndrome|not provided|Hereditary nonpolyposis colorectal neoplasms|Carcinoma of colon|Muir-Torré syndrome;Mismatch repair cancer syndrome 1;Lynch syndrome 1|Gastric cancer"
+    },
+    {
+      "variation_id": 1764,
+      "hgvs_name": "NM_000251.3(MSH2):c.1906G>C (p.Ala636Pro)",
+      "hgvs_c": "c.1906G>C",
+      "hgvs_p": "p.Ala636Pro",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs63750875",
+      "phenotype_ids": "MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0008018,MedGen:C1321489,OMIM:158320,Orphanet:587;MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144;MONDO:MONDO:0010159,MedGen:C5399763,OMIM:276300,Orphanet:252202|MONDO:MONDO:0002032,MedGen:C0699790",
+      "phenotype_list": "Lynch syndrome|Hereditary cancer-predisposing syndrome|not provided|Lynch syndrome 1|Hereditary nonpolyposis colorectal neoplasms|Muir-Torré syndrome;Lynch syndrome 1;Mismatch repair cancer syndrome 1|Carcinoma of colon"
+    },
+    {
+      "variation_id": 90519,
+      "hgvs_name": "NM_000251.3(MSH2):c.1076+1G>A",
+      "hgvs_c": "c.1076+1G>A",
+      "hgvs_p": "",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs267607940",
+      "phenotype_ids": "MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144;MONDO:MONDO:0010159,MedGen:C5399763,OMIM:276300,Orphanet:252202;MONDO:MONDO:0008018,MedGen:C1321489,OMIM:158320,Orphanet:587|MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144|MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144;MONDO:MONDO:0030840,MedGen:C5436806,OMIM:619096;MONDO:MONDO:0008018,MedGen:C1321489,OMIM:158320,Orphanet:587",
+      "phenotype_list": "Lynch syndrome|Hereditary cancer-predisposing syndrome|not provided|Hereditary nonpolyposis colorectal neoplasms|Lynch syndrome 1;Mismatch repair cancer syndrome 1;Muir-Torré syndrome|Lynch syndrome 1|Lynch syndrome 1;Mismatch repair cancer syndrome 2;Muir-Torré syndrome"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MSH2",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "mismatch repair cancer syndrome 1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AR",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.1216C>T",
+      "candidates": [
+        "c.1216C>T",
+        "c.1906G>C",
+        "c.1076+1G>A"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg406Ter",
+      "candidates": [
+        "p.Arg406Ter",
+        "p.Ala636Pro"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:7325",
+    "disease": "MONDO:0010159",
+    "variant_candidates": [
+      "ClinVarVariation:1755",
+      "ClinVarVariation:1764",
+      "ClinVarVariation:90519"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "MSH2",
+      "hgnc_id": "HGNC:7325"
+    },
+    "disease": {
+      "text": "mismatch repair cancer syndrome 1",
+      "mondo_id": "MONDO:0010159"
+    },
+    "variants": [
+      {
+        "text": "c.1216C>T",
+        "variation_id": "ClinVarVariation:1755",
+        "rsid": "rs63751108"
+      },
+      {
+        "text": "c.1906G>C",
+        "variation_id": "ClinVarVariation:1764",
+        "rsid": "rs63750875"
+      },
+      {
+        "text": "c.1076+1G>A",
+        "variation_id": "ClinVarVariation:90519",
+        "rsid": "rs267607940"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": "38022513",
+  "source_pmc": "PMC10657814",
+  "source_pdf_url": "https://europepmc.org/article/PMC/10657814?pdf=render",
+  "source_title": "Clinicopathological characteristics, molecular landscape, and biomarker landscape for predicting the efficacy of PD-1/PD-L1 inhibitors in Chinese population with mismatch repair deficient urothelial carcinoma: a real-world study.",
+  "source_journal": "",
+  "source_year": "2023",
+  "notes": "",
+  "literature_search_strategy": "\"MSH2\" AND \"c.1216C>T\" AND OPEN_ACCESS:y"
+}

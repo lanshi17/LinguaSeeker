@@ -1,0 +1,189 @@
+{
+  "entry_id": "fused_015",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "DICER1",
+    "hgnc_id": "HGNC:17098",
+    "disease_label": "DICER1-related tumor predisposition",
+    "mondo_id": "MONDO:0100216",
+    "moi": "AD",
+    "classification": "Definitive",
+    "gcep": "Hereditary Cancer Gene Curation Expert Panel",
+    "classification_date": "2023-07-05T17:00:00.000Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aeabfc3b-63a9-40f2-9c71-41b079fee4e2-2023-07-05T170000.000Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 4468,
+      "hgvs_name": "NM_177438.3(DICER1):c.4748T>G (p.Leu1583Arg)",
+      "hgvs_c": "c.4748T>G",
+      "hgvs_p": "p.Leu1583Arg",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs137852976",
+      "phenotype_ids": "Human Phenotype Ontology:HP:0100528,MONDO:MONDO:0011014,MedGen:C1266144,OMIM:601200,Orphanet:64742|MONDO:MONDO:0100216,MedGen:C3839822,Orphanet:284343",
+      "phenotype_list": "Pleuropulmonary blastoma|DICER1-related tumor predisposition"
+    },
+    {
+      "variation_id": 30563,
+      "hgvs_name": "NM_177438.3(DICER1):c.873_877del (p.Glu292fs)",
+      "hgvs_c": "c.873_877del",
+      "hgvs_p": "p.Glu292fs",
+      "variant_type": "deletion",
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs1595447577",
+      "phenotype_ids": "Human Phenotype Ontology:HP:0009798,MONDO:MONDO:0007681,MedGen:C0302859,OMIM:138800,Orphanet:276399|MONDO:MONDO:0100216,MedGen:C3839822,Orphanet:284343",
+      "phenotype_list": "Euthyroid goiter|DICER1-related tumor predisposition"
+    },
+    {
+      "variation_id": 30566,
+      "hgvs_name": "NM_177438.3(DICER1):c.2516C>T (p.Ser839Phe)",
+      "hgvs_c": "c.2516C>T",
+      "hgvs_p": "p.Ser839Phe",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs387906934",
+      "phenotype_ids": "Human Phenotype Ontology:HP:0009798,MONDO:MONDO:0007681,MedGen:C0302859,OMIM:138800,Orphanet:276399|MONDO:MONDO:0100216,MedGen:C3839822,Orphanet:284343|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162",
+      "phenotype_list": "Euthyroid goiter|DICER1-related tumor predisposition|Hereditary cancer-predisposing syndrome"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "DICER1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "DICER1-related tumor predisposition",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.4748T>G",
+      "candidates": [
+        "c.4748T>G",
+        "c.873_877del",
+        "c.2516C>T"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Leu1583Arg",
+      "candidates": [
+        "p.Leu1583Arg",
+        "p.Glu292fs",
+        "p.Ser839Phe"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "deletion",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Likely pathogenic",
+      "candidates": [
+        "Likely pathogenic",
+        "Likely pathogenic",
+        "Likely pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:17098",
+    "disease": "MONDO:0100216",
+    "variant_candidates": [
+      "ClinVarVariation:4468",
+      "ClinVarVariation:30563",
+      "ClinVarVariation:30566"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "DICER1",
+      "hgnc_id": "HGNC:17098"
+    },
+    "disease": {
+      "text": "DICER1-related tumor predisposition",
+      "mondo_id": "MONDO:0100216"
+    },
+    "variants": [
+      {
+        "text": "c.4748T>G",
+        "variation_id": "ClinVarVariation:4468",
+        "rsid": "rs137852976"
+      },
+      {
+        "text": "c.873_877del",
+        "variation_id": "ClinVarVariation:30563",
+        "rsid": "rs1595447577"
+      },
+      {
+        "text": "c.2516C>T",
+        "variation_id": "ClinVarVariation:30566",
+        "rsid": "rs387906934"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": "37333613",
+  "source_pmc": "PMC10273190",
+  "source_pdf_url": "https://europepmc.org/article/PMC/10273190?pdf=render",
+  "source_title": "DICER1 platform domain missense variants inhibit miRNA biogenesis and lead to tumor susceptibility.",
+  "source_journal": "",
+  "source_year": "2023",
+  "notes": "",
+  "literature_search_strategy": "\"DICER1\" AND \"c.4748T>G\" AND OPEN_ACCESS:y"
+}
