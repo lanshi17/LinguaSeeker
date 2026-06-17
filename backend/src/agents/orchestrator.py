@@ -19,6 +19,7 @@ from loguru import logger
 
 from src.agents.concurrency import RetryablePhaseExecutor
 from src.agents.contracts import (
+    InvalidStateTransitionError,
     PhaseErrorDetail,
     PhaseStatus,
     PhaseStatusDetail,
@@ -27,6 +28,8 @@ from src.agents.contracts import (
     PipelineMode,
     PipelineStatus,
     RetryablePhaseError,
+    validate_pipeline_status_transition,
+    validate_phase_status_transition,
 )
 from src.agents.state_persistence import SessionBoundStatePersistence
 
@@ -85,16 +88,43 @@ class PipelineOrchestrator:
         )
         phase_attr = f"phase_{phase}_status"
         current = getattr(state, phase_attr)
-        setattr(
-            state,
-            phase_attr,
-            PhaseStatusDetail(
-                status=PhaseStatus.FAILED,
-                started_at=current.started_at if current else None,
-                completed_at=datetime.now().isoformat(),
-                error=error_detail,
-            ),
+        new_phase_status = PhaseStatusDetail(
+            status=PhaseStatus.FAILED,
+            started_at=current.started_at if current else None,
+            completed_at=datetime.now().isoformat(),
+            error=error_detail,
         )
+
+        # Defense-in-depth: validate transitions before mutating state.
+        # These should never fail in practice — the orchestrator logic
+        # should always produce valid transitions. If they do fail, it
+        # indicates a programming bug rather than a data issue.
+        try:
+            validate_phase_status_transition(
+                current.status,
+                PhaseStatus.FAILED,
+                context=f"phase_{phase} failure handling",
+            )
+            validate_pipeline_status_transition(
+                state.pipeline_status,
+                PipelineStatus.FAILED,
+                context=f"pipeline failure handling (phase {phase})",
+            )
+        except InvalidStateTransitionError:
+            logger.exception(
+                "State transition guard triggered in _handle_phase_failure — "
+                "this indicates an orchestrator bug. run={}, phase={}, "
+                "current_pipeline_status={}, current_phase_status={}",
+                state.processing_run_id,
+                phase,
+                state.pipeline_status.value,
+                current.status.value,
+            )
+            # Continue anyway — we need to persist the failure state.
+            # The persistence layer guard will also fire, but we log here
+            # for better stack traces at the point of the logic error.
+
+        setattr(state, phase_attr, new_phase_status)
         state.error_message = str(error)
         state.error_phase = phase
         state.pipeline_status = PipelineStatus.FAILED
@@ -262,6 +292,22 @@ class PipelineOrchestrator:
             state.mode.value,
         )
 
+        # Defense-in-depth: validate PENDING → RUNNING transition
+        try:
+            validate_pipeline_status_transition(
+                state.pipeline_status,
+                PipelineStatus.RUNNING,
+                context=f"orchestrator.run() start",
+            )
+        except InvalidStateTransitionError:
+            logger.exception(
+                "State transition guard triggered at orchestrator start — "
+                "this indicates an orchestrator bug. run={}, current_status={}",
+                state.processing_run_id,
+                state.pipeline_status.value,
+            )
+            # Continue anyway — persistence layer is the final guard
+
         state.pipeline_status = PipelineStatus.RUNNING
         state.started_at = datetime.now().isoformat()
 
@@ -278,6 +324,22 @@ class PipelineOrchestrator:
 
         # If pipeline didn't fail, mark as AWAITING_REVIEW (Phase 4 is external)
         if final_state.pipeline_status != PipelineStatus.FAILED:
+            # Defense-in-depth: validate RUNNING → AWAITING_REVIEW transition
+            try:
+                validate_pipeline_status_transition(
+                    final_state.pipeline_status,
+                    PipelineStatus.AWAITING_REVIEW,
+                    context="orchestrator.run() finalization",
+                )
+            except InvalidStateTransitionError:
+                logger.exception(
+                    "State transition guard triggered at orchestrator finalization — "
+                    "this indicates an orchestrator bug. run={}, current_status={}",
+                    final_state.processing_run_id,
+                    final_state.pipeline_status.value,
+                )
+                # Continue anyway — persistence layer is the final guard
+
             final_state.pipeline_status = PipelineStatus.AWAITING_REVIEW
             final_state.completed_at = datetime.now().isoformat()
             await self._persistence.save(final_state)
