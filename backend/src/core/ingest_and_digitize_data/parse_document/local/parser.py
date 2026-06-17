@@ -1,33 +1,35 @@
-"""Local MinerU parser — HTTP client for the MinerU API server."""
+"""Local MinerU parser via model-server VLM endpoint."""
 from __future__ import annotations
 
-import base64
+import asyncio
 import re
-from pathlib import Path
 
 import httpx
 from loguru import logger
+from PIL import Image
 
 from ..base import ParserStrategy
 from ..contracts import (
     DocumentMetadata,
     PageContent,
     ParseResult,
+    pages_from_raw,
 )
 from ..exceptions import MinerUAPIError
+from .helpers import image_to_base64, pdf_to_images
 
 
 def _extract_abstract_from_markdown(text: str) -> str | None:
-    """Extract abstract text from markdown content."""
+    """Extract abstract text from markdown content.
+
+    Looks for common academic paper patterns:
+    - "Abstract" / "ABSTRACT" heading
+    - "摘要" / "【摘要】" heading (Chinese)
+    Falls back to first substantial paragraph before "Introduction"/"Keywords".
+    """
     if not text:
         return None
-    pattern = (
-        r"(?:^|\n)\s*(?:#{1,3}\s*)?(?:\*\*)?"
-        r"(?:Abstract|ABSTRACT|摘要|【摘要】)"
-        r"(?:\*\*)?\s*(?::\s*)?\n"
-        r"(.*?)(?=\n\s*(?:#{1,3}\s*)?(?:\*\*)?"
-        r"(?:Introduction|INTRODUCTION|引言|关键词|Keywords|KEYWORDS|Background|BACKGROUND|1\s*[\.\)])|\Z)"
-    )
+    pattern = r"(?:^|\n)\s*(?:#{1,3}\s*)?(?:\*\*)?(?:Abstract|ABSTRACT|摘要|【摘要】)(?:\*\*)?\s*(?::\s*)?\n(.*?)(?=\n\s*(?:#{1,3}\s*)?(?:\*\*)?(?:Introduction|INTRODUCTION|引言|关键词|Keywords|KEYWORDS|Background|BACKGROUND|1\s*[\.\)])|\Z)"
     m = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
     if m:
         abstract = m.group(1).strip()
@@ -38,114 +40,50 @@ def _extract_abstract_from_markdown(text: str) -> str | None:
 
 
 class MinerULocalParser(ParserStrategy):
-    """PDF parser using a locally deployed MinerU API server.
+    """PDF parser using local model-server VLM endpoint.
 
-    The MinerU API server (``mineru-api-server`` from the ``mineru`` package)
-    handles the full parsing pipeline: PDF rendering, layout detection, VLM
-    inference, table structure recognition, and formula OCR.
-
-    This parser uploads a PDF to ``POST /file_parse`` and maps the JSON
-    response back to our ``ParseResult`` contract.
+    Converts each PDF page to an image, sends to model-server's
+    /v1/chat/completions endpoint, and aggregates page results.
     """
 
     def __init__(
         self,
-        api_url: str = "http://localhost:8001",
-        timeout: float = 600.0,
-        backend: str = "vlm",
+        model_server_url: str = "http://localhost:8001",
+        model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B",
+        timeout: float = 120.0,
+        dpi: int = 200,
     ):
-        self._api_url = api_url.rstrip("/")
+        self._base_url = model_server_url.rstrip("/")
+        self._model_id = model_id
         self._timeout = timeout
-        self._backend = backend
+        self._dpi = dpi
 
     @property
     def name(self) -> str:
         return "mineru-local"
 
     async def parse(self, pdf_path: str) -> ParseResult:
-        """Parse a PDF via the MinerU API server.
+        """Parse PDF by converting pages to images and calling model-server."""
+        logger.info(f"MinerU local parsing: {pdf_path}")
 
-        Args:
-            pdf_path: Local path to the PDF file.
-
-        Returns:
-            ParseResult with metadata, pages, and full markdown.
-
-        Raises:
-            MinerUAPIError: On API errors or connection failures.
-        """
-        logger.info(f"MinerU local parsing via API server: {pdf_path}")
-
-        file_path = Path(pdf_path)
-        if not file_path.exists():
-            raise MinerUAPIError(f"PDF file does not exist: {pdf_path}")
-
-        file_data = file_path.read_bytes()
-
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                resp = await client.post(
-                    f"{self._api_url}/file_parse",
-                    data={
-                        "backend": self._backend,
-                        "return_content_list": "true",
-                        "return_images": "true",
-                        "return_md": "true",
-                    },
-                    files={"file": (file_path.name, file_data, "application/pdf")},
-                )
-                resp.raise_for_status()
-        except httpx.HTTPStatusError as e:
-            raise MinerUAPIError(
-                f"MinerU API server returned {e.response.status_code}: {e.response.text}"
-            ) from e
-        except httpx.RequestError as e:
-            raise MinerUAPIError(f"Failed to connect to MinerU API server: {e}") from e
-
-        data = resp.json()
-        results = data.get("results", {})
-        if not results:
-            raise MinerUAPIError(f"No results returned by MinerU API for: {pdf_path}")
-
-        file_name = file_path.name
-        file_result = results.get(file_name)
-        if file_result is None:
-            file_result = next(iter(results.values()))
-
-        return self._build_result_from_response(file_name, file_result)
-
-    @staticmethod
-    def _build_result_from_response(file_name: str, file_result: dict) -> ParseResult:
-        """Map MinerU API file result to ParseResult."""
-        full_markdown = file_result.get("md_content", "")
-        content_list = file_result.get("content_list", [])
-        raw_images = file_result.get("images", {})
-
-        images: dict[str, bytes] = {}
-        for img_name, img_data_uri in raw_images.items():
-            if isinstance(img_data_uri, str) and img_data_uri.startswith("data:"):
-                match = re.match(r"data:[^;]+;base64,(.+)", img_data_uri)
-                if match:
-                    images[img_name] = base64.b64decode(match.group(1))
-
-        max_page_idx = 0
-        for block in content_list:
-            page_idx = block.get("page_idx", 0)
-            max_page_idx = max(max_page_idx, page_idx)
-
-        total_pages = max_page_idx + 1 if content_list else 1
+        images = await asyncio.to_thread(pdf_to_images, pdf_path, self._dpi)
+        logger.info(f"Converted {len(images)} pages to images")
 
         pages: list[PageContent] = []
-        for i in range(total_pages):
-            pages.append(PageContent(page_number=i + 1, markdown=""))
+        full_markdown_parts: list[str] = []
 
-        if not pages:
-            pages = [PageContent(page_number=1, markdown=full_markdown)]
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            for i, image in enumerate(images, start=1):
+                logger.info(f"Processing page {i}/{len(images)}")
+                page = await self._extract_page(client, i, image)
+                pages.append(page)
+                full_markdown_parts.append(page.markdown)
 
-        abstract = _extract_abstract_from_markdown(full_markdown)
+        combined_markdown = "\n\n".join(full_markdown_parts)
+        abstract = _extract_abstract_from_markdown(combined_markdown)
 
         metadata = DocumentMetadata(
-            total_pages=total_pages,
+            total_pages=len(pages),
             title=None,
             authors=[],
             abstract_text=abstract,
@@ -154,8 +92,93 @@ class MinerULocalParser(ParserStrategy):
         return ParseResult(
             metadata=metadata,
             pages=pages,
-            full_markdown=full_markdown,
-            parser_used="mineru-local",
-            images=images,
-            content_blocks=content_list,
+            full_markdown="\n\n".join(full_markdown_parts),
+            parser_used=self.name,
         )
+
+    async def _extract_page(
+        self,
+        client: httpx.AsyncClient,
+        page_number: int,
+        image: Image.Image,
+    ) -> PageContent:
+        """Extract content from a single page image via model-server."""
+        b64 = image_to_base64(image)
+
+        payload = {
+            "model": self._model_id,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "Extract this document page as markdown."},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/png;base64,{b64}"},
+                        },
+                    ],
+                }
+            ],
+        }
+
+        try:
+            resp = await client.post(
+                f"{self._base_url}/v1/chat/completions",
+                json=payload,
+            )
+            resp.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise MinerUAPIError(
+                f"Model-server returned {e.response.status_code}: {e.response.text}"
+            ) from e
+        except httpx.RequestError as e:
+            raise MinerUAPIError(f"Request to model-server failed: {e}") from e
+
+        data = resp.json()
+        return self._parse_page_response(page_number, data)
+
+    @staticmethod
+    def _parse_page_response(page_number: int, data: dict) -> PageContent:
+        """Convert model-server VLM response to PageContent.
+
+        Supports two response formats:
+        - VLMExtractResponse: {"full_markdown": "...", "pages": [...]}
+        - OpenAI chat completions: {"choices": [{"message": {"content": "..."}}]}
+        """
+        # Try VLMExtractResponse format first
+        full_markdown = data.get("full_markdown", "")
+        pages_data = data.get("pages", [])
+
+        if pages_data:
+            page = pages_data[0]
+            markdown = page.get("markdown", full_markdown)
+            figures_raw = page.get("figures", [])
+            tables_raw = page.get("tables", [])
+        elif full_markdown:
+            markdown = full_markdown
+            figures_raw = []
+            tables_raw = []
+        else:
+            # Fallback: try OpenAI chat completions format
+            choices = data.get("choices", [])
+            if choices and isinstance(choices, list):
+                message = choices[0].get("message", {})
+                markdown = message.get("content", "")
+            else:
+                markdown = ""
+            figures_raw = []
+            tables_raw = []
+
+        if not markdown:
+            logger.warning(
+                f"Model-server returned empty markdown for page {page_number}. "
+                f"Response keys: {list(data.keys())}"
+            )
+
+        raw_page = {
+            "page_number": page_number,
+            "markdown": markdown,
+            "figures": figures_raw,
+            "tables": tables_raw,
+        }
+        return pages_from_raw([raw_page])[0]

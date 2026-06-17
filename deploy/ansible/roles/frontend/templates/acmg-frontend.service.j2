@@ -11,8 +11,9 @@ Group=deploy
 WorkingDirectory={{ frontend_root }}
 Environment=NODE_ENV={{ frontend_node_env }}
 Environment=PORT={{ frontend_port }}
-Environment=API_KEY={{ api_key }}
 Environment=NVM_DIR=/home/deploy/.nvm
+# Secrets loaded from restricted-permission file (not visible in `systemctl show`)
+EnvironmentFile=/etc/cross-evidence/frontend.env
 Environment=PATH=/home/deploy/.nvm/versions/node/v18/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=/home/deploy/.nvm/versions/node/v18/bin/node node_modules/.bin/next start -p {{ frontend_port }}
 Restart=always
