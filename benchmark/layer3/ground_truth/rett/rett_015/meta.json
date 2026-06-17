@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_015",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Genetic_Approach_to_Rett_Syndrome_with_MECP2_p-R270X_Mutation.pdf",
+  "language": "en",
+  "parse_status": "parsed",
+  "annotation_status": "generated",
+  "review_status": "ground_truth",
+  "reviewer": "auto-review",
+  "review_notes": "",
+  "rejection_reason": "",
+  "generated_at": "2026-06-16T08:23:19+00:00",
+  "reviewed_at": "2026-06-16T09:12:49+00:00",
+  "promoted_at": "2026-06-16T09:13:10+00:00",
+  "llm_model": "claude-opus-4-8",
+  "parse_backend": "mineru",
+  "variant_count": 1,
+  "clinical_feature_count": 6
+}

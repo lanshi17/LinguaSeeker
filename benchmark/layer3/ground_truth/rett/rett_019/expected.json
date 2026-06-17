@@ -1,0 +1,145 @@
+{
+  "entry_id": "rett_019",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "MECP2-related severe neonatal encephalopathy (with Rett syndrome spectrum)",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": "10.7759/cureus.101620",
+  "source_title": "MECP2 Gene-Related Severe Neonatal Encephalopathy: A Rare Case in a Female Neonate",
+  "source_journal": "Cureus",
+  "source_year": "2026",
+  "source_language": "en",
+  "source_pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_MECP2_Gene-Related_Severe_Neonatal_Encephalopathy_Case_in_Female_Neon.pdf",
+  "variants": [
+    {
+      "hgvs_c": "c.1477G>A",
+      "hgvs_p": "p.Val493Met",
+      "variant_type": "missense (single nucleotide variation)",
+      "clinical_significance": "variant of unknown significance (VUS)",
+      "exon": "exon 3",
+      "domain": "NLS"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "MECP2-related severe neonatal encephalopathy (with Rett syndrome spectrum)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.1477G>A",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Val493Met",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense (single nucleotide variation)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001250; HP:0001252; HP:0012759",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "neonatal encephalopathy; marked hypotonia; reduced spontaneous movements; apnea / poor respiratory effort; clonic seizures; stupor; cerebral atrophy; cerebellar dysplasia; multicystic encephalomalacia; ventriculomegaly; Grade I intraventricular hemorrhage",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "neonatal (encephalopathy at birth; seizures at 68 hours of life)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "unknown (parental sequencing not performed due to financial constraints)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "",
+  "classification": "Rett real-data",
+  "gcep": "Rett literature benchmark"
+}

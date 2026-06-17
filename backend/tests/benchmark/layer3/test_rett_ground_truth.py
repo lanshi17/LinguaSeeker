@@ -17,7 +17,7 @@ def test_export_rett_ground_truth_writes_layer3_selection_and_entry(tmp_path: Pa
     source_root = tmp_path / "annotation" / "ground_truth"
     entry_dir = source_root / "rett_001"
     entry_dir.mkdir(parents=True)
-    (entry_dir / "source.md").write_text("# Rett case\n\nMECP2 causes Rett syndrome.", encoding="utf-8")
+    (entry_dir / "source.md").write_text("# Rett\x00 case\n\nMECP2 causes Rett syndrome.", encoding="utf-8")
     (entry_dir / "source.pdf").write_bytes(b"%PDF-1.4\n")
     _write_json(
         entry_dir / "meta.json",
@@ -54,7 +54,9 @@ def test_export_rett_ground_truth_writes_layer3_selection_and_entry(tmp_path: Pa
 
     assert report.entry_count == 1
     assert (output_root / "rett_001" / "expected.json").exists()
-    assert (output_root / "rett_001" / "source.md").read_text(encoding="utf-8").startswith("# Rett case")
+    exported_source = (output_root / "rett_001" / "source.md").read_text(encoding="utf-8")
+    assert "\x00" not in exported_source
+    assert exported_source.startswith("# Rett case")
     assert (output_root / "rett_001" / "source.pdf").read_bytes() == b"%PDF-1.4\n"
 
     expected = json.loads((output_root / "rett_001" / "expected.json").read_text(encoding="utf-8"))

@@ -2,6 +2,18 @@
 
 # Lesson Log
 
+## 2026-06-17: Rett Layer 3 export must sanitize markdown text and test explicit dataset roots
+
+**Problem**: While introducing Rett annotations as a Layer 3 ground truth dataset, the first root-override test failed because it monkeypatched `GROUND_TRUTH_DIR` after `evaluate_one()` had already bound its default argument. A later structure check also showed `rett_001/source.md` was treated as binary by `rg`.
+
+**Investigation**: The failed test showed `pipeline_status=no_source`, proving the function still used its original default path. Separately, scanning both `benchmark/annotation/ground_truth` and the generated Layer 3 Rett directory showed one source markdown file contained a NUL byte; the generator had copied it verbatim.
+
+**Root cause**: Python default arguments are evaluated at function definition time, so monkeypatching the module constant does not update `ground_truth_dir=GROUND_TRUTH_DIR`. The NUL byte was pre-existing in the annotation source markdown and needed text-level normalization during export.
+
+**Fix**: Updated the test to pass `ground_truth_dir` explicitly, added a failing regression for NUL cleanup, and changed `generate_rett_ground_truth.py` to copy markdown via UTF-8 text read/write with `\x00` removal while preserving PDFs and metadata as byte copies.
+
+**Prevention**: For CLI-selectable dataset roots, test explicit parameters rather than monkeypatching constants bound into defaults. When promoting parsed markdown into benchmark ground truth, validate that generated `.md` files are plain UTF-8 text and do not contain NUL bytes before relying on search or evaluation tooling.
+
 ## 2026-06-16: Benchmark B pilot and queue selection were pointing at the wrong corpus root
 
 **Problem**: `select_benchmark_b_pilot` and `benchmark_b_phase2_queue` were using a path under `benchmark/pipeline/input/ground_truth`, so the pilot selection reported `Eligible=0` and the queue reported `QueuedSources=0` even though the real multilingual corpus existed under `benchmark/pipeline/input/`.

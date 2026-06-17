@@ -1,0 +1,222 @@
+{
+  "entry_id": "rett_064",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Rett syndrome",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": "10.1371/journal.pone.0068851",
+  "source_title": "Abnormal Expression of Cerebrospinal Fluid Cation Chloride Cotransporters in Patients with Rett Syndrome",
+  "source_journal": "PLoS ONE",
+  "source_year": "2013",
+  "source_language": "en",
+  "source_pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_pone0068851_17.pdf",
+  "variants": [
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Y141X",
+      "variant_type": "nonsense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "MBD"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.R270X",
+      "variant_type": "nonsense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD"
+    },
+    {
+      "hgvs_c": "c.905C>T",
+      "hgvs_p": "p.P302H",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.R306C",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.R255X",
+      "variant_type": "nonsense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.R294X",
+      "variant_type": "nonsense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "variant_type": "deletion",
+      "clinical_significance": "",
+      "exon": "exons 1-2",
+      "domain": ""
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.905C>T",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Y141X",
+      "candidates": [
+        "p.Y141X",
+        "p.R270X",
+        "p.P302H",
+        "p.R306C",
+        "p.R255X",
+        "p.R294X"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "nonsense",
+      "candidates": [
+        "nonsense",
+        "nonsense",
+        "missense",
+        "missense",
+        "nonsense",
+        "nonsense",
+        "deletion"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "MBD",
+      "candidates": [
+        "MBD",
+        "TRD",
+        "TRD",
+        "TRD",
+        "TRD",
+        "TRD"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001250; HP:0012759; HP:0000756; HP:0001249; HP:0002376",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "epilepsy/seizures (generalized, partial, absence, atonic, refractory, status epilepticus); respiratory anomalies (hyperventilation bursts and apneas); autistic behavior; mental retardation; motor regression / failure to acquire new skills",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "6-18 months",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "unknown",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "",
+  "classification": "Rett real-data",
+  "gcep": "Rett literature benchmark"
+}

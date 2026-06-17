@@ -8,7 +8,6 @@ Phase 1/2 and directly run Phase 3 (standardization).
 from __future__ import annotations
 
 import asyncio
-import base64
 import json
 import shutil
 import sys
@@ -135,7 +134,8 @@ async def preprocess_entry(
             return False
 
         # Copy Phase 1/2 outputs to ground_truth
-        pipeline_dir = Path("/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline") / run_id  # noqa: hardcoded-dev-path
+        # Pipeline artifacts are currently materialized under the main checkout.
+        pipeline_dir = Path("/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline") / run_id
         phase1_dir = pipeline_dir / "phase_1"
         phase2_dir = pipeline_dir / "phase_2"
 
