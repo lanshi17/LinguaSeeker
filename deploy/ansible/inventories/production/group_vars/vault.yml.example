@@ -15,8 +15,15 @@ vault_reasoning_llm_api_key: "***REDACTED_API_KEY***"
 # ── MinerU ────────────────────────────────────────────────────────────────
 vault_mineru_api_token: "xxxxxxxxxxxxxxxxxxxxxxxx"
 
-# ── Web Search ────────────────────────────────────────────────────────────
-vault_web_search_api_key: "fc-xxxxxxxxxxxxxxxxxxxxxxxx"
+
+# ── Literature Acquisition API Keys ──────────────────────────────────────
+# Optional but recommended: raises provider rate limits and unlocks full-text.
+#   PUBMED_API_KEY -> NCBI E-utilities (3→10 req/s); applies to pmc + pubmed_service
+#   BASE_API_KEY   -> BASE (Bielefeld Academic Search Engine)
+#   CORE_API_KEY   -> CORE (core.ac.uk)
+vault_pubmed_api_key: "your-ncbi-api-key"
+vault_base_api_key: ""
+vault_core_api_key: ""
 
 # ── PostgreSQL ────────────────────────────────────────────────────────────
 vault_postgres_password: "change-me-to-a-strong-password"

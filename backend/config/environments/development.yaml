@@ -36,6 +36,12 @@ postgres:
 redis:
   host: "localhost"
 
+# ── Literature Acquisition (Development) ──────────────────────────────────
+# Unpaywall requires a contact email; set your institutional address here.
+# API keys (pubmed/base/core) go in vault/development.yaml.
+unpaywall:
+  email: "[redacted-email]"
+
 # ── Network / Proxy ──────────────────────────────────────────────────────
 network:
   proxy: "http://127.0.0.1:7890"
