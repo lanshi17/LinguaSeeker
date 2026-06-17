@@ -1,0 +1,165 @@
+{
+  "entry_id": "fused_059",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "MT-ND3",
+    "hgnc_id": "HGNC:7458",
+    "disease_label": "Leigh syndrome",
+    "mondo_id": "MONDO:0009723",
+    "moi": "MT",
+    "classification": "Definitive",
+    "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+    "classification_date": "2021-03-24T04:00:00.000Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8af71e8b-b1f8-45d6-9dd7-e403a6f6080e-2021-03-24T040000.000Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 9712,
+      "hgvs_name": "NC_012920.1(MT-ND3):m.10191T>C",
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs267606890",
+      "phenotype_ids": "MONDO:MONDO:0027068,MedGen:C4746992,OMIM:500014|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0100133,MeSH:C537475,MedGen:C1838979,Orphanet:2609|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+      "phenotype_list": "Mitochondrial complex I deficiency, mitochondrial type 1|Leigh syndrome|Mitochondrial complex I deficiency|Mitochondrial disease|Primary Mitochondrial Disorders"
+    },
+    {
+      "variation_id": 9714,
+      "hgvs_name": "NC_012920.1(MT-ND3):m.10158T>C",
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs199476117",
+      "phenotype_ids": "MONDO:MONDO:0027068,MedGen:C4746992,OMIM:500014|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MedGen:C3661900|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+      "phenotype_list": "Mitochondrial complex I deficiency, mitochondrial type 1|Leigh syndrome|not provided|Mitochondrial disease|Primary Mitochondrial Disorders"
+    },
+    {
+      "variation_id": 9715,
+      "hgvs_name": "NC_012920.1(MT-ND3):m.10197G>A",
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs267606891",
+      "phenotype_ids": "MONDO:MONDO:0027068,MedGen:C4746992,OMIM:500014|MONDO:MONDO:0010772,MedGen:C1839040,OMIM:500001,Orphanet:99718|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MedGen:C3661900|MedGen:CN043634|MedGen:CN169374|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380||MONDO:MONDO:0020714,MedGen:C5193223,OMIM:251900|MedGen:CN381104",
+      "phenotype_list": "Mitochondrial complex I deficiency, mitochondrial type 1|Leber optic atrophy and dystonia|Leigh syndrome|not provided|Mitochondrial DNA-Associated Leigh Syndrome and NARP|not specified|Mitochondrial disease|See cases|Mitochondrial myopathy, episodic, with optic atrophy and reversible leukoencephalopathy|Primary Mitochondrial Disorders"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MT-ND3",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Leigh syndrome",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "MT",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:7458",
+    "disease": "MONDO:0009723",
+    "variant_candidates": [
+      "ClinVarVariation:9712",
+      "ClinVarVariation:9714",
+      "ClinVarVariation:9715"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "MT-ND3",
+      "hgnc_id": "HGNC:7458"
+    },
+    "disease": {
+      "text": "Leigh syndrome",
+      "mondo_id": "MONDO:0009723"
+    },
+    "variants": [
+      {
+        "text": "NC_012920.1(MT-ND3):m.10191T>C",
+        "variation_id": "ClinVarVariation:9712",
+        "rsid": "rs267606890"
+      },
+      {
+        "text": "NC_012920.1(MT-ND3):m.10158T>C",
+        "variation_id": "ClinVarVariation:9714",
+        "rsid": "rs199476117"
+      },
+      {
+        "text": "NC_012920.1(MT-ND3):m.10197G>A",
+        "variation_id": "ClinVarVariation:9715",
+        "rsid": "rs267606891"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": "41744643",
+  "source_pmc": "PMC12937636",
+  "source_pdf_url": "https://europepmc.org/article/PMC/12937636?pdf=render",
+  "source_title": "Generative AI Accelerates Genotype-Phenotype Characterization of a 1600-Case Leigh Syndrome Virtual Cohort from Published Literature.",
+  "source_journal": "",
+  "source_year": "2026",
+  "notes": "",
+  "literature_search_strategy": "\"MT-ND3\" AND \"Leigh syndrome\" AND OPEN_ACCESS:y"
+}

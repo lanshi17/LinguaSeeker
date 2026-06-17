@@ -1,0 +1,189 @@
+{
+  "entry_id": "fused_042",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "KCNQ1",
+    "hgnc_id": "HGNC:6294",
+    "disease_label": "long QT syndrome",
+    "mondo_id": "MONDO:0002442",
+    "moi": "AD",
+    "classification": "Definitive",
+    "gcep": "Long QT syndrome Gene Curation Expert Panel",
+    "classification_date": "2018-09-25T04:00:00.000Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dff8874e-98a1-472b-9cc2-3f441b1c1064-2018-09-25T040000.000Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 3118,
+      "hgvs_name": "NM_000218.3(KCNQ1):c.760G>A (p.Val254Met)",
+      "hgvs_c": "c.760G>A",
+      "hgvs_p": "p.Val254Met",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs120074179",
+      "phenotype_ids": "MONDO:MONDO:0100316,MedGen:C4551647,OMIM:192500,Orphanet:101016,Orphanet:768|MONDO:MONDO:0019171,MedGen:C1141890,OMIM:PS192500,Orphanet:101016,Orphanet:768|MONDO:MONDO:0002442,MeSH:D008133,MedGen:C0023976|MedGen:C3661900|MedGen:CN230736|MONDO:MONDO:0100316,MedGen:C4551647,OMIM:192500,Orphanet:101016,Orphanet:768;MONDO:MONDO:0011857,MedGen:C1837014,OMIM:607554;MONDO:MONDO:0012313,MedGen:C1865019,OMIM:609621,Orphanet:51083;MONDO:MONDO:0002441,MedGen:C0022387,OMIM:PS220400,Orphanet:90647",
+      "phenotype_list": "Long QT syndrome 1|Congenital long QT syndrome|Long QT syndrome|not provided|Cardiovascular phenotype|Long QT syndrome 1;Atrial fibrillation, familial, 3;Short QT syndrome type 2;Jervell and Lange-Nielsen syndrome"
+    },
+    {
+      "variation_id": 3119,
+      "hgvs_name": "NM_000218.3(KCNQ1):c.817C>T (p.Leu273Phe)",
+      "hgvs_c": "c.817C>T",
+      "hgvs_p": "p.Leu273Phe",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs120074180",
+      "phenotype_ids": "MONDO:MONDO:0100316,MedGen:C4551647,OMIM:192500,Orphanet:101016,Orphanet:768|MONDO:MONDO:0019171,MedGen:C1141890,OMIM:PS192500,Orphanet:101016,Orphanet:768|MedGen:C3661900|MedGen:CN230736|MONDO:MONDO:0002442,MeSH:D008133,MedGen:C0023976",
+      "phenotype_list": "Long QT syndrome 1|Congenital long QT syndrome|not provided|Cardiovascular phenotype|Long QT syndrome"
+    },
+    {
+      "variation_id": 3131,
+      "hgvs_name": "NM_000218.3(KCNQ1):c.1552C>T (p.Arg518Ter)",
+      "hgvs_c": "c.1552C>T",
+      "hgvs_p": "p.Arg518Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs17215500",
+      "phenotype_ids": "MedGen:C4017089|MONDO:MONDO:0002442,MeSH:D008133,MedGen:C0023976|MedGen:C3661900|MedGen:CN230736|MONDO:MONDO:0100316,MedGen:C4551647,OMIM:192500,Orphanet:101016,Orphanet:768|MONDO:MONDO:0019171,MedGen:C1141890,OMIM:PS192500,Orphanet:101016,Orphanet:768|MedGen:CN239322|MedGen:CN169374|EFO: The Experimental Factor Ontology:EFO_0004269,Human Phenotype Ontology:HP:0001656,Human Phenotype Ontology:HP:0001661,Human Phenotype Ontology:HP:0001665,Human Phenotype Ontology:HP:0001666,Human Phenotype Ontology:HP:0001687,Human Phenotype Ontology:HP:0001721,Human Phenotype Ontology:HP:0004351,Human Phenotype Ontology:HP:0005158,Human Phenotype Ontology:HP:0011675,MONDO:MONDO:0007263,MedGen:C0003811|MONDO:MONDO:0024540,MedGen:C4551509,OMIM:220400,Orphanet:768,Orphanet:90647|MONDO:MONDO:0100316,MedGen:C4551647,OMIM:192500,Orphanet:101016,Orphanet:768;MONDO:MONDO:0024540,MedGen:C4551509,OMIM:220400,Orphanet:768,Orphanet:90647|",
+      "phenotype_list": "Long QT syndrome 1, recessive|Long QT syndrome|not provided|Cardiovascular phenotype|Long QT syndrome 1|Congenital long QT syndrome|KCNQ1-related disorder|not specified|Cardiac arrhythmia|Jervell and Lange-Nielsen syndrome 1|Long QT syndrome 1;Jervell and Lange-Nielsen syndrome 1|Monogenic hearing loss"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "KCNQ1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "long QT syndrome",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.760G>A",
+      "candidates": [
+        "c.760G>A",
+        "c.817C>T",
+        "c.1552C>T"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Val254Met",
+      "candidates": [
+        "p.Val254Met",
+        "p.Leu273Phe",
+        "p.Arg518Ter"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Likely pathogenic",
+        "Likely pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6294",
+    "disease": "MONDO:0002442",
+    "variant_candidates": [
+      "ClinVarVariation:3118",
+      "ClinVarVariation:3119",
+      "ClinVarVariation:3131"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "KCNQ1",
+      "hgnc_id": "HGNC:6294"
+    },
+    "disease": {
+      "text": "long QT syndrome",
+      "mondo_id": "MONDO:0002442"
+    },
+    "variants": [
+      {
+        "text": "c.760G>A",
+        "variation_id": "ClinVarVariation:3118",
+        "rsid": "rs120074179"
+      },
+      {
+        "text": "c.817C>T",
+        "variation_id": "ClinVarVariation:3119",
+        "rsid": "rs120074180"
+      },
+      {
+        "text": "c.1552C>T",
+        "variation_id": "ClinVarVariation:3131",
+        "rsid": "rs17215500"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": "37124559",
+  "source_pmc": "PMC10134391",
+  "source_pdf_url": "https://europepmc.org/article/PMC/10134391?pdf=render",
+  "source_title": "SGK1 inhibition attenuated the action potential duration in patient- and genotype-specific re-engineered heart cells with congenital long QT syndrome.",
+  "source_journal": "",
+  "source_year": "2023",
+  "notes": "",
+  "literature_search_strategy": "\"KCNQ1\" AND \"c.760G>A\" AND OPEN_ACCESS:y"
+}

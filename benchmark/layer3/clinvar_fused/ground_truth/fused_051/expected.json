@@ -1,0 +1,189 @@
+{
+  "entry_id": "fused_051",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "MSH6",
+    "hgnc_id": "HGNC:7329",
+    "disease_label": "Lynch syndrome",
+    "mondo_id": "MONDO:0005835",
+    "moi": "AD",
+    "classification": "Definitive",
+    "gcep": "Hereditary Cancer Gene Curation Expert Panel",
+    "classification_date": "2023-07-05T17:00:00.000Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bc6e042d-74ad-42fc-9638-7f53f8bc32f9-2023-07-05T170000.000Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 8932,
+      "hgvs_name": "NM_000179.3(MSH6):c.651dup (p.Lys218Ter)",
+      "hgvs_c": "c.651dup",
+      "hgvs_p": "p.Lys218Ter",
+      "variant_type": "dup",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs63750955",
+      "phenotype_ids": "MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144|MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MedGen:C3661900|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144|MONDO:MONDO:0018630,MedGen:C1333990,OMIM:PS120435,Orphanet:443909|Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089|MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144;Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089;MONDO:MONDO:0030841,MedGen:C5436807,OMIM:619097|",
+      "phenotype_list": "Lynch syndrome 5|Lynch syndrome|not provided|Hereditary cancer-predisposing syndrome|Hereditary nonpolyposis colorectal neoplasms|Lynch syndrome 1|Hereditary nonpolyposis colon cancer|Endometrial carcinoma|Lynch syndrome 5;Endometrial carcinoma;Mismatch repair cancer syndrome 3|MSH6-related disorder"
+    },
+    {
+      "variation_id": 36593,
+      "hgvs_name": "NM_000179.3(MSH6):c.3699_3702del (p.Lys1233fs)",
+      "hgvs_c": "c.3699_3702del",
+      "hgvs_p": "p.Lys1233fs",
+      "variant_type": "deletion",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs193922343",
+      "phenotype_ids": "MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0018630,MedGen:C1333990,OMIM:PS120435,Orphanet:443909|Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089|MONDO:MONDO:0030841,MedGen:C5436807,OMIM:619097;MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144|",
+      "phenotype_list": "Lynch syndrome|Hereditary cancer-predisposing syndrome|not provided|Lynch syndrome 5|Hereditary nonpolyposis colorectal neoplasms|Hereditary nonpolyposis colon cancer|Endometrial carcinoma|Mismatch repair cancer syndrome 3;Lynch syndrome 5|MSH6-related disorder"
+    },
+    {
+      "variation_id": 42472,
+      "hgvs_name": "NM_000179.3(MSH6):c.3991C>T (p.Arg1331Ter)",
+      "hgvs_c": "c.3991C>T",
+      "hgvs_p": "p.Arg1331Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs267608094",
+      "phenotype_ids": "MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0018630,MedGen:C1333990,OMIM:PS120435,Orphanet:443909|Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089;MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144;MONDO:MONDO:0030841,MedGen:C5436807,OMIM:619097|MedGen:CN221562|Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089|",
+      "phenotype_list": "Lynch syndrome|Hereditary cancer-predisposing syndrome|not provided|Lynch syndrome 5|Hereditary nonpolyposis colorectal neoplasms|Hereditary nonpolyposis colon cancer|Endometrial carcinoma;Lynch syndrome 5;Mismatch repair cancer syndrome 3|Breast and/or ovarian cancer|Endometrial carcinoma|MSH6-related disorder"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MSH6",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Lynch syndrome",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.651dup",
+      "candidates": [
+        "c.651dup",
+        "c.3699_3702del",
+        "c.3991C>T"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Lys218Ter",
+      "candidates": [
+        "p.Lys218Ter",
+        "p.Lys1233fs",
+        "p.Arg1331Ter"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "dup",
+      "candidates": [
+        "dup",
+        "deletion",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:7329",
+    "disease": "MONDO:0005835",
+    "variant_candidates": [
+      "ClinVarVariation:8932",
+      "ClinVarVariation:36593",
+      "ClinVarVariation:42472"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "MSH6",
+      "hgnc_id": "HGNC:7329"
+    },
+    "disease": {
+      "text": "Lynch syndrome",
+      "mondo_id": "MONDO:0005835"
+    },
+    "variants": [
+      {
+        "text": "c.651dup",
+        "variation_id": "ClinVarVariation:8932",
+        "rsid": "rs63750955"
+      },
+      {
+        "text": "c.3699_3702del",
+        "variation_id": "ClinVarVariation:36593",
+        "rsid": "rs193922343"
+      },
+      {
+        "text": "c.3991C>T",
+        "variation_id": "ClinVarVariation:42472",
+        "rsid": "rs267608094"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": "34964038",
+  "source_pmc": "PMC8697338",
+  "source_pdf_url": "https://europepmc.org/article/PMC/8697338?pdf=render",
+  "source_title": "High Prevalence of Constitutional Mismatch Repair Deficiency in a Pediatric T-cell Lymphoblastic Lymphoma Cohort.",
+  "source_journal": "",
+  "source_year": "2022",
+  "notes": "",
+  "literature_search_strategy": "\"MSH6\" AND \"c.651dup\" AND OPEN_ACCESS:y"
+}
