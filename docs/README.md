@@ -41,10 +41,8 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | Date | Title | Status |
 |------|-------|--------|
 | 2026-06-15 | [BIBM Main Paper Manuscript Draft](active/2026-06-15-bibm-main-paper-manuscript-draft.md) | in-progress |
-| 2026-06-15 | [BIBM Main Paper Claim Matrix](active/2026-06-15-bibm-main-paper-claim-matrix.md) | in-progress |
 | 2026-06-15 | [BIBM Main Paper Outline](active/2026-06-15-bibm-main-paper-outline.md) | in-progress |
 | 2026-06-15 | [BIBM Main Paper Limitations](active/2026-06-15-bibm-main-paper-limitations.md) | in-progress |
-| 2026-06-15 | [BIBM Main Paper Pipeline Optimization & Benchmark Plan](active/2026-06-15-bibm-main-paper-pipeline-optimization-and-benchmark-plan.md) | in-progress |
 | 2026-06-15 | [Main Paper Tables Developer Guide](active/2026-06-15-main-paper-tables-guide.md) | in-progress |
 | 2026-06-15 | [Learned Arbitrator Gate A Report](active/2026-06-15-learned-arbitrator-gate-a-report.md) | negative ablation |
 | 2026-06-15 | [BIBM Main Paper LaTeX](active/2026-06-15-bibm-main-paper-tex/) | in-progress |
@@ -87,6 +85,8 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
+| 2026-06-15 | [BIBM Main Paper Pipeline Optimization & Benchmark Plan](archive/2026-06-15-bibm-main-paper-pipeline-optimization-and-benchmark-plan.md) | completed |
+| 2026-06-15 | [BIBM Main Paper Claim Matrix](archive/2026-06-15-bibm-main-paper-claim-matrix.md) | completed |
 | 2026-06-15 | [BIBM Benchmark A/B Readiness Plan](archive/plans/2026-06-15-bibm-benchmark-a-b-readiness-plan.md) | completed |
 | 2026-06-15 | [BIBM Benchmark Expansion Phase C Implementation Plan](archive/plans/2026-06-15-bibm-benchmark-expansion-phase-c-plan.md) | completed |
 
