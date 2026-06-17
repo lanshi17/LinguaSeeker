@@ -31,6 +31,7 @@ router = APIRouter()
 async def get_evidence_group_detail(
     group_id: str = Query(..., description="Evidence group identifier"),
     session: AsyncSession = Depends(get_db_session),
+    _api_key: str | None = Depends(require_api_key),
 ) -> EvidenceGroupDetailResponse:
     """Return grouped evidence detail with distribution and traceability."""
     service = SearchService(session)
@@ -75,6 +76,7 @@ async def patch_evidence(
 @router.get("/search", response_model=EvidenceSearchResponse)
 async def search_evidence(
     session: AsyncSession = Depends(get_db_session),
+    _api_key: str | None = Depends(require_api_key),
     gene: str | None = Query(None, description="Filter by gene (partial match on A.gene_symbol)"),
     variant: str | None = Query(None, description="Filter by variant (partial match on HGVS fields)"),
     disease: str | None = Query(None, description="Filter by disease (partial match on diagnosis fields)"),
@@ -103,6 +105,7 @@ async def search_evidence(
 @router.get("/literature/search", response_model=LiteratureSearchResponse)
 async def search_literature(
     session: AsyncSession = Depends(get_db_session),
+    _api_key: str | None = Depends(require_api_key),
     gene: str | None = Query(None, description="Filter by gene name"),
     variant: str | None = Query(None, description="Filter by variant"),
     disease: str | None = Query(None, description="Filter by disease"),
@@ -132,6 +135,7 @@ async def search_literature(
 async def get_literature_detail(
     source_document_id: UUID,
     session: AsyncSession = Depends(get_db_session),
+    _api_key: str | None = Depends(require_api_key),
 ) -> LiteratureProfileDetailResponse:
     """Return full literature profile with all evidence groups."""
     from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
