@@ -1,0 +1,228 @@
+{
+  "entry_id": "rett_012",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Rett syndrome",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": null,
+  "source_title": "Autonomic breathing abnormalities in Rett syndrome: caregiver perspectives in an international database study",
+  "source_journal": null,
+  "source_year": null,
+  "source_language": "en",
+  "source_pdf_path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Autonomic_breathing_abnormalities_in_Rett_syndrome_caregiver_perspectives_in_an_international_databa.pdf",
+  "variants": [
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg106Trp",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": "MBD"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg133Cys",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": "MBD"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Thr158Met",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": "MBD"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg168*",
+      "variant_type": "nonsense",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": "inter-domain (between MBD and TRD)"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg255*",
+      "variant_type": "nonsense",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": "TRD"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg270*",
+      "variant_type": "nonsense",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": "TRD"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg294*",
+      "variant_type": "nonsense",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": "TRD"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg306Cys",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": "TRD"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg106Trp",
+      "candidates": [
+        "p.Arg106Trp",
+        "p.Arg133Cys",
+        "p.Thr158Met",
+        "p.Arg168*",
+        "p.Arg255*",
+        "p.Arg270*",
+        "p.Arg294*",
+        "p.Arg306Cys"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense",
+        "nonsense",
+        "nonsense",
+        "nonsense",
+        "nonsense",
+        "missense"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "MBD",
+      "candidates": [
+        "MBD",
+        "MBD",
+        "MBD",
+        "inter-domain (between MBD and TRD)",
+        "TRD",
+        "TRD",
+        "TRD",
+        "TRD"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0012759; HP:0001250; HP:0002376; HP:0002072; HP:0001251; HP:0002650; HP:0002360; HP:0004322; HP:0011968",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "irregular breathing patterns (breath-holding, hyperventilation, apnoea); abdominal bloating; epilepsy/seizures; regression of acquired gross motor and communication skills and hand function; stereotypic hand movements; abnormal gait; scoliosis (curvature of the spine); sleep disturbances; growth retardation; feeding difficulties; gastrointestinal issues; autonomic dysfunction",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female (411/413; 2 male)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "regression between 6 and 18 months of age; breathing irregularities usually in early childhood",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "unknown",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "",
+  "classification": "Rett real-data",
+  "gcep": "Rett literature benchmark"
+}

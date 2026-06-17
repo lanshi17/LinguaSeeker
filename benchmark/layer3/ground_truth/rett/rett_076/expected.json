@@ -1,0 +1,278 @@
+{
+  "entry_id": "rett_076",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Rett syndrome (classic/typical and atypical/variant subtypes discussed)",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": null,
+  "source_title": "Rett Sendromlu Hastaların Klinik ve Moleküler Değerlendirmesi ve Genotip-Fenotip Korelasyonunun Araştırılması",
+  "source_journal": "Hacettepe Üniversitesi Tıp Fakültesi, Çocuk Sağlığı ve Hastalıkları Anabilim Dalı (Uzmanlık Tezi / specialty thesis)",
+  "source_year": "2015",
+  "source_language": "tr",
+  "source_pdf_path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/tr/tr_Rett_sendromlu_hastalarn_klinik_ve_molekuler_degerlendirmesi_ve_genotip-fenotip_korelasyonunun_arast.pdf",
+  "variants": [
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg106Trp",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "MBD (aa 78-162)"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg133Cys",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "MBD (aa 78-162)"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg152Arg",
+      "variant_type": "synonymous (reported in article under MBD missense list)",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "MBD (aa 78-162)"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Thr158Met",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "MBD (aa 78-162)"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg168Ter",
+      "variant_type": "nonsense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "interdomain"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg255Ter",
+      "variant_type": "nonsense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD (aa 201-310)"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg270Ter",
+      "variant_type": "nonsense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD (aa 201-310)"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg306Cys",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD (aa 201-310)"
+    },
+    {
+      "hgvs_c": "c.808delG",
+      "hgvs_p": "",
+      "variant_type": "frameshift deletion",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD (aa 201-310)"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Ter487Arg",
+      "variant_type": "non-stop (stop-loss)",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "C-terminal"
+    },
+    {
+      "hgvs_c": "c.1164delA",
+      "hgvs_p": "",
+      "variant_type": "frameshift deletion",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "C-terminal"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "variant_type": "large deletion (exon 3-4 deletion)",
+      "clinical_significance": "",
+      "exon": "exon 3-4",
+      "domain": ""
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome (classic/typical and atypical/variant subtypes discussed)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.808delG",
+      "candidates": [
+        "c.808delG",
+        "c.1164delA"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg106Trp",
+      "candidates": [
+        "p.Arg106Trp",
+        "p.Arg133Cys",
+        "p.Arg152Arg",
+        "p.Thr158Met",
+        "p.Arg168Ter",
+        "p.Arg255Ter",
+        "p.Arg270Ter",
+        "p.Arg306Cys",
+        "p.Ter487Arg"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "synonymous (reported in article under MBD missense list)",
+        "missense",
+        "nonsense",
+        "nonsense",
+        "nonsense",
+        "missense",
+        "frameshift deletion",
+        "non-stop (stop-loss)",
+        "frameshift deletion",
+        "large deletion (exon 3-4 deletion)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "MBD (aa 78-162)",
+      "candidates": [
+        "MBD (aa 78-162)",
+        "MBD (aa 78-162)",
+        "MBD (aa 78-162)",
+        "MBD (aa 78-162)",
+        "interdomain",
+        "TRD (aa 201-310)",
+        "TRD (aa 201-310)",
+        "TRD (aa 201-310)",
+        "TRD (aa 201-310)",
+        "C-terminal",
+        "C-terminal"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0002376; HP:0002072; HP:0001344; HP:0001250; HP:0000252; HP:0000253; HP:0012759; HP:0000756; HP:0002650; HP:0003763; HP:0002360; HP:0011968; HP:0002019; HP:0012171; HP:0004322; HP:0001251",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "early neurological regression following normal early development; loss of acquired purposeful hand use; stereotypic hand movements (hand-wringing, squeezing, clapping, mouthing, rubbing); loss of speech/communication skills; seizures / epilepsy; postnatal microcephaly / deceleration of head growth; breathing abnormalities (hyperventilation, breath-holding, apnea); autistic behavior / social withdrawal; scoliosis/kyphosis; bruxism (teeth grinding); sleep disturbance; feeding/gastrointestinal problems; constipation, gastroesophageal reflux; peripheral vasomotor disturbance / cold cyanotic hands and feet; growth failure / weight and height deceleration; ataxia, apraxia, broad-based gait; dystonia, rigidity, extrapyramidal movement and posture abnormalities; autonomic dysfunction, cardiac abnormalities (prolonged QT)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "median 1.5 years (regression onset)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "unknown",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "",
+  "classification": "Rett real-data",
+  "gcep": "Rett literature benchmark"
+}

@@ -1,0 +1,152 @@
+{
+  "entry_id": "rett_009",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Rett syndrome (classical)",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": null,
+  "source_title": "A rare case of a male child with post-zygotic de novo mosaic variant c.538C>T in MECP2 gene: a case report of Rett syndrome",
+  "source_journal": null,
+  "source_year": "2021",
+  "source_language": "en",
+  "source_pdf_path": "/data/[redacted-user]/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_A_rare_case_of_a_male_child_with_post-zygotic_de_novo_mosaic_variant_c538C_T_in.pdf",
+  "variants": [
+    {
+      "hgvs_c": "c.538C>T",
+      "hgvs_p": "p.Arg180Ter(p.R180*)",
+      "variant_type": "nonsense",
+      "clinical_significance": "pathogenic",
+      "exon": "exon 3",
+      "domain": "MBD (Methyl-CpG binding domain)"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome (classical)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.538C>T",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg180Ter (p.R180*)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "nonsense",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "MBD (Methyl-CpG binding domain)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001263; HP:0001250; HP:0000756; HP:0002072; HP:0012759; HP:0002194; HP:0001344",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "global developmental delay; delayed motor milestones (smiling, head holding, sitting, standing attained late); febrile seizure / abnormal epileptiform EEG activity; autism spectrum disorder (DSM-5); stereotypic hand movements / poor hand skills; apnea / breathing disturbance; absent/poor speech (communicates only via babbling); sudden tightening of the body; unilateral pre-axial polydactyly; simian crease on right hand; walks only with support",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "male",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "infancy (global developmental delay); febrile seizure onset at 1 year 9 months",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "post-zygotic de novo (somatic mosaicism, ~32% variant allele fraction; parents wildtype)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "",
+  "classification": "Rett real-data",
+  "gcep": "Rett literature benchmark"
+}
