@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 from typing import Any
 
@@ -36,7 +37,6 @@ class FileParseResponse(BaseModel):
 @router.post("/file_parse", response_model=FileParseResponse)
 async def file_parse(
     file: UploadFile = File(...),
-    backend: str = Form(default="vlm"),
     return_content_list: str = Form(default="true"),
     return_images: str = Form(default="true"),
     return_md: str = Form(default="true"),
@@ -52,12 +52,13 @@ async def file_parse(
         )
 
     file_name = file.filename or "document.pdf"
+    backend = _service.backend
     logger.info("Received file_parse request: {name} (backend={backend})", name=file_name, backend=backend)
 
     pdf_bytes = await file.read()
 
     try:
-        result = _service.parse(pdf_bytes, file_name)
+        result = await asyncio.to_thread(_service.parse, pdf_bytes, file_name)
     except Exception as exc:
         logger.error("MinerU parsing failed for {name}: {exc}", name=file_name, exc=exc)
         raise HTTPException(status_code=500, detail=f"MinerU parsing failed: {exc}") from exc

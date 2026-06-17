@@ -50,6 +50,8 @@ class Settings(BaseSettings):
     # Document parsing model (MinerU)
     doc_parse_model_id: str = ""
     doc_parse_image_analysis: bool = False
+    doc_parse_backend: str = "vlm"
+    doc_parse_model_path: str = ""
 
     # vllm shared settings
     vllm_gpu_memory_utilization: float = 0.9

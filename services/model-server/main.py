@@ -17,8 +17,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from fastapi import FastAPI
 
-from app.api import embedding, health, rerank, vlm
+from app.api import embedding, file_parse, health, rerank, vlm
 from app.config import get_config
+from app.domain.doc_parse import DocParseService
 from app.domain.embedding import EmbeddingService
 from app.domain.rerank import RerankService
 from app.domain.vlm import VLMService
@@ -46,16 +47,24 @@ _vlm_svc = VLMService(
     image_analysis=cfg.doc_parse_image_analysis,
 ) if cfg.doc_parse_model_id else None
 
+_doc_parse_svc = DocParseService(
+    backend=cfg.doc_parse_backend,
+    gpu_memory_utilization=cfg.doc_parse_gpu_memory_utilization,
+    model_path=cfg.doc_parse_model_path,
+)
+
 # Wire services into API routes
 embedding.bind(_embedding_svc)
 rerank.bind(_rerank_svc)
 if _vlm_svc:
     vlm.bind(_vlm_svc)
+file_parse.bind(_doc_parse_svc)
 
 # Register services for health checks
 health.register_services({
     "embedding": _embedding_svc,
     "rerank": _rerank_svc,
+    "doc_parse": _doc_parse_svc,
     **({"vlm": _vlm_svc} if _vlm_svc else {}),
 })
 
@@ -76,6 +85,7 @@ app.include_router(embedding.router)
 app.include_router(rerank.router)
 if _vlm_svc:
     app.include_router(vlm.router)
+app.include_router(file_parse.router)
 app.include_router(health.router)
 
 # ── Run ──────────────────────────────────────────────────────────────────

@@ -15,6 +15,7 @@ def test_file_parse_returns_result():
 
     mock_service = MagicMock()
     mock_service.is_available.return_value = True
+    mock_service.backend = "vlm"
     mock_service.parse.return_value = DocParseResult(
         md_content="# Hello\n\nWorld",
         content_list=[{"type": "text", "text": "Hello", "page_idx": 0}],
@@ -27,12 +28,13 @@ def test_file_parse_returns_result():
     response = client.post(
         "/file_parse",
         files={"file": ("test.pdf", b"%PDF-1.4 fake", "application/pdf")},
-        data={"backend": "vlm", "return_content_list": "true", "return_images": "true", "return_md": "true"},
+        data={"return_content_list": "true", "return_images": "true", "return_md": "true"},
     )
 
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "completed"
+    assert data["backend"] == "vlm"
     assert "test.pdf" in data["results"]
     assert data["results"]["test.pdf"]["md_content"] == "# Hello\n\nWorld"
 
@@ -44,6 +46,7 @@ def test_file_parse_service_unavailable():
 
     mock_service = MagicMock()
     mock_service.is_available.return_value = False
+    mock_service.backend = "vlm"
     file_parse.bind(mock_service)
 
     client = TestClient(app)
@@ -64,6 +67,7 @@ def test_file_parse_includes_images():
 
     mock_service = MagicMock()
     mock_service.is_available.return_value = True
+    mock_service.backend = "vlm"
     mock_service.parse.return_value = DocParseResult(
         md_content="content",
         content_list=[],
