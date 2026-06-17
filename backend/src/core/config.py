@@ -147,9 +147,10 @@ class ParseDocumentConfig(BaseModel):
 
     mineru_remote_poll_interval: float = 2.0
     mineru_remote_max_poll_attempts: int = 150
-    mineru_local_api_url: str = "http://localhost:8001"
-    mineru_local_timeout: float = 600.0
-    mineru_local_backend: str = "vlm"
+    mineru_local_model_server_url: str = "http://localhost:8001"
+    mineru_local_model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B"
+    mineru_local_timeout: float = 120.0
+    mineru_local_dpi: int = 200
 
 
 class RedisConfig(BaseModel):
@@ -243,10 +244,10 @@ class Settings(BaseSettings):
 
     # ── Top-level app config ─────────────────────────────────────────────
 
-    cors_origins: str = "*"
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     environment: str = "development"
     debug: bool = False
-    api_key: str = ""  # X-API-Key for write route auth; empty = disabled
+    api_key: str = ""  # X-API-Key for route auth; empty = disabled (insecure)
 
     # ── Preferred fast LLM flat fields (FAST_LLM_*) ────────────────────
 
@@ -307,9 +308,10 @@ class Settings(BaseSettings):
 
     mineru_remote_poll_interval: float = 2.0
     mineru_remote_max_poll_attempts: int = 150
-    mineru_local_api_url: str = "http://localhost:8001"
-    mineru_local_timeout: float = 600.0
-    mineru_local_backend: str = "vlm"
+    mineru_local_model_server_url: str = "http://localhost:8001"
+    mineru_local_model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B"
+    mineru_local_timeout: float = 120.0
+    mineru_local_dpi: int = 200
 
     # ── Model Server flat fields (MODEL_SERVER_*) ─────────────────────
 
@@ -425,9 +427,10 @@ class Settings(BaseSettings):
         self.parse_document = ParseDocumentConfig(
             mineru_remote_poll_interval=self.mineru_remote_poll_interval,
             mineru_remote_max_poll_attempts=self.mineru_remote_max_poll_attempts,
-            mineru_local_api_url=self.mineru_local_api_url,
+            mineru_local_model_server_url=self.mineru_local_model_server_url,
+            mineru_local_model_id=self.mineru_local_model_id,
             mineru_local_timeout=self.mineru_local_timeout,
-            mineru_local_backend=self.mineru_local_backend,
+            mineru_local_dpi=self.mineru_local_dpi,
         )
         self.redis = RedisConfig(
             host=self.redis_host,
@@ -459,6 +462,9 @@ class Settings(BaseSettings):
 
         if self.is_production and not self.api_key.strip():
             raise ValueError("API_KEY must be set when ENVIRONMENT=production")
+
+        if self.is_production and not self.redis.password.strip():
+            raise ValueError("REDIS_PASSWORD must be set when ENVIRONMENT=production")
 
         return self
 

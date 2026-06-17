@@ -19,7 +19,6 @@ TABLE_ERRORS = "Table 5 Error breakdown"
 TABLE_READINESS = "Table 6 Benchmark readiness and pilot selection"
 TABLE_ALIGNMENT = "Table 7 Alignment and drift/conflict detection"
 TABLE_AUGMENTATION = "Table 8 Evidence augmentation metrics"
-TABLE_RUNTIME = "Table 9 Benchmark B runtime pilot"
 
 ERROR_ROOT_CAUSE_ORDER = (
     "wrong_relationship_semantics",
@@ -80,9 +79,8 @@ def build_main_paper_tables(manifest_path: Path) -> MainPaperTables:
             MainPaperTable(TABLE_TRACEABILITY, _traceability_rows(manifest, manifest_path=manifest_path)),
             MainPaperTable(TABLE_ERRORS, _error_rows(manifest, manifest_path=manifest_path)),
             MainPaperTable(TABLE_READINESS, _readiness_rows(manifest)),
-            MainPaperTable(TABLE_ALIGNMENT, _alignment_rows(manifest, manifest_path=manifest_path)),
-            MainPaperTable(TABLE_AUGMENTATION, _augmentation_rows(manifest, manifest_path=manifest_path)),
-            MainPaperTable(TABLE_RUNTIME, _runtime_rows(manifest, manifest_path=manifest_path)),
+            MainPaperTable(TABLE_ALIGNMENT, _alignment_rows(manifest_path)),
+            MainPaperTable(TABLE_AUGMENTATION, _augmentation_rows(manifest_path)),
         ),
     )
 
@@ -281,54 +279,9 @@ def _latest_report(manifest_path: Path, pattern: str) -> Mapping[str, Any] | Non
     return _load_json_object(candidates[-1])
 
 
-def _manifest_report_payload(
-    manifest: Mapping[str, Any],
-    *,
-    manifest_path: Path,
-    key: str,
-    glob_pattern: str,
-) -> Mapping[str, Any] | None:
-    """Load a report payload using the manifest path when declared, falling back to glob."""
-    source_reports = _mapping(manifest.get("source_reports"))
-    raw_path = source_reports.get(key)
-    if raw_path:
-        resolved = _resolve_report_path(str(raw_path), manifest_path=manifest_path)
-        if resolved is None:
-            return None
-        return _load_json_object(resolved)
-    return _latest_report(manifest_path, glob_pattern)
-
-
-def _manifest_report_declared_but_missing(
-    manifest: Mapping[str, Any],
-    *,
-    manifest_path: Path,
-    key: str,
-) -> bool:
-    source_reports = _mapping(manifest.get("source_reports"))
-    raw_path = source_reports.get(key)
-    if not raw_path:
-        return False
-    return _resolve_report_path(str(raw_path), manifest_path=manifest_path) is None
-
-
-def _alignment_rows(
-    manifest: Mapping[str, Any],
-    *,
-    manifest_path: Path,
-) -> tuple[Mapping[str, object], ...]:
-    payload = _manifest_report_payload(
-        manifest,
-        manifest_path=manifest_path,
-        key="alignment_report",
-        glob_pattern="alignment_metrics_*.json",
-    )
+def _alignment_rows(manifest_path: Path) -> tuple[Mapping[str, object], ...]:
+    payload = _latest_report(manifest_path, "alignment_metrics_*.json")
     if not payload:
-        status_note = (
-            "not-yet-reportable"
-            if _manifest_report_declared_but_missing(manifest, manifest_path=manifest_path, key="alignment_report")
-            else ""
-        )
         return (
             {
                 "scope": "overall",
@@ -337,7 +290,6 @@ def _alignment_rows(
                 "drift_detection_f1": None,
                 "conflict_detection_f1": None,
                 "N": 0,
-                "status": status_note or "not-yet-reportable",
             },
         )
     overall = _mapping(_mapping(payload.get("overall")).get("alignment"))
@@ -368,17 +320,8 @@ def _alignment_rows(
     return tuple(rows)
 
 
-def _augmentation_rows(
-    manifest: Mapping[str, Any],
-    *,
-    manifest_path: Path,
-) -> tuple[Mapping[str, object], ...]:
-    payload = _manifest_report_payload(
-        manifest,
-        manifest_path=manifest_path,
-        key="evidence_augmentation_report",
-        glob_pattern="evidence_augmentation_metrics_*.json",
-    )
+def _augmentation_rows(manifest_path: Path) -> tuple[Mapping[str, object], ...]:
+    payload = _latest_report(manifest_path, "evidence_augmentation_metrics_*.json")
     if not payload:
         return (
             {
@@ -390,7 +333,6 @@ def _augmentation_rows(
                 "interpretation_relevant_evidence_gain": None,
                 "reviewer_burden": None,
                 "N": 0,
-                "status": "not-yet-reportable",
             },
         )
     overall = _mapping(payload.get("overall"))
@@ -420,74 +362,6 @@ def _augmentation_rows(
             "interpretation_relevant_evidence_gain": "",
             "reviewer_burden": "",
             "N": augmented_cases,
-        },
-    )
-
-
-def _runtime_rows(
-    manifest: Mapping[str, Any],
-    *,
-    manifest_path: Path,
-) -> tuple[Mapping[str, object], ...]:
-    payload = _manifest_report_payload(
-        manifest,
-        manifest_path=manifest_path,
-        key="benchmark_b_runtime_report",
-        glob_pattern="benchmark_b_phase2_runtime_metrics_*.json",
-    )
-    if not payload:
-        return (
-            {
-                "scope": "overall",
-                "attempted_samples": None,
-                "phase2_completed": None,
-                "timeout_count": None,
-                "failed_count": None,
-                "attempted_distinct_entries": None,
-                "attempted_languages": "",
-                "completed_distinct_entries": None,
-                "completed_languages": "",
-                "status": "not-yet-reportable",
-            },
-        )
-    summary = _mapping(payload.get("runtime_summary"))
-    completed_ids = [str(item) for item in _list(summary.get("completed_queue_ids"))]
-    failed_ids = [str(item) for item in _list(summary.get("failed_queue_ids"))]
-    incomplete_ids = [str(item) for item in _list(summary.get("incomplete_queue_ids"))]
-    all_attempted_ids = sorted({*completed_ids, *failed_ids, *incomplete_ids})
-
-    def _split_ids(queue_ids: list[str]) -> tuple[list[str], list[str]]:
-        entries = sorted({qid.split(":", 1)[0] for qid in queue_ids if ":" in qid})
-        languages = sorted({qid.split(":", 1)[1] for qid in queue_ids if ":" in qid})
-        return entries, languages
-
-    attempted_entry_ids_raw = _list(summary.get("attempted_distinct_entries"))
-    attempted_languages_raw = _list(summary.get("attempted_languages"))
-    if attempted_entry_ids_raw or attempted_languages_raw:
-        attempted_entries = sorted({str(item) for item in attempted_entry_ids_raw if item})
-        attempted_languages = sorted({str(item) for item in attempted_languages_raw if item})
-    else:
-        attempted_entries, attempted_languages = _split_ids(all_attempted_ids)
-
-    completed_entry_ids_raw = _list(summary.get("completed_distinct_entries"))
-    completed_languages_raw = _list(summary.get("completed_languages"))
-    if completed_entry_ids_raw or completed_languages_raw:
-        completed_entries = sorted({str(item) for item in completed_entry_ids_raw if item})
-        completed_languages = sorted({str(item) for item in completed_languages_raw if item})
-    else:
-        completed_entries, completed_languages = _split_ids(completed_ids)
-
-    return (
-        {
-            "scope": "overall",
-            "attempted_samples": _int(summary.get("attempted_samples")),
-            "phase2_completed": _int(summary.get("phase2_completed")),
-            "timeout_count": _int(summary.get("timeout_count")),
-            "failed_count": _int(summary.get("failed_count")),
-            "attempted_distinct_entries": len(attempted_entries),
-            "attempted_languages": ",".join(attempted_languages),
-            "completed_distinct_entries": len(completed_entries),
-            "completed_languages": ",".join(completed_languages),
         },
     )
 

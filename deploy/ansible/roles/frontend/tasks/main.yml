@@ -46,6 +46,24 @@
     NODE_ENV: "{{ frontend_node_env }}"
     NEXT_PUBLIC_API_URL: "https://{{ domain_name }}/api/v1"
 
+- name: Create cross-evidence config directory
+  file:
+    path: /etc/cross-evidence
+    state: directory
+    mode: "0700"
+    owner: root
+    group: root
+
+- name: Deploy frontend environment file (secrets)
+  template:
+    src: frontend.env.j2
+    dest: /etc/cross-evidence/frontend.env
+    mode: "0600"
+    owner: root
+    group: root
+  notify:
+    - Restart frontend
+
 - name: Deploy frontend systemd service
   template:
     src: acmg-frontend.service.j2

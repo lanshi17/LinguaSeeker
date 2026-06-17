@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from pathlib import Path
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -213,19 +214,32 @@ async def translate_all(
 
 
 def _build_providers() -> list[dict[str, str]]:
-    """Build multi-provider config. Edit here to add/remove providers."""
-    return [
-        {
-            "base_url": "https://open.cherryin.cc/v1",
-            "api_key": "sk-ZOipVWFFHhsGGx6fNY0dHl5UJyGUTaJXbBwWvHHCMxTWhIEz",
-            "model": "tencent/hunyuan-mt-7b(free)",
-        },
-        {
-            "base_url": "https://api.siliconflow.cn/v1",
-            "api_key": "sk-ujeenxgnylpqsumjkqpdjclvcpusjhyhmnqbhqkpiepailjm",
-            "model": "tencent/Hunyuan-MT-7B",
-        },
-    ]
+    """Build multi-provider config from environment variables.
+
+    Provider config is loaded from BENCHMARK_TRANSLATE_PROVIDERS env var as a
+    JSON array of {base_url, api_key, model} objects.  If unset, falls back to
+    a single provider using the standard FAST_LLM_* env vars.
+
+    NEVER hardcode API keys in source code — use environment variables or
+    vault-backed configuration instead.
+    """
+    raw = os.environ.get("BENCHMARK_TRANSLATE_PROVIDERS", "")
+    if raw:
+        import json as _json
+        return _json.loads(raw)
+
+    # Fallback: use the main FAST_LLM_* config if available
+    base_url = os.environ.get("FAST_LLM_BASE_URL", "")
+    api_key = os.environ.get("FAST_LLM_API_KEY", "")
+    model = os.environ.get("FAST_LLM_MODEL", "")
+    if base_url and api_key and model:
+        return [{"base_url": base_url, "api_key": api_key, "model": model}]
+
+    raise RuntimeError(
+        "No translation providers configured. "
+        "Set BENCHMARK_TRANSLATE_PROVIDERS (JSON array) or "
+        "FAST_LLM_BASE_URL / FAST_LLM_API_KEY / FAST_LLM_MODEL env vars."
+    )
 
 
 if __name__ == "__main__":

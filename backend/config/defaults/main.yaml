@@ -16,7 +16,7 @@
 # ============================================================================
 
 # ── Application ───────────────────────────────────────────────────────────
-cors_origins: "*"
+cors_origins: "http://localhost:3000,http://127.0.0.1:3000"
 environment: "development"
 debug: false
 
@@ -58,9 +58,10 @@ mineru:
   max_file_size_mb: 100
   remote_poll_interval: 2.0
   remote_max_poll_attempts: 150
-  local_api_url: "http://localhost:8001"
-  local_timeout: 600.0
-  local_backend: "vlm"
+  local_model_server_url: "http://localhost:8001"
+  local_model_id: "opendatalab/MinerU2.5-Pro-2604-1.2B"
+  local_timeout: 120.0
+  local_dpi: 200
 
 # ── Database Connections ──────────────────────────────────────────────────
 postgres:
@@ -87,3 +88,11 @@ web_search:
 network:
   proxy: ""
   no_proxy: "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
+
+# ── Model Server GPU Settings ────────────────────────────────────────────
+# Kept at top level for model-server compatibility
+doc_parse_model_id: ""
+embedding_gpu_memory_utilization: 0.35
+embedding_max_model_len: 4096
+rerank_gpu_memory_utilization: 0.20
+doc_parse_gpu_memory_utilization: 0.50
