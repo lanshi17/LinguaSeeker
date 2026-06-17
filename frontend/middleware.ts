@@ -10,12 +10,11 @@
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import crypto from "node:crypto";
 
 const SESSION_COOKIE = "ce_session";
 const PUBLIC_PATHS = ["/login", "/register", "/api/auth/login", "/api/auth/logout", "/health"];
 
-function isValidSession(token: string | undefined): boolean {
+async function isValidSession(token: string | undefined): Promise<boolean> {
   if (!token) return false;
 
   const sessionSecret =
@@ -25,21 +24,42 @@ function isValidSession(token: string | undefined): boolean {
   const [payload, signature] = token.split(".");
   if (!payload || !signature) return false;
 
-  const expected = crypto
-    .createHmac("sha256", sessionSecret)
-    .update(payload)
-    .digest("base64url");
-
-  // Constant-time comparison
-  const sigBuf = Buffer.from(signature);
-  const expBuf = Buffer.from(expected);
-  if (sigBuf.length !== expBuf.length) return false;
-  if (!crypto.timingSafeEqual(sigBuf, expBuf)) return false;
-
-  // Check expiry
   try {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(sessionSecret);
+    const key = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+
+    const signatureBytes = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      encoder.encode(payload)
+    );
+
+    const bytes = new Uint8Array(signatureBytes);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const expected = btoa(binary)
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=/g, "");
+
+    if (signature.length !== expected.length) return false;
+    let result = 0;
+    for (let i = 0; i < signature.length; i++) {
+      result |= signature.charCodeAt(i) ^ expected.charCodeAt(i);
+    }
+    if (result !== 0) return false;
+
     const data = JSON.parse(
-      Buffer.from(payload, "base64url").toString("utf-8"),
+      atob(payload.replace(/-/g, "+").replace(/_/g, "/"))
     ) as { exp: number };
     return data.exp > Math.floor(Date.now() / 1000);
   } catch {
@@ -47,7 +67,7 @@ function isValidSession(token: string | undefined): boolean {
   }
 }
 
-export function middleware(request: NextRequest): NextResponse {
+export async function middleware(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
 
   // ── Auth guard for dashboard routes ──────────────────────────────────
@@ -66,7 +86,7 @@ export function middleware(request: NextRequest): NextResponse {
     const authEnabled =
       !!process.env.ADMIN_PASSWORD || !!process.env.API_KEY;
 
-    if (authEnabled && !isValidSession(sessionToken)) {
+    if (authEnabled && !(await isValidSession(sessionToken))) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("next", pathname);
       return NextResponse.redirect(loginUrl);
