@@ -6,7 +6,8 @@ requires-python = ">=3.12"
 dependencies = [
     "acmg-config-loader",
     "vllm>=0.8.0",
-    "mineru_vl_utils",
+    "mineru[vlm]>=3.3.0",
+    "mineru_vl_utils>=1.0.4",
     "numpy>=1.26.0",
     "fastapi>=0.111.0",
     "pydantic>=2.7.0",
