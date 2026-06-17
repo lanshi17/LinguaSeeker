@@ -1,0 +1,189 @@
+{
+  "entry_id": "fused_005",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "ADA",
+    "hgnc_id": "HGNC:186",
+    "disease_label": "severe combined immunodeficiency, autosomal recessive, T cell-negative, B cell-negative, NK cell-negative, due to adenosine deaminase deficiency",
+    "mondo_id": "MONDO:0007064",
+    "moi": "AR",
+    "classification": "Definitive",
+    "gcep": "SCID-CID Gene Curation Expert Panel",
+    "classification_date": "2020-11-19T17:00:00.000Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_664ba77c-3db6-47da-941e-316ac819432a-2020-11-19T170000.000Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 1957,
+      "hgvs_name": "NM_000022.4(ADA):c.632G>A (p.Arg211His)",
+      "hgvs_c": "c.632G>A",
+      "hgvs_p": "p.Arg211His",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs121908716",
+      "phenotype_ids": "MONDO:MONDO:0007064,MedGen:C0392607,OMIM:102700,Orphanet:277|MedGen:C3661900",
+      "phenotype_list": "Severe combined immunodeficiency, autosomal recessive, T cell-negative, B cell-negative, NK cell-negative, due to adenosine deaminase deficiency|not provided"
+    },
+    {
+      "variation_id": 1959,
+      "hgvs_name": "NM_000022.4(ADA):c.986C>T (p.Ala329Val)",
+      "hgvs_c": "c.986C>T",
+      "hgvs_p": "p.Ala329Val",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs121908715",
+      "phenotype_ids": "MONDO:MONDO:0007064,MedGen:C0392607,OMIM:102700,Orphanet:277|MedGen:C3661900|MONDO:MONDO:0011086,MedGen:C1832322,OMIM:601457,Orphanet:331206|",
+      "phenotype_list": "Severe combined immunodeficiency, autosomal recessive, T cell-negative, B cell-negative, NK cell-negative, due to adenosine deaminase deficiency|not provided|Severe combined immunodeficiency, autosomal recessive, T cell-negative, B cell-negative, NK cell-positive|ADA-related disorder"
+    },
+    {
+      "variation_id": 1968,
+      "hgvs_name": "NM_000022.4(ADA):c.646G>A (p.Gly216Arg)",
+      "hgvs_c": "c.646G>A",
+      "hgvs_p": "p.Gly216Arg",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs121908723",
+      "phenotype_ids": "MONDO:MONDO:0007064,MedGen:C0392607,OMIM:102700,Orphanet:277|MedGen:C3661900|",
+      "phenotype_list": "Severe combined immunodeficiency, autosomal recessive, T cell-negative, B cell-negative, NK cell-negative, due to adenosine deaminase deficiency|not provided|ADA-related disorder"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "ADA",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "severe combined immunodeficiency, autosomal recessive, T cell-negative, B cell-negative, NK cell-negative, due to adenosine deaminase deficiency",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AR",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.632G>A",
+      "candidates": [
+        "c.632G>A",
+        "c.986C>T",
+        "c.646G>A"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg211His",
+      "candidates": [
+        "p.Arg211His",
+        "p.Ala329Val",
+        "p.Gly216Arg"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:186",
+    "disease": "MONDO:0007064",
+    "variant_candidates": [
+      "ClinVarVariation:1957",
+      "ClinVarVariation:1959",
+      "ClinVarVariation:1968"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "ADA",
+      "hgnc_id": "HGNC:186"
+    },
+    "disease": {
+      "text": "severe combined immunodeficiency, autosomal recessive, T cell-negative, B cell-negative, NK cell-negative, due to adenosine deaminase deficiency",
+      "mondo_id": "MONDO:0007064"
+    },
+    "variants": [
+      {
+        "text": "c.632G>A",
+        "variation_id": "ClinVarVariation:1957",
+        "rsid": "rs121908716"
+      },
+      {
+        "text": "c.986C>T",
+        "variation_id": "ClinVarVariation:1959",
+        "rsid": "rs121908715"
+      },
+      {
+        "text": "c.646G>A",
+        "variation_id": "ClinVarVariation:1968",
+        "rsid": "rs121908723"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": "39453496",
+  "source_pmc": "PMC11511704",
+  "source_pdf_url": "https://europepmc.org/article/PMC/11511704?pdf=render",
+  "source_title": "A Non-targeted Proteomics Newborn Screening Platform for Inborn Errors of Immunity.",
+  "source_journal": "",
+  "source_year": "2024",
+  "notes": "",
+  "literature_search_strategy": "\"ADA\" AND \"c.632G>A\" AND OPEN_ACCESS:y"
+}

@@ -1,0 +1,189 @@
+{
+  "entry_id": "fused_003",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "ACTA1",
+    "hgnc_id": "HGNC:129",
+    "disease_label": "alpha-actinopathy",
+    "mondo_id": "MONDO:0100084",
+    "moi": "AR",
+    "classification": "Definitive",
+    "gcep": "Congenital Myopathies and Myasthenic Syndromes Gene Curation Expert Panel",
+    "classification_date": "2024-02-26T17:00:00.000Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_098a7b3a-26ab-4915-8187-f6db682cef4f-2024-02-26T170000.000Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 18284,
+      "hgvs_name": "NM_001100.4(ACTA1):c.1075A>C (p.Ile359Leu)",
+      "hgvs_c": "c.1075A>C",
+      "hgvs_p": "p.Ile359Leu",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs121909524",
+      "phenotype_ids": "MONDO:MONDO:0859523,MedGen:C5830333,OMIM:620278|MONDO:MONDO:0100084,MedGen:CN295279",
+      "phenotype_list": "Congenital myopathy 2c, severe infantile, autosomal dominant|Alpha-actinopathy"
+    },
+    {
+      "variation_id": 18286,
+      "hgvs_name": "NM_001100.4(ACTA1):c.414C>G (p.Ile138Met)",
+      "hgvs_c": "c.414C>G",
+      "hgvs_p": "p.Ile138Met",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs121909526",
+      "phenotype_ids": "MONDO:MONDO:0008070,MedGen:C3711389,OMIM:161800,Orphanet:98904|MONDO:MONDO:0100084,MedGen:CN295279",
+      "phenotype_list": "Actin accumulation myopathy|Alpha-actinopathy"
+    },
+    {
+      "variation_id": 18288,
+      "hgvs_name": "NM_001100.4(ACTA1):c.1007A>C (p.Glu336Ala)",
+      "hgvs_c": "c.1007A>C",
+      "hgvs_p": "p.Glu336Ala",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs121909528",
+      "phenotype_ids": "MONDO:MONDO:0100084,MedGen:CN295279|MONDO:MONDO:0008070,MedGen:C3711389,OMIM:161800,Orphanet:98904",
+      "phenotype_list": "Alpha-actinopathy|Actin accumulation myopathy"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "ACTA1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "alpha-actinopathy",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AR",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.1075A>C",
+      "candidates": [
+        "c.1075A>C",
+        "c.414C>G",
+        "c.1007A>C"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Ile359Leu",
+      "candidates": [
+        "p.Ile359Leu",
+        "p.Ile138Met",
+        "p.Glu336Ala"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Likely pathogenic",
+        "Likely pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:129",
+    "disease": "MONDO:0100084",
+    "variant_candidates": [
+      "ClinVarVariation:18284",
+      "ClinVarVariation:18286",
+      "ClinVarVariation:18288"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "ACTA1",
+      "hgnc_id": "HGNC:129"
+    },
+    "disease": {
+      "text": "alpha-actinopathy",
+      "mondo_id": "MONDO:0100084"
+    },
+    "variants": [
+      {
+        "text": "c.1075A>C",
+        "variation_id": "ClinVarVariation:18284",
+        "rsid": "rs121909524"
+      },
+      {
+        "text": "c.414C>G",
+        "variation_id": "ClinVarVariation:18286",
+        "rsid": "rs121909526"
+      },
+      {
+        "text": "c.1007A>C",
+        "variation_id": "ClinVarVariation:18288",
+        "rsid": "rs121909528"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": "31217710",
+  "source_pmc": "PMC6559969",
+  "source_pdf_url": "https://europepmc.org/article/PMC/6559969?pdf=render",
+  "source_title": "A rare structural myopathy: Nemaline myopathy.",
+  "source_journal": "",
+  "source_year": "2019",
+  "notes": "",
+  "literature_search_strategy": "\"ACTA1\" AND \"c.1075A>C\" AND OPEN_ACCESS:y"
+}

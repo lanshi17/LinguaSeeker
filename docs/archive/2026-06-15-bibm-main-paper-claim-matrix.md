@@ -1,8 +1,8 @@
 # BIBM Main Paper Claim Matrix
 
-**Status:** in-progress
+**Status:** done
 **Created:** 2026-06-15
-**Completed:** —
+**Completed:** 2026-06-17
 **PR:** —
 
 ## Purpose
@@ -21,9 +21,11 @@ This matrix binds every paper-facing claim to frozen evidence artifacts. It is t
 | Internal source-grounded traceability | `benchmark/layer3/reports/traceability_source_grounded_reconcile_20260615_013609.json` | TraceableF1=0.8889 |
 | Same-window prompt-only frontier sweep | `benchmark/layer3/reports/prompt_model_baseline_tables_20260615_114312.md` | B6-B10 citation-required prompt-only baselines, release cohort 2025-08-07 to 2025-09-30, same provider gateway and prompt; strongest GPT-5 F1=0.9222, TraceableF1=0.9109 |
 | Error diagnosis | `benchmark/layer3/reports/contextual_reconcile_diagnosis_20260615_011335.json` | `source_label_visibility_limit=5`, `disease_boundary_error=2`, `candidate_absent=2` |
-| Benchmark A readiness | `benchmark/layer3/reports/benchmark_readiness_*.json` | Current state report: alignment annotations are missing or invalid on the frozen N=30 set; Benchmark A metrics are not yet reportable without gold annotation files |
-| Benchmark B pilot selection | `benchmark/layer3/ground_truth/benchmark_b_pilot_selection.json` | Frozen multilingual pilot selection from the existing non-English corpus; use this as the source for the N=10 pilot, not as an experimental result |
-| Paper tables | `benchmark/layer3/reports/main_paper_tables_20260615_194001.md` | Tables 1-6 generated from the frozen manifest |
+| Benchmark A readiness | `benchmark/layer3/reports/benchmark_readiness_20260616_124611.json` | Alignment annotations now cover 30/30 entries; AlignmentAccuracy=0.9556 from `alignment_metrics_20260616_144749.json`. |
+| Benchmark B pilot selection | `benchmark/layer3/ground_truth/benchmark_b_pilot_selection.json` | Frozen multilingual pilot selection from the existing non-English corpus; the merged pilot run reports cover N=4 of the original 30 queued sources (clingen_000:ja/ko/zh + clingen_003:ko). |
+| Benchmark B runtime pilot | `benchmark/layer3/reports/benchmark_b_phase2_runtime_metrics_20260616_161809.json` | N=4 multilingual runtime smoke: EvidenceCoverageGain=1.6667, NonEnglishYield=0.625, TraceableAugmentationRate=1.0. Remaining 26 queue items deferred. |
+| Source inventory | `benchmark/layer3/reports/source_inventory_20260616_165214.json` | Separates ClinGen gold, ClinVar structured anchor (75), and unlabeled multilingual PDFs (185); used by Tables 1 and 6 in the paper manifest. |
+| Paper tables | `benchmark/layer3/reports/main_paper_tables_20260616_175917.md` | Tables 1–9 generated from `main_paper_rescue_manifest_20260616_175902.json`. |
 
 ## Primary Paper Position
 

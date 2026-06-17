@@ -1,0 +1,189 @@
+{
+  "entry_id": "fused_048",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "MSH2",
+    "hgnc_id": "HGNC:7325",
+    "disease_label": "Lynch syndrome",
+    "mondo_id": "MONDO:0005835",
+    "moi": "AD",
+    "classification": "Definitive",
+    "gcep": "Hereditary Cancer Gene Curation Expert Panel",
+    "classification_date": "2022-06-20T17:00:00.000Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0f3acd9a-e2e5-498a-8974-399969ffa2d1-2022-06-20T170000.000Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 1753,
+      "hgvs_name": "NM_000251.3(MSH2):c.1865C>T (p.Pro622Leu)",
+      "hgvs_c": "c.1865C>T",
+      "hgvs_p": "p.Pro622Leu",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs28929483",
+      "phenotype_ids": "MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144|MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900",
+      "phenotype_list": "Lynch syndrome 1|Lynch syndrome|Hereditary nonpolyposis colorectal neoplasms|Hereditary cancer-predisposing syndrome|not provided"
+    },
+    {
+      "variation_id": 1755,
+      "hgvs_name": "NM_000251.3(MSH2):c.1216C>T (p.Arg406Ter)",
+      "hgvs_c": "c.1216C>T",
+      "hgvs_p": "p.Arg406Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs63751108",
+      "phenotype_ids": "MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144|MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0002032,MedGen:C0699790|MONDO:MONDO:0008018,MedGen:C1321489,OMIM:158320,Orphanet:587;MONDO:MONDO:0010159,MedGen:C5399763,OMIM:276300,Orphanet:252202;MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144|Human Phenotype Ontology:HP:0012126,MONDO:MONDO:0001056,MeSH:D013274,MedGen:C0024623,OMIM:613659",
+      "phenotype_list": "Lynch syndrome 1|Lynch syndrome|Hereditary cancer-predisposing syndrome|not provided|Hereditary nonpolyposis colorectal neoplasms|Carcinoma of colon|Muir-Torré syndrome;Mismatch repair cancer syndrome 1;Lynch syndrome 1|Gastric cancer"
+    },
+    {
+      "variation_id": 1756,
+      "hgvs_name": "NM_000251.3(MSH2):c.1915C>T (p.His639Tyr)",
+      "hgvs_c": "c.1915C>T",
+      "hgvs_p": "p.His639Tyr",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs28929484",
+      "phenotype_ids": "MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144|MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MedGen:C3661900|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0018630,MedGen:C1333990,OMIM:PS120435,Orphanet:443909",
+      "phenotype_list": "Lynch syndrome 1|Lynch syndrome|not provided|Hereditary cancer-predisposing syndrome|Hereditary nonpolyposis colorectal neoplasms|Hereditary nonpolyposis colon cancer"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MSH2",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Lynch syndrome",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.1865C>T",
+      "candidates": [
+        "c.1865C>T",
+        "c.1216C>T",
+        "c.1915C>T"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Pro622Leu",
+      "candidates": [
+        "p.Pro622Leu",
+        "p.Arg406Ter",
+        "p.His639Tyr"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:7325",
+    "disease": "MONDO:0005835",
+    "variant_candidates": [
+      "ClinVarVariation:1753",
+      "ClinVarVariation:1755",
+      "ClinVarVariation:1756"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "MSH2",
+      "hgnc_id": "HGNC:7325"
+    },
+    "disease": {
+      "text": "Lynch syndrome",
+      "mondo_id": "MONDO:0005835"
+    },
+    "variants": [
+      {
+        "text": "c.1865C>T",
+        "variation_id": "ClinVarVariation:1753",
+        "rsid": "rs28929483"
+      },
+      {
+        "text": "c.1216C>T",
+        "variation_id": "ClinVarVariation:1755",
+        "rsid": "rs63751108"
+      },
+      {
+        "text": "c.1915C>T",
+        "variation_id": "ClinVarVariation:1756",
+        "rsid": "rs28929484"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": "31773066",
+  "source_pmc": "PMC6849642",
+  "source_pdf_url": "https://europepmc.org/article/PMC/6849642?pdf=render",
+  "source_title": "Japanese Society for Cancer of the Colon and Rectum (JSCCR) Guidelines 2016 for the Clinical Practice of Hereditary Colorectal Cancer (Translated Version).",
+  "source_journal": "",
+  "source_year": "2018",
+  "notes": "",
+  "literature_search_strategy": "\"MSH2\" AND \"c.1865C>T\" AND OPEN_ACCESS:y"
+}
