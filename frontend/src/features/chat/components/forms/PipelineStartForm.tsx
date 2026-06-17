@@ -11,11 +11,13 @@ interface PipelineStartFormProps {
   isSubmitting?: boolean;
   defaultSourceType?: "online" | "local";
   defaultQuery?: string;
+  defaultIdentifiers?: string;
 }
 
 export interface PipelineFormData {
   sourceType: "online" | "local";
   query?: string;
+  identifiers?: string[];
   file?: File;
 }
 
@@ -24,24 +26,36 @@ export function PipelineStartForm({
   isSubmitting,
   defaultSourceType = "online",
   defaultQuery,
+  defaultIdentifiers,
 }: PipelineStartFormProps) {
   const [sourceType, setSourceType] = useState<"online" | "local">(
     defaultSourceType,
   );
   const [query, setQuery] = useState(defaultQuery ?? "");
+  const [identifiersText, setIdentifiersText] = useState(
+    defaultIdentifiers ?? "",
+  );
   const [file, setFile] = useState<File | null>(null);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const ids = identifiersText
+      .split(/[,\s]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
     onSubmit({
       sourceType,
-      query: sourceType === "online" ? query : undefined,
+      query: sourceType === "online" ? query.trim() || undefined : undefined,
+      identifiers:
+        sourceType === "online" && ids.length > 0 ? ids : undefined,
       file: sourceType === "local" ? file ?? undefined : undefined,
     });
   }
 
   const canSubmit =
-    sourceType === "online" ? query.trim().length > 0 : file !== null;
+    sourceType === "online"
+      ? query.trim().length > 0 || identifiersText.trim().length > 0
+      : file !== null;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
@@ -56,12 +70,20 @@ export function PipelineStartForm({
       />
 
       {sourceType === "online" ? (
-        <Input
-          label="Search Query"
-          placeholder="e.g., BRCA1 pathogenic variant OR PMID: 12345678"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <>
+          <Input
+            label="Identifiers (PMID / DOI / PMCID)"
+            placeholder="e.g., 34521984, 10.1038/s42003-021-02612-1"
+            value={identifiersText}
+            onChange={(e) => setIdentifiersText(e.target.value)}
+          />
+          <Input
+            label="Search Query (optional)"
+            placeholder="e.g., BRCA1 pathogenic variant"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </>
       ) : (
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-700">

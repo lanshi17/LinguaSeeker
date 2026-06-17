@@ -102,9 +102,10 @@ async def preprocess_entry(
     client: httpx.AsyncClient,
     base_url: str,
     entry_id: str,
+    ground_truth_dir: Path = GROUND_TRUTH_DIR,
 ) -> bool:
     """Preprocess one entry: run Phase 1/2 and save results."""
-    entry_dir = GROUND_TRUTH_DIR / entry_id
+    entry_dir = ground_truth_dir / entry_id
     source_path = entry_dir / "source.md"
 
     if not source_path.exists():
@@ -190,13 +191,19 @@ async def main():
     parser = argparse.ArgumentParser(description="Preprocess ground truth entries")
     parser.add_argument("--entries", nargs="+", help="Entry IDs to preprocess")
     parser.add_argument("--base-url", default="http://localhost:8000", help="Backend API URL")
+    parser.add_argument(
+        "--ground-truth-root",
+        type=Path,
+        default=GROUND_TRUTH_DIR,
+        help="Ground truth root containing selection.json and entry directories",
+    )
     args = parser.parse_args()
 
     logger.remove()
     logger.add(sys.stderr, level="INFO", format="{time:HH:mm:ss} | {level:<7} | {message}")
 
     # Load entries
-    selection_path = GROUND_TRUTH_DIR / "selection.json"
+    selection_path = args.ground_truth_root / "selection.json"
     all_entries = json.loads(selection_path.read_text(encoding="utf-8"))
 
     if args.entries:
@@ -212,7 +219,12 @@ async def main():
     async with httpx.AsyncClient(**transport_kwargs) as client:
         for entry in entries:
             entry_id = entry["entry_id"]
-            success = await preprocess_entry(client, args.base_url, entry_id)
+            success = await preprocess_entry(
+                client,
+                args.base_url,
+                entry_id,
+                ground_truth_dir=args.ground_truth_root,
+            )
             if success:
                 logger.info("[{}] ✓ Preprocessed", entry_id)
             else:
