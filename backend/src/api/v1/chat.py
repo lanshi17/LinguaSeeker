@@ -56,6 +56,7 @@ async def create_session(
 async def list_sessions(
     processing_run_id: UUID,
     session: AsyncSession = Depends(get_db_session),
+    _api_key: str | None = Depends(require_api_key),
 ) -> list[ChatSessionResponse]:
     """List all chat sessions for a processing run."""
     factory = get_phase4_factory()
@@ -68,6 +69,7 @@ async def list_messages(
     session_id: UUID,
     limit: int = 100,
     session: AsyncSession = Depends(get_db_session),
+    _api_key: str | None = Depends(require_api_key),
 ) -> list[ChatMessageResponse]:
     """List messages in a chat session."""
     factory = get_phase4_factory()
