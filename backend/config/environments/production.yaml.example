@@ -33,6 +33,12 @@ postgres:
 redis:
   host: "redis-server"
 
+# ── Literature Acquisition ────────────────────────────────────────────────
+# Unpaywall requires a contact email — set to your institutional address.
+# API keys (pubmed/base/core) go in vault/production.yaml.
+unpaywall:
+  email: "admin@your-domain.com"
+
 # ── Network / Proxy ──────────────────────────────────────────────────────
 network:
   proxy: ""

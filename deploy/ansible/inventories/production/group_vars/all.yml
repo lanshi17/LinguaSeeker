@@ -79,6 +79,10 @@ redis_max_connections: 20
 web_search_base_url: "https://api.firecrawl.dev"
 web_search_timeout: 30
 web_search_max_results: 10
+# ── Literature Acquisition ───────────────────────────────────────────────
+# Unpaywall requires a contact email (not secret — structural config).
+# API keys for pubmed/base/core go in vault.yml.
+unpaywall_email: "admin@your-domain.com"
 
 # ── Network / Proxy ───────────────────────────────────────────────────────
 network_proxy: ""

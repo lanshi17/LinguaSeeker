@@ -36,6 +36,16 @@ postgres:
 redis:
   password: ""
 
-# ── Web Search ────────────────────────────────────────────────────────────
-web_search:
-  api_key: "your-web-search-api-key"
+# ── Literature Acquisition API Keys ──────────────────────────────────────
+# Optional but recommended: raises provider rate limits and unlocks full-text.
+#   PUBMED_API_KEY  -> NCBI E-utilities (3→10 req/s); applies to pmc + pubmed_service
+#   BASE_API_KEY    -> BASE (Bielefeld Academic Search Engine)
+#   CORE_API_KEY    -> CORE (core.ac.uk)
+pubmed:
+  api_key: "your-pubmed-api-key"
+
+base:
+  api_key: "your-base-api-key"
+
+core:
+  api_key: "your-core-api-key"

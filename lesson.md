@@ -2954,3 +2954,35 @@ field, which layered config never populates in the dev environment. The actual k
 **Solution**: Runtime metrics now recover timeout rows only when a real final artifact exists, deduplicate by `queue_id`, and expose `attempted_samples`, `phase2_completed`, `timeout_count`, `failed_count`, and incomplete queue IDs. The latest runtime table reports 4 attempted samples, 3 completed Phase 2 artifacts, and 1 timeout.
 
 **Prevention**: For Benchmark B accounting, use final artifact existence as the completion source of truth. Keep timeout/failed samples visible instead of silently converting partial translation progress into evidence-yield results.
+
+---
+
+## 2026-06-17 — PMID/DOI 下载一直失败（Acquisition succeeded but no file path found）
+
+### 问题描述
+对 PMID 34521984 运行四阶段流水线，Phase 1 报错 "Acquisition succeeded but no file path found"（或更新代码中的 "Full-text PDF unavailable for the given identifier"）。Acquisition service 返回 success=True 但 downloads 为空。
+
+### 排查过程
+1. 从日志定位到 `phase_1_adapter.py` 在 `acquisition_result.downloads` 为空时抛 PermanentPhaseError。
+2. 跟踪 `online_acquisition_workflow` → `_download_candidates`，三条下载路由：
+   - Route 1 (DOI→unpaywall)：直接调用 `search_provider("unpaywall")`。
+   - Route 2 (PMCID→PMC)：构造 `https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{x}/pdf/`。
+   - Route 3 (直接 URL)。
+3. 直接用 net_io 测试 PMID 34521984：
+   - europepmc 搜索成功，返回 pmcid=PMC8440630, doi=10.1038/s42003-021-02612-1。
+   - unpaywall 搜索失败，warning=`unpaywall_requires_email`。
+   - PMC 直链下载返回 1817 字节的 HTML "Preparing to download..." JS 跳转页，非 PDF。
+4. 测试 EuropePMC render endpoint `https://europepmc.org/articles/PMC8440630?pdf=render` → 返回 3.67MB 真 PDF。
+
+### 根因分析
+1. **PMC 直链被 JS 拦截**：NCBI PMC 的 `.../pdf/` URL 现在返回一个 JS interstitial 页面，而不是 PDF 字节。Rust `download_file` 只做 HTTP GET，不执行 JS，所以拿到的 1817 字节是 HTML 而非 PDF。`download_file_from_url` 的 HTML→PDF 链接提取逻辑无法从该 interstitial 页面提取到真实 PDF 链接。
+2. **UNPAYWALL_EMAIL 未设置**：Rust unpaywall provider 从 `std::env::var("UNPAYWALL_EMAIL")` 读取 email，未设置时直接返回 failure，导致 DOI→OA 路由永远失败。`DocumentAcquisitionRequest` 有 `email` 字段但从未传递到 workflow/gateway，也没有写入环境变量。
+
+### 解决方案
+- 在 `_download_candidates` 的 PMCID 路由中，先尝试 EuropePMC render endpoint（`europepmc.org/articles/PMC{x}?pdf=render`，会 302 到 `europepmc.org/api/getPdf?pmcid=PMC{x}` 并流式返回真 PDF），失败再回退到 PMC 直链。
+- 新增 `_ensure_unpaywall_email()` helper，在下载前确保 `UNPAYWALL_EMAIL` 环境变量已设置（若未设置则用默认联系邮箱）。
+
+### 预防措施
+- 当某个下载 URL 返回非 PDF 内容时，应在 warnings 中记录 final_url 和 content-type，便于诊断 JS interstitial 类问题。
+- 对依赖环境变量的 Rust provider（unpaywall），应在 Python 侧调用前显式确保环境变量存在，而非静默失败。
+- EuropePMC render endpoint 是比 PMC 直链更可靠的 OA PDF 来源，应作为 PMCID 下载的首选。

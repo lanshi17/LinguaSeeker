@@ -1,7 +1,7 @@
 """Online acquisition workflow — three-phase pipeline.
 
 Phase 1 (Link Acquisition): Parallel search from API providers + Firecrawl.
-Phase 2 (Download): Route candidates by type — DOI → OA API, PMCID → PMC, direct URL → HTTP.
+Phase 2 (Download): Route candidates by type — DOI → OA API, PMCID → EuropePMC render (PMC direct fallback), direct URL → HTTP.
 Phase 3 (Gate): LLM classification on downloaded PDF content.
 """
 
@@ -294,6 +294,24 @@ def _merge_and_dedupe(
 # ── Phase 2: Download ───────────────────────────────────────────────────
 
 
+# Default contact email used for provider APIs that require one
+# (Unpaywall, NCBI EUtils). Overridable via the UNPAYWALL_EMAIL env var.
+_DEFAULT_PROVIDER_EMAIL = "yhvguk@stu.hunau.edu.cn"
+
+
+def _ensure_unpaywall_email() -> None:
+    """Ensure ``UNPAYWALL_EMAIL`` is set for the Rust unpaywall provider.
+
+    The Rust ``net_io`` unpaywall provider reads the email from
+    ``std::env::var("UNPAYWALL_EMAIL")`` at request time and refuses to
+    query the API when it is unset, returning a ``unpaywall_requires_email``
+    warning instead. Set it once from the default contact address if the
+    operator has not provided one.
+    """
+    if not os.environ.get("UNPAYWALL_EMAIL"):
+        os.environ["UNPAYWALL_EMAIL"] = _DEFAULT_PROVIDER_EMAIL
+
+
 async def _download_candidates(
     candidates: List[Dict[str, Any]],
     download_path: str,
@@ -302,9 +320,17 @@ async def _download_candidates(
 
     Routing:
     - DOI → unpaywall OA resolution → download
-    - PMCID → PMC PDF URL → download
+    - PMCID → EuropePMC render endpoint → PMC direct PDF URL fallback
     - Direct URL → HTTP download (with HTML→PDF redirect handling)
+
+    The PMC direct URL (``ncbi.nlm.nih.gov/pmc/articles/PMC{x}/pdf/``)
+    serves a JavaScript "Preparing to download" interstitial page rather
+    than the PDF bytes, so it is used only as a last-resort fallback.
+    EuropePMC's render endpoint (``europepmc.org/articles/PMC{x}?pdf=render``)
+    streams the actual PDF and is tried first.
     """
+    _ensure_unpaywall_email()
+
     async def _download_one(candidate: Dict[str, Any]) -> Optional[DownloadResult]:
         doi = _coerce_str(candidate.get("doi") or candidate.get("DOI")).strip() or None
         pmid = _coerce_str(candidate.get("pmid")).strip() or None
@@ -345,20 +371,24 @@ async def _download_candidates(
             except Exception as exc:
                 logger.debug("unpaywall download failed for {}: {}", doi, exc)
 
-        # Route 2: PMCID → PMC direct PDF URL
+        # Route 2: PMCID → EuropePMC render (primary) → PMC direct (fallback)
         if pmcid:
-            pdf_url = f"https://www.ncbi.nlm.nih.gov/pmc/articles/{pmcid}/pdf/"
-            file_path, final_url, warns = await download_file_from_url(
-                pdf_url, download_path, filename_stem
-            )
-            if file_path:
-                return DownloadResult(
-                    file_path=file_path,
-                    source="pmc",
-                    pmcid=pmcid,
-                    url=final_url,
-                    warnings=warns,
+            pmcid_url_candidates = [
+                f"https://europepmc.org/articles/{pmcid}?pdf=render",
+                f"https://www.ncbi.nlm.nih.gov/pmc/articles/{pmcid}/pdf/",
+            ]
+            for pdf_url in pmcid_url_candidates:
+                file_path, final_url, warns = await download_file_from_url(
+                    pdf_url, download_path, filename_stem
                 )
+                if file_path:
+                    return DownloadResult(
+                        file_path=file_path,
+                        source="pmc",
+                        pmcid=pmcid,
+                        url=final_url,
+                        warnings=warns,
+                    )
 
         # Route 3: Direct URL download
         if url:

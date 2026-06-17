@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
+    _download_candidates,
+    _ensure_unpaywall_email,
     _extract_identifiers,
     online_acquisition_workflow,
 )
@@ -127,3 +129,77 @@ class TestOnlineAcquisitionWorkflow:
         assert result["success"] is True
         assert result["raw"]["source_trace"][0]["provider"] == "firecrawl"
         assert result["raw"]["source_trace"][0]["items_count"] == 1
+
+
+class TestDownloadCandidatesPmcidRouting:
+    """PMCID download routing — EuropePMC render first, PMC direct fallback."""
+
+    @pytest.mark.asyncio
+    async def test_pmcid_tries_europepmc_render_first(self, tmp_path):
+        """EuropePMC render endpoint is tried before the PMC direct URL."""
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
+            DownloadResult,
+        )
+
+        tried_urls: list[str] = []
+
+        async def fake_download(url, download_path, filename_stem):
+            tried_urls.append(url)
+            if "europepmc.org/articles" in url:
+                return str(tmp_path / "out.pdf"), url, []
+            return None, None, []
+
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+            new_callable=AsyncMock,
+            side_effect=fake_download,
+        ):
+            downloads = await _download_candidates(
+                [{"pmcid": "PMC8440630", "title": "T", "_source_provider": "europepmc"}],
+                str(tmp_path),
+            )
+
+        assert len(downloads) == 1
+        assert isinstance(downloads[0], DownloadResult)
+        assert "europepmc.org/articles/PMC8440630" in tried_urls[0]
+        # PMC direct URL is NOT tried when EuropePMC render succeeds
+        assert not any("ncbi.nlm.nih.gov/pmc" in u for u in tried_urls)
+
+    @pytest.mark.asyncio
+    async def test_pmcid_falls_back_to_pmc_direct(self, tmp_path):
+        """When EuropePMC render fails, the PMC direct URL is tried."""
+        tried_urls: list[str] = []
+
+        async def fake_download(url, download_path, filename_stem):
+            tried_urls.append(url)
+            if "ncbi.nlm.nih.gov/pmc" in url:
+                return str(tmp_path / "out.pdf"), url, []
+            return None, None, []
+
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+            new_callable=AsyncMock,
+            side_effect=fake_download,
+        ):
+            downloads = await _download_candidates(
+                [{"pmcid": "PMC8440630", "title": "T"}],
+                str(tmp_path),
+            )
+
+        assert len(downloads) == 1
+        assert any("europepmc.org/articles/PMC8440630" in u for u in tried_urls)
+        assert any("ncbi.nlm.nih.gov/pmc/articles/PMC8440630" in u for u in tried_urls)
+
+
+class TestEnsureUnpaywallEmail:
+    def test_sets_default_when_unset(self, monkeypatch):
+        monkeypatch.delenv("UNPAYWALL_EMAIL", raising=False)
+        _ensure_unpaywall_email()
+        import os
+        assert os.environ["UNPAYWALL_EMAIL"]
+
+    def test_preserves_existing_value(self, monkeypatch):
+        monkeypatch.setenv("UNPAYWALL_EMAIL", "custom@example.com")
+        _ensure_unpaywall_email()
+        import os
+        assert os.environ["UNPAYWALL_EMAIL"] == "custom@example.com"
