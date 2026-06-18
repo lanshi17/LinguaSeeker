@@ -12,7 +12,7 @@ from typing import Any, Mapping, TypedDict, cast
 import httpx
 
 from benchmark.analysis.dataset_curation.materialize_phase2_artifacts import DEFAULT_PIPELINE_ROOT
-from benchmark.layer3.evaluate import GROUND_TRUTH_DIR, REPORTS_DIR, load_proxy
+from benchmark.core import GROUND_TRUTH_DIR, REPORTS_DIR, load_proxy
 
 
 DEFAULT_BASE_URL = "http://localhost:8000"

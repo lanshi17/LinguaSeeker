@@ -4,7 +4,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3 import evaluate
+import asyncio
+
+from benchmark.core import evaluate_one
 from benchmark.layer3.generate_rett_ground_truth import export_rett_ground_truth
 
 
@@ -102,8 +104,8 @@ def test_evaluate_one_uses_configured_ground_truth_root(tmp_path: Path) -> None:
     entry_dir.mkdir(parents=True)
     (entry_dir / "source.md").write_text("short", encoding="utf-8")
 
-    metrics = evaluate.asyncio.run(
-        evaluate.evaluate_one(
+    metrics = asyncio.run(
+        evaluate_one(
             client=None,
             base_url="http://localhost:8000",
             entry={
@@ -114,7 +116,7 @@ def test_evaluate_one_uses_configured_ground_truth_root(tmp_path: Path) -> None:
                 "expected_evidence": [{"field_id": "A.gene_symbol", "value": "MECP2"}],
             },
             sf=None,
-            semaphore=evaluate.asyncio.Semaphore(1),
+            semaphore=asyncio.Semaphore(1),
             ground_truth_dir=custom_root,
             mondo=None,
         )

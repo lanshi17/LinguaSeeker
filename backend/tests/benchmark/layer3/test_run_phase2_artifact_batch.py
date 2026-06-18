@@ -7,7 +7,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from benchmark.layer3.analysis.run_phase2_artifact_batch import (
+from benchmark.runners.phase2_batch import (
     Phase2ArtifactBatchConfig,
     build_phase2_run_payload,
     load_phase2_batch_entries,

@@ -5,7 +5,7 @@ import asyncio
 
 import pytest
 
-from benchmark.layer3.evaluate import (
+from benchmark.core import (
     compare_evidence,
     evaluate_one,
     fuzzy_match_value,
