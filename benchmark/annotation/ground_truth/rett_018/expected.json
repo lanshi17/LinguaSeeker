@@ -17,24 +17,132 @@
     {
       "hgvs_c": "c.1157_1197del41",
       "hgvs_p": "p.L386fs",
+      "hgvs_g": "",
       "variant_type": "frameshift",
-      "clinical_significance": "",
+      "clinical_significance": "pathogenic",
       "exon": "4",
-      "domain": "deleted-prone region (DPR) in exon 4",
-      "protein_effect": "frameshift leading to premature truncation of MeCP2",
-      "null_variant_detail": "frameshift causing premature truncation",
-      "protein_length_change": "truncated to 391 aa"
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift at codon 386 with premature truncation of the MeCP2 protein",
+      "null_variant_detail": "frameshift leading to premature stop codon",
+      "protein_length_change": "truncated five amino acids downstream of codon 386",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.1159_delCCinsT",
       "hgvs_p": "p.P387fs",
-      "variant_type": "frameshift",
-      "clinical_significance": "",
+      "hgvs_g": "",
+      "variant_type": "other",
+      "clinical_significance": "pathogenic",
       "exon": "4",
-      "domain": "deleted-prone region (DPR) in exon 4",
-      "protein_effect": "frameshift with addition of 21 aa followed by stop",
-      "null_variant_detail": "frameshift causing premature termination after +21 aa",
-      "protein_length_change": "predicted length 408 aa"
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift resulting in addition of 21 amino acids followed by a stop codon",
+      "null_variant_detail": "frameshift (delins) leading to altered C-terminus and premature stop codon",
+      "protein_length_change": "addition of 21 amino acids followed by a stop codon",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.215delC",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "frameshift",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "single-nucleotide deletion frameshift",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.32_50delins11",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "other",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "small intragenic rearrangement (delins)",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.766_779dup14",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "duplication",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "small intragenic rearrangement (duplication)",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.808delC",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "frameshift",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "single-nucleotide deletion frameshift",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.1150_1187del38",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "frameshift",
+      "clinical_significance": "pathogenic",
+      "exon": "4",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "C-terminal frameshift deletion",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.1156_1199del44",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "frameshift",
+      "clinical_significance": "pathogenic",
+      "exon": "4",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "C-terminal frameshift deletion",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.1164_1204del44",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "frameshift",
+      "clinical_significance": "pathogenic",
+      "exon": "4",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "C-terminal frameshift deletion",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.1168_1196del29",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "frameshift",
+      "clinical_significance": "pathogenic",
+      "exon": "4",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "C-terminal frameshift deletion",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -246,6 +354,132 @@
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_id",
+      "value": "Family A (I:1, II:1, II:2); Family B (I:1, II:2, II:3, II:4)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "proband",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "yes",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.diagnosis_sufficiency",
+      "value": "definite",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.biochemical_markers",
+      "value": "For patient II:4 (Family B): normal CT and MRI of brain; normal metabolic investigations of organic acids, amino acidopathies and lysosomal disorders; normal lactate and pyruvate in blood and cerebrospinal fluid; normal karyotype; negative genetic test for Angelman syndrome",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "6 years (patient II:4); variable for other patients",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.healthy_adult_status",
+      "value": "carrier",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.inheritance_source",
+      "value": "inherited from carrier mother (familial segregating mutation); cohort study of de novo frameshift mutations showed mostly paternal origin",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_genotype",
+      "value": "not carrier (fathers did not carry the mutation)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_phenotype",
+      "value": "Family A father had an IQ of 70; Family B fathers had no neurological handicaps or MR",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.obligate_carriers",
+      "value": "mother (Family B I:1)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.in_trans_confirmation",
+      "value": "not_applicable",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "D.population_database_name",
+      "value": "RettBASE",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.mechanism_consistency",
+      "value": "loss of function consistent with Rett syndrome",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.study_design",
+      "value": "case report and cohort (parental origin analysis of 24 sporadic RTT cases with frameshift mutations)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_definition",
+      "value": "Rett syndrome diagnosis according to 2001 consensus and 2010 revised diagnostic criteria",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "MECP2 encodes the methyl-CpG-binding protein 2 (MeCP2); loss-of-function mutations cause Rett syndrome",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.independent_publications_time_span",
+      "value": "1999-2010",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     }
   ],
   "expected_standardization": {
@@ -256,35 +490,46 @@
   "evaluation_config": {
     "gene_disease_fields": [
       "A.gene_symbol",
-      "B.disease_diagnosis",
       "A.gene_disease_relationship",
+      "B.disease_diagnosis",
       "B.mode_of_inheritance_reported",
       "B.single_genetic_etiology_claim"
     ],
     "variant_fields": [
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
       "A.variant_type",
       "A.functional_domain_or_hotspot",
       "A.protein_effect",
       "A.null_variant_detail",
-      "A.protein_length_change"
+      "A.protein_length_change",
+      "A.same_amino_acid_known_variant",
+      "A.transcript_id",
+      "A.reference_sequence"
     ],
     "clinical_fields": [
+      "B.case_id",
+      "B.proband_status",
       "B.case_count",
       "B.diagnosis_sufficiency",
       "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
+      "B.biochemical_markers",
       "B.sex",
       "B.age_of_onset",
       "B.age_current_or_last_followup",
       "B.ancestry_or_population",
+      "B.consanguinity",
       "B.testing_method",
-      "B.alternative_diagnosis_excluded"
+      "B.sequencing_method_quality",
+      "B.alternative_diagnosis_excluded",
+      "B.healthy_adult_status"
     ],
     "segregation_fields": [
       "C.de_novo_status",
+      "C.inheritance_source",
       "C.family_id",
       "C.pedigree_available",
       "C.parentage_confirmed",
@@ -292,10 +537,37 @@
       "C.paternal_genotype",
       "C.maternal_phenotype",
       "C.paternal_phenotype",
+      "C.obligate_carriers",
       "C.phase_status",
       "C.in_trans_confirmation",
-      "C.cis_or_trans_context",
-      "C.consanguinity"
+      "C.cis_or_trans_context"
+    ],
+    "population_fields": [
+      "D.absent_or_rare_statement",
+      "D.population_database_name",
+      "D.population_subgroup"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list"
+    ],
+    "functional_fields": [
+      "F.tested_variant",
+      "F.case_level_or_gene_level",
+      "F.mechanism_consistency"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_definition"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.independent_publications_time_span"
     ],
     "standardization_fields": [
       "gene",

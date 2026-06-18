@@ -13,30 +13,7 @@
   "source_year": "2015",
   "source_language": "ja",
   "source_pdf_path": "",
-  "variants": [
-    {
-      "hgvs_c": "",
-      "hgvs_p": "",
-      "variant_type": "duplication",
-      "clinical_significance": "",
-      "exon": "",
-      "domain": "",
-      "protein_effect": "",
-      "null_variant_detail": "",
-      "protein_length_change": ""
-    },
-    {
-      "hgvs_c": "",
-      "hgvs_p": "",
-      "variant_type": "duplication",
-      "clinical_significance": "",
-      "exon": "",
-      "domain": "",
-      "protein_effect": "",
-      "null_variant_detail": "",
-      "protein_length_change": ""
-    }
-  ],
+  "variants": [],
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
@@ -156,6 +133,90 @@
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "proband",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.biochemical_markers",
+      "value": "no skewing of maternal X-chromosome inactivation pattern",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.ancestry_or_population",
+      "value": "Japanese",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.healthy_adult_status",
+      "value": "carrier",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.inheritance_source",
+      "value": "inherited from mother (asymptomatic carrier of CDKL5 duplication)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.obligate_carriers",
+      "value": "mother",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.in_trans_confirmation",
+      "value": "not_applicable",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.case_level_or_gene_level",
+      "value": "gene-level",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.mechanism_consistency",
+      "value": "loss of function consistent with Rett (Mecp2-null mice recapitulate RTT features including apnea and cardiac/QT abnormalities)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.study_design",
+      "value": "case report",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "MeCP2 (methyl-CpG binding protein 2) regulates gene expression through epigenetic mechanisms, binding methylated CpG and affecting transcription (e.g., GAD1 promoter CpG methylation regulating mRNA expression)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_protein_interaction",
+      "value": "MeCP2 influences histone acetylation (H3K9, H4K5) and is involved in higher-order chromatin organization/decondensation at the imprinted 15q11-q13 locus, recognizing methylated CpG to maintain chromatin state",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     }
   ],
   "expected_standardization": {
@@ -166,35 +227,46 @@
   "evaluation_config": {
     "gene_disease_fields": [
       "A.gene_symbol",
-      "B.disease_diagnosis",
       "A.gene_disease_relationship",
+      "B.disease_diagnosis",
       "B.mode_of_inheritance_reported",
       "B.single_genetic_etiology_claim"
     ],
     "variant_fields": [
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
       "A.variant_type",
       "A.functional_domain_or_hotspot",
       "A.protein_effect",
       "A.null_variant_detail",
-      "A.protein_length_change"
+      "A.protein_length_change",
+      "A.same_amino_acid_known_variant",
+      "A.transcript_id",
+      "A.reference_sequence"
     ],
     "clinical_fields": [
+      "B.case_id",
+      "B.proband_status",
       "B.case_count",
       "B.diagnosis_sufficiency",
       "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
+      "B.biochemical_markers",
       "B.sex",
       "B.age_of_onset",
       "B.age_current_or_last_followup",
       "B.ancestry_or_population",
+      "B.consanguinity",
       "B.testing_method",
-      "B.alternative_diagnosis_excluded"
+      "B.sequencing_method_quality",
+      "B.alternative_diagnosis_excluded",
+      "B.healthy_adult_status"
     ],
     "segregation_fields": [
       "C.de_novo_status",
+      "C.inheritance_source",
       "C.family_id",
       "C.pedigree_available",
       "C.parentage_confirmed",
@@ -202,10 +274,37 @@
       "C.paternal_genotype",
       "C.maternal_phenotype",
       "C.paternal_phenotype",
+      "C.obligate_carriers",
       "C.phase_status",
       "C.in_trans_confirmation",
-      "C.cis_or_trans_context",
-      "C.consanguinity"
+      "C.cis_or_trans_context"
+    ],
+    "population_fields": [
+      "D.absent_or_rare_statement",
+      "D.population_database_name",
+      "D.population_subgroup"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list"
+    ],
+    "functional_fields": [
+      "F.tested_variant",
+      "F.case_level_or_gene_level",
+      "F.mechanism_consistency"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_definition"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.independent_publications_time_span"
     ],
     "standardization_fields": [
       "gene",

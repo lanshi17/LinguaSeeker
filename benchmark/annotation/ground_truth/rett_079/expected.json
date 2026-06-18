@@ -17,10 +17,15 @@
     {
       "hgvs_c": "c.622C>T",
       "hgvs_p": "p.Q208X",
+      "hgvs_g": "",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "premature stop codon / protein truncation",
+      "null_variant_detail": "premature stop codon (nonsense)",
+      "protein_length_change": "truncated at position 208",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -114,6 +119,118 @@
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "premature stop codon / protein truncation",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "premature stop codon (nonsense)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_length_change",
+      "value": "truncated at position 208",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "proband",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "yes",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.diagnosis_sufficiency",
+      "value": "definite",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "highly_specific",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.biochemical_markers",
+      "value": "normal blood count and peripheral smear; mycoplasma pneumoniae antibody negative; hepatitis B surface antibody positive; liver function and cardiac enzymes (CK, CK-MB, AST, ALT, TBIL, DBIL); urinalysis weak positive occult blood; chest X-ray showed increased lung markings",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "MECP2 gene genetic testing (coding region)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.pedigree_available",
+      "value": "no",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.in_trans_confirmation",
+      "value": "not_applicable",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.study_design",
+      "value": "case report",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_definition",
+      "value": "Rett syndrome diagnosis meeting clinical criteria",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "MECP2 encodes methyl-CpG binding protein (MeCP2)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.independent_publications_time_span",
+      "value": "1999-2015",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     }
   ],
   "expected_standardization": {
@@ -124,22 +241,84 @@
   "evaluation_config": {
     "gene_disease_fields": [
       "A.gene_symbol",
-      "B.disease_diagnosis",
       "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
+      "B.disease_diagnosis",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim"
     ],
     "variant_fields": [
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.functional_domain_or_hotspot",
+      "A.protein_effect",
+      "A.null_variant_detail",
+      "A.protein_length_change",
+      "A.same_amino_acid_known_variant",
+      "A.transcript_id",
+      "A.reference_sequence"
     ],
     "clinical_fields": [
+      "B.case_id",
+      "B.proband_status",
+      "B.case_count",
+      "B.diagnosis_sufficiency",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
+      "B.biochemical_markers",
       "B.sex",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.age_current_or_last_followup",
+      "B.ancestry_or_population",
+      "B.consanguinity",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "B.alternative_diagnosis_excluded",
+      "B.healthy_adult_status"
+    ],
+    "segregation_fields": [
+      "C.de_novo_status",
+      "C.inheritance_source",
+      "C.family_id",
+      "C.pedigree_available",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.paternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_phenotype",
+      "C.obligate_carriers",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context"
+    ],
+    "population_fields": [
+      "D.absent_or_rare_statement",
+      "D.population_database_name",
+      "D.population_subgroup"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list"
+    ],
+    "functional_fields": [
+      "F.tested_variant",
+      "F.case_level_or_gene_level",
+      "F.mechanism_consistency"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_definition"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.independent_publications_time_span"
     ],
     "standardization_fields": [
       "gene",

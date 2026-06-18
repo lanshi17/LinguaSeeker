@@ -17,35 +17,41 @@
     {
       "hgvs_c": "",
       "hgvs_p": "",
+      "hgvs_g": "chrX:g.154032104(translocationfromchr6:162662479_162862870)",
       "variant_type": "other",
       "clinical_significance": "pathogenic",
       "exon": "3-4",
       "domain": "",
-      "protein_effect": "disruption of MECP2 transcript with potential loss of function via splicing disruption and/or nonsense-mediated decay",
-      "null_variant_detail": "",
-      "protein_length_change": ""
+      "protein_effect": "disruption of MECP2 transcript; likely nonsense-mediated decay or aberrant protein production",
+      "null_variant_detail": "translocation disrupting MECP2 between exons 3 and 4; hypothesized to trigger nonsense-mediated decay or produce aberrant protein",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "",
+      "hgvs_g": "chrX:g.153867860_154040681(complexSV:twodeletions~5Kbpand~60Kbpwith~105Kbpinversion)",
       "variant_type": "other",
       "clinical_significance": "pathogenic",
       "exon": "3-4",
       "domain": "",
-      "protein_effect": "loss of MECP2 function due to large downstream deletion including exons 3-4 and 3' UTR; likely NMD",
-      "null_variant_detail": "complex SV involving deletions and inversion leading to disruption of MECP2; may trigger NMD",
-      "protein_length_change": ""
+      "protein_effect": "deletion of exons 3 and 4 and entire 3' UTR of both MECP2 isoforms; loss of function",
+      "null_variant_detail": "large deletion removing exons 3 and 4 and entire 3' UTR; transcript likely undergoes nonsense-mediated decay preventing protein production",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
-      "hgvs_c": "NC_000023.11:g.154027486_154030665del",
+      "hgvs_c": "",
       "hgvs_p": "",
+      "hgvs_g": "NC_000023.11:g.154027486_154030665del",
       "variant_type": "deletion",
       "clinical_significance": "pathogenic",
       "exon": "4",
       "domain": "",
-      "protein_effect": "frameshift starting around amino acid 397 with removal of terminal portion of exon 4; 149 aa novel C-terminal sequence before premature stop",
+      "protein_effect": "frameshift starting at amino acid 397; novel amino acid sequence of 149 residues before premature stop codon at position 545; stop-loss with frameshift",
       "null_variant_detail": "frameshift leading to premature stop codon",
-      "protein_length_change": "Frameshift with novel 149 aa C-terminal sequence; predicted length ~545 aa (longer than WT)"
+      "protein_length_change": "truncated/altered; stop codon introduced at position 545 after 149 novel residues from position 397",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -266,6 +272,150 @@
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_g",
+      "value": "chrX:g.154032104(translocation from chr6:162662479_162862870)",
+      "candidates": [
+        "chrX:g.154032104(translocation from chr6:162662479_162862870)",
+        "chrX:g.153867860_154040681(complex SV: two deletions ~5Kbp and ~60Kbp with ~105Kbp inversion)",
+        "NC_000023.11:g.154027486_154030665del"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.case_id",
+      "value": "Case 1; Case 2; Case 3",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "proband",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.biochemical_markers",
+      "value": "normal MRI (all three cases); EEG with bilateral central spikes and nocturnal spike activity (Case 1); EEG with mildly slow background and increased central asynchronous spikes during sleep (Case 2); EEG with slow background without epileptiform activity (Case 3)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.consanguinity",
+      "value": "no",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sequencing_method_quality",
+      "value": "Sanger sequencing confirmed SV breakpoints; PCR amplification validated findings",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.inheritance_source",
+      "value": "de novo (confirmed by absence of variant in parents and siblings via PCR)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.pedigree_available",
+      "value": "no",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_phenotype",
+      "value": "unaffected",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_phenotype",
+      "value": "unaffected",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.obligate_carriers",
+      "value": "none",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "D.absent_or_rare_statement",
+      "value": "novel SVs not detected by prior routine testing; described as novel disease-causing SVs",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "E.prediction_tools_list",
+      "value": "MANTA",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.tested_variant",
+      "value": "all three SVs validated by PCR and Sanger sequencing",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.case_level_or_gene_level",
+      "value": "case-level",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.mechanism_consistency",
+      "value": "loss of function consistent with Rett syndrome; disruption of both MECP2 isoforms (MECP2_e1 and MECP2_e2); NMD or aberrant protein production",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.study_design",
+      "value": "case report",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_definition",
+      "value": "clinically diagnosed Rett syndrome without prior molecular diagnosis",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "MECP2 encodes methyl-CpG binding protein 2, a key epigenetic modulator in the brain that controls gene expression and modulates chromatin architecture through binding to methylated DNA",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.authority_classification",
+      "value": "pathogenic",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     }
   ],
   "expected_standardization": {
@@ -276,35 +426,46 @@
   "evaluation_config": {
     "gene_disease_fields": [
       "A.gene_symbol",
-      "B.disease_diagnosis",
       "A.gene_disease_relationship",
+      "B.disease_diagnosis",
       "B.mode_of_inheritance_reported",
       "B.single_genetic_etiology_claim"
     ],
     "variant_fields": [
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
       "A.variant_type",
       "A.functional_domain_or_hotspot",
       "A.protein_effect",
       "A.null_variant_detail",
-      "A.protein_length_change"
+      "A.protein_length_change",
+      "A.same_amino_acid_known_variant",
+      "A.transcript_id",
+      "A.reference_sequence"
     ],
     "clinical_fields": [
+      "B.case_id",
+      "B.proband_status",
       "B.case_count",
       "B.diagnosis_sufficiency",
       "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
+      "B.biochemical_markers",
       "B.sex",
       "B.age_of_onset",
       "B.age_current_or_last_followup",
       "B.ancestry_or_population",
+      "B.consanguinity",
       "B.testing_method",
-      "B.alternative_diagnosis_excluded"
+      "B.sequencing_method_quality",
+      "B.alternative_diagnosis_excluded",
+      "B.healthy_adult_status"
     ],
     "segregation_fields": [
       "C.de_novo_status",
+      "C.inheritance_source",
       "C.family_id",
       "C.pedigree_available",
       "C.parentage_confirmed",
@@ -312,10 +473,37 @@
       "C.paternal_genotype",
       "C.maternal_phenotype",
       "C.paternal_phenotype",
+      "C.obligate_carriers",
       "C.phase_status",
       "C.in_trans_confirmation",
-      "C.cis_or_trans_context",
-      "C.consanguinity"
+      "C.cis_or_trans_context"
+    ],
+    "population_fields": [
+      "D.absent_or_rare_statement",
+      "D.population_database_name",
+      "D.population_subgroup"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list"
+    ],
+    "functional_fields": [
+      "F.tested_variant",
+      "F.case_level_or_gene_level",
+      "F.mechanism_consistency"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_definition"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.independent_publications_time_span"
     ],
     "standardization_fields": [
       "gene",

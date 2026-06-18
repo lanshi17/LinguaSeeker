@@ -340,6 +340,7 @@ def _build_expected_evidence(parsed: dict) -> list[ExpectedEvidenceField]:
     _add("C.phase_status", parsed.get("phase_status"))
     _add("C.in_trans_confirmation", parsed.get("in_trans_confirmation"))
     _add("C.cis_or_trans_context", parsed.get("cis_or_trans_context"))
+    _add("C.consanguinity", parsed.get("consanguinity"))
 
     # === Category D: Population/Frequency ===
     _add("D.absent_or_rare_statement", parsed.get("absent_or_rare_statement"))

@@ -13,7 +13,47 @@
   "source_year": "2013",
   "source_language": "ja",
   "source_pdf_path": "",
-  "variants": [],
+  "variants": [
+    {
+      "hgvs_c": "c.256dupC",
+      "hgvs_p": "p.Gln86ProfsX35",
+      "hgvs_g": "",
+      "variant_type": "frameshift",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "MBD",
+      "protein_effect": "haploinsufficiency / loss of function",
+      "null_variant_detail": "frameshift leading to premature stop codon",
+      "protein_length_change": "frameshift from Gln86, premature stop at +35 residues",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.689G>A",
+      "hgvs_p": "p.Arg230His",
+      "hgvs_g": "",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "deletion",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "haploinsufficiency of FOXG1 (0.54-Mb deletion at 14q12 including FOXG1 and C14orf23)",
+      "null_variant_detail": "0.54-Mb microdeletion encompassing FOXG1 and C14orf23",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    }
+  ],
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
@@ -107,6 +147,120 @@
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.256dupC",
+      "candidates": [
+        "c.256dupC",
+        "c.689G>A"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "haploinsufficiency / loss of function",
+      "candidates": [
+        "haploinsufficiency / loss of function",
+        "haploinsufficiency of FOXG1 (0.54-Mb deletion at 14q12 including FOXG1 and C14orf23)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "frameshift leading to premature stop codon",
+      "candidates": [
+        "frameshift leading to premature stop codon",
+        "0.54-Mb microdeletion encompassing FOXG1 and C14orf23"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_length_change",
+      "value": "frameshift from Gln86, premature stop at +35 residues",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "proband",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "yes",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "3",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.diagnosis_sufficiency",
+      "value": "probable",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "partially_specific",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "直接塩基配列決定法（Sanger）、MLPA、定量的PCR、array-CGH（high-resolution 400K array）",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "yes",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.in_trans_confirmation",
+      "value": "not_applicable",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.study_design",
+      "value": "case series",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_definition",
+      "value": "MECP2およびCDKL5に変異がない「先天型」レット症候群を疑われた患者23例",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "FOXG1は発生初期に神経細胞の移動に働き大脳皮質の層構造を形成する重要な転写因子であり、生後はWNTシグナルを抑制しシナプス接続・成熟・可塑性に関与する。",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     }
   ],
   "expected_standardization": {
@@ -117,35 +271,46 @@
   "evaluation_config": {
     "gene_disease_fields": [
       "A.gene_symbol",
-      "B.disease_diagnosis",
       "A.gene_disease_relationship",
+      "B.disease_diagnosis",
       "B.mode_of_inheritance_reported",
       "B.single_genetic_etiology_claim"
     ],
     "variant_fields": [
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
       "A.variant_type",
       "A.functional_domain_or_hotspot",
       "A.protein_effect",
       "A.null_variant_detail",
-      "A.protein_length_change"
+      "A.protein_length_change",
+      "A.same_amino_acid_known_variant",
+      "A.transcript_id",
+      "A.reference_sequence"
     ],
     "clinical_fields": [
+      "B.case_id",
+      "B.proband_status",
       "B.case_count",
       "B.diagnosis_sufficiency",
       "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
+      "B.biochemical_markers",
       "B.sex",
       "B.age_of_onset",
       "B.age_current_or_last_followup",
       "B.ancestry_or_population",
+      "B.consanguinity",
       "B.testing_method",
-      "B.alternative_diagnosis_excluded"
+      "B.sequencing_method_quality",
+      "B.alternative_diagnosis_excluded",
+      "B.healthy_adult_status"
     ],
     "segregation_fields": [
       "C.de_novo_status",
+      "C.inheritance_source",
       "C.family_id",
       "C.pedigree_available",
       "C.parentage_confirmed",
@@ -153,10 +318,37 @@
       "C.paternal_genotype",
       "C.maternal_phenotype",
       "C.paternal_phenotype",
+      "C.obligate_carriers",
       "C.phase_status",
       "C.in_trans_confirmation",
-      "C.cis_or_trans_context",
-      "C.consanguinity"
+      "C.cis_or_trans_context"
+    ],
+    "population_fields": [
+      "D.absent_or_rare_statement",
+      "D.population_database_name",
+      "D.population_subgroup"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list"
+    ],
+    "functional_fields": [
+      "F.tested_variant",
+      "F.case_level_or_gene_level",
+      "F.mechanism_consistency"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_definition"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.independent_publications_time_span"
     ],
     "standardization_fields": [
       "gene",
