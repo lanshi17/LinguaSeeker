@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.alignment_metrics import (
+from benchmark.analysis.dataset_curation.alignment_metrics import (
     AlignmentMetricConfig,
     build_alignment_metric_report,
     alignment_report_to_payload,

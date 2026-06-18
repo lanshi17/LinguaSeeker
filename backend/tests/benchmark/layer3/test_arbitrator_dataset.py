@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from benchmark.layer3.analysis.arbitrator_dataset import (
+from benchmark.analysis.arbitrator.dataset import (
     CandidateSample,
     DatasetSummary,
     _normalize_gold,
@@ -62,7 +62,7 @@ class TestDatasetSummary:
 
 class TestBuildDatasetIntegration:
     def test_build_dataset_runs_on_real_data(self) -> None:
-        from benchmark.layer3.analysis.arbitrator_dataset import build_dataset
+        from benchmark.analysis.arbitrator.dataset import build_dataset
         from benchmark.layer3.evaluate import GROUND_TRUTH_DIR
 
         if not GROUND_TRUTH_DIR.exists():

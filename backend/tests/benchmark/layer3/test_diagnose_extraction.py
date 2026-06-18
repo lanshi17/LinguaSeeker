@@ -5,7 +5,7 @@ import json
 import os
 from pathlib import Path
 
-from benchmark.layer3.analysis.diagnose_extraction import (
+from benchmark.analysis.diagnostics.extraction import (
     build_diagnostics,
     format_diagnostics,
     latest_report_path,

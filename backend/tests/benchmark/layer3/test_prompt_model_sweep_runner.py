@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from benchmark.layer3.baselines.model_sweep_contracts import PromptModelSpec, PromptModelSweepManifest
+from benchmark.analysis.baselines.model_sweep_contracts import PromptModelSpec, PromptModelSweepManifest
 import pytest
 
-from benchmark.layer3.baselines.prompt_model_sweep import (
+from benchmark.analysis.baselines.prompt_model_sweep import (
     build_baseline_config,
     build_extractor,
     run_model_sweep,
@@ -57,7 +57,7 @@ def test_build_extractor_uses_manifest_input_max_chars(monkeypatch) -> None:
         calls.append(kwargs)
         return object()
 
-    monkeypatch.setattr("benchmark.layer3.baselines.prompt_model_sweep.make_extractor", fake_make_extractor)
+    monkeypatch.setattr("benchmark.analysis.baselines.prompt_model_sweep.make_extractor", fake_make_extractor)
     manifest = PromptModelSweepManifest(
         run_label="prompt_frontier_20260615",
         prompt_mode="citation_required",
@@ -94,7 +94,7 @@ def test_build_extractor_uses_raw_client_by_default(monkeypatch) -> None:
         calls.append(kwargs)
         return object()
 
-    monkeypatch.setattr("benchmark.layer3.baselines.prompt_model_sweep.make_extractor", fake_make_extractor)
+    monkeypatch.setattr("benchmark.analysis.baselines.prompt_model_sweep.make_extractor", fake_make_extractor)
     manifest = PromptModelSweepManifest(
         run_label="prompt_frontier_20260615",
         prompt_mode="citation_required",
@@ -142,9 +142,9 @@ async def test_run_model_sweep_continues_after_model_failure(monkeypatch, tmp_pa
         calls.append(config.baseline_id)
         return type("Report", (), {"report_path": tmp_path / f"{config.baseline_id}.json"})()
 
-    monkeypatch.setattr("benchmark.layer3.baselines.prompt_model_sweep.build_extractor", fake_build_extractor)
+    monkeypatch.setattr("benchmark.analysis.baselines.prompt_model_sweep.build_extractor", fake_build_extractor)
     monkeypatch.setattr(
-        "benchmark.layer3.baselines.prompt_model_sweep.run_baseline_evaluation",
+        "benchmark.analysis.baselines.prompt_model_sweep.run_baseline_evaluation",
         fake_run_baseline_evaluation,
     )
 

@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Mapping
 
-from benchmark.layer3.analysis.reconcile_case_studies import (
+from benchmark.analysis.reconcile.case_studies import (
     build_case_study_report,
     format_case_study_report,
 )

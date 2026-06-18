@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.select_benchmark_b_pilot import (
+from benchmark.analysis.benchmark_b.pilot_selection import (
     BenchmarkBPilotSelectionConfig,
     build_benchmark_b_pilot_selection,
     benchmark_b_pilot_selection_to_payload,

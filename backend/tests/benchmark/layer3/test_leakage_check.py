@@ -5,7 +5,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from benchmark.layer3.analysis.leakage_check import (
+from benchmark.analysis.dataset_curation.leakage_check import (
     LeakageAuditReport,
     check_artifact_leakage,
     check_context_pack_no_gold_labels,

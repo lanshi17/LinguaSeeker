@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.evidence_augmentation_metrics import (
+from benchmark.analysis.dataset_curation.evidence_augmentation_metrics import (
     AugmentationMetricConfig,
     build_evidence_augmentation_report,
 )

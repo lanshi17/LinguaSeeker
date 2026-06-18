@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.prompt_model_baseline_tables import build_prompt_model_table
+from benchmark.analysis.baselines.prompt_model_baseline_tables import build_prompt_model_table
 
 
 def test_build_prompt_model_table_combines_extraction_and_traceability(tmp_path: Path) -> None:

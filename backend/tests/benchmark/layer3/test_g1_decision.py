@@ -3,15 +3,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from benchmark.analysis.diagnose_grounding import GroundingDiagnostics
-from benchmark.analysis.diagnose_native_gain import NativeGainDiagnostics
-from benchmark.layer3.analysis.diagnose_baselines import BaselineComparison, ComparisonRow
-from benchmark.layer3.analysis.g1_decision import (
+from benchmark.analysis.diagnostics.grounding import GroundingDiagnostics
+from benchmark.analysis.diagnostics.native_gain import NativeGainDiagnostics
+from benchmark.analysis.diagnostics.baselines import BaselineComparison, ComparisonRow
+from benchmark.analysis.paper_artifacts.g1_decision import (
     build_g1_decision,
     format_g1_decision,
     g1_decision_to_payload,
 )
-from benchmark.layer3.analysis.inventory_system_runs import SystemRunInventory
+from benchmark.analysis.dataset_curation.inventory_system_runs import SystemRunInventory
 
 
 def _comparison() -> BaselineComparison:

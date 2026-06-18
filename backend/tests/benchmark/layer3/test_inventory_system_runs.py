@@ -1,7 +1,7 @@
 """Tests for ClinGen system-run inventory diagnostics."""
 from __future__ import annotations
 
-from benchmark.layer3.analysis.inventory_system_runs import (
+from benchmark.analysis.dataset_curation.inventory_system_runs import (
     SystemRunRow,
     build_inventory,
     choose_best_run,

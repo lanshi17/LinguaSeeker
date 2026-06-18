@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.diagnose_block_recall import (
+from benchmark.analysis.diagnostics.block_recall import (
     build_block_recall_diagnostics,
     diagnostics_to_payload,
 )

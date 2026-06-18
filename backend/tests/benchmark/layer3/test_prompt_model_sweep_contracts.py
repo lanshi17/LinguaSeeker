@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from benchmark.layer3.baselines.model_sweep_contracts import (
+from benchmark.analysis.baselines.model_sweep_contracts import (
     PromptModelSpec,
     load_prompt_model_sweep_manifest,
 )

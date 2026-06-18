@@ -6,7 +6,7 @@ import pytest
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
-from benchmark.layer3.analysis.arbitrator_dataset import (
+from benchmark.analysis.arbitrator.dataset import (
     CandidateSample,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.features import (
@@ -61,7 +61,7 @@ def _make_sample(
 
 class TestTrainFold:
     def test_train_fold_produces_model(self) -> None:
-        from benchmark.layer3.analysis.arbitrator_policy_eval import _train_fold
+        from benchmark.analysis.arbitrator.policy_eval import _train_fold
 
         samples = [
             _make_sample(label=1),
@@ -78,7 +78,7 @@ class TestTrainFold:
         assert all(isinstance(v, float) for v in coefficients.values())
 
     def test_train_fold_predicts(self) -> None:
-        from benchmark.layer3.analysis.arbitrator_policy_eval import _train_fold
+        from benchmark.analysis.arbitrator.policy_eval import _train_fold
 
         np.random.seed(42)
         pos_samples = [_make_sample(label=1) for _ in range(10)]
@@ -95,7 +95,7 @@ class TestTrainFold:
 
 class TestEntryF1:
     def test_entry_f1_all_matched(self) -> None:
-        from benchmark.layer3.analysis.arbitrator_policy_eval import _entry_f1
+        from benchmark.analysis.arbitrator.policy_eval import _entry_f1
         from benchmark.layer3.evaluate import EntryMetrics, FieldMatch
 
         metrics = EntryMetrics(
@@ -121,7 +121,7 @@ class TestEntryF1:
 
 class TestGateA:
     def test_gate_a_f1_gain(self) -> None:
-        from benchmark.layer3.analysis.arbitrator_policy_eval import _check_gate_a, PolicyEvalReport
+        from benchmark.analysis.arbitrator.policy_eval import _check_gate_a, PolicyEvalReport
 
         report = PolicyEvalReport(
             folds=[],
@@ -135,7 +135,7 @@ class TestGateA:
         assert _check_gate_a(report) is True
 
     def test_gate_a_fails_below_threshold(self) -> None:
-        from benchmark.layer3.analysis.arbitrator_policy_eval import _check_gate_a, PolicyEvalReport
+        from benchmark.analysis.arbitrator.policy_eval import _check_gate_a, PolicyEvalReport
 
         report = PolicyEvalReport(
             folds=[],
@@ -149,7 +149,7 @@ class TestGateA:
         assert _check_gate_a(report) is False
 
     def test_gate_a_relationship_reduction(self) -> None:
-        from benchmark.layer3.analysis.arbitrator_policy_eval import _check_gate_a, PolicyEvalReport
+        from benchmark.analysis.arbitrator.policy_eval import _check_gate_a, PolicyEvalReport
 
         report = PolicyEvalReport(
             folds=[],
@@ -165,7 +165,7 @@ class TestGateA:
 
 class TestLOOIntegration:
     def test_loo_runs_on_real_data(self) -> None:
-        from benchmark.layer3.analysis.arbitrator_policy_eval import run_loo_evaluation
+        from benchmark.analysis.arbitrator.policy_eval import run_loo_evaluation
         from benchmark.layer3.evaluate import GROUND_TRUTH_DIR
 
         if not GROUND_TRUTH_DIR.exists():

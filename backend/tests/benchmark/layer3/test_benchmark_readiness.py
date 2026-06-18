@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.benchmark_readiness import (
+from benchmark.analysis.dataset_curation.readiness import (
     BenchmarkReadinessConfig,
     build_benchmark_readiness_report,
     benchmark_readiness_report_to_payload,

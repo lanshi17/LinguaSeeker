@@ -36,7 +36,7 @@ def _write_ground_truth_entry(root: Path, entry_id: str, source_text: str) -> No
 
 @pytest.mark.asyncio
 async def test_run_baseline_evaluation_reuses_layer3_metrics(tmp_path) -> None:
-    from benchmark.layer3.baselines.runner import BaselineConfig, BaselineEvidenceItem, run_baseline_evaluation
+    from benchmark.analysis.baselines.runner import BaselineConfig, BaselineEvidenceItem, run_baseline_evaluation
 
     ground_truth_dir = tmp_path / "ground_truth"
     reports_dir = tmp_path / "reports"
@@ -100,7 +100,7 @@ async def test_run_baseline_evaluation_reuses_layer3_metrics(tmp_path) -> None:
 
 @pytest.mark.asyncio
 async def test_run_baseline_evaluation_filters_entry_ids_and_limit(tmp_path) -> None:
-    from benchmark.layer3.baselines.runner import BaselineConfig, BaselineEvidenceItem, run_baseline_evaluation
+    from benchmark.analysis.baselines.runner import BaselineConfig, BaselineEvidenceItem, run_baseline_evaluation
 
     ground_truth_dir = tmp_path / "ground_truth"
     reports_dir = tmp_path / "reports"
@@ -139,7 +139,7 @@ async def test_run_baseline_evaluation_filters_entry_ids_and_limit(tmp_path) -> 
 
 @pytest.mark.asyncio
 async def test_run_baseline_evaluation_counts_extractor_error_as_missing_fields(tmp_path) -> None:
-    from benchmark.layer3.baselines.runner import BaselineConfig, BaselineEvidenceItem, run_baseline_evaluation
+    from benchmark.analysis.baselines.runner import BaselineConfig, BaselineEvidenceItem, run_baseline_evaluation
 
     ground_truth_dir = tmp_path / "ground_truth"
     reports_dir = tmp_path / "reports"
@@ -172,7 +172,7 @@ async def test_run_baseline_evaluation_counts_extractor_error_as_missing_fields(
 
 
 def test_all_baseline_modules_expose_metadata_and_extractor() -> None:
-    from benchmark.layer3.baselines import (
+    from benchmark.analysis.baselines import (
         naive_llm,
         original_only,
         rag_llm,
@@ -190,7 +190,7 @@ def test_all_baseline_modules_expose_metadata_and_extractor() -> None:
 
 
 def test_baseline_llm_response_normalizes_confidence_labels() -> None:
-    from benchmark.layer3.baselines.llm_common import BaselineLLMResponse
+    from benchmark.analysis.baselines.llm_common import BaselineLLMResponse
 
     response = BaselineLLMResponse.model_validate(
         {
@@ -217,7 +217,7 @@ def test_baseline_llm_response_normalizes_confidence_labels() -> None:
 
 
 def test_baseline_llm_response_normalizes_schema_drift() -> None:
-    from benchmark.layer3.baselines.llm_common import BaselineLLMResponse
+    from benchmark.analysis.baselines.llm_common import BaselineLLMResponse
 
     response = BaselineLLMResponse.model_validate(
         {
@@ -256,7 +256,7 @@ def test_baseline_llm_response_normalizes_schema_drift() -> None:
 
 
 def test_translate_then_extract_skips_translation_for_english_source() -> None:
-    from benchmark.layer3.baselines.llm_common import should_translate_before_extract
+    from benchmark.analysis.baselines.llm_common import should_translate_before_extract
 
     assert not should_translate_before_extract(
         "translate_then_extract",
@@ -273,7 +273,7 @@ def test_translate_then_extract_skips_translation_for_english_source() -> None:
 
 
 def test_baseline_report_serializes_metadata(tmp_path: Path) -> None:
-    from benchmark.layer3.baselines.runner import BaselineConfig, BaselineReport, _serialize_report
+    from benchmark.analysis.baselines.runner import BaselineConfig, BaselineReport, _serialize_report
 
     report = BaselineReport(
         baseline_id="B6_GPT5_PROMPT_CITE",

@@ -1,14 +1,14 @@
 """Tests for prompt-only citation-required LLM baseline behavior."""
 from __future__ import annotations
 
-from benchmark.layer3.baselines.llm_common import (
+from benchmark.analysis.baselines.llm_common import (
     BaselineLLMEvidenceItem,
     RawOpenAICompatibleClient,
     _build_extraction_prompt,
     _extract_chat_content,
     quote_to_source_span,
 )
-from benchmark.layer3.baselines.runner import BaselineEntry
+from benchmark.analysis.baselines.runner import BaselineEntry
 
 
 def test_baseline_llm_evidence_item_accepts_source_quote() -> None:

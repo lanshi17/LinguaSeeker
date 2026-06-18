@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Mapping
 
-from benchmark.layer3.analysis.g2_statistics import (
+from benchmark.analysis.paper_artifacts.g2_statistics import (
     build_g2_statistics,
     format_g2_statistics,
 )
