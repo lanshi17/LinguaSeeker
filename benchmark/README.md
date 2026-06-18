@@ -1,53 +1,86 @@
-# Benchmark
+# Benchmark Framework
 
-> Benchmarking and evaluation infrastructure for CrossEvidence. Covers literature acquisition, full pipeline execution, and ClinGen Layer 3 ground-truth evaluation.
+Reorganized layout of the ACMG-Lingua benchmark suite (2026-06-18 refactor).
 
-## Directory Structure
+## Top-level map
 
 ```
 benchmark/
-├── __init__.py
-├── README.md
-├── layer3/                    ClinGen Layer 3 evaluation
-│   ├── evaluate.py            Main evaluator: pipeline vs ground truth
-│   ├── visualize.py           Charts and HTML report generation
-│   ├── select_entries.py      Select representative ClinGen entries
-│   ├── fetch_literature.py    Query EuropePMC for PMID/PMC IDs
-│   ├── download_pdfs.py       Download PMC full-text articles
-│   ├── generate_ground_truth.py  Build expected.json from ClinGen CSV
-│   ├── mondo_hierarchy.py     MONDO ontology hierarchy utilities
-│   ├── ground_truth/          30 ClinGen entries (clingen_000..029 + selection.json)
-│   └── reports/               Evaluation reports (JSON, PNG, HTML)
-├── literature_acquisition/    Literature download benchmarks
-│   ├── benchmark.py           General cancer/genomics benchmark (7 languages)
-│   ├── rett_download.py       Rett/MECP2 disease-specific benchmark (12 languages)
-│   ├── rett_config.json       Rett config v2
-│   ├── rett_config_02.json    Rett config v4 (expanded)
-│   ├── downloads/             Downloaded PDFs + report JSONs
-│   └── log/                   Rotating log files
-└── pipeline/                  Full pipeline benchmark (Phases 1-3)
-    ├── benchmark.py           Benchmark runner (HTTP client)
-    ├── evidence_metrics.py    Evidence extraction metrics
-    ├── manifest.json          Selected PDFs (1 case_report per language)
-    ├── input/                 Test PDFs organized by language
-    │   ├── en/                English (case_report, functional, sequencing, unclassified)
-    │   ├── zh/                Chinese
-    │   ├── ja/                Japanese
-    │   ├── ko/                Korean
-    │   ├── es/                Spanish
-    │   ├── pt/                Portuguese
-    │   └── ru/                Russian
-    └── reports/               Timestamped JSON reports (38 runs)
+├── core/         shared primitives: contracts, matching, aggregate, paths, pdf,
+│                 pipeline_client, evidence_metrics, mondo_hierarchy
+├── datasets/     dataset-specific dataset assembly + evaluators
+│   ├── clingen/        ClinGen entries + Rett curation
+│   ├── clinvar_fused/  ClinVar-fused variants
+│   └── rett_annotation/ MinerU-driven annotation toolkit (independent uv project)
+├── runners/      experiment entry points that hit pipelines / providers / LLMs
+├── analysis/     offline reporters that read previously generated reports
+│   ├── reconcile/         ablation, case studies, oracle bound, contextual diagnosis
+│   ├── traceability/      citation validity / span boundary / traceable F1
+│   ├── baselines/         B0..B10 LLM baselines + prompt-only sweeps + summary tables
+│   ├── arbitrator/        arbitrator dataset + policy evaluator
+│   ├── benchmark_b/       multilingual pilot selection + Phase 2 metrics
+│   ├── dataset_curation/  readiness, source inventory, expansion, alignment, leakage
+│   ├── paper_artifacts/   paper-specific tables (G1/G2/main paper/rescue)
+│   └── diagnostics/       grounding, native gain, extraction, baselines, block recall, reconcile errors
+└── data/         every artifact (gitignored where appropriate)
+    ├── ground_truth/{clingen,clinvar_fused,rett}
+    ├── inputs/{pipeline,literature_acquisition}
+    ├── reports/{eval,reconcile,traceability,baseline,benchmark_b,
+    │            curation,paper,diagnostics,clinvar_fused,pipeline_e2e}
+    └── baselines/manifests
 ```
 
-## Sub-module Reference
+## Stable imports
 
-- **[layer3/](./layer3/README.md)** -- ClinGen Layer 3 evaluation against 30 ground-truth entries. Measures field P/R/F1, entity standardization accuracy, and cross-lingual consistency.
-- **[literature_acquisition/](./literature_acquisition/README.md)** -- Multilingual literature download benchmark. Evaluates provider coverage and success rates across 7-12 languages.
-- **[pipeline/](./pipeline/README.md)** -- Full pipeline benchmark (Phases 1-3) via HTTP API. Measures per-phase timing and reliability across 7 languages.
+Cross-cutting primitives live in `benchmark.core`:
 
-## Notes
+```python
+from benchmark.core import (
+    FieldMatch, EntryMetrics,
+    compare_evidence, fuzzy_match_value, normalize_comparison_text,
+    compute_aggregate_metrics,
+    GROUND_TRUTH_ROOT, REPORTS_ROOT, RAW_PDF_ROOT,
+    submit_and_poll, evaluate_one, run_evaluation,
+)
+```
 
-- Downloaded PDFs are not committed to git (in `.gitignore`).
-- Re-run benchmarks after provider changes to validate success rates.
-- Language coverage: English, Chinese, Japanese, Korean, Spanish, Portuguese, Russian (7 core languages; literature acquisition extends to 12).
+`GROUND_TRUTH_ROOT` and `REPORTS_ROOT` always resolve to `benchmark/data/...`. The
+legacy `GROUND_TRUTH_DIR` / `REPORTS_DIR` aliases are still exported but will be
+removed once the deprecation shims drop.
+
+## Common entry points
+
+|Goal|Command|
+|---|---|
+|Run pipeline benchmark|`python -m benchmark.runners.pipeline_e2e --help`|
+|Layer-3 ClinGen eval|`python -m benchmark.layer3.evaluate --help` _(legacy, shim — prefer running via `benchmark.runners`)_|
+|Download literature|`python -m benchmark.runners.literature_acquisition download --help`|
+|Rett literature pipeline|`python -m benchmark.runners.literature_rett --help`|
+|Build paper tables|`python -m benchmark.analysis.paper_artifacts.main_paper_tables --help`|
+|Pilot selection|`python -m benchmark.analysis.benchmark_b.pilot_selection --help`|
+|Grounding diagnostics|`python -m benchmark.analysis.diagnostics.grounding`|
+
+## Compat shims (deprecation, removed in Phase 6)
+
+The 2026-06-18 refactor preserved every legacy dotted path while the codebase
+caught up. Imports under these prefixes still resolve but emit a
+`DeprecationWarning` pointing at the new home:
+
+* `benchmark.layer3.evaluate` → `benchmark.core`
+* `benchmark.layer3.mondo_hierarchy` → `benchmark.core.mondo_hierarchy`
+* `benchmark.layer3.analysis.<x>` → `benchmark.analysis.<group>.<module>`
+* `benchmark.layer3.baselines.<x>` → `benchmark.analysis.baselines.<x>`
+* `benchmark.layer3.{select_entries,fetch_literature,download_pdfs,generate_*,visualize,preprocess}` → `benchmark.datasets.clingen.*` / `benchmark.runners.clingen_preprocess`
+* `benchmark.layer3.clinvar_fused.<x>` → `benchmark.datasets.clinvar_fused.<x>`
+* `benchmark.pipeline.benchmark` → `benchmark.runners.pipeline_e2e`
+* `benchmark.pipeline.evidence_metrics` → `benchmark.core.evidence_metrics`
+* `benchmark.literature_acquisition.{benchmark,rett_download}` → `benchmark.runners.{literature_acquisition,literature_rett}`
+* `benchmark.annotation.<x>` → `benchmark.datasets.rett_annotation.<x>`
+* `benchmark.analysis.diagnose_grounding` / `benchmark.analysis.diagnose_native_gain` → `benchmark.analysis.diagnostics.{grounding,native_gain}`
+
+## See also
+
+* Plan: `docs/active/2026-06-18-benchmark-framework-refactor-plan.md`
+* Migration script: `scripts/refactor_benchmark_imports.py`
+* Reports bucketing: `scripts/refactor_benchmark_reports.py`
+* Per-bucket README is kept in each subpackage.
