@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.analysis.diagnose_native_gain import (
+from benchmark.analysis.diagnostics.native_gain import (
     build_native_gain_diagnostics,
     compare_dual_track_file,
     format_native_gain_diagnostics,

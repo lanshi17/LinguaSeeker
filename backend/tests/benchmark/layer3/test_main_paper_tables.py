@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.main_paper_tables import (
+from benchmark.analysis.paper_artifacts.main_paper_tables import (
     build_main_paper_tables,
     main_paper_tables_to_payload,
     write_main_paper_tables,
@@ -40,7 +40,7 @@ def _manifest_report(path: Path) -> Path:
                     "benchmark/layer3/reports/reconcile_ablation_20260614_230554.json",
                 ],
                 "commands": {
-                    "ablation": "PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.layer3.analysis.reconcile_ablation --write",
+                    "ablation": "PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.analysis.reconcile.ablation --write",
                 },
             },
             "no_leakage": {

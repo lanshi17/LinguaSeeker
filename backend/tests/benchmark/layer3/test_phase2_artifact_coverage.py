@@ -4,8 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.inventory_system_runs import SystemRunInventory, SystemRunRow
-from benchmark.layer3.analysis.phase2_artifact_coverage import (
+from benchmark.analysis.dataset_curation.inventory_system_runs import SystemRunInventory, SystemRunRow
+from benchmark.analysis.dataset_curation.phase2_artifact_coverage import (
     Phase2ArtifactCoverageConfig,
     build_phase2_artifact_coverage,
     format_phase2_artifact_coverage,

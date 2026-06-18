@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.benchmark_b_phase2_runtime_metrics import (
+from benchmark.analysis.benchmark_b.phase2_runtime_metrics import (
     BenchmarkBPhase2RuntimeConfig,
     benchmark_b_phase2_runtime_report_to_payload,
     build_benchmark_b_phase2_runtime_report,

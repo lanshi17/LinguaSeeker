@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.contextual_reconcile_diagnosis import (
+from benchmark.analysis.reconcile.contextual_diagnosis import (
     build_contextual_reconcile_diagnosis,
     contextual_diagnosis_to_payload,
 )

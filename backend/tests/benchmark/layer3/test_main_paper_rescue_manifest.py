@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from benchmark.layer3.analysis.main_paper_rescue_manifest import (
+from benchmark.analysis.paper_artifacts.main_paper_rescue_manifest import (
     build_manifest,
     manifest_to_payload,
     write_manifest,

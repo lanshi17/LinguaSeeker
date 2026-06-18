@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.materialize_phase2_artifacts import (
+from benchmark.analysis.dataset_curation.materialize_phase2_artifacts import (
     DbEvidenceRow,
     MaterializeConfig,
     build_dual_result_from_db_rows,

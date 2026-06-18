@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.traceability_metrics import (
+from benchmark.analysis.traceability.metrics import (
     build_traceability_report,
     span_boundary_f1,
     traceable_f1,

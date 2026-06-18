@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.expansion_artifact_coverage import (
+from benchmark.analysis.dataset_curation.expansion_artifact_coverage import (
     build_expansion_artifact_coverage,
     expansion_artifact_coverage_to_payload,
     format_expansion_artifact_coverage,

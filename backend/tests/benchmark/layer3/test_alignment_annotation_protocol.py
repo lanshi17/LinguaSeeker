@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from benchmark.layer3.analysis.alignment_annotation_protocol import (
+from benchmark.analysis.dataset_curation.alignment_annotation_protocol import (
     load_alignment_annotation_file,
     validate_alignment_annotation_payload,
 )
