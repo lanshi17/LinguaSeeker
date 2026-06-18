@@ -19,7 +19,7 @@ from .gateway import (
 from .normalizers import normalize_items
 from .pubmed_service import OnlineAcquisitionPubMedArticle, OnlineAcquisitionPubMedCandidate, OnlineAcquisitionPubMedService, get_pubmed_service
 from .search_service import build_provider_plan, search_multilingual
-from .workflow import online_acquisition_workflow
+from .workflow import multilingual_acquisition_workflow, online_acquisition_workflow
 
 __all__ = [
     # Contracts
@@ -44,6 +44,7 @@ __all__ = [
     "search_multilingual",
     # Workflow
     "online_acquisition_workflow",
+    "multilingual_acquisition_workflow",
     # Normalizers
     "normalize_items",
 ]

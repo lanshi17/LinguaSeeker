@@ -14,7 +14,6 @@ Usage::
 
 from __future__ import annotations
 
-import asyncio
 import json
 from dataclasses import dataclass
 from typing import Optional
@@ -171,8 +170,11 @@ def _parse_response(raw: str, source_query: str) -> TranslatedQueries:
     if missing:
         raise ValueError(f"Translation response missing languages: {missing}")
 
-    # Ensure all values are strings and stripped
-    cleaned = {lang: str(obj[lang]).strip() for lang in TARGET_LANGUAGES}
+    # Ensure all values are strings and stripped (handle JSON null → fallback)
+    cleaned = {
+        lang: str(obj[lang]).strip() if obj[lang] is not None else ""
+        for lang in TARGET_LANGUAGES
+    }
     empty = [lang for lang, val in cleaned.items() if not val]
     if empty:
         logger.warning("Empty translations for languages: {}", empty)

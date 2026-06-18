@@ -33,7 +33,7 @@ from .gateway import (
 )
 from .literature_type_classifier import classify_item
 from .normalizers import normalize_items
-from .query_translator import TARGET_LANGUAGES, TranslatedQueries, translate_query
+from .query_translator import TARGET_LANGUAGES, translate_query
 from .relevance_gate import run_relevance_gate
 from .search_service import build_provider_plan, dedupe_candidates, rank_candidates, search_parallel
 from .web_search import SearchLink
@@ -685,7 +685,7 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
 # ── Multilingual Acquisition Workflow ──────────────────────────────────────
 
 
-async def _search_language(
+async def search_language(
     query: str,
     language: str,
     candidate_limit: int = 15,
@@ -699,7 +699,7 @@ async def _search_language(
         candidate_limit=candidate_limit,
     )
     for c in candidates:
-        c["_search_lang"] = language
+        c["search_lang"] = language
     return candidates
 
 
@@ -743,7 +743,7 @@ async def multilingual_acquisition_workflow(
     # === Phase 1: Parallel Multi-Lingual Search ===
     per_lang_limit = max(5, request.limit // len(TARGET_LANGUAGES))
     search_tasks = [
-        _search_language(query, lang, candidate_limit=per_lang_limit)
+        search_language(query, lang, candidate_limit=per_lang_limit)
         for lang, query in translations.as_dict().items()
     ]
     lang_results = await asyncio.gather(*search_tasks, return_exceptions=True)
@@ -794,7 +794,7 @@ async def multilingual_acquisition_workflow(
     logger.info(
         "multilingual search: {} candidates from {} languages",
         len(all_candidates),
-        len(set(c.get("_search_lang", "") for c in all_candidates)),
+        len(set(c.get("search_lang", "") for c in all_candidates)),
     )
 
     # Normalize items
@@ -820,6 +820,25 @@ async def multilingual_acquisition_workflow(
             if lt and lt.value in request.literature_types:
                 typed_items.append(ni)
         normalized_items = typed_items
+
+        # Also filter download candidates to match the type filter
+        allowed_dois = {
+            (ni.doi or "").strip().lower()
+            for ni in normalized_items if ni.doi
+        }
+        allowed_titles = {
+            (ni.title or "").strip().lower()[:80]
+            for ni in normalized_items if ni.title
+        }
+        if allowed_dois or allowed_titles:
+            filtered_candidates = []
+            for c in all_candidates:
+                c_doi = (c.get("doi") or "").strip().lower()
+                c_title = (c.get("title") or "").strip().lower()[:80]
+                if (c_doi and c_doi in allowed_dois) or (c_title and c_title in allowed_titles):
+                    filtered_candidates.append(c)
+            if filtered_candidates:
+                all_candidates = filtered_candidates
 
     clean_candidates = [{k: v for k, v in c.items() if not k.startswith("_")} for c in all_candidates]
 
@@ -855,8 +874,8 @@ async def multilingual_acquisition_workflow(
             "pmcid": dr.pmcid,
             "url": dr.url,
             "warnings": dr.warnings,
-            "_search_lang": next(
-                (c.get("_search_lang", "") for c in all_candidates
+            "search_lang": next(
+                (c.get("search_lang", "") for c in all_candidates
                  if (dr.doi and c.get("doi") == dr.doi) or (dr.url and c.get("url") == dr.url)),
                 "",
             ),
