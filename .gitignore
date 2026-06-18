@@ -73,6 +73,7 @@ backend/data/pipeline/run-123/*
 .qwen/*
 .claude/*
 
+benchmark/data/inputs/literature_acquisition/downloads/rett/report_*.json
 benchmark/literature_acquisition/downloads/rett/report_*.json
 .codegraph/*
 reasonix.toml
@@ -85,6 +86,7 @@ benchmark/pipeline/input/*
 backend/config-dev.yaml
 copier_defaults.yaml
 database/config/.env.neo4j
+benchmark/data/inputs/literature_acquisition/downloads/*.jsonl
 benchmark/literature_acquisition/downloads/*.jsonl
 .env
 **/*/.env
