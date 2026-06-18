@@ -217,7 +217,7 @@ class NonTerminalPipelineClient:
 
 @pytest.mark.asyncio
 async def test_submit_and_poll_sends_extraction_target(monkeypatch) -> None:
-    monkeypatch.setattr("benchmark.layer3.evaluate.POLL_INTERVAL_S", 0)
+    monkeypatch.setattr("benchmark.core.pipeline_client.POLL_INTERVAL_S", 0)
     client = FakePipelineClient()
 
     await submit_and_poll(
@@ -238,8 +238,8 @@ async def test_submit_and_poll_sends_extraction_target(monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_submit_and_poll_timeout_preserves_run_diagnostics(monkeypatch) -> None:
-    monkeypatch.setattr("benchmark.layer3.evaluate.POLL_INTERVAL_S", 0)
-    monkeypatch.setattr("benchmark.layer3.evaluate.MAX_POLL_ATTEMPTS", 1)
+    monkeypatch.setattr("benchmark.core.pipeline_client.POLL_INTERVAL_S", 0)
+    monkeypatch.setattr("benchmark.core.pipeline_client.MAX_POLL_ATTEMPTS", 1)
     client = NonTerminalPipelineClient()
 
     result = await submit_and_poll(
@@ -259,9 +259,9 @@ async def test_submit_and_poll_timeout_preserves_run_diagnostics(monkeypatch) ->
 
 @pytest.mark.asyncio
 async def test_evaluate_one_timeout_keeps_run_diagnostics(monkeypatch, tmp_path) -> None:
-    monkeypatch.setattr("benchmark.layer3.evaluate.GROUND_TRUTH_DIR", tmp_path)
-    monkeypatch.setattr("benchmark.layer3.evaluate.POLL_INTERVAL_S", 0)
-    monkeypatch.setattr("benchmark.layer3.evaluate.MAX_POLL_ATTEMPTS", 1)
+    monkeypatch.setattr("benchmark.core.pipeline_client.GROUND_TRUTH_ROOT", tmp_path)
+    monkeypatch.setattr("benchmark.core.pipeline_client.POLL_INTERVAL_S", 0)
+    monkeypatch.setattr("benchmark.core.pipeline_client.MAX_POLL_ATTEMPTS", 1)
     entry_dir = tmp_path / "clingen_001"
     entry_dir.mkdir()
     (entry_dir / "source.md").write_text("AARS2 evidence text. " * 10, encoding="utf-8")
