@@ -33,7 +33,9 @@ from .gateway import (
 )
 from .literature_type_classifier import classify_item
 from .normalizers import normalize_items
+from .query_translator import TARGET_LANGUAGES, TranslatedQueries, translate_query
 from .relevance_gate import run_relevance_gate
+from .search_service import build_provider_plan, dedupe_candidates, rank_candidates, search_parallel
 from .web_search import SearchLink
 
 DOI_PATTERN = re.compile(r"\b10\.\d{4,9}/[^\s\"<>]+", re.IGNORECASE)
@@ -676,5 +678,223 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
         downloads=downloads,
         warnings=warnings,
         route=route,
+        candidate_links=clean_candidates,
+    ).model_dump()
+
+
+# ── Multilingual Acquisition Workflow ──────────────────────────────────────
+
+
+async def _search_language(
+    query: str,
+    language: str,
+    candidate_limit: int = 15,
+) -> List[Dict[str, Any]]:
+    """Search providers for a single language, return candidates tagged with search_lang."""
+    plan = build_provider_plan(language=language)
+    candidates = await search_parallel(
+        query=query,
+        plan=plan,
+        concurrency=4,
+        candidate_limit=candidate_limit,
+    )
+    for c in candidates:
+        c["_search_lang"] = language
+    return candidates
+
+
+async def multilingual_acquisition_workflow(
+    payload: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Multilingual acquisition pipeline.
+
+    Phase 0: Translate query into 6 languages.
+    Phase 1: Parallel search across all languages and providers.
+    Phase 2: Download PDFs.
+    Phase 3: Early MinerU parse + variant relevance gate (to be wired in Step 4-5).
+    """
+    # --- Validate request ---
+    try:
+        request = OnlineAcquisitionRequest(**payload)
+    except Exception as exc:
+        route = OnlineAcquisitionRouteInfo(prefer="auto", used="none", reason="invalid_request")
+        return OnlineAcquisitionResponse(
+            success=False,
+            items=[],
+            warnings=[f"invalid_request: {exc}"],
+            route=route,
+            candidate_links=[],
+        ).model_dump()
+
+    base_query = _build_query(request)
+    warnings: List[str] = []
+    source_trace: List[OnlineAcquisitionSourceTraceEntry] = []
+
+    # === Phase 0: Query Translation ===
+    try:
+        translations = await translate_query(base_query)
+        logger.info("query translated into {} languages", len(TARGET_LANGUAGES))
+    except Exception as exc:
+        logger.warning("query translation failed, falling back to single-language search: {}", exc)
+        warnings.append(f"TRANSLATION_FAILED: {exc}")
+        # Fall back to the original single-language workflow
+        return await online_acquisition_workflow(payload)
+
+    # === Phase 1: Parallel Multi-Lingual Search ===
+    per_lang_limit = max(5, request.limit // len(TARGET_LANGUAGES))
+    search_tasks = [
+        _search_language(query, lang, candidate_limit=per_lang_limit)
+        for lang, query in translations.as_dict().items()
+    ]
+    lang_results = await asyncio.gather(*search_tasks, return_exceptions=True)
+
+    all_candidates: List[Dict[str, Any]] = []
+    for lang, result in zip(TARGET_LANGUAGES, lang_results):
+        if isinstance(result, Exception):
+            logger.warning("language '{}' search failed: {}", lang, result)
+            warnings.append(f"SEARCH_FAILED_{lang}: {result}")
+            source_trace.append(_source_trace_entry(
+                provider=f"multilingual-{lang}",
+                success=False,
+                warnings=[str(result)],
+                error=str(result),
+            ))
+        else:
+            all_candidates.extend(result)
+            source_trace.append(_source_trace_entry(
+                provider=f"multilingual-{lang}",
+                success=bool(result),
+                items_count=len(result),
+            ))
+
+    # Global dedup across all languages
+    all_candidates = dedupe_candidates(all_candidates)
+    all_candidates = rank_candidates(all_candidates, expected_title=base_query)
+
+    if not all_candidates:
+        warnings.append("FETCH_NO_RESULT: no candidates from any language")
+        return OnlineAcquisitionResponse(
+            success=False,
+            items=[],
+            downloads=[],
+            warnings=warnings,
+            route=OnlineAcquisitionRouteInfo(
+                prefer=request.prefer,
+                used="api",
+                reason="multilingual_parallel",
+                fallback_used=False,
+            ),
+            raw={"source_trace": [asdict(entry) for entry in source_trace]},
+            candidate_links=[],
+        ).model_dump()
+
+    # Limit total candidates
+    all_candidates = all_candidates[:request.limit]
+
+    logger.info(
+        "multilingual search: {} candidates from {} languages",
+        len(all_candidates),
+        len(set(c.get("_search_lang", "") for c in all_candidates)),
+    )
+
+    # Normalize items
+    normalized_items: List[OnlineAcquisitionItem] = []
+    for item in all_candidates:
+        provider = item.get("_source_provider", "unknown")
+        try:
+            normalized = normalize_items(provider, [item])
+            normalized_items.extend(normalized)
+        except Exception:
+            try:
+                normalized = normalize_items("crossref", [item])
+                normalized_items.extend(normalized)
+            except Exception:
+                pass
+
+    # Apply literature type filter
+    if request.literature_types:
+        typed_items = []
+        for ni in normalized_items:
+            lt = classify_item(ni)
+            ni.literature_type = lt.value if lt else None
+            if lt and lt.value in request.literature_types:
+                typed_items.append(ni)
+        normalized_items = typed_items
+
+    clean_candidates = [{k: v for k, v in c.items() if not k.startswith("_")} for c in all_candidates]
+
+    # === Search-only mode ===
+    if request.action == "search":
+        return OnlineAcquisitionResponse(
+            success=bool(normalized_items),
+            items=normalized_items,
+            downloads=[],
+            warnings=warnings,
+            route=OnlineAcquisitionRouteInfo(
+                prefer=request.prefer,
+                used="api",
+                reason="multilingual_parallel",
+                fallback_used=False,
+            ),
+            raw={"source_trace": [asdict(entry) for entry in source_trace]},
+            candidate_links=clean_candidates,
+        ).model_dump()
+
+    # === Phase 2: Download ===
+    download_path = request.download_path
+    download_results = await _download_candidates(all_candidates, download_path)
+
+    if not download_results:
+        warnings.append("FULLTEXT_UNAVAILABLE: no files downloaded")
+
+    downloads = [
+        {
+            "file_path": dr.file_path,
+            "source": dr.source,
+            "doi": dr.doi,
+            "pmcid": dr.pmcid,
+            "url": dr.url,
+            "warnings": dr.warnings,
+            "_search_lang": next(
+                (c.get("_search_lang", "") for c in all_candidates
+                 if (dr.doi and c.get("doi") == dr.doi) or (dr.url and c.get("url") == dr.url)),
+                "",
+            ),
+        }
+        for dr in download_results
+    ]
+
+    # === Phase 3: LLM Content Gate ===
+    if request.relevance_gate and downloads:
+        gate_result = await run_relevance_gate(
+            query=base_query,
+            downloads=downloads,
+            delete_files=True,
+        )
+        relevant_paths = {
+            j.file_path for j in gate_result.judgments
+            if j.relevant or j.error
+        }
+        filtered = [d for d in downloads if d.get("file_path") in relevant_paths]
+        removed = gate_result.irrelevant
+        if removed:
+            warnings.append(
+                f"RELEVANCE_GATE: {removed}/{gate_result.total} downloads "
+                f"removed as irrelevant"
+            )
+            downloads = filtered
+
+    return OnlineAcquisitionResponse(
+        success=bool(download_results),
+        items=normalized_items,
+        downloads=downloads,
+        warnings=warnings,
+        route=OnlineAcquisitionRouteInfo(
+            prefer=request.prefer,
+            used="api",
+            reason="multilingual_parallel",
+            fallback_used=False,
+        ),
+        raw={"source_trace": [asdict(entry) for entry in source_trace]},
         candidate_links=clean_candidates,
     ).model_dump()
