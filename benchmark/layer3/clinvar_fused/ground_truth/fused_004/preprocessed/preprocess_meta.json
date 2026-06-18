@@ -1,0 +1,13 @@
+{
+  "entry_id": "fused_004",
+  "run_id": "8c31ac30-0c3e-4525-866a-985fcb47d93c",
+  "pipeline_status": "awaiting_review",
+  "duration_s": 270.39,
+  "phase_1_files": [
+    "output.md",
+    "metadata.json"
+  ],
+  "phase_2_files": [
+    "extraction_result.json"
+  ]
+}
