@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.diagnose_reconcile_errors import (
+from benchmark.analysis.diagnostics.reconcile_errors import (
     build_reconcile_error_diagnostics,
     diagnostics_to_payload,
 )

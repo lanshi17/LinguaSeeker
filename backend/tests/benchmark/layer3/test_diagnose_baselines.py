@@ -5,7 +5,7 @@ import json
 import os
 from pathlib import Path
 
-from benchmark.layer3.analysis.diagnose_baselines import (
+from benchmark.analysis.diagnostics.baselines import (
     build_comparison,
     format_comparison,
 )

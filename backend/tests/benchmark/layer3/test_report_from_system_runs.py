@@ -1,8 +1,8 @@
 """Tests for DB-derived layer-3 report construction."""
 from __future__ import annotations
 
-from benchmark.layer3.analysis.inventory_system_runs import SystemRunRow
-from benchmark.layer3.analysis.report_from_system_runs import (
+from benchmark.analysis.dataset_curation.inventory_system_runs import SystemRunRow
+from benchmark.analysis.dataset_curation.report_from_system_runs import (
     ExtractedRunItem,
     build_entry_metrics_from_run,
     build_report_payload,

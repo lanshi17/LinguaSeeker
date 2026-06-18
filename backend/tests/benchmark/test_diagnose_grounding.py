@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.analysis.diagnose_grounding import (
+from benchmark.analysis.diagnostics.grounding import (
     build_grounding_diagnostics,
     format_grounding_diagnostics,
 )

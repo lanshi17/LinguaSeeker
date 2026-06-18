@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.reconcile_ablation import (
+from benchmark.analysis.reconcile.ablation import (
     AblationConfig,
     AblationStrategy,
     build_extracted_items,

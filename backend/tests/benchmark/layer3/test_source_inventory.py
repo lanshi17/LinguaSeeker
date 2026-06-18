@@ -5,7 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.source_inventory import (
+from benchmark.analysis.dataset_curation.source_inventory import (
     SourceInventoryConfig,
     build_source_inventory_report,
     write_source_inventory_report,

@@ -5,7 +5,7 @@ import csv
 import json
 from pathlib import Path
 
-from benchmark.layer3.analysis.select_expansion_entries import (
+from benchmark.analysis.dataset_curation.select_expansion import (
     ExpansionSelectionConfig,
     build_expansion_selection,
     expansion_selection_to_payload,
