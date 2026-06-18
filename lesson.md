@@ -3072,3 +3072,15 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 - 不要用单一 ClinGen 强样本外推到 ClinVar fused。
 - 后续若要宣称“框架一致”，至少需要补 5 样本以上并按 MOI/GCEP 分层。
 - Phase 2 预处理时间较长，sanity check 应优先用小样本+代表性覆盖，而不是盲跑全量。
+
+## 2026-06-18 — Benchmark refactor Phase 0 baseline
+
+**问题**: 启动 `benchmark/` 框架重构前需要冻结当前测试基线。
+
+**排查**: 在 `wt/benchmark-refactor` worktree 上运行 `pytest backend/tests/benchmark -q`。
+
+**根因**: `test_arbitrator_policy_eval.py` 因隐式依赖 `sklearn` 未声明而无法收集;`test_evaluate_one_timeout_keeps_run_diagnostics` 因 preprocessed shortcut 抢先返回,使 timeout 断言失效(早于本重构存在的回归)。
+
+**解决**: 已显式 `uv add --dev scikit-learn` (commit 21b4473a),baseline 收敛到 **258 passed / 1 failed (pre-existing)**;后续 phase gate 以 `258 passed + 同 1 failed` 为不变量,不允许新增失败。
+
+**预防**: PR review 时应同步检查 `pyproject.toml` 是否声明全部 `import` 链;新建 worktree 后立即 `uv sync --frozen` + `pytest` 抓取真实基线,避免把环境差异误归到代码改动。
