@@ -6,7 +6,11 @@ import json
 from pathlib import Path
 from typing import Any, Mapping, TypedDict, cast
 
-LAYER3_REPORTS_DIR = Path(__file__).resolve().parents[1] / "layer3" / "reports"
+from benchmark.core import REPORTS_ROOT
+
+# eval_*.json reports moved to benchmark/data/reports/eval/ in Phase 4
+# of the 2026-06-18 framework refactor; legacy name kept for callers.
+LAYER3_REPORTS_DIR = REPORTS_ROOT / "eval"
 
 
 class RawReport(TypedDict, total=False):

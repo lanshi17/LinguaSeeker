@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from benchmark.layer3.clinvar_fused.hgvs_normalize import (
+from benchmark.datasets.clinvar_fused.hgvs_normalize import (
     _parse_clinvar_hgvs_name,
     _parse_hgvs_from_clinvar_name,
     normalize_hgvs_c,
