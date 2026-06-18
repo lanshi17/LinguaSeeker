@@ -58,6 +58,14 @@ class TestParseResponse:
         with pytest.raises(ValueError, match="Failed to parse"):
             _parse_response("not json at all", "test")
 
+    def test_null_value_falls_back_to_source(self) -> None:
+        raw = json.dumps({
+            "en": "test", "zh": None, "ja": "test",
+            "de": "test", "fr": "test", "ru": "test",
+        })
+        result = _parse_response(raw, "original query")
+        assert result.zh == "original query"
+
     def test_as_dict(self) -> None:
         raw = json.dumps({
             "en": "en_q", "zh": "zh_q", "ja": "ja_q",
