@@ -6,6 +6,13 @@ import json
 from pathlib import Path
 from typing import Any
 
+from src.core.standardize_entities_and_align_knowledge.context_pack.contracts import (
+    TargetContextPack,
+)
+from src.core.standardize_entities_and_align_knowledge.context_pack.core import (
+    build_context_pack_from_runtime_target,
+)
+
 from .config_context import EvidenceExtractionConfigContext
 from .contracts import (
     ContentBlock,
@@ -65,11 +72,18 @@ class EvidenceExtractionService:
             self.run(documents.original),
             self.run(documents.translated),
         )
+        context_pack = _build_runtime_context_pack(documents, original_result, translated_result)
+        reconcile_output = self._reconcile_service.run_with_output(
+            original_result,
+            translated_result,
+            context_pack=context_pack,
+        )
         return DualEvidenceExtractionResult(
             document_id=documents.document_id,
             original_result=original_result,
             translated_result=translated_result,
-            reconciled_result=self._reconcile_service.run(original_result, translated_result),
+            reconciled_result=reconcile_output.result,
+            alignment_records=list(reconcile_output.alignment_records),
         )
 
     def run_sync(self, document: TrackDocument) -> EvidenceExtractionResult:
@@ -108,6 +122,41 @@ class EvidenceExtractionService:
             translated=translated,
         )
 
+
+def _build_runtime_context_pack(
+    documents: DualTrackDocuments,
+    original_result: EvidenceExtractionResult,
+    translated_result: EvidenceExtractionResult,
+) -> TargetContextPack | None:
+    target = (
+        original_result.extraction_target
+        or translated_result.extraction_target
+        or documents.original.extraction_target
+        or documents.translated.extraction_target
+    )
+    if target is None:
+        return None
+    source_pmid = documents.original.external_ids.pmid or documents.translated.external_ids.pmid
+    source_pmc = documents.original.external_ids.pmcid or documents.translated.external_ids.pmcid
+    return build_context_pack_from_runtime_target(
+        entry_id=target.clingen_entry_id or documents.document_id,
+        gene_symbol=target.gene_symbol,
+        disease_label=target.disease_name,
+        hgnc_id=_first_metadata_value(documents, "hgnc_id"),
+        mondo_id=_first_metadata_value(documents, "mondo_id"),
+        moi=_first_metadata_value(documents, "moi", "mode_of_inheritance"),
+        source_pmid=source_pmid,
+        source_pmc=source_pmc,
+    )
+
+
+def _first_metadata_value(documents: DualTrackDocuments, *keys: str) -> str | None:
+    for document in (documents.original, documents.translated):
+        for key in keys:
+            value = document.metadata.get(key, "").strip()
+            if value:
+                return value
+    return None
 
 
 def _build_track_document_from_json(

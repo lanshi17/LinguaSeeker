@@ -7,6 +7,7 @@ from pathlib import Path
 
 from src.core.standardize_entities_and_align_knowledge.context_pack.core import (
     build_context_pack_from_expected_json,
+    build_context_pack_from_runtime_target,
 )
 
 
@@ -47,6 +48,35 @@ def test_build_context_pack_from_expected_json_uses_only_safe_fields(tmp_path: P
     assert "Definitive" not in payload_text
     assert "expected_evidence" not in payload_text
     assert "causative" not in payload_text
+
+
+def test_build_context_pack_from_runtime_target_uses_safe_target_metadata() -> None:
+    pack = build_context_pack_from_runtime_target(
+        entry_id="clingen_024",
+        gene_symbol=" tlr5 ",
+        disease_label="Systemic lupus erythematosus (susceptibility)",
+        hgnc_id="HGNC:11851",
+        mondo_id="MONDO:0007915",
+        moi="AD",
+        source_pmid="12345678",
+        source_pmc="PMC123456",
+    )
+
+    assert pack.entry_id == "clingen_024"
+    assert pack.gene.symbol == "TLR5"
+    assert pack.gene.hgnc_id == "HGNC:11851"
+    assert pack.gene.aliases == ("TLR5",)
+    assert pack.disease.label == "Systemic lupus erythematosus (susceptibility)"
+    assert pack.disease.mondo_id == "MONDO:0007915"
+    assert pack.disease.aliases == (
+        "Systemic lupus erythematosus (susceptibility)",
+        "systemic lupus erythematosus (susceptibility)",
+        "Systemic lupus erythematosus",
+        "systemic lupus erythematosus",
+    )
+    assert pack.moi == "AD"
+    assert pack.source_pmid == "12345678"
+    assert pack.source_pmc == "PMC123456"
 
 
 def test_build_context_pack_adds_deterministic_disease_aliases(tmp_path: Path) -> None:
