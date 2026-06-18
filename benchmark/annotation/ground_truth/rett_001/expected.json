@@ -18,17 +18,23 @@
       "hgvs_c": "",
       "hgvs_p": "p.R294X",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "loss of function due to truncation",
+      "null_variant_detail": "premature stop codon",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "p.V247fs",
       "variant_type": "frameshift",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "frameshift",
+      "protein_length_change": ""
     }
   ],
   "expected_evidence": [
@@ -96,6 +102,23 @@
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "loss of function due to truncation",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "premature stop codon",
+      "candidates": [
+        "premature stop codon",
+        "frameshift"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
     }
   ],
   "expected_standardization": {
@@ -108,20 +131,44 @@
       "A.gene_symbol",
       "B.disease_diagnosis",
       "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim"
     ],
     "variant_fields": [
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.functional_domain_or_hotspot",
+      "A.protein_effect",
+      "A.null_variant_detail",
+      "A.protein_length_change"
     ],
     "clinical_fields": [
+      "B.case_count",
+      "B.diagnosis_sufficiency",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
       "B.sex",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.age_current_or_last_followup",
+      "B.ancestry_or_population",
+      "B.testing_method",
+      "B.alternative_diagnosis_excluded"
+    ],
+    "segregation_fields": [
+      "C.de_novo_status",
+      "C.family_id",
+      "C.pedigree_available",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.paternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.consanguinity"
     ],
     "standardization_fields": [
       "gene",

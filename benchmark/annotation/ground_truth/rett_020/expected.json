@@ -17,18 +17,24 @@
     {
       "hgvs_c": "c.1A>T",
       "hgvs_p": "p.Met1?",
-      "variant_type": "start-loss",
+      "variant_type": "other",
       "clinical_significance": "",
       "exon": "1",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.2T>C",
       "hgvs_p": "p.Met1?",
-      "variant_type": "start-loss",
+      "variant_type": "other",
       "clinical_significance": "",
       "exon": "1",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.20G>A",
@@ -36,39 +42,54 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "1",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
-      "hgvs_c": "c.47_57dup11",
-      "hgvs_p": "p.Gln16fs",
+      "hgvs_c": "c.47-57dup11",
+      "hgvs_p": "p.Gln16fs*",
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "frameshift leading to truncation",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated at position 16"
     },
     {
       "hgvs_c": "c.48C>T",
-      "hgvs_p": "p.Gly16=",
-      "variant_type": "synonymous",
+      "hgvs_p": "p.Gly16",
+      "variant_type": "missense",
       "clinical_significance": "",
-      "exon": "",
-      "domain": ""
+      "exon": "1",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.62+2_62+3delTG",
-      "hgvs_p": "",
-      "variant_type": "splice site",
+      "hgvs_p": "p.Splicesite",
+      "variant_type": "splice",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.62+2T>G",
-      "hgvs_p": "",
-      "variant_type": "splice site",
+      "hgvs_p": "p.Splicesite",
+      "variant_type": "splice",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.175dupG",
@@ -76,7 +97,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated at position 59"
     },
     {
       "hgvs_c": "c.215C>T",
@@ -84,7 +108,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.215delC",
@@ -92,15 +119,21 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Pro72"
     },
     {
-      "hgvs_c": "c.241_242delCC",
+      "hgvs_c": "c.241-242delCC",
       "hgvs_p": "p.Gly81Glnfs*",
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated at Gly81"
     },
     {
       "hgvs_c": "c.316C>T",
@@ -108,7 +141,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.317G>A",
@@ -116,7 +152,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.344G>A",
@@ -124,7 +163,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.353G>A",
@@ -132,7 +174,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.397C>T",
@@ -140,7 +185,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.397C>T",
@@ -148,7 +196,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.398C>T",
@@ -156,7 +207,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.398G>C",
@@ -164,7 +218,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.401C>T",
@@ -172,7 +229,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.401C>G",
@@ -180,7 +240,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.419C>T",
@@ -188,7 +251,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.469T>G",
@@ -196,7 +262,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.469T>A",
@@ -204,7 +273,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.471C>A",
@@ -212,15 +284,21 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
-      "hgvs_c": "c.481_482delTG",
+      "hgvs_c": "c.481-482delTG",
       "hgvs_p": "p.Gly161fs*",
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated at Gly161"
     },
     {
       "hgvs_c": "c.526C>T",
@@ -228,7 +306,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.674C>T",
@@ -236,7 +317,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.710delG",
@@ -244,7 +328,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Gly237"
     },
     {
       "hgvs_c": "c.730C>T",
@@ -252,7 +339,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Gln244"
     },
     {
       "hgvs_c": "c.753dupC",
@@ -260,7 +350,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Gly252"
     },
     {
       "hgvs_c": "c.806delG",
@@ -268,7 +361,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Gly269"
     },
     {
       "hgvs_c": "c.806delG",
@@ -276,7 +372,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Gly269"
     },
     {
       "hgvs_c": "c.806delG",
@@ -284,7 +383,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Gly269"
     },
     {
       "hgvs_c": "c.806delG",
@@ -292,7 +394,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Gly269"
     },
     {
       "hgvs_c": "c.806delG",
@@ -300,15 +405,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
-    },
-    {
-      "hgvs_c": "c.806delG",
-      "hgvs_p": "p.Gly269Alafs*",
-      "variant_type": "frameshift",
-      "clinical_significance": "",
-      "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Gly269"
     },
     {
       "hgvs_c": "c.808delC",
@@ -316,7 +416,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Arg270"
     },
     {
       "hgvs_c": "c.808delC",
@@ -324,7 +427,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Arg270"
     },
     {
       "hgvs_c": "c.808delC",
@@ -332,7 +438,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Arg270"
     },
     {
       "hgvs_c": "c.808delC",
@@ -340,7 +449,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Arg270"
     },
     {
       "hgvs_c": "c.822G>C",
@@ -348,15 +460,21 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
-      "hgvs_c": "c.876_880delTATCC",
+      "hgvs_c": "c.876-880delTATCC",
       "hgvs_p": "p.Arg294Cysfs*",
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Arg294"
     },
     {
       "hgvs_c": "c.880C>T",
@@ -364,7 +482,10 @@
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.901C>T",
@@ -372,7 +493,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.905C>T",
@@ -380,7 +504,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.917G>A",
@@ -388,15 +515,21 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.923C>T",
-      "hgvs_p": "p.Thr308Ile",
+      "hgvs_p": "p.Thr308Iso",
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.925C>T",
@@ -404,7 +537,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.925C>T",
@@ -412,7 +548,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.964C>T",
@@ -420,7 +559,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "NCoR/SMRT"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.1086dupA",
@@ -428,7 +570,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "NCoR/SMRT"
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Lys363"
     },
     {
       "hgvs_c": "c.1086dupA",
@@ -436,7 +581,10 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "NCoR/SMRT"
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Lys363"
     },
     {
       "hgvs_c": "c.1144dupC",
@@ -444,39 +592,54 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "NCoR/SMRT"
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Leu382"
     },
     {
-      "hgvs_c": "c.1155_1200del46",
+      "hgvs_c": "c.1155-1200del46",
       "hgvs_p": "p.Leu386Alafs*",
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "NCoR/SMRT"
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Leu386"
     },
     {
-      "hgvs_c": "c.1164_1207del44",
+      "hgvs_c": "c.1164-1207del44",
       "hgvs_p": "p.Pro389fs*",
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "NCoR/SMRT"
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Pro389"
     },
     {
-      "hgvs_c": "c.1188_1189insT",
+      "hgvs_c": "c.1188-1189insT",
       "hgvs_p": "p.Pro397Serfs*",
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "NCoR/SMRT"
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Pro397"
     },
     {
-      "hgvs_c": "c.1194_1203del11",
+      "hgvs_c": "c.1194-1203del11",
       "hgvs_p": "p.Pro399Hisfs*",
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "NCoR/SMRT"
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Pro399"
     },
     {
       "hgvs_c": "c.1250A>T",
@@ -484,15 +647,21 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "NLS"
+      "domain": "NLS",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
-      "hgvs_c": "c.57_58ins",
+      "hgvs_c": "c.57-58ins(exon1)",
       "hgvs_p": "p.Gln19fs*",
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "1",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Gln19"
     },
     {
       "hgvs_c": "c.353G>A",
@@ -500,23 +669,32 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.377A>T",
-      "hgvs_p": "p.Asp126Ile",
+      "hgvs_p": "p.Asp126Iso",
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.378C>G",
-      "hgvs_p": "",
-      "variant_type": "intronic change",
+      "hgvs_p": "Intronicchange",
+      "variant_type": "other",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.397C>T",
@@ -524,23 +702,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
-    },
-    {
-      "hgvs_c": "c.397C>T",
-      "hgvs_p": "p.Arg133Cys",
-      "variant_type": "missense",
-      "clinical_significance": "",
-      "exon": "",
-      "domain": "MBD"
-    },
-    {
-      "hgvs_c": "c.397C>T",
-      "hgvs_p": "p.Arg133Cys",
-      "variant_type": "missense",
-      "clinical_significance": "",
-      "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.419C>T",
@@ -548,15 +713,21 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
-      "hgvs_c": "c.471T>G",
+      "hgvs_c": "c.471>G",
       "hgvs_p": "p.Phe157Leu",
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.499C>T",
@@ -564,7 +735,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.507ins2bp",
@@ -572,15 +746,21 @@
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Gln170"
     },
     {
-      "hgvs_c": "c.527C>?",
+      "hgvs_c": "c.527C>Q",
       "hgvs_p": "p.Pro176His",
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.763C>T",
@@ -588,7 +768,10 @@
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.777C>T",
@@ -596,31 +779,54 @@
       "variant_type": "synonymous",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.806delG",
-      "hgvs_p": "p.Gly269fs*",
+      "hgvs_p": "p.Gly269Alafs*",
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Gly269"
     },
     {
-      "hgvs_c": "c.806delG",
-      "hgvs_p": "p.Gly269fs*",
+      "hgvs_c": "c.808delC",
+      "hgvs_p": "p.Arg270fs*",
       "variant_type": "frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Arg270"
     },
     {
-      "hgvs_c": "c.808C>T",
-      "hgvs_p": "p.Arg270X",
-      "variant_type": "nonsense",
+      "hgvs_c": "c.822G>C",
+      "hgvs_p": "p.Gln274His",
+      "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
+    },
+    {
+      "hgvs_c": "c.876-880delTATCC",
+      "hgvs_p": "p.Arg294Cysfs*",
+      "variant_type": "frameshift",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Arg294"
     },
     {
       "hgvs_c": "c.880C>T",
@@ -628,15 +834,54 @@
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
-      "hgvs_c": "c.917G>C",
-      "hgvs_p": "p.Arg306Pro",
+      "hgvs_c": "c.901C>T",
+      "hgvs_p": "p.Leu301Phe",
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
+    },
+    {
+      "hgvs_c": "c.905C>T",
+      "hgvs_p": "p.Pro302Leu",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
+    },
+    {
+      "hgvs_c": "c.917G>A",
+      "hgvs_p": "p.Arg306His",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
+    },
+    {
+      "hgvs_c": "c.923C>T",
+      "hgvs_p": "p.Thr308Iso",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.925C>T",
@@ -644,7 +889,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.964C>T",
@@ -652,79 +900,87 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "NCoR/SMRT"
+      "domain": "NCoR/SMRT",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
-      "hgvs_c": "c.1100A>G",
-      "hgvs_p": "p.His367Arg",
+      "hgvs_c": "c.1086dupA",
+      "hgvs_p": "p.Lys363Glufs*",
+      "variant_type": "frameshift",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Lys363"
+    },
+    {
+      "hgvs_c": "c.1144dupC",
+      "hgvs_p": "p.Leu382Profs*",
+      "variant_type": "frameshift",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Leu382"
+    },
+    {
+      "hgvs_c": "c.1155-1200del46",
+      "hgvs_p": "p.Leu386Alafs*",
+      "variant_type": "frameshift",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Leu386"
+    },
+    {
+      "hgvs_c": "c.1164-1207del44",
+      "hgvs_p": "p.Pro389fs*",
+      "variant_type": "frameshift",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Pro389"
+    },
+    {
+      "hgvs_c": "c.1188-1189insT",
+      "hgvs_p": "p.Pro397Serfs*",
+      "variant_type": "frameshift",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Pro397"
+    },
+    {
+      "hgvs_c": "c.1194-1203del11",
+      "hgvs_p": "p.Pro399Hisfs*",
+      "variant_type": "frameshift",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "NCoR/SMRT",
+      "protein_effect": "frameshift leading to premature stop",
+      "null_variant_detail": "premature stop",
+      "protein_length_change": "truncated after Pro399"
+    },
+    {
+      "hgvs_c": "c.1250A>T",
+      "hgvs_p": "p.Lys417Met",
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "NCoR/SMRT"
-    },
-    {
-      "hgvs_c": "c.1133_1134insT",
-      "hgvs_p": "p.Ala378fs*",
-      "variant_type": "frameshift",
-      "clinical_significance": "",
-      "exon": "",
-      "domain": "NCoR/SMRT"
-    },
-    {
-      "hgvs_c": "c.1145_425del",
-      "hgvs_p": "p.Leu382fs*",
-      "variant_type": "frameshift",
-      "clinical_significance": "",
-      "exon": "",
-      "domain": "NCoR/SMRT"
-    },
-    {
-      "hgvs_c": "c.1155_1200del46",
-      "hgvs_p": "p.Leu386fs*",
-      "variant_type": "frameshift",
-      "clinical_significance": "",
-      "exon": "",
-      "domain": "NCoR/SMRT"
-    },
-    {
-      "hgvs_c": "c.1164_1207del44",
-      "hgvs_p": "p.Pro398fs*",
-      "variant_type": "frameshift",
-      "clinical_significance": "",
-      "exon": "",
-      "domain": "NCoR/SMRT"
-    },
-    {
-      "hgvs_c": "c.1164_1207del44",
-      "hgvs_p": "p.Pro398fs*",
-      "variant_type": "frameshift",
-      "clinical_significance": "",
-      "exon": "",
-      "domain": "NCoR/SMRT"
-    },
-    {
-      "hgvs_c": "c.1164_1207del44",
-      "hgvs_p": "p.Pro398fs*",
-      "variant_type": "frameshift",
-      "clinical_significance": "",
-      "exon": "",
-      "domain": "NCoR/SMRT"
-    },
-    {
-      "hgvs_c": "c.1168_1173del6",
-      "hgvs_p": "p.390_391del",
-      "variant_type": "in-frame deletion",
-      "clinical_significance": "",
-      "exon": "",
-      "domain": "NCoR/SMRT"
-    },
-    {
-      "hgvs_c": "c.1357C>T",
-      "hgvs_p": "p.Pro453X",
-      "variant_type": "nonsense",
-      "clinical_significance": "",
-      "exon": "",
-      "domain": "NLS"
+      "domain": "NLS",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     }
   ],
   "expected_evidence": [
@@ -1130,6 +1386,194 @@
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "frameshift leading to truncation",
+      "candidates": [
+        "frameshift leading to truncation",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop",
+        "frameshift leading to premature stop"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "premature stop",
+      "candidates": [
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop",
+        "premature stop"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_length_change",
+      "value": "truncated at position 16",
+      "candidates": [
+        "truncated at position 16",
+        "truncated at position 59",
+        "truncated after Pro72",
+        "truncated at Gly81",
+        "truncated at Gly161",
+        "truncated after Gly237",
+        "truncated after Gln244",
+        "truncated after Gly252",
+        "truncated after Gly269",
+        "truncated after Gly269",
+        "truncated after Gly269",
+        "truncated after Gly269",
+        "truncated after Gly269",
+        "truncated after Arg270",
+        "truncated after Arg270",
+        "truncated after Arg270",
+        "truncated after Arg270",
+        "truncated after Arg294",
+        "truncated after Lys363",
+        "truncated after Lys363",
+        "truncated after Leu382",
+        "truncated after Leu386",
+        "truncated after Pro389",
+        "truncated after Pro397",
+        "truncated after Pro399",
+        "truncated after Gln19",
+        "truncated after Gln170",
+        "truncated after Gly269",
+        "truncated after Arg270",
+        "truncated after Arg294",
+        "truncated after Lys363",
+        "truncated after Leu382",
+        "truncated after Leu386",
+        "truncated after Pro389",
+        "truncated after Pro397",
+        "truncated after Pro399"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "no",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "85",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.diagnosis_sufficiency",
+      "value": "probable",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "partially_specific",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "neonatal",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "2-28 years",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "parent-reported genetic testing data; additional testing at Greenwood Genetic Center for mosaic status",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.pedigree_available",
+      "value": "no",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     }
   ],
   "expected_standardization": {
@@ -1142,20 +1586,44 @@
       "A.gene_symbol",
       "B.disease_diagnosis",
       "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim"
     ],
     "variant_fields": [
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.functional_domain_or_hotspot",
+      "A.protein_effect",
+      "A.null_variant_detail",
+      "A.protein_length_change"
     ],
     "clinical_fields": [
+      "B.case_count",
+      "B.diagnosis_sufficiency",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
       "B.sex",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.age_current_or_last_followup",
+      "B.ancestry_or_population",
+      "B.testing_method",
+      "B.alternative_diagnosis_excluded"
+    ],
+    "segregation_fields": [
+      "C.de_novo_status",
+      "C.family_id",
+      "C.pedigree_available",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.paternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.consanguinity"
     ],
     "standardization_fields": [
       "gene",

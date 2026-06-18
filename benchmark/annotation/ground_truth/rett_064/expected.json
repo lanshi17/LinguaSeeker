@@ -20,7 +20,10 @@
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "premature stop codon",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "",
@@ -28,15 +31,32 @@
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "premature stop codon",
+      "protein_length_change": ""
     },
     {
-      "hgvs_c": "c.905C>T",
+      "hgvs_c": "",
       "hgvs_p": "p.P302H",
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
+    },
+    {
+      "hgvs_c": "c.905C>T",
+      "hgvs_p": "",
+      "variant_type": "other",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "",
@@ -44,7 +64,10 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "",
@@ -52,7 +75,10 @@
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "premature stop codon",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "",
@@ -60,15 +86,21 @@
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "premature stop codon",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "",
       "variant_type": "deletion",
       "clinical_significance": "",
-      "exon": "exons 1-2",
-      "domain": ""
+      "exon": "1-2",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     }
   ],
   "expected_evidence": [
@@ -184,6 +216,81 @@
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "premature stop codon",
+      "candidates": [
+        "premature stop codon",
+        "premature stop codon",
+        "premature stop codon",
+        "premature stop codon"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "no",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "16",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.diagnosis_sufficiency",
+      "value": "definite",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "highly_specific",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "2-19 years",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.ancestry_or_population",
+      "value": "Spanish",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "yes",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.biochemical_markers",
+      "value": "CSF analysis showed reduced KCC2 levels and a decreased KCC2/NKCC1 ratio in RTT patients; NKCC1 levels were not significantly different between RTT and controls.",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.pedigree_available",
+      "value": "no",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     }
   ],
   "expected_standardization": {
@@ -196,20 +303,44 @@
       "A.gene_symbol",
       "B.disease_diagnosis",
       "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim"
     ],
     "variant_fields": [
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.functional_domain_or_hotspot",
+      "A.protein_effect",
+      "A.null_variant_detail",
+      "A.protein_length_change"
     ],
     "clinical_fields": [
+      "B.case_count",
+      "B.diagnosis_sufficiency",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
       "B.sex",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.age_current_or_last_followup",
+      "B.ancestry_or_population",
+      "B.testing_method",
+      "B.alternative_diagnosis_excluded"
+    ],
+    "segregation_fields": [
+      "C.de_novo_status",
+      "C.family_id",
+      "C.pedigree_available",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.paternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.consanguinity"
     ],
     "standardization_fields": [
       "gene",

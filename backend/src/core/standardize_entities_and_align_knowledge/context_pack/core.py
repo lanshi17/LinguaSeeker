@@ -1,4 +1,4 @@
-"""Build target-safe context packs from benchmark metadata."""
+"""Build target-safe context packs from benchmark or runtime metadata."""
 from __future__ import annotations
 
 import json
@@ -85,6 +85,39 @@ def build_context_pack_from_expected_json(path: Path) -> TargetContextPack:
         moi=_string(raw.get("moi")),
         source_pmid=_optional_string(raw.get("source_pmid")),
         source_pmc=_optional_string(raw.get("source_pmc")),
+    )
+
+
+def build_context_pack_from_runtime_target(
+    *,
+    entry_id: str,
+    gene_symbol: str,
+    disease_label: str,
+    hgnc_id: str | None = None,
+    mondo_id: str | None = None,
+    moi: str = "",
+    source_pmid: str | None = None,
+    source_pmc: str | None = None,
+) -> TargetContextPack:
+    """Build a target context pack from production runtime metadata."""
+    normalized_gene = _string(gene_symbol).upper()
+    normalized_disease = _string(disease_label)
+    return TargetContextPack(
+        entry_id=_string(entry_id),
+        gene=GeneContext(
+            symbol=normalized_gene,
+            hgnc_id=_optional_string(hgnc_id),
+            aliases=(normalized_gene,) if normalized_gene else (),
+        ),
+        disease=DiseaseContext(
+            label=normalized_disease,
+            mondo_id=_optional_string(mondo_id),
+            aliases=_disease_aliases(normalized_disease),
+            ancestor_labels=(),
+        ),
+        moi=_string(moi),
+        source_pmid=_optional_string(source_pmid),
+        source_pmc=_optional_string(source_pmc),
     )
 
 

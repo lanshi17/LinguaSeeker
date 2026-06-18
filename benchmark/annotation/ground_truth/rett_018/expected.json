@@ -17,82 +17,24 @@
     {
       "hgvs_c": "c.1157_1197del41",
       "hgvs_p": "p.L386fs",
-      "variant_type": "frameshift deletion",
-      "clinical_significance": "pathogenic",
-      "exon": "exon 4",
-      "domain": "C-terminal (within the deletion-prone region, DPR)"
+      "variant_type": "frameshift",
+      "clinical_significance": "",
+      "exon": "4",
+      "domain": "deleted-prone region (DPR) in exon 4",
+      "protein_effect": "frameshift leading to premature truncation of MeCP2",
+      "null_variant_detail": "frameshift causing premature truncation",
+      "protein_length_change": "truncated to 391 aa"
     },
     {
       "hgvs_c": "c.1159_delCCinsT",
       "hgvs_p": "p.P387fs",
-      "variant_type": "frameshift (deletion-insertion)",
-      "clinical_significance": "pathogenic",
-      "exon": "exon 4",
-      "domain": "C-terminal (within the deletion-prone region, DPR)"
-    },
-    {
-      "hgvs_c": "c.215delC",
-      "hgvs_p": "",
-      "variant_type": "frameshift (single-nucleotide deletion)",
-      "clinical_significance": "pathogenic",
-      "exon": "",
-      "domain": ""
-    },
-    {
-      "hgvs_c": "c.32_50delins11",
-      "hgvs_p": "",
-      "variant_type": "frameshift (small intragenic rearrangement)",
-      "clinical_significance": "pathogenic",
-      "exon": "",
-      "domain": ""
-    },
-    {
-      "hgvs_c": "c.766_779dup14",
-      "hgvs_p": "",
-      "variant_type": "frameshift (small intragenic rearrangement/duplication)",
-      "clinical_significance": "pathogenic",
-      "exon": "",
-      "domain": ""
-    },
-    {
-      "hgvs_c": "c.808delC",
-      "hgvs_p": "",
-      "variant_type": "frameshift (single-nucleotide deletion)",
-      "clinical_significance": "pathogenic",
-      "exon": "",
-      "domain": ""
-    },
-    {
-      "hgvs_c": "c.1150_1187del38",
-      "hgvs_p": "",
-      "variant_type": "frameshift (C-terminal deletion)",
-      "clinical_significance": "pathogenic",
-      "exon": "exon 4",
-      "domain": "C-terminal (DPR)"
-    },
-    {
-      "hgvs_c": "c.1156_1199del44",
-      "hgvs_p": "",
-      "variant_type": "frameshift (C-terminal deletion)",
-      "clinical_significance": "pathogenic",
-      "exon": "exon 4",
-      "domain": "C-terminal (DPR)"
-    },
-    {
-      "hgvs_c": "c.1164_1204del44",
-      "hgvs_p": "",
-      "variant_type": "frameshift (C-terminal deletion)",
-      "clinical_significance": "pathogenic",
-      "exon": "exon 4",
-      "domain": "C-terminal (DPR)"
-    },
-    {
-      "hgvs_c": "c.1168_1196del29",
-      "hgvs_p": "",
-      "variant_type": "frameshift (C-terminal deletion)",
-      "clinical_significance": "pathogenic",
-      "exon": "exon 4",
-      "domain": "C-terminal (DPR)"
+      "variant_type": "frameshift",
+      "clinical_significance": "",
+      "exon": "4",
+      "domain": "deleted-prone region (DPR) in exon 4",
+      "protein_effect": "frameshift with addition of 21 aa followed by stop",
+      "null_variant_detail": "frameshift causing premature termination after +21 aa",
+      "protein_length_change": "predicted length 408 aa"
     }
   ],
   "expected_evidence": [
@@ -218,6 +160,92 @@
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "frameshift leading to premature truncation of MeCP2",
+      "candidates": [
+        "frameshift leading to premature truncation of MeCP2",
+        "frameshift with addition of 21 aa followed by stop"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "frameshift causing premature truncation",
+      "candidates": [
+        "frameshift causing premature truncation",
+        "frameshift causing premature termination after +21 aa"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_length_change",
+      "value": "truncated to 391 aa",
+      "candidates": [
+        "truncated to 391 aa",
+        "predicted length 408 aa"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "partially_specific",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "direct sequencing of MECP2 coding region and flanking intronic sequences",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "yes",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.family_id",
+      "value": "Family A; Family B",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.pedigree_available",
+      "value": "yes",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_genotype",
+      "value": "heterozygous carrier",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_phenotype",
+      "value": "carrier mother with Rett-like features / cognitive impairment",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     }
   ],
   "expected_standardization": {
@@ -230,20 +258,44 @@
       "A.gene_symbol",
       "B.disease_diagnosis",
       "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim"
     ],
     "variant_fields": [
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.functional_domain_or_hotspot",
+      "A.protein_effect",
+      "A.null_variant_detail",
+      "A.protein_length_change"
     ],
     "clinical_fields": [
+      "B.case_count",
+      "B.diagnosis_sufficiency",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
       "B.sex",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.age_current_or_last_followup",
+      "B.ancestry_or_population",
+      "B.testing_method",
+      "B.alternative_diagnosis_excluded"
+    ],
+    "segregation_fields": [
+      "C.de_novo_status",
+      "C.family_id",
+      "C.pedigree_available",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.paternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.consanguinity"
     ],
     "standardization_fields": [
       "gene",

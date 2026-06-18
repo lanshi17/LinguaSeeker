@@ -17,26 +17,35 @@
     {
       "hgvs_c": "",
       "hgvs_p": "",
-      "variant_type": "translocation",
+      "variant_type": "other",
       "clinical_significance": "pathogenic",
-      "exon": "breakpoint between exons 3 and 4",
-      "domain": "disrupts MECP2_e1 (NM_004992.4) and MECP2_e2 (NM_001110792.3) core region; t(6;X)(q26;q28), ~200 kbp insertion from chr6"
+      "exon": "3-4",
+      "domain": "",
+      "protein_effect": "disruption of MECP2 transcript with potential loss of function via splicing disruption and/or nonsense-mediated decay",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "",
-      "variant_type": "complex structural variant (two deletions ~5Kbp and ~60Kbp plus ~105Kbp inversion)",
+      "variant_type": "other",
       "clinical_significance": "pathogenic",
-      "exon": "removes exons 3 and 4 plus entire 3' UTR",
-      "domain": "downstream portion of both MECP2 isoforms; likely NMD"
+      "exon": "3-4",
+      "domain": "",
+      "protein_effect": "loss of MECP2 function due to large downstream deletion including exons 3-4 and 3' UTR; likely NMD",
+      "null_variant_detail": "complex SV involving deletions and inversion leading to disruption of MECP2; may trigger NMD",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "NC_000023.11:g.154027486_154030665del",
-      "hgvs_p": "frameshiftalteringproteinfromaa397,prematurestopatposition545(affectsaa397-498,novel149-residuesequence)",
-      "variant_type": "deletion (~3,200 bp)",
+      "hgvs_p": "",
+      "variant_type": "deletion",
       "clinical_significance": "pathogenic",
-      "exon": "exon 4 (terminal portion) plus 2,889 bp of 3' UTR",
-      "domain": "C-terminal region (stop-loss)"
+      "exon": "4",
+      "domain": "",
+      "protein_effect": "frameshift starting around amino acid 397 with removal of terminal portion of exon 4; 149 aa novel C-terminal sequence before premature stop",
+      "null_variant_detail": "frameshift leading to premature stop codon",
+      "protein_length_change": "Frameshift with novel 149 aa C-terminal sequence; predicted length ~545 aa (longer than WT)"
     }
   ],
   "expected_evidence": [
@@ -138,6 +147,125 @@
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "disruption of MECP2 transcript with potential loss of function via splicing disruption and/or nonsense-mediated decay",
+      "candidates": [
+        "disruption of MECP2 transcript with potential loss of function via splicing disruption and/or nonsense-mediated decay",
+        "loss of MECP2 function due to large downstream deletion including exons 3-4 and 3' UTR; likely NMD",
+        "frameshift starting around amino acid 397 with removal of terminal portion of exon 4; 149 aa novel C-terminal sequence before premature stop"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "complex SV involving deletions and inversion leading to disruption of MECP2; may trigger NMD",
+      "candidates": [
+        "complex SV involving deletions and inversion leading to disruption of MECP2; may trigger NMD",
+        "frameshift leading to premature stop codon"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_length_change",
+      "value": "Frameshift with novel 149 aa C-terminal sequence; predicted length ~545 aa (longer than WT)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "no",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "3",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.diagnosis_sufficiency",
+      "value": "definite",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "highly_specific",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "Case 1: 7.5 years; Case 2: 5 years; Case 3: 19 years",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Case 1: trio whole genome sequencing (WGS); Case 2: whole genome sequencing (WGS); Case 3: whole genome sequencing (WGS)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "yes",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.parentage_confirmed",
+      "value": "yes",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_genotype",
+      "value": "wild-type",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_genotype",
+      "value": "wild-type",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.in_trans_confirmation",
+      "value": "not_applicable",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.cis_or_trans_context",
+      "value": "not_applicable",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.consanguinity",
+      "value": "no",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     }
   ],
   "expected_standardization": {
@@ -150,20 +278,44 @@
       "A.gene_symbol",
       "B.disease_diagnosis",
       "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim"
     ],
     "variant_fields": [
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.functional_domain_or_hotspot",
+      "A.protein_effect",
+      "A.null_variant_detail",
+      "A.protein_length_change"
     ],
     "clinical_fields": [
+      "B.case_count",
+      "B.diagnosis_sufficiency",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
       "B.sex",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.age_current_or_last_followup",
+      "B.ancestry_or_population",
+      "B.testing_method",
+      "B.alternative_diagnosis_excluded"
+    ],
+    "segregation_fields": [
+      "C.de_novo_status",
+      "C.family_id",
+      "C.pedigree_available",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.paternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.consanguinity"
     ],
     "standardization_fields": [
       "gene",

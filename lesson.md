@@ -3021,3 +3021,54 @@ field, which layered config never populates in the dev environment. The actual k
 ### 预防措施
 - Pipeline 入口设置 action 时应考虑下游需求：Phase 1 需要下载的 PDF，不能用仅搜索的 action。
 - "search" action 是只读元数据操作，不应用于需要文件的处理流程。
+
+---
+
+## 2026-06-18 — Benchmark contextual reconcile implemented but production pipeline still used source-grounded fallback
+
+### 问题描述
+Layer 3 benchmark 已经使用 `reconcile_with_context()` 做上下文验证版 reconcile，但主项目 `EvidenceExtractionService.run_dual()` 仍只调用 `CrossTrackReconcileService.run()`，而该 facade 内部固定走 `reconcile_results()`。
+
+### 排查过程
+1. 追踪生产双轨入口，确认 `run_dual()` 只返回 reconciled result，没有传入任何 `TargetContextPack`。
+2. 追踪 benchmark analysis，确认 `arbitrator_policy_eval.py` 和 `reconcile_ablation.py` 从 `expected.json` 构造 context pack 后调用 `reconcile_with_context()`。
+3. 检查 context pack 构造器，确认原实现只支持 benchmark `expected.json`，不能直接用于生产，否则会把评测答案路径接进 runtime。
+
+### 根因分析
+benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetContextPack`，但生产侧没有从运行时 `ExtractionTarget` 和文档 metadata 构造安全 context pack，也没有让 reconcile facade 返回 `ReconcileOutput` 中的 alignment records。
+
+### 解决方案
+新增 `build_context_pack_from_runtime_target()`，只接受生产运行时可得的目标元数据；`CrossTrackReconcileService` 增加 `run_with_output()` 并在有 context pack 时调用 `reconcile_with_context()`；`EvidenceExtractionService.run_dual()` 构造 runtime context pack，填充 `DualEvidenceExtractionResult.alignment_records`，无 target 时继续回退 `reconcile_results()`。
+
+### 预防措施
+- benchmark 中新增的 pipeline strategy 不能只在 analysis 脚本中落地；若要作为生产策略，必须同时提供 runtime-safe input contract 和生产 facade 测试。
+- 禁止把 benchmark `expected.json` 读取路径直接接入生产流水线；生产 context 只能来自抽提前已知的目标、文献 metadata 或术语库。
+- 主 pipeline 的结果模型已有字段时，接入新策略要验证字段是否真实填充，避免 benchmark/prod 输出结构分叉。
+
+## 2026-06-18 — ClinVar fused 3-sample sanity check showed partial consistency with ClinGen
+
+### 问题描述
+需要验证当前框架在 ClinVar fused 样本上的结果，是否与 ClinGen 基线的抽取模式一致，避免只看 ClinGen 数据得出过度乐观结论。
+
+### 排查过程
+1. 选择了 3 个代表性样本：`fused_000`、`fused_004`、`fused_008`，覆盖 AR / AD、不同 GCEP，以及边界样本（`fused_000`/`fused_008` 为稳定对照，`fused_004` 为易偏移样本）。
+2. 通过 `benchmark.layer3.preprocess` 运行当前 Phase 1/2 pipeline，确认 3 个样本都能产出 `preprocessed/phase_2/extraction_result.json`。
+3. 用 `benchmark.layer3.clinvar_fused.evaluate_fused` 对 3 个样本做预处理评测，并直接查看 per-entry field matches。
+
+### 根因分析
+当前框架在 ClinVar fused 上可以稳定抽取 gene_symbol 和 disease 相关字段，但仍存在：
+- disease boundary 偏移；
+- MOI 抽取不稳；
+- variant assertion / variant-level 字段召回不足；
+- 原文轨和译文轨之间存在 over-extraction 风险。
+
+### 解决方案
+本次没有改代码，只做验证并冻结结论：
+- `fused_000` 和 `fused_008` 的 gene_symbol / disease_diagnosis / gene_disease_relationship 与 ClinGen 期望一致；
+- `fused_004` 出现明显偏差，主要是疾病边界和 MOI；
+- 3 样本 aggregate 结果为 Layer 1 Gene-Disease P/R/F1=70.0/77.8/73.7，Layer 2 variant precision=50.0%。
+
+### 预防措施
+- 不要用单一 ClinGen 强样本外推到 ClinVar fused。
+- 后续若要宣称“框架一致”，至少需要补 5 样本以上并按 MOI/GCEP 分层。
+- Phase 2 预处理时间较长，sanity check 应优先用小样本+代表性覆盖，而不是盲跑全量。

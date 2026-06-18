@@ -16,83 +16,113 @@
   "variants": [
     {
       "hgvs_c": "c.316C>T",
-      "hgvs_p": "p.(R106W)",
+      "hgvs_p": "p.R106W",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.397C>T",
-      "hgvs_p": "p.(R133C)",
+      "hgvs_p": "p.R133C",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.455C>G",
-      "hgvs_p": "p.(P152R)",
+      "hgvs_p": "p.P152R",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.473C>T",
-      "hgvs_p": "p.(T158M)",
+      "hgvs_p": "p.T158M",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
     },
     {
       "hgvs_c": "c.502C>T",
-      "hgvs_p": "p.(R168*)",
+      "hgvs_p": "p.R168*",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "other (between MBD and TRD)"
-    },
-    {
-      "hgvs_c": "c.763C>T",
-      "hgvs_p": "p.(R255*)",
-      "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
-      "exon": "",
-      "domain": "TRD"
-    },
-    {
-      "hgvs_c": "c.806delG",
-      "hgvs_p": "p.(G269Afs*20)",
-      "variant_type": "frameshift",
-      "clinical_significance": "pathogenic",
-      "exon": "",
-      "domain": "TRD"
-    },
-    {
-      "hgvs_c": "c.808C>T",
-      "hgvs_p": "p.(R270*)",
-      "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
-      "exon": "",
-      "domain": "TRD"
+      "domain": "MBD",
+      "protein_effect": "premature stop codon",
+      "null_variant_detail": "premature stop codon",
+      "protein_length_change": "truncated at position 168"
     },
     {
       "hgvs_c": "c.880C>T",
-      "hgvs_p": "p.(R294*)",
+      "hgvs_p": "p.R294*",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "premature stop codon",
+      "null_variant_detail": "premature stop codon",
+      "protein_length_change": "truncated at position 294"
     },
     {
       "hgvs_c": "c.916C>T",
-      "hgvs_p": "p.(R306C)",
+      "hgvs_p": "p.R306C",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": ""
+    },
+    {
+      "hgvs_c": "c.763C>T",
+      "hgvs_p": "p.R255*",
+      "variant_type": "nonsense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD",
+      "protein_effect": "premature stop codon",
+      "null_variant_detail": "premature stop codon",
+      "protein_length_change": "truncated at position 255"
+    },
+    {
+      "hgvs_c": "c.806delG",
+      "hgvs_p": "p.G269fs",
+      "variant_type": "frameshift",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD",
+      "protein_effect": "frameshift leading to truncation",
+      "null_variant_detail": "frameshift",
+      "protein_length_change": "frameshift leading to truncation"
+    },
+    {
+      "hgvs_c": "c.808C>T",
+      "hgvs_p": "p.R270*",
+      "variant_type": "nonsense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD",
+      "protein_effect": "premature stop codon",
+      "null_variant_detail": "premature stop codon",
+      "protein_length_change": "truncated at position 270"
     }
   ],
   "expected_evidence": [
@@ -223,6 +253,80 @@
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "premature stop codon",
+      "candidates": [
+        "premature stop codon",
+        "premature stop codon",
+        "premature stop codon",
+        "frameshift leading to truncation",
+        "premature stop codon"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "premature stop codon",
+      "candidates": [
+        "premature stop codon",
+        "premature stop codon",
+        "premature stop codon",
+        "frameshift",
+        "premature stop codon"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_length_change",
+      "value": "truncated at position 168",
+      "candidates": [
+        "truncated at position 168",
+        "truncated at position 294",
+        "truncated at position 255",
+        "frameshift leading to truncation",
+        "truncated at position 270"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "16",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.diagnosis_sufficiency",
+      "value": "definite",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "partially_specific",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "micro-droplet digital PCR (mDDPCR) for MECP2 hotspot mutations",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_phenotype",
+      "value": "Some fathers with germline MECP2 mosaicism had normal health; some showed asthenospermia",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     }
   ],
   "expected_standardization": {
@@ -235,20 +339,44 @@
       "A.gene_symbol",
       "B.disease_diagnosis",
       "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim"
     ],
     "variant_fields": [
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.functional_domain_or_hotspot",
+      "A.protein_effect",
+      "A.null_variant_detail",
+      "A.protein_length_change"
     ],
     "clinical_fields": [
+      "B.case_count",
+      "B.diagnosis_sufficiency",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
       "B.sex",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.age_current_or_last_followup",
+      "B.ancestry_or_population",
+      "B.testing_method",
+      "B.alternative_diagnosis_excluded"
+    ],
+    "segregation_fields": [
+      "C.de_novo_status",
+      "C.family_id",
+      "C.pedigree_available",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.paternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.consanguinity"
     ],
     "standardization_fields": [
       "gene",

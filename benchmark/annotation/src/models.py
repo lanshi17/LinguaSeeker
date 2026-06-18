@@ -27,6 +27,9 @@ class ArticleVariant(BaseModel):
     clinical_significance: str = ""
     exon: str = ""
     domain: str = ""
+    protein_effect: str = ""
+    null_variant_detail: str = ""
+    protein_length_change: str = ""
 
 
 class RettExpectedJson(BaseModel):
@@ -71,19 +74,43 @@ class RettExpectedJson(BaseModel):
             "B.disease_diagnosis",
             "A.gene_disease_relationship",
             "B.mode_of_inheritance_reported",
+            "B.single_genetic_etiology_claim",
         ],
         "variant_fields": [
             "A.variant_hgvs_c",
             "A.variant_hgvs_p",
             "A.variant_type",
             "A.functional_domain_or_hotspot",
+            "A.protein_effect",
+            "A.null_variant_detail",
+            "A.protein_length_change",
         ],
         "clinical_fields": [
+            "B.case_count",
+            "B.diagnosis_sufficiency",
+            "B.phenotype_specificity",
             "B.hpo_terms",
             "B.clinical_phenotypes",
             "B.sex",
             "B.age_of_onset",
+            "B.age_current_or_last_followup",
+            "B.ancestry_or_population",
+            "B.testing_method",
+            "B.alternative_diagnosis_excluded",
+        ],
+        "segregation_fields": [
             "C.de_novo_status",
+            "C.family_id",
+            "C.pedigree_available",
+            "C.parentage_confirmed",
+            "C.maternal_genotype",
+            "C.paternal_genotype",
+            "C.maternal_phenotype",
+            "C.paternal_phenotype",
+            "C.phase_status",
+            "C.in_trans_confirmation",
+            "C.cis_or_trans_context",
+            "C.consanguinity",
         ],
         "standardization_fields": ["gene", "disease"],
     })

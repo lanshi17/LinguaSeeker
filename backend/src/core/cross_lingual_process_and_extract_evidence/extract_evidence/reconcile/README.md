@@ -11,15 +11,17 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconc
 
 service = CrossTrackReconcileService()
 reconciled = service.run(original_result, translated_result)
-print(reconciled.result.evidence_items)
-print(reconciled.alignment_records)
+output = service.run_with_output(original_result, translated_result, context_pack=target_context)
+print(reconciled.evidence_items)
+print(output.alignment_records)
 ```
 
 ## Architecture
 
 ```
 original EvidenceExtractionResult ┐
-                                  ├─ reconcile_results() ─→ ReconcileOutput
+                                  ├─ reconcile_results() ────────────→ ReconcileOutput
+                                  ├─ reconcile_with_context(context) ─→ ReconcileOutput
 translated EvidenceExtractionResult┘
                                       │
                                       ├─ _build_candidates()
@@ -32,6 +34,7 @@ translated EvidenceExtractionResult┘
 The slice is split into three layers:
 
 - `core.py` handles deterministic candidate building, scoring, and field decisions.
+- `contextual.py` adds target-context verifier scores and relationship/disease canonicalization.
 - `alignment.py` turns dual-track outputs into `EvidenceAlignmentRecord` entries.
 - `api.py` exposes the public service wrapper used by callers and tests.
 - `features.py` exposes a pure, typed feature vector for offline learned-arbitrator analysis.
@@ -43,7 +46,8 @@ The slice is split into three layers:
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `__init__` | `(self, params: ReconcileParams = ReconcileParams()) -> None` | Stores reconcile tuning constants. |
-| `run` | `(self, original: EvidenceExtractionResult, translated: EvidenceExtractionResult) -> EvidenceExtractionResult` | Reconciles both tracks and returns the merged extraction result. |
+| `run` | `(self, original: EvidenceExtractionResult, translated: EvidenceExtractionResult, context_pack: TargetContextPack | None = None) -> EvidenceExtractionResult` | Reconciles both tracks and returns the merged extraction result. Uses contextual verifier reconciliation when `context_pack` is supplied. |
+| `run_with_output` | `(self, original: EvidenceExtractionResult, translated: EvidenceExtractionResult, context_pack: TargetContextPack | None = None) -> ReconcileOutput` | Reconciles both tracks and returns the merged result plus decisions and alignment records. |
 
 ### `reconcile_results`
 
@@ -107,15 +111,22 @@ output = reconcile_results(original_result, translated_result)
 # 2. Context-aware reconciliation with target-specific verifier support
 output = reconcile_with_context(original_result, translated_result, target_context)
 
-# 3. Inspect accepted vs rejected fields
+# 3. Production facade with auditable output
+output = CrossTrackReconcileService().run_with_output(
+    original_result,
+    translated_result,
+    context_pack=target_context,
+)
+
+# 4. Inspect accepted vs rejected fields
 for decision in output.decisions:
     print(decision.field_id, decision.accepted, decision.requires_review)
 
-# 4. Export alignment records for benchmarking
+# 5. Export alignment records for benchmarking or production traceability
 for record in output.alignment_records:
     print(record.field_id, record.alignment_label, record.support_label)
 
-# 5. Build offline arbitrator features
+# 6. Build offline arbitrator features
 vector = extract_features(score, evidence_item, Track.ORIGINAL)
 features = vector.to_list()
 ```
@@ -125,6 +136,7 @@ features = vector.to_list()
 - Add new reconcile behavior in `core.py` only if it changes deterministic field selection.
 - Add new traceability metadata in `contracts.py` and surface it through `ReconcileOutput`.
 - Keep alignment-specific logic in `alignment.py`; do not mix it into the selection path.
+- Keep production context creation outside this module; pass in `TargetContextPack` so benchmark and runtime callers share the same verifier contract without sharing data sources.
 - Keep learned-policy experimentation in `features.py` or benchmark code, not in runtime reconcile.
 
 ## Performance Notes
@@ -152,4 +164,4 @@ uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evid
 uv run pytest tests/benchmark/layer3 -v
 ```
 
-The current suite covers deterministic field selection, alignment labeling, traceability gates, and feature-vector extraction.
+The current suite covers deterministic field selection, contextual verifier overrides, alignment labeling, traceability gates, and feature-vector extraction.
