@@ -63,7 +63,7 @@ class TestDatasetSummary:
 class TestBuildDatasetIntegration:
     def test_build_dataset_runs_on_real_data(self) -> None:
         from benchmark.analysis.arbitrator.dataset import build_dataset
-        from benchmark.layer3.evaluate import GROUND_TRUTH_DIR
+        from benchmark.core import GROUND_TRUTH_DIR
 
         if not GROUND_TRUTH_DIR.exists():
             pytest.skip("ground_truth directory not available")

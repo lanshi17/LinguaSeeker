@@ -8,14 +8,14 @@ from pathlib import Path
 import httpx
 import pytest
 
-from benchmark.layer3.analysis.benchmark_b_phase2_sample_runner import (
+from benchmark.runners.benchmark_b_phase2_sample import (
     BenchmarkBPhase2SampleConfig,
     benchmark_b_phase2_sample_report_to_payload,
     build_pipeline_payload,
     load_sample_sources,
     run_benchmark_b_phase2_sample,
 )
-from benchmark.layer3.evaluate import MAX_POLL_ATTEMPTS, POLL_INTERVAL_S
+from benchmark.core import MAX_POLL_ATTEMPTS, POLL_INTERVAL_S
 
 
 def _write_queue(path: Path, pdf_root: Path) -> None:
