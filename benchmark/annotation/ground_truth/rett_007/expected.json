@@ -17,57 +17,67 @@
     {
       "hgvs_c": "c.509C>T",
       "hgvs_p": "p.Thr170Met",
+      "hgvs_g": "",
       "variant_type": "missense",
-      "clinical_significance": "",
+      "clinical_significance": "pathogenic",
       "exon": "",
-      "domain": "",
-      "protein_effect": "",
+      "domain": "MBD",
+      "protein_effect": "loss of function",
       "null_variant_detail": "",
-      "protein_length_change": ""
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.538C>T",
       "hgvs_p": "p.Arg180Ter",
+      "hgvs_g": "",
       "variant_type": "nonsense",
-      "clinical_significance": "",
+      "clinical_significance": "pathogenic",
       "exon": "",
-      "domain": "",
+      "domain": "MBD",
       "protein_effect": "loss of function",
       "null_variant_detail": "premature stop codon",
-      "protein_length_change": "truncated to 180 aa"
+      "protein_length_change": "truncated at position 180",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.842delG",
       "hgvs_p": "p.Gly281AlafsTer20",
+      "hgvs_g": "",
       "variant_type": "frameshift",
-      "clinical_significance": "",
+      "clinical_significance": "pathogenic",
       "exon": "",
       "domain": "TRD",
       "protein_effect": "loss of function",
-      "null_variant_detail": "frameshift leading to premature stop",
-      "protein_length_change": "truncated to 301 aa"
+      "null_variant_detail": "frameshift leading to premature stop codon",
+      "protein_length_change": "truncated at position 300 (Gly281 + 20 aa)",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.844delC",
       "hgvs_p": "p.Arg282GlufsTer19",
+      "hgvs_g": "",
       "variant_type": "frameshift",
-      "clinical_significance": "",
+      "clinical_significance": "pathogenic",
       "exon": "",
       "domain": "TRD",
       "protein_effect": "loss of function",
-      "null_variant_detail": "frameshift leading to premature stop",
-      "protein_length_change": "truncated to 301 aa"
+      "null_variant_detail": "frameshift leading to premature stop codon",
+      "protein_length_change": "truncated at position 300 (Arg282 + 19 aa)",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "",
+      "hgvs_g": "",
       "variant_type": "duplication",
-      "clinical_significance": "",
+      "clinical_significance": "pathogenic",
       "exon": "",
       "domain": "",
-      "protein_effect": "increased dosage of MECP2",
+      "protein_effect": "increased MECP2 dosage",
       "null_variant_detail": "",
-      "protein_length_change": ""
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -308,6 +318,111 @@
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_id",
+      "value": "Patient 1, Patient 2, Patient 3, Patient 4, Patient 5",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "proband",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "1 year 9 months to 2 years 2 months",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.consanguinity",
+      "value": "no",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "yes",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.inheritance_source",
+      "value": "de novo (no mutation detected in parents for all 5 cases)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.parentage_confirmed",
+      "value": "no",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.obligate_carriers",
+      "value": "none",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.mechanism_consistency",
+      "value": "loss of function consistent with Rett syndrome; MECP2 duplication (increased dosage) consistent with MECP2 duplication syndrome",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.study_design",
+      "value": "case report",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_definition",
+      "value": "RTT-like phenotype assessed by 2010 revised RTT diagnostic criteria combined with genetic analysis",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "MeCP2 plays an important role in maintaining neuronal maturation, activity, and plasticity; MECP2 coding region mutations lead to loss of MeCP2 function; MECP2 encodes methyl-CpG-binding protein 2, a transcriptional regulator",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.authority_classification",
+      "value": "pathogenic",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.known_pathogenic_variant_reference",
+      "value": "mutations reported as pathogenic in published literature; Human Gene Mutation Database lists 555 RTT-related MECP2 mutations",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.independent_publications_time_span",
+      "value": "2010-2021",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     }
   ],
   "expected_standardization": {
@@ -318,35 +433,46 @@
   "evaluation_config": {
     "gene_disease_fields": [
       "A.gene_symbol",
-      "B.disease_diagnosis",
       "A.gene_disease_relationship",
+      "B.disease_diagnosis",
       "B.mode_of_inheritance_reported",
       "B.single_genetic_etiology_claim"
     ],
     "variant_fields": [
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
       "A.variant_type",
       "A.functional_domain_or_hotspot",
       "A.protein_effect",
       "A.null_variant_detail",
-      "A.protein_length_change"
+      "A.protein_length_change",
+      "A.same_amino_acid_known_variant",
+      "A.transcript_id",
+      "A.reference_sequence"
     ],
     "clinical_fields": [
+      "B.case_id",
+      "B.proband_status",
       "B.case_count",
       "B.diagnosis_sufficiency",
       "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
+      "B.biochemical_markers",
       "B.sex",
       "B.age_of_onset",
       "B.age_current_or_last_followup",
       "B.ancestry_or_population",
+      "B.consanguinity",
       "B.testing_method",
-      "B.alternative_diagnosis_excluded"
+      "B.sequencing_method_quality",
+      "B.alternative_diagnosis_excluded",
+      "B.healthy_adult_status"
     ],
     "segregation_fields": [
       "C.de_novo_status",
+      "C.inheritance_source",
       "C.family_id",
       "C.pedigree_available",
       "C.parentage_confirmed",
@@ -354,10 +480,37 @@
       "C.paternal_genotype",
       "C.maternal_phenotype",
       "C.paternal_phenotype",
+      "C.obligate_carriers",
       "C.phase_status",
       "C.in_trans_confirmation",
-      "C.cis_or_trans_context",
-      "C.consanguinity"
+      "C.cis_or_trans_context"
+    ],
+    "population_fields": [
+      "D.absent_or_rare_statement",
+      "D.population_database_name",
+      "D.population_subgroup"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list"
+    ],
+    "functional_fields": [
+      "F.tested_variant",
+      "F.case_level_or_gene_level",
+      "F.mechanism_consistency"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_definition"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.independent_publications_time_span"
     ],
     "standardization_fields": [
       "gene",

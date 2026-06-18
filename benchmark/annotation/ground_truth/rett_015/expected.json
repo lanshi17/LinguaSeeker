@@ -17,13 +17,15 @@
     {
       "hgvs_c": "c.808C>T",
       "hgvs_p": "p.R270X",
+      "hgvs_g": "",
       "variant_type": "nonsense",
       "clinical_significance": "pathogenic",
       "exon": "4",
       "domain": "TRD",
-      "protein_effect": "premature termination leading to truncated MECP2 protein; loss of function",
-      "null_variant_detail": "premature stop codon",
-      "protein_length_change": "truncated protein"
+      "protein_effect": "premature stop codon / protein truncation",
+      "null_variant_detail": "premature stop codon (nonsense, C>T transition)",
+      "protein_length_change": "truncated at position 270",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -215,6 +217,104 @@
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "proband",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.consanguinity",
+      "value": "no",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "yes",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.healthy_adult_status",
+      "value": "unaffected",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.inheritance_source",
+      "value": "de novo (mutation not identified in mother's DNA)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.pedigree_available",
+      "value": "no",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.parentage_confirmed",
+      "value": "no",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_genotype",
+      "value": "not tested",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_phenotype",
+      "value": "unaffected",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.obligate_carriers",
+      "value": "none",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.study_design",
+      "value": "case report",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_definition",
+      "value": "typical Rett syndrome meeting revised 2010 diagnostic criteria",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "MECP2 encodes methyl CpG-binding protein 2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.independent_publications_time_span",
+      "value": "1966-2011",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     }
   ],
   "expected_standardization": {
@@ -225,35 +325,46 @@
   "evaluation_config": {
     "gene_disease_fields": [
       "A.gene_symbol",
-      "B.disease_diagnosis",
       "A.gene_disease_relationship",
+      "B.disease_diagnosis",
       "B.mode_of_inheritance_reported",
       "B.single_genetic_etiology_claim"
     ],
     "variant_fields": [
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
       "A.variant_type",
       "A.functional_domain_or_hotspot",
       "A.protein_effect",
       "A.null_variant_detail",
-      "A.protein_length_change"
+      "A.protein_length_change",
+      "A.same_amino_acid_known_variant",
+      "A.transcript_id",
+      "A.reference_sequence"
     ],
     "clinical_fields": [
+      "B.case_id",
+      "B.proband_status",
       "B.case_count",
       "B.diagnosis_sufficiency",
       "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
+      "B.biochemical_markers",
       "B.sex",
       "B.age_of_onset",
       "B.age_current_or_last_followup",
       "B.ancestry_or_population",
+      "B.consanguinity",
       "B.testing_method",
-      "B.alternative_diagnosis_excluded"
+      "B.sequencing_method_quality",
+      "B.alternative_diagnosis_excluded",
+      "B.healthy_adult_status"
     ],
     "segregation_fields": [
       "C.de_novo_status",
+      "C.inheritance_source",
       "C.family_id",
       "C.pedigree_available",
       "C.parentage_confirmed",
@@ -261,10 +372,37 @@
       "C.paternal_genotype",
       "C.maternal_phenotype",
       "C.paternal_phenotype",
+      "C.obligate_carriers",
       "C.phase_status",
       "C.in_trans_confirmation",
-      "C.cis_or_trans_context",
-      "C.consanguinity"
+      "C.cis_or_trans_context"
+    ],
+    "population_fields": [
+      "D.absent_or_rare_statement",
+      "D.population_database_name",
+      "D.population_subgroup"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list"
+    ],
+    "functional_fields": [
+      "F.tested_variant",
+      "F.case_level_or_gene_level",
+      "F.mechanism_consistency"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_definition"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.independent_publications_time_span"
     ],
     "standardization_fields": [
       "gene",
