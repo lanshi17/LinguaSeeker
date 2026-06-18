@@ -107,6 +107,35 @@ LANG_SEARCHES: Dict[str, Dict] = {
     "zh": {
         "code": "zh", "name": "Chinese",
         "queries": [
+            # ── 队列研究 ──
+            "队列研究 基因突变", "前瞻性队列 癌症",
+            "回顾性队列 基因", "队列研究 乳腺癌",
+            "队列研究 预后", "队列研究 风险因素 基因",
+            "队列研究 肺癌", "队列研究 胃癌",
+            "队列研究 肝癌", "队列研究 结直肠癌",
+            "队列研究 甲状腺癌", "队列研究 卵巢癌",
+            "队列研究 宫颈癌", "队列研究 食管癌",
+            "队列研究 BRCA", "队列研究 TP53",
+            "队列研究 遗传性肿瘤", "队列研究 基因多态性",
+            "队列研究 生存分析", "队列研究 无病生存",
+            "队列研究 总生存期", "队列研究 化疗 基因",
+            "队列研究 靶向治疗 疗效", "队列研究 免疫治疗",
+            # ── 功能实验 ──
+            "功能实验 基因", "功能研究 基因突变",
+            "体外功能实验 癌症", "功能实验 蛋白表达",
+            "功能实验 细胞增殖", "基因功能研究 肿瘤",
+            "功能实验 细胞凋亡", "功能实验 细胞迁移",
+            "功能实验 细胞侵袭", "功能实验 Western blot",
+            "功能实验 荧光素酶", "功能实验 细胞周期",
+            "功能实验 siRNA", "功能实验 基因过表达",
+            "功能实验 CRISPR", "功能实验 信号通路",
+            "功能实验 乳腺癌 细胞", "功能实验 肺癌 细胞",
+            "功能实验 胃癌 细胞", "功能实验 肝癌 细胞",
+            "功能实验 结直肠癌 细胞", "功能实验 卵巢癌 细胞",
+            "功能实验 转录因子", "功能实验 甲基化",
+            "功能实验 microRNA", "功能实验 lncRNA",
+            "功能实验 蛋白互作", "功能实验 泛素化",
+            # ── 基因与癌症综合 ──
             "乳腺癌 基因突变", "癌症 基因测序", "肿瘤 基因检测",
             "病例报告 基因", "基因组测序 癌", "靶向测序 肿瘤",
             "基因突变 功能研究", "乳腺癌 细胞系", "癌症 蛋白表达",
@@ -114,12 +143,28 @@ LANG_SEARCHES: Dict[str, Dict] = {
             "乳腺癌 病例分析", "基因 突变 临床", "癌症 机制研究",
             "肿瘤 增殖 迁移", "基因 敲除 癌", "乳腺癌 免疫组化",
             "癌症 靶向治疗 基因", "肿瘤 基因组 变异",
-            "队列研究 基因突变", "前瞻性队列 癌症",
-            "回顾性队列 基因", "队列研究 乳腺癌",
-            "队列研究 预后", "队列研究 风险因素 基因",
-            "功能实验 基因", "功能研究 基因突变",
-            "体外功能实验 癌症", "功能实验 蛋白表达",
-            "功能实验 细胞增殖", "基因功能研究 肿瘤",
+            "肺癌 EGFR 突变", "胃癌 HER2 扩增",
+            "肝癌 TERT 启动子", "结直肠癌 KRAS 突变",
+            "甲状腺癌 BRAF 突变", "卵巢癌 BRCA 突变",
+            "宫颈癌 HPV 整合", "食管癌 TP53 突变",
+            "胰腺癌 KRAS", "前列腺癌 雄激素受体",
+            "膀胱癌 FGFR3", "肾癌 VHL 基因",
+            "白血病 BCR-ABL", "淋巴瘤 MYC 重排",
+            "神经母细胞瘤 ALK", "黑色素瘤 BRAF V600E",
+            "骨肉瘤 TP53", "软组织肉瘤 基因融合",
+            # ── 技术与方法 ──
+            "NGS 肿瘤 panel", "全外显子组测序 癌症",
+            "全基因组测序 肿瘤", "RNA-seq 肿瘤",
+            "单细胞测序 癌症", "液体活检 ctDNA",
+            "循环肿瘤DNA", "甲基化检测 肿瘤",
+            "FISH 基因扩增 肿瘤", "PCR 基因突变 检测",
+            "免疫组化 肿瘤标记物", "质谱 蛋白质组 肿瘤",
+            # ── 遗传与家系 ──
+            "遗传性乳腺癌 家系", "Lynch综合征 家系",
+            "遗传性胃癌 基因", "家族性腺瘤性息肉病",
+            "遗传性卵巢癌 BRCA", "Li-Fraumeni综合征",
+            "多发性内分泌腺瘤", "遗传性肾癌 基因",
+            "胚系突变 肿瘤", "新生突变 遗传病",
         ],
     },
     "ja": {
@@ -231,7 +276,7 @@ async def cmd_download(lang_filter: Optional[str] = None) -> None:
     all_langs = ["zh", "ja", "ko", "es", "pt", "ru", "en"]
     if lang_filter:
         all_langs = [lang_filter]
-    target_per_lang = 20
+    target_per_lang = 1000
 
     logger.info("Starting download benchmark")
     logger.info(f"Downloading via online_acquisition_workflow (API + Firecrawl, target {target_per_lang} per lang)")
@@ -242,8 +287,12 @@ async def cmd_download(lang_filter: Optional[str] = None) -> None:
         lang_code = cfg["code"]
         downloaded = 0
         query_idx = 0
-        dest_dir = DOWNLOAD_ROOT / lang
+        dest_dir = DOWNLOAD_ROOT / lang_code
         dest_dir.mkdir(parents=True, exist_ok=True)
+
+        seen_files: set[str] = {
+            str(p) for p in dest_dir.rglob("*.pdf")
+        }
 
         while downloaded < target_per_lang and query_idx < len(cfg["queries"]):
             query = cfg["queries"][query_idx]
@@ -252,57 +301,50 @@ async def cmd_download(lang_filter: Optional[str] = None) -> None:
             payload: Dict[str, Any] = {
                 "action": "download",
                 "query": query,
-                "limit": 5,
+                "limit": 20,
                 "language": lang_code,
-                "download_path": str(dest_dir),
+                "download_path": str(DOWNLOAD_ROOT),
             }
 
             stats.total_attempted += 1
 
+            result: Optional[Dict[str, Any]] = None
             try:
                 result = await asyncio.wait_for(
                     online_acquisition_workflow(payload),
-                    timeout=90,
+                    timeout=300,
                 )
-            except (asyncio.TimeoutError, Exception) as exc:
-                logger.debug(f"[{lang}] workflow failed for '{query}': {exc}")
-                continue
+            except asyncio.TimeoutError:
+                logger.info(f"[{lang}] timeout for '{query}' — scanning disk for new files")
+            except Exception as exc:
+                logger.info(f"[{lang}] workflow failed for '{query}': {exc}")
 
-            if not result.get("success"):
-                logger.debug(f"[{lang}] no results for: {query}")
-                continue
+            items = (result or {}).get("items", [])
+            route_info = (result or {}).get("route", {})
 
-            downloads = result.get("downloads", [])
-            items = result.get("items", [])
-            route_info = result.get("route", {})
+            new_files = {str(p) for p in dest_dir.rglob("*.pdf")} - seen_files
+            seen_files |= new_files
 
-            for dl in downloads:
+            for fp in sorted(new_files):
                 if downloaded >= target_per_lang:
                     break
-                file_path = dl.get("file_path") or ""
-                if not file_path or not Path(file_path).exists():
+                dest = Path(fp)
+                if not dest.exists() or dest.stat().st_size == 0:
                     continue
 
-                dest = Path(file_path)
                 title = ""
                 doi = ""
-                for item in items:
-                    item_doi = (item.get("doi") or "").strip()
-                    if item_doi and item_doi == (dl.get("doi") or "").strip():
-                        title = item.get("title") or ""
-                        doi = item_doi
-                        break
-                if not title and items:
-                    title = items[0].get("title") or ""
-                if not doi:
-                    doi = dl.get("doi") or ""
-
-                source = dl.get("source", route_info.get("used", "workflow"))
+                source = route_info.get("used", "workflow")
                 lit_type = "unclassified"
+
                 for item in items:
-                    lt = item.get("literature_type")
-                    if lt:
-                        lit_type = lt
+                    item_title = item.get("title") or ""
+                    if item_title:
+                        title = item_title
+                        doi = (item.get("doi") or "").strip()
+                        lt = item.get("literature_type")
+                        if lt:
+                            lit_type = lt
                         break
 
                 record = DownloadRecord(
@@ -310,7 +352,7 @@ async def cmd_download(lang_filter: Optional[str] = None) -> None:
                     title=title, doi=doi,
                     method=source, success=True,
                     file_path=str(dest), file_size=dest.stat().st_size,
-                    source_url=dl.get("url") or "", elapsed_ms=0,
+                    source_url="", elapsed_ms=0,
                 )
                 stats.records.append(record)
                 stats.total_downloaded += 1
@@ -323,8 +365,8 @@ async def cmd_download(lang_filter: Optional[str] = None) -> None:
                     f"{record.file_size // 1024}KB [{lit_type}] via {source}"
                 )
 
-            if not downloads:
-                logger.debug(f"[{lang}] workflow returned no downloads for: {query}")
+            if not new_files:
+                logger.info(f"[{lang}] no new files for: {query}")
 
     stats.elapsed_sec = round(time.monotonic() - start, 1)
 
