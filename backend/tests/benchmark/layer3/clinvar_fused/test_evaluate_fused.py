@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from benchmark.layer3.clinvar_fused.evaluate_fused import (
+from benchmark.datasets.clinvar_fused.evaluate_fused import (
     compare_gene_disease,
     compare_variant_precision,
     compute_aggregate_metrics,
@@ -183,7 +183,7 @@ class TestComputeAggregateMetrics:
         assert result["layer1_gene_disease"]["overall"]["f1"] == 0
 
     def test_basic_aggregation(self) -> None:
-        from benchmark.layer3.clinvar_fused.evaluate_fused import FieldResult, EntryResult
+        from benchmark.datasets.clinvar_fused.evaluate_fused import FieldResult, EntryResult
 
         entry = EntryResult(
             entry_id="test_001",

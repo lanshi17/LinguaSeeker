@@ -5,9 +5,9 @@ Splits long articles by sections to stay within context limits.
 Saves translated files as source_{lang}.md alongside source.md.
 
 Usage:
-    PYTHONPATH=.:backend uv run --project backend python -m benchmark.layer3.clinvar_fused.translate_to_multilingual
-    PYTHONPATH=.:backend uv run --project backend python -m benchmark.layer3.clinvar_fused.translate_to_multilingual --limit 5
-    PYTHONPATH=.:backend uv run --project backend python -m benchmark.layer3.clinvar_fused.translate_to_multilingual --langs zh ja
+    PYTHONPATH=.:backend uv run --project backend python -m benchmark.datasets.clinvar_fused.translate_to_multilingual
+    PYTHONPATH=.:backend uv run --project backend python -m benchmark.datasets.clinvar_fused.translate_to_multilingual --limit 5
+    PYTHONPATH=.:backend uv run --project backend python -m benchmark.datasets.clinvar_fused.translate_to_multilingual --langs zh ja
 """
 from __future__ import annotations
 

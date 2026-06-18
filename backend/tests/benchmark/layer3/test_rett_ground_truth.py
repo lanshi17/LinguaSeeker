@@ -7,7 +7,7 @@ from pathlib import Path
 import asyncio
 
 from benchmark.core import evaluate_one
-from benchmark.layer3.generate_rett_ground_truth import export_rett_ground_truth
+from benchmark.datasets.clingen.generate_rett_ground_truth import export_rett_ground_truth
 
 
 def _write_json(path: Path, payload: object) -> None:

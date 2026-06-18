@@ -13,7 +13,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-REPORTS_DIR = Path(__file__).resolve().parent / "reports"
+from benchmark.core import REPORTS_ROOT
+
+# eval_*.json reports + visualization output live under benchmark/data/reports/eval/
+# after Phase 4 of the 2026-06-18 framework refactor.
+REPORTS_DIR = REPORTS_ROOT / "eval"
 
 
 def load_latest_report() -> dict:

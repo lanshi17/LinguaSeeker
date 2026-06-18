@@ -1,9 +1,10 @@
 """DEPRECATED package surface.
 
 The flat ``benchmark.layer3.*`` layout was reorganized in the 2026-06-18
-framework refactor. ``benchmark.layer3.preprocess`` was moved to
-``benchmark.runners.clingen_preprocess``; provide a lazy redirect so old
-commands keep working through the shim window. Removed in Phase 6.
+framework refactor (see
+``docs/active/2026-06-18-benchmark-framework-refactor-plan.md``). Every
+old dotted path is preserved here via lazy ``__getattr__`` for one
+release. Removed in Phase 6.
 """
 from __future__ import annotations
 
@@ -11,6 +12,12 @@ import importlib
 import warnings
 
 _REDIRECT: dict[str, str] = {
+    "select_entries": "benchmark.datasets.clingen.select_entries",
+    "fetch_literature": "benchmark.datasets.clingen.fetch_literature",
+    "download_pdfs": "benchmark.datasets.clingen.download_pdfs",
+    "generate_ground_truth": "benchmark.datasets.clingen.generate_ground_truth",
+    "generate_rett_ground_truth": "benchmark.datasets.clingen.generate_rett_ground_truth",
+    "visualize": "benchmark.datasets.clingen.visualize",
     "preprocess": "benchmark.runners.clingen_preprocess",
 }
 
@@ -27,3 +34,7 @@ def __getattr__(name: str):  # noqa: D401
     module = importlib.import_module(target)
     globals()[name] = module
     return module
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | _REDIRECT.keys())
