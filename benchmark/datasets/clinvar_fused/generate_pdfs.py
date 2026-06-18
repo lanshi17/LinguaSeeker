@@ -7,9 +7,9 @@ Output structure matches Dataset 1:
   benchmark/pipeline/input/ground_truth/{lang}/case_report/{entry_id}.pdf
 
 Usage:
-    PYTHONPATH=. uv run python -m benchmark.layer3.clinvar_fused.generate_pdfs
-    PYTHONPATH=. uv run python -m benchmark.layer3.clinvar_fused.generate_pdfs --limit 5
-    PYTHONPATH=. uv run python -m benchmark.layer3.clinvar_fused.generate_pdfs --langs en zh
+    PYTHONPATH=. uv run python -m benchmark.datasets.clinvar_fused.generate_pdfs
+    PYTHONPATH=. uv run python -m benchmark.datasets.clinvar_fused.generate_pdfs --limit 5
+    PYTHONPATH=. uv run python -m benchmark.datasets.clinvar_fused.generate_pdfs --langs en zh
 """
 from __future__ import annotations
 

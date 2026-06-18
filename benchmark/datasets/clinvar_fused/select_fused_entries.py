@@ -17,7 +17,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from benchmark.layer3.clinvar_fused.hgvs_normalize import (
+from benchmark.datasets.clinvar_fused.hgvs_normalize import (
     _parse_hgvs_from_clinvar_name,
     normalize_variant_type,
 )
