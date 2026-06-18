@@ -3084,3 +3084,25 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 **解决**: 已显式 `uv add --dev scikit-learn` (commit 21b4473a),baseline 收敛到 **258 passed / 1 failed (pre-existing)**;后续 phase gate 以 `258 passed + 同 1 failed` 为不变量,不允许新增失败。
 
 **预防**: PR review 时应同步检查 `pyproject.toml` 是否声明全部 `import` 链;新建 worktree 后立即 `uv sync --frozen` + `pytest` 抓取真实基线,避免把环境差异误归到代码改动。
+
+## 2026-06-18 — Benchmark refactor Phases 1-5 complete
+
+**Problem**: `benchmark/` was 4 parallel top-level packages with mixed semantics; one 1,124-line `evaluate.py` doubled as contracts/utils/runner; 35 analysis modules sat flat next to data assets; 305 reports were unbucketed; `benchmark.layer3.evaluate.*` was an opaque shared API.
+
+**Investigation steps that paid off**:
+1. **Pin a baseline before touching anything**. `pytest backend/tests/benchmark` revealed sklearn was an undeclared dev dep and a pre-existing test was already broken — `commit 21b4473a`. Without that anchor, every Phase-N gate would have been unreliable.
+2. **Search for monkeypatch targets early**. Three tests patched `benchmark.layer3.evaluate.POLL_INTERVAL_S` directly; a naive split would have left them silently inert (the patched module attribute would no longer be the live one). Fix: `submit_and_poll`/`evaluate_one` now resolve constants from `sys.modules[__name__]` at call time, so monkeypatches on `benchmark.core.pipeline_client.*` are the canonical address.
+3. **Lazy `__getattr__` shims are cheaper than wide re-exports**. With 32+ legacy submodules, listing them all in `__init__.py` would import every module on package access. `__getattr__` redirects only resolve what's actually used; one DeprecationWarning per legacy import, zero startup cost.
+4. **Bucket reports with classifier+walk script**, not by-hand. `scripts/refactor_benchmark_reports.py` matched 305 files into 8 buckets in one run with 0 unmapped, while preserving git history via `git mv`.
+
+**Root causes worth remembering**:
+- Test failure `assert 'preprocessed' == 'timeout'` looked like a monkeypatch flake; it was actually a stale `monkeypatch.setattr("benchmark.layer3.evaluate.GROUND_TRUTH_DIR", ...)` not flowing into a default-arg-bound `Path` because the function captured the value at definition time. Switching to `ground_truth_dir=None` + `if … is None: dir = sys.modules[__name__].GROUND_TRUTH_ROOT` fixed it permanently.
+- `pilot_selection.py` used `_resolve_source_corpus_root` to scan `REPORTS_DIR/source_inventory_*.json`. After bucketing, those reports moved to `REPORTS_DIR/curation/`. Caught only because the test passed an absolute path that exercised the fallback.
+- `benchmark/datasets/clingen/visualize.py` and `analysis/diagnostics/grounding.py` had `Path(__file__).resolve().parent / "reports"` baked in. Always centralize asset roots through `benchmark.core.paths`; tools that relied on layout-by-proximity broke immediately.
+
+**Prevention checklist for future cross-cutting refactors**:
+- Run `pytest <area>` to pin a baseline number before any rename — record it in `lesson.md`.
+- Grep for `Path(__file__).resolve()` and `monkeypatch.setattr("<old.path>"` separately; both are landmines for moves.
+- Use lazy `__getattr__` for compat shims, never eager re-exports.
+- Bucket large file moves with a script; commit the script and its mapping table.
+- Keep one PR per phase; the plan's "shim, then move, then clean" cadence (Phase 1 → 5 → 6) made each commit independently revertable.
