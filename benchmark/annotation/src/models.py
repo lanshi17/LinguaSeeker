@@ -23,6 +23,7 @@ class ArticleVariant(BaseModel):
 
     hgvs_c: str = ""
     hgvs_p: str = ""
+    hgvs_g: str = ""
     variant_type: str = ""
     clinical_significance: str = ""
     exon: str = ""
@@ -30,6 +31,7 @@ class ArticleVariant(BaseModel):
     protein_effect: str = ""
     null_variant_detail: str = ""
     protein_length_change: str = ""
+    same_amino_acid_known_variant: str = ""
 
 
 class RettExpectedJson(BaseModel):
@@ -71,35 +73,46 @@ class RettExpectedJson(BaseModel):
     evaluation_config: dict = Field(default_factory=lambda: {
         "gene_disease_fields": [
             "A.gene_symbol",
-            "B.disease_diagnosis",
             "A.gene_disease_relationship",
+            "B.disease_diagnosis",
             "B.mode_of_inheritance_reported",
             "B.single_genetic_etiology_claim",
         ],
         "variant_fields": [
             "A.variant_hgvs_c",
             "A.variant_hgvs_p",
+            "A.variant_hgvs_g",
             "A.variant_type",
             "A.functional_domain_or_hotspot",
             "A.protein_effect",
             "A.null_variant_detail",
             "A.protein_length_change",
+            "A.same_amino_acid_known_variant",
+            "A.transcript_id",
+            "A.reference_sequence",
         ],
         "clinical_fields": [
+            "B.case_id",
+            "B.proband_status",
             "B.case_count",
             "B.diagnosis_sufficiency",
             "B.phenotype_specificity",
             "B.hpo_terms",
             "B.clinical_phenotypes",
+            "B.biochemical_markers",
             "B.sex",
             "B.age_of_onset",
             "B.age_current_or_last_followup",
             "B.ancestry_or_population",
+            "B.consanguinity",
             "B.testing_method",
+            "B.sequencing_method_quality",
             "B.alternative_diagnosis_excluded",
+            "B.healthy_adult_status",
         ],
         "segregation_fields": [
             "C.de_novo_status",
+            "C.inheritance_source",
             "C.family_id",
             "C.pedigree_available",
             "C.parentage_confirmed",
@@ -107,10 +120,37 @@ class RettExpectedJson(BaseModel):
             "C.paternal_genotype",
             "C.maternal_phenotype",
             "C.paternal_phenotype",
+            "C.obligate_carriers",
             "C.phase_status",
             "C.in_trans_confirmation",
             "C.cis_or_trans_context",
-            "C.consanguinity",
+        ],
+        "population_fields": [
+            "D.absent_or_rare_statement",
+            "D.population_database_name",
+            "D.population_subgroup",
+        ],
+        "computational_fields": [
+            "E.prediction_tools_list",
+        ],
+        "functional_fields": [
+            "F.tested_variant",
+            "F.case_level_or_gene_level",
+            "F.mechanism_consistency",
+        ],
+        "case_control_fields": [
+            "G.study_design",
+            "G.case_definition",
+        ],
+        "gene_function_fields": [
+            "I.gene_function_biochemical",
+            "I.gene_function_protein_interaction",
+        ],
+        "authority_fields": [
+            "J.clinvar_assertion",
+            "J.authority_classification",
+            "J.known_pathogenic_variant_reference",
+            "J.independent_publications_time_span",
         ],
         "standardization_fields": ["gene", "disease"],
     })
