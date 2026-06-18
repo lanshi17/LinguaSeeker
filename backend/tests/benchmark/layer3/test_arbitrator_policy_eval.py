@@ -96,7 +96,7 @@ class TestTrainFold:
 class TestEntryF1:
     def test_entry_f1_all_matched(self) -> None:
         from benchmark.analysis.arbitrator.policy_eval import _entry_f1
-        from benchmark.layer3.evaluate import EntryMetrics, FieldMatch
+        from benchmark.core import EntryMetrics, FieldMatch
 
         metrics = EntryMetrics(
             entry_id="test",
@@ -166,7 +166,7 @@ class TestGateA:
 class TestLOOIntegration:
     def test_loo_runs_on_real_data(self) -> None:
         from benchmark.analysis.arbitrator.policy_eval import run_loo_evaluation
-        from benchmark.layer3.evaluate import GROUND_TRUTH_DIR
+        from benchmark.core import GROUND_TRUTH_DIR
 
         if not GROUND_TRUTH_DIR.exists():
             pytest.skip("ground_truth directory not available")

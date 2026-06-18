@@ -13,9 +13,9 @@ from typing import Any, Mapping, TypedDict, cast
 import httpx
 
 from benchmark.analysis.dataset_curation.materialize_phase2_artifacts import DEFAULT_PIPELINE_ROOT
-from benchmark.layer3.evaluate import MAX_POLL_ATTEMPTS as DEFAULT_MAX_POLL_ATTEMPTS
-from benchmark.layer3.evaluate import POLL_INTERVAL_S as DEFAULT_POLL_INTERVAL_S
-from benchmark.layer3.evaluate import REPORTS_DIR, load_proxy
+from benchmark.core import MAX_POLL_ATTEMPTS as DEFAULT_MAX_POLL_ATTEMPTS
+from benchmark.core import POLL_INTERVAL_S as DEFAULT_POLL_INTERVAL_S
+from benchmark.core import REPORTS_DIR, load_proxy
 
 
 DEFAULT_BASE_URL = "http://localhost:8000"

@@ -48,6 +48,9 @@ _REDIRECT: dict[str, str] = {
     "diagnose_block_recall": "benchmark.analysis.diagnostics.block_recall",
     "diagnose_extraction": "benchmark.analysis.diagnostics.extraction",
     "diagnose_reconcile_errors": "benchmark.analysis.diagnostics.reconcile_errors",
+    # runners (moved out in Phase 3)
+    "run_phase2_artifact_batch": "benchmark.runners.phase2_batch",
+    "benchmark_b_phase2_sample_runner": "benchmark.runners.benchmark_b_phase2_sample",
 }
 
 
