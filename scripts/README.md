@@ -6,18 +6,18 @@
 
 ```
 scripts/
-├── build_terminology_embeddings.py   Build pgvector embeddings for imported terminology entries
 ├── generate_ground_truth_pdfs.py     Translate ground-truth literature to 6 languages and generate PDFs
 ├── import_terminology.py             CLI tool to import terminology database files into PostgreSQL
 ├── start_backend_dev.sh              Start FastAPI backend with hot-reload
 └── start_model_server.sh             Start model server (embedding/rerank/VLM) on port 8001
 ```
 
+> Terminology embedding builds live in `backend/scripts/build_terminology_embeddings.py`.
+
 ## Scripts
 
 | Script | Language | Purpose |
 |--------|----------|---------|
-| `build_terminology_embeddings.py` | Python | Build pgvector embeddings for all imported terminology entries via the Phase 3 facade |
 | `generate_ground_truth_pdfs.py` | Python | Translate ground-truth literature to zh/ja/ko/fr/de/es via LLM API, generate PDFs with weasyprint |
 | `import_terminology.py` | Python | Import local terminology files (hgnc, omim, hpo, clingen, clinvar) into PostgreSQL reference tables |
 | `start_backend_dev.sh` | Shell | Start uvicorn with hot-reload, excluding logs/temp/migration files from watch |
@@ -59,15 +59,6 @@ uv run python scripts/import_terminology.py --version 2024-01 --generate-embeddi
 | `--terminology-root` | No | `database/terminology_database` | Path to local terminology files |
 | `--generate-embeddings` | No | `false` | Generate pgvector embeddings after import |
 
-### Build Terminology Embeddings
-
-```bash
-# Build embeddings for all imported terminology entries
-uv run python scripts/build_terminology_embeddings.py
-```
-
-Requires a populated `terminology_entries` table. Run `import_terminology.py` first if data is not yet imported.
-
 ### Generate Ground-Truth PDFs
 
 ```bash
@@ -80,7 +71,7 @@ Reads from `benchmark/layer3/ground_truth/` and outputs to `benchmark/pipeline/i
 
 - **uv** -- Python dependency management (see [CLAUDE.md](../CLAUDE.md))
 - **PostgreSQL** -- Must be running and migrated for terminology scripts
-- **Model server** -- Must be running on port 8001 for embedding generation
+- **Model server** -- Must be running on port 8001 for embedding generation (see `backend/scripts/`)
 - **LLM API** -- Must be configured for `generate_ground_truth_pdfs.py`
 - **weasyprint** -- Required for PDF generation (installed via backend dependencies)
 
