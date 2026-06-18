@@ -118,11 +118,12 @@ def test_benchmark_b_pilot_selector_default_source_root_finds_multilingual_case_
 
 def test_benchmark_b_pilot_selector_falls_back_to_latest_source_inventory_root(
     tmp_path: Path,
+    monkeypatch,
 ) -> None:
     repo_root = tmp_path / "repo"
     selection_root = tmp_path / "ground_truth"
     reports_root = tmp_path / "reports"
-    source_root = repo_root / "benchmark" / "pipeline" / "input"
+    source_root = repo_root / "benchmark" / "data" / "inputs" / "pipeline"
     entry_ids = [f"clingen_{index:03d}" for index in range(2)]
     _write_selection(selection_root, entry_ids)
 
@@ -130,11 +131,16 @@ def test_benchmark_b_pilot_selector_falls_back_to_latest_source_inventory_root(
         _write_source_pdf(source_root, "en", entry_id)
         _write_source_pdf(source_root, "ja", entry_id)
 
-    inventory_path = reports_root / "source_inventory_20260616_000000.json"
+    inventory_path = reports_root / "curation" / "source_inventory_20260616_000000.json"
     inventory_path.parent.mkdir(parents=True, exist_ok=True)
     inventory_path.write_text(
         json.dumps({"config": {"repo_root": str(repo_root)}}),
         encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "benchmark.analysis.benchmark_b.pilot_selection.REPORTS_DIR",
+        reports_root,
     )
 
     report = build_benchmark_b_pilot_selection(

@@ -275,7 +275,7 @@ def _resolve_source_corpus_root(source_corpus_root: Path) -> Path:
     if source_corpus_root.exists():
         return source_corpus_root
 
-    latest_inventory = _latest_source_inventory_report(REPORTS_DIR)
+    latest_inventory = _latest_source_inventory_report(REPORTS_DIR / "curation")
     if latest_inventory is not None:
         payload = json.loads(latest_inventory.read_text(encoding="utf-8"))
         if isinstance(payload, Mapping):
@@ -283,7 +283,7 @@ def _resolve_source_corpus_root(source_corpus_root: Path) -> Path:
             if isinstance(config, Mapping):
                 repo_root = str(config.get("repo_root") or "").strip()
                 if repo_root:
-                    candidate = Path(repo_root) / "benchmark" / "pipeline" / "input"
+                    candidate = Path(repo_root) / "benchmark" / "data" / "inputs" / "pipeline"
                     if candidate.exists():
                         return candidate
     return source_corpus_root
