@@ -124,6 +124,7 @@ class RettExpectedJson(BaseModel):
             "C.phase_status",
             "C.in_trans_confirmation",
             "C.cis_or_trans_context",
+            "C.consanguinity",
         ],
         "population_fields": [
             "D.absent_or_rare_statement",
