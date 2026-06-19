@@ -3106,3 +3106,15 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 - Use lazy `__getattr__` for compat shims, never eager re-exports.
 - Bucket large file moves with a script; commit the script and its mapping table.
 - Keep one PR per phase; the plan's "shim, then move, then clean" cadence (Phase 1 → 5 → 6) made each commit independently revertable.
+
+## 2026-06-19 EvidenceItemNormalizer placement
+
+### 教训
+- backfill 节点必须放在 quality_gate **之后**,否则 quality 指标会被 ~100 个 NOT_FOUND 占位项稀释,且 source_grounding 会浪费计算在空 item 上。
+- `normalize_grouped` 同时也是「有 group_id 才回填,无 group_id 用空字符串占位」的契约,新节点必须保留这层语义。
+- Plan 的 baseline 校验只跑了 test_catalog.py 的字段计数,没有跑全 suite;166-field WIP 移除 `B.diagnosis_sufficiency` 后,test_quality_validation.py 两个用例 (StopIteration) 在 baseline commit 即红。Phase 2.3 的「全绿」验收暴露了这个 plan 缺口。修法:把两个用例的 field_id 迁到仍存在的 `B.disease_diagnosis`(行为不变,仅 field_id 过期)。
+
+### 预防
+- workflow 任何新节点都必须在 `_build_graph` **和** `_build_async_graph` 同步注册。
+- 增删节点时同步更新本文件的 README 节点表(若存在)。
+- 写 plan 前 baseline 校验应跑 `pytest <module>` 全量,而非只校验计数断言;字段增删会级联到所有按 field_id 查找的测试。
