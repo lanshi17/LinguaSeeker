@@ -2,9 +2,10 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task-by-task.
 
-**Status:** planned
+**Status:** completed
 **Created:** 2026-06-19
-**Revised:** 2026-06-19 (after code-grounded review)
+**Completed:** 2026-06-19
+**PR:** merged to dev (commits 1f22fe1c..5f39ec5d)
 **Goal:** Cut redundant LLM calls and align documentation in the 166-field evidence extraction pipeline, with surgical edits and one strict invariant: **every change must be paired with a test that locks it in**.
 
 ## Verified ground truth (do not edit without re-verifying)
