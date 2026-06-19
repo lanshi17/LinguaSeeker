@@ -1,0 +1,655 @@
+{
+  "items": [
+    {
+      "entry_id": "fused_000",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_000/expected.json",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_000/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_000",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_000/expected.json",
+      "expected_value": "AR",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_000/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_000",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_000/expected.json",
+      "expected_value": "deletion",
+      "field_id": "A.variant_type",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_000/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_001",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_001/expected.json",
+      "expected_value": "ABCA4-related retinopathy",
+      "field_id": "B.disease_diagnosis",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_001/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_001",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_001/expected.json",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_001/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_001",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_001/expected.json",
+      "expected_value": "AR",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_001/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_001",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_001/expected.json",
+      "expected_value": "p.Gly1961Glu",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_001/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_002",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/expected.json",
+      "expected_value": "very long chain acyl-CoA dehydrogenase deficiency",
+      "field_id": "B.disease_diagnosis",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_002",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/expected.json",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_002",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/expected.json",
+      "expected_value": "AR",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_002",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/expected.json",
+      "expected_value": "c.1182+1G>A",
+      "field_id": "A.variant_hgvs_c",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_002",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/expected.json",
+      "expected_value": "p.Arg613Trp",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_002",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/expected.json",
+      "expected_value": "Likely pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_003",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_003/expected.json",
+      "expected_value": "alpha-actinopathy",
+      "field_id": "B.disease_diagnosis",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_003/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_003",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_003/expected.json",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_003/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_003",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_003/expected.json",
+      "expected_value": "p.Ile359Leu",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_003/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_003",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_003/expected.json",
+      "expected_value": "missense",
+      "field_id": "A.variant_type",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_003/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_003",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_003/expected.json",
+      "expected_value": "Pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_003/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_004",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/expected.json",
+      "expected_value": "alpha-actinopathy",
+      "field_id": "B.disease_diagnosis",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_004",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/expected.json",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_004",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/expected.json",
+      "expected_value": "AD",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_004",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/expected.json",
+      "expected_value": "p.Ile359Leu",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_004",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/expected.json",
+      "expected_value": "missense",
+      "field_id": "A.variant_type",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_004",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/expected.json",
+      "expected_value": "Pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_005",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_005/expected.json",
+      "expected_value": "severe combined immunodeficiency, autosomal recessive, T cell-negative, B cell-negative, NK cell-negative, due to adenosine deaminase deficiency",
+      "field_id": "B.disease_diagnosis",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_005/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_005",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_005/expected.json",
+      "expected_value": "AR",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_005/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_005",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_005/expected.json",
+      "expected_value": "c.632G>A",
+      "field_id": "A.variant_hgvs_c",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_005/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_005",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_005/expected.json",
+      "expected_value": "Pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_005/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_006",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_006/expected.json",
+      "expected_value": "classic or attenuated familial adenomatous polyposis",
+      "field_id": "B.disease_diagnosis",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_006/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_006",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_006/expected.json",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_006/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_006",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_006/expected.json",
+      "expected_value": "AD",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_006/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_006",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_006/expected.json",
+      "expected_value": "other",
+      "field_id": "A.variant_type",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_006/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_007",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_007/expected.json",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_007/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_007",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_007/expected.json",
+      "expected_value": "AR",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_007/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_007",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_007/expected.json",
+      "expected_value": "c.8575TCT[1]",
+      "field_id": "A.variant_hgvs_c",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_007/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_007",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_007/expected.json",
+      "expected_value": "p.Ser2860del",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_007/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_008",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_008/expected.json",
+      "expected_value": "AD",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_008/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_008",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_008/expected.json",
+      "expected_value": "c.218C>G",
+      "field_id": "A.variant_hgvs_c",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_008/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_008",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_008/expected.json",
+      "expected_value": "p.Ser73Ter",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_008/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_009",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_009/expected.json",
+      "expected_value": "BRCA1-related cancer predisposition",
+      "field_id": "B.disease_diagnosis",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_009/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_009",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_009/expected.json",
+      "expected_value": "AD",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_009/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_009",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_009/expected.json",
+      "expected_value": "p.Cys61Gly",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_009/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_010",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/expected.json",
+      "expected_value": "Fanconi anemia complementation group D1",
+      "field_id": "B.disease_diagnosis",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_010",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/expected.json",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_010",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/expected.json",
+      "expected_value": "AR",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_010",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/expected.json",
+      "expected_value": "p.Ala938Profs",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_010",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/expected.json",
+      "expected_value": "deletion",
+      "field_id": "A.variant_type",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_011",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/expected.json",
+      "expected_value": "BRCA2-related cancer predisposition",
+      "field_id": "B.disease_diagnosis",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_011",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/expected.json",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_011",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/expected.json",
+      "expected_value": "AD",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_011",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/expected.json",
+      "expected_value": "p.Leu2092fs",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_011",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/expected.json",
+      "expected_value": "deletion",
+      "field_id": "A.variant_type",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_012",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_012/expected.json",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_012/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_012",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_012/expected.json",
+      "expected_value": "XL",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_012/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_012",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_012/expected.json",
+      "expected_value": "p.Gln834Ter",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_012/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_013",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_013/expected.json",
+      "expected_value": "CYP1B1-related glaucoma with or without anterior segment dysgenesis",
+      "field_id": "B.disease_diagnosis",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_013/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_013",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_013/expected.json",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_013/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_013",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_013/expected.json",
+      "expected_value": "p.Gly61Glu",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_013/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_013",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_013/expected.json",
+      "expected_value": "missense",
+      "field_id": "A.variant_type",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_013/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_014",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_014/expected.json",
+      "expected_value": "severe combined immunodeficiency due to DCLRE1C deficiency",
+      "field_id": "B.disease_diagnosis",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_014/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_014",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_014/expected.json",
+      "expected_value": "AR",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_014/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_014",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_014/expected.json",
+      "expected_value": "p.Arg81Ter",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_014/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_015",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_015/expected.json",
+      "expected_value": "DICER1-related tumor predisposition",
+      "field_id": "B.disease_diagnosis",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_015/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_015",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_015/expected.json",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_015/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_015",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_015/expected.json",
+      "expected_value": "AD",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_015/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_015",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_015/expected.json",
+      "expected_value": "p.Leu1583Arg",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_015/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_016",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_016/expected.json",
+      "expected_value": "autosomal dominant centronuclear myopathy",
+      "field_id": "B.disease_diagnosis",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_016/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_016",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_016/expected.json",
+      "expected_value": "AD",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_016/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_016",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_016/expected.json",
+      "expected_value": "p.Arg369Gln",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_016/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_017",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_017/expected.json",
+      "expected_value": "hemophilia A",
+      "field_id": "B.disease_diagnosis",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_017/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_017",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_017/expected.json",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_017/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_017",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_017/expected.json",
+      "expected_value": "XL",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_017/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_017",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_017/expected.json",
+      "expected_value": "c.6976C>T",
+      "field_id": "A.variant_hgvs_c",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_017/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_017",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_017/expected.json",
+      "expected_value": "p.Arg2326Ter",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_017/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_018",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_018/expected.json",
+      "expected_value": "XL",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_018/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_018",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_018/expected.json",
+      "expected_value": "p.Arg75Ter",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_018/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_018",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_018/expected.json",
+      "expected_value": "Pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_018/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_019",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_019/expected.json",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_019/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_019",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_019/expected.json",
+      "expected_value": "AD",
+      "field_id": "B.mode_of_inheritance_reported",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_019/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_019",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_019/expected.json",
+      "expected_value": "c.8326C>T",
+      "field_id": "A.variant_hgvs_c",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_019/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_019",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_019/expected.json",
+      "expected_value": "p.Arg2776Ter",
+      "field_id": "A.variant_hgvs_p",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_019/source.md",
+      "split": "adjudication_test"
+    }
+  ],
+  "total_entries": 20,
+  "total_labels": 160,
+  "unresolved_labels": 81
+}
