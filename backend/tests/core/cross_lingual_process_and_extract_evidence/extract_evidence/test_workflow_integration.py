@@ -22,7 +22,7 @@ class FakeProvider:
         self.stages.append(stage)
         if stage == "relevance_scan":
             return DocumentEvidenceMap(relevant=True)
-        if stage == "catalog_extraction":
+        if stage.startswith("catalog_extraction"):
             return [
                 EvidenceItem(
                     field_id="A.gene_symbol",
@@ -71,7 +71,14 @@ async def test_workflow_runs_block_group_ground_chain_quality_order():
 
     state = await EvidenceExtractionWorkflow(provider=provider).run(document)
 
-    assert provider.stages == ["relevance_scan", "catalog_extraction", "special_evidence"]
+    # catalog_extraction dispatches per group (catalog_extraction/<group>);
+    # catalog_backfill (Phase 2) is pure CPU and does NOT call the provider.
+    assert provider.stages[0] == "relevance_scan"
+    assert provider.stages[-1] == "special_evidence"
+    catalog_stages = provider.stages[1:-1]
+    assert catalog_stages == ["catalog_extraction/high_signal", "catalog_extraction/supporting"]
+    assert all(s.startswith("catalog_extraction/") for s in catalog_stages)
+    assert "catalog_backfill" not in provider.stages
     assert state.evidence_items
     assert [item.group_id for item in state.evidence_items]
     assert state.evidence_chains == []

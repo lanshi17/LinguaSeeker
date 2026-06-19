@@ -42,7 +42,9 @@ def _make_evidence_map() -> DocumentEvidenceMap:
 
 
 def _catalog_task_count(chunk_count: int) -> int:
-    return chunk_count * len(CATALOG_GROUPS)
+    # CatalogExtractionStage dispatches every group except `curation` (K),
+    # which is cross-paper GDV metadata filled outside the per-document LLM pass.
+    return chunk_count * (len(CATALOG_GROUPS) - 1)
 
 
 @pytest.mark.asyncio
