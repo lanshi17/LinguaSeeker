@@ -1,8 +1,11 @@
-"""Catalog extraction stage — structured field extraction using the 10-category catalog.
+"""Catalog extraction stage — structured field extraction over the 166-field A–K catalog.
 
-Uses parallel catalog groups to reduce per-call output tokens: the 134-field
-catalog is split into 2 balanced groups (~62 and ~72 fields) that are extracted
-concurrently per chunk, cutting output token demand roughly in half.
+Sends only the LLM-extractable groups to the per-document model:
+  - high_signal (62 fields, A/B/D/E/J)
+  - supporting  (81 fields, C/F/G/H/I)
+The curation group (23 fields, K) is cross-paper GDV metadata and is filtered
+out here; it is filled by the downstream gene-disease validity pipeline.
+Groups run concurrently per chunk via asyncio.Semaphore (see _DEFAULT_CHUNK_CONCURRENCY).
 """
 from __future__ import annotations
 
@@ -10,7 +13,7 @@ import asyncio
 
 from loguru import logger
 
-from ..catalog import CATALOG_GROUPS, EVIDENCE_FIELD_SPECS
+from ..catalog import CATALOG_GROUPS
 from ..chunking import (
     STRONG_TIER_INPUT_BUDGET_TOKENS,
     build_block_prompt_chunks,
@@ -39,8 +42,12 @@ class CatalogExtractionStage:
         self._provider = provider
         self._input_budget_tokens = input_budget_tokens
         self._raw_source_normalizer = RawSourceNormalizer()
-        # Use catalog groups for parallel extraction; fall back to full catalog
-        self._catalog_groups: dict[str, tuple] = dict(CATALOG_GROUPS) if CATALOG_GROUPS else {"full": EVIDENCE_FIELD_SPECS}
+        # Curation (K) is cross-paper GDV metadata, filled outside this stage.
+        self._catalog_groups: dict[str, tuple] = {
+            name: catalog
+            for name, catalog in CATALOG_GROUPS.items()
+            if name != "curation"
+        }
 
     def _max_group_overhead(self, summary: str, extraction_target: ExtractionTarget | None) -> int:
         """Estimate the maximum prompt overhead across all catalog groups."""
