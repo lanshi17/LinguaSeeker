@@ -215,8 +215,13 @@ def get_field_spec(field_id: str) -> EvidenceFieldSpec:
     return _FIELD_BY_ID[field_id]
 
 
-# ── Catalog groups for parallel extraction ─────────────────────────────
-# 166 fields split into 3 groups: 2 for LLM extraction, 1 for GDV curation.
+# ── Catalog groups ─────────────────────────────────────────────────────
+# 166 fields split into 3 groups:
+#   - high_signal (62): A,B,D,E,J — variant, case, population, prediction, authority
+#   - supporting  (81): C,F,G,H,I — segregation, functional, case-control, contradiction, gene
+#   - curation    (23): K         — cross-paper GDV (NOT for single-paper LLM extraction)
+# CatalogExtractionStage filters out `curation`; it is consumed downstream by the
+# cross-paper GDV pipeline.
 _CATALOG_GROUP_CATEGORIES = {
     "high_signal": ("A", "B", "D", "E", "J"),   # 62 fields: variant, case, population, prediction, authority
     "supporting":  ("C", "F", "G", "H", "I"),    # 81 fields: segregation, functional, case-control, contradiction, gene
