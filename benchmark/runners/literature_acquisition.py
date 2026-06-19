@@ -24,6 +24,7 @@ import httpx
 import fitz
 
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
+    multilingual_acquisition_workflow,
     online_acquisition_workflow,
 )
 from src.core.config import get_config
@@ -379,6 +380,138 @@ async def cmd_download(lang_filter: Optional[str] = None) -> None:
     logger.info(f"\nDone. {stats.total_downloaded}/{stats.total_attempted} downloaded in {stats.elapsed_sec:.1f}s")
     logger.info(f"Report: {report_path}")
 
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Multilingual mode — uses multilingual_acquisition_workflow
+# ═══════════════════════════════════════════════════════════════════
+
+
+@dataclass
+class MultilingualRunRecord:
+    """Per-query multilingual run report row."""
+
+    query: str
+    success: bool
+    candidates_total: int
+    candidates_by_lang: Dict[str, int] = field(default_factory=dict)
+    downloads_total: int = 0
+    downloads_pre_parsed: int = 0
+    warnings: List[str] = field(default_factory=list)
+    elapsed_sec: float = 0.0
+
+
+@dataclass
+class MultilingualRunStats:
+    queries: List[MultilingualRunRecord] = field(default_factory=list)
+    total_candidates: int = 0
+    total_downloads: int = 0
+    total_pre_parsed: int = 0
+    total_elapsed_sec: float = 0.0
+
+
+async def cmd_multilingual(
+    queries: List[str],
+    *,
+    download_dir: Optional[str] = None,
+    limit: int = 12,
+    dry_run: bool = False,
+) -> None:
+    """Run multilingual_acquisition_workflow over a list of seed queries.
+
+    Each seed query is internally translated into 6 languages and searched
+    in parallel; this loop iterates over distinct *seed* queries.
+    Reports include per-search-lang candidate counts and pre-parsed
+    (early MinerU) markdown counts on surviving downloads.
+    """
+    setup_logging()
+    out_dir = Path(download_dir) if download_dir else (DOWNLOAD_ROOT / "multilingual")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    report_path = out_dir / "multilingual_report.json"
+
+    stats = MultilingualRunStats()
+    overall_start = time.monotonic()
+
+    logger.info(
+        "Starting multilingual benchmark: {} seed queries → 6 languages each",
+        len(queries),
+    )
+
+    for idx, query in enumerate(queries, 1):
+        logger.info(f"[{idx}/{len(queries)}] {query!r}")
+        payload: Dict[str, Any] = {
+            "action": "search" if dry_run else "download",
+            "query": query,
+            "limit": limit,
+            "language": "auto",
+            "download_path": str(out_dir),
+        }
+
+        q_start = time.monotonic()
+        try:
+            result = await asyncio.wait_for(
+                multilingual_acquisition_workflow(payload),
+                timeout=600,
+            )
+        except asyncio.TimeoutError:
+            stats.queries.append(MultilingualRunRecord(
+                query=query, success=False, candidates_total=0,
+                warnings=["workflow_timeout"],
+                elapsed_sec=round(time.monotonic() - q_start, 2),
+            ))
+            continue
+        except Exception as exc:  # noqa: BLE001
+            stats.queries.append(MultilingualRunRecord(
+                query=query, success=False, candidates_total=0,
+                warnings=[str(exc)[:200]],
+                elapsed_sec=round(time.monotonic() - q_start, 2),
+            ))
+            continue
+
+        candidates = result.get("candidate_links", []) or []
+        downloads = result.get("downloads", []) or []
+        warnings = result.get("warnings", []) or []
+
+        by_lang: Dict[str, int] = {}
+        for c in candidates:
+            lang = c.get("search_lang") or "?"
+            by_lang[lang] = by_lang.get(lang, 0) + 1
+
+        pre_parsed = sum(1 for d in downloads if d.get("parsed_markdown"))
+
+        record = MultilingualRunRecord(
+            query=query,
+            success=bool(result.get("success", False)),
+            candidates_total=len(candidates),
+            candidates_by_lang=by_lang,
+            downloads_total=len(downloads),
+            downloads_pre_parsed=pre_parsed,
+            warnings=warnings,
+            elapsed_sec=round(time.monotonic() - q_start, 2),
+        )
+        stats.queries.append(record)
+        stats.total_candidates += record.candidates_total
+        stats.total_downloads += record.downloads_total
+        stats.total_pre_parsed += pre_parsed
+
+        logger.info(
+            "  candidates={} (by_lang={}) downloads={} pre_parsed={} elapsed={}s",
+            record.candidates_total, by_lang,
+            record.downloads_total, pre_parsed, record.elapsed_sec,
+        )
+
+    stats.total_elapsed_sec = round(time.monotonic() - overall_start, 2)
+
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(report_path, "w", encoding="utf-8") as rf:
+        json.dump(asdict(stats), rf, indent=2, ensure_ascii=False)
+
+    logger.info(
+        "Multilingual benchmark complete: queries={} candidates={} downloads={} pre_parsed={}",
+        len(stats.queries), stats.total_candidates,
+        stats.total_downloads, stats.total_pre_parsed,
+    )
+    logger.info(f"Report: {report_path}")
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -925,6 +1058,21 @@ def main() -> None:
     p_an.add_argument("--llm-timeout", type=int, default=60, help="LLM request timeout in seconds")
     p_an.add_argument("--llm-force", action="store_true", help="Reclassify records even if medical_domain exists")
 
+    p_ml = sub.add_parser(
+        "multilingual",
+        help="Run multilingual_acquisition_workflow on seed queries",
+    )
+    p_ml.add_argument("--query", type=str, default=None,
+                      help="Single seed query (English recommended)")
+    p_ml.add_argument("--query-file", type=str, default=None,
+                      help="Plain text query file; one seed query per line")
+    p_ml.add_argument("--download-dir", type=str, default=None,
+                      help="Override download directory (default: downloads/multilingual)")
+    p_ml.add_argument("--limit", type=int, default=12,
+                      help="Per-request candidate limit across all 6 languages")
+    p_ml.add_argument("--dry-run", action="store_true",
+                      help="Search only, do not download files")
+
     args = parser.parse_args()
 
     if args.cmd == "download":
@@ -938,6 +1086,28 @@ def main() -> None:
             llm_timeout=args.llm_timeout,
             llm_force=args.llm_force,
         )
+    elif args.cmd == "multilingual":
+        seeds: List[str] = []
+        if args.query:
+            seeds = [args.query]
+        elif args.query_file:
+            qfile = Path(args.query_file)
+            if not qfile.exists():
+                logger.error(f"Query file not found: {qfile}")
+                sys.exit(1)
+            seeds = [
+                ln.strip() for ln in qfile.read_text(encoding="utf-8").splitlines()
+                if ln.strip() and not ln.startswith("#")
+            ]
+        else:
+            logger.error("multilingual requires --query or --query-file")
+            sys.exit(1)
+        asyncio.run(cmd_multilingual(
+            seeds,
+            download_dir=args.download_dir,
+            limit=args.limit,
+            dry_run=args.dry_run,
+        ))
 
 
 if __name__ == "__main__":

@@ -37,6 +37,7 @@ from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.r
 )
 
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
+    multilingual_acquisition_workflow,
     online_acquisition_workflow,
 )
 
@@ -856,6 +857,158 @@ async def cmd_rename(
 
 
 # ═══════════════════════════════════════════════════════════════════
+# Multilingual download — uses multilingual_acquisition_workflow
+# ═══════════════════════════════════════════════════════════════════
+
+
+@dataclass
+class MultilingualBenchmarkRecord:
+    """Per-query multilingual run report row."""
+
+    query: str
+    success: bool
+    candidates_total: int
+    candidates_by_lang: Dict[str, int] = field(default_factory=dict)
+    downloads_total: int = 0
+    downloads_pre_parsed: int = 0
+    warnings: List[str] = field(default_factory=list)
+    elapsed_sec: float = 0.0
+
+
+@dataclass
+class MultilingualBenchmarkStats:
+    queries: List[MultilingualBenchmarkRecord] = field(default_factory=list)
+    total_candidates: int = 0
+    total_downloads: int = 0
+    total_pre_parsed: int = 0
+    total_elapsed_sec: float = 0.0
+
+
+async def cmd_multilingual(
+    queries: List[str],
+    *,
+    download_dir: Optional[str] = None,
+    limit: int = 12,
+    dry_run: bool = False,
+    relevance_gate: bool = True,
+    literature_types: Optional[List[str]] = None,
+) -> None:
+    """Drive multilingual_acquisition_workflow over a list of seed queries.
+
+    Each query is translated into 6 languages internally; this loop only
+    iterates over distinct seed queries (e.g. "Rett syndrome MECP2",
+    "MECP2 case report"). Per-query stats include a per-search-lang
+    candidate breakdown, pre-parsed (early MinerU) markdown counts, and
+    surviving downloads after the relevance gate.
+    """
+    out_dir = Path(download_dir) if download_dir else (
+        MODULE_DIR / "downloads" / "rett_multilingual"
+    )
+    out_dir.mkdir(parents=True, exist_ok=True)
+    report_path = out_dir / "multilingual_report.json"
+
+    stats = MultilingualBenchmarkStats()
+    overall_start = time.monotonic()
+
+    logger.info(
+        "Starting multilingual benchmark: {} seed queries → 6 languages each",
+        len(queries),
+    )
+
+    for idx, query in enumerate(queries, 1):
+        logger.info(f"[{idx}/{len(queries)}] {query!r}")
+        payload: Dict[str, Any] = {
+            "action": "search" if dry_run else "download",
+            "query": query,
+            "limit": limit,
+            "language": "auto",
+            "download_path": str(out_dir),
+            "relevance_gate": relevance_gate,
+        }
+        if literature_types:
+            payload["literature_types"] = literature_types
+
+        q_start = time.monotonic()
+        try:
+            result = await asyncio.wait_for(
+                multilingual_acquisition_workflow(payload),
+                timeout=600,
+            )
+        except asyncio.TimeoutError:
+            logger.warning(f"[{idx}] timeout: {query}")
+            stats.queries.append(
+                MultilingualBenchmarkRecord(
+                    query=query, success=False,
+                    candidates_total=0,
+                    warnings=["workflow_timeout"],
+                    elapsed_sec=round(time.monotonic() - q_start, 2),
+                )
+            )
+            continue
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"[{idx}] failed: {query}: {exc}")
+            stats.queries.append(
+                MultilingualBenchmarkRecord(
+                    query=query, success=False,
+                    candidates_total=0,
+                    warnings=[str(exc)[:200]],
+                    elapsed_sec=round(time.monotonic() - q_start, 2),
+                )
+            )
+            continue
+
+        candidates = result.get("candidate_links", []) or []
+        downloads = result.get("downloads", []) or []
+        warnings = result.get("warnings", []) or []
+
+        by_lang: Dict[str, int] = {}
+        for c in candidates:
+            lang = c.get("search_lang") or "?"
+            by_lang[lang] = by_lang.get(lang, 0) + 1
+
+        pre_parsed = sum(1 for d in downloads if d.get("parsed_markdown"))
+
+        record = MultilingualBenchmarkRecord(
+            query=query,
+            success=bool(result.get("success", False)),
+            candidates_total=len(candidates),
+            candidates_by_lang=by_lang,
+            downloads_total=len(downloads),
+            downloads_pre_parsed=pre_parsed,
+            warnings=warnings,
+            elapsed_sec=round(time.monotonic() - q_start, 2),
+        )
+        stats.queries.append(record)
+        stats.total_candidates += record.candidates_total
+        stats.total_downloads += record.downloads_total
+        stats.total_pre_parsed += pre_parsed
+
+        logger.info(
+            "  candidates={} (by_lang={}) downloads={} pre_parsed={} elapsed={}s",
+            record.candidates_total,
+            by_lang,
+            record.downloads_total,
+            pre_parsed,
+            record.elapsed_sec,
+        )
+
+    stats.total_elapsed_sec = round(time.monotonic() - overall_start, 2)
+
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(report_path, "w", encoding="utf-8") as rf:
+        json.dump(asdict(stats), rf, indent=2, ensure_ascii=False)
+
+    logger.info(
+        "Multilingual benchmark complete: {} queries, {} candidates, {} downloads, {} pre-parsed",
+        len(stats.queries),
+        stats.total_candidates,
+        stats.total_downloads,
+        stats.total_pre_parsed,
+    )
+    logger.info(f"Report: {report_path}")
+
+
+# ═══════════════════════════════════════════════════════════════════
 # CLI
 # ═══════════════════════════════════════════════════════════════════
 
@@ -890,6 +1043,25 @@ def main() -> None:
     p_ren.add_argument("--download-dir", type=str, default=None, help="PDF directory (default: downloads/rett)")
     p_ren.add_argument("--dry-run", action="store_true", help="Preview only, do not rename")
     p_ren.add_argument("--concurrency", type=int, default=8, help="Parallel LLM calls")
+
+    p_ml = sub.add_parser(
+        "multilingual",
+        help="Multilingual benchmark — drives multilingual_acquisition_workflow",
+    )
+    p_ml.add_argument("--query-file", type=str, default=None,
+                      help="Plain text query file; one seed query per line")
+    p_ml.add_argument("--query", type=str, default=None,
+                      help="Single seed query (alternative to --query-file)")
+    p_ml.add_argument("--download-dir", type=str, default=None,
+                      help="Override download directory")
+    p_ml.add_argument("--limit", type=int, default=12,
+                      help="Per-request candidate limit (across all 6 languages)")
+    p_ml.add_argument("--dry-run", action="store_true",
+                      help="Search only, do not download files")
+    p_ml.add_argument("--no-relevance-gate", action="store_true",
+                      help="Disable LLM relevance gate")
+    p_ml.add_argument("--literature-types", type=str, default=None,
+                      help="Comma-separated literature_type filter (e.g. case_report,sequencing)")
 
     args = parser.parse_args()
 
@@ -947,6 +1119,33 @@ def main() -> None:
             download_dir=args.download_dir,
             dry_run=args.dry_run,
             concurrency=args.concurrency,
+        ))
+    elif args.cmd == "multilingual":
+        seeds: List[str] = []
+        if args.query:
+            seeds = [args.query]
+        elif args.query_file:
+            qfile = Path(args.query_file)
+            if not qfile.exists():
+                logger.error(f"Query file not found: {qfile}")
+                sys.exit(1)
+            seeds = load_queries(qfile)
+        else:
+            logger.error("multilingual requires --query or --query-file")
+            sys.exit(1)
+
+        lit_types = (
+            [t.strip() for t in args.literature_types.split(",") if t.strip()]
+            if args.literature_types else None
+        )
+
+        asyncio.run(cmd_multilingual(
+            seeds,
+            download_dir=args.download_dir,
+            limit=args.limit,
+            dry_run=args.dry_run,
+            relevance_gate=not args.no_relevance_gate,
+            literature_types=lit_types,
         ))
 
 
