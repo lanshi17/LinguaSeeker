@@ -4,13 +4,13 @@
   "is_complete": false,
   "labels": [
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "DICER1",
       "field_id": "A.gene_symbol",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:1",
+      "source_quote": "# DICER1 platform domain missense variants inhibit miRNA biogenesis and lead to tumor susceptibility",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -40,13 +40,13 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "c.4748T>G",
       "field_id": "A.variant_hgvs_c",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:155",
+      "source_quote": "12 | Hill DA, 2009 PMID: 19556464 | PPB | p.L1583R | c.4748T>G | RNase IIIa | Not done | Not done | LP^ | N/P | Probably damaging | Not tolerated | Damaging: Buried hydrophilic introduced, buried charge introduced",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -58,22 +58,22 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "missense",
       "field_id": "A.variant_type",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:1",
+      "source_quote": "# DICER1 platform domain missense variants inhibit miRNA biogenesis and lead to tumor susceptibility",
+      "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "Likely pathogenic",
       "field_id": "J.clinvar_assertion",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:133",
+      "source_quote": "1A , Table 1 ). Given the unknown role of the Platform in DTPS, we decided to focus on variants in this domain. Based on our own laboratory data, we had previously indicated that we considered the variants p.G803R, p.L805P and p.L881P to be Likely Pathogenic, but we lacked further tumor sequencing information from persons with p.G803R and p.L881P germline variants. Additionally, from the variants in Table 1 , three out of six cases in which second somatic DICER1 mutations were identified in tumo",
+      "visibility": "source_visible"
     }
   ],
   "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_015/source.md",

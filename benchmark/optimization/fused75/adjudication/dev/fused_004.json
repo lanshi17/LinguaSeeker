@@ -4,13 +4,13 @@
   "is_complete": false,
   "labels": [
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "ACTA1",
       "field_id": "A.gene_symbol",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_004/source.md:15",
+      "source_quote": "\u03b1-actin (ACTA1) gene, which is the second most common cause of this disease.",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -40,13 +40,13 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "c.1075A>C",
       "field_id": "A.variant_hgvs_c",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_004/source.md:88",
+      "source_quote": "examination was planned. NM_001100.3 : c.1075A>C (p.I359L) (heterozygous) mutation was",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,

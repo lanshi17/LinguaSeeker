@@ -4,13 +4,13 @@
   "is_complete": false,
   "labels": [
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "BRCA2",
       "field_id": "A.gene_symbol",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_011/source.md:5",
+      "source_quote": "The mechanisms by which it develops include germline (generally inherited) and somatic mutations. There are six mutations with the highest incidence in the Colombian population, called the Colombia profile, which is associated with the BRCA1 and BRCA2 genes. The aim of this study is to identify germline mutations in individuals with breast cancer, such as BRCA and other genes. Methods This study describes the frequency and type of variants in hereditary cancer genes associated with breast cance",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -40,13 +40,13 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "c.6275_6276del",
       "field_id": "A.variant_hgvs_c",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_011/source.md:74",
+      "source_quote": "is genetic variability may be due to factors such as historical migration, population mix and geographic isolation. Likewise, we observed other mutations in the BRCA genes with equal or greater frequency, such as c.1674del (4/18) in BRCA1 and c.6275_6276del (5/18) in BRCA2 . As sequencing technology and methods advance, new mutations are discovered in different genes, including BRCA1 and BRCA2. NGS has allowed us to analyse genes in greater detail and find mutations that were previously unknown,",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -67,13 +67,13 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "Pathogenic",
       "field_id": "J.clinvar_assertion",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_011/source.md:5",
+      "source_quote": "ncing of a panel of 111 hereditary cancer genes, including BRCA1 and BRCA2 . Results This analysis allowed the identification of variants associated with breast cancer in 307 patients from a population in southwestern Colombia, of which 19% had pathogenic and probably pathogenic mutations associated with hereditary cancer. According to the variant classification, it was found that the mutation frequency in BRCA1 was 17%, in BRCA2 was 14% and in the ATM gene was 12%; nevertheless, 57% of mutation",
+      "visibility": "source_visible"
     }
   ],
   "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/source.md",

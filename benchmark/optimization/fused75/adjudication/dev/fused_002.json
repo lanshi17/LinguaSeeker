@@ -4,13 +4,13 @@
   "is_complete": false,
   "labels": [
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "ACADVL",
       "field_id": "A.gene_symbol",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_002/source.md:12",
+      "source_quote": "en results from homozygosity or compound heterozygosity for null variants. Milder forms are often associated with residual enzyme activity. However, this correlation is far from perfect. The effect of novel acyl-CoA dehydrogenase very long-chain (ACADVL) variants identified in pre-symptomatic patients diagnosed through newborn screening is less clear, and the same is true for compound heterozygosity variants. For these reasons, functional assays like VLCAD enzyme activity are essential to proper",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -58,13 +58,13 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "missense",
       "field_id": "A.variant_type",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_002/source.md:99",
+      "source_quote": "ring initial presentation, as he was detected through a positive newborn screening and then he continued to be asymptomatic. This presentation corresponds to what is reported in the literature [ 9 ]. The majority of pathogenic variants found are missense variants. The variant c.1844G>A, p.(Arg615Gln) found in patient number 10 was reclassified as likely benign. This emphasizes the importance of performing an enzyme activity assay to confirm VLCAD deficiency diagnosis. Pena et al. (2016) reported",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,

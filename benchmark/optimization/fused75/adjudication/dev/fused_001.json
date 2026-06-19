@@ -4,13 +4,13 @@
   "is_complete": false,
   "labels": [
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "ABCA4",
       "field_id": "A.gene_symbol",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_001/source.md:5",
+      "source_quote": "Purpose To quantitatively investigate disease progression and genotype\u2013phenotype correlations in Stargardt disease patients harboring the common ABCA4 variant c.5882G>A p.(Gly1961Glu), aiming to evaluate the contribution of second ABCA4 variants to disease severity. Methods This multicenter study included 77 Stargardt disease patients uniformly carrying the ABCA4 c.5882G>A p.(Gly1961Glu) variant from Nijmegen, Bonn, and Basel. Ellipsoid zone (EZ) loss was measured using automated segmentation of",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -40,13 +40,13 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "c.5882G>A",
       "field_id": "A.variant_hgvs_c",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_001/source.md:1",
+      "source_quote": "# Genetic Correlates of Phenotypic Variability in c.5882G>A p.(Gly1961Glu)-Associated Stargardt Disease",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -58,22 +58,22 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "missense",
       "field_id": "A.variant_type",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_001/source.md:155",
+      "source_quote": "with previous reports showing that this allele accelerates disease onset relative to early truncating variants, likely owing to a combined loss-of-function and toxic gain-of-function mechanism. 25 However, we did not observe previous genotype\u2013phenotype association for most other variants. For example, a missense variant not considered to be severe (c.1957G>T) 16 was among the most severe phenotypes in our cohort, whereas a deletion of six exons was associated with a surprisingly mild phenotype.",
+      "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "Pathogenic",
       "field_id": "J.clinvar_assertion",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_001/source.md:7",
+      "source_quote": "Stargardt disease (STGD1) is one of the most common inherited retinal dystrophies, resulting from biallelic pathogenic variants in the ABCA4 gene. 1 The disease is characterized by progressive central vision loss owing to photoreceptor degeneration and RPE atrophy. 2 , 3 Considerable phenotypic variability exists among patients, with differences in age of onset, progression rate, and severity, presenting a major challenge for both predicting disease progression and therapeutic development. 4 \u2013 6",
+      "visibility": "source_visible"
     }
   ],
   "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_001/source.md",

@@ -3164,3 +3164,33 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 - 测试新增 catalog 字段时,断言 EVIDENCE_FIELD_SPECS 总数与 test_catalog.py 同步。
 - 改 prompt 文本后,检查所有按 `input_budget_tokens` 硬编码 chunk 数的 stage 测试——prompt 变大 → overhead 变大 → chunk 数变大。
 - mock provider 的 stage 匹配一律用 `startswith`,不要 `==`;stage 名普遍带 `/<group>[/<chunk>]` 后缀。
+
+## 2026-06-19 Fused-75 source-visible preannotation path handling
+
+### 问题
+- `benchmark/optimization/fused75/adjudication/*.json` 中的 `source_path` 是相对项目根目录的路径。
+- 从 `backend/` 目录执行 `python -m benchmark.optimization.fused75.source_visible_drafts` 时,预标注器按当前工作目录解析这些路径,导致 20 个真实 fused-75 source.md 全部被误报为 missing。
+- 第一版 exact substring 还会把短值 `AR` 错配到 `Caribbean` 这类单词内部。
+
+### 排查过程
+- 先用新增单测确认目录预标注器能在绝对路径 source 下写入 exact-match source-visible 草稿。
+- 真实运行返回 `processed_entries=0` 和 20 个 missing source,但这些文件在项目根下实际存在。
+- 补充回归测试:模板保留相对 `benchmark/data/.../source.md`,函数显式接收 `project_root`,要求从项目根解析。
+- diff review 时发现 `B.mode_of_inheritance_reported=AR` 被标在标题行,新增短 token 边界测试和机器结果刷新测试。
+
+### 根因
+- benchmark CLI 通常从 `backend/` 配合 `PYTHONPATH=..` 执行,而模板路径语义是 repo-root relative。
+- 代码把 `Path.exists()` 直接用在模板路径上,隐式依赖调用者 cwd。
+- 对医学短码/遗传方式缩写使用裸 substring 匹配,没有要求字母数字边界。
+
+### 解决方案
+- 在 `source_visible_drafts.py` 中将相对 source path 统一解析为 `Path(__file__).resolve().parents[3] / source_path`。
+- 保留 `project_root` 参数用于测试和未来迁移。
+- 预标注只填 source-visible exact match quote/location/adjudicator,不修改 `is_complete`。
+- exact match 改为 `(?<![A-Za-z0-9])value(?![A-Za-z0-9])` 边界匹配;同一 `exact-match-preannotator` 产生的旧标签允许重算覆盖,人工 adjudicator 标签仍保持不动。
+
+### 预防措施
+- benchmark 文件中跨目录持久化的路径,统一明确“repo-root relative”或保存绝对路径。
+- CLI 测试至少覆盖一次从非项目根 cwd 调用的路径解析场景。
+- 对 1-3 字符标签和缩写字段必须覆盖“词内不匹配”的测试,尤其是 MOI、variant type、classification 等短值。
+- 自动预标注不得替代人工 adjudication:机器输出必须保持 `is_complete=false`,由 validator 继续阻断 promotion。
