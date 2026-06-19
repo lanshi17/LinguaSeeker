@@ -657,6 +657,7 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
             query=query,
             downloads=downloads,
             delete_files=True,
+            literature_types=list(request.literature_types) or None,
         )
         # Keep only relevant downloads (and those with errors — conservative)
         relevant_paths = {
@@ -683,6 +684,71 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
 
 
 # ── Multilingual Acquisition Workflow ──────────────────────────────────────
+
+
+async def _batch_parse_downloads(
+    downloads: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Submit downloaded PDFs to MinerU as a batch and attach parsed markdown.
+
+    Each download dict gains a ``parsed_markdown`` (str) and ``parser_used``
+    field. Files that MinerU fails to parse keep the dict but with empty
+    markdown — the relevance gate then falls back to PDF text extraction.
+
+    Imports ``create_parse_service`` lazily to avoid a hard dependency on
+    PyO3 native extensions during plain ``import`` of this module (e.g.
+    in unit tests that don't exercise parsing).
+    """
+    if not downloads:
+        return downloads
+
+    file_paths = [d.get("file_path", "") for d in downloads if d.get("file_path")]
+    if not file_paths:
+        return downloads
+
+    try:
+        from src.core.ingest_and_digitize_data.parse_document import (
+            create_parse_service,
+        )
+    except Exception as exc:
+        logger.warning("MinerU parse_service unavailable, skipping early parse: {}", exc)
+        return downloads
+
+    try:
+        service = create_parse_service()
+        batch = await service.parse_local_files(file_paths)
+    except Exception as exc:
+        logger.warning("MinerU batch parse failed, falling back to PDF extraction: {}", exc)
+        return downloads
+
+    # MinerU keys parsed results by basename of the uploaded file.
+    parsed_by_name: Dict[str, Any] = batch.results
+    for d in downloads:
+        fp = d.get("file_path") or ""
+        if not fp:
+            continue
+        name = os.path.basename(fp)
+        result = parsed_by_name.get(name)
+        if result is None:
+            # Try stem match as a fallback (MinerU may rename extension).
+            stem = os.path.splitext(name)[0]
+            for key in parsed_by_name:
+                if os.path.splitext(key)[0] == stem:
+                    result = parsed_by_name[key]
+                    break
+        if result is None:
+            continue
+        d["parsed_markdown"] = result.full_markdown
+        d["parser_used"] = result.parser_used
+
+    parsed_count = sum(1 for d in downloads if d.get("parsed_markdown"))
+    logger.info(
+        "early MinerU parse: {}/{} downloads parsed",
+        parsed_count,
+        len(downloads),
+    )
+    return downloads
+
 
 
 async def search_language(
@@ -883,12 +949,21 @@ async def multilingual_acquisition_workflow(
         for dr in download_results
     ]
 
+    # === Phase 2.5: Early MinerU batch parse ===
+    # Submit downloads to MinerU before the relevance gate so the LLM can
+    # judge against rich extracted markdown instead of fitz-extracted PDF
+    # text. Survivors carry their markdown forward as ``pre_parsed_markdown``
+    # for downstream Phase 1 (which then skips MinerU re-parsing).
+    if downloads:
+        downloads = await _batch_parse_downloads(downloads)
+
     # === Phase 3: LLM Content Gate ===
     if request.relevance_gate and downloads:
         gate_result = await run_relevance_gate(
             query=base_query,
             downloads=downloads,
             delete_files=True,
+            literature_types=list(request.literature_types) or None,
         )
         relevant_paths = {
             j.file_path for j in gate_result.judgments
