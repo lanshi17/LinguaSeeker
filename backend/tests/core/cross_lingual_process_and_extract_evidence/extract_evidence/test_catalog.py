@@ -33,3 +33,22 @@ def test_catalog_lookup_returns_spec():
     spec = get_field_spec("A.variant_type")
     assert spec.field_id == "A.variant_type"
     assert "PVS1" in spec.acmg_codes
+
+
+def test_catalog_extraction_stage_excludes_curation_group():
+    from unittest.mock import MagicMock
+
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import (
+        CATALOG_GROUPS,
+    )
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction import (
+        CatalogExtractionStage,
+    )
+
+    assert "curation" in CATALOG_GROUPS, "Sanity: curation must still exist in the catalog source."
+
+    stage = CatalogExtractionStage(MagicMock())
+
+    assert set(stage._catalog_groups.keys()) == {"high_signal", "supporting"}
+    assert "curation" not in stage._catalog_groups
+    assert sum(len(g) for g in stage._catalog_groups.values()) == 143  # 62 + 81
