@@ -1,6 +1,6 @@
 ---
-# Non-secret configuration for the Rett annotation benchmark tool.
-# Source of truth rendered to benchmark/datasets/rett_annotation/config.yaml.
+# Non-secret configuration for the benchmark subproject.
+# Renders to: benchmark/datasets/rett_annotation/ and benchmark/data/inputs/literature_acquisition/
 # Secrets live in vault/secrets.yml (ansible-vault encrypted, gitignored).
 
 # Canonical destination root for rendered configs. Resolves to
@@ -9,6 +9,10 @@
 rett_annotation_dest_root: "{{ (playbook_dir | dirname | dirname) }}/datasets/rett_annotation"
 rett_annotation_config_dest: "{{ rett_annotation_dest_root }}/config.yaml"
 rett_annotation_env_dest: "{{ rett_annotation_dest_root }}/.env"
+
+# Destination for the multilingual acquisition config files (rett_config*.json).
+# Same playbook_dir-based resolution as above → <repo-root>/benchmark/data/inputs/literature_acquisition
+rett_acquisition_dest_dir: "{{ (playbook_dir | dirname | dirname) }}/data/inputs/literature_acquisition"
 
 rett_annotation_llm:
   base_url: "https://linxi.chat/v1"

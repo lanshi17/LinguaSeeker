@@ -3190,3 +3190,36 @@ benchmark 子项目的配置文件散落在 `benchmark/datasets/rett_annotation/
 - template 任务不要加 `changed_when: true`;让 template 模块的 checksum 比对保证幂等。
 - 密钥一律走 ansible-vault;`.vault_pass` 与加密后的 secrets.yml 必须进 .gitignore,同时保留 `*.example` 占位文件供新检出者引导。
 - 用 hashline 编辑 YAML inventory 时,SWAP 行范围必须覆盖全部要改的行,否则会留下重复行(本次遗留一行 `ansible_connection: local`,改为整文件 rewrite 修复)。
+
+## 2026-06-19 集中 benchmark 所有散落配置(文件 + 硬编码常量)
+
+### 问题描述
+上一任务只迁移了 rett_annotation 的自包含配置。本次要求把 benchmark 散落在各处的配置全部集中:配置文件(rett_config.json/rett_config_02.json)与硬编码 Python 常量(poll/retry/base_url/threshold/seed queries)。
+
+### 排查过程
+1. find 扫描 benchmark 下所有 yaml/toml/ini/json/env/config.py,区分"自包含配置文件"与"调用 backend/config 的 runner"。新增候选:rett_config.json/rett_config_02.json(在 data/inputs/literature_acquisition/)、pipeline/manifest.json、core/paths.py、ground_truth/manifest.json。
+2. search 扫描 runners 硬编码常量,发现重复:POLL_INTERVAL_S/MAX_POLL_ATTEMPTS/TERMINAL_STATUSES 在 core/pipeline_client.py + pipeline_e2e.py + clingen_preprocess.py 三处定义;DEFAULT_BASE_URL/PHASE2_* 在 phase2_batch + benchmark_b_phase2_sample 两处定义;TIER1 阈值/DEFAULT_SEED_QUERIES 单点散落。
+3. 查 core/pipeline_client.py 发现 submit_and_poll 在 call time 从 module 对象读取 POLL_INTERVAL_S/MAX_POLL_ATTEMPTS,以便测试 monkeypatch `benchmark.core.pipeline_client.POLL_INTERVAL_S`。结论:poll 常量规范源必须在 core,不能搬到 config/defaults.py。
+4. 查测试:只有 core.pipeline_client.POLL_INTERVAL_S 被 monkeypatch(test_evaluate_matching.py);无测试引用 runner 级 DEFAULT_BASE_URL/TIER1/SEED_QUERIES。故 import-swap 安全。
+
+### 根因分析
+- "配置"有两类,需不同机制:可调/含密文件 → Ansible 渲染;代码级运行常量 → 中心 Python 模块。混用 Ansible 渲染代码常量属过度设计(常量与环境无关,渲染只增摩擦,违规则 20.2)。
+- 重复根因:runner 各自重定义 core 已有的常量,而非 import。
+- literature_rett 的 CONFIG_FILE 默认 `MODULE_DIR/rett_config.json`(MODULE_DIR=benchmark/runners/)是 stale——该目录从未有此文件,用户一直靠 --config 显式传参。
+
+### 解决方案
+- 文件:rett_config*.json 用 `copy` 模块(静态内容,非 template),源放 roles/rett_acquisition_config/files/,渲染到 data/inputs/literature_acquisition/。pipeline/manifest.json 经用户确认为数据,不迁移。
+- 常量:新建 benchmark/config 包(__init__.py + defaults.py)放可调运行常量;runner import 之。poll 常量留 core,runner 改 import from benchmark.core 去重。import 用 `as` 保留旧别名(DEFAULT_PIPELINE_BASE_URL as DEFAULT_BASE_URL)以维持调用点不变。
+- 路径:defaults.py 从 benchmark.core.paths import BENCHMARK_ROOT 解析,消除 runner CWD 依赖;CONFIG_FILE 默认改 RETT_CONFIG_PATH。
+
+### 踩坑
+- **SWAP 空白 body 删除行会留下字面 `DEL` token**:edit 工具的 `SWAP N.=M:` 必须有 body 行;要删行用 `DEL N.=M` 形式。本次在 4 个文件踩到,每次都要再 `DEL` 清理。
+- **SWAP 范围误吞相邻 import**:简化 phase2_batch 导入时,`SWAP 15.=26` 跨越了 `from benchmark.core import GROUND_TRUTH_DIR,REPORTS_DIR,load_proxy` 行,被删除导致 NameError。import-check 阶段捕获。修法:重读确认范围,INS.POST 补回。教训:用 SWAP 合并/简化多行 import 时,务必核对范围是否包含未列入新 body 的 keeper。
+- **自测断言写错期望值**:我把 DEFAULT_SEED_QUERIES 期望写成 26,实际 25(原文件 208-232 行=25 条)。自测报 AssertionError 才发现是断言错而非代码错。教训:断言期望值要先从源数据精确计数,别凭印象。
+
+### 预防措施
+- 删除行一律用 `DEL N.=M`,不用 `SWAP` 空 body。
+- 多行 import 重构后立即 import-check 全部受影响模块,捕获被误删的 import。
+- 自测断言的期望值从源文件精确数/复制,不凭记忆。
+- 中心常量模块只放"可调运行参数";与 primitive 强耦合且被测试 monkeypatch 的常量留原处,去重靠 import 而非搬家。
+- 静态大内容配置文件(如 rett_config 的多语言 query 数组)用 ansible `copy` 而非 `template`;template+group_vars 只适合可变量化的小结构。
