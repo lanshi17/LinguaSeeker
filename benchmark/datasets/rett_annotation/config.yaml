@@ -1,6 +1,7 @@
 llm:
   base_url: "https://linxi.chat/v1"
-  model: "claude-opus-4-8"
+  # model: "claude-opus-4-8"
+  model: "gpt-5-nano"
   max_tokens: 32768
   temperature: 0.0
   timeout: 120

@@ -28,7 +28,7 @@ cp .env.example .env
 ## 安装
 
 ```bash
-cd benchmark/annotation
+cd benchmark/datasets/rett_annotation
 uv sync
 ```
 
@@ -69,6 +69,38 @@ uv run python cli/generate_drafts.py --force
 ```
 
 输出：`draft/rett_NNN/expected.json`（标注草稿）
+
+### 2.1 Catalog 驱动重新标注
+
+主项目字段目录更新后，使用 `cli/catalog_reannotate.py` 按当前 `knowledges/evidence-field-catalog.json` 重新生成标注。该脚本只抽取 A-J 单篇文献字段，自动排除 K 类跨论文 GDV curation 字段。
+
+```bash
+# 快速字段覆盖扫描（不写入 expected.json）
+uv run python cli/catalog_reannotate.py \
+  --model gpt-5-nano \
+  --limit 5 \
+  --concurrency 2 \
+  --report reports/gpt5_nano_field_scan_sample.json
+
+# 真实 ground_truth 重标注（写入 ground_truth/approved/draft 中已有条目）
+uv run python cli/catalog_reannotate.py \
+  --model claude-opus-4-8 \
+  --concurrency 3 \
+  --write \
+  --report reports/claude_opus_4_8_reannotation.json
+
+# 429 或长文失败时，缩小输入块并降低输出上限后重跑指定条目
+uv run python cli/catalog_reannotate.py \
+  --model claude-opus-4-8 \
+  --entries rett_020 rett_030 \
+  --concurrency 1 \
+  --max-tokens 16384 \
+  --chunk-size 6000 \
+  --write \
+  --report reports/claude_opus_4_8_reannotation_retry_compact.json
+```
+
+输出：`ground_truth/rett_NNN/expected.json`、同步的 `approved/` 和 `draft/` 现有条目、`ground_truth/selection.json`、以及 `reports/*.json` 运行报告。空 `expected_evidence` 会被视为失败，不会覆盖现有标注。
 
 ### 3. 人工审核
 
@@ -129,9 +161,9 @@ benchmark/annotation/
 
 ## Schema 兼容性
 
-`expected.json` 的证据字段（`expected_evidence`）完全使用主项目 `EVIDENCE_FIELD_SPECS` 目录定义的标准 `field_id`（10 个类别 A–J，共 138 个字段），与 ClinGen/ClinVar-fused 数据集格式一致。
+`expected.json` 的证据字段（`expected_evidence`）使用主项目当前字段目录中的 A-J 单篇文献字段：`knowledges/evidence-field-catalog.json` schema `2.0.0`，共 143 个 literature-extractable 字段。K 类 Gene-Disease Validity Curation 字段是跨论文 curation 字段，不进入 Rett 单篇文献标注。
 
-每条 `expected_evidence` 记录对应文章中实际出现的一个字段，包含 `field_id`、`value`、`evaluation_type`（`precision_recall` 或 `precision_only`）、`candidates`（多变体时可选值列表）。不同文章提取到的字段数量和种类各不相同，不强制固定字段集。
+每条 `expected_evidence` 记录对应文章中实际出现的一个字段，包含 `field_id`、`value`、`evaluation_type`（`precision_recall` 或 `precision_only`）、`candidates`（多变体时可选值列表）。不同文章提取到的字段数量和种类各不相同，不强制固定字段集；空字段不写入 `expected_evidence`。
 
 **Rett 数据集特征**：
 - 基因通常为 **MECP2**（HGNC:6992），非典型 Rett 可见 CDKL5/FOXG1
@@ -144,15 +176,18 @@ benchmark/annotation/
 
 ```bash
 # 1. 环境准备
-cd benchmark/annotation
+cd benchmark/datasets/rett_annotation
 cp .env.example .env && $EDITOR .env
 uv sync
 
 # 2. 解析全部 PDF（MinerU API，约 10-30 分钟）
 uv run python cli/parse_pdfs.py
 
-# 3. AI 生成标注草稿（约 10-20 分钟）
+# 3. AI 生成标注草稿（旧 55 字段 prompt；字段目录更新后优先使用 catalog_reannotate.py）
 uv run python cli/generate_drafts.py
+
+# 3b. 使用当前主项目字段目录重新标注 ground_truth
+uv run python cli/catalog_reannotate.py --model claude-opus-4-8 --write
 
 # 4. 人工审核（循环执行）
 uv run python cli/review_status.py --list --status draft

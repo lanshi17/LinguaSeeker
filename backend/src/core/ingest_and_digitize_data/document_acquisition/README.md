@@ -1,6 +1,6 @@
 # Document Acquisition
 
-> Unified document acquisition facade for CrossEvidence's Phase 1 pipeline. Provides a single `acquire()` entry point that routes to either local file upload or online literature search/download with multi-provider fallback chains.
+> Unified document acquisition facade for CrossEvidence's Phase 1 pipeline. Provides a single `acquire()` entry point that routes to either local file upload or online literature search/download with multi-provider fallback chains, multilingual query translation, MinerU batch pre-parsing, and typed LLM relevance gating.
 
 ## Quick Start
 
@@ -49,32 +49,44 @@ DocumentAcquisitionService (facade)
 │       └── rust_io.files (SHA-256 + disk write)
 │
 └── source=ONLINE ──► online_acquisition/
-    ├── workflow.online_acquisition_workflow()
-    │   ├── Identifier extraction (DOI/PMID/PMCID regex)
-    │   ├── Provider chain selection (API vs Web)
-    │   ├── _handle_search() — iterates API provider chain
-    │   └── _handle_download() — API chain → DOI fallback → Web fallback
+    ├── workflow.py (three-phase pipeline)
+    │   ├── online_acquisition_workflow()     — single-language path
+    │   │   Phase 1: _acquire_links_api (parallel) + _acquire_links_firecrawl
+    │   │   Phase 2: _download_candidates (DOI→OA, PMCID→PMC, URL→direct)
+    │   │   Phase 3: run_relevance_gate
+    │   │
+    │   └── multilingual_acquisition_workflow() — multilingual path
+    │       Phase 0: query_translator → en/zh/ja/de/fr/ru
+    │       Phase 1: search_language × 6 (search_parallel)
+    │       Phase 2: _download_candidates
+    │       Phase 2.5: _batch_parse_downloads (MinerU)
+    │       Phase 3: run_relevance_gate (typed)
     │
     ├── gateway.py (net_io bridge)
     │   ├── call_provider() → net_io.fetch_one()
     │   ├── search_provider() — with retry
-    │   └── download_from_provider() — candidate URL → PDF download
+    │   ├── resolve_oa_url() — Unpaywall OA URL extraction
+    │   └── download_file_from_url() — HTTP file download
     │
     ├── search_service.py (multilingual orchestration)
-    │   ├── build_provider_plan() — language-based routing
-    │   ├── search_multilingual() — serial search with dedup
-    │   └── search_parallel() — concurrent search with asyncio.Semaphore
+    │   ├── build_provider_plan() — language-based routing from LANG_PROVIDER_MATRIX
+    │   ├── search_multilingual() — sequential plan walk with health-aware reordering
+    │   ├── search_parallel() — concurrent search with asyncio.Semaphore
+    │   ├── dedupe_candidates() — DOI/URL/title dedup
+    │   └── rank_candidates() — title match + DOI + year ranking
     │
-    ├── doi_fallback.py — DOI landing page probe → PDF extraction
+    ├── query_translator.py — LLM query translation to 6 languages
+    ├── relevance_gate.py — LLM-based content relevance gate (typed/untyped)
     ├── normalizers.py — per-provider → OnlineAcquisitionItem
     ├── pubmed_service.py — PubMed esearch/esummary/efetch
     ├── provider_health.py — sliding-window health tracking
-    └── literature_type_classifier.py — keyword-based classification
+    ├── literature_type_classifier.py — keyword-based classification
+    └── web_search/
+        ├── adapter.py — SearchLink data contract
+        └── firecrawl_adapter.py — Firecrawl search + scrape integration
 ```
 
 Data flows top-down: the facade dispatches to a submodule, which calls the gateway (Rust `net_io`) for API providers. All raw provider responses are normalized to `OnlineAcquisitionItem` before returning.
-
-**Note**: Web scraper adapters (crawl4ai-based) were archived on 2026-06-16 due to high maintenance costs and instability. See `docs/archive/deprecated-modules/web-scraper-adapters/`.
 
 ## Public API
 
@@ -101,10 +113,12 @@ Data flows top-down: the facade dispatches to a submodule, which calls the gatew
 | `download_path` | `str` | `"./downloads"` | PDF save directory |
 | `language` | `Optional[str]` | `"auto"` | Language hint for provider routing |
 | `prefer` | `str` | `"auto"` | `"auto"`, `"api"`, or `"web"` |
-| `web_provider` | `Optional[str]` | `None` | Force a specific web provider |
 | `api_provider` | `Optional[str]` | `None` | Force a specific API provider |
-| `max_retries` | `int` | `3` | Max retry attempts |
-| `timeout` | `int` | `60` | Timeout in seconds |
+| `use_cache` | `bool` | `True` | Enable response caching |
+| `proxy` | `Optional[str]` | `None` | Network proxy override |
+| `email` | `str` | `"[redacted-email]"` | Email for Unpaywall OA resolution |
+| `relevance_gate` | `bool` | `True` | Enable LLM-based relevance filtering after download |
+| `literature_types` | `Optional[List[str]]` | `None` | Activate typed gate (e.g. `["case_report"]`) |
 
 ### `DocumentAcquisitionResult`
 
@@ -119,7 +133,18 @@ Data flows top-down: the facade dispatches to a submodule, which calls the gatew
 | `items` | `List[OnlineAcquisitionItem]` | Search result items |
 | `downloads` | `List[DocumentDownloadEntry]` | Download result entries |
 | `route` | `Optional[OnlineAcquisitionRouteInfo]` | Provider routing decision |
+| `cached` | `bool` | Whether result came from cache |
+| `retries` | `int` | Number of retry attempts used |
 | `elapsed_time` | `float` | Wall-clock seconds |
+
+### `DocumentDownloadEntry`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `file_path` | `Optional[str]` | Path to downloaded PDF |
+| `pdf_url` | `Optional[str]` | Original PDF URL |
+| `resolved_url` | `Optional[str]` | Final URL after redirects |
+| `pre_parsed_markdown` | `Optional[str]` | MinerU pre-parsed markdown (bypasses Phase 2 re-parsing) |
 
 ### `OnlineAcquisitionItem` (Pydantic)
 
@@ -127,7 +152,7 @@ Standardized literature metadata returned by all providers after normalization.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `source` | `str` | Provider name (e.g. `"crossref"`, `"pubscholar"`) |
+| `source` | `str` | Provider name (e.g. `"crossref"`, `"openalex"`) |
 | `title` | `Optional[str]` | Article title |
 | `authors` | `List[str]` | Author names |
 | `journal` | `Optional[str]` | Journal name |
@@ -136,41 +161,49 @@ Standardized literature metadata returned by all providers after normalization.
 | `url` | `Optional[str]` | Primary URL |
 | `links` | `List[str]` | All discovered URLs |
 | `language` | `Optional[str]` | ISO language code |
+| `publisher` | `Optional[str]` | Publisher name |
+| `issn` | `List[str]` | ISSN identifiers |
 | `identifiers` | `Dict[str, Any]` | Provider-specific IDs (pmcid, pmid, issn) |
 | `keywords` | `List[str]` | Subject keywords |
 | `literature_type` | `Optional[str]` | Classification: `case_report`, `sequencing`, `functional` |
 
 ## Internal Design
 
-### Provider Fallback Chain
+### Two Workflow Paths
 
-The workflow uses a cascading fallback strategy for both search and download:
+The `_handle_literature` method in `service.py` routes between two workflows:
 
-1. **API providers** (Rust `net_io`): crossref → unpaywall → openalex → europepmc → pmc → jstage → doaj → scielo → base → core → openaire → arxiv → biorxiv → medrxiv → cinii
-2. **DOI fallback**: If API providers fail and a DOI is available, probe the DOI landing page for a direct PDF link
+- **`multilingual_acquisition_workflow`** — when the request has a free-text query and `language ∈ {None, "", "auto"}`. Translates the query into 6 languages, fans out to per-language provider plans, deduplicates globally, batch-parses PDFs via MinerU, and gates survivors through a typed LLM classifier.
+- **`online_acquisition_workflow`** — when an explicit language is set or only identifiers are present (no query). Single-language parallel API search + optional Firecrawl, download, and untyped relevance gate.
 
-The initial provider is selected based on identifier type:
-- PMCID/PMID → `pmc`
-- DOI + search → `crossref`
-- DOI + download → `unpaywall`
-- No identifier → `crossref`
+### Provider Plan Resolution
 
-**Note**: Web provider fallback tier was removed on 2026-06-16. See archived module at `docs/archive/deprecated-modules/web-scraper-adapters/`.
-
-### Multilingual Routing
-
-`search_service.build_provider_plan()` selects provider order based on language:
+`search_service.LANG_PROVIDER_MATRIX` is the single source of truth for per-language provider order. Each entry is `{"route": "api", "provider": "<name>"}`.
 
 | Language | Priority |
 |----------|----------|
-| `zh` (Chinese) | crossref → unpaywall → doaj → pmc |
+| `zh` (Chinese) | crossref → unpaywall → openalex → doaj → pmc |
 | `ja` (Japanese) | jstage → cinii → crossref → unpaywall → doaj → pmc |
 | `ko` (Korean) | crossref → unpaywall → doaj |
-| `es`/`pt` (Spanish/Portuguese) | scielo → crossref → unpaywall |
-| `en` (English) | pmc → crossref → arxiv → biorxiv → medrxiv → openaire → base → core → unpaywall → doaj |
-| `auto` | crossref → unpaywall → doaj → pmc |
+| `es` (Spanish) | scielo → crossref → unpaywall |
+| `pt` (Portuguese) | scielo → crossref → unpaywall |
+| `en` (English) | pmc → europepmc → crossref → arxiv → biorxiv → medrxiv → openalex → openaire → base → core → unpaywall → doaj |
+| `de` (German) | crossref → europepmc → unpaywall → openalex → base → doaj |
+| `fr` (French) | crossref → europepmc → unpaywall → openalex → doaj → pmc |
+| `ru` (Russian) | pmc → europepmc → crossref → unpaywall → openalex |
+| `auto` | crossref → unpaywall → openalex → europepmc → doaj → pmc |
 
-**Note**: Web providers (pubscholar, chinaxiv, hans_publishers, koreascience, redalyc) were removed from routing on 2026-06-16.
+### Multilingual Routing
+
+`search_service.build_provider_plan()` selects provider order based on language. The multilingual workflow fans out to all 6 target languages (`en`, `zh`, `ja`, `de`, `fr`, `ru`) via `query_translator.translate_query()`, which makes a single LLM call with `temperature=0.2` to produce language-optimized search queries. Gene symbols (HGNC) and HGVS variant nomenclature are preserved as-is.
+
+### Download Routing
+
+`_download_candidates` tries three routes per candidate, in order:
+
+1. **DOI route** — call Unpaywall, then `resolve_oa_url` → `download_file_from_url`
+2. **PMCID route** — try `europepmc.org/articles/PMC{id}?pdf=render` first, then `ncbi.nlm.nih.gov/pmc/articles/PMC{id}/pdf/` as fallback
+3. **Direct URL** — HTTP download with HTML-to-PDF redirect handling
 
 ### Provider Health Tracking
 
@@ -178,7 +211,7 @@ The initial provider is selected based on identifier type:
 
 ### Normalization
 
-Each API provider has a dedicated normalizer function in `normalizers.py` that maps raw JSON responses to `OnlineAcquisitionItem`. The `NORMALIZER_MAP` registry dispatches by provider name. Web providers use `normalize_web_generic()` for a common schema.
+Each API provider has a dedicated normalizer function in `normalizers.py` that maps raw JSON responses to `OnlineAcquisitionItem`. The `NORMALIZER_MAP` registry dispatches by provider name.
 
 ### Identifier Extraction
 
@@ -198,11 +231,23 @@ Unicode hyphen/dash variants in DOIs are normalized to ASCII hyphens (`gateway._
 
 Supports English, Chinese, Japanese, Korean, Spanish, Portuguese, and Russian keywords.
 
-### Web Scrapers (Archived)
+### Web Search (Firecrawl)
 
-Web scraper adapters were archived on 2026-06-16 due to high maintenance costs and instability. The original module is preserved at `docs/archive/deprecated-modules/web-scraper-adapters/`.
+`web_search/firecrawl_adapter.py` provides `FirecrawlAdapter` for web-based literature discovery. Used by `online_acquisition_workflow` when `prefer="auto"` and no deterministic identifier is present. Runs in parallel with API providers. The adapter searches for links and optionally scrapes the top 5 results for additional PDF links.
 
-Original architecture used crawl4ai + Playwright for browser automation with LLM-assisted structured extraction. Direct HTTP (httpx) was attempted first as a faster fallback.
+### MinerU Batch Pre-Parsing (Multilingual)
+
+The multilingual workflow includes a Phase 2.5 step (`_batch_parse_downloads`) that submits all surviving PDFs through `parse_document.create_parse_service().parse_local_files(...)` in one MinerU batch. The parsed markdown is:
+1. Used by `relevance_gate` for content classification (preferred over fitz extraction)
+2. Forwarded via `DocumentDownloadEntry.pre_parsed_markdown` to downstream Phase 1, bypassing MinerU re-parsing
+
+### Relevance Gate
+
+`relevance_gate.run_relevance_gate()` filters downloaded PDFs by LLM-judged relevance. Two modes:
+- **Untyped**: returns `{relevant, reason}` — used when `literature_types` is empty
+- **Typed**: returns `{relevant, doc_type, reason}` — used when `literature_types` is set. Missing or mismatched `doc_type` is conservatively rejected.
+
+Errored judgments are kept (never lose a file because the gate failed). Confirmed-irrelevant downloads have their files deleted (`delete_files=True`).
 
 ### File Deduplication (Local Upload)
 
@@ -230,7 +275,6 @@ result = await service.acquire(DocumentAcquisitionRequest(
 
 # route.used shows which provider succeeded
 print(result.route.used)     # "api"
-print(result.route.api_provider)  # e.g., "crossref"
 ```
 
 ### Download by DOI with fallback
@@ -277,16 +321,17 @@ candidates = await search_multilingual(
 ### Parallel search with semaphore
 
 ```python
-from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition import search_multilingual
-from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.search_service import search_parallel
+from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.search_service import (
+    build_provider_plan,
+    search_parallel,
+)
 
-# Concurrent provider calls with semaphore control
+plan = build_provider_plan(language="en")
 candidates = await search_parallel(
-    target="Fabry disease GLA variant",
-    disease="Fabry disease",
-    language="auto",
+    query="Fabry disease GLA variant case report",
+    plan=plan,
+    concurrency=4,
     candidate_limit=10,
-    max_concurrency=4,
 )
 ```
 
@@ -316,6 +361,34 @@ if result.deduplicated:
     print("File already exists at", result.stored_file.file_path)
 ```
 
+### Multilingual variant search with typed gate
+
+```python
+result = await service.acquire(DocumentAcquisitionRequest(
+    source=AcquisitionSource.ONLINE,
+    action="download",
+    query="MECP2 Rett syndrome case report",
+    limit=18,
+    literature_types=["case_report"],
+    download_path="./downloads/rett",
+))
+# Phase 0: 6-lang translation → Phase 1: parallel search → Phase 2: download
+# Phase 2.5: MinerU batch parse → Phase 3: typed gate
+for d in result.downloads:
+    print(d.file_path, d.pre_parsed_markdown[:100] if d.pre_parsed_markdown else "")
+```
+
+### Disable the relevance gate
+
+```python
+result = await service.acquire(DocumentAcquisitionRequest(
+    source=AcquisitionSource.ONLINE,
+    action="download",
+    query="ACMG variant classification",
+    relevance_gate=False,
+))
+```
+
 ## Extension Guide
 
 ### Adding a new API provider
@@ -323,25 +396,23 @@ if result.deduplicated:
 1. Implement the provider in Rust `net-io` crate with `search` and `download` actions
 2. Add the provider name to `ApiProvider` literal type in `contracts.py`
 3. Add a normalizer function in `normalizers.py` and register in `NORMALIZER_MAP`
-4. Add to `API_PROVIDER_CHAIN` in `workflow.py` for fallback inclusion
+4. Add to `_API_SEARCH_PROVIDERS` and `_ID_PROVIDER_MAP` in `workflow.py` for fallback inclusion
 5. Add to `LANG_PROVIDER_MATRIX` in `search_service.py` for language-based routing
-
-### Adding a new web scraper (Archived)
-
-Web scraper adapters are no longer maintained. The archived module at `docs/archive/deprecated-modules/web-scraper-adapters/` contains the original implementation for reference only. New providers should be implemented as Rust-based API providers in `backend/libs/net-io/`.
 
 ### Modifying the fallback chain
 
-Edit `API_PROVIDER_CHAIN` in `workflow.py` to change the order or add/remove providers from the fallback sequence. The chain is selected by identifier type (doi/pmid/pmcid/default).
+Edit `_API_SEARCH_PROVIDERS` in `workflow.py` to change the order or add/remove providers from the fallback sequence. Identifier-specific overrides are in `_ID_PROVIDER_MAP`.
 
 ## Performance Notes
 
 - **Rust I/O**: API provider HTTP calls go through `net_io.fetch_one()` (Rust/PyO3), which handles connection pooling and async I/O natively
-- **Retry**: `call_provider_with_retry()` retries up to 2 attempts with exponential backoff (0.5s × attempt)
 - **Health-based reordering**: Unhealthy providers (<50% success rate) are deprioritized in multilingual search
 - **Deduplication**: `search_service.dedupe_candidates()` uses DOI/URL/title matching; O(n) per provider call
-- **Concurrency**: `search_parallel()` uses `asyncio.Semaphore(4)` for concurrent provider calls
+- **Concurrency**: `search_parallel()` uses `asyncio.Semaphore(4)` for concurrent provider calls within a language; multilingual fans out 6 language tasks via `asyncio.gather`
 - **PDF validation**: All downloaded PDFs are validated by checking `%PDF` magic bytes before writing to disk
+- **Translation cost**: 1 LLM call per multilingual request (~200–400 tokens out)
+- **Gate cost**: 1 LLM call per surviving download; concurrency capped at 6
+- **MinerU batch**: one batch call per multilingual workflow run, dominated by the largest PDF
 
 ## Dependencies
 
@@ -349,11 +420,11 @@ Edit `API_PROVIDER_CHAIN` in `workflow.py` to change the order or add/remove pro
 |------------|---------|
 | `rust_io.net` (via `src.utils.rust_io`) | HTTP I/O for API providers (crossref, unpaywall, etc.) |
 | `rust_io.files` (via `src.utils.rust_io`) | SHA-256 hashing and file write for local upload |
-| `httpx` | Async HTTP for DOI fallback and PDF download |
-| `pydantic` | Request/response validation (`OnlineAcquisitionRequest`, `OnlineAcquisitionItem`) |
+| `httpx` | Async HTTP for downloads, DOI probing, Firecrawl |
+| `pydantic` | Request/response validation |
+| `openai` (`AsyncOpenAI`) | LLM calls for `query_translator` and `relevance_gate` |
+| `pymupdf` (`fitz`) | PDF text extraction fallback when MinerU markdown is absent |
 | `loguru` | Structured logging |
-
-**Removed dependencies** (archived 2026-06-16): `crawl4ai`, `selectolax` — previously used for web scraper adapters.
 
 ## Testing
 
@@ -365,6 +436,15 @@ uv run pytest tests/core/ingest_and_digitize_data/document_acquisition/ -v
 
 # Run a specific test
 uv run pytest tests/core/ingest_and_digitize_data/document_acquisition/test_service.py::test_local_upload -v
+
+# Query translator tests
+uv run pytest tests/unit/test_query_translator.py
+
+# Relevance gate tests
+uv run pytest tests/unit/test_relevance_gate_parsed.py
+
+# MinerU batch parse tests
+uv run pytest tests/unit/test_batch_parse_downloads.py
 ```
 
 ### Test coverage
@@ -379,5 +459,6 @@ uv run pytest tests/core/ingest_and_digitize_data/document_acquisition/test_serv
 | `online_acquisition/test_gateway.py` | `call_provider()`, `search_provider()`, `download_from_provider()` |
 | `online_acquisition/test_contracts.py` | `OnlineAcquisitionRequest`, `OnlineAcquisitionItem` validation |
 | `online_acquisition/test_normalizers.py` | Per-provider normalizer functions, `NORMALIZER_MAP` |
-
-**Note**: `test_web_providers.py` was removed on 2026-06-16 along with the web scraper module.
+| `tests/unit/test_query_translator.py` | Query translation, JSON parsing, missing-language fallback |
+| `tests/unit/test_relevance_gate_parsed.py` | Typed gate strictness (missing/mismatch/match) + markdown bypass |
+| `tests/unit/test_batch_parse_downloads.py` | MinerU batch attach / failure / empty input |

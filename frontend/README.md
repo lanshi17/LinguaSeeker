@@ -98,11 +98,11 @@ page.tsx  ──→  @/features/<name>  (barrel only)
 | Module | Components | Hooks | Types | Backend API |
 |--------|-----------|-------|-------|-------------|
 | **auth** | 2 | 1 | 1 | `POST /auth/login`, `POST /auth/register` |
-| **pipeline** | 4 | 3 | 1 | `POST /pipeline/run`, `GET /pipeline/runs/{id}/status` |
-| **evidence-search** | 5 | 2 | 1 | `POST /evidence/search`, `GET /evidence/{id}` |
-| **chat** | 3 | 2 | 1 | `CRUD /chat/sessions`, `POST /chat/messages` |
+| **pipeline** | 6 | 4 | 1 | `POST /pipeline/run`, `GET /pipeline/runs/{id}/status` |
+| **evidence-search** | 7 | 2 | 1 | `POST /evidence/search`, `GET /evidence/{id}` |
+| **chat** | 3 | 1 | 1 | `CRUD /chat/sessions`, `POST /chat/messages` |
 
-**Totals:** 14 components, 8 hooks across 4 implemented modules.
+**Totals:** 18 components, 8 hooks across 4 implemented modules.
 
 ### Pipeline (backbone feature)
 

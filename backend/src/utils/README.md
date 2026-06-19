@@ -26,16 +26,17 @@ def extract(state: PipelineState) -> PipelineState:
 
 ```
 src/utils/
-├── __init__.py        # empty package marker
-├── logger.py          # loguru config (stderr + file sinks, stdlib interception)
-├── exceptions.py      # centralized exception hierarchy with stable error codes
-├── middleware.py       # request monitoring middleware (timing + logging)
-├── health.py          # startup dependency health checks (PostgreSQL, Redis)
-├── observability.py   # traced_node decorator (LangSmith + loguru)
-├── text.py            # sanitize_filename, strip_json_fences
-├── rust_io.py         # lazy imports for PyO3 native extensions
-├── llm_adapter.py     # LLM client adapter with API key pool (round-robin rotation + failover)
-└── llm_params.py      # LLM parameter resolution (resolve_max_tokens)
+├── __init__.py         # empty package marker
+├── logger.py           # loguru config (stderr + file sinks, stdlib interception)
+├── exceptions.py       # centralized exception hierarchy with stable error codes
+├── middleware.py        # raw ASGI request monitoring middleware (timing + logging + X-Request-ID)
+├── security_headers.py # SecurityHeadersMiddleware + HSTS variant for production
+├── health.py           # startup dependency health checks (PostgreSQL, Redis)
+├── observability.py    # traced_node decorator (LangSmith + loguru)
+├── text.py             # sanitize_filename, strip_json_fences
+├── rust_io.py          # lazy imports for PyO3 native extensions
+├── llm_adapter.py      # LLM client adapter with API key pool (round-robin rotation + failover)
+└── llm_params.py       # LLM parameter resolution (resolve_max_tokens)
 ```
 
 Flat module structure — no sub-packages. Each module is independently importable with zero cross-dependencies within `utils/`.
@@ -56,6 +57,13 @@ Flat module structure — no sub-packages. Each module is independently importab
 | Function | Signature | Description |
 |----------|-----------|-------------|
 | `traced_node` | `(name: str) -> Callable` | Decorator that wraps a pipeline node with LangSmith `@traceable(run_type="chain")` and loguru start/done/error logging. |
+
+### security_headers.py
+
+| Class | Description |
+|-------|-------------|
+| `SecurityHeadersMiddleware` | Adds defense-in-depth HTTP security headers: X-Content-Type-Options (nosniff), X-Frame-Options (DENY), Content-Security-Policy (default-src 'none'), Referrer-Policy, Permissions-Policy, X-XSS-Protection |
+| `SecurityHeadersMiddlewareHSTS` | Extends `SecurityHeadersMiddleware` with HSTS header (`max-age=31536000; includeSubDomains; preload`). Used when `cfg.is_production` is True. |
 
 ### rust_io.py
 
@@ -83,6 +91,22 @@ Centralized lazy imports for the two PyO3 native extensions (`rust_io.files`, `r
 |----------|-----------|-------------|
 | `resolve_max_tokens` | `(configured_max_tokens: int, percentage: float = 1.0, *, minimum: int = 256) -> int` | Scale max_tokens by percentage with floor. Used for dynamic output budget scaling per task complexity. |
 
+### health.py
+
+| Function/Class | Signature | Description |
+|----------------|-----------|-------------|
+| `check_all_connections` | `async (services: list[str] \| None = None) -> HealthResult` | Check infrastructure connections (PostgreSQL, Redis). Returns `HealthResult` with per-service status. |
+| `HealthResult` | dataclass | `postgres: bool`, `redis: bool`. Methods: `all_ok()`, `failed_services()`. |
+
+Health checks are registered via `@_register("service_name")` decorator. PostgreSQL check runs `SELECT 1` via the wiring engine. Redis check runs `PING` via the wiring client.
+
+### middleware.py
+
+| Class/Function | Signature | Description |
+|----------------|-----------|-------------|
+| `RequestMonitorMiddleware` | raw ASGI | Logs every HTTP request with method, path, status, latency (ms), and X-Request-ID. Does NOT buffer response body (safe for SSE/chunked streaming). Assigns or propagates `X-Request-ID` header. |
+| `add_request_monitoring` | `(app: FastAPI) -> None` | Register the middleware on a FastAPI app. |
+
 ## Usage Patterns
 
 ### sanitize_filename — PDF download paths
@@ -106,6 +130,15 @@ import json
 
 raw = llm.invoke(prompt).content
 data = json.loads(strip_json_fences(raw))
+```
+
+### security_headers middleware
+
+```python
+# Automatically registered in create_app() -- no manual usage needed
+# Production: SecurityHeadersMiddlewareHSTS (includes HSTS)
+# Development: SecurityHeadersMiddleware (no HSTS)
+from src.utils.security_headers import SecurityHeadersMiddleware, SecurityHeadersMiddlewareHSTS
 ```
 
 ### traced_node — LangGraph pipeline nodes
@@ -188,16 +221,17 @@ uv run pytest tests/utils/test_text.py -v
 uv run pytest tests/utils/test_observability.py -v
 ```
 
-30+ tests total: 7 for `sanitize_filename`, 6 for `strip_json_fences`, 6 for `traced_node` (+1 async), 3 for `logger`, 15 for `exceptions`, 5 for `middleware`, 2 for `health`. Additional tests exist for `llm_adapter` and `llm_params` — run `uv run pytest tests/utils/ -v` to verify current count.
+Run `uv run pytest tests/utils/ -v` to verify current test count. Tests cover: `sanitize_filename`, `strip_json_fences`, `traced_node` (sync + async), `logger`, `exceptions` (error codes + status mapping), `middleware` (request monitoring + X-Request-ID), `health` (connection checks), `llm_adapter` (key pool rotation + failover), `llm_params`, and `security_headers`.
 
 ## Dependencies
 
 | Dependency | Used by | Purpose |
 |------------|---------|---------|
 | `langsmith` | `observability.py` | `@traceable` decorator for LangSmith tracing |
-| `loguru` | `observability.py`, `rust_io.py` | Structured logging for node lifecycle and import warnings |
+| `loguru` | `observability.py`, `rust_io.py`, `middleware.py` | Structured logging for node lifecycle, import warnings, and request monitoring |
 | `rust_io` (native) | `rust_io.py` | PyO3 extensions for file I/O and HTTP/provider operations |
 | `langchain_openai` | `llm_adapter.py` | ChatOpenAI client creation |
+| `starlette` | `middleware.py`, `security_headers.py` | Raw ASGI middleware base and `BaseHTTPMiddleware` |
 
 ## Extension Guide
 
