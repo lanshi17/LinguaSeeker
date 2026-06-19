@@ -73,6 +73,8 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-06-14 | [BIBM Main Paper Detailed Plan](planned/2026-06-14-bibm-main-paper-detailed-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Rescue Plan](planned/2026-06-14-bibm-main-paper-rescue.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Effect Plan](planned/2026-06-14-bibm-main-paper-effect-plan.md) | planned |
+| 2026-06-19 | [Fused-75 F1 Dynamic Pipeline Optimization Design](planned/2026-06-19-fused75-f1-dynamic-pipeline-optimization-design.md) | planned |
+| 2026-06-19 | [Fused-75 F1 Dynamic Pipeline Optimization Implementation Plan](planned/2026-06-19-fused75-f1-dynamic-pipeline-optimization-plan.md) | planned |
 
 ## Diagrams
 
