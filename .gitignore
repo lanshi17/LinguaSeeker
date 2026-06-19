@@ -103,6 +103,10 @@ benchmark/config/vault/secrets.yaml
 benchmark/config/vault/secrets.yml
 !benchmark/config/vault/*.example
 !benchmark/config/vault/README.md
+# Ansible-deployed benchmark config artifacts (rendered from benchmark/config/ sources)
+benchmark/data/inputs/literature_acquisition/rett_config.json
+benchmark/data/inputs/literature_acquisition/rett_config_02.json
+benchmark/datasets/rett_annotation/config.yaml
 **/nohup.out
 .aider*
 .mcp.json

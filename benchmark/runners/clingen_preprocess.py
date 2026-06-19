@@ -18,10 +18,9 @@ import httpx
 import yaml
 from loguru import logger
 
+from benchmark.core import MAX_POLL_ATTEMPTS, POLL_INTERVAL_S, TERMINAL_STATUSES
+
 GROUND_TRUTH_DIR = Path(__file__).resolve().parent / "ground_truth"
-MAX_POLL_ATTEMPTS = 360  # 30 min max per entry
-POLL_INTERVAL_S = 5.0
-TERMINAL_STATUSES = {"awaiting_review", "completed", "failed"}
 
 
 def load_proxy() -> str | None:
