@@ -3164,3 +3164,29 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 - 测试新增 catalog 字段时,断言 EVIDENCE_FIELD_SPECS 总数与 test_catalog.py 同步。
 - 改 prompt 文本后,检查所有按 `input_budget_tokens` 硬编码 chunk 数的 stage 测试——prompt 变大 → overhead 变大 → chunk 数变大。
 - mock provider 的 stage 匹配一律用 `startswith`,不要 `==`;stage 名普遍带 `/<group>[/<chunk>]` 后缀。
+
+## 2026-06-19 将 benchmark 配置统一到 benchmark/config/ Ansible 架构
+
+### 问题描述
+benchmark 子项目的配置文件散落在 `benchmark/datasets/rett_annotation/`(config.yaml、.env、.env.example)与 legacy `benchmark/annotation/.env`,无统一管理,密钥以明文 .env 形式存在(虽被 gitignore)。需收集到 `benchmark/config/` 下用 Ansible 架构统一管理。
+
+### 排查过程
+1. `find` 扫描 benchmark 下所有 yaml/toml/ini/env/json 配置,区分"benchmark 自包含配置"与"调用 backend/config 的 runner"。结论:只有 rett_annotation 是自包含配置;runners(clingen_preprocess/literature_acquisition 等)走 `src.core.config.get_config()`,不在本次范围。
+2. 确认 `benchmark/annotation/` 是 deprecated shim(`__init__.py` 标注 Phase 6 移除,src/ 只剩 .pyc),其 .env 是 stale 重复。
+3. 向用户确认三个关键决策:迁移方式(模板渲染 vs 改加载路径 vs 复制)、Ansible 深度(完整脚手架 vs 最小布局)、密钥处理(vault 加密 vs 仅 example)。
+
+### 根因分析
+- 配置无单一真相源,渲染式管理需保证源码加载路径不变 + 派生文件可重建。
+- group_vars 命名需与 inventory 中的 group 名匹配,否则不会被加载。
+
+### 解决方案
+- `benchmark/config/` 完整 Ansible 脚手架(ansible.cfg + inventories/local + group_vars + playbooks + roles + vault)。
+- group_vars/benchmark.yml 放非密钥变量;vault/secrets.yml 用 `ansible-vault encrypt` 加密(密钥来自 .vault_pass,gitignored)。
+- playbook 本地连接渲染 config.yaml(0644)与 .env(0600, no_log)到 rett_annotation 原位置;template 模块天然幂等(勿加 `changed_when: true`,否则破坏幂等)。
+- inventory 必须把 localhost 放进 `benchmark` group 才能加载 group_vars/benchmark.yml。
+
+### 预防措施
+- group_vars 文件名必须对应 inventory 中真实存在的 group;写完先用 `ansible-inventory --list` 验证 hostvars 含目标变量。
+- template 任务不要加 `changed_when: true`;让 template 模块的 checksum 比对保证幂等。
+- 密钥一律走 ansible-vault;`.vault_pass` 与加密后的 secrets.yml 必须进 .gitignore,同时保留 `*.example` 占位文件供新检出者引导。
+- 用 hashline 编辑 YAML inventory 时,SWAP 行范围必须覆盖全部要改的行,否则会留下重复行(本次遗留一行 `ansible_connection: local`,改为整文件 rewrite 修复)。

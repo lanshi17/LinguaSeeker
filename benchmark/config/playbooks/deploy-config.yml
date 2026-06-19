@@ -1,0 +1,12 @@
+---
+# Deploy (render) the Rett annotation benchmark configuration.
+# Run from benchmark/config/:
+#   ansible-playbook playbooks/deploy-config.yml
+- name: Deploy Rett annotation benchmark configuration
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../vault/secrets.yml
+  roles:
+    - role: rett_annotation_config
