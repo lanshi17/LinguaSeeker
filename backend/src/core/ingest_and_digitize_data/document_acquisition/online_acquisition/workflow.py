@@ -326,7 +326,7 @@ async def _download_candidates(
         title = _coerce_str(candidate.get("title")) or "untitled"
         url_for_hash = url or doi or pmcid or title or "unknown"
         url_hash = hashlib.md5(url_for_hash.encode()).hexdigest()[:8]
-        filename_stem = f"{re.sub(r'[^\\w\\-]', '_', title)[:70]}_{url_hash}"
+        filename_stem = f"{re.sub(r'[^\w\-]', '_', title)[:70]}_{url_hash}"
 
         # Route 1: DOI → unpaywall OA resolution
         if doi:
