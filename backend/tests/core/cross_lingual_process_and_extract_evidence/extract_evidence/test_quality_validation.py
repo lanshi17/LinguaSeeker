@@ -339,9 +339,9 @@ def test_normalizer_clears_scoring_assignments_for_non_found_items():
 
 def test_normalizer_routes_model_source_invalid_with_source_back_to_grounding():
     item = EvidenceItem(
-        field_id="B.diagnosis_sufficiency",
+        field_id="B.disease_diagnosis",
         category="B",
-        field_name="Diagnosis sufficiency",
+        field_name="Disease diagnosis",
         status=EvidenceStatus.SOURCE_INVALID,
         value="Diagnosis confirmed by genetic testing and clinical features",
         confidence=0.8,
@@ -357,23 +357,23 @@ def test_normalizer_routes_model_source_invalid_with_source_back_to_grounding():
     )
 
     normalized = EvidenceItemNormalizer().normalize([item])
-    diagnosis = next(i for i in normalized if i.field_id == "B.diagnosis_sufficiency")
+    diagnosis = next(i for i in normalized if i.field_id == "B.disease_diagnosis")
 
     assert diagnosis.status == EvidenceStatus.FOUND
 
 
 def test_normalizer_keeps_source_invalid_without_source_invalid():
     item = EvidenceItem(
-        field_id="B.diagnosis_sufficiency",
+        field_id="B.disease_diagnosis",
         category="B",
-        field_name="Diagnosis sufficiency",
+        field_name="Disease diagnosis",
         status=EvidenceStatus.SOURCE_INVALID,
         value="Diagnosis confirmed by genetic testing and clinical features",
         confidence=0.8,
     )
 
     normalized = EvidenceItemNormalizer().normalize([item])
-    diagnosis = next(i for i in normalized if i.field_id == "B.diagnosis_sufficiency")
+    diagnosis = next(i for i in normalized if i.field_id == "B.disease_diagnosis")
 
     assert diagnosis.status == EvidenceStatus.SOURCE_INVALID
     assert diagnosis.value == "Diagnosis confirmed by genetic testing and clinical features"

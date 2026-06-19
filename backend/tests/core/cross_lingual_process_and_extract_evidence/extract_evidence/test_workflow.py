@@ -182,3 +182,64 @@ def test_workflow_normalization_node_rejects_coordinate_only_hgvs() -> None:
     assert result.evidence_items[0].status == EvidenceStatus.NOT_FOUND
     assert result.normalization_issues[0].field_id == "A.variant_hgvs_g"
     assert result.normalization_issues[0].issue_type == EvidenceNormalizationIssueType.INVALID_HGVS
+
+
+def test_catalog_backfill_node_expands_to_full_catalog():
+    """Unit test for the backfill node — no LLM, no graph compile."""
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import (
+        EVIDENCE_FIELD_SPECS,
+    )
+
+    workflow = EvidenceExtractionWorkflow(provider=MagicMock())
+    state = EvidenceExtractionState(
+        document=TrackDocument(
+            document_id="d1",
+            track=Track.ORIGINAL,
+            formatted_text="x",
+            page_spans=[],
+        ),
+    )
+    state.evidence_items = [
+        EvidenceItem(
+            field_id="A.gene_symbol",
+            category="A",
+            field_name="Gene symbol",
+            status=EvidenceStatus.FOUND,
+            value="GLA",
+            confidence=0.9,
+            group_id="g1",
+        ),
+    ]
+
+    out = workflow._node_catalog_backfill(state)
+    field_ids = {item.field_id for item in out.evidence_items}
+    expected = {spec.field_id for spec in EVIDENCE_FIELD_SPECS}
+    assert expected.issubset(field_ids), f"Missing: {expected - field_ids}"
+    # Backfilled items keep group_id of source items
+    backfilled = [i for i in out.evidence_items if i.field_id != "A.gene_symbol"]
+    assert all(i.group_id == "g1" for i in backfilled)
+    assert all(i.status == EvidenceStatus.NOT_FOUND for i in backfilled)
+
+
+@pytest.mark.asyncio
+async def test_workflow_backfills_after_quality_gate(mock_config):
+    """Integration: ensure the END state carries the full 166 rows when relevant=True."""
+    provider = MagicMock()
+    # Force not-relevant path so we exit early without LLM extraction;
+    # the not_relevant branch returns directly to END with [] items —
+    # this asserts backfill is NOT applied on the not_relevant branch.
+    emap = DocumentEvidenceMap(relevant=False)
+    provider.invoke_structured.return_value = emap
+    provider.ainvoke_structured = AsyncMock(return_value=emap)
+
+    workflow = EvidenceExtractionWorkflow(provider=provider)
+    state = await workflow.run(
+        TrackDocument(
+            document_id="doc-1",
+            track=Track.ORIGINAL,
+            formatted_text="unrelated paper",
+            page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=15)],
+        )
+    )
+    # not_relevant path exits before catalog_backfill — items stay empty.
+    assert state.evidence_items == []

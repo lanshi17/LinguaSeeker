@@ -20,7 +20,7 @@ from .contracts import (
     TrackDocument,
 )
 from .chunking import DEFAULT_INPUT_BUDGET_TOKENS
-from .core import EvidenceChainBuilder, TargetEntityGuard
+from .core import EvidenceChainBuilder, EvidenceItemNormalizer, TargetEntityGuard
 from .normalization import AcmgEvidenceValueNormalizer
 from .providers import LangChainEvidenceProvider
 from .stages.catalog_extraction import CatalogExtractionStage
@@ -49,6 +49,7 @@ class EvidenceExtractionWorkflow:
         self._chain_builder = EvidenceChainBuilder()
         self._role_router = EvidenceRoleRouter()
         self._target_guard = TargetEntityGuard()
+        self._item_normalizer = EvidenceItemNormalizer()
         self._graph = self._build_graph()
         self._async_graph = self._build_async_graph()
 
@@ -171,6 +172,16 @@ class EvidenceExtractionWorkflow:
         state.quality_report = report
         return state
 
+    def _node_catalog_backfill(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        """Expand sparse evidence_items to the full 166-row catalog per group.
+
+        Runs AFTER quality_gate so the gate's metrics reflect real extracted
+        items, not synthesized NOT_FOUND placeholders. Downstream alignment
+        and reporting consume the backfilled matrix.
+        """
+        state.evidence_items = self._item_normalizer.normalize_grouped(state.evidence_items)
+        return state
+
     def _node_not_relevant(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         logger.info("Document {} marked not relevant", state.document.document_id)
         return state
@@ -189,6 +200,7 @@ class EvidenceExtractionWorkflow:
         graph.add_node("source_grounding", self._node_source_grounding)
         graph.add_node("chain_assembly", self._node_chain_assembly)
         graph.add_node("quality_gate", self._node_quality_gate)
+        graph.add_node("catalog_backfill", self._node_catalog_backfill)
         graph.add_node("not_relevant", self._node_not_relevant)
 
         graph.set_entry_point("relevance_scan")
@@ -206,7 +218,8 @@ class EvidenceExtractionWorkflow:
         graph.add_edge("target_guard", "source_grounding")
         graph.add_edge("source_grounding", "chain_assembly")
         graph.add_edge("chain_assembly", "quality_gate")
-        graph.add_edge("quality_gate", END)
+        graph.add_edge("quality_gate", "catalog_backfill")
+        graph.add_edge("catalog_backfill", END)
         graph.add_edge("not_relevant", END)
 
         return graph.compile()
@@ -226,6 +239,7 @@ class EvidenceExtractionWorkflow:
         graph.add_node("source_grounding", self._node_source_grounding)
         graph.add_node("chain_assembly", self._node_chain_assembly)
         graph.add_node("quality_gate", self._node_quality_gate)
+        graph.add_node("catalog_backfill", self._node_catalog_backfill)
         graph.add_node("not_relevant", self._node_not_relevant)
 
         graph.set_entry_point("relevance_scan")
@@ -243,7 +257,8 @@ class EvidenceExtractionWorkflow:
         graph.add_edge("target_guard", "source_grounding")
         graph.add_edge("source_grounding", "chain_assembly")
         graph.add_edge("chain_assembly", "quality_gate")
-        graph.add_edge("quality_gate", END)
+        graph.add_edge("quality_gate", "catalog_backfill")
+        graph.add_edge("catalog_backfill", END)
         graph.add_edge("not_relevant", END)
 
         return graph.compile()
