@@ -472,3 +472,4 @@
 [2026-06-19] Evidence extraction baseline realigned: 166 fields, 3 groups (62/81/23), test_catalog updated [done]
 [2026-06-19] Catalog extraction now skips K (curation) group; saves 23 fields × N chunks per doc [done]
 [2026-06-19] EvidenceItemNormalizer wired as catalog_backfill node after quality_gate (sync+async); 2 stale B.diagnosis_sufficiency tests realigned to B.disease_diagnosis [done]
+[2026-06-19] special_evidence prompt narrowed to gap-filling; no hard gating added [done]
