@@ -239,6 +239,13 @@ def get_special_evidence_prompt(
 ) -> str:
     return f"""You are performing a focused second pass on a biomedical document.
 
+SCOPE: This pass is a focused gap-filler. The primary catalog extraction has
+already produced the items shown in CURRENT EXTRACTION SUMMARY. Only emit
+records for functional, case-control, authority, or contradiction evidence
+that is NOT already represented there, OR where you have strictly higher-
+confidence evidence (e.g. a direct quote vs an inferred summary). Do not
+restate items already present.
+
 Document ID: {document_id}
 Track: {track.value}
 
