@@ -1,0 +1,289 @@
+{
+  "_description": "Rett syndrome / MECP2 — multilingual case report PDF acquisition config v4. Optimized: higher candidate_limit to compensate for literature_type + relevance gate filtering.",
+
+  "disease": "Rett syndrome MECP2",
+  "candidate_limit": 20,
+  "download_dir": "downloads/rett",
+  "literature_types": ["case_report"],
+  "timeout_s": 60,
+  "concurrency": 3,
+
+  "filters": {
+    "year_range": [2005, 2026],
+    "require_variant_report": true,
+    "exclude_review": true,
+    "min_fulltext": true
+  },
+  "open_access_priority": true,
+
+  "target_per_lang": {
+    "zh": 10,
+    "en": 15,
+    "ja": 8,
+    "ko": 6,
+    "tr": 6,
+    "de": 5,
+    "fr": 5,
+    "es": 5,
+    "pt": 4,
+    "ru": 4,
+    "it": 4,
+    "ar": 3
+  },
+
+  "languages": {
+    "zh": {
+      "name": "Chinese",
+      "primary_source": ["CNKI", "Wanfang", "PubMed"],
+      "queries": [
+        "Rett综合征 MECP2 病例报告",
+        "MECP2 基因突变 女童 病例报告",
+        "Rett综合征 MECP2 基因诊断 病例",
+        "非典型Rett综合征 MECP2 病例报告",
+        "MECP2 无义突变 Rett综合征 病例报告",
+        "MECP2 移码突变 Rett综合征 病例报告",
+        "MECP2 错义突变 Rett综合征 病例报告",
+        "MECP2 大片段缺失 Rett综合征 病例报告",
+        "MECP2 重复突变 男性患者 病例报告",
+        "Rett综合征 全外显子测序 病例报告",
+        "Rett综合征 误诊 Angelman 病例报告",
+        "MECP2 de novo 突变 女孩 病例报告",
+        "Rett综合征 退行 发育倒退 病例报告",
+        "Rett综合征 癫痫 MECP2 病例报告",
+        "Rett综合征 刻板手动作 MECP2 病例报告",
+        "Rett综合征 新生儿起病 MECP2 病例",
+        "CDKL5 缺陷 Rett样综合征 病例报告",
+        "FOXG1 突变 非典型Rett 病例报告"
+      ]
+    },
+
+    "en": {
+      "name": "English",
+      "primary_source": ["PubMed", "PMC"],
+      "queries": [
+        "Rett syndrome MECP2 mutation case report",
+        "MECP2 novel variant case report Rett",
+        "atypical Rett syndrome MECP2 case report",
+        "MECP2 duplication syndrome case report",
+        "Rett syndrome de novo MECP2 mutation case report",
+        "Rett syndrome misdiagnosed Angelman case report",
+        "MECP2 nonsense mutation Rett syndrome case report",
+        "MECP2 frameshift mutation Rett case report",
+        "MECP2 missense mutation Rett syndrome case report",
+        "MECP2 large deletion Rett syndrome case report",
+        "MECP2 splice site mutation Rett case report",
+        "male MECP2 mutation case report intellectual disability",
+        "Rett syndrome whole exome sequencing case report",
+        "MECP2 p.R306C case report",
+        "MECP2 p.T158M case report",
+        "MECP2 p.R255X case report",
+        "MECP2 p.R168X case report",
+        "MECP2 p.R270X case report",
+        "classic Rett syndrome MECP2 case report",
+        "Rett syndrome preserved speech variant case report",
+        "MECP2 mosaic mutation case report female",
+        "Rett syndrome epilepsy MECP2 case report",
+        "CDKL5 deficiency disorder case report Rett-like",
+        "FOXG1 syndrome case report Rett variant",
+        "Rett syndrome neonatal onset case report",
+        "MECP2 duplication syndrome male case report",
+        "Rett syndrome autopsy case report",
+        "Rett syndrome pregnancy case report"
+      ]
+    },
+
+    "ja": {
+      "name": "Japanese",
+      "primary_source": ["J-STAGE", "CiNii"],
+      "queries": [
+        "レット症候群 MECP2 症例報告",
+        "MECP2 遺伝子変異 女児 症例報告",
+        "レット症候群 MECP2 臨床像 症例",
+        "非定型レット症候群 MECP2 症例報告",
+        "MECP2 重複症候群 男性 症例報告",
+        "レット症候群 新規変異 症例報告",
+        "レット症候群 遺伝子解析 日本人 症例報告",
+        "MECP2 ナンセンス変異 レット症候群 症例報告",
+        "MECP2 フレームシフト変異 レット症候群 症例",
+        "MECP2 ミスセンス変異 レット症候群 症例報告",
+        "レット症候群 全エクソーム解析 症例報告",
+        "レット症候群 発達退行 症例報告",
+        "レット症候群 てんかん MECP2 症例報告",
+        "MECP2 大欠失 レット症候群 症例報告",
+        "レット症候群 de novo 変異 症例報告",
+        "CDKL5 欠損症 レット様 症例報告"
+      ]
+    },
+
+    "ko": {
+      "name": "Korean",
+      "primary_source": ["RISS", "KISS", "PubMed"],
+      "queries": [
+        "레트 증후군 MECP2 증례 보고",
+        "MECP2 유전자 변이 여아 증례 보고",
+        "비정형 레트 증후군 MECP2 증례 보고",
+        "레트 증후군 신규 변이 증례 보고",
+        "MECP2 넌센스 변이 레트 증후군 증례",
+        "MECP2 프레임시프트 변이 레트 증후군 증례",
+        "레트 증후군 전장 엑솜 분석 증례 보고",
+        "레트 증후군 발달 퇴행 MECP2 증례 보고",
+        "MECP2 중복 증후군 남아 증례 보고",
+        "레트 증후군 de novo 변이 증례 보고",
+        "레트 증후군 간질 MECP2 증례 보고",
+        "CDKL5 결핍 레트 유사 증례 보고"
+      ]
+    },
+
+    "tr": {
+      "name": "Turkish",
+      "primary_source": ["PubMed", "DergiPark"],
+      "queries": [
+        "Rett sendromu MECP2 olgu sunumu",
+        "MECP2 mutasyonu olgu raporu Rett",
+        "atipik Rett sendromu MECP2 olgu sunumu",
+        "Rett sendromu de novo mutasyon olgu sunumu",
+        "MECP2 duplikasyon sendromu olgu sunumu",
+        "Rett sendromu genetik tani olgu sunumu",
+        "MECP2 nonsense mutasyon Rett olgu sunumu",
+        "MECP2 frameshift mutasyon Rett olgu raporu",
+        "Rett sendromu tum ekzom dizileme olgu sunumu",
+        "MECP2 missense mutasyon Rett olgu sunumu",
+        "Rett sendromu gelisimsel gerileme olgu sunumu",
+        "MECP2 buyuk delesyon Rett olgu raporu",
+        "Rett sendromu epilepsi MECP2 olgu sunumu",
+        "MECP2 mozaik mutasyon Rett vaka sunumu",
+        "CDKL5 eksiklik Rett benzeri olgu sunumu"
+      ]
+    },
+
+    "de": {
+      "name": "German",
+      "primary_source": ["PubMed", "LIVIVO"],
+      "queries": [
+        "Rett-Syndrom MECP2 Fallbericht",
+        "MECP2-Mutation Fallbericht Rett-Syndrom",
+        "atypisches Rett-Syndrom MECP2 Fallbericht",
+        "Rett-Syndrom de-novo-Mutation Fallbericht",
+        "MECP2 Nonsense-Mutation Rett-Syndrom Fallbericht",
+        "MECP2 Frameshift-Mutation Rett Fallbericht",
+        "Rett-Syndrom Exom-Sequenzierung Fallbericht",
+        "MECP2 Missense-Mutation Rett-Syndrom Fallbericht",
+        "MECP2 Duplikationssyndrom mannlich Fallbericht",
+        "Rett-Syndrom Entwicklungsregression Fallbericht",
+        "MECP2 grosse Deletion Rett Fallbericht",
+        "CDKL5-Defizienz Rett-ahnlich Fallbericht"
+      ]
+    },
+
+    "fr": {
+      "name": "French",
+      "primary_source": ["PubMed", "ScienceDirect"],
+      "queries": [
+        "syndrome de Rett MECP2 rapport de cas",
+        "mutation MECP2 nouveau cas clinique Rett",
+        "syndrome de Rett atypique MECP2 rapport de cas",
+        "MECP2 mutation de novo syndrome Rett cas clinique",
+        "syndrome de Rett diagnostic genetique rapport de cas",
+        "mutation non-sens MECP2 syndrome de Rett cas clinique",
+        "mutation faux-sens MECP2 syndrome de Rett cas clinique",
+        "syndrome de Rett sequencage exome cas clinique",
+        "MECP2 deletion large syndrome de Rett cas clinique",
+        "syndrome de duplication MECP2 garcon rapport de cas",
+        "syndrome de Rett regression developpementale cas clinique",
+        "MECP2 mutation mosaique syndrome de Rett cas clinique",
+        "deficience CDKL5 type Rett rapport de cas"
+      ]
+    },
+
+    "es": {
+      "name": "Spanish",
+      "primary_source": ["PubMed", "SciELO"],
+      "queries": [
+        "sindrome de Rett MECP2 reporte de caso",
+        "mutacion MECP2 caso clinico sindrome de Rett",
+        "sindrome de Rett atipico MECP2 reporte de caso",
+        "MECP2 mutacion de novo sindrome de Rett caso clinico",
+        "sindrome de Rett diagnostico genetico reporte de caso",
+        "mutacion sin sentido MECP2 sindrome Rett caso clinico",
+        "mutacion cambio de marco MECP2 Rett caso clinico",
+        "sindrome de Rett secuenciacion exoma reporte de caso",
+        "MECP2 deleción grande sindrome de Rett caso clinico",
+        "sindrome de duplicacion MECP2 varon reporte de caso",
+        "sindrome de Rett regresion del desarrollo caso clinico",
+        "MECP2 mutacion en mosaico sindrome Rett caso clinico",
+        "deficiencia CDKL5 tipo Rett reporte de caso"
+      ]
+    },
+
+    "pt": {
+      "name": "Portuguese",
+      "primary_source": ["PubMed", "SciELO"],
+      "queries": [
+        "sindrome de Rett MECP2 relato de caso",
+        "mutacao MECP2 caso clinico sindrome de Rett",
+        "sindrome de Rett atipica MECP2 relato de caso",
+        "MECP2 mutacao de novo sindrome de Rett caso clinico",
+        "mutacao nonsense MECP2 sindrome Rett relato de caso",
+        "mutacao frameshift MECP2 Rett caso clinico",
+        "sindrome de Rett sequenciamento exoma relato de caso",
+        "MECP2 delecao grande sindrome Rett caso clinico",
+        "sindrome de duplicacao MECP2 masculino relato de caso",
+        "sindrome de Rett regressao desenvolvimento caso clinico",
+        "deficiencia CDKL5 tipo Rett relato de caso"
+      ]
+    },
+
+    "ru": {
+      "name": "Russian",
+      "primary_source": ["eLibrary", "PubMed"],
+      "queries": [
+        "синдром Ретта MECP2 клинический случай",
+        "мутация MECP2 описание случая синдром Ретта",
+        "синдром Ретта MECP2 клинический разбор случая",
+        "MECP2 нонсенс-мутация синдром Ретта клинический случай",
+        "MECP2 миссенс-мутация синдром Ретта случай",
+        "синдром Ретта секвенирование экзома клинический случай",
+        "MECP2 de novo мутация синдром Ретта случай",
+        "синдром Ретта регресс развития MECP2 клинический случай",
+        "MECP2 крупная делеция синдром Ретта клинический случай",
+        "дефицит CDKL5 реттподобный синдром клинический случай"
+      ]
+    },
+
+    "it": {
+      "name": "Italian",
+      "primary_source": ["PubMed", "ScienceDirect"],
+      "queries": [
+        "sindrome di Rett MECP2 case report",
+        "mutazione MECP2 caso clinico sindrome di Rett",
+        "sindrome di Rett atipica MECP2 caso clinico",
+        "MECP2 mutazione de novo sindrome di Rett caso clinico",
+        "mutazione non senso MECP2 sindrome Rett caso clinico",
+        "mutazione frameshift MECP2 sindrome Rett caso clinico",
+        "sindrome di Rett sequenziamento esoma caso clinico",
+        "MECP2 grande delezione sindrome Rett caso clinico",
+        "sindrome di duplicazione MECP2 maschio caso clinico",
+        "sindrome di Rett regressione sviluppo caso clinico",
+        "deficienza CDKL5 tipo Rett caso clinico"
+      ]
+    },
+
+    "ar": {
+      "name": "Arabic",
+      "primary_source": ["PubMed"],
+      "rtl": true,
+      "queries": [
+        "متلازمة ريت MECP2 تقرير حالة",
+        "طفرة MECP2 حالة سريرية متلازمة ريت",
+        "متلازمة ريت غير النمطية MECP2 تقرير حالة",
+        "طفرة إيقاف MECP2 متلازمة ريت تقرير حالة",
+        "طفرة إطار القراءة MECP2 متلازمة ريت حالة سريرية",
+        "متلازمة ريت تسلسل الإكسوم الكامل تقرير حالة",
+        "MECP2 حذف كبير متلازمة ريت تقرير حالة",
+        "متلازمة تضاعف MECP2 ذكر تقرير حالة",
+        "متلازمة ريت تراجع النمو MECP2 تقرير حالة",
+        "نقص CDKL5 شبيه متلازمة ريت تقرير حالة"
+      ]
+    }
+  }
+}

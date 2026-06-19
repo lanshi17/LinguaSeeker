@@ -38,6 +38,7 @@ from typing import Any
 import httpx
 from loguru import logger
 
+from benchmark.core import POLL_INTERVAL_S, MAX_POLL_ATTEMPTS, TERMINAL_STATUSES
 from benchmark.core.evidence_metrics import query_evidence_metrics
 from src.dao.postgresql.connection import async_session_factory, build_async_engine
 
@@ -46,10 +47,6 @@ MANIFEST_PATH = MODULE_DIR / "manifest.json"
 REPORTS_DIR = MODULE_DIR / "reports"
 DOWNLOADS_DIR = (MODULE_DIR.parent / "literature_acquisition" / "downloads").resolve()
 INPUT_DIR = MODULE_DIR / "input"
-
-POLL_INTERVAL_S = 5.0
-MAX_POLL_ATTEMPTS = 360  # 30 min at 5s intervals
-TERMINAL_STATUSES = {"awaiting_review", "completed", "failed"}
 
 
 @dataclass
