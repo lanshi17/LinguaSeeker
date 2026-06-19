@@ -54,6 +54,11 @@ class PipelineRunRequest(BaseModel):
     # Online acquisition fields
     query: str | None = None
     identifiers: list[str] | None = None
+    # Optional gate controls (online only). literature_types activates the
+    # typed doc-classification path in run_relevance_gate; missing/unknown
+    # doc_type is conservatively rejected.
+    relevance_gate: bool = True
+    literature_types: list[str] | None = None
 
     # Target gene-disease hypothesis (Phase 2/3 evidence extraction)
     extraction_target: ExtractionTarget | None = Field(default=None, alias="target")
@@ -326,6 +331,8 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         query=body.query,
         identifiers=body.identifiers,
         action=online_action,
+        relevance_gate=body.relevance_gate,
+        literature_types=body.literature_types,
         created_at=datetime.now().isoformat(),
         extraction_target=body.extraction_target,
     )

@@ -170,3 +170,124 @@ async def test_check_one_with_markdown_skips_missing_file_check(tmp_path):
     # No file_not_found — markdown was used.
     assert judgment.error == ""
     assert judgment.relevant is True
+
+
+@pytest.mark.asyncio
+async def test_typed_gate_rejects_missing_doc_type():
+    """When literature_types is set, a response without doc_type is rejected."""
+    download = {
+        "file_path": "",  # empty fine — markdown supplies text
+        "title": "Test",
+        "lang": "en",
+        "parsed_markdown": "Some substantial text about MECP2 mutations and Rett syndrome.",
+    }
+
+    # LLM says relevant but emits no doc_type
+    mock_response = MagicMock()
+    mock_response.choices = [MagicMock()]
+    mock_response.choices[0].message.content = json.dumps(
+        {"relevant": True, "reason": "yes"}
+    )
+
+    client = MagicMock()
+    client.chat.completions.create = AsyncMock(return_value=mock_response)
+
+    import asyncio as _asyncio
+
+    sem = _asyncio.Semaphore(1)
+
+    judgment = await _check_one(
+        client=client,
+        sem=sem,
+        model="test-model",
+        query="MECP2",
+        download=download,
+        max_pages=3,
+        max_chars=3000,
+        max_tokens=1024,
+        literature_types=["case_report"],
+    )
+
+    # Conservative reject — keeping a missing-type doc would defeat typed filtering.
+    assert judgment.relevant is False
+    assert judgment.doc_type == ""
+    assert "doc_type_missing" in judgment.reason
+
+
+@pytest.mark.asyncio
+async def test_typed_gate_rejects_doc_type_mismatch():
+    """When literature_types=[case_report] but model returns review, reject."""
+    download = {
+        "file_path": "",
+        "title": "Review",
+        "lang": "en",
+        "parsed_markdown": "A review of MECP2 mutations across multiple cohorts.",
+    }
+
+    mock_response = MagicMock()
+    mock_response.choices = [MagicMock()]
+    mock_response.choices[0].message.content = json.dumps(
+        {"relevant": True, "doc_type": "review", "reason": "ok"}
+    )
+
+    client = MagicMock()
+    client.chat.completions.create = AsyncMock(return_value=mock_response)
+
+    import asyncio as _asyncio
+
+    sem = _asyncio.Semaphore(1)
+
+    judgment = await _check_one(
+        client=client,
+        sem=sem,
+        model="test-model",
+        query="MECP2",
+        download=download,
+        max_pages=3,
+        max_chars=3000,
+        max_tokens=1024,
+        literature_types=["case_report"],
+    )
+
+    assert judgment.relevant is False
+    assert judgment.doc_type == "review"
+    assert "doc_type_mismatch" in judgment.reason
+
+
+@pytest.mark.asyncio
+async def test_typed_gate_accepts_matching_doc_type():
+    """Matching doc_type and relevant=True is kept."""
+    download = {
+        "file_path": "",
+        "title": "Case",
+        "lang": "en",
+        "parsed_markdown": "Case report of a 7-year-old girl with MECP2 c.473C>T.",
+    }
+
+    mock_response = MagicMock()
+    mock_response.choices = [MagicMock()]
+    mock_response.choices[0].message.content = json.dumps(
+        {"relevant": True, "doc_type": "case_report", "reason": "single proband"}
+    )
+
+    client = MagicMock()
+    client.chat.completions.create = AsyncMock(return_value=mock_response)
+
+    import asyncio as _asyncio
+
+    sem = _asyncio.Semaphore(1)
+
+    judgment = await _check_one(
+        client=client,
+        sem=sem,
+        model="test-model",
+        query="MECP2",
+        download=download,
+        max_pages=3,
+        max_chars=3000,
+        max_tokens=1024,
+        literature_types=["case_report"],
+    )
+
+    assert judgment.relevant is True
+    assert judgment.doc_type == "case_report"

@@ -56,6 +56,9 @@ class DocumentAcquisitionRequest:
     timeout: int = 60
     proxy: Optional[str] = None
     email: str = "yhvguk@stu.hunau.edu.cn"
+    # LLM relevance gate controls (forwarded to online_acquisition workflow)
+    relevance_gate: bool = True
+    literature_types: Optional[List[str]] = None
 
 
 @dataclass

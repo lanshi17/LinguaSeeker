@@ -104,6 +104,58 @@ class TestDocumentAcquisitionService:
             assert result.success is True
 
     @pytest.mark.asyncio
+    async def test_service_forwards_relevance_gate_and_literature_types(self):
+        """relevance_gate + literature_types on the request reach the workflow payload."""
+        service = DocumentAcquisitionService()
+        request = DocumentAcquisitionRequest(
+            source=AcquisitionSource.ONLINE,
+            action="download",
+            query="MECP2 Rett syndrome",
+            relevance_gate=True,
+            literature_types=["case_report", "sequencing"],
+        )
+        mock_result = {
+            "success": True,
+            "items": [],
+            "downloads": [],
+            "warnings": [],
+            "route": None,
+        }
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+            new_callable=AsyncMock,
+            return_value=mock_result,
+        ) as mock_ml:
+            await service.acquire(request)
+            mock_ml.assert_awaited_once()
+            payload = mock_ml.await_args.args[0]
+            assert payload["relevance_gate"] is True
+            assert payload["literature_types"] == ["case_report", "sequencing"]
+
+    @pytest.mark.asyncio
+    async def test_service_forwards_relevance_gate_disabled(self):
+        """relevance_gate=False is passed through; literature_types omitted when None."""
+        service = DocumentAcquisitionService()
+        request = DocumentAcquisitionRequest(
+            source=AcquisitionSource.ONLINE,
+            action="download",
+            query="some topic",
+            relevance_gate=False,
+        )
+        mock_result = {
+            "success": True, "items": [], "downloads": [], "warnings": [], "route": None,
+        }
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+            new_callable=AsyncMock,
+            return_value=mock_result,
+        ) as mock_ml:
+            await service.acquire(request)
+            payload = mock_ml.await_args.args[0]
+            assert payload["relevance_gate"] is False
+            assert "literature_types" not in payload
+
+    @pytest.mark.asyncio
     async def test_acquire_online_search_with_explicit_language_uses_single(self):
         """Explicit language pins to the single-language workflow (no translation)."""
         service = DocumentAcquisitionService()
