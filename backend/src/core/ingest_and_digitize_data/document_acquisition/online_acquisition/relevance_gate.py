@@ -187,17 +187,25 @@ async def _check_one(
     max_tokens: int,
     literature_types: Optional[List[str]] = None,
 ) -> RelevanceJudgment:
-    """Check a single downloaded PDF for relevance to the query."""
+    """Check a single downloaded PDF for relevance to the query.
+
+    When ``download["parsed_markdown"]`` is present (set by the multilingual
+    workflow's early MinerU batch parse), it is used directly instead of
+    re-extracting text from the PDF with PyMuPDF.
+    """
     file_path = download.get("file_path") or ""
     lang = download.get("lang", "")
     title = download.get("title", "")
 
-    if not file_path or not Path(file_path).exists():
-        return RelevanceJudgment(file_path=file_path, error="file_not_found")
-
-    text = await asyncio.to_thread(_extract_text, file_path, max_pages, max_chars)
-    if not text or len(text.strip()) < 30:
-        return RelevanceJudgment(file_path=file_path, error="empty_text")
+    parsed_markdown = download.get("parsed_markdown") or ""
+    if parsed_markdown:
+        text = parsed_markdown[:max_chars]
+    else:
+        if not file_path or not Path(file_path).exists():
+            return RelevanceJudgment(file_path=file_path, error="file_not_found")
+        text = await asyncio.to_thread(_extract_text, file_path, max_pages, max_chars)
+        if not text or len(text.strip()) < 30:
+            return RelevanceJudgment(file_path=file_path, error="empty_text")
 
     use_typed = bool(literature_types)
     system_prompt = _SYSTEM_PROMPT_TYPED if use_typed else _SYSTEM_PROMPT
@@ -224,14 +232,24 @@ async def _check_one(
             raw = (resp.choices[0].message.content or "").strip()
             relevant, doc_type, reason = _parse_response(raw)
 
-            # If literature_types is set, reject docs whose type doesn't match
-            if use_typed and doc_type and doc_type not in literature_types:
-                return RelevanceJudgment(
-                    file_path=file_path,
-                    relevant=False,
-                    doc_type=doc_type,
-                    reason=f"doc_type_mismatch: {doc_type} not in {literature_types}",
-                )
+            # If literature_types is set, the LLM MUST emit a known doc_type
+            # AND it must match. Missing/unknown doc_type is conservatively
+            # rejected — never silently kept.
+            if use_typed:
+                if not doc_type:
+                    return RelevanceJudgment(
+                        file_path=file_path,
+                        relevant=False,
+                        doc_type=doc_type,
+                        reason="doc_type_missing: classifier did not emit a doc_type",
+                    )
+                if doc_type not in literature_types:
+                    return RelevanceJudgment(
+                        file_path=file_path,
+                        relevant=False,
+                        doc_type=doc_type,
+                        reason=f"doc_type_mismatch: {doc_type} not in {literature_types}",
+                    )
 
             return RelevanceJudgment(
                 file_path=file_path,
