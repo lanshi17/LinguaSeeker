@@ -73,6 +73,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-06-14 | [BIBM Main Paper Detailed Plan](planned/2026-06-14-bibm-main-paper-detailed-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Rescue Plan](planned/2026-06-14-bibm-main-paper-rescue.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Effect Plan](planned/2026-06-14-bibm-main-paper-effect-plan.md) | planned |
+| 2026-06-19 | [Evidence Extraction Pipeline Revision](planned/2026-06-19-evidence-extraction-pipeline-revision.md) | planned |
 
 ## Diagrams
 
