@@ -4,13 +4,13 @@
   "is_complete": false,
   "labels": [
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "ADA",
       "field_id": "A.gene_symbol",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_005/source.md:32",
+      "source_quote": "619Leu NA 0.004 30 32 20 c.862C > T, p.Arg288Trp NA 0.017 31 33 386 c.1921C > T, p.Arg641Cys NA 0.029 32 34 113 c.902-904delAAG, p.Glu301del NA 0.055 33 35 456 c.95T > C, p.Leu32Ser NA 0.002 34 36 255 c.1856C > T, p.Pro619Leu NA 0.035 35 37 0 SCID ADA ADA1 c.218 + 2T > G c.218 + 2 T > G 0.040 Mean, 0.075; SD, 0.054; Min, 0.014 Mean, 0.18; SD, 0.096; Min, 0.047 36 38 3 c.218 + 2T > G c.632G > A, p.Arg211His 0.108 37 39 0 X-SCID IL2RG IL2R\u03b3 c.865C > T, p.Arg289X NA Below detection limit NA NA 38 4",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -22,13 +22,13 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "causative",
       "field_id": "A.gene_disease_relationship",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_005/source.md:5",
+      "source_quote": "nitoring of levels of proteins encoded by 2912 genes, including 1110 listed in the Online Mendelian Inheritance in Man database, in healthy newborn samples, and was useful in identifying patients with IEIs by detecting reduced levels of disease causative proteins and their interacting proteins, as well as cell-phenotypical alterations. Conclusion Our results indicate that non-targeted quantitative protein profiling of DBS samples can be used to identify patients with IEIs and develop a novel new",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -49,22 +49,22 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "p.Arg211His",
       "field_id": "A.variant_hgvs_p",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_005/source.md:32",
+      "source_quote": "5 456 c.95T > C, p.Leu32Ser NA 0.002 34 36 255 c.1856C > T, p.Pro619Leu NA 0.035 35 37 0 SCID ADA ADA1 c.218 + 2T > G c.218 + 2 T > G 0.040 Mean, 0.075; SD, 0.054; Min, 0.014 Mean, 0.18; SD, 0.096; Min, 0.047 36 38 3 c.218 + 2T > G c.632G > A, p.Arg211His 0.108 37 39 0 X-SCID IL2RG IL2R\u03b3 c.865C > T, p.Arg289X NA Below detection limit NA NA 38 40 2 c.374A > G, p.Tyr125Cys NA Below detection limit 39 41 b 0 CHS LYST LYST c.1673dupT, p.Leu558Phefs*22 c.5506C > T, p.Arg1836X 0.003 Mean, 0.056; SD, 0",
+      "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "missense",
       "field_id": "A.variant_type",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_005/source.md:58",
+      "source_quote": "### Prediction of Effects of Missense Mutations on Protein Stability",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
