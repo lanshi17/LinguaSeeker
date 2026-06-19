@@ -3,13 +3,13 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "MECP2 duplication syndrome (síndrome de duplicación MECP2)",
+  "disease_label": "Síndrome de duplicación MECP2",
   "mondo_id": "MONDO:0010726",
-  "moi": "X-linked",
+  "moi": "Ligado al cromosoma X",
   "source_pmid": null,
   "source_doi": "10.33588/rn.7008.2019457",
   "source_title": "Síndrome de duplicación MECP2 familiar",
-  "source_journal": "Revista de Neurología",
+  "source_journal": "Rev Neurol",
   "source_year": "2020",
   "source_language": "es",
   "source_pdf_path": "",
@@ -17,10 +17,28 @@
     {
       "hgvs_c": "",
       "hgvs_p": "",
-      "variant_type": "duplication (copy number gain, Xq28 including MECP2; 416 kb)",
-      "clinical_significance": "pathogenic",
+      "hgvs_g": "",
+      "variant_type": "Duplicación (ganancia del número de copias) de la banda cromosómica Xq28 que incluye el gen MECP2",
+      "clinical_significance": "Patógena (duplicación patógena por array-CGH)",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "Exceso de proteína MeCP2",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "Duplicación patógena de 416 kb de la banda cromosómica Xq28 (misma duplicación familiar, caso 2)",
+      "clinical_significance": "Patógena",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "Exceso de proteína MeCP2",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -32,67 +50,275 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "MECP2 duplication syndrome (síndrome de duplicación MECP2)",
+      "field_id": "A.gene_disease_relationship",
+      "value": "Las duplicaciones de MECP2 (Xq28) producen un exceso de proteína MeCP2 y originan el síndrome de duplicación MECP2; las deleciones y mutaciones en MECP2 producen el síndrome de Rett. MECP2 es un gen regulador esencial para el correcto desarrollo del sistema nervioso central.",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "A.gene_disease_relationship",
-      "value": "causative",
+      "field_id": "A.variant_legacy_name",
+      "value": "Duplicación Xq28 que incluye MECP2 (416 kb)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "Duplicación / variación del número de copias (ganancia) de la banda Xq28 que incluye MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "Exceso (sobreproducción) de proteína MeCP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_consequence_class",
+      "value": "Ganancia de dosis génica que origina exceso/sobreexpresión de la proteína MeCP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.identity_by_descent_variant",
+      "value": "Duplicación familiar compartida y heredada por vía materna en una misma familia (primo, madre, dos tías maternas, abuela materna)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "Dos probandos (caso 1 y caso 2), primos hermanos de una misma familia",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "2 casos afectos (varones) de una misma familia",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Síndrome de duplicación MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001252; HP:0001263; HP:0002376; HP:0000756; HP:0001344; HP:0001249; HP:0001250; HP:0001257; HP:0002072; HP:0003763; HP:0002650; HP:0002194",
+      "candidates": [
+        "HP:0001252",
+        "HP:0001263",
+        "HP:0002376",
+        "HP:0000756",
+        "HP:0001344",
+        "HP:0001249",
+        "HP:0001250",
+        "HP:0001257",
+        "HP:0002072",
+        "HP:0003763",
+        "HP:0002650",
+        "HP:0002194"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "Síndrome (descripción general): hipotonía, retraso psicomotor y regresión de hitos, rasgos del espectro autista, escaso desarrollo del lenguaje, discapacidad intelectual moderada a grave, epilepsia (50-80%), infecciones respiratorias recurrentes, espasticidad progresiva, estereotipias de las manos, reflujo gastroesofágico, estreñimiento, bruxismo, sialorrea, escoliosis, estrabismo divergente, hipermetropía, hipertensión pulmonar; rasgos dismórficos (hipoplasia mediofacial, puente nasal estrecho, labio inferior grueso, orejas grandes y prominentes, cabello grueso, dedos cónicos, pies pequeños). Caso 1: hipotonía axial, aducción/inclusión del primer dedo de ambas manos, retraso psicomotor importante (sedestación 11-12 meses, bipedestación con apoyo a 14 meses, marcha autónoma inestable a 20 meses), uso escaso de manos, no señala, balbuceo escaso, a los 4 años sin lenguaje propositivo y estereotipias manuales. Caso 2: retraso psicomotor (sostén cefálico 8 meses, sedestación 11-12 meses, gateo 19-20 meses, a 23 meses sin deambulación autónoma), no señala, sin bisílabos propositivos, bruxismo; bronquiolitis y bronquitis de repetición.",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.biochemical_markers",
+      "value": "Estudio neurometabólico en sangre normal (hormonas tiroideas, ácido fólico, vitamina B, creatincinasa, cobre, ceruloplasmina, homocisteína y transferrina deficiente en carbohidratos)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "Caso 1: 4 años; Caso 2: 23 meses",
+      "candidates": [
+        "Caso 1: 4 años",
+        "Caso 2: 23 meses"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "Caso 1: remitido a los 6 meses por retraso psicomotor; Caso 2: remitido a los 13 meses por retraso psicomotor",
+      "candidates": [
+        "Caso 1: remitido a los 6 meses por retraso psicomotor",
+        "Caso 2: remitido a los 13 meses por retraso psicomotor"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "Masculino (ambos casos varones)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.ancestry_or_population",
+      "value": "España (familia seguida en Zaragoza, España)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.consanguinity",
+      "value": "Caso 1: padres sanos no consanguíneos",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.mode_of_inheritance_reported",
-      "value": "X-linked",
+      "value": "Ligado al cromosoma X; duplicación heredada por vía materna",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "A.variant_type",
-      "value": "duplication (copy number gain, Xq28 including MECP2; 416 kb)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
-      "field_id": "B.hpo_terms",
-      "value": "HP:0001252; HP:0001263; HP:0002376; HP:0000756; HP:0001344; HP:0001249; HP:0001250; HP:0001257; HP:0002072; HP:0002019; HP:0003763; HP:0002650; HP:0000568; HP:0002194; HP:0011968",
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "Se descarta X frágil (caso 1)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.clinical_phenotypes",
-      "value": "hipotonía axial/temprana; retraso psicomotor / retraso global del desarrollo; regresión de los hitos del desarrollo; rasgos del espectro autista; escaso desarrollo del lenguaje / ausencia de lenguaje expresivo; discapacidad intelectual de moderada a grave; epilepsia (50-80% de los casos, frecuentemente refractaria); espasticidad progresiva; estereotipias manuales / movimientos estereotipados de las manos; estreñimiento; bruxismo; escoliosis; estrabismo divergente; dificultad para la marcha; problemas respiratorios y de nutrición; infecciones respiratorias recurrentes; reflujo gastroesofágico; sialorrea; hipermetropía; rasgos dismórficos (hipoplasia mediofacial, puente nasal estrecho, labio inferior grueso, orejas grandes y prominentes, cabello grueso, dedos cónicos, pies pequeños); hipertensión pulmonar (descrita como causa de muerte precoz)",
+      "field_id": "B.testing_method",
+      "value": "Array-CGH (objetiva duplicación patógena de Xq28 que incluye MECP2); estudio de X frágil; estudio genético familiar ampliado",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.sex",
-      "value": "male (ambos casos varones)",
+      "field_id": "B.healthy_adult_status",
+      "value": "Madre, dos tías maternas y abuela materna del caso 1 son portadoras asintomáticas de la duplicación",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.age_of_onset",
-      "value": "infancy; caso 1 remitido a los 6 meses, caso 2 a los 13 meses",
+      "field_id": "C.inheritance_source",
+      "value": "Heredada por vía materna (la mayoría de los varones hereda la duplicación de su madre; en estos casos heredada de la madre portadora)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "inherited (duplicación heredada de la madre portadora; familia con múltiples portadoras: madre, dos tías maternas y abuela materna)",
+      "value": "No de novo en estos casos (duplicación familiar heredada); el artículo menciona que existen casos de novo en la bibliografía general",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_genotype",
+      "value": "Madre portadora de la duplicación Xq28/MECP2 (en ambos casos)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_phenotype",
+      "value": "Portadora asintomática",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_phenotype",
+      "value": "Padres sanos (caso 1)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.g_plus_p_plus_count",
+      "value": "2 (caso 1 y caso 2, varones afectos portadores de la duplicación)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.g_plus_p_minus_count",
+      "value": "4 portadoras asintomáticas (madre, dos tías maternas y abuela materna)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.obligate_carriers",
+      "value": "Madre y abuela materna (portadoras obligadas)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "D.absent_or_rare_statement",
+      "value": "Prevalencia real desconocida; se estima que constituye el 1-2% de los casos de discapacidad intelectual ligada al cromosoma X; prevalencia de nacimientos de 0,65 por cada 100.000 nacidos vivos en un estudio en Australia",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.healthy_carrier_observation",
+      "value": "La mayoría de las mujeres portadoras son asintomáticas (inactivación preferencial del cromosoma X anormal); en esta familia madre, dos tías maternas y abuela materna portadoras asintomáticas",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "F.declared_disease_mechanism",
+      "value": "Ganancia de dosis / sobreexpresión: el exceso de proteína MeCP2 por duplicación origina el síndrome (mecanismo opuesto a la pérdida de función del síndrome de Rett)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "MECP2 es un gen regulador que indica a los genes que controla cuándo deben estar inactivos; su funcionamiento inadecuado permite que otros genes se expresen o permanezcan activos de forma inapropiada. La proteína MeCP2 (methyl CpG binding protein 2) regula el patrón de expresión necesario para el desarrollo del sistema nervioso central.",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_expression_pattern",
+      "value": "La proteína MeCP2 es más abundante en el cerebro, pero se encuentra en todas las células del organismo, por lo que también pueden afectarse otros órganos y sistemas",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.disease_relevant_expression",
+      "value": "Mayor abundancia en el cerebro; relevante para el neurodesarrollo y las funciones cognitivas, sensoriales, emocionales y motoras",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.authority_classification",
+      "value": "Duplicación clasificada como patógena por array-CGH (laboratorio)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
     }
   ],
   "expected_standardization": {
@@ -101,24 +327,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "B.disease_diagnosis",
-      "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.null_variant_detail",
+      "A.protein_effect",
+      "A.same_amino_acid_known_variant",
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
+      "B.proband_status",
+      "B.case_count",
+      "B.disease_diagnosis",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
-      "B.sex",
+      "B.biochemical_markers",
+      "B.age_current_or_last_followup",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.sex",
+      "B.ancestry_or_population",
+      "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "B.healthy_adult_status"
+    ],
+    "segregation_fields": [
+      "C.inheritance_source",
+      "C.de_novo_status",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_genotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
+    ],
+    "population_fields": [
+      "D.population_database_name",
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
+    ],
+    "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
+      "F.tested_variant",
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.expert_panel_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

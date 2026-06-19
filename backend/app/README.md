@@ -22,6 +22,8 @@ app/
 └── main.py     # create_app() factory, lifespan, middleware, error handlers
 ```
 
+Note: Security headers middleware (`SecurityHeadersMiddleware`, `SecurityHeadersMiddlewareHSTS`) and body size limit middleware (`BodySizeLimitMiddleware`) are defined in `src/utils/security_headers.py` and `src/api/body_size_limit.py` respectively, then registered in `create_app()`.
+
 ### `main.py`
 
 | Symbol | Type | Description |
@@ -40,22 +42,24 @@ app/
 1. Clears system proxy env vars (ALL_PROXY, HTTP_PROXY, etc.) -- app-level proxy routing in `NetworkConfig` handles selective proxying instead
 2. Initializes logging via `setup_logging()`
 3. Calls `wire_dependencies()` from `src/api/wiring.py` -- assembles engine, session factory, Redis client, phase adapters, orchestrator, runner, and Phase4Factory
-4. Creates standalone database tables (search index metadata)
-5. Recovers orphaned pipeline runs interrupted by prior server restart
-6. Runs startup health checks (non-blocking -- warns but does not crash)
+4. Acquires a PostgreSQL advisory lock (`pg_try_advisory_lock`) to prevent multi-worker races during table creation and orphan recovery
+5. Creates standalone database tables (search index metadata) -- only if this worker holds the advisory lock
+6. Recovers orphaned pipeline runs (heartbeat-stale runs stuck in pending/running) -- only if this worker holds the advisory lock; releases lock afterward
+7. Runs startup health checks (non-blocking -- warns but does not crash)
 
 **Shutdown:**
-1. Waits for in-flight pipeline tasks to complete (90s timeout)
-2. Closes Phase4ServiceFactory
+1. Waits for in-flight pipeline tasks to complete (90s timeout; cancelled tasks get 5s grace to persist FAILED state)
+2. Closes Phase4ServiceFactory (disposes httpx client in ChatLLMProvider)
 3. Disposes Redis client
 4. Disposes PostgreSQL engine
 
 ### Middleware Stack (outermost first)
 
-1. **Request monitoring** -- logs every request with method, path, status, and latency
-2. **CORS** -- configured from `cfg.cors_origins_list`
-3. **Body size limit** -- rejects requests exceeding `cfg.mineru.max_file_size_mb`
-4. **Rate limiting** -- via `slowapi`
+1. **Request monitoring** -- raw ASGI middleware that logs every request with method, path, status, latency, and X-Request-ID; does NOT buffer response body (safe for SSE/chunked streaming)
+2. **CORS** -- configured from `cfg.cors_origins_list`; credentials disabled when origins is `*`
+3. **Security headers** -- adds X-Content-Type-Options, X-Frame-Options, CSP, Referrer-Policy, Permissions-Policy; HSTS variant (`SecurityHeadersMiddlewareHSTS`) used in production
+4. **Body size limit** -- rejects requests exceeding `cfg.mineru.max_file_size_mb`
+5. **Rate limiting** -- via `slowapi`
 
 ### Mounted Routes
 
@@ -77,6 +81,8 @@ Global handlers for `ACMGException`, `StarletteHTTPException`, and `RequestValid
 ```
 GET /health -> {"status": "ok"}
 ```
+
+Startup health checks (PostgreSQL, Redis) run asynchronously after the app starts. Redis failures are logged at DEBUG level (non-critical); all other failures are logged at WARNING level.
 
 ## Testing
 

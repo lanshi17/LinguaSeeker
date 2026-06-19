@@ -1,0 +1,29 @@
+{
+  "model": "claude-opus-4-8",
+  "write": true,
+  "started_at": "2026-06-19T05:09:54+00:00",
+  "finished_at": "2026-06-19T05:14:55+00:00",
+  "catalog_field_count": 143,
+  "rows": [
+    {
+      "entry_id": "rett_020",
+      "language": "en",
+      "model": "claude-opus-4-8",
+      "source_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/datasets/rett_annotation/ground_truth/rett_020/source.md",
+      "expected_fields": 32,
+      "variants": 0,
+      "status": "written",
+      "error": ""
+    },
+    {
+      "entry_id": "rett_030",
+      "language": "en",
+      "model": "claude-opus-4-8",
+      "source_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/datasets/rett_annotation/ground_truth/rett_030/source.md",
+      "expected_fields": 38,
+      "variants": 1,
+      "status": "written",
+      "error": ""
+    }
+  ]
+}

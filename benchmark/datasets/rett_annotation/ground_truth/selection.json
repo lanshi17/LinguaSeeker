@@ -2,55 +2,55 @@
   {
     "entry_id": "rett_001",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome",
+    "disease_label": "Rett syndrome (RTT)",
     "source_language": "en"
   },
   {
     "entry_id": "rett_003",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome",
+    "disease_label": "Rett syndrome (RTT)",
     "source_language": "en"
   },
   {
     "entry_id": "rett_004",
     "gene_symbol": "MECP2",
-    "disease_label": "典型 Rett 综合征 (typical Rett syndrome)",
+    "disease_label": "Rett syndrome (典型Rett综合征)",
     "source_language": "zh"
   },
   {
     "entry_id": "rett_005",
     "gene_symbol": "MECP2",
-    "disease_label": "Severe neonatal encephalopathy (MECP2-related, OMIM #300673)",
+    "disease_label": "Severe neonatal encephalopathy (MECP2-related), OMIM #300673",
     "source_language": "en"
   },
   {
     "entry_id": "rett_006",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome",
+    "disease_label": "Rett syndrome (典型/classical Rett syndrome)",
     "source_language": "zh"
   },
   {
     "entry_id": "rett_007",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome (classic RTT) in cases 1-4; MECP2 duplication syndrome (MDS) in case 5",
+    "disease_label": "Rett syndrome (RTT); MECP2 duplication syndrome (MDS)",
     "source_language": "zh"
   },
   {
     "entry_id": "rett_008",
     "gene_symbol": "FOXG1",
-    "disease_label": "Congenital variant Rett syndrome (atypical Rett syndrome)",
+    "disease_label": "Congenital variant Rett syndrome-like phenotype / atypical Rett syndrome",
     "source_language": "en"
   },
   {
     "entry_id": "rett_009",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome (classical)",
+    "disease_label": "Rett syndrome",
     "source_language": "en"
   },
   {
     "entry_id": "rett_011",
     "gene_symbol": "MECP2",
-    "disease_label": "典型Rett综合征 (typical Rett syndrome)",
+    "disease_label": "Rett syndrome (typical), OMIM#312750",
     "source_language": "zh"
   },
   {
@@ -62,37 +62,37 @@
   {
     "entry_id": "rett_013",
     "gene_symbol": "MECP2",
-    "disease_label": "Classical Rett syndrome",
+    "disease_label": "Rett syndrome",
     "source_language": "en"
   },
   {
     "entry_id": "rett_015",
     "gene_symbol": "MECP2",
-    "disease_label": "typical Rett syndrome",
+    "disease_label": "Rett syndrome (typical RTT)",
     "source_language": "en"
   },
   {
     "entry_id": "rett_016",
     "gene_symbol": "MECP2",
-    "disease_label": "Autism spectrum disorder (Rett syndrome explicitly excluded in all three patients)",
+    "disease_label": "Autism spectrum disorder (ASD); Rett syndrome excluded in all three patients",
     "source_language": "en"
   },
   {
     "entry_id": "rett_018",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome (classic and atypical RTT, with some carriers presenting only mild mental retardation)",
+    "disease_label": "Rett syndrome",
     "source_language": "en"
   },
   {
     "entry_id": "rett_019",
     "gene_symbol": "MECP2",
-    "disease_label": "MECP2-related severe neonatal encephalopathy (with Rett syndrome spectrum)",
+    "disease_label": "MECP2-related severe neonatal encephalopathy",
     "source_language": "en"
   },
   {
     "entry_id": "rett_020",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome (classic and atypical), MECP2-related neonatal encephalopathy, male RTT encephalopathy, and intellectual disability",
+    "disease_label": "Rett syndrome",
     "source_language": "en"
   },
   {
@@ -110,7 +110,7 @@
   {
     "entry_id": "rett_024",
     "gene_symbol": "FOXG1",
-    "disease_label": "Rett syndrome (classical and congenital/atypical RTT; FOXG1-related severe RTT-like neurodevelopmental disorder)",
+    "disease_label": "Rett syndrome (congenital/classical and severe RTT-like neurodevelopment disorder)",
     "source_language": "en"
   },
   {
@@ -122,13 +122,13 @@
   {
     "entry_id": "rett_028",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome (classic RTT)",
+    "disease_label": "Rett syndrome (RTT)",
     "source_language": "en"
   },
   {
     "entry_id": "rett_030",
     "gene_symbol": "FOXG1",
-    "disease_label": "Rett syndrome, congenital variant",
+    "disease_label": "Rett syndrome, congenital variant (OMIM#613454)",
     "source_language": "en"
   },
   {
@@ -140,13 +140,13 @@
   {
     "entry_id": "rett_033",
     "gene_symbol": "MECP2",
-    "disease_label": "MECP2 duplication syndrome (síndrome de duplicación MECP2)",
+    "disease_label": "Síndrome de duplicación MECP2",
     "source_language": "es"
   },
   {
     "entry_id": "rett_034",
     "gene_symbol": "MECP2",
-    "disease_label": "Síndrome de Rett (Rett syndrome, typical/classic)",
+    "disease_label": "Rett syndrome",
     "source_language": "pt"
   },
   {
@@ -164,7 +164,7 @@
   {
     "entry_id": "rett_041",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome",
+    "disease_label": "Syndrome de Rett (Rett syndrome)",
     "source_language": "fr"
   },
   {
@@ -182,31 +182,31 @@
   {
     "entry_id": "rett_049",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome (two typical RTT; one atypical preserved speech variant)",
+    "disease_label": "Rett syndrome",
     "source_language": "en"
   },
   {
     "entry_id": "rett_051",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome (typical/classic)",
+    "disease_label": "Rett syndrome",
     "source_language": "en"
   },
   {
     "entry_id": "rett_055",
-    "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome",
+    "gene_symbol": "[\"MECP2\", \"CDKL5\", \"FOXG1\"]",
+    "disease_label": "Rett syndrome (typical and atypical: early seizure variant, congenital variant)",
     "source_language": "ja"
   },
   {
     "entry_id": "rett_062",
-    "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome",
+    "gene_symbol": "FOXG1",
+    "disease_label": "先天型レット症候群 (congenital variant of Rett syndrome)",
     "source_language": "ja"
   },
   {
     "entry_id": "rett_063",
-    "gene_symbol": "MECP2",
-    "disease_label": "レット症候群 (Rett syndrome); 非典型レット症候群を含む（早期発症てんかん型: CDKL5、先天型: FOXG1）",
+    "gene_symbol": "CDKL5",
+    "disease_label": "レット症候群（Rett syndrome）に関する統合研究。報告された変異例はCDKL5重複を有する精神遅滞・自閉症スペクトラム障害の男性患者",
     "source_language": "ja"
   },
   {
@@ -230,7 +230,7 @@
   {
     "entry_id": "rett_068",
     "gene_symbol": "MECP2",
-    "disease_label": "congenital variant-like Rett syndrome",
+    "disease_label": "Rett syndrome, congenital variant-like",
     "source_language": "en"
   },
   {
@@ -242,25 +242,25 @@
   {
     "entry_id": "rett_070",
     "gene_symbol": "MECP2",
-    "disease_label": "Заболевание спектра синдрома Ретта (Rett syndrome spectrum disorder / Rett-like syndrome)",
+    "disease_label": "Заболевание спектра синдрома Ретта (Rett syndrome spectrum disorder), тяжелое течение, стадия позднего ухудшения, генетическая эпилепсия, фармакорезистентное течение",
     "source_language": "ru"
   },
   {
     "entry_id": "rett_071",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome",
+    "disease_label": "Синдром Ретта (Rett syndrome)",
     "source_language": "ru"
   },
   {
     "entry_id": "rett_076",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome (classic/typical and atypical/variant subtypes discussed)",
+    "disease_label": "Rett sendromu (Rett syndrome)",
     "source_language": "tr"
   },
   {
     "entry_id": "rett_077",
     "gene_symbol": "MECP2",
-    "disease_label": "Typical Rett syndrome",
+    "disease_label": "Rett syndrome (typical/classic RTT)",
     "source_language": "en"
   },
   {
@@ -272,13 +272,13 @@
   {
     "entry_id": "rett_079",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett综合征",
+    "disease_label": "Rett syndrome",
     "source_language": "zh"
   },
   {
     "entry_id": "rett_080",
     "gene_symbol": "MECP2",
-    "disease_label": "typical Rett syndrome",
+    "disease_label": "Rett syndrome (典型 Rett 综合征, RTT)",
     "source_language": "zh"
   },
   {
@@ -296,25 +296,25 @@
   {
     "entry_id": "rett_083",
     "gene_symbol": "MECP2",
-    "disease_label": "Rett syndrome (classic RTT); MECP2 duplication syndrome (MDS) in 1 case",
+    "disease_label": "[\"Rett syndrome\", \"MECP2 duplication syndrome\"]",
     "source_language": "zh"
   },
   {
     "entry_id": "rett_084",
     "gene_symbol": "MECP2",
-    "disease_label": "非典型Rett综合征（先天型）/ atypical Rett syndrome, congenital variant",
+    "disease_label": "Rett syndrome (atypical, congenital variant / 非典型Rett综合征先天型)",
     "source_language": "zh"
   },
   {
     "entry_id": "rett_085",
     "gene_symbol": "MECP2",
-    "disease_label": "典型Rett综合征 (typical Rett syndrome)",
+    "disease_label": "Rett syndrome (typical / 典型Rett综合征)",
     "source_language": "zh"
   },
   {
     "entry_id": "rett_087",
     "gene_symbol": "MECP2",
-    "disease_label": "典型Rett综合征 (typical Rett syndrome)",
+    "disease_label": "Rett syndrome (typical Rett syndrome)",
     "source_language": "zh"
   }
 ]

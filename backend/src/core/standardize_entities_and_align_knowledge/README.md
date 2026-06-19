@@ -14,11 +14,12 @@ from src.core.standardize_entities_and_align_knowledge.api import (
 )
 
 cfg = get_config()
-service = EntityStandardizationService(cfg=cfg, session=async_session)
+service = EntityStandardizationService(cfg=cfg)
 
 result: DualEvidenceExtractionResult = ...
 output = await service.run_dual_result(
-    result,
+    session=async_session,
+    result=result,
     source_document_id="source-document-id",
     processing_run_id="processing-run-id",
 )
@@ -51,29 +52,34 @@ DualEvidenceExtractionResult
   -> StandardizationInput
   -> StandardizationService
      -> HybridTerminologyMatcher
-        -> precise_match.PreciseTerminologyMatcher (deterministic alias lookup)
-        -> similarity_match.SimilarityTerminologyMatcher (semantic fallback)
-           -> model-server /v1/embeddings
-           -> terminology_embeddings pgvector retrieval
-           -> model-server /v1/rerank
+        -> PreciseTerminologyMatcher (deterministic alias lookup)
+        -> SimilarityTerminologyMatcher (semantic fallback)
+           -> ModelServerEmbeddingProvider -> model-server /v1/embeddings
+           -> PgvectorTerminologyRepository -> pgvector cosine distance
+           -> ModelServerRerankProvider -> model-server /v1/rerank
+     -> AcmgReadyProjector (ACMG rules-engine facts)
      -> StandardizationRepository
         -> terminology_entries / terminology_aliases / terminology_relationships
         -> terminology_embeddings (pgvector)
         -> normalized_entities / run_evidence_items / evidence_entity_bindings / canonical_evidence_items
+     -> refresh_literature_profile()
+     -> refresh_search_index()
 ```
 
-The slice follows the repo’s vertical-slice layout:
+The slice follows the repo's vertical-slice layout:
 
-- `api.py`: public facade and terminology import entry point
+- `api.py`: public facade (`EntityStandardizationService`) and terminology import/embedding entry points
 - `contracts.py`: typed service contracts
 - `adapters.py`: Phase 2 to Phase 3 boundary adapter
 - `importers.py`: local terminology file parsers
 - `matchers.py`: matcher facade with `HybridTerminologyMatcher`
 - `precise_match/`: deterministic source-priority matching
-- `similarity_match/`: semantic matching via pgvector and model-server
+- `similarity_match/`: semantic matching via pgvector and model-server (providers, repositories, indexer, contracts)
 - `repositories.py`: write boundary to SQLAlchemy ORM models
-- `normalizers.py`: shared text normalization and scope hashing
+- `normalizers.py`: shared text normalization, scope hashing, and cross-lingual disease mapping
+- `acmg_projection.py`: projects standardized entities into ACMG-ready evidence facts
 - `core.py`: orchestration only
+- `context_pack/`: context pack assembly helpers
 
 ## Public API
 
@@ -81,8 +87,8 @@ The slice follows the repo’s vertical-slice layout:
 
 | Method | Signature | Description |
 |---|---|---|
-| `__init__` | `(cfg: Any, session: Any)` | Accepts global config plus an async SQLAlchemy session or session-like test double. |
-| `run_dual_result` | `(result: DualEvidenceExtractionResult, *, source_document_id: str, processing_run_id: str) -> StandardizationResult` | Adapts a dual-track extraction result, matches all candidates, and persists normalized state. |
+| `__init__` | `(cfg: Settings)` | Accepts global config. Session is passed per-call. |
+| `run_dual_result` | `(session: AsyncSession, result: DualEvidenceExtractionResult, *, source_document_id: str, processing_run_id: str) -> StandardizationResult` | Adapts a dual-track extraction result, matches all candidates, and persists normalized state. |
 
 ### `import_terminology`
 
@@ -94,7 +100,7 @@ The slice follows the repo’s vertical-slice layout:
 
 | Method | Signature | Description |
 |---|---|---|
-| `build_terminology_embeddings` | `(*, cfg: Any) -> int` | Builds pgvector embeddings for imported terminology entries. Returns count of embeddings written. Idempotent via upsert. |
+| `build_terminology_embeddings` | `(*, cfg: Any, entity_types: set[EntityType] \| None = None, source_dbs: set[str] \| None = None) -> int` | Builds pgvector embeddings for imported terminology entries. Returns count of embeddings written. Idempotent via upsert. Optional filters restrict to specific entity types or source databases. |
 
 ### `StandardizationResult`
 
@@ -107,9 +113,11 @@ class StandardizationResult:
     ambiguous_count: int
     unmapped_count: int
     normalized_entity_ids: tuple[str, ...]
+    matches: tuple[EntityMatch, ...] = ()
+    acmg_ready: AcmgReadyEvidenceSet | None = None
 ```
 
-Returned by `StandardizationService.run()` and the facade. Counts are per candidate, not per evidence item.
+Returned by `StandardizationService.run()` and the facade. Counts are per candidate, not per evidence item. The `matches` field carries the full `EntityMatch` tuple for downstream inspection. The `acmg_ready` field provides a projected `AcmgReadyEvidenceSet` when ACMG-eligible phenotype matches exist.
 
 ## Contracts
 
@@ -118,6 +126,7 @@ Returned by `StandardizationService.run()` and the facade. Counts are per candid
 - `EntityType`: `gene`, `disease`, `phenotype`, `variant`
 - `BindingRole`: `subject`, `target`, `context`, `mention`
 - `MatchStatus`: `standardized`, `unmapped`, `ambiguous`
+- `MatchMethod`: `precise`, `similarity`
 - `CanonicalStatusRank`: symbolic status ordering used by canonical evidence selection
 
 ### Main dataclasses
@@ -126,9 +135,12 @@ Returned by `StandardizationService.run()` and the facade. Counts are per candid
 |---|---|
 | `StandardizationCandidate` | One entity mention extracted from a chain or phenotype field |
 | `TerminologyCandidate` | One repository lookup hit from `terminology_aliases` |
+| `SimilarityCandidate` | Semantic retrieval candidate from pgvector and rerank |
 | `EntityMatch` | Match decision for one candidate |
 | `StandardizationInput` | Service boundary input for one processing run |
 | `StandardizationResult` | Service summary output |
+| `AcmgReadyEvidenceItem` | Normalized evidence fact for ACMG scoring consumers |
+| `AcmgReadyEvidenceSet` | Document-level normalized evidence projection |
 | `ImportEntry` / `ImportAlias` / `ImportRelationship` / `ImportBatch` | Parser staging payloads for terminology import |
 
 ## Import Flow
@@ -146,13 +158,14 @@ Current parsers:
 | OMIM | `parse_omim_rows()` | disease entries + aliases |
 | HPO | `parse_hpo_rows()` | phenotype entries + aliases |
 | ClinGen | `parse_clingen_rows()` | MONDO fallback disease entries + relationships |
-| ClinVar | `parse_clinvar_rows()` | variant entries + aliases + scalar clinical-significance relationships |
+| ClinVar | `parse_clinvar_rows()` / `iter_clinvar_batches()` | variant entries + aliases + scalar clinical-significance relationships |
 
 Important implementation details:
 
-- ClinVar rows stream through `_iter_tsv_rows()`; the parser does not load the whole file into memory.
+- ClinVar rows stream through `_iter_tsv_rows()` and `iter_clinvar_batches()`; the parser does not load the whole file into memory.
 - `is_importable_clinvar_review_status()` excludes 0-star or evidence-free ClinVar rows.
 - `upsert_terminology_batch()` resolves relationship subjects and objects by either external ID or alias lookup.
+- Bulk upsert uses PostgreSQL `INSERT ... ON CONFLICT` for production sessions; falls back to per-row upsert for test doubles. An optional COPY-based staging path (`_copy_upsert_*`) uses `asyncpg.copy_records_to_table` via temp tables for high-throughput scenarios.
 
 ## Matcher Rules
 
@@ -185,6 +198,10 @@ When precise matching returns `unmapped`, the system:
 
 Semantic matches are persisted with `match_method="similarity"` and include `similarity_score` and `semantic_candidates` in the raw payload for auditability.
 
+### Graceful Degradation
+
+If the semantic matching service is unavailable (`SemanticMatchServiceError`), `HybridTerminologyMatcher` logs a warning and returns `unmapped` with `match_method="similarity"` and a rationale describing the failure. This prevents transient model-server outages from crashing the entire standardization pipeline.
+
 ## Repository Write Boundaries
 
 `StandardizationRepository` owns all persistence:
@@ -195,6 +212,8 @@ Semantic matches are persisted with `match_method="similarity"` and include `sim
   - inserts or updates `TerminologyEntry`
   - inserts or updates `TerminologyAlias`
   - inserts or updates `TerminologyRelationship`
+  - supports bulk upsert via `pg_insert ... ON CONFLICT DO UPDATE` for production sessions
+  - optional COPY-based staging path for high-throughput scenarios
 
 ### Run persistence
 
@@ -215,6 +234,14 @@ Semantic matches are persisted with `match_method="similarity"` and include `sim
   - writes or updates `CanonicalEvidenceItem`
   - uses status priority `found > source_invalid > ocr_gap > table_ungrounded > not_found`
   - does not create canonical rows for ordinary `not_found`
+  - batch-loads existing canonical items in chunks of 5000 to stay under PostgreSQL's parameter limit
+
+### Read model refresh
+
+After persistence, the repository (called from `StandardizationService`) refreshes two read models:
+
+- `refresh_literature_profile()` -- rebuilds `literature_profiles` via `LiteratureProfileRepository`
+- `refresh_search_index()` -- rebuilds `frontend_search_index` via `SearchIndexRepository`
 
 The repository is the only place allowed to translate Phase 3 contracts into ORM rows.
 
@@ -223,24 +250,27 @@ The repository is the only place allowed to translate Phase 3 contracts into ORM
 ### 1. Standardize one dual-track result
 
 ```python
-service = EntityStandardizationService(cfg=cfg, session=session)
+service = EntityStandardizationService(cfg=cfg)
 result = await service.run_dual_result(
-    dual_result,
+    session=session,
+    result=dual_result,
     source_document_id="source-1",
     processing_run_id="run-1",
 )
 
 print(result.standardized_count, result.ambiguous_count, result.unmapped_count)
+for match in result.matches:
+    print(match.candidate.raw_text, match.status.value, match.external_id)
 ```
 
 ### 2. Match a single candidate in isolation
 
 ```python
-from src.core.standardize_entities_and_align_knowledge.matchers import TerminologyMatcher
+from src.core.standardize_entities_and_align_knowledge.precise_match import PreciseTerminologyMatcher
 from src.core.standardize_entities_and_align_knowledge.repositories import StandardizationRepository
 
 repo = StandardizationRepository(session)
-matcher = TerminologyMatcher(repo)
+matcher = PreciseTerminologyMatcher(repo)
 match = await matcher.match(candidate)
 ```
 
@@ -287,25 +317,29 @@ Change those together and add a repository/service test before modifying product
 ## Performance Notes
 
 - ClinVar import is streamed row-by-row. Avoid any helper that materializes the full TSV.
-- Candidate matching is exact lookup on `terminology_aliases.normalized_alias`; no expensive similarity search exists in MVP.
+- Candidate matching uses precise lookup on `terminology_aliases.normalized_alias` as the first pass. Only unmapped candidates fall through to the semantic (pgvector) path.
 - `DualResultAdapter` deduplicates by `(entity_type, normalized_text, chain_id)` so duplicate original/translated chains do not double the candidate count.
-- Repository helpers currently run per-entity/per-relationship lookups. This is correct for MVP but not optimized for large batch import throughput.
+- Bulk terminology upsert uses PostgreSQL `INSERT ... ON CONFLICT` for production sessions; per-row upsert for test doubles. The optional COPY staging path (`asyncpg.copy_records_to_table` via temp tables) handles high-throughput scenarios.
+- Canonical evidence upserts batch-load existing items in chunks of 5000 to stay under PostgreSQL's parameter limit.
+
+## Cross-Lingual Normalization
+
+`normalizers.py` provides cross-lingual normalization for disease names. A built-in Chinese-to-English disease name mapping (`_CROSS_LINGUAL_DISEASE_MAP`) covers common medical genetics terms (e.g., "法布雷病" -> "fabry disease"). The `normalize_disease_lookup_text()` function applies this mapping automatically, enabling the precise matcher to resolve Chinese disease names against English terminology entries.
 
 ## Vector Similarity Search (pgvector)
 
-Phase 3 supports optional semantic similarity search via pgvector as a fallback
-when deterministic matching returns no results.
+Phase 3 supports optional semantic similarity search via pgvector as a fallback when deterministic matching returns no results.
 
 ### Architecture
 
 ```text
-TerminologyMatcher (deterministic)
-    │
-    └── no results?
-        └── VectorFallbackMatcher
-            └── TerminologyEmbeddingService
-                ├── EmbeddingProvider → model-server /v1/embeddings
-                └── VectorRepository → pgvector <=> cosine distance
+HybridTerminologyMatcher
+    ├── PreciseTerminologyMatcher (deterministic alias lookup)
+    └── unmapped?
+        └── SimilarityTerminologyMatcher
+            ├── ModelServerEmbeddingProvider -> model-server /v1/embeddings
+            ├── PgvectorTerminologyRepository -> pgvector cosine retrieval
+            └── ModelServerRerankProvider -> model-server /v1/rerank
 ```
 
 ### Enabling
@@ -313,24 +347,7 @@ TerminologyMatcher (deterministic)
 1. Ensure `pgvector_enabled: true` in PostgreSQL config
 2. Run the pgvector migration: `uv run alembic upgrade head`
 3. Start model-server on port 8001 with embedding model loaded
-4. Generate embeddings: `uv run python scripts/import_terminology.py --generate-embeddings`
-
-### Usage
-
-```python
-from src.core.standardize_entities_and_align_knowledge.matchers import (
-    TerminologyMatcher,
-    VectorFallbackMatcher,
-)
-from src.core.standardize_entities_and_align_knowledge.embedding_service import (
-    TerminologyEmbeddingService,
-)
-
-# Wire vector fallback (optional — matcher works without it)
-embedding_svc = TerminologyEmbeddingService(...)
-vector_matcher = VectorFallbackMatcher(embedding_service=embedding_svc)
-matcher = TerminologyMatcher(repository=repo, vector_fallback=vector_matcher)
-```
+4. Generate embeddings: `uv run python scripts/build_terminology_embeddings.py`
 
 ### Tables
 
@@ -376,10 +393,6 @@ uv run pytest tests/core/standardize_entities_and_align_knowledge tests/dao/test
 uv run ruff check src tests
 ```
 
-## ACMG-Ready Projection
-
-`acmg_projection.py` converts standardized entity matches into compact rules-engine facts. Phenotype matches with `HP:` identifiers from proband fields (`B.hpo_terms`, `B.clinical_phenotypes`) are exposed as `hpo_terms`, while unmapped phenotype text remains available in the original evidence items for human review. Family and model phenotype fields (e.g. `C.maternal_phenotype`, `I.animal_model_phenotype`) are excluded from proband HPO projection.
-
 Coverage areas currently present:
 
 - ORM + Alembic parity for terminology and pgvector tables
@@ -393,3 +406,5 @@ Coverage areas currently present:
 - facade integration with fake repository/session wiring
 - repository staging behavior for terminology batches and evidence persistence
 - embedding dimension validation
+- cross-lingual disease normalization
+- ACMG projection

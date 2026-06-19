@@ -5,7 +5,7 @@
   "hgnc_id": "HGNC:6992",
   "disease_label": "Rett syndrome",
   "mondo_id": "MONDO:0010726",
-  "moi": "XD",
+  "moi": "X-linked",
   "source_pmid": null,
   "source_doi": null,
   "source_title": "Methyl-CpG-binding protein 2 (MECP2) mutation type is associated with bone disease severity in Rett syndrome",
@@ -19,10 +19,10 @@
       "hgvs_p": "p.R133C",
       "hgvs_g": "",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
       "domain": "MBD",
-      "protein_effect": "loss of function",
+      "protein_effect": "amino acid substitution R133C",
       "null_variant_detail": "",
       "protein_length_change": "",
       "same_amino_acid_known_variant": ""
@@ -32,12 +32,12 @@
       "hgvs_p": "p.R294X",
       "hgvs_g": "",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
       "domain": "TRD",
-      "protein_effect": "loss of function",
-      "null_variant_detail": "premature stop codon",
-      "protein_length_change": "truncated at position 294",
+      "protein_effect": "stop-gain / truncation",
+      "null_variant_detail": "loss-of-function (nonsense, less severe group)",
+      "protein_length_change": "truncated protein",
       "same_amino_acid_known_variant": ""
     },
     {
@@ -45,10 +45,10 @@
       "hgvs_p": "p.R306C",
       "hgvs_g": "",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
       "domain": "TRD",
-      "protein_effect": "loss of function",
+      "protein_effect": "amino acid substitution R306C",
       "null_variant_detail": "",
       "protein_length_change": "",
       "same_amino_acid_known_variant": ""
@@ -58,10 +58,10 @@
       "hgvs_p": "p.T158M",
       "hgvs_g": "",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
       "domain": "MBD",
-      "protein_effect": "loss of function",
+      "protein_effect": "amino acid substitution T158M",
       "null_variant_detail": "",
       "protein_length_change": "",
       "same_amino_acid_known_variant": ""
@@ -71,25 +71,25 @@
       "hgvs_p": "p.R106T",
       "hgvs_g": "",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
       "domain": "MBD",
-      "protein_effect": "loss of function",
+      "protein_effect": "amino acid substitution R106T",
       "null_variant_detail": "",
       "protein_length_change": "",
-      "same_amino_acid_known_variant": ""
+      "same_amino_acid_known_variant": "R106W reported as one of eight hotspot mutations"
     },
     {
       "hgvs_c": "c.502C>T",
       "hgvs_p": "p.R168X",
       "hgvs_g": "",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "TRD",
-      "protein_effect": "loss of function",
-      "null_variant_detail": "premature stop codon",
-      "protein_length_change": "truncated at position 168",
+      "domain": "",
+      "protein_effect": "stop-gain / truncation",
+      "null_variant_detail": "loss-of-function (nonsense, more severe group)",
+      "protein_length_change": "truncated protein",
       "same_amino_acid_known_variant": ""
     },
     {
@@ -97,12 +97,12 @@
       "hgvs_p": "p.R255X",
       "hgvs_g": "",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
       "domain": "TRD",
-      "protein_effect": "loss of function",
-      "null_variant_detail": "premature stop codon",
-      "protein_length_change": "truncated at position 255",
+      "protein_effect": "stop-gain / truncation",
+      "null_variant_detail": "loss-of-function (nonsense, more severe group)",
+      "protein_length_change": "truncated protein",
       "same_amino_acid_known_variant": ""
     },
     {
@@ -110,12 +110,12 @@
       "hgvs_p": "p.R270X",
       "hgvs_g": "",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
       "domain": "TRD",
-      "protein_effect": "loss of function",
-      "null_variant_detail": "premature stop codon",
-      "protein_length_change": "truncated at position 270",
+      "protein_effect": "stop-gain / truncation",
+      "null_variant_detail": "loss-of-function (nonsense, more severe group)",
+      "protein_length_change": "truncated protein",
       "same_amino_acid_known_variant": ""
     }
   ],
@@ -128,29 +128,22 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome",
+      "field_id": "A.gene_aliases",
+      "value": "methyl-CpG-binding protein 2; methyl-CpG binding protein 2",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.gene_disease_relationship",
-      "value": "causative",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "XD",
+      "value": "More than 95% of individuals with RTT have mutations in MECP2; in 90-95% of classic RTT the disease is caused by loss-of-function mutations in the X-linked MECP2 gene",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.variant_hgvs_c",
-      "value": "c.397C>T",
+      "value": "c.397C>T; c.880C>T; c.906C>T; c.473C>T; c.306C>G; c.502C>T; c.763C>T; c.808C>T",
       "candidates": [
         "c.397C>T",
         "c.880C>T",
@@ -166,7 +159,7 @@
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.R133C",
+      "value": "p.R133C; p.R294X; p.R306C; p.T158M; p.R106T; p.R168X; p.R255X; p.R270X",
       "candidates": [
         "p.R133C",
         "p.R294X",
@@ -181,202 +174,260 @@
       "evaluation_type": "precision_only"
     },
     {
+      "field_id": "A.variant_legacy_name",
+      "value": "R133C; R294X; R306C; T158M; R106T; R168X; R255X; R270X; R106W; R168X; R255X; R270X; R294X; R306C; R133C; T158M",
+      "candidates": [
+        "R133C",
+        "R294X",
+        "R306C",
+        "T158M",
+        "R106T",
+        "R168X",
+        "R255X",
+        "R270X",
+        "R106W",
+        "R168X",
+        "R255X",
+        "R270X",
+        "R294X",
+        "R306C",
+        "R133C",
+        "T158M"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
       "field_id": "A.variant_type",
-      "value": "missense",
+      "value": "missense; nonsense",
       "candidates": [
         "missense",
-        "nonsense",
-        "missense",
-        "missense",
-        "missense",
-        "nonsense",
-        "nonsense",
         "nonsense"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD",
-      "candidates": [
-        "MBD",
-        "TRD",
-        "TRD",
-        "MBD",
-        "MBD",
-        "inter-domain (between MBD and TRD)",
-        "TRD",
-        "TRD"
-      ],
+      "field_id": "A.null_variant_detail",
+      "value": "Loss-of-function mutations cause classic RTT; nonsense/truncating mutations R168X, R255X, R270X, R294X; large deletions and truncations also noted",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "B.hpo_terms",
-      "value": "HP:0002650; HP:0002376; HP:0001344; HP:0001250",
+      "field_id": "A.protein_effect",
+      "value": "Amino acid substitutions (R106W, R133C, T158M, R168X, R255X, R270X, R294X, R306C); MECP2 protein deficiency / loss-of-function",
       "candidates": [],
       "source": "article",
-      "evaluation_type": "precision_recall"
+      "evaluation_type": "precision_only"
     },
     {
-      "field_id": "B.clinical_phenotypes",
-      "value": "scoliosis; developmental regression; loss of speech; loss of hand skills; epilepsy/seizures; low bone mineral density / osteoporosis; fragility fractures (especially femur); reduced mobility / inability to walk",
+      "field_id": "A.same_residue_other_missense",
+      "value": "Hotspot at residue R106 reported as R106W; study analyzed R106T at the same residue",
       "candidates": [],
       "source": "article",
-      "evaluation_type": "precision_recall"
+      "evaluation_type": "precision_only"
     },
     {
-      "field_id": "B.sex",
-      "value": "female",
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "Eight hotspot mutations (R106W, R133C, T158M, R168X, R255X, R270X, R294X and R306C) constitute more than 60% of documented cases",
       "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "C.de_novo_status",
-      "value": "unknown",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.null_variant_detail",
-      "value": "premature stop codon",
-      "candidates": [
-        "premature stop codon",
-        "premature stop codon",
-        "premature stop codon",
-        "premature stop codon"
-      ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.protein_length_change",
-      "value": "truncated at 294",
-      "candidates": [
-        "truncated at 294",
-        "truncated at 168",
-        "truncated at 255",
-        "truncated at 270"
-      ],
+      "value": "Nonsense mutations (R168X, R255X, R270X, R294X) produce truncated protein; 30 truncations referenced",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "B.single_genetic_etiology_claim",
-      "value": "yes",
+      "field_id": "A.splice_or_synonymous_effect",
+      "value": "Splice sites referenced among more severe mutation categories",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_consequence_class",
+      "value": "Predicted null for nonsense/truncating mutations (R168X, R255X, R270X, R294X); missense for R133C, R306C, T158M, R106T, R106W",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "232 affected females with Rett syndrome (probands)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.case_count",
-      "value": "232",
+      "value": "232 patients overall; 125 in genotype-phenotype severity comparison (62 more severe, 63 less severe)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.diagnosis_sufficiency",
-      "value": "definite",
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome (classic RTT and Rett variant)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.phenotype_specificity",
-      "value": "partially_specific",
+      "value": "Classical Rett syndrome or Rett variant; diagnosis per internationally accepted diagnostic criteria",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.age_current_or_last_followup",
-      "value": "13.8 years",
-      "candidates": [],
+      "field_id": "B.hpo_terms",
+      "value": "HP:0002650; HP:0002376; HP:0001344; HP:0001250",
+      "candidates": [
+        "HP:0002650",
+        "HP:0002376",
+        "HP:0001344",
+        "HP:0001250"
+      ],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.ancestry_or_population",
-      "value": "Italian",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.testing_method",
-      "value": "MECP2 mutation analysis (genetic testing; eight common point mutations)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.alternative_diagnosis_excluded",
-      "value": "yes",
+      "field_id": "B.clinical_phenotypes",
+      "value": "Low bone mineral density/osteoporosis, fragility fractures (especially femur/lower limbs), scoliosis, developmental regression including loss of speech and hand skills, epilepsy, reduced mobility/inability to walk",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.biochemical_markers",
-      "value": "Calcium 9.5 mg/dL; Phosphorus 5.1 mg/dL; 25OHD 21.2 ng/mL",
+      "value": "Serum calcium (more severe 9.5±0.5, less severe 9.4±0.6 mg/dl), phosphorous (5.1±0.8 vs 5.3±0.7 mg/dl), 25OHD (21.2±13.2 vs 24.3±14.7 ng/ml)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "C.pedigree_available",
-      "value": "no",
+      "field_id": "B.age_current_or_last_followup",
+      "value": "Mean age 13.8 ± 8.3 years; age range 4-33 years",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "A.protein_effect",
-      "value": "loss of function",
-      "candidates": [
-        "loss of function",
-        "loss of function",
-        "loss of function",
-        "loss of function",
-        "loss of function",
-        "loss of function",
-        "loss of function",
-        "loss of function"
-      ],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
-      "field_id": "C.in_trans_confirmation",
-      "value": "not_applicable",
+      "field_id": "B.age_of_onset",
+      "value": "Developmental regression after apparently normal development; scoliosis onset seen as early as age 1 year",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "G.study_design",
-      "value": "cohort",
+      "field_id": "B.sex",
+      "value": "Female",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "G.case_definition",
-      "value": "Rett syndrome diagnosed according to internationally accepted diagnostic criteria with confirmed MECP2 mutation",
+      "field_id": "B.ancestry_or_population",
+      "value": "Italian (patients from different parts of Italy, referred to Siena)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "X-linked (X-linked MECP2 gene)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "The disorder is caused by mutations in a single gene (MECP2)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "Patients with CDKL5 and FOXG1 mutations, male Rett patients, and patients with MECP2 duplications were excluded",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Clinical and genetic diagnosis with MECP2 mutation status determination",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.declared_disease_mechanism",
+      "value": "Loss-of-function (RTT caused by loss-of-function mutations in MECP2)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "I.gene_function_biochemical",
-      "value": "MECP2 protein modulates gene transcription; loss-of-function mutations cause Rett syndrome",
+      "value": "MECP2 encodes methyl-CpG binding protein 2, whose protein product modulates/regulates gene transcription",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.functional_alteration_patient_cells",
+      "value": "Case report (Hofstaetter JG et al.) investigated bone matrix mineralization in a patient with severe typical MECP2 mutation (c.502C>T, p.R168X) showing very low BMD and severe scoliosis",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.animal_model_type",
+      "value": "Functional knockout mouse model of RTT; murine model",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.animal_model_phenotype",
+      "value": "Range of anatomical, biomaterial and biomechanical abnormalities in bone of MECP2-deficient mice; altered osteoblast morphology",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.animal_model_genotype",
+      "value": "MECP2-deficient / functional MECP2 knockout mice",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.animal_rescue_experiment",
+      "value": "Reactivating the MECP2 gene, even in fully adult mice, reportedly reverses bone defects",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.rescue_result",
+      "value": "Many bone abnormalities potentially reversible by reactivating MECP2 gene in MECP2-deficient mice",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.known_pathogenic_variant_reference",
+      "value": "Eight RTT-causing hotspot MECP2 mutations (R106W, R133C, T158M, R168X, R255X, R270X, R294X, R306C) referenced as established RTT-causing variants",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
     }
   ],
   "expected_standardization": {
@@ -385,86 +436,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "A.gene_disease_relationship",
-      "B.disease_diagnosis",
-      "B.mode_of_inheritance_reported",
-      "B.single_genetic_etiology_claim"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
       "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot",
-      "A.protein_effect",
       "A.null_variant_detail",
-      "A.protein_length_change",
+      "A.protein_effect",
       "A.same_amino_acid_known_variant",
-      "A.transcript_id",
-      "A.reference_sequence"
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
-      "B.case_id",
       "B.proband_status",
       "B.case_count",
-      "B.diagnosis_sufficiency",
+      "B.disease_diagnosis",
       "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
       "B.biochemical_markers",
-      "B.sex",
-      "B.age_of_onset",
       "B.age_current_or_last_followup",
+      "B.age_of_onset",
+      "B.sex",
       "B.ancestry_or_population",
       "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
       "B.testing_method",
       "B.sequencing_method_quality",
-      "B.alternative_diagnosis_excluded",
       "B.healthy_adult_status"
     ],
     "segregation_fields": [
-      "C.de_novo_status",
       "C.inheritance_source",
-      "C.family_id",
-      "C.pedigree_available",
+      "C.de_novo_status",
       "C.parentage_confirmed",
       "C.maternal_genotype",
-      "C.paternal_genotype",
       "C.maternal_phenotype",
+      "C.paternal_genotype",
       "C.paternal_phenotype",
-      "C.obligate_carriers",
       "C.phase_status",
       "C.in_trans_confirmation",
-      "C.cis_or_trans_context"
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
     ],
     "population_fields": [
-      "D.absent_or_rare_statement",
       "D.population_database_name",
-      "D.population_subgroup"
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
     ],
     "computational_fields": [
-      "E.prediction_tools_list"
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
     ],
     "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
       "F.tested_variant",
-      "F.case_level_or_gene_level",
-      "F.mechanism_consistency"
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
     ],
     "case_control_fields": [
       "G.study_design",
-      "G.case_definition"
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
     ],
     "gene_function_fields": [
       "I.gene_function_biochemical",
-      "I.gene_function_protein_interaction"
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
     ],
     "authority_fields": [
       "J.clinvar_assertion",
+      "J.expert_panel_assertion",
       "J.authority_classification",
       "J.known_pathogenic_variant_reference",
-      "J.independent_publications_time_span"
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

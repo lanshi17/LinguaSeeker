@@ -5,7 +5,7 @@
   "hgnc_id": "HGNC:6992",
   "disease_label": "Síndrome de Rett",
   "mondo_id": "MONDO:0010726",
-  "moi": "XD",
+  "moi": "X-linked",
   "source_pmid": null,
   "source_doi": null,
   "source_title": "Síndrome de Rett en un lactante varón con variante patogénica en MECP2",
@@ -18,14 +18,14 @@
       "hgvs_c": "c.806del",
       "hgvs_p": "p.Gly269Alafs*20",
       "hgvs_g": "",
-      "variant_type": "frameshift",
+      "variant_type": "frameshift deletion",
       "clinical_significance": "pathogenic",
       "exon": "",
       "domain": "TRD",
-      "protein_effect": "loss of function",
-      "null_variant_detail": "frameshift leading to premature stop codon",
-      "protein_length_change": "frameshift at Gly269 with truncation after 20 aberrant residues (stop at position 289)",
-      "same_amino_acid_known_variant": ""
+      "protein_effect": "frameshift with premature termination (Alafs*20)",
+      "null_variant_detail": "single-nucleotide deletion producing frameshift and premature stop codon",
+      "protein_length_change": "truncated protein (premature stop)",
+      "same_amino_acid_known_variant": "Same variant (c.806del) reported in four other male patients with similar presentation"
     }
   ],
   "expected_evidence": [
@@ -37,22 +37,8 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Síndrome de Rett",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
       "field_id": "A.gene_disease_relationship",
-      "value": "causative",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "XD",
+      "value": "Variantes patogénicas en MECP2 son la causa principal del síndrome de Rett",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -79,67 +65,39 @@
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "A.functional_domain_or_hotspot",
-      "value": "TRD",
+      "field_id": "A.null_variant_detail",
+      "value": "Frameshift deletion produciendo codón de parada prematuro (p.Gly269Alafs*20), variante en hemicigosis",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
-    },
-    {
-      "field_id": "B.hpo_terms",
-      "value": "HP:0001250; HP:0002376; HP:0000252; HP:0000253; HP:0012759; HP:0001263; HP:0001252; HP:0011968; HP:0004322; HP:0012171; HP:0000505; HP:0000365; HP:0001257",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.clinical_phenotypes",
-      "value": "crisis convulsivas desde el nacimiento (crisis focales clónicas); regresión del neurodesarrollo a los cuatro meses; detención del crecimiento cefálico / microcefalia (perímetro cefálico -5 DT); episodios de apnea y alteraciones en el patrón respiratorio; retraso global del neurodesarrollo; hipotonía axial; hipertonía apendicular e hiperreflexia generalizada; movimientos coreo-distónicos de cabeza y extremidades; disfagia para sólidos y líquidos / dificultades de alimentación; detención del crecimiento pondo-estatural / desnutrición aguda; síntomas disautonómicos (anomalías en color y temperatura de extremidades); ausencia de seguimiento visual; ausencia de seguimiento auditivo; atrofia cerebral difusa con depósito de hierro en globus pallidus; infecciones respiratorias recurrentes; rasgos dismórficos: pabellones auriculares de implantación baja, cabello escaso y ralo, paladar ojival, mentón puntiagudo, labios finos",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.sex",
-      "value": "male",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.age_of_onset",
-      "value": "neonatal (crisis convulsivas desde el nacimiento; regresión del neurodesarrollo a los 4 meses)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "C.de_novo_status",
-      "value": "de novo",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.protein_effect",
-      "value": "frameshift leading to premature stop; loss of function",
+      "value": "Frameshift con terminación prematura",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "A.null_variant_detail",
-      "value": "frameshift leading to premature stop codon",
+      "field_id": "A.same_amino_acid_known_variant",
+      "value": "Variante c.806del (p.Gly269Alafs*20) reportada en otros cuatro pacientes masculinos con presentación similar (Wan, Leuzzi, Kankirawatana)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.protein_length_change",
-      "value": "truncated at ~289 aa",
+      "value": "Proteína truncada por terminación prematura",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "Proband (caso índice)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.case_count",
@@ -149,113 +107,127 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.diagnosis_sufficiency",
-      "value": "definite",
+      "field_id": "B.disease_diagnosis",
+      "value": "Síndrome de Rett",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.phenotype_specificity",
-      "value": "partially_specific",
+      "value": "Encefalopatía progresiva temprana / encefalopatía neonatal grave compatible con síndrome de Rett en varón",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.age_current_or_last_followup",
-      "value": "18 months",
-      "candidates": [],
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001250; HP:0002376; HP:0000253; HP:0001252; HP:0012759; HP:0001263",
+      "candidates": [
+        "HP:0001250",
+        "HP:0002376",
+        "HP:0000253",
+        "HP:0001252",
+        "HP:0012759",
+        "HP:0001263"
+      ],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.ancestry_or_population",
-      "value": "Colombian",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.testing_method",
-      "value": "targeted gene panel (leukodystrophy and leukoencephalopathy panel)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.alternative_diagnosis_excluded",
-      "value": "yes",
+      "field_id": "B.clinical_phenotypes",
+      "value": "Crisis convulsivas desde el nacimiento, regresión del neurodesarrollo a los 4 meses, movimientos coreo-distónicos de cabeza y extremidades, detención del crecimiento cefálico (microcefalia), síntomas disautonómicos, alteraciones en patrón respiratorio (apneas), hipotonía axial, hipertonía apendicular, hiperreflexia generalizada, disfagia, pabellones auriculares de implantación baja, cabello escaso y ralo, paladar ojival, mentón puntiagudo, labios finos",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.biochemical_markers",
-      "value": "Metabolic and infectious etiologies ruled out; normal lactic acid, ammonia, pyruvic acid, organic acids, long-chain fatty acids; normal thyroid, hepatic and immunological profiles",
+      "value": "Evaluación metabólica normal (ácido láctico, amonio, ácido pirúvico, ácidos orgánicos en orina, ácidos grasos de cadena larga, aminoácidos en sangre y orina, electrolitos en sudor, gases arteriales, CPK sérica); perfil tiroideo, hepático e inmunológico normal",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "C.pedigree_available",
-      "value": "no",
+      "field_id": "B.age_current_or_last_followup",
+      "value": "Falleció (manejo hasta los 18 meses de edad)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "C.consanguinity",
-      "value": "no",
+      "field_id": "B.age_of_onset",
+      "value": "Crisis convulsivas desde el nacimiento; regresión del neurodesarrollo a los 4 meses",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.proband_status",
-      "value": "proband",
+      "field_id": "B.sex",
+      "value": "Masculino",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.single_genetic_etiology_claim",
-      "value": "yes",
+      "field_id": "B.ancestry_or_population",
+      "value": "Colombia (Bogotá)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.consanguinity",
-      "value": "no",
+      "value": "Padres no consanguíneos",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "Ligado al cromosoma X",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "Variante patogénica de novo en MECP2 confirma el diagnóstico de síndrome de Rett",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "Se descartaron etiologías metabólicas e infecciosas; se sospechó inicialmente neurodegeneración con acumulación de hierro pero se confirmó MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Panel genético dirigido a leucodistrofias y leucoencefalopatías",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.inheritance_source",
-      "value": "de novo",
+      "value": "De novo",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "C.maternal_genotype",
-      "value": "not tested",
+      "field_id": "C.de_novo_status",
+      "value": "De novo (variante en hemicigosis)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "C.paternal_genotype",
-      "value": "not tested",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "C.in_trans_confirmation",
-      "value": "not_applicable",
+      "field_id": "C.de_novo_without_parentage_confirmation",
+      "value": "Reportada como de novo, sin declaración explícita de confirmación de paternidad y maternidad",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -265,35 +237,42 @@
       "value": "RettBASE",
       "candidates": [],
       "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "G.study_design",
-      "value": "case report",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "G.case_definition",
-      "value": "Rett syndrome diagnosis confirmed by MECP2 pathogenic variant",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
+      "evaluation_type": "precision_only"
     },
     {
       "field_id": "I.gene_function_biochemical",
-      "value": "MECP2 codifica la proteína 2 de unión a metil-CpG, proteína nuclear básica ampliamente expresada en el cerebro; su alteración produce cambios en la expresión de una gran cantidad de genes y desregulación del sistema de neurotransmisores",
+      "value": "MECP2 codifica la proteína 2 de unión a metil-CpG, proteína nuclear básica que se expresa ampliamente en el cerebro; su alteración produce cambios en la expresión de genes, desregulación de neurotransmisores y compromiso de circuitos cerebrales",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "J.independent_publications_time_span",
-      "value": "1988-2021",
+      "field_id": "I.gene_expression_pattern",
+      "value": "Se expresa ampliamente en el cerebro",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.disease_relevant_expression",
+      "value": "Expresión en el cerebro; alteración produce deterioro neurológico",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.authority_classification",
+      "value": "Variante reportada como patogénica",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.known_pathogenic_variant_reference",
+      "value": "Variante c.806del (p.Gly269Alafs*20) previamente reportada en cuatro pacientes masculinos (Wan et al., Leuzzi et al., Kankirawatana et al.); base de datos RettBASE",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
     }
   ],
   "expected_standardization": {
@@ -302,86 +281,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "A.gene_disease_relationship",
-      "B.disease_diagnosis",
-      "B.mode_of_inheritance_reported",
-      "B.single_genetic_etiology_claim"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
       "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot",
-      "A.protein_effect",
       "A.null_variant_detail",
-      "A.protein_length_change",
+      "A.protein_effect",
       "A.same_amino_acid_known_variant",
-      "A.transcript_id",
-      "A.reference_sequence"
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
-      "B.case_id",
       "B.proband_status",
       "B.case_count",
-      "B.diagnosis_sufficiency",
+      "B.disease_diagnosis",
       "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
       "B.biochemical_markers",
-      "B.sex",
-      "B.age_of_onset",
       "B.age_current_or_last_followup",
+      "B.age_of_onset",
+      "B.sex",
       "B.ancestry_or_population",
       "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
       "B.testing_method",
       "B.sequencing_method_quality",
-      "B.alternative_diagnosis_excluded",
       "B.healthy_adult_status"
     ],
     "segregation_fields": [
-      "C.de_novo_status",
       "C.inheritance_source",
-      "C.family_id",
-      "C.pedigree_available",
+      "C.de_novo_status",
       "C.parentage_confirmed",
       "C.maternal_genotype",
-      "C.paternal_genotype",
       "C.maternal_phenotype",
+      "C.paternal_genotype",
       "C.paternal_phenotype",
-      "C.obligate_carriers",
       "C.phase_status",
       "C.in_trans_confirmation",
-      "C.cis_or_trans_context"
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
     ],
     "population_fields": [
-      "D.absent_or_rare_statement",
       "D.population_database_name",
-      "D.population_subgroup"
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
     ],
     "computational_fields": [
-      "E.prediction_tools_list"
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
     ],
     "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
       "F.tested_variant",
-      "F.case_level_or_gene_level",
-      "F.mechanism_consistency"
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
     ],
     "case_control_fields": [
       "G.study_design",
-      "G.case_definition"
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
     ],
     "gene_function_fields": [
       "I.gene_function_biochemical",
-      "I.gene_function_protein_interaction"
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
     ],
     "authority_fields": [
       "J.clinvar_assertion",
+      "J.expert_panel_assertion",
       "J.authority_classification",
       "J.known_pathogenic_variant_reference",
-      "J.independent_publications_time_span"
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

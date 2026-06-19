@@ -2,10 +2,10 @@
   "entry_id": "rett_034",
   "source": "rett_literature",
   "gene_symbol": "MECP2",
-  "hgnc_id": "HGNC:6992",
-  "disease_label": "Síndrome de Rett (Rett syndrome, typical/classic)",
+  "hgnc_id": "HGNC:6990",
+  "disease_label": "Rett syndrome",
   "mondo_id": "MONDO:0010726",
-  "moi": "XD",
+  "moi": "X-linked",
   "source_pmid": null,
   "source_doi": null,
   "source_title": "SÍNDROME DE RETT – RELATO DE UM CASO RARO",
@@ -16,11 +16,16 @@
   "variants": [
     {
       "hgvs_c": "c.763C>T",
-      "hgvs_p": "p.Arg255*",
-      "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "hgvs_p": "p.Arg255",
+      "hgvs_g": "",
+      "variant_type": "missense",
+      "clinical_significance": "compatible with Rett syndrome (positive genetic test)",
       "exon": "4",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "alteration at amino acid p.Arg255",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -32,22 +37,8 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Síndrome de Rett (Rett syndrome, typical/classic)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
       "field_id": "A.gene_disease_relationship",
-      "value": "causative",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "XD",
+      "value": "About 95% of Rett syndrome cases are caused by mutations in the MECP2 gene on the X chromosome",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -61,35 +52,77 @@
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.Arg255*",
+      "value": "p.Arg255",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "A.variant_type",
-      "value": "nonsense",
+      "field_id": "A.protein_effect",
+      "value": "alteration at amino acid p.Arg255",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "A.functional_domain_or_hotspot",
-      "value": "TRD",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
-      "field_id": "B.hpo_terms",
-      "value": "HP:0001250; HP:0002376; HP:0000756; HP:0002072; HP:0001344; HP:0002360; HP:0002194",
+      "field_id": "B.proband_status",
+      "value": "proband (single case report)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
+      "field_id": "B.case_count",
+      "value": "1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "compatible with Rett syndrome (typical/classic features described)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0002376; HP:0000756; HP:0002072; HP:0001250; HP:0001344; HP:0002360",
+      "candidates": [
+        "HP:0002376",
+        "HP:0000756",
+        "HP:0002072",
+        "HP:0001250",
+        "HP:0001344",
+        "HP:0002360"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
       "field_id": "B.clinical_phenotypes",
-      "value": "regressão psicomotora aos 18 meses; características autistas; estereotipias na linha média (bater palmas e esfregar as mãos); conservação do uso das mãos de forma rudimentar; crises tônico-clônicas generalizadas e crises focais disperceptivas (origem epilética); ausência de fala / não verbalizava; dificuldade na marcha; não saía da posição sentada para ortostática sem auxílio; insônia; agressividade; sensibilidade reduzida à dor; gritos sem motivo aparente; dependência integral para atividades diárias; pé plano congênito; intolerância à lactose",
+      "value": "Psychomotor regression at 1 year 6 months with autistic features; non-verbal (loss of speech); very suggestive midline hand stereotypies (hand clapping and hand rubbing); rudimentary preservation of hand use; some preserved eye contact; gait difficulty, unable to stand from sitting without help; total dependency for hygiene and feeding; generalized tonic-clonic seizures and focal dysperceptive seizures of suggested epileptic origin; insomnia; aggressiveness; reduced sensitivity to pain; screaming apparently for no reason; lactose intolerance; congenital flat feet",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "12 years",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "1 year and 6 months (regression onset); clinical diagnosis at 9 years",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -102,15 +135,71 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.age_of_onset",
-      "value": "1 ano e 6 meses (início da regressão psicomotora)",
+      "field_id": "B.ancestry_or_population",
+      "value": "white; Brazilian (from Balneário Camboriú, residing in Palhoça, SC, Brazil)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "C.de_novo_status",
-      "value": "unknown (sem relatos familiares de casos semelhantes nem consanguinidade; status de novo não confirmado por estudo parental)",
+      "field_id": "B.consanguinity",
+      "value": "No consanguineous marriage reported among the described generations",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "X-linked; in most cases RTT, although genetic, is not hereditary",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "Positive genetic test for MECP2 mutation compatible with Rett syndrome",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "Angelman syndrome excluded by PCR; normal cranial computed tomography and karyotype",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Genetic test for MECP2 mutation; PCR for Angelman syndrome; karyotype; cranial computed tomography",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.inheritance_source",
+      "value": "No family history of similar cases reported by the mother",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_phenotype",
+      "value": "Mother (S.R.V.) reports uneventful pregnancy; no similar cases in family",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.declared_disease_mechanism",
+      "value": "Main hypothesis: failure of synaptic maturation and cortical maintenance due to MECP2 deficiency",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "Main hypothesis consists of failure of synaptic maturation and cortical maintenance due to MECP2 gene deficiency",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -122,24 +211,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "B.disease_diagnosis",
-      "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.null_variant_detail",
+      "A.protein_effect",
+      "A.same_amino_acid_known_variant",
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
+      "B.proband_status",
+      "B.case_count",
+      "B.disease_diagnosis",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
-      "B.sex",
+      "B.biochemical_markers",
+      "B.age_current_or_last_followup",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.sex",
+      "B.ancestry_or_population",
+      "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "B.healthy_adult_status"
+    ],
+    "segregation_fields": [
+      "C.inheritance_source",
+      "C.de_novo_status",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_genotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
+    ],
+    "population_fields": [
+      "D.population_database_name",
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
+    ],
+    "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
+      "F.tested_variant",
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.expert_panel_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

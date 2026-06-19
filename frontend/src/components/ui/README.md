@@ -15,6 +15,9 @@
 | **Input** | Text input with optional label and error. | `label`, `error` + native input props |
 | **Toast** | Global notification renderer (reads `toastStore`). Levels: `info`, `success`, `warning`, `error`. | Mounted in root layout |
 | **ErrorBoundary** | React error boundary with fallback UI and "Try again" button. | `fallback`, `onError` |
+| **MetricTile** | Compact label/value tile for quantitative facts. Tones: `default`, `primary`, `success`, `warning`, `error`. Optimised for tabular display inside phase cards. | `label`, `value`, `unit`, `tone`, `icon` |
+| **LivePulse** | Small live indicator: solid dot + expanding ring animation. Communicates "in progress" without full spinner noise. Tones: `primary`, `success`, `warning`, `error`, `neutral`. | `tone`, `label` |
+| **Skeleton** | Animated shimmer placeholder block. Variants: `text`, `line`, `circle`, `block`, `pill`. 1.6s gradient animation. | `variant`, `width`, `height` |
 
 ## Styling Convention
 

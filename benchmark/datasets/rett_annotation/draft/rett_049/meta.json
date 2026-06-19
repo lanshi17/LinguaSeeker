@@ -8,7 +8,7 @@
   "reviewer": null,
   "review_notes": "[case_series] Presents three Rett syndrome cases with specific MECP2 structural variants in human patients, including exact hg38 genomic coordinates and validated borders by PCR/Sanger sequencing; thus, includes human-derived variant data and is a case series.",
   "rejection_reason": "",
-  "generated_at": "2026-06-16T08:28:36+00:00",
+  "generated_at": "2026-06-19T04:39:30+00:00",
   "reviewed_at": null,
   "promoted_at": null,
   "llm_model": "claude-opus-4-8",

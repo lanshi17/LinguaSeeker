@@ -3,13 +3,13 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome (classic/typical and atypical/variant subtypes discussed)",
+  "disease_label": "Rett sendromu (Rett syndrome)",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "source_pmid": null,
   "source_doi": null,
   "source_title": "Rett Sendromlu Hastaların Klinik ve Moleküler Değerlendirmesi ve Genotip-Fenotip Korelasyonunun Araştırılması",
-  "source_journal": "Hacettepe Üniversitesi Tıp Fakültesi, Çocuk Sağlığı ve Hastalıkları Anabilim Dalı (Uzmanlık Tezi / specialty thesis)",
+  "source_journal": null,
   "source_year": "2015",
   "source_language": "tr",
   "source_pdf_path": "",
@@ -17,98 +17,158 @@
     {
       "hgvs_c": "",
       "hgvs_p": "p.Arg106Trp",
+      "hgvs_g": "",
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD (aa 78-162)"
+      "domain": "MBD (Methyl-CpG binding domain)",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "p.Arg133Cys",
+      "hgvs_g": "",
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD (aa 78-162)"
+      "domain": "MBD (Methyl-CpG binding domain)",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
-      "hgvs_p": "p.Arg152Arg",
-      "variant_type": "synonymous (reported in article under MBD missense list)",
+      "hgvs_p": "R152R",
+      "hgvs_g": "",
+      "variant_type": "missense (makalede MBD bölgesinde missense olarak listelenmiştir)",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD (aa 78-162)"
+      "domain": "MBD (Methyl-CpG binding domain)",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "p.Thr158Met",
+      "hgvs_g": "",
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD (aa 78-162)"
+      "domain": "MBD (Methyl-CpG binding domain)",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "p.Arg168Ter",
+      "hgvs_g": "",
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "interdomain"
+      "domain": "interdomain",
+      "protein_effect": "premature stop codon (nonsense)",
+      "null_variant_detail": "nonsense mutasyon",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "p.Arg255Ter",
+      "hgvs_g": "",
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD (aa 201-310)"
+      "domain": "TRD (Transcriptional repression domain)",
+      "protein_effect": "premature stop codon (nonsense)",
+      "null_variant_detail": "nonsense mutasyon",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "p.Arg270Ter",
+      "hgvs_g": "",
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD (aa 201-310)"
+      "domain": "TRD (Transcriptional repression domain)",
+      "protein_effect": "premature stop codon (nonsense)",
+      "null_variant_detail": "nonsense mutasyon",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "p.Arg306Cys",
+      "hgvs_g": "",
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD (aa 201-310)"
+      "domain": "TRD (Transcriptional repression domain)",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.808delG",
       "hgvs_p": "",
-      "variant_type": "frameshift deletion",
+      "hgvs_g": "",
+      "variant_type": "deletion/frameshift (makalede TRD bölgesinde listelenmiştir)",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD (aa 201-310)"
+      "domain": "TRD (Transcriptional repression domain)",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
-      "hgvs_p": "p.Ter487Arg",
-      "variant_type": "non-stop (stop-loss)",
+      "hgvs_p": "X487R",
+      "hgvs_g": "",
+      "variant_type": "non-stop (stop-loss) mutasyon",
       "clinical_significance": "",
       "exon": "",
-      "domain": "C-terminal"
+      "domain": "C-terminal",
+      "protein_effect": "non-stop / stop kodon kaybı",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.1164delA",
       "hgvs_p": "",
-      "variant_type": "frameshift deletion",
+      "hgvs_g": "",
+      "variant_type": "frameshift (çerçeve kayması)",
       "clinical_significance": "",
       "exon": "",
-      "domain": "C-terminal"
+      "domain": "C-terminal",
+      "protein_effect": "",
+      "null_variant_detail": "çerçeve kaymasına yol açan delesyon",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "",
-      "variant_type": "large deletion (exon 3-4 deletion)",
+      "hgvs_g": "",
+      "variant_type": "büyük delesyon",
       "clinical_significance": "",
       "exon": "exon 3-4",
-      "domain": ""
+      "domain": "C-terminal",
+      "protein_effect": "",
+      "null_variant_detail": "ekzon 3-4 delesyonu",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -120,29 +180,15 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome (classic/typical and atypical/variant subtypes discussed)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
       "field_id": "A.gene_disease_relationship",
-      "value": "causative",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "XD",
+      "value": "Rett sendromu MECP2 genindeki mutasyonlar sonucu oluşur; MECP2 mutasyonu tanıyı destekler ancak tanı için gerekli ve yeterli değildir",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.variant_hgvs_c",
-      "value": "c.808delG",
+      "value": "c.808delG; c.1164delA",
       "candidates": [
         "c.808delG",
         "c.1164delA"
@@ -152,91 +198,185 @@
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.Arg106Trp",
+      "value": "R106W; R133C; R152R; T158M; R168X; R255X; R270X; R306C; X487R",
       "candidates": [
-        "p.Arg106Trp",
-        "p.Arg133Cys",
-        "p.Arg152Arg",
-        "p.Thr158Met",
-        "p.Arg168Ter",
-        "p.Arg255Ter",
-        "p.Arg270Ter",
-        "p.Arg306Cys",
-        "p.Ter487Arg"
+        "R106W",
+        "R133C",
+        "R152R",
+        "T158M",
+        "R168X",
+        "R255X",
+        "R270X",
+        "R306C",
+        "X487R"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_legacy_name",
+      "value": "R106W; R133C; R152R; T158M; R168X; R255X; R270X; R306C; 808delG; X487R; 1164delA; exon 3-4 deletion",
+      "candidates": [
+        "R106W",
+        "R133C",
+        "R152R",
+        "T158M",
+        "R168X",
+        "R255X",
+        "R270X",
+        "R306C",
+        "808delG",
+        "X487R",
+        "1164delA",
+        "exon 3-4 deletion"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_type",
-      "value": "missense",
+      "value": "missense; nonsense; deletion/frameshift; non-stop (stop-loss); exon deletion",
       "candidates": [
         "missense",
-        "missense",
-        "synonymous (reported in article under MBD missense list)",
-        "missense",
         "nonsense",
-        "nonsense",
-        "nonsense",
-        "missense",
-        "frameshift deletion",
+        "deletion/frameshift",
         "non-stop (stop-loss)",
-        "frameshift deletion",
-        "large deletion (exon 3-4 deletion)"
+        "exon deletion"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
+      "field_id": "A.null_variant_detail",
+      "value": "Nonsense mutasyonlar R168X, R255X, R270X; çerçeve kayması 1164delA; ekzon 3-4 delesyonu null/LoF varyantları olarak değerlendirilebilir",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "Missense (R106W, R133C, T158M, R306C), nonsense/erken stop (R168X, R255X, R270X), non-stop/stop kodon kaybı (X487R), çerçeve kayması (1164delA)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD (aa 78-162)",
+      "value": "MBD (Methyl-CpG binding domain); interdomain; TRD (Transcriptional repression domain); C-terminal",
       "candidates": [
-        "MBD (aa 78-162)",
-        "MBD (aa 78-162)",
-        "MBD (aa 78-162)",
-        "MBD (aa 78-162)",
+        "MBD (Methyl-CpG binding domain)",
         "interdomain",
-        "TRD (aa 201-310)",
-        "TRD (aa 201-310)",
-        "TRD (aa 201-310)",
-        "TRD (aa 201-310)",
-        "C-terminal",
+        "TRD (Transcriptional repression domain)",
         "C-terminal"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0002072; HP:0001344; HP:0001250; HP:0000252; HP:0000253; HP:0012759; HP:0000756; HP:0002650; HP:0003763; HP:0002360; HP:0011968; HP:0002019; HP:0012171; HP:0004322; HP:0001251",
+      "field_id": "A.protein_length_change",
+      "value": "X487R non-stop mutasyonu protein uzunluğunu etkiler; 1164delA çerçeve kaymasına yol açar; ekzon 3-4 delesyonu",
       "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "16 Rett sendromu klinik tanısı alan ve MECP2 mutasyonu saptanan probandlar",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "16",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett sendromu (Rett syndrome)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "Klinik tanı; 2002 ve 2010 tanı kriterlerine göre değerlendirilmiş (sırasıyla 7 ve 2 hasta ana kriterleri karşılamamaktadır)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0002376; HP:0001250; HP:0002072; HP:0001344; HP:0012759; HP:0002650; HP:0003763; HP:0002360; HP:0000756; HP:0000253",
+      "candidates": [
+        "HP:0002376",
+        "HP:0001250",
+        "HP:0002072",
+        "HP:0001344",
+        "HP:0012759",
+        "HP:0002650",
+        "HP:0003763",
+        "HP:0002360",
+        "HP:0000756",
+        "HP:0000253"
+      ],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "early neurological regression following normal early development; loss of acquired purposeful hand use; stereotypic hand movements (hand-wringing, squeezing, clapping, mouthing, rubbing); loss of speech/communication skills; seizures / epilepsy; postnatal microcephaly / deceleration of head growth; breathing abnormalities (hyperventilation, breath-holding, apnea); autistic behavior / social withdrawal; scoliosis/kyphosis; bruxism (teeth grinding); sleep disturbance; feeding/gastrointestinal problems; constipation, gastroesophageal reflux; peripheral vasomotor disturbance / cold cyanotic hands and feet; growth failure / weight and height deceleration; ataxia, apraxia, broad-based gait; dystonia, rigidity, extrapyramidal movement and posture abnormalities; autonomic dysfunction, cardiac abnormalities (prolonged QT)",
+      "value": "Erken nörolojik regresyon, edinilmiş bilişsel/ince ve kaba motor/sözel ve iletişim yetilerinin kaybı, otonomik disfonksiyon, nöbetler, stereotipik el hareketleri",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.sex",
-      "value": "female",
+      "field_id": "B.age_current_or_last_followup",
+      "value": "Ortanca 6,5 yaş (2,5-22 yaş)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "median 1.5 years (regression onset)",
+      "value": "Ortanca 1,5 yaş (regresyon/başvuru başlangıcı)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "C.de_novo_status",
-      "value": "unknown",
+      "field_id": "B.sex",
+      "value": "Kız (kadın) - hastalık büyük çoğunlukla kızlarda görülür",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.ancestry_or_population",
+      "value": "Türkiye (Hacettepe Üniversitesi referans merkezi)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "MECP2 mutasyonu saptanan hastalar",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Sanger yöntemi ile MECP2 geni DNA dizi analizi; Multipleks Ligasyon-bağımlı Prob Amplifikasyonu (MLPA)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sequencing_method_quality",
+      "value": "Periferik kandan genomik DNA izolasyonu ve DNA kalite analizi; Sanger dizileme; MLPA",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -248,24 +388,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "B.disease_diagnosis",
-      "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.null_variant_detail",
+      "A.protein_effect",
+      "A.same_amino_acid_known_variant",
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
+      "B.proband_status",
+      "B.case_count",
+      "B.disease_diagnosis",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
-      "B.sex",
+      "B.biochemical_markers",
+      "B.age_current_or_last_followup",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.sex",
+      "B.ancestry_or_population",
+      "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "B.healthy_adult_status"
+    ],
+    "segregation_fields": [
+      "C.inheritance_source",
+      "C.de_novo_status",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_genotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
+    ],
+    "population_fields": [
+      "D.population_database_name",
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
+    ],
+    "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
+      "F.tested_variant",
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.expert_panel_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

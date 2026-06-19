@@ -3,9 +3,9 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome (typical/classic)",
+  "disease_label": "Rett syndrome",
   "mondo_id": "MONDO:0010726",
-  "moi": "XD",
+  "moi": "X-linked dominant",
   "source_pmid": null,
   "source_doi": "10.3389/fped.2021.748641",
   "source_title": "Case Report: Prenatal Diagnosis for a Rett Syndrome Family Caused by a Novel MECP2 Deletion With Heteroduplexes of PCR Product",
@@ -17,10 +17,15 @@
     {
       "hgvs_c": "c.441_1153del713",
       "hgvs_p": "",
-      "variant_type": "frameshift deletion (713-bp deletion causing premature termination at codon 154 of the 487-aa protein)",
-      "clinical_significance": "pathogenic",
+      "hgvs_g": "",
+      "variant_type": "heterozygous deletion (713 bp), frameshift",
+      "clinical_significance": "",
       "exon": "exon 4",
-      "domain": "spans from methyl-CpG binding domain (MBD) to C-terminal domain"
+      "domain": "spans methyl-CpG binding domain to C-terminal domain",
+      "protein_effect": "frameshift and premature termination of the 487 amino acid protein at the 154th codon",
+      "null_variant_detail": "frameshift leading to premature termination; large loss from methyl-CpG binding domain to C-terminal domain",
+      "protein_length_change": "premature termination at codon 154 of 487 amino acid protein",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -32,22 +37,29 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome (typical/classic)",
+      "field_id": "A.gene_aliases",
+      "value": "methyl-CpG-binding protein 2",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.gene_disease_relationship",
-      "value": "causative",
+      "value": "MECP2 mutations cause Rett syndrome; ~80-90% of classic Rett syndrome patients harbor mutations in the coding region of MECP2",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "XD",
+      "field_id": "A.transcript_id",
+      "value": "NM_004992.4",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.reference_sequence",
+      "value": "NM_004992.4",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -61,28 +73,103 @@
     },
     {
       "field_id": "A.variant_type",
-      "value": "frameshift deletion (713-bp deletion causing premature termination at codon 154 of the 487-aa protein)",
+      "value": "deletion (713-base pair heterozygous deletion in exon 4), frameshift",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "713 bp deletion causing frameshift and premature termination at codon 154; large loss from methyl-CpG binding domain to C-terminal domain",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "frameshift and premature termination of the 487 amino acid protein at the 154th codon",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "spans from methyl-CpG binding domain (MBD) to C-terminal domain",
+      "value": "deletion in 3' end of exon 4 (region where small deletions comprise ~10% of mutated alleles); spans methyl-CpG binding domain to C-terminal domain",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "B.hpo_terms",
-      "value": "HP:0001250; HP:0002072; HP:0002376; HP:0001344; HP:0000756",
+      "field_id": "A.protein_length_change",
+      "value": "premature termination at codon 154 (truncation of 487 amino acid protein)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_consequence_class",
+      "value": "predicted null variant (frameshift, premature termination)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "proband (affected)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
+      "field_id": "B.case_count",
+      "value": "1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome (typical/classic)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "diagnosed with typical Rett syndrome",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0002376; HP:0002072; HP:0001250; HP:0001344",
+      "candidates": [
+        "HP:0002376",
+        "HP:0002072",
+        "HP:0001250",
+        "HP:0001344"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
       "field_id": "B.clinical_phenotypes",
-      "value": "epilepsy (developed at 30 months, managed with sodium valproate and lamotrigine); stereotypical hand movements / frequent hand wringing; developmental regression (loss of acquired purposeful hand skills at 15 months); loss of speech (spoke 'papa'/'mama' at 11 months, no longer spoke after 13 months); loss of communicative abilities / emotionally distant, no longer responded to parents' call (autistic-like behavior)",
+      "value": "apparently normal early development then regression: lost spoken words after 13 months, loss of acquired purposeful hand skills at 15 months, stereotypical hand movements (frequent hand wringing), loss of social responsiveness, epilepsy developed at 30 months (treated with sodium valproate and lamotrigine)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "4 years",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "13 months (regression onset); delayed development typically 6-18 months",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -95,15 +182,78 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.age_of_onset",
-      "value": "~13 months (regression onset; speech loss after 13 months, hand-skill loss at 15 months)",
+      "field_id": "B.ancestry_or_population",
+      "value": "Chinese (Zhejiang province)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "X-linked dominant",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "MECP2 c.441_1153del713 identified as the genetic basis of Rett syndrome in the proband",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "multiplex ligation-dependent probe amplification (MLPA, MRC-Holland kit P015C), real-time quantitative PCR, long-range PCR, DNA sequencing, T-A cloning, gel electrophoresis",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.inheritance_source",
+      "value": "deletion not found in blood of parents; possibly de novo or inherited from a germline-mosaic parent",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "unknown - deletion not detected in blood of parents and not found in father's sperm, but maternal germline mosaicism could not be ruled out; authors conclude the variant is probably inherited from a germline-mosaic parent rather than de novo",
+      "value": "MECP2 deletion not detected in parental blood; de novo not confirmed; maternal germline mosaicism cannot be ruled out",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_genotype",
+      "value": "MECP2 deletion not found in maternal blood; maternal germline mosaicism cannot be ruled out",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_phenotype",
+      "value": "healthy",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_genotype",
+      "value": "MECP2 deletion not found in paternal blood; no MECP2 mosaicism found in father's sperm",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_without_parentage_confirmation",
+      "value": "deletion absent in parental blood and paternal sperm; de novo assumed but parentage not formally confirmed and maternal germline mosaicism not excluded",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.molecular_consequence",
+      "value": "frameshift / protein truncation (premature termination at codon 154)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -115,24 +265,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "B.disease_diagnosis",
-      "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.null_variant_detail",
+      "A.protein_effect",
+      "A.same_amino_acid_known_variant",
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
+      "B.proband_status",
+      "B.case_count",
+      "B.disease_diagnosis",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
-      "B.sex",
+      "B.biochemical_markers",
+      "B.age_current_or_last_followup",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.sex",
+      "B.ancestry_or_population",
+      "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "B.healthy_adult_status"
+    ],
+    "segregation_fields": [
+      "C.inheritance_source",
+      "C.de_novo_status",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_genotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
+    ],
+    "population_fields": [
+      "D.population_database_name",
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
+    ],
+    "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
+      "F.tested_variant",
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.expert_panel_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

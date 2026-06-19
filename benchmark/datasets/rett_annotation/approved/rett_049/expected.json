@@ -3,9 +3,9 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome (two typical RTT; one atypical preserved speech variant)",
+  "disease_label": "Rett syndrome",
   "mondo_id": "MONDO:0010726",
-  "moi": "XD",
+  "moi": "X-linked; de novo",
   "source_pmid": null,
   "source_doi": null,
   "source_title": "Unraveling MECP2 structural variants in previously elusive Rett syndrome cases through IGV interpretation",
@@ -17,26 +17,41 @@
     {
       "hgvs_c": "",
       "hgvs_p": "",
-      "variant_type": "translocation",
-      "clinical_significance": "pathogenic",
-      "exon": "breakpoint between exons 3 and 4",
-      "domain": "disrupts MECP2_e1 (NM_004992.4) and MECP2_e2 (NM_001110792.3) core region; t(6;X)(q26;q28), ~200 kbp insertion from chr6"
+      "hgvs_g": "breakpointhg38:chrX:154,032,104;chr6:162,662,479andchr6:162,862,870",
+      "variant_type": "Translocation (~200 Kbp / 200,391 bp from chromosome 6 to chromosome X); t(6;X)(q26;q28)",
+      "clinical_significance": "Reported as disease-causing (novel de novo SV)",
+      "exon": "Breakpoint within MECP2 between exons 3 and 4",
+      "domain": "",
+      "protein_effect": "Disrupts MECP2 between exons 3 and 4; hypothesized to disrupt normal splicing, potentially triggering NMD or producing an aberrant MECP2 protein; disrupts both isoforms MECP2_e1 and MECP2_e2",
+      "null_variant_detail": "Predicted to disrupt MECP2 transcript (NM_004992.4, MECP2_e1); possible NMD; considered highly unlikely to produce normal WT protein. Translocated region encompasses complete exons 1 and 2 of PACRG and entire exon 1 of PRKN",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "",
-      "variant_type": "complex structural variant (two deletions ~5Kbp and ~60Kbp plus ~105Kbp inversion)",
-      "clinical_significance": "pathogenic",
-      "exon": "removes exons 3 and 4 plus entire 3' UTR",
-      "domain": "downstream portion of both MECP2 isoforms; likely NMD"
+      "hgvs_g": "breakpointshg38:chrX:154,040,681(betweenexons2and3ofMECP2);chrX:153,873,102andchrX:153,867,860(L1CAM);chrX:153,980,877(TMEM187)",
+      "variant_type": "Complex structural variant (cSV): two deletions (~5 Kbp and ~60 Kbp) and a ~105 Kbp inversion",
+      "clinical_significance": "Reported as disease-causing (novel de novo SV)",
+      "exon": "Large deletion removes exons 3 and 4 and the entire 3' UTR",
+      "domain": "",
+      "protein_effect": "Removes the entire downstream portion of both MECP2 isoforms including exons 3 and 4 and the entire 3' UTR; likely results in transcript undergoing NMD, preventing protein production; disrupts both isoforms MECP2_e1 and MECP2_e2",
+      "null_variant_detail": "Predicted NMD; partially deleted and inverted TMEM187 and L1CAM at borders",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
-      "hgvs_c": "NC_000023.11:g.154027486_154030665del",
-      "hgvs_p": "frameshiftalteringproteinfromaa397,prematurestopatposition545(affectsaa397-498,novel149-residuesequence)",
-      "variant_type": "deletion (~3,200 bp)",
-      "clinical_significance": "pathogenic",
-      "exon": "exon 4 (terminal portion) plus 2,889 bp of 3' UTR",
-      "domain": "C-terminal region (stop-loss)"
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "hgvs_g": "NC_000023.11:g.154027486_154030665del(hg38:ChrX:154,027,486andChrX:154,030,665)",
+      "variant_type": "Heterozygous deletion (~3,200 bp / ~3 Kbp) in the downstream C-terminal region of MECP2",
+      "clinical_significance": "Reported as disease-causing (novel de novo SV)",
+      "exon": "Removes terminal portion of exon 4",
+      "domain": "C-terminus of MECP2",
+      "protein_effect": "Removes terminal portion of exon 4 resulting in a stop-loss mutation; includes 2,889 bp of the 3' UTR; affects amino acids 397 to 498 and causes a frameshift, generating a novel amino acid sequence of 149 residues before a premature stop codon (stop codon at position 545); disrupts both isoforms MECP2_e1 and MECP2_e2",
+      "null_variant_detail": "Stop-loss with frameshift",
+      "protein_length_change": "Frameshift altering protein sequence starting at amino acid 397; introduces stop codon at position 545; novel sequence of 149 residues",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -48,93 +63,348 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome (two typical RTT; one atypical preserved speech variant)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
       "field_id": "A.gene_disease_relationship",
-      "value": "causative",
+      "value": "MECP2 is the primary gene associated with Rett syndrome; pathogenic variants identified in 90-95% of classic RTT cases and 50-70% of atypical RTT cases",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "XD",
-      "candidates": [],
+      "field_id": "A.transcript_id",
+      "value": "NM_004992.4 (MECP2_e1); NM_001110792.3 (MECP2_e2)",
+      "candidates": [
+        "NM_004992.4 (MECP2_e1)",
+        "NM_001110792.3 (MECP2_e2)"
+      ],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "A.variant_hgvs_c",
-      "value": "NC_000023.11:g.154027486_154030665del",
+      "field_id": "A.reference_sequence",
+      "value": "hg38; NC_000023.11",
+      "candidates": [
+        "hg38",
+        "NC_000023.11"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_g",
+      "value": "NC_000023.11:g.154027486_154030665del (Case 3)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "A.variant_hgvs_p",
-      "value": "frameshift altering protein from aa 397, premature stop at position 545 (affects aa 397-498, novel 149-residue sequence)",
+      "field_id": "A.variant_legacy_name",
+      "value": "t(6;X)(q26;q28) (Case 1)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_type",
-      "value": "translocation",
+      "value": "Translocation (~200 Kbp from chromosome 6 to chromosome X); Complex structural variant (two deletions ~5 Kbp and ~60 Kbp plus a ~105 Kbp inversion); Heterozygous deletion (~3,200 bp)",
       "candidates": [
-        "translocation",
-        "complex structural variant (two deletions ~5Kbp and ~60Kbp plus ~105Kbp inversion)",
-        "deletion (~3,200 bp)"
+        "Translocation (~200 Kbp from chromosome 6 to chromosome X)",
+        "Complex structural variant (two deletions ~5 Kbp and ~60 Kbp plus a ~105 Kbp inversion)",
+        "Heterozygous deletion (~3,200 bp)"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "A.functional_domain_or_hotspot",
-      "value": "disrupts MECP2_e1 (NM_004992.4) and MECP2_e2 (NM_001110792.3) core region; t(6;X)(q26;q28), ~200 kbp insertion from chr6",
+      "field_id": "A.null_variant_detail",
+      "value": "All three SVs predicted to disrupt both main MECP2 isoforms (MECP2_e1 and MECP2_e2); Case 1 and Case 2 predicted to trigger NMD; Case 2 large deletion removes exons 3 and 4 and entire 3' UTR likely causing NMD; Case 3 stop-loss with frameshift",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "Case 1: disrupts MECP2 between exons 3 and 4; possible splicing disruption, NMD, or aberrant protein; Case 2: removes downstream portion of both isoforms including exons 3 and 4 and 3' UTR; likely NMD, no protein; Case 3: stop-loss; affects amino acids 397 to 498; frameshift generating novel 149-residue sequence before premature stop codon at position 545",
       "candidates": [
-        "disrupts MECP2_e1 (NM_004992.4) and MECP2_e2 (NM_001110792.3) core region; t(6;X)(q26;q28), ~200 kbp insertion from chr6",
-        "downstream portion of both MECP2 isoforms; likely NMD",
-        "C-terminal region (stop-loss)"
+        "Case 1: disrupts MECP2 between exons 3 and 4; possible splicing disruption, NMD, or aberrant protein",
+        "Case 2: removes downstream portion of both isoforms including exons 3 and 4 and 3' UTR; likely NMD, no protein",
+        "Case 3: stop-loss; affects amino acids 397 to 498; frameshift generating novel 149-residue sequence before premature stop codon at position 545"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_length_change",
+      "value": "Case 3: frameshift altering sequence from amino acid 397 with premature stop at position 545; novel 149-residue sequence",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.splice_or_synonymous_effect",
+      "value": "Case 1: translocation hypothesized to disrupt normal splicing of MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_consequence_class",
+      "value": "Predicted null variants disrupting MECP2 (loss-of-function); translocation, complex SV with deletions and inversion, and stop-loss deletion",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "Three affected probands (three distinct RTT patients lacking genetic diagnosis for years)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "3",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome (two typical RTT; one atypical preserved speech variant / PSV)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "Case 1: atypical Rett syndrome, preserved speech variant (PSV); Case 2: typical Rett syndrome; Case 3: typical Rett syndrome",
+      "candidates": [
+        "Case 1: atypical Rett syndrome, preserved speech variant (PSV)",
+        "Case 2: typical Rett syndrome",
+        "Case 3: typical Rett syndrome"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001263; HP:0002376; HP:0002072; HP:0001344; HP:0001250; HP:0012759; HP:0000756; HP:0003763; HP:0002360; HP:0001252; HP:0011968; HP:0002019; HP:0000568; HP:0001257; HP:0002650; HP:0001251; HP:0000252; HP:0000253; HP:0002194; HP:0001371",
-      "candidates": [],
+      "value": "HP:0001263; HP:0002376; HP:0002072; HP:0000756; HP:0003763; HP:0002360; HP:0012759; HP:0001250; HP:0001251; HP:0001252; HP:0000253; HP:0001257; HP:0002650; HP:0001344; HP:0002194",
+      "candidates": [
+        "HP:0001263",
+        "HP:0002376",
+        "HP:0002072",
+        "HP:0000756",
+        "HP:0003763",
+        "HP:0002360",
+        "HP:0012759",
+        "HP:0001250",
+        "HP:0001251",
+        "HP:0001252",
+        "HP:0000253",
+        "HP:0001257",
+        "HP:0002650",
+        "HP:0001344",
+        "HP:0002194"
+      ],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "developmental and motor delay; developmental regression / loss of acquired skills; loss of hand usage with hand stereotypies (tapping, washing, clapping); loss of acquired speech / limited verbal communication; seizures (focal with impaired awareness; generalized tonic-clonic); breathing abnormalities (hyperventilation, breath-holding, apneas); autistic features / autism spectrum disorder diagnosis; daytime/awake bruxism; sleep disturbance; hypotonia; feeding difficulties / poor chewing and swallowing / poor weight gain; constipation; bilateral squint / strabismus; lower limb spasticity; scoliosis; apraxic ataxic wide-based gait; microcephaly / deceleration of head growth (below 3rd percentile); delayed motor milestones (delayed walking, loss of walking ability); early contractures",
-      "candidates": [],
+      "value": "Case 1: developmental delay, walking at 20 months with wide-based apraxic ataxic gait, temporary regression of eye contact, decline in hand usage, hand tapping/stereotypies, daytime bruxism, sleep disturbance, anxiety/freezing episodes, hyperventilation and breath-holding, bilateral central spikes on EEG with suspected ESES, mild hypotonia, normal head circumference (51 cm, 50th percentile), autism spectrum disorder, limited verbal communication; Case 2: hypotonia, feeding difficulties, poor weight gain, developmental delay, no independent walking ('bunny jumping'), decline in hand usage, hand stereotypies (hand washing, hand tapping on mouth, clapping), daytime bruxism, loss and intermittent regain of eye contact with bilateral squint, poor chewing/swallowing, mild constipation, sleep disturbance, hyperventilation and breath-holding, focal seizures with partial unawareness, slow EEG background with central asynchronous spikes, head circumference 45 cm at age 2; Case 3: motor and generalized developmental delay, loss of walking at 4 years (regained with walker), loss of speech by 21 months, hand stereotypies, awake bruxism, mild tremors, eye-rolling, progressive deceleration of head growth (50th percentile to below 3rd by 18 months), breathing abnormalities (hyperventilation alternating with apneas), severe constipation, wheelchair-bound, mild to moderate lower limb spasticity, scoliosis, generalized tonic-clonic seizures from age 10",
+      "candidates": [
+        "Case 1: developmental delay, walking at 20 months with wide-based apraxic ataxic gait, temporary regression of eye contact, decline in hand usage, hand tapping/stereotypies, daytime bruxism, sleep disturbance, anxiety/freezing episodes, hyperventilation and breath-holding, bilateral central spikes on EEG with suspected ESES, mild hypotonia, normal head circumference (51 cm, 50th percentile), autism spectrum disorder, limited verbal communication",
+        "Case 2: hypotonia, feeding difficulties, poor weight gain, developmental delay, no independent walking ('bunny jumping'), decline in hand usage, hand stereotypies (hand washing, hand tapping on mouth, clapping), daytime bruxism, loss and intermittent regain of eye contact with bilateral squint, poor chewing/swallowing, mild constipation, sleep disturbance, hyperventilation and breath-holding, focal seizures with partial unawareness, slow EEG background with central asynchronous spikes, head circumference 45 cm at age 2",
+        "Case 3: motor and generalized developmental delay, loss of walking at 4 years (regained with walker), loss of speech by 21 months, hand stereotypies, awake bruxism, mild tremors, eye-rolling, progressive deceleration of head growth (50th percentile to below 3rd by 18 months), breathing abnormalities (hyperventilation alternating with apneas), severe constipation, wheelchair-bound, mild to moderate lower limb spasticity, scoliosis, generalized tonic-clonic seizures from age 10"
+      ],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.sex",
-      "value": "female (all three patients)",
-      "candidates": [],
+      "field_id": "B.age_current_or_last_followup",
+      "value": "Case 1: 7.5 years; Case 2: 5 years; Case 3: 19 years (last clinic visit at age 18 years)",
+      "candidates": [
+        "Case 1: 7.5 years",
+        "Case 2: 5 years",
+        "Case 3: 19 years (last clinic visit at age 18 years)"
+      ],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "infancy (behavioral changes / regression around 1 year of age)",
+      "value": "Case 1: age 1 year (behavioral changes); Case 2: first year (hypotonia, feeding difficulties, developmental delays); Case 3: first/second year (developmental delay; head growth deceleration from birth)",
+      "candidates": [
+        "Case 1: age 1 year (behavioral changes)",
+        "Case 2: first year (hypotonia, feeding difficulties, developmental delays)",
+        "Case 3: first/second year (developmental delay; head growth deceleration from birth)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "Female (all three cases)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.ancestry_or_population",
+      "value": "Followed at the Israeli Rett clinic at Sheba Medical Center, Israel",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "De novo (novel de novo SVs in all three cases)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "Yes; each of the three cases was reported as caused by a distinct de novo structural variant within MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "Prior negative testing in all cases: chromosomal microarray analysis (CMA), trio exome/whole-exome sequencing, RTT/RTT-like gene panels (Invitae), and MECP2 MLPA; Case 3 also had negative MECP2 sequencing",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.additional_pathogenic_variant",
+      "value": "Case 1: translocation disrupts PRKN and PACRG on chromosome 6 in heterozygous state; PRKN associated with Parkinson disease only in biallelic state and PACRG not associated with disease in heterozygous state (per OMIM); not considered contributory to phenotype",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Short-read whole genome sequencing (WGS), trio for Cases 1 and 2; MANTA software for SV breakpoint detection (Cases 1 and 2); IGV visualization of BAM alignment (all cases; Case 3 resolved by IGV alone without MANTA); PCR amplification across SV borders; Sanger sequencing confirmation; Prior: CMA, trio exome/WES, Invitae RTT-like gene panel, MECP2 MLPA",
+      "candidates": [
+        "Short-read whole genome sequencing (WGS), trio for Cases 1 and 2",
+        "MANTA software for SV breakpoint detection (Cases 1 and 2)",
+        "IGV visualization of BAM alignment (all cases; Case 3 resolved by IGV alone without MANTA)",
+        "PCR amplification across SV borders",
+        "Sanger sequencing confirmation",
+        "Prior: CMA, trio exome/WES, Invitae RTT-like gene panel, MECP2 MLPA"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sequencing_method_quality",
+      "value": "Standard short-read whole genome sequencing (SRS/WGS)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.inheritance_source",
+      "value": "De novo (all three cases)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo (all three SVs confirmed absent in parents and siblings)",
+      "value": "De novo; variants present only in affected individuals and absent in parents and siblings by PCR",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.parentage_confirmed",
+      "value": "Not explicitly confirmed by genetic markers; PCR across SV borders amplified only in affected individuals and not parents/siblings",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_genotype",
+      "value": "Negative (variant not detected in mother by PCR in Cases 1 and 2)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_genotype",
+      "value": "Negative (variant not detected in father by PCR in Cases 1 and 2)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.g_minus_p_minus_count",
+      "value": "Case 1: two siblings unaffected and negative for the SV by PCR; Case 2: two healthy siblings negative for the SV by PCR",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_without_parentage_confirmation",
+      "value": "Variants demonstrated de novo by absence in parents (and siblings) via PCR; formal parentage (paternity/maternity) confirmation not reported",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "D.absent_or_rare_statement",
+      "value": "All three SVs described as novel",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "F.declared_disease_mechanism",
+      "value": "Loss-of-function (variants predicted to disrupt MECP2 via NMD or aberrant/truncated protein)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.molecular_consequence",
+      "value": "Predicted NMD (Cases 1 and 2); stop-loss with frameshift and premature stop codon (Case 3); translocation disrupting MECP2 between exons 3 and 4 (Case 1)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.misdiagnosis_or_reclassification",
+      "value": "Discussion notes many conditions can imitate Rett syndrome and misdiagnosis may lead to ineffective treatment; the three cases were confirmed as MECP2 SVs, not reclassified",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.alternative_causative_gene",
+      "value": "Case 1 translocation also disrupts PRKN and PACRG on chromosome 6 but in heterozygous state, not associated with disease; discussion notes other genes proposed for Rett/Rett-like cases without MECP2 mutation may not all be disease-causing",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "MECP2 encodes methyl-CpG binding protein 2, a key epigenetic modulator that controls gene expression and modulates chromatin architecture through binding to methylated DNA",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_expression_pattern",
+      "value": "Epigenetic modulator in the brain",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.disease_relevant_expression",
+      "value": "MECP2_e1 transcript (NM_004992.4) considered the relevant transcript for Rett syndrome in Case 1",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -146,24 +416,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "B.disease_diagnosis",
-      "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.null_variant_detail",
+      "A.protein_effect",
+      "A.same_amino_acid_known_variant",
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
+      "B.proband_status",
+      "B.case_count",
+      "B.disease_diagnosis",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
-      "B.sex",
+      "B.biochemical_markers",
+      "B.age_current_or_last_followup",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.sex",
+      "B.ancestry_or_population",
+      "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "B.healthy_adult_status"
+    ],
+    "segregation_fields": [
+      "C.inheritance_source",
+      "C.de_novo_status",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_genotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
+    ],
+    "population_fields": [
+      "D.population_database_name",
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
+    ],
+    "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
+      "F.tested_variant",
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.expert_panel_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

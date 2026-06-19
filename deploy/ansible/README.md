@@ -16,7 +16,6 @@ deploy/ansible/
 │       ├── group_vars/
 │       │   ├── all.yml                      Structural config (safe to commit)
 │       │   └── vault.yml.example            Secrets template
-│       └── host_vars/                       Per-host overrides
 ├── playbooks/
 │   ├── site.yml                             Main deployment playbook
 │   └── healthcheck.yml                      Post-deployment verification
@@ -28,7 +27,6 @@ deploy/ansible/
 │   ├── model-server/                        Embedding/Rerank/LLM server (systemd)
 │   ├── frontend/                            Next.js frontend (nvm + systemd)
 │   └── nginx/                               Nginx reverse proxy + auto TLS via certbot
-└── templates/                               Shared templates
 ```
 
 Each role follows standard Ansible structure: `tasks/`, `handlers/`, `defaults/`, `templates/`.

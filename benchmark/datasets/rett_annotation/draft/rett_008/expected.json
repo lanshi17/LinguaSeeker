@@ -3,9 +3,9 @@
   "source": "rett_literature",
   "gene_symbol": "FOXG1",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Congenital variant Rett syndrome (atypical Rett syndrome)",
+  "disease_label": "Congenital variant Rett syndrome-like phenotype / atypical Rett syndrome",
   "mondo_id": "MONDO:0010726",
-  "moi": "de novo (autosomal); not specified as a formal inheritance mode",
+  "moi": "De novo",
   "source_pmid": null,
   "source_doi": "10.1038/ejhg.2012.208",
   "source_title": "14q12 microdeletions excluding FOXG1 give rise to a congenital variant Rett syndrome-like phenotype",
@@ -15,98 +15,669 @@
   "source_pdf_path": "",
   "variants": [
     {
-      "hgvs_c": "c.256dupC",
-      "hgvs_p": "p.Gln86ProfsX35",
-      "variant_type": "frameshift (cytosine duplication at nucleotide 256)",
-      "clinical_significance": "pathogenic",
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "hgvs_g": "14q12:28,765,009-29,942,125[1.17Mb](HG18);maximumextent28.747-29.962Mb[1.21Mb]",
+      "variant_type": "Interstitial deletion (14q12 microdeletion)",
+      "clinical_significance": "Reported as causative; de novo (parental studies normal)",
       "exon": "",
-      "domain": "MBD"
+      "domain": "",
+      "protein_effect": "Deletion includes PRKD1 gene but not FOXG1 gene",
+      "null_variant_detail": "Whole-gene deletion of PRKD1; FOXG1 intact",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "hgvs_g": "14q12:28,407,180-29,557,749[1.15Mb](HG18);maximumextent28.396-29.574Mb[1.18Mb]",
+      "variant_type": "Interstitial deletion (14q12 microdeletion)",
+      "clinical_significance": "De novo (parental studies confirmed de novo)",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "Includes entire PRKD1 gene; FOXG1 maps 0.1 Mb outside proximal boundary",
+      "null_variant_detail": "Whole-gene deletion of PRKD1; FOXG1 intact",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "hgvs_g": "14q12:28,499,292-29,386,470[0.89Mb](HG18);maximumextent28.487-29.393Mb[0.91Mb]",
+      "variant_type": "Interstitial deletion (14q12 microdeletion)",
+      "clinical_significance": "Reported as causative; de novo (parental studies normal)",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "Includes part of PRKD1; FOXG1 maps 0.18 Mb outside proximal boundary",
+      "null_variant_detail": "Partial deletion of PRKD1; FOXG1 intact",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.256dupC",
+      "hgvs_p": "p.Gln86ProfsX35(alsoreportedasp.Gln86Pro*34)",
+      "hgvs_g": "",
+      "variant_type": "Frameshift (cytosine duplication at nucleotide 256)",
+      "clinical_significance": "Pathogenic; de novo; identified in patient 4 with congenital Rett syndrome variant",
+      "exon": "",
+      "domain": "MBD",
+      "protein_effect": "Shift in the open-reading frame of the protein (FOXG1)",
+      "null_variant_detail": "Frameshift / loss-of-function FOXG1 mutation",
+      "protein_length_change": "Frameshift truncation",
+      "same_amino_acid_known_variant": "Previously identified in both a female and a male with congenital variant of Rett syndrome"
     }
   ],
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
-      "value": "FOXG1",
-      "candidates": [],
+      "value": "FOXG1; PRKD1",
+      "candidates": [
+        "FOXG1",
+        "PRKD1"
+      ],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Congenital variant Rett syndrome (atypical Rett syndrome)",
+      "field_id": "A.gene_aliases",
+      "value": "FoxG1 (forkhead box protein G1)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.gene_disease_relationship",
-      "value": "associated",
+      "value": "Mutations in FOXG1 have been associated with the congenital Rett syndrome variant; authors propose primary defect is misregulation of FOXG1 rather than primary abnormality of PRKD1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.transcript_id",
+      "value": "NM_005249.4 (FOXG1 primary transcript); NM_002742.2 (PRKD1)",
+      "candidates": [
+        "NM_005249.4 (FOXG1 primary transcript)",
+        "NM_002742.2 (PRKD1)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.reference_sequence",
+      "value": "NC_000014.8 (genomic reference); Genome build HG18 (hg18)",
+      "candidates": [
+        "NC_000014.8 (genomic reference)",
+        "Genome build HG18 (hg18)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.256dupC (FOXG1); c.-9C>A (PRKD1 5'UTR variant)",
+      "candidates": [
+        "c.256dupC (FOXG1)",
+        "c.-9C>A (PRKD1 5'UTR variant)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Gln86ProfsX35 (p.Gln86Pro*34)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_g",
+      "value": "14q12:28,765,009-29,942,125 [1.17 Mb]; 14q12:28,407,180-29,557,749 [1.15 Mb]; 14q12:28,499,292-29,386,470 [0.89 Mb]",
+      "candidates": [
+        "14q12:28,765,009-29,942,125 [1.17 Mb]",
+        "14q12:28,407,180-29,557,749 [1.15 Mb]",
+        "14q12:28,499,292-29,386,470 [0.89 Mb]"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "Interstitial 14q12 microdeletion; Frameshift duplication (FOXG1 c.256dupC)",
+      "candidates": [
+        "Interstitial 14q12 microdeletion",
+        "Frameshift duplication (FOXG1 c.256dupC)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "De novo loss-of-function point mutations in FOXG1 reported in congenital form; c.256dupC frameshift predicted to shift open-reading frame; 14q12 microdeletions delete PRKD1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "Frameshift (FOXG1 p.Gln86Pro*34); Deletion of PRKD1 gene",
+      "candidates": [
+        "Frameshift (FOXG1 p.Gln86Pro*34)",
+        "Deletion of PRKD1 gene"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.same_amino_acid_known_variant",
+      "value": "c.256dupC previously identified in both a female and a male with congenital variant of Rett syndrome (refs 24, 26)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "FoxG1 protein is a winged-helix transcription factor; 14q12 region described as recurrent microdeletion region in congenital Rett",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_length_change",
+      "value": "Frameshift truncation predicted for FOXG1 c.256dupC (p.Gln86Pro*34)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.splice_or_synonymous_effect",
+      "value": "PRKD1 c.2202T>C (p.I734I) synonymous polymorphism; c.-9C>A predicted to have no effect on transcription/translation initiation of PRKD1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.gene_truncating_mechanism_evidence",
+      "value": "De novo loss-of-function point mutations in FOXG1 reported particularly in congenital Rett; gene dosage importance at this locus highlighted",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_consequence_class",
+      "value": "Predicted null (microdeletions and frameshift loss-of-function)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "Proband (three index patients with 14q12 microdeletion; patient 4 with FOXG1 mutation)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "3 patients with 14q12 microdeletion; 1 patient with FOXG1 c.256dupC mutation",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Atypical Rett syndrome; Congenital variant Rett syndrome-like phenotype; Congenital Rett syndrome variant (patient 4)",
+      "candidates": [
+        "Atypical Rett syndrome",
+        "Congenital variant Rett syndrome-like phenotype",
+        "Congenital Rett syndrome variant (patient 4)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "Phenotypic overlap between congenital Rett syndrome variants with FOXG1 mutations and the three 14q12 microdeletion patients",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001249; HP:0001263; HP:0000252; HP:0000253; HP:0001252; HP:0002072; HP:0001250; HP:0001257; HP:0002650; HP:0002360; HP:0003763; HP:0012759; HP:0001344; HP:0002194",
+      "candidates": [
+        "HP:0001249",
+        "HP:0001263",
+        "HP:0000252",
+        "HP:0000253",
+        "HP:0001252",
+        "HP:0002072",
+        "HP:0001250",
+        "HP:0001257",
+        "HP:0002650",
+        "HP:0002360",
+        "HP:0003763",
+        "HP:0012759",
+        "HP:0001344",
+        "HP:0002194"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "Severe intellectual impairment, early-onset developmental delay without regression, postnatal microcephaly, hypotonia (truncal), seizure disorder (females), agenesis of the corpus callosum (females), subtle dysmorphism, hand stereotypies (grasping/wringing/mouthing), limb hypertonia/spasticity, scoliosis, bruxism, cold extremities, disturbed sleep, constipation, feeding difficulties, tongue thrusting, breathing abnormalities (hyperventilation/deep breathing/apnea)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.biochemical_markers",
+      "value": "Normal urinary amino and organic acids, plasma lactate, pyruvate, ammonia, transferrin isoforms, very long chain fatty acids, TORCH serology; urinary glycosaminoglycans normal",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "Patient 1: died at 16 years; Patient 2: 11 years 9 months / 12 years; Patient 3: 4 years; Patient 4: 7 years",
+      "candidates": [
+        "Patient 1: died at 16 years",
+        "Patient 2: 11 years 9 months / 12 years",
+        "Patient 3: 4 years",
+        "Patient 4: 7 years"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "Early-onset / infantile; Case 1: infantile spasms at 1 year; Case 2: hypotonic from birth, seizures at 11 years; Case 3: microcephaly by 6 months",
+      "candidates": [
+        "Early-onset / infantile",
+        "Case 1: infantile spasms at 1 year",
+        "Case 2: hypotonic from birth, seizures at 11 years",
+        "Case 3: microcephaly by 6 months"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "Patient 1: Female; Patient 2: Female; Patient 3: Male; Patient 4: Female",
+      "candidates": [
+        "Patient 1: Female",
+        "Patient 2: Female",
+        "Patient 3: Male",
+        "Patient 4: Female"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.ancestry_or_population",
+      "value": "HapMap European population data used for dbSNP heterozygosity (PRKD1 polymorphisms)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.consanguinity",
+      "value": "Non-consanguineous parents (Case 1 and Case 3)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.mode_of_inheritance_reported",
-      "value": "de novo (autosomal); not specified as a formal inheritance mode",
+      "value": "De novo (14q12 microdeletions and FOXG1 c.256dupC)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "A.variant_hgvs_c",
-      "value": "c.256dupC",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
-      "field_id": "A.variant_hgvs_p",
-      "value": "p.Gln86ProfsX35",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
-      "field_id": "A.variant_type",
-      "value": "frameshift (cytosine duplication at nucleotide 256)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
-      "field_id": "B.hpo_terms",
-      "value": "HP:0001249; HP:0001263; HP:0000252; HP:0000253; HP:0001252; HP:0001290; HP:0001250; HP:0002072; HP:0011968; HP:0002019; HP:0003763; HP:0002360; HP:0000568; HP:0012171; HP:0002650; HP:0012759; HP:0001257; HP:0001344; HP:0001371; HP:0002194",
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "Authors propose primary defect is misregulation of the FOXG1 gene rather than a primary abnormality of PRKD1",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.clinical_phenotypes",
-      "value": "severe intellectual impairment; early-onset developmental delay without regression; postnatal/progressive microcephaly; truncal hypotonia; limb hypertonia / spastic quadriparesis with brisk deep tendon reflexes; seizure disorder (including infantile spasms; onset 1 year and 11 years); stereotypic hand movements (hand grasping, wringing, tapping, mouthing); feeding difficulties; constipation; bruxism; disturbed sleep pattern; strabismus / esotropia; cold hands and feet; thoracolumbar scoliosis; disturbed breathing pattern (hyperventilation, deep breathing, sleep-disordered breathing with apnoea); fixed flexion deformities; absent or minimal speech; tongue thrusting / protruding tongue; agenesis of the corpus callosum; subtle facial dysmorphism; delayed motor development (unable to walk)",
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "MECP2 mutation testing (including MLPA) normal; CDKL5 analysis normal; methylation studies for Angelman syndrome normal; karyotype normal; subtelomere FISH normal; metabolic screens normal",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.sex",
-      "value": "Female (Patient 4 with FOXG1 mutation; reported microdeletion patients: 2 female, 1 male)",
+      "field_id": "B.testing_method",
+      "value": "Array CGH (Agilent SurePrint G3 400K, hg18); MECP2 sequencing and MLPA; CDKL5 analysis; Bi-directional Sanger sequencing of FOXG1 and PRKD1",
+      "candidates": [
+        "Array CGH (Agilent SurePrint G3 400K, hg18)",
+        "MECP2 sequencing and MLPA",
+        "CDKL5 analysis",
+        "Bi-directional Sanger sequencing of FOXG1 and PRKD1"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sequencing_method_quality",
+      "value": "CGH microarray effective median resolution 0.06 Mb (400K array); parental array 0.25 Mb (8x60K); bi-directional sequencing on ABI3730XL, analysed with Mutation Surveyor; ADM-2 algorithm threshold 6.7",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.age_of_onset",
-      "value": "Congenital/early-onset (infantile)",
+      "field_id": "C.inheritance_source",
+      "value": "De novo",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo",
+      "value": "Case 2: parental studies indicated de novo; FOXG1 c.256dupC: parental screening indicated de novo; Cases 1 and 3: parental studies normal; all reported 14q12 microdeletions were de novo",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_genotype",
+      "value": "Parental studies normal (no 14q12 deletion); mother of Case 3 carried balanced translocation 46,XX,t(12;21)(p11.2;p11.2)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_genotype",
+      "value": "Parental studies normal (no 14q12 deletion)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_without_parentage_confirmation",
+      "value": "Cases 1 and 3 reported as parental studies normal without explicit parentage confirmation; Case 2 reported as de novo",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "D.population_database_name",
+      "value": "NCBI dbSNP; HapMap European population",
+      "candidates": [
+        "NCBI dbSNP",
+        "HapMap European population"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.allele_frequency",
+      "value": "c.91_96dupTCCGGG: 8.6%; c.1673-50A>G: 64.1%; c.2167-12T>A: 41.2%; c.2202T>C: 43.9%; c.2435-14G>A: 87.5%",
+      "candidates": [
+        "c.91_96dupTCCGGG: 8.6%",
+        "c.1673-50A>G: 64.1%",
+        "c.2167-12T>A: 41.2%",
+        "c.2202T>C: 43.9%",
+        "c.2435-14G>A: 87.5%"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.population_subgroup",
+      "value": "HapMap European population",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.absent_or_rare_statement",
+      "value": "PRKD1 c.-9C>A 5'UTR variation not reported in NCBI dbSNP",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "E.prediction_tools_list",
+      "value": "BDGP Neural Network promoter prediction software; Promo 3.0; NetStart 1.0; Primer3 (primer design)",
+      "candidates": [
+        "BDGP Neural Network promoter prediction software",
+        "Promo 3.0",
+        "NetStart 1.0",
+        "Primer3 (primer design)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "E.benign_prediction_summary",
+      "value": "PRKD1 c.-9C>A: no differences between predictions from wild-type and mutated sequence for transcription initiation; near-identical results for translation initiation (NetStart) — unlikely to affect transcription/translation of PRKD1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.assay_type",
+      "value": "Reverse-transcription quantitative PCR (RT-qPCR) gene expression analysis",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.assay_system",
+      "value": "Lymphoblastoid cell line (case 1); whole blood collected in PAXgene Blood RNA tubes (cases 2 and 3)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.tested_variant",
+      "value": "14q12 microdeletions (cases 1, 2, 3)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.functional_result",
+      "value": "FOXG1 and PRKD1 mRNA expression appeared decreased in whole-blood from cases 2 and 3; no difference in FOXG1 or PRKD1 expression in case 1 lymphoblast cell line vs controls",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.quantitative_result",
+      "value": "Case 1: FOXG1 1.1 fold, PRKD1 1.35 fold; Case 2: FOXG1 0.5 fold, PRKD1 0.03 fold; Case 3: FOXG1 0.6 fold, PRKD1 0.05 fold (relative to two normal controls)",
+      "candidates": [
+        "Case 1: FOXG1 1.1 fold, PRKD1 1.35 fold",
+        "Case 2: FOXG1 0.5 fold, PRKD1 0.03 fold",
+        "Case 3: FOXG1 0.6 fold, PRKD1 0.05 fold (relative to two normal controls)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.negative_controls",
+      "value": "Two normal controls for each sample type",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.total_controls",
+      "value": "Two normal controls per sample type",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.replicates_or_statistics",
+      "value": "Triplicate cDNA synthesis, measured in duplicate; GAPDH housekeeping gene; nonparametric Mann-Whitney U-test treating triplicate cDNA as distinct samples (n=6), P<0.005",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.patient_cell_evidence",
+      "value": "Patient lymphoblastoid cell line (case 1) and patient whole blood (cases 2, 3)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.functional_normal_result",
+      "value": "Case 1 lymphoblast cell line: no difference in FOXG1 or PRKD1 expression between patient and controls",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.functional_inconclusive_result",
+      "value": "Triplicates did not represent true biological replicates; inclusion of similar samples in future required to establish significance",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.physiologic_context",
+      "value": "Patient-derived material (lymphoblastoid cell line and whole blood)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.declared_disease_mechanism",
+      "value": "Proposed misregulation (decrease) of FOXG1; FOXG1 loss-of-function/haploinsufficiency mechanism (de novo LOF mutations reported)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.molecular_consequence",
+      "value": "Decreased FOXG1 mRNA expression in cases 2 and 3; deletion of PRKD1; frameshift truncation in FOXG1 c.256dupC",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.disease_mechanism_consistency",
+      "value": "Decreased FOXG1 expression consistent with proposed FOXG1 misregulation/haploinsufficiency as the disease mechanism",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.clia_laboratory_status",
+      "value": "Patient samples received for clinical diagnostic testing; CGH performed at Cytogenetics Department, The Children's Hospital at Westmead",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.study_design",
+      "value": "Screening of 32 atypical Rett syndrome patients (previously excluded for MECP2 and CDKL5 mutations) for PRKD1 and FOXG1 mutations",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_count",
+      "value": "32 atypical Rett syndrome patients screened",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_definition",
+      "value": "Atypical Rett syndrome patients previously excluded for mutations in MECP2 and CDKL5",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.variant_count_cases",
+      "value": "1 FOXG1 mutation (c.256dupC) identified in 32 patients; no pathogenic PRKD1 mutations identified",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_control_negative_result",
+      "value": "No pathogenic mutations in PRKD1 identified in the 32 atypical Rett syndrome patients screened",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.alternative_causative_gene",
+      "value": "Authors propose the primary defect is misregulation of FOXG1 rather than a primary abnormality of PRKD1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.negative_functional_result",
+      "value": "No pathogenic PRKD1 mutations found in 32 patients; only known nonpathogenic polymorphisms identified; c.-9C>A predicted no functional effect",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "FoxG1 is a winged-helix transcription factor involved in telencephalic development, promotes neurogenesis and antagonises neuronal differentiation; PRKD1 is a protein kinase involved in extracellular receptor-mediated signal transduction pathways",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_expression_pattern",
+      "value": "FoxG1 expression is highest in fetal and infant brain",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.disease_relevant_expression",
+      "value": "FOXG1 involved in telencephalic/brain development; gene dosage importance at this locus highlighted",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.functional_alteration_patient_cells",
+      "value": "Decreased FOXG1 and PRKD1 expression in whole-blood from cases 2 and 3 (statistically significant, P<0.005)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.cell_model_type",
+      "value": "Lymphoblastoid cell line (case 1)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.cell_model_phenotype",
+      "value": "No difference in FOXG1 or PRKD1 expression in case 1 lymphoblast cell line vs controls",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.experimental_replication",
+      "value": "Triplicate cDNA synthesis per sample, duplicate measurement; triplicates noted as not true biological replicates",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.known_pathogenic_variant_reference",
+      "value": "FOXG1 c.256dupC (p.Gln86ProfsX35) previously identified in both a female and a male with congenital variant of Rett syndrome (refs 24, 26); de novo loss-of-function FOXG1 point mutations reported in congenital Rett",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
     }
   ],
   "expected_standardization": {
@@ -115,24 +686,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "B.disease_diagnosis",
-      "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.null_variant_detail",
+      "A.protein_effect",
+      "A.same_amino_acid_known_variant",
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
+      "B.proband_status",
+      "B.case_count",
+      "B.disease_diagnosis",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
-      "B.sex",
+      "B.biochemical_markers",
+      "B.age_current_or_last_followup",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.sex",
+      "B.ancestry_or_population",
+      "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "B.healthy_adult_status"
+    ],
+    "segregation_fields": [
+      "C.inheritance_source",
+      "C.de_novo_status",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_genotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
+    ],
+    "population_fields": [
+      "D.population_database_name",
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
+    ],
+    "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
+      "F.tested_variant",
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.expert_panel_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

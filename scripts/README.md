@@ -6,10 +6,12 @@
 
 ```
 scripts/
-├── generate_ground_truth_pdfs.py     Translate ground-truth literature to 6 languages and generate PDFs
-├── import_terminology.py             CLI tool to import terminology database files into PostgreSQL
-├── start_backend_dev.sh              Start FastAPI backend with hot-reload
-└── start_model_server.sh             Start model server (embedding/rerank/VLM) on port 8001
+├── generate_ground_truth_pdfs.py       Translate ground-truth literature to 6 languages and generate PDFs
+├── import_terminology.py               CLI tool to import terminology database files into PostgreSQL
+├── refactor_benchmark_imports.py       Refactor benchmark module imports after reorganization
+├── refactor_benchmark_reports.py       Refactor benchmark report file paths after reorganization
+├── start_backend_dev.sh                Start FastAPI backend with hot-reload
+└── start_model_server.sh               Start model server (embedding/rerank/VLM) on port 8001
 ```
 
 > Terminology embedding builds live in `backend/scripts/build_terminology_embeddings.py`.
@@ -20,6 +22,8 @@ scripts/
 |--------|----------|---------|
 | `generate_ground_truth_pdfs.py` | Python | Translate ground-truth literature to zh/ja/ko/fr/de/es via LLM API, generate PDFs with weasyprint |
 | `import_terminology.py` | Python | Import local terminology files (hgnc, omim, hpo, clingen, clinvar) into PostgreSQL reference tables |
+| `refactor_benchmark_imports.py` | Python | Refactor benchmark module imports after directory reorganization |
+| `refactor_benchmark_reports.py` | Python | Refactor benchmark report file paths after directory reorganization |
 | `start_backend_dev.sh` | Shell | Start uvicorn with hot-reload, excluding logs/temp/migration files from watch |
 | `start_model_server.sh` | Shell | Start the model server microservice (lazy-loads embedding, rerank, VLM models on first request) |
 

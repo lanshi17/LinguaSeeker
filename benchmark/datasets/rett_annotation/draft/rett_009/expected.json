@@ -3,9 +3,9 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome (classical)",
+  "disease_label": "Rett syndrome",
   "mondo_id": "MONDO:0010726",
-  "moi": "XD",
+  "moi": "X-linked dominant",
   "source_pmid": null,
   "source_doi": null,
   "source_title": "A rare case of a male child with post-zygotic de novo mosaic variant c.538C>T in MECP2 gene: a case report of Rett syndrome",
@@ -17,10 +17,132 @@
     {
       "hgvs_c": "c.538C>T",
       "hgvs_p": "p.Arg180Ter(p.R180*)",
-      "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "hgvs_g": "chrX:g.153296777G>A",
+      "variant_type": "nonsense single base pair substitution (SNV)",
+      "clinical_significance": "Pathogenic",
       "exon": "exon 3",
-      "domain": "MBD (Methyl-CpG binding domain)"
+      "domain": "Methyl-CpG binding domain (MBD)",
+      "protein_effect": "stop codon and premature truncation of the protein at codon 180",
+      "null_variant_detail": "nonsense variant, predicted null/LoF (PVS1 very strong applied)",
+      "protein_length_change": "truncation at codon 180 (full-length MeCP2 is 486 aa)",
+      "same_amino_acid_known_variant": "known pathogenic variant previously reported in multiple Rett syndrome patients, exclusively in females; first identified in 1999"
+    },
+    {
+      "hgvs_c": "c.241_242del",
+      "hgvs_p": "p.Gly81Glnfs*9",
+      "hgvs_g": "",
+      "variant_type": "frameshift (LoF)",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.398G>A",
+      "hgvs_p": "p.Arg133His",
+      "hgvs_g": "",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.808C>T",
+      "hgvs_p": "p.Arg270*",
+      "hgvs_g": "",
+      "variant_type": "nonsense (LoF)",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "TRD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.473C>T",
+      "hgvs_p": "p.Thr158Met",
+      "hgvs_g": "",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.316C>T",
+      "hgvs_p": "p.Arg106Trp",
+      "hgvs_g": "",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.360T>G",
+      "hgvs_p": "p.Tyr120*",
+      "hgvs_g": "",
+      "variant_type": "nonsense (LoF)",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.317G>A",
+      "hgvs_p": "p.Arg106Gln",
+      "hgvs_g": "",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.353G>A",
+      "hgvs_p": "p.Gly118Val",
+      "hgvs_g": "",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
+    },
+    {
+      "hgvs_c": "c.1308dup",
+      "hgvs_p": "p.Gln437Serfs*50",
+      "hgvs_g": "",
+      "variant_type": "frameshift (LoF), affects codon 437",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "NLS",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -32,22 +154,22 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome (classical)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
       "field_id": "A.gene_disease_relationship",
-      "value": "causative",
+      "value": "Mutations in the MECP2 gene identified as the cause of Rett syndrome (1999)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "XD",
+      "field_id": "A.transcript_id",
+      "value": "ENST00000453960.2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.reference_sequence",
+      "value": "GRCh37/hg19",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -67,29 +189,127 @@
       "evaluation_type": "precision_only"
     },
     {
+      "field_id": "A.variant_hgvs_g",
+      "value": "chrX:g.153296777G>A",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_legacy_name",
+      "value": "p.R180*",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
       "field_id": "A.variant_type",
-      "value": "nonsense",
+      "value": "nonsense single base pair substitution (SNV)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "nonsense variant resulting in a stop codon and premature truncation of the protein at codon 180; PVS1 (very strong) applied",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "premature truncation of the protein at codon 180 (p.Arg180Ter)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.same_amino_acid_known_variant",
+      "value": "known pathogenic variant previously reported in multiple Rett syndrome patients, exclusively in females; first identified in 1999",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD (Methyl-CpG binding domain)",
+      "value": "Methyl-CpG binding domain (MBD) of the MeCP2 protein",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "B.hpo_terms",
-      "value": "HP:0001263; HP:0001250; HP:0000756; HP:0002072; HP:0012759; HP:0002194; HP:0001344",
+      "field_id": "A.protein_length_change",
+      "value": "truncation at codon 180 (full-length MeCP2 is 486 aa)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_consequence_class",
+      "value": "predicted null variant (loss of function)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "proband (affected male child)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
+      "field_id": "B.case_count",
+      "value": "1 new case (12 mosaic males including present case compared in Table 1)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome (classical)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "classical RTT phenotype",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001263; HP:0001250; HP:0002072; HP:0000756; HP:0012759; HP:0001344",
+      "candidates": [
+        "HP:0001263",
+        "HP:0001250",
+        "HP:0002072",
+        "HP:0000756",
+        "HP:0012759",
+        "HP:0001344"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
       "field_id": "B.clinical_phenotypes",
-      "value": "global developmental delay; delayed motor milestones (smiling, head holding, sitting, standing attained late); febrile seizure / abnormal epileptiform EEG activity; autism spectrum disorder (DSM-5); stereotypic hand movements / poor hand skills; apnea / breathing disturbance; absent/poor speech (communicates only via babbling); sudden tightening of the body; unilateral pre-axial polydactyly; simian crease on right hand; walks only with support",
+      "value": "premature birth (32 weeks), apnea of prematurity, global developmental delay, delayed milestones (smiling 3m, head holding 7m, sitting 12m, standing 29m), walks only with support, communicates only via babbling, febrile seizure at 1y9m on antiepileptic treatment, sudden tightening of body, unilateral pre-axial polydactyly, simian crease on right hand, autism spectrum disorder (DSM-5), poor hand skills, stereotypic hand movements present, breathing disturbance present, normal MRI brain, abnormal EEG background with epileptiform activity",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "2 years 7 months",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "global developmental delay from infancy; febrile seizure onset at 1 year 9 months",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -102,18 +322,193 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.age_of_onset",
-      "value": "infancy (global developmental delay); febrile seizure onset at 1 year 9 months",
+      "field_id": "B.ancestry_or_population",
+      "value": "Indian (India)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.consanguinity",
+      "value": "nonconsanguineous",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "X-linked dominant",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "yes - single pathogenic MECP2 variant identified as cause",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "no pathogenic copy number variations (deletions/duplications) detected by CMA (resolution >=150 kb); cytogenetic aberrations unlikely",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Chromosomal microarray (Affymetrix Cytoscan 750k), whole exome sequencing, Sanger sequencing validation and parental segregation",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sequencing_method_quality",
+      "value": "Agilent SureSelect v6 enrichment; Illumina HiSeq; mean >80-100x coverage; variant depth 92x; aligned with BWA to GRCh37/hg19; variants called with GATK v4.1; annotation with JANNOVAR; prioritization with Exomiser v12.1.0",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.inheritance_source",
+      "value": "de novo (post-zygotic)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "post-zygotic de novo (somatic mosaicism, ~32% variant allele fraction; parents wildtype)",
+      "value": "post-zygotic de novo somatic mosaicism (variant in ~32% of reads)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.parentage_confirmed",
+      "value": "parental segregation analysis by Sanger sequencing performed; both parents carry wildtype allele, confirming de novo event",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_genotype",
+      "value": "wildtype allele",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_genotype",
+      "value": "wildtype allele",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_without_parentage_confirmation",
+      "value": "de novo confirmed by parental segregation (both parents wildtype); paternity/maternity not explicitly confirmed by additional testing",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "D.population_database_name",
+      "value": "1000Genomes, gnomAD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.allele_frequency",
+      "value": "not reported (absent in 1000Genomes and gnomAD)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.absent_or_rare_statement",
+      "value": "variant has not been reported in the 1000Genomes and gnomAD databases (PM2 moderate applied)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "E.prediction_tools_list",
+      "value": "Exomiser v12.1.0 used for phenotype-driven variant filtration/prioritization",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "E.deleterious_prediction_summary",
+      "value": "PP3 (supporting) applied - computational evidence supports deleterious effect",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "E.in_silico_consensus",
+      "value": "PP3 (supporting)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.functional_result",
+      "value": "PS3 (strong) functional criterion applied during ACMG classification; no functional assay performed in this study",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.evidence_strength_tier",
+      "value": "PS3 (strong) applied in ACMG-AMP/ClinGen classification",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.declared_disease_mechanism",
+      "value": "loss of function (LoF); MeCP2 functions as transcriptional repressor",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.molecular_consequence",
+      "value": "protein truncation (nonsense, premature stop at codon 180)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "MeCP2 (methyl-CpG-binding protein 2) acts as a transcriptional repressor by selectively binding CpG dinucleotides in the genome; encompasses a highly conserved 85 amino acid methyl-binding domain (MBD) and a 104 amino acid transcription repression domain (TRD)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "known pathogenic, nonsense variant (SCV001447189.1)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.authority_classification",
+      "value": "Pathogenic per ACMG-AMP classification system and ClinGen framework (criteria: PVS1 very strong, PP5 very strong, PS3 strong, PM2 moderate, PP3 supporting)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.known_pathogenic_variant_reference",
+      "value": "SCV001447189.1; variant first identified in 1999 in multiple females with classical Rett syndrome; previously reported in multiple Rett syndrome patients",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
     }
   ],
   "expected_standardization": {
@@ -122,24 +517,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "B.disease_diagnosis",
-      "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.null_variant_detail",
+      "A.protein_effect",
+      "A.same_amino_acid_known_variant",
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
+      "B.proband_status",
+      "B.case_count",
+      "B.disease_diagnosis",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
-      "B.sex",
+      "B.biochemical_markers",
+      "B.age_current_or_last_followup",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.sex",
+      "B.ancestry_or_population",
+      "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "B.healthy_adult_status"
+    ],
+    "segregation_fields": [
+      "C.inheritance_source",
+      "C.de_novo_status",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_genotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
+    ],
+    "population_fields": [
+      "D.population_database_name",
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
+    ],
+    "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
+      "F.tested_variant",
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.expert_panel_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

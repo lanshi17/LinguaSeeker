@@ -8,7 +8,7 @@
   "reviewer": null,
   "review_notes": "[cohort_study] Identifies and reports specific human MECP2 variants with HGVS-style nomenclature (c.455C>T, c.1162C>T, c.880C>T; p.P152L, p.P376S, p.R294X) in autism patients, including transmission status, within a 120-family ASD cohort; includes functional validation experiments.",
   "rejection_reason": "",
-  "generated_at": "2026-06-16T08:23:43+00:00",
+  "generated_at": "2026-06-19T04:27:33+00:00",
   "reviewed_at": null,
   "promoted_at": null,
   "llm_model": "claude-opus-4-8",

@@ -3,9 +3,9 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome (classic and atypical RTT, with some carriers presenting only mild mental retardation)",
+  "disease_label": "Rett syndrome",
   "mondo_id": "MONDO:0010726",
-  "moi": "XD",
+  "moi": "X-linked dominant",
   "source_pmid": null,
   "source_doi": null,
   "source_title": "Two new Rett syndrome families and review of the literature: expanding the knowledge of MECP2 frameshift mutations",
@@ -17,82 +17,132 @@
     {
       "hgvs_c": "c.1157_1197del41",
       "hgvs_p": "p.L386fs",
-      "variant_type": "frameshift deletion",
-      "clinical_significance": "pathogenic",
+      "hgvs_g": "",
+      "variant_type": "C-terminal frameshift deletion",
+      "clinical_significance": "disease-causing (reported as RTT-causing)",
       "exon": "exon 4",
-      "domain": "C-terminal (within the deletion-prone region, DPR)"
+      "domain": "deleted prone region (DPR)",
+      "protein_effect": "Frameshift at codon 386 and subsequent premature truncation of the MeCP2 protein five amino acids downstream",
+      "null_variant_detail": "Frameshift leading to premature truncation; loss-of-function context",
+      "protein_length_change": "Premature truncation five amino acids downstream of codon 386",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.1159_delCCinsT",
       "hgvs_p": "p.P387fs",
-      "variant_type": "frameshift (deletion-insertion)",
-      "clinical_significance": "pathogenic",
+      "hgvs_g": "",
+      "variant_type": "frameshift (delins)",
+      "clinical_significance": "disease-causing (reported as RTT-causing); novel mutation",
       "exon": "exon 4",
-      "domain": "C-terminal (within the deletion-prone region, DPR)"
+      "domain": "deleted prone region (DPR)",
+      "protein_effect": "Predicted to result in addition of 21 amino acids followed by a stop codon",
+      "null_variant_detail": "Frameshift with addition of 21 amino acids followed by stop codon",
+      "protein_length_change": "Addition of 21 amino acids followed by a stop codon",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.215delC",
       "hgvs_p": "",
+      "hgvs_g": "",
       "variant_type": "frameshift (single-nucleotide deletion)",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "Single cytosine deletion",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.32_50delins11",
       "hgvs_p": "",
+      "hgvs_g": "",
       "variant_type": "frameshift (small intragenic rearrangement)",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.766_779dup14",
       "hgvs_p": "",
-      "variant_type": "frameshift (small intragenic rearrangement/duplication)",
-      "clinical_significance": "pathogenic",
+      "hgvs_g": "",
+      "variant_type": "frameshift (duplication / small intragenic rearrangement)",
+      "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.808delC",
       "hgvs_p": "",
+      "hgvs_g": "",
       "variant_type": "frameshift (single-nucleotide deletion)",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "Single cytosine deletion",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.1150_1187del38",
       "hgvs_p": "",
-      "variant_type": "frameshift (C-terminal deletion)",
-      "clinical_significance": "pathogenic",
-      "exon": "exon 4",
-      "domain": "C-terminal (DPR)"
+      "hgvs_g": "",
+      "variant_type": "C-terminal frameshift deletion",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.1156_1199del44",
       "hgvs_p": "",
-      "variant_type": "frameshift (C-terminal deletion)",
-      "clinical_significance": "pathogenic",
-      "exon": "exon 4",
-      "domain": "C-terminal (DPR)"
+      "hgvs_g": "",
+      "variant_type": "C-terminal frameshift deletion",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.1164_1204del44",
       "hgvs_p": "",
-      "variant_type": "frameshift (C-terminal deletion)",
-      "clinical_significance": "pathogenic",
-      "exon": "exon 4",
-      "domain": "C-terminal (DPR)"
+      "hgvs_g": "",
+      "variant_type": "C-terminal frameshift deletion",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.1168_1196del29",
       "hgvs_p": "",
-      "variant_type": "frameshift (C-terminal deletion)",
-      "clinical_significance": "pathogenic",
-      "exon": "exon 4",
-      "domain": "C-terminal (DPR)"
+      "hgvs_g": "",
+      "variant_type": "C-terminal frameshift deletion",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -104,29 +154,36 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome (classic and atypical RTT, with some carriers presenting only mild mental retardation)",
+      "field_id": "A.gene_aliases",
+      "value": "methyl-CpG-binding protein 2",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.gene_disease_relationship",
-      "value": "causative",
+      "value": "Loss-of-function mutations in MECP2 cause Rett syndrome, an X-linked dominant neurodevelopmental disorder; first reported in 1999",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "XD",
+      "field_id": "A.transcript_id",
+      "value": "NM_004992.3",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.reference_sequence",
+      "value": "NCBI Reference Sequence NM_004992.3",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.variant_hgvs_c",
-      "value": "c.1157_1197del41",
+      "value": "c.1157_1197del41; c.1159_delCCinsT; c.215delC; c.32_50delins11; c.766_779dup14; c.808delC; c.1150_1187del38; c.1156_1199del44; c.1164_1204del44; c.1168_1196del29",
       "candidates": [
         "c.1157_1197del41",
         "c.1159_delCCinsT",
@@ -144,7 +201,7 @@
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.L386fs",
+      "value": "p.L386fs; p.P387fs",
       "candidates": [
         "p.L386fs",
         "p.P387fs"
@@ -154,70 +211,287 @@
     },
     {
       "field_id": "A.variant_type",
-      "value": "frameshift deletion",
+      "value": "Frameshift mutations (C-terminal frameshift deletions, single-nucleotide deletions/insertions, small intragenic rearrangements)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "C-terminal frameshift mutations within the deleted prone region (DPR) leading to premature truncation; loss-of-function mutations",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "Family A (c.1157_1197del41): frameshift at codon 386 and premature truncation five amino acids downstream; Family B (c.1159_delCCinsT): addition of 21 amino acids followed by a stop codon",
       "candidates": [
-        "frameshift deletion",
-        "frameshift (deletion-insertion)",
-        "frameshift (single-nucleotide deletion)",
-        "frameshift (small intragenic rearrangement)",
-        "frameshift (small intragenic rearrangement/duplication)",
-        "frameshift (single-nucleotide deletion)",
-        "frameshift (C-terminal deletion)",
-        "frameshift (C-terminal deletion)",
-        "frameshift (C-terminal deletion)",
-        "frameshift (C-terminal deletion)"
+        "Family A (c.1157_1197del41): frameshift at codon 386 and premature truncation five amino acids downstream",
+        "Family B (c.1159_delCCinsT): addition of 21 amino acids followed by a stop codon"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "C-terminal (within the deletion-prone region, DPR)",
+      "value": "Deleted prone region (DPR) of exon 4 (C-terminal); small C-terminal deletions account for 10% of RTT cases",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_length_change",
+      "value": "Family A: premature truncation five amino acids downstream of codon 386; Family B: addition of 21 amino acids followed by a stop codon",
       "candidates": [
-        "C-terminal (within the deletion-prone region, DPR)",
-        "C-terminal (within the deletion-prone region, DPR)",
-        "C-terminal (DPR)",
-        "C-terminal (DPR)",
-        "C-terminal (DPR)",
-        "C-terminal (DPR)"
+        "Family A: premature truncation five amino acids downstream of codon 386",
+        "Family B: addition of 21 amino acids followed by a stop codon"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "B.hpo_terms",
-      "value": "HP:0001250; HP:0001249; HP:0001263; HP:0002376; HP:0002072; HP:0000252; HP:0002650; HP:0001251; HP:0001252; HP:0012759; HP:0003763; HP:0002194; HP:0001344; HP:0004322",
+      "field_id": "A.variant_consequence_class",
+      "value": "Predicted null / loss-of-function variants",
       "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "Affected probands within two unrelated RTT families (Family A: mother and two daughters; Family B: mother and four children)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "Two new families described (three and four individuals respectively); additional 24 presumably sporadic RTT patients in parental origin study, of which 9 informative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome (classical RTT, atypical RTT, and mild mental retardation across mutation carriers)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "Large intrafamilial clinical variability ranging from classic RTT to mild mental retardation",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001250; HP:0002072; HP:0002376; HP:0000252; HP:0002650; HP:0001252; HP:0001251; HP:0003763; HP:0012759; HP:0001344; HP:0001249; HP:0002194",
+      "candidates": [
+        "HP:0001250",
+        "HP:0002072",
+        "HP:0002376",
+        "HP:0000252",
+        "HP:0002650",
+        "HP:0001252",
+        "HP:0001251",
+        "HP:0003763",
+        "HP:0012759",
+        "HP:0001344",
+        "HP:0001249",
+        "HP:0002194"
+      ],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "epileptic seizures / epilepsy; mild to moderate mental retardation / cognitive impairment; developmental delay; developmental regression; stereotypic hand movements / hand-wringing; hand dyspraxia; microcephaly / head circumference below percentiles; kyphosis and scoliosis; ataxia (truncal and fine motor); generalized hypotonia; forced breathing / respiratory irregularities; teeth grinding (bruxism); delayed motor development; absent or limited speech; growth retardation; delayed nociception",
+      "value": "Cognitive impairment/mental retardation, stereotypic/ritual hand movements, hand dyspraxia, developmental regression, microcephaly/growth retardation, kyphosis and scoliosis, hypotonia, truncal and fine motor ataxia, teeth grinding (bruxism), forced/irregular breathing, epileptic seizures, absent or limited speech, delayed motor development",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.sex",
-      "value": "Predominantly female; one affected male (Family B, II:4)",
+      "field_id": "B.biochemical_markers",
+      "value": "Patient II:4 (Family B): metabolic investigations of organic acids, amino acidopathies and lysosomal disorders, and lactate and pyruvate in blood and cerebrospinal fluid were normal",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "Patient II:4 (Family B) examined at age 6 years; other patients followed into adulthood/institutional living; Family A mother adult living in sheltered housing",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "Infancy to early childhood (developmental stagnation/regression noted between ~7 months and kindergarten age)",
+      "value": "Regression/stagnation variably noted (e.g., Family A II:1 during foster care after 2.5 years; II:2 regression at 20 months; Family B II:4 development stagnated at 7-8 months with delayed motor development at 12 months)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female; male",
+      "candidates": [
+        "female",
+        "male"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "X-linked dominant; familial segregation of MECP2 frameshift mutation in both families",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "A C-terminal frameshift MECP2 mutation segregates in each family and correlates with phenotype",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "Patient II:4 (Family B): normal karyotype, negative genetic test for Angelman syndrome, normal CT/MRI and metabolic investigations",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Direct sequencing of the entire coding MECP2 and flanking intronic sequences",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sequencing_method_quality",
+      "value": "Entire coding MECP2 and flanking intronic sequences sequenced; introns and 3'-UTR sequenced for SNP identification; allele-specific PCR and cloning used for parental origin determination",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.healthy_adult_status",
+      "value": "Carrier mothers are either asymptomatic or have mild mental retardation; Family A mother (I:1) IQ 45; Family B mother (I:1) IQ 50-70 living independently",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.inheritance_source",
+      "value": "Familial segregation of C-terminal frameshift mutation in Families A and B; de novo origin investigated in 9 sporadic frameshift cases",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "Inherited / familial — the C-terminal frameshift mutations segregate from carrier mothers in both families (Table 1 lists separate de novo frameshift cases, mostly of paternal origin)",
+      "value": "Families A and B: inherited/segregating maternal mutation; parental origin study: 7/9 de novo frameshift mutations of paternal origin, 2/9 of maternal origin",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.parentage_confirmed",
+      "value": "Parental origin determined by genotyping respective intronic SNPs in the parents",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_genotype",
+      "value": "Family A mother (I:1) is a carrier with skewed XCI; Family B mother (I:1) is an obligate carrier with random XCI",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_phenotype",
+      "value": "Family A mother (I:1): cognitively impaired, IQ 45, subtle Rett-like symptoms, does not meet RTT criteria; Family B mother (I:1): mild cognitive impairment (IQ 50-70), forced breathing, does not meet RTT criteria",
+      "candidates": [
+        "Family A mother (I:1): cognitively impaired, IQ 45, subtle Rett-like symptoms, does not meet RTT criteria",
+        "Family B mother (I:1): mild cognitive impairment (IQ 50-70), forced breathing, does not meet RTT criteria"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_phenotype",
+      "value": "Family A: husband of I:1 had an IQ of 70; Family B: neither of mother's husbands had neurological handicaps or MR",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.obligate_carriers",
+      "value": "Family B mother (I:1) is an obligate carrier (affected children from two different fathers)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "D.population_database_name",
+      "value": "RettBASE (http://mecp2.chw.edu.au)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.absent_or_rare_statement",
+      "value": "c.1159_delCCinsT (Family B) is a novel MECP2 frameshift mutation",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.healthy_carrier_observation",
+      "value": "Carrier mothers may be asymptomatic; existence of RTT families with affected females explained by germline mosaicism or skewed XCI in carrier mothers",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "F.declared_disease_mechanism",
+      "value": "Loss-of-function (first loss-of-function mutations in MECP2 reported in RTT)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.molecular_consequence",
+      "value": "Protein truncation due to C-terminal frameshift mutations within the DPR",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "MECP2 encodes methyl-CpG-binding protein 2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.functional_alteration_patient_cells",
+      "value": "Skewed X chromosome inactivation patterns (AR assay) in carriers correlate with their geno-/phenotypes (Family A I:1 12:88 skewed; Family B II:3 20:80 skewed)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.known_pathogenic_variant_reference",
+      "value": "More than 200 different MECP2 mutations identified (RettBASE); about 70% of RTT cases have one of eight recurrent C>T transitions; C-terminal deletions account for 10% of cases",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
     }
   ],
   "expected_standardization": {
@@ -226,24 +500,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "B.disease_diagnosis",
-      "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.null_variant_detail",
+      "A.protein_effect",
+      "A.same_amino_acid_known_variant",
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
+      "B.proband_status",
+      "B.case_count",
+      "B.disease_diagnosis",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
-      "B.sex",
+      "B.biochemical_markers",
+      "B.age_current_or_last_followup",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.sex",
+      "B.ancestry_or_population",
+      "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "B.healthy_adult_status"
+    ],
+    "segregation_fields": [
+      "C.inheritance_source",
+      "C.de_novo_status",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_genotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
+    ],
+    "population_fields": [
+      "D.population_database_name",
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
+    ],
+    "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
+      "F.tested_variant",
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.expert_panel_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

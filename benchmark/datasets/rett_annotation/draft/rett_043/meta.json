@@ -8,7 +8,7 @@
   "reviewer": null,
   "review_notes": "[other] Contains explicit human-derived mutation data (HGVS-style DNA changes and corresponding protein changes) for MECP2 across iPSC and fibroblast/lymphocyte samples; presented as a resource/data sheet describing cell line collections rather than a traditional study.",
   "rejection_reason": "",
-  "generated_at": "2026-06-16T08:28:20+00:00",
+  "generated_at": "2026-06-19T04:37:56+00:00",
   "reviewed_at": null,
   "promoted_at": null,
   "llm_model": "claude-opus-4-8",

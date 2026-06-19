@@ -8,7 +8,7 @@
   "reviewer": null,
   "review_notes": "[review] The article discusses Rett syndrome and summarizes genetic findings; it includes explicit human variants (e.g., MECP2 c.880C>T p.Arg294X; CDKL5 c.2112C>A p.Tyr704X; FOXG1 c.689G>A p.Arg230His) presented in figures and tables, indicating reported human mutations. Thus it provides variant-level information in a review format.",
   "rejection_reason": "",
-  "generated_at": "2026-06-16T08:29:32+00:00",
+  "generated_at": "2026-06-19T04:40:29+00:00",
   "reviewed_at": null,
   "promoted_at": null,
   "llm_model": "claude-opus-4-8",

@@ -1,91 +1,150 @@
 # Benchmark: Literature Acquisition
 
-> Multilingual literature download benchmark for the CrossEvidence online acquisition pipeline. Evaluates provider coverage, download success rates, and literature type classification across 7-12 languages.
+> **Status: DEPRECATED SHIM.** This package (`benchmark/literature_acquisition/`) contains only
+> backward-compatible import shims after the 2026-06-18 framework refactor.
+> All runner code now lives in `benchmark.runners.*`. The shims will be removed
+> in Phase 6 of the refactor.
 
-## Files
+Multilingual literature download benchmark for the CrossEvidence online acquisition pipeline. Evaluates provider coverage, download success rates, and literature type classification across 7 languages.
+
+## New Module Locations
+
+| Old path | New path | Purpose |
+|----------|----------|---------|
+| `benchmark.literature_acquisition.benchmark` | `benchmark.runners.literature_acquisition` | General cancer/genomics benchmark |
+| `benchmark.literature_acquisition.rett_download` | `benchmark.runners.literature_rett` | Disease-specific (Rett/MECP2) benchmark |
+
+## Current Files
 
 | File | Description |
 |------|-------------|
-| `benchmark.py` | General cancer/genomics benchmark -- 7 languages, 20 queries each, download + analyze |
-| `rett_download.py` | Disease-specific (Rett/MECP2) benchmark -- 12 languages, config-driven queries |
-| `rett_config.json` | Rett config v2: 12 languages, `candidate_limit: 10` |
-| `rett_config_02.json` | Rett config v4: expanded queries, `candidate_limit: 20`, year range 2005-2026 |
+| `__init__.py` | Deprecated shim with `__getattr__` redirect to `benchmark.runners.*` |
 | `downloads/` | Downloaded PDFs (per-language subdirs) + report JSONs |
-| `log/` | Rotating log files (`benchmark.log`, `rett_download.log`) |
+
+## New Runner Files
+
+The actual runner code now lives under `benchmark/runners/`:
+
+| File | Description |
+|------|-------------|
+| `benchmark/runners/literature_acquisition.py` | General cancer/genomics benchmark -- 7 languages, query-driven, download + analyze + multilingual |
+| `benchmark/runners/literature_rett.py` | Disease-specific (Rett/MECP2) benchmark -- config-driven queries, cleanup, rename, multilingual |
+| `benchmark/runners/downloads/` | Downloaded PDFs (per-language subdirs) + report JSONs |
+| `benchmark/runners/log/` | Rotating log files |
 
 ## Quick Start
 
 ```bash
 cd backend
 
-# General benchmark: download 20 PDFs per language (7 languages)
-uv run python ../benchmark/literature_acquisition/benchmark.py download
+# General benchmark: download PDFs per language (7 languages)
+uv run python -m benchmark.runners.literature_acquisition download
 
 # Single language
-uv run python ../benchmark/literature_acquisition/benchmark.py download --lang zh
+uv run python -m benchmark.runners.literature_acquisition download --lang zh
 
 # Analyze results
-uv run python ../benchmark/literature_acquisition/benchmark.py analyze
-uv run python ../benchmark/literature_acquisition/benchmark.py analyze --llm-classify
+uv run python -m benchmark.runners.literature_acquisition analyze
+uv run python -m benchmark.runners.literature_acquisition analyze --llm-classify
 
-# Rett syndrome / MECP2 (12 languages, config-driven)
-uv run python ../benchmark/literature_acquisition/rett_download.py download --config rett_config_02.json
+# Multilingual acquisition workflow (seed queries -> 6 languages)
+uv run python -m benchmark.runners.literature_acquisition multilingual --query "BRCA1 breast cancer"
 
-# Dry run
-uv run python ../benchmark/literature_acquisition/rett_download.py download --config rett_config_02.json --dry-run
+# Rett syndrome / MECP2 (config-driven)
+uv run python -m benchmark.runners.literature_rett download --config rett_config_02.json
 
-# Cleanup + rename
-uv run python ../benchmark/literature_acquisition/rett_download.py cleanup --dry-run
-uv run python ../benchmark/literature_acquisition/rett_download.py rename --dry-run
+# Rett: seed query file generation
+uv run python -m benchmark.runners.literature_rett seed-queries
+
+# Rett: dry run (search only)
+uv run python -m benchmark.runners.literature_rett download --config rett_config_02.json --dry-run
+
+# Rett: cleanup + rename
+uv run python -m benchmark.runners.literature_rett cleanup --dry-run
+uv run python -m benchmark.runners.literature_rett rename --dry-run
+
+# Rett: multilingual benchmark
+uv run python -m benchmark.runners.literature_rett multilingual --query "Rett syndrome MECP2"
 ```
 
 ## Architecture
 
-Both scripts delegate acquisition logic to `online_acquisition_workflow` from the backend's online acquisition module. The benchmark layer handles iteration, statistics, analysis, and post-processing.
+Both runners delegate acquisition logic to `online_acquisition_workflow` or `multilingual_acquisition_workflow` from the backend's online acquisition module. The benchmark layer handles iteration, statistics, analysis, and post-processing.
 
 ```
-benchmark.py                          rett_download.py
-  |-- cmd_download()                    |-- cmd_download() / cmd_cleanup() / cmd_rename()
-  |     +-- Multi-provider search       |     +-- Config-driven per-language search
-  |     +-- Download PDFs               |     +-- Download PDFs (relevance_gate=False)
-  |-- cmd_analyze()                     |-- cmd_analyze()
-        +-- SHA256 dedup                     +-- Per-source / per-query stats
-        +-- Validation                       +-- Literature type distribution
-        +-- Language x Type breakdown
-        +-- LLM domain classification (optional)
+benchmark.runners.literature_acquisition     benchmark.runners.literature_rett
+  |-- cmd_download()                           |-- cmd_seed_queries()
+  |     +-- Multi-provider search              |-- cmd_download() / cmd_cleanup() / cmd_rename()
+  |     +-- Download PDFs                      |     +-- Config-driven per-language search
+  |-- cmd_analyze()                            |     +-- Download PDFs (relevance_gate=False)
+  |     +-- SHA256 dedup                       |-- cmd_analyze()
+  |     +-- Validation                         |     +-- Per-source / per-query stats
+  |     +-- Language x Type breakdown          |     +-- Literature type distribution
+  |     +-- LLM domain classification          |-- cmd_multilingual()
+  |-- cmd_multilingual()                             +-- multilingual_acquisition_workflow
+        +-- multilingual_acquisition_workflow
 ```
 
 ## CLI Reference
 
-### benchmark.py
+### benchmark.runners.literature_acquisition
 
 ```
-benchmark.py download [--lang LANG]
+download [--lang LANG]
     Download literature across languages.
     --lang    Filter to a single language code (zh, ja, en, ...)
 
-benchmark.py analyze [PATH] [--llm-classify] [--llm-max-pages N] [--llm-max-chars N] [--llm-timeout N] [--llm-force]
+analyze [PATH] [--llm-classify] [--llm-max-pages N] [--llm-max-chars N] [--llm-timeout N] [--llm-force]
     Print analysis of a report.json file.
     --llm-classify    Run LLM medical-domain classification on downloaded PDFs
+
+multilingual [--query QUERY] [--query-file PATH] [--download-dir DIR] [--limit N] [--dry-run]
+    Run multilingual_acquisition_workflow on seed queries.
+    --query       Single seed query (English recommended)
+    --query-file  Plain text query file; one seed query per line
+    --limit       Per-request candidate limit across all 6 languages (default: 12)
+    --dry-run     Search only, do not download files
 ```
 
-### rett_download.py
+### benchmark.runners.literature_rett
 
 ```
-rett_download.py download [--config PATH] [--dry-run]
+seed-queries [--force]
+    Generate seed query file from Rett syndrome keyword bank.
+    --force   Overwrite existing query file
+
+download [--config PATH] [--query-file PATH] [--download-dir DIR] [--dry-run]
     Run Rett syndrome literature download benchmark.
-    --config    JSON config file (default: rett_config.json)
-    --dry-run   Search only, write candidates to JSONL
+    --config      JSON config file
+    --query-file  Plain text query file (alternative to config)
+    --dry-run     Search only, write candidates to JSONL
 
-rett_download.py analyze [PATH]
+analyze [PATH] [--llm-classify]
     Print analysis of a Rett benchmark report.
 
-rett_download.py cleanup [--download-dir DIR] [--dry-run] [--concurrency N]
+cleanup [--download-dir DIR] [--dry-run] [--concurrency N]
     LLM-based relevance check; delete irrelevant PDFs.
 
-rett_download.py rename [--download-dir DIR] [--dry-run] [--concurrency N]
+rename [--download-dir DIR] [--dry-run] [--concurrency N]
     Rename PDFs using LLM-extracted English titles.
+
+multilingual [--query QUERY] [--query-file PATH] [--download-dir DIR] [--limit N] [--dry-run]
+    Multilingual benchmark -- drives multilingual_acquisition_workflow.
 ```
+
+## Language Coverage
+
+The general benchmark covers 7 languages with native-language queries:
+
+| Language | Query categories |
+|----------|-----------------|
+| zh (Chinese) | Cohort studies, functional experiments, genetics/cancer, techniques, hereditary cancer families |
+| ja (Japanese) | Cohort studies, functional experiments, genetics/cancer, techniques, hereditary cancer families |
+| ko (Korean) | Cohort studies, functional experiments, genetics/cancer, techniques, hereditary cancer families |
+| en (English) | Cohort studies, functional experiments, genetics/cancer, techniques, hereditary cancer families |
+| es (Spanish) | Cohort studies, functional experiments, genetics/cancer, techniques, hereditary cancer families |
+| pt (Portuguese) | Cohort studies, functional experiments, genetics/cancer, techniques, hereditary cancer families |
+| ru (Russian) | Cohort studies, functional experiments, genetics/cancer, techniques, hereditary cancer families |
 
 ## Provider Coverage
 
@@ -99,7 +158,7 @@ rett_download.py rename [--download-dir DIR] [--dry-run] [--concurrency N]
 
 ## Analysis Output
 
-`benchmark.py analyze` produces: overview stats, SHA256 dedup validation, by-language breakdown, language x type cross-tab, by-method provider distribution, optional LLM domain classification, file size and download time distributions, failure analysis, and per-language detail.
+`analyze` produces: overview stats, SHA256 dedup validation, by-language breakdown, language x type cross-tab, by-method provider distribution, optional LLM domain classification, file size and download time distributions, failure analysis, and per-language detail.
 
 ## Dependencies
 

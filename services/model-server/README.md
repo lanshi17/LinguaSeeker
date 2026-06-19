@@ -26,14 +26,17 @@ Set `DOC_PARSE_MODEL_ID=opendatalab/MinerU2.5-Pro-2604-1.2B` in `.env.local` to 
 ```
 app/
 ├── __init__.py
+├── auth.py             # API key authentication middleware
 ├── config.py           # Settings via pydantic-settings (layered YAML + env vars)
 ├── api/
 │   ├── health.py       # GET /health — model readiness per service
 │   ├── embedding.py    # POST /v1/embeddings — text to vector
 │   ├── rerank.py       # POST /v1/rerank — query-document relevance scoring
+│   ├── file_parse.py   # POST /v1/parse/file — file-based document extraction
 │   └── vlm.py          # POST /v1/chat/completions — multimodal document extraction
 ├── domain/
 │   ├── base.py         # ABC BaseModelService (lazy loading + unload lifecycle)
+│   ├── doc_parse.py    # DocumentParseService (file-based MinerU extraction)
 │   ├── embedding.py    # EmbeddingService (Qwen3-Embedding-0.6B via vllm)
 │   ├── rerank.py       # RerankService (bge-reranker-v2-m3 via vllm)
 │   └── vlm.py          # VLMService (MinerU2.5-Pro via vllm)

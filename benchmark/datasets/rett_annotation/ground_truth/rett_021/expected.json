@@ -5,7 +5,7 @@
   "hgnc_id": "HGNC:6992",
   "disease_label": "Rett syndrome",
   "mondo_id": "MONDO:0010726",
-  "moi": "XD",
+  "moi": "X-linked; MECP2 variants in sporadic RTT mostly de novo and of paternal origin",
   "source_pmid": null,
   "source_doi": null,
   "source_title": "MECP2 germline mosaicism plays an important part in the inheritance of Rett syndrome: a study of MECP2 germline mosaicism in males",
@@ -19,10 +19,10 @@
       "hgvs_p": "p.(R106W)",
       "hgvs_g": "",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "MECP2 hotspot pathogenic mutation",
       "exon": "",
-      "domain": "MBD",
-      "protein_effect": "",
+      "domain": "MECP2 hotspot",
+      "protein_effect": "missense substitution (Arg106Trp)",
       "null_variant_detail": "",
       "protein_length_change": "",
       "same_amino_acid_known_variant": ""
@@ -32,10 +32,10 @@
       "hgvs_p": "p.(R133C)",
       "hgvs_g": "",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "MECP2 hotspot pathogenic mutation",
       "exon": "",
-      "domain": "MBD",
-      "protein_effect": "",
+      "domain": "MECP2 hotspot",
+      "protein_effect": "missense substitution (Arg133Cys)",
       "null_variant_detail": "",
       "protein_length_change": "",
       "same_amino_acid_known_variant": ""
@@ -45,10 +45,10 @@
       "hgvs_p": "p.(P152R)",
       "hgvs_g": "",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "MECP2 hotspot pathogenic mutation",
       "exon": "",
-      "domain": "MBD",
-      "protein_effect": "",
+      "domain": "MECP2 hotspot",
+      "protein_effect": "missense substitution (Pro152Arg)",
       "null_variant_detail": "",
       "protein_length_change": "",
       "same_amino_acid_known_variant": ""
@@ -58,10 +58,10 @@
       "hgvs_p": "p.(T158M)",
       "hgvs_g": "",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "MECP2 hotspot pathogenic mutation; most common MECP2 mutation reported in RettBASE",
       "exon": "",
-      "domain": "MBD",
-      "protein_effect": "",
+      "domain": "MECP2 hotspot",
+      "protein_effect": "missense substitution (Thr158Met)",
       "null_variant_detail": "",
       "protein_length_change": "",
       "same_amino_acid_known_variant": ""
@@ -71,12 +71,12 @@
       "hgvs_p": "p.(R168*)",
       "hgvs_g": "",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "MECP2 hotspot pathogenic mutation",
       "exon": "",
-      "domain": "",
-      "protein_effect": "loss of function",
-      "null_variant_detail": "premature stop codon",
-      "protein_length_change": "truncated at position 168",
+      "domain": "MECP2 hotspot",
+      "protein_effect": "premature stop codon (Arg168Ter)",
+      "null_variant_detail": "nonsense variant predicted to truncate protein",
+      "protein_length_change": "truncation at residue 168",
       "same_amino_acid_known_variant": ""
     },
     {
@@ -84,25 +84,25 @@
       "hgvs_p": "p.(R255*)",
       "hgvs_g": "",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "MECP2 hotspot pathogenic mutation",
       "exon": "",
-      "domain": "TRD",
-      "protein_effect": "loss of function",
-      "null_variant_detail": "premature stop codon",
-      "protein_length_change": "truncated at position 255",
+      "domain": "MECP2 hotspot",
+      "protein_effect": "premature stop codon (Arg255Ter)",
+      "null_variant_detail": "nonsense variant predicted to truncate protein",
+      "protein_length_change": "truncation at residue 255",
       "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.806delG",
       "hgvs_p": "p.(G269Afs*20)",
       "hgvs_g": "",
-      "variant_type": "frameshift",
-      "clinical_significance": "pathogenic",
+      "variant_type": "frameshift (deletion)",
+      "clinical_significance": "MECP2 hotspot pathogenic mutation",
       "exon": "",
-      "domain": "TRD",
-      "protein_effect": "loss of function",
-      "null_variant_detail": "frameshift leading to premature termination",
-      "protein_length_change": "frameshift from position 269 with truncation after 20 residues",
+      "domain": "MECP2 hotspot",
+      "protein_effect": "frameshift (Gly269AlafsTer20); also denoted p.G269fs",
+      "null_variant_detail": "frameshift deletion predicted to truncate protein",
+      "protein_length_change": "frameshift with new stop after 20 residues",
       "same_amino_acid_known_variant": ""
     },
     {
@@ -110,12 +110,12 @@
       "hgvs_p": "p.(R270*)",
       "hgvs_g": "",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "MECP2 hotspot pathogenic mutation",
       "exon": "",
-      "domain": "TRD",
-      "protein_effect": "loss of function",
-      "null_variant_detail": "premature stop codon",
-      "protein_length_change": "truncated at position 270",
+      "domain": "MECP2 hotspot",
+      "protein_effect": "premature stop codon (Arg270Ter)",
+      "null_variant_detail": "nonsense variant predicted to truncate protein",
+      "protein_length_change": "truncation at residue 270",
       "same_amino_acid_known_variant": ""
     },
     {
@@ -123,12 +123,12 @@
       "hgvs_p": "p.(R294*)",
       "hgvs_g": "",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "MECP2 hotspot pathogenic mutation",
       "exon": "",
-      "domain": "TRD",
-      "protein_effect": "loss of function",
-      "null_variant_detail": "premature stop codon",
-      "protein_length_change": "truncated at position 294",
+      "domain": "MECP2 hotspot",
+      "protein_effect": "premature stop codon (Arg294Ter)",
+      "null_variant_detail": "nonsense variant predicted to truncate protein",
+      "protein_length_change": "truncation at residue 294",
       "same_amino_acid_known_variant": ""
     },
     {
@@ -136,10 +136,10 @@
       "hgvs_p": "p.(R306C)",
       "hgvs_g": "",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "MECP2 hotspot pathogenic mutation",
       "exon": "",
-      "domain": "TRD",
-      "protein_effect": "",
+      "domain": "MECP2 hotspot",
+      "protein_effect": "missense substitution (Arg306Cys)",
       "null_variant_detail": "",
       "protein_length_change": "",
       "same_amino_acid_known_variant": ""
@@ -154,29 +154,36 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome",
+      "field_id": "A.gene_aliases",
+      "value": "MeCP2 (Methyl-CpG-binding protein 2)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.gene_disease_relationship",
-      "value": "causative",
+      "value": "RTT is a neurodevelopmental disorder mainly caused by MECP2 variants; MECP2 mutations account for about 95% of RTT patients",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "XD",
+      "field_id": "A.transcript_id",
+      "value": "NM_004992.3",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.reference_sequence",
+      "value": "Reference cDNA: NM_004992.3; Reference amino acid sequence: NP_004983.1",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.variant_hgvs_c",
-      "value": "c.316C>T",
+      "value": "c.316C>T; c.397C>T; c.455C>G; c.473C>T; c.502C>T; c.763C>T; c.806delG; c.808C>T; c.880C>T; c.916C>T",
       "candidates": [
         "c.316C>T",
         "c.397C>T",
@@ -194,7 +201,7 @@
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.(R106W)",
+      "value": "p.(R106W); p.(R133C); p.(P152R); p.(T158M); p.(R168*); p.(R255*); p.(G269Afs*20); p.(R270*); p.(R294*); p.(R306C)",
       "candidates": [
         "p.(R106W)",
         "p.(R133C)",
@@ -211,233 +218,310 @@
       "evaluation_type": "precision_only"
     },
     {
+      "field_id": "A.variant_legacy_name",
+      "value": "R106W; R133C; P152R; T158M; R168*; R255*; G269fs; R270*; R294*; R306C",
+      "candidates": [
+        "R106W",
+        "R133C",
+        "P152R",
+        "T158M",
+        "R168*",
+        "R255*",
+        "G269fs",
+        "R270*",
+        "R294*",
+        "R306C"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
       "field_id": "A.variant_type",
-      "value": "missense",
+      "value": "missense; nonsense; frameshift (deletion)",
       "candidates": [
         "missense",
-        "missense",
-        "missense",
-        "missense",
         "nonsense",
-        "nonsense",
-        "frameshift",
-        "nonsense",
-        "nonsense",
-        "missense"
-      ],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
-      "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD",
-      "candidates": [
-        "MBD",
-        "MBD",
-        "MBD",
-        "MBD",
-        "other (between MBD and TRD)",
-        "TRD",
-        "TRD",
-        "TRD",
-        "TRD",
-        "TRD"
-      ],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
-      "field_id": "B.hpo_terms",
-      "value": "HP:0002072; HP:0002376; HP:0001249; HP:0001344",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.clinical_phenotypes",
-      "value": "loss of acquired purposeful hand skills; loss of acquired language skills; gait abnormalities; stereotypic hand movements; intellectual disability",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.sex",
-      "value": "female (affected RTT probands); male (germline mosaicism carriers studied)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "C.de_novo_status",
-      "value": "apparently de novo in offspring but inherited from paternal germline mosaicism",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.protein_effect",
-      "value": "premature stop codon",
-      "candidates": [
-        "premature stop codon",
-        "premature stop codon",
-        "premature stop codon",
-        "frameshift leading to truncation",
-        "premature stop codon"
+        "frameshift (deletion)"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.null_variant_detail",
-      "value": "premature stop codon",
-      "candidates": [
-        "premature stop codon",
-        "premature stop codon",
-        "premature stop codon",
-        "frameshift",
-        "premature stop codon"
-      ],
+      "value": "Hotspot panel includes nonsense (c.502C>T/R168*, c.763C>T/R255*, c.808C>T/R270*, c.880C>T/R294*) and frameshift (c.806delG/G269Afs*20) variants predicted to truncate the protein",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "Missense substitutions (R106W, R133C, P152R, T158M, R306C) and protein-truncating changes (R168*, R255*, R270*, R294*, G269Afs*20)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "Ten MECP2 hotspot mutations; c.473C>T (p.T158M) is the most common MECP2 mutation reported in RettBASE; ten hotspots account for ~65% of RTT patients with MECP2 mutations",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.protein_length_change",
-      "value": "truncated at position 168",
-      "candidates": [
-        "truncated at position 168",
-        "truncated at position 294",
-        "truncated at position 255",
-        "frameshift leading to truncation",
-        "truncated at position 270"
-      ],
+      "value": "Truncating variants (R168*, R255*, R270*, R294*, G269Afs*20) shorten the protein; G269Afs*20 introduces a new stop 20 residues downstream",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "B.case_count",
-      "value": "16",
+      "field_id": "B.proband_status",
+      "value": "Probands are RTT daughters carrying MECP2 pathogenic mutations; study subjects are their fathers and unrelated healthy adult males",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.diagnosis_sufficiency",
-      "value": "definite",
+      "field_id": "B.case_count",
+      "value": "32 RTT daughters (fathers recruited); 9 fathers found with sperm MECP2 mosaicism",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.phenotype_specificity",
-      "value": "partially_specific",
+      "value": "RTT characterized by loss of acquired purposeful hand skills, loss of acquired language skills, gait abnormalities, and stereotypic hand movements",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.testing_method",
-      "value": "micro-droplet digital PCR (mDDPCR) for MECP2 hotspot mutations",
+      "field_id": "B.hpo_terms",
+      "value": "HP:0002072; HP:0001344; HP:0001249",
+      "candidates": [
+        "HP:0002072",
+        "HP:0001344",
+        "HP:0001249"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "Loss of acquired purposeful hand skills; loss of acquired language skills; gait abnormalities; stereotypic hand movements; one of the most common causes of intellectual disability in females",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "C.paternal_phenotype",
-      "value": "Some fathers with germline MECP2 mosaicism had normal health; some showed asthenospermia",
+      "field_id": "B.sex",
+      "value": "RTT affects females almost exclusively; study subjects (fathers and healthy carriers tested) are male",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.proband_status",
-      "value": "family member",
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "De novo in most RTT cases; 94–96% of MECP2 variants in sporadic RTT are of paternal origin; paternal germline mosaicism described; X-linked (paternal germline X chromosome, X chromosome inactivation discussed)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.single_genetic_etiology_claim",
-      "value": "yes",
+      "value": "MECP2 variants are the main cause of RTT; MECP2 mutations account for about 95% of RTT patients, of which nearly 99% are de novo",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Micro-droplet digital PCR (mDDPCR) with single-molecule resolution; TaqMan genotyping assays (mutant allele VIC, wild-type allele FAM); validation qPCR on StepOne Plus; RainDrop Source droplet generator and RainDrop Sense detector; RainDrop Analyst V3 software",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.sequencing_method_quality",
-      "value": "detection limit 10^-4 alternative allele/total genomic copies; single-molecule resolution",
+      "value": "Detection limit of mDDPCR was 10^-4 alternative allele/total genomic copies; positivity required MAF >=0.01%, >=10 mutant droplets, and total genome copies >10,000; DNA from different tissues sheared separately with UV treatment to avoid contamination",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.healthy_adult_status",
-      "value": "carrier",
+      "value": "25 healthy adult males (aged 24–39) without history or family history of RTT or other genetic disorders; 7/25 (28.0%) had MECP2 germline (sperm) mosaicism (MAFs 0.05%–0.18%); none had MECP2 mosaicism in blood",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.inheritance_source",
-      "value": "paternal germline mosaicism (commonly classified as de novo)",
+      "value": "Daughters' MECP2 mutations considered 'de novo'; study indicates origin from paternal germline (sperm) mosaicism not detectable in parental blood",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "C.pedigree_available",
-      "value": "no",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "C.maternal_genotype",
-      "value": "not tested",
+      "field_id": "C.de_novo_status",
+      "value": "Mutations in RTT daughters detected in proband blood but classically considered de novo when absent in parental blood; this study shows underlying paternal sperm mosaicism",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.paternal_genotype",
-      "value": "germline (sperm) mosaicism for MECP2 hotspot mutation",
+      "value": "9/32 fathers had MECP2 mosaicism in sperm (MAF 0.05%–7.55%); only 1 father (R848F, c.806delG) also had mosaicism in blood (MAF 0.28%); remaining fathers had no blood mosaicism",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "C.in_trans_confirmation",
-      "value": "not_applicable",
+      "field_id": "C.paternal_phenotype",
+      "value": "Fathers in good health without family history of genetic disorders apart from RTT in daughters",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "D.population_database_name",
-      "value": "RettBASE",
+      "value": "RettBASE database",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.healthy_carrier_observation",
+      "value": "MECP2 germline (sperm) mosaicism found in 7/25 (28.0%) healthy adult males without RTT family history; MAFs 0.05%–0.18%; none detected in blood",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "G.study_design",
+      "value": "Comparison of MECP2 germline mosaicism between 32 fathers of RTT daughters and 25 healthy adult males without RTT family history",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "G.study_design",
-      "value": "case-control",
+      "field_id": "G.case_count",
+      "value": "32 fathers with RTT daughters",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.control_count",
+      "value": "25 healthy adult males",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "G.case_definition",
-      "value": "fathers of girls with Rett syndrome carrying MECP2 hotspot mutations versus healthy adult males without RTT family history",
+      "value": "Fathers (aged 20–45) of an RTT daughter carrying one of ten MECP2 hotspot mutations, in good health without family history of other genetic disorders",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.control_matching",
+      "value": "Healthy adult males (aged 20–45; recruited range 24–39) in good health without history of genetic disease and without family history of RTT or other inherited disorders",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.variant_count_cases",
+      "value": "9/32 (28.1%) fathers with sperm MECP2 mosaicism",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.variant_count_controls",
+      "value": "7/25 (28.0%) healthy males with sperm MECP2 mosaicism",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.confidence_interval",
+      "value": "95% confidence intervals for MAF calculated under a binomial distribution",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.p_value",
+      "value": "Age difference P=0.304; asthenospermia incidence P=0.559; correlation MAF vs age r=0.008, P=0.974",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.statistical_method",
+      "value": "IBM SPSS 22.0; Shapiro–Wilk test for normality; independent samples t-test or Mann–Whitney U test; Fisher's exact test for asthenospermia incidence; Spearman correlation for MAF vs age; significance p<0.05",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_control_negative_result",
+      "value": "No statistical difference in age (P=0.304) or incidence of asthenospermia (P=0.559) between fathers with RTT daughters and healthy adult males with MECP2 germline mosaicism; sperm MECP2 mosaicism appears random rather than specific to RTT fathers",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.detection_methodology_quality",
+      "value": "Same mDDPCR single-molecule method applied; ten hotspot mutations analyzed in each healthy male sperm sample, but only the daughter's specific mutation site tested in each RTT father's sperm (noted as potential experimental bias)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.bias_confounding_factors",
+      "value": "Limited sample size; RTT fathers tested only for daughter's mutation (sample offset); single sample per subject; lower MAFs below 10^-4 detection limit not excluded",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.healthy_carrier_contradiction",
+      "value": "Germline (sperm) MECP2 mosaicism of hotspot mutations found in healthy adult males without RTT family history; interpreted as random germline mosaicism in males rather than disease-causing in carriers themselves",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "I.gene_function_biochemical",
-      "value": "MeCP2 (Methyl-CpG-binding protein 2) is a multifunctional protein involved in transcriptional regulation and chromatin structure modulation, essential for neurodevelopment",
+      "value": "MeCP2 is a multifunctional protein involved in transcriptional regulation and chromatin structure modulation, essential for many cellular processes",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.disease_relevant_expression",
+      "value": "MeCP2 is essential for neurodevelopment; MeCP2 dysfunction associated with the neurodevelopmental disorder RTT",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.known_pathogenic_variant_reference",
+      "value": "Ten MECP2 hotspot pathogenic mutations referenced; c.473C>T (p.T158M) cited as most common MECP2 mutation in RettBASE database",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
     }
   ],
   "expected_standardization": {
@@ -446,86 +530,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "A.gene_disease_relationship",
-      "B.disease_diagnosis",
-      "B.mode_of_inheritance_reported",
-      "B.single_genetic_etiology_claim"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
       "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot",
-      "A.protein_effect",
       "A.null_variant_detail",
-      "A.protein_length_change",
+      "A.protein_effect",
       "A.same_amino_acid_known_variant",
-      "A.transcript_id",
-      "A.reference_sequence"
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
-      "B.case_id",
       "B.proband_status",
       "B.case_count",
-      "B.diagnosis_sufficiency",
+      "B.disease_diagnosis",
       "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
       "B.biochemical_markers",
-      "B.sex",
-      "B.age_of_onset",
       "B.age_current_or_last_followup",
+      "B.age_of_onset",
+      "B.sex",
       "B.ancestry_or_population",
       "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
       "B.testing_method",
       "B.sequencing_method_quality",
-      "B.alternative_diagnosis_excluded",
       "B.healthy_adult_status"
     ],
     "segregation_fields": [
-      "C.de_novo_status",
       "C.inheritance_source",
-      "C.family_id",
-      "C.pedigree_available",
+      "C.de_novo_status",
       "C.parentage_confirmed",
       "C.maternal_genotype",
-      "C.paternal_genotype",
       "C.maternal_phenotype",
+      "C.paternal_genotype",
       "C.paternal_phenotype",
-      "C.obligate_carriers",
       "C.phase_status",
       "C.in_trans_confirmation",
-      "C.cis_or_trans_context"
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
     ],
     "population_fields": [
-      "D.absent_or_rare_statement",
       "D.population_database_name",
-      "D.population_subgroup"
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
     ],
     "computational_fields": [
-      "E.prediction_tools_list"
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
     ],
     "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
       "F.tested_variant",
-      "F.case_level_or_gene_level",
-      "F.mechanism_consistency"
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
     ],
     "case_control_fields": [
       "G.study_design",
-      "G.case_definition"
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
     ],
     "gene_function_fields": [
       "I.gene_function_biochemical",
-      "I.gene_function_protein_interaction"
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
     ],
     "authority_fields": [
       "J.clinvar_assertion",
+      "J.expert_panel_assertion",
       "J.authority_classification",
       "J.known_pathogenic_variant_reference",
-      "J.independent_publications_time_span"
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

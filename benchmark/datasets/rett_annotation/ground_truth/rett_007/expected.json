@@ -3,12 +3,12 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome (classic RTT) in cases 1-4; MECP2 duplication syndrome (MDS) in case 5",
+  "disease_label": "Rett syndrome (RTT); MECP2 duplication syndrome (MDS)",
   "mondo_id": "MONDO:0010726",
-  "moi": "XD",
+  "moi": "X-linked",
   "source_pmid": null,
   "source_doi": "10.13404/j.cnki.cjbhh.2023.04.008",
-  "source_title": "5 例 Rett 综合征样表型患儿的基因突变分析 (Gene mutation analysis of 5 children with Rett syndrome-like phenotype)",
+  "source_title": "5 例 Rett 综合征样表型患儿的基因突变分析 / Gene mutation analysis of 5 children with Rett syndrome-like phenotype",
   "source_journal": null,
   "source_year": "2023",
   "source_language": "zh",
@@ -18,63 +18,63 @@
       "hgvs_c": "c.509C>T",
       "hgvs_p": "p.Thr170Met",
       "hgvs_g": "",
-      "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "variant_type": "错义突变 (missense)",
+      "clinical_significance": "致病 (pathogenicity reported in literature)",
       "exon": "",
-      "domain": "MBD",
-      "protein_effect": "loss of function",
+      "domain": "",
+      "protein_effect": "missense substitution Thr170Met",
       "null_variant_detail": "",
       "protein_length_change": "",
-      "same_amino_acid_known_variant": ""
+      "same_amino_acid_known_variant": "致病性有文献报道"
     },
     {
       "hgvs_c": "c.538C>T",
       "hgvs_p": "p.Arg180Ter",
       "hgvs_g": "",
-      "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "variant_type": "无义突变 (nonsense)",
+      "clinical_significance": "致病 (pathogenicity reported in literature)",
       "exon": "",
-      "domain": "MBD",
-      "protein_effect": "loss of function",
-      "null_variant_detail": "premature stop codon",
-      "protein_length_change": "truncated at position 180",
-      "same_amino_acid_known_variant": ""
+      "domain": "",
+      "protein_effect": "premature stop / protein truncation (Arg180Ter)",
+      "null_variant_detail": "nonsense variant predicted to cause loss of MeCP2 function",
+      "protein_length_change": "truncation",
+      "same_amino_acid_known_variant": "致病性有文献报道"
     },
     {
       "hgvs_c": "c.842delG",
       "hgvs_p": "p.Gly281AlafsTer20",
       "hgvs_g": "",
-      "variant_type": "frameshift",
-      "clinical_significance": "pathogenic",
+      "variant_type": "移码突变 (frameshift)",
+      "clinical_significance": "致病 (pathogenicity reported in literature)",
       "exon": "",
       "domain": "TRD",
-      "protein_effect": "loss of function",
-      "null_variant_detail": "frameshift leading to premature stop codon",
-      "protein_length_change": "truncated at position 300 (Gly281 + 20 aa)",
-      "same_amino_acid_known_variant": ""
+      "protein_effect": "frameshift leading to truncation (Gly281AlafsTer20)",
+      "null_variant_detail": "frameshift variant predicted to cause loss of MeCP2 function",
+      "protein_length_change": "frameshift truncation",
+      "same_amino_acid_known_variant": "致病性有文献报道"
     },
     {
       "hgvs_c": "c.844delC",
       "hgvs_p": "p.Arg282GlufsTer19",
       "hgvs_g": "",
-      "variant_type": "frameshift",
-      "clinical_significance": "pathogenic",
+      "variant_type": "移码突变 (frameshift)",
+      "clinical_significance": "致病 (pathogenicity reported in literature)",
       "exon": "",
       "domain": "TRD",
-      "protein_effect": "loss of function",
-      "null_variant_detail": "frameshift leading to premature stop codon",
-      "protein_length_change": "truncated at position 300 (Arg282 + 19 aa)",
-      "same_amino_acid_known_variant": ""
+      "protein_effect": "frameshift leading to truncation (Arg282GlufsTer19)",
+      "null_variant_detail": "frameshift variant predicted to cause loss of MeCP2 function",
+      "protein_length_change": "frameshift truncation",
+      "same_amino_acid_known_variant": "致病性有文献报道"
     },
     {
       "hgvs_c": "",
       "hgvs_p": "",
-      "hgvs_g": "",
-      "variant_type": "duplication",
-      "clinical_significance": "pathogenic",
+      "hgvs_g": "Xq28duplication,0.299Mb",
+      "variant_type": "拷贝数变异/重复 (copy number duplication)",
+      "clinical_significance": "致病 (MECP2 duplication syndrome)",
       "exon": "",
       "domain": "",
-      "protein_effect": "increased MECP2 dosage",
+      "protein_effect": "MECP2 dosage increase (duplication)",
       "null_variant_detail": "",
       "protein_length_change": "",
       "same_amino_acid_known_variant": ""
@@ -89,29 +89,22 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome (classic RTT) in cases 1-4; MECP2 duplication syndrome (MDS) in case 5",
+      "field_id": "A.gene_aliases",
+      "value": "methyl-CpG-binding protein 2 (MeCP2)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.gene_disease_relationship",
-      "value": "causative",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "XD",
+      "value": "MECP2 coding-region mutations cause Rett syndrome (96% of classic RTT); MECP2 duplication on Xq28 causes MECP2 duplication syndrome (MDS)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.variant_hgvs_c",
-      "value": "c.509C>T",
+      "value": "c.509C>T; c.538C>T; c.842delG; c.844delC",
       "candidates": [
         "c.509C>T",
         "c.538C>T",
@@ -123,7 +116,7 @@
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.Thr170Met",
+      "value": "p.Thr170Met; p.Arg180Ter; p.Gly281AlafsTer20; p.Arg282GlufsTer19",
       "candidates": [
         "p.Thr170Met",
         "p.Arg180Ter",
@@ -134,295 +127,321 @@
       "evaluation_type": "precision_only"
     },
     {
+      "field_id": "A.variant_hgvs_g",
+      "value": "Xq28 duplication 0.299 Mb (case 5)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
       "field_id": "A.variant_type",
-      "value": "missense (heterozygous)",
+      "value": "错义突变 (missense); 无义突变 (nonsense); 移码突变 (frameshift); 移码突变 (frameshift); 拷贝数重复变异 (CNV duplication)",
       "candidates": [
-        "missense (heterozygous)",
-        "nonsense (heterozygous)",
-        "frameshift (heterozygous)",
-        "frameshift (heterozygous)",
-        "copy number variation (Xq28 duplication, ~0.299 Mb encompassing MECP2; case 5, MDS)"
-      ],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
-      "field_id": "A.functional_domain_or_hotspot",
-      "value": "Inter-domain region (between MBD and TRD)",
-      "candidates": [
-        "Inter-domain region (between MBD and TRD)",
-        "Inter-domain region (between MBD and TRD)",
-        "TRD (aa 201-310)",
-        "TRD (aa 201-310)",
-        "Whole-gene duplication"
-      ],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
-      "field_id": "B.hpo_terms",
-      "value": "HP:0001250; HP:0001263; HP:0002072; HP:0002376; HP:0003763; HP:0001252; HP:0000756; HP:0001344; HP:0002360; HP:0002194; HP:0000252; HP:0004322",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.clinical_phenotypes",
-      "value": "loss of hand function / loss of pincer grasp (developmental regression); absent or lost speech (no purposeful vocalization); loss of motor function / delayed motor development (unable to stand or walk independently); hand stereotypies (hand-wringing, hand-mouthing, hand-patting, hand-clasping); bruxism (teeth grinding); low muscle tone / hypotonia; seizures / epilepsy (epileptiform discharges on EEG); autistic behavior (spinning, poor social interaction, autistic features); sleep disturbance (frequent night waking, disrupted sleep rhythm); microcephaly / reduced head growth (case 3 head circumference 3rd percentile); growth failure; self-injurious behavior (head hitting, arm biting); global developmental delay (developmental quotient 44.2 and 38.4); decreased pain sensitivity; delayed myelination / brain dysplasia on MRI; intellectual disability, language impairment and infantile hypotonia (MDS case)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.sex",
-      "value": "Female (all 5 cases)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.age_of_onset",
-      "value": "Development normal before 6 months; developmental regression after ~12 months of age (cases presented at 1 year 9 months to 2 years 2 months)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "C.de_novo_status",
-      "value": "de novo (no mutation detected in either parent of any case)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.protein_effect",
-      "value": "loss of function",
-      "candidates": [
-        "loss of function",
-        "loss of function",
-        "loss of function",
-        "increased dosage of MECP2"
+        "错义突变 (missense)",
+        "无义突变 (nonsense)",
+        "移码突变 (frameshift)",
+        "移码突变 (frameshift)",
+        "拷贝数重复变异 (CNV duplication)"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.null_variant_detail",
-      "value": "premature stop codon",
-      "candidates": [
-        "premature stop codon",
-        "frameshift leading to premature stop",
-        "frameshift leading to premature stop"
-      ],
+      "value": "Cases 2-4 carry nonsense and frameshift variants (p.Arg180Ter, p.Gly281AlafsTer20, p.Arg282GlufsTer19) that lead to loss of MeCP2 function",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "Missense (case 1), nonsense truncation (case 2), frameshift truncation (cases 3-4); MeCP2 loss of function for coding mutations and MECP2 dosage increase for duplication",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.same_amino_acid_known_variant",
+      "value": "致病性均有文献报道 (pathogenicity of all four coding variants reported in literature)",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.protein_length_change",
-      "value": "truncated to 180 aa",
-      "candidates": [
-        "truncated to 180 aa",
-        "truncated to 301 aa",
-        "truncated to 301 aa"
-      ],
+      "value": "Nonsense/frameshift variants (cases 2-4) cause protein truncation",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "B.single_genetic_etiology_claim",
-      "value": "no",
+      "field_id": "A.gene_truncating_mechanism_evidence",
+      "value": "MECP2 coding-region mutations cause 96% of classic RTT, leading to loss of MeCP2 function; HGMD contains 555 RTT-related MECP2 mutations",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_consequence_class",
+      "value": "Predicted null variants (nonsense/frameshift, cases 2-4); missense (case 1); duplication/dosage gain (case 5)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "5 probands (children); each is the affected proband",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.case_count",
-      "value": "5",
+      "value": "5 (4 diagnosed RTT, 1 diagnosed MDS)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.diagnosis_sufficiency",
-      "value": "definite",
+      "field_id": "B.disease_diagnosis",
+      "value": "Cases 1-4: classic Rett syndrome (RTT); Case 5: MECP2 duplication syndrome (MDS)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.phenotype_specificity",
-      "value": "partially_specific",
+      "value": "RTT-like phenotype; cases 1-4 met 2010 revised RTT diagnostic criteria for classic RTT",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.ancestry_or_population",
-      "value": "Chinese",
-      "candidates": [],
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001344; HP:0001263; HP:0002072; HP:0002376; HP:0001250; HP:0003763; HP:0002360; HP:0001252; HP:0000756",
+      "candidates": [
+        "HP:0001344",
+        "HP:0001263",
+        "HP:0002072",
+        "HP:0002376",
+        "HP:0001250",
+        "HP:0003763",
+        "HP:0002360",
+        "HP:0001252",
+        "HP:0000756"
+      ],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.testing_method",
-      "value": "whole exome sequencing and CNV detection (qPCR-SYBR Green I)",
+      "field_id": "B.clinical_phenotypes",
+      "value": "Loss of purposeful hand function, loss of language, gait/motor dysfunction, hand stereotypies (hand-wringing/clapping, hand-mouthing), developmental regression, bruxism (cases 1,3), sleep disturbance (cases 2,4), hypotonia (cases 1,5), seizures/epilepsy (case 1), self-injurious behavior (case 4 head-hitting, arm-biting), autistic features; case 5 with hypotonia, developmental delay, language impairment, autistic features",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.biochemical_markers",
-      "value": "血尿代谢筛查未见明显异常",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "C.pedigree_available",
-      "value": "no",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "C.maternal_genotype",
-      "value": "wild-type",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "C.paternal_genotype",
-      "value": "wild-type",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "C.maternal_phenotype",
-      "value": "unaffected",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "C.paternal_phenotype",
-      "value": "unaffected",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "C.in_trans_confirmation",
-      "value": "not_applicable",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.case_id",
-      "value": "Patient 1, Patient 2, Patient 3, Patient 4, Patient 5",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.proband_status",
-      "value": "proband",
+      "value": "Blood and urine metabolic screening unremarkable (cases 2,3,4,5)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_current_or_last_followup",
-      "value": "1 year 9 months to 2 years 2 months",
+      "value": "1 year 9 months to 2 years 2 months (case 1: 2y1m; case 2: 2y2m; case 3: 1y9m; case 4: 2y2m; case 5: 1y9m)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.consanguinity",
-      "value": "no",
+      "field_id": "B.age_of_onset",
+      "value": "Cases 1 and 5 developed relatively normally before 6 months; case 4 milestones slightly delayed before 1 year with regression after 1 year; overall regression following early near-normal period",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "All female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.ancestry_or_population",
+      "value": "Chinese (patients from Affiliated Hospital of Jining Medical University, Shandong, China)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "X-linked (Xq28 / MECP2)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "Single causative genetic finding identified per case (MECP2 coding mutation for cases 1-4; Xq28/MECP2 duplication for case 5)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.alternative_diagnosis_excluded",
-      "value": "yes",
+      "value": "Brain MRI normal (cases 1,2,3); blood/urine metabolic screening normal (cases 2,3,4,5)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Whole exome sequencing and copy number variation detection (qPCR-SYBR Green I dye method); performed on probands and parents",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sequencing_method_quality",
+      "value": "Whole exome sequencing performed by Beijing Chigene (康旭) Medical Laboratory; CNV by qPCR-SYBR Green I",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.inheritance_source",
-      "value": "de novo (no mutation detected in parents for all 5 cases)",
+      "value": "De novo; mutations not detected in either parent",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "C.parentage_confirmed",
-      "value": "no",
+      "field_id": "C.de_novo_status",
+      "value": "De novo (患儿父母均未检测到突变 - no mutation detected in parents)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "C.obligate_carriers",
-      "value": "none",
+      "field_id": "C.maternal_genotype",
+      "value": "No mutation detected",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "F.mechanism_consistency",
-      "value": "loss of function consistent with Rett syndrome; MECP2 duplication (increased dosage) consistent with MECP2 duplication syndrome",
+      "field_id": "C.maternal_phenotype",
+      "value": "Family history unremarkable",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "G.study_design",
-      "value": "case report",
+      "field_id": "C.paternal_genotype",
+      "value": "No mutation detected",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "G.case_definition",
-      "value": "RTT-like phenotype assessed by 2010 revised RTT diagnostic criteria combined with genetic analysis",
+      "field_id": "C.paternal_phenotype",
+      "value": "Family history unremarkable",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_without_parentage_confirmation",
+      "value": "Both parents tested negative for the variants, but paternity/maternity not explicitly confirmed in the article",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "D.absent_or_rare_statement",
+      "value": "RTT is a rare disorder with incidence about 1/100,000",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.healthy_carrier_observation",
+      "value": "Females carrying MECP2 duplication are often unaffected or only mildly affected due to highly skewed X-inactivation preferentially inactivating the duplicated X",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "F.declared_disease_mechanism",
+      "value": "Loss of function for MECP2 coding mutations (RTT); MECP2 dosage gain/duplication for MDS",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.molecular_consequence",
+      "value": "Protein truncation (nonsense/frameshift variants); missense; gene dosage increase (duplication)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.misdiagnosis_or_reclassification",
+      "value": "Case 5 presented with RTT-like overlapping features but was reclassified as MECP2 duplication syndrome (MDS) based on CNV analysis; article concludes clinical diagnosis alone may be misleading",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.alternative_causative_gene",
+      "value": "A small proportion of atypical RTT may be associated with CDKL5 or FOXG1 mutations; over 80 genes linked to RTT-like phenotypes",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.healthy_carrier_contradiction",
+      "value": "Females carrying MECP2 duplication are often unaffected or only mildly affected due to skewed X-inactivation",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "I.gene_function_biochemical",
-      "value": "MeCP2 plays an important role in maintaining neuronal maturation, activity, and plasticity; MECP2 coding region mutations lead to loss of MeCP2 function; MECP2 encodes methyl-CpG-binding protein 2, a transcriptional regulator",
+      "value": "MeCP2 plays an important role in maintaining neuronal maturation, activity, and plasticity; loss of MeCP2 function associated with RTT",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "J.authority_classification",
-      "value": "pathogenic",
+      "field_id": "I.gene_function_protein_interaction",
+      "value": "MECP2 considered the key factor in the neurological phenotype; other genes in the Xq28 region may have mutual regulation and jointly contribute to pathogenesis",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_expression_pattern",
+      "value": "Differential expression of genes in neurons may relate to phenotypic variation",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.disease_relevant_expression",
+      "value": "MECP2 is the key dosage-sensitive gene responsible for the severe phenotype in Xq28 duplications; IRAK1 involved in cellular immunity (immunodeficiency reported in male MDS), OPN1LW/OPN1MW related to color vision and night blindness, FLNA related to intestinal pseudo-obstruction and Hirschsprung disease",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "J.known_pathogenic_variant_reference",
-      "value": "mutations reported as pathogenic in published literature; Human Gene Mutation Database lists 555 RTT-related MECP2 mutations",
+      "value": "Pathogenicity of all four MECP2 coding variants reported in literature; HGMD has identified 555 RTT-related MECP2 mutations; severe-effect mutations referenced include early truncating R168X, R255X, R270X, large deletions, R106W versus R133C, R294X, R306X and C-terminal truncations",
       "candidates": [],
       "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "J.independent_publications_time_span",
-      "value": "2010-2021",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
+      "evaluation_type": "precision_only"
     }
   ],
   "expected_standardization": {
@@ -431,86 +450,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "A.gene_disease_relationship",
-      "B.disease_diagnosis",
-      "B.mode_of_inheritance_reported",
-      "B.single_genetic_etiology_claim"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
       "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot",
-      "A.protein_effect",
       "A.null_variant_detail",
-      "A.protein_length_change",
+      "A.protein_effect",
       "A.same_amino_acid_known_variant",
-      "A.transcript_id",
-      "A.reference_sequence"
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
-      "B.case_id",
       "B.proband_status",
       "B.case_count",
-      "B.diagnosis_sufficiency",
+      "B.disease_diagnosis",
       "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
       "B.biochemical_markers",
-      "B.sex",
-      "B.age_of_onset",
       "B.age_current_or_last_followup",
+      "B.age_of_onset",
+      "B.sex",
       "B.ancestry_or_population",
       "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
       "B.testing_method",
       "B.sequencing_method_quality",
-      "B.alternative_diagnosis_excluded",
       "B.healthy_adult_status"
     ],
     "segregation_fields": [
-      "C.de_novo_status",
       "C.inheritance_source",
-      "C.family_id",
-      "C.pedigree_available",
+      "C.de_novo_status",
       "C.parentage_confirmed",
       "C.maternal_genotype",
-      "C.paternal_genotype",
       "C.maternal_phenotype",
+      "C.paternal_genotype",
       "C.paternal_phenotype",
-      "C.obligate_carriers",
       "C.phase_status",
       "C.in_trans_confirmation",
-      "C.cis_or_trans_context"
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
     ],
     "population_fields": [
-      "D.absent_or_rare_statement",
       "D.population_database_name",
-      "D.population_subgroup"
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
     ],
     "computational_fields": [
-      "E.prediction_tools_list"
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
     ],
     "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
       "F.tested_variant",
-      "F.case_level_or_gene_level",
-      "F.mechanism_consistency"
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
     ],
     "case_control_fields": [
       "G.study_design",
-      "G.case_definition"
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
     ],
     "gene_function_fields": [
       "I.gene_function_biochemical",
-      "I.gene_function_protein_interaction"
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
     ],
     "authority_fields": [
       "J.clinvar_assertion",
+      "J.expert_panel_assertion",
       "J.authority_classification",
       "J.known_pathogenic_variant_reference",
-      "J.independent_publications_time_span"
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

@@ -3,13 +3,13 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "典型 Rett 综合征 (typical Rett syndrome)",
+  "disease_label": "Rett syndrome (典型Rett综合征)",
   "mondo_id": "MONDO:0010726",
-  "moi": "XD",
+  "moi": "X-linked dominant (X连锁显性遗传)",
   "source_pmid": null,
   "source_doi": "10.11724/jdmu.2022.06.20",
-  "source_title": "Rett 综合征 1 例 (A case report of Rett syndrome)",
-  "source_journal": "大连医科大学学报 (Journal of Dalian Medical University)",
+  "source_title": "Rett综合征1例 / A case report of Rett syndrome",
+  "source_journal": null,
   "source_year": "2022",
   "source_language": "zh",
   "source_pdf_path": "",
@@ -17,10 +17,15 @@
     {
       "hgvs_c": "c.502C>T",
       "hgvs_p": "p.R168X",
-      "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "hgvs_g": "",
+      "variant_type": "无义突变 (nonsense)",
+      "clinical_significance": "致病性 (pathogenic, per ACMG)",
       "exon": "",
-      "domain": "inter-domain (between MBD and TRD)"
+      "domain": "",
+      "protein_effect": "导致氨基酸合成异常，基因功能丧失 (loss of function)",
+      "null_variant_detail": "无义突变，502号核苷酸由胞嘧啶C变为胸腺嘧啶T，导致基因功能丧失",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -32,22 +37,22 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "典型 Rett 综合征 (typical Rett syndrome)",
+      "field_id": "A.gene_aliases",
+      "value": "甲基化CpG结合蛋白2 (methyl-CpG binding protein 2)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.gene_disease_relationship",
-      "value": "causative",
+      "value": "MECP2基因突变并伴X染色体非随机失活是RTT主要致病原因；90%~95%典型RTT及75%非典型RTT患者可检测到MECP2基因突变",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "XD",
+      "field_id": "A.reference_sequence",
+      "value": "人类基因组GRCh37.p5 (hg19)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -67,53 +72,232 @@
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "A.variant_type",
-      "value": "nonsense",
+      "field_id": "A.variant_legacy_name",
+      "value": "p.R168X",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "A.functional_domain_or_hotspot",
-      "value": "inter-domain (between MBD and TRD)",
+      "field_id": "A.variant_type",
+      "value": "无义突变 (nonsense)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "无义突变，502号核苷酸C>T，导致氨基酸合成异常，基因功能丧失",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "基因功能丧失 (loss of function)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_consequence_class",
+      "value": "predicted null variant (无义突变，基因功能丧失)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "proband (患儿，先证者)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "典型Rett综合征 (typical Rett syndrome, RTT Ⅱ期)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "满足修订版诊断标准主要标准全部4条，支持标准中第(3)(4)(7)(9)(10)条；临床符合典型RTT Ⅱ期",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002072; HP:0002376; HP:0001344; HP:0001263; HP:0001249; HP:0000756; HP:0001251; HP:0012759; HP:0002360; HP:0011968; HP:0001250; HP:0004322",
-      "candidates": [],
+      "value": "HP:0002376; HP:0001344; HP:0002072; HP:0012759; HP:0002360; HP:0000756; HP:0001263; HP:0001249; HP:0001251; HP:0002194",
+      "candidates": [
+        "HP:0002376",
+        "HP:0001344",
+        "HP:0002072",
+        "HP:0012759",
+        "HP:0002360",
+        "HP:0000756",
+        "HP:0001263",
+        "HP:0001249",
+        "HP:0001251",
+        "HP:0002194"
+      ],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "丧失目的性手部技能（双手功能退化、不能定向抓握）; 手部刻板动作（拍手、掐指、绞手）; 运动、语言、认知发育倒退; 语言功能丧失; 全面发育落后于同龄儿; 认知障碍; 孤独症样行为/类孤独症倾向; 步态逐渐不稳、运动功能丧失; 清醒期间断呼吸暂停; 睡眠增多（14～15 h/d）; 吞咽困难; 脑电图癫痫样放电; 体重无增加（生长发育迟缓）; 双眼频繁上翻、眨眼; 易激惹、尖叫样抗拒; 可疑痛觉障碍; 震颤",
+      "value": "丧失目的性手部技能；丧失已获得语言功能；步态异常/运动功能障碍（步态不稳，运动倒退至不能走路）；手部刻板运动（拍手、掐指、绞手）伴震颤；清醒期间断呼吸暂停；睡眠增多(14~15h/d)；孤独症样行为/易激惹、尖叫；认知障碍；可疑痛觉障碍；吞咽困难；双眼频繁上翻、眨眼",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.sex",
-      "value": "female",
+      "field_id": "B.biochemical_markers",
+      "value": "新生儿先天性甲状腺功能低下及苯丙酮尿症筛查未见异常；新生儿期听力筛查正常",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "2岁2个月 (确诊5个月后随访)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "7个月 (约7月龄起运动、语言、认知逐渐落后)",
+      "value": "生后7个月起运动、语言、认知逐渐落后（6个月前发育正常）",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "女 (female)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.ancestry_or_population",
+      "value": "中国 (河北邯郸)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "X连锁显性遗传 (X-linked dominant)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "结合临床表现、辅助检查、基因检测诊断为典型RTT，MECP2 c.502C>T为致病变异",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "初期误诊为孤独症，后重新查体、监测EEG、WES证实为RTT；讨论中提及与BECT、PMG、PMD、脆性X综合征、Turner综合征、PKU等鉴别",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "全外显子基因检测V4（WES004，北京迈基诺）结合Sanger测序验证策略；采集患儿及父母EDTA抗凝外周血，QIAamp DNA Blood Mini Kit提取基因组DNA",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sequencing_method_quality",
+      "value": "测序在HiSeq 2000上完成，比对参照GRCh37.p5(hg19)，变异注释采用ANNOVAR软件；Sanger测序在3730XL(ABI)上完成，分析采用MutationSurveyor 4.0(SoftGenetics)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.inheritance_source",
+      "value": "de novo (新发突变)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo",
+      "value": "新发突变；患儿父母在该位点均无异常",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_genotype",
+      "value": "无变异 (患儿母亲该位点无变异)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_phenotype",
+      "value": "母亲体健，智能发育正常，孕检无异常",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_genotype",
+      "value": "无变异 (患儿父亲该位点无变异)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_phenotype",
+      "value": "父亲体健，智能发育正常",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_without_parentage_confirmation",
+      "value": "父母均检测该位点无变异，判定为新发突变，但文中未明确确认父母生物学亲缘关系",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.misdiagnosis_or_reclassification",
+      "value": "患儿1岁6个月被误诊为孤独症，后经查体、EEG监测及WES重新诊断为Rett综合征",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "MECP2为X染色体上的甲基化CpG结合蛋白2基因；其突变伴X染色体非随机失活是RTT主要致病原因",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.authority_classification",
+      "value": "根据ACMG指南，该变异为致病性突变",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
     }
   ],
   "expected_standardization": {
@@ -122,24 +306,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "B.disease_diagnosis",
-      "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.null_variant_detail",
+      "A.protein_effect",
+      "A.same_amino_acid_known_variant",
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
+      "B.proband_status",
+      "B.case_count",
+      "B.disease_diagnosis",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
-      "B.sex",
+      "B.biochemical_markers",
+      "B.age_current_or_last_followup",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.sex",
+      "B.ancestry_or_population",
+      "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "B.healthy_adult_status"
+    ],
+    "segregation_fields": [
+      "C.inheritance_source",
+      "C.de_novo_status",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_genotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
+    ],
+    "population_fields": [
+      "D.population_database_name",
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
+    ],
+    "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
+      "F.tested_variant",
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.expert_panel_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

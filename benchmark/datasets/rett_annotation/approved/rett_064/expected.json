@@ -5,7 +5,7 @@
   "hgnc_id": "HGNC:6992",
   "disease_label": "Rett syndrome",
   "mondo_id": "MONDO:0010726",
-  "moi": "XD",
+  "moi": "X-linked",
   "source_pmid": null,
   "source_doi": "10.1371/journal.pone.0068851",
   "source_title": "Abnormal Expression of Cerebrospinal Fluid Cation Chloride Cotransporters in Patients with Rett Syndrome",
@@ -16,59 +16,94 @@
   "variants": [
     {
       "hgvs_c": "",
-      "hgvs_p": "p.Y141X",
+      "hgvs_p": "p.Tyr141Ter",
+      "hgvs_g": "",
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "premature stop codon",
+      "null_variant_detail": "nonsense variant",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
-      "hgvs_p": "p.R270X",
+      "hgvs_p": "p.Arg270Ter",
+      "hgvs_g": "",
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "premature stop codon",
+      "null_variant_detail": "nonsense variant",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "c.905C>T",
-      "hgvs_p": "p.P302H",
+      "hgvs_p": "p.Pro302His",
+      "hgvs_g": "",
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "amino acid substitution",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
-      "hgvs_p": "p.R306C",
+      "hgvs_p": "p.Arg306Cys",
+      "hgvs_g": "",
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "amino acid substitution",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
-      "hgvs_p": "p.R255X",
+      "hgvs_p": "p.Arg255Ter",
+      "hgvs_g": "",
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "premature stop codon",
+      "null_variant_detail": "nonsense variant",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
-      "hgvs_p": "p.R294X",
+      "hgvs_p": "p.Arg294Ter",
+      "hgvs_g": "",
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD",
+      "protein_effect": "premature stop codon",
+      "null_variant_detail": "nonsense variant",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "",
+      "hgvs_g": "",
       "variant_type": "deletion",
       "clinical_significance": "",
-      "exon": "exons 1-2",
-      "domain": ""
+      "exon": "",
+      "domain": "",
+      "protein_effect": "deletion of exons 1-2",
+      "null_variant_detail": "exonic deletion (DEL EX.1-2)",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -80,22 +115,15 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome",
+      "field_id": "A.gene_aliases",
+      "value": "MeCP2 (methyl-CpG-binding protein 2)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.gene_disease_relationship",
-      "value": "causative",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "XD",
+      "value": "Loss-of-function mutations in the gene encoding methyl-CpG binding protein 2 (MeCP2) cause most cases of RTT",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -109,57 +137,116 @@
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.Y141X",
+      "value": "p.Tyr141Ter; p.Arg270Ter; p.Pro302His; p.Arg306Cys; p.Arg255Ter; p.Arg294Ter",
       "candidates": [
-        "p.Y141X",
-        "p.R270X",
-        "p.P302H",
-        "p.R306C",
-        "p.R255X",
-        "p.R294X"
+        "p.Tyr141Ter",
+        "p.Arg270Ter",
+        "p.Pro302His",
+        "p.Arg306Cys",
+        "p.Arg255Ter",
+        "p.Arg294Ter"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_legacy_name",
+      "value": "P.Y141X; P.R270X; P302H; P.R306C; P.R255X; DEL EX.1-2; P.R294X",
+      "candidates": [
+        "P.Y141X",
+        "P.R270X",
+        "P302H",
+        "P.R306C",
+        "P.R255X",
+        "DEL EX.1-2",
+        "P.R294X"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_type",
-      "value": "nonsense",
+      "value": "nonsense; missense; deletion",
       "candidates": [
         "nonsense",
-        "nonsense",
         "missense",
-        "missense",
-        "nonsense",
-        "nonsense",
         "deletion"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD",
-      "candidates": [
-        "MBD",
-        "TRD",
-        "TRD",
-        "TRD",
-        "TRD",
-        "TRD"
-      ],
+      "field_id": "A.null_variant_detail",
+      "value": "Loss-of-function mutations cause most cases of RTT; nonsense variants (Y141X, R270X, R255X, R294X) and exon 1-2 deletion reported",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "B.hpo_terms",
-      "value": "HP:0001250; HP:0012759; HP:0000756; HP:0001249; HP:0002376",
+      "field_id": "B.proband_status",
+      "value": "Sixteen patients with RTT recruited",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
+      "field_id": "B.case_count",
+      "value": "16",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "Patients without a documented mutation fulfilled clinical criteria for RTT according to the last updated revision",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001250; HP:0012759; HP:0000756; HP:0002376; HP:0001249",
+      "candidates": [
+        "HP:0001250",
+        "HP:0012759",
+        "HP:0000756",
+        "HP:0002376",
+        "HP:0001249"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
       "field_id": "B.clinical_phenotypes",
-      "value": "epilepsy/seizures (generalized, partial, absence, atonic, refractory, status epilepticus); respiratory anomalies (hyperventilation bursts and apneas); autistic behavior; mental retardation; motor regression / failure to acquire new skills",
+      "value": "Epilepsy (refractory/generalized/partial/absence/atonic/reflex seizures), respiratory anomalies (hyperventilation bursts, apneas), autistic behavior, motor regression, mental retardation",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.biochemical_markers",
+      "value": "Reduced CSF KCC2 levels and reduced KCC2/NKCC1 ratio in RTT patients; total CSF protein within normal limits",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "2 to 19 years at CSF collection (mean 3444.69 days)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "Normal development up to 6-18 months, then failure to acquire new skills and motor regression",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -172,15 +259,211 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.age_of_onset",
-      "value": "6-18 months",
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "X-linked",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "C.de_novo_status",
-      "value": "unknown",
+      "field_id": "B.additional_pathogenic_variant",
+      "value": "Patient 13: polymorphism in NTNG1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "MECP2 and CDKL5 genetic screening; protein levels by western blot/immunoblot",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.assay_type",
+      "value": "Immunoblot / western blot quantification of optical densities",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.assay_system",
+      "value": "Cerebrospinal fluid (CSF)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.functional_result",
+      "value": "RTT patients showed significantly reduced KCC2 levels and reduced KCC2/NKCC1 ratio compared to controls; NKCC1 not significantly different",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.quantitative_result",
+      "value": "KCC2 OD: RTT M=81383.80 (SD=82370.99) vs controls M=692663.52 (SD=425753.91), F(1,76)=12.28, p<.001; KCC2/NKCC1 ratio: RTT M=.26 (SD=.30) vs controls M=1.08 (SD=.56), F(1,70)=26.56, p<.001; NKCC1 OD: RTT M=307834.25 vs controls M=608703.27, F(1,74)=1.87, p>.05",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.replicates_or_statistics",
+      "value": "MANCOVA F(1,73)=6.99, p<.01, ηp²=.087; ANCOVA for ratio F(1,70)=30.08, p=.001, ηp²=.29; controlled for age and gender",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.patient_cell_evidence",
+      "value": "CSF samples from 16 RTT patients analyzed by immunoblot",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.functional_normal_result",
+      "value": "NKCC1 expression did not differ significantly between patients and healthy controls",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.physiologic_context",
+      "value": "Patient-derived material (CSF obtained in vivo by lumbar puncture)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.declared_disease_mechanism",
+      "value": "Loss-of-function; disturbed GABAergic neuronal maturation / inhibitory GABA dysfunction",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.study_design",
+      "value": "Comparison of CSF cotransporter protein levels between RTT patients and a control pediatric population",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_count",
+      "value": "16",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.control_count",
+      "value": "67",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_definition",
+      "value": "Patients with RTT (documented MECP2 mutation or fulfilling clinical criteria for RTT)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.control_matching",
+      "value": "Control group: 67 subjects, age range 1 day-14 years, 27 female/40 male; CSF under suspicion of meningitis/encephalitis; controls significantly younger than RTT patients; analyses controlled for age and gender",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.p_value",
+      "value": "KCC2 p<.001; KCC2/NKCC1 ratio p<.001",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.statistical_method",
+      "value": "MANCOVA, Univariate ANCOVA, Mann-Whitney U test, partial correlation; SPSS v19.0",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_control_negative_result",
+      "value": "NKCC1 expression did not differ significantly between patients and controls (F(1,74)=1.87, p>.05)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.bias_confounding_factors",
+      "value": "Controlled for age and gender (controls significantly younger than RTT patients); outliers excluded; gender controlled due to reported sexually dimorphic KCC2 expression",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "MeCP2 is a transcriptional regulatory protein; in its absence many genes show abnormal expression affecting balance between synaptic excitation and inhibition; important for GABAergic function",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_expression_pattern",
+      "value": "MeCP2 expression approximately 50% higher in GABAergic neurons compared to non-GABAergic neurons",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.disease_relevant_expression",
+      "value": "Relevance of MeCP2 for GABAergic function; reduced GABA levels and decreased GABA receptor subunit expression in RTT",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.functional_alteration_patient_cells",
+      "value": "Reduced KCC2 and KCC2/NKCC1 ratio in CSF of RTT patients; evidence of BDNF reduction in RTT humans",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.animal_model_type",
+      "value": "Mouse (Mecp2-deficient/null and conditional deletion of Mecp2 in GABAergic neurons)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.animal_model_phenotype",
+      "value": "Forepaw stereotyped movements, compulsive grooming, impaired motor coordination, learning/memory deficits, abnormal EEG hyperexcitability, severe respiratory dysrhythmias, premature lethality; reduced BDNF expression after birth",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.animal_model_genotype",
+      "value": "Conditional deletion of Mecp2 in GABAergic neurons; Mecp2 null mice",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.animal_rescue_experiment",
+      "value": "Exogenous BDNF has been shown to rescue synaptic dysfunction in Mecp2 null mice",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.rescue_result",
+      "value": "Exogenous BDNF rescues synaptic dysfunction in Mecp2 null mice (mechanism not completely understood)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -192,24 +475,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "B.disease_diagnosis",
-      "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.null_variant_detail",
+      "A.protein_effect",
+      "A.same_amino_acid_known_variant",
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
+      "B.proband_status",
+      "B.case_count",
+      "B.disease_diagnosis",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
-      "B.sex",
+      "B.biochemical_markers",
+      "B.age_current_or_last_followup",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.sex",
+      "B.ancestry_or_population",
+      "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "B.healthy_adult_status"
+    ],
+    "segregation_fields": [
+      "C.inheritance_source",
+      "C.de_novo_status",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_genotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
+    ],
+    "population_fields": [
+      "D.population_database_name",
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
+    ],
+    "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
+      "F.tested_variant",
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.expert_panel_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

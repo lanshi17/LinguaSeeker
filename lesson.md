@@ -2,6 +2,18 @@
 
 # Lesson Log
 
+
+## 2026-06-19: Rett reannotation must fail closed on empty LLM outputs
+
+**Problem**: During catalog-driven Rett reannotation, three entries were temporarily overwritten with empty `expected_evidence` after provider 429 failures caused `annotate_article()` to return the default empty `RettExpectedJson` fallback.
+
+**Investigation**: The first `claude-opus-4-8` batch report showed `rett_020`, `rett_030`, and `rett_032` with zero fields. The persisted files confirmed empty evidence for the first two entries, while the retry for `rett_032` later produced 50 fields.
+
+**Root cause**: The batch writer treated an empty fallback annotation as a successful output. This hid provider failures and allowed valid labels to be replaced by empty benchmark data.
+
+**Fix**: Added an empty-output guard in `cli/catalog_reannotate.py` so zero-field annotations return a failed row and do not write `expected.json`. Retried `rett_020` and `rett_030` with `--chunk-size 6000 --max-tokens 16384`, then revalidated all 53 entries.
+
+**Prevention**: Batch LLM annotation writers must fail closed on empty required collections before persistence. Reports should be checked for both process success and semantic non-emptiness before considering generated benchmark labels usable.
 ## 2026-06-17: Rett Layer 3 export must sanitize markdown text and test explicit dataset roots
 
 **Problem**: While introducing Rett annotations as a Layer 3 ground truth dataset, the first root-override test failed because it monkeypatched `GROUND_TRUTH_DIR` after `evaluate_one()` had already bound its default argument. A later structure check also showed `rett_001/source.md` was treated as binary by `rg`.

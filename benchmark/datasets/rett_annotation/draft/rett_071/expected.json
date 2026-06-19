@@ -3,9 +3,9 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome",
+  "disease_label": "Синдром Ретта (Rett syndrome)",
   "mondo_id": "MONDO:0010726",
-  "moi": "XD",
+  "moi": "X-linked",
   "source_pmid": null,
   "source_doi": "10.25207/1608-6228-2021-28-1-116-124",
   "source_title": "Синдром Ретта: клинический случай (Rett syndrome: a clinical case)",
@@ -16,11 +16,16 @@
   "variants": [
     {
       "hgvs_c": "c.468C>G",
-      "hgvs_p": "p.D156E",
-      "variant_type": "missense",
-      "clinical_significance": "pathogenic (reported as disease-causing/diagnostic)",
+      "hgvs_p": "p.D156E(p.Asp156Glu)",
+      "hgvs_g": "",
+      "variant_type": "missense (single-nucleotide substitution); referred to as single-nucleotide polymorphism in the English abstract",
+      "clinical_significance": "Reported as the disease-causing mutation establishing the Rett syndrome diagnosis; no formal ACMG/ClinVar classification stated",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD",
+      "protein_effect": "",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -32,22 +37,8 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
       "field_id": "A.gene_disease_relationship",
-      "value": "causative",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "XD",
+      "value": "Мутация гена MECP2 (Xq28) является причиной синдрома Ретта, X-сцепленного генетического заболевания с преимущественным поражением лиц женского пола",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -61,56 +52,156 @@
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.D156E",
+      "value": "p.D156E (p.Asp156Glu)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_legacy_name",
+      "value": "D156E (р.Д156Е)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_type",
-      "value": "missense",
+      "value": "Missense substitution; described as single-nucleotide polymorphism in the English abstract",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD",
+      "field_id": "B.proband_status",
+      "value": "Proband (девочка Г., 3 лет)",
       "candidates": [],
       "source": "article",
-      "evaluation_type": "precision_only"
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Синдром Ретта (Rett syndrome), F84.2, MIM 312750",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0001263; HP:0001344; HP:0001251; HP:0002072; HP:0001290; HP:0000568; HP:0001249; HP:0001250; HP:0000756; HP:0012759",
-      "candidates": [],
+      "value": "HP:0002376; HP:0002072; HP:0001344; HP:0001249; HP:0001252; HP:0001251; HP:0001250; HP:0001263",
+      "candidates": [
+        "HP:0002376",
+        "HP:0002072",
+        "HP:0001344",
+        "HP:0001249",
+        "HP:0001252",
+        "HP:0001251",
+        "HP:0001250",
+        "HP:0001263"
+      ],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "регресс/утрата ранее приобретенных моторных навыков (developmental regression); задержка психомоторного развития (delayed psychomotor / global developmental delay); задержка речевого развития, речь на уровне звуковых комплексов (absent/impaired speech); нарушение походки, туловищная атаксия, интенция, дизметрия (gait ataxia); стереотипные движения руками моющего характера (hand stereotypies / hand-washing); диффузная мышечная гипотония (generalized hypotonia); альтернирующее косоглазие (strabismus); резко сниженный интеллект, тяжелая умственная отсталость (intellectual disability); эпилептиформная активность на ЭЭГ (seizures/epileptiform activity); аутоподобное поведение (autistic behavior); приступы апноэ (apnea / breathing abnormalities)",
+      "value": "Утрата ранее приобретённых моторных навыков (регресс), задержка психомоторного и речевого развития, стереотипные движения руками моющего характера, нарушение походки/шаткая походка, туловищная атаксия, интенция, дизметрия, диффузная мышечная гипотония, высокие сухожильные рефлексы, резкое снижение интеллекта, речь на уровне звуковых комплексов, гипомимичное лицо, альтернирующее косоглазие; на ЭЭГ — эпилептиформная активность (комплексы спайк-волна); приступы апноэ в неонатальном периоде",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.sex",
-      "value": "female",
+      "field_id": "B.biochemical_markers",
+      "value": "Общий белок 69 г/л, глюкоза 4,8 ммоль/л, холестерин 4,3 ммоль/л, общий билирубин 5,2 мкмоль/л, АЛТ 24 ЕД/л, АСТ 30 ЕД/л, креатинин 52 мкмоль/л, мочевина 3,1 ммоль/л, КФК 82 ЕД/л; ТТГ 2,54 мкЕД/л, сТ4 11,99 пмоль/л, сТ3 5,9 пмоль/л, АТ-ТПО 0 ЕД/л; фенилаланин 1,6 мг/дл (в пределах нормы, признаков патологии не выявлено)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "3 года (наблюдение в отделении катамнеза до 2 лет 8 месяцев по рисунку)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "1 year 3 months (first symptoms)",
+      "value": "1 год 3 месяца",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "C.de_novo_status",
-      "value": "unknown",
+      "field_id": "B.sex",
+      "value": "Female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.consanguinity",
+      "value": "Наследственность со слов родителей не отягощена",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "X-сцепленное (X-linked)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "Диагноз синдрома Ретта установлен на основании мутации гена MECP2 c.468C>G (p.D156E)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "Исключены гипотиреоз (тиреоидные гормоны в норме) и фенилкетонурия (фенилаланин 1,6 мг/дл); ранее ошибочно установлен диагноз ДЦП; проводится дифференциальная диагностика с аутизмом; при первичном медико-генетическом обследовании генетической/синдромальной патологии не выявлено",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Прямое автоматическое секвенирование гена MECP2 (Медико-генетический научный центр имени академика Н.П. Бочкова, Москва)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_phenotype",
+      "value": "Мать здорова",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_phenotype",
+      "value": "Отец здоров",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.misdiagnosis_or_reclassification",
+      "value": "Ребёнку первоначально (в 1 год 6 месяцев и в 2 года 3 месяца) был установлен диагноз «детский церебральный паралич, атонически-атактическая форма», впоследствии пересмотренный на синдром Ретта после молекулярно-генетического исследования",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "MECP2 кодирует метил-CpG-связывающий белок 2, регулирующий работу нейротрансмиттеров, участвующих в образовании нейронных ассоциативных связей; участвует в регуляции синаптической передачи нервного импульса и пре-/постнатального развития головного мозга",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -122,24 +213,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "B.disease_diagnosis",
-      "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.null_variant_detail",
+      "A.protein_effect",
+      "A.same_amino_acid_known_variant",
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
+      "B.proband_status",
+      "B.case_count",
+      "B.disease_diagnosis",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
-      "B.sex",
+      "B.biochemical_markers",
+      "B.age_current_or_last_followup",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.sex",
+      "B.ancestry_or_population",
+      "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "B.healthy_adult_status"
+    ],
+    "segregation_fields": [
+      "C.inheritance_source",
+      "C.de_novo_status",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_genotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
+    ],
+    "population_fields": [
+      "D.population_database_name",
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
+    ],
+    "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
+      "F.tested_variant",
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.expert_panel_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

@@ -48,10 +48,10 @@ The module keeps raw `process.env` reads in one place and exposes typed objects 
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `baseUrl` | `string` | API base path or absolute URL. |
-| `timeout` | `number` | Shared request timeout in milliseconds. |
-| `healthEndpoint` | `string` | Backend health check path. |
-| `healthPollInterval` | `number` | React Query polling interval in milliseconds. |
+| `baseUrl` | `string` | API base path or absolute URL. In production, MUST be relative (e.g. `/api/v1`) so requests pass through `middleware.ts` which injects `X-API-Key`. Absolute URLs in production trigger a console warning. |
+| `timeout` | `number` | Shared request timeout in milliseconds (default 30 000). |
+| `healthEndpoint` | `string` | Backend health check path (default `/health`). |
+| `healthPollInterval` | `number` | React Query polling interval in milliseconds (default 30 000). |
 
 ### `AppConfig`, `ApiConfig`, `FeatureFlags`
 

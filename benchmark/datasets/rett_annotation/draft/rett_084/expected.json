@@ -3,9 +3,9 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "非典型Rett综合征（先天型）/ atypical Rett syndrome, congenital variant",
+  "disease_label": "Rett syndrome (atypical, congenital variant / 非典型Rett综合征先天型)",
   "mondo_id": "MONDO:0010726",
-  "moi": "XD",
+  "moi": "X-linked",
   "source_pmid": null,
   "source_doi": null,
   "source_title": "MECP2 基因新发突变致男童 Rett 综合征 1 例报告",
@@ -17,10 +17,15 @@
     {
       "hgvs_c": "c.194delC",
       "hgvs_p": "p.S65X",
-      "variant_type": "frameshift deletion (single-base deletion causing premature stop; described in article as 无义突变/nonsense)",
-      "clinical_significance": "pathogenic",
+      "hgvs_g": "",
+      "variant_type": "single-nucleotide deletion; described as nonsense mutation (无义突变) producing premature stop codon",
+      "clinical_significance": "Pathogenic (致病性突变)",
       "exon": "",
-      "domain": "N-terminal region upstream of MBD (aa 65); truncation removes major MECP2 functional domains"
+      "domain": "Loss of the major functional region of MECP2 protein (蛋白丢失主要的功能区域)",
+      "protein_effect": "Deletion of base C at position 194 changes Ser65 to a stop codon; premature termination of peptide synthesis; truncated MECP2 protein losing main functional domain",
+      "null_variant_detail": "Early truncating/null variant; predicted loss of function with loss of major functional domain",
+      "protein_length_change": "Protein truncated at residue 65",
+      "same_amino_acid_known_variant": ""
     }
   ],
   "expected_evidence": [
@@ -32,22 +37,15 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "非典型Rett综合征（先天型）/ atypical Rett syndrome, congenital variant",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
       "field_id": "A.gene_disease_relationship",
-      "value": "causative",
+      "value": "MECP2 loss-of-function mutations are the most common cause of Rett syndrome (functional loss / 功能缺失性突变是最主要原因); reported as the first domestic case of male Rett syndrome caused by MECP2 mutation",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "XD",
+      "field_id": "A.reference_sequence",
+      "value": "GRCh37.p5 (hg19)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -67,53 +65,272 @@
       "evaluation_type": "precision_only"
     },
     {
+      "field_id": "A.variant_legacy_name",
+      "value": "P.S65X (S65X)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
       "field_id": "A.variant_type",
-      "value": "frameshift deletion (single-base deletion causing premature stop; described in article as 无义突变/nonsense)",
+      "value": "Single-nucleotide deletion described as nonsense mutation (无义突变) producing premature stop codon",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "Premature termination codon at residue 65; early truncation; loss of major functional domain of MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "65位丝氨酸变成终止密码子，肽链合成提前终止，MECP2蛋白丢失主要的功能区域 (Ser65 to stop codon, premature termination, loss of main functional domain)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "N-terminal region upstream of MBD (aa 65); truncation removes major MECP2 functional domains",
+      "value": "Variant results in loss of the major functional domain of MECP2; common point mutation hotspots listed for MECP2: R106W, R133C, T158M, R168X, R255X, R270X, R294X, R306C",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "B.hpo_terms",
-      "value": "HP:0012759; HP:0001344; HP:0002376; HP:0002072; HP:0004322; HP:0011968; HP:0001250; HP:0001263; HP:0002194; HP:0012171",
+      "field_id": "A.protein_length_change",
+      "value": "Protein truncated/shortened due to stop codon at residue 65",
       "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_consequence_class",
+      "value": "Predicted null variant / loss-of-function (early truncating)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.proband_status",
+      "value": "Proband (index case), male child",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Atypical Rett syndrome, congenital variant (非典型Rett综合征先天型)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "Diagnosed per 2010 revised diagnostic criteria (International Rett Syndrome clinical research association); classified as congenital variant of atypical Rett syndrome based on early severe psychomotor delay and breathing abnormalities",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0012759; HP:0001344; HP:0002072; HP:0002376; HP:0001263; HP:0001250; HP:0001257; HP:0002194",
+      "candidates": [
+        "HP:0012759",
+        "HP:0001344",
+        "HP:0002072",
+        "HP:0002376",
+        "HP:0001263",
+        "HP:0001250",
+        "HP:0001257",
+        "HP:0002194"
+      ],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "自主呼吸障碍/呼吸暂停 (severe abnormal breathing, apnea); 语言能力丧失/发音减少 (loss of acquired spoken language); 手部技能丧失伴发育倒退 (loss of acquired purposeful hand skills, developmental regression); 手部刻板动作（双手握拳、左手频繁触鼻）(hand stereotypies); 生长发育迟滞/生长缓慢 (growth retardation); 喂养困难/频发吐奶 (feeding difficulties, frequent vomiting); 睡眠惊厥 (seizures); 严重精神运动发育迟滞 (severe global/psychomotor developmental delay); 1岁仍不会抬头翻身、运动少 (delayed motor development); 四肢细小、末稍厥冷 (thin limbs, cold extremities); 肌张力增高 (hypertonia)",
+      "value": "Severe abnormal/autonomic breathing difficulty, loss of acquired purposeful hand skills, loss of spoken language, hand stereotypies (双手握拳, 左手频繁触鼻), gait/motor abnormalities, growth retardation, increased muscle tone, thin and cold extremities (手足厥冷细小), frequent vomiting/regurgitation, apnea and sleep seizures at 2 months, unable to lift head/roll over at 1 year",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.sex",
-      "value": "male",
+      "field_id": "B.biochemical_markers",
+      "value": "Metabolic tests showed no obvious abnormality (代谢性检查无明显异常)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "Died at 18 months of age (suspected respiratory failure)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "early infancy (~2 months; apnea and sleep seizures noted at 2 months, presented at 5 months)",
+      "value": "Early infancy; apnea and sleep seizures at 2 months; regression of vocalization and active grasping with hand stereotypies at 8 months; presented at 5 months",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "Male",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.ancestry_or_population",
+      "value": "Chinese",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.consanguinity",
+      "value": "Non-consanguineous (非近亲结婚)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "X-linked; de novo (new mutation)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "value": "Yes; MECP2 c.194delC reported as the causative pathogenic mutation",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "Metabolic testing normal; perinatal history reviewed (G1P1, 36+3 weeks, premature membrane rupture, monitored 11 days with normal findings)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Whole-exome sequencing combined with Sanger sequencing validation",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sequencing_method_quality",
+      "value": "SeqCap EZ Human Exome Library v3.0 (Nimblegen) capture; sequencing on HiSeq 2000; alignment to GRCh37.p5 (hg19); variant annotation/filtering with Ingenuity Variant Analysis (QIAGEN); Sanger on 3500 DX Genetic Analyzer (ABI); analysis with MutationSurveyor 4.0 (SoftGenetics)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.inheritance_source",
+      "value": "De novo (新发突变); not found in either parent",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo (变异在父母该位点均无, both parents wild-type)",
+      "value": "De novo; parents tested negative at this locus",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_genotype",
+      "value": "No variant at c.194 (wild-type)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.maternal_phenotype",
+      "value": "Healthy (父母均体健)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_genotype",
+      "value": "No variant at c.194 (wild-type)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.paternal_phenotype",
+      "value": "Healthy (父母均体健)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_without_parentage_confirmation",
+      "value": "Assumed de novo; both parents negative at the locus, but paternity/maternity not formally confirmed in the article",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "D.absent_or_rare_statement",
+      "value": "The c.194delC (P.S65X) variant has not been previously reported in domestic or international literature (尚未见文献报道)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "F.declared_disease_mechanism",
+      "value": "Loss-of-function (functional loss mutation / 功能缺失性突变 stated as disease mechanism for MECP2 in Rett syndrome)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.molecular_consequence",
+      "value": "Protein truncation due to premature stop codon at residue 65",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.misdiagnosis_or_reclassification",
+      "value": "In the literature review of Chinese male cases, among 6 cases with complete clinical information, 2 had previously been diagnosed as autism (孤独症) and infantile spasms (婴儿痉挛症)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "MECP2 encodes X-linked methyl-CpG-binding protein 2; functional loss mutations are the main cause of Rett syndrome",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.known_pathogenic_variant_reference",
+      "value": "Common MECP2 point mutations cited: R106W, R133C, T158M, R168X, R255X, R270X, R294X, R306C; RettBASE Rett syndrome database referenced",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
     }
   ],
   "expected_standardization": {
@@ -122,24 +339,168 @@
   },
   "expected_entities": {},
   "evaluation_config": {
-    "gene_disease_fields": [
-      "A.gene_symbol",
-      "B.disease_diagnosis",
-      "A.gene_disease_relationship",
-      "B.mode_of_inheritance_reported"
-    ],
     "variant_fields": [
+      "A.gene_symbol",
+      "A.gene_aliases",
+      "A.gene_disease_relationship",
+      "A.transcript_id",
+      "A.reference_sequence",
       "A.variant_hgvs_c",
       "A.variant_hgvs_p",
+      "A.variant_hgvs_g",
+      "A.variant_legacy_name",
       "A.variant_type",
-      "A.functional_domain_or_hotspot"
+      "A.null_variant_detail",
+      "A.protein_effect",
+      "A.same_amino_acid_known_variant",
+      "A.same_residue_other_missense",
+      "A.functional_domain_or_hotspot",
+      "A.protein_length_change",
+      "A.repeat_region_status",
+      "A.splice_or_synonymous_effect",
+      "A.gene_missense_constraint",
+      "A.gene_truncating_mechanism_evidence",
+      "A.variant_consequence_class",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
+      "B.proband_status",
+      "B.case_count",
+      "B.disease_diagnosis",
+      "B.phenotype_specificity",
       "B.hpo_terms",
       "B.clinical_phenotypes",
-      "B.sex",
+      "B.biochemical_markers",
+      "B.age_current_or_last_followup",
       "B.age_of_onset",
-      "C.de_novo_status"
+      "B.sex",
+      "B.ancestry_or_population",
+      "B.consanguinity",
+      "B.mode_of_inheritance_reported",
+      "B.single_genetic_etiology_claim",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "B.healthy_adult_status"
+    ],
+    "segregation_fields": [
+      "C.inheritance_source",
+      "C.de_novo_status",
+      "C.parentage_confirmed",
+      "C.maternal_genotype",
+      "C.maternal_phenotype",
+      "C.paternal_genotype",
+      "C.paternal_phenotype",
+      "C.phase_status",
+      "C.in_trans_confirmation",
+      "C.cis_or_trans_context",
+      "C.g_plus_p_plus_count",
+      "C.g_plus_p_minus_count",
+      "C.g_minus_p_plus_count",
+      "C.g_minus_p_minus_count",
+      "C.obligate_carriers",
+      "C.lod_score",
+      "C.de_novo_without_parentage_confirmation"
+    ],
+    "population_fields": [
+      "D.population_database_name",
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.homozygote_count",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation"
+    ],
+    "computational_fields": [
+      "E.prediction_tools_list",
+      "E.deleterious_prediction_summary",
+      "E.benign_prediction_summary",
+      "E.splice_prediction",
+      "E.conservation_score",
+      "E.in_silico_consensus",
+      "E.prediction_conflict"
+    ],
+    "functional_fields": [
+      "F.assay_id",
+      "F.assay_type",
+      "F.assay_system",
+      "F.tested_variant",
+      "F.functional_result",
+      "F.quantitative_result",
+      "F.positive_controls",
+      "F.negative_controls",
+      "F.total_controls",
+      "F.control_quality",
+      "F.replicates_or_statistics",
+      "F.patient_cell_evidence",
+      "F.non_patient_cell_evidence",
+      "F.functional_normal_result",
+      "F.functional_inconclusive_result",
+      "F.odds_path",
+      "F.evidence_strength_tier",
+      "F.physiologic_context",
+      "F.declared_disease_mechanism",
+      "F.molecular_consequence",
+      "F.disease_mechanism_consistency",
+      "F.assay_validation_method",
+      "F.allelic_series_size",
+      "F.clia_laboratory_status"
+    ],
+    "case_control_fields": [
+      "G.study_design",
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "G.case_control_status",
+      "G.detection_methodology_quality",
+      "G.bias_confounding_factors"
+    ],
+    "contradiction_fields": [
+      "H.misdiagnosis_or_reclassification",
+      "H.alternative_causative_gene",
+      "H.other_pathogenic_variant",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.negative_functional_result",
+      "H.animal_model_no_phenotype",
+      "H.contradiction_type",
+      "H.contradiction_severity"
+    ],
+    "gene_function_fields": [
+      "I.gene_function_biochemical",
+      "I.gene_function_protein_interaction",
+      "I.gene_expression_pattern",
+      "I.disease_relevant_expression",
+      "I.functional_alteration_patient_cells",
+      "I.functional_alteration_non_patient_cells",
+      "I.animal_model_type",
+      "I.animal_model_phenotype",
+      "I.animal_model_genotype",
+      "I.cell_model_type",
+      "I.cell_model_phenotype",
+      "I.human_rescue_experiment",
+      "I.animal_rescue_experiment",
+      "I.cell_rescue_experiment",
+      "I.rescue_result",
+      "I.experimental_replication"
+    ],
+    "authority_fields": [
+      "J.clinvar_assertion",
+      "J.expert_panel_assertion",
+      "J.authority_classification",
+      "J.known_pathogenic_variant_reference",
+      "J.ps1_pm5_relationship",
+      "J.reputable_benign_assertion"
     ],
     "standardization_fields": [
       "gene",

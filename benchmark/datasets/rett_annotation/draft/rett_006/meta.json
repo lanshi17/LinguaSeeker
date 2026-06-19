@@ -8,7 +8,7 @@
   "reviewer": null,
   "review_notes": "[case_series] Reports specific MECP2 gene variants in 9 Rett syndrome patients (e.g., c.913insT, c.316C>T, c.502C>T, c.808C>T, c.1126C>T with amino acid changes such as R106W, R168X, R270X, P376S; HGVS-style nomenclature included). Study design is a small clinical case series analyzing mutations in affected children and their parents.",
   "rejection_reason": "",
-  "generated_at": "2026-06-16T10:23:05+00:00",
+  "generated_at": "2026-06-19T04:21:23+00:00",
   "reviewed_at": null,
   "promoted_at": null,
   "llm_model": "claude-opus-4-8",
