@@ -469,3 +469,4 @@
 [2026-06-18] Remove 12 non-literature-extractable fields from catalog.py and regenerate evidence-field-catalog.json/md (138 -> 126) [DONE]
 [2026-06-18] Expand catalog from 126 to 161 fields: ACMG 2019 SVI PS3/BS3 (F+8), GDV-12 single-paper (A+2, G+3, H+2), Category K GDV curation (+20). All 28 ACMG codes + 3 source references covered [DONE]
 [2026-06-18] Catalog review: fix 3 critical + 4 medium issues. Restore PP2/BP1 fields, fix PS4/IBD mapping, add SVI declared_disease_mechanism, remove H duplicate, add 3 K fields. 161 -> 166 fields [DONE]
+[2026-06-19] Evidence extraction baseline realigned: 166 fields, 3 groups (62/81/23), test_catalog updated [done]
