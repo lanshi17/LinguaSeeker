@@ -108,6 +108,8 @@ class Phase1Adapter:
                 action=state.action,
                 query=state.query,
                 identifiers=state.identifiers,
+                relevance_gate=state.relevance_gate,
+                literature_types=list(state.literature_types) if state.literature_types else None,
             )
 
             # Acquire document

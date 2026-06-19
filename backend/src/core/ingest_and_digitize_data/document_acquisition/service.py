@@ -149,7 +149,10 @@ class DocumentAcquisitionService:
             "language": request.language,
             "prefer": request.prefer,
             "api_provider": request.api_provider,
+            "relevance_gate": request.relevance_gate,
         }
+        if request.literature_types:
+            payload["literature_types"] = list(request.literature_types)
 
         # Multilingual fanout requires a free-text query and "auto" routing.
         # An explicit language or an identifier-only request stays on the
