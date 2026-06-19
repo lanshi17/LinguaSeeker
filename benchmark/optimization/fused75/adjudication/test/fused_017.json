@@ -4,13 +4,13 @@
   "is_complete": false,
   "labels": [
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "F8",
       "field_id": "A.gene_symbol",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_017/source.md:142",
+      "source_quote": "coordinates in P1 ( Supplementary Material ). SYBR Green PCR Master Mix (Applied Biosystems, Waltham, MA, USA) was used to perform the qPCR reaction. All reactions were run in in triplicate on a ViiA\u2122 7 thermal cycler (Applied Biosystems). ALB and F8 were used for normalization; the F8 was the internal sample control (based on sex determination). The comparative 2\u2212\u0394\u0394CT method was used for the analysis, with noncommercial healthy control DNA as a calibrator. The thermal profile included the init",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -58,22 +58,22 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "missense",
       "field_id": "A.variant_type",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_017/source.md:61",
+      "source_quote": "repeats in ATXN genes (for spinocerebellar ataxia) analysis, did not allow for detecting disease-causal variants. Therefore, both disorders could be excluded in the patient. Only WES enabled the identification of two novel compound heterozygous missense variants c.648C\u02c3A, p.(Phe216Leu) and c.733A\u02c3T, p.(Asn245Tyr) in exon 1 in the FLVCR1 gene. WES results were verified by Sanger sequencing ( Figure 2 ). Variants segregation analysis in the family was not possible due to the death of the patient\u2019",
+      "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "Pathogenic",
       "field_id": "J.clinvar_assertion",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_017/source.md:14",
+      "source_quote": "terior column ataxia and retinitis pigmentosa is called PCARP (MIM 609033). The disease begins in infancy with areflexia and symptoms of retinal degeneration. The progression is characterized by visual field restriction, night blindness, and later onset secondary ataxia [ 6 ]. PCARP is caused by pathogenic variants in the FLVCR1 (MIM 609144) gene that encodes the feline leukemia virus subgroup C receptor 1, a heme-transporter protein that maintains the intracellular heme concentration [ 7 , 8 ].",
+      "visibility": "source_visible"
     }
   ],
   "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_017/source.md",

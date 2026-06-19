@@ -4,31 +4,31 @@
   "is_complete": false,
   "labels": [
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "BMPR2",
       "field_id": "A.gene_symbol",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_008/source.md:1",
+      "source_quote": "# Adaptation of ACMG/AMP Guidelines for Clinical Classification of BMPR2 Variants in Pulmonary Arterial Hypertension Resolves Variants of Unclear Pathogenicity in ClinVar",
+      "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "pulmonary arterial hypertension",
       "field_id": "B.disease_diagnosis",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_008/source.md:1",
+      "source_quote": "# Adaptation of ACMG/AMP Guidelines for Clinical Classification of BMPR2 Variants in Pulmonary Arterial Hypertension Resolves Variants of Unclear Pathogenicity in ClinVar",
+      "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "causative",
       "field_id": "A.gene_disease_relationship",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_008/source.md:12",
+      "source_quote": "The first gene identified as causative for PAH encodes the Bone Morphogenetic Protein Receptor Type 2 ( BMPR2 ; HGNC: 1078) [ 3 , 4 ], and it remains the gene with the highest frequency of Pathogenic variants in HPAH patients [ 5 \u2013 7 ]. BMPR2 is a cell surface receptor and part of the Transforming Growth Factor \u03b2 superfamily responsible for vascular homeostasis of cell proliferation and apoptosis. Heterozygous Pathogenic or Likely Pathogenic (LP) BMPR2 variants lead to PAH in an autosomal domina",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -58,22 +58,22 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "missense",
       "field_id": "A.variant_type",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_008/source.md:31",
+      "source_quote": "n tested our adapted specifications on a pilot group of 28 variants, representing all ACMG classes, including those with conflicting interpretations of pathogenicity. The selected variants included insertions, deletions, 5\u2063\u2032-untranslated region, missense, splice, nonsense, and synonymous variants. Only BMPR2 variants identified in nonsyndromic HPAH and/or IPAH cases were considered for pilot curation. Thus, one additional variant (c.319T>C p.Ser107Pro) was removed from the pilot curation list as",
+      "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "Pathogenic",
       "field_id": "J.clinvar_assertion",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_008/source.md:5",
+      "source_quote": "Pulmonary arterial hypertension (PAH) is a rare disease that can be caused by pathogenic variants, most frequently in the bone Morphogenetic Protein Receptor Type 2 ( BMPR2 ) gene. We formed a ClinGen variant curation expert panel to devise guidelines for the clinical interpretation of BMPR2 variants identified in PAH patients. The general ACMG/AMP variant classification criteria were refined for PAH and adapted to BMPR2 following ClinGen procedures. Subsequently, these specifications were teste",
+      "visibility": "source_visible"
     }
   ],
   "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_008/source.md",

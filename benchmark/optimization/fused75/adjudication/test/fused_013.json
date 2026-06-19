@@ -4,13 +4,13 @@
   "is_complete": false,
   "labels": [
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "CYP1B1",
       "field_id": "A.gene_symbol",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_013/source.md:23",
+      "source_quote": "increasing its prevalence in the Saudi population ( 15 ). Additionally, IODs contribute significantly to the prevalence of anterior segment diseases such as congenital glaucoma, keratoconus, and corneal dystrophies (macular and lattice) in Saudi Arabia. Furthermore, mutations in the CYP1B1 gene are strongly associated with congenital glaucoma. High consanguinity rates in Saudi Arabia contribute to an increased prevalence of IOD and high genomic homozygosity of pathogenic founder variants ( 16 ).",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -31,22 +31,22 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "AR",
       "field_id": "B.mode_of_inheritance_reported",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_013/source.md:5",
+      "source_quote": "Consanguineous marriages are common, particularly in Saudi Arabia, where approximately half of all marriages are consanguineous. The likelihood of autosomal recessive (AR) genetic abnormalities, especially rare diseases (RDs) that present long-term health issues, is significantly increased by this trend, making Inherited Ocular Diseases (IODs) a public health concern in Saudi Arabia. The common IODs include Primary Congenital Glaucoma (PCG), Retinitis Pigmentosa (RP), and Leber Congenital Amauro",
+      "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "c.182G>A",
       "field_id": "A.variant_hgvs_c",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_013/source.md:49",
+      "source_quote": "study published by Aleissa et al. (2022) analyzed the most frequently carried pathogenic alleles in the Saudi population by comparing three genetic databases. The study reported the minor allele frequency of the CYP1B1 gene variant (rs28936700, c.182G>A), which is associated with glaucoma. High allele frequency rates were found in two Saudi databases, specifically 2.51% in the Saudi Human Genome Project database (dbSNP) and 1.31% in the King Abdullah International Medical Research Center Genomi",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -67,13 +67,13 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "Pathogenic",
       "field_id": "J.clinvar_assertion",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_013/source.md:23",
+      "source_quote": "increasing its prevalence in the Saudi population ( 15 ). Additionally, IODs contribute significantly to the prevalence of anterior segment diseases such as congenital glaucoma, keratoconus, and corneal dystrophies (macular and lattice) in Saudi Arabia. Furthermore, mutations in the CYP1B1 gene are strongly associated with congenital glaucoma. High consanguinity rates in Saudi Arabia contribute to an increased prevalence of IOD and high genomic homozygosity of pathogenic founder variants ( 16 ).",
+      "visibility": "source_visible"
     }
   ],
   "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_013/source.md",

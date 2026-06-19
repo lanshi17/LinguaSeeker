@@ -4,13 +4,13 @@
   "is_complete": false,
   "labels": [
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "APC",
       "field_id": "A.gene_symbol",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_006/source.md:71",
+      "source_quote": "*The genomic alterations of APC and EGFR detected in the biopsy specimen. (A) EGFR: c.2240_2254del (p.Leu747_Thr751del); AF=12.38%. (B) APC: c.3927_3931del (p.Glu1309fs); AF=55.04%.*",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -40,22 +40,22 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "c.3927_3931del",
       "field_id": "A.variant_hgvs_c",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_006/source.md:71",
+      "source_quote": "*The genomic alterations of APC and EGFR detected in the biopsy specimen. (A) EGFR: c.2240_2254del (p.Leu747_Thr751del); AF=12.38%. (B) APC: c.3927_3931del (p.Glu1309fs); AF=55.04%.*",
+      "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "p.Glu1309fs",
       "field_id": "A.variant_hgvs_p",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_006/source.md:71",
+      "source_quote": "*The genomic alterations of APC and EGFR detected in the biopsy specimen. (A) EGFR: c.2240_2254del (p.Leu747_Thr751del); AF=12.38%. (B) APC: c.3927_3931del (p.Glu1309fs); AF=55.04%.*",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -67,13 +67,13 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "exact-match-preannotator",
       "expected_value": "Pathogenic",
       "field_id": "J.clinvar_assertion",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_006/source.md:83",
+      "source_quote": "n are detected in 90-95% of sporadic AF cases, leading to the activation of the Wnt/\u03b2-catenin signaling pathway and excessive accumulation of \u03b2-catenin ( 4 , 20 ). Mutations in AKT1 and BRAF have also been reported in pediatric AF ( 21 ). Novel pathogenic gene mutations have been identified through whole-genome sequencing in patients with AF. The reported gene variations include AKT1 (G311S/D and T312I), ALK (R806H and G924S), AR (A159T), EGFR (P848L), ERBB2 (H174Y), KIT (V559D), RET (T1038A), S",
+      "visibility": "source_visible"
     }
   ],
   "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_006/source.md",
