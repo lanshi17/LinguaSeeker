@@ -232,14 +232,24 @@ async def _check_one(
             raw = (resp.choices[0].message.content or "").strip()
             relevant, doc_type, reason = _parse_response(raw)
 
-            # If literature_types is set, reject docs whose type doesn't match
-            if use_typed and doc_type and doc_type not in literature_types:
-                return RelevanceJudgment(
-                    file_path=file_path,
-                    relevant=False,
-                    doc_type=doc_type,
-                    reason=f"doc_type_mismatch: {doc_type} not in {literature_types}",
-                )
+            # If literature_types is set, the LLM MUST emit a known doc_type
+            # AND it must match. Missing/unknown doc_type is conservatively
+            # rejected — never silently kept.
+            if use_typed:
+                if not doc_type:
+                    return RelevanceJudgment(
+                        file_path=file_path,
+                        relevant=False,
+                        doc_type=doc_type,
+                        reason="doc_type_missing: classifier did not emit a doc_type",
+                    )
+                if doc_type not in literature_types:
+                    return RelevanceJudgment(
+                        file_path=file_path,
+                        relevant=False,
+                        doc_type=doc_type,
+                        reason=f"doc_type_mismatch: {doc_type} not in {literature_types}",
+                    )
 
             return RelevanceJudgment(
                 file_path=file_path,

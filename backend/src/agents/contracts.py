@@ -402,6 +402,9 @@ class PipelineGraphState(BaseModel):
     query: str | None = None
     identifiers: list[str] | None = None
     action: str | None = None
+    # Optional online-acquisition gate controls
+    relevance_gate: bool = True
+    literature_types: list[str] | None = None
 
     # Target gene-disease hypothesis for evidence extraction (Phase 2/3)
     extraction_target: ExtractionTarget | None = None
