@@ -1,21 +1,14 @@
+# Managed by Ansible — do not edit by hand.
+# Source: benchmark/config/{inventories/local/group_vars,roles/rett_annotation_config/templates,vault/secrets.yml}
+# Re-render with: ansible-playbook playbooks/deploy-config.yml
 llm:
   base_url: "https://linxi.chat/v1"
-  # model: "claude-opus-4-8"
   model: "gpt-5-nano"
   max_tokens: 32768
   temperature: 0.0
   timeout: 120
-
-# Optional fallback provider
-# llm_fallback:
-#   base_url: "https://api.siliconflow.cn/v1"
-#   model: "deepseek-ai/DeepSeek-V3"
-#   max_tokens: 8192
-#   temperature: 0.0
-#   timeout: 120
-
 pdf_parser:
-  backend: "mineru" # mineru | pymupdf (fallback)
+  backend: "mineru"
   mineru_base_url: "https://mineru.net/api/v4"
   mineru_model_version: "vlm"
   mineru_enable_formula: true
@@ -24,11 +17,9 @@ pdf_parser:
   poll_interval: 3.0
   max_poll_attempts: 200
   batch_size: 10
-
 annotation:
   max_concurrency: 3
   chunk_size: 12000
-
 paths:
   pdf_source_dir: "../literature_acquisition/downloads/rett"
   draft_dir: "./draft"
