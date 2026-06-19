@@ -1,0 +1,81 @@
+{
+  "entry_id": "fused_008",
+  "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_008/expected.json",
+  "is_complete": false,
+  "labels": [
+    {
+      "adjudicator": null,
+      "expected_value": "BMPR2",
+      "field_id": "A.gene_symbol",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    },
+    {
+      "adjudicator": null,
+      "expected_value": "pulmonary arterial hypertension",
+      "field_id": "B.disease_diagnosis",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    },
+    {
+      "adjudicator": null,
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    },
+    {
+      "adjudicator": null,
+      "expected_value": "AD",
+      "field_id": "B.mode_of_inheritance_reported",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    },
+    {
+      "adjudicator": null,
+      "expected_value": "c.218C>G",
+      "field_id": "A.variant_hgvs_c",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    },
+    {
+      "adjudicator": null,
+      "expected_value": "p.Ser73Ter",
+      "field_id": "A.variant_hgvs_p",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    },
+    {
+      "adjudicator": null,
+      "expected_value": "missense",
+      "field_id": "A.variant_type",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    },
+    {
+      "adjudicator": null,
+      "expected_value": "Pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    }
+  ],
+  "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_008/source.md",
+  "split": "adjudication_dev"
+}

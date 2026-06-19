@@ -1,0 +1,81 @@
+{
+  "entry_id": "fused_007",
+  "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_007/expected.json",
+  "is_complete": false,
+  "labels": [
+    {
+      "adjudicator": null,
+      "expected_value": "ATM",
+      "field_id": "A.gene_symbol",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    },
+    {
+      "adjudicator": null,
+      "expected_value": "ataxia telangiectasia",
+      "field_id": "B.disease_diagnosis",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    },
+    {
+      "adjudicator": null,
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    },
+    {
+      "adjudicator": null,
+      "expected_value": "AR",
+      "field_id": "B.mode_of_inheritance_reported",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    },
+    {
+      "adjudicator": null,
+      "expected_value": "c.8575TCT[1]",
+      "field_id": "A.variant_hgvs_c",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    },
+    {
+      "adjudicator": null,
+      "expected_value": "p.Ser2860del",
+      "field_id": "A.variant_hgvs_p",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    },
+    {
+      "adjudicator": null,
+      "expected_value": "other",
+      "field_id": "A.variant_type",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    },
+    {
+      "adjudicator": null,
+      "expected_value": "Pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "notes": null,
+      "source_location": null,
+      "source_quote": null,
+      "visibility": null
+    }
+  ],
+  "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_007/source.md",
+  "split": "adjudication_dev"
+}
