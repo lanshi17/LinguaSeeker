@@ -11,6 +11,9 @@ import rust_io.files as files
 # Literature acquisition
 result = await net_io.fetch_one("crossref", "search", {"query": "CRISPR"})
 
+# Download a file from URL
+dl = await net_io.download_file("https://example.com/paper.pdf")
+
 # MinerU document parsing
 task = await net_io.mineru_create_task("https://example.com/paper.pdf", token="...")
 
@@ -46,9 +49,9 @@ rust-io (cdylib + rlib)
  |   +-- src/py/dedup.rs     #   check_duplicate, batch_hash
  |   +-- src/py/utils.rs     #   compute_sha256, write_file, validate_pdf_magic
  |
- +-- net-io (rlib dep)       # HTTP/web I/O (14 providers, scraper, MinerU API)
+ +-- net-io (rlib dep)       # HTTP/web I/O (15 providers, scraper, MinerU API)
      +-- src/py.rs           #   fetch_one, fetch_multi, scrape_web, scrape_html,
-                             #   extract_pdf_links, mineru_* (8 functions)
+                             #   extract_pdf_links, download_file, mineru_* (8 functions)
 ```
 
 This crate contains no business logic. `src/lib.rs` only:
