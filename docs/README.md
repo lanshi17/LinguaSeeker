@@ -73,7 +73,6 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-06-14 | [BIBM Main Paper Detailed Plan](planned/2026-06-14-bibm-main-paper-detailed-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Rescue Plan](planned/2026-06-14-bibm-main-paper-rescue.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Effect Plan](planned/2026-06-14-bibm-main-paper-effect-plan.md) | planned |
-| 2026-06-19 | [Evidence Extraction Pipeline Revision](planned/2026-06-19-evidence-extraction-pipeline-revision.md) | planned |
 
 ## Diagrams
 
@@ -88,6 +87,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
+| 2026-06-19 | [Evidence Extraction Pipeline Revision](archive/plans/2026-06-19-evidence-extraction-pipeline-revision.md) | completed |
 | 2026-06-17 | [Worktree Merge Plan](archive/plans/2026-06-17-worktree-merge-plan.md) | executed |
 | 2026-06-16 | [MinerU Local SDK Migration](archive/plans/2026-06-16-mineru-local-sdk-migration.md) | completed |
 | 2026-06-16 | [Benchmark B Completion Plan](archive/plans/2026-06-16-benchmark-b-completion-plan.md) | done-with-partial-pilot |
