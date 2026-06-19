@@ -717,7 +717,7 @@ def test_special_evidence_stage_chunks_long_document_prompts():
         ],
     )
 
-    result = SpecialEvidenceStage(provider, input_budget_tokens=500).run(document, [current_item])
+    result = SpecialEvidenceStage(provider, input_budget_tokens=600).run(document, [current_item])
 
     assert result == []
     assert provider.invoke_structured.call_count == 2

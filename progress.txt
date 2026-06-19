@@ -473,3 +473,4 @@
 [2026-06-19] Catalog extraction now skips K (curation) group; saves 23 fields × N chunks per doc [done]
 [2026-06-19] EvidenceItemNormalizer wired as catalog_backfill node after quality_gate (sync+async); 2 stale B.diagnosis_sufficiency tests realigned to B.disease_diagnosis [done]
 [2026-06-19] special_evidence prompt narrowed to gap-filling; no hard gating added [done]
+[2026-06-19] Evidence extraction revision complete: K group removed, normalizer wired post-quality_gate, special_evidence prompt narrowed. Full extract_evidence suite green (289 passed, 2 skipped). Fixed 4 plan-regressions (catalog_task_count 3->2 groups; special_evidence chunk budget 500->600 for SCOPE overhead) + 2 pre-existing mock bugs (Fabry/integration stage name catalog_extraction/<group>) [done]

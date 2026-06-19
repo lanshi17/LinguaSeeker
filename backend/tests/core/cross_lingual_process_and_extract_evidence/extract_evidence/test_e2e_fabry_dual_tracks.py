@@ -70,7 +70,7 @@ class FabryFixtureProvider:
                 disease_terms=["法布雷病"] if track == Track.ORIGINAL else ["Fabry disease"],
                 gene_terms=["GLA"],
             )
-        if stage == "catalog_extraction":
+        if stage.startswith("catalog_extraction"):
             text = self._document_text_from_prompt(prompt)
             snippet = "法布雷病" if track == Track.ORIGINAL else "Fabry disease"
             start = text.index(snippet)
@@ -93,7 +93,7 @@ class FabryFixtureProvider:
                     confidence=0.95,
                 )
             ]
-        if stage == "special_evidence":
+        if stage.startswith("special_evidence"):
             return []
         raise AssertionError(f"unexpected stage: {stage}")
 
@@ -161,13 +161,20 @@ async def test_fabry_output_fixture_runs_original_and_translated_tracks_independ
     assert [span.page for span in documents.original.page_spans] == [1, 2, 3, 4]
     assert [span.page for span in documents.translated.page_spans] == [1, 2, 3, 4]
     # Tracks run in parallel, so call order is non-deterministic.
-    # Verify all 6 stage calls happened across both tracks.
-    expected_calls = {
-        ("relevance_scan", Track.ORIGINAL),
-        ("catalog_extraction", Track.ORIGINAL),
-        ("special_evidence", Track.ORIGINAL),
-        ("relevance_scan", Track.TRANSLATED),
-        ("catalog_extraction", Track.TRANSLATED),
-        ("special_evidence", Track.TRANSLATED),
+    # catalog_extraction dispatches per group (catalog_extraction/<group>[/<chunk>]);
+    # verify each track touched relevance_scan, catalog_extraction, and special_evidence,
+    # with catalog_extraction called once per LLM-extractable group (high_signal, supporting).
+    from collections import Counter
+
+    stage_types: dict[tuple[str, Track], int] = Counter(
+        (stage.split("/", 1)[0], track) for stage, track in provider.calls
+    )
+    expected_stage_types = {
+        ("relevance_scan", Track.ORIGINAL): 1,
+        ("catalog_extraction", Track.ORIGINAL): 2,
+        ("special_evidence", Track.ORIGINAL): 1,
+        ("relevance_scan", Track.TRANSLATED): 1,
+        ("catalog_extraction", Track.TRANSLATED): 2,
+        ("special_evidence", Track.TRANSLATED): 1,
     }
-    assert set(provider.calls) == expected_calls
+    assert stage_types == expected_stage_types

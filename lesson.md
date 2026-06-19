@@ -3118,3 +3118,37 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 - workflow 任何新节点都必须在 `_build_graph` **和** `_build_async_graph` 同步注册。
 - 增删节点时同步更新本文件的 README 节点表(若存在)。
 - 写 plan 前 baseline 校验应跑 `pytest <module>` 全量,而非只校验计数断言;字段增删会级联到所有按 field_id 查找的测试。
+
+## 2026-06-19 Evidence Extraction Pipeline Revision — summary
+
+### 问题
+- K (curation) 组在 catalog.py 标注为 cross-paper,但 CatalogExtractionStage 仍把它发给单文档 LLM。
+- catalog_extraction.py docstring 写 134 字段/2 组,真实是 166/3。
+- EvidenceItemNormalizer 被定义和测试,但未接入 workflow,导致 166-row 矩阵契约失效。
+- special_evidence 与 catalog F/G 在 prompt 层面有重叠语义。
+
+### 解决方案
+- 在 stage 构造时过滤 curation 组(Phase 1)。
+- 把 EvidenceItemNormalizer 接入为 catalog_backfill 节点,放在 quality_gate **之后**(Phase 2)。
+- 给 special_evidence prompt 加 SCOPE 指令(Phase 3),不做 runtime hard skip,保留召回。
+- 修正 docstring 与 baseline 测试(Phase 0)。
+
+### 拒绝的方案
+- 用 evidence_map 做 supporting 组的 hard skip:81 字段盲区,代价过大。
+- 用 evidence_map 做 special_evidence 的 hard skip:同上。
+- 删除 EvidenceItemNormalizer:破坏下游 166-row 对齐契约。
+- 把 backfill 放在 source_grounding/quality_gate 之前:稀释 quality 指标,浪费 grounding 计算。
+
+### Phase 4 验收暴露的级联失败与修复
+- **Plan 回归(4 个,由 Phase 1/3 引起)**:
+  - `test_stages_async._catalog_task_count` 用 `len(CATALOG_GROUPS)=3` 算期望调用数,Phase 1 把 stage 派发组数降到 2 → 3 个用例计数失配。修法:helper 改为 `len(CATALOG_GROUPS) - 1`,直接编码「curation 不派发」不变量;附带治好了原 timing flake(4 任务进 1 个 Semaphore(5) 批次,<0.09s)。
+  - `test_special_evidence_stage_chunks_long_document_prompts` 固定 `input_budget_tokens=500` + `call_count==2`;Phase 3 的 SCOPE 块增加 prompt overhead,500 预算下 chunk 爆炸到 86。修法:预算 500→600 恢复「2 block → 2 chunk」的原始意图(700 会塌缩成 1 chunk,丢失分块语义)。
+- **Pre-existing(2 个,baseline 即红,与本次 plan 无关)**:
+  - `test_e2e_fabry_dual_tracks` / `test_workflow_integration` 的 mock 用 `stage == "catalog_extraction"` 匹配,但 `_stage_name` 一直产出 `catalog_extraction/<group>`。修法:改 `startswith`,assertion 按 stage-type×track 聚合(Fabry 用 Counter,integration 用精确 group 列表 + 断言 `catalog_backfill` 不调用 provider 以锁 Phase 2)。
+
+### 预防措施
+- 每次新增 catalog 分类 → 同步更新 _CATALOG_GROUP_CATEGORIES 与 stage 过滤逻辑。
+- 每次新增 workflow 节点 → 在 `_build_graph` 和 `_build_async_graph` **双图**注册。
+- 测试新增 catalog 字段时,断言 EVIDENCE_FIELD_SPECS 总数与 test_catalog.py 同步。
+- 改 prompt 文本后,检查所有按 `input_budget_tokens` 硬编码 chunk 数的 stage 测试——prompt 变大 → overhead 变大 → chunk 数变大。
+- mock provider 的 stage 匹配一律用 `startswith`,不要 `==`;stage 名普遍带 `/<group>[/<chunk>]` 后缀。
