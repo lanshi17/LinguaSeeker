@@ -5,8 +5,10 @@
 ## Quick Start
 
 ```python
-from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.format import (
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.format.formatter import (
     MarkdownFormatter,
+)
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.format.segmenter import (
     segment_text,
 )
 
@@ -25,16 +27,22 @@ chunks = segment_text(doc.formatted_markdown, max_tokens=4096)
 segment_text() [segmenter.py]
 │
 ├─ estimate_tokens()  — rough tokenizer (ASCII ÷ 4, CJK × 1)
-├─ _split_paragraph()  — sentence-level sub-splitting
+├─ _split_paragraph()  — sentence-level sub-splitting with max_chars guard
 └─ paragraph-level merge → preserves structure
+    └─ CJK ratio-aware char budget (4.0 - cjk_ratio * 2.8 chars/token)
 
 MarkdownFormatter [formatter.py]
 │
 ├─ _format_markdown()  — join pages, normalize whitespace, fix headings
+│   └─ ContentBlock.from_mineru_block()  — build structured blocks from MinerU content_list
 ├─ build_page_offset_map()  — char offset → page number
-├─ extract_sentences()  — split on  。！？.!?  with page tracking
-├─ compute_format_drift()  — raw ↔ formatted position mapping
+├─ _resolve_page()  — resolve character offset to page via offset map
+├─ extract_sentences()  — split on 。！？.!?  with page tracking (regex finditer)
+├─ compute_format_drift()  — raw ↔ formatted position mapping (exact → normalized prefix)
+├─ _find_raw_offset()  — find sentence position in raw text (exact → fuzzy fallback)
+├─ _is_html()  — detect HTML error pages from LLM output
 └─ _apply_llm_formatting()  — optional LLM redaction detection
+    └─ HTML rejection + length-mismatch safety (>30%) + [REDACTED] marker counting
 ```
 
 ## Public API
@@ -58,31 +66,34 @@ def segment_text(
 ) -> List[str]:
 ```
 
-Token-budgeted segmentation. Splits on paragraph boundaries first, then sentences, finally hard-splits. Adjusts char budget based on CJK ratio (~1 token/CJK char vs ~4 tokens/ASCII char).
+Token-budgeted segmentation. Splits on paragraph boundaries first, then sentences, finally hard-splits. Adjusts char budget based on CJK ratio using a blended formula: `chars_per_token = 4.0 - cjk_ratio * 2.8` (ASCII-heavy ~4 chars/token, CJK-heavy ~1.2 chars/token). The internal `_split_paragraph()` also enforces a `max_chars` guard derived from the token budget.
 
 ### Key Functions
 
 | Function | Purpose |
 |----------|---------|
 | `build_page_offset_map(pages)` | Maps character offsets to page numbers for bbox tracking |
-| `extract_sentences(text, page_offset_map)` | Sentence splitting with page-level position tracking |
-| `compute_format_drift(raw_text, sentences)` | Aligns formatted sentences back to raw text positions |
+| `_resolve_page(offset, page_map)` | Resolve a character offset to its page number via the offset map |
+| `extract_sentences(text, page_offset_map)` | Sentence splitting with page-level position tracking (regex `finditer`, trailing segment capture) |
+| `compute_format_drift(raw_text, sentences)` | Aligns formatted sentences back to raw text positions (exact -> normalized-prefix fuzzy) |
+| `_find_raw_offset(sentence, raw_text, search_start)` | Find sentence position in raw text; returns `(-1, -1)` if not found |
 | `estimate_tokens(text)` | Approximates token count (no LLM needed) |
+| `_is_html(text)` | Detect HTML documents (used to reject LLM error pages) |
 
 ### Data Types (from parent contracts)
 
 | Type | Description |
 |------|-------------|
-| `FormattedDocument` | Normalized markdown, sentences, metadata, raw original, blocks |
+| `FormattedDocument` | Normalized markdown, sentences, metadata, raw original, original blocks |
 | `SentenceRegion` | Sentence text with page, start/end offset |
-| `SentenceDrift` | Drift mapping between raw and formatted positions |
-| `ContentBlock` | Structured content block with bbox |
+| `SentenceDrift` | Drift mapping between raw and formatted positions (sentence_index, page, raw/formatted offsets, drift delta) |
+| `ContentBlock` | Structured content block with bbox; built from MinerU blocks via `ContentBlock.from_mineru_block()` |
 
 ## Internal Design
 
 ### Token estimation
 
-Uses a hybrid heuristic: ASCII characters count as 0.25 tokens each, non-ASCII (CJK) count as 1 token each. This matches OpenAI/Claude tokenizer behavior closely enough for budget management without requiring a real tokenizer dependency.
+`estimate_tokens()` uses a hybrid heuristic: ASCII characters count as 0.25 tokens each (`ascii_chars / 4`), non-ASCII (CJK) characters count as 1 token each. This matches OpenAI/Claude tokenizer behavior closely enough for budget management without requiring a real tokenizer dependency. O(n) scan, ~0.1ms for 100KB text.
 
 ### Page tracking
 
@@ -94,7 +105,13 @@ Formatting (whitespace normalization, heading fixes) shifts character positions.
 
 ### LLM formatting
 
-When `llm` is provided, `_apply_llm_formatting()` sends the formatted markdown to the LLM with a redaction-detection prompt. Safety: output is rejected if length differs by >30% from input.
+When `llm` is provided, `_apply_llm_formatting()` sends the formatted markdown to the LLM with a redaction-detection prompt (from `translate.prompts.get_format_prompt`). Safety checks:
+- Output is rejected if it looks like an HTML error page (`_is_html()`)
+- Output is rejected if length differs by >30% from input
+- `[REDACTED]` marker count is logged (new markers added by LLM)
+- On failure, the original document is preserved unchanged
+
+The LLM is invoked synchronously via LangChain's `invoke()` (not async).
 
 ## Usage Patterns
 
