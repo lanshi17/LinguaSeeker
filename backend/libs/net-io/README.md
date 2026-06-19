@@ -17,6 +17,9 @@ results = await net_io.fetch_multi(
     {"query": "BRCA1 variant", "limit": 5},
 )
 
+# Download a file from URL
+dl = await net_io.download_file("https://example.com/paper.pdf")
+
 # MinerU document parsing
 task = await net_io.mineru_create_task(
     "https://example.com/paper.pdf",
@@ -58,7 +61,7 @@ src/
     +-- europepmc.rs      # Europe PMC REST API
     +-- arxiv.rs          # arXiv API
     +-- pmc.rs            # PubMed Central E-utilities
-    +-- biorxiv.rs        # bioRxiv/medRxiv API
+    +-- biorxiv.rs        # bioRxiv + medRxiv API (two separate providers)
     +-- scielo.rs         # SciELO search
     +-- cinii.rs          # CiNii (Japan) API
     +-- jstage.rs         # J-STAGE (Japan Science and Technology)
@@ -69,7 +72,7 @@ src/
     +-- base_search.rs    # BASE (Bielefeld Academic Search Engine)
 ```
 
-## Literature Providers (14)
+## Literature Providers (15)
 
 | Provider | Search | Download | Source |
 |----------|--------|----------|--------|
@@ -77,8 +80,9 @@ src/
 | `crossref` | YES | NO | Crossref REST API |
 | `europepmc` | YES | NO | Europe PMC REST API |
 | `arxiv` | YES | NO | arXiv API |
-| `pmc` | YES | NO | PubMed Central E-utilities |
-| `biorxiv` | YES | NO | bioRxiv/medRxiv API |
+| `pmc` | YES | NO | PubMed Central E-utilities (supports NCBI API key via `PUBMED_API_KEY` env var) |
+| `biorxiv` | YES | NO | bioRxiv preprint API |
+| `medrxiv` | YES | NO | medRxiv preprint API |
 | `scielo` | YES | NO | SciELO search |
 | `cinii` | YES | NO | CiNii (Japan) API |
 | `jstage` | YES | YES | J-STAGE |
@@ -100,6 +104,7 @@ async def fetch_multi(providers, action, params, timeout_ms=None, max_retries=No
 async def scrape_web(provider, action, params, timeout_ms=None, max_retries=None, proxy=None) -> dict
 def scrape_html(html, css_selector) -> list[dict]
 def extract_pdf_links(html, base_url) -> list[str]
+async def download_file(url, timeout_ms=None, max_retries=None, proxy=None) -> dict  # {"bytes": bytes, "final_url": str, "status_code": int}
 ```
 
 `fetch_multi` launches all provider requests in parallel via `futures::join_all`. Per-provider failures are captured as `FetchResult` objects with `success: false` rather than propagating exceptions.
@@ -121,13 +126,15 @@ def extract_pdf_links(html, base_url) -> list[str]
 
 | Feature | Default | Notes |
 |---------|---------|-------|
-| Timeout | 30,000 ms | Configurable per-call via `timeout_ms` |
-| Max retries | 2 (3 total attempts) | Exponential backoff starting at 1s, capped at 2^20 ms |
-| User-Agent | `cross-evidence-io/0.1.0` | |
+| Timeout | 60,000 ms | Configurable per-call via `timeout_ms` |
+| Connect timeout | 15,000 ms | Fixed |
+| Max retries | 3 total attempts | Exponential backoff starting at 1s, capped at 2^20 ms |
+| User-Agent | Chrome 131 browser UA | Mimics a real browser to avoid 403 from academic publishers |
+| Default headers | `Accept`, `Accept-Language`, `Accept-Encoding` | Browser-like headers for the same reason |
 | Redirects | Up to 10 | |
 | Gzip | Enabled | |
 
-Retry only applies to `get_json` (provider search calls). MinerU API calls do not retry.
+Retry applies to `get_json` (provider search calls), `get_bytes` (file downloads), and `get_text`. MinerU API calls do not retry. A `new_no_proxy()` constructor is available for MinerU calls that should bypass system proxy settings.
 
 ## Error Handling
 
@@ -147,9 +154,11 @@ Retry only applies to `get_json` (provider search calls). MinerU API calls do no
 | reqwest | HTTP client (rustls, gzip, SOCKS proxy) |
 | scraper | HTML parsing + CSS selectors |
 | tokio | Async runtime |
+| futures | `join_all` for parallel provider requests |
 | serde / serde_json | Serialization |
 | url / urlencoding | URL handling |
 | pythonize | Rust struct -> Python dict |
+| thiserror | Derive `Error` trait for `GatewayError` |
 
 ## Testing
 
