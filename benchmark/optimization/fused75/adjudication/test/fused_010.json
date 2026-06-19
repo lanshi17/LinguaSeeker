@@ -58,13 +58,13 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "deletion",
       "field_id": "A.variant_type",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted variant type phrase",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_010/source.md:91",
+      "source_quote": "Between 1999 and 2014, BRCA1/2 testing was performed using conformation-sensitive gel electrophoresis (CSGE) or conformation-sensitive capillary electrophoresis (CSCE), followed by Sanger sequencing. The Portuguese BRCA2 founder variant was screened using a specific polymerase chain reaction (PCR)-based assay, and large deletions and insertions in BRCA1 and BRCA2 were assessed by multiplex ligation-dependent probe amplification (MRC Holland, Amsterdam, Netherlands).",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",

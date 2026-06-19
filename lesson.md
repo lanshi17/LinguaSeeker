@@ -3194,3 +3194,24 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 - CLI 测试至少覆盖一次从非项目根 cwd 调用的路径解析场景。
 - 对 1-3 字符标签和缩写字段必须覆盖“词内不匹配”的测试,尤其是 MOI、variant type、classification 等短值。
 - 自动预标注不得替代人工 adjudication:机器输出必须保持 `is_complete=false`,由 validator 继续阻断 promotion。
+
+## 2026-06-19 Fused-75 AI-assisted review guardrails
+
+### 问题
+- AI-assisted source-visible 草稿初版把 `due to CFTR variant screening panel bias` 误判为 `A.gene_disease_relationship=causative` 的支持证据。
+
+### 排查过程
+- 运行真实 fused-75 AI-assisted pass 后抽查 `fused_000`。
+- 发现关系字段命中了摘要中的 `due to ... CFTR variant screening panels`,但这句话表达的是诊断偏倚原因,不是 CFTR 导致 cystic fibrosis。
+- 增加回归测试:第一行放置 `due to CFTR variant screening panel bias` 干扰项,第二行放置真正的 `caused by mutations in the CFTR gene`。
+
+### 根因
+- 关系 matcher 把 `due to` 当成强因果触发词,但在医学论文中 `due to` 常描述研究偏倚、治疗限制、诊断差异等非 gene-disease 因果关系。
+
+### 解决方案
+- `A.gene_disease_relationship=causative` 只接受更强的 `caused by` / `results from` / `disease-causing` 模式。
+- AI-assisted pass 重跑后从 32 个新增 source-visible 收紧到 28 个,总 source-visible=107,未决字段=53。
+
+### 预防措施
+- AI-assisted reviewer 只填高置信 `source_visible`,不自动填 `not_source_visible` 或 `is_complete=true`。
+- 每个新增触发词都必须有负例测试,尤其是 `due to`, `associated with`, `linked to` 这类语义过宽的短语。

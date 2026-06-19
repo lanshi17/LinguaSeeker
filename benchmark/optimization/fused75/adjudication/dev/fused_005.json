@@ -13,13 +13,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "severe combined immunodeficiency, autosomal recessive, T cell-negative, B cell-negative, NK cell-negative, due to adenosine deaminase deficiency",
       "field_id": "B.disease_diagnosis",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted disease phrase overlap",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_005/source.md:5",
+      "source_quote": "Purpose Newborn screening using dried blood spot (DBS) samples for the targeted measurement of metabolites and nucleic acids has made a substantial contribution to public healthcare by facilitating the detection of neonates with genetic disorders. Here, we investigated the applicability of non-targeted quantitative proteomics analysis to newborn screening for inborn errors of immunity (IEIs). Methods DBS samples from 40 healthy newborns and eight healthy adults were subjected to non-targeted pro",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
@@ -31,22 +31,22 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "AR",
       "field_id": "B.mode_of_inheritance_reported",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted MOI phrase for AR",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_005/source.md:98",
+      "source_quote": "Next, we considered which diseases are feasible potential targets for diagnosis/screening by DIA-LC\u2013MS/MS using DBS samples. Diseases with autosomal recessive or X-linked inheritance were identified as primary targets; as diseases with autosomal dominant inheritance are caused by anomaly of a single allele, while the other allele remains intact, which would be expected to minimally affect protein levels, they were not considered ideal for screening using this approach. Of the 1110 identified pro",
+      "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "c.632G>A",
       "field_id": "A.variant_hgvs_c",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted normalized variant mention",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_005/source.md:32",
+      "source_quote": "DBS samples on Guthrie cards from 40 healthy newborns used to screen for metabolic disorders were collected, as were samples from 8 healthy adults, and 45 samples from 43 patients with 12 IEI diseases. Of the IEI samples, 38 were obtained after disease onset and stored at their respective institutions for research purposes, and the remaining FHL type 3 (n = 5) and CHS (n = 1) samples were obtained pre-symptomatically for use in public health screening for metabolic diseases. Detailed sample info",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
@@ -67,13 +67,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "Pathogenic",
       "field_id": "J.clinvar_assertion",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted classification phrase",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_005/source.md:107",
+      "source_quote": "We next determined whether the effect of a gene mutation on its protein level can be reliably predicted by in silico analysis. Table 2 shows the results of mutation effect predictions, together with the observed protein levels. As missense mutations often affect protein abundance by destabilizing protein structures [ 26 ], we performed computational prediction of the impact of missense mutations on protein stability using FoldX, a state-of-the art method for stability estimation based on the thr",
+      "visibility": "source_visible"
     }
   ],
   "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_005/source.md",

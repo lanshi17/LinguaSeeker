@@ -13,13 +13,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "BRCA2-related cancer predisposition",
       "field_id": "B.disease_diagnosis",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted disease phrase overlap",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_011/source.md:89",
+      "source_quote": "The present study of 307 patients with breast cancer revealed germline mutations in 19% of cases. BRCA1/2 genes accounted for 31% of pathogenic mutations, while the ATM gene represented 12%. The high frequency of ATM mutations (12% overall) and its functional similarity to BRCA1/2 suggest it could be considered as BRCA3. Of the 307 patients with breast cancer, 33% had VUS, primarily in ATM (12%), BRCA2 (11%) and BRCA1 (5%). The majority of VUS (95%) were missense mutations. Investigating VUS, es",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -31,13 +31,13 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "AD",
       "field_id": "B.mode_of_inheritance_reported",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted MOI phrase for AD",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_011/source.md:12",
+      "source_quote": "The gene alterations can be inherited or acquired after exposure to carcinogenic agents. Risk factors such as hormonal regulation and lifestyle have also been identified [ 3 \u2013 5 ]; however, heredity represents one of the most important risk factors [ 6 , 7 ]. It is estimated that 5%\u201310% of breast cancers are attributable to hereditary syndromes with autosomal dominant transmission, such as hereditary breast and ovarian cancer syndrome (HBOC). The BCRA1 and BCRA2 genes are responsible for 30%\u201350%",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",

@@ -31,13 +31,13 @@
       "visibility": null
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "XL",
       "field_id": "B.mode_of_inheritance_reported",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted MOI phrase for XL",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_012/source.md:10",
+      "source_quote": "Mutations in the X-linked cyclin-dependent kinase-like 5 gene ( CDKL5 ) are associated with CDKL5 deficiency disorder (CDD [MIM300203]) [ 1 ], a neurodevelopmental disease characterized by early infantile epileptic encephalopathy, autism spectrum disorders, and intellectual disability [ 2 \u2013 6 ]. CDKL5 is a serine/threonine kinase that shares homology with cyclin-dependent kinases and mitogen-activated protein kinases [ 2 ]. It plays a crucial role in proper brain development [ 7 \u2013 10 ], with its",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
