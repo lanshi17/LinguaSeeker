@@ -1,0 +1,613 @@
+{
+  "entries": [
+    {
+      "entry_id": "fused_000",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_000/expected.json",
+      "selection_reason": "first 10 sorted entries reserved for adjudication dev",
+      "sha256": "8f255eb05b9f10cdd7271986007bf9778ada436a28569c4fe3682f0d03eccccc",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_000/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_001",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_001/expected.json",
+      "selection_reason": "first 10 sorted entries reserved for adjudication dev",
+      "sha256": "fba0b8f2a13fbd00909ca1f975d1c83a27e1a1493e09d725349ca34c2899ed6e",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_001/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_002",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/expected.json",
+      "selection_reason": "first 10 sorted entries reserved for adjudication dev",
+      "sha256": "4562aba13114e2bdfe8ff2d17b0fcc6dbf51ae5feb313a5940ba92269b408c87",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_003",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_003/expected.json",
+      "selection_reason": "first 10 sorted entries reserved for adjudication dev",
+      "sha256": "41ff0107f6ec9f19019f449708db1301f5751f394e9ce8aa27730ef6b9652a11",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_003/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_004",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/expected.json",
+      "selection_reason": "first 10 sorted entries reserved for adjudication dev",
+      "sha256": "d19fb19e3f2b30c071e9e85819c0c8b57049c978bf6ec6b29d026246828961c2",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_005",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_005/expected.json",
+      "selection_reason": "first 10 sorted entries reserved for adjudication dev",
+      "sha256": "0d1b6d6738f09a0d2e5728b511b130b3352d369f54a9a07bb09c2f24e0fa78e0",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_005/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_006",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_006/expected.json",
+      "selection_reason": "first 10 sorted entries reserved for adjudication dev",
+      "sha256": "20284443f79e91bc5578b314e3797b051e3462763887181dea761b2489ba4643",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_006/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_007",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_007/expected.json",
+      "selection_reason": "first 10 sorted entries reserved for adjudication dev",
+      "sha256": "b2fc1f05a878bbb11b6d90995e21c80755d0bef406a502b1c0929d238a6b48ec",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_007/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_008",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_008/expected.json",
+      "selection_reason": "first 10 sorted entries reserved for adjudication dev",
+      "sha256": "2b76a63abb44548479866362aac8d1ad3f1dfd5ae5850407c8a035c5e48a8c07",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_008/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_009",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_009/expected.json",
+      "selection_reason": "first 10 sorted entries reserved for adjudication dev",
+      "sha256": "cd7964576b1919201129562d6476f81804c947d139296a067b77996fa2bf1da3",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_009/source.md",
+      "split": "adjudication_dev"
+    },
+    {
+      "entry_id": "fused_010",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/expected.json",
+      "selection_reason": "next 10 sorted entries reserved for held-out adjudication test",
+      "sha256": "3583a9acb2291a72926b175d46269f4e8c19f5973422285b5be4e6f322a2ff40",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_011",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/expected.json",
+      "selection_reason": "next 10 sorted entries reserved for held-out adjudication test",
+      "sha256": "465a2fd1838872dabe0bd476c68d3180b72b64625470ba03c827658de0aeef45",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_012",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_012/expected.json",
+      "selection_reason": "next 10 sorted entries reserved for held-out adjudication test",
+      "sha256": "5d7884bafd245cb6440fd09a8c0ea6f8bd34d04b661bd7a1bd6b58514317312d",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_012/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_013",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_013/expected.json",
+      "selection_reason": "next 10 sorted entries reserved for held-out adjudication test",
+      "sha256": "ef0bfbcc8eea9f57c18a6db493c613cec10d81d8ad560abc25609ed5a72ef31d",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_013/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_014",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_014/expected.json",
+      "selection_reason": "next 10 sorted entries reserved for held-out adjudication test",
+      "sha256": "357e4c3010bd9dd1e67a6c01a6a2fa0064c64aa77769b995c728e0231ed46ca3",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_014/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_015",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_015/expected.json",
+      "selection_reason": "next 10 sorted entries reserved for held-out adjudication test",
+      "sha256": "cb3cfd9394c7b8c8963ba4eb2a4fa45295efb6667a1f6cf88c735de292bf279c",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_015/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_016",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_016/expected.json",
+      "selection_reason": "next 10 sorted entries reserved for held-out adjudication test",
+      "sha256": "d2af5f3f71ab2d2db2d127da5f70694a955357e4cae3c66c5cdd4c04d12a8380",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_016/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_017",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_017/expected.json",
+      "selection_reason": "next 10 sorted entries reserved for held-out adjudication test",
+      "sha256": "62befa9c518d21cafa0f3ac48b24d9bbc8b7f0b02976fa2d3122388aa1161b25",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_017/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_018",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_018/expected.json",
+      "selection_reason": "next 10 sorted entries reserved for held-out adjudication test",
+      "sha256": "7405b15f63b9458c935eb77f1e1369d1ed9d37c795175093dbb085ee7e29a5d5",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_018/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_019",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_019/expected.json",
+      "selection_reason": "next 10 sorted entries reserved for held-out adjudication test",
+      "sha256": "2abe1448f881204fe077662f6342b715f2c9b0358c27bbbd77899f18bf7105d8",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_019/source.md",
+      "split": "adjudication_test"
+    },
+    {
+      "entry_id": "fused_020",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_020/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "72dada5d13792f29fb51830257d335b334f29adf6c8483ea9840c703e9368c79",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_020/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_021",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_021/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "d773c4c2587c197591db08e5cc15b84cfb29c6bc02e1969963c032bb6a708573",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_021/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_022",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_022/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "475f8ca37f9cb290fa61b23119756d1c56f95f4fe9e6a2a4b3f78e3f934bc6d1",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_022/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_023",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_023/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "489fa32e116acd4b6e42684f4edcd14cdcb057698d138b13c949ca8f84e70b3b",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_023/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_024",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_024/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "e5404cdc4ea4c93d7aa988ebcba3b5c24d0da8949d6d3587caa9c4683ac0fb7d",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_024/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_025",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_025/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "4e9cf974f8002f967e02831aec2cc5d7f141556c08aebd7a0731a6e737f3d1f2",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_025/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_026",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_026/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "34cf2d126f62c1c338ae7856661b0f041e6659572a9f9fe2a87aa4b8012eccd1",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_026/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_027",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_027/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "fc2ab6a7477ca80859453aacb2e32c1bf5da648fab3d384f3e8a962b2ee39acc",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_027/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_028",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_028/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "e83151095c41e2adf2743636c56d5c5bbfa3a64b8e8fb600e8745f36a4edd59e",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_028/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_029",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_029/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "2498e11e531a84f2161cf9ab041f944000d2235d858906eef79dd3edb306d9c5",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_029/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_030",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_030/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "47b26ad363352cfef5b45c5bd8ad18a3c223133c4ab6612b1f13375360ede86a",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_030/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_031",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_031/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "29f7d1e8f05ab61e63b3e1ea9df79bc6bc58e4ae020d8d1decccf1a808d77e17",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_031/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_032",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_032/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "562d78941c304dcdac851ba9d123f55d7169e5e0ddf57cb36c4488083615306f",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_032/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_033",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_033/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "d0d5c0212eb302105ac6c856a50b3c01bd1f5e88aa305ad404ff4a923f07692f",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_033/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_034",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_034/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "60bc9168af89438afb2421e2d9e1416845ca378aa2d942d978da8e4ac8fc321e",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_034/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_035",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_035/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "fa2ab9b185d399857dbeeb1746fc21fe4a1f06516a51fd935123369f1ee8bb2a",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_035/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_036",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_036/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "ffba406d63843c9d0cb1957ce8870385d75e415e38aeaec8bb839a2372f8c22e",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_036/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_037",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_037/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "772be1d117d656675c6138320a3f34088f9009f09965ff4a85614b1a3a6abf8e",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_037/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_038",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_038/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "54f34ed09e24c6494234356e78d7a5a646229641a1b76db01285d85965cc5977",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_038/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_039",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_039/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "1ad6f55ddd4b5798ed79754b53adfc42d20a3078c5aca545a9b86bcfa89ce088",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_039/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_040",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_040/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "b6375fe5d9fe16b1f9841231a12ff2f61fac310d91d07c38c383ce21463e2446",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_040/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_041",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_041/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "2d62e7947b79ec9021112da0fc2e3757a765fec6bbd956c44c318912f299dbf6",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_041/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_042",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_042/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "40486cb9ee30c68a95e6dd3a2443f582b4b5f8e257057f606d2bc83a46595a69",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_042/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_043",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_043/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "9430ca78cfdef90d20a562eaa36df603833b1f5f0150d97da1f65ea576f46fae",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_043/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_044",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_044/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "0b96e16c8ac7b77abdf253cce04f76349d2425274aa0f50d857d950ffaa335c0",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_044/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_045",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_045/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "540f8219ed09e082b8b3eb8ab98d4e2c706c8f7e0eaf7b5592c767a53bf4a016",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_045/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_046",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_046/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "abff1a9cafb7c6c9e098364784bd0a70c5046d160d6c4de90273cb56e1793b63",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_046/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_047",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_047/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "d9bdfc92c7627e8e4f45ff4275edb1f2b01f882f3d2390e2dab1e0720234f6c6",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_047/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_048",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_048/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "8fdf9fab2695b02b5882af21e77887af18925839de32381e6dd35a141f474147",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_048/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_049",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_049/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "3ba1faef0559583a90219cf7ce6f2d7b49e1a9829c55cc68f726860b99010383",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_049/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_050",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_050/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "277361a242bff11d332468ab2b1391dec109d0ec10a879688d84e993ec2e2514",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_050/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_051",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_051/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "f4d8d5134411fbda5b6de1467faaa087449dec91a1d170a2e024e250b9022e2c",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_051/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_052",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_052/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "39e09925933dcd97222be1923488e124f48ed979b1d5227ad9c5a2b4fd220665",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_052/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_053",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_053/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "bc69804dc40007b66e689ba015234c37700a33602f3dae0c931947e867e3708d",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_053/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_054",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_054/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "516551efb75dc71b97423bcb1d3f94415b87ddcc0df751cdf97dd7910a7e15b9",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_054/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_055",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_055/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "2ae913d4d1e3a206c8af8cf2b9a94a9e22f0fe8745fa96fddea078e4c711a9a3",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_055/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_056",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_056/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "c0cfb100138034ac6e4d40169dc8c753797c9fa4e0cfb5bc3d65031c9dda0bc6",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_056/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_057",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_057/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "0927f52e49f689dd33e8b8e20e9e63b76cfc78ddb2cea80759961011504dcc94",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_057/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_058",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_058/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "bb7d365263b274832b715d559b18b1705651c4618d98625b09191fde352c5fa2",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_058/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_059",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_059/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "beb2763f83df9af1538343f1ccfc516b820f7138088bb5a5fab7e79f65330ffc",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_059/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_060",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_060/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "cafa8c21a15ac2e5a2dbfa3f127b24ea1d13d1a6537bd29e1b8702cafc3b2604",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_060/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_061",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_061/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "343c8b255a5d9b13a5f10398971a2fcfb23ef5fdb34ed7d9a8421b4302aec729",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_061/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_062",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_062/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "bbc53c19780a6f13bd5b2b1dd9f775042fdda90d0ff2202735277a09bee6d3c8",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_062/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_063",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_063/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "4bc0d9d6784acdb27cd46d7a8a0ddbc7bc6c7553e0dfef37478fdf55e33a56c0",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_063/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_064",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_064/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "120d818d310ed565376e377b0cc65c0145b17c14f734d038524d19ceb867c56f",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_064/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_065",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_065/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "3595b243804fde0ad67bf259f036861eccc52164c9897f582be0d94172f56417",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_065/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_066",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_066/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "eb2c5288f515c965d03031117fa9e4254f64ef3f2cf05f4bce8d3208db9b414a",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_066/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_067",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_067/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "2d7734a4edca8e0fee370a49561d2add45e3e289bcd2a4330c4bcf0529fefdea",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_067/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_068",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_068/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "ff2b23125234db0382db4018f7177a6c806abacd44ac44cc5fda18186cefe89a",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_068/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_069",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_069/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "67fa97a8dd8166c0c07ca36e0eba3e6075eb958b0e7b8afcc61a1dd6f0540afe",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_069/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_070",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_070/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "82104685d7c09e43e4238cf328ce59a8ba7c93cf6bcd9ef32ef895f16a585973",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_070/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_071",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_071/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "237e683dabae5b4c4f9408bb19d1d2e5be6c2575317e0c35e8e1885a9117a812",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_071/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_072",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_072/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "b4ad6a494f400cbc8b327405afd8cb76c0df263dcfa4ebe8aa8ed9651be74b57",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_072/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_073",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_073/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "72ad06299fc7780dd66c403d2fc0849101254a6b309a362f035091f0fed896c2",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_073/source.md",
+      "split": "auto_pool"
+    },
+    {
+      "entry_id": "fused_074",
+      "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_074/expected.json",
+      "selection_reason": "remaining sorted entries retained for automatic evaluation pool",
+      "sha256": "3f8d162d818b40322e3129d41c3ff75e6699efebeeb5b7a53c71d9aa561306ae",
+      "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_074/source.md",
+      "split": "auto_pool"
+    }
+  ],
+  "metadata": {
+    "dataset_root": "benchmark/data/ground_truth/clinvar_fused",
+    "dev_count": 10,
+    "selection_method": "sorted_entry_id_v1",
+    "selection_path": "benchmark/data/ground_truth/clinvar_fused/selection.json",
+    "split_seed": "sorted-entry-id-v1",
+    "test_count": 10,
+    "total_entries": 75
+  }
+}
