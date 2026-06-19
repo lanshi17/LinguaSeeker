@@ -13,13 +13,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "autosomal dominant centronuclear myopathy",
       "field_id": "B.disease_diagnosis",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted disease phrase overlap",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_016/source.md:16",
+      "source_quote": "Monoallelic variants in the DNM2 are associated with heterogeneous clinical presentations, including dominant intermediate Charcot\u2013Marie\u2013Tooth disease (CMTDIB, MIM 606482), dominant axonal Charcot\u2013Marie\u2013Tooth disease (CMT2M, MIM 606482), and a form of centronuclear myopathy (CNM, MIM 160150), characterized by muscle weakness. In DNM2 -related CNM patients, muscle biopsy usually shows disorganization of myofibers and centralized nuclei ( Jungbluth et al., 2008 ; Romero, 2010 ; Biancalana et al.,",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
@@ -49,13 +49,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "p.Arg369Gln",
       "field_id": "A.variant_hgvs_p",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted normalized variant mention",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_016/source.md:89",
+      "source_quote": "Immunofluorescence showed positivity for the membrane proteins NH-dystrophin, spectrin, and caveolin-3, indicating a membrane lining of these vacuoles, but positive staining for laminin-\u03b12 was not observed ( Figures 2G\u2013J ). Several fibers showed altered staining for \u03b1B-crystalline, with marked protein accumulation in numerous fibers ( Figure 2K ). The \u201cnecklace fibers\u201d showed strong positivity for myotilin ( Figure 2L ). Strong positivity associated with these vacuolar structures was detected fo",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",

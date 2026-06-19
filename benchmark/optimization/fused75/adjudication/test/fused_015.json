@@ -13,13 +13,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "DICER1-related tumor predisposition",
       "field_id": "B.disease_diagnosis",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted disease phrase overlap",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:5",
+      "source_quote": "Abstract The endoribonuclease DICER1 plays an essential role in the microRNA (miRNA) biogenesis pathway, cleaving precursor miRNA (pre-miRNA) stem-loops to generate mature single-stranded miRNAs. Germline pathogenic variants (GPVs) in DICER1 result in DICER1 tumor predisposition syndrome (DTPS), a mainly childhood-onset tumor susceptibility disorder. Most DTPS-causing GPVs are nonsense or frameshifting, with tumor development requiring a second somatic missense hit that impairs the DICER1 RNase",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,

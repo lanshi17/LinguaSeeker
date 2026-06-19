@@ -13,13 +13,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "classic or attenuated familial adenomatous polyposis",
       "field_id": "B.disease_diagnosis",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted disease phrase overlap",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_006/source.md:5",
+      "source_quote": "We present the first case of a male patient with an epidermal growth factor receptor (EGFR) 19del mutation who was diagnosed with intra-abdominal aggressive fibromatosis and familial adenomatous polyposis. We assessed the clinical response of the patient to first-generation EGFR-tyrosine kinase inhibitors (EGFR-TKIs). A remarkable sustained partial response was achieved with the application of gefitinib after progression on multiple lines of therapy. The main adverse event of gefitinib treatment",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,
@@ -58,13 +58,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "other",
       "field_id": "A.variant_type",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted variant type phrase",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_006/source.md:12",
+      "source_quote": "Clinical guidelines recommend a wait-and-see approach for patients who are asymptomatic, have smaller tumors, slow tumor growth, or no organ dysfunction. Currently, the radical treatment for AF is extended surgical resection with a negative margin, despite local recurrence rates as high as 30%\u201340% ( 5 ). Radiotherapy can also be used to treat AF, contributing to long-term local control ( 6 ). Systemic therapy, including endocrine drugs, non-steroidal anti-inflammatory drugs (NSAIDs), chemotherap",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
