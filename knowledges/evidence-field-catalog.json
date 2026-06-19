@@ -1,0 +1,2391 @@
+{
+  "schema_version": "2.0.0",
+  "title": "ACMG/AMP + ClinGen GDV Evidence Field Catalog",
+  "description": "Complete catalog of 166 evidence fields across 11 categories (A-K) covering ACMG/AMP 2015 variant interpretation criteria, ClinGen SVI 2019 PS3/BS3 refinements (OddsPath framework), ClinGen GDV SOP v12 gene-disease validity curation, and GDV-12 single-paper extractable fields. 143 literature-extractable (A-J) + 23 cross-paper GDV curation fields (K).",
+  "total_fields": 166,
+  "categories": [
+    {
+      "id": "A",
+      "name": "Variant Information",
+      "count": 22,
+      "scope": "literature + db-lookup"
+    },
+    {
+      "id": "B",
+      "name": "Case/Phenotype Information",
+      "count": 19,
+      "scope": "literature-extractable"
+    },
+    {
+      "id": "C",
+      "name": "Segregation/Family Information",
+      "count": 17,
+      "scope": "literature-extractable"
+    },
+    {
+      "id": "D",
+      "name": "Population/Frequency Information",
+      "count": 8,
+      "scope": "literature-extractable"
+    },
+    {
+      "id": "E",
+      "name": "Computational/Prediction Evidence",
+      "count": 7,
+      "scope": "literature-extractable"
+    },
+    {
+      "id": "F",
+      "name": "Functional Evidence",
+      "count": 24,
+      "scope": "literature-extractable"
+    },
+    {
+      "id": "G",
+      "name": "Case-Control Evidence",
+      "count": 15,
+      "scope": "literature-extractable"
+    },
+    {
+      "id": "H",
+      "name": "Contradiction/Exclusion Evidence",
+      "count": 9,
+      "scope": "literature-extractable"
+    },
+    {
+      "id": "I",
+      "name": "Gene Function/Experimental Evidence",
+      "count": 16,
+      "scope": "literature-extractable"
+    },
+    {
+      "id": "J",
+      "name": "Authority/Time Validity",
+      "count": 6,
+      "scope": "literature-extractable"
+    },
+    {
+      "id": "K",
+      "name": "Gene-Disease Validity Curation",
+      "count": 23,
+      "scope": "cross-paper curation"
+    }
+  ],
+  "extraction_groups": {
+    "high_signal": {
+      "categories": [
+        "A",
+        "B",
+        "D",
+        "E",
+        "J"
+      ],
+      "description": "Variant, case, population, prediction, and authority fields"
+    },
+    "supporting": {
+      "categories": [
+        "C",
+        "F",
+        "G",
+        "H",
+        "I"
+      ],
+      "description": "Segregation, functional, case-control, contradiction, and gene function fields"
+    },
+    "curation": {
+      "categories": [
+        "K"
+      ],
+      "description": "Gene-disease validity curation fields - cross-paper, GDV SOP v12"
+    }
+  },
+  "source_references": {
+    "ACMG_AMP_2015": "Richards et al., Genetics in Medicine (2015) - 28 standard variant interpretation criteria",
+    "ClinGen_SVI_2019": "Brnich et al., Genome Medicine (2020) - PS3/BS3 OddsPath framework",
+    "ClinGen_GDV_v12": "ClinGen Gene Curation SOP v12 - Gene-Disease Validity Curation"
+  },
+  "items": [
+    {
+      "field_id": "A.gene_symbol",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Gene symbol",
+      "description": "Gene symbol",
+      "acmg_codes": [
+        "PVS1",
+        "PP2",
+        "BP1"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": true
+    },
+    {
+      "field_id": "A.gene_aliases",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Gene aliases or old names",
+      "description": "Gene aliases or old names",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Reported gene-disease relationship",
+      "description": "Reported gene-disease relationship",
+      "acmg_codes": [
+        "PP4"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.transcript_id",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Transcript ID",
+      "description": "Transcript ID",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.reference_sequence",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Reference sequence or genome build",
+      "description": "Reference sequence or genome build",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "HGVS coding variant",
+      "description": "HGVS coding variant",
+      "acmg_codes": [
+        "PS1",
+        "PM5"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": true
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "HGVS protein variant",
+      "description": "HGVS protein variant",
+      "acmg_codes": [
+        "PS1",
+        "PM5"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": true
+    },
+    {
+      "field_id": "A.variant_hgvs_g",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "HGVS genomic variant",
+      "description": "HGVS genomic variant",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.variant_legacy_name",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Legacy or traditional variant name",
+      "description": "Legacy or traditional variant name",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.variant_type",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Variant type",
+      "description": "Variant type",
+      "acmg_codes": [
+        "PVS1",
+        "BP1",
+        "BP7"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Null variant detail and LoF context",
+      "description": "Null variant detail and LoF context",
+      "acmg_codes": [
+        "PVS1"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.protein_effect",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Protein effect description",
+      "description": "Protein effect description",
+      "acmg_codes": [
+        "PM4",
+        "BP3",
+        "BP7"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.same_amino_acid_known_variant",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Same amino acid as known pathogenic variant",
+      "description": "Same amino acid as known pathogenic variant",
+      "acmg_codes": [
+        "PS1"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.same_residue_other_missense",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Same residue different missense pathogenic reference",
+      "description": "Same residue different missense pathogenic reference",
+      "acmg_codes": [
+        "PM5"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Functional domain or mutational hotspot",
+      "description": "Functional domain or mutational hotspot",
+      "acmg_codes": [
+        "PM1"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.protein_length_change",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Protein length change",
+      "description": "Protein length change",
+      "acmg_codes": [
+        "PM4"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.repeat_region_status",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Repeat region status",
+      "description": "Repeat region status",
+      "acmg_codes": [
+        "BP3"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.splice_or_synonymous_effect",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Synonymous or splice effect statement",
+      "description": "Synonymous or splice effect statement",
+      "acmg_codes": [
+        "BP7"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.gene_missense_constraint",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Gene missense constraint evidence",
+      "description": "Gene-level missense intolerance evidence (e.g. gnomAD missense Z-score, obs/exp ratio). Requires external database lookup, not directly stated in literature. (PP2)",
+      "acmg_codes": [
+        "PP2"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.gene_truncating_mechanism_evidence",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Gene truncating mechanism evidence",
+      "description": "Evidence that gene disease mechanism is primarily through truncating/LOF variants (e.g. ClinGen curation, LOEUF). Requires external database lookup. (BP1)",
+      "acmg_codes": [
+        "BP1"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.variant_consequence_class",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Variant consequence class (GDV)",
+      "description": "Predicted null vs other variant with gene impact vs gain-of-function (GDV-12)",
+      "acmg_codes": [
+        "PVS1",
+        "BP1"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "A.identity_by_descent_variant",
+      "category_id": "A",
+      "category_name": "Variant Information",
+      "field_name": "Identity-by-descent or founder variant",
+      "description": "Known founder variant in specific population (GDV-12 p24)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "population"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.proband_status",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Proband status",
+      "description": "Proband status",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "phenotype_consistency"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.case_count",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Independent case count",
+      "description": "Independent case count",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_level"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Disease diagnosis",
+      "description": "Disease diagnosis",
+      "acmg_codes": [
+        "PP4"
+      ],
+      "clingen_modules": [
+        "phenotype_consistency"
+      ],
+      "required_for_scorable": true
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Phenotype specificity",
+      "description": "Phenotype specificity",
+      "acmg_codes": [
+        "PP4"
+      ],
+      "clingen_modules": [
+        "phenotype_consistency"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "HPO phenotype terms",
+      "description": "HPO phenotype terms",
+      "acmg_codes": [
+        "PP4"
+      ],
+      "clingen_modules": [
+        "phenotype_consistency"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Key clinical phenotypes",
+      "description": "Key clinical phenotypes",
+      "acmg_codes": [
+        "PP4"
+      ],
+      "clingen_modules": [
+        "phenotype_consistency"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.biochemical_markers",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Biochemical or laboratory markers",
+      "description": "Biochemical or laboratory markers",
+      "acmg_codes": [
+        "PP4"
+      ],
+      "clingen_modules": [
+        "phenotype_consistency"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Current or last follow-up age",
+      "description": "Current or last follow-up age",
+      "acmg_codes": [
+        "BS2"
+      ],
+      "clingen_modules": [
+        "case_level"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Age of onset",
+      "description": "Age of onset",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "phenotype_consistency"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.sex",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Sex",
+      "description": "Sex",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.ancestry_or_population",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Ancestry or population",
+      "description": "Ancestry or population",
+      "acmg_codes": [
+        "PM2",
+        "BA1",
+        "BS1"
+      ],
+      "clingen_modules": [
+        "population"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.consanguinity",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Consanguinity",
+      "description": "Consanguinity",
+      "acmg_codes": [
+        "PM3"
+      ],
+      "clingen_modules": [
+        "segregation"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Reported mode of inheritance",
+      "description": "Reported mode of inheritance",
+      "acmg_codes": [
+        "PVS1",
+        "PM3",
+        "BP2"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.single_genetic_etiology_claim",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Single genetic etiology claim",
+      "description": "Single genetic etiology claim",
+      "acmg_codes": [
+        "PP4"
+      ],
+      "clingen_modules": [
+        "phenotype_consistency"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Other diagnoses excluded",
+      "description": "Other diagnoses excluded",
+      "acmg_codes": [
+        "BP5"
+      ],
+      "clingen_modules": [
+        "contradiction"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.additional_pathogenic_variant",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Additional pathogenic variant",
+      "description": "Additional pathogenic variant",
+      "acmg_codes": [
+        "BP5"
+      ],
+      "clingen_modules": [
+        "contradiction"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.testing_method",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Variant testing method",
+      "description": "Variant testing method",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "segregation"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.sequencing_method_quality",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Sequencing method quality",
+      "description": "Sequencing method quality",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "segregation"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "B.healthy_adult_status",
+      "category_id": "B",
+      "category_name": "Case/Phenotype Information",
+      "field_name": "Healthy adult observation",
+      "description": "Healthy adult observation",
+      "acmg_codes": [
+        "BS2"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.inheritance_source",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "Inherited or de novo source",
+      "description": "Inherited or de novo source",
+      "acmg_codes": [
+        "PS2",
+        "PM6"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "De novo status",
+      "description": "De novo status",
+      "acmg_codes": [
+        "PS2",
+        "PM6"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.parentage_confirmed",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "Parentage confirmation",
+      "description": "Parentage confirmation",
+      "acmg_codes": [
+        "PS2",
+        "PM6"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.maternal_genotype",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "Maternal genotype",
+      "description": "Maternal genotype",
+      "acmg_codes": [
+        "PS2",
+        "PM6",
+        "BS4"
+      ],
+      "clingen_modules": [
+        "segregation"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.maternal_phenotype",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "Maternal phenotype",
+      "description": "Maternal phenotype",
+      "acmg_codes": [
+        "PS2",
+        "PM6",
+        "BS4"
+      ],
+      "clingen_modules": [
+        "segregation"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.paternal_genotype",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "Paternal genotype",
+      "description": "Paternal genotype",
+      "acmg_codes": [
+        "PS2",
+        "PM6",
+        "BS4"
+      ],
+      "clingen_modules": [
+        "segregation"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.paternal_phenotype",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "Paternal phenotype",
+      "description": "Paternal phenotype",
+      "acmg_codes": [
+        "PS2",
+        "PM6",
+        "BS4"
+      ],
+      "clingen_modules": [
+        "segregation"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.phase_status",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "Phase status",
+      "description": "Phase status",
+      "acmg_codes": [
+        "PM3",
+        "BP2"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.in_trans_confirmation",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "In trans confirmation",
+      "description": "In trans confirmation",
+      "acmg_codes": [
+        "PM3"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.cis_or_trans_context",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "Cis or trans context",
+      "description": "Cis or trans context",
+      "acmg_codes": [
+        "BP2"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.g_plus_p_plus_count",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "G+/P+ count",
+      "description": "G+/P+ count",
+      "acmg_codes": [
+        "PP1"
+      ],
+      "clingen_modules": [
+        "segregation"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.g_plus_p_minus_count",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "G+/P- count",
+      "description": "G+/P- count",
+      "acmg_codes": [
+        "BS4"
+      ],
+      "clingen_modules": [
+        "segregation"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.g_minus_p_plus_count",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "G-/P+ count",
+      "description": "G-/P+ count",
+      "acmg_codes": [
+        "BS4"
+      ],
+      "clingen_modules": [
+        "segregation"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.g_minus_p_minus_count",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "G-/P- count",
+      "description": "G-/P- count",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "segregation"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.obligate_carriers",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "Obligate carriers",
+      "description": "Obligate carriers",
+      "acmg_codes": [
+        "PP1"
+      ],
+      "clingen_modules": [
+        "segregation"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.lod_score",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "LOD score",
+      "description": "LOD score",
+      "acmg_codes": [
+        "PP1"
+      ],
+      "clingen_modules": [
+        "segregation"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "C.de_novo_without_parentage_confirmation",
+      "category_id": "C",
+      "category_name": "Segregation/Family Information",
+      "field_name": "De novo without full parentage confirmation",
+      "description": "De novo without full parentage confirmation (PM6: assumed de novo, but without confirmation of paternity and maternity)",
+      "acmg_codes": [
+        "PM6"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "D.population_database_name",
+      "category_id": "D",
+      "category_name": "Population/Frequency Information",
+      "field_name": "Population database name",
+      "description": "Population database name",
+      "acmg_codes": [
+        "PM2",
+        "BA1",
+        "BS1"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "D.allele_frequency",
+      "category_id": "D",
+      "category_name": "Population/Frequency Information",
+      "field_name": "Allele frequency",
+      "description": "Allele frequency",
+      "acmg_codes": [
+        "PM2",
+        "BA1",
+        "BS1"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": true
+    },
+    {
+      "field_id": "D.allele_count",
+      "category_id": "D",
+      "category_name": "Population/Frequency Information",
+      "field_name": "Allele count",
+      "description": "Allele count",
+      "acmg_codes": [
+        "PM2",
+        "BA1",
+        "BS1"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "D.allele_number",
+      "category_id": "D",
+      "category_name": "Population/Frequency Information",
+      "field_name": "Allele number",
+      "description": "Allele number",
+      "acmg_codes": [
+        "PM2",
+        "BA1",
+        "BS1"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "D.homozygote_count",
+      "category_id": "D",
+      "category_name": "Population/Frequency Information",
+      "field_name": "Homozygote count",
+      "description": "Homozygote count",
+      "acmg_codes": [
+        "BS2"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "D.population_subgroup",
+      "category_id": "D",
+      "category_name": "Population/Frequency Information",
+      "field_name": "Population subgroup",
+      "description": "Population subgroup",
+      "acmg_codes": [
+        "PM2",
+        "BA1",
+        "BS1"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "D.absent_or_rare_statement",
+      "category_id": "D",
+      "category_name": "Population/Frequency Information",
+      "field_name": "Absent or rare population statement",
+      "description": "Absent or rare population statement",
+      "acmg_codes": [
+        "PM2"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "D.healthy_carrier_observation",
+      "category_id": "D",
+      "category_name": "Population/Frequency Information",
+      "field_name": "Healthy carrier population observation",
+      "description": "Healthy carrier population observation",
+      "acmg_codes": [
+        "BS2"
+      ],
+      "clingen_modules": [
+        "variant_evidence"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "E.prediction_tools_list",
+      "category_id": "E",
+      "category_name": "Computational/Prediction Evidence",
+      "field_name": "Prediction tools list",
+      "description": "Prediction tools list",
+      "acmg_codes": [
+        "PP3",
+        "BP4"
+      ],
+      "clingen_modules": [
+        "computational"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "E.deleterious_prediction_summary",
+      "category_id": "E",
+      "category_name": "Computational/Prediction Evidence",
+      "field_name": "Deleterious prediction summary",
+      "description": "Deleterious prediction summary",
+      "acmg_codes": [
+        "PP3"
+      ],
+      "clingen_modules": [
+        "computational"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "E.benign_prediction_summary",
+      "category_id": "E",
+      "category_name": "Computational/Prediction Evidence",
+      "field_name": "Benign prediction summary",
+      "description": "Benign prediction summary",
+      "acmg_codes": [
+        "BP4"
+      ],
+      "clingen_modules": [
+        "computational"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "E.splice_prediction",
+      "category_id": "E",
+      "category_name": "Computational/Prediction Evidence",
+      "field_name": "Splice prediction",
+      "description": "Splice prediction",
+      "acmg_codes": [
+        "PP3",
+        "BP4"
+      ],
+      "clingen_modules": [
+        "computational"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "E.conservation_score",
+      "category_id": "E",
+      "category_name": "Computational/Prediction Evidence",
+      "field_name": "Conservation score",
+      "description": "Conservation score",
+      "acmg_codes": [
+        "PP3",
+        "BP4"
+      ],
+      "clingen_modules": [
+        "computational"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "E.in_silico_consensus",
+      "category_id": "E",
+      "category_name": "Computational/Prediction Evidence",
+      "field_name": "In silico consensus",
+      "description": "In silico consensus",
+      "acmg_codes": [
+        "PP3",
+        "BP4"
+      ],
+      "clingen_modules": [
+        "computational"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "E.prediction_conflict",
+      "category_id": "E",
+      "category_name": "Computational/Prediction Evidence",
+      "field_name": "Computational prediction conflict",
+      "description": "Computational prediction conflict",
+      "acmg_codes": [
+        "PP3",
+        "BP4"
+      ],
+      "clingen_modules": [
+        "computational"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.assay_id",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Functional assay identifier",
+      "description": "Functional assay identifier",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.assay_type",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Functional assay type",
+      "description": "Functional assay type",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.assay_system",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Functional assay system",
+      "description": "Functional assay system",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.tested_variant",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Tested variant",
+      "description": "Tested variant",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.functional_result",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Functional result",
+      "description": "Functional result",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.quantitative_result",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Quantitative functional result",
+      "description": "Quantitative functional result",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.positive_controls",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Positive controls",
+      "description": "Positive controls",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.negative_controls",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Negative controls",
+      "description": "Negative controls",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.total_controls",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Total positive plus benign controls",
+      "description": "Total positive plus benign controls",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.control_quality",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Control quality",
+      "description": "Quality of both experimental controls (wild-type/null demonstrating assay dynamic range) and clinical validation controls (known pathogenic/benign variants with independent classifications). SVI distinguishes these two types; experimental controls demonstrate dynamic range while validation controls determine OddsPath (ACMG 2019 SVI)",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.replicates_or_statistics",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Replicates or functional statistics",
+      "description": "Replicates or functional statistics",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.patient_cell_evidence",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Patient-cell functional evidence",
+      "description": "Patient-cell functional evidence",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.non_patient_cell_evidence",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Non-patient-cell functional evidence",
+      "description": "Non-patient-cell functional evidence",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.functional_normal_result",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Functional normal result",
+      "description": "Functional normal result",
+      "acmg_codes": [
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.functional_inconclusive_result",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Functional inconclusive result",
+      "description": "Functional inconclusive result",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.odds_path",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Odds of pathogenicity (OddsPath)",
+      "description": "Calculated OddsPath from functional assay validation (ACMG 2019 SVI Table 3)",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.evidence_strength_tier",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "PS3/BS3 evidence strength tier",
+      "description": "PS3_supporting (OddsPath >2.1) / PS3_moderate (>4.3) / PS3 (>18.7) / PS3_very_strong (>350) / BS3_supporting (<0.48) / BS3_moderate (<0.23) / BS3_strong (<0.053). Note: BS3_strong is the SVI strong-level equivalent, distinct from the generic ACMG BS3 code (ACMG 2019 SVI Table 3)",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.physiologic_context",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Physiologic context of assay",
+      "description": "Patient-derived material vs model organism vs in vitro cellular system (ACMG 2019 SVI Rec 1-2)",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.declared_disease_mechanism",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Declared disease mechanism",
+      "description": "Loss-of-function / gain-of-function / dominant-negative. Prerequisite for Step 1 consistency check; F.disease_mechanism_consistency compares assay against this (ACMG 2019 SVI Step 1 Table 2)",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.molecular_consequence",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Molecular consequence of variant on assay",
+      "description": "NMD-escaped / splicing impact / protein truncation / missense in assay context (ACMG 2019 SVI Rec 3)",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.disease_mechanism_consistency",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Disease mechanism consistency",
+      "description": "Whether assay models LoF / GoF / dominant-negative consistent with known disease mechanism (ACMG 2019 SVI Step 1)",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.assay_validation_method",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Assay validation method",
+      "description": "Three qualifying paths per SVI Step 3 Fig 2: (a) supporting: controls + replicates but <=10 validation controls or historically accepted assay; (b) moderate: >=11 validation controls (mix of benign/pathogenic) without formal OddsPath; (c) formal OddsPath calculated at any strength tier (ACMG 2019 SVI Step 3)",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.allelic_series_size",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "Allelic series validation control count",
+      "description": "Total classified variant controls for validation; must include a mix of benign AND pathogenic variants; >=11 total required for moderate-level evidence (ACMG 2019 SVI Step 3)",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "F.clia_laboratory_status",
+      "category_id": "F",
+      "category_name": "Functional Evidence",
+      "field_name": "CLIA laboratory status",
+      "description": "Whether assay performed in CLIA laboratory or with commercially available kit (ACMG 2019 SVI Rec 5)",
+      "acmg_codes": [
+        "PS3",
+        "BS3"
+      ],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.study_design",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "Case-control study design",
+      "description": "Case-control study design",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_control"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.case_count",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "Case-control case count",
+      "description": "Case-control case count",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_control"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.control_count",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "Case-control control count",
+      "description": "Case-control control count",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_control"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.case_definition",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "Case definition",
+      "description": "Case definition",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_control"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.control_matching",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "Control matching quality",
+      "description": "Control matching quality",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_control"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.variant_count_cases",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "Variant count in cases",
+      "description": "Variant count in cases",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_control"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.variant_count_controls",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "Variant count in controls",
+      "description": "Variant count in controls",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_control"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.odds_ratio",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "Odds ratio",
+      "description": "Odds ratio",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_control"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.confidence_interval",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "Confidence interval",
+      "description": "Confidence interval",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_control"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.p_value",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "P-value",
+      "description": "P-value",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_control"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.statistical_method",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "Statistical method",
+      "description": "Statistical method",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_control"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.case_control_negative_result",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "Negative case-control result",
+      "description": "Negative case-control result",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "contradiction"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.case_control_status",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "Case-control scoring status (GDV)",
+      "description": "Score / Contradicts / Review status per GDV-12 p39",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_control"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.detection_methodology_quality",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "Detection methodology equivalence (GDV)",
+      "description": "Whether cases and controls analyzed using methods with equivalent analytical performance (GDV-12 p39)",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_control"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "G.bias_confounding_factors",
+      "category_id": "G",
+      "category_name": "Case-Control Evidence",
+      "field_name": "Bias and confounding factors (GDV)",
+      "description": "Selection bias, demographic matching, genetic ancestry control (GDV-12 p39)",
+      "acmg_codes": [
+        "PS4"
+      ],
+      "clingen_modules": [
+        "case_control"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "H.misdiagnosis_or_reclassification",
+      "category_id": "H",
+      "category_name": "Contradiction/Exclusion Evidence",
+      "field_name": "Misdiagnosis or reclassification",
+      "description": "Misdiagnosis or reclassification",
+      "acmg_codes": [
+        "BP5"
+      ],
+      "clingen_modules": [
+        "contradiction"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "H.alternative_causative_gene",
+      "category_id": "H",
+      "category_name": "Contradiction/Exclusion Evidence",
+      "field_name": "Alternative causative gene",
+      "description": "Alternative causative gene",
+      "acmg_codes": [
+        "BP5"
+      ],
+      "clingen_modules": [
+        "contradiction"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "H.other_pathogenic_variant",
+      "category_id": "H",
+      "category_name": "Contradiction/Exclusion Evidence",
+      "field_name": "Other pathogenic variant",
+      "description": "Other pathogenic variant",
+      "acmg_codes": [
+        "BP5"
+      ],
+      "clingen_modules": [
+        "contradiction"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "H.non_segregation",
+      "category_id": "H",
+      "category_name": "Contradiction/Exclusion Evidence",
+      "field_name": "Non-segregation",
+      "description": "Non-segregation",
+      "acmg_codes": [
+        "BS4"
+      ],
+      "clingen_modules": [
+        "contradiction"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "H.healthy_carrier_contradiction",
+      "category_id": "H",
+      "category_name": "Contradiction/Exclusion Evidence",
+      "field_name": "Healthy carrier contradiction",
+      "description": "Healthy carrier contradiction",
+      "acmg_codes": [
+        "BS2"
+      ],
+      "clingen_modules": [
+        "contradiction"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "H.negative_functional_result",
+      "category_id": "H",
+      "category_name": "Contradiction/Exclusion Evidence",
+      "field_name": "Negative functional result",
+      "description": "Negative functional result",
+      "acmg_codes": [
+        "BS3"
+      ],
+      "clingen_modules": [
+        "contradiction"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "H.animal_model_no_phenotype",
+      "category_id": "H",
+      "category_name": "Contradiction/Exclusion Evidence",
+      "field_name": "Animal model no phenotype",
+      "description": "Animal model no phenotype",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "contradiction"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "H.contradiction_type",
+      "category_id": "H",
+      "category_name": "Contradiction/Exclusion Evidence",
+      "field_name": "Contradictory evidence type (GDV)",
+      "description": "MAF too high / non-significant CC / non-replicated / non-segregation / non-supporting functional (GDV-12 p46)",
+      "acmg_codes": [
+        "BS1",
+        "BS4"
+      ],
+      "clingen_modules": [
+        "contradiction"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "H.contradiction_severity",
+      "category_id": "H",
+      "category_name": "Contradiction/Exclusion Evidence",
+      "field_name": "Contradiction severity level (GDV)",
+      "description": "Disputed vs Refuted severity assessment (GDV-12 p5-8)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "contradiction"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Biochemical gene function evidence",
+      "description": "Biochemical gene function evidence",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "function"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.gene_function_protein_interaction",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Protein interaction evidence",
+      "description": "Protein interaction evidence",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "function"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.gene_expression_pattern",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Gene expression pattern",
+      "description": "Gene expression pattern",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "function"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.disease_relevant_expression",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Disease-relevant expression",
+      "description": "Disease-relevant expression",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "function"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.functional_alteration_patient_cells",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Patient-cell functional alteration",
+      "description": "Patient-cell functional alteration",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.functional_alteration_non_patient_cells",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Non-patient-cell functional alteration",
+      "description": "Non-patient-cell functional alteration",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "functional_alteration"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.animal_model_type",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Animal model type",
+      "description": "Animal model type",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "models"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.animal_model_phenotype",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Animal model phenotype",
+      "description": "Animal model phenotype",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "models"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.animal_model_genotype",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Animal model genotype",
+      "description": "Animal model genotype",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "models"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.cell_model_type",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Cell model type",
+      "description": "Cell model type",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "models"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.cell_model_phenotype",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Cell model phenotype",
+      "description": "Cell model phenotype",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "models"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.human_rescue_experiment",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Human rescue experiment",
+      "description": "Human rescue experiment",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "rescue"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.animal_rescue_experiment",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Animal rescue experiment",
+      "description": "Animal rescue experiment",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "rescue"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.cell_rescue_experiment",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Cell rescue experiment",
+      "description": "Cell rescue experiment",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "rescue"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.rescue_result",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Rescue result",
+      "description": "Rescue result",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "rescue"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "I.experimental_replication",
+      "category_id": "I",
+      "category_name": "Gene Function/Experimental Evidence",
+      "field_name": "Experimental replication",
+      "description": "Experimental replication",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "function"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "category_id": "J",
+      "category_name": "Authority/Time Validity",
+      "field_name": "ClinVar assertion",
+      "description": "ClinVar assertion",
+      "acmg_codes": [
+        "PP5",
+        "BP6"
+      ],
+      "clingen_modules": [
+        "time_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "J.expert_panel_assertion",
+      "category_id": "J",
+      "category_name": "Authority/Time Validity",
+      "field_name": "Expert panel assertion",
+      "description": "Expert panel assertion",
+      "acmg_codes": [
+        "PP5",
+        "BP6"
+      ],
+      "clingen_modules": [
+        "time_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "J.authority_classification",
+      "category_id": "J",
+      "category_name": "Authority/Time Validity",
+      "field_name": "Authority classification",
+      "description": "Authority classification",
+      "acmg_codes": [
+        "PP5",
+        "BP6"
+      ],
+      "clingen_modules": [
+        "time_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "J.known_pathogenic_variant_reference",
+      "category_id": "J",
+      "category_name": "Authority/Time Validity",
+      "field_name": "Known pathogenic variant reference",
+      "description": "Known pathogenic variant reference",
+      "acmg_codes": [
+        "PS1",
+        "PM5"
+      ],
+      "clingen_modules": [
+        "time_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "J.ps1_pm5_relationship",
+      "category_id": "J",
+      "category_name": "Authority/Time Validity",
+      "field_name": "PS1 or PM5 relationship to current variant",
+      "description": "PS1 or PM5 relationship to current variant",
+      "acmg_codes": [
+        "PS1",
+        "PM5"
+      ],
+      "clingen_modules": [
+        "time_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "J.reputable_benign_assertion",
+      "category_id": "J",
+      "category_name": "Authority/Time Validity",
+      "field_name": "Reputable source benign assertion without shared data",
+      "description": "Reputable source recently reports variant as benign, but evidence is not available for independent evaluation (BP6)",
+      "acmg_codes": [
+        "BP6"
+      ],
+      "clingen_modules": [
+        "time_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.mode_of_inheritance",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Mode of inheritance",
+      "description": "AD / AR / SD / XL / Mitochondrial / Somatic Mosaicism / Undetermined (GDV-12 Table 1)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.disease_entity_mondo",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Disease entity MONDO ID",
+      "description": "Monarch Disease Ontology identifier for curated disease entity (GDV-12 p10)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.disease_name",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Disease name",
+      "description": "Curated disease name per ClinGen naming conventions (GDV-12 p10)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.disease_prevalence",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Disease prevalence",
+      "description": "Disease prevalence used for frequency threshold derivation (GDV-12 p36)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.precuration_id",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Precuration identifier",
+      "description": "Precuration ID from GeneTracker required for new GCI records (GDV-12 p10)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.gene_disease_validity_classification",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Gene-disease validity classification",
+      "description": "Definitive / Strong / Moderate / Limited / Disputed / Refuted / No Known Disease Relationship (GDV-12 p5-8)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.replication_over_time_flag",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Replication over time flag",
+      "description": ">2 independent publications over >3 years (GDV-12 Figure 9 col D)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.genetic_evidence_total_score",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Genetic evidence total score",
+      "description": "0-12 points from case-level + segregation + case-control data (GDV-12 Figure 2)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.experimental_evidence_total_score",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Experimental evidence total score",
+      "description": "0-6 points from function + functional alteration + models + rescue (GDV-12 Figure 8)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.calculated_total_score",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Calculated total score",
+      "description": "0-18 points sum of genetic + experimental evidence (GDV-12 Figure 9 col C)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.modified_classification",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Modified classification",
+      "description": "Manual override of calculated classification by expert panel (GDV-12 p49)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.curator_classification",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Curator classification",
+      "description": "Curator-assigned classification before expert panel approval (GDV-12 Figure 9 col F)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.final_published_classification",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Final published classification",
+      "description": "Approved classification published to clinicalgenome.org (GDV-12 Figure 9 col G)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.gcep_affiliation",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "GCEP affiliation",
+      "description": "Gene Curation Expert Panel affiliation (GDV-12 p4)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.curation_version",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Curation version",
+      "description": "Version number of published classification (GDV-12 p49)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.independent_publication_count",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Independent publication count",
+      "description": "Number of independent publications for replication assessment (GDV-12 p47)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.years_since_original_publication",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Years since original publication",
+      "description": "Time span from original gene-disease assertion for replication (>3 years required) (GDV-12 p47)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.pmid",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "PubMed ID",
+      "description": "PMID of evidence source publication (GDV-12 p12)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.publication_date",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Publication date",
+      "description": "Publication date for replication over time assessment (GDV-12 p47)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.original_assertion_pmid",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Original assertion PMID",
+      "description": "PMID of first publication asserting gene-disease relationship (GDV-12 p15)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.valid_contradictory_evidence_flag",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Valid contradictory evidence flag",
+      "description": "Whether valid contradictory evidence exists for this gene-disease curation (GDV-12 Figure 9 row E)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.contradictory_evidence_pmids",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Contradictory evidence PMIDs",
+      "description": "PMIDs and description of contradictory evidence at curation level (GDV-12 Figure 9 row E)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    },
+    {
+      "field_id": "K.modified_classification_rationale",
+      "category_id": "K",
+      "category_name": "Gene-Disease Validity Curation",
+      "field_name": "Modified classification rationale",
+      "description": "Required free-text rationale when expert panel overrides calculated classification (GDV-12 p49)",
+      "acmg_codes": [],
+      "clingen_modules": [
+        "gene_disease_validity"
+      ],
+      "required_for_scorable": false
+    }
+  ]
+}

@@ -1,687 +1,514 @@
 # Evidence Extraction Pipeline Revision Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task-by-task.
 
 **Status:** planned
 **Created:** 2026-06-19
-**Goal:** Reduce redundant LLM calls and fix catalog/docstring inconsistencies in the 166-field evidence extraction pipeline while preserving extraction quality.
+**Revised:** 2026-06-19 (after code-grounded review)
+**Goal:** Cut redundant LLM calls and align documentation in the 166-field evidence extraction pipeline, with surgical edits and one strict invariant: **every change must be paired with a test that locks it in**.
 
-**Architecture:** Keep the existing LangGraph workflow topology; apply surgical changes inside `CatalogExtractionStage` and `SpecialEvidenceStage`. Use runtime evidence-map signals to skip groups that cannot contribute, and resolve the dormant `EvidenceItemNormalizer` by either wiring it in or deleting it. All changes are backward-compatible for API consumers.
+## Verified ground truth (do not edit without re-verifying)
 
-**Tech Stack:** Python 3.12, FastAPI/LangGraph, Pydantic, pytest, uv, Ruff.
+Run before any code change:
 
----
-
-## Phase 0: Verify Baseline and Document State
-
-**Goal:** Establish current behavior before changes so we can measure cost/quality deltas.
-
-### Task 0.1: Snapshot current group/task counts
-
-**Files:**
-- Read: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/catalog.py:218-230`
-- Read: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/catalog_extraction.py:33-53`
-
-**Step 1:** Print the current catalog group sizes.
-
-Run:
 ```bash
-cd backend
-uv run python -c "
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import CATALOG_GROUPS
-for k, v in CATALOG_GROUPS.items():
-    print(k, len(v))
+cd backend && uv run python -c "
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import CATALOG_GROUPS, EVIDENCE_FIELD_SPECS
+from collections import Counter
+print('Total fields:', len(EVIDENCE_FIELD_SPECS))
+for k, v in CATALOG_GROUPS.items(): print(' ', k, len(v))
+print('Categories:', dict(Counter(s.category_id for s in EVIDENCE_FIELD_SPECS)))
 "
 ```
 
-**Expected output:**
-```
-high_signal 62
-supporting 81
-curation 23
-```
+Expected (current main, 2026-06-19):
+- 166 fields total
+- Groups: `high_signal=62`, `supporting=81`, `curation=23`
+- Categories: A:22 B:19 C:17 D:8 E:7 F:24 G:15 H:9 I:16 J:6 K:23
 
-**Step 2:** Record the baseline in `progress.txt`.
+If output drifts, **stop and re-anchor the plan** before editing.
 
-Append one line:
-```text
-[2026-06-19] Evidence extraction baseline: 166 fields, 3 groups (62/81/23), K group currently sent to LLM [in_progress]
-```
+## Architecture stance
 
-**Step 3:** Commit the progress update.
+- Keep existing LangGraph topology (`workflow.py:181-210`, `:218-247`).
+- Surgical edits only inside `CatalogExtractionStage`, `SpecialEvidenceStage`, and the workflow node that wires `EvidenceItemNormalizer`.
+- Use `DocumentEvidenceMap` only as a **soft signal**, never as a hard gate that can skip a whole group of 81 fields based on a single LLM-extracted hint list.
+- All changes are backward-compatible at the API surface (`EvidenceExtractionService.run`).
 
-```bash
-cd /data/yangzs/Projects/01_ACMG_Lingua
-git add progress.txt
-git commit -m "chore: record evidence extraction revision baseline"
-```
+**Tech stack:** Python 3.12, LangGraph, Pydantic, pytest, uv, ruff.
 
 ---
 
-## Phase 1: Remove Curation (K) Group from LLM Extraction
+## Phase 0 — Realign the broken baseline
 
-**Goal:** Stop sending the 23 cross-paper GDV curation fields to the per-document LLM, cutting ~33% of catalog LLM calls per chunk.
+**Why first:** `tests/.../test_catalog.py::test_catalog_has_expected_category_counts` is **already RED on main** (asserts 134 fields / A–J only). Until this is green, every later phase's "测一处" verification step is meaningless because the file already has a failure.
 
-### Task 1.1: Add an explicit exclusion in `CatalogExtractionStage`
+### Task 0.1: Verify and snapshot the real baseline
 
-**Files:**
-- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/catalog_extraction.py:43`
-- Test: `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_catalog.py`
+**Files (read only):**
+- `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/catalog.py:175-196`
+- `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_catalog.py`
 
-**Step 1:** Modify `__init__` to filter out the curation group.
+**Step 1:** Run the verification command from the section above. Confirm 166 / 62-81-23.
 
-Replace line 43:
-```python
-self._catalog_groups: dict[str, tuple] = dict(CATALOG_GROUPS) if CATALOG_GROUPS else {"full": EVIDENCE_FIELD_SPECS}
-```
-
-With:
-```python
-# Curation (K) fields are cross-paper GDV metadata filled downstream, not single-paper extractable.
-self._catalog_groups: dict[str, tuple] = {
-    name: catalog
-    for name, catalog in CATALOG_GROUPS.items()
-    if name != "curation"
-} or {"full": EVIDENCE_FIELD_SPECS}
-```
-
-**Step 2:** Add a test that asserts curation is excluded.
-
-Open `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_catalog.py` and append:
-
-```python
-def test_catalog_extraction_stage_excludes_curation_group(provider):
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction import CatalogExtractionStage
-
-    stage = CatalogExtractionStage(provider)
-    assert "curation" not in stage._catalog_groups
-    assert {"high_signal", "supporting"} == set(stage._catalog_groups.keys())
-```
-
-**Step 3:** Run the new test.
+**Step 2:** Run the existing failing test to capture the current diff:
 
 ```bash
 cd backend
-uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_catalog.py::test_catalog_extraction_stage_excludes_curation_group -v
+uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_catalog.py::test_catalog_has_expected_category_counts -v
 ```
 
-**Expected:** PASS.
+**Expected:** `FAILED`. Counter shows A:22 B:19 C:17 D:8 E:7 F:24 G:15 H:9 I:16 J:6 K:23.
 
-**Step 4:** Run all catalog tests.
+### Task 0.2: Fix `test_catalog.py` baseline (no production code yet)
+
+**Files:**
+- Modify: `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_catalog.py`
+
+**Step 1:** Replace the expected counts dict with the real catalog:
+
+```python
+def test_catalog_has_expected_category_counts():
+    counts = Counter(spec.category_id for spec in EVIDENCE_FIELD_SPECS)
+    assert counts == {
+        "A": 22,
+        "B": 19,
+        "C": 17,
+        "D": 8,
+        "E": 7,
+        "F": 24,
+        "G": 15,
+        "H": 9,
+        "I": 16,
+        "J": 6,
+        "K": 23,
+    }
+    assert sum(counts.values()) == 166
+```
+
+**Step 2:** Run.
 
 ```bash
+cd backend
 uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_catalog.py -v
 ```
 
 **Expected:** All pass.
 
-**Step 5:** Commit.
-
-```bash
-git add backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/catalog_extraction.py
-# if test file already exists and was modified, add it too
-git diff --stat
-git commit -m "feat: exclude GDV curation group from per-document LLM extraction"
-```
-
-### Task 1.2: Harden the comment in `catalog.py`
+### Task 0.3: Fix the stale comment in `catalog.py`
 
 **Files:**
-- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/catalog.py:219`
+- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/catalog.py:183-189`
 
-**Step 1:** Update the group comment to state the LLM/curation split explicitly.
+The comment block at lines 183-189 (read it first via `read` to get fresh tag) currently says **"Split 134 fields into 2 balanced groups"** while the dict below has 3 groups. Replace the comment block above `_CATALOG_GROUP_CATEGORIES` with:
 
-Change:
 ```python
-# 166 fields split into 3 groups: 2 for LLM extraction, 1 for GDV curation.
+# ── Catalog groups ─────────────────────────────────────────────────────
+# 166 fields split into 3 groups:
+#   - high_signal (62): A,B,D,E,J — variant, case, population, prediction, authority
+#   - supporting  (81): C,F,G,H,I — segregation, functional, case-control, contradiction, gene
+#   - curation    (23): K         — cross-paper GDV (NOT for single-paper LLM extraction)
+# CatalogExtractionStage filters out `curation`; it is consumed downstream by the
+# cross-paper GDV pipeline.
 ```
 
-To:
-```python
-# 166 fields split into 3 groups: 2 for LLM extraction (high_signal/supporting),
-# 1 for GDV curation (curation). The curation group MUST NOT be sent to the
-# single-paper LLM extractor; it is filled by the cross-paper GDV pipeline.
+Leave the dict and loop below unchanged.
+
+### Task 0.4: Snapshot baseline + commit
+
+**Step 1:** Append to `progress.txt`:
+
+```
+[2026-06-19] Evidence extraction baseline realigned: 166 fields, 3 groups (62/81/23), test_catalog updated [done]
 ```
 
-**Step 2:** Run Ruff to ensure no line-length issues.
+**Step 2:** Commit baseline alignment as a single change:
 
 ```bash
-cd backend
-uv run ruff check src/core/cross_lingual_process_and_extract_evidence/extract_evidence/catalog.py
+git add backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_catalog.py \
+        backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/catalog.py \
+        progress.txt
+git commit -m "test(extract_evidence): realign catalog baseline to 166 fields A-K"
 ```
 
-**Expected:** No errors.
-
-**Step 3:** Commit.
-
-```bash
-git add backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/catalog.py
-git commit -m "docs: clarify curation group is not for single-paper LLM extraction"
-```
+**Acceptance:** All `test_catalog.py` tests green. No production behavior change.
 
 ---
 
-## Phase 2: Fix `catalog_extraction.py` Docstring
+## Phase 1 — Remove curation (K) group from per-document LLM dispatch
 
-**Goal:** Align the module docstring with the verified field counts (166 fields, 62/81/23).
+**Why:** K-group fields (`K.precuration_id`, `K.curation_status`, ...) are explicitly cross-paper GDV metadata (catalog.py:183 "Cross-paper curation fields; not single-paper extractable"). The current `CatalogExtractionStage.__init__` (catalog_extraction.py:43) sends them anyway. Removing them saves ~14% of catalog LLM output budget per chunk per document with **zero loss** of expected extraction signal.
 
-### Task 2.1: Update docstring
+### Task 1.1: Filter `curation` out of the stage's group dict
 
 **Files:**
-- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/catalog_extraction.py:1-6`
+- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/catalog_extraction.py:42-43`
+- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/catalog_extraction.py:1-6` (docstring)
 
-**Step 1:** Replace the docstring.
+**Step 1:** Re-read line 42-43 with `read` (or `lsp definition` on `CatalogExtractionStage.__init__`) to get a fresh `#TAG`.
+
+**Step 2:** Replace lines 42-43:
 
 ```python
-"""Catalog extraction stage — structured field extraction using the 10-category catalog.
+        # Curation (K) is cross-paper GDV metadata, filled outside this stage.
+        self._catalog_groups: dict[str, tuple] = {
+            name: catalog
+            for name, catalog in CATALOG_GROUPS.items()
+            if name != "curation"
+        }
+```
 
-Uses parallel catalog groups to reduce per-call output tokens: the 166-field
-catalog is split into 3 groups (high_signal: 62 fields, supporting: 81 fields,
-curation: 23 fields). Only high_signal and supporting are sent to the LLM;
-curation is cross-paper GDV metadata filled downstream.
+(No `or {"full": ...}` fallback — `CATALOG_GROUPS` always has `high_signal`/`supporting`; the fallback was dead code.)
+
+**Step 3:** Replace the module docstring (lines 1-6):
+
+```python
+"""Catalog extraction stage — structured field extraction over the 166-field A–K catalog.
+
+Sends only the LLM-extractable groups to the per-document model:
+  - high_signal (62 fields, A/B/D/E/J)
+  - supporting  (81 fields, C/F/G/H/I)
+The curation group (23 fields, K) is cross-paper GDV metadata and is filtered
+out here; it is filled by the downstream gene-disease validity pipeline.
+Groups run concurrently per chunk via asyncio.Semaphore (see _DEFAULT_CHUNK_CONCURRENCY).
 """
 ```
 
-**Step 2:** Run Ruff.
-
-```bash
-cd backend
-uv run ruff check src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/catalog_extraction.py
-```
-
-**Expected:** No errors.
-
-**Step 3:** Commit.
-
-```bash
-git add backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/catalog_extraction.py
-git commit -m "docs: correct catalog_extraction docstring to match 166-field 3-group reality"
-```
-
----
-
-## Phase 3: Resolve `EvidenceItemNormalizer` (Wire In or Delete)
-
-**Goal:** Eliminate the "tested but not wired" dead code. Choose one of two explicit paths.
-
-> **Decision required:** The downstream GDV scoring/alignment step needs a complete 166-row matrix (one row per field) or can work with sparse output. If the matrix is required, wire `EvidenceItemNormalizer`. If sparse is acceptable, delete the class and tests to avoid misleading future maintainers.
-
-Assume **wire-in** for this plan (recommended in the attachment because `EvidenceAlignmentRecord` compares by `field_id`).
-
-### Task 3.1: Wire `EvidenceItemNormalizer` into the workflow
+### Task 1.2: Lock the behavior with a stage-level test
 
 **Files:**
-- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/workflow.py:23-24`
-- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/workflow.py:42-52`
-- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/workflow.py:100-108`
-- Test: `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_normalizer.py`
+- Append to: `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_catalog.py`
 
-**Step 1:** Import `EvidenceItemNormalizer`.
-
-Change line 23-24 from:
-```python
-from .core import EvidenceChainBuilder, TargetEntityGuard
-```
-
-To:
-```python
-from .core import EvidenceChainBuilder, EvidenceItemNormalizer, TargetEntityGuard
-```
-
-**Step 2:** Instantiate it in `__init__`.
-
-After line 46 (`self._value_normalizer = AcmgEvidenceValueNormalizer()`), add:
-```python
-self._item_normalizer = EvidenceItemNormalizer()
-```
-
-**Step 3:** Add a catalog-backfill node.
-
-Add a new sync method after `_node_value_normalization`:
+The stage's `__init__` only stashes `provider` and `_input_budget_tokens` — neither is touched until `run()`. So the test can use a bare `MagicMock`, no `provider` fixture needed.
 
 ```python
-    def _node_catalog_backfill(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
-        """Backfill missing catalog fields so downstream alignment sees one row per field."""
-        state.evidence_items = self._item_normalizer.normalize_grouped(state.evidence_items)
-        return state
-```
-
-**Step 4:** Wire the node into both graphs.
-
-In `_build_graph`, after `"value_normalization"`, add:
-```python
-graph.add_node("catalog_backfill", self._node_catalog_backfill)
-```
-
-Change the edge:
-```python
-graph.add_edge("value_normalization", "target_guard")
-```
-
-To:
-```python
-graph.add_edge("value_normalization", "catalog_backfill")
-graph.add_edge("catalog_backfill", "target_guard")
-```
-
-Do the same in `_build_async_graph`.
-
-**Step 5:** Add a workflow-level test.
-
-Open `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_normalizer.py` and append:
-
-```python
-def test_workflow_backfills_missing_fields(make_document, provider):
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import EvidenceExtractionWorkflow
-
-    workflow = EvidenceExtractionWorkflow(provider)
-    # Run the sync graph on a minimal document.
-    state = workflow._graph.invoke(EvidenceExtractionState(document=make_document()))
-    field_ids = {item.field_id for item in state.evidence_items}
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import EVIDENCE_FIELD_SPECS
-    expected = {spec.field_id for spec in EVIDENCE_FIELD_SPECS}
-    assert expected == field_ids, f"Missing: {expected - field_ids}"
-```
-
-**Step 6:** Run the normalizer tests.
-
-```bash
-cd backend
-uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_normalizer.py -v
-```
-
-**Expected:** PASS (existing tests plus new test).
-
-**Step 7:** Commit.
-
-```bash
-git add backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/workflow.py
-# add only if test file already tracked
-git diff --stat
-git commit -m "feat: wire EvidenceItemNormalizer for 166-field backfill"
-```
-
-### Alternative Task 3.1b: Delete `EvidenceItemNormalizer` (if sparse output is chosen)
-
-**Files:**
-- Delete: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/core.py:75-176`
-- Delete: `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_normalizer.py`
-- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/README.md` if it references the class
-
-**Step 1:** Remove the class from `core.py`.
-
-**Step 2:** Delete `test_normalizer.py`.
-
-**Step 3:** Update `README.md` to state "sparse extraction; missing fields are absent, not backfilled."
-
-**Step 4:** Record the decision in `lesson.md`.
-
-**Step 5:** Commit.
-
-```bash
-git add -A
-git commit -m "refactor: remove dormant EvidenceItemNormalizer; sparse extraction by design"
-```
-
----
-
-## Phase 4: Eliminate `special_evidence` Duplication with Catalog
-
-**Goal:** Stop extracting functional/case-control/authority/contradiction twice. Prefer a gap-filling mode for `SpecialEvidenceStage`.
-
-### Task 4.1: Add runtime gating to `SpecialEvidenceStage`
-
-**Files:**
-- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/special_evidence.py:34-73`
-- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/workflow.py:67-70`
-- Test: create `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_special_evidence.py`
-
-**Step 1:** Define helper to decide whether special evidence is needed.
-
-Add at module level in `special_evidence.py`:
-
-```python
-def _should_run_special_evidence(
-    evidence_map: DocumentEvidenceMap | None,
-    current_items: list[EvidenceItem],
-) -> bool:
-    """Skip when catalog already found special-class evidence and the map shows no new signals."""
-    if evidence_map is None:
-        return True
-    # If the relevance scan found no case/authority/contradiction hints, skip.
-    has_signals = bool(
-        evidence_map.case_references
-        or evidence_map.authority_references
-        or evidence_map.contradictions
-        or evidence_map.structure_hints
+def test_catalog_extraction_stage_excludes_curation_group():
+    from unittest.mock import MagicMock
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction import (
+        CatalogExtractionStage,
     )
-    if not has_signals:
-        return False
-    # If catalog already populated F/G/H/I/J items, only run if contradictions/authority hints remain.
-    special_categories = {"F", "G", "H", "I", "J"}
-    found_special = any(
-        item.category in special_categories and item.status == EvidenceStatus.FOUND
-        for item in current_items
-    )
-    return not found_special or bool(evidence_map.contradictions or evidence_map.authority_references)
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import CATALOG_GROUPS
+
+    assert "curation" in CATALOG_GROUPS, "Sanity: curation must still exist in the catalog source."
+
+    stage = CatalogExtractionStage(MagicMock())
+
+    assert set(stage._catalog_groups.keys()) == {"high_signal", "supporting"}
+    assert "curation" not in stage._catalog_groups
+    assert sum(len(g) for g in stage._catalog_groups.values()) == 143  # 62 + 81
 ```
 
-**Step 2:** Update imports to include `DocumentEvidenceMap` and `EvidenceStatus`.
-
-```python
-from ..contracts import DocumentEvidenceMap, EvidenceItem, EvidenceStatus, SpecialEvidenceRecord, SpecialEvidenceResponse, TrackDocument
-```
-
-**Step 3:** Modify `run` to accept `evidence_map` and early-return.
-
-Change signature:
-```python
-    def run(
-        self,
-        document: TrackDocument,
-        evidence_map: DocumentEvidenceMap | None,
-        current_items: list[EvidenceItem],
-    ) -> list[SpecialEvidenceRecord]:
-```
-
-Add at the top of the method:
-```python
-        if not _should_run_special_evidence(evidence_map, current_items):
-            logger.debug("Skipping special_evidence: no unmet signals")
-            return []
-```
-
-**Step 4:** Do the same for `run_async`.
-
-Change signature and add the same guard.
-
-**Step 5:** Update workflow call sites.
-
-In `workflow.py`, change:
-```python
-    def _node_special_evidence(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
-        records = self._special_evidence.run(state.document, state.evidence_items)
-        state.special_evidence = records
-        return state
-```
-
-To:
-```python
-    def _node_special_evidence(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
-        records = self._special_evidence.run(state.document, state.evidence_map, state.evidence_items)
-        state.special_evidence = records
-        return state
-```
-
-Do the same for `_async_node_special_evidence`.
-
-**Step 6:** Write a test for the new gating.
-
-Create `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_special_evidence.py`:
-
-```python
-"""Tests for SpecialEvidenceStage gap-filling behavior."""
-
-import pytest
-
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
-    DocumentEvidenceMap,
-    EvidenceItem,
-    EvidenceStatus,
-    TrackDocument,
-)
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.special_evidence import (
-    SpecialEvidenceStage,
-    _should_run_special_evidence,
-)
-
-
-def test_should_run_when_signals_present():
-    emap = DocumentEvidenceMap(relevant=True, contradictions=["conflicting report"])
-    assert _should_run_special_evidence(emap, []) is True
-
-
-def test_should_skip_when_no_signals():
-    emap = DocumentEvidenceMap(relevant=True)
-    assert _should_run_special_evidence(emap, []) is False
-
-
-def test_should_skip_when_catalog_already_covers_signals():
-    emap = DocumentEvidenceMap(relevant=True, case_references=["patient A"])
-    items = [EvidenceItem(field_id="F.1", category="F", field_name="x", status=EvidenceStatus.FOUND, value="y", confidence=1.0)]
-    assert _should_run_special_evidence(emap, items) is False
-```
-
-**Step 7:** Run the tests.
-
-```bash
-cd backend
-uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_special_evidence.py -v
-```
-
-**Expected:** PASS.
-
-**Step 8:** Commit.
-
-```bash
-git add backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/special_evidence.py
-# add workflow and new test if modified
-git diff --stat
-git commit -m "feat: gate special_evidence stage on unmet catalog signals"
-```
-
-### Task 4.2 (Optional): Narrow the special-evidence prompt
-
-**Files:**
-- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/prompts.py:240-276`
-
-**Step 1:** Add a sentence telling the model to focus only on gaps.
-
-After "You are performing a focused second pass on a biomedical document.", add:
-```
-This pass only runs when the primary catalog extraction did not fully capture functional experiments, case-control evidence, authority assertions, or contradictions. Do not re-extract fields already present in CURRENT EXTRACTION SUMMARY unless you have higher-confidence evidence.
-```
-
-**Step 2:** Commit.
-
-```bash
-git add backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/prompts.py
-git commit -m "docs: narrow special_evidence prompt to gap-filling scope"
-```
-
----
-
-## Phase 5: Use `DocumentEvidenceMap` to Skip Irrelevant Catalog Groups
-
-**Goal:** Avoid running the `supporting` group when the document has no case/variant/authority/contradiction signals.
-
-### Task 5.1: Add group selection helper and pass evidence map deeper
-
-**Files:**
-- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/catalog_extraction.py:57-98`
-- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/catalog_extraction.py:94-167`
-- Test: `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_catalog.py`
-
-**Step 1:** Add a static helper to select groups from the evidence map.
-
-Add after `_DEFAULT_CHUNK_CONCURRENCY`:
-
-```python
-def _select_catalog_groups(
-    groups: dict[str, tuple],
-    evidence_map: DocumentEvidenceMap | None,
-) -> dict[str, tuple]:
-    """Return only catalog groups that match document-level evidence signals.
-
-    Always keep high_signal. Keep supporting only when the map suggests the
-    document may contain case-level, functional, case-control, contradiction,
-    or authority evidence. Falls back to all groups when the map is empty or
-    confidence is low.
-    """
-    if evidence_map is None:
-        return groups
-    if not evidence_map.relevant:
-        return {}
-    # If no supporting signals at all, drop the supporting group.
-    has_supporting_signals = bool(
-        evidence_map.case_references
-        or evidence_map.variant_terms
-        or evidence_map.authority_references
-        or evidence_map.contradictions
-        or evidence_map.structure_hints
-    )
-    if has_supporting_signals:
-        return groups
-    return {name: catalog for name, catalog in groups.items() if name == "high_signal"}
-```
-
-**Step 2:** Use `_select_catalog_groups` in `run` and `run_async`.
-
-In `run`, replace:
-```python
-        for chunk in chunks:
-            chunk_summary = self._chunk_summary(summary, chunk)
-            for group_name, catalog in self._catalog_groups.items():
-```
-
-With:
-```python
-        selected_groups = _select_catalog_groups(self._catalog_groups, evidence_map)
-        for chunk in chunks:
-            chunk_summary = self._chunk_summary(summary, chunk)
-            for group_name, catalog in selected_groups.items():
-```
-
-Do the same in `run_async`.
-
-**Step 3:** Add a test for group selection.
-
-Append to `test_catalog.py`:
-
-```python
-def test_select_catalog_groups_respects_evidence_map():
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction import _select_catalog_groups
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import DocumentEvidenceMap
-
-    groups = {"high_signal": (1, 2), "supporting": (3, 4)}
-    assert set(_select_catalog_groups(groups, None).keys()) == {"high_signal", "supporting"}
-    assert set(_select_catalog_groups(groups, DocumentEvidenceMap(relevant=False)).keys()) == set()
-    assert set(_select_catalog_groups(groups, DocumentEvidenceMap(relevant=True)).keys()) == {"high_signal"}
-    assert set(_select_catalog_groups(groups, DocumentEvidenceMap(relevant=True, case_references=["A"])).keys()) == {"high_signal", "supporting"}
-```
-
-**Step 4:** Run tests.
+### Task 1.3: Verify, log, commit
 
 ```bash
 cd backend
 uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_catalog.py -v
+uv run ruff check src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/catalog_extraction.py
 ```
 
-**Expected:** PASS.
+Append to `progress.txt`:
 
-**Step 5:** Commit.
+```
+[2026-06-19] Catalog extraction now skips K (curation) group; saves 23 fields × N chunks per doc [done]
+```
 
 ```bash
-git add backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/catalog_extraction.py
-git add backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_catalog.py
-git commit -m "feat: skip supporting catalog group when evidence_map has no signals"
+git add backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/catalog_extraction.py \
+        backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_catalog.py \
+        progress.txt
+git commit -m "feat(extract_evidence): exclude curation (K) group from per-document LLM dispatch"
 ```
+
+**Acceptance:** New test passes. Existing `test_catalog.py` tests stay green. No `ruff` errors.
 
 ---
 
-## Phase 6: Tune `STRONG_TIER_INPUT_BUDGET_TOKENS`
+## Phase 2 — Wire `EvidenceItemNormalizer` into the workflow
 
-**Goal:** Increase chunk text budget after removing the K group to reduce chunk count for long documents.
+**Decision (final, do not relitigate):** Wire it in. `core.py:75-176` is the only component that backfills the 166-row matrix downstream alignment expects; deleting it would silently lose that contract. `merge_sparse_evidence_items` (chunking.py) only de-dupes within a chunk and does **not** backfill. `AcmgEvidenceValueNormalizer.normalize` (normalization.py:52) does value-shape normalization but has no catalog awareness. They are complementary, not overlapping.
 
-### Task 6.1: Increase budget and benchmark chunk count
+**Critical placement constraint:** `EvidenceItemNormalizer.normalize_grouped` synthesizes ~100+ `NOT_FOUND` placeholder items per group. These have `source=None`, `raw_source=None`, `value=None`. Placing the node **before** `source_grounding` (workflow.py:189) wastes grounding compute on empty items and risks `quality_gate` flagging them as `missing_required` for fields that legitimately should be missing. The normalizer **must** sit at the tail, after `quality_gate` is computed on real items.
+
+### Task 2.1: Add `_node_catalog_backfill` after `quality_gate`
+
+**Files (re-read for fresh `#TAG`):**
+- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/workflow.py:23` (import)
+- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/workflow.py:46-52` (instantiate)
+- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/workflow.py:158-176` (add node method)
+- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/workflow.py:191-209` (sync graph wiring)
+- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/workflow.py:228-247` (async graph wiring)
+
+**Step 1:** Update the import on line 23 to add `EvidenceItemNormalizer`:
+
+```python
+from .core import EvidenceChainBuilder, EvidenceItemNormalizer, TargetEntityGuard
+```
+
+**Step 2:** In `__init__`, after `self._target_guard = TargetEntityGuard()` (line 51), add:
+
+```python
+        self._item_normalizer = EvidenceItemNormalizer()
+```
+
+(Insert *before* `self._graph = self._build_graph()`.)
+
+**Step 3:** Add a new node method between `_node_quality_gate` and `_node_not_relevant`:
+
+```python
+    def _node_catalog_backfill(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        """Expand sparse evidence_items to the full 166-row catalog per group.
+
+        Runs AFTER quality_gate so the gate's metrics reflect real extracted
+        items, not synthesized NOT_FOUND placeholders. Downstream alignment
+        and reporting consume the backfilled matrix.
+        """
+        state.evidence_items = self._item_normalizer.normalize_grouped(state.evidence_items)
+        return state
+```
+
+**Step 4:** In `_build_graph`, register the node and rewire the tail:
+
+Find:
+```python
+        graph.add_node("quality_gate", self._node_quality_gate)
+        graph.add_node("not_relevant", self._node_not_relevant)
+```
+Replace with:
+```python
+        graph.add_node("quality_gate", self._node_quality_gate)
+        graph.add_node("catalog_backfill", self._node_catalog_backfill)
+        graph.add_node("not_relevant", self._node_not_relevant)
+```
+
+Find:
+```python
+        graph.add_edge("chain_assembly", "quality_gate")
+        graph.add_edge("quality_gate", END)
+```
+Replace with:
+```python
+        graph.add_edge("chain_assembly", "quality_gate")
+        graph.add_edge("quality_gate", "catalog_backfill")
+        graph.add_edge("catalog_backfill", END)
+```
+
+**Step 5:** Repeat the same two replacements verbatim in `_build_async_graph`. The node name is shared between sync and async graphs — no `_async_node_catalog_backfill` is needed because `normalize_grouped` is pure CPU work.
+
+### Task 2.2: Test the new node in isolation, then end-to-end
 
 **Files:**
-- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/chunking.py:19`
-- Script: create `backend/scripts/measure_chunk_count.py`
+- Append to: `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_workflow.py`
 
-**Step 1:** Increase the constant.
-
-Change:
-```python
-STRONG_TIER_INPUT_BUDGET_TOKENS = 8_000
-```
-
-To:
-```python
-STRONG_TIER_INPUT_BUDGET_TOKENS = 12_000
-```
-
-**Step 2:** Create a small benchmark script.
-
-Create `backend/scripts/measure_chunk_count.py`:
+The existing `test_workflow_returns_not_relevant` proves the workflow harness works with a `MagicMock` provider. We add two tests:
 
 ```python
-"""Measure catalog extraction chunk count for a sample document at current budget."""
-import asyncio
-import sys
-
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.chunking import build_block_prompt_chunks
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import CATALOG_GROUPS
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.prompts import get_catalog_extraction_prompt
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import Track, TrackDocument
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.cross_lingual.format.segmenter import estimate_tokens
-
-
-def main() -> None:
-    # Load a sample document path from argv or use a fixture.
-    text = sys.argv[1] if len(sys.argv) > 1 else ""
-    document = TrackDocument(
-        document_id="bench",
-        track=Track.ORIGINAL,
-        formatted_text=text,
-        blocks=[],
+def test_catalog_backfill_node_expands_to_full_catalog():
+    """Unit test for the backfill node — no LLM, no graph compile."""
+    from unittest.mock import MagicMock
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import (
+        EvidenceExtractionWorkflow,
     )
-    groups = {k: v for k, v in CATALOG_GROUPS.items() if k != "curation"}
-    max_overhead = max(
-        estimate_tokens(get_catalog_extraction_prompt("", Track.ORIGINAL, "", catalog=catalog, evidence_map_summary=""))
-        for catalog in groups.values()
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+        EvidenceExtractionState,
+        Track,
+        TrackDocument,
     )
-    chunks = build_block_prompt_chunks(document, prompt_overhead_tokens=max_overhead)
-    print(f"budget=12000 chunks={len(chunks)} words={len(text.split())}")
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import (
+        EVIDENCE_FIELD_SPECS,
+    )
+
+    workflow = EvidenceExtractionWorkflow(provider=MagicMock())
+    state = EvidenceExtractionState(
+        document=TrackDocument(document_id="d1", track=Track.ORIGINAL, formatted_text="x"),
+    )
+    state.evidence_items = [
+        EvidenceItem(
+            field_id="A.gene_symbol",
+            category="A",
+            field_name="Gene symbol",
+            status=EvidenceStatus.FOUND,
+            value="GLA",
+            confidence=0.9,
+            group_id="g1",
+        ),
+    ]
+
+    out = workflow._node_catalog_backfill(state)
+    field_ids = {item.field_id for item in out.evidence_items}
+    expected = {spec.field_id for spec in EVIDENCE_FIELD_SPECS}
+    assert expected.issubset(field_ids), f"Missing: {expected - field_ids}"
+    # Backfilled items keep group_id of source items
+    backfilled = [i for i in out.evidence_items if i.field_id != "A.gene_symbol"]
+    assert all(i.group_id == "g1" for i in backfilled)
+    assert all(i.status == EvidenceStatus.NOT_FOUND for i in backfilled)
 
 
-if __name__ == "__main__":
-    main()
+@pytest.mark.asyncio
+async def test_workflow_backfills_after_quality_gate(mock_config):
+    """Integration: ensure the END state carries the full 166 rows when relevant=True."""
+    from unittest.mock import AsyncMock, MagicMock
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import (
+        EvidenceExtractionWorkflow,
+    )
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import (
+        EVIDENCE_FIELD_SPECS,
+    )
+
+    provider = MagicMock()
+    # Force not-relevant path so we exit early without LLM extraction;
+    # the not_relevant branch returns directly to END with [] items —
+    # this asserts backfill is NOT applied on the not_relevant branch.
+    emap = DocumentEvidenceMap(relevant=False)
+    provider.invoke_structured.return_value = emap
+    provider.ainvoke_structured = AsyncMock(return_value=emap)
+
+    workflow = EvidenceExtractionWorkflow(provider=provider)
+    state = await workflow.run(
+        TrackDocument(
+            document_id="doc-1",
+            track=Track.ORIGINAL,
+            formatted_text="unrelated paper",
+            page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=15)],
+        )
+    )
+    # not_relevant path exits before catalog_backfill — items stay empty.
+    assert state.evidence_items == []
 ```
 
-**Step 3:** Run with a representative long document.
+> Note: do **not** stand up a fully-mocked happy-path through all 12 nodes here — that's brittle. The node-level unit test plus the existing relevance-path test are sufficient gates. A real happy-path test belongs in benchmark integration suites, not in this unit-test file.
+
+### Task 2.3: Verify, log, commit
 
 ```bash
 cd backend
-uv run python scripts/measure_chunk_count.py "$(cat /path/to/sample/article.txt)"
+uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_workflow.py -v
+uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_normalizer.py -v
+uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_quality_validation.py -v
+uv run ruff check src/core/cross_lingual_process_and_extract_evidence/extract_evidence/workflow.py
 ```
 
-**Expected:** Fewer chunks than before the budget change. Record the number.
+Append to `progress.txt`:
 
-**Step 4:** If chunk count drops without issues, commit.
+```
+[2026-06-19] EvidenceItemNormalizer wired as catalog_backfill node after quality_gate (sync+async) [done]
+```
+
+Append to `lesson.md`:
+
+```markdown
+## 2026-06-19 EvidenceItemNormalizer placement
+
+### 教训
+- backfill 节点必须放在 quality_gate **之后**,否则 quality 指标会被 ~100 个 NOT_FOUND 占位项稀释,且 source_grounding 会浪费计算在空 item 上。
+- `normalize_grouped` 同时也是「有 group_id 才回填,无 group_id 用空字符串占位」的契约,新节点必须保留这层语义。
+
+### 预防
+- workflow 任何新节点都必须在 `_build_graph` **和** `_build_async_graph` 同步注册。
+- 增删节点时同步更新本文件的 README 节点表(若存在)。
+```
 
 ```bash
-git add backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/chunking.py
-# do not commit ad-hoc script unless it is meant to stay
-git commit -m "perf: raise strong-tier input budget to 12k after curation group removal"
+git add backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/workflow.py \
+        backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_workflow.py \
+        progress.txt lesson.md
+git commit -m "feat(extract_evidence): wire EvidenceItemNormalizer as catalog_backfill node"
 ```
 
-**Step 5:** If 12k causes context-window issues, revert to 10k or 11k and re-test.
+**Acceptance:** All extract_evidence tests green. Workflow on `relevant=False` still short-circuits to empty items.
 
 ---
 
-## Phase 7: Regression and Integration Testing
+## Phase 3 — Narrow `special_evidence` to gap-filling (prompt-only, no hard gating)
 
-### Task 7.1: Run extraction unit tests
+**Why prompt-only and not a runtime gate:**
+- `evidence_map` is itself an LLM-extracted hint set. Using its emptiness as a hard skip propagates its recall miss directly to `special_evidence` (functional/case-control/authority/contradiction). The cost saved (one extra STRONG-tier pass) is not worth losing a real PS3/BS3 tier hit.
+- The original plan's `_should_run_special_evidence` had a second leg ("skip when catalog already populated F/G/H/I/J") that confuses *coverage* with *completeness*: catalog filling one F field (e.g. `F.evidence_strength_tier`) does not mean the paper's functional narrative is exhausted.
+- Trim the **prompt scope** instead — the LLM still sees the chunk but is told to focus only on uncovered ground.
+
+### Task 3.1: Add a "gap-filling scope" instruction to the special-evidence prompt
+
+**Files (re-read for fresh `#TAG`):**
+- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/prompts.py` — find the `get_special_evidence_prompt` function or its template
+
+**Step 1:** Locate the system-instruction block (the one that already includes `CURRENT EXTRACTION SUMMARY`). Add immediately after the opening sentence:
+
+```
+SCOPE: This pass is a focused gap-filler. The primary catalog extraction has
+already produced the items shown in CURRENT EXTRACTION SUMMARY. Only emit
+records for functional, case-control, authority, or contradiction evidence
+that is NOT already represented there, OR where you have strictly higher-
+confidence evidence (e.g. a direct quote vs an inferred summary). Do not
+restate items already present.
+```
+
+(Use exact wording so we can grep for it in tests.)
+
+### Task 3.2: Lock the prompt change with a regression test
+
+**Files:**
+- Append to: `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/` — create `test_special_evidence_prompt.py` if it does not exist
+
+```python
+"""Locks the gap-filling scope instruction in the special-evidence prompt."""
+from __future__ import annotations
+
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import Track
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.prompts import (
+    get_special_evidence_prompt,
+)
+
+
+def test_special_evidence_prompt_carries_gap_filling_scope():
+    prompt = get_special_evidence_prompt(
+        document_id="d1",
+        track=Track.ORIGINAL,
+        text="x",
+        current_items_summary="A.gene_symbol: GLA",
+    )
+    assert "SCOPE:" in prompt
+    assert "gap-filler" in prompt
+    assert "NOT already represented" in prompt
+```
+
+### Task 3.3: Verify, log, commit
+
+```bash
+cd backend
+uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_special_evidence_prompt.py -v
+uv run ruff check src/core/cross_lingual_process_and_extract_evidence/extract_evidence/prompts.py
+```
+
+Append to `progress.txt`:
+
+```
+[2026-06-19] special_evidence prompt narrowed to gap-filling; no hard gating added [done]
+```
+
+```bash
+git add backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/prompts.py \
+        backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_special_evidence_prompt.py \
+        progress.txt
+git commit -m "feat(extract_evidence): narrow special_evidence prompt to gap-filling scope"
+```
+
+**Acceptance:** Test green. No behavioral regression (no signature change to `SpecialEvidenceStage.run`/`run_async`, no new workflow wiring).
+
+> **Explicitly NOT in this revision:** runtime skip of `SpecialEvidenceStage` based on `evidence_map`. Reason: false-negative recall risk on PS3/BS3 evidence outweighs the LLM-call savings. Revisit only after benchmark ablation shows a duplication rate >X% across a representative dataset.
+
+---
+
+## Phase 4 — Verification across the whole extract_evidence package
+
+### Task 4.1: Full module test run
 
 ```bash
 cd backend
 uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/ -v --tb=short
 ```
 
-**Expected:** All pass.
+**Expected:** All pass. If any test fails, **stop**, classify the failure (regression vs pre-existing), and append a row to `lesson.md` before fixing.
 
-### Task 7.2: Run lint
+### Task 4.2: Lint
 
 ```bash
 cd backend
@@ -690,88 +517,89 @@ uv run ruff check src/core/cross_lingual_process_and_extract_evidence/extract_ev
 
 **Expected:** No errors.
 
-### Task 7.3: Run type check if available
+### Task 4.3: Smoke run on a benchmark sample (optional, only when local config is set up)
 
 ```bash
 cd backend
-uv run pyright src/core/cross_lingual_process_and_extract_evidence/extract_evidence/ || true
+uv run python -m benchmark.runners.phase2_batch --dataset <path> --limit 3
 ```
 
-**Expected:** No new errors.
+Manually compare the LLM call count log line with the pre-revision baseline (see `progress.txt` Phase 0 entry). Expect a drop of roughly `chunks × 1` (the K group eliminated per chunk) and roughly equal token usage on `special_evidence` (prompt narrower but still issued).
 
-### Task 7.4: Run benchmark ablation (optional but recommended)
+### Task 4.4: Final progress + lesson entry
 
-```bash
-cd backend
-uv run python -m benchmark.runners.phase2_batch --dataset <path> --limit 10
+Append to `progress.txt`:
+
 ```
-
-Record LLM call count before/after.
-
----
-
-## Phase 8: Documentation and Handoff
-
-### Task 8.1: Update `progress.txt`
-
-Append:
-```text
-[2026-06-19] Evidence extraction revision complete: K group removed from LLM, docstring fixed, EvidenceItemNormalizer wired, special_evidence gated, evidence_map drives group selection, strong-tier budget raised to 12k [done]
+[2026-06-19] Evidence extraction revision complete: K group removed, normalizer wired post-quality_gate, special_evidence prompt narrowed [done]
 ```
-
-### Task 8.2: Write `lesson.md` entry
 
 Append to `lesson.md`:
+
 ```markdown
-## 2026-06-19 Evidence Extraction Pipeline Revision
+## 2026-06-19 Evidence Extraction Pipeline Revision — summary
 
 ### 问题
-- K 组（GDV curation）被错误下发给单文档 LLM，浪费 token。
-- catalog_extraction.py docstring 写 134 字段/2 组，与代码 166 字段/3 组不符。
-- EvidenceItemNormalizer 定义并被测试，但未接入 workflow。
-- special_evidence 与 catalog F/G/H/I/J 重复抽取。
-- evidence_map 信号仅用于 relevant 布尔开关，未驱动 group 选择。
-
-### 根因
-- 分组意图注释明确（catalog.py:219）但 stage 实现未过滤 curation 组。
-- workflow 演进过程中新增 AcmgEvidenceValueNormalizer，原 EvidenceItemNormalizer 被遗忘。
-- special_evidence stage 无条件运行，未复用 catalog 已有结果。
+- K (curation) 组在 catalog.py 标注为 cross-paper,但 CatalogExtractionStage 仍把它发给单文档 LLM。
+- catalog_extraction.py docstring 写 134 字段/2 组,真实是 166/3。
+- EvidenceItemNormalizer 被定义和测试,但未接入 workflow,导致 166-row 矩阵契约失效。
+- special_evidence 与 catalog F/G 在 prompt 层面有重叠语义。
 
 ### 解决方案
-- 在 CatalogExtractionStage 中过滤 curation 组。
-- 修正 docstring。
-- 将 EvidenceItemNormalizer 接入 value_normalization 后节点，保证 166 行全矩阵。
-- 按 evidence_map 信号短路 special_evidence 和 supporting group。
-- 将 STRONG_TIER_INPUT_BUDGET_TOKENS 提高到 12k。
+- 在 stage 构造时过滤 curation 组(Phase 1)。
+- 把 EvidenceItemNormalizer 接入为 catalog_backfill 节点,放在 quality_gate **之后**(Phase 2)。
+- 给 special_evidence prompt 加 SCOPE 指令(Phase 3),不做 runtime hard skip,保留召回。
+- 修正 docstring 与 baseline 测试(Phase 0)。
+
+### 拒绝的方案
+- 用 evidence_map 做 supporting 组的 hard skip:81 字段盲区,代价过大。
+- 用 evidence_map 做 special_evidence 的 hard skip:同上。
+- 删除 EvidenceItemNormalizer:破坏下游 166-row 对齐契约。
+- 把 backfill 放在 source_grounding/quality_gate 之前:稀释 quality 指标,浪费 grounding 计算。
 
 ### 预防措施
-- 每次新增 catalog category 时检查 `_CATALOG_GROUP_CATEGORIES` 和 stage 过滤逻辑。
-- 新增 stage 必须在 workflow.py 同步/异步图同时注册并添加测试。
+- 每次新增 catalog 分类 → 同步更新 _CATALOG_GROUP_CATEGORIES 与 stage 过滤逻辑。
+- 每次新增 workflow 节点 → 在 `_build_graph` 和 `_build_async_graph` **双图**注册。
+- 测试新增 catalog 字段时,断言 EVIDENCE_FIELD_SPECS 总数与 test_catalog.py 同步。
 ```
-
-### Task 8.3: Commit documentation
 
 ```bash
 git add progress.txt lesson.md
-git commit -m "docs: record evidence extraction revision progress and lessons"
+git commit -m "docs(extract_evidence): record pipeline revision lessons"
 ```
 
 ---
 
-## Verification Checklist
+## Verification checklist (run before merging)
 
-- [ ] `uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/ -v` passes
-- [ ] `uv run ruff check src/core/cross_lingual_process_and_extract_evidence/extract_evidence/` passes
-- [ ] `CatalogExtractionStage._catalog_groups` has exactly `high_signal` and `supporting`
-- [ ] `EvidenceItemNormalizer` produces 166 rows in workflow output
-- [ ] `SpecialEvidenceStage.run` returns `[]` when evidence_map has no signals
-- [ ] Long-document chunk count is lower at 12k budget than at 8k
-- [ ] `progress.txt` and `lesson.md` updated
+- [ ] `uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/ -v` — all green
+- [ ] `uv run ruff check src/core/cross_lingual_process_and_extract_evidence/extract_evidence/` — no errors
+- [ ] `CatalogExtractionStage._catalog_groups` keys are exactly `{"high_signal", "supporting"}`
+- [ ] `EvidenceExtractionWorkflow._build_graph` registers `catalog_backfill` between `quality_gate` and `END`
+- [ ] `EvidenceExtractionWorkflow._build_async_graph` does the same
+- [ ] `get_special_evidence_prompt(...)` output contains `"SCOPE:"`, `"gap-filler"`, `"NOT already represented"`
+- [ ] `test_catalog_has_expected_category_counts` asserts 166 fields A–K
+- [ ] `progress.txt` and `lesson.md` carry the four entries above
 
----
+## Things explicitly NOT changing in this revision
 
-## Notes
+| Item | Location | Why preserved |
+|---|---|---|
+| `STRONG_TIER_INPUT_BUDGET_TOKENS = 8_000` | `chunking.py:19` | Tuning belongs in a separate, benchmark-driven revision; bundling it here muddies the LLM-call-reduction signal. |
+| `DEFAULT_INPUT_BUDGET_TOKENS = 16_000` | `chunking.py:18` | Same. |
+| `_DEFAULT_CHUNK_CONCURRENCY = 5` | `catalog_extraction.py:26`, `special_evidence.py:20` | Already balanced for current model server limits. |
+| `required_for_scorable` set (5 fields) | `catalog.py` flag on A.gene_symbol, A.variant_hgvs_c, A.variant_hgvs_p, B.disease_diagnosis, D.allele_frequency | Hard contract for downstream scoring. |
+| `merge_sparse_evidence_items` semantics | `chunking.py:138` | Complementary to normalizer (dedup vs backfill); merging them collapses two distinct concerns. |
+| LangGraph topology between `relevance_scan` and `quality_gate` | `workflow.py:194-208` | All 10 intermediate nodes have established contracts; only the post-quality_gate tail is touched. |
+| `EvidenceItemNormalizer` API surface | `core.py:75-176` | Used by 4 tests (`test_normalizer.py`, `test_quality_validation.py`); changing the signature would force a sweep. The plan uses the existing `normalize_grouped(items)` signature unchanged. |
+| `special_evidence` runtime gating | `special_evidence.py` | Risk to recall outweighs token savings (see Phase 3 rationale). |
 
-- Do **not** split the 166 fields into per-ACMG-code stages; the attachment analysis showed 55 fields have no ACMG code and grouping by category is already balanced.
-- Do **not** remove `CATALOG_GROUPS` parallelism; the current `asyncio.gather` + `Semaphore(5)` pattern is sufficient.
-- The curation group must still be available downstream for Phase 3 cross-paper GDV aggregation; only remove it from the Phase 2 LLM extractor.
+## Rollback
+
+Each phase is a single, self-contained commit. To roll back the riskiest one (Phase 2, normalizer wiring):
+
+```bash
+git revert <Phase 2 commit hash>
+```
+
+The other phases (0, 1, 3) are independently revertable; they do not depend on Phase 2.
