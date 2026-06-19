@@ -19,12 +19,17 @@ class AcquisitionSource(str, Enum):
 
 @dataclass(frozen=True)
 class DocumentDownloadEntry:
-    """A single download result from online acquisition."""
+    """A single download result from online acquisition.
+
+    ``pre_parsed_markdown`` is set when the acquisition pipeline already
+    submitted the PDF to MinerU (multilingual workflow's early parse).
+    Downstream Phase 1 can use it to skip MinerU re-parsing.
+    """
 
     file_path: Optional[str] = None
     pdf_url: Optional[str] = None
     resolved_url: Optional[str] = None
-
+    pre_parsed_markdown: Optional[str] = None
 
 @dataclass
 class DocumentAcquisitionRequest:

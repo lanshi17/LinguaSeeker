@@ -73,8 +73,8 @@ class TestDocumentAcquisitionService:
         assert "content is required" in result.error
 
     @pytest.mark.asyncio
-    async def test_acquire_online_search_calls_async_workflow(self):
-        """Test online search properly awaits the async workflow."""
+    async def test_acquire_online_search_routes_to_multilingual(self):
+        """Free-text query with language='auto' routes to the multilingual workflow."""
         service = DocumentAcquisitionService()
         request = DocumentAcquisitionRequest(
             source=AcquisitionSource.ONLINE,
@@ -89,14 +89,78 @@ class TestDocumentAcquisitionService:
             "route": None,
         }
         with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+            new_callable=AsyncMock,
+            return_value=mock_result,
+        ) as mock_ml, patch(
             "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.online_acquisition_workflow",
             new_callable=AsyncMock,
             return_value=mock_result,
-        ) as mock_wf:
+        ) as mock_single:
             result = await service.acquire(request)
-            mock_wf.assert_awaited_once()
+            mock_ml.assert_awaited_once()
+            mock_single.assert_not_awaited()
             assert result.source == AcquisitionSource.ONLINE
             assert result.success is True
+
+    @pytest.mark.asyncio
+    async def test_acquire_online_search_with_explicit_language_uses_single(self):
+        """Explicit language pins to the single-language workflow (no translation)."""
+        service = DocumentAcquisitionService()
+        request = DocumentAcquisitionRequest(
+            source=AcquisitionSource.ONLINE,
+            action="search",
+            query="test query",
+            language="en",
+        )
+        mock_result = {
+            "success": True,
+            "items": [],
+            "downloads": [],
+            "warnings": [],
+            "route": None,
+        }
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+            new_callable=AsyncMock,
+            return_value=mock_result,
+        ) as mock_ml, patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.online_acquisition_workflow",
+            new_callable=AsyncMock,
+            return_value=mock_result,
+        ) as mock_single:
+            await service.acquire(request)
+            mock_single.assert_awaited_once()
+            mock_ml.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_acquire_online_identifier_only_uses_single(self):
+        """Identifier-only download (no query) stays on the single-language workflow."""
+        service = DocumentAcquisitionService()
+        request = DocumentAcquisitionRequest(
+            source=AcquisitionSource.ONLINE,
+            action="download",
+            identifiers=["10.1234/abcd"],
+        )
+        mock_result = {
+            "success": True,
+            "items": [],
+            "downloads": [],
+            "warnings": [],
+            "route": None,
+        }
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+            new_callable=AsyncMock,
+            return_value=mock_result,
+        ) as mock_ml, patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.online_acquisition_workflow",
+            new_callable=AsyncMock,
+            return_value=mock_result,
+        ) as mock_single:
+            await service.acquire(request)
+            mock_single.assert_awaited_once()
+            mock_ml.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_acquire_online_missing_action(self):

@@ -120,10 +120,12 @@ class Phase1Adapter:
                 )
 
             # Extract file path
+            entry: object | None = None
             if acquisition_result.stored_file:
                 pdf_path = acquisition_result.stored_file.file_path
             elif acquisition_result.downloads:
-                pdf_path = acquisition_result.downloads[0].file_path
+                entry = acquisition_result.downloads[0]
+                pdf_path = entry.file_path
             else:
                 # Acquisition returned metadata/items but no downloadable PDF.
                 # Most common cause: the article is paywalled or the provider
@@ -138,6 +140,19 @@ class Phase1Adapter:
                     f"The article may be paywalled or no OA copy is indexed.",
                     phase=1,
                 )
+
+            # If the acquisition pipeline already parsed the PDF (multilingual
+            # workflow's early MinerU batch), reuse that markdown and bypass
+            # the local re-parse. Falls back to ``_build_from_pre_parsed``
+            # which writes the canonical metadata.json layout Phase 2 expects.
+            pre_parsed = getattr(entry, "pre_parsed_markdown", None) if entry else None
+            if pre_parsed:
+                state.pre_parsed_markdown = pre_parsed
+                state = await self._build_from_pre_parsed(state)
+                # Surface the original PDF for downstream provenance.
+                if state.phase_1_output and pdf_path:
+                    state.phase_1_output.pdf_path = pdf_path
+                return state
 
             # Parse document — use absolute path to survive CWD changes
             from pathlib import Path as _Path
