@@ -123,18 +123,24 @@ class DocumentAcquisitionService:
         )
 
     async def _handle_literature(self, request: DocumentAcquisitionRequest) -> DocumentAcquisitionResult:
-        """Handle online literature acquisition."""
+        """Handle online literature acquisition.
+
+        Routes to ``multilingual_acquisition_workflow`` when the request
+        has a free-text query and no specific language hint (``auto``);
+        single-language and identifier-driven requests stay on
+        ``online_acquisition_workflow``.
+        """
         if not request.action:
             raise ValueError("action is required for online acquisition")
         if request.action == "search" and not request.query:
             raise ValueError("query is required for search action")
 
-        self.logger.debug(f"Searching literature: {request.query}")
+        from .online_acquisition import (
+            multilingual_acquisition_workflow,
+            online_acquisition_workflow,
+        )
 
-        # Call online_acquisition module
-        from .online_acquisition import online_acquisition_workflow
-
-        payload = {
+        payload: dict[str, object] = {
             "action": request.action,
             "query": request.query,
             "identifiers": request.identifiers,
@@ -145,7 +151,21 @@ class DocumentAcquisitionService:
             "api_provider": request.api_provider,
         }
 
-        result = await online_acquisition_workflow(payload)
+        # Multilingual fanout requires a free-text query and "auto" routing.
+        # An explicit language or an identifier-only request stays on the
+        # single-language path so we don't translate identifiers like DOIs.
+        use_multilingual = bool(
+            request.query
+            and (request.language in (None, "", "auto"))
+            and not (request.identifiers and not request.query)
+        )
+
+        if use_multilingual:
+            self.logger.debug(f"Searching literature (multilingual): {request.query}")
+            result = await multilingual_acquisition_workflow(payload)
+        else:
+            self.logger.debug(f"Searching literature (single-language): {request.query}")
+            result = await online_acquisition_workflow(payload)
 
         # Convert raw download dicts to typed entries
         downloads = [
@@ -153,6 +173,7 @@ class DocumentAcquisitionService:
                 file_path=d.get("file_path"),
                 pdf_url=d.get("pdf_url"),
                 resolved_url=d.get("resolved_url"),
+                pre_parsed_markdown=d.get("parsed_markdown") or None,
             )
             for d in result.get("downloads", [])
         ]
