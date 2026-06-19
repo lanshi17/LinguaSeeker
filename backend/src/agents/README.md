@@ -65,7 +65,7 @@ result = await task  # or poll with runner.get_last_state(run_id)
 | `phase_1_adapter.py` | `Phase1Adapter` — wraps acquisition + parsing services |
 | `phase_2_adapter.py` | `Phase2Adapter` — wraps translation + evidence extraction services |
 | `phase_3_adapter.py` | `Phase3Adapter` — wraps entity standardization service |
-| `phase_4_factory.py` | `Phase4ServiceFactory` — creates Phase 4 services with per-request sessions |
+| `phase_4_factory.py` | `Phase4ServiceFactory` — creates Phase 4 services (feedback, chat, source_linker, delta_audit) with per-request sessions. Long-lived dependencies (cfg, ChatLLMProvider) injected at construction. |
 
 ## Public API
 
@@ -80,38 +80,74 @@ result = await task  # or poll with runner.get_last_state(run_id)
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `start` | `(initial_state: PipelineGraphState) -> asyncio.Task` | Start background pipeline execution |
-| `get_last_state` | `async (run_id: str) -> PipelineGraphState \| None` | Read state (memory cache → PostgreSQL fallback, no mutation) |
+| `start` | `async (initial_state: PipelineGraphState) -> asyncio.Task` | Durable claim + background task. Heartbeat loop refreshes ownership while active. IntegrityError propagates as race-proof duplicate-source guard. |
+| `get_last_state` | `async (run_id: str) -> PipelineGraphState \| None` | Read state (memory cache -> PostgreSQL fallback, no mutation). Only caches terminal DB states to avoid stale active rows. |
 | `get_last_state_cached` | `(run_id: str) -> PipelineGraphState \| None` | Fast path: memory cache only |
 | `is_running` | `(run_id: str) -> bool` | Check if a run is currently active |
-| `is_running_for_source` | `(source_key: str) -> bool` | Dedup check by filename/query |
+| `is_running_for_source` | `async (source_key: str) -> bool` | Dedup check by filename/query; checks memory cache then persistence for cross-worker dedup |
+| `finalize_review` | `async (run_id: str) -> PipelineGraphState \| None` | Transition from AWAITING_REVIEW to COMPLETED |
+| `recover_orphaned_runs` | `async (heartbeat_timeout_seconds=300) -> int` | Mark heartbeat-stale non-terminal runs as FAILED |
+| `shutdown` | `async (timeout=60.0) -> None` | Graceful shutdown: wait for active tasks, cancel stragglers |
+| `remember_state` | `(run_id: str, state: PipelineGraphState) -> None` | Store state in LRU cache (max 100 entries) |
+
+Constructor: `__init__(orchestrator, semaphore, state_persistence, worker_id=None, heartbeat_interval_seconds=15.0)`
 
 ### `PipelineGraphState`
 
 ```python
 class PipelineGraphState(BaseModel):
+    # Run identity (UUID strings)
     processing_run_id: str              # UUID string
     source_document_id: str             # UUID string
+    # Execution mode
     mode: PipelineMode                  # FULL or PHASE
     source_type: SourceType             # LOCAL or ONLINE
     target_phase: int | None            # 1-3 for single-phase mode
-    pipeline_status: PipelineStatus     # PENDING → RUNNING → AWAITING_REVIEW | FAILED
-    phase_1_status: PhaseStatusDetail   # Per-phase timing + errors
+    # Dedup
+    source_key: str | None              # filename (local) or query (online)
+    # Overall pipeline status
+    pipeline_status: PipelineStatus     # PENDING -> RUNNING -> AWAITING_REVIEW | FAILED
+    # Per-phase status (structured with timing and errors)
+    phase_1_status: PhaseStatusDetail
     phase_2_status: PhaseStatusDetail
     phase_3_status: PhaseStatusDetail
-    phase_1_output: Phase1Output | None # pdf_path, md_path, metadata_path
-    phase_2_output: Phase2Output | None # output_dir, translation paths, extraction path
+    # Phase outputs (typed models)
+    phase_1_output: Phase1Output | None # pdf_path, md_path, metadata_path, output_dir, images_dir
+    phase_2_output: Phase2Output | None # output_dir, translation paths, source_language, extraction_result_path
     phase_3_output: Phase3Output | None # match/standardized/ambiguous/unmapped counts
+    # Error tracking
+    error_message: str | None
+    error_phase: int | None
+    # Execution metadata
+    created_at: str
+    started_at: str | None
+    completed_at: str | None
+    # Content-based routing
     skip_phase_3_reason: SkipPhase3Reason | None
+    # Upload content
+    upload_file_path: str | None
+    pre_parsed_markdown: str | None     # Bypasses Phase 1 MinerU parsing
+    # Online acquisition fields
+    query: str | None
+    identifiers: list[str] | None
+    action: str | None
+    relevance_gate: bool                # Default True
+    literature_types: list[str] | None
+    # Target gene-disease hypothesis for Phase 2/3
+    extraction_target: ExtractionTarget | None
 ```
 
 ### Error Hierarchy
 
 ```
 PhaseError (base)
-├── RetryablePhaseError    # Transient: timeouts, rate limits → retried by RetryablePhaseExecutor
-└── PermanentPhaseError    # Permanent: invalid input, parser exhaustion → no retry
+├── RetryablePhaseError    # Transient: timeouts, rate limits -> retried by RetryablePhaseExecutor
+└── PermanentPhaseError    # Permanent: invalid input, parser exhaustion -> no retry
+
+InvalidStateTransitionError  # Programming/data-corruption guard: invalid status transition
 ```
+
+State transition guards validate all pipeline and phase status transitions. Valid transitions are defined in `_VALID_PIPELINE_TRANSITIONS` and `_VALID_PHASE_TRANSITIONS`. Terminal states can return to PENDING for phase reruns.
 
 ### `RetryablePhaseExecutor`
 
@@ -126,17 +162,67 @@ Default: 2 retries, 30s base backoff (30s → 60s).
 ### Adapter Error Classification
 
 Phase adapters translate domain exceptions into classified orchestrator errors:
-- `ConnectionError`, `TimeoutError`, `openai.APITimeoutError`, `httpx.TimeoutException`, `MinerUTimeoutError` → `RetryablePhaseError`
-- `ParserExhaustedError`, config errors, invalid input → `PermanentPhaseError`
-- Unknown exceptions → `PermanentPhaseError` (safe default)
+- `ConnectionError`, `TimeoutError`, `openai.APITimeoutError`, `openai.RateLimitError`, `httpx.TimeoutException`, `MinerUTimeoutError`, `CatalogExtractionError` -> `RetryablePhaseError`
+- `FileNotFoundError`, `PermissionError`, `IsADirectoryError` -> `PermanentPhaseError` (OSError subclasses but non-transient)
+- `ParserExhaustedError`, config errors, invalid input -> `PermanentPhaseError`
+- Unknown exceptions -> `PermanentPhaseError` (safe default)
+
+The retryable error tuple is built dynamically by `build_retryable_errors()` to handle optional dependencies (httpx, openai, MinerU).
 
 ### State Persistence
 
-State is saved to PostgreSQL (`pipeline_run_states` table) after each phase completes (success or failure). `SessionBoundStatePersistence` creates a fresh session per operation to avoid stale-session bugs in long-lived contexts. `PipelineRunner.get_last_state()` checks in-memory cache first, then falls back to DB without changing the stored status. Orphan recovery runs once during app startup via `recover_orphaned_runs()`.
+State is saved to PostgreSQL (`pipeline_run_states` table) after each phase completes (success or failure). `SessionBoundStatePersistence` creates a fresh session per operation to avoid stale-session bugs in long-lived contexts.
+
+Each save performs a state transition guard check: loads the existing state from DB and validates that the new pipeline/phase status transitions are legal before committing. This defense-in-depth prevents corrupted state from reaching the database.
+
+Worker ownership is tracked via `owner_worker_id` and `heartbeat_at` columns. The runner's heartbeat loop (default 15s interval) refreshes ownership while a pipeline is active. Orphan recovery marks runs with stale heartbeats (>300s) as FAILED during app startup. A PostgreSQL advisory lock prevents multi-worker races during recovery.
+
+Additional persistence methods:
+- `heartbeat(run_id, worker_id)` -- refresh ownership timestamp for active runs
+- `has_active_source_key(source_key)` -- cross-worker dedup check
+- `finalize_review(run_id)` -- transition AWAITING_REVIEW to COMPLETED
 
 ### Single-Phase Mode
 
 When `mode=PHASE`, the orchestrator validates that all upstream phases have completed before executing the target phase. E.g., Phase 3 requires Phase 1 and Phase 2 to be `COMPLETED`.
+
+### Pre-parsed Markdown Fast Path
+
+When `state.pre_parsed_markdown` is set, Phase 1 skips MinerU parsing entirely and constructs Phase1Output directly from the provided markdown text. This is used when the online acquisition pipeline already parsed the PDF via MinerU batch processing.
+
+### Phase 2 Dual-Track Extraction
+
+Phase 2 runs dual-track evidence extraction (original + translated documents). If both tracks return NOT_RELEVANT, `skip_phase_3_reason` is set to `SkipPhase3Reason.NOT_RELEVANT` and Phase 3 is skipped. The extraction result is persisted to disk for Phase 3 consumption.
+
+### Phase 3 Skip Conditions
+
+Phase 3 is skipped when:
+- `skip_phase_3_reason` is set by Phase 2 (NOT_RELEVANT)
+- Standardization produces zero candidates (NO_CANDIDATES -- set after Phase 3 runs)
+
+### State Transition Tables
+
+Pipeline status transitions:
+
+| From | Allowed To |
+|------|------------|
+| PENDING | RUNNING, FAILED |
+| RUNNING | AWAITING_REVIEW, FAILED |
+| AWAITING_REVIEW | COMPLETED, FAILED, PENDING (rerun) |
+| FAILED | PENDING (rerun) |
+| COMPLETED | PENDING (rerun) |
+
+Phase status transitions:
+
+| From | Allowed To |
+|------|------------|
+| PENDING | RUNNING, SKIPPED, FAILED |
+| RUNNING | COMPLETED, FAILED, SKIPPED |
+| COMPLETED | PENDING (rerun) |
+| SKIPPED | PENDING (rerun) |
+| FAILED | PENDING (rerun) |
+
+Identity transitions (same status) are always allowed for metadata-only saves.
 
 ### Duplicate Run Prevention
 
@@ -184,7 +270,8 @@ uv run pytest tests/agents/ -v
 
 | Dependency | Purpose |
 |------------|---------|
-| `langgraph` | `StateGraph`, `END` — pipeline state machine |
+| `langgraph` | `StateGraph`, `END` -- pipeline state machine |
 | `pydantic` | `PipelineGraphState` and all typed contracts |
-| `sqlalchemy[asyncio]` | State persistence to `pipeline_run_states` |
+| `sqlalchemy[asyncio]` | State persistence to `pipeline_run_states` via upsert + state transition guards |
 | `loguru` | Structured logging per phase |
+| `aiofiles` | Async file I/O in phase adapters |

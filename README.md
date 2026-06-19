@@ -59,9 +59,16 @@ Multi-Agent infrastructure platform for medical genetics literature automation a
 │       ├── playbooks/              # site.yml, healthcheck.yml
 │       └── inventories/            # production/
 ├── docs/                           # Documentation (active, planned, archive)
-├── benchmark/                      # Pipeline benchmarking + ClinGen Layer 3 evaluation
-│   ├── pipeline/                   # Pipeline benchmarks
-│   └── layer3/                     # ClinGen evaluation (ground_truth/)
+├── benchmark/                      # Pipeline benchmarking + evaluation
+│   ├── analysis/                   # Reconciliation, diagnostics, paper artifacts
+│   ├── annotation/                 # Rett annotation workflow (draft/approved/rejected)
+│   ├── core/                       # Shared benchmark utilities
+│   ├── data/                       # Reports, baselines, ground truth
+│   ├── datasets/                   # Dataset loaders (clingen, clinvar_fused, rett_annotation)
+│   ├── layer3/                     # ClinGen Layer 3 evaluation (ground_truth/)
+│   ├── literature_acquisition/     # Literature download benchmarks
+│   ├── pipeline/                   # Pipeline end-to-end benchmarks
+│   └── runners/                    # Multi-language benchmark runners + downloads
 ├── scripts/                        # Project-level utility scripts
 ├── data/                           # Runtime data
 ├── knowledges/                     # Knowledge base documents

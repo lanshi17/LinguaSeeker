@@ -7,7 +7,7 @@
 ```python
 from src.core.ingest_and_digitize_data.parse_document import create_parse_service
 
-service = create_parse_service()  # Reads from global config (ParseDocumentConfig)
+service = create_parse_service()  # Reads from global config
 
 # Single remote URL
 result = await service.parse("https://example.com/paper.pdf")
@@ -39,7 +39,7 @@ print(result.failed_files)
 
 ```
 caller
-  └─ create_parse_service()                # __init__.py — factory, reads ParseDocumentConfig
+  └─ create_parse_service()                # __init__.py — factory, reads global config
        └─ ParseDocumentService             # service.py — public facade
             └─ DocumentParseOrchestrator   # orchestrator.py — remote-first fallback
                  ├─ MinerURemoteParser     # remote/parser.py — cloud API lifecycle + batch upload (name="mineru-remote")
@@ -102,11 +102,12 @@ service = create_parse_service()
 
 # Custom config overrides
 config = ParseDocumentConfig(
-    mineru_remote_api_token="my-token",
     mineru_local_model_server_url="http://localhost:8001",
 )
 service = create_parse_service(config=config)
 ```
+
+**Note**: The MinerU API token is read from `get_config().mineru_api_token` (top-level config), not from `ParseDocumentConfig`.
 
 ### ParseDocumentService
 
@@ -136,7 +137,11 @@ Abstract base for all parser implementations. Extend this to add new backends.
 DocumentParseOrchestrator(remote: ParserStrategy, local: ParserStrategy)
 ```
 
-Implements `ParserStrategy` with `name = "orchestrator"`. Tries `remote.parse()` first; on any exception, falls back to `local.parse()`. Raises `ParserExhaustedError(errors={...})` if both fail, carrying both exception objects keyed by parser name.
+Implements `ParserStrategy` with `name = "orchestrator"`. Tries `remote.parse()` first; on any exception, falls back to `local.parse()`. For URL inputs, the local fallback downloads the PDF to a temp file first (with SSRF protection via `_validate_url_safe()`). Raises `ParserExhaustedError(errors={...})` if both fail, carrying both exception objects keyed by parser name.
+
+The orchestrator also exposes `parse_local_files()` which delegates to the remote parser's batch upload API.
+
+**Security**: `_validate_url_safe()` rejects URLs targeting private/reserved IP addresses. Download limit is 100 MB. Content-type is validated against `application/pdf` and `application/octet-stream`.
 
 ### MinerURemoteParser
 
@@ -166,6 +171,10 @@ MinerURemoteParser(
 
 4. `_build_result(raw_data)` → maps `_MinerURawResult` → `ParseResult` with `DocumentMetadata`, `PageContent`, images, and raw `content_blocks`.
 
+**Image collection**: `_collect_images()` searches for `images/` directories at any nesting level in the extracted zip, handling layouts where the zip root contains a subdirectory.
+
+**Abstract extraction**: `_extract_abstract_from_markdown()` extracts abstract text from MinerU-generated markdown using regex patterns for English ("Abstract", "ABSTRACT") and Chinese ("摘要", "【摘要】") headings, falling back to first substantial paragraph before "Introduction"/"Keywords".
+
 **Local-file batch** (`MinerURemoteParser.parse_local_files(file_paths, ...)`) — the full lifecycle:
 1. `upload_local_files()` → `rust_io.net.mineru_upload_local_files()` + PUT to pre-signed URLs → `MinerULocalBatchUploadResult`
 2. `poll_batch_until_terminal(batch_id)` → loops `poll_batch_result()` until all files terminal
@@ -192,6 +201,8 @@ Page-by-page extraction via model-server VLM:
 2. **`image_to_base64(image)`** — PIL Image → base64 PNG string
 3. **`_extract_page(client, page_number, image)`** — POSTs `{"model": …, "messages": [{"role": "user", "content": [{"type": "text", …}, {"type": "image_url", …}]}]}` to `{base_url}/v1/chat/completions`
 4. Results aggregated into `ParseResult` with `full_markdown` joined by `"\n\n"`
+
+**Abstract extraction**: `_extract_abstract_from_markdown()` is a module-level function that extracts abstract text from the combined markdown using regex patterns for English and Chinese academic paper conventions.
 
 **Response format handling** in `_parse_page_response`:
 - **VLMExtractResponse**: `{"full_markdown": "…", "pages": [{"markdown": "…", "figures": […], "tables": […]}]}`
@@ -284,11 +295,14 @@ Extends `ParseResult` with `saved_files: SavedFiles | None`.
 | `MinerULocalBatchParseResult` | Completed batch: `batch_id`, `status`, `results: dict[str, ParseResult]`. `failed_files` property |
 | `MinerULocalBatchSaveResult` | Saved output paths for each completed batch file |
 
-#### ParserName
+#### Additional Type Aliases
 
-```python
-ParserName = Literal["mineru-remote", "mineru-local", "unknown"]
-```
+| Type | Values |
+|------|--------|
+| `ParserName` | `Literal["mineru-remote", "mineru-local", "unknown"]` |
+| `MinerUModelVersion` | `Literal["pipeline", "vlm", "MinerU-HTML"]` |
+| `MinerUExtraFormat` | `Literal["docx", "html", "latex"]` |
+| `MinerUBatchState` | `Literal["waiting-file", "pending", "running", "converting", "done", "failed"]` |
 
 ### Exceptions
 
@@ -313,7 +327,7 @@ ParserName = Literal["mineru-remote", "mineru-local", "unknown"]
 
 ### Remote Parser: Content Extraction Fallback
 
-`MinerUParser._parse_extracted_content()` discovers the best available format from a downloaded zip:
+`MinerURemoteParser._parse_extracted_content()` discovers the best available format from a downloaded zip:
 
 1. **`*_content_list.json`** — Most feature-rich. Groups blocks by `page_idx`, converts text→Markdown via `block_to_markdown()`, extracts image captions and `img_path`, parses HTML tables via `html_table_to_structured()`. Returns per-page figures/tables.
 2. **`layout.json` with `pdf_info`** — Legacy format. Parses `pdf_info[n].page_content` per page. Also handles `"pages"` key as alternative.
@@ -325,6 +339,13 @@ If none yield content, raises `MinerUAPIError`.
 ### Local Parser: Image Processing
 
 `MinerULocalParser` runs PDF-to-image conversion via `asyncio.to_thread` to avoid blocking the async event loop. Each page image is base64-encoded and sent as a multimodal chat completion request. Processing is strictly sequential (page 1 → page 2 → …).
+
+### Abstract Extraction
+
+Both `MinerULocalParser` and `MinerURemoteParser` extract abstract text from combined markdown using regex patterns:
+- English: "Abstract", "ABSTRACT" headings
+- Chinese: "摘要", "【摘要】" headings
+- Falls back to first substantial paragraph (>30 chars) before "Introduction", "Keywords", etc.
 
 ### Full Markdown Auto-Derivation
 
@@ -385,7 +406,7 @@ for failed_file in batch.parse_result.failed_files:
     print(f"MinerU failed: {failed_file}")
 ```
 
-Batch parsing is a remote MinerU capability exposed through `MinerUParser` and `ParseDocumentService`, not the local VLM parser. Completed files are parsed through the same zip extraction path as URL-based remote parsing.
+Batch parsing is a remote MinerU capability exposed through `MinerURemoteParser` and `ParseDocumentService`, not the local VLM parser. Completed files are parsed through the same zip extraction path as URL-based remote parsing.
 
 ### Direct local parser (bypass orchestrator)
 
@@ -495,11 +516,11 @@ New backends should produce data in this shape; `pages_from_raw()` handles `Page
 
 ## Configuration
 
-Environment variables loaded via `src.core.config.ParseDocumentConfig`:
+Environment variables loaded via `src.core.config`:
 
 | Variable | Config field | Default |
 |----------|-------------|---------|
-| `MINERU_REMOTE_API_TOKEN` | `parse_document.mineru_remote_api_token` | `""` |
+| `MINERU_API_TOKEN` | `mineru_api_token` (top-level) | `""` |
 | `MINERU_REMOTE_POLL_INTERVAL` | `parse_document.mineru_remote_poll_interval` | `2.0` |
 | `MINERU_REMOTE_MAX_POLL_ATTEMPTS` | `parse_document.mineru_remote_max_poll_attempts` | `150` |
 | `MINERU_LOCAL_MODEL_SERVER_URL` | `parse_document.mineru_local_model_server_url` | `"http://localhost:8001"` |

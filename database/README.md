@@ -18,7 +18,7 @@ database/
 ├── migrations/
 │   ├── env.py                           Async migration environment (offline/online, imports Base.metadata)
 │   ├── script.py.mako                   Migration script template (upgrade/downgrade stubs)
-│   └── versions/                        12 migration files (init schema through schema hardening)
+│   └── versions/                        16 migration files (init schema through chat message action)
 ├── seeds/
 │   └── .gitkeep                         Placeholder for future seed data
 └── terminology_database/                Biomedical reference data (see terminology_database/README.md)
@@ -52,7 +52,7 @@ backend/src/core/config.py
     │                                  src.dao.postgresql.models.Base.metadata
     │
     ├──► database/migrations/versions/
-    │       12 migration files (head → 2026-06-08 schema hardening)
+    │       16 migration files (head → 2026-06-13 chat message action)
     │
     ▼
 backend/src/dao/postgresql/models.py
@@ -69,7 +69,7 @@ backend/src/dao/postgresql/models.py
 
 ## Migrations
 
-The `versions/` directory contains 12 migration files:
+The `versions/` directory contains 16 migration files:
 
 | Migration | Purpose |
 |-----------|---------|
@@ -85,6 +85,10 @@ The `versions/` directory contains 12 migration files:
 | `add_reviewed_unmappable_status` | reviewed_unmappable status for entities |
 | `extract_pipeline_status_column` | Pipeline status column extraction |
 | `remove_run_evidence_canonical_fk` | Remove run-evidence canonical FK |
+| `add_created_at_to_search_index` | Add created_at timestamp to search index |
+| `add_pipeline_run_leases` | Pipeline run lease/lock mechanism |
+| `allow_standalone_chat_sessions` | Allow chat sessions without pipeline run |
+| `add_chat_message_action` | Chat message action field |
 
 ### Alembic CLI Reference
 

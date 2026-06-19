@@ -19,7 +19,7 @@ backend/
 │   │   ├── standardize_entities_and_align_knowledge/    # Phase 3
 │   │   └── visualize_evidence_with_expert_in_loop/      # Phase 4
 │   ├── dao/              #   Persistence: PostgreSQL, Redis, Neo4j, MinIO
-│   └── utils/            #   Logging, exceptions, middleware, health checks
+│   └── utils/            #   Logging, exceptions, middleware, health, observability, text, LLM/Rust adapters
 ├── config/               # Layered YAML config (defaults, environments, vault)
 ├── libs/                 # Rust PyO3 native extensions
 │   ├── rust-io/          #   Facade crate (cdylib) -- Python module `rust_io`

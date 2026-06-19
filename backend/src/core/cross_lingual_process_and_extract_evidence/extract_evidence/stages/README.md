@@ -1,6 +1,6 @@
 # Extract Evidence Stages
 
-> Individual stage classes for the 7-stage evidence extraction LangGraph pipeline. Each stage is a focused unit that transforms `TrackDocument` data through one step of the extraction workflow.
+> Individual stage classes for the 12-stage evidence extraction LangGraph pipeline. Each stage is a focused unit that transforms `EvidenceExtractionState` data through one step of the extraction workflow. Deterministic stages are provider-free; LLM stages take a `LangChainEvidenceProvider`.
 
 ## Quick Start
 
@@ -17,7 +17,7 @@ evidence_map = scan_stage.run(document)
 catalog_stage = CatalogExtractionStage(provider=provider)
 items = catalog_stage.run(document, evidence_map)
 
-# Stage 6: Source grounding
+# Stage 9: Source grounding
 grounding_stage = SourceGroundingStage()
 items, specials = grounding_stage.run(document, items, special_records)
 ```
@@ -27,27 +27,50 @@ items, specials = grounding_stage.run(document, items, special_records)
 ```
 LangGraph Pipeline (workflow.py)
   │
-  ├─ Stage 1: RelevanceScanStage        [evidence_map.py]
-  │    Scan document for evidence categories present
+  ├─ Stage 1:  RelevanceScanStage          [evidence_map.py]
+  │    Scan document for evidence categories present (FAST tier)
+  │    ├─ relevant? → not_relevant → END
+  │    └─ relevant? → Stage 2
   │
-  ├─ Stage 2: CatalogExtractionStage     [catalog_extraction.py]
-  │    Extract catalog fields using chunked STRONG-tier LLM calls
+  ├─ Stage 2:  CatalogExtractionStage       [catalog_extraction.py]
+  │    Extract catalog fields from high_signal + supporting groups (STRONG tier)
   │    Uses recall-first block selection when a target gene-disease pair exists
+  │    Filters out curation (K) group; runs chunk x group tasks concurrently
   │
-  ├─ Stage 3: SourceGroundingStage       [source_grounding.py]
-  │    Validate and repair source spans against document text
+  ├─ Stage 3:  SpecialEvidenceStage         [special_evidence.py]
+  │    Second pass for functional / case-control / authority / contradiction (STRONG tier)
   │
-  ├─ Stage 4: GroupAssignmentStage       [group_assignment.py]
-  │    Assign evidence items to variant-centered groups
+  ├─ Stage 4:  Language Metadata            [workflow.py — _node_language_metadata]
+  │    Stamp article_language, is_english, requires_translation onto each EvidenceItem
+  │    Derives target_gene, target_disease, target_variant from ExtractionTarget
   │
-  ├─ Stage 5: SpecialEvidenceStage       [special_evidence.py]
-  │    Extract special records (ACMG/AMP/ClinGen rules)
+  ├─ Stage 5:  GroupAssignmentStage         [group_assignment.py]
+  │    Assign variant-centered group_id values to items and special records
   │
-  ├─ Stage 6: QualityValidationStage     [quality_validation.py]
-  │    Run quality rules, compute QualityReport
+  ├─ Stage 6:  EvidenceRoleRouter           [role_routing.py]
+  │    Route items by evidence_role: primary, phenotype, comparator, context
+  │    Discard non-primary non-phenotype items unless they match the extraction target
   │
-  └─ Stage 7: (conflict check — in workflow.py)
-       Intra-track conflict detection
+  ├─ Stage 7:  AcmgEvidenceValueNormalizer  [normalization.py via workflow.py]
+  │    Reject coordinate-only HGVS, block milestone ages from B.age_of_onset,
+  │    keep computational predictions out of functional fields, merge duplicates
+  │
+  ├─ Stage 8:  TargetEntityGuard            [core.py via workflow.py]
+  │    Filter evidence items against the ExtractionTarget gene-disease pair
+  │
+  ├─ Stage 9:  SourceGroundingStage         [source_grounding.py]
+  │    Validate and repair source spans via SourceGrounder
+  │    raw_source → block/text grounding → OCR_GAP/SOURCE_INVALID
+  │
+  ├─ Stage 10: EvidenceChainBuilder         [core.py via workflow.py]
+  │    Build full / partial / singleton variant-centered chains
+  │
+  ├─ Stage 11: QualityGateStage             [quality_validation.py]
+  │    Chain-aware quality validation and intra-track conflict detection
+  │
+  └─ Stage 12: Catalog Backfill             [core.py via workflow.py]
+       Expand sparse items to the full 166-row catalog per group
+       Runs AFTER quality_gate so the gate's metrics reflect real extracted items
 ```
 
 ## Public API
@@ -58,20 +81,50 @@ LangGraph Pipeline (workflow.py)
 |--------|-----------|-------------|
 | `__init__` | `(provider, input_budget_tokens=DEFAULT)` | Inject LLM provider and token budget |
 | `run` | `(document: TrackDocument) -> DocumentEvidenceMap` | Scan document for present evidence categories. Chunks long documents, merges results. |
+| `run_async` | `(document: TrackDocument) -> DocumentEvidenceMap` | Async version — runs chunk LLM calls concurrently with semaphore (concurrency = 5). |
 
 ### `CatalogExtractionStage` (`catalog_extraction.py`)
 
+Extracts structured fields from the 166-field catalog. Only sends the LLM-extractable groups to the model: high_signal (62 fields, A/B/D/E/J) and supporting (81 fields, C/F/G/H/I). The curation group (23 fields, K) is cross-paper GDV metadata and is filtered out here.
+
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `__init__` | `(provider, input_budget_tokens=DEFAULT)` | Inject LLM provider |
-| `run` | `(document, evidence_map) -> list[EvidenceItem]` | Extract catalog fields. Uses recall-first block selection for target-scoped documents, chunked prompts for long documents, and sparse item merging. |
+| `__init__` | `(provider, input_budget_tokens=STRONG_DEFAULT)` | Inject LLM provider |
+| `run` | `(document, evidence_map) -> list[EvidenceItem]` | Extract catalog fields. Uses recall-first block selection for target-scoped documents, chunked prompts for long documents, and sparse item merging. Runs group x chunk serially. |
+| `run_async` | `(document, evidence_map) -> list[EvidenceItem]` | Async version — runs chunk x group tasks concurrently via `asyncio.Semaphore(5)`. Raises `CatalogExtractionError` when all tasks fail. |
+
+### `SpecialEvidenceStage` (`special_evidence.py`)
+
+Second-pass extraction for functional, case-control, authority, and contradiction evidence not already captured by the primary catalog extraction.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `__init__` | `(provider, input_budget_tokens=STRONG_DEFAULT)` | Inject LLM provider and validator |
+| `run` | `(document, current_items) -> list[SpecialEvidenceRecord]` | Chunked extraction with raw source normalization and `SpecialEvidenceValidator.filter_records()`. |
+| `run_async` | `(document, current_items) -> list[SpecialEvidenceRecord]` | Async version — concurrent chunk extraction with semaphore. |
+
+### `EvidenceRoleRouter` (`role_routing.py`)
+
+Routes extracted items by `evidence_role` before normalization.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `route` | `(items, extraction_target) -> tuple[primary, phenotype, discarded]` | PRIMARY items go to the main pipeline; PHENOTYPE items are preserved separately; CONTEXT items matching the target gene/disease are promoted to PRIMARY; everything else is discarded. |
+
+### `GroupAssignmentStage` (`group_assignment.py`)
+
+Assigns evidence items to variant-centered groups based on gene/variant/disease identity chains. Thin wrapper around `GroupAssigner`.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `run` | `(document, items, special_records) -> tuple[items, special_records]` | Delegates to `GroupAssigner.assign()`. |
 
 ### `SelectedBlock` and Recall-First Selection (`block_selection.py`)
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
 | `select_recall_first_blocks` | `(document: TrackDocument, *, max_blocks: int = 12, disease_aliases: Sequence[str] = ()) -> tuple[SelectedBlock, ...]` | Select target-relevant original block indices before catalog extraction. |
-| `score_block` | `(index: int, block: ContentBlock, target: ExtractionTarget, disease_aliases: Sequence[str] = ()) -> SelectedBlock | None` | Score one block by target gene, target disease, disease-family fallback, relationship cues, variant cues, table/caption cues, and section cues. |
+| `score_block` | `(index: int, block: ContentBlock, target: ExtractionTarget, disease_aliases: Sequence[str] = ()) -> SelectedBlock | None` | Score one block by target gene (+6), target disease (+5), disease-family fallback (+0.75), relationship cues (+2), variant cues (+1.5), table/caption context (+1.25), and section cues (+0.75). |
 
 ### `SourceGroundingStage` (`source_grounding.py`)
 
@@ -80,19 +133,25 @@ LangGraph Pipeline (workflow.py)
 | `__init__` | `()` | No dependencies — uses `SourceGrounder` internally |
 | `run` | `(document, items, special_records) -> tuple[list[EvidenceItem], list[SpecialEvidenceRecord]]` | Validate and repair source spans. Delegates to `SourceGrounder.ground_items()` and `ground_special_records()`. |
 
-### `GroupAssignmentStage` (`group_assignment.py`)
+### `QualityGateStage` (`quality_validation.py`)
 
-Assigns evidence items to variant-centered groups based on gene/variant/disease identity chains.
-
-### `SpecialEvidenceStage` (`special_evidence.py`)
-
-Extracts ACMG/AMP/ClinGen special evidence records that don't fit the standard 138-field catalog.
-
-### `QualityValidationStage` (`quality_validation.py`)
-
-Runs quality rules (completeness, consistency, grounding coverage) and produces a `QualityReport`.
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `run` | `(items, contradictions, chains, special_records, evidence_chain_count) -> QualityReport` | Delegates to `QualityValidator.validate()`. Chain-aware: `scorable` requires at least one `full` chain without blocking source issues. |
 
 ## Internal Design
+
+### Catalog Group Split
+
+The 166-field catalog is split into three groups at import time:
+
+| Group | Categories | Fields | Purpose |
+|-------|-----------|--------|---------|
+| `high_signal` | A, B, D, E, J | 62 | Variant, case, population, prediction, authority |
+| `supporting` | C, F, G, H, I | 81 | Segregation, functional, case-control, contradiction, gene function |
+| `curation` | K | 23 | Cross-paper GDV SOP v12 (NOT sent to per-document LLM) |
+
+`CatalogExtractionStage` filters out the `curation` group. It is consumed downstream by the cross-paper gene-disease validity pipeline.
 
 ### Chunked Processing
 
@@ -101,6 +160,10 @@ Both `RelevanceScanStage` and `CatalogExtractionStage` chunk long documents to s
 - `build_text_prompt_chunks()` — splits text by token budget
 - `build_block_prompt_chunks()` — splits by content blocks and can restrict to selected original block indices
 - `merge_evidence_maps()` / `merge_sparse_evidence_items()` — combines chunk results
+
+### Concurrent Chunk Execution
+
+Each LLM stage provides a `run_async()` method that runs chunk extraction concurrently using `asyncio.Semaphore` (default concurrency = 5). `CatalogExtractionStage` runs the full chunk x group matrix concurrently, so a 3-chunk document with 2 catalog groups produces 6 concurrent LLM tasks. Failures are logged and partial results are preserved; `CatalogExtractionError` is raised only when all tasks fail.
 
 ### Target-Scoped Recall-First Extraction
 
@@ -114,7 +177,11 @@ This keeps source grounding and later audit views aligned with the original docu
 
 ### Source Grounding Algorithm
 
-`SourceGrounder` validates that each evidence item's `source_span` matches actual text in the document. If the span is invalid, it attempts repair by searching for the claimed text snippet. Grounding status: `exact` → `corrected` → `ambiguous` → `ungrounded`.
+`SourceGrounder` validates that each evidence item's `source_span` matches actual text in the document. If the span is invalid, it attempts repair by searching for the claimed text snippet. Grounding status: `exact` -> `corrected` -> `ambiguous` -> `ungrounded`.
+
+### Language Metadata Stamping
+
+The `_node_language_metadata` node resolves the article language from the document track and `metadata["source_language"]`, then propagates `article_language`, `is_english`, `requires_translation`, `evidence_source_language`, `target_gene`, `target_disease`, and `target_variant` onto every `EvidenceItem`. The translated track is always `"en"`.
 
 ## Testing
 

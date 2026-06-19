@@ -6,7 +6,7 @@
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `e2e_full.py` | Full end-to-end pipeline with composable stages | `uv run python scripts/e2e_full.py --stages parse,translate,extract,standardize,visualize` |
+| `e2e_full.py` | Full end-to-end pipeline with composable stages (default: `parse,translate`) | `uv run python scripts/e2e_full.py --stages parse,translate,extract,standardize,visualize` |
 | `e2e_translate.py` | End-to-end translation pipeline only | `uv run python scripts/e2e_translate.py` |
 | `e2e_extract_evidence.py` | End-to-end evidence extraction only | `uv run python scripts/e2e_extract_evidence.py` |
 | `e2e_standardize_entities.py` | End-to-end entity standardization only | `uv run python scripts/e2e_standardize_entities.py` |

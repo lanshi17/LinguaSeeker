@@ -28,7 +28,7 @@ cfg = get_config()
 cfg.llm.model                    # "mimo-v2.5"
 cfg.reasoning.model              # "mimo-v2.5-pro"
 cfg.embedding.model              # "Qwen/Qwen3-Embedding-0.6B"
-cfg.mineru.api_token             # MinerU API token
+cfg.mineru.max_file_size_mb      # max upload file size (MB)
 cfg.postgresql.host              # "127.0.0.1"
 
 # Direct fields
@@ -44,19 +44,20 @@ cfg.environment                  # "development"
 | `reasoning` | Reasoning LLM | `cfg.reasoning.model` |
 | `embedding` | Embedding model | `cfg.embedding.model` |
 | `rerank` | Rerank model | `cfg.rerank.model` |
-| `mineru` | MinerU document parsing | `cfg.mineru.api_token` |
+| `mineru` | MinerU document parsing | `cfg.mineru.max_file_size_mb` |
 | `parse_document` | Document parsing settings | `cfg.parse_document.mineru_remote_poll_interval` |
-| `evidence_extraction` | Evidence extraction | `cfg.evidence_extraction.model` |
 | `redis` | Redis connection | `cfg.redis.host` |
 | `postgresql` | PostgreSQL connection | `cfg.postgresql.host` |
 | `web_search` | Web search API | `cfg.web_search.api_key` |
 | `network` | Network/proxy settings | `cfg.network.proxy` |
+| `chat` | Chat interaction LLM (lightweight, conversational) | `cfg.chat.model` |
 
 ## Environment Variable Mapping
 
 YAML fields map to environment variables:
 - `fast_llm.model` → `FAST_LLM_MODEL`
-- `mineru.api_token` → `MINERU_API_TOKEN`
+- `chat_llm.model` → `CHAT_LLM_MODEL`
+- `mineru.max_file_size_mb` → `MINERU_MAX_FILE_SIZE_MB`
 - `postgres.host` → `POSTGRES_HOST`
 
 ## Shared Loader API
@@ -114,21 +115,28 @@ The following models were removed in v3.0.0 as they were unused:
 
 | Phase | Directory | Purpose |
 |-------|-----------|---------|
-| 1 | `ingest_and_digitize_data/` | Literature acquisition (14 API providers + 7 web scrapers) and MinerU PDF parsing |
-| 2 | `cross_lingual_process_and_extract_evidence/` | Cross-lingual translation (9 languages) and GDV/ACMG evidence extraction (10 categories) |
-| 3 | `standardize_entities_and_align_knowledge/` | Deterministic + semantic entity matching with terminology alignment |
-| 4 | `visualize_evidence_with_expert_in_loop/` | Expert review, chat, feedback, audit trail, and export |
+| 1 | `ingest_and_digitize_data/` | Literature acquisition (14 API providers + 7 web scrapers) and MinerU PDF parsing. Sub-packages: `document_acquisition/` (online/local acquisition), `parse_document/` (local/remote MinerU parsing) |
+| 2 | `cross_lingual_process_and_extract_evidence/` | Cross-lingual translation (9 languages) and GDV/ACMG evidence extraction (10 categories). Sub-packages: `cross_lingual/` (format + translate), `extract_evidence/` (stages, verify, reconcile) |
+| 3 | `standardize_entities_and_align_knowledge/` | Deterministic + semantic entity matching with terminology alignment. Includes `precise_match/`, `similarity_match/`, `context_pack/` sub-packages |
+| 4 | `visualize_evidence_with_expert_in_loop/` | Expert review, feedback, chat, delta audit, source linking, and evidence search. Interactive request-response (not a pipeline node) |
 
 Each slice follows the vertical-slice contract: `api.py` (orchestrator-facing), `core.py` (pure business logic), `providers.py` (LLM/DB/external I/O), `contracts.py` (typed data models). See each subdirectory's README for details.
 
-## Simplified MinerU API Token
+## MinerU Configuration
 
-Previously required three separate tokens:
-- `mineru_api_token`
-- `mineru_api_token_backup`
-- `mineru_remote_api_token`
+MinerU document parsing configuration has been simplified. The `MinerUConfig` model now contains only `max_file_size_mb` (default 100). The API token is no longer stored in the config model -- it is injected via environment variables at the provider level.
 
-Now only `mineru.api_token` is needed for all use cases (remote and local deployment).
+Document parsing settings (`ParseDocumentConfig`) control remote polling intervals, local model server URL, timeout, and DPI.
+
+## pgvector Validation
+
+The `_build_nested` validator enforces that `EMBEDDING_DIMENSION` matches the PostgreSQL pgvector column dimension (1024). A mismatch raises a `ValueError` at startup, preventing silent embedding truncation.
+
+## Production Guards
+
+When `ENVIRONMENT=production`, the config validator requires:
+- `API_KEY` must be set (non-empty)
+- `REDIS_PASSWORD` must be set (non-empty)
 
 ## Legacy Fallbacks Removed
 
