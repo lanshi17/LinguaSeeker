@@ -22,22 +22,22 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "causative",
       "field_id": "A.gene_disease_relationship",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted causative relationship phrase",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_019/source.md:1",
+      "source_quote": "# Autosomal dominant Marfan syndrome caused by a previously reported recessive FBN1 variant",
+      "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "AD",
       "field_id": "B.mode_of_inheritance_reported",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted MOI phrase for AD",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_019/source.md:1",
+      "source_quote": "# Autosomal dominant Marfan syndrome caused by a previously reported recessive FBN1 variant",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,

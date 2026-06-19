@@ -13,13 +13,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "CYP1B1-related glaucoma with or without anterior segment dysgenesis",
       "field_id": "B.disease_diagnosis",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted disease phrase overlap",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_013/source.md:23",
+      "source_quote": "With the increasing prevalence of genetic disorders in Saudi Arabia, IODs pose a significant health challenge ( 14 ). Retinal diseases such as Stargardt disease, Leber congenital amaurosis (LCA), retinitis pigmentosa (RP), and cone-rod dystrophies are more commonly observed. Mutations in specific genes, including RHO, USH2A , and RPGR , have been strongly linked to RP, increasing its prevalence in the Saudi population ( 15 ). Additionally, IODs contribute significantly to the prevalence of anter",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": null,

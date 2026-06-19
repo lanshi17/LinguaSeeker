@@ -67,13 +67,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "Pathogenic",
       "field_id": "J.clinvar_assertion",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted classification phrase",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_018/source.md:55",
+      "source_quote": "The effect of each variant was analyzed using most common four distinct online tools: 1st SIFT (Score: \u201cTolerent >0.05,\u201d \u201cintolerant <0.05 is deleterious or affect protein function\u201d), 2nd Mutation taster (Grantham Matrix score: 0\u2013215), 3rd Polyphen 2 program (score ranged from 0 to 1, \u201c0 is benign\u201d, \u201c1 is probably damaging\u201d) and 4th FATHMM (Tolerated and Damaging). Novel variants were documented and confirmed in the Leiden Open Variation Database (LOVD) system (accessible at https://databases.lo",
+      "visibility": "source_visible"
     }
   ],
   "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_018/source.md",

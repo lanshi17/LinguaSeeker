@@ -13,13 +13,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "BRCA1-related cancer predisposition",
       "field_id": "B.disease_diagnosis",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted disease phrase overlap",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:129",
+      "source_quote": "The relatively low genetic heterogeneity and the predominant importance of the two genes BRCA1 and BRCA2 in both sporadic and hereditary BRCA -related cancers make genetic diagnostics in this area common and well-planned in many countries [ 6 , 17 \u2013 19 ]. The development of diagnostic methods in BRCA- related cancers is currently promoted either by the high incidence of cancer worldwide or the high prevalence of breast cancer (BC) cases in the total number of cancers. In addition to testing onco",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
@@ -49,13 +49,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "p.Cys61Gly",
       "field_id": "A.variant_hgvs_p",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted normalized variant mention",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:16",
+      "source_quote": "Among BRCA1 and BRCA2 pathogenic recurrent variants observed in some populations, including Central and Eastern European populations, the BRCA1 c.5266dup p.(Gln1756fs), variant (according to the Breast Cancer Information Core (BIC): c.5382insC) characteristic of the Ashkenazi Jewish population, is prevalent. Apart from BRCA1 c.5266dup, the most common pathogenic variants reported in Central and Eastern Europe (especially Slavic) populations are also: c.181T > G (BIC: 300T > A) p.(Cys61Gly), c.40",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",

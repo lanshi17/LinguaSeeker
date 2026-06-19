@@ -22,22 +22,22 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "causative",
       "field_id": "A.gene_disease_relationship",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted causative relationship phrase",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_000/source.md:10",
+      "source_quote": "Cystic fibrosis (CF) is a progressive, autosomal recessive disorder affecting the lungs, pancreas, and gastrointestinal tract [ 1 ]. It is caused by mutations in the CFTR gene, which impair chloride and bicarbonate ion transport, leading to mucus dehydration, airway obstruction, infection, and inflammation [ 2 , 3 ]. Over 2000 CFTR variants have been identified [ 3 ]. These are classified into multiple functional groups based on their effect on protein synthesis, folding, and function, informing",
+      "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "AR",
       "field_id": "B.mode_of_inheritance_reported",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted MOI phrase for AR",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_000/source.md:10",
+      "source_quote": "Cystic fibrosis (CF) is a progressive, autosomal recessive disorder affecting the lungs, pancreas, and gastrointestinal tract [ 1 ]. It is caused by mutations in the CFTR gene, which impair chloride and bicarbonate ion transport, leading to mucus dehydration, airway obstruction, infection, and inflammation [ 2 , 3 ]. Over 2000 CFTR variants have been identified [ 3 ]. These are classified into multiple functional groups based on their effect on protein synthesis, folding, and function, informing",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",

@@ -13,13 +13,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "severe combined immunodeficiency due to DCLRE1C deficiency",
       "field_id": "B.disease_diagnosis",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted disease phrase overlap",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_014/source.md:1",
+      "source_quote": "# Targeted Next-Generation Sequencing in the Molecular Diagnosis of Severe Combined Immunodeficiency",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
@@ -31,13 +31,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "AR",
       "field_id": "B.mode_of_inheritance_reported",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "AI-assisted MOI phrase for AR",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_014/source.md:106",
+      "source_quote": "In patient P2, a female infant with persisting CMV infection of the CNS and a \u03a4 \u2212 \u0392 \u2212 \u039d\u039a + SCID phenotype, we detected the nonsense variant c.241C>T (p.Arg81*) in the DCLRE1C gene, causing Artemis deficiency. According to ClinVar database (Variation ID: 4665), DCLRE1C:c.241C>T variant meets the criteria to be classified as pathogenic for autosomal recessive SCID due to DCLRE1C deficiency. This very rare variant with a frequency of 0.0031% in the non-Finnish European population introduces a prema",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
