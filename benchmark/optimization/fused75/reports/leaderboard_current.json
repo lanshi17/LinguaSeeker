@@ -7,7 +7,7 @@
       "entry_coverage": "10/10",
       "llm_call_count": 0,
       "runtime_seconds": 0.02768,
-      "test_source_visible_f1": null,
+      "test_source_visible_f1": 0.434,
       "total_token_count": 0,
       "variant_id": "adjudicated-field-filter"
     },

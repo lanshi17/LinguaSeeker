@@ -3287,3 +3287,26 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 - 新增 benchmark CLI 时,默认输入/输出路径必须基于 repo root 绝对路径,测试覆盖从非 repo-root cwd 执行的路径语义。
 - 调用已运行服务前,先确认服务进程 cwd;跨 worktree materialization 必须显式传入 producer 的 artifact root。
 - 不再用系统 Python 执行项目脚本;即使是一行诊断脚本也使用 `uv run`。
+
+## 2026-06-20 Fused-75 dev/test optimization boundary
+
+### 问题
+- `adjudicated-field-filter` 在 dev split 上把 source-visible F1 从 0.3660 提升到 0.5138,但 held-out test checkpoint 只有 0.4340。
+- 该策略本质上过滤 benchmark scoring 字段集合,不是生产抽取能力提升。
+
+### 排查过程
+- 先补齐 dev/test 全部 Phase 2 artifacts,保证 dev 与 test 都是 10/10 coverage。
+- 只用 dev split 选择 `adjudicated-field-filter`,随后用 `--checkpoint` 对 frozen test split 运行一次。
+- 对比 dev/test 指标:dev precision 提升明显且 recall 不变;test precision 仍高于 baseline 类型表现,但 recall 降到 0.3433。
+
+### 根因
+- dev 主要错误集中在 unsupported field false positives,字段过滤能直接减少这类 FP。
+- test split 的召回瓶颈更明显,说明 benchmark-side 过滤无法解决 candidate_absent 或 evidence extraction miss。
+
+### 解决方案
+- 本轮不推广 production Phase 2 backend change。
+- 将 `adjudicated-field-filter` 保留为 benchmark-side evaluation hygiene 和诊断基线。
+
+### 预防措施
+- 任何要进入生产 pipeline 的优化必须改变抽取候选生成、上下文约束或验证逻辑,不能只依赖 scorer filter。
+- 继续保持 dev-only 选择策略;held-out test 只做 checkpoint,不能用于新一轮调参。
