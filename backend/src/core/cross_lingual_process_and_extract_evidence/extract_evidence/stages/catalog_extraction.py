@@ -21,6 +21,7 @@ from ..chunking import (
 )
 from ..contracts import DocumentEvidenceMap, EvidenceItem, ExtractionTarget, Track, TrackDocument
 from ..core import FieldValueNormalizer, RawSourceNormalizer
+from ..field_eligibility import FieldEligibilityPolicy
 from ..prompts import get_catalog_extraction_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 from .block_selection import select_recall_first_blocks
@@ -42,6 +43,7 @@ class CatalogExtractionStage:
         self._provider = provider
         self._input_budget_tokens = input_budget_tokens
         self._raw_source_normalizer = RawSourceNormalizer()
+        self._field_eligibility_policy = FieldEligibilityPolicy()
         # Curation (K) is cross-paper GDV metadata, filled outside this stage.
         self._catalog_groups: dict[str, tuple] = {
             name: catalog
@@ -74,10 +76,11 @@ class CatalogExtractionStage:
             prompt_overhead_tokens=overhead,
             block_indices=self._recall_first_block_indices(document),
         )
+        catalog_groups = self._eligible_catalog_groups(document, evidence_map, chunks)
         extracted: list[EvidenceItem] = []
         for chunk in chunks:
             chunk_summary = self._chunk_summary(summary, chunk)
-            for group_name, catalog in self._catalog_groups.items():
+            for group_name, catalog in catalog_groups.items():
                 prompt = get_catalog_extraction_prompt(
                     document_id=document.document_id,
                     track=document.track,
@@ -111,8 +114,9 @@ class CatalogExtractionStage:
             prompt_overhead_tokens=overhead,
             block_indices=self._recall_first_block_indices(document),
         )
+        catalog_groups = self._eligible_catalog_groups(document, evidence_map, chunks)
         sem = asyncio.Semaphore(_DEFAULT_CHUNK_CONCURRENCY)
-        num_tasks = len(chunks) * len(self._catalog_groups)
+        num_tasks = len(chunks) * len(catalog_groups)
 
         async def _extract_group(chunk, group_name: str, catalog: tuple):  # noqa: ANN001
             chunk_summary = self._chunk_summary(summary, chunk)
@@ -137,11 +141,11 @@ class CatalogExtractionStage:
         tasks = [
             _extract_group(chunk, group_name, catalog)
             for chunk in chunks
-            for group_name, catalog in self._catalog_groups.items()
+            for group_name, catalog in catalog_groups.items()
         ]
         logger.info(
             "catalog_extraction: {} chunks × {} groups = {} tasks",
-            len(chunks), len(self._catalog_groups), num_tasks,
+            len(chunks), len(catalog_groups), num_tasks,
         )
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -172,6 +176,29 @@ class CatalogExtractionStage:
                 )
 
         return merge_sparse_evidence_items(extracted)
+
+    def _eligible_catalog_groups(
+        self,
+        document: TrackDocument,
+        evidence_map: DocumentEvidenceMap,
+        chunks: list[object],
+    ) -> dict[str, tuple]:
+        """Filter catalog groups to target-eligible fields and skip empty groups."""
+        selected_text = "\n\n".join(str(getattr(chunk, "text", "")) for chunk in chunks)
+        decision = self._field_eligibility_policy.decide(
+            extraction_target=document.extraction_target,
+            evidence_map=evidence_map,
+            selected_text=selected_text,
+        )
+        return {
+            group_name: eligible_catalog
+            for group_name, catalog in self._catalog_groups.items()
+            if (
+                eligible_catalog := tuple(
+                    spec for spec in catalog if spec.field_id in decision.allowed_field_ids
+                )
+            )
+        }
 
     @staticmethod
     def _chunk_summary(summary: str, chunk: object) -> str:  # noqa: ANN001
