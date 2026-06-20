@@ -44,6 +44,15 @@ class FieldEligibilityPolicy:
         "gnomad",
         "population",
     )
+    _AUTHORITY_CUE_WORDS = (
+        "assertion",
+        "classified",
+        "classification",
+        "clinvar",
+        "expert panel",
+        "known pathogenic",
+        "pathogenic",
+    )
     _VARIANT_CUE_WORDS = (
         "c.",
         "p.",
@@ -77,6 +86,9 @@ class FieldEligibilityPolicy:
         if self._has_variant_cue(extraction_target, evidence_map, cue_text):
             allowed.update(self._variant_field_ids())
             reasons.append("cue:variant")
+        if self._has_keyword(cue_text, self._AUTHORITY_CUE_WORDS):
+            allowed.update(self._authority_field_ids())
+            reasons.append("cue:authority")
         if self._has_keyword(cue_text, self._FUNCTIONAL_CUE_WORDS):
             allowed.update(self._functional_field_ids())
             reasons.append("cue:functional")
@@ -107,24 +119,35 @@ class FieldEligibilityPolicy:
         variant_field_ids = {
             spec.field_id
             for spec in cls._extractable_specs()
-            if spec.category_id == "A"
-            and (
-                "variant" in spec.field_id
-                or spec.field_id
-                in {
-                    "A.transcript_id",
-                    "A.reference_sequence",
-                    "A.null_variant_detail",
-                    "A.protein_effect",
-                    "A.functional_domain_or_hotspot",
-                    "A.protein_length_change",
-                    "A.repeat_region_status",
-                    "A.splice_or_synonymous_effect",
-                }
+            if "variant_evidence" in spec.clingen_modules
+            or (
+                spec.category_id == "A"
+                and (
+                    "variant" in spec.field_id
+                    or spec.field_id
+                    in {
+                        "A.transcript_id",
+                        "A.reference_sequence",
+                        "A.null_variant_detail",
+                        "A.protein_effect",
+                        "A.functional_domain_or_hotspot",
+                        "A.protein_length_change",
+                        "A.repeat_region_status",
+                        "A.splice_or_synonymous_effect",
+                    }
+                )
             )
         }
         variant_field_ids.add("F.tested_variant")
         return frozenset(variant_field_ids)
+
+    @classmethod
+    def _authority_field_ids(cls) -> frozenset[str]:
+        return frozenset(
+            spec.field_id
+            for spec in cls._extractable_specs()
+            if spec.category_id == "J" or "time_validity" in spec.clingen_modules
+        )
 
     @classmethod
     def _functional_field_ids(cls) -> frozenset[str]:
@@ -171,6 +194,7 @@ class FieldEligibilityPolicy:
             parts.extend(evidence_map.variant_terms)
             parts.extend(evidence_map.structure_hints)
             parts.extend(evidence_map.case_references)
+            parts.extend(evidence_map.authority_references)
         return " ".join(part for part in parts if part).casefold()
 
     @classmethod
