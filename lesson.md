@@ -3371,6 +3371,31 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 - 长文档 artifact 批处理保持 concurrency=1,并用 batch report 而不是单条日志判断成败。
 - Phase 2-only benchmark 不应被 Phase 3 embedding warning 中断,但报告中必须记录该风险边界。
 
+## 2026-06-20 Feature branch dev merge during fused-75 optimization
+
+### 问题
+- 用户要求拉取主分支 pipeline 最新改进时,当前 feature 分支已有未提交的 fused75 优化 WIP。
+- `git merge dev` 后在归档设计文档和 `lesson.md` 上出现冲突。
+
+### 排查过程
+- 先用 `git stash push -u` 保存 WIP,再 `git fetch origin dev`。
+- 确认本地 `dev` 比 `origin/dev` 多 1 个提交,且包含 model-server API key 相关 pipeline 修复,因此合入本地 `dev`。
+- 查看 ours/theirs 后发现归档设计文档只有 header 状态/owner 冲突;`lesson.md` 两边都是独立复盘条目。
+
+### 根因
+- feature 分支从 fused75 优化点分出后,主分支继续进行了 benchmark config、frontend、evidence-db、model-server 鉴权等较大改动。
+- `docs/archive/plans` 被 `.gitignore` 忽略,解决冲突后需要 `git add -f` stage 已归档文档。
+
+### 解决方案
+- 保留归档设计文档的 `completed` 状态和 CrossEvidence owner。
+- `lesson.md` 保留双方所有复盘条目,仅移除冲突标记。
+- merge commit `a66157fc` 后恢复 stash,无 WIP 冲突。
+
+### 预防措施
+- 长跑 benchmark 分支在启动 live artifact 批处理前先同步主分支,避免后续 runtime 配置差异。
+- 归档目录被 ignore 时,冲突解决或新增归档结果文档需要显式 `git add -f`。
+- 合并文档类冲突优先语义合并,不要简单选择 ours/theirs。
+
 ## 2026-06-19 将 benchmark 配置统一到 benchmark/config/ Ansible 架构
 
 ### 问题描述

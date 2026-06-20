@@ -71,9 +71,26 @@ def test_target_variant_cues_include_variant_fields() -> None:
         "A.variant_hgvs_p",
         "A.variant_hgvs_g",
         "A.variant_type",
+        "B.mode_of_inheritance_reported",
         "F.tested_variant",
     }.issubset(decision.allowed_field_ids)
     assert "cue:variant" in decision.reasons
+
+
+def test_variant_cues_include_variant_evidence_module_fields() -> None:
+    target = ExtractionTarget(
+        gene_symbol="CFTR",
+        disease_name="cystic fibrosis",
+        variant_hgvs_p="p.Phe508del",
+    )
+
+    decision = FieldEligibilityPolicy().decide(extraction_target=target, evidence_map=None)
+
+    assert {
+        "A.variant_type",
+        "B.mode_of_inheritance_reported",
+        "F.tested_variant",
+    }.issubset(decision.allowed_field_ids)
 
 
 def test_functional_cues_include_functional_fields() -> None:
@@ -158,9 +175,26 @@ def test_selected_text_variant_cue_includes_variant_fields_without_target_varian
         "A.variant_hgvs_p",
         "A.variant_hgvs_g",
         "A.variant_type",
+        "B.mode_of_inheritance_reported",
         "F.tested_variant",
     }.issubset(decision.allowed_field_ids)
     assert "cue:variant" in decision.reasons
+
+
+def test_authority_cues_include_clinvar_assertion_fields() -> None:
+    target = ExtractionTarget(gene_symbol="CFTR", disease_name="cystic fibrosis")
+
+    decision = FieldEligibilityPolicy().decide(
+        extraction_target=target,
+        selected_text="ClinVar classified the variant as Pathogenic.",
+    )
+
+    assert {
+        "J.clinvar_assertion",
+        "J.authority_classification",
+        "J.known_pathogenic_variant_reference",
+    }.issubset(decision.allowed_field_ids)
+    assert "cue:authority" in decision.reasons
 
 
 def test_target_gene_map_cue_does_not_expand_to_all_extractable_fields() -> None:
