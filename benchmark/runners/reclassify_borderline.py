@@ -40,6 +40,8 @@ def load_llm_config() -> Tuple[str, str, str]:
         if base_url.endswith(suffix):
             base_url = base_url[: -len(suffix)]
     api_key = (cfg.llm.api_key or "").strip()
+    if not api_key and cfg.llm.all_api_keys:
+        api_key = cfg.llm.all_api_keys[0]
     return model, base_url, api_key
 
 
@@ -130,19 +132,41 @@ def classify_one(
     else:
         return False, {"error": "rate_limited_after_3_retries"}
 
-    text_clean = content
-    if text_clean.startswith("```"):
+    text_clean = content.strip()
+    # Strip markdown fences
+    if "```" in text_clean:
         lines = text_clean.split("\n")
         lines = [ln for ln in lines if not ln.strip().startswith("```")]
         text_clean = "\n".join(lines).strip()
 
+    # Strategy 1: find JSON object
     match = re.search(r"\{[\s\S]*\}", text_clean)
     if match:
         text_clean = match.group(0)
 
+    # Strategy 2: try parsing JSON directly
+    obj = None
     try:
         obj = json.loads(text_clean)
     except json.JSONDecodeError:
+        # Fix common issues: unquoted booleans, trailing commas
+        fixed = re.sub(r':\s*true\b', ': true', text_clean)
+        fixed = re.sub(r':\s*false\b', ': false', fixed)
+        fixed = re.sub(r",\s*}", "}", fixed)
+        fixed = re.sub(r",\s*]", "]", fixed)
+        try:
+            obj = json.loads(fixed)
+        except json.JSONDecodeError:
+            pass
+
+    if obj is None:
+        # Strategy 3: regex extraction from raw text
+        has_match = re.search(r'"has_variant_evidence"\s*:\s*(true|false)', content, re.IGNORECASE)
+        if has_match:
+            has_evidence = has_match.group(1).lower() == "true"
+            reason_match = re.search(r'"reason"\s*:\s*"([^"]*)"', content)
+            reason = reason_match.group(1) if reason_match else ""
+            return has_evidence, {"has_variant_evidence": has_evidence, "reason": reason, "parsed_via": "regex"}
         return False, {"error": "invalid_json", "raw": content[:200]}
 
     return bool(obj.get("has_variant_evidence", False)), obj
