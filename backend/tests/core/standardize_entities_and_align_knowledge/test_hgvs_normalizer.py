@@ -16,6 +16,12 @@ def test_one_letter_protein_passes_through() -> None:
     """One-letter protein notation passes through unchanged."""
     assert "p.Arg243*" in expand_hgvs_aliases("p.Arg243*")
 
+def test_three_letter_ref_with_stop_symbol_alt() -> None:
+    """Three-letter ref with literal `*` alt also yields a one-letter ref alias."""
+    aliases = expand_hgvs_aliases("p.Arg243*")
+    assert "p.R243*" in aliases
+    assert "p.Arg243*" in aliases
+
 
 def test_dna_notation_strips_transcript_prefix() -> None:
     """Transcript-prefixed DNA notation also yields its bare c. form."""
