@@ -63,6 +63,22 @@ def test_catalog_prompt_includes_catalog_field_ids():
     assert "not_found" in prompt
 
 
+def test_catalog_prompt_declares_pre_scoped_eligible_fields() -> None:
+    prompt = get_catalog_extraction_prompt(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        text="BRCA1",
+        catalog=EVIDENCE_FIELD_SPECS,
+        evidence_map_summary="relevant",
+    )
+
+    lower = prompt.lower()
+    assert "pre-scoped" in lower
+    assert "eligible fields" in lower
+    assert "do not add fields outside this catalog" in lower
+    assert "set status=\"not_found\" for listed eligible fields" in lower
+
+
 def test_catalog_prompt_defines_ocr_gap_and_external_completion_boundaries():
     prompt = get_catalog_extraction_prompt(
         document_id="doc-1",

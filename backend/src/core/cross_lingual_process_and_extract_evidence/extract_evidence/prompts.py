@@ -198,6 +198,11 @@ EVIDENCE MAP SUMMARY:
 EVIDENCE CATALOG (field_id: field_name [ACMG_codes], * = required for scoring):
 {catalog_text}
 
+CATALOG SCOPE:
+- This catalog is pre-scoped to eligible fields for the current extraction pass.
+- Extract only the listed eligible fields. Do not add fields outside this catalog.
+- Set status="not_found" for listed eligible fields when the document does not support a value.
+
 RULES:
 1. For each catalog field, set status="found" with the extracted value, or status="not_found" if absent.
 2. Do not score or classify ACMG/GDV evidence.
