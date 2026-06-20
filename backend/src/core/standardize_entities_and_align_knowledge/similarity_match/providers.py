@@ -14,7 +14,6 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.contract
 
 class ModelServerEmbeddingProvider:
     """Client for model-server OpenAI-compatible embeddings."""
-
     def __init__(
         self,
         *,
@@ -22,11 +21,13 @@ class ModelServerEmbeddingProvider:
         model: str,
         client: httpx.AsyncClient | None = None,
         timeout: float = 60.0,
+        api_key: str | None = None,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._model = model
         self._client = client
         self._timeout = timeout
+        self._headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
 
     async def embed_texts(self, texts: str | Sequence[str]) -> EmbeddingBatchResult:
         """Embed texts through model-server `/v1/embeddings`."""
@@ -43,7 +44,7 @@ class ModelServerEmbeddingProvider:
         client: httpx.AsyncClient,
         payload: dict[str, object],
     ) -> EmbeddingBatchResult:
-        response = await client.post(f"{self._api_root()}/embeddings", json=payload)
+        response = await client.post(f"{self._api_root()}/embeddings", json=payload, headers=self._headers)
         response.raise_for_status()
         body = response.json()
         data = sorted(body.get("data", []), key=lambda item: item.get("index", 0))
@@ -65,11 +66,13 @@ class ModelServerRerankProvider:
         model: str,
         client: httpx.AsyncClient | None = None,
         timeout: float = 60.0,
+        api_key: str | None = None,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._model = model
         self._client = client
         self._timeout = timeout
+        self._headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
 
     async def rerank(
         self,
@@ -92,7 +95,7 @@ class ModelServerRerankProvider:
         client: httpx.AsyncClient,
         payload: dict[str, object],
     ) -> RerankBatchResult:
-        response = await client.post(f"{self._api_root()}/rerank", json=payload)
+        response = await client.post(f"{self._api_root()}/rerank", json=payload, headers=self._headers)
         response.raise_for_status()
         body = response.json()
         results = tuple(
