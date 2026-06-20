@@ -1,4 +1,3 @@
-"use client";
 
 import { Search, X, Dna, FlaskConical, Stethoscope, Hash } from "lucide-react";
 import { Input } from "@/components/ui/Input";

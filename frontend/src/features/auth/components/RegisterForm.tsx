@@ -1,7 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -9,7 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { useToastStore } from "@/stores/toastStore";
 
 export function RegisterForm() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { register, isRegistering } = useAuth();
   const addToast = useToastStore((s) => s.addToast);
   const [email, setEmail] = useState("");
@@ -25,7 +23,7 @@ export function RegisterForm() {
     try {
       await register({ email, password, password_confirm: confirm });
       addToast({ level: "success", title: "Registration successful" });
-      router.push("/login");
+      navigate("/login");
     } catch {
       addToast({ level: "error", title: "Registration failed" });
     }

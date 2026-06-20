@@ -1,4 +1,3 @@
-"use client";
 
 import type { PhaseTimelineStep } from "../types/pipeline";
 import { cn } from "@/lib/utils/cn";

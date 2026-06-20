@@ -25,7 +25,7 @@ deploy/ansible/
 │   ├── redis/                               Redis 8.0 (Docker)
 │   ├── backend/                             FastAPI backend (uv + systemd)
 │   ├── model-server/                        Embedding/Rerank/LLM server (systemd)
-│   ├── frontend/                            Next.js frontend (nvm + systemd)
+│   ├── frontend/                            Next.js frontend (bun + systemd)
 │   └── nginx/                               Nginx reverse proxy + auto TLS via certbot
 ```
 
@@ -93,7 +93,7 @@ ansible-playbook playbooks/healthcheck.yml
 
 | Group | Host | Services | Port |
 |-------|------|----------|------|
-| `web` | web-01 | Nginx, Frontend (Next.js) | 80/443, 3000 |
+| `web` | web-01 | Nginx, Frontend (Next.js via bun) | 80/443, 3000 |
 | `app` | app-01 | Backend (FastAPI), Model Server | 8000, 8001 |
 | `db` | db-01 | PostgreSQL 16, Redis 8.0 | 5432, 6379 |
 

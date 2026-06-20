@@ -1,7 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -9,7 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { useToastStore } from "@/stores/toastStore";
 
 export function LoginForm() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { login, isLoggingIn } = useAuth();
   const addToast = useToastStore((s) => s.addToast);
   const [email, setEmail] = useState("");
@@ -20,7 +18,7 @@ export function LoginForm() {
     try {
       await login({ email, password });
       addToast({ level: "success", title: "Login successful" });
-      router.push("/pipeline");
+      navigate("/pipeline");
     } catch {
       addToast({ level: "error", title: "Login failed", message: "Invalid credentials." });
     }

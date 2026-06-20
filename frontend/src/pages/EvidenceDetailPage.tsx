@@ -1,20 +1,15 @@
-import { redirect } from "next/navigation";
+import { useSearchParams, Navigate } from "react-router-dom";
 import { EvidenceDetailView } from "@/features/evidence-search";
 import { BookOpen, Columns2 } from "lucide-react";
 
-interface EvidenceDetailPageProps {
-  searchParams: Promise<{
-    evidenceId?: string;
-    groupId?: string;
-    view?: string;
-  }>;
-}
-
-export default async function EvidenceDetailPage({ searchParams }: EvidenceDetailPageProps) {
-  const { evidenceId, groupId, view } = await searchParams;
+export function EvidenceDetailPage() {
+  const [searchParams] = useSearchParams();
+  const evidenceId = searchParams.get("evidenceId") ?? undefined;
+  const groupId = searchParams.get("groupId");
+  const view = searchParams.get("view");
 
   if (!groupId) {
-    redirect("/evidence");
+    return <Navigate to="/evidence" replace />;
   }
 
   const isCompareView = view === "compare";

@@ -1,7 +1,7 @@
 import { EvidenceSearchView } from "@/features/evidence-search";
 import { BookOpen } from "lucide-react";
 
-export default function EvidencePage() {
+export function EvidencePage() {
   return (
     <div className="space-y-6">
       {/* Page header */}
