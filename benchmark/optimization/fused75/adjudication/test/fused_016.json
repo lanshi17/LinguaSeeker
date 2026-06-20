@@ -1,7 +1,7 @@
 {
   "entry_id": "fused_016",
   "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_016/expected.json",
-  "is_complete": false,
+  "is_complete": true,
   "labels": [
     {
       "adjudicator": "exact-match-preannotator",
@@ -31,13 +31,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "AD",
       "field_id": "B.mode_of_inheritance_reported",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "Monoallelic/dominant DNM2 disease context supports AD.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_016/source.md:16",
+      "source_quote": "Monoallelic variants in the DNM2 are associated with heterogeneous clinical presentations, including dominant intermediate Charcot-Marie-Tooth disease, dominant axonal Charcot-Marie-Tooth disease, and a form of centronuclear myopathy.",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",

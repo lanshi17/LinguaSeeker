@@ -1,7 +1,7 @@
 {
   "entry_id": "fused_010",
   "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/expected.json",
-  "is_complete": false,
+  "is_complete": true,
   "labels": [
     {
       "adjudicator": "exact-match-preannotator",
@@ -13,31 +13,31 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "Fanconi anemia complementation group D1",
       "field_id": "B.disease_diagnosis",
-      "notes": null,
+      "notes": "Source concerns BRCA1/2 and CHEK2 pathogenic variants in urological cancers, not Fanconi anemia complementation group D1.",
       "source_location": null,
       "source_quote": null,
-      "visibility": null
+      "visibility": "not_source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "causative",
       "field_id": "A.gene_disease_relationship",
-      "notes": null,
+      "notes": "BRCA2 pathogenic variants are discussed for urological cancer predisposition, not as causative for expected Fanconi anemia group D1.",
       "source_location": null,
       "source_quote": null,
-      "visibility": null
+      "visibility": "ambiguous_boundary"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "AR",
       "field_id": "B.mode_of_inheritance_reported",
-      "notes": null,
+      "notes": "Autosomal recessive Fanconi anemia inheritance is not stated in this urological cancer source.",
       "source_location": null,
       "source_quote": null,
-      "visibility": null
+      "visibility": "not_source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
@@ -49,13 +49,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "p.Ala938Profs",
       "field_id": "A.variant_hgvs_p",
-      "notes": null,
+      "notes": "Expected p.Ala938Profs protein notation is not directly visible in the source text.",
       "source_location": null,
       "source_quote": null,
-      "visibility": null
+      "visibility": "not_source_visible"
     },
     {
       "adjudicator": "ai-assisted-reviewer",

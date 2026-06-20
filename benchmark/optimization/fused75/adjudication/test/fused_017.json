@@ -1,7 +1,7 @@
 {
   "entry_id": "fused_017",
   "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_017/expected.json",
-  "is_complete": false,
+  "is_complete": true,
   "labels": [
     {
       "adjudicator": "exact-match-preannotator",
@@ -13,49 +13,49 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "hemophilia A",
       "field_id": "B.disease_diagnosis",
-      "notes": null,
+      "notes": "Source is about PCARP/PHARC-like ocular-neurologic disease, not hemophilia A.",
       "source_location": null,
       "source_quote": null,
-      "visibility": null
+      "visibility": "not_source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "causative",
       "field_id": "A.gene_disease_relationship",
-      "notes": null,
+      "notes": "F8 appears only as a qPCR normalization/internal control, not as a causative gene for hemophilia A in this source.",
       "source_location": null,
       "source_quote": null,
-      "visibility": null
+      "visibility": "not_source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "XL",
       "field_id": "B.mode_of_inheritance_reported",
-      "notes": null,
+      "notes": "Source does not discuss X-linked hemophilia A inheritance.",
       "source_location": null,
       "source_quote": null,
-      "visibility": null
+      "visibility": "not_source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "c.6976C>T",
       "field_id": "A.variant_hgvs_c",
-      "notes": null,
+      "notes": "Expected F8 variant c.6976C>T is absent from source text.",
       "source_location": null,
       "source_quote": null,
-      "visibility": null
+      "visibility": "not_source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "p.Arg2326Ter",
       "field_id": "A.variant_hgvs_p",
-      "notes": null,
+      "notes": "Expected p.Arg2326Ter is absent from source text.",
       "source_location": null,
       "source_quote": null,
-      "visibility": null
+      "visibility": "not_source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
