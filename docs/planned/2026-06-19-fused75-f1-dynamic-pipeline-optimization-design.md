@@ -2,7 +2,7 @@
 
 **Status:** planned
 **Created:** 2026-06-19
-**Owner:** CrossEvidence benchmark team
+**Owner:** LinguaSeeker benchmark team
 
 ## Goal
 

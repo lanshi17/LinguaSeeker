@@ -1,4 +1,4 @@
-"""API v1 router for Cross Evidencebackend."""
+"""API v1 router for Lingua Seeker backend."""
 from __future__ import annotations
 
 from fastapi import APIRouter

@@ -1,6 +1,6 @@
 # Terminology Database
 
-> Biomedical reference terminology data for CrossEvidence Phase 3 entity standardization and knowledge alignment.
+> Biomedical reference terminology data for LinguaSeeker Phase 3 entity standardization and knowledge alignment.
 
 ## Directory Structure
 

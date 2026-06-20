@@ -1,13 +1,13 @@
-# APP_FLOW — CrossEvidence Application Flow
+# APP_FLOW — LinguaSeeker Application Flow
 
 ## 1. Navigation & Architecture Overview
 
-CrossEvidence uses a sidebar-based dashboard layout. Unauthenticated users are
+LinguaSeeker uses a sidebar-based dashboard layout. Unauthenticated users are
 redirected to the login page. The root route (`/`) redirects to `/chat`.
 
 ```
 ┌──────────────┬───────────────────────────────────────────────┐
-│  CrossEvidence │  ┌──────────────────────────────────────────┐ │
+│  LinguaSeeker  │  ┌──────────────────────────────────────────┐ │
 │              │  │  header: sidebar toggle · connection status│ │
 │  [AI Chat]   │  ├──────────────────────────────────────────┤ │
 │  [Evidence]  │  │                                          │ │
@@ -116,7 +116,7 @@ FullChatView renders:
   │
   └── Right: Chat area
         ├── Empty state:
-        │     Welcome component ("CrossEvidence Agent" + description)
+        │     Welcome component ("LinguaSeeker Agent" + description)
         │     + Prompt suggestions (3 clickable items):
         │       - "Start Pipeline" → shows inline PipelineStartForm
         │       - "Upload PDF" → shows inline PipelineStartForm (file mode)
@@ -139,13 +139,13 @@ User types message and hits Send
   ├── 2. Open SSE stream: GET /api/v1/chat/sessions/{sessionId}/stream
   │       ?user_message=...
   │
-  └── 3. SSE events parsed by CrossEvidenceChatProvider:
+  └── 3. SSE events parsed by LinguaSeekerChatProvider:
         data: {"type": "text", "content": "..."}  → accumulate tokens
         data: {"type": "done"}                     → stream complete
         data: {"type": "error", "message": "..."}  → display error
 ```
 
-The `CrossEvidenceChatProvider` extends `AbstractChatProvider` from `@ant-design/x-sdk`.
+The `LinguaSeekerChatProvider` extends `AbstractChatProvider` from `@ant-design/x-sdk`.
 It customizes the fetch function to append `user_message` as a query parameter
 to the SSE endpoint. The backend agent auto-classifies intent (question,
 correction, note) and streams replies accordingly.
@@ -177,7 +177,7 @@ PipelineStartForm submit
 
 Renders a simpler `ChatView` for a single session — no conversation sidebar,
 no prompt suggestions. Just `Bubble.List` + `Sender`. Messages are streamed
-via the same `CrossEvidenceChatProvider` mechanism.
+via the same `LinguaSeekerChatProvider` mechanism.
 
 ### 3.5 Standalone Chat Sessions
 
@@ -185,8 +185,8 @@ via the same `CrossEvidenceChatProvider` mechanism.
 When opened without a `processingRunId`, the chat feature:
 
 - Creates sessions with `POST /api/v1/chat/sessions` (empty body).
-- Stores visible session metadata in browser `localStorage` (key: `cross-evidence.chat.sessions.v1`).
-- Remembers the active session ID in `localStorage` (key: `cross-evidence.chat.activeSessionId.v1`).
+- Stores visible session metadata in browser `localStorage` (key: `lingua-seeker.chat.sessions.v1`).
+- Remembers the active session ID in `localStorage` (key: `lingua-seeker.chat.activeSessionId.v1`).
 - Reloading `/chat` restores the standalone session cards and active session from `localStorage`.
 - Clicking the "Upload PDF" prompt opens the pipeline form with local upload selected by default.
 - Uploading a PDF starts `POST /api/v1/pipeline/run`, shows an inline status card, and does not navigate away.

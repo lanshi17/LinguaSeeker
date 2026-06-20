@@ -1,5 +1,5 @@
 # ============================================================================
-# Cross Evidence Health Check — Verify all services after deployment
+# Lingua Seeker Health Check — Verify all services after deployment
 # ============================================================================
 # Usage:
 #   ansible-playbook playbooks/healthcheck.yml

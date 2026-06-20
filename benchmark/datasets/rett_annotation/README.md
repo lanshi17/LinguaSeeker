@@ -4,7 +4,7 @@
 
 ## 概述
 
-本工具为 [Cross Evidence](../../AGENTS.md) 项目的第三基准数据集提供端到端标注流水线：
+本工具为 [Lingua Seeker](../../AGENTS.md) 项目的第三基准数据集提供端到端标注流水线：
 
 1. **PDF 解析** — 通过 MinerU 云 API 将 PDF 转为结构化 Markdown
 2. **AI 标注生成** — LLM 提取基因、变异、临床特征等证据字段

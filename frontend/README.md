@@ -1,4 +1,4 @@
-# Frontend — CrossEvidence
+# Frontend — LinguaSeeker
 
 > Vite + React 18 SPA for medical genetics evidence extraction, built with a feature-sliced architecture: thin page shells, self-contained feature modules, and shared infrastructure.
 
@@ -347,7 +347,7 @@ All env vars use the `VITE_` prefix (required by Vite to expose them to the clie
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VITE_APP_NAME` | `Cross Evidence` | Application display name |
+| `VITE_APP_NAME` | `Lingua Seeker` | Application display name |
 | `VITE_APP_VERSION` | `0.0.0` | Semantic version |
 | `VITE_API_BASE_URL` | `/api/v1` | API base URL (must be relative for proxy) |
 | `VITE_API_TIMEOUT` | `30000` | Request timeout in ms |

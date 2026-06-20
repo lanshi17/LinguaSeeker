@@ -11,7 +11,7 @@
 import type { AppConfig, FeatureFlags } from "./types";
 
 export const appConfig: AppConfig = {
-  name: import.meta.env.VITE_APP_NAME ?? "Cross Evidence",
+  name: import.meta.env.VITE_APP_NAME ?? "Lingua Seeker",
   version: import.meta.env.VITE_APP_VERSION ?? "0.0.0",
   environment: import.meta.env.PROD ? "production" : "development",
   debug: import.meta.env.VITE_DEBUG === "true",

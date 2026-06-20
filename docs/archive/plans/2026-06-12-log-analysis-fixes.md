@@ -204,7 +204,7 @@ In `backend/app/main.py:79-93`, replace:
     try:
         raw_conn = await engine.raw_connection()
         result = await raw_conn.exec_driver_sql(
-            "SELECT pg_try_advisory_lock(hashtext('cross_evidence_backend_startup'))"
+            "SELECT pg_try_advisory_lock(hashtext('lingua_seeker_backend_startup'))"
         )
         row = result.fetchone()
         acquired = bool(row[0]) if row else False
@@ -224,7 +224,7 @@ With:
         raw_conn = await engine.raw_connection()
         try:
             result = await raw_conn.exec_driver_sql(
-                "SELECT pg_try_advisory_lock(hashtext('cross_evidence_backend_startup'))"
+                "SELECT pg_try_advisory_lock(hashtext('lingua_seeker_backend_startup'))"
             )
             row = result.fetchone()
             acquired = bool(row[0]) if row else False

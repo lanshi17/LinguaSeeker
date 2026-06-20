@@ -1,6 +1,6 @@
 # Scripts
 
-> Operational and end-to-end testing scripts for the CrossEvidence backend. Run from the `backend/` directory with `uv run python scripts/<script>.py`.
+> Operational and end-to-end testing scripts for the LinguaSeeker backend. Run from the `backend/` directory with `uv run python scripts/<script>.py`.
 
 ## Script Map
 

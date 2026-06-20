@@ -1,4 +1,4 @@
-# FRONTEND_GUIDELINES — CrossEvidence Frontend
+# FRONTEND_GUIDELINES — LinguaSeeker Frontend
 
 ## 1. Tech Stack
 
@@ -22,7 +22,7 @@ FastAPI is authoritative for authentication and API behavior. Next.js proxies re
 
 ### 2.1 Core Positioning
 
-CrossEvidence is an "evidence porter" -- absolutely loyal to source data. Every piece of extracted information must be citation-valid-by-construction: each adopted evidence item carries a programmatically verifiable source span anchor to its original location in the literature.
+LinguaSeeker is an "evidence porter" -- absolutely loyal to source data. Every piece of extracted information must be citation-valid-by-construction: each adopted evidence item carries a programmatically verifiable source span anchor to its original location in the literature.
 
 ### 2.2 Design Principles
 
@@ -50,7 +50,7 @@ The dashboard uses a collapsible sidebar layout. The root page (`/`) redirects t
 
 ```
 ┌─────────────┬───────────────────────────────────────────┐
-│  CrossEvidence│                                           │
+│  LinguaSeeker│                                           │
 │             │              Top Bar                       │
 │  [AI Chat]  ├───────────────────────────────────────────┤
 │  [Evidence] │                                           │
@@ -175,8 +175,8 @@ The chat feature is the primary entry point. It provides conversation-based inte
 ### 5.1 Standalone Sessions
 
 `/chat` supports standalone chat sessions without a pipeline run. Standalone
-session metadata is stored in browser `localStorage` (keys: `cross-evidence.chat.sessions.v1`,
-`cross-evidence.chat.activeSessionId.v1`). Reloading restores session cards and
+session metadata is stored in browser `localStorage` (keys: `lingua-seeker.chat.sessions.v1`,
+`lingua-seeker.chat.activeSessionId.v1`). Reloading restores session cards and
 the active session. All message history and assistant replies are persisted in
 the backend. The "Upload PDF" prompt opens the pipeline form with local upload
 mode selected by default; submitting a PDF starts the pipeline without navigation.
@@ -195,7 +195,7 @@ mode selected by default; submitting a PDF starts the pipeline without navigatio
 ### 5.4 Services
 
 - **chat.ts** -- API calls for chat sessions and messages. `createSession()` accepts optional `processingRunId`.
-- **chatProvider.ts** -- Chat provider abstraction for Cross Evidence chat behavior. Uses SSE with JSON events (`{"type":"text","content":"..."}`, `{"type":"done"}`, `{"type":"error","message":"..."}`).
+- **chatProvider.ts** -- Chat provider abstraction for Lingua Seeker chat behavior. Uses SSE with JSON events (`{"type":"text","content":"..."}`, `{"type":"done"}`, `{"type":"error","message":"..."}`).
 
 ### 5.5 Types
 

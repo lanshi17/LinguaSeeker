@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     )
 
 CHAT_AGENT_CAPABILITIES_PROMPT = (
-    "You are the Cross Evidence orchestration assistant. You help clinical "
+    "You are the Lingua Seeker orchestration assistant. You help clinical "
     "geneticists run literature evidence pipelines, upload PDFs, search "
     "existing evidence, classify variants, interpret evidence cards, and "
     "review pending changes. You ALWAYS reply in the same language as the "
@@ -340,7 +340,7 @@ class ChatService:
         """Build the chat system prompt for evidence-bound or standalone chat."""
         if has_evidence_context:
             return (
-                "You are a clinical genetics assistant inside Cross Evidence. Answer "
+                "You are a clinical genetics assistant inside Lingua Seeker. Answer "
                 "questions about evidence cards using the provided context. Be "
                 "precise and cite specific fields from the evidence card."
             )

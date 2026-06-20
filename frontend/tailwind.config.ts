@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Cross Evidence Design System
+ * Lingua Seeker Design System
  *
  * Based on UI/UX Pro Max "Accessible & Ethical" style:
  * - Medical teal primary (#0891B2)

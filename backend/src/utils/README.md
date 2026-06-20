@@ -1,6 +1,6 @@
 # utils
 
-> Shared infrastructure utilities for the CrossEvidence backend. Houses cross-cutting helpers that multiple feature slices depend on — text processing, observability, and native extension access.
+> Shared infrastructure utilities for the LinguaSeeker backend. Houses cross-cutting helpers that multiple feature slices depend on — text processing, observability, and native extension access.
 
 ## Quick Start
 

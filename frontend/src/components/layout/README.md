@@ -20,7 +20,7 @@ Collapsible navigation with route-aware active states. Accepts `mobile` prop (al
 | AI Chat | `/chat` | `MessageSquare` |
 | Evidence | `/evidence` | `Search` |
 
-Active detection: exact match or prefix match (e.g., `/evidence/detail` activates Evidence). Footer shows "Cross Evidencev0.1.0" when expanded.
+Active detection: exact match or prefix match (e.g., `/evidence/detail` activates Evidence). Footer shows "Lingua Seeker v0.1.0" when expanded.
 
 ### ConnectionStatus
 

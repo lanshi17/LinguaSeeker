@@ -1,6 +1,6 @@
 # database/migrations
 
-> Alembic async migration environment for the CrossEvidence PostgreSQL schema.
+> Alembic async migration environment for the LinguaSeeker PostgreSQL schema.
 
 ## Quick Start
 

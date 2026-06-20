@@ -1,4 +1,4 @@
-# CrossEvidence Pipeline Correctness Remediation Implementation Plan
+# LinguaSeeker Pipeline Correctness Remediation Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
@@ -533,7 +533,7 @@ In `backend/app/main.py`, avoid multi-worker recovery races by wrapping standalo
 
 ```python
 async def _try_startup_lock(engine: AsyncEngine) -> bool:
-    result = await conn.execute(text("SELECT pg_try_advisory_lock(hashtext('cross_evidence_backend_startup'))"))
+    result = await conn.execute(text("SELECT pg_try_advisory_lock(hashtext('lingua_seeker_backend_startup'))"))
 ```
 
 Use the same connection to release with `pg_advisory_unlock(...)` in `finally`. If lock acquisition returns false, skip `search_index_metadata.create_all()` and `runner.recover_orphaned_runs()` in that worker and log at info level.
