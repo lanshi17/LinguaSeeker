@@ -50,6 +50,33 @@ def _coerce_str(value: Any) -> str | None:
         return ", ".join(str(v) for v in value)
     return str(value)
 
+_MISSING_GROUP_VALUE = "__missing__"
+
+
+def _parse_gene_from_group_id(group_id: str) -> str | None:
+    """Extract gene from a group_id string like 'gene=BRCA1|variant=...'."""
+    m = re.search(r"gene=([^|]+)", group_id)
+    if not m:
+        return None
+    val = m.group(1).strip()
+    if val == _MISSING_GROUP_VALUE or not val:
+        return None
+    # Clean up list-like syntax: ['value1','value2'] -> "value1, value2"
+    val = re.sub(r"^\['|^\[\"|'\]$|\"\]$", "", val)
+    return val
+
+
+def _parse_variant_from_group_id(group_id: str) -> str | None:
+    """Extract variant from a group_id string like 'gene=...|variant=...'."""
+    m = re.search(r"variant=([^|]+)", group_id)
+    if not m:
+        return None
+    val = m.group(1).strip()
+    if val == _MISSING_GROUP_VALUE or not val:
+        return None
+    val = re.sub(r"^\['|^\[\"|'\]$|\"\]$", "", val)
+    return val
+
 
 def _category_from_field_id(field_id: str) -> str | None:
     """Infer the evidence category prefix from a field id."""
@@ -393,6 +420,12 @@ class SearchService:
                 g["disease"] = _coerce_str(value)
             elif field_id in _CLASSIFICATION_FIELDS and not g["classification"]:
                 g["classification"] = _coerce_str(value)
+        # Fallback: parse gene/variant from group_id if field-level extraction missed them
+        for g in groups.values():
+            if not g["gene"]:
+                g["gene"] = _parse_gene_from_group_id(g["group_id"])
+            if not g["variant"]:
+                g["variant"] = _parse_variant_from_group_id(g["group_id"])
 
         # Batch-load identifiers for all source documents
         doc_ids = {g["source_document_id"] for g in groups.values()}
@@ -592,6 +625,11 @@ class SearchService:
             )
 
 
+        # Fallback: parse gene/variant from group_id if field-level extraction missed them
+        if not gene:
+            gene = _parse_gene_from_group_id(group_id)
+        if not variant:
+            variant = _parse_variant_from_group_id(group_id)
         # Build traces by matching original/translated pairs per field_id
         items_by_field: dict[str, list] = {}
         for row in rows:

@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
@@ -23,7 +21,7 @@ import {
   Stethoscope,
   Layers3,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/Spinner";
 import { cn } from "@/lib/utils/cn";
@@ -217,7 +215,7 @@ function EvidenceItemSummary({
           </p>
         </div>
         <Link
-          href={buildBilingualCompareHref(groupId, item.canonical_evidence_id)}
+          to={buildBilingualCompareHref(groupId, item.canonical_evidence_id)}
           className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md border border-primary-200 bg-primary-50 px-3 text-sm font-medium text-primary-800 transition-colors hover:bg-primary-100 focus-visible:ring-2 focus-visible:ring-primary-500"
         >
           <Columns2 className="h-4 w-4" />
@@ -248,7 +246,7 @@ function LiteratureOverview({
   return (
     <div className="space-y-5">
       <Link
-        href="/evidence"
+        to="/evidence"
         className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-primary-600"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -397,7 +395,7 @@ function LiteratureOverview({
             </div>
             {detail.items[0] && (
               <Link
-                href={buildBilingualCompareHref(
+                to={buildBilingualCompareHref(
                   groupId,
                   detail.items[0].canonical_evidence_id,
                 )}
@@ -673,7 +671,7 @@ function BilingualCompareView({
   return (
     <div className="space-y-5">
       <Link
-        href={`/evidence/detail?groupId=${encodeURIComponent(groupId)}`}
+        to={`/evidence/detail?groupId=${encodeURIComponent(groupId)}`}
         className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-primary-600"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -925,7 +923,7 @@ export function EvidenceDetailView({
             {error?.message ?? "The requested evidence group could not be found."}
           </p>
           <Link
-            href="/evidence"
+            to="/evidence"
             className="mt-5 inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
           >
             <ArrowLeft className="h-4 w-4" />

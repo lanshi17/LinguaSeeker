@@ -146,6 +146,7 @@ class FakeConfig:
         self.embedding = FakeEmbeddingConfig()
         self.rerank = FakeRerankConfig()
         self.model_server_url = "http://localhost:8001"
+        self.api_key = ""
 
 
 def build_service_with_fake_repository(monkeypatch: pytest.MonkeyPatch) -> api_module.EntityStandardizationService:
@@ -198,7 +199,7 @@ def build_service_with_fake_repository(monkeypatch: pytest.MonkeyPatch) -> api_m
     }
 
     monkeypatch.setattr(api_module, "StandardizationRepository", FakeRepository)
-    monkeypatch.setattr(api_module, "HybridTerminologyMatcher", lambda precise, sim: HybridTerminologyMatcher(precise, FakeSimilarityMatcher()))
+    monkeypatch.setattr(api_module, "HybridTerminologyMatcher", lambda precise, sim, **kwargs: HybridTerminologyMatcher(precise, FakeSimilarityMatcher()))
     return api_module.EntityStandardizationService(cfg=FakeConfig()), lookup
 
 
@@ -289,7 +290,7 @@ async def test_dual_result_standardization_pipeline_reports_unmapped_and_ambiguo
         return repo
 
     monkeypatch.setattr(api_module, "StandardizationRepository", _factory)
-    monkeypatch.setattr(api_module, "HybridTerminologyMatcher", lambda precise, sim: HybridTerminologyMatcher(precise, FakeSimilarityMatcher()))
+    monkeypatch.setattr(api_module, "HybridTerminologyMatcher", lambda precise, sim, **kwargs: HybridTerminologyMatcher(precise, FakeSimilarityMatcher()))
     service = api_module.EntityStandardizationService(cfg=FakeConfig())
 
     output = await service.run_dual_result(

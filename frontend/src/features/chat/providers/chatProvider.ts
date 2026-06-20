@@ -1,5 +1,5 @@
 /**
- * Custom chat provider for the Cross Evidence backend.
+ * Custom chat provider for the Lingua Seeker backend.
  *
  * Backend chat agent flow:
  * 1. POST /api/v1/chat/sessions/{id}/messages  → persist user message
@@ -31,7 +31,7 @@ interface ChatRequestParams {
 }
 
 /**
- * Custom provider that binds to the Cross Evidence backend's chat agent.
+ * Custom provider that binds to the Lingua Seeker backend's chat agent.
  *
  * On request:
  * 1. Persists the user message via POST /chat/sessions/{id}/messages
@@ -39,7 +39,7 @@ interface ChatRequestParams {
  * 3. The backend agent (ReasoningLLMProvider) generates a streamed reply
  * 4. Tokens are parsed from the SSE stream and displayed in real-time
  */
-class CrossEvidenceChatProvider extends AbstractChatProvider<
+class LinguaSeekerChatProvider extends AbstractChatProvider<
   ChatBubbleMessage,
   unknown,
   SSEOutput
@@ -105,13 +105,13 @@ class CrossEvidenceChatProvider extends AbstractChatProvider<
 /**
  * Create a chat provider for a specific session.
  *
- * This creates a CrossEvidenceChatProvider that:
+ * This creates a LinguaSeekerChatProvider that:
  * - Persists messages to the backend
  * - Streams AI replies from the backend's ReasoningLLMProvider
  * - Supports evidence context injection via evidence_id
  */
-export function createCrossEvidenceChatProvider(sessionId: string) {
-  return new CrossEvidenceChatProvider(sessionId);
+export function createLinguaSeekerChatProvider(sessionId: string) {
+  return new LinguaSeekerChatProvider(sessionId);
 }
 
 /**

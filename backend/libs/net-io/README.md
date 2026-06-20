@@ -1,6 +1,6 @@
 # net-io
 
-> Rust library for HTTP/web I/O operations in CrossEvidence -- literature provider APIs, HTML scraping, PDF link extraction, and MinerU document parsing. **Not a standalone Python module** -- accessed via the `rust_io.net` facade.
+> Rust library for HTTP/web I/O operations in LinguaSeeker -- literature provider APIs, HTML scraping, PDF link extraction, and MinerU document parsing. **Not a standalone Python module** -- accessed via the `rust_io.net` facade.
 
 ## From Python
 

@@ -2,7 +2,7 @@
 services:
   redis:
     image: redis:8.0-alpine
-    container_name: cross-evidence-redis
+    container_name: lingua-seeker-redis
     restart: unless-stopped
     ports:
       - "127.0.0.1:{{ redis_port }}:6379"
@@ -23,7 +23,7 @@ services:
       - "{{ vault_redis_password }}"
 {% endif %}
     volumes:
-      - /opt/cross-evidence-data/redis:/data
+      - /opt/lingua-seeker-data/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

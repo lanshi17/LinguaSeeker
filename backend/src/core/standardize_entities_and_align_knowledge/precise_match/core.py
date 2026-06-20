@@ -9,6 +9,7 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     StandardizationCandidate,
     TerminologyCandidate,
 )
+from src.core.standardize_entities_and_align_knowledge.hgvs_normalizer import expand_hgvs_aliases
 from src.core.standardize_entities_and_align_knowledge.repositories import StandardizationRepository
 
 
@@ -29,9 +30,37 @@ class PreciseTerminologyMatcher:
 
     async def match(self, candidate: StandardizationCandidate) -> EntityMatch:
         """Match one candidate to zero, one, or many deterministic terminology entries."""
+        if candidate.entity_type == EntityType.VARIANT:
+            return await self._match_variant(candidate)
         choices = await self._repository.find_alias_candidates(candidate.entity_type, candidate.raw_text)
-        ranked = self._rank(candidate.entity_type, choices, candidate)
+        return self._finalize(candidate, choices)
 
+    async def _match_variant(self, candidate: StandardizationCandidate) -> EntityMatch:
+        """Match a variant candidate by trying every normalized HGVS alias form.
+
+        ClinVar aliases may store the one-letter protein form, the transcript
+        prefix stripped, or list-literal sub-variants, while source text may use
+        any equivalent form. We expand the raw text into all alias forms and
+        merge repository lookups, deduplicating by ``entry_id`` so a single
+        ClinVar entry reachable via multiple aliases is not double counted.
+        """
+        seen_entry_ids: set[str] = set()
+        merged: list[TerminologyCandidate] = []
+        for alias in expand_hgvs_aliases(candidate.raw_text):
+            for choice in await self._repository.find_alias_candidates(EntityType.VARIANT, alias):
+                if choice.entry_id in seen_entry_ids:
+                    continue
+                seen_entry_ids.add(choice.entry_id)
+                merged.append(choice)
+        return self._finalize(candidate, merged)
+
+    def _finalize(
+        self,
+        candidate: StandardizationCandidate,
+        choices: list[TerminologyCandidate] | tuple[TerminologyCandidate, ...],
+    ) -> EntityMatch:
+        """Rank choices and build the final ``EntityMatch`` verdict."""
+        ranked = self._rank(candidate.entity_type, tuple(choices), candidate)
         if len(ranked) == 1:
             selected = ranked[0]
             return EntityMatch(

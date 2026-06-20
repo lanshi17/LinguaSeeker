@@ -1,6 +1,6 @@
 # Scripts
 
-> Project-level operational scripts for CrossEvidence -- development servers, terminology management, and ground-truth generation. Run from the project root.
+> Project-level operational scripts for LinguaSeeker -- development servers, terminology management, and ground-truth generation. Run from the project root.
 
 ## Directory Structure
 

@@ -61,7 +61,7 @@ html_result = await scrape_web("pubscholar", "search", {"query": "BRCA1"})
 name = "rust-io"
 version = "0.1.0"
 edition = "2024"
-description = "High-performance I/O module for CrossEvidence"
+description = "High-performance I/O module for LinguaSeeker"
 
 [lib]
 name = "rust_io"
@@ -229,7 +229,7 @@ impl HttpClient {
         let timeout = Duration::from_millis(timeout_ms.unwrap_or(DEFAULT_TIMEOUT_MS));
         let mut builder = Client::builder()
             .timeout(timeout)
-            .user_agent("cross-evidence-io/0.1.0")
+            .user_agent("lingua-seeker-io/0.1.0")
             .gzip(true)
             .redirect(reqwest::redirect::Policy::limited(10));
 

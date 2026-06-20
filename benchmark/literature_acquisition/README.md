@@ -5,7 +5,7 @@
 > All runner code now lives in `benchmark.runners.*`. The shims will be removed
 > in Phase 6 of the refactor.
 
-Multilingual literature download benchmark for the CrossEvidence online acquisition pipeline. Evaluates provider coverage, download success rates, and literature type classification across 7 languages.
+Multilingual literature download benchmark for the LinguaSeeker online acquisition pipeline. Evaluates provider coverage, download success rates, and literature type classification across 7 languages.
 
 ## New Module Locations
 

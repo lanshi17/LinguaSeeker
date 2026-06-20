@@ -1,4 +1,3 @@
-"use client";
 
 import { AlertCircle, CheckCircle2, Circle, FileText, Hash, Layers, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";

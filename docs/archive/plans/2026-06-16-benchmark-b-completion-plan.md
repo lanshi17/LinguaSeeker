@@ -331,14 +331,14 @@ Expected: Markdown contains Tables 1-9.
 Allowed wording:
 
 ```text
-CrossEvidence improves traceable evidence coverage available for variant interpretation in a multilingual pilot.
+LinguaSeeker improves traceable evidence coverage available for variant interpretation in a multilingual pilot.
 ```
 
 Forbidden wording:
 
 ```text
-CrossEvidence improves clinical variant classification accuracy.
-CrossEvidence performs autonomous ACMG/ClinGen classification.
+LinguaSeeker improves clinical variant classification accuracy.
+LinguaSeeker performs autonomous ACMG/ClinGen classification.
 ```
 
 **Step 2: Update manuscript draft**

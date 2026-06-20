@@ -1,8 +1,8 @@
-# PRD — CrossEvidence
+# PRD — LinguaSeeker
 
 ## 1. Product Positioning
 
-CrossEvidence is a next-generation medical genetics literature evidence mining and structured traceability workbench. It is an "evidence porter" — absolutely loyal to source data, ensuring every piece of extracted information is **citation-valid-by-construction**: each adopted evidence item carries a programmatically verifiable source span anchor to its original location in the literature. The system organizes evidence collection, extraction, standardization, and expert review behind four fixed tabs: AI Assistant, Task Board, Knowledge Base Query, and Settings. (Note: this is the target design. The current implementation provides: Auth, Pipeline, Evidence Search, and Chat.)
+LinguaSeeker is a next-generation medical genetics literature evidence mining and structured traceability workbench. It is an "evidence porter" — absolutely loyal to source data, ensuring every piece of extracted information is **citation-valid-by-construction**: each adopted evidence item carries a programmatically verifiable source span anchor to its original location in the literature. The system organizes evidence collection, extraction, standardization, and expert review behind four fixed tabs: AI Assistant, Task Board, Knowledge Base Query, and Settings. (Note: this is the target design. The current implementation provides: Auth, Pipeline, Evidence Search, and Chat.)
 
 The system provides a high-quality data foundation for downstream clinical interpretation and research computation. It does not perform final autonomous ACMG/GDV medical classification in the current scope.
 

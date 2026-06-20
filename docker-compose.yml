@@ -6,24 +6,24 @@ services:
     depends_on:
       - backend
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
-      # Server-only key — injected by middleware.ts, never reaches the browser.
-      # Set to the same value as backend's API_KEY.
-      - API_KEY=${API_KEY:-}
+      # Vite SPA uses relative /api/v1 (proxied to backend). No API_KEY here:
+      # compose has no reverse proxy to inject the X-API-Key header, so the
+      # backend trust boundary in this profile is the 127.0.0.1 port binding +
+      # the private docker network. For production key injection see deploy/ansible.
 
   backend:
     build: ./backend
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     depends_on:
       - postgres
       - redis
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/cross_evidence
+      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/lingua_seeker
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
-      - POSTGRES_DB=cross_evidence
+      - POSTGRES_DB=lingua_seeker
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - REDIS_HOST=redis
@@ -36,7 +36,7 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
     environment:
-      POSTGRES_DB: cross_evidence
+      POSTGRES_DB: lingua_seeker
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:

@@ -1,6 +1,6 @@
 # Tests
 
-> Frontend test suite for CrossEvidence. Uses **Vitest** with React Testing Library. Test organization mirrors the `src/` source structure.
+> Frontend test suite for LinguaSeeker. Uses **Vitest** with React Testing Library. Test organization mirrors the `src/` source structure.
 
 ## Quick Start
 

@@ -1,5 +1,5 @@
 # ============================================================================
-# Cross Evidence Production Deployment — Main Entry
+# Lingua Seeker Production Deployment — Main Entry
 # ============================================================================
 # Usage:
 #   ansible-playbook playbooks/site.yml                          # Full deploy

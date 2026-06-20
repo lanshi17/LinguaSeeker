@@ -1,6 +1,6 @@
 # API
 
-> FastAPI HTTP boundary for the CrossEvidence backend. Provides REST endpoints, authentication, middleware, and dependency injection. All business logic is delegated to `agents/` and `core/` -- this layer is thin and stateless.
+> FastAPI HTTP boundary for the LinguaSeeker backend. Provides REST endpoints, authentication, middleware, and dependency injection. All business logic is delegated to `agents/` and `core/` -- this layer is thin and stateless.
 
 ## Architecture
 

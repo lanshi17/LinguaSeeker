@@ -1,4 +1,4 @@
-"""Alembic async migration environment for Cross Evidence.
+"""Alembic async migration environment for Lingua Seeker.
 
 Adapted from ``alembic init -t async`` with repo-relative import handling.
 """

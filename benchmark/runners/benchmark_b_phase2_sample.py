@@ -13,16 +13,18 @@ from typing import Any, Mapping, TypedDict, cast
 import httpx
 
 from benchmark.analysis.dataset_curation.materialize_phase2_artifacts import DEFAULT_PIPELINE_ROOT
+from benchmark.config.defaults import (
+    DEFAULT_PIPELINE_BASE_URL as DEFAULT_BASE_URL,
+    PHASE2_ARTIFACT_RELATIVE_PATH,
+    PHASE2_TERMINAL_STATUSES,
+    PIPELINE_FAILURE_STATUSES,
+)
 from benchmark.core import MAX_POLL_ATTEMPTS as DEFAULT_MAX_POLL_ATTEMPTS
 from benchmark.core import POLL_INTERVAL_S as DEFAULT_POLL_INTERVAL_S
 from benchmark.core import REPORTS_DIR, load_proxy
 
 
-DEFAULT_BASE_URL = "http://localhost:8000"
 DEFAULT_QUEUE_PATH = Path(__file__).resolve().parent.parent / "ground_truth" / "benchmark_b_phase2_queue.json"
-PHASE2_ARTIFACT_RELATIVE_PATH = Path("phase_2") / "extraction_result.json"
-PHASE2_TERMINAL_STATUSES = {"completed", "failed", "skipped"}
-PIPELINE_FAILURE_STATUSES = {"failed"}
 
 
 class BenchmarkBTargetPayload(TypedDict, total=False):

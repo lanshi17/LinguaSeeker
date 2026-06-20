@@ -40,7 +40,7 @@
 
 - name: Wait for PostgreSQL to be ready
   command: >
-    docker exec cross-evidence-postgres pg_isready
+    docker exec lingua-seeker-postgres pg_isready
     -U {{ postgres_user }}
     -d {{ postgres_db }}
   register: pg_ready
@@ -53,7 +53,7 @@
 
 - name: Create backup directory
   file:
-    path: /opt/cross-evidence-data/postgres-backups
+    path: /opt/lingua-seeker-data/postgres-backups
     state: directory
     owner: deploy
     group: deploy
@@ -67,7 +67,7 @@
 
 - name: Schedule daily database backup (03:00)
   cron:
-    name: "cross-evidence postgres backup"
+    name: "lingua-seeker postgres backup"
     hour: 3
     minute: 0
     job: "/usr/local/bin/backup-acmg-postgres"

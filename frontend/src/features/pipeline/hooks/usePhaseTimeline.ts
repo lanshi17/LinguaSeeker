@@ -1,4 +1,3 @@
-"use client";
 
 import { useMemo } from "react";
 import type { PipelineStatusResponse, PhaseTimelineStep } from "../types/pipeline";

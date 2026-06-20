@@ -1,4 +1,4 @@
-# TECH_STACK — CrossEvidence Technology Stack
+# TECH_STACK — LinguaSeeker Technology Stack
 
 ## 1. Overview
 

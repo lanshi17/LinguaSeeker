@@ -222,6 +222,7 @@ async def test_get_group_detail_pivots_distribution_and_traces():
         _FakeResult(rows=rows),
         _FakeResult(scalars=identifiers),
         _FakeResult(scalar={"title": "BRCA1 evidence paper"}),
+        _FakeResult(scalar=None),  # PipelineRunState.state_json query
     ]))
 
     detail = await service.get_group_detail(group_id=group_id)
@@ -293,6 +294,7 @@ async def test_get_group_detail_includes_value_anchors_for_paired_field():
         _FakeResult(rows=rows),
         _FakeResult(scalars=[]),
         _FakeResult(scalar={}),
+        _FakeResult(scalar=None),  # PipelineRunState.state_json query
     ]))
 
     detail = await service.get_group_detail(group_id=group_id)
@@ -441,6 +443,7 @@ async def test_get_group_detail_skips_field_ids_without_standard_tracks():
         _FakeResult(rows=rows),
         _FakeResult(scalars=identifiers),
         _FakeResult(scalar={}),
+        _FakeResult(scalar=None),  # PipelineRunState.state_json query
     ]))
 
     detail = await service.get_group_detail(group_id=group_id)
@@ -481,6 +484,7 @@ async def test_get_group_detail_single_track_field_produces_partial_trace():
         _FakeResult(rows=rows),
         _FakeResult(scalars=identifiers),
         _FakeResult(scalar={}),
+        _FakeResult(scalar=None),  # PipelineRunState.state_json query
     ]))
 
     detail = await service.get_group_detail(group_id=group_id)

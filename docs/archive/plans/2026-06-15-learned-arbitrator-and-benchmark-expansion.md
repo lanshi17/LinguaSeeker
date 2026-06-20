@@ -7,7 +7,7 @@
 **Completed:** 2026-06-15 (Phase 0 + Phase A)
 **PR:** —
 
-**Goal:** Improve CrossEvidence's main-paper evidence quality by testing whether a learned, interpretable arbitrator can outperform the current contextual verifier reconcile, while expanding the benchmark only where it strengthens statistical power and held-out generalization.
+**Goal:** Improve LinguaSeeker's main-paper evidence quality by testing whether a learned, interpretable arbitrator can outperform the current contextual verifier reconcile, while expanding the benchmark only where it strengthens statistical power and held-out generalization.
 
 **Architecture:** Treat the learned arbitrator as an evaluation candidate first, not a default runtime replacement. Build an auditable feature dataset from existing dual-track candidates and contextual verifier scores, run leave-one-entry-out policy evaluation on the frozen N=30 set, then integrate the learned strategy only if it beats predefined gates. Expand the benchmark to N=60+ as an independent data-quality and statistical-power track with adjudicated source spans.
 
