@@ -3310,3 +3310,63 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 ### 预防措施
 - 任何要进入生产 pipeline 的优化必须改变抽取候选生成、上下文约束或验证逻辑,不能只依赖 scorer filter。
 - 继续保持 dev-only 选择策略;held-out test 只做 checkpoint,不能用于新一轮调参。
+
+## 2026-06-20 Target-aware source-visible checkpoint regression
+
+### 问题
+- `target-aware-source-visible` 在 dev split 上达到 source-visible F1=0.5156,略高于 `adjudicated-field-filter` 的 dev F1=0.5138。
+- 同一 variant 在 frozen test checkpoint 上只有 source-visible F1=0.3770,低于既有 test checkpoint 0.4340。
+- test recall 没有改善,仍为 0.3433;precision 从 0.5897 降到 0.4182。
+
+### 排查过程
+- 先用 live Phase 2 pipeline 生成 dev artifacts `fused_000`-`fused_009`;`fused_009` 首轮超时后作为运行级 transient failure 单独补跑成功。
+- dev 通过后,只将同一配置用于 frozen test checkpoint,没有根据 test 结果调参。
+- 生成 test artifacts `fused_010`-`fused_019`,批处理报告 `phase2_artifact_batch_20260620_173112.json` 显示 completed=10、failed=0。
+- 运行 `run_variant --split test --checkpoint`,确认 coverage=10/10 且无缺失 artifact。
+
+### 根因
+- target-aware field eligibility 在 dev 上提高 recall,但没有解决 test split 的 candidate-absent/source-recovery 瓶颈。
+- bounded neighbor block expansion 增加了候选上下文,但 test precision 明显下降,说明新增上下文带来了更多 unsupported 或边界错误。
+- 该策略仍主要影响 catalog ask/selection 形态,不足以保证最终 source-visible quote 命中。
+
+### 解决方案
+- 不推广 `target-aware-source-visible` 为 fused-75 最优 production variant。
+- 保留 test checkpoint 报告作为负结果,leaderboard 中标记为 checkpoint_only。
+- 下一轮优化转向 candidate generation、source-visible quote validation 和 dev-only candidate-absent error taxonomy。
+
+### 预防措施
+- dev 小幅领先不能作为推广依据;必须以 frozen test checkpoint 是否超过当前 test best 为准。
+- test checkpoint 一旦运行,不得继续用 test 反馈调参。
+- 对提高召回的改动必须同时增加 source-visible 支持验证,否则可能用更多上下文换来更多 FP。
+
+## 2026-06-20 Live pipeline operational diagnostics
+
+### 问题
+- feature worktree 初次启动 backend 时缺少 ignored `backend/config/vault/development.yaml`,运行配置不完整。
+- batch runner 初次请求本地 backend 时遇到 API key 401,产生失败报告 `phase2_artifact_batch_20260620_144226.json`。
+- 长文档 Phase 2 运行期间出现 LLM read timeout、429 Too Many Requests,以及部分 `response_format=json_object` 调用提示 messages must contain word json。
+- Phase 3 embedding 调用本地 model-server `localhost:8001/v1/embeddings` 出现 401,但 Phase 2 artifact 已生成。
+
+### 排查过程
+- 确认 vault 文件为本地忽略配置,只在 worktree runtime 使用,不提交。
+- 以 `API_KEY=` 启动 feature backend 的本地评测服务,绕过本地 API key 鉴权,仅用于本机 benchmark runner。
+- 对 timeout/429 观察 pipeline status 和 batch report,只在 pipeline failed 或 artifact 缺失时处理;dev `fused_009` 属于 transient timeout,单条补跑成功。
+- 检查 Phase 3 401 后确认 benchmark scorer 只读取 Phase 2 `extraction_result.json`,因此该警告不阻塞本轮 F1 评估。
+
+### 根因
+- worktree 隔离不会复制 ignored vault 文件。
+- 本地 benchmark runner 与 FastAPI API key middleware 默认配置不匹配。
+- GPT-5/xhigh 长文档抽取运行时间长,容易触发 provider 限流或读超时。
+- Phase 3 依赖的 model-server 鉴权未为本轮 Phase 2 artifact benchmark 配齐。
+
+### 解决方案
+- 本轮使用 local-only `API_KEY=` 后端进程完成 artifact generation。
+- 保留失败 auth report 作为诊断记录,不纳入 variant score。
+- 对 transient timeout 只做同参数运行级补跑,不改变代码或 benchmark 参数。
+- 将 model-server 401 记录为非阻塞诊断,后续若评估 Phase 3 指标再单独修复。
+
+### 预防措施
+- 新 worktree 跑 live backend 前先检查 ignored vault 配置是否存在。
+- 本地 benchmark backend 的 API key 策略必须在启动命令中显式声明。
+- 长文档 artifact 批处理保持 concurrency=1,并用 batch report 而不是单条日志判断成败。
+- Phase 2-only benchmark 不应被 Phase 3 embedding warning 中断,但报告中必须记录该风险边界。
