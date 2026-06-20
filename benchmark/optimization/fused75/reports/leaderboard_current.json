@@ -1,0 +1,15 @@
+{
+  "rows": [
+    {
+      "best_split": "dev",
+      "decision": "checkpoint_only",
+      "dev_source_visible_f1": null,
+      "entry_coverage": "3/10",
+      "llm_call_count": 0,
+      "runtime_seconds": 0.007582,
+      "test_source_visible_f1": null,
+      "total_token_count": 0,
+      "variant_id": "contextual-reconcile-baseline"
+    }
+  ]
+}

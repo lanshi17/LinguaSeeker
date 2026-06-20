@@ -3237,3 +3237,27 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 ### 预防措施
 - 从 `backend/` 调用 repo-root benchmark 模块时,所有脚本化子进程都显式传入 `PYTHONPATH=..`。
 - 对批量写入型脚本先让第一条命令失败即退出,确认未产生部分落盘后再重跑。
+
+## 2026-06-20 Fused-75 leaderboard mixed-report discovery
+
+### 问题
+- `benchmark.optimization.fused75.build_leaderboard --reports-dir` 直接读取 `reports/*.json`。
+- `reports/` 同时包含 `adjudication_review_queue.json` 和 variant run report JSON,导致 Pydantic 按 `PipelineRunReport` 解析 queue JSON 时报缺少 `config`、`metric`、`decision`、`artifact_status`。
+
+### 排查过程
+- 先生成 `contextual_reconcile_dev_partial.json`,确认 run report 本身可被 `json.tool` 正常读取。
+- 运行 leaderboard CLI 稳定复现失败,堆栈定位到 `_load_report(path)` 解析非 variant JSON。
+- 对比调用方式后确认显式 `build_leaderboard(report_paths=...)` 应继续严格校验,问题只在 CLI 自动发现边界。
+
+### 根因
+- `reports/` 是共享报告目录,不是只包含 variant run reports 的专用目录。
+- CLI 的发现逻辑用扩展名判断语义,把 adjudication queue 报告误当作 run report。
+
+### 解决方案
+- 新增 `discover_run_report_paths(reports_dir)`,只在 CLI 自动发现时跳过 JSON 解码失败或 `PipelineRunReport` 校验失败的文件。
+- 保持 `build_leaderboard(report_paths=...)` 对显式传入路径的严格校验。
+- 增加回归测试覆盖 reports 目录混有 `adjudication_review_queue.json` 的场景。
+
+### 预防措施
+- 共享 reports 目录中的 CLI 自动发现必须按 schema 过滤,不能只按 `*.json`。
+- 显式 API 和自动发现 CLI 要分层:显式输入严格失败,自动发现跳过非目标 schema 并通过测试固定行为。
