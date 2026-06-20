@@ -61,6 +61,7 @@ def run_variant(
     totals = _Totals()
     missing_artifact_entry_ids: list[str] = []
     evaluated_entry_count = 0
+    score_field_filter = _score_field_filter(config)
     for adjudication in adjudications:
         extraction_path = _resolve_extraction_path(
             entry_id=adjudication.entry_id,
@@ -70,9 +71,13 @@ def run_variant(
         if extraction_path is None:
             missing_artifact_entry_ids.append(adjudication.entry_id)
             continue
+        extracted_items = _load_items(extraction_path)
+        if score_field_filter == "adjudicated_labels":
+            allowed_field_ids = {label.field_id for label in adjudication.labels}
+            extracted_items = tuple(item for item in extracted_items if item.field_id in allowed_field_ids)
         result = evaluate_adjudicated_entry(
             adjudication,
-            extracted_items=_load_items(extraction_path),
+            extracted_items=extracted_items,
         )
         totals.add(tp=result.metric.tp, fp=result.metric.fp, fn=result.metric.fn)
         evaluated_entry_count += 1
@@ -140,6 +145,16 @@ def _load_adjudications(*, split: PipelineRunSplit, adjudication_root: Path) -> 
     split_dir = "dev" if split == "dev" else "test"
     paths = sorted((adjudication_root / split_dir).glob("*.json"))
     return tuple(Fused75EntryAdjudication.model_validate_json(path.read_text(encoding="utf-8")) for path in paths)
+
+
+def _score_field_filter(config: PipelineVariantConfig) -> str:
+    values = tuple(flag.value for flag in config.pipeline_flags if flag.key == "score_field_filter")
+    if not values:
+        return "none"
+    value = str(values[-1])
+    if value not in {"none", "adjudicated_labels"}:
+        raise ValueError(f"Unsupported score_field_filter: {value}")
+    return value
 
 
 def _load_items(path: Path) -> tuple[ExtractedItem, ...]:
