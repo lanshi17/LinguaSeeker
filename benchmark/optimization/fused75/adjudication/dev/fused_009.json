@@ -1,7 +1,7 @@
 {
   "entry_id": "fused_009",
   "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_009/expected.json",
-  "is_complete": false,
+  "is_complete": true,
   "labels": [
     {
       "adjudicator": "exact-match-preannotator",
@@ -31,13 +31,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "AD",
       "field_id": "B.mode_of_inheritance_reported",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "Carrier framing for BRCA1/2 pathogenic variants supports dominant cancer predisposition in this source context.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:10",
+      "source_quote": "Genetic tests in breast cancer patients are increasingly prevalent in oncology, both because of the high incidence of breast cancer and the potential for effective preventative care in carriers of causative pathogenic and likely pathogenic variants.",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",

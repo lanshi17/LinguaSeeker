@@ -1,7 +1,7 @@
 {
   "entry_id": "fused_013",
   "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_013/expected.json",
-  "is_complete": false,
+  "is_complete": true,
   "labels": [
     {
       "adjudicator": "exact-match-preannotator",
@@ -22,13 +22,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "causative",
       "field_id": "A.gene_disease_relationship",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "CYP1B1 mutations are directly associated with glaucoma.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_013/source.md:23",
+      "source_quote": "Mutations in the CYP1B1 gene are strongly associated with congenital glaucoma.",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
@@ -49,22 +49,22 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "p.Gly61Glu",
       "field_id": "A.variant_hgvs_p",
-      "notes": null,
+      "notes": "Expected p.Gly61Glu protein notation was not found in source text.",
       "source_location": null,
       "source_quote": null,
-      "visibility": null
+      "visibility": "not_source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "missense",
       "field_id": "A.variant_type",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "c.182G>A is a nucleotide substitution supporting missense for the expected p.Gly61Glu variant.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_013/source.md:49",
+      "source_quote": "The study reported the minor allele frequency of the CYP1B1 gene variant (rs28936700, c.182G>A), which is associated with glaucoma.",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",

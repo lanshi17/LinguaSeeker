@@ -1,7 +1,7 @@
 {
   "entry_id": "fused_015",
   "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_015/expected.json",
-  "is_complete": false,
+  "is_complete": true,
   "labels": [
     {
       "adjudicator": "exact-match-preannotator",
@@ -22,22 +22,22 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "causative",
       "field_id": "A.gene_disease_relationship",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "DICER1 pathogenic variants are directly described as resulting in DTPS.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:5",
+      "source_quote": "Germline pathogenic variants (GPVs) in DICER1 result in DICER1 tumor predisposition syndrome (DTPS), a mainly childhood-onset tumor susceptibility disorder.",
+      "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "AD",
       "field_id": "B.mode_of_inheritance_reported",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "Germline pathogenic variant predisposition is consistent with the expected dominant tumor predisposition context.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:5",
+      "source_quote": "Germline pathogenic variants (GPVs) in DICER1 result in DICER1 tumor predisposition syndrome (DTPS), a mainly childhood-onset tumor susceptibility disorder.",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
@@ -49,13 +49,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "p.Leu1583Arg",
       "field_id": "A.variant_hgvs_p",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "p.L1583R is the one-letter equivalent of expected p.Leu1583Arg.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:155",
+      "source_quote": "12 | Hill DA, 2009 PMID: 19556464 | PPB | p.L1583R | c.4748T>G | RNase IIIa | Not done | Not done | LP^ | N/P | Probably damaging | Not tolerated | Damaging: Buried hydrophilic introduced, buried charge introduced",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",

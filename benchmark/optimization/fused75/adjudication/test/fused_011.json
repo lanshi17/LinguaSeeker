@@ -1,7 +1,7 @@
 {
   "entry_id": "fused_011",
   "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/expected.json",
-  "is_complete": false,
+  "is_complete": true,
   "labels": [
     {
       "adjudicator": "exact-match-preannotator",
@@ -22,13 +22,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "causative",
       "field_id": "A.gene_disease_relationship",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "BRCA2 is directly tied to hereditary breast/ovarian cancer cases.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_011/source.md:12",
+      "source_quote": "It is estimated that 5%-10% of breast cancers are attributable to hereditary syndromes with autosomal dominant transmission, such as hereditary breast and ovarian cancer syndrome (HBOC). The BCRA1 and BCRA2 genes are responsible for 30%-50% of HBOC cases.",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "ai-assisted-reviewer",
@@ -49,22 +49,22 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "p.Leu2092fs",
       "field_id": "A.variant_hgvs_p",
-      "notes": null,
+      "notes": "Expected p.Leu2092fs is not directly visible; source only lists c.6275_6276del.",
       "source_location": null,
       "source_quote": null,
-      "visibility": null
+      "visibility": "not_source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "deletion",
       "field_id": "A.variant_type",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "c.6275_6276del directly supports deletion type.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_011/source.md:74",
+      "source_quote": "Likewise, we observed other mutations in the BRCA genes with equal or greater frequency, such as c.1674del (4/18) in BRCA1 and c.6275_6276del (5/18) in BRCA2.",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
