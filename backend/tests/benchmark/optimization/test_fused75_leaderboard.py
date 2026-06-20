@@ -4,9 +4,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from benchmark.optimization.fused75.build_leaderboard import build_leaderboard
+from benchmark.optimization.fused75.build_leaderboard import build_leaderboard, discover_run_report_paths
 from benchmark.optimization.fused75.run_contracts import (
     PipelineFlag,
+    PipelineRunArtifactStatus,
     PipelineRunMetric,
     PipelineRunReport,
     PipelineVariantConfig,
@@ -14,7 +15,15 @@ from benchmark.optimization.fused75.run_contracts import (
 )
 
 
-def _report(*, variant_id: str, split: str, f1: float, decision: str = "checkpoint_only") -> PipelineRunReport:
+def _report(
+    *,
+    variant_id: str,
+    split: str,
+    f1: float,
+    decision: str = "checkpoint_only",
+    missing_entry_ids: tuple[str, ...] = (),
+) -> PipelineRunReport:
+    expected_entry_count = 10
     return PipelineRunReport(
         config=PipelineVariantConfig(
             variant_id=variant_id,
@@ -35,6 +44,11 @@ def _report(*, variant_id: str, split: str, f1: float, decision: str = "checkpoi
             source_visible_f1=f1,
         ),
         decision=PipelineVariantDecision(decision=decision, reason=f"{decision} variant"),
+        artifact_status=PipelineRunArtifactStatus(
+            expected_entry_count=expected_entry_count,
+            evaluated_entry_count=expected_entry_count - len(missing_entry_ids),
+            missing_artifact_entry_ids=missing_entry_ids,
+        ),
     )
 
 
@@ -72,5 +86,34 @@ def test_build_leaderboard_writes_stable_json_and_markdown(tmp_path: Path) -> No
 
     assert payload["rows"][0]["variant_id"] == "variant-a"
     assert payload["rows"][0]["decision"] == "rejected"
-    assert "| variant-a | dev | 0.8000 |" in markdown
+    assert "| variant-a | dev | 10/10 | 0.8000 |" in markdown
     assert leaderboard.rows[0].decision == "rejected"
+
+
+def test_build_leaderboard_excludes_partial_artifact_runs_from_ranked_f1(tmp_path: Path) -> None:
+    reports_dir = tmp_path / "reports"
+    _write_report(
+        reports_dir / "partial_dev.json",
+        _report(variant_id="partial", split="dev", f1=1.0, missing_entry_ids=("fused_001",)),
+    )
+    _write_report(reports_dir / "complete_dev.json", _report(variant_id="complete", split="dev", f1=0.2))
+
+    leaderboard = build_leaderboard(report_paths=tuple(sorted(reports_dir.glob("*.json"))))
+
+    assert [row.variant_id for row in leaderboard.rows] == ["complete", "partial"]
+    assert leaderboard.rows[0].dev_source_visible_f1 == 0.2
+    assert leaderboard.rows[1].dev_source_visible_f1 is None
+    assert leaderboard.rows[1].entry_coverage == "9/10"
+
+
+def test_discover_run_report_paths_ignores_non_variant_json(tmp_path: Path) -> None:
+    reports_dir = tmp_path / "reports"
+    _write_report(reports_dir / "variant_dev.json", _report(variant_id="variant-a", split="dev", f1=0.8))
+    (reports_dir / "adjudication_review_queue.json").write_text(
+        json.dumps({"total_entries": 0, "items": []}) + "\n",
+        encoding="utf-8",
+    )
+
+    paths = discover_run_report_paths(reports_dir)
+
+    assert paths == (reports_dir / "variant_dev.json",)

@@ -74,6 +74,26 @@ class PipelineVariantDecision(BaseModel):
     reason: str = Field(min_length=1)
 
 
+class PipelineRunArtifactStatus(BaseModel):
+    """Artifact coverage for one fused-75 run."""
+
+    model_config = ConfigDict(frozen=True)
+
+    expected_entry_count: int = Field(ge=0)
+    evaluated_entry_count: int = Field(ge=0)
+    missing_artifact_entry_ids: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def validate_counts(self) -> PipelineRunArtifactStatus:
+        """Reject internally inconsistent artifact coverage counts."""
+        if self.evaluated_entry_count > self.expected_entry_count:
+            raise ValueError("evaluated_entry_count cannot exceed expected_entry_count")
+        missing_count = len(self.missing_artifact_entry_ids)
+        if self.expected_entry_count != self.evaluated_entry_count + missing_count:
+            raise ValueError("artifact counts must equal evaluated plus missing entries")
+        return self
+
+
 class PipelineRunReport(BaseModel):
     """Complete deterministic report for one fused-75 pipeline run."""
 
@@ -82,6 +102,7 @@ class PipelineRunReport(BaseModel):
     config: PipelineVariantConfig
     metric: PipelineRunMetric
     decision: PipelineVariantDecision
+    artifact_status: PipelineRunArtifactStatus
 
     def to_stable_json(self) -> str:
         """Serialize the report with stable key ordering and compact separators."""

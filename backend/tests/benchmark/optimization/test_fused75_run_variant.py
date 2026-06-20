@@ -134,3 +134,79 @@ def test_run_variant_writes_stubbed_dev_report(tmp_path: Path) -> None:
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert payload["config"]["variant_id"] == "stub-variant"
     assert payload["decision"]["decision"] == "checkpoint_only"
+    assert payload["artifact_status"]["evaluated_entry_count"] == 1
+    assert payload["artifact_status"]["missing_artifact_entry_ids"] == []
+
+
+def test_run_variant_reads_nested_reconciled_phase2_artifact(tmp_path: Path) -> None:
+    config_path = tmp_path / "variant.json"
+    output_path = tmp_path / "report.json"
+    _write_config(config_path)
+    _write_adjudication(tmp_path / "adjudication" / "dev" / "fused_000.json")
+    _write_json(
+        tmp_path
+        / "ground_truth"
+        / "fused_000"
+        / "preprocessed"
+        / "phase_2"
+        / "extraction_result.json",
+        {
+            "reconciled_result": {
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "status": "found", "value": "CFTR"},
+                    {"field_id": "A.gene_symbol", "status": "source_invalid", "value": "BAD"},
+                ]
+            }
+        },
+    )
+
+    report = run_variant(
+        split="dev",
+        config_path=config_path,
+        adjudication_root=tmp_path / "adjudication",
+        extraction_root=tmp_path / "extractions",
+        fused_ground_truth_root=tmp_path / "ground_truth",
+        output_path=output_path,
+    )
+
+    assert report.metric.f1 == 1.0
+    assert report.artifact_status.evaluated_entry_count == 1
+
+
+def test_run_variant_rejects_missing_artifacts_by_default(tmp_path: Path) -> None:
+    config_path = tmp_path / "variant.json"
+    _write_config(config_path)
+    _write_adjudication(tmp_path / "adjudication" / "dev" / "fused_000.json")
+
+    with pytest.raises(FileNotFoundError, match="missing extraction artifacts"):
+        run_variant(
+            split="dev",
+            config_path=config_path,
+            adjudication_root=tmp_path / "adjudication",
+            extraction_root=tmp_path / "extractions",
+            fused_ground_truth_root=tmp_path / "ground_truth",
+            output_path=tmp_path / "report.json",
+        )
+
+
+def test_run_variant_can_write_partial_artifact_diagnostic(tmp_path: Path) -> None:
+    config_path = tmp_path / "variant.json"
+    output_path = tmp_path / "report.json"
+    _write_config(config_path)
+    _write_adjudication(tmp_path / "adjudication" / "dev" / "fused_000.json")
+
+    report = run_variant(
+        split="dev",
+        config_path=config_path,
+        adjudication_root=tmp_path / "adjudication",
+        extraction_root=tmp_path / "extractions",
+        fused_ground_truth_root=tmp_path / "ground_truth",
+        output_path=output_path,
+        allow_missing_artifacts=True,
+    )
+
+    assert report.metric.f1 == 0.0
+    assert report.artifact_status.expected_entry_count == 1
+    assert report.artifact_status.evaluated_entry_count == 0
+    assert report.artifact_status.missing_artifact_entry_ids == ("fused_000",)
+    assert "not eligible" in report.decision.reason

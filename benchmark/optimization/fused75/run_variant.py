@@ -11,6 +11,7 @@ from typing import Any, Literal, Sequence
 from benchmark.optimization.fused75.adjudication_contracts import Fused75EntryAdjudication
 from benchmark.optimization.fused75.evaluate_adjudicated import ExtractedItem, evaluate_adjudicated_entry
 from benchmark.optimization.fused75.run_contracts import (
+    PipelineRunArtifactStatus,
     PipelineRunMetric,
     PipelineRunReport,
     PipelineVariantConfig,
@@ -22,6 +23,7 @@ PipelineRunSplit = Literal["dev", "test", "auto_pool"]
 _DEFAULT_CONFIG_PATH = Path("benchmark/optimization/fused75/variant_config.json")
 _DEFAULT_ADJUDICATION_ROOT = Path("benchmark/optimization/fused75/adjudication")
 _DEFAULT_EXTRACTION_ROOT = Path("benchmark/optimization/fused75/extractions")
+_DEFAULT_FUSED_GROUND_TRUTH_ROOT = Path("benchmark/data/ground_truth/clinvar_fused")
 _DEFAULT_OUTPUT_PATH = Path("benchmark/optimization/fused75/reports/variant_report.json")
 
 
@@ -39,8 +41,10 @@ def run_variant(
     config_path: Path,
     adjudication_root: Path = _DEFAULT_ADJUDICATION_ROOT,
     extraction_root: Path = _DEFAULT_EXTRACTION_ROOT,
+    fused_ground_truth_root: Path = _DEFAULT_FUSED_GROUND_TRUTH_ROOT,
     output_path: Path = _DEFAULT_OUTPUT_PATH,
     checkpoint: bool = False,
+    allow_missing_artifacts: bool = False,
 ) -> PipelineRunReport:
     """Run a variant over existing extraction artifacts and write a report."""
     if split == "test" and not checkpoint:
@@ -55,13 +59,30 @@ def run_variant(
     if incomplete:
         raise ValueError(f"incomplete adjudication entries: {', '.join(incomplete)}")
     totals = _Totals()
+    missing_artifact_entry_ids: list[str] = []
+    evaluated_entry_count = 0
     for adjudication in adjudications:
-        extraction_path = extraction_root / f"{adjudication.entry_id}.json"
+        extraction_path = _resolve_extraction_path(
+            entry_id=adjudication.entry_id,
+            extraction_root=extraction_root,
+            fused_ground_truth_root=fused_ground_truth_root,
+        )
+        if extraction_path is None:
+            missing_artifact_entry_ids.append(adjudication.entry_id)
+            continue
         result = evaluate_adjudicated_entry(
             adjudication,
             extracted_items=_load_items(extraction_path),
         )
         totals.add(tp=result.metric.tp, fp=result.metric.fp, fn=result.metric.fn)
+        evaluated_entry_count += 1
+
+    if missing_artifact_entry_ids and not allow_missing_artifacts:
+        raise FileNotFoundError(
+            "missing extraction artifacts for entries: "
+            f"{', '.join(missing_artifact_entry_ids)}. "
+            "Pass allow_missing_artifacts=True only for coverage diagnostics."
+        )
 
     precision, recall, f1 = totals.scores()
     metric = PipelineRunMetric(
@@ -75,10 +96,21 @@ def run_variant(
         f1=f1,
         source_visible_f1=f1,
     )
+    decision_reason = f"Recorded {split} variant run"
+    if missing_artifact_entry_ids:
+        decision_reason = (
+            f"Partial {split} run; missing {len(missing_artifact_entry_ids)} "
+            "extraction artifacts, not eligible for full-split ranking"
+        )
     report = PipelineRunReport(
         config=config,
         metric=metric,
-        decision=PipelineVariantDecision(decision="checkpoint_only", reason=f"Recorded {split} variant run"),
+        decision=PipelineVariantDecision(decision="checkpoint_only", reason=decision_reason),
+        artifact_status=PipelineRunArtifactStatus(
+            expected_entry_count=len(adjudications),
+            evaluated_entry_count=evaluated_entry_count,
+            missing_artifact_entry_ids=tuple(missing_artifact_entry_ids),
+        ),
     )
     _write_report(report, output_path)
     return report
@@ -112,8 +144,52 @@ def _load_adjudications(*, split: PipelineRunSplit, adjudication_root: Path) -> 
 
 def _load_items(path: Path) -> tuple[ExtractedItem, ...]:
     payload = _load_json(path)
-    items = payload.get("items", ())
+    items = _extract_items(payload)
     return tuple(PipelineExtractionItem(field_id=str(item["field_id"]), value=str(item["value"])) for item in items)
+
+
+def _resolve_extraction_path(
+    *,
+    entry_id: str,
+    extraction_root: Path,
+    fused_ground_truth_root: Path,
+) -> Path | None:
+    explicit_path = extraction_root / f"{entry_id}.json"
+    if explicit_path.exists():
+        return explicit_path
+    preprocessed_path = fused_ground_truth_root / entry_id / "preprocessed" / "phase_2" / "extraction_result.json"
+    if preprocessed_path.exists():
+        return preprocessed_path
+    return None
+
+
+def _extract_items(payload: dict[str, Any]) -> tuple[dict[str, Any], ...]:
+    if isinstance(payload.get("items"), list):
+        return tuple(_found_items(payload["items"]))
+
+    reconciled = payload.get("reconciled_result")
+    if isinstance(reconciled, dict) and isinstance(reconciled.get("evidence_items"), list):
+        return tuple(_found_items(reconciled["evidence_items"]))
+
+    merged: list[dict[str, Any]] = []
+    for track_key in ("original_result", "translated_result"):
+        track = payload.get(track_key)
+        if isinstance(track, dict) and isinstance(track.get("evidence_items"), list):
+            merged.extend(_found_items(track["evidence_items"]))
+    return tuple(merged)
+
+
+def _found_items(items: Sequence[Any]) -> tuple[dict[str, Any], ...]:
+    found: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        if item.get("status", "found") != "found":
+            continue
+        if item.get("field_id") is None or item.get("value") is None:
+            continue
+        found.append(item)
+    return tuple(found)
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -134,8 +210,10 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--config", type=Path, default=_DEFAULT_CONFIG_PATH)
     parser.add_argument("--adjudication-root", type=Path, default=_DEFAULT_ADJUDICATION_ROOT)
     parser.add_argument("--extraction-root", type=Path, default=_DEFAULT_EXTRACTION_ROOT)
+    parser.add_argument("--fused-ground-truth-root", type=Path, default=_DEFAULT_FUSED_GROUND_TRUTH_ROOT)
     parser.add_argument("--output", type=Path, default=_DEFAULT_OUTPUT_PATH)
     parser.add_argument("--checkpoint", action="store_true")
+    parser.add_argument("--allow-missing-artifacts", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -147,8 +225,10 @@ def main(argv: Sequence[str] | None = None) -> None:
         config_path=args.config,
         adjudication_root=args.adjudication_root,
         extraction_root=args.extraction_root,
+        fused_ground_truth_root=args.fused_ground_truth_root,
         output_path=args.output,
         checkpoint=args.checkpoint,
+        allow_missing_artifacts=args.allow_missing_artifacts,
     )
 
 
