@@ -6,8 +6,7 @@
  * - Response interceptor normalizes errors into ApiError and redirects
  *   to /login on 401 (with a guard to prevent duplicate navigations).
  *
- * The backend's X-API-Key header is injected server-side by
- * middleware.ts — never expose API keys to the browser bundle.
+ * The backend validates auth via session cookie or X-API-Key header.
  */
 
 import axios from "axios";
@@ -34,8 +33,7 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    // X-API-Key is injected by middleware.ts on the server side.
-    // Do NOT add it here — NEXT_PUBLIC_* vars leak to the browser.
+    // Auth is handled by the backend via session cookie.
   }
   return config;
 });

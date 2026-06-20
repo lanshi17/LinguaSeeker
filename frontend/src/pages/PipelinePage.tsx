@@ -2,7 +2,7 @@ import { PipelineSubmitForm } from "@/features/pipeline";
 import { RunHistory } from "@/features/pipeline";
 import { PageHeader } from "@/components/layout/PageHeader";
 
-export default function PipelinePage() {
+export function PipelinePage() {
   return (
     <div className="space-y-6">
       <PageHeader

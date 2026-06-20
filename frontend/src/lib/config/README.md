@@ -1,6 +1,6 @@
 # Frontend Config
 
-> Typed access to layered Next.js environment settings for app, API, and feature flags.
+> Typed access to layered Vite environment settings for app, API, and feature flags.
 
 ## Quick Start
 
@@ -17,14 +17,14 @@ if (featureFlags.enableChat) {
 ## Architecture
 
 ```text
-.env files -> Next.js env loader -> process.env -> typed config singletons
+.env files -> Vite env loader -> import.meta.env -> typed config singletons
                                            |
                                            +-> appConfig
                                            +-> apiConfig
                                            +-> featureFlags
 ```
 
-The module keeps raw `process.env` reads in one place and exposes typed objects to the rest of the frontend. This makes API clients, hooks, and feature gates consume the same source of truth.
+The module keeps raw `import.meta.env` reads in one place and exposes typed objects to the rest of the frontend. This makes API clients, hooks, and feature gates consume the same source of truth.
 
 ## Public API
 
@@ -118,11 +118,11 @@ Avoid expanding this module into a generic config framework. It is meant to be a
 
 ## Testing
 
-- `npm run type-check`
-- `npm run lint`
-- `npm test`
+- `bun run type-check`
+- `bun run lint`
+- `bun run test`
 
 The current test coverage checks that:
 
 - `apiClient` consumes `apiConfig.baseUrl` and `apiConfig.timeout`
-- `process.env.NEXT_PUBLIC_*` reads stay inside `src/lib/config/`
+- `import.meta.env.VITE_*` reads stay inside `src/lib/config/`

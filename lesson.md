@@ -3223,3 +3223,65 @@ benchmark 子项目的配置文件散落在 `benchmark/datasets/rett_annotation/
 - 自测断言的期望值从源文件精确数/复制,不凭记忆。
 - 中心常量模块只放"可调运行参数";与 primitive 强耦合且被测试 monkeypatch 的常量留原处,去重靠 import 而非搬家。
 - 静态大内容配置文件(如 rett_config 的多语言 query 数组)用 ansible `copy` 而非 `template`;template+group_vars 只适合可变量化的小结构。
+
+## 2026-06-20 前端包管理器 npm→bun 迁移
+
+**问题描述**:将前端包管理器从 npm+nvm 迁移到 bun,涉及锁文件、版本管理、Ansible 部署角色、systemd 服务模板、AGENTS.md 规则文档等多处配置。
+
+**排查过程**:
+1. 先分析当前状态:853 包/1.2GB node_modules/12K 行 package-lock.json,bun 已安装(v1.3.14)。
+2. 发现 Next.js 利用极浅(41 个 'use client',零 next/image/link/navigation/font/server actions),确认迁移到 bun+Vite 的决策正确。
+3. 分步执行:先生成 bun.lock,再更新所有配置文件,最后验证。
+
+**根因分析**:无 bug,纯迁移工作。主要风险点在于 ast_edit 工具误用于 markdown 文件。
+
+**解决方案**:
+- 删除 `package-lock.json` + `.nvmrc` + `.nvmrc.jinja`,生成 `bun.lock` + `.bun-version` + `.bun-version.jinja`。
+- Ansible frontend role: nvm 安装→bun 安装, npm ci→bun install --frozen-lockfile, npm run build→bun run build。
+- systemd 服务: ExecStart 从 `node node_modules/.bin/next start` 改为 `bun run start -- -p`, PATH 从 nvm node 路径改为 bun bin 路径。
+- AGENTS.md: 规则 1(nvm+npm→bun)、规则 19(package-lock.json→bun.lock)、规则 27(npm run→bun run)、附录开发命令全部更新。
+- frontend/README.md: 所有 npm 命令替换为 bun。
+
+**踩坑**:
+- **ast_edit 不能用于 markdown 文件**:用 ast_edit 对 README.md 做 "npm install"→"bun install" 等文本替换,导致整个文件被替换为 "bun run type-check"(181 处误替换)。ast_edit 是 AST 模式匹配工具,markdown 无 AST 结构,模式匹配行为不可预测。**修正**:markdown/纯文本文件的局部替换必须用 `edit` 工具指定精确行号。
+
+**预防措施**:
+- `ast_edit` 仅用于有 AST 的代码文件(.ts/.tsx/.py/.rs 等),禁止用于 markdown/yaml/json 等非 AST 文件。
+- 纯文本替换用 `edit` 工具 + 精确行号,或 `search` 确认后手动逐处替换。
+- 迁移类任务先收集所有受影响文件清单,再批量修改,避免遗漏。
+- 验证时区分迁移引入的错误和 pre-existing 错误(本次 type-check/build 的 TS 错误来自 evidence-db feature,与 bun 迁移无关)。
+
+## 2026-06-20 前端 Next.js→Vite+React Router 迁移
+
+**问题描述**:将前端从 Next.js 16 App Router 迁移到 Vite 6 + React Router 7,包括路由、auth、页面组件、配置等。
+
+**排查过程**:
+1. 先全面探索代码库:发现 Next.js 利用极浅(41 个 'use client',零 next/image/link/font/server actions),仅用 middleware(auth guard)和 2 个 API route(login/logout)。
+2. 识别所有 Next.js 专属文件:next.config.ts, middleware.ts, next-env.d.ts, app/ 目录(13 个文件)。
+3. 识别所有 next/* import:10 个文件用了 next/link、next/navigation。
+4. 识别所有 'use client' 指令:~44 个文件。
+5. 拆分为 3 个并行子任务:后端 auth 迁移、Vite 脚手架+路由+配置、import 替换+'use client' 清理。
+
+**根因分析**:无 bug,纯迁移工作。
+
+**解决方案**:
+- 后端新增 `backend/src/api/v1/auth.py`:3 个 endpoint(login/logout/me),HMAC-SHA256 签名 session cookie,与原 Next.js 实现逻辑一致。
+- 后端 `src/api/auth.py` 的 `require_api_key` 新增 session cookie 认证:先查 X-API-Key header,再查 ce_session cookie。
+- 前端新增 `vite.config.ts`、`index.html`、`src/main.tsx`、`src/App.tsx`(React Router 路由)、`src/components/AuthGuard.tsx`。
+- 前端 9 个页面组件迁移到 `src/pages/`,用 React Router hooks(useParams/useSearchParams/Navigate)替代 Next.js 的 params/searchParams/redirect。
+- 前端 DashboardLayout 从 `{children}` 改为 `<Outlet />`。
+- 10 个文件的 next/* import 替换为 react-router-dom。
+- 44 个文件删除 'use client' 指令。
+- 环境变量从 `NEXT_PUBLIC_*` 改为 `VITE_*`,`process.env` 改为 `import.meta.env`。
+- 删除 next.config.ts、middleware.ts、next-env.d.ts、app/ 目录。
+
+**踩坑**:
+- **缺少 @types/react-dom**:Vite 不像 Next.js 自带 @types/react-dom,需要手动添加到 devDependencies。tsc 报 `react-dom/client` 隐式 any。修正:`bun add -d @types/react-dom@^18.3.0`。
+- **子任务文件冲突**:DashboardLayout.tsx 同时被 ViteScaffold(改 Outlet)和 ImportMigration(删 'use client')修改。通过 IRC 协调,ViteScaffold 完全接管该文件,ImportMigration 跳过。需要在任务分配时预判文件重叠并明确归属。
+- **子任务间依赖**:ViteScaffold 需要知道 ImportMigration 不会碰 DashboardLayout 的 'use client,ImportMigration 需要知道 ViteScaffold 会删它。通过 IRC 实时通信解决。
+
+**预防措施**:
+- Vite 项目模板必须包含 @types/react-dom,不像 Next.js 那样内置。
+- 多子任务并行修改时,提前用 IRC 声明文件归属,避免 stale tag 冲突。
+- 大型迁移先全面探索(Next.js 专属用法、import 分布、'use client' 分布),再拆分为独立子任务并行执行。
+- 迁移后搜索残留引用(`from "next/`、`use client`、`NEXT_PUBLIC`),包括注释和 README。

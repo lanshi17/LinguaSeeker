@@ -1,4 +1,3 @@
-"use client";
 
 import { Activity, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
