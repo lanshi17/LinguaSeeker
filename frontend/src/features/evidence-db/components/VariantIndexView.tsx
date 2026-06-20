@@ -19,7 +19,7 @@ import type {
 } from "../types/variantDb";
 import {
   classificationColor,
-  classificationBadgeStyle,
+  classificationBadgeClasses,
   classificationShortLabel,
 } from "../utils/pathogenicity";
 import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
@@ -45,9 +45,9 @@ function StatCard({
   label: string;
   accent?: string;
 }) {
-  const accentColor = accent ?? "#22D3EE";
+  const accentColor = accent ?? "#0891B2";
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-slate-700/30 bg-slate-900/40 px-4 py-3">
+    <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50/60 px-4 py-3">
       <div
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
         style={{ backgroundColor: `${accentColor}1a` }}
@@ -61,7 +61,7 @@ function StatCard({
         >
           {typeof value === "number" ? value.toLocaleString() : value}
         </p>
-        <p className="text-xs text-slate-500">{label}</p>
+        <p className="text-xs text-gray-500">{label}</p>
       </div>
     </div>
   );
@@ -102,20 +102,17 @@ function CategoryDistributionBar({
 
 function VariantCard({ entry }: { entry: VariantIndexEntry }) {
   const borderColor = classificationColor(entry.classificationLevel);
-  const badgeStyle = classificationBadgeStyle(entry.classificationLevel);
+  const badgeClasses = classificationBadgeClasses(entry.classificationLevel);
 
   return (
     <Link
       to={`/evidence-db/${encodeURIComponent(entry.variantSlug)}`}
-      className="edb-card edb-card-clickable group block rounded-xl overflow-hidden"
+      className="edb-card edb-card-clickable group block rounded-xl overflow-hidden cursor-pointer"
     >
-      {/* Pathogenicity accent bar with glow */}
+      {/* Pathogenicity accent bar */}
       <div
         className="h-0.5 w-full"
-        style={{
-          backgroundColor: borderColor,
-          boxShadow: `0 0 8px ${borderColor}`,
-        }}
+        style={{ backgroundColor: borderColor }}
       />
 
       <div className="p-4">
@@ -123,16 +120,18 @@ function VariantCard({ entry }: { entry: VariantIndexEntry }) {
         <div className="mb-2">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h3 className="font-mono text-base font-semibold text-slate-100 truncate group-hover:text-cyan-300 transition-colors">
+              <h3 className="font-mono text-base font-semibold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
                 {entry.gene || "Unknown Gene"}
               </h3>
-              <p className="font-mono text-sm text-slate-400 truncate mt-0.5">
+              <p className="font-mono text-sm text-gray-500 truncate mt-0.5">
                 {entry.variant || "Unknown Variant"}
               </p>
             </div>
             <span
-              className="shrink-0 inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium font-mono"
-              style={badgeStyle}
+              className={cn(
+                "shrink-0 inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium font-mono",
+                badgeClasses,
+              )}
             >
               {classificationShortLabel(entry.classificationLevel)}
             </span>
@@ -142,32 +141,32 @@ function VariantCard({ entry }: { entry: VariantIndexEntry }) {
         {/* Disease + Classification */}
         <div className="mb-3 space-y-0.5">
           {entry.disease && (
-            <p className="text-sm text-slate-300 truncate">{entry.disease}</p>
+            <p className="text-sm text-gray-700 truncate">{entry.disease}</p>
           )}
-          <p className="text-xs text-slate-600">
+          <p className="text-xs text-gray-500">
             {entry.classification || "No classification"}
           </p>
         </div>
 
         {/* Stats row */}
-        <div className="mb-3 flex items-center gap-4 text-xs text-slate-500">
+        <div className="mb-3 flex items-center gap-4 text-xs text-gray-500">
           <span className="flex items-center gap-1">
             <FileText className="h-3.5 w-3.5" />
-            <span className="font-medium text-slate-300">
+            <span className="font-medium text-gray-700">
               {entry.evidenceGroupCount}
             </span>
             evidence
           </span>
           <span className="flex items-center gap-1">
             <BookOpen className="h-3.5 w-3.5" />
-            <span className="font-medium text-slate-300">
+            <span className="font-medium text-gray-700">
               {entry.literatureCount}
             </span>
             refs
           </span>
           <span className="flex items-center gap-1">
             <TrendingUp className="h-3.5 w-3.5" />
-            <span className="font-medium text-slate-300">
+            <span className="font-medium text-gray-700">
               {Math.round(entry.avgConfidence * 100)}%
             </span>
             conf.
@@ -196,10 +195,10 @@ function ClassificationFilter({
         type="button"
         onClick={() => onChange(undefined)}
         className={cn(
-          "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+          "cursor-pointer rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
           !value
-            ? "border-slate-500 bg-slate-200 text-slate-900"
-            : "border-slate-700 bg-slate-900/40 text-slate-400 hover:border-slate-600",
+            ? "border-gray-900 bg-gray-900 text-white"
+            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300",
         )}
       >
         All
@@ -215,14 +214,14 @@ function ClassificationFilter({
               onChange(value === opt.value ? undefined : opt.value)
             }
             className={cn(
-              "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+              "cursor-pointer rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
               isActive
-                ? "border-transparent"
-                : "border-slate-700 bg-slate-900/40 text-slate-400 hover:border-slate-600",
+                ? "border-transparent text-white"
+                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300",
             )}
             style={
               isActive
-                ? { backgroundColor: hex, color: "#0a0e17" }
+                ? { backgroundColor: hex }
                 : undefined
             }
           >
@@ -257,7 +256,7 @@ export function VariantIndexView() {
   return (
     <div className="space-y-6">
       {/* Hero Stats Section */}
-      <section className="edb-surface rounded-2xl p-6">
+      <section className="edb-hero rounded-2xl border border-gray-200 p-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatCard
             icon={Dna}
@@ -269,7 +268,7 @@ export function VariantIndexView() {
             icon={FileText}
             value={stats.totalEvidenceGroups}
             label="Evidence Groups"
-            accent="#22D3EE"
+            accent="#0891B2"
           />
           <StatCard
             icon={BookOpen}
@@ -281,17 +280,17 @@ export function VariantIndexView() {
             icon={TrendingUp}
             value={`${Math.round(stats.avgConfidence * 100)}%`}
             label="Avg Confidence"
-            accent="#22C55E"
+            accent="#0F766E"
           />
         </div>
       </section>
 
       {/* Search & Filter Bar */}
-      <section className="edb-surface rounded-xl p-4">
+      <section className="rounded-xl border border-gray-200 bg-white p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           {/* Text search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search by gene or variant..."
@@ -301,7 +300,7 @@ export function VariantIndexView() {
                 updateFilter("gene", val || undefined);
                 if (val) updateFilter("variant", undefined);
               }}
-              className="w-full rounded-lg border border-slate-700/50 bg-slate-900/50 py-2 pl-9 pr-3 text-sm text-slate-200 placeholder-slate-600 transition-colors focus:border-cyan-500/50 focus:bg-slate-900 focus:outline-none"
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-primary-400 focus:bg-white focus:outline-none"
             />
             {(filters.gene || filters.variant) && (
               <button
@@ -310,7 +309,7 @@ export function VariantIndexView() {
                   updateFilter("gene", undefined);
                   updateFilter("variant", undefined);
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-500 hover:text-slate-300"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 hover:text-gray-700 cursor-pointer"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -326,7 +325,7 @@ export function VariantIndexView() {
               onChange={(e) =>
                 updateFilter("disease", e.target.value || undefined)
               }
-              className="w-full rounded-lg border border-slate-700/50 bg-slate-900/50 py-2 px-3 text-sm text-slate-200 placeholder-slate-600 transition-colors focus:border-cyan-500/50 focus:bg-slate-900 focus:outline-none"
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-primary-400 focus:bg-white focus:outline-none"
             />
           </div>
 
@@ -335,7 +334,7 @@ export function VariantIndexView() {
             <button
               type="button"
               onClick={clearFilters}
-              className="shrink-0 rounded-lg border border-slate-700/50 px-3 py-2 text-xs font-medium text-slate-400 hover:bg-slate-800/50 transition-colors"
+              className="cursor-pointer shrink-0 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
             >
               Clear all
             </button>
@@ -343,7 +342,7 @@ export function VariantIndexView() {
         </div>
 
         {/* Classification filter pills */}
-        <div className="mt-3 pt-3 border-t border-slate-800/50">
+        <div className="mt-3 pt-3 border-t border-gray-100">
           <ClassificationFilter
             value={filters.classification}
             onChange={(val) => updateFilter("classification", val)}
@@ -353,21 +352,21 @@ export function VariantIndexView() {
 
       {/* Results */}
       {error ? (
-        <div className="flex items-center gap-3 rounded-xl border border-red-500/30 bg-red-950/30 p-4 text-sm text-red-300">
+        <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <AlertCircle className="h-5 w-5 shrink-0" />
           <span>Failed to load variant data. Please try again.</span>
         </div>
       ) : isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <Spinner className="h-6 w-6 text-cyan-400" />
+          <Spinner className="h-6 w-6 text-primary-600" />
         </div>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-700 py-20 text-center">
-          <Dna className="h-10 w-10 text-slate-700 mb-3" />
-          <p className="text-sm font-medium text-slate-400">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 py-20 text-center">
+          <Dna className="h-10 w-10 text-gray-300 mb-3" />
+          <p className="text-sm font-medium text-gray-700">
             No variants found
           </p>
-          <p className="text-xs text-slate-600 mt-1">
+          <p className="text-xs text-gray-500 mt-1">
             Try adjusting your search filters
           </p>
         </div>
@@ -375,16 +374,16 @@ export function VariantIndexView() {
         <>
           {/* Result count */}
           <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-500">
-              <span className="font-medium text-slate-300">{total}</span>{" "}
+            <p className="text-sm text-gray-600">
+              <span className="font-medium text-gray-900">{total}</span>{" "}
               variant{total !== 1 ? "s" : ""} found
               {isFetching && (
                 <span className="ml-2 inline-block">
-                  <Spinner className="h-3 w-3 text-cyan-400 inline" />
+                  <Spinner className="h-3 w-3 text-primary-600 inline" />
                 </span>
               )}
             </p>
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-gray-500">
               Page {page} of {totalPages || 1}
             </p>
           </div>
@@ -412,8 +411,8 @@ export function VariantIndexView() {
                 className={cn(
                   "flex h-9 w-9 items-center justify-center rounded-lg border text-sm transition-colors",
                   page <= 1
-                    ? "cursor-not-allowed border-slate-800/50 text-slate-700"
-                    : "border-slate-700/50 text-slate-400 hover:bg-slate-800/50",
+                    ? "cursor-not-allowed border-gray-100 text-gray-300"
+                    : "cursor-pointer border-gray-200 text-gray-600 hover:bg-gray-50",
                 )}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -428,8 +427,8 @@ export function VariantIndexView() {
                     className={cn(
                       "flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-medium transition-colors",
                       pageNum === page
-                        ? "border-cyan-500 bg-cyan-500 text-slate-900"
-                        : "border-slate-700/50 text-slate-400 hover:bg-slate-800/50",
+                        ? "cursor-pointer border-primary-600 bg-primary-600 text-white"
+                        : "cursor-pointer border-gray-200 text-gray-600 hover:bg-gray-50",
                     )}
                   >
                     {pageNum}
@@ -437,7 +436,7 @@ export function VariantIndexView() {
                 );
               })}
               {totalPages > 7 && (
-                <span className="px-1 text-slate-600">…</span>
+                <span className="px-1 text-gray-400">…</span>
               )}
               <button
                 type="button"
@@ -446,8 +445,8 @@ export function VariantIndexView() {
                 className={cn(
                   "flex h-9 w-9 items-center justify-center rounded-lg border text-sm transition-colors",
                   page >= totalPages
-                    ? "cursor-not-allowed border-slate-800/50 text-slate-700"
-                    : "border-slate-700/50 text-slate-400 hover:bg-slate-800/50",
+                    ? "cursor-not-allowed border-gray-100 text-gray-300"
+                    : "cursor-pointer border-gray-200 text-gray-600 hover:bg-gray-50",
                 )}
               >
                 <ChevronRight className="h-4 w-4" />

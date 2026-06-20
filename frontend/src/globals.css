@@ -184,87 +184,55 @@
   }
 }
 
-/* ── Evidence DB: Helix dark scientific aesthetic ── */
-/* Root wrapper — dark panel within the light dashboard shell.
-   Creates a "specimen view" contrast: light chrome, dark workspace. */
-.edb-root {
+/* ── Evidence DB: Unified medical-teal light theme ── */
+/* Hero surface — subtle teal-tinted gradient matching dashboard palette */
+.edb-hero {
   background:
-    radial-gradient(ellipse 800px 400px at 15% -5%, rgba(34, 211, 238, 0.07) 0%, transparent 60%),
-    radial-gradient(ellipse 600px 300px at 90% 10%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse 500px 400px at 50% 110%, rgba(45, 212, 191, 0.04) 0%, transparent 50%),
-    #0a0e17;
-  color: #e2e8f0;
-  border-radius: 0.75rem;
-  min-height: calc(100vh - 3.5rem - 3rem);
+    radial-gradient(ellipse 600px 300px at 15% -5%, rgba(8, 145, 178, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 500px 250px at 90% 10%, rgba(34, 197, 94, 0.03) 0%, transparent 50%),
+    #f0fdfa;
 }
-/* Glass-morphism surface */
-.edb-surface {
-  background: rgba(19, 26, 43, 0.55);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(148, 163, 184, 0.1);
-}
-/* Card — the fundamental unit */
+/* Card — white with subtle border, matching dashboard pattern */
 .edb-card {
-  background: #131a2b;
-  border: 1px solid rgba(148, 163, 184, 0.08);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
 }
 .edb-card:hover {
-  border-color: rgba(148, 163, 184, 0.2);
-  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.6);
-  transform: translateY(-2px);
+  border-color: #d1d5db;
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.08);
 }
-/* Hover-lift variant for clickable cards */
+/* Clickable card variant — teal accent on hover */
 .edb-card-clickable {
   cursor: pointer;
 }
 .edb-card-clickable:hover {
-  border-color: rgba(34, 211, 238, 0.3);
-  box-shadow:
-    0 12px 40px -12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(34, 211, 238, 0.1);
+  border-color: #0891b2;
+  box-shadow: 0 4px 16px -4px rgba(8, 145, 178, 0.12);
+  transform: translateY(-1px);
 }
 /* Category distribution strip */
 .edb-cat-strip {
   display: flex;
-  height: 3px;
+  height: 4px;
   border-radius: 2px;
   overflow: hidden;
-  gap: 1px;
+  gap: 2px;
 }
 .edb-cat-strip > span {
   height: 100%;
   border-radius: 1px;
   transition: opacity 200ms ease;
 }
-/* Confidence ring — conic gradient with glow */
+/* Confidence ring — conic gradient */
 .edb-ring {
   --ring-value: 0;
   background: conic-gradient(
     currentColor calc(var(--ring-value) * 1%),
-    rgba(148, 163, 184, 0.12) calc(var(--ring-value) * 1%)
+    #e5e7eb calc(var(--ring-value) * 1%)
   );
-  box-shadow: 0 0 12px -2px currentColor;
 }
-/* Glow text for data values */
-.edb-glow {
-  text-shadow: 0 0 16px currentColor;
-}
-/* Synced scroll gutter for bilingual reader */
-.edb-gutter {
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent,
-    transparent 3px,
-    rgba(148, 163, 184, 0.15) 3px,
-    rgba(148, 163, 184, 0.15) 4px
-  );
-  background-size: 1px 100%;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-/* Custom scrollbar for dark theme */
+/* Custom scrollbar */
 .edb-scroll::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -273,24 +241,16 @@
   background: transparent;
 }
 .edb-scroll::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
+  background: #d1d5db;
   border-radius: 3px;
 }
 .edb-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.35);
+  background: #9ca3af;
 }
 /* Staggered entrance — children set animation-delay inline */
 .edb-stagger {
   opacity: 0;
-  animation: staggerIn 400ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-}
-/* Pulse glow for active/selected items */
-@keyframes edbPulseGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
-  50% { box-shadow: 0 0 16px 2px rgba(34, 211, 238, 0.15); }
-}
-.edb-pulse {
-  animation: edbPulseGlow 2.5s ease-in-out infinite;
+  animation: staggerIn 320ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 /* Print styles */
