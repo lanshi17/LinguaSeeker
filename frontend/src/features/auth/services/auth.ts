@@ -1,12 +1,12 @@
 import type { LoginRequest, LoginResponse, RegisterRequest } from "../types/auth";
 
 // Frontend session auth — validates password against ADMIN_PASSWORD / API_KEY
-// server-side via /api/auth/login and sets an HttpOnly session cookie.
-// The backend API key is injected by Next.js middleware independently.
+// server-side via /api/v1/auth/login and sets an HttpOnly session cookie.
+// Auth is handled by the backend via session cookie.
 // TODO: Replace with real backend user auth when available.
 
 export async function login(body: LoginRequest): Promise<LoginResponse> {
-  const res = await fetch("/api/auth/login", {
+  const res = await fetch("/api/v1/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ password: body.password }),

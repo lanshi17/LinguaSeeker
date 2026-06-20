@@ -1,4 +1,3 @@
-"use client";
 
 import { useEffect, useRef, useCallback, type ReactNode } from "react";
 import { X } from "lucide-react";

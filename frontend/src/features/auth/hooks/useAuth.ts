@@ -1,4 +1,3 @@
-"use client";
 
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -35,7 +34,7 @@ export function useAuth() {
 
   const logout = useCallback(async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch("/api/v1/auth/logout", { method: "POST" });
     } catch {
       // Ignore — cookie will expire eventually
     }

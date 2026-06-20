@@ -1,8 +1,5 @@
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Search, MessageSquare } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Search, MessageSquare, Database } from "lucide-react";
 import { useAppStore } from "@/stores/appStore";
 import { cn } from "@/lib/utils/cn";
 import type { ComponentType } from "react";
@@ -16,6 +13,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: "AI Chat", href: "/chat", icon: MessageSquare },
   { label: "Evidence", href: "/evidence", icon: Search },
+  { label: "Evidence DB", href: "/evidence-db", icon: Database },
 ];
 
 interface SidebarProps {
@@ -26,7 +24,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ mobile, onNavigate }: SidebarProps) {
-  const pathname = usePathname();
+  const { pathname } = useLocation();
   const collapsed = useAppStore((s) => s.sidebarCollapsed);
   const effectiveCollapsed = mobile ? false : collapsed;
 
@@ -64,7 +62,7 @@ export function Sidebar({ mobile, onNavigate }: SidebarProps) {
           return (
             <Link
               key={item.href}
-              href={item.href}
+              to={item.href}
               aria-label={effectiveCollapsed ? item.label : undefined}
               aria-current={isActive ? "page" : undefined}
               onClick={onNavigate}

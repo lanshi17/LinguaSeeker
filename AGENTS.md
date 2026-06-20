@@ -10,17 +10,17 @@
 
 - 项目必须且只能使用现代化管理工具启动与管理依赖：
   - **Python**: `uv`（禁止使用系统 `pip`）
-  - **Node.js**: `nvm` + `npm`（禁止使用系统全局 Node）
+  - **Node.js**: `bun`（禁止使用系统全局 Node 或 npm/nvm）
   - **Rust**: `cargo`
   - **C/C++**: `cmake`
 - 禁止直接使用系统环境安装或管理任何项目依赖。
-- 所有依赖版本必须在对应配置文件中明确声明（`pyproject.toml` / `package.json` / `Cargo.toml`）。
+- 所有依赖版本必须在对应配置文件中明确声明（`pyproject.toml` / `package.json` / `Cargo.toml`），锁文件为 `uv.lock` / `bun.lock` / `Cargo.lock`。
 
 ### 2. 业务代码目录
 
 - 除主入口文件外，所有业务代码必须放入 **`src/`** 目录。
 - Backend 入口：`backend/app/main.py`；业务逻辑放 `backend/src/` 及其子目录。
-- Frontend 入口：Next.js App Router 页面放 `frontend/app/`；组件放 `frontend/components/`。
+- Frontend 入口：Vite + React 应用入口为 `frontend/src/main.tsx`；页面放 `frontend/src/pages/`；组件放 `frontend/src/components/`。
 
 ### 2.1 架构偏好 — 编排式垂直切片架构
 
@@ -29,7 +29,7 @@
 - 垂直特性包负责完整业务闭环：对编排器暴露 `api.py`/Node 接口，内部使用 `core.py` 放纯业务逻辑，`providers.py` 封装 LLM/DB/Rust I/O/外部服务，`contracts.py` 或 `schema.py` 放强类型契约。
 - 全局状态使用 Pydantic 模型作为单一真相源；节点之间通过类型化状态增量通信，禁止裸 `dict` 作为稳定跨模块契约。
 - 本仓库 Backend 映射：`backend/src/agents/` 是 Orchestrator，`backend/src/core/<feature>/` 是 Features，`backend/src/utils/`、`backend/src/dao/`、Rust crates 是 Shared infrastructure，`backend/src/core/config.py` 是 Config。
-- Frontend 映射：`frontend/app/**/page.tsx` 负责页面级编排，`frontend/components/<feature>/` 与 `frontend/lib/hooks/` 承载垂直 UI 特性，`frontend/components/ui/`、`frontend/lib/api/`、`frontend/lib/types/`、`frontend/stores/` 为共享基础设施。
+- Frontend 映射：`frontend/src/pages/` 负责页面级编排，`frontend/src/components/<feature>/` 与 `frontend/src/hooks/` 承载垂直 UI 特性，`frontend/src/components/`（antd 衍生组件）、`frontend/src/api/`、`frontend/src/types/`、`frontend/src/stores/` 为共享基础设施。
 
 ### 3. 文档管理
 
@@ -129,7 +129,7 @@
 
 ### 19. 依赖锁定与审计
 
-- 生产依赖必须锁定到具体版本（Python `uv.lock` / Node `package-lock.json` / Rust `Cargo.lock`）。
+- 生产依赖必须锁定到具体版本（Python `uv.lock` / Node `bun.lock` / Rust `Cargo.lock`）。
 - 定期审计依赖安全性，发现漏洞及时升级。
 
 ---
@@ -275,6 +275,17 @@
 - `grep` / `read_file` 仍用于搜索注释、字符串字面量、配置值等非符号信息。
 - 索引由 daemon 自动维护；如需重建或排查索引问题，检查 `.codegraph/daemon.log`。
 
+### 27. 前端技术链 — Vite + React + Antd
+
+- 前端技术栈固定为 **Vite + React + Antd**，禁止引入其他前端框架或 UI 组件库（如 Next.js、Vue、Tailwind CSS、Material UI 等）。
+- **构建工具**：Vite；开发服务器通过 `bun run dev` 启动。
+- **UI 组件库**：Ant Design（antd），所有通用组件优先使用 antd 组件，自定义组件应遵循 antd 设计规范。
+- **路由**：React Router（`react-router-dom`），使用嵌套路由配置。
+- **状态管理**：Zustand。
+- **数据获取**：React Query（`@tanstack/react-query`）+ Axios。
+- **语言**：TypeScript（strict mode）。
+- **API 代理**：通过 Vite `server.proxy` 配置将 `/api/v1/*` 代理到后端。
+
 ---
 
 ## 三、违反处理
@@ -290,7 +301,7 @@
 
 ### Project Overview
 
-Cross Evidenceis a Multi-Agent infrastructure platform for medical genetics literature automation and structured evidence extraction. It provides a four-phase evidence pipeline: literature acquisition and digitization, cross-lingual dual evidence extraction and fusion, entity standardization and knowledge alignment, and bilingual visualization with expert-in-the-loop feedback. Monorepo with a Next.js frontend, FastAPI backend, and three Rust native extensions via PyO3.
+Cross Evidence is a Multi-Agent infrastructure platform for medical genetics literature automation and structured evidence extraction. It provides a four-phase evidence pipeline: literature acquisition and digitization, cross-lingual dual evidence extraction and fusion, entity standardization and knowledge alignment, and bilingual visualization with expert-in-the-loop feedback. Monorepo with a Vite + React + Antd frontend, FastAPI backend, and three Rust native extensions via PyO3.
 
 ### Architecture
 
@@ -336,25 +347,19 @@ Standalone FastAPI microservice (port 8001) for local model inference: Embedding
 
 #### Frontend (`frontend/`)
 
-Next.js 15 App Router, React 18, TypeScript, Tailwind CSS. State: Zustand. Data fetching: React Query + Axios. API proxy: `next.config.ts` rewrites `/api/v1/*` to `localhost:8000`.
+Vite + React 18 + TypeScript + Ant Design. State: Zustand. Data fetching: React Query + Axios. Routing: React Router. API proxy: Vite `server.proxy` forwards `/api/v1/*` to `localhost:8000`.
 
 ```
-app/
-├── api/              # Next.js API routes (auth, proxy)
-├── (dashboard)/      # Dashboard layout group
-│   ├── analysis/     # Variant analysis page
-│   ├── results/      # Results review page
-│   └── settings/     # User settings
-components/
-├── ui/               # Base UI components
-├── charts/           # Data visualizations
-├── forms/            # Input forms
-└── layout/           # Page layouts
-lib/
-├── api/              # API client functions
-├── hooks/            # React hooks
-├── types/            # TypeScript types
-└── utils/            # Utility functions
+src/
+├── main.tsx         # Vite entry point
+├── App.tsx          # Root component with router config
+├── pages/           # Route-level page components
+├── components/      # Reusable UI components (antd-based)
+├── api/             # API client functions
+├── hooks/           # Custom React hooks
+├── stores/          # Zustand state stores
+├── types/           # TypeScript type definitions
+└── utils/           # Utility functions
 ```
 
 #### Infrastructure
@@ -393,18 +398,19 @@ uv run pytest tests/path/to/test_file.py::test_function_name
 uv lock
 ```
 
-#### Frontend (Node.js)
+#### Frontend (Bun)
 
-Use `nvm` to select Node 18+. Never use system global Node.
+Bun is both the package manager and runtime. No separate Node.js/nvm installation needed.
 
 ```bash
 cd frontend
-nvm use
-npm install
-npm run dev          # Dev server
-npm run lint         # ESLint
-npm run type-check   # TypeScript check
-npm run build        # Production build
+bun install
+bun run dev          # Vite dev server
+bun run lint         # ESLint
+bun run type-check   # TypeScript check
+bun run build        # Vite production build
+bun run preview      # Preview production build
+bun run test         # Vitest
 ```
 
 #### Rust Libraries

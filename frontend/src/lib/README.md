@@ -11,7 +11,7 @@
 
 ### `lib/config/` — Configuration
 
-Typed singletons from `NEXT_PUBLIC_*` env vars. Never read `process.env` outside this module.
+Typed singletons from `VITE_*` env vars. Never read `import.meta.env` outside this module.
 
 | Export | Key Fields |
 |--------|------------|
