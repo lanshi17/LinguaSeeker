@@ -1,7 +1,8 @@
 # Target-Aware Source-Visible Extraction Design
 
-**Status:** planned
+**Status:** completed
 **Created:** 2026-06-20
+**Completed:** 2026-06-20
 **Owner:** CrossEvidence benchmark team
 
 ## Goal
