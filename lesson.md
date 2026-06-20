@@ -3215,3 +3215,25 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 ### 预防措施
 - AI-assisted reviewer 只填高置信 `source_visible`,不自动填 `not_source_visible` 或 `is_complete=true`。
 - 每个新增触发词都必须有负例测试,尤其是 `due to`, `associated with`, `linked to` 这类语义过宽的短语。
+
+## 2026-06-20 Fused-75 adjudication CLI subprocess environment
+
+### 问题
+- 批量调用 `benchmark.optimization.fused75.review_status` 写入剩余审核决策时,外层脚本使用 `uv run python`,但子进程没有设置 `PYTHONPATH=..`,导致 `ModuleNotFoundError: No module named 'benchmark'`。
+
+### 排查过程
+- 单次 CLI 命令从 `backend/` 目录配合 `PYTHONPATH=..` 可以正常运行。
+- 批量脚本中同样从 `backend/` 执行,但 `subprocess.run()` 没有显式传入包含 `PYTHONPATH` 的环境变量。
+- 首个子进程在导入 `benchmark.optimization.fused75.review_status` 前失败,未写入任何决策。
+
+### 根因
+- benchmark 包位于 repo root 下,从 `backend/` 作为 cwd 启动 Python 时不会自动出现在 `sys.path`。
+- 手工命令依赖 shell 前缀 `PYTHONPATH=..`,批量子进程没有继承这个临时前缀。
+
+### 解决方案
+- 在批量脚本中构造 `ENV = os.environ.copy()` 并设置 `ENV["PYTHONPATH"] = ".."`。
+- 所有后续 `review_status` 子进程通过该环境执行,成功写入 51 个剩余字段决策并完成 20 个 entry。
+
+### 预防措施
+- 从 `backend/` 调用 repo-root benchmark 模块时,所有脚本化子进程都显式传入 `PYTHONPATH=..`。
+- 对批量写入型脚本先让第一条命令失败即退出,确认未产生部分落盘后再重跑。

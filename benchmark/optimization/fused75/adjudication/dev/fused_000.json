@@ -1,7 +1,7 @@
 {
   "entry_id": "fused_000",
   "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_000/expected.json",
-  "is_complete": false,
+  "is_complete": true,
   "labels": [
     {
       "adjudicator": "exact-match-preannotator",
@@ -58,13 +58,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "manual-reviewer",
       "expected_value": "deletion",
       "field_id": "A.variant_type",
       "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_000/source.md:168",
+      "source_quote": "3 | 13 | c.1521_1523del | p.Phe508del | PATHOGENIC",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",

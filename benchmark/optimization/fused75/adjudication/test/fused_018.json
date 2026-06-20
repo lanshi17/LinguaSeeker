@@ -1,7 +1,7 @@
 {
   "entry_id": "fused_018",
   "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_018/expected.json",
-  "is_complete": false,
+  "is_complete": true,
   "labels": [
     {
       "adjudicator": "exact-match-preannotator",
@@ -31,13 +31,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "XL",
       "field_id": "B.mode_of_inheritance_reported",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "Source directly states X-linked recessive HB.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_018/source.md:10",
+      "source_quote": "Hemophilia B (HB, OMIM #306900; ICDX: D67) is an X-linked recessive bleeding disorder caused by various mutations in the coagulation factor IX gene ( F9 , MIM #300746).",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
@@ -49,13 +49,13 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "p.Arg75Ter",
       "field_id": "A.variant_hgvs_p",
-      "notes": null,
-      "source_location": null,
-      "source_quote": null,
-      "visibility": null
+      "notes": "p.Arg75* is the stop notation equivalent of p.Arg75Ter.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_018/source.md:5",
+      "source_quote": "Nonsense c.223C > T (p.Arg75*) mutation was detected in two unrelated patients.",
+      "visibility": "source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",

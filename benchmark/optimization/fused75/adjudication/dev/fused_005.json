@@ -1,7 +1,7 @@
 {
   "entry_id": "fused_005",
   "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_005/expected.json",
-  "is_complete": false,
+  "is_complete": true,
   "labels": [
     {
       "adjudicator": "exact-match-preannotator",

@@ -1,7 +1,7 @@
 {
   "entry_id": "fused_019",
   "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_019/expected.json",
-  "is_complete": false,
+  "is_complete": true,
   "labels": [
     {
       "adjudicator": "exact-match-preannotator",
@@ -40,22 +40,22 @@
       "visibility": "source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "c.8326C>T",
       "field_id": "A.variant_hgvs_c",
-      "notes": null,
+      "notes": "Expected variant c.8326C>T is absent; source discusses FBN1 c.1453C>T.",
       "source_location": null,
       "source_quote": null,
-      "visibility": null
+      "visibility": "not_source_visible"
     },
     {
-      "adjudicator": null,
+      "adjudicator": "ai-assisted-reviewer",
       "expected_value": "p.Arg2776Ter",
       "field_id": "A.variant_hgvs_p",
-      "notes": null,
+      "notes": "Expected p.Arg2776Ter is absent; source discusses p.Arg485Cys.",
       "source_location": null,
       "source_quote": null,
-      "visibility": null
+      "visibility": "not_source_visible"
     },
     {
       "adjudicator": "exact-match-preannotator",
