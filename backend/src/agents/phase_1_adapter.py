@@ -235,10 +235,18 @@ class Phase1Adapter:
         async with aiofiles.open(str(md_path), "w") as f:
             await f.write(markdown_text)
 
+        # Extract title from first markdown heading (# Title)
+        title: str | None = None
+        for line in markdown_text.split("\n"):
+            line = line.strip()
+            if line.startswith("# "):
+                title = line[2:].strip() or None
+                break
+
         # Construct metadata JSON compatible with Phase 2 expectations
         metadata = {
             "total_pages": 1,
-            "title": None,
+            "title": title,
             "authors": [],
             "abstract_text": None,
             "pages": [

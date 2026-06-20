@@ -6,6 +6,7 @@ Two implementations:
 """
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
@@ -16,7 +17,6 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.agents.contracts import (
-    InvalidStateTransitionError,
     PhaseStatus,
     PipelineGraphState,
     PipelineStatus,
@@ -39,6 +39,29 @@ def _derive_error_phase(state: PipelineGraphState) -> int:
     return 0
 
 
+def _build_raw_metadata(state: PipelineGraphState) -> dict[str, object]:
+    """Extract title/authors from Phase 1 metadata.json for SourceDocument.raw_metadata."""
+    meta: dict[str, object] = {}
+    if not state.phase_1_output or not state.phase_1_output.metadata_path:
+        return meta
+    try:
+        with open(state.phase_1_output.metadata_path, encoding="utf-8") as f:
+            phase1_meta = json.load(f)
+        if isinstance(phase1_meta, dict):
+            title = phase1_meta.get("title")
+            if title and isinstance(title, str):
+                meta["title"] = title
+            authors = phase1_meta.get("authors")
+            if authors and isinstance(authors, list):
+                meta["authors"] = authors
+            journal = phase1_meta.get("journal")
+            if journal and isinstance(journal, str):
+                meta["journal"] = journal
+    except (OSError, json.JSONDecodeError):
+        pass
+    return meta
+
+
 class DirectStatePersistence:
     """Save/load PipelineGraphState with a fixed session.
 
@@ -59,8 +82,14 @@ class DirectStatePersistence:
         sd_id = UUID(state.source_document_id)
         existing_sd = await self._session.get(SourceDocument, sd_id)
         if not existing_sd:
-            self._session.add(SourceDocument(source_document_id=sd_id))
+            raw_meta = _build_raw_metadata(state)
+            self._session.add(SourceDocument(source_document_id=sd_id, raw_metadata=raw_meta))
             await self._session.flush()
+        elif state.phase_1_output:
+            # Update metadata if Phase 1 just completed
+            new_meta = _build_raw_metadata(state)
+            if new_meta.get("title"):
+                existing_sd.raw_metadata = {**existing_sd.raw_metadata, **new_meta}
 
         existing = await self._session.get(
             PipelineRunState, UUID(state.processing_run_id)
@@ -157,12 +186,19 @@ class SessionBoundStatePersistence:
         async with self._session_factory() as session:
             # Ensure source_document exists (FK requirement for pipeline_run_states)
             sd_id = UUID(state.source_document_id)
+            raw_meta = _build_raw_metadata(state)
             sd_upsert = (
                 pg_insert(SourceDocument)
-                .values(source_document_id=sd_id)
+                .values(source_document_id=sd_id, raw_metadata=raw_meta)
                 .on_conflict_do_nothing(index_elements=["source_document_id"])
             )
             await session.execute(sd_upsert)
+            # Update metadata if Phase 1 just completed. The upsert above only
+            # sets raw_metadata on first insert; existing rows need an update.
+            if state.phase_1_output and raw_meta.get("title"):
+                existing_sd = await session.get(SourceDocument, sd_id)
+                if existing_sd is not None and existing_sd.raw_metadata.get("title") != raw_meta["title"]:
+                    existing_sd.raw_metadata = {**existing_sd.raw_metadata, **raw_meta}
 
             # ── State transition guard ──
             # Load existing state (if any) to validate the transition is legal.
