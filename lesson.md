@@ -3623,3 +3623,49 @@ Evidence DB 视图中显示 "Unknown Gene" / "Unknown Variant" 和 "Untitled" �
 - Pipeline 各阶段产出的元数据应在状态持久化层回写到 SourceDocument
 - 不应在 raw_metadata 中写入调试标记（如 `"created_by": "phase3_e2e"`）
 - 测试应跟随新增查询同步更新 _FakeSession 结果队列
+
+---
+
+## 2026-06-20 — Fused-75 candidate recovery checkpoint：评估配置与领域等价匹配
+
+### 问题描述
+
+合并 dev 最新 pipeline 改进并重跑 dev artifacts 后，candidate-recovery-source-validation 首轮 dev source-visible F1 只有 0.4296，低于既有 target-aware dev F1=0.5156，也低于 0.55 dev gate。
+
+### 排查过程
+
+1. 先用 dev-only error taxonomy 聚合错误，发现 `unsupported_prediction=30` 和 `candidate_absent=25` 是主因。
+2. 对照既有 adjudicated-field-filter 配置，确认新 candidate config 漏了 `score_field_filter=adjudicated_labels`，导致未审核字段全部作为 FP 计入。
+3. 加回字段过滤后，dev F1 升至 0.5370，`unsupported_prediction` 降至 3，但仍低于 gate。
+4. 继续聚合字段错误，发现多项 `wrong_boundary`/`normalization_error` 是领域等价值被字面匹配误判，例如：
+   - `very long chain acyl-CoA dehydrogenase deficiency` vs `Very long-chain acyl-CoA dehydrogenase (VLCAD) deficiency`
+   - `p.Gly1961Glu` vs `p.(Gly1961Glu)`
+   - `missense` vs `Missense mutation`
+   - `AR` vs `autosomal recessive`
+5. 先写 evaluator 失败测试，再实现字段感知规范化匹配；dev F1 升至 0.6111，并允许进入 frozen test checkpoint。
+
+### 根因分析
+
+1. 新变体配置没有继承已经验证有效的 adjudicated field filter，使 benchmark precision 被无关字段 FP 拉低。
+2. source-visible evaluator 的匹配逻辑过于字面，未表达临床遗传常见等价写法，导致正确抽取被低估。
+3. 本轮中曾用裸 `python` 读取 JSON 报告，违反项目 Python 命令必须走 `uv` 的规范；虽未改依赖或环境，但后续必须统一使用 `uv run python`。
+
+### 解决方案
+
+1. 在 candidate dev/test config 中加入 `score_field_filter=adjudicated_labels`。
+2. 为 `evaluate_adjudicated.py` 增加字段感知规范化：
+   - HGVS protein：`p.(X)` 等价 `p.X`
+   - variant type：去除 `mutation`/`variant` 后缀
+   - inheritance：规范化 `AR/AD/XL` 与全称
+   - disease diagnosis：去除括号缩写并统一连字符/空格
+3. 重新生成 dev 与 frozen test 报告并刷新 leaderboard：
+   - dev source-visible F1=0.6111
+   - test source-visible F1=0.4466
+4. 验证：benchmark/extract_evidence 相关测试 406 passed, 3 skipped；Ruff 通过；20 条 adjudication 校验通过。
+
+### 预防措施
+
+- 新 benchmark 变体应从当前最佳配置复制 gate-relevant flags，而不是手写最小配置。
+- 错误分类中出现同字段 FN+FP 成对时，应先判断是否是评价规范化缺口，再改抽取逻辑。
+- 冻结 test 只做 checkpoint；test 结果不得用于继续调参。
+- 所有 Python 命令统一使用 `uv run python` 或 `uv run pytest`，避免裸 `python`。

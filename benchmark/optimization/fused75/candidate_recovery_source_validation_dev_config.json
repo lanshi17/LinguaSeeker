@@ -1,0 +1,23 @@
+{
+  "dataset_split": "dev",
+  "git_commit": "175cdc46e7d4e32ac5e08d9b2774eae65a8f2246",
+  "model_config_names": [
+    "LLM_MODEL",
+    "REASONING_LLM_MODEL"
+  ],
+  "pipeline_flags": [
+    {
+      "key": "artifact_source",
+      "value": "benchmark/data/ground_truth/clinvar_fused/*/preprocessed/phase_2/extraction_result.json"
+    },
+    {
+      "key": "score_field_filter",
+      "value": "adjudicated_labels"
+    },
+    {
+      "key": "variant",
+      "value": "candidate_recovery_source_validation"
+    }
+  ],
+  "variant_id": "candidate-recovery-source-validation"
+}

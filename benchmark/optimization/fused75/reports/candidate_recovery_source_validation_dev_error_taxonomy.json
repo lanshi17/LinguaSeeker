@@ -1,0 +1,432 @@
+{
+  "counts": {
+    "candidate_absent": 25,
+    "normalization_error": 3,
+    "not_source_visible_label": 0,
+    "unsupported_prediction": 3,
+    "wrong_boundary": 4,
+    "wrong_relationship": 0
+  },
+  "errors": [
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_000",
+      "expected_value": "AR",
+      "extracted_value": null,
+      "field_id": "B.mode_of_inheritance_reported",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_000/source.md:10",
+      "source_quote": "Cystic fibrosis (CF) is a progressive, autosomal recessive disorder affecting the lungs, pancreas, and gastrointestinal tract [ 1 ]. It is caused by mutations in the CFTR gene, which impair chloride and bicarbonate ion transport, leading to mucus dehydration, airway obstruction, infection, and inflammation [ 2 , 3 ]. Over 2000 CFTR variants have been identified [ 3 ]. These are classified into multiple functional groups based on their effect on protein synthesis, folding, and function, informing"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_000",
+      "expected_value": "deletion",
+      "extracted_value": null,
+      "field_id": "A.variant_type",
+      "outcome": "fn",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_000/source.md:168",
+      "source_quote": "3 | 13 | c.1521_1523del | p.Phe508del | PATHOGENIC"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_000",
+      "expected_value": "Pathogenic",
+      "extracted_value": null,
+      "field_id": "J.clinvar_assertion",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_000/source.md:92",
+      "source_quote": "CF results from pathogenic variants in both copies of the CFTR gene, which impair channel synthesis, trafficking, stability, or function [ 1 , 15 ]. More than 2000 variants have been identified and grouped into multiple functional classes that inform responsiveness to CFTR modulator therapies. However, data on Caribbean CFTR variants remain limited, and several variants enriched in Puerto Rican and Dominican patients are underrepresented in therapeutic development, complicating diagnosis and tre"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_001",
+      "expected_value": "causative",
+      "extracted_value": null,
+      "field_id": "A.gene_disease_relationship",
+      "outcome": "fn",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_001/source.md:7",
+      "source_quote": "Stargardt disease (STGD1) is one of the most common inherited retinal dystrophies, resulting from biallelic pathogenic variants in the ABCA4 gene."
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_001",
+      "expected_value": "AR",
+      "extracted_value": null,
+      "field_id": "B.mode_of_inheritance_reported",
+      "outcome": "fn",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_001/source.md:7",
+      "source_quote": "Stargardt disease (STGD1) is one of the most common inherited retinal dystrophies, resulting from biallelic pathogenic variants in the ABCA4 gene."
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_001",
+      "expected_value": "Pathogenic",
+      "extracted_value": null,
+      "field_id": "J.clinvar_assertion",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_001/source.md:7",
+      "source_quote": "Stargardt disease (STGD1) is one of the most common inherited retinal dystrophies, resulting from biallelic pathogenic variants in the ABCA4 gene. 1 The disease is characterized by progressive central vision loss owing to photoreceptor degeneration and RPE atrophy. 2 , 3 Considerable phenotypic variability exists among patients, with differences in age of onset, progression rate, and severity, presenting a major challenge for both predicting disease progression and therapeutic development. 4 – 6"
+    },
+    {
+      "category": "unsupported_prediction",
+      "entry_id": "fused_001",
+      "expected_value": "",
+      "extracted_value": "Stargardt disease (STGD1)",
+      "field_id": "B.disease_diagnosis",
+      "outcome": "fp",
+      "source_location": null,
+      "source_quote": null
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_002",
+      "expected_value": "causative",
+      "extracted_value": null,
+      "field_id": "A.gene_disease_relationship",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_002/source.md:12",
+      "source_quote": "A genotype–phenotype correlation was reported for VLCAD deficiency [ 2 ]. Severe disease is associated with little/no residual enzyme activity and often results from homozygosity or compound heterozygosity for null variants. Milder forms are often associated with residual enzyme activity. However, this correlation is far from perfect. The effect of novel acyl-CoA dehydrogenase very long-chain (ACADVL) variants identified in pre-symptomatic patients diagnosed through newborn screening is less cle"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_002",
+      "expected_value": "AR",
+      "extracted_value": null,
+      "field_id": "B.mode_of_inheritance_reported",
+      "outcome": "fn",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_002/source.md:12",
+      "source_quote": "Severe disease is associated with little/no residual enzyme activity and often results from homozygosity or compound heterozygosity for null variants."
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_002",
+      "expected_value": "missense",
+      "extracted_value": null,
+      "field_id": "A.variant_type",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_002/source.md:99",
+      "source_quote": "ring initial presentation, as he was detected through a positive newborn screening and then he continued to be asymptomatic. This presentation corresponds to what is reported in the literature [ 9 ]. The majority of pathogenic variants found are missense variants. The variant c.1844G>A, p.(Arg615Gln) found in patient number 10 was reclassified as likely benign. This emphasizes the importance of performing an enzyme activity assay to confirm VLCAD deficiency diagnosis. Pena et al. (2016) reported"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_003",
+      "expected_value": "causative",
+      "extracted_value": null,
+      "field_id": "A.gene_disease_relationship",
+      "outcome": "fn",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_003/source.md:217",
+      "source_quote": "Current literature reports that mutations in 10 different genes including ACTA1, NEB, TPM3, TPM2, TNNT1, CFL2, KBTBD13, KLHL40, KLHL41 and LMOD3 cause NM disease."
+    },
+    {
+      "category": "wrong_boundary",
+      "entry_id": "fused_003",
+      "expected_value": "AR",
+      "extracted_value": null,
+      "field_id": "B.mode_of_inheritance_reported",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_003/source.md:180",
+      "source_quote": "Autosomal dominant (OD) and autosomal recessive (AR) types have been reported. Frequently,"
+    },
+    {
+      "category": "normalization_error",
+      "entry_id": "fused_003",
+      "expected_value": "p.Ile359Leu",
+      "extracted_value": null,
+      "field_id": "A.variant_hgvs_p",
+      "outcome": "fn",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_003/source.md:88",
+      "source_quote": "NM_001100.3 : c.1075A>C (p.I359L) (heterozygous) mutation was found in skeletal muscle alpha-actin (ACTA1) gene."
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_003",
+      "expected_value": "missense",
+      "extracted_value": null,
+      "field_id": "A.variant_type",
+      "outcome": "fn",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_003/source.md:88",
+      "source_quote": "NM_001100.3 : c.1075A>C (p.I359L) (heterozygous) mutation was found in skeletal muscle alpha-actin (ACTA1) gene."
+    },
+    {
+      "category": "normalization_error",
+      "entry_id": "fused_003",
+      "expected_value": "",
+      "extracted_value": "p.I359L",
+      "field_id": "A.variant_hgvs_p",
+      "outcome": "fp",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_003/source.md:88",
+      "source_quote": "NM_001100.3 : c.1075A>C (p.I359L) (heterozygous) mutation was found in skeletal muscle alpha-actin (ACTA1) gene."
+    },
+    {
+      "category": "unsupported_prediction",
+      "entry_id": "fused_003",
+      "expected_value": "",
+      "extracted_value": "Nemaline myopathy",
+      "field_id": "B.disease_diagnosis",
+      "outcome": "fp",
+      "source_location": null,
+      "source_quote": null
+    },
+    {
+      "category": "wrong_boundary",
+      "entry_id": "fused_003",
+      "expected_value": "",
+      "extracted_value": "Autosomal dominant (de novo suspected)",
+      "field_id": "B.mode_of_inheritance_reported",
+      "outcome": "fp",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_003/source.md:180",
+      "source_quote": "Autosomal dominant (OD) and autosomal recessive (AR) types have been reported. Frequently,"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_004",
+      "expected_value": "causative",
+      "extracted_value": null,
+      "field_id": "A.gene_disease_relationship",
+      "outcome": "fn",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md:217",
+      "source_quote": "Current literature reports that mutations in 10 different genes including ACTA1, NEB, TPM3, TPM2, TNNT1, CFL2, KBTBD13, KLHL40, KLHL41 and LMOD3 cause NM disease."
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_004",
+      "expected_value": "AD",
+      "extracted_value": null,
+      "field_id": "B.mode_of_inheritance_reported",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_004/source.md:180",
+      "source_quote": "Autosomal dominant (OD) and autosomal recessive (AR) types have been reported. Frequently,"
+    },
+    {
+      "category": "normalization_error",
+      "entry_id": "fused_004",
+      "expected_value": "p.Ile359Leu",
+      "extracted_value": null,
+      "field_id": "A.variant_hgvs_p",
+      "outcome": "fn",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md:88",
+      "source_quote": "NM_001100.3 : c.1075A>C (p.I359L) (heterozygous) mutation was found in skeletal muscle alpha-actin (ACTA1) gene."
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_004",
+      "expected_value": "missense",
+      "extracted_value": null,
+      "field_id": "A.variant_type",
+      "outcome": "fn",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md:88",
+      "source_quote": "NM_001100.3 : c.1075A>C (p.I359L) (heterozygous) mutation was found in skeletal muscle alpha-actin (ACTA1) gene."
+    },
+    {
+      "category": "normalization_error",
+      "entry_id": "fused_004",
+      "expected_value": "",
+      "extracted_value": "p.I359L",
+      "field_id": "A.variant_hgvs_p",
+      "outcome": "fp",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md:88",
+      "source_quote": "NM_001100.3 : c.1075A>C (p.I359L) (heterozygous) mutation was found in skeletal muscle alpha-actin (ACTA1) gene."
+    },
+    {
+      "category": "unsupported_prediction",
+      "entry_id": "fused_004",
+      "expected_value": "",
+      "extracted_value": "Nemaline myopathy",
+      "field_id": "B.disease_diagnosis",
+      "outcome": "fp",
+      "source_location": null,
+      "source_quote": null
+    },
+    {
+      "category": "wrong_boundary",
+      "entry_id": "fused_005",
+      "expected_value": "severe combined immunodeficiency, autosomal recessive, T cell-negative, B cell-negative, NK cell-negative, due to adenosine deaminase deficiency",
+      "extracted_value": null,
+      "field_id": "B.disease_diagnosis",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_005/source.md:5",
+      "source_quote": "Purpose Newborn screening using dried blood spot (DBS) samples for the targeted measurement of metabolites and nucleic acids has made a substantial contribution to public healthcare by facilitating the detection of neonates with genetic disorders. Here, we investigated the applicability of non-targeted quantitative proteomics analysis to newborn screening for inborn errors of immunity (IEIs). Methods DBS samples from 40 healthy newborns and eight healthy adults were subjected to non-targeted pro"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_005",
+      "expected_value": "AR",
+      "extracted_value": null,
+      "field_id": "B.mode_of_inheritance_reported",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_005/source.md:98",
+      "source_quote": "Next, we considered which diseases are feasible potential targets for diagnosis/screening by DIA-LC–MS/MS using DBS samples. Diseases with autosomal recessive or X-linked inheritance were identified as primary targets; as diseases with autosomal dominant inheritance are caused by anomaly of a single allele, while the other allele remains intact, which would be expected to minimally affect protein levels, they were not considered ideal for screening using this approach. Of the 1110 identified pro"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_005",
+      "expected_value": "Pathogenic",
+      "extracted_value": null,
+      "field_id": "J.clinvar_assertion",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_005/source.md:107",
+      "source_quote": "We next determined whether the effect of a gene mutation on its protein level can be reliably predicted by in silico analysis. Table 2 shows the results of mutation effect predictions, together with the observed protein levels. As missense mutations often affect protein abundance by destabilizing protein structures [ 26 ], we performed computational prediction of the impact of missense mutations on protein stability using FoldX, a state-of-the art method for stability estimation based on the thr"
+    },
+    {
+      "category": "wrong_boundary",
+      "entry_id": "fused_005",
+      "expected_value": "",
+      "extracted_value": "adenosine deaminase deficiency",
+      "field_id": "B.disease_diagnosis",
+      "outcome": "fp",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_005/source.md:5",
+      "source_quote": "Purpose Newborn screening using dried blood spot (DBS) samples for the targeted measurement of metabolites and nucleic acids has made a substantial contribution to public healthcare by facilitating the detection of neonates with genetic disorders. Here, we investigated the applicability of non-targeted quantitative proteomics analysis to newborn screening for inborn errors of immunity (IEIs). Methods DBS samples from 40 healthy newborns and eight healthy adults were subjected to non-targeted pro"
+    },
+    {
+      "category": "wrong_boundary",
+      "entry_id": "fused_006",
+      "expected_value": "classic or attenuated familial adenomatous polyposis",
+      "extracted_value": null,
+      "field_id": "B.disease_diagnosis",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_006/source.md:5",
+      "source_quote": "We present the first case of a male patient with an epidermal growth factor receptor (EGFR) 19del mutation who was diagnosed with intra-abdominal aggressive fibromatosis and familial adenomatous polyposis. We assessed the clinical response of the patient to first-generation EGFR-tyrosine kinase inhibitors (EGFR-TKIs). A remarkable sustained partial response was achieved with the application of gefitinib after progression on multiple lines of therapy. The main adverse event of gefitinib treatment"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_006",
+      "expected_value": "causative",
+      "extracted_value": null,
+      "field_id": "A.gene_disease_relationship",
+      "outcome": "fn",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_006/source.md:83",
+      "source_quote": "FAP-related AF is linked to APC gene deletion and impaired phosphorylation of beta-catenin, resulting in aberrant tumor cell proliferation."
+    },
+    {
+      "category": "normalization_error",
+      "entry_id": "fused_006",
+      "expected_value": "other",
+      "extracted_value": null,
+      "field_id": "A.variant_type",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_006/source.md:12",
+      "source_quote": "Clinical guidelines recommend a wait-and-see approach for patients who are asymptomatic, have smaller tumors, slow tumor growth, or no organ dysfunction. Currently, the radical treatment for AF is extended surgical resection with a negative margin, despite local recurrence rates as high as 30%–40% ( 5 ). Radiotherapy can also be used to treat AF, contributing to long-term local control ( 6 ). Systemic therapy, including endocrine drugs, non-steroidal anti-inflammatory drugs (NSAIDs), chemotherap"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_006",
+      "expected_value": "Pathogenic",
+      "extracted_value": null,
+      "field_id": "J.clinvar_assertion",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_006/source.md:83",
+      "source_quote": "n are detected in 90-95% of sporadic AF cases, leading to the activation of the Wnt/β-catenin signaling pathway and excessive accumulation of β-catenin ( 4 , 20 ). Mutations in AKT1 and BRAF have also been reported in pediatric AF ( 21 ). Novel pathogenic gene mutations have been identified through whole-genome sequencing in patients with AF. The reported gene variations include AKT1 (G311S/D and T312I), ALK (R806H and G924S), AR (A159T), EGFR (P848L), ERBB2 (H174Y), KIT (V559D), RET (T1038A), S"
+    },
+    {
+      "category": "normalization_error",
+      "entry_id": "fused_006",
+      "expected_value": "",
+      "extracted_value": "frameshift deletion",
+      "field_id": "A.variant_type",
+      "outcome": "fp",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_006/source.md:12",
+      "source_quote": "Clinical guidelines recommend a wait-and-see approach for patients who are asymptomatic, have smaller tumors, slow tumor growth, or no organ dysfunction. Currently, the radical treatment for AF is extended surgical resection with a negative margin, despite local recurrence rates as high as 30%–40% ( 5 ). Radiotherapy can also be used to treat AF, contributing to long-term local control ( 6 ). Systemic therapy, including endocrine drugs, non-steroidal anti-inflammatory drugs (NSAIDs), chemotherap"
+    },
+    {
+      "category": "wrong_boundary",
+      "entry_id": "fused_006",
+      "expected_value": "",
+      "extracted_value": "familial adenomatous polyposis",
+      "field_id": "B.disease_diagnosis",
+      "outcome": "fp",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_006/source.md:5",
+      "source_quote": "We present the first case of a male patient with an epidermal growth factor receptor (EGFR) 19del mutation who was diagnosed with intra-abdominal aggressive fibromatosis and familial adenomatous polyposis. We assessed the clinical response of the patient to first-generation EGFR-tyrosine kinase inhibitors (EGFR-TKIs). A remarkable sustained partial response was achieved with the application of gefitinib after progression on multiple lines of therapy. The main adverse event of gefitinib treatment"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_007",
+      "expected_value": "other",
+      "extracted_value": null,
+      "field_id": "A.variant_type",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_007/source.md:15",
+      "source_quote": "Seven years later, at 66 years of age, she presented with new onset spreading red patches on her distal forearms, legs, and thighs over the course of 6 months. There was no oral or ocular involvement and no reported cutaneous or systemic symptoms other than exacerbation by heat, warmth, and showers. Her medical history at this point included hypertension and type 2 diabetes mellitus in addition to melanoma in situ treated by wide excision 6 years prior and recent conjunctival squamous cell carci"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_007",
+      "expected_value": "Pathogenic",
+      "extracted_value": null,
+      "field_id": "J.clinvar_assertion",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_007/source.md:15",
+      "source_quote": "il drops. Genetic testing for cancer risk assessment was performed 4 years prior to her current presentation given her personal history of melanoma and family history of colon and uterine cancer. She was found to be a heterozygote carrier for a pathogenic mutation of the ATM gene called c.5763-1050A>G. Her long-term medications included labetalol, spironolactone, metformin, gabapentin, azelastine nasal spray, and cetirizine. Notably, she had been started on hydrochlorothiazide prior to the onset"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_008",
+      "expected_value": "missense",
+      "extracted_value": null,
+      "field_id": "A.variant_type",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_008/source.md:31",
+      "source_quote": "n tested our adapted specifications on a pilot group of 28 variants, representing all ACMG classes, including those with conflicting interpretations of pathogenicity. The selected variants included insertions, deletions, 5⁣′-untranslated region, missense, splice, nonsense, and synonymous variants. Only BMPR2 variants identified in nonsyndromic HPAH and/or IPAH cases were considered for pilot curation. Thus, one additional variant (c.319T>C p.Ser107Pro) was removed from the pilot curation list as"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_008",
+      "expected_value": "Pathogenic",
+      "extracted_value": null,
+      "field_id": "J.clinvar_assertion",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_008/source.md:5",
+      "source_quote": "Pulmonary arterial hypertension (PAH) is a rare disease that can be caused by pathogenic variants, most frequently in the bone Morphogenetic Protein Receptor Type 2 ( BMPR2 ) gene. We formed a ClinGen variant curation expert panel to devise guidelines for the clinical interpretation of BMPR2 variants identified in PAH patients. The general ACMG/AMP variant classification criteria were refined for PAH and adapted to BMPR2 following ClinGen procedures. Subsequently, these specifications were teste"
+    },
+    {
+      "category": "wrong_boundary",
+      "entry_id": "fused_009",
+      "expected_value": "BRCA1-related cancer predisposition",
+      "extracted_value": null,
+      "field_id": "B.disease_diagnosis",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:129",
+      "source_quote": "The relatively low genetic heterogeneity and the predominant importance of the two genes BRCA1 and BRCA2 in both sporadic and hereditary BRCA -related cancers make genetic diagnostics in this area common and well-planned in many countries [ 6 , 17 – 19 ]. The development of diagnostic methods in BRCA- related cancers is currently promoted either by the high incidence of cancer worldwide or the high prevalence of breast cancer (BC) cases in the total number of cancers. In addition to testing onco"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_009",
+      "expected_value": "causative",
+      "extracted_value": null,
+      "field_id": "A.gene_disease_relationship",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:10",
+      "source_quote": "Genetic tests in breast cancer (BC) patients are increasingly prevalent in oncology, both because of the high incidence of breast cancer (general population risk is 12%) and the potential for effective preventative care in carriers of causative pathogenic (PVs) and likely pathogenic variants (LPVs) [ 1 ]. Moreover the introduction of effective PARP inhibitor therapy in ovarian cancer a decade ago, and subsequently in breast, pancreatic and prostate cancer, has additionally led to an increase in"
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_009",
+      "expected_value": "AD",
+      "extracted_value": null,
+      "field_id": "B.mode_of_inheritance_reported",
+      "outcome": "fn",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:10",
+      "source_quote": "Genetic tests in breast cancer patients are increasingly prevalent in oncology, both because of the high incidence of breast cancer and the potential for effective preventative care in carriers of causative pathogenic and likely pathogenic variants."
+    },
+    {
+      "category": "candidate_absent",
+      "entry_id": "fused_009",
+      "expected_value": "Pathogenic",
+      "extracted_value": null,
+      "field_id": "J.clinvar_assertion",
+      "outcome": "fn",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:1",
+      "source_quote": "# Prevalence of recurrent and non-recurrent BRCA1 and BRCA2 pathogenic variants in Polish breast cancer patients: insights from a regional genetic testing cohort from Lower Silesia"
+    },
+    {
+      "category": "wrong_boundary",
+      "entry_id": "fused_009",
+      "expected_value": "",
+      "extracted_value": "hereditary breast and ovarian cancer syndrome",
+      "field_id": "B.disease_diagnosis",
+      "outcome": "fp",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:129",
+      "source_quote": "The relatively low genetic heterogeneity and the predominant importance of the two genes BRCA1 and BRCA2 in both sporadic and hereditary BRCA -related cancers make genetic diagnostics in this area common and well-planned in many countries [ 6 , 17 – 19 ]. The development of diagnostic methods in BRCA- related cancers is currently promoted either by the high incidence of cancer worldwide or the high prevalence of breast cancer (BC) cases in the total number of cancers. In addition to testing onco"
+    }
+  ]
+}
