@@ -3285,3 +3285,35 @@ benchmark 子项目的配置文件散落在 `benchmark/datasets/rett_annotation/
 - 多子任务并行修改时,提前用 IRC 声明文件归属,避免 stale tag 冲突。
 - 大型迁移先全面探索(Next.js 专属用法、import 分布、'use client' 分布),再拆分为独立子任务并行执行。
 - 迁移后搜索残留引用(`from "next/`、`use client`、`NEXT_PUBLIC`),包括注释和 README。
+
+---
+
+## 2026-06-20 — 前端证据数据库视图重新设计
+
+### 问题描述
+
+审查现有 evidence-db 实现时发现：(1) 三级页面中 L2 和 L3 的路由未注册——`App.tsx` 仅有 `/evidence-db` (L1)，而 L2 (`/evidence-db/:variantSlug`) 和 L3 (`/evidence-db/:variantSlug/:sourceDocId`) 的链接会命中 catch-all `*` 路由重定向到 `/chat`，导致详情页和双语对照页完全不可访问。(2) 现有 "Clinical Atlas" 浅色美学较为普通，用户要求重新设计。
+
+### 排查过程
+
+1. 通过 `find` 和 `search` 定位 evidence-db 相关文件（`frontend/src/features/evidence-db/`）
+2. 读取 `App.tsx` 路由配置，发现仅注册 L1 路由
+3. 读取全部 3 个组件源码、hooks、types、services、utils 理解数据流
+4. 确认组件内部已使用 `<Link to="/evidence-db/:variantSlug">` 但无对应路由
+
+### 根因分析
+
+路由注册不完整是原有实现的遗漏——组件和链接已编写，但路由表未添加对应条目。设计上选择了浅色主题但缺乏视觉辨识度。
+
+### 解决方案
+
+1. **路由修复**：在 `App.tsx` 中添加 L2 和 L3 路由条目，统一使用 `EvidenceDbPage` 组件通过 `useParams` 分发到正确的视图
+2. **重新设计**：采用 "Helix" 暗色科学仪器美学——深色 `#0a0e17` 底色搭配发光数据可视化，在浅色仪表盘外壳内形成"标本视图"对比效果
+3. **色彩系统**：致病性分级使用发光色（P=#FF4D6D → LP=#FF7849 → VUS=#FFB323 → LB=#4ECDC4 → B=#2DD4BF），10 个证据类别 A-J 保持各自色相但以半透明背景+底部边框方式呈现在暗色上
+4. **CSS 工具类**：在 `globals.css` 中定义 `.edb-root`、`.edb-card`、`.edb-surface`、`.edb-ring`、`.edb-cat-strip`、`.edb-scroll`、`.edb-stagger` 等暗色主题工具类
+
+### 预防措施
+
+- 路由注册应在编写组件链接之前或同步完成，避免"死链接"
+- 多级路由页面应在审查时验证每一级路由的可访问性，不能仅测试首页
+- 暗色主题组件应使用 CSS 工具类封装，而非在每个组件中重复内联颜色值
