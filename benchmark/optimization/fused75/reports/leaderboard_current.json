@@ -3,10 +3,21 @@
     {
       "best_split": "dev",
       "decision": "checkpoint_only",
-      "dev_source_visible_f1": null,
-      "entry_coverage": "3/10",
+      "dev_source_visible_f1": 0.5138,
+      "entry_coverage": "10/10",
       "llm_call_count": 0,
-      "runtime_seconds": 0.007582,
+      "runtime_seconds": 0.02768,
+      "test_source_visible_f1": null,
+      "total_token_count": 0,
+      "variant_id": "adjudicated-field-filter"
+    },
+    {
+      "best_split": "dev",
+      "decision": "checkpoint_only",
+      "dev_source_visible_f1": 0.366,
+      "entry_coverage": "10/10",
+      "llm_call_count": 0,
+      "runtime_seconds": 0.027597,
       "test_source_visible_f1": null,
       "total_token_count": 0,
       "variant_id": "contextual-reconcile-baseline"

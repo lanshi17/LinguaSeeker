@@ -3261,3 +3261,29 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 ### 预防措施
 - 共享 reports 目录中的 CLI 自动发现必须按 schema 过滤,不能只按 `*.json`。
 - 显式 API 和自动发现 CLI 要分层:显式输入严格失败,自动发现跳过非目标 schema 并通过测试固定行为。
+
+## 2026-06-20 Fused-75 artifact runner cwd and dependency discipline
+
+### 问题
+- 生成实际 dev 错误 taxonomy 时,第一次用了系统 `python`,没有通过 `uv run`,导致 `ModuleNotFoundError: No module named 'pydantic'`,也违反了项目 Python 依赖管理约定。
+- `phase2_artifact_batch.py` 初版默认路径使用相对 `benchmark/...` 和 `backend/data/pipeline`;从 `backend/` 执行 CLI 时,报告被误写到 `backend/benchmark/...`,pipeline_root 也可能指向错误目录。
+
+### 排查过程
+- 系统 Python 失败后,改为从 `backend/` 运行 `PYTHONPATH=.. uv run python`,同一脚本成功生成 taxonomy。
+- dry-run 后 `git status` 出现 `backend/benchmark/`,检查发现是错误 cwd 下的 batch report。
+- 使用 `/proc/<pid>/cwd` 确认当前 uvicorn 进程实际运行在主工作区 `/data/yangzs/Projects/01_ACMG_Lingua/backend`,不是 feature worktree;live runner 因此必须显式读取主工作区 `backend/data/pipeline` 产物再 materialize 到当前 worktree。
+
+### 根因
+- benchmark 模块依赖 backend venv,不能用系统 Python 直接运行。
+- CLI 默认路径没有绑定 repo root,隐式依赖调用者 cwd。
+- 本地已有后端服务可能来自不同 worktree,artifact producer 和 benchmark materializer 的根目录可能不同。
+
+### 解决方案
+- 所有 benchmark Python 命令统一使用 `PYTHONPATH=.. uv run python` 从 `backend/` 执行。
+- fused75 artifact runner 默认 `ground_truth_dir`、`reports_dir`、`pipeline_root` 改为 repo-root 绝对路径,并添加回归测试。
+- 删除误生成的 `backend/benchmark/` 目录;live run 显式传入正在运行后端的 `/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline`。
+
+### 预防措施
+- 新增 benchmark CLI 时,默认输入/输出路径必须基于 repo root 绝对路径,测试覆盖从非 repo-root cwd 执行的路径语义。
+- 调用已运行服务前,先确认服务进程 cwd;跨 worktree materialization 必须显式传入 producer 的 artifact root。
+- 不再用系统 Python 执行项目脚本;即使是一行诊断脚本也使用 `uv run`。
