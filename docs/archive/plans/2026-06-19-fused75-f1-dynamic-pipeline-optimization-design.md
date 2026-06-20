@@ -1,7 +1,8 @@
 # Fused-75 F1 Dynamic Pipeline Optimization Design
 
-**Status:** planned
+**Status:** completed
 **Created:** 2026-06-19
+**Completed:** 2026-06-20
 **Owner:** CrossEvidence benchmark team
 
 ## Goal
