@@ -3349,3 +3349,46 @@ benchmark 子项目的配置文件散落在 `benchmark/datasets/rett_annotation/
 - 新功能页面的设计应先参考现有仪表盘风格和 tailwind 配置，确保一致性
 - 使用 UI/UX Pro Max 设计系统工具在实现前确认推荐风格方向
 - 颜色系统应使用项目已定义的 Tailwind 色阶 (primary/gray/teal/red) 而非自定义暗色变量
+
+---
+
+## 2026-06-20 — 后端数据质量：基因/变异缺失 + 文献标题未持久化
+
+### 问题描述
+
+Evidence DB 视图中显示 "Unknown Gene" / "Unknown Variant" 和 "Untitled" 文献引用。用户指出这不应该出现，因为 pipeline 会提取文献元数据。
+
+### 排查过程
+
+1. **基因/变异缺失**：通过 SQL 查询发现 101 个证据组中 34 个缺失基因、50 个缺失变异。检查 group_id 格式发现始终编码了基因和变异（`gene=XXX|variant=YYY`），但 `search_service.py` 的 pivot 逻辑仅从特定字段提取（`A.gene_symbol`、`A.variant_hgvs_c` 等），当这些字段缺失时基因/变异保持 null。
+
+2. **文献标题缺失**：检查 `source_documents.raw_metadata` 发现全部 127 行为空 `{}`。`literature_profiles` 的 86 行标题也全部为 NULL。追溯发现 `SourceDocument` 在两处创建：
+   - `state_persistence.py`：`SourceDocument(source_document_id=sd_id)` — 无任何元数据
+   - `repositories.py:ensure_run_parents()`：`raw_metadata={"created_by": "phase3_e2e"}` — 调试标记而非真实元数据
+   
+   Phase 1 的 `_build_from_pre_parsed` 方法硬编码 `"title": None`。即使 MinerU 路径提取了标题，也从未写入 `SourceDocument.raw_metadata`。
+
+3. **回填策略**：通过 `pipeline_run_states.source_key` 映射到 benchmark ground truth 的 `source.md` 文件，提取首个 `#` 标题作为文献标题。发现 source_key 是复合字符串（`filename|gene=...|disease=...|...`），需要分割取首部分。
+
+### 根因分析
+
+1. **基因/变异**：pivot 逻辑未将 group_id 作为权威信息源的后备。group_id 由 `make_group_id(gene, variant)` 构造，始终包含基因和变异。
+2. **标题**：Pipeline 各阶段间缺少元数据传递机制。Phase 1 产出 metadata.json（含标题），但从未回写到 SourceDocument。benchmark 数据通过 pre_parsed_markdown 提交，Phase 1 跳过 MinerU 解析，标题硬编码为 None。
+
+### 解决方案
+
+1. **基因/变异回退**：在 `search_service.py` 和 `literature_profile_repo.py` 添加 `_parse_gene_from_group_id()` / `_parse_variant_from_group_id()` 辅助函数，在字段级提取为 null 时从 group_id 回退解析。处理 `__missing__` 哨兵值和 `['val1','val2']` 列表语法。
+
+2. **标题提取**：
+   - `phase_1_adapter.py:_build_from_pre_parsed()` — 从 markdown 首个 `#` 标题提取标题
+   - `state_persistence.py` — 添加 `_build_raw_metadata()` 辅助函数，从 Phase 1 metadata.json 读取标题写入 `SourceDocument.raw_metadata`
+   - `repositories.py:ensure_run_parents()` — 移除 `"created_by": "phase3_e2e"` 调试标记
+
+3. **数据回填**：编写 `backend/scripts/backfill_metadata.py`，通过 `pipeline_run_states.source_key` → ground truth `source.md` 映射回填 101 个源文档标题和 80 个文献配置文件标题。
+
+### 预防措施
+
+- 新字段提取应始终将 group_id 作为后备信息源
+- Pipeline 各阶段产出的元数据应在状态持久化层回写到 SourceDocument
+- 不应在 raw_metadata 中写入调试标记（如 `"created_by": "phase3_e2e"`）
+- 测试应跟随新增查询同步更新 _FakeSession 结果队列

@@ -803,7 +803,7 @@ class StandardizationRepository:
         if source_document is None:
             source_document = SourceDocument(
                 source_document_id=source_document_id,
-                raw_metadata={"created_by": "phase3_e2e"},
+                raw_metadata={},
                 latest_processing_run_id=None,
             )
             self.session.add(source_document)
