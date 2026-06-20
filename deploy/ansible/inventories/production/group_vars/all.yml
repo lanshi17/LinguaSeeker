@@ -19,7 +19,8 @@ acmg_environment: production
 acmg_debug: false
 acmg_cors_origins: "https://cross-evidence.your-domain.com"
 # API key for X-API-Key auth — actual value lives in vault.yml (ansible-vault encrypted).
-# Injected into both backend (config) and frontend (middleware) services.
+# Injected by nginx as the X-API-Key header on /api/ requests; the browser never sees it.
+# The backend binds to 127.0.0.1, so it is only reachable via nginx.
 api_key: "{{ vault_api_key }}"
 
 # ── Domain / TLS ──────────────────────────────────────────────────────────

@@ -12,7 +12,7 @@ bun run build         # tsc --noEmit && vite build → dist/
 bun run test          # vitest run (54 tests across 7 files)
 ```
 
-The backend must be running on `:8000` for API calls and auth to work.
+The backend must be running on `:8000` for API calls.
 
 ## Architecture
 
@@ -20,13 +20,11 @@ The backend must be running on `:8000` for API calls and auth to work.
 index.html
   └─ src/main.tsx                    # Entry: BrowserRouter + QueryProvider + App
        └─ src/App.tsx                 # Route table (React Router v7)
-            ├─ /login, /register      # Public routes
-            └─ <AuthGuard>            # Session-gated dashboard
-                 └─ <DashboardLayout> # Sidebar + topbar + <Outlet />
-                      ├─ /chat, /chat/:sessionId
-                      ├─ /evidence, /evidence/detail
-                      ├─ /evidence-db
-                      └─ /pipeline, /pipeline/:runId
+            └─ <DashboardLayout>      # Dashboard routes (open access, no login)
+                 ├─ /chat, /chat/:sessionId
+                 ├─ /evidence, /evidence/detail
+                 ├─ /evidence-db
+                 └─ /pipeline, /pipeline/:runId
 ```
 
 ```
@@ -36,11 +34,9 @@ src/
 ├── providers.tsx         # QueryClientProvider (React Query)
 ├── globals.css           # Tailwind directives + custom animations
 ├── components/           # Shared UI + layout (cross-feature)
-│   ├── AuthGuard.tsx     # Session check via GET /api/v1/auth/me
 │   ├── layout/           # DashboardLayout, Sidebar, PageHeader, ConnectionStatus
 │   └── ui/               # Button, Card, Input, Modal, Toast, Badge, Spinner, ...
 ├── features/             # Vertical feature slices (self-contained)
-│   ├── auth/             # LoginForm, useAuth, auth service
 │   ├── chat/             # ChatView, SSE streaming, chat sessions
 │   ├── evidence-search/  # Evidence search, detail, bilingual comparison
 │   ├── evidence-db/      # Variant index, variant detail, bilingual evidence
@@ -52,9 +48,7 @@ src/
 │   ├── EvidenceDetailPage.tsx
 │   ├── EvidenceDbPage.tsx
 │   ├── PipelinePage.tsx
-│   ├── PipelineRunPage.tsx
-│   ├── LoginPage.tsx
-│   └── RegisterPage.tsx
+│   └── PipelineRunPage.tsx
 ├── lib/                  # Shared infrastructure
 │   ├── api/              # apiClient (Axios), ApiError, normalizeError
 │   ├── config/           # Typed env var singletons (appConfig, apiConfig)
@@ -75,22 +69,13 @@ Component → feature hook (useQuery/useMutation)
   ← React Query cache → component re-render
 ```
 
-### Auth Flow
+### Auth
 
-```
-LoginPage → POST /api/v1/auth/login { password }
-  → FastAPI validates against API_KEY, sets HttpOnly ce_session cookie (8h, HMAC-SHA256)
-  → useAuth stores access_token in localStorage (for client-side auth state)
-
-AuthGuard → GET /api/v1/auth/me
-  → FastAPI validates ce_session cookie
-  → Returns { authenticated: bool }
-  → If unauthenticated → redirect to /login?next=<path>
-
-Logout → POST /api/v1/auth/logout
-  → FastAPI deletes ce_session cookie
-  → useAuth clears localStorage
-```
+This is an open-access research tool — no login is required. The frontend has no
+authentication guard; all routes are publicly accessible. The backend's
+`require_api_key` dependency is disabled (returns `None`) when no `API_KEY`
+environment variable is set, so all API routes are open. Set `API_KEY` on the
+backend to optionally re-enable API-key/session-cookie auth.
 
 ## Public API
 
@@ -100,7 +85,6 @@ Each feature exposes its public API through a barrel `index.ts`:
 
 | Feature | Key Exports |
 |---------|-------------|
-| `@/features/auth` | `LoginForm`, `RegisterForm`, `useAuth`, `LoginRequest`, `LoginResponse` |
 | `@/features/chat` | `ChatView`, `useChatSessions`, `createAcmgChatProvider`, `sendChatMessage` |
 | `@/features/evidence-search` | `EvidenceSearchView`, `EvidenceDetailView`, `BilingualComparison`, `useEvidenceSearch`, `useEvidenceGroupDetail` |
 | `@/features/evidence-db` | `VariantIndexView`, `VariantDetailView`, `BilingualEvidenceView` |
@@ -126,7 +110,7 @@ Each feature exposes its public API through a barrel `index.ts`:
 
 | Export | Signature | Description |
 |--------|-----------|-------------|
-| `apiClient` | `AxiosInstance` | Pre-configured Axios instance: baseURL from config, 30s timeout, Bearer token injection, 401→/login redirect |
+| `apiClient` | `AxiosInstance` | Pre-configured Axios instance: baseURL from config, 30s timeout, error normalization via `normalizeError` |
 | `ApiError` | `class extends Error` | Normalized error with `status: number` and `backendMessage: string` |
 | `normalizeError` | `(err: AxiosError) => ApiError` | Converts Axios errors to ApiError (network failures get status 0) |
 | `extractErrorMessage` | `(err: unknown, fallback?) => string` | Duck-typed error message extraction for UI display |
@@ -143,10 +127,10 @@ Each feature exposes its public API through a barrel `index.ts`:
 
 ### Routing (React Router v7)
 
-All routes are defined in `src/App.tsx`. Public routes (`/login`, `/register`) render directly. Dashboard routes are nested under an `<AuthGuard>` + `<DashboardLayout>` wrapper:
+All routes are defined in `src/App.tsx` and nested under a single `<DashboardLayout>` wrapper (open access, no auth guard):
 
 ```tsx
-<Route element={<AuthGuard><DashboardLayout /></AuthGuard>}>
+<Route element={<DashboardLayout />}>
   <Route path="/chat" element={<ChatPage />} />
   <Route path="/chat/:sessionId" element={<ChatSessionPage />} />
   ...
@@ -155,16 +139,9 @@ All routes are defined in `src/App.tsx`. Public routes (`/login`, `/register`) r
 
 `DashboardLayout` renders the sidebar, topbar, and `<Outlet />` for nested route content. Dynamic segments (`:sessionId`, `:runId`) are accessed via `useParams`. Query parameters (`?groupId=...`) are accessed via `useSearchParams`.
 
-### Auth Guard
-
-`AuthGuard` checks session validity on mount by calling `GET /api/v1/auth/me`. Three states: `loading` (renders null), `unauthenticated` (redirects to `/login?next=<current path>`), `authenticated` (renders children). The check runs once per route entry — it does not re-validate on every navigation within the dashboard.
-
 ### API Client Interceptors
 
-The shared Axios instance (`apiClient`) has two interceptors:
-
-- **Request**: Injects `Authorization: Bearer <token>` from localStorage if present. The backend also accepts the `ce_session` HttpOnly cookie, so the token is supplementary.
-- **Response**: On 401, clears localStorage and redirects to `/login` (guarded against duplicate redirects). All errors are normalized to `ApiError` via `normalizeError()`.
+The shared Axios instance (`apiClient`) has a single response interceptor that normalizes all errors into `ApiError` via `normalizeError()`. No request-side token injection or 401 redirect is performed — auth is delegated to the backend.
 
 ### Feature Slice Pattern
 
@@ -186,7 +163,6 @@ Hooks wrap React Query's `useQuery`/`useMutation` and call service functions. Co
 
 - **Server state**: React Query (TanStack Query) with `staleTime: 30s`, `retry: 1`, `refetchOnWindowFocus: false` (set in `QueryProvider`).
 - **Global UI state**: Zustand stores (`appStore` for sidebar, `toastStore` for notifications).
-- **Auth state**: Local to `useAuth` hook (not in a global store). Token persisted in localStorage; session validity checked via `/api/v1/auth/me`.
 
 ### Styling
 
@@ -208,7 +184,7 @@ export function MyFeaturePage() {
   );
 }
 
-// 2. Add the route in src/App.tsx inside the AuthGuard+DashboardLayout wrapper
+// 2. Add the route in src/App.tsx inside the DashboardLayout wrapper
 <Route path="/my-feature" element={<MyFeaturePage />} />
 
 // 3. Add nav item in src/components/layout/Sidebar.tsx
@@ -289,11 +265,14 @@ function MyComponent() {
 4. Wrap API calls in React Query hooks, not in components directly.
 5. Create a page component in `src/pages/` and add a route in `src/App.tsx`.
 
-### Modifying the Auth Flow
+### Auth
 
-- **Change session duration**: Backend `backend/src/api/v1/auth.py` — `SESSION_DURATION_SEC` constant.
-- **Add role-based access**: Extend `AuthMeResponse` in the backend to include roles, then check in `AuthGuard` or create a `RoleGuard` wrapper.
-- **Disable auth**: If the backend has no `API_KEY` configured, `/api/v1/auth/me` returns `authenticated: true` and all routes are accessible.
+Open access by default — no `API_KEY` configured. To optionally re-enable API-key
+auth on the backend, set the `API_KEY` environment variable; the backend's
+`require_api_key` dependency then enforces an `X-API-Key` header or signed
+`ce_session` cookie on all routes. The frontend ships no login UI (removed in
+favor of open access); re-adding a login page would require restoring an
+`features/auth` slice and an `AuthGuard` wrapper.
 
 ### Common Pitfalls
 

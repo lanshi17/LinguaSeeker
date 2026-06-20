@@ -6,7 +6,7 @@
 
 ### `lib/api/` — API Client
 
-- **`client.ts`**: Axios instance. Base URL `/api/v1`, 30s timeout. Request interceptor injects Bearer token from `localStorage`. Response interceptor clears token on 401 and redirects to `/login`.
+- **`client.ts`**: Axios instance. Base URL `/api/v1`, 30s timeout. Response interceptor normalizes errors into `ApiError`. Auth is handled by the backend via session cookie; no client-side token management.
 - **`error.ts`**: `ApiError` class with `status`, `backendMessage`. `normalizeError()` converts Axios errors.
 
 ### `lib/config/` — Configuration
