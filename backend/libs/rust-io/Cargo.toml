@@ -2,7 +2,7 @@
 name = "rust-io"
 version = "0.1.0"
 edition = "2024"
-description = "High-performance I/O module for Cross Evidence"
+description = "High-performance I/O module for Lingua Seeker"
 
 [lib]
 name = "rust_io"

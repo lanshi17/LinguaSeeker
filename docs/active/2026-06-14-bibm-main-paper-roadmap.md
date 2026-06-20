@@ -7,7 +7,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement the engineering tasks from this roadmap task-by-task.
 
-**Goal:** Turn CrossEvidence from an engineering system into a defensible BIBM Main Paper submission by proving one clear algorithmic contribution: source-grounded cross-lingual biomedical evidence extraction with evidence-graph reconciliation and citation-valid-by-construction traceability.
+**Goal:** Turn LinguaSeeker from an engineering system into a defensible BIBM Main Paper submission by proving one clear algorithmic contribution: source-grounded cross-lingual biomedical evidence extraction with evidence-graph reconciliation and citation-valid-by-construction traceability.
 
 **Architecture:** The Main Paper path is not a frontend/product completion path. It is a research pipeline: recall-first dual-track candidate generation, target-safe context, typed evidence graph construction, calibrated conflict-aware scoring, hard source-span validation, and statistically controlled evaluation against strong LLM and BioNLP baselines.
 

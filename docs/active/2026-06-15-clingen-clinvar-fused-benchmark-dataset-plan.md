@@ -4,7 +4,7 @@
 **Created:** 2026-06-15
 **Updated:** 2026-06-16
 **Scope:** Benchmark Layer 3 — 第二数据集（Dataset 2）
-**Owner:** CrossEvidence benchmark team
+**Owner:** LinguaSeeker benchmark team
 
 ---
 

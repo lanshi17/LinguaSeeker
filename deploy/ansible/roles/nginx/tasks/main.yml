@@ -23,24 +23,24 @@
 
 - name: Deploy Nginx site config (HTTP-only, for initial cert provisioning)
   template:
-    src: cross-evidence-http.conf.j2
-    dest: /etc/nginx/sites-available/cross-evidence.conf
+    src: lingua-seeker-http.conf.j2
+    dest: /etc/nginx/sites-available/lingua-seeker.conf
     mode: "0644"
   when: not acmg_tls_cert.stat.exists
   notify: Reload Nginx
 
 - name: Deploy Nginx site config (full TLS)
   template:
-    src: cross-evidence.conf.j2
-    dest: /etc/nginx/sites-available/cross-evidence.conf
+    src: lingua-seeker.conf.j2
+    dest: /etc/nginx/sites-available/lingua-seeker.conf
     mode: "0644"
   when: acmg_tls_cert.stat.exists
   notify: Reload Nginx
 
 - name: Enable site config
   file:
-    src: /etc/nginx/sites-available/cross-evidence.conf
-    dest: /etc/nginx/sites-enabled/cross-evidence.conf
+    src: /etc/nginx/sites-available/lingua-seeker.conf
+    dest: /etc/nginx/sites-enabled/lingua-seeker.conf
     state: link
   notify: Reload Nginx
 
@@ -76,8 +76,8 @@
 
 - name: Redeploy site config with TLS after cert provisioning
   template:
-    src: cross-evidence.conf.j2
-    dest: /etc/nginx/sites-available/cross-evidence.conf
+    src: lingua-seeker.conf.j2
+    dest: /etc/nginx/sites-available/lingua-seeker.conf
     mode: "0644"
   notify: Reload Nginx
 

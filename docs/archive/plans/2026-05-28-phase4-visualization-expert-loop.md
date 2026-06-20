@@ -2744,7 +2744,7 @@ touch backend/src/api/v1/__init__.py
 Create/update `backend/src/api/v1/router.py`:
 
 ```python
-"""API v1 router for Cross Evidencebackend."""
+"""API v1 router for Lingua Seekerbackend."""
 from __future__ import annotations
 
 from fastapi import APIRouter

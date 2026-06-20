@@ -7,7 +7,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Move CrossEvidence from the current "engineering system plus weak reconcile gain" state toward a defensible BIBM Main Paper by implementing only the next algorithmic and evaluation steps that can produce measurable improvement, traceable evidence, and non-leaking statistical claims.
+**Goal:** Move LinguaSeeker from the current "engineering system plus weak reconcile gain" state toward a defensible BIBM Main Paper by implementing only the next algorithmic and evaluation steps that can produce measurable improvement, traceable evidence, and non-leaking statistical claims.
 
 **Architecture:** The next paper attempt should be a target-safe, source-grounded cross-lingual evidence graph pipeline. The immediate work is not a broad product build: diagnose why `context_verifier_reconcile` still ties the same-report hard-rule baseline, repair candidate generation only where diagnostics prove it is needed, formalize evidence graph scoring, then rerun worst-5 and N=30 gates with traceability metrics.
 

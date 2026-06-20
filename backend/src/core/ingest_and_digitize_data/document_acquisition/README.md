@@ -1,6 +1,6 @@
 # Document Acquisition
 
-> Unified document acquisition facade for CrossEvidence's Phase 1 pipeline. Provides a single `acquire()` entry point that routes to either local file upload or online literature search/download with multi-provider fallback chains, multilingual query translation, MinerU batch pre-parsing, and typed LLM relevance gating.
+> Unified document acquisition facade for LinguaSeeker's Phase 1 pipeline. Provides a single `acquire()` entry point that routes to either local file upload or online literature search/download with multi-provider fallback chains, multilingual query translation, MinerU batch pre-parsing, and typed LLM relevance gating.
 
 ## Quick Start
 

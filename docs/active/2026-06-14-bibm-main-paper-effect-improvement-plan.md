@@ -7,7 +7,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Convert the current CrossEvidence / ACMG Lingua work from an engineering system into a defensible BIBM Main Paper submission by implementing only the algorithmic changes that can measurably improve extraction F1, conflict handling, cross-lingual consistency, and citation traceability under non-leaking evaluation.
+**Goal:** Convert the current LinguaSeeker / ACMG Lingua work from an engineering system into a defensible BIBM Main Paper submission by implementing only the algorithmic changes that can measurably improve extraction F1, conflict handling, cross-lingual consistency, and citation traceability under non-leaking evaluation.
 
 **Architecture:** The Main Paper path should be a target-safe, source-grounded evidence graph pipeline: recall-first candidate generation produces dual-track candidates; an evidence graph links candidates, spans, target entities, tracks, and normalized values; a confidence and conflict model selects or defers field values; accepted citations are generated only from programmatically verified source spans. UI and batch-operation work remains supporting infrastructure unless it directly enables annotation or audit evaluation.
 
@@ -749,7 +749,7 @@ Stop Main Paper execution and pivot if any of these remain true after Task 3:
 The strongest defensible Main Paper positioning is:
 
 ```text
-CrossEvidence is not just a multi-agent wrapper. It is a source-grounded cross-lingual biomedical IE method that transforms dual-track extraction into a typed evidence graph, resolves conflicts with calibrated support and contradiction scores, and enforces citation-valid-by-construction evidence selection. On ACMG/ClinGen extraction, it improves or remains competitive with strong LLM baselines while substantially reducing hallucinated citations and making every accepted evidence item auditable.
+LinguaSeeker is not just a multi-agent wrapper. It is a source-grounded cross-lingual biomedical IE method that transforms dual-track extraction into a typed evidence graph, resolves conflicts with calibrated support and contradiction scores, and enforces citation-valid-by-construction evidence selection. On ACMG/ClinGen extraction, it improves or remains competitive with strong LLM baselines while substantially reducing hallucinated citations and making every accepted evidence item auditable.
 ```
 
 If the F1 gate does not pass, the fallback positioning is:

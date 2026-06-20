@@ -42,9 +42,9 @@
     NODE_ENV: "{{ frontend_node_env }}"
     NEXT_PUBLIC_API_URL: "https://{{ domain_name }}/api/v1"
 
-- name: Create cross-evidence config directory
+- name: Create lingua-seeker config directory
   file:
-    path: /etc/cross-evidence
+    path: /etc/lingua-seeker
     state: directory
     mode: "0700"
     owner: root
@@ -53,7 +53,7 @@
 - name: Deploy frontend environment file (secrets)
   template:
     src: frontend.env.j2
-    dest: /etc/cross-evidence/frontend.env
+    dest: /etc/lingua-seeker/frontend.env
     mode: "0600"
     owner: root
     group: root

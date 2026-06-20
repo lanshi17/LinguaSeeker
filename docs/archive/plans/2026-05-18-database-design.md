@@ -7,7 +7,7 @@
 
 ## Goal
 
-Build a PostgreSQL-first persistence layer for CrossEvidence that keeps the write side normalized and versioned, while exposing a flattened read model for fast gene, variant, DOI, PMID, and keyword search. Redis remains a cache only. Vector search and graph storage stay out of the MVP.
+Build a PostgreSQL-first persistence layer for LinguaSeeker that keeps the write side normalized and versioned, while exposing a flattened read model for fast gene, variant, DOI, PMID, and keyword search. Redis remains a cache only. Vector search and graph storage stay out of the MVP.
 
 ## Confirmed Decisions
 

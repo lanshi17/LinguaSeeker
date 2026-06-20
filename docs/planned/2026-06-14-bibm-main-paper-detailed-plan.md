@@ -7,7 +7,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Make CrossEvidence a defensible BIBM Main Paper candidate by proving one algorithmic contribution: citation-valid-by-construction cross-lingual evidence reconciliation that measurably improves clinically meaningful extraction and traceability over strong baselines.
+**Goal:** Make LinguaSeeker a defensible BIBM Main Paper candidate by proving one algorithmic contribution: citation-valid-by-construction cross-lingual evidence reconciliation that measurably improves clinically meaningful extraction and traceability over strong baselines.
 
 **Architecture:** Diagnose first, then improve candidate recall, then formalize dual-track reconciliation, then freeze traceability metrics and baselines, then package the paper. UI work only supports review and labeling; it is not novelty. All reported numbers must come from a frozen manifest and paired statistical tests.
 

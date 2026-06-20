@@ -42,10 +42,10 @@
   loop:
     - "{{ project_root }}"
     - "{{ project_root }}/logs"
-    - /opt/cross-evidence-data
-    - /opt/cross-evidence-data/postgres
-    - /opt/cross-evidence-data/redis
-    - /opt/cross-evidence-data/model-cache
+    - /opt/lingua-seeker-data
+    - /opt/lingua-seeker-data/postgres
+    - /opt/lingua-seeker-data/redis
+    - /opt/lingua-seeker-data/model-cache
 
 - name: Set timezone to Asia/Shanghai
   timezone:
@@ -76,5 +76,5 @@
           copytruncate
           su deploy deploy
       }
-    dest: /etc/logrotate.d/cross-evidence
+    dest: /etc/logrotate.d/lingua-seeker
     mode: "0644"

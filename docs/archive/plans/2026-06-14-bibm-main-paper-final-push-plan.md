@@ -7,7 +7,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Convert CrossEvidence from a promising but still statistically weak BIBM Main Paper candidate into a reproducible, reviewer-defensible submission by closing the manifest, baseline, traceability, semantic-error, and final-statistics gates.
+**Goal:** Convert LinguaSeeker from a promising but still statistically weak BIBM Main Paper candidate into a reproducible, reviewer-defensible submission by closing the manifest, baseline, traceability, semantic-error, and final-statistics gates.
 
 **Architecture:** Treat the paper method as a citation-valid-by-construction cross-lingual biomedical evidence reconciliation framework. Original-track and translated-track candidates are converted into an auditable evidence graph; each field decision is scored from source grounding, cross-track agreement, target specificity, verifier support, and contradiction penalties. Product UI work is frozen until the G2/G3 research gates pass.
 
@@ -886,7 +886,7 @@ score = w_source * source_score
 The next step is not more UI or broad feature implementation. Write the Main Paper package around the conservative claim:
 
 ```text
-CrossEvidence is a citation-valid-by-construction, traceability-centered cross-lingual biomedical evidence reconciliation framework. On a frozen N=30 ClinGen/ACMG-style benchmark, context-verifier reconciliation significantly improves over a grounded hard-rule internal baseline while remaining competitive with matched LLM baselines and providing explicit citation-validity metrics.
+LinguaSeeker is a citation-valid-by-construction, traceability-centered cross-lingual biomedical evidence reconciliation framework. On a frozen N=30 ClinGen/ACMG-style benchmark, context-verifier reconciliation significantly improves over a grounded hard-rule internal baseline while remaining competitive with matched LLM baselines and providing explicit citation-validity metrics.
 ```
 
 Drafted writing artifacts:

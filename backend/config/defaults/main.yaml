@@ -1,5 +1,5 @@
 # ============================================================================
-# Cross Evidence Backend — Default Configuration Variables
+# Lingua Seeker Backend — Default Configuration Variables
 # ============================================================================
 # Base structural defaults for all environments. Safe to commit.
 # Override in environments/<env>.yaml and vault/<env>.yaml
@@ -67,7 +67,7 @@ mineru:
 postgres:
   host: "127.0.0.1"
   port: 5432
-  db: "cross_evidence"
+  db: "lingua_seeker"
   schema: "acmg_app"
   pool_size: 20
   max_overflow: 30

@@ -5,7 +5,7 @@
 **Started:** 2026-06-16
 **Completed:** 2026-06-17
 **Scope:** BIBM Main Paper (not demo/resource track)
-**Owner:** CrossEvidence backend / benchmark team
+**Owner:** LinguaSeeker backend / benchmark team
 
 > **Closeout note (2026-06-17).** Pilot scope was reduced before merge: 4 queued multilingual sources (3 entries × 3 languages, less one Japanese timeout) were completed instead of the originally planned 30. The N=4 runtime sample is reported explicitly in `benchmark_b_phase2_runtime_metrics_20260616_161809.json`; remaining 26 queue items stay frozen as deferred work. All other deliverables — pipeline propagation, alignment metrics with 30/30 annotations, source inventory, claim matrix, and Tables 1–9 in `main_paper_tables_20260616_175917.md` — meet the acceptance criteria.
 
@@ -13,7 +13,7 @@
 
 ## Summary
 
-论文主线锁定为：**CrossEvidence 是跨语言、可溯源的 variant-interpretation evidence augmentation pipeline**。系统不做 ACMG/ClinGen 最终评级，只做证据项提取、原文-译文对齐、可溯源搬运、以及非英文证据增补。
+论文主线锁定为：**LinguaSeeker 是跨语言、可溯源的 variant-interpretation evidence augmentation pipeline**。系统不做 ACMG/ClinGen 最终评级，只做证据项提取、原文-译文对齐、可溯源搬运、以及非英文证据增补。
 
 核心创新点分三层：
 
@@ -295,7 +295,7 @@ Baselines：
 - prompt-only citation LLM
 - RAG + LLM
 - single-agent CoT
-- CrossEvidence full
+- LinguaSeeker full
 - ablation: no alignment
 - ablation: no traceability gate
 - ablation: no drift detection
@@ -345,7 +345,7 @@ scorable fields × 30 entries = 90 records.
 
 - English-only pipeline
 - English + translate-then-extract non-English pipeline
-- CrossEvidence multilingual full pipeline
+- LinguaSeeker multilingual full pipeline
 
 指标：
 
@@ -358,8 +358,8 @@ scorable fields × 30 entries = 90 records.
 
 主结论写法：
 
-- 允许说：CrossEvidence improves evidence coverage available for variant interpretation.
-- 不允许说：CrossEvidence improves clinical variant classification accuracy.
+- 允许说：LinguaSeeker improves evidence coverage available for variant interpretation.
+- 不允许说：LinguaSeeker improves clinical variant classification accuracy.
 
 **Implementation note (from audit):** pilot case selection is done (N=10) and the 7-language
 corpus exists. The metric module runs but produces invalid output until blocker #1 is fixed.
@@ -483,7 +483,7 @@ PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.laye
 Acceptance criteria:
 
 - Benchmark A reports Extraction F1, CVR, HCR, ESR, TraceableF1, Alignment Accuracy, Drift Detection F1, Conflict Detection F1.
-- CrossEvidence has competitive F1 and better traceability than prompt-only citation baselines.
+- LinguaSeeker has competitive F1 and better traceability than prompt-only citation baselines.
 - Full method outperforms no-alignment and no-traceability ablations on TraceableF1 or HCR.
 - Benchmark B pilot shows measurable non-English evidence yield with source-valid spans.
 - The raw corpus inventory is reproducible and clearly separates `ClinGen`, `ClinVar`, and unlabeled multilingual PDFs.
