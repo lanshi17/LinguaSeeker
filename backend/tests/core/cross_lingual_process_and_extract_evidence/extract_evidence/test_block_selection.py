@@ -100,3 +100,79 @@ def test_select_recall_first_blocks_ignores_empty_blocks() -> None:
     selected = select_recall_first_blocks(doc, max_blocks=5)
 
     assert [block.index for block in selected] == [2]
+
+
+def test_select_recall_first_blocks_includes_neighbor_context_when_budget_allows() -> None:
+    doc = _document(
+        [
+            ContentBlock(text="The proband had neonatal cholestasis and elevated GGT."),
+            ContentBlock(
+                text=(
+                    "Biallelic pathogenic ABCB4 changes cause progressive familial "
+                    "intrahepatic cholestasis type 3."
+                )
+            ),
+            ContentBlock(text="Segregation analysis confirmed both parents were carriers."),
+            ContentBlock(text="Unrelated references and acknowledgements."),
+        ]
+    )
+
+    selected = select_recall_first_blocks(doc, max_blocks=3)
+
+    assert [block.index for block in selected] == [1, 0, 2]
+    assert selected[1].reasons == ("target_neighbor",)
+    assert selected[2].reasons == ("target_neighbor",)
+
+
+def test_select_recall_first_blocks_neighbor_expansion_respects_max_blocks() -> None:
+    doc = _document(
+        [
+            ContentBlock(text="The proband had neonatal cholestasis and elevated GGT."),
+            ContentBlock(
+                text=(
+                    "Biallelic pathogenic ABCB4 changes cause progressive familial "
+                    "intrahepatic cholestasis type 3."
+                )
+            ),
+            ContentBlock(text="Segregation analysis confirmed both parents were carriers."),
+        ]
+    )
+
+    selected = select_recall_first_blocks(doc, max_blocks=2)
+
+    assert len(selected) == 2
+    assert [block.index for block in selected] == [1, 0]
+
+
+def test_select_recall_first_blocks_prefers_target_neighbor_over_unrelated_scored_block() -> None:
+    doc = _document(
+        [
+            ContentBlock(text="The proband had neonatal cholestasis and elevated GGT."),
+            ContentBlock(
+                text=(
+                    "Biallelic pathogenic ABCB4 changes cause progressive familial "
+                    "intrahepatic cholestasis type 3."
+                )
+            ),
+            ContentBlock(text="An unrelated BRCA1 variant was discussed in the methods."),
+        ]
+    )
+
+    selected = select_recall_first_blocks(doc, max_blocks=2)
+
+    assert [block.index for block in selected] == [1, 0]
+
+
+def test_select_recall_first_blocks_keeps_target_disease_block_ahead_of_neighbor() -> None:
+    doc = _document(
+        [
+            ContentBlock(text="The proband had neonatal cholestasis and elevated GGT."),
+            ContentBlock(text="Biallelic pathogenic ABCB4 changes were identified."),
+            ContentBlock(text="progressive familial intrahepatic cholestasis type 3 was diagnosed."),
+            ContentBlock(text="An unrelated BRCA1 variant was discussed in the methods."),
+        ]
+    )
+
+    selected = select_recall_first_blocks(doc, max_blocks=2)
+
+    assert [block.index for block in selected] == [1, 2]

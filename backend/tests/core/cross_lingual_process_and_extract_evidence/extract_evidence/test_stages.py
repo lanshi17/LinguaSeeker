@@ -113,8 +113,8 @@ def test_catalog_extraction_stage_uses_target_recall_first_block_selection() -> 
     prompts = [call.kwargs["prompt"] for call in provider.invoke_structured.call_args_list]
     assert prompts
     assert all("[Block 1 | text | page 1]" in prompt for prompt in prompts)
-    assert all("[Block 0" not in prompt for prompt in prompts)
-    assert all("Administrative header without target evidence" not in prompt for prompt in prompts)
+    assert all("[Block 0 | text | page 1]" in prompt for prompt in prompts)
+    assert all("Administrative header without target evidence" in prompt for prompt in prompts)
 
 
 def test_catalog_extraction_stage_scopes_target_catalog_to_eligible_fields() -> None:

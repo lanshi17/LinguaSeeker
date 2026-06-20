@@ -68,16 +68,27 @@ def select_recall_first_blocks(
     if not scored:
         return ()
 
-    required_indices = _required_indices(scored, max_blocks)
+    expanded = _expand_with_neighbors(scored, document.blocks, max_blocks)
+    required_indices = _required_indices(expanded, max_blocks)
     ranked = sorted(
-        scored,
+        expanded,
         key=lambda block: (
             0 if block.index in required_indices else 1,
+            _selection_priority(block),
             -block.score,
             block.index,
         ),
     )
     return tuple(ranked[:max_blocks])
+
+
+def _selection_priority(block: SelectedBlock) -> int:
+    """Rank target evidence above neighbors, and neighbors above unrelated cues."""
+    if "target_gene" in block.reasons or "target_disease" in block.reasons:
+        return 0
+    if "target_neighbor" in block.reasons:
+        return 1
+    return 2
 
 
 def score_block(
@@ -126,6 +137,34 @@ def score_block(
     if not reasons:
         return None
     return SelectedBlock(index=index, score=round(score, 4), reasons=tuple(reasons))
+
+
+def _expand_with_neighbors(
+    scored: tuple[SelectedBlock, ...],
+    blocks: Sequence[ContentBlock],
+    max_blocks: int,
+) -> tuple[SelectedBlock, ...]:
+    """Add immediate neighbors around target blocks while respecting max_blocks."""
+    by_index = {block.index: block for block in scored}
+    target_blocks = [
+        block for block in scored
+        if "target_gene" in block.reasons or "target_disease" in block.reasons
+    ]
+    for block in sorted(target_blocks, key=lambda item: (-item.score, item.index)):
+        for neighbor_index in (block.index - 1, block.index + 1):
+            if (
+                neighbor_index < 0
+                or neighbor_index >= len(blocks)
+                or neighbor_index in by_index
+                or not block_readable_text(blocks[neighbor_index])
+            ):
+                continue
+            by_index[neighbor_index] = SelectedBlock(
+                index=neighbor_index,
+                score=0.1,
+                reasons=("target_neighbor",),
+            )
+    return tuple(by_index.values())
 
 
 def _required_indices(blocks: tuple[SelectedBlock, ...], max_blocks: int) -> set[int]:
