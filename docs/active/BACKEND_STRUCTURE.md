@@ -1,8 +1,8 @@
-# BACKEND_STRUCTURE — CrossEvidence Backend
+# BACKEND_STRUCTURE — LinguaSeeker Backend
 
 ## 1. Overview
 
-CrossEvidence backend is a FastAPI async application organized around a four-phase evidence infrastructure pipeline. It ingests literature or user-uploaded PDF/DOCX documents, parses them into citation-valid structured documents, performs original-language extraction and translated-text secondary extraction (storing both tracks side-by-side), standardizes biomedical entities, builds evidence matrices, and persists source-linked review feedback. Automated cross-track reconciliation is planned.
+LinguaSeeker backend is a FastAPI async application organized around a four-phase evidence infrastructure pipeline. It ingests literature or user-uploaded PDF/DOCX documents, parses them into citation-valid structured documents, performs original-language extraction and translated-text secondary extraction (storing both tracks side-by-side), standardizes biomedical entities, builds evidence matrices, and persists source-linked review feedback. Automated cross-track reconciliation is planned.
 
 Backend responsibilities:
 

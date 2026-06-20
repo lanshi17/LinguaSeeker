@@ -2,21 +2,14 @@
  * Shared Axios instance used by every feature service layer.
  *
  * Configuration comes from @/lib/config (layered .env files).
- * - Request interceptor injects the auth token from localStorage.
- * - Response interceptor normalizes errors into ApiError and redirects
- *   to /login on 401 (with a guard to prevent duplicate navigations).
- *
- * The backend's X-API-Key header is injected server-side by
- * middleware.ts — never expose API keys to the browser bundle.
+ * Auth is handled by the backend via session cookie or X-API-Key header;
+ * no client-side token management is required.
  */
 
 import axios from "axios";
-import type { InternalAxiosRequestConfig, AxiosResponse } from "axios";
+import type { AxiosResponse } from "axios";
 import { apiConfig } from "../config";
 import { normalizeError } from "./error";
-
-/** Guard against concurrent 401s each triggering a navigation. */
-let isRedirectingToLogin = false;
 
 export const apiClient = axios.create({
   baseURL: apiConfig.baseUrl,
@@ -26,35 +19,8 @@ export const apiClient = axios.create({
   },
 });
 
-// --------------- Request interceptor ---------------
-
-apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("access_token");
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    // X-API-Key is injected by middleware.ts on the server side.
-    // Do NOT add it here — NEXT_PUBLIC_* vars leak to the browser.
-  }
-  return config;
-});
-
-// --------------- Response interceptor ---------------
-
+// Normalize errors into ApiError for consistent handling downstream.
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
-  (error) => {
-    // Redirect to login on 401 (client-side only, once).
-    if (typeof window !== "undefined" && error.response?.status === 401) {
-      if (!isRedirectingToLogin) {
-        isRedirectingToLogin = true;
-        localStorage.removeItem("access_token");
-        window.location.href = "/login";
-      }
-    }
-
-    // Normalize to ApiError for consistent handling downstream.
-    return Promise.reject(normalizeError(error));
-  },
+  (error) => Promise.reject(normalizeError(error)),
 );

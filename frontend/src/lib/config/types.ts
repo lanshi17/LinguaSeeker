@@ -1,9 +1,9 @@
 /**
  * Typed configuration interfaces.
  *
- * These mirror the NEXT_PUBLIC_* environment variables defined in
+ * These mirror the VITE_* environment variables defined in
  * the layered .env files.  Access via the appConfig / apiConfig
- * singletons — never read process.env directly outside this module.
+ * singletons — never read import.meta.env directly outside this module.
  */
 
 export interface AppConfig {
@@ -21,10 +21,9 @@ export interface ApiConfig {
   /**
    * Base URL for API requests.
    *
-   * MUST be a relative path ("/api/v1") in production so that requests
-   * pass through Next.js middleware.ts, which injects the server-side
-   * X-API-Key header.  An absolute URL bypasses middleware and protected
-   * routes will 401.
+   * MUST be a relative path ("/api/v1") so that requests pass through
+   * the Vite dev-server proxy (see vite.config.ts), which forwards them
+   * to the backend.  An absolute URL bypasses the proxy.
    */
   baseUrl: string;
   /** Request timeout in milliseconds. */

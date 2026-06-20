@@ -1,5 +1,5 @@
 /**
- * Custom chat provider for the Cross Evidencebackend.
+ * Custom chat provider for the Lingua Seeker backend.
  *
  * Backend chat agent flow:
  * 1. POST /api/v1/chat/sessions/{id}/messages  → persist user message
@@ -31,7 +31,7 @@ interface ChatRequestParams {
 }
 
 /**
- * Custom provider that binds to the Cross Evidencebackend's chat agent.
+ * Custom provider that binds to the Lingua Seeker backend's chat agent.
  *
  * On request:
  * 1. Persists the user message via POST /chat/sessions/{id}/messages

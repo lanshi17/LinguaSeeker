@@ -1,13 +1,11 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { EvidenceSearchForm } from "./EvidenceSearchForm";
 import { EvidenceResultsTable } from "./EvidenceResultsTable";
 import { useEvidenceSearch } from "../hooks/useEvidenceSearch";
 
 export function EvidenceSearchView() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const {
     results,
     total,
@@ -56,7 +54,7 @@ export function EvidenceSearchView() {
             isLoading={isLoading}
             onPageChange={setPage}
             onRowClick={(item) => {
-              router.push(
+              navigate(
                 `/evidence/detail?groupId=${encodeURIComponent(item.representativeGroupId)}`,
               );
             }}

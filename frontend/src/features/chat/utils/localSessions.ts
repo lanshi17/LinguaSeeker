@@ -1,7 +1,7 @@
 import type { ChatSessionResponse } from "../types/chat";
 
-export const CHAT_SESSIONS_KEY = "cross-evidence.chat.sessions.v1";
-export const ACTIVE_CHAT_SESSION_KEY = "cross-evidence.chat.activeSessionId.v1";
+export const CHAT_SESSIONS_KEY = "lingua-seeker.chat.sessions.v1";
+export const ACTIVE_CHAT_SESSION_KEY = "lingua-seeker.chat.activeSessionId.v1";
 
 const MAX_LOCAL_SESSIONS = 20;
 

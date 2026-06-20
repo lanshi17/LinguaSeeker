@@ -1,12 +1,31 @@
-import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
-import nextTypescript from "eslint-config-next/typescript";
+import js from "@eslint/js";
+import tseslint from "typescript-eslint";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
 
 const eslintConfig = [
-  {
-    ignores: [".test-build/**"],
-  },
-  ...nextCoreWebVitals,
-  ...nextTypescript,
+  { ignores: ["dist", ".test-build"] },
+  ...tseslint.config(
+    js.configs.recommended,
+    ...tseslint.configs.recommended,
+    {
+      files: ["**/*.{ts,tsx}"],
+      languageOptions: {
+        ecmaVersion: 2020,
+      },
+      plugins: {
+        "react-hooks": reactHooks,
+        "react-refresh": reactRefresh,
+      },
+      rules: {
+        ...reactHooks.configs.recommended.rules,
+        "react-refresh/only-export-components": [
+          "warn",
+          { allowConstantExport: true },
+        ],
+      },
+    },
+  ),
 ];
 
 export default eslintConfig;

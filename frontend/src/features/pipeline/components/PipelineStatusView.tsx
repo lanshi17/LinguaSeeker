@@ -1,4 +1,3 @@
-"use client";
 
 import { usePipelineStatus } from "../hooks/usePipelineStatus";
 import { usePhaseTimeline } from "../hooks/usePhaseTimeline";

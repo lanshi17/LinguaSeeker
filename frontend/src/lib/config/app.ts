@@ -1,9 +1,9 @@
 /**
  * Application-level configuration.
  *
- * Reads NEXT_PUBLIC_* env vars into a typed object.
+ * Reads VITE_* env vars into a typed object.
  * Values come from the layered .env files (see .env, .env.development,
- * .env.production, .env.local) with the standard Next.js priority:
+ * .env.production, .env.local) with the standard Vite priority:
  *
  *   .env < .env.development/.env.production < .env.local < OS env vars
  */
@@ -11,14 +11,13 @@
 import type { AppConfig, FeatureFlags } from "./types";
 
 export const appConfig: AppConfig = {
-  name: process.env.NEXT_PUBLIC_APP_NAME ?? "Cross Evidence",
-  version: process.env.NEXT_PUBLIC_APP_VERSION ?? "0.0.0",
-  environment:
-    process.env.NODE_ENV === "production" ? "production" : "development",
-  debug: process.env.NEXT_PUBLIC_DEBUG === "true",
+  name: import.meta.env.VITE_APP_NAME ?? "Lingua Seeker",
+  version: import.meta.env.VITE_APP_VERSION ?? "0.0.0",
+  environment: import.meta.env.PROD ? "production" : "development",
+  debug: import.meta.env.VITE_DEBUG === "true",
 };
 
 export const featureFlags: FeatureFlags = {
-  enableChat: process.env.NEXT_PUBLIC_ENABLE_CHAT !== "false",
-  enableGraph: process.env.NEXT_PUBLIC_ENABLE_GRAPH !== "false",
+  enableChat: import.meta.env.VITE_ENABLE_CHAT !== "false",
+  enableGraph: import.meta.env.VITE_ENABLE_GRAPH !== "false",
 };

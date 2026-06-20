@@ -1,6 +1,6 @@
 # rust-io
 
-> PyO3 facade crate for CrossEvidence's Rust native extensions. Registers two Python submodules -- `rust_io.net` and `rust_io.files` -- backed by the `net-io` and `files-io` rlib crates.
+> PyO3 facade crate for LinguaSeeker's Rust native extensions. Registers two Python submodules -- `rust_io.net` and `rust_io.files` -- backed by the `net-io` and `files-io` rlib crates.
 
 ## Python Usage
 

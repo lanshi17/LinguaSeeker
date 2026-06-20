@@ -18,6 +18,9 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     EntityType,
     StandardizationResult,
 )
+from src.core.standardize_entities_and_align_knowledge.cross_lingual_disease import (
+    CrossLingualDiseaseResolver,
+)
 from src.core.standardize_entities_and_align_knowledge.core import StandardizationService
 from src.core.standardize_entities_and_align_knowledge.importers import (
     ImportBatch,
@@ -122,10 +125,12 @@ class EntityStandardizationService:
             embedding_provider=ModelServerEmbeddingProvider(
                 base_url=semantic_base_url,
                 model=self._cfg.embedding.model,
+                api_key=self._cfg.api_key,
             ),
             rerank_provider=ModelServerRerankProvider(
                 base_url=self._cfg.rerank.base_url or self._cfg.model_server_url,
                 model=self._cfg.rerank.model,
+                api_key=self._cfg.api_key,
             ),
             repository=PgvectorTerminologyRepository(session),
             config=SimilarityMatchConfig(
@@ -134,7 +139,12 @@ class EntityStandardizationService:
                 rerank_score_threshold=self._cfg.rerank.score_threshold,
             ),
         )
-        matcher = HybridTerminologyMatcher(precise_matcher, similarity_matcher)
+        cross_lingual_disease_resolver = CrossLingualDiseaseResolver(session)
+        matcher = HybridTerminologyMatcher(
+            precise_matcher,
+            similarity_matcher,
+            cross_lingual_disease_resolver=cross_lingual_disease_resolver,
+        )
         adapter = DualResultAdapter()
         input_data = adapter.to_standardization_input(
             result,
@@ -234,6 +244,7 @@ async def build_terminology_embeddings(
             provider = ModelServerEmbeddingProvider(
                 base_url=(cfg.embedding.base_url or cfg.model_server_url),
                 model=cfg.embedding.model,
+                api_key=cfg.api_key,
             )
             count = await TerminologyEmbeddingIndexer(session, provider).build(
                 embedding_model=cfg.embedding.model,

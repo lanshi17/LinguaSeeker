@@ -1,6 +1,6 @@
 # deploy/ansible/ -- Production Deployment
 
-Ansible-based provisioning and deployment for CrossEvidence production environments.
+Ansible-based provisioning and deployment for LinguaSeeker production environments.
 
 ## Directory Structure
 
@@ -25,7 +25,7 @@ deploy/ansible/
 │   ├── redis/                               Redis 8.0 (Docker)
 │   ├── backend/                             FastAPI backend (uv + systemd)
 │   ├── model-server/                        Embedding/Rerank/LLM server (systemd)
-│   ├── frontend/                            Next.js frontend (nvm + systemd)
+│   ├── frontend/                            Next.js frontend (bun + systemd)
 │   └── nginx/                               Nginx reverse proxy + auto TLS via certbot
 ```
 
@@ -93,7 +93,7 @@ ansible-playbook playbooks/healthcheck.yml
 
 | Group | Host | Services | Port |
 |-------|------|----------|------|
-| `web` | web-01 | Nginx, Frontend (Next.js) | 80/443, 3000 |
+| `web` | web-01 | Nginx, Frontend (Next.js via bun) | 80/443, 3000 |
 | `app` | app-01 | Backend (FastAPI), Model Server | 8000, 8001 |
 | `db` | db-01 | PostgreSQL 16, Redis 8.0 | 5432, 6379 |
 
@@ -129,7 +129,7 @@ Client (HTTPS)
 ## Key Features
 
 - **TLS / Let's Encrypt** -- Automatically provisioned by the nginx role via certbot. First deploy starts HTTP-only, certbot obtains the cert, Nginx redeploys with TLS. Auto-renewal via `certbot.timer`.
-- **Automated backup** -- PostgreSQL daily backup at 03:00 via cron. Stored at `/opt/cross-evidence-data/postgres-backups/`, retained 30 days.
+- **Automated backup** -- PostgreSQL daily backup at 03:00 via cron. Stored at `/opt/lingua-seeker-data/postgres-backups/`, retained 30 days.
 - **Security** -- `vault.yml` encrypted with `ansible-vault`, git-ignored. All systemd services run with `NoNewPrivileges` and `ProtectSystem=strict`. Database ports not exposed publicly.
 
 ## Maintenance

@@ -1,6 +1,6 @@
 # PostgreSQL DAO
 
-> SQLAlchemy 2.0 async ORM models, connection helpers, and query repositories for the CrossEvidence persistence layer.
+> SQLAlchemy 2.0 async ORM models, connection helpers, and query repositories for the LinguaSeeker persistence layer.
 
 ## Architecture
 

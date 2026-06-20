@@ -29,6 +29,7 @@ from typing import Any, Dict, List, Optional, Set
 import fitz
 from loguru import logger
 from openai import AsyncOpenAI
+from benchmark.config.defaults import DEFAULT_SEED_QUERIES, RETT_CONFIG_PATH
 
 from src.core.config import get_config
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.relevance_gate import (
@@ -42,7 +43,7 @@ from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.w
 )
 
 MODULE_DIR = Path(__file__).resolve().parent
-CONFIG_FILE = MODULE_DIR / "rett_config.json"
+CONFIG_FILE = RETT_CONFIG_PATH  # Ansible-deployed to benchmark/data/inputs/literature_acquisition/
 QUERY_FILE = MODULE_DIR / "rett_syndrome_queries.txt"
 OUTPUT_FILE = MODULE_DIR / "downloads" / "rett_syndrome_candidates.jsonl"
 REPORT_FILE = MODULE_DIR / "downloads" / "rett_syndrome_report.json"
@@ -201,35 +202,6 @@ def load_config(path: Path) -> ConfigData:
         task_name=task_name,
         target_per_lang=target_per_lang,
     )
-
-
-DEFAULT_SEED_QUERIES = [
-    "Rett syndrome MECP2 mutation case report",
-    "Rett syndrome gene sequencing",
-    "Rett syndrome functional study MECP2",
-    "Rett syndrome CDKL5 mutation",
-    "Rett syndrome FOXG1 clinical case",
-    "Rett syndrome whole exome sequencing",
-    "Rett syndrome genotype phenotype correlation",
-    "Rett syndrome novel mutation",
-    "Rett syndrome atypical case report",
-    "Rett syndrome male case report",
-    "Rett syndrome neurodevelopmental",
-    "Rett syndrome EEG clinical",
-    "Rett syndrome呼吸异常",
-    "Rett综合征 基因突变",
-    "Rett syndrome遺伝子変異",
-    "Rett síndrome mutación genética",
-    "Rett syndrome targeted sequencing",
-    "Rett syndrome CRISPR model",
-    "Rett syndrome mouse model functional",
-    "Rett syndrome protein expression",
-    "MECP2 duplication syndrome case report",
-    "Rett syndrome brain derived neurotrophic factor",
-    "Rett syndrome methyl CpG binding protein 2",
-    "Rett syndrome临床特征",
-    "Rett syndrome natural history study",
-]
 
 
 # ═══════════════════════════════════════════════════════════════════

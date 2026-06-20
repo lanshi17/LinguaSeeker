@@ -1,6 +1,6 @@
 # deploy
 
-> Deployment configuration for the CrossEvidence platform.
+> Deployment configuration for the LinguaSeeker platform.
 
 ## Structure
 

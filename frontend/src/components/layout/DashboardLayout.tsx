@@ -1,17 +1,12 @@
-"use client";
-
-import { useState, useCallback, type ReactNode } from "react";
+import { useState, useCallback } from "react";
+import { Outlet } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { ConnectionStatus } from "./ConnectionStatus";
 import { useAppStore } from "@/stores/appStore";
 import { cn } from "@/lib/utils/cn";
 
-interface DashboardLayoutProps {
-  children: ReactNode;
-}
-
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export function DashboardLayout() {
   const collapsed = useAppStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -84,7 +79,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             "transition-[padding] duration-200",
           )}
         >
-          <div className="mx-auto max-w-7xl">{children}</div>
+          <div className="mx-auto max-w-7xl"><Outlet /></div>
         </main>
       </div>
     </div>

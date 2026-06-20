@@ -1,4 +1,3 @@
-"use client";
 
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -16,8 +15,8 @@ interface BackendHealth {
  * Poll the backend health endpoint at a configurable interval.
  *
  * Endpoint and polling interval come from the layered .env config
- * (NEXT_PUBLIC_HEALTH_ENDPOINT, NEXT_PUBLIC_HEALTH_POLL_INTERVAL).
- * Requests go through the Next.js proxy.
+ * (VITE_HEALTH_ENDPOINT, VITE_HEALTH_POLL_INTERVAL).
+ * Requests go through the Vite dev server proxy.
  */
 export function useBackendHealth(): BackendHealth {
   const { data } = useQuery({

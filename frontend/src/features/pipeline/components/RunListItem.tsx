@@ -1,7 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { Check, Copy, FileText, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { LivePulse } from "@/components/ui/LivePulse";
@@ -77,7 +75,7 @@ export function RunListItem({ run, index }: RunListItemProps) {
 
   return (
     <Link
-      href={`/pipeline/${run.processing_run_id}`}
+      to={`/pipeline/${run.processing_run_id}`}
       className={cn(
         "stagger-in group block rounded-lg border border-gray-200 bg-white p-4 shadow-sm",
         "transition-all duration-200 ease-out",

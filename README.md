@@ -1,4 +1,4 @@
-# CrossEvidence
+# LinguaSeeker
 
 Multi-Agent infrastructure platform for medical genetics literature automation and structured evidence extraction.
 

@@ -362,7 +362,7 @@ Add `await dispose_redis()` before `await dispose_engine()` in the shutdown `fin
     finally:
         await dispose_redis()
         await dispose_engine()
-        logger.info("Cross Evidencebackend stopped")
+        logger.info("Lingua Seekerbackend stopped")
 ```
 
 **Step 4: Run test to verify it passes**

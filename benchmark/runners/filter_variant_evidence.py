@@ -30,6 +30,12 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 import fitz
 import httpx
 from loguru import logger
+from benchmark.config.defaults import (
+    DEFAULT_FILTER_INPUT_DIRS as DEFAULT_INPUT_DIRS,
+    DEFAULT_FILTER_OUTPUT_DIR as DEFAULT_OUTPUT_DIR,
+    FILTER_TIER1_KEEP_THRESHOLD as TIER1_KEEP_THRESHOLD,
+    FILTER_TIER1_REJECT_THRESHOLD as TIER1_REJECT_THRESHOLD,
+)
 
 # ═══════════════════════════════════════════════════════════════════
 # Paths
@@ -39,12 +45,6 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
 BACKEND_DIR = PROJECT_ROOT / "backend"
 
-DEFAULT_INPUT_DIRS = [
-    PROJECT_ROOT / "benchmark" / "literature_acquisition" / "downloads",
-    PROJECT_ROOT / "benchmark" / "runners" / "downloads",
-]
-
-DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "benchmark" / "runners" / "downloads"
 
 # ═══════════════════════════════════════════════════════════════════
 # Genetic variant keyword dictionaries (per language)
@@ -366,9 +366,6 @@ def infer_title_from_filename(filename: str) -> str:
 # ═══════════════════════════════════════════════════════════════════
 # Main processing
 # ═══════════════════════════════════════════════════════════════════
-
-TIER1_KEEP_THRESHOLD = 3
-TIER1_REJECT_THRESHOLD = 0
 
 
 def process_all(
