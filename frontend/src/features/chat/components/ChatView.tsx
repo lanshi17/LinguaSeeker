@@ -30,8 +30,8 @@ import {
 import { clearCachedMessageStore } from "../utils/messageStore";
 import type { ChatAction, ChatActionIntent } from "../types/actions";
 import { ChatMarkdown } from "../utils/markdown";
-import { PipelineStartForm, PipelineStatusCard } from "./forms";
-import type { PipelineFormData } from "./forms";
+import { PipelineConfirmCard, PipelineStartForm, PipelineStatusCard } from "./forms";
+import type { PipelineConfirmSlots, PipelineFormData } from "./forms";
 import { ChatActionBubble } from "./ChatActionBubble";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { apiClient } from "@/lib/api/client";
@@ -129,7 +129,7 @@ function WelcomeBlock({ onPick }: WelcomeBlockProps) {
         </div>
         <div className="space-y-1.5">
           <h2 className="text-[15px] font-semibold tracking-tight text-gray-900">
-            Welcome to <span className="text-cyan-600">Cross Evidence</span>
+            Welcome to <span className="text-cyan-600">Lingua Seeker</span>
           </h2>
           <p className="text-[13.5px] leading-relaxed text-gray-600">
             A literature-grounded assistant for variant and evidence
@@ -685,6 +685,68 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     ],
   );
 
+  // ── Pipeline confirm: submit from conversational confirm card ──
+  const handlePipelineConfirm = useCallback(
+    async (slots: PipelineConfirmSlots) => {
+      setActiveForm(null);
+      try {
+        const body: Record<string, unknown> = {
+          source_type: slots.source_type ?? "online",
+          mode: "full",
+        };
+        if (slots.source_type !== "local") {
+          if (slots.query) body.query = slots.query;
+          if (slots.identifiers) {
+            body.identifiers = slots.identifiers
+              .split(/[,\s]+/)
+              .map((s) => s.trim())
+              .filter(Boolean);
+          }
+        }
+        if (
+          slots.gene_symbol ||
+          slots.disease_name ||
+          slots.variant_hgvs_p
+        ) {
+          body.target = {
+            gene_symbol: slots.gene_symbol || undefined,
+            disease_name: slots.disease_name || undefined,
+            variant_hgvs_p: slots.variant_hgvs_p || undefined,
+          };
+        }
+        const response = await apiClient.post<{
+          processing_run_id: string;
+          status: string;
+        }>("/pipeline/run", body);
+        const runId = response.data.processing_run_id;
+        setPipelineStatus({ runId, status: response.data.status });
+        if (activeProvider) {
+          onRequest?.({
+            messages: [
+              {
+                role: "assistant" as const,
+                content: `Pipeline started. Run ID: ${runId.slice(0, 8)}...`,
+              },
+            ],
+          });
+        }
+        pollPipelineStatus(runId);
+      } catch (err: unknown) {
+        console.error("[Pipeline] start failed:", err);
+        antdMessage.error(
+          `Failed to start pipeline: ${extractErrorMessage(err)}`,
+        );
+      }
+    },
+    [
+      activeProvider,
+      onRequest,
+      pollPipelineStatus,
+      setActiveForm,
+      setPipelineStatus,
+    ],
+  );
+
   // ── Build bubble items with contentRender for embedded forms ──
   const bubbleItems = useMemo(() => {
     const messageKeys = toUniqueChatMessageKeys(messages);
@@ -743,7 +805,28 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       };
     });
 
-    if (activeForm === "start-pipeline" || activeForm === "upload-pdf") {
+    if (activeForm === "start-pipeline") {
+      items.push({
+        key: "__confirm__",
+        role: "assistant",
+        content: "",
+        variant: "borderless" as const,
+        contentRender: () => (
+          <PipelineConfirmCard
+            key={`confirm:${JSON.stringify(activeFormSlots)}`}
+            slots={(activeFormSlots ?? {}) as PipelineConfirmSlots}
+            onConfirm={handlePipelineConfirm}
+            onCancel={() => {
+              setActiveForm(null);
+              setActiveFormSlots(null);
+            }}
+            isSubmitting={isRequesting}
+          />
+        ),
+      });
+    }
+
+    if (activeForm === "upload-pdf") {
       items.push({
         key: "__form__",
         role: "assistant",
@@ -751,23 +834,8 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         variant: "borderless" as const,
         contentRender: () => (
           <PipelineStartForm
-            key={`${activeForm}:${activeFormSlots?.query ?? ""}:${activeFormSlots?.identifiers ?? ""}`}
-            defaultSourceType={
-              activeForm === "upload-pdf"
-                ? "local"
-                : (activeFormSlots?.source_type as "online" | "local") ??
-                  "online"
-            }
-            defaultQuery={
-              activeForm === "start-pipeline"
-                ? activeFormSlots?.query ?? undefined
-                : undefined
-            }
-            defaultIdentifiers={
-              activeForm === "start-pipeline"
-                ? activeFormSlots?.identifiers ?? undefined
-                : undefined
-            }
+            key="upload-pdf-form"
+            defaultSourceType="local"
             onSubmit={handlePipelineSubmit}
             isSubmitting={isRequesting}
           />
@@ -811,9 +879,12 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     pipelineStatus,
     isRequesting,
     handlePipelineSubmit,
+    handlePipelineConfirm,
     handleSendMessage,
     dispatchedActions,
     handleDispatchAction,
+    setActiveForm,
+    setActiveFormSlots,
   ]);
 
   // ── Create session ──
@@ -960,7 +1031,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
               }
             }}
             onSubmit={handleSubmitAndClear}
-            placeholder="Ask the Cross Evidence Agent..."
+            placeholder="Ask the Lingua Seeker Agent..."
           />
         </div>
       </div>
@@ -1143,7 +1214,7 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
             }
           }}
           onSubmit={handleSingleSessionSubmit}
-          placeholder="Ask the Cross Evidence Agent..."
+          placeholder="Ask the Lingua Seeker Agent..."
         />
       </div>
     </XProvider>

@@ -146,7 +146,7 @@ class TestChatService:
 
         assert reply == "I can help start a pipeline."
         kwargs = provider.generate.await_args.kwargs
-        assert "Cross Evidence" in kwargs["system_prompt"]
+        assert "Lingua Seeker" in kwargs["system_prompt"]
         assert "pipeline" in kwargs["system_prompt"].lower()
 
     async def test_build_evidence_context_uses_current_best_run_id(

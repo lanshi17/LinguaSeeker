@@ -1,6 +1,6 @@
 # files-io
 
-> Unified local + S3 file I/O for CrossEvidence, implemented as a Rust/PyO3 native extension. Provides a single `File` class that transparently dispatches to local filesystem or Amazon S3, plus batch operations, archive handling, and SHA-256 deduplication.
+> Unified local + S3 file I/O for LinguaSeeker, implemented as a Rust/PyO3 native extension. Provides a single `File` class that transparently dispatches to local filesystem or Amazon S3, plus batch operations, archive handling, and SHA-256 deduplication.
 
 ## Quick Start
 

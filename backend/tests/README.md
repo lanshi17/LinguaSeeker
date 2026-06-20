@@ -1,6 +1,6 @@
 # Tests
 
-> Test suite for the CrossEvidence backend. Uses `pytest` with `pytest-asyncio` for async test support. Tests mirror the `backend/src/` source structure.
+> Test suite for the LinguaSeeker backend. Uses `pytest` with `pytest-asyncio` for async test support. Tests mirror the `backend/src/` source structure.
 
 ## Quick Start
 

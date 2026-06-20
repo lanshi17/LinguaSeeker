@@ -1,6 +1,6 @@
 # database/config
 
-> Configuration files for the CrossEvidence database infrastructure: PostgreSQL, Redis, Qdrant, and Neo4j.
+> Configuration files for the LinguaSeeker database infrastructure: PostgreSQL, Redis, Qdrant, and Neo4j.
 
 ## Files
 

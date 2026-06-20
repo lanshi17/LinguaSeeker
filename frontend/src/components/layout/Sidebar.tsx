@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { MessageSquare, Database } from "lucide-react";
+import { MessageSquare, Database, ClipboardList } from "lucide-react";
 import { useAppStore } from "@/stores/appStore";
 import { cn } from "@/lib/utils/cn";
 import type { ComponentType } from "react";
@@ -12,6 +12,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "AI Chat", href: "/chat", icon: MessageSquare },
+  { label: "Tasks", href: "/pipeline", icon: ClipboardList },
   { label: "Evidence DB", href: "/evidence-db", icon: Database },
 ];
 
@@ -46,7 +47,7 @@ export function Sidebar({ mobile, onNavigate }: SidebarProps) {
           </span>
         ) : (
           <span className="text-lg font-bold text-primary-700">
-            Cross Evidence
+            Lingua Seeker
           </span>
         )}
       </div>
@@ -84,7 +85,7 @@ export function Sidebar({ mobile, onNavigate }: SidebarProps) {
       {/* Footer */}
       <div className="border-t border-gray-200 p-4">
         {!effectiveCollapsed && (
-          <p className="text-xs text-gray-400">Cross Evidencev0.1.0</p>
+          <p className="text-xs text-gray-400">Lingua Seeker v0.1.0</p>
         )}
       </div>
     </aside>

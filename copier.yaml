@@ -1,4 +1,4 @@
-# Cross Evidence— Copier Template Configuration (Monorepo Root)
+# Lingua Seeker — Copier Template Configuration (Monorepo Root)
 # ============================================================
 # Run:  copier copy . /path/to/new-project
 
@@ -7,7 +7,7 @@
 project_name:
   type: str
   help: Monorepo / project name (hyphenated, e.g. my-app)
-  default: cross-evidence
+  default: lingua-seeker
 
 project_slug:
   type: str
@@ -46,7 +46,7 @@ python_version:
 app_name:
   type: str
   help: Application display name (used in logs, UI titles, config.py defaults)
-  default: Cross Evidence
+  default: Lingua Seeker
 
 app_version:
   type: str
@@ -56,7 +56,7 @@ app_version:
 postgres_db:
   type: str
   help: Default PostgreSQL database name (docker-compose + config.py)
-  default: cross_evidence
+  default: lingua_seeker
 
 postgres_schema:
   type: str

@@ -8,7 +8,7 @@ directly from backend/config/.
 
 Usage:
     uv run python scripts/render_config.py --env development
-    uv run python scripts/render_config.py --env production --output /tmp/cross-evidence-config.yaml
+    uv run python scripts/render_config.py --env production --output /tmp/lingua-seeker-config.yaml
 """
 
 from __future__ import annotations

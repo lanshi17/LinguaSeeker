@@ -1,6 +1,6 @@
 # Agents (Orchestrator)
 
-> Pipeline orchestrator layer for CrossEvidence. Owns LangGraph topology, pipeline state, phase adapters, concurrency control, and state persistence. Contains zero business rules — all domain logic lives in `core/` feature slices.
+> Pipeline orchestrator layer for LinguaSeeker. Owns LangGraph topology, pipeline state, phase adapters, concurrency control, and state persistence. Contains zero business rules — all domain logic lives in `core/` feature slices.
 
 ## Quick Start
 

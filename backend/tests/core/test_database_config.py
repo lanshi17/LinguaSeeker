@@ -30,7 +30,7 @@ def test_postgresql_and_redis_nested_config(monkeypatch) -> None:
 
     assert settings.postgresql.host == "127.0.0.1"
     assert settings.postgresql.port == 5432
-    assert settings.postgresql.db == "cross_evidence"
+    assert settings.postgresql.db == "lingua_seeker"
     assert settings.postgresql.schema_ == "acmg_app"
     assert settings.postgresql.user == ""
     assert settings.postgresql.password == ""

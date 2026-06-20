@@ -17,14 +17,14 @@
 # ── Application ───────────────────────────────────────────────────────────
 acmg_environment: production
 acmg_debug: false
-acmg_cors_origins: "https://cross-evidence.your-domain.com"
+acmg_cors_origins: "https://lingua-seeker.your-domain.com"
 # API key for X-API-Key auth — actual value lives in vault.yml (ansible-vault encrypted).
 # Injected by nginx as the X-API-Key header on /api/ requests; the browser never sees it.
 # The backend binds to 127.0.0.1, so it is only reachable via nginx.
 api_key: "{{ vault_api_key }}"
 
 # ── Domain / TLS ──────────────────────────────────────────────────────────
-domain_name: "cross-evidence.your-domain.com"
+domain_name: "lingua-seeker.your-domain.com"
 tls_email: "[redacted-email]"
 
 # ── Fast LLM ──────────────────────────────────────────────────────────────
@@ -64,7 +64,7 @@ mineru_local_dpi: 200
 # ── PostgreSQL ────────────────────────────────────────────────────────────
 postgres_host: "{{ hostvars[groups['db'][0]]['ansible_host'] }}"
 postgres_port: 5432
-postgres_db: "cross_evidence"
+postgres_db: "lingua_seeker"
 postgres_schema: "acmg_app"
 postgres_user: "acmg_app"
 postgres_pool_size: 20

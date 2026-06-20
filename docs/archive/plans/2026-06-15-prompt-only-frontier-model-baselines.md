@@ -7,7 +7,7 @@
 **Completed:** 2026-06-15
 **PR:** local branch `prompt-model-baselines`
 
-**Goal:** Add a reproducible prompt-only model-sweep benchmark that compares CrossEvidence against several mainstream LLMs using the same prompt, same input, same schema, and no evidence-graph reconciliation.
+**Goal:** Add a reproducible prompt-only model-sweep benchmark that compares LinguaSeeker against several mainstream LLMs using the same prompt, same input, same schema, and no evidence-graph reconciliation.
 
 **Architecture:** Reuse the existing `benchmark/layer3/baselines` runner and OpenAI-compatible LLM adapter. Add a manifest-driven model sweep where each baseline differs only by `model` name and paper-visible model metadata; add a citation-required prompt variant so prompt-only models can be evaluated on both extraction F1 and traceability metrics.
 
@@ -20,19 +20,19 @@
 This benchmark answers the reviewer question:
 
 ```text
-If a strong frontier model is given a good prompt, does CrossEvidence still add value?
+If a strong frontier model is given a good prompt, does LinguaSeeker still add value?
 ```
 
 The paper-facing comparison should be framed as:
 
 ```text
-Prompt-only frontier models provide strong extraction baselines, but they do not enforce citation-valid accepted evidence by construction. CrossEvidence keeps extraction competitive while adding source-span validation and contradiction-aware reconciliation.
+Prompt-only frontier models provide strong extraction baselines, but they do not enforce citation-valid accepted evidence by construction. LinguaSeeker keeps extraction competitive while adding source-span validation and contradiction-aware reconciliation.
 ```
 
 Do not claim broad SOTA superiority unless the frozen model-sweep statistics support it. The minimum acceptable claim is:
 
 ```text
-CrossEvidence is competitive with prompt-only frontier models and stronger on traceable extraction.
+LinguaSeeker is competitive with prompt-only frontier models and stronger on traceable extraction.
 ```
 
 ## Recommended Model Set For 2026-06-15 Run
@@ -62,7 +62,7 @@ Primary paper table should use the five primary baselines. Optional baselines ca
 
 - The model-sweep runner can run all configured models by changing only the manifest `model` field.
 - Every model report stores exact `model`, provider label, prompt mode, run date, temperature, max tokens, input truncation policy, and report path.
-- Prompt-only baselines do not call CrossEvidence grounding, dual-track reconciliation, verifier scoring, ontology target-safe context, or gold labels.
+- Prompt-only baselines do not call LinguaSeeker grounding, dual-track reconciliation, verifier scoring, ontology target-safe context, or gold labels.
 - Citation-required prompt output includes a `source_quote`; the benchmark only maps that quote to canonical source text for measurement.
 - Frozen output includes per-model Precision/Recall/F1, CVR, HCR, SpanBoundaryF1, ESR, TraceableF1, error rate, and latency.
 - Main paper tables and claim matrix are updated with conservative wording.
@@ -73,7 +73,7 @@ Primary paper table should use the five primary baselines. Optional baselines ca
 - Do not introduce a new extraction algorithm inside the baseline.
 - Do not tune prompts per model.
 - Do not use expected fields, ClinGen classifications, evaluator matches, or gold relationship labels at runtime.
-- Do not change CrossEvidence candidate method while running this comparison.
+- Do not change LinguaSeeker candidate method while running this comparison.
 
 ## Task 1: Add Typed Model-Sweep Manifest Loader
 
@@ -606,7 +606,7 @@ def quote_to_source_span(source_quote: str, source_text: str) -> dict[str, objec
     }
 ```
 
-This quote mapping is only for measurement. It is not CrossEvidence grounding, does not repair the value, and does not feed back into acceptance.
+This quote mapping is only for measurement. It is not LinguaSeeker grounding, does not repair the value, and does not feed back into acceptance.
 
 **Step 4: Add the citation-required prompt**
 
@@ -898,7 +898,7 @@ Expected:
 
 **Step 3: Do not repair baseline outputs**
 
-Do not use CrossEvidence grounding to correct baseline quotes. The goal is to measure prompt-only citation behavior.
+Do not use LinguaSeeker grounding to correct baseline quotes. The goal is to measure prompt-only citation behavior.
 
 **Step 4: Commit frozen reports only after final run**
 
@@ -1149,13 +1149,13 @@ Add a new evidence row:
 Add safe claim:
 
 ```markdown
-CrossEvidence remains competitive with prompt-only frontier models while adding citation-valid-by-construction acceptance and explicit traceability metrics.
+LinguaSeeker remains competitive with prompt-only frontier models while adding citation-valid-by-construction acceptance and explicit traceability metrics.
 ```
 
 Add forbidden claim unless supported:
 
 ```markdown
-"CrossEvidence significantly outperforms every frontier model baseline."
+"LinguaSeeker significantly outperforms every frontier model baseline."
 ```
 
 **Step 2: Update manuscript results**
@@ -1279,10 +1279,10 @@ Use the following interpretation:
 
 | Outcome | Paper stance |
 |---|---|
-| CrossEvidence beats all prompt-only models on F1 and TraceableF1 | Strong Main Paper claim, but still report significance before saying "outperforms." |
-| CrossEvidence is close on F1 but wins TraceableF1/CVR/HCR | Best expected outcome; claim traceability-centered competitive method. |
-| A prompt-only model beats CrossEvidence on F1 but has lower traceability | Still publishable if the novelty is framed around auditable evidence acceptance. |
-| A prompt-only model beats CrossEvidence on F1 and traceability | Main Paper claim must shift; method may need stronger reconciliation or a resource/demo framing. |
+| LinguaSeeker beats all prompt-only models on F1 and TraceableF1 | Strong Main Paper claim, but still report significance before saying "outperforms." |
+| LinguaSeeker is close on F1 but wins TraceableF1/CVR/HCR | Best expected outcome; claim traceability-centered competitive method. |
+| A prompt-only model beats LinguaSeeker on F1 but has lower traceability | Still publishable if the novelty is framed around auditable evidence acceptance. |
+| A prompt-only model beats LinguaSeeker on F1 and traceability | Main Paper claim must shift; method may need stronger reconciliation or a resource/demo framing. |
 
 The target result for the current BIBM submission is not necessarily highest raw F1. The target is:
 
