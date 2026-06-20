@@ -105,19 +105,53 @@ def evaluate_adjudicated_entry(
 
 def _find_matching_item(field_id: str, expected_value: str, items: list[ExtractedItem]) -> int | None:
     for index, item in enumerate(items):
-        if item.field_id == field_id and _matches(expected_value, str(item.value)):
+        if item.field_id == field_id and _matches(field_id, expected_value, str(item.value)):
             return index
     return None
 
 
-def _matches(expected_value: str, extracted_value: str) -> bool:
-    return _normalize(expected_value).lower() == _normalize(extracted_value).lower()
+def _matches(field_id: str, expected_value: str, extracted_value: str) -> bool:
+    expected = _field_normalize(field_id, expected_value)
+    extracted = _field_normalize(field_id, extracted_value)
+    return expected == extracted
 
 
 def _normalize(value: str) -> str:
     normalized = unicodedata.normalize("NFKC", value)
     normalized = re.sub(r"\s+", " ", normalized)
     return normalized.strip()
+
+
+def _field_normalize(field_id: str, value: str) -> str:
+    normalized = _normalize(value).lower()
+    if field_id == "A.variant_hgvs_p":
+        return re.sub(r"^p\.\(([^)]+)\)$", r"p.\1", normalized)
+    if field_id == "A.variant_type":
+        return re.sub(r"\s+(mutation|variant)$", "", normalized)
+    if field_id == "B.mode_of_inheritance_reported":
+        return _normalize_inheritance(normalized)
+    if field_id == "B.disease_diagnosis":
+        return _normalize_disease(normalized)
+    return normalized
+
+
+def _normalize_inheritance(value: str) -> str:
+    aliases = {
+        "ar": "autosomal recessive",
+        "autosomal recessive": "autosomal recessive",
+        "ad": "autosomal dominant",
+        "autosomal dominant": "autosomal dominant",
+        "xl": "x-linked",
+        "x linked": "x-linked",
+        "x-linked": "x-linked",
+    }
+    return aliases.get(value, value)
+
+
+def _normalize_disease(value: str) -> str:
+    without_parentheticals = re.sub(r"\s*\([^)]*\)", "", value)
+    without_hyphen = without_parentheticals.replace("-", " ")
+    return _normalize(without_hyphen).lower()
 
 
 def _metric(*, tp: int, fp: int, fn: int) -> AdjudicatedMetric:

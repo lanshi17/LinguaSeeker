@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from benchmark.optimization.fused75.adjudication_contracts import (
     Fused75EntryAdjudication,
     Fused75FieldAdjudication,
@@ -42,6 +44,33 @@ def test_evaluate_adjudicated_entry_counts_true_positive() -> None:
     assert result.metric.recall == 1.0
     assert result.metric.f1 == 1.0
     assert result.field_results[0].outcome == "tp"
+
+
+@pytest.mark.parametrize(
+    ("field_id", "expected_value", "extracted_value"),
+    (
+        (
+            "B.disease_diagnosis",
+            "very long chain acyl-CoA dehydrogenase deficiency",
+            "Very long-chain acyl-CoA dehydrogenase (VLCAD) deficiency",
+        ),
+        ("A.variant_hgvs_p", "p.Gly1961Glu", "p.(Gly1961Glu)"),
+        ("A.variant_type", "missense", "Missense mutation"),
+        ("B.mode_of_inheritance_reported", "AR", "autosomal recessive"),
+    ),
+)
+def test_evaluate_adjudicated_entry_matches_domain_equivalent_values(
+    field_id: str,
+    expected_value: str,
+    extracted_value: str,
+) -> None:
+    result = evaluate_adjudicated_entry(
+        _entry((_visible(field_id, expected_value),)),
+        extracted_items=(PipelineItem(field_id=field_id, value=extracted_value),),
+    )
+
+    assert result.metric.tp == 1
+    assert result.metric.f1 == 1.0
 
 
 def test_evaluate_adjudicated_entry_counts_false_negative() -> None:
