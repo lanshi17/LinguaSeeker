@@ -104,21 +104,22 @@ Routing is handled by `EvidenceDbPage` (`src/pages/EvidenceDbPage.tsx`), which r
 |----------|-------------|
 | `classifyLevel(classification)` | Maps classification string → `ClassificationLevel` |
 | `classificationColor(level)` | Hex color for dark-theme rendering |
-| `classificationBadgeStyle(level)` | Inline CSS for badge (bg, border, text) |
+| `classificationBadgeClasses(level)` | Tailwind classes for badge (bg, border, text) |
 | `classificationLabel(level)` / `classificationShortLabel(level)` | Human-readable / abbreviated labels |
 | `aggregateVariants(results)` | Groups flat `EvidenceSearchResult[]` → `VariantIndexEntry[]` |
 | `filterAndPaginateVariants(entries, filters)` | Applies filters + pagination → `VariantIndexData` |
 
-## Design: Helix Dark Scientific Aesthetic
+## Design: Unified Medical-Teal Light Theme
 
-The evidence DB uses a dark theme (`#0a0e17` base) that creates a "specimen view" contrast within the light dashboard shell. This reduces eye strain during long evidence review sessions and makes the 10-color category palette pop.
+The evidence DB uses a light theme matching the dashboard's "Accessible & Ethical" design system (WCAG AAA, medical teal primary). Consistent with the rest of the application: white cards on gray-50 background, teal-600 primary, Figtree/Fraunces/JetBrains Mono typography.
 
 **Color system:**
-- Pathogenicity scale: `#FF4D6D` (P) → `#FF7849` (LP) → `#FFB323` (VUS) → `#4ECDC4` (LB) → `#2DD4BF` (B)
+- Primary: `#0891B2` (teal-600) — shared with dashboard
+- Pathogenicity scale: `#B91C1C` (P) → `#DC2626` (LP) → `#6B7280` (VUS) → `#0D9488` (LB) → `#0F766E` (B) — all WCAG AA on white
 - Evidence categories A–J: each has a hex color (defined in `@/features/evidence-search/utils/evidenceDocument.ts` `CATEGORY_COLORS`)
-- Dark theme CSS utilities: `.edb-root`, `.edb-card`, `.edb-surface`, `.edb-ring`, `.edb-cat-strip`, `.edb-scroll`, `.edb-stagger` (defined in `src/globals.css`)
+- CSS utilities: `.edb-hero` (teal-tinted gradient), `.edb-card` (white card), `.edb-card-clickable` (teal hover), `.edb-ring` (confidence ring), `.edb-cat-strip`, `.edb-scroll`, `.edb-stagger` (defined in `src/globals.css`)
 
-**Highlight rendering (L3):** Category marks use semi-transparent backgrounds (`${hex}25`) with solid bottom borders (`2px solid ${hex}`) for identification on dark backgrounds. Selected evidence gets a cyan ring.
+**Highlight rendering (L3):** Category marks use `categoryMarkStyle()` Tailwind classes (e.g., `bg-amber-200 text-amber-950 ring-1 ring-amber-300`) designed for light backgrounds. Selected evidence gets a `ring-primary-500` focus ring.
 
 ## Dependencies
 
