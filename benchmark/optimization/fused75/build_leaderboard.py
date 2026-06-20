@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Sequence
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from benchmark.optimization.fused75.run_contracts import PipelineRunReport
 
@@ -26,6 +26,7 @@ class LeaderboardRow(BaseModel):
     runtime_seconds: float
     llm_call_count: int
     total_token_count: int
+    entry_coverage: str
 
 
 class LeaderboardReport(BaseModel):
@@ -53,6 +54,18 @@ def build_leaderboard(
     return leaderboard
 
 
+def discover_run_report_paths(reports_dir: Path) -> tuple[Path, ...]:
+    """Discover fused-75 run reports while ignoring other report JSON files."""
+    paths: list[Path] = []
+    for path in sorted(reports_dir.glob("*.json")):
+        try:
+            _load_report(path)
+        except (json.JSONDecodeError, ValidationError):
+            continue
+        paths.append(path)
+    return tuple(paths)
+
+
 def _load_report(path: Path) -> PipelineRunReport:
     return PipelineRunReport.model_validate_json(path.read_text(encoding="utf-8"))
 
@@ -70,11 +83,12 @@ def _rows_by_variant(reports: tuple[PipelineRunReport, ...]) -> tuple[Leaderboar
                 variant_id=variant_id,
                 decision=primary.decision.decision,
                 best_split=primary.config.dataset_split,
-                dev_source_visible_f1=dev_report.metric.source_visible_f1 if dev_report else None,
-                test_source_visible_f1=test_report.metric.source_visible_f1 if test_report else None,
+                dev_source_visible_f1=_eligible_f1(dev_report),
+                test_source_visible_f1=_eligible_f1(test_report),
                 runtime_seconds=primary.metric.runtime_seconds,
                 llm_call_count=primary.metric.llm_call_count,
                 total_token_count=primary.metric.total_token_count,
+                entry_coverage=_coverage(primary),
             )
         )
     return tuple(rows)
@@ -84,7 +98,20 @@ def _best_report(reports: tuple[PipelineRunReport, ...], *, split: str) -> Pipel
     matching = tuple(report for report in reports if report.config.dataset_split == split)
     if not matching:
         return None
-    return max(matching, key=lambda report: report.metric.source_visible_f1)
+    return max(matching, key=lambda report: _eligible_f1(report) if _eligible_f1(report) is not None else -1.0)
+
+
+def _eligible_f1(report: PipelineRunReport | None) -> float | None:
+    if report is None:
+        return None
+    if report.artifact_status.missing_artifact_entry_ids:
+        return None
+    return report.metric.source_visible_f1
+
+
+def _coverage(report: PipelineRunReport) -> str:
+    status = report.artifact_status
+    return f"{status.evaluated_entry_count}/{status.expected_entry_count}"
 
 
 def _sort_key(row: LeaderboardRow) -> tuple[float, str]:
@@ -104,14 +131,15 @@ def _write_markdown(leaderboard: LeaderboardReport, output_path: Path) -> None:
     lines = [
         "# Fused-75 Optimization Leaderboard",
         "",
-        "| Variant | Best Split | Dev Source-Visible F1 | Test Source-Visible F1 | Decision | Runtime Seconds | LLM Calls | Tokens |",
-        "|---|---|---:|---:|---|---:|---:|---:|",
+        "| Variant | Best Split | Entry Coverage | Dev Source-Visible F1 | Test Source-Visible F1 | Decision | Runtime Seconds | LLM Calls | Tokens |",
+        "|---|---|---:|---:|---:|---|---:|---:|---:|",
     ]
     for row in leaderboard.rows:
         lines.append(
             "| "
             f"{row.variant_id} | "
             f"{row.best_split} | "
+            f"{row.entry_coverage} | "
             f"{_fmt_score(row.dev_source_visible_f1)} | "
             f"{_fmt_score(row.test_source_visible_f1)} | "
             f"{row.decision} | "
@@ -138,7 +166,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     """CLI entry point."""
     args = _parse_args(argv)
     build_leaderboard(
-        report_paths=tuple(sorted(args.reports_dir.glob("*.json"))),
+        report_paths=discover_run_report_paths(args.reports_dir),
         json_output_path=args.json_output,
         markdown_output_path=args.markdown_output,
     )

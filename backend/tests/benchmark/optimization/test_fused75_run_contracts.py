@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from benchmark.optimization.fused75.run_contracts import (
     PipelineFlag,
+    PipelineRunArtifactStatus,
     PipelineRunMetric,
     PipelineRunReport,
     PipelineVariantConfig,
@@ -153,6 +154,11 @@ def test_report_serializes_deterministically_without_public_bare_dict_helper() -
         config=_variant_config(),
         metric=_metric(),
         decision=PipelineVariantDecision(decision="checkpoint_only", reason="record dev checkpoint"),
+        artifact_status=PipelineRunArtifactStatus(
+            expected_entry_count=2,
+            evaluated_entry_count=1,
+            missing_artifact_entry_ids=("fused_001",),
+        ),
     )
 
     first_payload = report.to_stable_json()
@@ -160,6 +166,16 @@ def test_report_serializes_deterministically_without_public_bare_dict_helper() -
     decoded = json.loads(first_payload)
 
     assert first_payload == second_payload
-    assert list(decoded) == ["config", "decision", "metric"]
+    assert list(decoded) == ["artifact_status", "config", "decision", "metric"]
     assert decoded["config"]["git_commit"] == "a" * 40
     assert decoded["metric"]["source_visible_f1"] == 0.812
+    assert decoded["artifact_status"]["evaluated_entry_count"] == 1
+
+
+def test_artifact_status_rejects_inconsistent_counts() -> None:
+    with pytest.raises(ValidationError, match="artifact counts"):
+        PipelineRunArtifactStatus(
+            expected_entry_count=3,
+            evaluated_entry_count=1,
+            missing_artifact_entry_ids=("fused_001",),
+        )
