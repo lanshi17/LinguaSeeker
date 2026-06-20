@@ -2,8 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task-by-task.
 
-**Status:** planned
+**Status:** completed
 **Created:** 2026-06-20
+**Completed:** 2026-06-20
 **Goal:** Add a production Phase 2 extraction variant that improves fused-75 source-visible recall and F1 by scoping catalog prompts to target-aware eligible fields before LLM extraction.
 
 **Architecture:** Keep the current Phase 2 topology. Add deterministic field eligibility logic inside the `extract_evidence` vertical slice, wire it into `CatalogExtractionStage`, expand target block selection conservatively, and evaluate through the existing fused75 dev/test benchmark loop. Do not change adjudication labels or scorer semantics.
