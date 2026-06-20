@@ -30,6 +30,17 @@ def _write_config(path: Path, dataset_split: str = "dev") -> None:
     _write_json(path, config.model_dump(mode="json"))
 
 
+def _write_config_with_flags(path: Path, *, flags: tuple[PipelineFlag, ...]) -> None:
+    config = PipelineVariantConfig(
+        variant_id="filtered-variant",
+        git_commit="a" * 40,
+        dataset_split="dev",
+        pipeline_flags=flags,
+        model_config_names=("LLM_MODEL",),
+    )
+    _write_json(path, config.model_dump(mode="json"))
+
+
 def _write_adjudication(path: Path) -> None:
     payload = Fused75EntryAdjudication(
         entry_id="fused_000",
@@ -210,3 +221,31 @@ def test_run_variant_can_write_partial_artifact_diagnostic(tmp_path: Path) -> No
     assert report.artifact_status.evaluated_entry_count == 0
     assert report.artifact_status.missing_artifact_entry_ids == ("fused_000",)
     assert "not eligible" in report.decision.reason
+
+
+def test_run_variant_can_filter_outputs_to_adjudicated_field_ids(tmp_path: Path) -> None:
+    config_path = tmp_path / "variant.json"
+    output_path = tmp_path / "report.json"
+    _write_config_with_flags(config_path, flags=(PipelineFlag(key="score_field_filter", value="adjudicated_labels"),))
+    _write_adjudication(tmp_path / "adjudication" / "dev" / "fused_000.json")
+    _write_json(
+        tmp_path / "extractions" / "fused_000.json",
+        {
+            "items": [
+                {"field_id": "A.gene_symbol", "value": "CFTR"},
+                {"field_id": "B.case_count", "value": "20"},
+            ]
+        },
+    )
+
+    report = run_variant(
+        split="dev",
+        config_path=config_path,
+        adjudication_root=tmp_path / "adjudication",
+        extraction_root=tmp_path / "extractions",
+        output_path=output_path,
+    )
+
+    assert report.metric.precision == 1.0
+    assert report.metric.recall == 1.0
+    assert report.metric.f1 == 1.0
