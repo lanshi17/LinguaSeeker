@@ -1,0 +1,20 @@
+---
+# Render the Rett annotation benchmark configuration in place.
+- name: Ensure destination directory exists
+  ansible.builtin.file:
+    path: "{{ rett_annotation_dest_root }}"
+    state: directory
+    mode: "0755"
+
+- name: Render config.yaml (non-secret)
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: "{{ rett_annotation_config_dest }}"
+    mode: "0644"
+
+- name: Render .env (secrets from vault)
+  ansible.builtin.template:
+    src: .env.j2
+    dest: "{{ rett_annotation_env_dest }}"
+    mode: "0600"
+  no_log: true

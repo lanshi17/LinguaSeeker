@@ -1,8 +1,5 @@
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Search, MessageSquare } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { MessageSquare, Database, ClipboardList } from "lucide-react";
 import { useAppStore } from "@/stores/appStore";
 import { cn } from "@/lib/utils/cn";
 import type { ComponentType } from "react";
@@ -15,7 +12,8 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "AI Chat", href: "/chat", icon: MessageSquare },
-  { label: "Evidence", href: "/evidence", icon: Search },
+  { label: "Tasks", href: "/pipeline", icon: ClipboardList },
+  { label: "Evidence DB", href: "/evidence-db", icon: Database },
 ];
 
 interface SidebarProps {
@@ -26,7 +24,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ mobile, onNavigate }: SidebarProps) {
-  const pathname = usePathname();
+  const { pathname } = useLocation();
   const collapsed = useAppStore((s) => s.sidebarCollapsed);
   const effectiveCollapsed = mobile ? false : collapsed;
 
@@ -49,7 +47,7 @@ export function Sidebar({ mobile, onNavigate }: SidebarProps) {
           </span>
         ) : (
           <span className="text-lg font-bold text-primary-700">
-            Cross Evidence
+            Lingua Seeker
           </span>
         )}
       </div>
@@ -64,7 +62,7 @@ export function Sidebar({ mobile, onNavigate }: SidebarProps) {
           return (
             <Link
               key={item.href}
-              href={item.href}
+              to={item.href}
               aria-label={effectiveCollapsed ? item.label : undefined}
               aria-current={isActive ? "page" : undefined}
               onClick={onNavigate}
@@ -87,7 +85,7 @@ export function Sidebar({ mobile, onNavigate }: SidebarProps) {
       {/* Footer */}
       <div className="border-t border-gray-200 p-4">
         {!effectiveCollapsed && (
-          <p className="text-xs text-gray-400">Cross Evidencev0.1.0</p>
+          <p className="text-xs text-gray-400">Lingua Seeker v0.1.0</p>
         )}
       </div>
     </aside>

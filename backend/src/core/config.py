@@ -168,7 +168,7 @@ class PostgreSQLConfig(BaseModel):
 
     host: str = "127.0.0.1"
     port: int = 5432
-    db: str = "cross_evidence"
+    db: str = "lingua_seeker"
     schema_: str = "acmg_app"
     user: str = ""
     password: str = ""
@@ -329,7 +329,7 @@ class Settings(BaseSettings):
 
     postgres_host: str = "127.0.0.1"
     postgres_port: int = 5432
-    postgres_db: str = "cross_evidence"
+    postgres_db: str = "lingua_seeker"
     postgres_schema: str = "acmg_app"
     postgres_user: str = ""
     postgres_password: str = ""

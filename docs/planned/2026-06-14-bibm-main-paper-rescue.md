@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** 把 CrossEvidence 从“有工程系统、但论文信号不稳定”拉回到“能用严谨实验支撑的 BIBM Main Paper 候选”，优先证明跨语言证据抽取的 recall、traceability 和 citation validity 真的有增益。
+**Goal:** 把 LinguaSeeker 从“有工程系统、但论文信号不稳定”拉回到“能用严谨实验支撑的 BIBM Main Paper 候选”，优先证明跨语言证据抽取的 recall、traceability 和 citation validity 真的有增益。
 
 **Architecture:** 采用诊断优先的研究路径。先修复当前最明确的 recall 瓶颈，再重新跑 worst-case ablation 和统计检验；只有当 signal 被重新拉起来后，才继续强化双轨调和、置信度评分、traceability 指标和论文材料。Phase 4 UI 只作为审查与标注基础设施，不作为 main paper novelty。
 

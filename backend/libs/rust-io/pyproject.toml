@@ -5,11 +5,11 @@ build-backend = "maturin"
 [project]
 name = "rust-io"
 requires-python = ">=3.12"
-description = "High-performance Rust native extensions for Cross Evidence: literature search, MinerU document parsing, file I/O, S3, archives, and SHA-256 dedup."
+description = "High-performance Rust native extensions for Lingua Seeker: literature search, MinerU document parsing, file I/O, S3, archives, and SHA-256 dedup."
 readme = "README.md"
 license = "MIT"
 authors = [
-    { name = "Cross EvidenceTeam" },
+    { name = "Lingua Seeker Team" },
 ]
 classifiers = [
     "Programming Language :: Rust",
@@ -23,8 +23,8 @@ classifiers = [
 dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://github.com/lanshi17/cross-evidence"
-Repository = "https://github.com/lanshi17/cross-evidence"
+Homepage = "https://github.com/lanshi17/lingua-seeker"
+Repository = "https://github.com/lanshi17/lingua-seeker"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]

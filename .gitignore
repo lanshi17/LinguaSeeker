@@ -97,6 +97,16 @@ backend/config/vault/*.yaml
 backend/config/vault/*.yml
 !backend/config/vault/*.example
 !backend/config/vault/README.md
+# Benchmark Ansible config — vault secrets & vault password
+benchmark/config/.vault_pass
+benchmark/config/vault/secrets.yaml
+benchmark/config/vault/secrets.yml
+!benchmark/config/vault/*.example
+!benchmark/config/vault/README.md
+# Ansible-deployed benchmark config artifacts (rendered from benchmark/config/ sources)
+benchmark/data/inputs/literature_acquisition/rett_config.json
+benchmark/data/inputs/literature_acquisition/rett_config_02.json
+benchmark/datasets/rett_annotation/config.yaml
 **/nohup.out
 .aider*
 .mcp.json

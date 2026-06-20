@@ -7,7 +7,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Build a defensible BIBM Main Paper path for CrossEvidence by prioritizing only the algorithmic, dataset, and evaluation work that can improve field-level extraction quality, cross-lingual consistency, and citation-valid traceability under non-leaking evaluation.
+**Goal:** Build a defensible BIBM Main Paper path for LinguaSeeker by prioritizing only the algorithmic, dataset, and evaluation work that can improve field-level extraction quality, cross-lingual consistency, and citation-valid traceability under non-leaking evaluation.
 
 **Architecture:** The paper method should be a target-safe, source-grounded cross-lingual evidence graph pipeline. Phase 2 generates recall-first original/translated candidates, Phase 3 adds target-safe entity context and normalization, the evidence graph scores support/contradiction/source validity, and the benchmark layer produces frozen ablations, baseline comparisons, traceability metrics, and statistical gates. UI work is included only where it supports annotation, audit, or reproducible expert review.
 

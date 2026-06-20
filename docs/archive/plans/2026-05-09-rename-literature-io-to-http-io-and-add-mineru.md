@@ -35,7 +35,7 @@ Change `name` and `lib.name`:
 name = "http-io"
 version = "0.1.0"
 edition = "2024"
-description = "High-performance HTTP/web I/O for CrossEvidence"
+description = "High-performance HTTP/web I/O for LinguaSeeker"
 
 [lib]
 name = "http_io"
@@ -220,7 +220,7 @@ Rewrite `backend/libs/http-io/README.md`:
 ```markdown
 # http-io
 
-Rust library for HTTP/web I/O operations in CrossEvidence. **Not a standalone Python module** — accessed via the `rust_io.http` facade.
+Rust library for HTTP/web I/O operations in LinguaSeeker. **Not a standalone Python module** — accessed via the `rust_io.http` facade.
 
 ## From Python
 

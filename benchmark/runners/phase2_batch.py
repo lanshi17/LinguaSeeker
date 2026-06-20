@@ -12,13 +12,13 @@ from typing import Any, Mapping, TypedDict, cast
 import httpx
 
 from benchmark.analysis.dataset_curation.materialize_phase2_artifacts import DEFAULT_PIPELINE_ROOT
+from benchmark.config.defaults import (
+    DEFAULT_PIPELINE_BASE_URL as DEFAULT_BASE_URL,
+    PHASE2_ARTIFACT_RELATIVE_PATH,
+    PHASE2_TERMINAL_STATUSES,
+    PIPELINE_FAILURE_STATUSES,
+)
 from benchmark.core import GROUND_TRUTH_DIR, REPORTS_DIR, load_proxy
-
-
-DEFAULT_BASE_URL = "http://localhost:8000"
-PHASE2_ARTIFACT_RELATIVE_PATH = Path("phase_2") / "extraction_result.json"
-PHASE2_TERMINAL_STATUSES = {"completed", "failed", "skipped"}
-PIPELINE_FAILURE_STATUSES = {"failed"}
 
 
 class Phase2TargetPayload(TypedDict):

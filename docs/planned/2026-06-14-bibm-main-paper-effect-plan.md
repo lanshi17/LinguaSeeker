@@ -7,7 +7,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** 以 BIBM Main Paper 为目标，把 CrossEvidence 从“端到端工程系统”推进为可被实验支撑的跨语言生物医学证据抽取方法，核心产出是可复现的算法增益、可审计的溯源指标、以及严谨的数据集和基线对比。
+**Goal:** 以 BIBM Main Paper 为目标，把 LinguaSeeker 从“端到端工程系统”推进为可被实验支撑的跨语言生物医学证据抽取方法，核心产出是可复现的算法增益、可审计的溯源指标、以及严谨的数据集和基线对比。
 
 **Architecture:** 采用编排式垂直切片架构。Phase 2 聚焦候选证据召回、双轨证据图和源文一致性调和；Phase 3 聚焦实体标准化、外部知识上下文和证据矩阵；Phase 4 只服务专家标注、错误分析和可追溯审稿材料，不把 UI 功能包装成 Main Paper novelty。
 
@@ -1183,7 +1183,7 @@ Gate G8:
 如果 Main Paper no-go，则论文定位改为：
 
 ```text
-CrossEvidence: A citation-valid-by-construction bilingual workbench and benchmark resource for ACMG/ClinGen evidence extraction.
+LinguaSeeker: A citation-valid-by-construction bilingual workbench and benchmark resource for ACMG/ClinGen evidence extraction.
 ```
 
 此时保留：

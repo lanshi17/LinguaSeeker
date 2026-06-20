@@ -476,7 +476,7 @@ Backend tests:
 - Create: `backend/tests/api/test_pipeline_auth.py`
 
 Deploy (non-breaking):
-- Modify: `deploy/ansible/roles/nginx/templates/cross-evidence.conf.j2` — HSTS/security headers
+- Modify: `deploy/ansible/roles/nginx/templates/lingua-seeker.conf.j2` — HSTS/security headers
 - Modify: `deploy/ansible/roles/backend/templates/acmg-backend.service.j2` — `forwarded-allow-ips` restricted
 
 ```bash
@@ -489,7 +489,7 @@ cp worktrees/UHLC0N_quartz/backend/src/api/v1/source_link.py backend/src/api/v1/
 cp worktrees/UHLC0N_quartz/backend/pyproject.toml backend/pyproject.toml
 cp worktrees/UHLC0N_quartz/backend/tests/api/test_auth.py backend/tests/api/test_auth.py
 cp worktrees/UHLC0N_quartz/backend/tests/api/test_pipeline_auth.py backend/tests/api/test_pipeline_auth.py
-cp worktrees/UHLC0N_quartz/deploy/ansible/roles/nginx/templates/cross-evidence.conf.j2 deploy/ansible/roles/nginx/templates/cross-evidence.conf.j2
+cp worktrees/UHLC0N_quartz/deploy/ansible/roles/nginx/templates/lingua-seeker.conf.j2 deploy/ansible/roles/nginx/templates/lingua-seeker.conf.j2
 cp worktrees/UHLC0N_quartz/deploy/ansible/roles/backend/templates/acmg-backend.service.j2 deploy/ansible/roles/backend/templates/acmg-backend.service.j2
 ```
 

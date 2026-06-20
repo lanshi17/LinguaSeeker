@@ -1,6 +1,6 @@
 # Configuration Management
 
-CrossEvidence uses `backend/config/` as the only file-based configuration source. `config_loader.py`
+LinguaSeeker uses `backend/config/` as the only file-based configuration source. `config_loader.py`
 loads layered YAML into environment variables, and `config.py` exposes typed Pydantic Settings.
 
 ## Configuration Sources (Priority Order)

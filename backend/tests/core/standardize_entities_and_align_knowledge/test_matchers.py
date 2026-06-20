@@ -313,3 +313,153 @@ async def test_hybrid_matcher_degrades_to_unmapped_on_semantic_service_error() -
     assert match.match_method == MatchMethod.SIMILARITY
     assert "semantic matching unavailable" in match.rationale
     assert semantic_matcher.calls == 1
+
+
+class FakeCrossLingualResolver:
+    """Cross-lingual disease resolver test double."""
+
+    def __init__(self, resolved: str | None):
+        self._resolved = resolved
+        self.calls = 0
+        self.last_raw_text: str | None = None
+
+    async def resolve(self, raw_text: str) -> str | None:
+        self.calls += 1
+        self.last_raw_text = raw_text
+        return self._resolved
+
+
+class FakePreciseMatcherWithRetry:
+    """Precise matcher that returns UNMAPPED for the original text and a match for the retry text."""
+
+    def __init__(self, unmapped: EntityMatch, retry_match: EntityMatch, retry_raw_text: str):
+        self._unmapped = unmapped
+        self._retry_match = retry_match
+        self._retry_raw_text = retry_raw_text
+        self.calls = 0
+        self.last_candidate_raw_text: str | None = None
+
+    async def match(self, candidate):
+        self.calls += 1
+        self.last_candidate_raw_text = candidate.raw_text
+        if candidate.raw_text == self._retry_raw_text:
+            return self._retry_match
+        return self._unmapped
+
+
+@pytest.mark.asyncio
+async def test_hybrid_matcher_uses_cross_lingual_resolver_for_unmapped_disease() -> None:
+    """A DISEASE candidate resolved cross-lingually standardizes via a precise retry."""
+    candidate = StandardizationCandidate(
+        candidate_id="c-xling",
+        entity_type=EntityType.DISEASE,
+        role=BindingRole.CONTEXT,
+        raw_text="乳腺癌",
+        chain_id="chain-1",
+        track="translated",
+    )
+    unmapped = EntityMatch(candidate, MatchStatus.UNMAPPED, None, "乳腺癌")
+    retry_candidate = StandardizationCandidate(
+        candidate_id="c-xling",
+        entity_type=EntityType.DISEASE,
+        role=BindingRole.CONTEXT,
+        raw_text="breast cancer",
+        chain_id="chain-1",
+        track="translated",
+    )
+    retry_match = EntityMatch(
+        retry_candidate,
+        MatchStatus.STANDARDIZED,
+        "OMIM:114480",
+        "Breast cancer",
+    )
+    precise = FakePreciseMatcherWithRetry(unmapped, retry_match, retry_raw_text="breast cancer")
+    resolver = FakeCrossLingualResolver(resolved="breast cancer")
+    semantic_matcher = FakeSimilarityMatcher(
+        EntityMatch(candidate, MatchStatus.STANDARDIZED, "WRONG", "wrong", match_method=MatchMethod.SIMILARITY)
+    )
+
+    match = await HybridTerminologyMatcher(
+        precise,
+        semantic_matcher,
+        cross_lingual_disease_resolver=resolver,
+    ).match(candidate)
+
+    assert match.status == MatchStatus.STANDARDIZED
+    assert match.external_id == "OMIM:114480"
+    assert match.rationale == "cross-lingual fuzzy match"
+    assert resolver.calls == 1
+    assert resolver.last_raw_text == "乳腺癌"
+    assert semantic_matcher.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_hybrid_matcher_falls_through_when_resolver_fails() -> None:
+    """When the resolver returns None, similarity matching is still attempted."""
+    candidate = StandardizationCandidate(
+        candidate_id="c-xling-none",
+        entity_type=EntityType.DISEASE,
+        role=BindingRole.CONTEXT,
+        raw_text="未知疾病",
+        chain_id="chain-1",
+        track="translated",
+    )
+    unmapped = EntityMatch(candidate, MatchStatus.UNMAPPED, None, "未知疾病")
+    precise = FakePreciseMatcher(unmapped)
+    resolver = FakeCrossLingualResolver(resolved=None)
+    semantic_matcher = FakeSimilarityMatcher(
+        EntityMatch(
+            candidate,
+            MatchStatus.STANDARDIZED,
+            "OMIM:1",
+            "Disease A",
+            match_method=MatchMethod.SIMILARITY,
+        )
+    )
+
+    match = await HybridTerminologyMatcher(
+        precise,
+        semantic_matcher,
+        cross_lingual_disease_resolver=resolver,
+    ).match(candidate)
+
+    assert match.status == MatchStatus.STANDARDIZED
+    assert match.match_method == MatchMethod.SIMILARITY
+    assert resolver.calls == 1
+    assert semantic_matcher.calls == 1
+
+
+@pytest.mark.asyncio
+async def test_hybrid_matcher_skips_resolver_for_non_disease() -> None:
+    """Non-DISEASE candidates skip the cross-lingual resolver entirely."""
+    candidate = StandardizationCandidate(
+        candidate_id="c-variant-xling",
+        entity_type=EntityType.VARIANT,
+        role=BindingRole.TARGET,
+        raw_text="c.9999A>T",
+        chain_id="chain-1",
+        track="original",
+    )
+    unmapped = EntityMatch(candidate, MatchStatus.UNMAPPED, None, "c.9999A>T")
+    precise = FakePreciseMatcher(unmapped)
+    resolver = FakeCrossLingualResolver(resolved="should-not-be-called")
+    semantic_matcher = FakeSimilarityMatcher(
+        EntityMatch(
+            candidate,
+            MatchStatus.STANDARDIZED,
+            "ClinVarVariation:1",
+            "Variant A",
+            match_method=MatchMethod.SIMILARITY,
+        )
+    )
+
+    match = await HybridTerminologyMatcher(
+        precise,
+        semantic_matcher,
+        cross_lingual_disease_resolver=resolver,
+    ).match(candidate)
+
+    assert match.status == MatchStatus.STANDARDIZED
+    assert match.match_method == MatchMethod.SIMILARITY
+    assert resolver.calls == 0
+    assert semantic_matcher.calls == 1

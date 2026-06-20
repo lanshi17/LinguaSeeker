@@ -1,18 +1,10 @@
-# ── Frontend (Next.js via systemd) ────────────────────────────────────────
+# ── Frontend (Next.js via systemd, bun runtime) ──────────────────────────
 
-- name: Install Node.js 18 via nvm (for deploy user)
+- name: Install bun runtime (for deploy user)
   shell: >
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+    curl -fsSL https://bun.sh/install | bash
   args:
-    creates: /home/deploy/.nvm/nvm.sh
-
-- name: Install Node 18
-  shell: >
-    source /home/deploy/.nvm/nvm.sh && nvm install 18 && nvm alias default 18
-  args:
-    executable: /bin/bash
-  environment:
-    NVM_DIR: /home/deploy/.nvm
+    creates: /home/deploy/.bun/bin/bun
 
 - name: Sync frontend source code
   synchronize:
@@ -27,28 +19,32 @@
 
 - name: Install frontend dependencies
   shell: >
-    source /home/deploy/.nvm/nvm.sh && npm ci --production=false
+    export BUN_INSTALL=/home/deploy/.bun &&
+    export PATH=$BUN_INSTALL/bin:$PATH &&
+    bun install --frozen-lockfile
   args:
     chdir: "{{ frontend_root }}"
     executable: /bin/bash
   environment:
-    NVM_DIR: /home/deploy/.nvm
+    BUN_INSTALL: /home/deploy/.bun
     NODE_ENV: "{{ frontend_node_env }}"
 
 - name: Build frontend
   shell: >
-    source /home/deploy/.nvm/nvm.sh && npm run build
+    export BUN_INSTALL=/home/deploy/.bun &&
+    export PATH=$BUN_INSTALL/bin:$PATH &&
+    bun run build
   args:
     chdir: "{{ frontend_root }}"
     executable: /bin/bash
   environment:
-    NVM_DIR: /home/deploy/.nvm
+    BUN_INSTALL: /home/deploy/.bun
     NODE_ENV: "{{ frontend_node_env }}"
     NEXT_PUBLIC_API_URL: "https://{{ domain_name }}/api/v1"
 
-- name: Create cross-evidence config directory
+- name: Create lingua-seeker config directory
   file:
-    path: /etc/cross-evidence
+    path: /etc/lingua-seeker
     state: directory
     mode: "0700"
     owner: root
@@ -57,7 +53,7 @@
 - name: Deploy frontend environment file (secrets)
   template:
     src: frontend.env.j2
-    dest: /etc/cross-evidence/frontend.env
+    dest: /etc/lingua-seeker/frontend.env
     mode: "0600"
     owner: root
     group: root

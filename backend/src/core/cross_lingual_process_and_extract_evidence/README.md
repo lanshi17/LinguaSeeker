@@ -1,6 +1,6 @@
 # Cross-Lingual Process & Extract Evidence
 
-> Phase 2 of the CrossEvidence pipeline: format, translate, and persist non-English biomedical documents into structured bilingual JSON via a 3-stage LLM pipeline with block-level alignment and character drift tracking.
+> Phase 2 of the LinguaSeeker pipeline: format, translate, and persist non-English biomedical documents into structured bilingual JSON via a 3-stage LLM pipeline with block-level alignment and character drift tracking.
 
 ## Quick Start
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 
 from .contracts import (
     EvidenceItem,
@@ -27,6 +28,10 @@ _HGVS_G_RE = re.compile(
 class AcmgEvidenceValueNormalizer:
     """Normalize extracted values before catalog backfill and quality gates."""
 
+    _GENE_SYMBOL_FIELDS = {
+        "A.gene_symbol",
+        "A.gene_aliases",
+    }
     _HGVS_OR_REFERENCE_FIELDS = {
         "A.variant_hgvs_g",
         "A.reference_sequence",
@@ -94,6 +99,8 @@ class AcmgEvidenceValueNormalizer:
                     )
                 ],
             )
+        if item.field_id in self._GENE_SYMBOL_FIELDS:
+            return self._normalize_gene_symbol(item)
         if item.field_id == "C.de_novo_status":
             return self._normalize_de_novo(item)
         if item.field_id == "B.consanguinity":
@@ -167,6 +174,23 @@ class AcmgEvidenceValueNormalizer:
         if text.isdigit():
             return self._with_value_issue(item, int(text))
         return item, []
+
+    def _normalize_gene_symbol(
+        self, item: EvidenceItem,
+    ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
+        value = item.value
+        if isinstance(value, list):
+            normalized = [
+                unicodedata.normalize("NFKC", str(v)).strip().upper()
+                for v in value
+            ]
+        elif isinstance(value, str):
+            normalized = unicodedata.normalize("NFKC", value).strip().upper()
+        else:
+            return item, []
+        if normalized == value:
+            return item, []
+        return self._with_value_issue(item, normalized)
 
     def _normalize_age_of_onset(
         self, item: EvidenceItem,

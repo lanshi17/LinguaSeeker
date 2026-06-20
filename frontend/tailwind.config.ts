@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Cross EvidenceDesign System
+ * Lingua Seeker Design System
  *
  * Based on UI/UX Pro Max "Accessible & Ethical" style:
  * - Medical teal primary (#0891B2)
@@ -10,7 +10,7 @@ import type { Config } from "tailwindcss";
  * - Figtree / Noto Sans typography
  */
 const config: Config = {
-  content: ["./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: ["./src/**/*.{ts,tsx}", "./index.html"],
   theme: {
     extend: {
       colors: {
@@ -39,6 +39,13 @@ const config: Config = {
           800: "#166534",
           900: "#14532d",
         },
+        patho: {
+          pathogenic: "#B91C1C",
+          likely_pathogenic: "#DC2626",
+          uncertain: "#6B7280",
+          likely_benign: "#0D9488",
+          benign: "#0F766E",
+        },
       },
       fontFamily: {
         sans: [
@@ -48,6 +55,8 @@ const config: Config = {
           "-apple-system",
           "sans-serif",
         ],
+        display: ["Fraunces", "Georgia", "serif"],
+        mono: ["JetBrains Mono", "Menlo", "monospace"],
       },
     },
   },

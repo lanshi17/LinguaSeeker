@@ -1,7 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { usePipelineRun } from "../hooks/usePipelineRun";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -12,7 +10,7 @@ import { extractErrorMessage } from "@/lib/api/error";
 import type { PipelineRunRequest } from "../types/pipeline";
 
 export function PipelineSubmitForm() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const addToast = useToastStore((s) => s.addToast);
   const { mutateAsync: startRun, isPending } = usePipelineRun();
 
@@ -39,7 +37,7 @@ export function PipelineSubmitForm() {
     try {
       const result = await startRun(body);
       addToast({ level: "success", title: "Pipeline started" });
-      router.push(`/pipeline/${result.processing_run_id}`);
+      navigate(`/pipeline/${result.processing_run_id}`);
     } catch (err: unknown) {
       console.error("[Pipeline] start failed:", err);
       addToast({ level: "error", title: `Failed to start pipeline: ${extractErrorMessage(err)}` });

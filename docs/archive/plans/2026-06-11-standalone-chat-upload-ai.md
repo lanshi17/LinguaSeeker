@@ -574,8 +574,8 @@ Create `frontend/src/features/chat/utils/localSessions.ts`:
 ```typescript
 import type { ChatSessionResponse } from "../types/chat";
 
-export const CHAT_SESSIONS_KEY = "cross-evidence.chat.sessions.v1";
-export const ACTIVE_CHAT_SESSION_KEY = "cross-evidence.chat.activeSessionId.v1";
+export const CHAT_SESSIONS_KEY = "lingua-seeker.chat.sessions.v1";
+export const ACTIVE_CHAT_SESSION_KEY = "lingua-seeker.chat.activeSessionId.v1";
 const MAX_LOCAL_SESSIONS = 20;
 
 function safeStorage(storage?: Storage): Storage | null {
@@ -987,7 +987,7 @@ export function appendAssistantChunk(
 In `frontend/src/features/chat/providers/chatProvider.ts`:
 
 - Import `appendAssistantChunk` and `ChatBubbleMessage`.
-- Change `CrossEvidenceChatProvider` generic from local `ChatMessage` to `ChatBubbleMessage`.
+- Change `LinguaSeekerChatProvider` generic from local `ChatMessage` to `ChatBubbleMessage`.
 - Replace `transformMessage()`:
 
 ```typescript
@@ -1338,7 +1338,7 @@ git commit -m "feat: enable standalone chat upload flow"
 
 **Step 1: Write failing provider-call tests**
 
-Add a test that asks a question without `evidence_id` and asserts the provider receives a general CrossEvidence prompt, not a context-only prompt:
+Add a test that asks a question without `evidence_id` and asserts the provider receives a general LinguaSeeker prompt, not a context-only prompt:
 
 ```python
 async def test_generate_reply_without_evidence_uses_general_chat_prompt(
@@ -1362,7 +1362,7 @@ async def test_generate_reply_without_evidence_uses_general_chat_prompt(
 
     assert reply == "I can help start a pipeline."
     kwargs = mock_llm.await_args.kwargs
-    assert "CrossEvidence" in kwargs["system_prompt"]
+    assert "LinguaSeeker" in kwargs["system_prompt"]
     assert "pipeline" in kwargs["system_prompt"].lower()
 ```
 
@@ -1384,13 +1384,13 @@ def _system_prompt(self, *, has_evidence_context: bool) -> str:
     """Build the chat system prompt for evidence-bound or standalone chat."""
     if has_evidence_context:
         return (
-            "You are a clinical genetics assistant inside CrossEvidence. Answer "
+            "You are a clinical genetics assistant inside LinguaSeeker. Answer "
             "questions about evidence cards using the provided context. Be "
             "precise and cite specific fields from the evidence card."
         )
 
     return (
-        "You are the Cross Evidence assistant. Help users start literature "
+        "You are the Lingua Seeker assistant. Help users start literature "
         "evidence extraction pipelines, upload biomedical PDFs, search "
         "existing evidence, and understand evidence extraction results. "
         "Do not provide a clinical diagnosis. When evidence is unavailable, "

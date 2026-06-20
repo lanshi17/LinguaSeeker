@@ -1,5 +1,5 @@
 [project]
-name = "cross-evidence-backend"
+name = "lingua-seeker-backend"
 version = "0.1.0"
 description = "Variant classification and evidence interpretation platform"
 requires-python = ">=3.12"

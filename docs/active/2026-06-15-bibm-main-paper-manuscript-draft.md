@@ -1,4 +1,4 @@
-# CrossEvidence: Citation-Valid Cross-Lingual Biomedical Evidence Reconciliation
+# LinguaSeeker: Citation-Valid Cross-Lingual Biomedical Evidence Reconciliation
 
 **Status:** in-progress
 **Created:** 2026-06-15
@@ -7,7 +7,7 @@
 
 ## Abstract
 
-Cross-lingual biomedical evidence extraction for clinical genetics requires both accurate structured fields and citations that can be audited against source literature. Direct LLM extraction can produce plausible values, but it does not guarantee that accepted evidence is grounded in recoverable source spans. We present CrossEvidence, a citation-valid-by-construction evidence reconciliation framework for ACMG/ClinGen-style gene-disease evidence extraction. The method converts original-track and translated-track extraction candidates into a typed evidence graph, validates source spans, adds target-safe gene/disease context, and reconciles conflicts using verifier support, target specificity, cross-track agreement, and contradiction-aware scoring. We evaluate on a frozen N=30 ClinGen/ACMG-style benchmark against matched direct LLM, translate-then-extract, original-only, RAG-LLM, single-agent CoT, same-release-window citation-required frontier prompt-only, and grounded hard-rule baselines. Context-verifier reconciliation achieves P=0.9205, R=0.9759, and F1=0.9474, significantly improving over the grounded hard-rule baseline (F1=0.8820; delta=+0.0654; 95% CI=[0.0302, 0.1060]; p=0.0039). It also exceeds the strongest same-window citation-required prompt-only frontier baseline, GPT-5, on raw F1 (0.9474 vs. 0.9222) and TraceableF1 (0.9474 vs. 0.9109). Accepted citations are recoverable from canonical source spans in the benchmark (CVR=1.0, HCR=0.0). Error analysis shows that the hardest remaining cases are relationship labels whose ClinGen validity semantics are not fully visible in article-local evidence.
+Cross-lingual biomedical evidence extraction for clinical genetics requires both accurate structured fields and citations that can be audited against source literature. Direct LLM extraction can produce plausible values, but it does not guarantee that accepted evidence is grounded in recoverable source spans. We present LinguaSeeker, a citation-valid-by-construction evidence reconciliation framework for ACMG/ClinGen-style gene-disease evidence extraction. The method converts original-track and translated-track extraction candidates into a typed evidence graph, validates source spans, adds target-safe gene/disease context, and reconciles conflicts using verifier support, target specificity, cross-track agreement, and contradiction-aware scoring. We evaluate on a frozen N=30 ClinGen/ACMG-style benchmark against matched direct LLM, translate-then-extract, original-only, RAG-LLM, single-agent CoT, same-release-window citation-required frontier prompt-only, and grounded hard-rule baselines. Context-verifier reconciliation achieves P=0.9205, R=0.9759, and F1=0.9474, significantly improving over the grounded hard-rule baseline (F1=0.8820; delta=+0.0654; 95% CI=[0.0302, 0.1060]; p=0.0039). It also exceeds the strongest same-window citation-required prompt-only frontier baseline, GPT-5, on raw F1 (0.9474 vs. 0.9222) and TraceableF1 (0.9474 vs. 0.9109). Accepted citations are recoverable from canonical source spans in the benchmark (CVR=1.0, HCR=0.0). Error analysis shows that the hardest remaining cases are relationship labels whose ClinGen validity semantics are not fully visible in article-local evidence.
 
 ## 1. Introduction
 
@@ -15,7 +15,7 @@ Clinical genetics evidence curation depends on structured, auditable facts rathe
 
 Large language models provide a convenient interface for biomedical information extraction, but prompt-only systems often treat citations as generated text. This makes it difficult to distinguish a correct value supported by the source, a plausible value unsupported by the article, and a correct-looking citation that cannot be mapped back to the canonical document. For ACMG/ClinGen-style gene-disease evidence extraction, this is a methodological problem rather than only a product problem: the extraction method must make source validity and conflict resolution explicit enough to be measured.
 
-We propose CrossEvidence, a citation-valid-by-construction cross-lingual biomedical evidence reconciliation framework. The method extracts original-track and translated-track candidates, converts them into a typed evidence graph, verifies source spans, applies target-safe gene/disease context, and reconciles field conflicts with verifier support, target specificity, agreement, and contradiction penalties. The contribution is not the surrounding multi-agent software; it is the evidence-graph decision layer that turns citation validity into an acceptance invariant.
+We propose LinguaSeeker, a citation-valid-by-construction cross-lingual biomedical evidence reconciliation framework. The method extracts original-track and translated-track candidates, converts them into a typed evidence graph, verifies source spans, applies target-safe gene/disease context, and reconciles field conflicts with verifier support, target specificity, agreement, and contradiction penalties. The contribution is not the surrounding multi-agent software; it is the evidence-graph decision layer that turns citation validity into an acceptance invariant.
 
 This paper makes five contributions:
 
@@ -47,7 +47,7 @@ Bilingual joint training combines data from both languages. Taiyi [Luo et al., 2
 
 TransFusion [Chen et al., 2025], published at ACL 2025, is the closest architectural precedent to our dual-track design. TransFusion fine-tunes models to use English translations of low-resource language data and fuses annotations from both tracks, achieving +5 to +14 F1 improvement on low-resource NER across 50 languages. However, TransFusion operates on generic IE tasks (NER, RE, event extraction) with annotation-level fusion; it does not address domain-specific evidence catalogs, citation validity, or the multi-dimensional reconciliation required for clinical genetics evidence extraction.
 
-CrossEvidence differs from these approaches in three ways. First, it maintains independent original and translated extraction tracks that produce candidate evidence items, not fused annotations. Second, reconciliation is performed by a deterministic scoring function over source grounding, target specificity, cross-track agreement, verifier support, and contradiction penalties, not by annotation merging or model ensembling. Third, accepted evidence requires recoverable source spans, making citation validity a deterministic acceptance condition rather than a post-hoc evaluation metric.
+LinguaSeeker differs from these approaches in three ways. First, it maintains independent original and translated extraction tracks that produce candidate evidence items, not fused annotations. Second, reconciliation is performed by a deterministic scoring function over source grounding, target specificity, cross-track agreement, verifier support, and contradiction penalties, not by annotation merging or model ensembling. Third, accepted evidence requires recoverable source spans, making citation validity a deterministic acceptance condition rather than a post-hoc evaluation metric.
 
 ### 2.3 LLM-Based Extraction and Citation Grounding
 
@@ -59,7 +59,7 @@ RAG-based systems ground LLM outputs in retrieved documents. SyRACT [Zhao et al.
 
 Systematic review automation provides dual-extraction patterns at the screening level. ASReview [van de Schoot et al., 2021] supports crowd screening with active learning. Rayyan [Ouzzani et al., 2016] implements dual independent screening with conflict resolution. Khan et al. [2025] demonstrate dual-LLM collaborative data extraction mimicking the Cochrane two-reviewer workflow. These tools operate at the screening or data-extraction level for systematic reviews; they do not perform structured field-level extraction against a domain-specific evidence catalog.
 
-CrossEvidence differs from LLM-based extraction systems by making citation validity a deterministic acceptance condition. Every accepted evidence item must include a source span recoverable from canonical document text. The reconciliation function is deterministic: it does not depend on LLM voting, debate, or consensus. This produces CVR=1.0 and HCR=0.0 on the frozen benchmark, a property that prompt-only and multi-agent debate systems do not guarantee.
+LinguaSeeker differs from LLM-based extraction systems by making citation validity a deterministic acceptance condition. Every accepted evidence item must include a source span recoverable from canonical document text. The reconciliation function is deterministic: it does not depend on LLM voting, debate, or consensus. This produces CVR=1.0 and HCR=0.0 on the frozen benchmark, a property that prompt-only and multi-agent debate systems do not guarantee.
 
 ### 2.4 Clinical Genetics and ACMG/ClinGen Evidence Curation
 
@@ -71,7 +71,7 @@ VETA [Li et al., 2026] is the first system to systematically extract ACMG eviden
 
 The Cochrane evidence synthesis community has established dual independent review as a methodological standard [Higgins et al., 2019]. Polyglot Search Translator [Scott et al., 2019] translates search strategies across languages for multilingual systematic reviews. Egger et al. [1997] demonstrated that language-restricted meta-analyses introduce bias, motivating multilingual evidence inclusion. These methodological principles inform our dual-track design, but existing automation tools implement dual review at the screening level, not at the structured evidence extraction level.
 
-CrossEvidence addresses the gap between literature-level evidence extraction and structured ACMG/ClinGen field output. Unlike InterVar or VarSome, it extracts evidence from unstructured full-text literature. Unlike PubTator or LitVar, it produces structured fields against a 134-field ACMG/ClinGen evidence catalog rather than entity-level annotations. Unlike VETA, it operates on full-text articles rather than pre-structured summaries. Unlike translate-then-extract pipelines, it maintains source-language grounding through dual-track reconciliation. And unlike prompt-only LLM systems, it enforces citation validity as a deterministic acceptance condition with CVR=1.0 and HCR=0.0 on the frozen benchmark.
+LinguaSeeker addresses the gap between literature-level evidence extraction and structured ACMG/ClinGen field output. Unlike InterVar or VarSome, it extracts evidence from unstructured full-text literature. Unlike PubTator or LitVar, it produces structured fields against a 134-field ACMG/ClinGen evidence catalog rather than entity-level annotations. Unlike VETA, it operates on full-text articles rather than pre-structured summaries. Unlike translate-then-extract pipelines, it maintains source-language grounding through dual-track reconciliation. And unlike prompt-only LLM systems, it enforces citation validity as a deterministic acceptance condition with CVR=1.0 and HCR=0.0 on the frozen benchmark.
 
 ## 3. Task And Dataset
 
@@ -89,7 +89,7 @@ Table 1 summarizes the frozen dataset and reproducibility anchor.
 
 ### 4.1 Dual-Track Candidate Generation
 
-CrossEvidence first extracts candidate evidence from two tracks: the source/original track and a translated track. The two tracks are not treated as independent final answers. Instead, their outputs become candidates in a shared evidence graph. This design allows the method to compare semantically similar values, identify disagreements, and preserve the source span supporting each candidate.
+LinguaSeeker first extracts candidate evidence from two tracks: the source/original track and a translated track. The two tracks are not treated as independent final answers. Instead, their outputs become candidates in a shared evidence graph. This design allows the method to compare semantically similar values, identify disagreements, and preserve the source span supporting each candidate.
 
 ### 4.2 Evidence Graph
 
@@ -113,7 +113,7 @@ Target-safe context adds known gene and disease aliases, ontology metadata, and 
 
 ### 4.5 Context-Verifier Reconciliation
 
-For each field and normalized candidate value, CrossEvidence computes a reconciliation score:
+For each field and normalized candidate value, LinguaSeeker computes a reconciliation score:
 
 ```text
 score = w_source * source_score
@@ -204,7 +204,7 @@ To separate model strength from method design, we additionally evaluate citation
 | B9_CLAUDE_SONNET45_PROMPT_CITE | claude-sonnet-4-5-20250929 | 2025-09-29 | 0.8987 | 0.8659 | 0.8820 | 0.7342 | 0.2658 | 0.6476 | 0.0000 | 7.3370 |
 | B10_GLM46_PROMPT_CITE | glm-4.6 | 2025-09-30 | 0.8621 | 0.6098 | 0.7143 | 0.6724 | 0.3276 | 0.4803 | 0.0000 | 6.8700 |
 
-The strongest prompt-only frontier baseline is GPT-5, with F1=0.9222 and TraceableF1=0.9109. CrossEvidence remains higher on both raw F1 and TraceableF1 in this frozen comparison. We do not claim paired statistical superiority over each frontier model unless such tests are added; the result is used to show that prompt engineering alone does not close the traceable-extraction gap in this benchmark.
+The strongest prompt-only frontier baseline is GPT-5, with F1=0.9222 and TraceableF1=0.9109. LinguaSeeker remains higher on both raw F1 and TraceableF1 in this frozen comparison. We do not claim paired statistical superiority over each frontier model unless such tests are added; the result is used to show that prompt engineering alone does not close the traceable-extraction gap in this benchmark.
 
 ### 6.5 Error Analysis
 
@@ -220,7 +220,7 @@ The dominant remaining issue is not a simple extraction failure. Five relationsh
 
 ## 7. Discussion And Limitations
 
-The results support a conservative Main Paper claim. CrossEvidence significantly improves over a grounded hard-rule internal baseline and remains competitive with matched LLM baselines while adding deterministic citation-valid acceptance. The method is strongest when the evidence needed for a field is visible in the article and can be linked to target-safe gene/disease context.
+The results support a conservative Main Paper claim. LinguaSeeker significantly improves over a grounded hard-rule internal baseline and remains competitive with matched LLM baselines while adding deterministic citation-valid acceptance. The method is strongest when the evidence needed for a field is visible in the article and can be linked to target-safe gene/disease context.
 
 **Relation to external systems.** The closest published systems operate under task definitions that differ from ours in input type, output granularity, or evaluation scope, preventing direct head-to-head comparison on a shared benchmark. Table 6 summarizes these differences.
 
@@ -231,13 +231,13 @@ The results support a conservative Main Paper claim. CrossEvidence significantly
 | AcmGENTIC [Saadat and Fellay, 2026] | Full-text articles | Variant-centric evidence reports | No | No | ClinGen-based (unpublished) |
 | TransFusion [Chen et al., 2025] | Multilingual text | NER/RE/EE annotations | Yes | No | 50 languages, 12 datasets |
 | PubTator 3.0 [Wei et al., 2024] | PubMed/PMC | Entity-level annotations | No | No | Full PubMed corpus |
-| CrossEvidence | Full-text articles | 134-field structured evidence + source spans | Yes | Yes (CVR=1.0) | Frozen N=30 ClinGen |
+| LinguaSeeker | Full-text articles | 134-field structured evidence + source spans | Yes | Yes (CVR=1.0) | Frozen N=30 ClinGen |
 
-No publicly available benchmark currently covers the full-text-to-structured-field-with-citation-validation task that CrossEvidence addresses. The frozen N=30 ClinGen/ACMG-style benchmark used in this evaluation is, to our knowledge, the first to pair full-text source articles with structured field-level ground truth and programmatic citation validity checking. We release it as a contribution in its own right, and we encourage future work to build larger benchmarks under this task definition so that direct head-to-head comparisons become possible.
+No publicly available benchmark currently covers the full-text-to-structured-field-with-citation-validation task that LinguaSeeker addresses. The frozen N=30 ClinGen/ACMG-style benchmark used in this evaluation is, to our knowledge, the first to pair full-text source articles with structured field-level ground truth and programmatic citation validity checking. We release it as a contribution in its own right, and we encourage future work to build larger benchmarks under this task definition so that direct head-to-head comparisons become possible.
 
 Our internal baselines are designed to cover the major architectural design dimensions present in the external literature, but they are not reproductions of any specific published system. B0 represents the upper bound of single-prompt LLM extraction under a complete schema — the dominant paradigm in recent LLM-based biomedical IE work. B1 covers the translate-then-extract dimension, which is the standard cross-lingual pipeline. B3 covers the retrieval-augmented dimension. The internal reconciliation gradient (dual_union through context_verifier_reconcile) isolates the contribution of source grounding, verifier support, target specificity, and contradiction awareness. Together, these baselines demonstrate that each architectural dimension we add produces measurable, statistically significant improvement, without claiming equivalence to any external system that implements additional design contributions of its own.
 
-**Limitations.** First, we acknowledge the absence of direct head-to-head comparison with published external systems. This reflects a genuine gap in the field: no existing system covers our full task definition, and adapting external systems to the 134-field schema with citation validation is substantial engineering work that we prioritize as future work. Second, the frozen benchmark contains 30 entries, suitable for controlled method analysis and paired statistics but not for broad claims of general biomedical IE superiority. Third, the margin over the strongest matched B0-B4 baseline is +0.0188 F1, below the pre-declared +0.03 strong-superiority threshold. Fourth, the B6-B10 prompt-only frontier sweep is tied to exact provider aliases and a same-release-window cohort; hosted model behavior may change over time. Fifth, some gene-disease relationship labels reflect external ClinGen validity curation not fully visible in article-local evidence. Finally, CrossEvidence extracts, grounds, and reconciles evidence fields for expert review; it is not an autonomous clinical decision-support or ACMG classification system.
+**Limitations.** First, we acknowledge the absence of direct head-to-head comparison with published external systems. This reflects a genuine gap in the field: no existing system covers our full task definition, and adapting external systems to the 134-field schema with citation validation is substantial engineering work that we prioritize as future work. Second, the frozen benchmark contains 30 entries, suitable for controlled method analysis and paired statistics but not for broad claims of general biomedical IE superiority. Third, the margin over the strongest matched B0-B4 baseline is +0.0188 F1, below the pre-declared +0.03 strong-superiority threshold. Fourth, the B6-B10 prompt-only frontier sweep is tied to exact provider aliases and a same-release-window cohort; hosted model behavior may change over time. Fifth, some gene-disease relationship labels reflect external ClinGen validity curation not fully visible in article-local evidence. Finally, LinguaSeeker extracts, grounds, and reconciles evidence fields for expert review; it is not an autonomous clinical decision-support or ACMG classification system.
 
 The current benchmark-readiness artifacts are conservative by design: Benchmark A is only reportable once valid `alignment_annotations.json` files exist for the frozen N=30 set, and Benchmark B is reported as a small multilingual runtime pilot (10 attempted zh/ja/ko samples, 3 completed with per-case metrics reused from the frozen baseline report, 4 failed, 3 timed out) rather than a measured autonomous-classification experiment. Those artifacts support planning and curation, not result claims about clinical classification accuracy.
 
@@ -247,7 +247,7 @@ Future work should expand the benchmark, add citation-generating direct LLM and 
 
 ## 8. Conclusion
 
-CrossEvidence frames cross-lingual biomedical evidence extraction as traceability-constrained evidence reconciliation rather than prompt-only generation. On a frozen ACMG/ClinGen-style benchmark, context-verifier reconciliation significantly improves over a grounded internal baseline, remains competitive with matched LLM baselines, and enforces citation-valid-by-construction accepted evidence. The current evidence supports a conservative Main Paper submission centered on auditable, source-grounded cross-lingual biomedical IE.
+LinguaSeeker frames cross-lingual biomedical evidence extraction as traceability-constrained evidence reconciliation rather than prompt-only generation. On a frozen ACMG/ClinGen-style benchmark, context-verifier reconciliation significantly improves over a grounded internal baseline, remains competitive with matched LLM baselines, and enforces citation-valid-by-construction accepted evidence. The current evidence supports a conservative Main Paper submission centered on auditable, source-grounded cross-lingual biomedical IE.
 
 ## Frozen Evidence References
 

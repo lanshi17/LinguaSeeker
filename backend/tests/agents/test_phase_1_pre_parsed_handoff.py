@@ -66,6 +66,13 @@ async def test_phase_1_uses_pre_parsed_markdown_from_acquisition(tmp_path):
     assert result.phase_1_output.md_path.endswith("output.md")
     # Read what was written and confirm it contains our markdown.
     from pathlib import Path
+    import json as _json
 
     written = Path(result.phase_1_output.md_path).read_text(encoding="utf-8")
     assert "MECP2 c.473C>T" in written
+
+    # Title is extracted from the first "# " heading into metadata.json
+    meta = _json.loads(
+        Path(result.phase_1_output.metadata_path).read_text(encoding="utf-8")
+    )
+    assert meta["title"] == "Title"

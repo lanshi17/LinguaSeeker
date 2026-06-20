@@ -3370,3 +3370,231 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 - 本地 benchmark backend 的 API key 策略必须在启动命令中显式声明。
 - 长文档 artifact 批处理保持 concurrency=1,并用 batch report 而不是单条日志判断成败。
 - Phase 2-only benchmark 不应被 Phase 3 embedding warning 中断,但报告中必须记录该风险边界。
+
+## 2026-06-19 将 benchmark 配置统一到 benchmark/config/ Ansible 架构
+
+### 问题描述
+benchmark 子项目的配置文件散落在 `benchmark/datasets/rett_annotation/`(config.yaml、.env、.env.example)与 legacy `benchmark/annotation/.env`,无统一管理,密钥以明文 .env 形式存在(虽被 gitignore)。需收集到 `benchmark/config/` 下用 Ansible 架构统一管理。
+
+### 排查过程
+1. `find` 扫描 benchmark 下所有 yaml/toml/ini/env/json 配置,区分"benchmark 自包含配置"与"调用 backend/config 的 runner"。结论:只有 rett_annotation 是自包含配置;runners(clingen_preprocess/literature_acquisition 等)走 `src.core.config.get_config()`,不在本次范围。
+2. 确认 `benchmark/annotation/` 是 deprecated shim(`__init__.py` 标注 Phase 6 移除,src/ 只剩 .pyc),其 .env 是 stale 重复。
+3. 向用户确认三个关键决策:迁移方式(模板渲染 vs 改加载路径 vs 复制)、Ansible 深度(完整脚手架 vs 最小布局)、密钥处理(vault 加密 vs 仅 example)。
+
+### 根因分析
+- 配置无单一真相源,渲染式管理需保证源码加载路径不变 + 派生文件可重建。
+- group_vars 命名需与 inventory 中的 group 名匹配,否则不会被加载。
+
+### 解决方案
+- `benchmark/config/` 完整 Ansible 脚手架(ansible.cfg + inventories/local + group_vars + playbooks + roles + vault)。
+- group_vars/benchmark.yml 放非密钥变量;vault/secrets.yml 用 `ansible-vault encrypt` 加密(密钥来自 .vault_pass,gitignored)。
+- playbook 本地连接渲染 config.yaml(0644)与 .env(0600, no_log)到 rett_annotation 原位置;template 模块天然幂等(勿加 `changed_when: true`,否则破坏幂等)。
+- inventory 必须把 localhost 放进 `benchmark` group 才能加载 group_vars/benchmark.yml。
+
+### 预防措施
+- group_vars 文件名必须对应 inventory 中真实存在的 group;写完先用 `ansible-inventory --list` 验证 hostvars 含目标变量。
+- template 任务不要加 `changed_when: true`;让 template 模块的 checksum 比对保证幂等。
+- 密钥一律走 ansible-vault;`.vault_pass` 与加密后的 secrets.yml 必须进 .gitignore,同时保留 `*.example` 占位文件供新检出者引导。
+- 用 hashline 编辑 YAML inventory 时,SWAP 行范围必须覆盖全部要改的行,否则会留下重复行(本次遗留一行 `ansible_connection: local`,改为整文件 rewrite 修复)。
+
+## 2026-06-19 集中 benchmark 所有散落配置(文件 + 硬编码常量)
+
+### 问题描述
+上一任务只迁移了 rett_annotation 的自包含配置。本次要求把 benchmark 散落在各处的配置全部集中:配置文件(rett_config.json/rett_config_02.json)与硬编码 Python 常量(poll/retry/base_url/threshold/seed queries)。
+
+### 排查过程
+1. find 扫描 benchmark 下所有 yaml/toml/ini/json/env/config.py,区分"自包含配置文件"与"调用 backend/config 的 runner"。新增候选:rett_config.json/rett_config_02.json(在 data/inputs/literature_acquisition/)、pipeline/manifest.json、core/paths.py、ground_truth/manifest.json。
+2. search 扫描 runners 硬编码常量,发现重复:POLL_INTERVAL_S/MAX_POLL_ATTEMPTS/TERMINAL_STATUSES 在 core/pipeline_client.py + pipeline_e2e.py + clingen_preprocess.py 三处定义;DEFAULT_BASE_URL/PHASE2_* 在 phase2_batch + benchmark_b_phase2_sample 两处定义;TIER1 阈值/DEFAULT_SEED_QUERIES 单点散落。
+3. 查 core/pipeline_client.py 发现 submit_and_poll 在 call time 从 module 对象读取 POLL_INTERVAL_S/MAX_POLL_ATTEMPTS,以便测试 monkeypatch `benchmark.core.pipeline_client.POLL_INTERVAL_S`。结论:poll 常量规范源必须在 core,不能搬到 config/defaults.py。
+4. 查测试:只有 core.pipeline_client.POLL_INTERVAL_S 被 monkeypatch(test_evaluate_matching.py);无测试引用 runner 级 DEFAULT_BASE_URL/TIER1/SEED_QUERIES。故 import-swap 安全。
+
+### 根因分析
+- "配置"有两类,需不同机制:可调/含密文件 → Ansible 渲染;代码级运行常量 → 中心 Python 模块。混用 Ansible 渲染代码常量属过度设计(常量与环境无关,渲染只增摩擦,违规则 20.2)。
+- 重复根因:runner 各自重定义 core 已有的常量,而非 import。
+- literature_rett 的 CONFIG_FILE 默认 `MODULE_DIR/rett_config.json`(MODULE_DIR=benchmark/runners/)是 stale——该目录从未有此文件,用户一直靠 --config 显式传参。
+
+### 解决方案
+- 文件:rett_config*.json 用 `copy` 模块(静态内容,非 template),源放 roles/rett_acquisition_config/files/,渲染到 data/inputs/literature_acquisition/。pipeline/manifest.json 经用户确认为数据,不迁移。
+- 常量:新建 benchmark/config 包(__init__.py + defaults.py)放可调运行常量;runner import 之。poll 常量留 core,runner 改 import from benchmark.core 去重。import 用 `as` 保留旧别名(DEFAULT_PIPELINE_BASE_URL as DEFAULT_BASE_URL)以维持调用点不变。
+- 路径:defaults.py 从 benchmark.core.paths import BENCHMARK_ROOT 解析,消除 runner CWD 依赖;CONFIG_FILE 默认改 RETT_CONFIG_PATH。
+
+### 踩坑
+- **SWAP 空白 body 删除行会留下字面 `DEL` token**:edit 工具的 `SWAP N.=M:` 必须有 body 行;要删行用 `DEL N.=M` 形式。本次在 4 个文件踩到,每次都要再 `DEL` 清理。
+- **SWAP 范围误吞相邻 import**:简化 phase2_batch 导入时,`SWAP 15.=26` 跨越了 `from benchmark.core import GROUND_TRUTH_DIR,REPORTS_DIR,load_proxy` 行,被删除导致 NameError。import-check 阶段捕获。修法:重读确认范围,INS.POST 补回。教训:用 SWAP 合并/简化多行 import 时,务必核对范围是否包含未列入新 body 的 keeper。
+- **自测断言写错期望值**:我把 DEFAULT_SEED_QUERIES 期望写成 26,实际 25(原文件 208-232 行=25 条)。自测报 AssertionError 才发现是断言错而非代码错。教训:断言期望值要先从源数据精确计数,别凭印象。
+
+### 预防措施
+- 删除行一律用 `DEL N.=M`,不用 `SWAP` 空 body。
+- 多行 import 重构后立即 import-check 全部受影响模块,捕获被误删的 import。
+- 自测断言的期望值从源文件精确数/复制,不凭记忆。
+- 中心常量模块只放"可调运行参数";与 primitive 强耦合且被测试 monkeypatch 的常量留原处,去重靠 import 而非搬家。
+- 静态大内容配置文件(如 rett_config 的多语言 query 数组)用 ansible `copy` 而非 `template`;template+group_vars 只适合可变量化的小结构。
+
+## 2026-06-20 前端包管理器 npm→bun 迁移
+
+**问题描述**:将前端包管理器从 npm+nvm 迁移到 bun,涉及锁文件、版本管理、Ansible 部署角色、systemd 服务模板、AGENTS.md 规则文档等多处配置。
+
+**排查过程**:
+1. 先分析当前状态:853 包/1.2GB node_modules/12K 行 package-lock.json,bun 已安装(v1.3.14)。
+2. 发现 Next.js 利用极浅(41 个 'use client',零 next/image/link/navigation/font/server actions),确认迁移到 bun+Vite 的决策正确。
+3. 分步执行:先生成 bun.lock,再更新所有配置文件,最后验证。
+
+**根因分析**:无 bug,纯迁移工作。主要风险点在于 ast_edit 工具误用于 markdown 文件。
+
+**解决方案**:
+- 删除 `package-lock.json` + `.nvmrc` + `.nvmrc.jinja`,生成 `bun.lock` + `.bun-version` + `.bun-version.jinja`。
+- Ansible frontend role: nvm 安装→bun 安装, npm ci→bun install --frozen-lockfile, npm run build→bun run build。
+- systemd 服务: ExecStart 从 `node node_modules/.bin/next start` 改为 `bun run start -- -p`, PATH 从 nvm node 路径改为 bun bin 路径。
+- AGENTS.md: 规则 1(nvm+npm→bun)、规则 19(package-lock.json→bun.lock)、规则 27(npm run→bun run)、附录开发命令全部更新。
+- frontend/README.md: 所有 npm 命令替换为 bun。
+
+**踩坑**:
+- **ast_edit 不能用于 markdown 文件**:用 ast_edit 对 README.md 做 "npm install"→"bun install" 等文本替换,导致整个文件被替换为 "bun run type-check"(181 处误替换)。ast_edit 是 AST 模式匹配工具,markdown 无 AST 结构,模式匹配行为不可预测。**修正**:markdown/纯文本文件的局部替换必须用 `edit` 工具指定精确行号。
+
+**预防措施**:
+- `ast_edit` 仅用于有 AST 的代码文件(.ts/.tsx/.py/.rs 等),禁止用于 markdown/yaml/json 等非 AST 文件。
+- 纯文本替换用 `edit` 工具 + 精确行号,或 `search` 确认后手动逐处替换。
+- 迁移类任务先收集所有受影响文件清单,再批量修改,避免遗漏。
+- 验证时区分迁移引入的错误和 pre-existing 错误(本次 type-check/build 的 TS 错误来自 evidence-db feature,与 bun 迁移无关)。
+
+## 2026-06-20 前端 Next.js→Vite+React Router 迁移
+
+**问题描述**:将前端从 Next.js 16 App Router 迁移到 Vite 6 + React Router 7,包括路由、auth、页面组件、配置等。
+
+**排查过程**:
+1. 先全面探索代码库:发现 Next.js 利用极浅(41 个 'use client',零 next/image/link/font/server actions),仅用 middleware(auth guard)和 2 个 API route(login/logout)。
+2. 识别所有 Next.js 专属文件:next.config.ts, middleware.ts, next-env.d.ts, app/ 目录(13 个文件)。
+3. 识别所有 next/* import:10 个文件用了 next/link、next/navigation。
+4. 识别所有 'use client' 指令:~44 个文件。
+5. 拆分为 3 个并行子任务:后端 auth 迁移、Vite 脚手架+路由+配置、import 替换+'use client' 清理。
+
+**根因分析**:无 bug,纯迁移工作。
+
+**解决方案**:
+- 后端新增 `backend/src/api/v1/auth.py`:3 个 endpoint(login/logout/me),HMAC-SHA256 签名 session cookie,与原 Next.js 实现逻辑一致。
+- 后端 `src/api/auth.py` 的 `require_api_key` 新增 session cookie 认证:先查 X-API-Key header,再查 ce_session cookie。
+- 前端新增 `vite.config.ts`、`index.html`、`src/main.tsx`、`src/App.tsx`(React Router 路由)、`src/components/AuthGuard.tsx`。
+- 前端 9 个页面组件迁移到 `src/pages/`,用 React Router hooks(useParams/useSearchParams/Navigate)替代 Next.js 的 params/searchParams/redirect。
+- 前端 DashboardLayout 从 `{children}` 改为 `<Outlet />`。
+- 10 个文件的 next/* import 替换为 react-router-dom。
+- 44 个文件删除 'use client' 指令。
+- 环境变量从 `NEXT_PUBLIC_*` 改为 `VITE_*`,`process.env` 改为 `import.meta.env`。
+- 删除 next.config.ts、middleware.ts、next-env.d.ts、app/ 目录。
+
+**踩坑**:
+- **缺少 @types/react-dom**:Vite 不像 Next.js 自带 @types/react-dom,需要手动添加到 devDependencies。tsc 报 `react-dom/client` 隐式 any。修正:`bun add -d @types/react-dom@^18.3.0`。
+- **子任务文件冲突**:DashboardLayout.tsx 同时被 ViteScaffold(改 Outlet)和 ImportMigration(删 'use client')修改。通过 IRC 协调,ViteScaffold 完全接管该文件,ImportMigration 跳过。需要在任务分配时预判文件重叠并明确归属。
+- **子任务间依赖**:ViteScaffold 需要知道 ImportMigration 不会碰 DashboardLayout 的 'use client,ImportMigration 需要知道 ViteScaffold 会删它。通过 IRC 实时通信解决。
+
+**预防措施**:
+- Vite 项目模板必须包含 @types/react-dom,不像 Next.js 那样内置。
+- 多子任务并行修改时,提前用 IRC 声明文件归属,避免 stale tag 冲突。
+- 大型迁移先全面探索(Next.js 专属用法、import 分布、'use client' 分布),再拆分为独立子任务并行执行。
+- 迁移后搜索残留引用(`from "next/`、`use client`、`NEXT_PUBLIC`),包括注释和 README。
+
+---
+
+## 2026-06-20 — 前端证据数据库视图重新设计
+
+### 问题描述
+
+审查现有 evidence-db 实现时发现：(1) 三级页面中 L2 和 L3 的路由未注册——`App.tsx` 仅有 `/evidence-db` (L1)，而 L2 (`/evidence-db/:variantSlug`) 和 L3 (`/evidence-db/:variantSlug/:sourceDocId`) 的链接会命中 catch-all `*` 路由重定向到 `/chat`，导致详情页和双语对照页完全不可访问。(2) 现有 "Clinical Atlas" 浅色美学较为普通，用户要求重新设计。
+
+### 排查过程
+
+1. 通过 `find` 和 `search` 定位 evidence-db 相关文件（`frontend/src/features/evidence-db/`）
+2. 读取 `App.tsx` 路由配置，发现仅注册 L1 路由
+3. 读取全部 3 个组件源码、hooks、types、services、utils 理解数据流
+4. 确认组件内部已使用 `<Link to="/evidence-db/:variantSlug">` 但无对应路由
+
+### 根因分析
+
+路由注册不完整是原有实现的遗漏——组件和链接已编写，但路由表未添加对应条目。设计上选择了浅色主题但缺乏视觉辨识度。
+
+### 解决方案
+
+1. **路由修复**：在 `App.tsx` 中添加 L2 和 L3 路由条目，统一使用 `EvidenceDbPage` 组件通过 `useParams` 分发到正确的视图
+2. **重新设计**：采用 "Helix" 暗色科学仪器美学——深色 `#0a0e17` 底色搭配发光数据可视化，在浅色仪表盘外壳内形成"标本视图"对比效果
+3. **色彩系统**：致病性分级使用发光色（P=#FF4D6D → LP=#FF7849 → VUS=#FFB323 → LB=#4ECDC4 → B=#2DD4BF），10 个证据类别 A-J 保持各自色相但以半透明背景+底部边框方式呈现在暗色上
+4. **CSS 工具类**：在 `globals.css` 中定义 `.edb-root`、`.edb-card`、`.edb-surface`、`.edb-ring`、`.edb-cat-strip`、`.edb-scroll`、`.edb-stagger` 等暗色主题工具类
+
+### 预防措施
+
+- 路由注册应在编写组件链接之前或同步完成，避免"死链接"
+- 多级路由页面应在审查时验证每一级路由的可访问性，不能仅测试首页
+- 暗色主题组件应使用 CSS 工具类封装，而非在每个组件中重复内联颜色值
+
+---
+
+## 2026-06-20 — 证据数据库风格统一
+
+### 问题描述
+
+前一轮重新设计采用了暗色 "Helix" 主题 (#0a0e17 深色底)，但该主题与项目仪表盘的浅色医疗蓝绿风格不一致，形成了视觉割裂。用户要求"优化 Evidence DB 设计，统一风格"。
+
+### 排查过程
+
+1. 使用 UI/UX Pro Max 设计系统工具 (`search.py --design-system`) 生成推荐：结果为 "Accessible & Ethical" 风格，WCAG AAA，医疗蓝绿 (#0891B2)，浅色背景 (#F0FDFA)
+2. 审计发现暗色主题违反了设计系统的反模式警告："避免明亮霓虹色 + 重度动画"
+3. 确认仪表盘已有的 tailwind 配置使用 primary teal-600 (#0891b2)，与设计系统推荐一致
+
+### 根因分析
+
+暗色主题选择与项目整体浅色仪表盘风格冲突。根因是设计决策时未考虑与现有应用风格的一致性。
+
+### 解决方案
+
+1. **CSS 工具类**：将 `.edb-*` 暗色类替换为浅色版本（白底卡片、teal-50 渐变 hero、灰色滚动条）
+2. **致病性颜色**：恢复 WCAG AA 白底兼容色 (P=#B91C1C → B=#0F766E)，移除霓虹发光色
+3. **三组件重写**：使用 3 个并行子代理同时将 L1/L2/L3 组件从 slate-* 暗色转为 gray-*/primary-* 浅色
+4. **无障碍改进**：为 L3 图标按钮 (Eye/EyeOff) 添加 aria-label
+5. **高亮标注**：L3 使用 categoryMarkStyle() Tailwind 类（为浅色背景设计）替代内联样式
+
+### 预防措施
+
+- 新功能页面的设计应先参考现有仪表盘风格和 tailwind 配置，确保一致性
+- 使用 UI/UX Pro Max 设计系统工具在实现前确认推荐风格方向
+- 颜色系统应使用项目已定义的 Tailwind 色阶 (primary/gray/teal/red) 而非自定义暗色变量
+
+---
+
+## 2026-06-20 — 后端数据质量：基因/变异缺失 + 文献标题未持久化
+
+### 问题描述
+
+Evidence DB 视图中显示 "Unknown Gene" / "Unknown Variant" 和 "Untitled" 文献引用。用户指出这不应该出现，因为 pipeline 会提取文献元数据。
+
+### 排查过程
+
+1. **基因/变异缺失**：通过 SQL 查询发现 101 个证据组中 34 个缺失基因、50 个缺失变异。检查 group_id 格式发现始终编码了基因和变异（`gene=XXX|variant=YYY`），但 `search_service.py` 的 pivot 逻辑仅从特定字段提取（`A.gene_symbol`、`A.variant_hgvs_c` 等），当这些字段缺失时基因/变异保持 null。
+
+2. **文献标题缺失**：检查 `source_documents.raw_metadata` 发现全部 127 行为空 `{}`。`literature_profiles` 的 86 行标题也全部为 NULL。追溯发现 `SourceDocument` 在两处创建：
+   - `state_persistence.py`：`SourceDocument(source_document_id=sd_id)` — 无任何元数据
+   - `repositories.py:ensure_run_parents()`：`raw_metadata={"created_by": "phase3_e2e"}` — 调试标记而非真实元数据
+   
+   Phase 1 的 `_build_from_pre_parsed` 方法硬编码 `"title": None`。即使 MinerU 路径提取了标题，也从未写入 `SourceDocument.raw_metadata`。
+
+3. **回填策略**：通过 `pipeline_run_states.source_key` 映射到 benchmark ground truth 的 `source.md` 文件，提取首个 `#` 标题作为文献标题。发现 source_key 是复合字符串（`filename|gene=...|disease=...|...`），需要分割取首部分。
+
+### 根因分析
+
+1. **基因/变异**：pivot 逻辑未将 group_id 作为权威信息源的后备。group_id 由 `make_group_id(gene, variant)` 构造，始终包含基因和变异。
+2. **标题**：Pipeline 各阶段间缺少元数据传递机制。Phase 1 产出 metadata.json（含标题），但从未回写到 SourceDocument。benchmark 数据通过 pre_parsed_markdown 提交，Phase 1 跳过 MinerU 解析，标题硬编码为 None。
+
+### 解决方案
+
+1. **基因/变异回退**：在 `search_service.py` 和 `literature_profile_repo.py` 添加 `_parse_gene_from_group_id()` / `_parse_variant_from_group_id()` 辅助函数，在字段级提取为 null 时从 group_id 回退解析。处理 `__missing__` 哨兵值和 `['val1','val2']` 列表语法。
+
+2. **标题提取**：
+   - `phase_1_adapter.py:_build_from_pre_parsed()` — 从 markdown 首个 `#` 标题提取标题
+   - `state_persistence.py` — 添加 `_build_raw_metadata()` 辅助函数，从 Phase 1 metadata.json 读取标题写入 `SourceDocument.raw_metadata`
+   - `repositories.py:ensure_run_parents()` — 移除 `"created_by": "phase3_e2e"` 调试标记
+
+3. **数据回填**：编写 `backend/scripts/backfill_metadata.py`，通过 `pipeline_run_states.source_key` → ground truth `source.md` 映射回填 101 个源文档标题和 80 个文献配置文件标题。
+
+### 预防措施
+
+- 新字段提取应始终将 group_id 作为后备信息源
+- Pipeline 各阶段产出的元数据应在状态持久化层回写到 SourceDocument
+- 不应在 raw_metadata 中写入调试标记（如 `"created_by": "phase3_e2e"`）
+- 测试应跟随新增查询同步更新 _FakeSession 结果队列

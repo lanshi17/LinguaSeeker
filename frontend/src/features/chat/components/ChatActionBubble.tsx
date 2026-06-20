@@ -1,4 +1,3 @@
-"use client";
 
 import { useCallback, useRef, useState } from "react";
 import { Card, Tag, Typography } from "antd";
