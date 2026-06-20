@@ -18,6 +18,9 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     EntityType,
     StandardizationResult,
 )
+from src.core.standardize_entities_and_align_knowledge.cross_lingual_disease import (
+    CrossLingualDiseaseResolver,
+)
 from src.core.standardize_entities_and_align_knowledge.core import StandardizationService
 from src.core.standardize_entities_and_align_knowledge.importers import (
     ImportBatch,
@@ -134,7 +137,12 @@ class EntityStandardizationService:
                 rerank_score_threshold=self._cfg.rerank.score_threshold,
             ),
         )
-        matcher = HybridTerminologyMatcher(precise_matcher, similarity_matcher)
+        cross_lingual_disease_resolver = CrossLingualDiseaseResolver(session)
+        matcher = HybridTerminologyMatcher(
+            precise_matcher,
+            similarity_matcher,
+            cross_lingual_disease_resolver=cross_lingual_disease_resolver,
+        )
         adapter = DualResultAdapter()
         input_data = adapter.to_standardization_input(
             result,
