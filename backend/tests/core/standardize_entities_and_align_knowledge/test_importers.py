@@ -49,15 +49,21 @@ def test_parse_omim_rows_builds_disease_entries(tmp_path: Path) -> None:
     root = tmp_path / "omim"
     root.mkdir()
     (root / "mimTitles.txt").write_text(
-        "# Prefix\tMIM Number\tPreferred Title; symbol\n"
-        "*\t100100\tExample disease\n",
+        "# Prefix\tMIM Number\tPreferred Title; symbol\tAlternative Title(s); symbol(s)\tIncluded Title(s); symbols\n"
+        "*\t100100\tPRUNE BELLY SYNDROME; PBS\tABDOMINAL MUSCLES, ABSENCE OF, WITH URINARY TRACT ABNORMALITY;; EAGLE-BARRETT SYNDROME; EGBRS\tAPLASIA CUTIS CONGENITA, INCLUDED\n",
         encoding="utf-8",
     )
-
     batch = parse_omim_rows(root, version="omim_test")
-
     assert batch.entries[0].external_id == "OMIM:100100"
-    assert batch.entries[0].display_name == "Example disease"
+    assert batch.entries[0].display_name == "PRUNE BELLY SYNDROME; PBS"
+    alias_texts = {alias.alias_text for alias in batch.aliases}
+    assert "PRUNE BELLY SYNDROME; PBS" in alias_texts
+    assert "PRUNE BELLY SYNDROME" in alias_texts
+    assert "PBS" in alias_texts
+    assert "ABDOMINAL MUSCLES, ABSENCE OF, WITH URINARY TRACT ABNORMALITY" in alias_texts
+    assert "EAGLE-BARRETT SYNDROME" in alias_texts
+    assert "EGBRS" in alias_texts
+    assert "APLASIA CUTIS CONGENITA" in alias_texts
 
 
 def test_parse_hpo_rows_builds_phenotype_entries(tmp_path: Path) -> None:

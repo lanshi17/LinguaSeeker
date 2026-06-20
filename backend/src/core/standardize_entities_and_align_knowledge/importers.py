@@ -189,6 +189,38 @@ def parse_hgnc_rows(path: Path, version: str) -> ImportBatch:
     return ImportBatch(entries=tuple(entries), aliases=tuple(aliases))
 
 
+def _split_omim_titles(field: str) -> list[str]:
+    """Split an OMIM title field into individual aliases.
+
+    Each ``;;``-separated segment is a combined title (full name plus an
+    optional ``;``-separated symbol). The full segment and each ``;``-split
+    part are returned as aliases, with ``, INCLUDED`` suffixes stripped from
+    the individual parts. Results are deduplicated while preserving the
+    first-seen order.
+    """
+    aliases: list[str] = []
+    seen: set[str] = set()
+    for segment in field.split(";;"):
+        segment = segment.strip()
+        if not segment:
+            continue
+        parts = [_strip_included_suffix(part) for part in segment.split(";")]
+        for candidate in (segment, *parts):
+            candidate = candidate.strip()
+            if candidate and candidate not in seen:
+                seen.add(candidate)
+                aliases.append(candidate)
+    return aliases
+
+
+def _strip_included_suffix(value: str) -> str:
+    """Strip a trailing ``, INCLUDED`` marker (case-insensitive) from an OMIM title part."""
+    stripped = value.strip()
+    if stripped.upper().endswith(", INCLUDED"):
+        stripped = stripped[: -len(", INCLUDED")].rstrip()
+    return stripped
+
+
 def parse_omim_rows(root: Path, version: str) -> ImportBatch:
     """Parse OMIM title rows into disease entries and aliases."""
     path = root / "mimTitles.txt"
@@ -198,35 +230,49 @@ def parse_omim_rows(root: Path, version: str) -> ImportBatch:
     entries: list[ImportEntry] = []
     aliases: list[ImportAlias] = []
 
-    for row in _iter_tsv_rows(path, header_prefix="Prefix\tMIM Number\tPreferred Title; symbol"):
+    for row in _iter_tsv_rows(path, header_prefix="Prefix\tMIM Number"):
         mim_number = (row.get("MIM Number") or "").strip()
-        title = (row.get("Preferred Title; symbol") or "").strip()
-        if not mim_number or not title:
+        preferred_title = (row.get("Preferred Title; symbol") or "").strip()
+        if not mim_number or not preferred_title:
             continue
 
         external_id = f"OMIM:{mim_number}"
+        alternative_titles = (row.get("Alternative Title(s); symbol(s)") or "").strip()
+        included_titles = (row.get("Included Title(s); symbols") or "").strip()
+
+        ordered_aliases: list[str] = []
+        seen_normalized: set[str] = set()
+        for field in (preferred_title, alternative_titles, included_titles):
+            for candidate in _split_omim_titles(field):
+                normalized = normalize_lookup_text(candidate)
+                if not normalized or normalized in seen_normalized:
+                    continue
+                seen_normalized.add(normalized)
+                ordered_aliases.append(candidate)
+
         entries.append(
             ImportEntry(
                 entity_type=EntityType.DISEASE,
                 source_db="OMIM",
                 external_id=external_id,
-                display_name=title,
-                normalized_name=normalize_lookup_text(title),
-                aliases=(title,),
+                display_name=preferred_title,
+                normalized_name=normalize_lookup_text(preferred_title),
+                aliases=tuple(ordered_aliases),
                 raw_payload={"mim_number": mim_number},
                 version=version,
             ),
         )
-        aliases.append(
-            ImportAlias(
-                external_id=external_id,
-                entity_type=EntityType.DISEASE,
-                source_db="OMIM",
-                alias_text=title,
-                normalized_alias=normalize_lookup_text(title),
-                alias_type="name",
-            ),
-        )
+        for candidate in ordered_aliases:
+            aliases.append(
+                ImportAlias(
+                    external_id=external_id,
+                    entity_type=EntityType.DISEASE,
+                    source_db="OMIM",
+                    alias_text=candidate,
+                    normalized_alias=normalize_lookup_text(candidate),
+                    alias_type="name",
+                ),
+            )
 
     return ImportBatch(entries=tuple(entries), aliases=tuple(aliases))
 
