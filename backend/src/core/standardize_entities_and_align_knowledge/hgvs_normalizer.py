@@ -15,8 +15,9 @@ from src.core.standardize_entities_and_align_knowledge.importers import AA3_TO_1
 _SPACE_RE = re.compile(r"\s+")
 
 # Three-letter protein variant, optional parentheses around the change.
-# Groups: 1 = reference 3-letter code, 2 = position, 3 = alt 3-letter code or "Ter".
-_PROTEIN_3LETTER_RE = re.compile(r"p\.?\(?([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|Ter)\)?")
+# Groups: 1 = reference 3-letter code, 2 = position,
+# 3 = alt 3-letter code, "Ter", or the literal stop symbol "*".
+_PROTEIN_3LETTER_RE = re.compile(r"p\.?\(?([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|Ter|\*)\)?")
 
 # RefSeq transcript prefix such as `NM_000059.4(BRCA2):` preceding a c. notation.
 _TRANSCRIPT_PREFIX_RE = re.compile(r"^(?:NM|NR|XM|XR|NG)_[\d.]+(?:\([^)]+\))?:")
@@ -46,7 +47,7 @@ def _convert_protein_3letter(text: str) -> str | None:
     ref1 = AA3_TO_1.get(ref3)
     if ref1 is None:
         return None
-    alt1 = "*" if alt3 == "Ter" else AA3_TO_1.get(alt3)
+    alt1 = "*" if alt3 in ("Ter", "*") else AA3_TO_1.get(alt3)
     if alt1 is None:
         return None
     return f"p.{ref1}{position}{alt1}"
