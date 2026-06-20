@@ -146,6 +146,7 @@ class FakeConfig:
         self.embedding = FakeEmbeddingConfig()
         self.rerank = FakeRerankConfig()
         self.model_server_url = "http://localhost:8001"
+        self.api_key = ""
 
 
 def build_service_with_fake_repository(monkeypatch: pytest.MonkeyPatch) -> api_module.EntityStandardizationService:
