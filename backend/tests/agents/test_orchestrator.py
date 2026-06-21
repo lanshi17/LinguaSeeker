@@ -86,7 +86,7 @@ async def test_orchestrator_runs_all_phases(
     assert result_state.phase_1_status.status == PhaseStatus.COMPLETED
     assert result_state.phase_2_status.status == PhaseStatus.COMPLETED
     assert result_state.phase_3_status.status == PhaseStatus.COMPLETED
-    assert result_state.pipeline_status == PipelineStatus.AWAITING_REVIEW
+    assert result_state.pipeline_status == PipelineStatus.COMPLETED
 
 
 @pytest.mark.asyncio
@@ -267,10 +267,10 @@ async def test_orchestrator_notifies_on_state_change(
 
     await orchestrator.run(sample_state)
 
-    # Should notify after each of the 3 phases + final AWAITING_REVIEW update
+    # Should notify after each of the 3 phases + final COMPLETED update
     assert len(notifications) >= 3
-    # Final notification should be "awaiting_review"
-    assert notifications[-1] == "awaiting_review"
+    # Final notification should be "completed"
+    assert notifications[-1] == "completed"
 
 
 @pytest.mark.asyncio
@@ -298,7 +298,7 @@ async def test_phase_mode_target_1_stops_after_phase_1(
     result = await orchestrator.run(state)
 
     assert result.phase_1_status.status == PhaseStatus.COMPLETED
-    assert result.pipeline_status == PipelineStatus.AWAITING_REVIEW
+    assert result.pipeline_status == PipelineStatus.COMPLETED
     mock_adapters["phase_2"].run.assert_not_called()
     mock_adapters["phase_3"].run.assert_not_called()
 
@@ -336,7 +336,7 @@ async def test_phase_mode_target_2_starts_at_phase_2_when_upstream_complete(
     result = await orchestrator.run(state)
 
     assert result.phase_2_status.status == PhaseStatus.COMPLETED
-    assert result.pipeline_status == PipelineStatus.AWAITING_REVIEW
+    assert result.pipeline_status == PipelineStatus.COMPLETED
     mock_adapters["phase_1"].run.assert_not_called()
     mock_adapters["phase_2"].run.assert_called_once()
     mock_adapters["phase_3"].run.assert_not_called()

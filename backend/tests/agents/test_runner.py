@@ -71,7 +71,7 @@ async def test_runner_executes_in_background(
 ):
     """PipelineRunner executes pipeline in background task."""
     completed_state = sample_state.model_copy(deep=True)
-    completed_state.pipeline_status = PipelineStatus.AWAITING_REVIEW
+    completed_state.pipeline_status = PipelineStatus.COMPLETED
     mock_orchestrator.run.return_value = completed_state
 
     runner = PipelineRunner(
@@ -116,7 +116,7 @@ async def test_runner_get_last_state_falls_back_to_db(
 ):
     """get_last_state falls back to PostgreSQL when in-memory cache misses."""
     db_state = sample_state.model_copy(deep=True)
-    db_state.pipeline_status = PipelineStatus.AWAITING_REVIEW
+    db_state.pipeline_status = PipelineStatus.COMPLETED
     mock_persistence.load.return_value = db_state
 
     runner = PipelineRunner(
@@ -129,7 +129,7 @@ async def test_runner_get_last_state_falls_back_to_db(
     result = await runner.get_last_state("unknown-run")
 
     assert result is not None
-    assert result.pipeline_status == PipelineStatus.AWAITING_REVIEW
+    assert result.pipeline_status == PipelineStatus.COMPLETED
     mock_persistence.load.assert_called_once_with("unknown-run")
 
 

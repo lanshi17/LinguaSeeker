@@ -37,7 +37,7 @@ result = await task  # or poll with runner.get_last_state(run_id)
 │     │ FAIL→END             │ FAIL→END             │      │
 │     └──► END               └──► END               └─►END │
 │                                                          │
-│  After Phase 3: pipeline_status = AWAITING_REVIEW        │
+│  After Phase 3: pipeline_status = COMPLETED              │
 │  (Phase 4 operates independently via HTTP API)           │
 └────────────────────┬────────────────────────────────────┘
                      │
@@ -85,7 +85,6 @@ result = await task  # or poll with runner.get_last_state(run_id)
 | `get_last_state_cached` | `(run_id: str) -> PipelineGraphState \| None` | Fast path: memory cache only |
 | `is_running` | `(run_id: str) -> bool` | Check if a run is currently active |
 | `is_running_for_source` | `async (source_key: str) -> bool` | Dedup check by filename/query; checks memory cache then persistence for cross-worker dedup |
-| `finalize_review` | `async (run_id: str) -> PipelineGraphState \| None` | Transition from AWAITING_REVIEW to COMPLETED |
 | `recover_orphaned_runs` | `async (heartbeat_timeout_seconds=300) -> int` | Mark heartbeat-stale non-terminal runs as FAILED |
 | `shutdown` | `async (timeout=60.0) -> None` | Graceful shutdown: wait for active tasks, cancel stragglers |
 | `remember_state` | `(run_id: str, state: PipelineGraphState) -> None` | Store state in LRU cache (max 100 entries) |
@@ -106,7 +105,7 @@ class PipelineGraphState(BaseModel):
     # Dedup
     source_key: str | None              # filename (local) or query (online)
     # Overall pipeline status
-    pipeline_status: PipelineStatus     # PENDING -> RUNNING -> AWAITING_REVIEW | FAILED
+    pipeline_status: PipelineStatus     # PENDING -> RUNNING -> COMPLETED | FAILED
     # Per-phase status (structured with timing and errors)
     phase_1_status: PhaseStatusDetail
     phase_2_status: PhaseStatusDetail
@@ -180,7 +179,6 @@ Worker ownership is tracked via `owner_worker_id` and `heartbeat_at` columns. Th
 Additional persistence methods:
 - `heartbeat(run_id, worker_id)` -- refresh ownership timestamp for active runs
 - `has_active_source_key(source_key)` -- cross-worker dedup check
-- `finalize_review(run_id)` -- transition AWAITING_REVIEW to COMPLETED
 
 ### Single-Phase Mode
 
@@ -207,8 +205,7 @@ Pipeline status transitions:
 | From | Allowed To |
 |------|------------|
 | PENDING | RUNNING, FAILED |
-| RUNNING | AWAITING_REVIEW, FAILED |
-| AWAITING_REVIEW | COMPLETED, FAILED, PENDING (rerun) |
+| RUNNING | COMPLETED, FAILED |
 | FAILED | PENDING (rerun) |
 | COMPLETED | PENDING (rerun) |
 
@@ -242,7 +239,7 @@ state = PipelineGraphState(
 )
 task = runner.start(state)
 result = await task
-assert result.pipeline_status == PipelineStatus.AWAITING_REVIEW
+assert result.pipeline_status == PipelineStatus.COMPLETED
 ```
 
 ### Single-phase run

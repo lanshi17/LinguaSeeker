@@ -181,11 +181,25 @@ class DocumentAcquisitionService:
             for d in result.get("downloads", [])
         ]
 
+        warnings_list = result.get("warnings", [])
+        success = result.get("success", False)
+        # OnlineAcquisitionResponse carries failure reasons in ``warnings``
+        # and has no ``error`` field, so ``result.get("error")`` is always
+        # None. Surface the warnings as a concrete error so upstream layers
+        # (Phase 1 adapter) don't report "Acquisition failed: None".
+        error = result.get("error")
+        if not success and not error:
+            error = (
+                "; ".join(warnings_list)
+                if warnings_list
+                else "No candidates or downloads returned by any provider"
+            )
+
         return DocumentAcquisitionResult(
-            success=result.get("success", False),
+            success=success,
             source=AcquisitionSource.ONLINE,
-            warnings=result.get("warnings", []),
-            error=result.get("error"),
+            warnings=warnings_list,
+            error=error,
             items=result.get("items", []),
             downloads=downloads,
             route=result.get("route"),

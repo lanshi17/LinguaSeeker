@@ -140,9 +140,6 @@ function PhaseStatusBadge({ status }: { status: ProcessingStatus }) {
   if (status === "skipped") {
     return <Badge variant="default">Skipped</Badge>;
   }
-  if (status === "awaiting_review") {
-    return <Badge variant="warning">Awaiting Review</Badge>;
-  }
   return <Badge variant="default">Pending</Badge>;
 }
 

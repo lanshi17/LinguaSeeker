@@ -189,13 +189,6 @@ class PipelineRunner:
             heartbeat_timeout_seconds=heartbeat_timeout_seconds
         )
 
-    async def finalize_review(self, processing_run_id: str) -> PipelineGraphState | None:
-        """Transition a run from AWAITING_REVIEW to COMPLETED."""
-        result = await self._persistence.finalize_review(processing_run_id)
-        if result is not None:
-            self.remember_state(processing_run_id, result)
-        return result
-
     async def list_runs(
         self,
         *,

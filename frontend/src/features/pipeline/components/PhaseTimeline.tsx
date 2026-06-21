@@ -9,7 +9,6 @@ interface PhaseTimelineProps {
 const statusStyles: Record<string, string> = {
   pending: "bg-gray-200 text-gray-500",
   running: "bg-primary-100 text-primary-700 animate-pulse",
-  awaiting_review: "bg-amber-100 text-amber-700",
   completed: "bg-success-100 text-success-700",
   failed: "bg-red-100 text-red-700",
   skipped: "bg-gray-100 text-gray-400",

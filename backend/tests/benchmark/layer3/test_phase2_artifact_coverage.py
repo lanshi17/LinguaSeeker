@@ -41,7 +41,7 @@ def _db_run(entry_id: str) -> SystemRunRow:
     return SystemRunRow(
         processing_run_id=f"run-{entry_id}",
         source_document_id=f"source-{entry_id}",
-        pipeline_status="awaiting_review",
+        pipeline_status="completed",
         source_key=f"{entry_id}.md|clingen={entry_id}",
         evidence_count=3,
         found_count=3,

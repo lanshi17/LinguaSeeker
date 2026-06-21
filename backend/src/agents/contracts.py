@@ -42,7 +42,6 @@ class PipelineStatus(str, Enum):
 
     PENDING = "pending"
     RUNNING = "running"
-    AWAITING_REVIEW = "awaiting_review"
     COMPLETED = "completed"
     FAILED = "failed"
 
@@ -115,14 +114,8 @@ _VALID_PIPELINE_TRANSITIONS: dict[PipelineStatus, frozenset[PipelineStatus]] = {
         PipelineStatus.FAILED,
     }),
     PipelineStatus.RUNNING: frozenset({
-        PipelineStatus.AWAITING_REVIEW,
         PipelineStatus.COMPLETED,
         PipelineStatus.FAILED,
-    }),
-    PipelineStatus.AWAITING_REVIEW: frozenset({
-        PipelineStatus.COMPLETED,
-        PipelineStatus.FAILED,  # e.g. review rejection triggers re-failure
-        PipelineStatus.PENDING,  # phase rerun
     }),
     PipelineStatus.FAILED: frozenset({
         PipelineStatus.PENDING,  # phase rerun / retry

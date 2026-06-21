@@ -1,5 +1,3 @@
-export { PipelineStartForm } from "./PipelineStartForm";
-export type { PipelineFormData } from "./PipelineStartForm";
-export { PipelineConfirmCard } from "./PipelineConfirmCard";
-export type { PipelineConfirmSlots } from "./PipelineConfirmCard";
+export { PipelineSummaryCard } from "./PipelineSummaryCard";
+export type { PipelineSummarySlots } from "./PipelineSummaryCard";
 export { PipelineStatusCard } from "./PipelineStatusCard";

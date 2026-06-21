@@ -316,6 +316,7 @@ class SearchService:
         2. Fetch details only for those groups (small bounded set)
         """
         from sqlalchemy import func as sa_func
+        from sqlalchemy.dialects.postgresql.ext import aggregate_order_by
 
         group_id_expr = CanonicalEvidenceItem.active_payload["group_id"].astext
 
@@ -358,22 +359,55 @@ class SearchService:
             matching_group_ids = None
 
         # ── Pass 1: DB-level GROUP BY + pagination ────────────────
-        page_query = (
+        #
+        # The inner query aggregates per-group rows. UUID-typed columns
+        # (canonical_evidence_id) and status strings (review_status) cannot
+        # be reduced with `min()` / `max()` (no PG ordering for UUID), so
+        # we capture them as `array_agg(x ORDER BY created_at)` arrays.
+        # The outer SELECT indexes those arrays at [1] to pick the oldest
+        # row's value as the representative — a form PostgreSQL actually
+        # accepts (unlike `CAST(... AS UUID[])[1]`, which is a syntax
+        # error because the cast needs parentheses before indexing).
+        inner = (
             select(
                 group_id_expr.label("group_id"),
                 sa_func.count().label("field_count"),
                 sa_func.avg(CanonicalEvidenceItem.current_best_confidence).label("avg_confidence"),
-                sa_func.min(CanonicalEvidenceItem.canonical_evidence_id).label("canonical_evidence_id"),
-                sa_func.min(CanonicalEvidenceItem.source_document_id).label("source_document_id"),
-                sa_func.min(CanonicalEvidenceItem.review_status).label("review_status"),
+                sa_func.array_agg(
+                    aggregate_order_by(
+                        CanonicalEvidenceItem.canonical_evidence_id,
+                        CanonicalEvidenceItem.created_at.asc(),
+                    )
+                ).label("canonical_ids"),
+                CanonicalEvidenceItem.source_document_id.label("source_document_id"),
+                sa_func.array_agg(
+                    aggregate_order_by(
+                        CanonicalEvidenceItem.review_status,
+                        CanonicalEvidenceItem.created_at.asc(),
+                    )
+                ).label("review_statuses"),
                 sa_func.max(CanonicalEvidenceItem.created_at).label("created_at"),
             )
-            .group_by(group_id_expr)
+            .group_by(
+                group_id_expr,
+                CanonicalEvidenceItem.source_document_id,
+            )
             .having(group_id_expr.isnot(None))
             .having(group_id_expr != "")
         )
         if matching_group_ids is not None:
-            page_query = page_query.where(group_id_expr.in_(matching_group_ids))
+            inner = inner.where(group_id_expr.in_(matching_group_ids))
+
+        sub = inner.subquery()
+        page_query = select(
+            sub.c.group_id,
+            sub.c.field_count,
+            sub.c.avg_confidence,
+            sub.c.canonical_ids[1].label("canonical_evidence_id"),
+            sub.c.source_document_id,
+            sub.c.review_statuses[1].label("review_status"),
+            sub.c.created_at,
+        )
 
         # Count total groups
         count_sub = page_query.subquery()
@@ -385,7 +419,7 @@ class SearchService:
 
         # Apply pagination
         offset = (page - 1) * page_size
-        page_query = page_query.order_by(group_id_expr).offset(offset).limit(page_size)
+        page_query = page_query.order_by(sub.c.group_id).offset(offset).limit(page_size)
         page_result = await self._session.execute(page_query)
         page_rows = page_result.all()
 

@@ -170,7 +170,7 @@ PipelineStartForm submit
   └── PipelineStatusCard rendered as an inline bubble
         Shows: run ID, overall status badge, 3-phase progress indicators
         Polls GET /api/v1/pipeline/runs/{id}/status every 2 seconds
-        until terminal status (completed / failed / awaiting_review / cancelled)
+        until terminal status (completed / failed / cancelled)
 ```
 
 ### 3.4 Single Session Chat (`/chat/[sessionId]`)

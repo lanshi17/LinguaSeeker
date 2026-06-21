@@ -186,8 +186,9 @@ class ChatSessionResponse(BaseModel):
 
 
 ChatActionIntent = Literal[
-    "start-pipeline",
-    "upload-pdf",
+    "confirm-pipeline",
+    "start-pipeline",  # deprecated: kept for back-compat with persisted messages
+    "upload-pdf",  # deprecated: kept for back-compat with persisted messages
     "search-evidence",
     "classify-variant",
     "interpret-evidence",

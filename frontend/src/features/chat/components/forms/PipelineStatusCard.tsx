@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils/cn";
 import {
   Check,
   Circle,
-  CircleDashed,
   CircleX,
   Clock,
   SkipForward,
@@ -21,7 +20,6 @@ interface PipelineStatusCardProps {
 const STATUS_VARIANT: Record<string, "default" | "info" | "success" | "error" | "warning"> = {
   pending: "default",
   running: "info",
-  awaiting_review: "warning",
   completed: "success",
   failed: "error",
   cancelled: "default",
@@ -30,7 +28,6 @@ const STATUS_VARIANT: Record<string, "default" | "info" | "success" | "error" | 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Queued",
   running: "Running",
-  awaiting_review: "Awaiting expert review",
   completed: "Completed",
   failed: "Failed",
   cancelled: "Cancelled",
@@ -71,7 +68,6 @@ const PHASE_STATUS_STYLES: Record<string, string> = {
   completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
   failed: "bg-red-50 text-red-700 border-red-200",
   skipped: "bg-gray-50 text-gray-400 border-gray-200",
-  awaiting_review: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
 function PhaseIcon({ status }: { status: string }) {
@@ -84,8 +80,6 @@ function PhaseIcon({ status }: { status: string }) {
       return <CircleX className="h-3.5 w-3.5" />;
     case "skipped":
       return <SkipForward className="h-3.5 w-3.5" />;
-    case "awaiting_review":
-      return <CircleDashed className="h-3.5 w-3.5" />;
     default:
       return <Circle className="h-3.5 w-3.5" />;
   }
@@ -144,11 +138,9 @@ export function PipelineStatusCard({
       ? "All phases finished. Evidence cards are ready for review."
       : status === "failed"
         ? "A phase failed. Check logs for details."
-        : status === "awaiting_review"
-          ? "Evidence cards are ready — open the review queue to inspect."
-          : runningPhase
-            ? `Now: ${runningPhase.description}`
-            : "Preparing the pipeline…";
+        : runningPhase
+          ? `Now: ${runningPhase.description}`
+          : "Preparing the pipeline…";
 
   const completedCount = PHASES.filter(
     (p) => phases?.[p.id]?.status === "completed",
@@ -226,11 +218,11 @@ export function PipelineStatusCard({
               "h-full rounded-full transition-all duration-500",
               status === "failed"
                 ? "bg-red-500"
-                : status === "completed" || status === "awaiting_review"
+                : status === "completed"
                   ? "bg-emerald-500"
                   : "bg-gradient-to-r from-cyan-500 to-blue-500 progress-stripe",
             )}
-            style={{ width: `${status === "completed" || status === "awaiting_review" ? 100 : progressPct}%` }}
+            style={{ width: `${status === "completed" ? 100 : progressPct}%` }}
           />
         </div>
 

@@ -8,7 +8,7 @@
 
 Full pipeline benchmark (Phases 1-3) that submits case-report PDFs through the HTTP API as if they were frontend uploads. Measures per-phase timing, success rates, evidence quality metrics, and reliability across multiple languages.
 
-Phase 4 is not exercised -- the pipeline stops at `AWAITING_REVIEW`.
+Phase 4 is not exercised -- the pipeline stops at `COMPLETED`.
 
 ## New Module Locations
 

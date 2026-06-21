@@ -120,7 +120,7 @@ async def test_persistence_called_after_each_phase():
 
     await orchestrator.run(state)
 
-    # save() called after each phase + final AWAITING_REVIEW save
+    # save() called after each phase + final COMPLETED save
     assert mock_persistence.save.call_count >= 3
 
 

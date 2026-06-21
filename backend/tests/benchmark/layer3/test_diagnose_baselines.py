@@ -52,7 +52,7 @@ def _write_system_report(path: Path) -> None:
                 "gene_symbol": "MECP2",
                 "classification": "Definitive",
                 "moi": "XL",
-                "pipeline_status": "awaiting_review",
+                "pipeline_status": "completed",
                 "field_matches": [
                     {
                         "field_id": "A.gene_symbol",

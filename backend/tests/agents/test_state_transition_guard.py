@@ -44,20 +44,16 @@ class TestPipelineStatusTransitionValidation:
             # Normal forward flow
             (PipelineStatus.PENDING, PipelineStatus.RUNNING),
             (PipelineStatus.PENDING, PipelineStatus.FAILED),
-            (PipelineStatus.RUNNING, PipelineStatus.AWAITING_REVIEW),
+            (PipelineStatus.RUNNING, PipelineStatus.COMPLETED),
             (PipelineStatus.RUNNING, PipelineStatus.FAILED),
-            (PipelineStatus.AWAITING_REVIEW, PipelineStatus.COMPLETED),
-            (PipelineStatus.AWAITING_REVIEW, PipelineStatus.FAILED),
             # Phase rerun: terminal → PENDING
             (PipelineStatus.FAILED, PipelineStatus.PENDING),
-            (PipelineStatus.AWAITING_REVIEW, PipelineStatus.PENDING),
             (PipelineStatus.COMPLETED, PipelineStatus.PENDING),
-            # Identity (metadata-only saves
+            # Identity (metadata-only saves)
             (PipelineStatus.PENDING, PipelineStatus.PENDING),
             (PipelineStatus.RUNNING, PipelineStatus.RUNNING),
             (PipelineStatus.FAILED, PipelineStatus.FAILED),
             (PipelineStatus.COMPLETED, PipelineStatus.COMPLETED),
-            (PipelineStatus.AWAITING_REVIEW, PipelineStatus.AWAITING_REVIEW),
         ],
     )
     def test_valid_transitions(self, from_status, to_status):
@@ -68,17 +64,11 @@ class TestPipelineStatusTransitionValidation:
         "from_status, to_status",
         [
             # Skipping states
-            (PipelineStatus.PENDING, PipelineStatus.AWAITING_REVIEW),
             (PipelineStatus.PENDING, PipelineStatus.COMPLETED),
-            (PipelineStatus.RUNNING, PipelineStatus.COMPLETED),
             # Reversing flow
             (PipelineStatus.RUNNING, PipelineStatus.PENDING),
-            (PipelineStatus.AWAITING_REVIEW, PipelineStatus.RUNNING),
             (PipelineStatus.COMPLETED, PipelineStatus.RUNNING),
-            (PipelineStatus.COMPLETED, PipelineStatus.AWAITING_REVIEW),
             (PipelineStatus.FAILED, PipelineStatus.RUNNING),
-            (PipelineStatus.FAILED, PipelineStatus.AWAITING_REVIEW),
-            (PipelineStatus.FAILED, PipelineStatus.COMPLETED),
             # Terminal to terminal
             (PipelineStatus.COMPLETED, PipelineStatus.FAILED),
         ],
@@ -346,7 +336,7 @@ class TestDirectStatePersistenceTransitionGuard:
 
     @pytest.mark.asyncio
     async def test_full_lifecycle_succeeds(self, db_session: AsyncSession):
-        """Full normal lifecycle PENDING → RUNNING → AWAITING_REVIEW → COMPLETED."""
+        """Full normal lifecycle PENDING → RUNNING → COMPLETED."""
         persistence = DirectStatePersistence(db_session)
         state = self._make_state(pipeline_status=PipelineStatus.PENDING)
         await persistence.save(state)
@@ -364,9 +354,6 @@ class TestDirectStatePersistenceTransitionGuard:
         await persistence.save(state)
 
         state.phase_3_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
-        state.pipeline_status = PipelineStatus.AWAITING_REVIEW
-        await persistence.save(state)
-
         state.pipeline_status = PipelineStatus.COMPLETED
         await persistence.save(state)
 
@@ -457,17 +444,3 @@ class TestSessionBoundTransitionGuard:
 
         loaded = await persistence.load(state.processing_run_id)
         assert loaded.pipeline_status == PipelineStatus.FAILED
-
-    @pytest.mark.asyncio
-    async def test_finalize_review_uses_valid_transition(
-        self, db_session: AsyncSession
-    ):
-        """finalize_review produces valid AWAITING_REVIEW → COMPLETED transition."""
-        persistence = SessionBoundStatePersistence(_make_session_factory(db_session))
-
-        state = self._make_state(pipeline_status=PipelineStatus.AWAITING_REVIEW)
-        await persistence.save(state)
-
-        result = await persistence.finalize_review(state.processing_run_id)
-        assert result is not None
-        assert result.pipeline_status == PipelineStatus.COMPLETED
