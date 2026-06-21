@@ -12,7 +12,7 @@ from loguru import logger
 
 from src.agents.concurrency import PipelineSemaphore
 from src.agents.contracts import PipelineGraphState, PipelineStatus
-from src.agents.state_persistence import SessionBoundStatePersistence, _derive_error_phase
+from src.agents.state_persistence import SessionBoundStatePersistence, PipelineRunSummaryRow, _derive_error_phase
 
 
 class PipelineRunner:
@@ -195,6 +195,15 @@ class PipelineRunner:
         if result is not None:
             self.remember_state(processing_run_id, result)
         return result
+
+    async def list_runs(
+        self,
+        *,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> tuple[list[PipelineRunSummaryRow], int]:
+        """List pipeline run summaries (newest first)."""
+        return await self._persistence.list_runs(limit=limit, offset=offset)
 
     async def shutdown(self, timeout: float = 60.0) -> None:
         """Wait for active pipeline tasks to complete before server shutdown.

@@ -14,7 +14,8 @@ export type ChatActionIntent =
   | "search-evidence"
   | "classify-variant"
   | "interpret-evidence"
-  | "review-changes";
+  | "review-changes"
+  | "check-pipeline-status";
 
 export interface ChatAction {
   intent: ChatActionIntent;

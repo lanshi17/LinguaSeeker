@@ -12,7 +12,7 @@ import uuid
 from collections import OrderedDict
 from typing import Any
 
-from sqlalchemy import Text, cast, func, or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from src.dao.postgresql.models import (
@@ -403,17 +403,23 @@ class LiteratureProfileRepository:
 
         if gene:
             conditions.append(
-                cast(LiteratureProfile.evidence_groups, Text).ilike(f"%{gene}%")
+                LiteratureProfile.evidence_groups.contains(
+                    [{"summary": {"gene": gene}}]
+                )
             )
 
         if variant:
             conditions.append(
-                cast(LiteratureProfile.evidence_groups, Text).ilike(f"%{variant}%")
+                LiteratureProfile.evidence_groups.contains(
+                    [{"summary": {"variant": variant}}]
+                )
             )
 
         if disease:
             conditions.append(
-                cast(LiteratureProfile.evidence_groups, Text).ilike(f"%{disease}%")
+                LiteratureProfile.evidence_groups.contains(
+                    [{"summary": {"disease": disease}}]
+                )
             )
 
         base_stmt = select(LiteratureProfile)

@@ -7,6 +7,7 @@ Two implementations:
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
@@ -24,6 +25,21 @@ from src.agents.contracts import (
     validate_pipeline_status_transition,
 )
 from src.dao.postgresql.models import PipelineRunState, SourceDocument
+
+
+@dataclass
+class PipelineRunSummaryRow:
+    """Lightweight summary for listing pipeline runs (avoids full state deserialization)."""
+
+    processing_run_id: str
+    pipeline_status: str
+    source_key: str | None
+    started_at: str | None
+    completed_at: str | None
+    title: str | None
+    current_phase: str | None
+    completed_phases: int
+    total_phases: int
 
 
 def _derive_error_phase(state: PipelineGraphState) -> int:
@@ -60,6 +76,49 @@ def _build_raw_metadata(state: PipelineGraphState) -> dict[str, object]:
     except (OSError, json.JSONDecodeError):
         pass
     return meta
+
+
+_TERMINAL_PHASE_STATUSES = frozenset({"completed", "skipped"})
+_PHASE_KEYS = ("phase_1", "phase_2", "phase_3")
+
+
+def _derive_run_title(sj: dict) -> str | None:
+    """Derive a human-readable title from state_json fields."""
+    query = sj.get("query")
+    if query and isinstance(query, str):
+        return query[:120]
+    identifiers = sj.get("identifiers")
+    if identifiers and isinstance(identifiers, list) and identifiers:
+        return ", ".join(str(i) for i in identifiers[:5])
+    source_key = sj.get("source_key")
+    if source_key and isinstance(source_key, str):
+        return source_key[:120]
+    upload_path = sj.get("upload_file_path")
+    if upload_path and isinstance(upload_path, str):
+        from pathlib import PurePosixPath
+
+        return PurePosixPath(upload_path.replace("\\", "/")).name
+    return None
+
+
+def _derive_current_phase(sj: dict) -> str | None:
+    """Return the phase key that is currently 'running', or None."""
+    for pk in _PHASE_KEYS:
+        phase_detail = sj.get(pk + "_status")
+        if isinstance(phase_detail, dict) and phase_detail.get("status") == "running":
+            return pk
+    return None
+
+
+def _count_completed_phases(sj: dict) -> tuple[int, int]:
+    """Count completed/skipped phases and return (completed, total)."""
+    total = len(_PHASE_KEYS)
+    completed = 0
+    for pk in _PHASE_KEYS:
+        detail = sj.get(pk + "_status")
+        if isinstance(detail, dict) and detail.get("status") in _TERMINAL_PHASE_STATUSES:
+            completed += 1
+    return completed, total
 
 
 class DirectStatePersistence:
@@ -356,3 +415,53 @@ class SessionBoundStatePersistence:
             record.pipeline_status = "completed"
             await session.commit()
             return state
+
+    async def list_runs(
+        self,
+        *,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> tuple[list[PipelineRunSummaryRow], int]:
+        """List pipeline run summaries ordered by creation time (newest first).
+
+        Returns a (items, total) tuple. Extracts summary fields from the
+        JSONB state_json column to avoid full state deserialization.
+        """
+        async with self._session_factory() as session:
+            count_result = await session.execute(
+                select(func.count()).select_from(PipelineRunState)
+            )
+            total = count_result.scalar() or 0
+
+            stmt = (
+                select(PipelineRunState)
+                .order_by(PipelineRunState.created_at.desc())
+                .limit(limit)
+                .offset(offset)
+            )
+            result = await session.execute(stmt)
+            records = result.scalars().all()
+
+            items: list[PipelineRunSummaryRow] = []
+            for record in records:
+                sj = record.state_json
+
+                title = _derive_run_title(sj)
+                current_phase = _derive_current_phase(sj)
+                completed, total_phases = _count_completed_phases(sj)
+
+                items.append(
+                    PipelineRunSummaryRow(
+                        processing_run_id=str(record.processing_run_id),
+                        pipeline_status=record.pipeline_status,
+                        source_key=record.source_key,
+                        started_at=sj.get("started_at"),
+                        completed_at=sj.get("completed_at"),
+                        title=title,
+                        current_phase=current_phase,
+                        completed_phases=completed,
+                        total_phases=total_phases,
+                    )
+                )
+
+            return items, total

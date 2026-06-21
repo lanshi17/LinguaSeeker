@@ -307,14 +307,20 @@ class SearchService:
         page: int = 1,
         page_size: int = 50,
     ) -> EvidenceSearchResponse:
-        """Search evidence with optional filters and pagination.
+        """Search evidence with optional filters and DB-level pagination.
 
         Groups field-level extractions by group_id and pivots them into
         summary rows with gene/variant/disease/classification columns.
+        Uses a two-pass approach:
+        1. DB-level GROUP BY + OFFSET/LIMIT to get current page group_ids
+        2. Fetch details only for those groups (small bounded set)
         """
+        from sqlalchemy import func as sa_func
+
+        group_id_expr = CanonicalEvidenceItem.active_payload["group_id"].astext
+
         # Build filter conditions on field-level rows
         conditions = []
-
         if gene:
             conditions.append(
                 and_(
@@ -337,21 +343,70 @@ class SearchService:
                 )
             )
 
-        # If filters are present, find matching group_ids first
-        matching_group_ids = None
+        # If filters are present, narrow to matching group_ids
         if conditions:
             filter_stmt = (
-                select(CanonicalEvidenceItem.active_payload["group_id"].astext)
+                select(group_id_expr)
                 .where(and_(*conditions))
-                .distinct()
+                .group_by(group_id_expr)
             )
             result = await self._session.execute(filter_stmt)
-            matching_group_ids = [row[0] for row in result.all()]
+            matching_group_ids = [row[0] for row in result.all() if row[0]]
             if not matching_group_ids:
                 return EvidenceSearchResponse(items=[], total=0, page=page, page_size=page_size)
+        else:
+            matching_group_ids = None
 
-        # Build main query: fetch all fields for matching groups
-        stmt = (
+        # ── Pass 1: DB-level GROUP BY + pagination ────────────────
+        page_query = (
+            select(
+                group_id_expr.label("group_id"),
+                sa_func.count().label("field_count"),
+                sa_func.avg(CanonicalEvidenceItem.current_best_confidence).label("avg_confidence"),
+                sa_func.min(CanonicalEvidenceItem.canonical_evidence_id).label("canonical_evidence_id"),
+                sa_func.min(CanonicalEvidenceItem.source_document_id).label("source_document_id"),
+                sa_func.min(CanonicalEvidenceItem.review_status).label("review_status"),
+                sa_func.max(CanonicalEvidenceItem.created_at).label("created_at"),
+            )
+            .group_by(group_id_expr)
+            .having(group_id_expr.isnot(None))
+            .having(group_id_expr != "")
+        )
+        if matching_group_ids is not None:
+            page_query = page_query.where(group_id_expr.in_(matching_group_ids))
+
+        # Count total groups
+        count_sub = page_query.subquery()
+        count_stmt = select(sa_func.count()).select_from(count_sub)
+        total = (await self._session.execute(count_stmt)).scalar_one()
+
+        if total == 0:
+            return EvidenceSearchResponse(items=[], total=0, page=page, page_size=page_size)
+
+        # Apply pagination
+        offset = (page - 1) * page_size
+        page_query = page_query.order_by(group_id_expr).offset(offset).limit(page_size)
+        page_result = await self._session.execute(page_query)
+        page_rows = page_result.all()
+
+        if not page_rows:
+            return EvidenceSearchResponse(items=[], total=total, page=page, page_size=page_size)
+
+        page_group_ids = [row.group_id for row in page_rows]
+        # Build a lookup from the aggregated page data
+        page_summary: dict[str, dict] = {}
+        for row in page_rows:
+            page_summary[row.group_id] = {
+                "field_count": row.field_count,
+                "avg_confidence": float(row.avg_confidence) if row.avg_confidence else None,
+                "canonical_evidence_id": row.canonical_evidence_id,
+                "source_document_id": row.source_document_id,
+                "review_status": row.review_status,
+                "created_at": row.created_at,
+            }
+
+        # ── Pass 2: Fetch detail rows for current page only ───────
+        detail_stmt = (
             select(
                 CanonicalEvidenceItem.canonical_evidence_id,
                 CanonicalEvidenceItem.source_document_id,
@@ -361,54 +416,37 @@ class SearchService:
                 CanonicalEvidenceItem.active_payload,
                 CanonicalEvidenceItem.created_at,
             )
+            .where(group_id_expr.in_(page_group_ids))
+            .order_by(group_id_expr, CanonicalEvidenceItem.field_id)
         )
+        detail_result = await self._session.execute(detail_stmt)
+        detail_rows = detail_result.all()
 
-        if matching_group_ids:
-            stmt = stmt.where(
-                CanonicalEvidenceItem.active_payload["group_id"].astext.in_(matching_group_ids)
-            )
-
-        stmt = stmt.order_by(
-            CanonicalEvidenceItem.source_document_id,
-            CanonicalEvidenceItem.active_payload["group_id"].astext,
-            CanonicalEvidenceItem.field_id,
-        )
-
-        result = await self._session.execute(stmt)
-        rows = result.all()
-
-        # Pivot: group by group_id and extract summary fields
+        # Pivot: extract gene/variant/disease/classification per group
         groups: dict[str, dict] = {}
-        for row in rows:
+        for row in detail_rows:
             payload = row.active_payload or {}
-            group_id = payload.get("group_id", "")
-            if not group_id:
+            gid = payload.get("group_id", "")
+            if not gid:
                 continue
 
-            if group_id not in groups:
-                groups[group_id] = {
-                    "group_id": group_id,
-                    "source_document_id": row.source_document_id,
-                    "canonical_evidence_id": row.canonical_evidence_id,
-                    "created_at": row.created_at,
-                    "review_status": row.review_status,
-                    "field_count": 0,
-                    "confidences": [],
+            if gid not in groups:
+                summary = page_summary.get(gid, {})
+                groups[gid] = {
+                    "group_id": gid,
+                    "source_document_id": summary.get("source_document_id", row.source_document_id),
+                    "canonical_evidence_id": summary.get("canonical_evidence_id", row.canonical_evidence_id),
+                    "created_at": summary.get("created_at", row.created_at),
+                    "review_status": summary.get("review_status", row.review_status),
+                    "field_count": summary.get("field_count", 0),
+                    "avg_confidence": summary.get("avg_confidence"),
                     "gene": None,
                     "variant": None,
                     "disease": None,
                     "classification": None,
                 }
 
-            g = groups[group_id]
-            g["field_count"] += 1
-            if row.current_best_confidence is not None:
-                g["confidences"].append(float(row.current_best_confidence))
-
-            # Keep the latest created_at within a group.
-            if row.created_at and (g["created_at"] is None or row.created_at > g["created_at"]):
-                g["created_at"] = row.created_at
-
+            g = groups[gid]
             field_id = row.field_id
             value = payload.get("value")
 
@@ -420,14 +458,15 @@ class SearchService:
                 g["disease"] = _coerce_str(value)
             elif field_id in _CLASSIFICATION_FIELDS and not g["classification"]:
                 g["classification"] = _coerce_str(value)
-        # Fallback: parse gene/variant from group_id if field-level extraction missed them
+
+        # Fallback: parse gene/variant from group_id
         for g in groups.values():
             if not g["gene"]:
                 g["gene"] = _parse_gene_from_group_id(g["group_id"])
             if not g["variant"]:
                 g["variant"] = _parse_variant_from_group_id(g["group_id"])
 
-        # Batch-load identifiers for all source documents
+        # Batch-load identifiers and titles for current page's documents
         doc_ids = {g["source_document_id"] for g in groups.values()}
         ident_map: dict[str, dict[str, str]] = {}
         title_map: dict[str, str] = {}
@@ -455,23 +494,21 @@ class SearchService:
                 if title:
                     title_map[str(row.source_document_id)] = title
 
-        # Build results with pagination
-        total = len(groups)
-        offset = (page - 1) * page_size
-        items = []
+        # Build results (apply PMID/DOI post-filters)
+        items: list[EvidenceSearchResult] = []
+        filtered_total = total
+        for gid in page_group_ids:
+            g = groups.get(gid)
+            if not g:
+                continue
 
-        for group_id, g in sorted(groups.items(), key=lambda x: x[0]):
-            # Apply PMID/DOI filters
             doc_ident = ident_map.get(str(g["source_document_id"]), {})
             if pmid and pmid not in doc_ident.get("pmid", ""):
-                total -= 1
+                filtered_total -= 1
                 continue
             if doi and doi.lower() not in doc_ident.get("doi", "").lower():
-                total -= 1
+                filtered_total -= 1
                 continue
-
-            confs = g["confidences"]
-            avg_conf = sum(confs) / len(confs) if confs else None
 
             items.append(
                 EvidenceSearchResult(
@@ -485,19 +522,16 @@ class SearchService:
                     disease=g["disease"],
                     classification=g["classification"],
                     field_count=g["field_count"],
-                    avg_confidence=avg_conf,
+                    avg_confidence=g["avg_confidence"],
                     review_status=g["review_status"],
                     canonical_evidence_id=g["canonical_evidence_id"],
                     created_at=g["created_at"],
                 )
             )
 
-        # Apply pagination
-        paginated_items = items[offset:offset + page_size]
-
         return EvidenceSearchResponse(
-            items=paginated_items,
-            total=total,
+            items=items,
+            total=filtered_total if (pmid or doi) else total,
             page=page,
             page_size=page_size,
         )

@@ -1,14 +1,25 @@
 
 import { Activity, RefreshCcw } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { RunListItem } from "./RunListItem";
 import { usePipelineRuns } from "../hooks/usePipelineRuns";
 import { cn } from "@/lib/utils/cn";
+import type { ProcessingStatus } from "../types/pipeline";
 
-export function RunHistory({ className }: { className?: string }) {
+interface RunHistoryProps {
+  className?: string;
+  statusFilter?: ProcessingStatus | "all";
+}
+
+export function RunHistory({ className, statusFilter }: RunHistoryProps) {
   const { data, isLoading, error, refetch, isFetching } = usePipelineRuns();
-  const items = data?.items ?? [];
+  const allItems = data?.items ?? [];
+  const items =
+    statusFilter && statusFilter !== "all"
+      ? allItems.filter((r) => r.pipeline_status === statusFilter)
+      : allItems;
 
   return (
     <section
@@ -18,11 +29,11 @@ export function RunHistory({ className }: { className?: string }) {
         <div className="flex items-center gap-2">
           <Activity className="h-4 w-4 text-primary-600" aria-hidden />
           <h2 className="text-sm font-semibold tracking-tight text-gray-900">
-            All Pipeline Runs
+            Pipeline Runs
           </h2>
           {!isLoading && (
             <span className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-[10px] tabular-nums text-gray-600">
-              {data?.total ?? items.length}
+              {items.length}
             </span>
           )}
         </div>
@@ -44,7 +55,7 @@ export function RunHistory({ className }: { className?: string }) {
         ) : error ? (
           <RunHistoryError onRetry={() => refetch()} />
         ) : items.length === 0 ? (
-          <RunHistoryEmpty />
+          <RunHistoryEmpty hasFilter={Boolean(statusFilter && statusFilter !== "all")} />
         ) : (
           <ol className="space-y-2">
             {items.map((run, i) => (
@@ -85,17 +96,35 @@ function RunHistorySkeleton() {
   );
 }
 
-function RunHistoryEmpty() {
+function RunHistoryEmpty({ hasFilter }: { hasFilter: boolean }) {
   return (
     <div className="grid place-items-center px-6 py-10 text-center">
       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary-600">
         <Activity className="h-5 w-5" aria-hidden />
       </div>
-      <p className="mt-3 text-sm font-medium text-gray-900">No runs yet</p>
-      <p className="mt-1 max-w-sm text-xs text-gray-500">
-        Submit a document or a search query above to start your first pipeline run.
-        Every run will appear here with its full ID and live status.
-      </p>
+      {hasFilter ? (
+        <>
+          <p className="mt-3 text-sm font-medium text-gray-900">
+            No matching runs
+          </p>
+          <p className="mt-1 max-w-sm text-xs text-gray-500">
+            No pipeline runs match the selected filter. Try a different status
+            or clear the filter.
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="mt-3 text-sm font-medium text-gray-900">No runs yet</p>
+          <p className="mt-1 max-w-sm text-xs text-gray-500">
+            Start a conversation in{" "}
+            <Link to="/chat" className="font-medium text-primary-600 hover:underline">
+              AI Chat
+            </Link>{" "}
+            to submit your first pipeline run. Every run will appear here with
+            live status.
+          </p>
+        </>
+      )}
     </div>
   );
 }
