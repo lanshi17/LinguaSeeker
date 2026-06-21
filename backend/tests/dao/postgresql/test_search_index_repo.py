@@ -191,6 +191,46 @@ def test_refresh_insert_sql_includes_created_at():
 
 
 @pytest.mark.asyncio
+async def test_refresh_sql_propagates_variant_ids_from_active_payload() -> None:
+    """refresh() maps active_payload->'variant_ids' into the variant_ids column.
+
+    Pins the write-side contract: a canonical evidence row whose
+    active_payload carries ``variant_ids`` flows into
+    ``frontend_search_index.variant_ids`` (COALESCE'd to an empty array).
+    """
+    from src.dao.postgresql.search_index_repo import (
+        VARIANT_IDS_PAYLOAD_KEY,
+        SearchIndexRepository,
+    )
+
+    session = _fake_session()
+    repo = SearchIndexRepository(session)
+    await repo.refresh()
+
+    # Capture the runtime INSERT SQL emitted by refresh().
+    execute_calls = [str(c.args[0]) for c in session.execute.call_args_list]
+    insert_call = next(t for t in execute_calls if "INSERT INTO frontend_search_index" in t)
+    assert f"cei.active_payload -> '{VARIANT_IDS_PAYLOAD_KEY}'" in insert_call
+    assert "AS variant_ids" in insert_call
+    assert "'[]'::jsonb" in insert_call
+
+
+def test_search_variant_ids_uses_jsonb_overlap_operator() -> None:
+    """search(variant_ids=...) filters via the JSONB ?| overlap operator.
+
+    Pins the read-side contract: variant_ids filtering matches rows whose
+    variant_ids array overlaps the supplied list.
+    """
+    import inspect
+
+    from src.dao.postgresql.search_index_repo import SearchIndexRepository
+
+    source = inspect.getsource(SearchIndexRepository.search)
+    assert "variant_ids" in source
+    assert '.op("?|")' in source
+
+
+@pytest.mark.asyncio
 async def test_refresh_truncates_and_rebuilds() -> None:
     """Refresh truncates the search index and rebuilds from canonical evidence."""
     from src.dao.postgresql.search_index_repo import SearchIndexRepository

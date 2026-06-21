@@ -10,6 +10,7 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     TerminologyCandidate,
 )
 from src.core.standardize_entities_and_align_knowledge.hgvs_normalizer import expand_hgvs_aliases
+from src.core.standardize_entities_and_align_knowledge.normalizers import normalize_gene_symbol
 from src.core.standardize_entities_and_align_knowledge.repositories import StandardizationRepository
 
 
@@ -139,15 +140,63 @@ class PreciseTerminologyMatcher:
         choices: tuple[TerminologyCandidate, ...],
         candidate: StandardizationCandidate | None,
     ) -> tuple[TerminologyCandidate, ...]:
-        """Reduce ClinVar variant ambiguities using chain gene-symbol context when available."""
-        if not choices or candidate is None:
+        """Reduce ClinVar variant ambiguities using normalized gene-symbol context.
+
+        Decision tree (D3):
+        1. ``choices`` empty → return ``()`` (UNMAPPED).
+        2. ``candidate is None`` → return a single deterministic winner
+           (``_pick_deterministic_winner``); no gene signal is available, so a
+           single winner is acceptable since no gene can disagree.
+        3. Normalize the candidate gene (``norm_gene``) and each choice's ClinVar
+           ``gene_symbol`` with ``normalize_gene_symbol`` so casing/alias surface
+           forms compare equal. Partition choices into ``same_gene`` (normalized
+           gene equals ``norm_gene``), only when ``norm_gene`` is truthy.
+        4. When ``same_gene`` is non-empty, keep the best alias-type tier within it
+           and return a single deterministic winner (entry_id ascending). Same-gene
+           same-priority entries are ClinVar duplicates across transcripts/submitters
+           and must NOT collapse to ambiguous (STANDARDIZED — correct).
+        5. When ``same_gene`` is empty (candidate gene matches no ClinVar entry):
+           - ``len(choices) == 1`` → return ``choices`` (a single unambiguous HGVS
+             match is a strong identity signal; safe to standardize even without a
+             gene match).
+           - ``len(choices) > 1`` → return ``()`` (UNMAPPED). Multiple cross-gene
+             matches with no gene signal are genuine ambiguity; do NOT guess, since
+             a wrong-gene ClinVar ``external_id`` is the primary variant pivot and
+             must not be attached gene-agnostically. Phase 4 assigns an internal
+             variant id instead.
+
+        The filter therefore returns at most one entry whenever a deterministic
+        signal exists, so ``_finalize`` produces ``STANDARDIZED`` rather than
+        ``AMBIGUOUS`` for multi-hit variants — while never falsely standardizing a
+        multi-gene mismatch to a single wrong-gene ClinVar id.
+        """
+        if not choices:
             return choices
-        gene_symbol = str(candidate.metadata.get("gene_symbol", "") or "").strip()
-        if not gene_symbol:
-            return choices
-        filtered = tuple(
-            item
-            for item in choices
-            if str(item.raw_payload.get("gene_symbol", "") or "").strip() == gene_symbol
+        if candidate is None:
+            return self._pick_deterministic_winner(choices)
+
+        norm_gene = normalize_gene_symbol(str(candidate.metadata.get("gene_symbol", "") or ""))
+        same_gene = tuple(
+            choice
+            for choice in choices
+            if normalize_gene_symbol(str(choice.raw_payload.get("gene_symbol", "") or "")) == norm_gene
+            and norm_gene
         )
-        return filtered or choices
+        if same_gene:
+            best = self._apply_alias_type_priority(same_gene) or same_gene
+            return self._pick_deterministic_winner(best)
+        # No gene-matched ClinVar entry. A single unambiguous HGVS match is a safe
+        # identity signal; multiple cross-gene matches with no gene signal are genuine
+        # ambiguity — do not guess (Phase 4 assigns an internal variant id instead).
+        if len(choices) == 1:
+            return choices
+        return ()
+
+    @staticmethod
+    def _pick_deterministic_winner(
+        choices: tuple[TerminologyCandidate, ...],
+    ) -> tuple[TerminologyCandidate, ...]:
+        """Return a single stable winner (entry_id ascending), never ambiguous."""
+        if len(choices) <= 1:
+            return choices
+        return (min(choices, key=lambda item: item.entry_id),)
