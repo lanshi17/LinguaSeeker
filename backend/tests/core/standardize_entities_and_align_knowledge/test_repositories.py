@@ -820,6 +820,182 @@ async def test_upsert_normalized_entity_standardized_variant_keeps_clinvar_id() 
 
 
 
+class _CanonicalPayloadSession:
+    """Session stub that returns staged NormalizedEntity rows on lookup.
+
+    Canonical-evidence lookups return an empty result so the insert path is
+    exercised, while NormalizedEntity lookups return previously-staged rows so
+    the payload-key batch load can resolve externals.
+    """
+
+    def __init__(self, existing_canonical: list[object] | None = None) -> None:
+        self.added: list[object] = []
+        self.existing_canonical: list[object] = existing_canonical or []
+
+    async def execute(self, statement):
+        if "normalized_entities" in str(statement):
+            rows = [e for e in self.added if e.__class__.__name__ == "NormalizedEntity"]
+            return FakeResult(rows)
+        if "canonical_evidence_items" in str(statement):
+            return FakeResult(self.existing_canonical)
+        return FakeResult([])
+
+    def add(self, value) -> None:
+        self.added.append(value)
+
+    async def flush(self) -> None:
+        for index, value in enumerate(self.added, start=1):
+            if hasattr(value, "entity_id") and getattr(value, "entity_id", None) is None:
+                value.entity_id = uuid.UUID(int=index)  # type: ignore[attr-defined]
+            if (
+                hasattr(value, "run_evidence_item_id")
+                and getattr(value, "run_evidence_item_id", None) is None
+            ):
+                value.run_evidence_item_id = uuid.UUID(int=index)  # type: ignore[attr-defined]
+            if (
+                hasattr(value, "canonical_evidence_id")
+                and getattr(value, "canonical_evidence_id", None) is None
+            ):
+                value.canonical_evidence_id = uuid.UUID(int=index)  # type: ignore[attr-defined]
+
+
+def _make_variant_match() -> EntityMatch:
+    return EntityMatch(
+        candidate=StandardizationCandidate(
+            candidate_id="chain-1:variant",
+            entity_type=EntityType.VARIANT,
+            role=BindingRole.SUBJECT,
+            raw_text="c.4748T>G",
+            chain_id="chain-1",
+            track="original",
+        ),
+        status=MatchStatus.STANDARDIZED,
+        external_id="ClinVarVariation:4468",
+        display_name="c.4748T>G",
+        rationale="precise ClinVar match",
+    )
+
+
+def _make_gene_match() -> EntityMatch:
+    return EntityMatch(
+        candidate=StandardizationCandidate(
+            candidate_id="chain-1:gene",
+            entity_type=EntityType.GENE,
+            role=BindingRole.SUBJECT,
+            raw_text="BRCA1",
+            chain_id="chain-1",
+            track="original",
+        ),
+        status=MatchStatus.STANDARDIZED,
+        external_id="HGNC:1100",
+        display_name="BRCA1",
+        rationale="exact primary match",
+    )
+
+
+def _make_input(match: EntityMatch) -> StandardizationInput:
+    return StandardizationInput(
+        document_id="doc-payload",
+        source_document_id=str(uuid.uuid4()),
+        processing_run_id=str(uuid.uuid4()),
+        candidates=(match.candidate,),
+        evidence_items=(),
+    )
+
+
+@pytest.mark.asyncio
+async def test_upsert_canonical_evidence_writes_variant_payload_keys() -> None:
+    """A variant-field canonical row carries variant_id/variant_ids and empty gene_ids."""
+    session = _CanonicalPayloadSession()
+    repo = StandardizationRepository(session)
+    match = _make_variant_match()
+
+    entity_id = await repo.upsert_normalized_entity(match)
+    input_data = _make_input(match)
+    await repo.insert_run_evidence_items(input_data, (match,))
+    await repo.upsert_canonical_evidence(input_data, (match,), (entity_id,))
+
+    canonical_rows = [
+        value for value in session.added if value.__class__.__name__ == "CanonicalEvidenceItem"
+    ]
+    assert len(canonical_rows) == 1
+    payload = canonical_rows[0].active_payload
+    assert payload["variant_id"] == "ClinVarVariation:4468"
+    assert payload["variant_ids"] == ["ClinVarVariation:4468"]
+    assert payload["gene_ids"] == []
+    assert payload["entity_ids"] == ["ClinVarVariation:4468"]
+    assert isinstance(payload["search_text"], str)
+    assert payload["search_text"]
+    assert "c.4748t>g" in payload["search_text"]
+
+
+@pytest.mark.asyncio
+async def test_upsert_canonical_evidence_writes_gene_payload_keys() -> None:
+    """A gene-field canonical row carries gene_ids and empty variant_ids."""
+    session = _CanonicalPayloadSession()
+    repo = StandardizationRepository(session)
+    match = _make_gene_match()
+
+    entity_id = await repo.upsert_normalized_entity(match)
+    input_data = _make_input(match)
+    await repo.insert_run_evidence_items(input_data, (match,))
+    await repo.upsert_canonical_evidence(input_data, (match,), (entity_id,))
+
+    canonical_rows = [
+        value for value in session.added if value.__class__.__name__ == "CanonicalEvidenceItem"
+    ]
+    assert len(canonical_rows) == 1
+    payload = canonical_rows[0].active_payload
+    assert payload["variant_id"] is None
+    assert payload["variant_ids"] == []
+    assert payload["gene_ids"] == ["HGNC:1100"]
+    assert payload["entity_ids"] == ["HGNC:1100"]
+    assert isinstance(payload["search_text"], str)
+    assert payload["search_text"]
+    assert "brca1" in payload["search_text"]
+
+
+@pytest.mark.asyncio
+async def test_upsert_canonical_evidence_update_path_refreshes_payload_keys() -> None:
+    """A better-status row supersedes an existing item and refreshes its payload keys."""
+    from src.dao.postgresql.models import CanonicalEvidenceItem
+
+    session = _CanonicalPayloadSession()
+    repo = StandardizationRepository(session)
+    match = _make_variant_match()
+
+    entity_id = await repo.upsert_normalized_entity(match)
+    input_data = _make_input(match)
+    await repo.insert_run_evidence_items(input_data, (match,))
+
+    # Build a pre-existing canonical item sharing the incoming row's identity
+    # but carrying a lower-priority best version, so the update path
+    # (better_status) is taken instead of the insert path.
+    run_row, _ = repo._run_item_rows[0]
+    existing_item = CanonicalEvidenceItem(
+        source_document_id=run_row.source_document_id,
+        field_id=run_row.field_id,
+        position_hash=run_row.position_hash,
+        text_hash=run_row.text_hash,
+        entity_scope_hash=run_row.entity_scope_hash,
+        current_best_run_evidence_id=uuid.uuid4(),
+        current_best_status="source_invalid",
+        current_best_confidence=0.5,
+        conflict_flag=False,
+        active_payload={"old": True},
+    )
+    session.existing_canonical = [existing_item]
+
+    await repo.upsert_canonical_evidence(input_data, (match,), (entity_id,))
+
+    payload = existing_item.active_payload
+    assert payload["variant_id"] == "ClinVarVariation:4468"
+    assert payload["variant_ids"] == ["ClinVarVariation:4468"]
+    assert payload["gene_ids"] == []
+    assert payload["entity_ids"] == ["ClinVarVariation:4468"]
+    assert payload["search_text"]
+
+
 def test_context_contamination_is_not_canonical_eligible() -> None:
     from src.core.standardize_entities_and_align_knowledge.repositories import (
         CANONICAL_ELIGIBLE_STATUSES,
