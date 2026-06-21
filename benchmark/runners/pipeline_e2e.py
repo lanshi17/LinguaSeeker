@@ -214,7 +214,7 @@ async def process_one_pdf(
             result.total_duration_s = round(time.time() - t0, 2)
 
             pipeline_status = status_data.get("pipeline_status", "unknown")
-            if pipeline_status in ("awaiting_review", "completed"):
+            if pipeline_status == "completed":
                 result.status = "passed"
             else:
                 result.status = "failed"

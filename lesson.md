@@ -3,6 +3,17 @@
 # Lesson Log
 
 
+## 2026-06-20: "Acquisition failed: None" — response model had no error field, so warnings were discarded
+
+**Problem**: A pipeline run failed Phase 1 with the opaque log line `Phase 1 failed permanently: Acquisition failed: None`. The actual failure reason (e.g. "no candidates from any source") was unreachable from the error message.
+
+**Investigation**: Traced the chain: `phase_1_adapter.py` raises `PermanentPhaseError(f"Acquisition failed: {acquisition_result.error}")`. For the online path, `service.py::_handle_literature` set `error=result.get("error")`. But `OnlineAcquisitionResponse` (contracts.py) has NO `error` field — failure reasons live only in `warnings`. So `result.get("error")` is always `None`, and the adapter stringified `None` into the message.
+
+**Root cause**: A shape mismatch between the online acquisition response model and the consuming service layer. The online workflow returns `success=False` plus a `warnings` list (e.g. `["FETCH_NO_RESULT: no candidates from any source", ...]`), but the facade did `result.get("error")` against a dict that never contains that key, silently dropping the only diagnostic information.
+
+**Fix**: In `service.py::_handle_literature`, when `success=False` and `error` is falsy, synthesize `error` from `"; ".join(warnings)`, falling back to a generic "No candidates or downloads returned by any provider". Added two regression tests (warnings-surfaced path and empty-warnings default path).
+
+**Prevention**: When a facade consumes an inner response model, never assume a field exists just because the consumer-side dataclass has a slot for it. Either read the model's actual schema or default-missing fields to a synthesized, non-None message. Error messages that print a bare `None` are a code smell — a failure path that produces no human-readable reason is itself a bug.
 ## 2026-06-19: Rett reannotation must fail closed on empty LLM outputs
 
 **Problem**: During catalog-driven Rett reannotation, three entries were temporarily overwritten with empty `expected_evidence` after provider 429 failures caused `annotate_article()` to return the default empty `RettExpectedJson` fallback.
@@ -3747,3 +3758,95 @@ evidence DB 存在未知变异 id（variant 实体 `external_id` 为 NULL），�
 ### 教训
 
 backfill Step B 初版误用 `active_payload->>'entity_id'` 解析实体（pre-Phase-5 行无此 key），导致 `variant_ids` 全为 `[]`。运行时验证（psql 计数）发现了“updated=180”的假成功。教训：脚本的“updated”计数不等于语义正确，必须用独立 SQL 验证终态。
+
+## 2026-06-21 — awaiting_review 残留状态清理复盘
+
+### 问题描述
+
+任务管理页面仍显示 `awaiting_review` 筛选项，但新产生的 pipeline run 永远不会进入该状态。
+
+### 排查过程
+
+1. `grep awaiting_review` 全局扫描，定位到 `backend/src/agents/contracts.py:45` 的枚举定义。
+2. 查看 `orchestrator.py:349-366` 发现 orchestrator 已直接把 `pipeline_status` 设为 `COMPLETED`，不再经过 `AWAITING_REVIEW`。
+3. 但 `Runner.finalize_review`、`/api/v1/pipeline/runs/{id}/finalize` 端点、前端筛选 Tab 和状态卡片分支、状态转移表、benchmark 终态集合、测试断言全部还引用 `AWAITING_REVIEW`。
+4. 运行 `tests/agents/test_orchestrator.py`，发现 `test_orchestrator_runs_all_phases` 因 `PENDING→COMPLETED` 不在原转移表里已经失败——这是不彻底重构留下的回归。
+
+### 根因分析
+
+历史某次 orchestrator 重构（把最终状态从 `AWAITING_REVIEW` 直接跳到 `COMPLETED`）只改了生产代码路径，没有同步更新：
+- 枚举成员与状态转移表
+- `finalize_review` 相关方法
+- `/finalize` HTTP 端点
+- 全部测试断言
+- 前端类型与 UI 分支
+- benchmark 工具终态集合
+
+属于"半截重构"的经典陷阱：用户侧仍然能看到残留 UI 元素（任务管理的 Awaiting Review 筛选项），但实际业务流程已不再产生该状态。
+
+### 解决方案
+
+彻底移除 `awaiting_review`：
+
+1. **Backend**：
+   - `contracts.py`：删除 `PipelineStatus.AWAITING_REVIEW`、`_VALID_PIPELINE_TRANSITIONS` 中相关边；新增 `RUNNING → COMPLETED` 合法转移。
+   - `orchestrator.py`：更新模块/类/方法 docstring 里三处 `AWAITING_REVIEW` 引用。
+   - `runner.py`、`state_persistence.py`：删除 `finalize_review` 方法。
+   - `api/v1/pipeline.py`：删除 `PipelineFinalizeResponse` 与 `/runs/{id}/finalize` 端点；`api/v1/README.md` 同步更新。
+   - 删除 `scripts/migrate_awaiting_review.py`。
+   - 测试：`test_orchestrator.py`、`test_contracts.py`、`test_integration.py`、`test_runner.py`、`test_state_transition_guard.py`、`test_pipeline_api.py` 全部把 `AWAITING_REVIEW` 替换为 `COMPLETED`，删除两个 `/finalize` API 测试。
+2. **Benchmark**：`benchmark/analysis/dataset_curation/inventory_system_runs.py`、`benchmark/core/pipeline_client.py`、`benchmark/runners/clingen_preprocess.py`、`benchmark/runners/pipeline_e2e.py`、`benchmark/datasets/clingen/visualize.py`、`benchmark/pipeline/README.md` 全部把 `awaiting_review` 终态判等替换为 `completed`。
+3. **Frontend**：
+   - `lib/types/common.ts`：`ProcessingStatus` union 移除 `awaiting_review`。
+   - `pages/PipelinePage.tsx`：`FILTER_TABS` 删除 Awaiting Review 行。
+   - `features/pipeline/hooks/usePipelineStatus.ts`、`features/pipeline/components/PipelineStatusView.tsx`：`TERMINAL_STATUSES`/`NON_LIVE` 移除。
+   - `features/pipeline/components/PhaseTimeline.tsx`、`PhaseDetailCard.tsx`、`RunListItem.tsx`、`features/chat/components/forms/PipelineStatusCard.tsx`：所有状态映射删除 `awaiting_review` 条目。
+   - `features/chat/components/ChatView.tsx`：TERMINAL 轮询集合与 review-changes 默认 filter 改为 `all`。
+   - `features/chat/types/actions.ts`：`reviewChanges.filter` union 移除 `awaiting_review`。
+   - `tests/config/layeredConfig.test.ts`：改为断言 `awaiting_review` 不在合法状态列表里。
+4. **Chat Service**：`core/visualize_evidence_with_expert_in_loop/chat_service.py` 的 review-changes 意图提示词默认 filter 从 `awaiting_review` 改为 `all`。
+
+### 验证
+
+- `pytest tests/agents tests/api tests/benchmark`：552 passed（与本次无关的 4 个 pre-existing 失败：`test_delta_audit_api` 307 redirect、`test_pipeline_path_traversal`/`test_pipeline_upload_limit`/`test_rate_limiting` 的 `TypeError: object bool can't be used in 'await' expression`，经 `git stash` 对比确认这些在改动前已存在）。
+- `bun run type-check`：前端 TypeScript 编译通过。
+- `bun test tests/config/layeredConfig.test.ts`：`pipeline statuses match backend lifecycle` 通过（API URL 失败为 pre-existing）。
+
+### 预防措施
+
+- 状态机变更属于"跨栈契约"，修改时必须一次性同步更新：枚举、转移表、持久化层、API 端点、前端类型、UI 分支、benchmark 工具、迁移脚本、README、测试。
+- 引入 grep checklist：重构状态/事件/错误码等枚举值前，用 `grep -rn "旧值" src tests frontend benchmark docs` 输出清单，作为完成定义的验收门槛。
+- 跑一次全栈测试（agents + api + benchmark + frontend type-check）再宣布完成，避免半截重构回归在数月后才被发现。
+
+## 2026-06-21 — awaiting_review 清理后遗留的 DB 回归复盘
+
+### 问题描述
+
+清理 `awaiting_review` 后，前端 `usePipelineStatus` 对某个历史 `processing_run_id` 轮询 `/api/v1/pipeline/runs/{id}/status` 时持续收到 500。
+
+### 排查过程
+
+1. `logs/2026-06-21_123442.log` 只看到 `GET .../status -> 500 (2.2ms)`，没有 traceback（中间件只记状态码）。
+2. 直接 `curl` 后端带 API key → 返回 500 空响应体。
+3. `SELECT count(*) WHERE state_json->>'pipeline_status' = 'awaiting_review'` → 20 条。
+4. 定位根因：删除 `PipelineStatus.AWAITING_REVIEW` 枚举后，`PipelineGraphState.model_validate(record.state_json)` 拒绝旧值，`get_last_state` 抛 ValidationError，FastAPI 默认变成 500。
+
+### 根因分析
+
+- 清理枚举时只改了"新数据"路径，没有同步处理"历史数据"。
+- 之前删除的 `scripts/migrate_awaiting_review.py` 恰好就是干这件事的，我把它连同代码一起删掉，相当于把迁移责任也丢掉了。
+- 列表接口 `/runs` 没报错是因为它只读 `pipeline_status` 扁平列，不反序列化 state_json；单条 `/runs/{id}/status` 才会触发完整反序列化。
+
+### 解决方案
+
+一次性 SQL 把 20 条 `awaiting_review` 行改为 `completed`，同时更新 JSONB `state_json.pipeline_status`、`state_json.completed_at`、扁平 `pipeline_status` 列与 `updated_at`。执行后 curl 验证 200 OK，pipeline_status = "completed"。
+
+### 预防措施
+
+- 删除枚举/状态/错误码等"跨栈契约值"时，**必须**同时回答三个问题：
+  1. 新代码路径还引用旧值吗？
+  2. 历史持久化数据里还有旧值吗？
+  3. 如果 2 为 yes，是写迁移还是保留枚举值做兼容？
+- 不要急着删一次性迁移脚本——在确认数据库里已无旧值之前保留它。
+- 状态机回归测试应包含"反序列化旧状态"的 fixture，保证枚举收缩时能提前发现历史数据兼容问题。
+

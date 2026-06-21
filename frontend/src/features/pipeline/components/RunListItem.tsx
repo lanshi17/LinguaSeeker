@@ -19,7 +19,6 @@ const STATUS_LABEL: Record<ProcessingStatus, string> = {
   completed: "Completed",
   failed: "Failed",
   skipped: "Skipped",
-  awaiting_review: "Awaiting review",
 };
 
 const STATUS_TONE: Record<
@@ -31,7 +30,6 @@ const STATUS_TONE: Record<
   completed: "success",
   failed: "error",
   skipped: "default",
-  awaiting_review: "warning",
 };
 
 const PULSE_TONE: Record<
@@ -43,7 +41,6 @@ const PULSE_TONE: Record<
   completed: "success",
   failed: "error",
   skipped: "neutral",
-  awaiting_review: "warning",
 };
 
 export function RunListItem({ run, index }: RunListItemProps) {
@@ -96,7 +93,6 @@ export function RunListItem({ run, index }: RunListItemProps) {
                 run.pipeline_status === "failed" && "bg-red-500",
                 run.pipeline_status === "skipped" && "bg-gray-400",
                 run.pipeline_status === "pending" && "bg-gray-300",
-                run.pipeline_status === "awaiting_review" && "bg-amber-400",
               )}
               aria-hidden
             />

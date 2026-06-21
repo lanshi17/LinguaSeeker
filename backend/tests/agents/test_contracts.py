@@ -82,7 +82,6 @@ def test_pipeline_status_enum():
     """PipelineStatus enum has expected values."""
     assert PipelineStatus.PENDING == "pending"
     assert PipelineStatus.RUNNING == "running"
-    assert PipelineStatus.AWAITING_REVIEW == "awaiting_review"
     assert PipelineStatus.COMPLETED == "completed"
     assert PipelineStatus.FAILED == "failed"
 

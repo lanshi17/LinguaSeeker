@@ -8,6 +8,7 @@ import type { ChatAction, ChatActionIntent } from "../types/actions";
 const { Text } = Typography;
 
 const INTENT_LABELS: Record<ChatActionIntent, string> = {
+  "confirm-pipeline": "Start pipeline",
   "start-pipeline": "Start pipeline",
   "upload-pdf": "Upload PDF",
   "search-evidence": "Search evidence",

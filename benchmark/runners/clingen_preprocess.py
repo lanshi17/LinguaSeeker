@@ -75,7 +75,7 @@ async def submit_and_poll_phase12(
 
     logger.info("[{}] Submitted, run_id={}", filename, run_id)
 
-    # Poll until Phase 2 completes (status = awaiting_review means Phase 3 done)
+    # Poll until Phase 3 completes (status = completed).
     for attempt in range(MAX_POLL_ATTEMPTS):
         await asyncio.sleep(POLL_INTERVAL_S)
         try:
@@ -128,7 +128,7 @@ async def preprocess_entry(
 
         logger.info("[{}] Pipeline completed: status={}, duration={:.1f}s", entry_id, pipeline_status, duration)
 
-        if pipeline_status not in ("awaiting_review", "completed"):
+        if pipeline_status != "completed":
             logger.error("[{}] Pipeline failed: {}", entry_id, status_data.get("error_message", "unknown"))
             return False
 

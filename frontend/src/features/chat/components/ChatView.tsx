@@ -30,8 +30,8 @@ import {
 import { clearCachedMessageStore } from "../utils/messageStore";
 import type { ChatAction, ChatActionIntent } from "../types/actions";
 import { ChatMarkdown } from "../utils/markdown";
-import { PipelineConfirmCard, PipelineStartForm, PipelineStatusCard } from "./forms";
-import type { PipelineConfirmSlots, PipelineFormData } from "./forms";
+import { PipelineSummaryCard, PipelineStatusCard } from "./forms";
+import type { PipelineSummarySlots } from "./forms";
 import { ChatActionBubble } from "./ChatActionBubble";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { apiClient } from "@/lib/api/client";
@@ -39,13 +39,24 @@ import { extractErrorMessage } from "@/lib/api/error";
 import {
   BookOpen,
   FlaskConical,
+  ListChecks,
   Search,
   Sparkles,
   Upload,
 } from "lucide-react";
+import { TaskQueuePanel } from "@/features/pipeline";
 
 /** Max words of the first user message used as the session title. */
 const SESSION_TITLE_WORDS = 5;
+
+/** localStorage key for the task-queue panel visibility preference. */
+const TASK_QUEUE_STORAGE_KEY = "chat.taskQueueOpen";
+
+function readInitialQueueOpen(): boolean {
+  if (typeof window === "undefined") return true;
+  const stored = window.localStorage.getItem(TASK_QUEUE_STORAGE_KEY);
+  return stored === null ? true : stored === "1";
+}
 
 interface ChatViewProps {
   processingRunId?: string;
@@ -228,6 +239,24 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect -- standard Next.js SSR/CSR hydration gate; the one-shot mount flag has no cascading-render risk because the dep array is empty.
+  }, []);
+
+  const [taskQueueOpen, setTaskQueueOpen] = useState<boolean>(
+    readInitialQueueOpen,
+  );
+  const toggleTaskQueue = useCallback(() => {
+    setTaskQueueOpen((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(
+          TASK_QUEUE_STORAGE_KEY,
+          next ? "1" : "0",
+        );
+      } catch {
+        // Storage quota or sandboxed env — silently ignore.
+      }
+      return next;
+    });
   }, []);
 
   const [providerCache] = useState(
@@ -528,8 +557,8 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       }
 
       if (action.intent === "review-changes") {
-        const filter = action.slots?.filter ?? "awaiting_review";
-        window.location.href = `/evidence?review_status=${filter ?? "awaiting_review"}`;
+        const filter = action.slots?.filter ?? "all";
+        window.location.href = `/evidence?review_status=${filter ?? "all"}`;
         return;
       }
 
@@ -539,9 +568,19 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         return;
       }
 
-      if (action.intent === "start-pipeline" || action.intent === "upload-pdf") {
-        setActiveForm(action.intent);
+      if (action.intent === "confirm-pipeline") {
+        setActiveForm("confirm-pipeline");
         setActiveFormSlots(action.slots ?? {});
+        return;
+      }
+
+      if (action.intent === "start-pipeline" || action.intent === "upload-pdf") {
+        // Legacy intents — the chat no longer opens inline forms. Nudge the
+        // user toward the conversational flow; the LLM will drive slot
+        // gathering from here and eventually dispatch `confirm-pipeline`.
+        antdMessage.info(
+          "Describe what you want to run — I'll ask the right questions.",
+        );
         return;
       }
 
@@ -600,7 +639,6 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     const TERMINAL = new Set([
       "completed",
       "failed",
-      "awaiting_review",
       "cancelled",
     ]);
     const MAX_POLL_MS = 30 * 60 * 1000; // 30 min safety cap
@@ -638,62 +676,9 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     setTimeout(poll, 1000);
   }, [setPipelineStatus]);
 
-  // ── Pipeline form submit ──
-  const handlePipelineSubmit = useCallback(
-    async (data: PipelineFormData) => {
-      setActiveForm(null);
-      try {
-        const body: Record<string, unknown> = {
-          source_type: data.sourceType,
-          mode: "full",
-        };
-        if (data.sourceType === "online") {
-          if (data.query) body.query = data.query;
-          if (data.identifiers && data.identifiers.length > 0) {
-            body.identifiers = data.identifiers;
-          }
-        } else if (data.sourceType === "local" && data.file) {
-          body.content_base64 = await readFileAsBase64(data.file);
-          body.filename = data.file.name;
-        }
-        const response = await apiClient.post<{
-          processing_run_id: string;
-          status: string;
-        }>("/pipeline/run", body);
-        const runId = response.data.processing_run_id;
-        setPipelineStatus({ runId, status: response.data.status });
-        // Only post to chat if a session is active; otherwise the
-        // pipeline status card alone is sufficient feedback.
-        if (activeProvider) {
-          onRequest?.({
-            messages: [
-              {
-                role: "assistant" as const,
-                content: `Pipeline started. Run ID: ${runId.slice(0, 8)}...`,
-              },
-            ],
-          });
-        }
-        pollPipelineStatus(runId);
-      } catch (err: unknown) {
-        console.error("[Pipeline] start failed:", err);
-        antdMessage.error(
-          `Failed to start pipeline: ${extractErrorMessage(err)}`,
-        );
-      }
-    },
-    [
-      activeProvider,
-      onRequest,
-      pollPipelineStatus,
-      setActiveForm,
-      setPipelineStatus,
-    ],
-  );
-
-  // ── Pipeline confirm: submit from conversational confirm card ──
+  // ── Pipeline confirm: submit from the conversational summary card ──
   const handlePipelineConfirm = useCallback(
-    async (slots: PipelineConfirmSlots) => {
+    async (slots: PipelineSummarySlots) => {
       setActiveForm(null);
       try {
         const body: Record<string, unknown> = {
@@ -811,38 +796,21 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       };
     });
 
-    if (activeForm === "start-pipeline") {
+    if (activeForm === "confirm-pipeline") {
       items.push({
         key: "__confirm__",
         role: "assistant",
         content: "",
         variant: "borderless" as const,
         contentRender: () => (
-          <PipelineConfirmCard
-            key={`confirm:${JSON.stringify(activeFormSlots)}`}
-            slots={(activeFormSlots ?? {}) as PipelineConfirmSlots}
+          <PipelineSummaryCard
+            key={`summary:${JSON.stringify(activeFormSlots)}`}
+            slots={(activeFormSlots ?? {}) as PipelineSummarySlots}
             onConfirm={handlePipelineConfirm}
-            onCancel={() => {
+            onModify={() => {
               setActiveForm(null);
               setActiveFormSlots(null);
             }}
-            isSubmitting={isRequesting}
-          />
-        ),
-      });
-    }
-
-    if (activeForm === "upload-pdf") {
-      items.push({
-        key: "__form__",
-        role: "assistant",
-        content: "",
-        variant: "borderless" as const,
-        contentRender: () => (
-          <PipelineStartForm
-            key="upload-pdf-form"
-            defaultSourceType="local"
-            onSubmit={handlePipelineSubmit}
             isSubmitting={isRequesting}
           />
         ),
@@ -884,7 +852,6 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     activeFormSlots,
     pipelineStatus,
     isRequesting,
-    handlePipelineSubmit,
     handlePipelineConfirm,
     handleSendMessage,
     dispatchedActions,
@@ -1008,37 +975,70 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
         {/* Main chat area */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <Bubble.List
-            className="flex-1 overflow-auto"
-            style={{ padding: 16 }}
-            items={bubbleItems}
-            role={roles}
-            autoScroll
-          />
+          {/* Task-queue toolbar: a slim bar above the bubble stream so the
+              user can collapse/expand the right-side queue without losing
+              chat scroll position. */}
+          <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-1.5">
+            <button
+              type="button"
+              onClick={toggleTaskQueue}
+              aria-pressed={taskQueueOpen}
+              aria-label={
+                taskQueueOpen ? "Hide task queue" : "Show task queue"
+              }
+              className={[
+                "flex items-center gap-1.5 rounded-md px-2 py-1 text-[11.5px] font-medium transition-colors",
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600",
+                taskQueueOpen
+                  ? "bg-gray-900 text-white shadow-sm"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-800",
+              ].join(" ")}
+            >
+              <ListChecks className="h-3.5 w-3.5" aria-hidden />
+              <span>Task Queue</span>
+            </button>
+            <span className="text-[10.5px] text-gray-400">
+              {taskQueueOpen ? "Pinned on the right" : "Hidden"}
+            </span>
+          </div>
 
-          <Sender
-            ref={senderRef}
-            className="border-t border-gray-100"
-            style={{ padding: 16 }}
-            loading={isRequesting}
-            onCancel={() => {
-              // Cancel via the provider's own AbortController for
-              // for reliable fetch termination. Also try the SDK's
-              // abort as a secondary cleanup for internal state.
-              try {
-                activeProvider?.abort();
-              } catch {
-                  // noop
-              }
-              try {
-                abort?.();
-              } catch {
-                  // noop
-              }
-            }}
-            onSubmit={handleSubmitAndClear}
-            placeholder="Ask the Lingua Seeker Agent..."
-          />
+          <div className="flex min-h-0 flex-1">
+            <div className="flex min-w-0 flex-1 flex-col">
+              <Bubble.List
+                className="flex-1 overflow-auto"
+                style={{ padding: 16 }}
+                items={bubbleItems}
+                role={roles}
+                autoScroll
+              />
+
+              <Sender
+                ref={senderRef}
+                className="border-t border-gray-100"
+                style={{ padding: 16 }}
+                loading={isRequesting}
+                onCancel={() => {
+                  // Cancel via the provider's own AbortController for
+                  // reliable fetch termination. Also try the SDK's
+                  // abort as a secondary cleanup for internal state.
+                  try {
+                    activeProvider?.abort();
+                  } catch {
+                      // noop
+                  }
+                  try {
+                    abort?.();
+                  } catch {
+                      // noop
+                  }
+                }}
+                onSubmit={handleSubmitAndClear}
+                placeholder="Ask the Lingua Seeker Agent..."
+              />
+            </div>
+
+            {taskQueueOpen && <TaskQueuePanel onClose={toggleTaskQueue} />}
+          </div>
         </div>
       </div>
     </XProvider>
@@ -1225,18 +1225,4 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
       </div>
     </XProvider>
   );
-}
-
-// ─── Helpers ───────────────────────────────────────────────────────────
-
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = (reader.result as string).split(",")[1];
-      resolve(base64);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }

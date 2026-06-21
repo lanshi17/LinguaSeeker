@@ -51,7 +51,7 @@ def _write_report(path: Path, total_entries: int, f1: float) -> None:
         },
         "per_entry": [
             {
-                "pipeline_status": "awaiting_review",
+                "pipeline_status": "completed",
                 "field_matches": [
                     {"field_id": "A.gene_symbol", "match_type": "exact"},
                     {"field_id": "B.disease_diagnosis", "match_type": "missing"},
@@ -92,7 +92,7 @@ def test_build_diagnostics_summarizes_axes_and_match_types(tmp_path) -> None:
     assert diagnostics.match_type_counts["exact"] == 1
     assert diagnostics.match_type_counts["missing"] == 1
     assert diagnostics.match_type_counts["wrong_value"] == 1
-    assert diagnostics.pipeline_status_counts["awaiting_review"] == 1
+    assert diagnostics.pipeline_status_counts["completed"] == 1
     assert diagnostics.pipeline_status_counts["failed"] == 1
 
 

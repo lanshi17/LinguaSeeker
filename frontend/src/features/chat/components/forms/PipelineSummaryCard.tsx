@@ -12,7 +12,9 @@ import {
   Upload,
 } from "lucide-react";
 
-export interface PipelineConfirmSlots {
+/** Slot schema mirrors the backend-emitted `action.slots` for
+ *  `confirm-pipeline`. Keys are snake_case to avoid a mapping layer. */
+export interface PipelineSummarySlots {
   source_type?: string;
   query?: string;
   identifiers?: string;
@@ -22,10 +24,10 @@ export interface PipelineConfirmSlots {
   filename?: string;
 }
 
-interface PipelineConfirmCardProps {
-  slots: PipelineConfirmSlots;
-  onConfirm: (slots: PipelineConfirmSlots) => void;
-  onCancel: () => void;
+interface PipelineSummaryCardProps {
+  slots: PipelineSummarySlots;
+  onConfirm: (slots: PipelineSummarySlots) => void;
+  onModify?: () => void;
   isSubmitting?: boolean;
 }
 
@@ -59,12 +61,20 @@ function FieldRow({ icon, label, value, mono }: FieldRowProps) {
   );
 }
 
-export function PipelineConfirmCard({
+/**
+ * Renders the final "Ready to start?" summary produced by the chat agent's
+ * conversational slot-gathering. The user either confirms (submitting the
+ * pipeline) or modifies a slot by continuing the conversation.
+ *
+ * Replaces the deprecated PipelineConfirmCard that paired with the
+ * now-removed inline form flow.
+ */
+export function PipelineSummaryCard({
   slots,
   onConfirm,
-  onCancel,
+  onModify,
   isSubmitting,
-}: PipelineConfirmCardProps) {
+}: PipelineSummaryCardProps) {
   const [submitted, setSubmitted] = useState(false);
 
   const handleConfirm = useCallback(() => {
@@ -85,7 +95,7 @@ export function PipelineConfirmCard({
 
   const hasData = isOnline
     ? Boolean(slots.query || slots.identifiers)
-    : Boolean(slots.filename);
+    : true; // local upload flow: submission is valid once the user confirms
 
   return (
     <div className="w-full max-w-md overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -127,6 +137,13 @@ export function PipelineConfirmCard({
             value={slots.filename}
           />
         )}
+        {!isOnline && !slots.filename && (
+          <FieldRow
+            icon={<Upload className="h-3.5 w-3.5" />}
+            label="Document"
+            value="Upload via /pipeline after confirmation"
+          />
+        )}
         {hasTarget && (
           <div className="py-1.5">
             <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-gray-400">
@@ -134,7 +151,7 @@ export function PipelineConfirmCard({
             </span>
             <div className="flex flex-wrap gap-1.5">
               {slots.gene_symbol && (
-                <span className="rounded-full bg-cyan-50 px-2 py-0.5 text-[11px] font-medium text-cyan-700">
+                <span className="rounded-full bg-cyan-50 px-2 py-0.5 font-mono text-[11px] font-medium text-cyan-700">
                   Gene: {slots.gene_symbol}
                 </span>
               )}
@@ -144,7 +161,7 @@ export function PipelineConfirmCard({
                 </span>
               )}
               {slots.variant_hgvs_p && (
-                <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700 font-mono">
+                <span className="rounded-full bg-violet-50 px-2 py-0.5 font-mono text-[11px] font-medium text-violet-700">
                   {slots.variant_hgvs_p}
                 </span>
               )}
@@ -164,15 +181,17 @@ export function PipelineConfirmCard({
           <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
           Confirm & Start
         </Button>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={isSubmitting || submitted}
-          className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[12px] text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50"
-        >
-          <MessageSquare className="h-3 w-3" />
-          Modify
-        </button>
+        {onModify && (
+          <button
+            type="button"
+            onClick={onModify}
+            disabled={isSubmitting || submitted}
+            className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[12px] text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50"
+          >
+            <MessageSquare className="h-3 w-3" />
+            Modify via chat
+          </button>
+        )}
       </div>
     </div>
   );

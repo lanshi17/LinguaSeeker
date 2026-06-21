@@ -54,7 +54,7 @@ __all__ = [
 
 POLL_INTERVAL_S = 5.0
 MAX_POLL_ATTEMPTS = 360  # 30 min max per entry
-TERMINAL_STATUSES = {"awaiting_review", "completed", "failed"}
+TERMINAL_STATUSES = {"completed", "failed"}
 
 
 def _run_id_from_status_url(status_url: str) -> str | None:
@@ -426,7 +426,7 @@ async def evaluate_one(
                 metrics.last_pipeline_status = last_status.get("pipeline_status")
                 metrics.last_current_phase = last_status.get("current_phase")
 
-            if metrics.pipeline_status in ("awaiting_review", "completed"):
+            if metrics.pipeline_status == "completed":
                 run_id = metrics.run_id
                 if not run_id:
                     raise RuntimeError("Pipeline completed without processing_run_id")
@@ -555,7 +555,7 @@ async def run_evaluation(
                 mondo=mondo,
             )
             all_metrics.append(m)
-            status_icon = "\u2713" if m.pipeline_status in ("awaiting_review", "completed") else "\u2717"
+            status_icon = "\u2713" if m.pipeline_status == "completed" else "\u2717"
             tp = sum(1 for f in m.field_matches if f.matched)
             total = len(m.field_matches)
             entity_str = f"std={m.standardization_accuracy:.0%}" if m.entity_matches else "std=-"

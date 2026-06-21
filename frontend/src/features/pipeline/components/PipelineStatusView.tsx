@@ -20,7 +20,6 @@ const NON_LIVE: ReadonlyArray<ProcessingStatus> = [
   "completed",
   "failed",
   "skipped",
-  "awaiting_review",
 ];
 
 export function PipelineStatusView({ runId }: PipelineStatusViewProps) {

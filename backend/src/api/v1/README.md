@@ -8,8 +8,7 @@
 /api/v1
 ├── /pipeline
 │   ├── POST   /run                                  # Start a pipeline run
-│   ├── GET    /runs/{processing_run_id}/status       # Poll run status
-│   └── POST   /runs/{processing_run_id}/finalize     # Finalize run awaiting review
+│   └── GET    /runs/{processing_run_id}/status       # Poll run status
 ├── /evidence
 │   ├── GET    /groups/detail                         # Evidence group detail with distribution
 │   ├── PATCH  /{canonical_evidence_id}               # Patch evidence card (Phase 4)
@@ -38,7 +37,6 @@
 |----------|--------|---------|----------|-------------|
 | `/pipeline/run` | POST | `PipelineRunRequest` | `PipelineRunResponse` (202) | Start async pipeline run. Rate-limited to 10/min. Returns immediately with `processing_run_id`. Checks for duplicate in-progress runs (409). |
 | `/pipeline/runs/{id}/status` | GET | -- | `PipelineStatusResponse` | Poll pipeline status with per-phase details. Checks memory cache first, then PostgreSQL. |
-| `/pipeline/runs/{id}/finalize` | POST | -- | `PipelineFinalizeResponse` | Finalize a run in `awaiting_review` status, transitioning to `completed`. Idempotent for already-completed runs. |
 
 #### `PipelineRunRequest`
 

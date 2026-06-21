@@ -9,8 +9,9 @@
  */
 
 export type ChatActionIntent =
-  | "start-pipeline"
-  | "upload-pdf"
+  | "confirm-pipeline"
+  | "start-pipeline" // deprecated: LLM must no longer emit; kept for back-compat with persisted messages
+  | "upload-pdf" // deprecated: LLM must no longer emit; kept for back-compat with persisted messages
   | "search-evidence"
   | "classify-variant"
   | "interpret-evidence"
@@ -23,6 +24,15 @@ export interface ChatAction {
 }
 
 export interface ChatActionBubbleSlots {
+  confirmPipeline?: {
+    source_type?: "online" | "local";
+    query?: string;
+    identifiers?: string;
+    gene_symbol?: string;
+    disease_name?: string;
+    variant_hgvs_p?: string;
+    filename?: string;
+  };
   startPipeline?: { sourceType?: "online" | "local"; query?: string };
   uploadPdf?: { sourceType?: "local" };
   searchEvidence?: {
@@ -34,5 +44,5 @@ export interface ChatActionBubbleSlots {
   };
   classifyVariant?: { variant?: string };
   interpretEvidence?: { evidenceId?: string };
-  reviewChanges?: { filter?: "awaiting_review" | "all" };
+  reviewChanges?: { filter?: "all" };
 }

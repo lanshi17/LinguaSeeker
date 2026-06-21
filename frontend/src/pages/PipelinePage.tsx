@@ -17,7 +17,6 @@ const FILTER_TABS: FilterTab[] = [
   { value: "all", label: "All" },
   { value: "running", label: "Running" },
   { value: "pending", label: "Pending" },
-  { value: "awaiting_review", label: "Awaiting Review" },
   { value: "completed", label: "Completed" },
   { value: "failed", label: "Failed" },
 ];

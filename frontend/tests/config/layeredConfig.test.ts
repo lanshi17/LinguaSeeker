@@ -50,16 +50,15 @@ describe("layered frontend config", () => {
     const statuses: string[] = [
       "pending",
       "running",
-      "awaiting_review",
       "completed",
       "failed",
       "skipped",
     ];
-    assert.equal(statuses.includes("awaiting_review"), true);
     assert.equal(statuses.includes("pending"), true);
     assert.equal(statuses.includes("skipped"), true);
-    // Backend does not use "queued" or "cancelled" in the shared type
+    // Backend does not use "queued", "cancelled", or "awaiting_review" in the shared type
     assert.equal(statuses.includes("queued"), false);
     assert.equal(statuses.includes("cancelled"), false);
+    assert.equal(statuses.includes("awaiting_review"), false);
   });
 });

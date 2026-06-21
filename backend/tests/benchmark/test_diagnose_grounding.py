@@ -30,7 +30,7 @@ def test_build_grounding_diagnostics_computes_span_validity_when_spans_exist(tmp
         [
             {
                 "entry_id": "clingen_001",
-                "pipeline_status": "awaiting_review",
+                "pipeline_status": "completed",
                 "grounding_rate": 0.5,
                 "field_matches": [
                     {
@@ -77,7 +77,7 @@ def test_build_grounding_diagnostics_accepts_text_snippet_and_zero_offsets(tmp_p
         [
             {
                 "entry_id": "clingen_001",
-                "pipeline_status": "awaiting_review",
+                "pipeline_status": "completed",
                 "grounding_rate": 1.0,
                 "field_matches": [
                     {
@@ -108,7 +108,7 @@ def test_build_grounding_diagnostics_flags_missing_span_evidence(tmp_path) -> No
         [
             {
                 "entry_id": "clingen_001",
-                "pipeline_status": "awaiting_review",
+                "pipeline_status": "completed",
                 "grounding_rate": 0.0,
                 "field_matches": [{"field_id": "A.gene_symbol", "matched": True, "match_type": "exact"}],
             }

@@ -7,6 +7,7 @@ from benchmark.analysis.dataset_curation.inventory_system_runs import (
     choose_best_run,
     format_inventory,
     parse_clingen_entry_id,
+    parse_entry_id,
 )
 
 
@@ -14,7 +15,7 @@ def _row(
     run_id: str,
     *,
     source_key: str | None,
-    status: str = "awaiting_review",
+    status: str = "completed",
     evidence_count: int = 0,
     found_count: int = 0,
     source_span_count: int = 0,
@@ -37,6 +38,12 @@ def test_parse_clingen_entry_id_from_source_key() -> None:
     assert parse_clingen_entry_id("clingen_014.md") == "clingen_014"
     assert parse_clingen_entry_id("5例Rett综合征样表型患儿的基因突变分析_刘文晶.pdf") is None
     assert parse_clingen_entry_id(None) is None
+
+
+def test_parse_entry_id_supports_rett_source_keys() -> None:
+    assert parse_entry_id("rett_069.md|gene=MECP2|rett=rett_069", entry_id_key="rett") == "rett_069"
+    assert parse_entry_id("rett_069.md", entry_id_pattern=r"\b(rett_\d+)\b") == "rett_069"
+    assert parse_entry_id("clingen_014.md", entry_id_key="rett", entry_id_pattern=r"\b(rett_\d+)\b") is None
 
 
 def test_choose_best_run_prefers_successful_run_with_more_source_spans() -> None:
@@ -94,6 +101,38 @@ def test_build_inventory_maps_only_explicit_clingen_source_keys() -> None:
     assert inventory.best_by_entry["clingen_001"].processing_run_id == "clingen-run"
 
 
+def test_build_inventory_maps_rett_source_keys() -> None:
+    rows = [
+        _row(
+            "rett-run",
+            source_key="rett_069.md|gene=MECP2|rett=rett_069",
+            evidence_count=12,
+            found_count=10,
+            source_span_count=10,
+        ),
+        _row(
+            "clingen-run",
+            source_key="clingen_001.md|clingen=clingen_001",
+            evidence_count=28,
+            found_count=27,
+            source_span_count=27,
+        ),
+    ]
+
+    inventory = build_inventory(
+        rows,
+        expected_entry_ids=["rett_001", "rett_069"],
+        entry_id_key="rett",
+        entry_id_pattern=r"\b(rett_\d+)\b",
+    )
+
+    assert inventory.total_expected == 2
+    assert inventory.mapped_count == 1
+    assert inventory.missing_entry_ids == ["rett_001"]
+    assert inventory.unmapped_count == 1
+    assert inventory.best_by_entry["rett_069"].processing_run_id == "rett-run"
+
+
 def test_format_inventory_reports_coverage_and_best_runs() -> None:
     inventory = build_inventory(
         [
@@ -112,4 +151,4 @@ def test_format_inventory_reports_coverage_and_best_runs() -> None:
 
     assert "mapped=1/3" in output
     assert "missing=clingen_000,clingen_001" in output
-    assert "clingen_002 best-run awaiting_review evidence=63 found=57 spans=57" in output
+    assert "clingen_002 best-run completed evidence=63 found=57 spans=57" in output

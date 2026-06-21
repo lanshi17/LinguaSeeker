@@ -21,7 +21,6 @@ export interface ApiErrorResponse {
 export type ProcessingStatus =
   | "pending"
   | "running"
-  | "awaiting_review"
   | "completed"
   | "failed"
   | "skipped";
