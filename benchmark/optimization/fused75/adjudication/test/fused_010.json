@@ -1,0 +1,81 @@
+{
+  "entry_id": "fused_010",
+  "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/expected.json",
+  "is_complete": true,
+  "labels": [
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "BRCA2",
+      "field_id": "A.gene_symbol",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_010/source.md:5",
+      "source_quote": "Background Germline pathogenic variants (gPVs) in BRCA1 , BRCA2 , and CHEK2 are well\u2011established cancer predisposition factors of prostate cancer. However, their contribution across the full spectrum of urological cancers remains insufficiently characterized. The primary objective was to describe the spectrum and outcomes of urological cancers in BRCA1/2 and CHEK2 gPV carriers, while secondary objectives were to assess overall survival (OS) and compare age at diagnosis, stage, and survival outco",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "Fanconi anemia complementation group D1",
+      "field_id": "B.disease_diagnosis",
+      "notes": "Source concerns BRCA1/2 and CHEK2 pathogenic variants in urological cancers, not Fanconi anemia complementation group D1.",
+      "source_location": null,
+      "source_quote": null,
+      "visibility": "not_source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "notes": "BRCA2 pathogenic variants are discussed for urological cancer predisposition, not as causative for expected Fanconi anemia group D1.",
+      "source_location": null,
+      "source_quote": null,
+      "visibility": "ambiguous_boundary"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "AR",
+      "field_id": "B.mode_of_inheritance_reported",
+      "notes": "Autosomal recessive Fanconi anemia inheritance is not stated in this urological cancer source.",
+      "source_location": null,
+      "source_quote": null,
+      "visibility": "not_source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "c.2808_2811del",
+      "field_id": "A.variant_hgvs_c",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_010/source.md:260",
+      "source_quote": "c.2808_2811del | 69 | G7 | Hepatocarcinoma, colorectal, breast | Colorectal, breast",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "p.Ala938Profs",
+      "field_id": "A.variant_hgvs_p",
+      "notes": "Expected p.Ala938Profs protein notation is not directly visible in the source text.",
+      "source_location": null,
+      "source_quote": null,
+      "visibility": "not_source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "deletion",
+      "field_id": "A.variant_type",
+      "notes": "AI-assisted variant type phrase",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_010/source.md:91",
+      "source_quote": "Between 1999 and 2014, BRCA1/2 testing was performed using conformation-sensitive gel electrophoresis (CSGE) or conformation-sensitive capillary electrophoresis (CSCE), followed by Sanger sequencing. The Portuguese BRCA2 founder variant was screened using a specific polymerase chain reaction (PCR)-based assay, and large deletions and insertions in BRCA1 and BRCA2 were assessed by multiplex ligation-dependent probe amplification (MRC Holland, Amsterdam, Netherlands).",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "Pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_010/source.md:1",
+      "source_quote": "# BRCA1/2 and CHEK2 Pathogenic Variants in Urological Cancers: A Portuguese Single-Center Experience",
+      "visibility": "source_visible"
+    }
+  ],
+  "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_010/source.md",
+  "split": "adjudication_test"
+}

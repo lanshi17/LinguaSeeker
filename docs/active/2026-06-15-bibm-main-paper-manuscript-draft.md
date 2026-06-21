@@ -24,6 +24,7 @@ This paper makes five contributions:
 3. Traceability metrics that separate citation validity, hallucinated citation rate, span boundary quality, semantic support, and TraceableF1.
 4. A frozen N=30 evaluation against matched LLM baselines and grounded internal ablations, with paired statistics and explicit limitations.
 5. A citation-required prompt-only frontier model sweep using a same-release-window cohort and a single OpenAI-compatible provider gateway, isolating method value from prompt engineering alone.
+6. A separate Fused-75 source-visible stress test that measures source-supported field recovery on a larger adjudicated ClinVar-fused slice without replacing the N=30 paired comparison.
 
 ## 2. Related Work
 
@@ -84,6 +85,8 @@ Table 1 summarizes the frozen dataset and reproducibility anchor.
 | total_entries | covered_count | needs_pipeline_count | frozen_entry_count | git_commit | ablation_report |
 | --- | --- | --- | --- | --- | --- |
 | 30 | 30 | 0 | 30 | 7d13b1a8206476cd8c0e750684f53d6dc80b5c55 | `benchmark/layer3/reports/reconcile_ablation_20260615_010725.json` |
+
+We additionally maintain a Fused-75 optimization stress set with source-visible adjudication on 20 entries split into 10 dev entries and 10 frozen test entries. This stress set is not used for the paired N=30 headline comparison. Its role is to test whether pipeline changes improve source-supported field recovery under stricter quote visibility constraints and a held-out checkpoint discipline.
 
 ## 4. Method
 
@@ -206,9 +209,23 @@ To separate model strength from method design, we additionally evaluate citation
 
 The strongest prompt-only frontier baseline is GPT-5, with F1=0.9222 and TraceableF1=0.9109. LinguaSeeker remains higher on both raw F1 and TraceableF1 in this frozen comparison. We do not claim paired statistical superiority over each frontier model unless such tests are added; the result is used to show that prompt engineering alone does not close the traceable-extraction gap in this benchmark.
 
-### 6.5 Error Analysis
+### 6.5 Fused-75 Source-Visible Stress Test
 
-Table 5 summarizes remaining errors.
+Table 5 reports the current Fused-75 source-visible optimization leaderboard. The stress test uses source-visible adjudicated labels and a dev/test checkpoint protocol: variants are selected on the 10-entry dev split and evaluated once on the 10-entry frozen test split after passing the dev gate. The latest target-span field recovery variant improves frozen test source-visible F1 from 0.4466 to 0.5983, mainly by recovering high-signal fields from already selected target source snippets rather than by broadening document context.
+
+| variant | dev source-visible f1 | test source-visible f1 | test precision | test recall | decision |
+| --- | --- | --- | --- | --- | --- |
+| contextual-reconcile-baseline | 0.3660 | NA | NA | NA | checkpoint_only |
+| adjudicated-field-filter | 0.5138 | 0.4340 | 0.5897 | 0.3433 | checkpoint_only |
+| target-aware-source-visible | 0.5156 | 0.3770 | NA | NA | checkpoint_only |
+| candidate-recovery-source-validation | 0.6111 | 0.4466 | 0.6389 | 0.3433 | checkpoint_only |
+| target-span-field-recovery | 0.7438 | 0.5983 | 0.7000 | 0.5224 | checkpoint_only |
+
+The dev-only error taxonomy explains the gain. Before target-span recovery, the largest false-negative bucket was `span_selected_field_missing=15`, followed by `target_span_not_selected=10`. After the recovery pass, those buckets decreased to 7 and 5, respectively, while `source_quote_invalid` remained 0. This supports the next-paper claim that source-visible recall failures were often caused by missing field filling over already selected evidence spans, not by a need for wider context.
+
+### 6.6 Error Analysis
+
+Table 6 summarizes remaining errors.
 
 | root_cause | error_count | strategy | source_report |
 | --- | --- | --- | --- |
@@ -237,7 +254,7 @@ No publicly available benchmark currently covers the full-text-to-structured-fie
 
 Our internal baselines are designed to cover the major architectural design dimensions present in the external literature, but they are not reproductions of any specific published system. B0 represents the upper bound of single-prompt LLM extraction under a complete schema — the dominant paradigm in recent LLM-based biomedical IE work. B1 covers the translate-then-extract dimension, which is the standard cross-lingual pipeline. B3 covers the retrieval-augmented dimension. The internal reconciliation gradient (dual_union through context_verifier_reconcile) isolates the contribution of source grounding, verifier support, target specificity, and contradiction awareness. Together, these baselines demonstrate that each architectural dimension we add produces measurable, statistically significant improvement, without claiming equivalence to any external system that implements additional design contributions of its own.
 
-**Limitations.** First, we acknowledge the absence of direct head-to-head comparison with published external systems. This reflects a genuine gap in the field: no existing system covers our full task definition, and adapting external systems to the 134-field schema with citation validation is substantial engineering work that we prioritize as future work. Second, the frozen benchmark contains 30 entries, suitable for controlled method analysis and paired statistics but not for broad claims of general biomedical IE superiority. Third, the margin over the strongest matched B0-B4 baseline is +0.0188 F1, below the pre-declared +0.03 strong-superiority threshold. Fourth, the B6-B10 prompt-only frontier sweep is tied to exact provider aliases and a same-release-window cohort; hosted model behavior may change over time. Fifth, some gene-disease relationship labels reflect external ClinGen validity curation not fully visible in article-local evidence. Finally, LinguaSeeker extracts, grounds, and reconciles evidence fields for expert review; it is not an autonomous clinical decision-support or ACMG classification system.
+**Limitations.** First, we acknowledge the absence of direct head-to-head comparison with published external systems. This reflects a genuine gap in the field: no existing system covers our full task definition, and adapting external systems to the 134-field schema with citation validation is substantial engineering work that we prioritize as future work. Second, the frozen benchmark contains 30 entries, suitable for controlled method analysis and paired statistics but not for broad claims of general biomedical IE superiority. Third, the margin over the strongest matched B0-B4 baseline is +0.0188 F1, below the pre-declared +0.03 strong-superiority threshold. Fourth, the Fused-75 stress test is a separate 20-entry source-visible optimization set, not an independent replacement for the N=30 paired evaluation. Fifth, the B6-B10 prompt-only frontier sweep is tied to exact provider aliases and a same-release-window cohort; hosted model behavior may change over time. Sixth, some gene-disease relationship labels reflect external ClinGen validity curation not fully visible in article-local evidence. Finally, LinguaSeeker extracts, grounds, and reconciles evidence fields for expert review; it is not an autonomous clinical decision-support or ACMG classification system.
 
 The current benchmark-readiness artifacts are conservative by design: Benchmark A is only reportable once valid `alignment_annotations.json` files exist for the frozen N=30 set, and Benchmark B is reported as a small multilingual runtime pilot (10 attempted zh/ja/ko samples, 3 completed with per-case metrics reused from the frozen baseline report, 4 failed, 3 timed out) rather than a measured autonomous-classification experiment. Those artifacts support planning and curation, not result claims about clinical classification accuracy.
 
@@ -264,3 +281,5 @@ LinguaSeeker frames cross-lingual biomedical evidence extraction as traceability
 - Benchmark B runtime pilot: `benchmark/layer3/reports/benchmark_b_phase2_runtime_metrics_*.json` (manifest-declared)
 - Main paper tables: `benchmark/layer3/reports/main_paper_tables_20260615_194001.md`
 - Main paper manifest: `benchmark/layer3/reports/main_paper_rescue_manifest_20260615_193945.json`
+- Fused-75 source-visible stress test leaderboard: `benchmark/optimization/fused75/reports/leaderboard_current.md`
+- Fused-75 target-span field recovery checkpoint: `benchmark/optimization/fused75/reports/target_span_field_recovery_test_checkpoint.json`

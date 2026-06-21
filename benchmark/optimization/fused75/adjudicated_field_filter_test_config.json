@@ -1,0 +1,23 @@
+{
+  "dataset_split": "test",
+  "git_commit": "165921eedef36e446814534e8d1902bd4877e1d5",
+  "model_config_names": [
+    "LLM_MODEL",
+    "REASONING_LLM_MODEL"
+  ],
+  "pipeline_flags": [
+    {
+      "key": "artifact_source",
+      "value": "benchmark/data/ground_truth/clinvar_fused/*/preprocessed/phase_2/extraction_result.json"
+    },
+    {
+      "key": "score_field_filter",
+      "value": "adjudicated_labels"
+    },
+    {
+      "key": "variant",
+      "value": "adjudicated_field_filter"
+    }
+  ],
+  "variant_id": "adjudicated-field-filter"
+}

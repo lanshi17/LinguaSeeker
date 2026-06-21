@@ -113,8 +113,41 @@ def test_catalog_extraction_stage_uses_target_recall_first_block_selection() -> 
     prompts = [call.kwargs["prompt"] for call in provider.invoke_structured.call_args_list]
     assert prompts
     assert all("[Block 1 | text | page 1]" in prompt for prompt in prompts)
-    assert all("[Block 0" not in prompt for prompt in prompts)
-    assert all("Administrative header without target evidence" not in prompt for prompt in prompts)
+    assert all("[Block 0 | text | page 1]" in prompt for prompt in prompts)
+    assert all("Administrative header without target evidence" in prompt for prompt in prompts)
+
+
+def test_catalog_extraction_stage_scopes_target_catalog_to_eligible_fields() -> None:
+    provider = MagicMock()
+    provider.invoke_structured.return_value = []
+    document = TrackDocument(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        formatted_text="",
+        page_spans=[],
+        blocks=[
+            ContentBlock(
+                text="ABCA3 deficiency is caused by biallelic pathogenic changes in ABCA3.",
+            ),
+        ],
+        extraction_target=ExtractionTarget(
+            gene_symbol="ABCA3",
+            disease_name="ABCA3 deficiency",
+        ),
+    )
+
+    CatalogExtractionStage(provider).run(document, DocumentEvidenceMap(relevant=True))
+
+    assert provider.invoke_structured.call_count == 1
+    call = provider.invoke_structured.call_args
+    assert call.kwargs["stage"] == "catalog_extraction/high_signal"
+    prompt = call.kwargs["prompt"]
+    catalog_text = prompt.split("EVIDENCE CATALOG", maxsplit=1)[1].split("RULES:", maxsplit=1)[0]
+    assert "A.gene_symbol" in catalog_text
+    assert "A.gene_disease_relationship" in catalog_text
+    assert "B.disease_diagnosis" in catalog_text
+    assert "A.variant_hgvs_c" not in catalog_text
+    assert "F.functional_result" not in catalog_text
 
 
 def test_special_evidence_stage_calls_strong_tier():

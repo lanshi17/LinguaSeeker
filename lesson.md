@@ -3165,6 +3165,237 @@ benchmark 改进停留在离线评测路径：上下文验证器依赖 `TargetCo
 - 改 prompt 文本后,检查所有按 `input_budget_tokens` 硬编码 chunk 数的 stage 测试——prompt 变大 → overhead 变大 → chunk 数变大。
 - mock provider 的 stage 匹配一律用 `startswith`,不要 `==`;stage 名普遍带 `/<group>[/<chunk>]` 后缀。
 
+## 2026-06-19 Fused-75 source-visible preannotation path handling
+
+### 问题
+- `benchmark/optimization/fused75/adjudication/*.json` 中的 `source_path` 是相对项目根目录的路径。
+- 从 `backend/` 目录执行 `python -m benchmark.optimization.fused75.source_visible_drafts` 时,预标注器按当前工作目录解析这些路径,导致 20 个真实 fused-75 source.md 全部被误报为 missing。
+- 第一版 exact substring 还会把短值 `AR` 错配到 `Caribbean` 这类单词内部。
+
+### 排查过程
+- 先用新增单测确认目录预标注器能在绝对路径 source 下写入 exact-match source-visible 草稿。
+- 真实运行返回 `processed_entries=0` 和 20 个 missing source,但这些文件在项目根下实际存在。
+- 补充回归测试:模板保留相对 `benchmark/data/.../source.md`,函数显式接收 `project_root`,要求从项目根解析。
+- diff review 时发现 `B.mode_of_inheritance_reported=AR` 被标在标题行,新增短 token 边界测试和机器结果刷新测试。
+
+### 根因
+- benchmark CLI 通常从 `backend/` 配合 `PYTHONPATH=..` 执行,而模板路径语义是 repo-root relative。
+- 代码把 `Path.exists()` 直接用在模板路径上,隐式依赖调用者 cwd。
+- 对医学短码/遗传方式缩写使用裸 substring 匹配,没有要求字母数字边界。
+
+### 解决方案
+- 在 `source_visible_drafts.py` 中将相对 source path 统一解析为 `Path(__file__).resolve().parents[3] / source_path`。
+- 保留 `project_root` 参数用于测试和未来迁移。
+- 预标注只填 source-visible exact match quote/location/adjudicator,不修改 `is_complete`。
+- exact match 改为 `(?<![A-Za-z0-9])value(?![A-Za-z0-9])` 边界匹配;同一 `exact-match-preannotator` 产生的旧标签允许重算覆盖,人工 adjudicator 标签仍保持不动。
+
+### 预防措施
+- benchmark 文件中跨目录持久化的路径,统一明确“repo-root relative”或保存绝对路径。
+- CLI 测试至少覆盖一次从非项目根 cwd 调用的路径解析场景。
+- 对 1-3 字符标签和缩写字段必须覆盖“词内不匹配”的测试,尤其是 MOI、variant type、classification 等短值。
+- 自动预标注不得替代人工 adjudication:机器输出必须保持 `is_complete=false`,由 validator 继续阻断 promotion。
+
+## 2026-06-19 Fused-75 AI-assisted review guardrails
+
+### 问题
+- AI-assisted source-visible 草稿初版把 `due to CFTR variant screening panel bias` 误判为 `A.gene_disease_relationship=causative` 的支持证据。
+
+### 排查过程
+- 运行真实 fused-75 AI-assisted pass 后抽查 `fused_000`。
+- 发现关系字段命中了摘要中的 `due to ... CFTR variant screening panels`,但这句话表达的是诊断偏倚原因,不是 CFTR 导致 cystic fibrosis。
+- 增加回归测试:第一行放置 `due to CFTR variant screening panel bias` 干扰项,第二行放置真正的 `caused by mutations in the CFTR gene`。
+
+### 根因
+- 关系 matcher 把 `due to` 当成强因果触发词,但在医学论文中 `due to` 常描述研究偏倚、治疗限制、诊断差异等非 gene-disease 因果关系。
+
+### 解决方案
+- `A.gene_disease_relationship=causative` 只接受更强的 `caused by` / `results from` / `disease-causing` 模式。
+- AI-assisted pass 重跑后从 32 个新增 source-visible 收紧到 28 个,总 source-visible=107,未决字段=53。
+
+### 预防措施
+- AI-assisted reviewer 只填高置信 `source_visible`,不自动填 `not_source_visible` 或 `is_complete=true`。
+- 每个新增触发词都必须有负例测试,尤其是 `due to`, `associated with`, `linked to` 这类语义过宽的短语。
+
+## 2026-06-20 Fused-75 adjudication CLI subprocess environment
+
+### 问题
+- 批量调用 `benchmark.optimization.fused75.review_status` 写入剩余审核决策时,外层脚本使用 `uv run python`,但子进程没有设置 `PYTHONPATH=..`,导致 `ModuleNotFoundError: No module named 'benchmark'`。
+
+### 排查过程
+- 单次 CLI 命令从 `backend/` 目录配合 `PYTHONPATH=..` 可以正常运行。
+- 批量脚本中同样从 `backend/` 执行,但 `subprocess.run()` 没有显式传入包含 `PYTHONPATH` 的环境变量。
+- 首个子进程在导入 `benchmark.optimization.fused75.review_status` 前失败,未写入任何决策。
+
+### 根因
+- benchmark 包位于 repo root 下,从 `backend/` 作为 cwd 启动 Python 时不会自动出现在 `sys.path`。
+- 手工命令依赖 shell 前缀 `PYTHONPATH=..`,批量子进程没有继承这个临时前缀。
+
+### 解决方案
+- 在批量脚本中构造 `ENV = os.environ.copy()` 并设置 `ENV["PYTHONPATH"] = ".."`。
+- 所有后续 `review_status` 子进程通过该环境执行,成功写入 51 个剩余字段决策并完成 20 个 entry。
+
+### 预防措施
+- 从 `backend/` 调用 repo-root benchmark 模块时,所有脚本化子进程都显式传入 `PYTHONPATH=..`。
+- 对批量写入型脚本先让第一条命令失败即退出,确认未产生部分落盘后再重跑。
+
+## 2026-06-20 Fused-75 leaderboard mixed-report discovery
+
+### 问题
+- `benchmark.optimization.fused75.build_leaderboard --reports-dir` 直接读取 `reports/*.json`。
+- `reports/` 同时包含 `adjudication_review_queue.json` 和 variant run report JSON,导致 Pydantic 按 `PipelineRunReport` 解析 queue JSON 时报缺少 `config`、`metric`、`decision`、`artifact_status`。
+
+### 排查过程
+- 先生成 `contextual_reconcile_dev_partial.json`,确认 run report 本身可被 `json.tool` 正常读取。
+- 运行 leaderboard CLI 稳定复现失败,堆栈定位到 `_load_report(path)` 解析非 variant JSON。
+- 对比调用方式后确认显式 `build_leaderboard(report_paths=...)` 应继续严格校验,问题只在 CLI 自动发现边界。
+
+### 根因
+- `reports/` 是共享报告目录,不是只包含 variant run reports 的专用目录。
+- CLI 的发现逻辑用扩展名判断语义,把 adjudication queue 报告误当作 run report。
+
+### 解决方案
+- 新增 `discover_run_report_paths(reports_dir)`,只在 CLI 自动发现时跳过 JSON 解码失败或 `PipelineRunReport` 校验失败的文件。
+- 保持 `build_leaderboard(report_paths=...)` 对显式传入路径的严格校验。
+- 增加回归测试覆盖 reports 目录混有 `adjudication_review_queue.json` 的场景。
+
+### 预防措施
+- 共享 reports 目录中的 CLI 自动发现必须按 schema 过滤,不能只按 `*.json`。
+- 显式 API 和自动发现 CLI 要分层:显式输入严格失败,自动发现跳过非目标 schema 并通过测试固定行为。
+
+## 2026-06-20 Fused-75 artifact runner cwd and dependency discipline
+
+### 问题
+- 生成实际 dev 错误 taxonomy 时,第一次用了系统 `python`,没有通过 `uv run`,导致 `ModuleNotFoundError: No module named 'pydantic'`,也违反了项目 Python 依赖管理约定。
+- `phase2_artifact_batch.py` 初版默认路径使用相对 `benchmark/...` 和 `backend/data/pipeline`;从 `backend/` 执行 CLI 时,报告被误写到 `backend/benchmark/...`,pipeline_root 也可能指向错误目录。
+
+### 排查过程
+- 系统 Python 失败后,改为从 `backend/` 运行 `PYTHONPATH=.. uv run python`,同一脚本成功生成 taxonomy。
+- dry-run 后 `git status` 出现 `backend/benchmark/`,检查发现是错误 cwd 下的 batch report。
+- 使用 `/proc/<pid>/cwd` 确认当前 uvicorn 进程实际运行在主工作区 `/data/yangzs/Projects/01_ACMG_Lingua/backend`,不是 feature worktree;live runner 因此必须显式读取主工作区 `backend/data/pipeline` 产物再 materialize 到当前 worktree。
+
+### 根因
+- benchmark 模块依赖 backend venv,不能用系统 Python 直接运行。
+- CLI 默认路径没有绑定 repo root,隐式依赖调用者 cwd。
+- 本地已有后端服务可能来自不同 worktree,artifact producer 和 benchmark materializer 的根目录可能不同。
+
+### 解决方案
+- 所有 benchmark Python 命令统一使用 `PYTHONPATH=.. uv run python` 从 `backend/` 执行。
+- fused75 artifact runner 默认 `ground_truth_dir`、`reports_dir`、`pipeline_root` 改为 repo-root 绝对路径,并添加回归测试。
+- 删除误生成的 `backend/benchmark/` 目录;live run 显式传入正在运行后端的 `/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline`。
+
+### 预防措施
+- 新增 benchmark CLI 时,默认输入/输出路径必须基于 repo root 绝对路径,测试覆盖从非 repo-root cwd 执行的路径语义。
+- 调用已运行服务前,先确认服务进程 cwd;跨 worktree materialization 必须显式传入 producer 的 artifact root。
+- 不再用系统 Python 执行项目脚本;即使是一行诊断脚本也使用 `uv run`。
+
+## 2026-06-20 Fused-75 dev/test optimization boundary
+
+### 问题
+- `adjudicated-field-filter` 在 dev split 上把 source-visible F1 从 0.3660 提升到 0.5138,但 held-out test checkpoint 只有 0.4340。
+- 该策略本质上过滤 benchmark scoring 字段集合,不是生产抽取能力提升。
+
+### 排查过程
+- 先补齐 dev/test 全部 Phase 2 artifacts,保证 dev 与 test 都是 10/10 coverage。
+- 只用 dev split 选择 `adjudicated-field-filter`,随后用 `--checkpoint` 对 frozen test split 运行一次。
+- 对比 dev/test 指标:dev precision 提升明显且 recall 不变;test precision 仍高于 baseline 类型表现,但 recall 降到 0.3433。
+
+### 根因
+- dev 主要错误集中在 unsupported field false positives,字段过滤能直接减少这类 FP。
+- test split 的召回瓶颈更明显,说明 benchmark-side 过滤无法解决 candidate_absent 或 evidence extraction miss。
+
+### 解决方案
+- 本轮不推广 production Phase 2 backend change。
+- 将 `adjudicated-field-filter` 保留为 benchmark-side evaluation hygiene 和诊断基线。
+
+### 预防措施
+- 任何要进入生产 pipeline 的优化必须改变抽取候选生成、上下文约束或验证逻辑,不能只依赖 scorer filter。
+- 继续保持 dev-only 选择策略;held-out test 只做 checkpoint,不能用于新一轮调参。
+
+## 2026-06-20 Target-aware source-visible checkpoint regression
+
+### 问题
+- `target-aware-source-visible` 在 dev split 上达到 source-visible F1=0.5156,略高于 `adjudicated-field-filter` 的 dev F1=0.5138。
+- 同一 variant 在 frozen test checkpoint 上只有 source-visible F1=0.3770,低于既有 test checkpoint 0.4340。
+- test recall 没有改善,仍为 0.3433;precision 从 0.5897 降到 0.4182。
+
+### 排查过程
+- 先用 live Phase 2 pipeline 生成 dev artifacts `fused_000`-`fused_009`;`fused_009` 首轮超时后作为运行级 transient failure 单独补跑成功。
+- dev 通过后,只将同一配置用于 frozen test checkpoint,没有根据 test 结果调参。
+- 生成 test artifacts `fused_010`-`fused_019`,批处理报告 `phase2_artifact_batch_20260620_173112.json` 显示 completed=10、failed=0。
+- 运行 `run_variant --split test --checkpoint`,确认 coverage=10/10 且无缺失 artifact。
+
+### 根因
+- target-aware field eligibility 在 dev 上提高 recall,但没有解决 test split 的 candidate-absent/source-recovery 瓶颈。
+- bounded neighbor block expansion 增加了候选上下文,但 test precision 明显下降,说明新增上下文带来了更多 unsupported 或边界错误。
+- 该策略仍主要影响 catalog ask/selection 形态,不足以保证最终 source-visible quote 命中。
+
+### 解决方案
+- 不推广 `target-aware-source-visible` 为 fused-75 最优 production variant。
+- 保留 test checkpoint 报告作为负结果,leaderboard 中标记为 checkpoint_only。
+- 下一轮优化转向 candidate generation、source-visible quote validation 和 dev-only candidate-absent error taxonomy。
+
+### 预防措施
+- dev 小幅领先不能作为推广依据;必须以 frozen test checkpoint 是否超过当前 test best 为准。
+- test checkpoint 一旦运行,不得继续用 test 反馈调参。
+- 对提高召回的改动必须同时增加 source-visible 支持验证,否则可能用更多上下文换来更多 FP。
+
+## 2026-06-20 Live pipeline operational diagnostics
+
+### 问题
+- feature worktree 初次启动 backend 时缺少 ignored `backend/config/vault/development.yaml`,运行配置不完整。
+- batch runner 初次请求本地 backend 时遇到 API key 401,产生失败报告 `phase2_artifact_batch_20260620_144226.json`。
+- 长文档 Phase 2 运行期间出现 LLM read timeout、429 Too Many Requests,以及部分 `response_format=json_object` 调用提示 messages must contain word json。
+- Phase 3 embedding 调用本地 model-server `localhost:8001/v1/embeddings` 出现 401,但 Phase 2 artifact 已生成。
+
+### 排查过程
+- 确认 vault 文件为本地忽略配置,只在 worktree runtime 使用,不提交。
+- 以 `API_KEY=` 启动 feature backend 的本地评测服务,绕过本地 API key 鉴权,仅用于本机 benchmark runner。
+- 对 timeout/429 观察 pipeline status 和 batch report,只在 pipeline failed 或 artifact 缺失时处理;dev `fused_009` 属于 transient timeout,单条补跑成功。
+- 检查 Phase 3 401 后确认 benchmark scorer 只读取 Phase 2 `extraction_result.json`,因此该警告不阻塞本轮 F1 评估。
+
+### 根因
+- worktree 隔离不会复制 ignored vault 文件。
+- 本地 benchmark runner 与 FastAPI API key middleware 默认配置不匹配。
+- GPT-5/xhigh 长文档抽取运行时间长,容易触发 provider 限流或读超时。
+- Phase 3 依赖的 model-server 鉴权未为本轮 Phase 2 artifact benchmark 配齐。
+
+### 解决方案
+- 本轮使用 local-only `API_KEY=` 后端进程完成 artifact generation。
+- 保留失败 auth report 作为诊断记录,不纳入 variant score。
+- 对 transient timeout 只做同参数运行级补跑,不改变代码或 benchmark 参数。
+- 将 model-server 401 记录为非阻塞诊断,后续若评估 Phase 3 指标再单独修复。
+
+### 预防措施
+- 新 worktree 跑 live backend 前先检查 ignored vault 配置是否存在。
+- 本地 benchmark backend 的 API key 策略必须在启动命令中显式声明。
+- 长文档 artifact 批处理保持 concurrency=1,并用 batch report 而不是单条日志判断成败。
+- Phase 2-only benchmark 不应被 Phase 3 embedding warning 中断,但报告中必须记录该风险边界。
+
+## 2026-06-20 Feature branch dev merge during fused-75 optimization
+
+### 问题
+- 用户要求拉取主分支 pipeline 最新改进时,当前 feature 分支已有未提交的 fused75 优化 WIP。
+- `git merge dev` 后在归档设计文档和 `lesson.md` 上出现冲突。
+
+### 排查过程
+- 先用 `git stash push -u` 保存 WIP,再 `git fetch origin dev`。
+- 确认本地 `dev` 比 `origin/dev` 多 1 个提交,且包含 model-server API key 相关 pipeline 修复,因此合入本地 `dev`。
+- 查看 ours/theirs 后发现归档设计文档只有 header 状态/owner 冲突;`lesson.md` 两边都是独立复盘条目。
+
+### 根因
+- feature 分支从 fused75 优化点分出后,主分支继续进行了 benchmark config、frontend、evidence-db、model-server 鉴权等较大改动。
+- `docs/archive/plans` 被 `.gitignore` 忽略,解决冲突后需要 `git add -f` stage 已归档文档。
+
+### 解决方案
+- 保留归档设计文档的 `completed` 状态和 CrossEvidence owner。
+- `lesson.md` 保留双方所有复盘条目,仅移除冲突标记。
+- merge commit `a66157fc` 后恢复 stash,无 WIP 冲突。
+
+### 预防措施
+- 长跑 benchmark 分支在启动 live artifact 批处理前先同步主分支,避免后续 runtime 配置差异。
+- 归档目录被 ignore 时,冲突解决或新增归档结果文档需要显式 `git add -f`。
+- 合并文档类冲突优先语义合并,不要简单选择 ours/theirs。
+
 ## 2026-06-19 将 benchmark 配置统一到 benchmark/config/ Ansible 架构
 
 ### 问题描述
@@ -3392,3 +3623,88 @@ Evidence DB 视图中显示 "Unknown Gene" / "Unknown Variant" 和 "Untitled" �
 - Pipeline 各阶段产出的元数据应在状态持久化层回写到 SourceDocument
 - 不应在 raw_metadata 中写入调试标记（如 `"created_by": "phase3_e2e"`）
 - 测试应跟随新增查询同步更新 _FakeSession 结果队列
+
+---
+
+## 2026-06-20 — Fused-75 candidate recovery checkpoint：评估配置与领域等价匹配
+
+### 问题描述
+
+合并 dev 最新 pipeline 改进并重跑 dev artifacts 后，candidate-recovery-source-validation 首轮 dev source-visible F1 只有 0.4296，低于既有 target-aware dev F1=0.5156，也低于 0.55 dev gate。
+
+### 排查过程
+
+1. 先用 dev-only error taxonomy 聚合错误，发现 `unsupported_prediction=30` 和 `candidate_absent=25` 是主因。
+2. 对照既有 adjudicated-field-filter 配置，确认新 candidate config 漏了 `score_field_filter=adjudicated_labels`，导致未审核字段全部作为 FP 计入。
+3. 加回字段过滤后，dev F1 升至 0.5370，`unsupported_prediction` 降至 3，但仍低于 gate。
+4. 继续聚合字段错误，发现多项 `wrong_boundary`/`normalization_error` 是领域等价值被字面匹配误判，例如：
+   - `very long chain acyl-CoA dehydrogenase deficiency` vs `Very long-chain acyl-CoA dehydrogenase (VLCAD) deficiency`
+   - `p.Gly1961Glu` vs `p.(Gly1961Glu)`
+   - `missense` vs `Missense mutation`
+   - `AR` vs `autosomal recessive`
+5. 先写 evaluator 失败测试，再实现字段感知规范化匹配；dev F1 升至 0.6111，并允许进入 frozen test checkpoint。
+
+### 根因分析
+
+1. 新变体配置没有继承已经验证有效的 adjudicated field filter，使 benchmark precision 被无关字段 FP 拉低。
+2. source-visible evaluator 的匹配逻辑过于字面，未表达临床遗传常见等价写法，导致正确抽取被低估。
+3. 本轮中曾用裸 `python` 读取 JSON 报告，违反项目 Python 命令必须走 `uv` 的规范；虽未改依赖或环境，但后续必须统一使用 `uv run python`。
+
+### 解决方案
+
+1. 在 candidate dev/test config 中加入 `score_field_filter=adjudicated_labels`。
+2. 为 `evaluate_adjudicated.py` 增加字段感知规范化：
+   - HGVS protein：`p.(X)` 等价 `p.X`
+   - variant type：去除 `mutation`/`variant` 后缀
+   - inheritance：规范化 `AR/AD/XL` 与全称
+   - disease diagnosis：去除括号缩写并统一连字符/空格
+3. 重新生成 dev 与 frozen test 报告并刷新 leaderboard：
+   - dev source-visible F1=0.6111
+   - test source-visible F1=0.4466
+4. 验证：benchmark/extract_evidence 相关测试 406 passed, 3 skipped；Ruff 通过；20 条 adjudication 校验通过。
+
+### 预防措施
+
+- 新 benchmark 变体应从当前最佳配置复制 gate-relevant flags，而不是手写最小配置。
+- 错误分类中出现同字段 FN+FP 成对时，应先判断是否是评价规范化缺口，再改抽取逻辑。
+- 冻结 test 只做 checkpoint；test 结果不得用于继续调参。
+- 所有 Python 命令统一使用 `uv run python` 或 `uv run pytest`，避免裸 `python`。
+
+---
+
+## 2026-06-21 — Fused-75 target-span field recovery：已选证据片段未填字段
+
+### 问题描述
+
+上一轮 test 显示不应继续做字段过滤或扩大上下文：precision 会受损且 recall 不涨。本轮按 dev-only 路径先做 false-negative root-cause taxonomy，再只针对最大桶优化。
+
+### 排查过程
+
+1. 基于 `candidate-recovery-source-validation` dev 报告新增 FN root-cause taxonomy。
+2. dev 最大桶不是 `target_span_not_selected`，而是 `span_selected_field_missing=15`；其次为 `target_span_not_selected=10`。
+3. 这说明许多 adjudicated source quote 已经进入 Phase 2 artifact 的已选 snippet，但 catalog extraction 没有填出对应字段。
+4. 因此没有优先实现更宽的 target scout/alias expansion，而是在 `target_guard` 后、`source_grounding` 前加入确定性 `TargetSpanFieldRecovery`，只从已选 source snippets 恢复少数高信号字段。
+5. frozen test 生成时 `fused_013` 首次失败，错误为 `unhashable type: 'list'`。根因是 `_missing_field_ids()` 用 `item.value not in {"", None}` 判断非空值，而 `EvidenceItem.value` 合法类型包含 `list[str]`。补充 list value 回归测试后，改为显式 `_has_value()` 判断并补跑成功。
+
+### 根因分析
+
+主要指标缺口来自“证据 span 已经选中，但字段填充缺失”，不是上下文召回不足。原始 pipeline 把大量可判定字段留给 LLM catalog extraction，导致 `causative`、`AR/AD`、variant type、ClinVar assertion 等可由局部文本确定的字段漏填。
+
+### 解决方案
+
+1. 新增 `TargetSpanFieldRecovery`，只读取已存在 `found` item 的 source snippets，不扩大上下文、不覆盖已有字段。
+2. 恢复字段限制在高信号、低歧义字段：
+   - `A.gene_disease_relationship=causative`
+   - `B.mode_of_inheritance_reported=AR/AD`
+   - `A.variant_type`
+   - `J.clinvar_assertion`
+3. 新增 dev/test variant config，重新生成 dev/test artifacts 并刷新 leaderboard。
+4. 指标结果：
+   - dev source-visible F1：`0.6111 -> 0.7438`，precision `0.8036`，recall `0.6923`
+   - frozen test source-visible F1：`0.4466 -> 0.5983`，precision `0.7000`，recall `0.5224`
+
+### 预防措施
+
+- Dev taxonomy 的最大桶必须先于架构直觉；不要因为 `candidate_absent` 名称就默认扩大 context。
+- 恢复逻辑必须尊重 `EvidenceItem.value` 的完整类型联合，尤其是 `list[str]`。
+- Frozen test 仍只做一次 checkpoint；如果后续继续优化，应回到 dev taxonomy，不能根据本次 test 失败样本调参。

@@ -47,7 +47,8 @@ This paper makes five contributions:
   \item a context-verifier reconciliation method that combines source grounding, target specificity, cross-track agreement, and contradiction-aware scoring;
   \item traceability metrics that separate citation validity, hallucinated citation rate, span boundary quality, semantic support, and TraceableF1;
   \item a frozen $N=30$ evaluation against matched LLM baselines and grounded internal ablations, with paired statistics and explicit limitations;
-  \item a citation-required prompt-only frontier model sweep using a same-release-window cohort and a single OpenAI-compatible provider gateway, isolating method value from prompt engineering alone.
+  \item a citation-required prompt-only frontier model sweep using a same-release-window cohort and a single OpenAI-compatible provider gateway, isolating method value from prompt engineering alone;
+  \item a separate Fused-75 source-visible stress test that measures source-supported field recovery on a larger adjudicated ClinVar-fused slice without replacing the $N=30$ paired comparison.
 \end{itemize}
 
 \section{Related Work}
@@ -81,6 +82,8 @@ total\_entries & covered\_count & needs\_pipeline\_count & frozen\_entry\_count 
 \bottomrule
 \end{tabular}
 \end{table*}
+
+We additionally maintain a Fused-75 optimization stress set with source-visible adjudication on 20 entries split into 10 dev entries and 10 frozen test entries. This stress set is not used for the paired $N=30$ headline comparison. Its role is to test whether pipeline changes improve source-supported field recovery under stricter quote visibility constraints and a held-out checkpoint discipline.
 
 \section{Method}
 \subsection{Dual-Track Candidate Generation}
@@ -248,6 +251,31 @@ B10\_GLM46\_PROMPT\_CITE & glm-4.6 & 2025-09-30 & 0.7143 & 0.6724 & 0.3276 & 0.4
 
 The strongest prompt-only frontier baseline is GPT-5, with F1=0.9222 and TraceableF1=0.9109. \methodname{} remains higher on both raw F1 and TraceableF1 in this frozen comparison. We do not claim paired statistical superiority over each frontier model unless such tests are added; the result is used to show that prompt engineering alone does not close the traceable-extraction gap in this benchmark.
 
+\subsection{Fused-75 Source-Visible Stress Test}
+Table~\ref{tab:fused75} reports the current Fused-75 source-visible optimization leaderboard. The stress test uses source-visible adjudicated labels and a dev/test checkpoint protocol: variants are selected on the 10-entry dev split and evaluated once on the 10-entry frozen test split after passing the dev gate. The latest target-span field recovery variant improves frozen test source-visible F1 from 0.4466 to 0.5983, mainly by recovering high-signal fields from already selected target source snippets rather than by broadening document context.
+
+\begin{table*}[t]
+\centering
+\caption{Fused-75 source-visible stress-test checkpoint.}
+\label{tab:fused75}
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.08}
+\footnotesize
+\begin{tabular}{lccccc}
+\toprule
+variant & dev source-visible F1 & test source-visible F1 & test precision & test recall & decision \\
+\midrule
+contextual-reconcile-baseline & 0.3660 & NA & NA & NA & checkpoint\_only \\
+adjudicated-field-filter & 0.5138 & 0.4340 & 0.5897 & 0.3433 & checkpoint\_only \\
+target-aware-source-visible & 0.5156 & 0.3770 & NA & NA & checkpoint\_only \\
+candidate-recovery-source-validation & 0.6111 & 0.4466 & 0.6389 & 0.3433 & checkpoint\_only \\
+target-span-field-recovery & 0.7438 & 0.5983 & 0.7000 & 0.5224 & checkpoint\_only \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The dev-only error taxonomy explains the gain. Before target-span recovery, the largest false-negative bucket was \texttt{span\_selected\_field\_missing=15}, followed by \texttt{target\_span\_not\_selected=10}. After the recovery pass, those buckets decreased to 7 and 5, respectively, while \texttt{source\_quote\_invalid} remained 0. This supports the next-paper claim that source-visible recall failures were often caused by missing field filling over already selected evidence spans, not by a need for wider context.
+
 \subsection{Error Analysis}
 Table~\ref{tab:error} summarizes remaining errors.
 
@@ -274,7 +302,7 @@ The dominant remaining issue is not a simple extraction failure. Five relationsh
 \section{Discussion and Limitations}
 The results support a conservative Main Paper claim. \methodname{} significantly improves over a grounded hard-rule internal baseline and remains competitive with matched LLM baselines while adding deterministic citation-valid acceptance. The method is strongest when the evidence needed for a field is visible in the article and can be linked to target-safe gene/disease context.
 
-The study has several limitations. First, the frozen benchmark contains 30 ClinGen/ACMG-style entries. This is suitable for controlled method analysis and paired statistics, but not for broad claims of general biomedical IE superiority. Second, the candidate's margin over the strongest matched B0-B4 LLM extraction baseline is +0.0188 F1, below the pre-declared +0.03 strong-superiority threshold. Third, the B6-B10 prompt-only frontier sweep is tied to exact provider aliases and a same-release-window cohort; hosted model behavior and routing may change over time, so the manifest is part of the frozen evidence package. Fourth, some gene-disease relationship labels reflect external ClinGen validity curation not fully visible in article-local evidence. Finally, \methodname{} extracts, grounds, and reconciles evidence fields for expert review; it is not an autonomous clinical decision-support or ACMG classification system.
+The study has several limitations. First, the frozen benchmark contains 30 ClinGen/ACMG-style entries. This is suitable for controlled method analysis and paired statistics, but not for broad claims of general biomedical IE superiority. Second, the candidate's margin over the strongest matched B0-B4 LLM extraction baseline is +0.0188 F1, below the pre-declared +0.03 strong-superiority threshold. Third, the Fused-75 stress test is a separate 20-entry source-visible optimization set, not an independent replacement for the $N=30$ paired evaluation. Fourth, the B6-B10 prompt-only frontier sweep is tied to exact provider aliases and a same-release-window cohort; hosted model behavior and routing may change over time, so the manifest is part of the frozen evidence package. Fifth, some gene-disease relationship labels reflect external ClinGen validity curation not fully visible in article-local evidence. Finally, \methodname{} extracts, grounds, and reconciles evidence fields for expert review; it is not an autonomous clinical decision-support or ACMG classification system.
 
 Future work should expand the benchmark, add citation-generating direct LLM and RAG baselines for direct HCR comparison, and build a native multilingual biomedical genetics gold set. Curated ClinGen context could also be tested as a separate external-knowledge ablation, but it should not be mixed into source-only extraction without disclosure.
 

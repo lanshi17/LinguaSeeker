@@ -12,7 +12,7 @@ This document lists the limitations that must be disclosed in the BIBM Main Pape
 ## Short Limitations Paragraph For Paper
 
 ```text
-This study has several limitations. First, the frozen benchmark contains 30 ClinGen/ACMG-style entries, which is sufficient for a controlled method analysis but not for broad claims of general biomedical IE superiority. Second, while the proposed method significantly improves over a grounded hard-rule internal baseline, its margin over the strongest matched LLM baseline is +0.0188 F1 and does not satisfy our pre-declared +0.03 strong-superiority threshold. Third, the prompt-only frontier comparison uses a frozen same-release-window provider-alias cohort from 2025-08-07 to 2025-09-30; hosted model behavior and provider routing can change, so the manifest must be treated as part of the evidence package. Fourth, several gene-disease relationship labels encode ClinGen curation semantics that may not be fully visible in article-local source text. Finally, LinguaSeeker extracts and reconciles evidence fields; it is not a clinical ACMG classification system and should not be used as autonomous clinical decision support.
+This study has several limitations. First, the frozen benchmark contains 30 ClinGen/ACMG-style entries, which is sufficient for a controlled method analysis but not for broad claims of general biomedical IE superiority. Second, while the proposed method significantly improves over a grounded hard-rule internal baseline, its margin over the strongest matched LLM baseline is +0.0188 F1 and does not satisfy our pre-declared +0.03 strong-superiority threshold. Third, the Fused-75 stress test is a separate 20-entry source-visible optimization set, not an independent replacement for the N=30 paired evaluation. Fourth, the prompt-only frontier comparison uses a frozen same-release-window provider-alias cohort from 2025-08-07 to 2025-09-30; hosted model behavior and provider routing can change, so the manifest must be treated as part of the evidence package. Fifth, several gene-disease relationship labels encode ClinGen curation semantics that may not be fully visible in article-local source text. Finally, LinguaSeeker extracts and reconciles evidence fields; it is not a clinical ACMG classification system and should not be used as autonomous clinical decision support.
 ```
 
 ## Mandatory Limitations
@@ -107,6 +107,34 @@ Do not say:
 
 ```text
 We compared against every frontier model currently available.
+```
+
+### 3.2 Fused-75 Stress Test Is Separate From The N=30 Main Benchmark
+
+What to say:
+
+```text
+The Fused-75 source-visible stress test evaluates pipeline optimization on 20 adjudicated entries (10 dev and 10 frozen test). It supports the source-visible recovery analysis but does not replace the N=30 paired main benchmark.
+```
+
+Evidence:
+
+- Current best Fused-75 variant: `target-span-field-recovery`.
+- Dev source-visible F1=0.7438, precision=0.8036, recall=0.6923.
+- Frozen test source-visible F1=0.5983, precision=0.7000, recall=0.5224.
+- Previous Fused-75 checkpoint: test source-visible F1=0.4466.
+- Leaderboard: `benchmark/optimization/fused75/reports/leaderboard_current.md`.
+
+Do not say:
+
+```text
+The Fused-75 result supersedes the N=30 benchmark result.
+```
+
+Use instead:
+
+```text
+The Fused-75 result is a stricter source-visible stress-test checkpoint showing improved target-span field recovery under held-out evaluation.
 ```
 
 ### 4. Citation Validity Is Not Semantic Perfection

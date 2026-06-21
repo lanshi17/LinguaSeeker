@@ -1,0 +1,81 @@
+{
+  "entry_id": "fused_007",
+  "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_007/expected.json",
+  "is_complete": true,
+  "labels": [
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "ATM",
+      "field_id": "A.gene_symbol",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_007/source.md:6",
+      "source_quote": "Cutaneous collagenous vasculopathy (CCV) is a rare microangiopathy of unclear etiology clinically manifesting as spreading telangiectasias predominantly involving the extremities. 1 We report a unique case of a patient who is a carrier of the ataxia telangiectasia mutated (ATM) gene mutation with recurrent episodes of CCV separated by a decade with identifiable medication triggers.",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "ataxia telangiectasia",
+      "field_id": "B.disease_diagnosis",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_007/source.md:1",
+      "source_quote": "# Recurrent cutaneous collagenous vasculopathy in a heterozygote carrier for the ataxia telangiectasia mutated gene: A case report",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "notes": "Source describes a heterozygote ATM carrier with CCV and cancer-risk testing, not an ataxia telangiectasia affected case or direct disease-causative relationship.",
+      "source_location": null,
+      "source_quote": null,
+      "visibility": "ambiguous_boundary"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "AR",
+      "field_id": "B.mode_of_inheritance_reported",
+      "notes": "Source does not state autosomal recessive inheritance for ataxia telangiectasia.",
+      "source_location": null,
+      "source_quote": null,
+      "visibility": "not_source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "c.8575TCT[1]",
+      "field_id": "A.variant_hgvs_c",
+      "notes": "Expected variant c.8575TCT[1] is absent; source reports ATM c.5763-1050A>G.",
+      "source_location": null,
+      "source_quote": null,
+      "visibility": "not_source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "p.Ser2860del",
+      "field_id": "A.variant_hgvs_p",
+      "notes": "Expected protein change p.Ser2860del is absent from source text.",
+      "source_location": null,
+      "source_quote": null,
+      "visibility": "not_source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "other",
+      "field_id": "A.variant_type",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_007/source.md:15",
+      "source_quote": "Seven years later, at 66 years of age, she presented with new onset spreading red patches on her distal forearms, legs, and thighs over the course of 6 months. There was no oral or ocular involvement and no reported cutaneous or systemic symptoms other than exacerbation by heat, warmth, and showers. Her medical history at this point included hypertension and type 2 diabetes mellitus in addition to melanoma in situ treated by wide excision 6 years prior and recent conjunctival squamous cell carci",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "Pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_007/source.md:15",
+      "source_quote": "il drops. Genetic testing for cancer risk assessment was performed 4 years prior to her current presentation given her personal history of melanoma and family history of colon and uterine cancer. She was found to be a heterozygote carrier for a pathogenic mutation of the ATM gene called c.5763-1050A>G. Her long-term medications included labetalol, spironolactone, metformin, gabapentin, azelastine nasal spray, and cetirizine. Notably, she had been started on hydrochlorothiazide prior to the onset",
+      "visibility": "source_visible"
+    }
+  ],
+  "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_007/source.md",
+  "split": "adjudication_dev"
+}

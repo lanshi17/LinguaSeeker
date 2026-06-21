@@ -1,0 +1,81 @@
+{
+  "entry_id": "fused_009",
+  "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_009/expected.json",
+  "is_complete": true,
+  "labels": [
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "BRCA1",
+      "field_id": "A.gene_symbol",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:1",
+      "source_quote": "# Prevalence of recurrent and non-recurrent BRCA1 and BRCA2 pathogenic variants in Polish breast cancer patients: insights from a regional genetic testing cohort from Lower Silesia",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "BRCA1-related cancer predisposition",
+      "field_id": "B.disease_diagnosis",
+      "notes": "AI-assisted disease phrase overlap",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:129",
+      "source_quote": "The relatively low genetic heterogeneity and the predominant importance of the two genes BRCA1 and BRCA2 in both sporadic and hereditary BRCA -related cancers make genetic diagnostics in this area common and well-planned in many countries [ 6 , 17 \u2013 19 ]. The development of diagnostic methods in BRCA- related cancers is currently promoted either by the high incidence of cancer worldwide or the high prevalence of breast cancer (BC) cases in the total number of cancers. In addition to testing onco",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:10",
+      "source_quote": "Genetic tests in breast cancer (BC) patients are increasingly prevalent in oncology, both because of the high incidence of breast cancer (general population risk is 12%) and the potential for effective preventative care in carriers of causative pathogenic (PVs) and likely pathogenic variants (LPVs) [ 1 ]. Moreover the introduction of effective PARP inhibitor therapy in ovarian cancer a decade ago, and subsequently in breast, pancreatic and prostate cancer, has additionally led to an increase in",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "AD",
+      "field_id": "B.mode_of_inheritance_reported",
+      "notes": "Carrier framing for BRCA1/2 pathogenic variants supports dominant cancer predisposition in this source context.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:10",
+      "source_quote": "Genetic tests in breast cancer patients are increasingly prevalent in oncology, both because of the high incidence of breast cancer and the potential for effective preventative care in carriers of causative pathogenic and likely pathogenic variants.",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "c.181T>G",
+      "field_id": "A.variant_hgvs_c",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:102",
+      "source_quote": "Table 5 PVs and LPVs BRCA1/2 Lp. HGVS (nucleotide*) Exon/intron Type HGVS (protein) rs number Class Rec. No. of samples BRCA1 21 1 c.5266dup 19 fs p.(Gln1756fs) rs80357906 PV yes 9 2 c.181T>G 4 miss p.(Cys61Gly) rs28897672 PV yes 3 3 c.4035del 10 fs p.(Glu1346fs) rs80357711 PV yes 1 4 c.212+2T>C i4 spl p.? rs80358026 PV no 1 5 c.213-5T >G i4 spl p.? rs886038196 LPV no 1 6 c.321del 6 fs p.(Phe107fs) rs80357544 PV no 1 7 c.1687C>T 10 STOP p.(Gln563Ter) rs80356898 PV no 1 8 c.4986+4A>T i15 spl p.?",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "p.Cys61Gly",
+      "field_id": "A.variant_hgvs_p",
+      "notes": "AI-assisted normalized variant mention",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:16",
+      "source_quote": "Among BRCA1 and BRCA2 pathogenic recurrent variants observed in some populations, including Central and Eastern European populations, the BRCA1 c.5266dup p.(Gln1756fs), variant (according to the Breast Cancer Information Core (BIC): c.5382insC) characteristic of the Ashkenazi Jewish population, is prevalent. Apart from BRCA1 c.5266dup, the most common pathogenic variants reported in Central and Eastern Europe (especially Slavic) populations are also: c.181T > G (BIC: 300T > A) p.(Cys61Gly), c.40",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "missense",
+      "field_id": "A.variant_type",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:102",
+      "source_quote": "delinsC 11 fs p.(Glu2089fs) rs276174868 PV no 1 15 c.6405_6409del 11 fs p.(Asn2135fs) rs80359584 PV no 1 16 c.7007G>A 13 spl p.? rs28897743 PV no 1 17 c.7879A>T 17 miss p.(Ile2627Phe) rs80359014 PV no 1 18 c.9117G>A 23 spl p.? rs28897756 PV no 1 19 c.9371A>T 25 miss p.(Asn3124Ile) rs28897759 PV no 1 * NM_007294.4 Mane Select, NM_000059.4 Mane Select; recurrent variants in bold; spl \u2013 splicing variant, fs \u2013 frameshift variant, miss \u2013 missense variant, STOP \u2013 stop variant, Rec. - recurrent variant",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "Pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_009/source.md:1",
+      "source_quote": "# Prevalence of recurrent and non-recurrent BRCA1 and BRCA2 pathogenic variants in Polish breast cancer patients: insights from a regional genetic testing cohort from Lower Silesia",
+      "visibility": "source_visible"
+    }
+  ],
+  "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_009/source.md",
+  "split": "adjudication_dev"
+}

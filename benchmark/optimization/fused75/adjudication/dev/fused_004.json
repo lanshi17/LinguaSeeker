@@ -1,0 +1,81 @@
+{
+  "entry_id": "fused_004",
+  "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/expected.json",
+  "is_complete": true,
+  "labels": [
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "ACTA1",
+      "field_id": "A.gene_symbol",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_004/source.md:15",
+      "source_quote": "\u03b1-actin (ACTA1) gene, which is the second most common cause of this disease.",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "alpha-actinopathy",
+      "field_id": "B.disease_diagnosis",
+      "notes": "Source diagnosis is Nemaline myopathy; expected alpha-actinopathy is a broader/alternate boundary not directly stated.",
+      "source_location": null,
+      "source_quote": null,
+      "visibility": "ambiguous_boundary"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "notes": "ACTA1 is listed among genes whose mutations cause nemaline myopathy.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md:217",
+      "source_quote": "Current literature reports that mutations in 10 different genes including ACTA1, NEB, TPM3, TPM2, TNNT1, CFL2, KBTBD13, KLHL40, KLHL41 and LMOD3 cause NM disease.",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "AD",
+      "field_id": "B.mode_of_inheritance_reported",
+      "notes": "AI-assisted MOI phrase for AD",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_004/source.md:180",
+      "source_quote": "Autosomal dominant (OD) and autosomal recessive (AR) types have been reported. Frequently,",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "c.1075A>C",
+      "field_id": "A.variant_hgvs_c",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_004/source.md:88",
+      "source_quote": "examination was planned. NM_001100.3 : c.1075A>C (p.I359L) (heterozygous) mutation was",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "p.Ile359Leu",
+      "field_id": "A.variant_hgvs_p",
+      "notes": "p.I359L is the one-letter equivalent of expected p.Ile359Leu.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md:88",
+      "source_quote": "NM_001100.3 : c.1075A>C (p.I359L) (heterozygous) mutation was found in skeletal muscle alpha-actin (ACTA1) gene.",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "missense",
+      "field_id": "A.variant_type",
+      "notes": "The c.1075A>C / p.I359L substitution supports missense variant type.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md:88",
+      "source_quote": "NM_001100.3 : c.1075A>C (p.I359L) (heterozygous) mutation was found in skeletal muscle alpha-actin (ACTA1) gene.",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "Pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "notes": "The article reports the ACTA1 variant but does not directly state a ClinVar Pathogenic assertion for it.",
+      "source_location": null,
+      "source_quote": null,
+      "visibility": "not_source_visible"
+    }
+  ],
+  "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_004/source.md",
+  "split": "adjudication_dev"
+}

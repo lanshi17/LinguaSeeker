@@ -1,0 +1,81 @@
+{
+  "entry_id": "fused_002",
+  "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/expected.json",
+  "is_complete": true,
+  "labels": [
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "ACADVL",
+      "field_id": "A.gene_symbol",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_002/source.md:12",
+      "source_quote": "en results from homozygosity or compound heterozygosity for null variants. Milder forms are often associated with residual enzyme activity. However, this correlation is far from perfect. The effect of novel acyl-CoA dehydrogenase very long-chain (ACADVL) variants identified in pre-symptomatic patients diagnosed through newborn screening is less clear, and the same is true for compound heterozygosity variants. For these reasons, functional assays like VLCAD enzyme activity are essential to proper",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "very long chain acyl-CoA dehydrogenase deficiency",
+      "field_id": "B.disease_diagnosis",
+      "notes": "AI-assisted disease phrase overlap",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_002/source.md:1",
+      "source_quote": "# Management and Outcomes of Very Long-Chain Acyl-CoA Dehydrogenase Deficiency (VLCAD Deficiency): A Retrospective Chart Review",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "notes": "AI-assisted causative relationship phrase",
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_002/source.md:12",
+      "source_quote": "A genotype\u2013phenotype correlation was reported for VLCAD deficiency [ 2 ]. Severe disease is associated with little/no residual enzyme activity and often results from homozygosity or compound heterozygosity for null variants. Milder forms are often associated with residual enzyme activity. However, this correlation is far from perfect. The effect of novel acyl-CoA dehydrogenase very long-chain (ACADVL) variants identified in pre-symptomatic patients diagnosed through newborn screening is less cle",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "AR",
+      "field_id": "B.mode_of_inheritance_reported",
+      "notes": "Homozygosity/compound heterozygosity supports AR inheritance.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_002/source.md:12",
+      "source_quote": "Severe disease is associated with little/no residual enzyme activity and often results from homozygosity or compound heterozygosity for null variants.",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "c.1182+1G>A",
+      "field_id": "A.variant_hgvs_c",
+      "notes": "Expected variant c.1182+1G>A was not found in the article text; source discusses other ACADVL variants.",
+      "source_location": null,
+      "source_quote": null,
+      "visibility": "not_source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "p.Arg613Trp",
+      "field_id": "A.variant_hgvs_p",
+      "notes": "Expected protein change p.Arg613Trp was not found in the article text; nearby source variant is p.Arg615Gln.",
+      "source_location": null,
+      "source_quote": null,
+      "visibility": "not_source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "missense",
+      "field_id": "A.variant_type",
+      "notes": null,
+      "source_location": "/data/yangzs/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_002/source.md:99",
+      "source_quote": "ring initial presentation, as he was detected through a positive newborn screening and then he continued to be asymptomatic. This presentation corresponds to what is reported in the literature [ 9 ]. The majority of pathogenic variants found are missense variants. The variant c.1844G>A, p.(Arg615Gln) found in patient number 10 was reclassified as likely benign. This emphasizes the importance of performing an enzyme activity assay to confirm VLCAD deficiency diagnosis. Pena et al. (2016) reported",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "Likely pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "notes": "Likely pathogenic assertion for the expected variant is not directly visible in source text.",
+      "source_location": null,
+      "source_quote": null,
+      "visibility": "not_source_visible"
+    }
+  ],
+  "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_002/source.md",
+  "split": "adjudication_dev"
+}
