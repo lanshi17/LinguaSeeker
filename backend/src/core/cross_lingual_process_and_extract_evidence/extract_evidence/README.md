@@ -85,6 +85,9 @@ EvidenceExtractionService (public facade)
       ├─ target_guard ──────────────> TargetEntityGuard (deterministic)
       │    └─ filters items against the ExtractionTarget gene-disease pair
       │
+      ├─ target_span_recovery ──────> TargetSpanFieldRecovery (deterministic)
+      │    └─ recovers missing high-signal fields from already selected source snippets
+      │
       ├─ source_grounding ──────────> SourceGroundingStage (deterministic)
       │    └─ SourceGrounder: raw_source -> block/text grounding -> OCR_GAP/SOURCE_INVALID
       │
@@ -109,6 +112,7 @@ TrackDocument -> [relevance_scan] -> DocumentEvidenceMap
                                 -> [role_routing] -> primary items, phenotype items, discarded
                                 -> [value_normalization] -> normalized items + normalization issues
                                 -> [target_guard] -> target-filtered items
+                                -> [target_span_recovery] -> gap-filled target-span items
                                 -> [source_grounding] -> grounded items + grounded special records
                                 -> [chain_assembly] -> EvidenceChain[]
                                 -> [quality_gate] -> QualityReport
@@ -133,7 +137,7 @@ class EvidenceExtractionService:
         """cfg must have cfg.llm (FAST_LLM) and cfg.reasoning (REASONING_LLM)."""
 
     async def run(self, document: TrackDocument) -> EvidenceExtractionResult:
-        """Run the full 12-stage pipeline asynchronously."""
+        """Run the full 13-stage pipeline asynchronously."""
 
     async def run_dual(self, documents: DualTrackDocuments) -> DualEvidenceExtractionResult:
         """Run original and translated tracks concurrently, then reconcile."""
@@ -301,6 +305,16 @@ Routes extracted items by `evidence_role` before normalization.
 
 Filters evidence items against the `ExtractionTarget` gene-disease pair, removing items that do not match the extraction target.
 
+### `TargetSpanFieldRecovery` (`target_span_recovery.py`)
+
+Deterministically recovers a narrow set of high-signal fields from source snippets that extraction has already selected. It does not expand document context and does not overwrite existing `found` fields.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `recover` | `(document: TrackDocument, items: list[EvidenceItem]) -> list[EvidenceItem]` | Adds missing target-span-supported fields for gene-disease relationship, mode of inheritance, variant type, and ClinVar assertion. |
+
+The recovery node is intentionally placed after `target_guard` and before `source_grounding`: it only uses target-filtered snippets and still requires normal source grounding before artifact write.
+
 ### `EvidenceChainBuilder` (`core.py`)
 
 | Method | Signature | Description |
@@ -373,6 +387,7 @@ Thin wrappers that each own one pipeline step. Deterministic stages are provider
 | role_routing | `EvidenceRoleRouter` | `list[EvidenceItem], ExtractionTarget` | primary, phenotype, discarded | none |
 | value_normalization | `AcmgEvidenceValueNormalizer` | `list[EvidenceItem]` | normalized items + normalization issues | none |
 | target_guard | `TargetEntityGuard` | `list[EvidenceItem], ExtractionTarget` | filtered items | none |
+| target_span_recovery | `TargetSpanFieldRecovery` | `TrackDocument, list[EvidenceItem]` | items plus recovered target-span fields | none |
 | source_grounding | `SourceGroundingStage` | `TrackDocument, list[EvidenceItem], list[SpecialEvidenceRecord]` | grounded items + grounded special records | none |
 | chain_assembly | `EvidenceChainBuilder` | `list[EvidenceItem], list[SpecialEvidenceRecord]` | `list[EvidenceChain]` | none |
 | quality_gate | `QualityGateStage` | `list[EvidenceItem], list[str], list[EvidenceChain], list[SpecialEvidenceRecord]` | `QualityReport` | none |
@@ -386,10 +401,10 @@ class EvidenceExtractionWorkflow:
         """Builds and compiles both sync and async LangGraph StateGraphs."""
 
     async def run(self, document: TrackDocument) -> EvidenceExtractionState:
-        """Execute the 12-stage pipeline (sync graph in executor)."""
+        """Execute the 13-stage pipeline (sync graph in executor)."""
 
     async def run_async(self, document: TrackDocument) -> EvidenceExtractionState:
-        """Execute the 12-stage pipeline (async graph with concurrent chunk LLM calls)."""
+        """Execute the 13-stage pipeline (async graph with concurrent chunk LLM calls)."""
 ```
 
 ### Contract Models (`contracts.py`)
@@ -588,6 +603,15 @@ The `get_source_ambiguity_review_prompt()` in `prompts.py` is defined but not ye
 2. Pass a `LangChainEvidenceProvider` to `SourceGrounder.__init__()` (currently no provider).
 3. Use `EvidenceModelTier.FAST` for the ambiguity resolution call.
 
+### Adding deterministic target-span recovery rules
+
+`TargetSpanFieldRecovery` should stay conservative. New rules should:
+
+1. Read only `EvidenceItem.source` or `EvidenceItem.raw_source` snippets already produced by upstream extraction.
+2. Recover only missing fields; never replace a `found` value.
+3. Produce a source snippet that can pass `SourceGroundingStage`.
+4. Include a unit test with the exact source phrase and a non-string value regression if the rule inspects `EvidenceItem.value`.
+
 ### Adding a new retry exception category
 
 Modify `LangChainEvidenceProvider._TRANSIENT_EXCEPTIONS` in `providers.py` to add new exception types. Non-transient exceptions are caught by the generic `except Exception` handler.
@@ -600,6 +624,7 @@ Modify `LangChainEvidenceProvider._TRANSIENT_EXCEPTIONS` in `providers.py` to ad
 - **Source grounding searches full document text** — O(n x m) where n is document length and m is snippet length. Bounded at 50 matches per snippet. For large documents (>100KB), consider chunking before grounding.
 - **Both LangGraph graphs compile once** — `_build_graph()` and `_build_async_graph()` are called in `__init__()` and the compiled graphs are reused for all `run()` / `run_async()` calls.
 - **Async concurrency** — `CatalogExtractionStage.run_async()` runs chunk x group tasks concurrently with `asyncio.Semaphore(5)`, significantly reducing wall-clock time for multi-chunk documents.
+- **Target span recovery is O(selected snippets)** — it scans only source snippets already selected by upstream extraction, so it improves recall without increasing LLM calls or document-wide grounding cost.
 
 ### Known bottlenecks
 
