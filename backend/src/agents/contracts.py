@@ -116,6 +116,7 @@ _VALID_PIPELINE_TRANSITIONS: dict[PipelineStatus, frozenset[PipelineStatus]] = {
     }),
     PipelineStatus.RUNNING: frozenset({
         PipelineStatus.AWAITING_REVIEW,
+        PipelineStatus.COMPLETED,
         PipelineStatus.FAILED,
     }),
     PipelineStatus.AWAITING_REVIEW: frozenset({

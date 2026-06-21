@@ -192,6 +192,7 @@ ChatActionIntent = Literal[
     "classify-variant",
     "interpret-evidence",
     "review-changes",
+    "check-pipeline-status",
 ]
 
 

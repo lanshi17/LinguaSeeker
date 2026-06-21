@@ -343,13 +343,15 @@ class PipelineOrchestrator:
         if isinstance(final_state, dict):
             final_state = PipelineGraphState.model_validate(final_state)
 
-        # If pipeline didn't fail, mark as AWAITING_REVIEW (Phase 4 is external)
+        # If pipeline didn't fail, mark as COMPLETED.
+        # Expert review / correction is handled via the chat interface,
+        # not as a gating step on the pipeline itself.
         if final_state.pipeline_status != PipelineStatus.FAILED:
-            # Defense-in-depth: validate RUNNING → AWAITING_REVIEW transition
+            # Defense-in-depth: validate RUNNING → COMPLETED transition
             try:
                 validate_pipeline_status_transition(
                     final_state.pipeline_status,
-                    PipelineStatus.AWAITING_REVIEW,
+                    PipelineStatus.COMPLETED,
                     context="orchestrator.run() finalization",
                 )
             except InvalidStateTransitionError:
@@ -361,7 +363,7 @@ class PipelineOrchestrator:
                 )
                 # Continue anyway — persistence layer is the final guard
 
-            final_state.pipeline_status = PipelineStatus.AWAITING_REVIEW
+            final_state.pipeline_status = PipelineStatus.COMPLETED
             final_state.completed_at = datetime.now().isoformat()
             await self._persistence.save(final_state)
             self._notify(final_state)

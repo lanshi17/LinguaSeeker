@@ -20,12 +20,15 @@ import {
   FlaskConical,
   Stethoscope,
   Layers3,
+  Pencil,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/Spinner";
 import { cn } from "@/lib/utils/cn";
 import { useEvidenceGroupDetail } from "../hooks/useEvidenceGroupDetail";
+import { EvidenceCorrectionForm } from "./EvidenceCorrectionForm";
+import { EvidenceAuditHistory } from "./EvidenceAuditHistory";
 import type {
   EvidenceGroupDetailResponse,
   EvidenceGroupItem,
@@ -187,6 +190,19 @@ function EvidenceTonePill({ item }: { item: EvidenceGroupItem }) {
   );
 }
 
+const FIELD_ID_TO_CARD_FIELD: Record<string, string> = {
+  "A.gene_symbol": "gene",
+  "B.disease_diagnosis": "disease",
+  "B.clinical_diagnosis": "disease",
+  "J.authority_classification": "classification",
+};
+
+function cardFieldForFieldId(fieldId: string): string | null {
+  if (FIELD_ID_TO_CARD_FIELD[fieldId]) return FIELD_ID_TO_CARD_FIELD[fieldId];
+  if (fieldId.startsWith("A.variant_hgvs_")) return "variant";
+  return null;
+}
+
 function EvidenceItemSummary({
   groupId,
   item,
@@ -194,44 +210,75 @@ function EvidenceItemSummary({
   groupId: string;
   item: EvidenceGroupItem;
 }) {
+  const [editing, setEditing] = useState(false);
+  const cardField = cardFieldForFieldId(item.field_id);
+
   return (
-    <article className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-primary-200 hover:shadow-md">
-      {/* Accent bar */}
+    <article className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:border-primary-200 hover:shadow-md">
       <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-primary-400 to-primary-600 opacity-0 transition-opacity group-hover:opacity-100" />
 
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <EvidenceTonePill item={item} />
-            <Badge variant={STATUS_VARIANT[item.review_status] ?? "default"}>
-              {item.review_status}
-            </Badge>
+      <div className="p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <EvidenceTonePill item={item} />
+              <Badge variant={STATUS_VARIANT[item.review_status] ?? "default"}>
+                {item.review_status}
+              </Badge>
+            </div>
+            <h3 className="mt-3 text-sm font-semibold text-gray-900">
+              {itemLabel(item)}
+            </h3>
+            <p className="mt-1 font-mono text-xs text-gray-500">
+              {item.field_id}
+            </p>
           </div>
-          <h3 className="mt-3 text-sm font-semibold text-gray-900">
-            {itemLabel(item)}
-          </h3>
-          <p className="mt-1 font-mono text-xs text-gray-500">
-            {item.field_id}
-          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setEditing((v) => !v)}
+              className={cn(
+                "inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-md border px-2.5 text-sm font-medium transition-colors",
+                editing
+                  ? "border-primary-300 bg-primary-100 text-primary-800"
+                  : "border-gray-200 bg-white text-gray-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700",
+              )}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              {editing ? "Close" : "Edit"}
+            </button>
+            <Link
+              to={buildBilingualCompareHref(groupId, item.canonical_evidence_id)}
+              className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-primary-200 bg-primary-50 px-3 text-sm font-medium text-primary-800 transition-colors hover:bg-primary-100 focus-visible:ring-2 focus-visible:ring-primary-500"
+            >
+              <Columns2 className="h-4 w-4" />
+              Compare
+            </Link>
+          </div>
         </div>
-        <Link
-          to={buildBilingualCompareHref(groupId, item.canonical_evidence_id)}
-          className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md border border-primary-200 bg-primary-50 px-3 text-sm font-medium text-primary-800 transition-colors hover:bg-primary-100 focus-visible:ring-2 focus-visible:ring-primary-500"
-        >
-          <Columns2 className="h-4 w-4" />
-          Compare full text
-        </Link>
+
+        <p className="mt-4 line-clamp-3 text-sm leading-6 text-gray-700">
+          {item.value ?? "\u2014"}
+        </p>
+
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-3">
+          <StatBadge icon={Percent} value={formatPercent(item.confidence)} label="confidence" />
+          <StatBadge icon={Layers3} value={item.track ?? "\u2014"} label="track" />
+          <StatBadge icon={FileText} value={item.page ?? "\u2014"} label="page" />
+        </div>
       </div>
 
-      <p className="mt-4 line-clamp-3 text-sm leading-6 text-gray-700">
-        {item.value ?? "\u2014"}
-      </p>
-
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-3">
-        <StatBadge icon={Percent} value={formatPercent(item.confidence)} label="confidence" />
-        <StatBadge icon={Layers3} value={item.track ?? "\u2014"} label="track" />
-        <StatBadge icon={FileText} value={item.page ?? "\u2014"} label="page" />
-      </div>
+      {editing && (
+        <EvidenceCorrectionForm
+          canonicalEvidenceId={item.canonical_evidence_id}
+          currentValue={item.value ?? null}
+          currentStatus={item.review_status}
+          fieldId={item.field_id}
+          cardField={cardField}
+          groupId={groupId}
+          onClose={() => setEditing(false)}
+        />
+      )}
     </article>
   );
 }
@@ -376,6 +423,8 @@ function LiteratureOverview({
               )}
             </div>
           </section>
+
+          <EvidenceAuditHistory sourceDocumentId={detail.source_document_id} />
         </aside>
 
         <section className="space-y-3">
