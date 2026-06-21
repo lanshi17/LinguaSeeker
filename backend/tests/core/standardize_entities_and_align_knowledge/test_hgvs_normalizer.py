@@ -75,3 +75,13 @@ def test_stop_word_alt_derives_star_alias() -> None:
     """p.Arg75stop derives the p.R75* one-letter alias."""
     aliases = expand_hgvs_aliases("p.Arg75stop")
     assert "p.R75*" in aliases
+
+
+def test_three_letter_fs_alt_derives_one_letter_alias() -> None:
+    """Three-letter frameshift p.Glu1309fs expands to the p.E1309fs alias."""
+    assert "p.E1309fs" in expand_hgvs_aliases("p.Glu1309fs")
+
+
+def test_three_letter_del_alt_derives_one_letter_alias() -> None:
+    """Three-letter deletion p.Phe508del expands to the p.F508del alias."""
+    assert "p.F508del" in expand_hgvs_aliases("p.Phe508del")
