@@ -14,6 +14,7 @@ const INTENT_LABELS: Record<ChatActionIntent, string> = {
   "classify-variant": "Classify variant",
   "interpret-evidence": "Interpret evidence",
   "review-changes": "Review queue",
+  "check-pipeline-status": "Task manager",
 };
 
 export interface ChatActionBubbleProps {

@@ -126,6 +126,29 @@ class PipelineStatusResponse(BaseModel):
     error_phase: int | None = None
     started_at: str | None = None
     completed_at: str | None = None
+    elapsed_seconds: float | None = None
+    title: str | None = None
+
+
+class PipelineRunSummaryResponse(BaseModel):
+    """Compact summary for pipeline run list views."""
+
+    processing_run_id: str
+    pipeline_status: str
+    title: str | None = None
+    started_at: str | None = None
+    completed_at: str | None = None
+    elapsed_seconds: float | None = None
+    current_phase: str | None = None
+    completed_phases: int = 0
+    total_phases: int = 3
+
+
+class PipelineRunListResponse(BaseModel):
+    """Paginated list of pipeline run summaries."""
+
+    items: list[PipelineRunSummaryResponse]
+    total: int
 
 
 # ── Global pipeline runner (initialized in app lifespan) ─────────────────────
@@ -218,6 +241,35 @@ def _phase_detail_to_response(detail: PhaseStatusDetail) -> PhaseStatusResponse:
         error=error_dict,
         summary=detail.summary,
     )
+
+
+def _compute_elapsed(started_at: str | None, completed_at: str | None) -> float | None:
+    """Compute elapsed seconds between two ISO timestamps.
+
+    Returns None if started_at is missing. For running pipelines
+    (completed_at is None), computes elapsed against current time.
+    """
+    if not started_at:
+        return None
+    try:
+        start = datetime.fromisoformat(started_at)
+        end = datetime.fromisoformat(completed_at) if completed_at else datetime.now()
+        return max(0.0, (end - start).total_seconds())
+    except (ValueError, TypeError):
+        return None
+
+
+def _state_title(state: PipelineGraphState) -> str | None:
+    """Derive a human-readable title from PipelineGraphState."""
+    if state.query:
+        return state.query[:120]
+    if state.identifiers:
+        return ", ".join(state.identifiers[:5])
+    if state.source_key:
+        return state.source_key[:120]
+    if state.upload_file_path:
+        return PurePosixPath(state.upload_file_path.replace("\\", "/")).name
+    return None
 
 
 # ── Routes ───────────────────────────────────────────────────────────────────
@@ -365,6 +417,36 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
     )
 
 
+@router.get("/runs", response_model=PipelineRunListResponse)
+async def list_pipeline_runs(
+    limit: int = 50,
+    offset: int = 0,
+    _api_key: str | None = Depends(require_api_key),
+):
+    """List all pipeline runs as compact summaries (newest first)."""
+    runner = get_pipeline_runner()
+    rows, total = await runner.list_runs(limit=limit, offset=offset)
+
+    items = []
+    for row in rows:
+        elapsed = _compute_elapsed(row.started_at, row.completed_at)
+        items.append(
+            PipelineRunSummaryResponse(
+                processing_run_id=row.processing_run_id,
+                pipeline_status=row.pipeline_status,
+                title=row.title,
+                started_at=row.started_at,
+                completed_at=row.completed_at,
+                elapsed_seconds=elapsed,
+                current_phase=row.current_phase,
+                completed_phases=row.completed_phases,
+                total_phases=row.total_phases,
+            )
+        )
+
+    return PipelineRunListResponse(items=items, total=total)
+
+
 @router.get("/runs/{processing_run_id}/status", response_model=PipelineStatusResponse)
 async def get_pipeline_status(processing_run_id: str, _api_key: str | None = Depends(require_api_key)):
     """Get the current status of a pipeline run.
@@ -387,6 +469,9 @@ async def get_pipeline_status(processing_run_id: str, _api_key: str | None = Dep
         "phase_3": _phase_detail_to_response(state.phase_3_status),
     }
 
+    elapsed = _compute_elapsed(state.started_at, state.completed_at)
+    title = _state_title(state)
+
     return PipelineStatusResponse(
         processing_run_id=state.processing_run_id,
         source_document_id=state.source_document_id,
@@ -398,6 +483,8 @@ async def get_pipeline_status(processing_run_id: str, _api_key: str | None = Dep
         error_phase=state.error_phase,
         started_at=state.started_at,
         completed_at=state.completed_at,
+        elapsed_seconds=elapsed,
+        title=title,
     )
 
 

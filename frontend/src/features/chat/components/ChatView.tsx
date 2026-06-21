@@ -533,6 +533,12 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         return;
       }
 
+      if (action.intent === "check-pipeline-status") {
+        const runId = action.slots?.run_id;
+        window.location.href = runId ? `/pipeline/${runId}` : "/pipeline";
+        return;
+      }
+
       if (action.intent === "start-pipeline" || action.intent === "upload-pdf") {
         setActiveForm(action.intent);
         setActiveFormSlots(action.slots ?? {});

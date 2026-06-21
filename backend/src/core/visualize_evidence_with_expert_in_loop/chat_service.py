@@ -36,7 +36,7 @@ CHAT_AGENT_CAPABILITIES_PROMPT = (
     "existing evidence, classify variants, interpret evidence cards, and "
     "review pending changes. You ALWAYS reply in the same language as the "
     "user. Do NOT provide a clinical diagnosis.\n\n"
-    "You have six dispatchable capabilities. Each requires specific slots "
+    "You have seven dispatchable capabilities. Each requires specific slots "
     "before it can run. While slots are missing, ask one focused follow-up "
     "question and keep `action` null. Once every required slot is gathered, "
     "set `action.intent` to the matching value and put the slots in "
@@ -57,9 +57,17 @@ CHAT_AGENT_CAPABILITIES_PROMPT = (
     "   slots: { evidence_id?: uuid, gene?, variant? }.\n"
     "6. review-changes — list pending review items.\n"
     "   slots: { filter?: 'awaiting_review'|'all' }. Default filter is "
-    "'awaiting_review'.\n\n"
+    "'awaiting_review'.\n"
+    "7. check-pipeline-status — check pipeline run status or navigate to "
+    "task management.\n"
+    "   slots: { run_id?: str }. No slots required (navigates to task list). "
+    "If the user provides a run ID, include it.\n\n"
     "Identity questions ('who are you?', '你是谁') get a direct answer with "
-    "action=null. Casual greetings get a brief greeting with action=null."
+    "action=null. Casual greetings get a brief greeting with action=null.\n\n"
+    "FORMAT RULES: Reply in plain text and Markdown only. NEVER use HTML tags "
+    "(no <span>, <div>, <p>, etc.). For classification labels, write them as "
+    "plain text (e.g. 'Pathogenic', 'VUS') — the frontend renders badges "
+    "automatically."
 )
 
 _QUESTION_PATTERNS: list[re.Pattern[str]] = [
@@ -314,6 +322,109 @@ class ChatService:
 
         return "\n".join(context_parts)
 
+    _CORRECTION_FIELD_ALIASES: dict[str, str] = {
+        "gene": "gene",
+        "基因": "gene",
+        "variant": "variant",
+        "变异": "variant",
+        "突变": "variant",
+        "disease": "disease",
+        "疾病": "disease",
+        "classification": "classification",
+        "分类": "classification",
+        "phenotype": "phenotype",
+        "表型": "phenotype",
+        "evidence_strength": "evidence_strength",
+        "evidence_type": "evidence_type",
+        "functional_impact": "functional_impact",
+        "inheritance_pattern": "inheritance_pattern",
+        "zygosity": "zygosity",
+        "summary": "summary",
+        "摘要": "summary",
+        "references": "references",
+    }
+
+    _CORRECTION_PATTERNS_PARSE: list[re.Pattern[str]] = [
+        re.compile(
+            r"(?:change|update|correct|set|modify)\s+"
+            r"(?P<field>[a-z_\u4e00-\u9fff]+)\s+"
+            r"(?:to|as|=)\s+"
+            r"(?P<value>.+)",
+            re.IGNORECASE,
+        ),
+        re.compile(
+            r"(?:把|将)?\s*"
+            r"(?P<field>[a-z_\u4e00-\u9fff]+)\s*"
+            r"(?:改为|修改为|改成|设为|更新为)\s*"
+            r"(?P<value>.+)",
+        ),
+    ]
+
+    @classmethod
+    def _parse_correction_message(cls, message: str) -> dict[str, str]:
+        """Parse a correction message into {card_field: new_value}.
+
+        Returns empty dict if no field/value pair could be extracted.
+        """
+        for pattern in cls._CORRECTION_PATTERNS_PARSE:
+            match = pattern.search(message)
+            if match:
+                raw_field = match.group("field").strip().lower()
+                value = match.group("value").strip().rstrip(".,;。；")
+                card_field = cls._CORRECTION_FIELD_ALIASES.get(raw_field)
+                if card_field and value:
+                    return {card_field: value}
+        return {}
+
+    async def _apply_correction(
+        self,
+        *,
+        evidence_id: UUID,
+        user_message: str,
+    ) -> str:
+        """Parse the user message and apply correction via FeedbackService."""
+        from src.core.visualize_evidence_with_expert_in_loop.feedback_service import (
+            FeedbackService,
+        )
+        from src.core.visualize_evidence_with_expert_in_loop.contracts import (
+            EvidencePatchRequest,
+        )
+
+        fields = self._parse_correction_message(user_message)
+        if not fields:
+            return (
+                "I couldn't parse a field correction from your message. "
+                "Try: \"change gene to BRCA2\" or \"把分类改为 pathogenic\". "
+                "You can also use the Edit button on the evidence detail page."
+            )
+
+        patch = EvidencePatchRequest(
+            fields=fields,
+            change_reason=f"Chat correction: {user_message[:200]}",
+        )
+
+        try:
+            service = FeedbackService(self._session)
+            result = await service.patch_evidence(
+                canonical_evidence_id=evidence_id,
+                patch=patch,
+            )
+            await self._session.commit()
+        except Exception as exc:
+            logger.warning("Chat correction failed: {}", exc)
+            return f"Correction failed: {exc}"
+
+        delta_parts = [
+            f"**{d.field}**: ~~{d.old_value}~~ → {d.new_value}"
+            for d in result.field_deltas
+        ]
+        summary = "\n".join(delta_parts) if delta_parts else "Status updated."
+        return (
+            f"Correction applied to evidence `{str(evidence_id)[:8]}…`.\n\n"
+            f"{summary}\n\n"
+            f"Status: {result.old_status.value} → {result.new_status.value}"
+        )
+
     def _detect_intent(self, message: str) -> str:
         """Detect user intent: question, correction, or note.
 
@@ -342,7 +453,10 @@ class ChatService:
             return (
                 "You are a clinical genetics assistant inside Lingua Seeker. Answer "
                 "questions about evidence cards using the provided context. Be "
-                "precise and cite specific fields from the evidence card."
+                "precise and cite specific fields from the evidence card. "
+                "Reply in plain text and Markdown only — NEVER use HTML tags. "
+                "For classification labels, write them as plain text (e.g. "
+                "'Pathogenic', 'VUS')."
             )
 
         return CHAT_AGENT_CAPABILITIES_PROMPT
@@ -365,7 +479,11 @@ class ChatService:
             return None
 
         if intent == "correction" and evidence_id:
-            return f"Correction applied to evidence {evidence_id}."
+            result = await self._apply_correction(
+                evidence_id=evidence_id,
+                user_message=user_message,
+            )
+            return result
 
         context = ""
         if evidence_id:
@@ -413,10 +531,11 @@ class ChatService:
         intent = self._detect_intent(user_message)
 
         if intent == "correction" and evidence_id:
-            yield {
-                "type": "text",
-                "content": f"Correction applied to evidence {evidence_id}.",
-            }
+            result = await self._apply_correction(
+                evidence_id=evidence_id,
+                user_message=user_message,
+            )
+            yield {"type": "text", "content": result}
             yield {"type": "done"}
             return
 
