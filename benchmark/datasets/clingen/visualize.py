@@ -287,7 +287,7 @@ def generate_html_report(report: dict, output_dir: Path) -> Path:
     for e in per_entry[:20]:
         tp = sum(1 for f in e.get("field_matches", []) if f["matched"])
         total = len(e.get("field_matches", []))
-        status_class = "success" if e["pipeline_status"] in ("awaiting_review", "completed") else "error"
+        status_class = "success" if e["pipeline_status"] == "completed" else "error"
         entry_rows += f"""<tr class="{status_class}">
             <td>{e['entry_id']}</td>
             <td>{e['gene_symbol']}</td>

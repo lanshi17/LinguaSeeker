@@ -236,16 +236,18 @@ PATCH /api/v1/evidence/{canonical_evidence_id}
 
 ### Capabilities
 
-The chat agent supports six dispatchable capabilities via `ChatAction`:
+The chat agent supports eight dispatchable capabilities via `ChatAction`:
 
 | Intent | Slots | Description |
 |---|---|---|
-| `start-pipeline` | `source_type`, `query`, `identifiers` | Run literature acquisition pipeline |
-| `upload-pdf` | `filename` | Guide PDF upload |
+| `confirm-pipeline` | `source_type`, `query`, `identifiers`, `gene_symbol`, `disease_name`, `variant_hgvs_p`, `filename` | Submit the pipeline after conversational slot gathering + user confirmation |
+| `start-pipeline` *(deprecated)* | `source_type`, `query`, `identifiers` | Legacy: opens the inline form. The LLM must no longer emit this; use `confirm-pipeline` instead |
+| `upload-pdf` *(deprecated)* | `filename` | Legacy: opens the inline upload form. Use `confirm-pipeline` with `source_type=local` instead |
 | `search-evidence` | `gene`, `variant`, `disease`, `pmid`, `doi` | Search existing evidence |
 | `classify-variant` | `variant`, `gene`, `disease` | Propose ACMG classification |
 | `interpret-evidence` | `evidence_id`, `gene`, `variant` | Summarize an evidence card |
 | `review-changes` | `filter` | List pending review items |
+| `check-pipeline-status` | `run_id` | Show status of a pipeline run |
 
 ### Intent detection
 

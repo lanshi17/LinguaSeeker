@@ -123,7 +123,7 @@ async def test_get_pipeline_status_shows_skip_reason(async_client: AsyncClient):
         source_document_id="doc-456",
         mode=PipelineMode.FULL,
         source_type=SourceType.LOCAL,
-        pipeline_status=PipelineStatus.AWAITING_REVIEW,
+        pipeline_status=PipelineStatus.COMPLETED,
         phase_1_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
         phase_2_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
         phase_3_status=PhaseStatusDetail(
@@ -324,52 +324,3 @@ async def test_post_pipeline_run_duplicate_source_key_race_returns_409(async_cli
 
     assert response.status_code == 409
 
-
-@pytest.mark.asyncio
-async def test_finalize_pipeline_run_returns_completed(async_client: AsyncClient):
-    """POST /runs/{id}/finalize transitions AWAITING_REVIEW to COMPLETED."""
-    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
-        mock_runner = MagicMock()
-        mock_runner.get_last_state = AsyncMock(return_value=PipelineGraphState(
-            processing_run_id="run-123",
-            source_document_id="doc-456",
-            mode=PipelineMode.FULL,
-            source_type=SourceType.LOCAL,
-            pipeline_status=PipelineStatus.AWAITING_REVIEW,
-        ))
-        finalized_state = PipelineGraphState(
-            processing_run_id="run-123",
-            source_document_id="doc-456",
-            mode=PipelineMode.FULL,
-            source_type=SourceType.LOCAL,
-            pipeline_status=PipelineStatus.COMPLETED,
-            completed_at="2026-06-12T00:00:00",
-        )
-        mock_runner.finalize_review = AsyncMock(return_value=finalized_state)
-        mock_get_runner.return_value = mock_runner
-
-        response = await async_client.post("/api/v1/pipeline/runs/run-123/finalize")
-
-    assert response.status_code == 200
-    data = response.json()
-    assert data["pipeline_status"] == "completed"
-    assert data["processing_run_id"] == "run-123"
-
-
-@pytest.mark.asyncio
-async def test_finalize_returns_409_for_non_review_run(async_client: AsyncClient):
-    """POST /runs/{id}/finalize returns 409 for non-awaiting_review runs."""
-    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
-        mock_runner = MagicMock()
-        mock_runner.get_last_state = AsyncMock(return_value=PipelineGraphState(
-            processing_run_id="run-123",
-            source_document_id="doc-456",
-            mode=PipelineMode.FULL,
-            source_type=SourceType.LOCAL,
-            pipeline_status=PipelineStatus.RUNNING,
-        ))
-        mock_get_runner.return_value = mock_runner
-
-        response = await async_client.post("/api/v1/pipeline/runs/run-123/finalize")
-
-    assert response.status_code == 409

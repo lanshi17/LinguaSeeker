@@ -3,7 +3,7 @@
 Architecture:
 - 3 phase adapter nodes (Phase 1, 2, 3)
 - Phase 4 is NOT a graph node — it operates via its own HTTP API
-- After Phase 3 completes, pipeline_status is set to AWAITING_REVIEW
+- After Phase 3 completes, pipeline_status is set to COMPLETED
 - State persisted to PostgreSQL after each phase for crash recovery
 - Upstream dependency validation for single-phase mode
 - Adapters raise classified errors; orchestrator catches and decides
@@ -44,7 +44,7 @@ REQUIRED_UPSTREAM: dict[int, list[int]] = {
 class PipelineOrchestrator:
     """LangGraph-based orchestrator coordinating 3 phases of evidence processing.
 
-    Flow: Phase 1 -> Phase 2 -> (skip Phase 3 if not relevant) -> AWAITING_REVIEW
+    Flow: Phase 1 -> Phase 2 -> (skip Phase 3 if not relevant) -> COMPLETED
     Phase 4 operates independently via its own HTTP API.
     """
 
@@ -234,7 +234,7 @@ class PipelineOrchestrator:
         return "phase_3"
 
     def _route_after_phase_3(self, state: PipelineGraphState) -> str:
-        """Route after Phase 3: always end (finalize sets AWAITING_REVIEW)."""
+        """Route after Phase 3: always end (orchestrator finalizes to COMPLETED)."""
         if state.phase_3_status.status == PhaseStatus.FAILED:
             logger.error("Phase 3 failed, stopping pipeline")
         return "end"
@@ -305,7 +305,7 @@ class PipelineOrchestrator:
 
         For mode=FULL: runs all phases in sequence.
         For mode=PHASE: validates upstream, runs target phase only.
-        After Phase 3 completes (or is skipped), sets pipeline_status=AWAITING_REVIEW.
+        After Phase 3 completes (or is skipped), sets pipeline_status=COMPLETED.
         """
         logger.info(
             "Pipeline orchestrator started: run={}, mode={}",

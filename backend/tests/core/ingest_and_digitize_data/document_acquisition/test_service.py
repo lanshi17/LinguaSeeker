@@ -317,3 +317,67 @@ class TestDocumentAcquisitionService:
         result = await service.acquire(request)
         assert result.elapsed_time > 0
         os.unlink(result.stored_file.file_path)
+
+
+    @pytest.mark.asyncio
+    async def test_acquire_online_failure_surfaces_warnings_as_error(self):
+        """Online workflow returns success=False with warnings but no ``error``
+        field (OnlineAcquisitionResponse has none). The service must surface a
+        concrete error so the Phase 1 adapter doesn't raise 'Acquisition
+        failed: None'.
+        """
+        service = DocumentAcquisitionService()
+        request = DocumentAcquisitionRequest(
+            source=AcquisitionSource.ONLINE,
+            action="search",
+            query="MECP2 Rett syndrome",
+        )
+        mock_result = {
+            "success": False,
+            "items": [],
+            "downloads": [],
+            "warnings": [
+                "FETCH_NO_RESULT: no candidates from any source",
+                "firecrawl acquisition failed: timeout",
+            ],
+            "route": None,
+        }
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+            new_callable=AsyncMock,
+            return_value=mock_result,
+        ):
+            result = await service.acquire(request)
+
+        assert result.success is False
+        # error must NOT be None — it carries the actual failure reason
+        assert result.error is not None
+        assert "FETCH_NO_RESULT" in result.error
+        assert "firecrawl acquisition failed" in result.error
+
+    @pytest.mark.asyncio
+    async def test_acquire_online_failure_no_warnings_uses_default_error(self):
+        """Online failure with no warnings still yields a non-None error."""
+        service = DocumentAcquisitionService()
+        request = DocumentAcquisitionRequest(
+            source=AcquisitionSource.ONLINE,
+            action="search",
+            query="test query",
+        )
+        mock_result = {
+            "success": False,
+            "items": [],
+            "downloads": [],
+            "warnings": [],
+            "route": None,
+        }
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+            new_callable=AsyncMock,
+            return_value=mock_result,
+        ):
+            result = await service.acquire(request)
+
+        assert result.success is False
+        assert result.error is not None
+        assert result.error  # non-empty string

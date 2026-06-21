@@ -9,7 +9,7 @@ features/chat/
 ├── components/
 │   ├── ChatView.tsx             Main chat UI (XProvider, Bubble.List, Sender, Conversations)
 │   └── forms/
-│       ├── PipelineStartForm    Form to start a pipeline from chat
+│       ├── PipelineSummaryCard  Conversational "Ready to start?" confirmation card
 │       ├── PipelineStatusCard   Pipeline status summary card
 │       └── index.ts             Barrel export for forms
 ├── hooks/
