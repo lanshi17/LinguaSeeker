@@ -60,10 +60,12 @@ AA3_TO_1 = {
     "Ter": "*",
 }
 
-HGVS_PROTEIN_3LETTER_RE = re.compile(r"(p\.)(([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|Ter|\*|stop|X))")
+HGVS_PROTEIN_3LETTER_RE = re.compile(r"(p\.)(([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|Ter|\*|stop|X|fs|del|dup|ins))")
 
 STOP_CODON_ONE_LETTER = "*"
 STOP_ALT_TOKENS = {"Ter", "*", "stop", "X"}
+# Protein alt tokens emitted verbatim (no 3-letter-to-1 lookup) in derived aliases.
+_PROTEIN_LITERAL_ALT_TOKENS = {"fs", "del", "dup", "ins"}
 
 
 @dataclass(frozen=True)
@@ -463,6 +465,9 @@ def iter_clinvar_batches(path: Path, version: str, chunk_size: int) -> Iterator[
         protein_alias = _derive_hgvs_protein_alias(name)
         if protein_alias:
             alias_values.append(protein_alias)
+        coding_alias = _extract_bare_coding_alias(name)
+        if coding_alias:
+            alias_values.append(coding_alias)
         rs_value = _normalize_rsid(row.get("RS# (dbSNP)"))
         if rs_value:
             alias_values.append(rs_value)
@@ -504,6 +509,17 @@ def iter_clinvar_batches(path: Path, version: str, chunk_size: int) -> Iterator[
                     alias_text=protein_alias,
                     normalized_alias=normalize_variant_text(protein_alias),
                     alias_type="protein_short",
+                ),
+            )
+        if coding_alias:
+            aliases.append(
+                ImportAlias(
+                    external_id=external_id,
+                    entity_type=EntityType.VARIANT,
+                    source_db="ClinVar",
+                    alias_text=coding_alias,
+                    normalized_alias=normalize_variant_text(coding_alias),
+                    alias_type="coding",
                 ),
             )
         if rs_value:
@@ -732,10 +748,34 @@ def _derive_hgvs_protein_alias(name: str) -> str | None:
         return None
     ref = AA3_TO_1.get(match.group(3))
     alt_token = match.group(5)
-    alt = STOP_CODON_ONE_LETTER if alt_token in STOP_ALT_TOKENS else AA3_TO_1.get(alt_token)
+    if alt_token in STOP_ALT_TOKENS:
+        alt = STOP_CODON_ONE_LETTER
+    elif alt_token in _PROTEIN_LITERAL_ALT_TOKENS:
+        alt = alt_token
+    else:
+        alt = AA3_TO_1.get(alt_token)
     if ref is None or alt is None:
         return None
     return f"{match.group(1)}{ref}{match.group(4)}{alt}"
+
+
+def _extract_bare_coding_alias(name: str) -> str | None:
+    """Extract the bare ``c.`` coding alias from a ClinVar variant name.
+
+    ClinVar names look like ``NM_177438.3(DICER1):c.4748T>G (p.Leu1583Arg)``; literature
+    often cites only the bare coding form ``c.4748T>G``. Indexing it as a standalone
+    alias lets exact-text lookups hit the right ClinVar entry even without the protein
+    suffix or transcript prefix.
+    """
+    from src.core.standardize_entities_and_align_knowledge.hgvs_normalizer import _TRANSCRIPT_PREFIX_RE
+
+    stripped = _TRANSCRIPT_PREFIX_RE.sub("", name or "", count=1)
+    # Drop the trailing ` (p....)` protein suffix: the bare coding form is the first
+    # whitespace-delimited token after the transcript prefix.
+    token = stripped.split(" ", 1)[0].strip()
+    if not token.startswith("c."):
+        return None
+    return normalize_variant_text(token)
 
 
 def _clinvar_review_stars(review_status: str) -> str | None:
