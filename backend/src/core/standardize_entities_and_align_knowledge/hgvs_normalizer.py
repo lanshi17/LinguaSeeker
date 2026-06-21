@@ -16,8 +16,9 @@ _SPACE_RE = re.compile(r"\s+")
 
 # Three-letter protein variant, optional parentheses around the change.
 # Groups: 1 = reference 3-letter code, 2 = position,
-# 3 = alt 3-letter code, "Ter", or the literal stop symbol "*".
-_PROTEIN_3LETTER_RE = re.compile(r"p\.?\(?([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|Ter|\*)\)?")
+# 3 = alt 3-letter code, a stop token ("Ter", "*", "stop", "X"),
+# or a literal effect token ("fs", "del", "dup", "ins").
+_PROTEIN_3LETTER_RE = re.compile(r"p\.?\(?([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|Ter|\*|stop|X|fs|del|dup|ins)\)?")
 
 # RefSeq transcript prefix such as `NM_000059.4(BRCA2):` preceding a c. notation.
 _TRANSCRIPT_PREFIX_RE = re.compile(r"^(?:NM|NR|XM|XR|NG)_[\d.]+(?:\([^)]+\))?:")
@@ -27,6 +28,10 @@ _LIST_RE = re.compile(r"^\[([^\]]+)\]")
 
 # Single quoted item inside a list literal.
 _LIST_ITEM_RE = re.compile(r"['\"]([^'\"]+)['\"]")
+
+# One-letter protein variant whose alt is the literal stop letter `X`, e.g. `p.R243X`.
+# Literature often uses `X` for stop; ClinVar aliases use `*`, so emit the canonical `*` form.
+_PROTEIN_1LETTER_STOP_RE = re.compile(r"p\.([A-Z])(\d+)X")
 
 
 def normalize_hgvs_for_lookup(value: str) -> str:
@@ -47,10 +52,26 @@ def _convert_protein_3letter(text: str) -> str | None:
     ref1 = AA3_TO_1.get(ref3)
     if ref1 is None:
         return None
-    alt1 = "*" if alt3 in ("Ter", "*") else AA3_TO_1.get(alt3)
+    if alt3 in ("Ter", "*", "stop", "X"):
+        alt1 = "*"
+    elif alt3 in ("fs", "del", "dup", "ins"):
+        alt1 = alt3
+    else:
+        alt1 = AA3_TO_1.get(alt3)
     if alt1 is None:
         return None
     return f"p.{ref1}{position}{alt1}"
+
+
+def _convert_protein_1letter_stop(text: str) -> str | None:
+    """Convert a one-letter protein stop variant like `p.R243X` to the canonical `*` form.
+
+    Returns `None` when `text` is not a one-letter protein stop variant.
+    """
+    match = _PROTEIN_1LETTER_STOP_RE.search(text)
+    if match is None:
+        return None
+    return f"p.{match.group(1)}{match.group(2)}*"
 
 
 def _expand_one(text: str) -> list[str]:
@@ -78,6 +99,10 @@ def _expand_one(text: str) -> list[str]:
     converted = _convert_protein_3letter(text)
     if converted is not None:
         _add(converted)
+
+    stop_converted = _convert_protein_1letter_stop(text)
+    if stop_converted is not None:
+        _add(stop_converted)
 
     return aliases
 

@@ -8,7 +8,7 @@ from hashlib import sha256
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import select, text, tuple_
+from sqlalchemy import String, cast, select, text, tuple_
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from src.core.standardize_entities_and_align_knowledge.contracts import (
@@ -26,6 +26,9 @@ from src.core.standardize_entities_and_align_knowledge.normalizers import (
     normalize_gene_symbol,
     normalize_lookup_text,
     normalize_variant_text,
+)
+from src.core.standardize_entities_and_align_knowledge.variant_id import (
+    make_internal_variant_id,
 )
 from src.dao.postgresql.models import (
     CanonicalEvidenceItem,
@@ -752,19 +755,56 @@ class StandardizationRepository:
             match.candidate.entity_type,
             match.candidate.raw_text,
         )
-        statement = select(NormalizedEntity).where(
-            NormalizedEntity.entity_type == match.candidate.entity_type.value,
-            NormalizedEntity.normalized_raw_text == normalized_raw_text,
-            NormalizedEntity.standardization_status == match.status.value,
-        )
+        # Variant entities always carry a non-NULL external_id: ClinVar matches
+        # use ``ClinVarVariation:<id>``; unmapped/ambiguous variants get a
+        # deterministic synthetic ``internal:variant:<sha8>`` id so they remain
+        # a stable pivot dimension while retaining their audit ``unmapped``
+        # status.
+        external_id = match.external_id
+        if (
+            match.candidate.entity_type == EntityType.VARIANT
+            and match.status != MatchStatus.STANDARDIZED
+            and not external_id
+        ):
+            gene = str(match.candidate.metadata.get("gene_symbol", "") or "").strip()
+            external_id = make_internal_variant_id(match.candidate.raw_text, gene)
+
+        existing: NormalizedEntity | None = None
         if match.status == MatchStatus.STANDARDIZED and match.external_id:
             statement = select(NormalizedEntity).where(
                 NormalizedEntity.entity_type == match.candidate.entity_type.value,
                 NormalizedEntity.external_id == match.external_id,
                 NormalizedEntity.standardization_status == MatchStatus.STANDARDIZED.value,
             )
-
-        existing = (await self.session.execute(statement)).scalars().first()
+            existing = (await self.session.execute(statement)).scalars().first()
+        elif (
+            match.candidate.entity_type == EntityType.VARIANT
+            and external_id
+            and external_id.startswith("internal:variant:")
+        ):
+            # Idempotency for synthetic variant ids: collapse repeated mentions
+            # of the same unmapped variant onto one row before falling back to
+            # the raw-text lookup (which covers pre-existing NULL-external_id rows).
+            statement = select(NormalizedEntity).where(
+                NormalizedEntity.entity_type == match.candidate.entity_type.value,
+                NormalizedEntity.external_id == external_id,
+                NormalizedEntity.standardization_status == match.status.value,
+            )
+            existing = (await self.session.execute(statement)).scalars().first()
+            if existing is None:
+                statement = select(NormalizedEntity).where(
+                    NormalizedEntity.entity_type == match.candidate.entity_type.value,
+                    NormalizedEntity.normalized_raw_text == normalized_raw_text,
+                    NormalizedEntity.standardization_status == match.status.value,
+                )
+                existing = (await self.session.execute(statement)).scalars().first()
+        else:
+            statement = select(NormalizedEntity).where(
+                NormalizedEntity.entity_type == match.candidate.entity_type.value,
+                NormalizedEntity.normalized_raw_text == normalized_raw_text,
+                NormalizedEntity.standardization_status == match.status.value,
+            )
+            existing = (await self.session.execute(statement)).scalars().first()
         payload = {
             "candidate_id": match.candidate.candidate_id,
             "rationale": match.rationale,
@@ -776,7 +816,7 @@ class StandardizationRepository:
         if existing is None:
             existing = NormalizedEntity(
                 entity_type=match.candidate.entity_type.value,
-                external_id=match.external_id if match.status == MatchStatus.STANDARDIZED else None,
+                external_id=external_id,
                 normalized_raw_text=normalized_raw_text,
                 display_name=match.display_name,
                 aliases=[match.candidate.raw_text],
@@ -935,16 +975,57 @@ class StandardizationRepository:
                         (item.source_document_id, item.field_id, item.position_hash, item.entity_scope_hash)
                     ] = item
 
+        # Batch-load normalized-entity externals so each canonical payload can
+        # populate variant_ids/gene_ids/entity_ids/search_text without an N+1
+        # lookup. Chunked to stay under PostgreSQL's parameter limit.
+        entity_id_values = [eid for eid in entity_ids_by_candidate_id.values() if eid]
+        entity_externals_by_id: dict[str, tuple[str | None, str, str]] = {}
+        for start in range(0, len(entity_id_values), _BATCH_SIZE):
+            chunk = entity_id_values[start:start + _BATCH_SIZE]
+            entity_stmt = select(NormalizedEntity).where(
+                cast(NormalizedEntity.entity_id, String).in_(chunk)
+            )
+            entity_result = await self.session.execute(entity_stmt)
+            for entity in entity_result.scalars().all():
+                entity_externals_by_id[str(entity.entity_id)] = (
+                    entity.external_id,
+                    entity.entity_type,
+                    entity.display_name,
+                )
+
         for row, spec in self._run_item_rows:
             if row.status not in CANONICAL_ELIGIBLE_STATUSES:
                 continue
             existing = existing_lookup.get(
                 (row.source_document_id, row.field_id, row.position_hash, row.entity_scope_hash)
             )
+            entity_id = entity_ids_by_candidate_id.get(spec.candidate_id)
+            entity_tuple = entity_externals_by_id.get(entity_id)
+            if entity_tuple is not None:
+                external_id, entity_type, _display_name = entity_tuple
+            else:
+                external_id, entity_type, _display_name = None, "", ""
+            variant_ids = (
+                [external_id]
+                if entity_type == EntityType.VARIANT.value and external_id
+                else []
+            )
+            gene_ids = (
+                [external_id]
+                if entity_type == EntityType.GENE.value and external_id
+                else []
+            )
+            entity_ids_list = [external_id] if external_id else []
+            search_text = self._build_search_text(row, external_id, entity_tuple)
             payload = {
                 **row.raw_payload,
                 "track": row.track,
-                "entity_id": entity_ids_by_candidate_id.get(spec.candidate_id),
+                "entity_id": entity_id,
+                "variant_id": variant_ids[0] if variant_ids else None,
+                "variant_ids": variant_ids,
+                "gene_ids": gene_ids,
+                "entity_ids": entity_ids_list,
+                "search_text": search_text,
             }
             if existing is None:
                 new_item = CanonicalEvidenceItem(
@@ -985,6 +1066,37 @@ class StandardizationRepository:
                 existing.conflict_flag = True
 
         await self.session.flush()
+
+    def _build_search_text(
+        self,
+        row: RunEvidenceItem,
+        external_id: str | None,
+        entity_tuple: tuple[str | None, str, str] | None,
+    ) -> str:
+        """Build a lowercase search-text blob for the search index.
+
+        Concatenates the field value text with the entity display name and
+        external id so the ``frontend_search_index.search_text`` column has
+        non-empty, queryable content. Returns ``""`` when no text is present.
+        """
+        parts: list[str] = []
+        value = getattr(row, "value", None)
+        if isinstance(value, dict):
+            field_text = value.get("value") or value.get("text") or value.get("display_name")
+            if field_text:
+                parts.append(str(field_text))
+        raw_payload = getattr(row, "raw_payload", None)
+        if isinstance(raw_payload, dict):
+            raw_value = raw_payload.get("value")
+            if isinstance(raw_value, str) and raw_value.strip():
+                parts.append(raw_value)
+        if entity_tuple is not None and len(entity_tuple) > 2:
+            display_name = entity_tuple[2]
+            if display_name:
+                parts.append(str(display_name))
+        if external_id:
+            parts.append(str(external_id))
+        return " ".join(" ".join(parts).split()).lower()
 
     async def persist_run_evidence(
         self,

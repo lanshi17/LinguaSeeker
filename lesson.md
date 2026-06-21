@@ -3708,3 +3708,42 @@ Evidence DB 视图中显示 "Unknown Gene" / "Unknown Variant" 和 "Untitled" �
 - Dev taxonomy 的最大桶必须先于架构直觉；不要因为 `candidate_absent` 名称就默认扩大 context。
 - 恢复逻辑必须尊重 `EvidenceItem.value` 的完整类型联合，尤其是 `list[str]`。
 - Frozen test 仍只做一次 checkpoint；如果后续继续优化，应回到 dev taxonomy，不能根据本次 test 失败样本调参。
+
+## 2026-06-20 Variant ID Guarantee — Unknown Variant IDs in Evidence DB
+
+### 问题描述
+
+evidence DB 存在未知变异 id（variant 实体 `external_id` 为 NULL），搜索索引 `variant_ids` 全为空。变异作为主维度实体却没有稳定外部标识，导致证据无法按变异聚合，前端证据数据库视图变异维度缺失。
+
+### 排查过程
+
+审计 `normalized_entities`（27 个 variant 实体：3 standardized / 4 ambiguous / 20 unmapped）+ `terminology_aliases`（裸 `c.` 记法 0 命中；`p.R243X` 有 18 条别名而 `p.R243*` 0 条）+ `canonical_evidence` `active_payload`（`variant_ids` key 从不写入）。逐步定位到 4 个独立根因，分布在导入侧、归一化侧、消歧侧与持久化侧。
+
+### 根因分析
+
+1. **ClinVar 别名索引太窄**：导入器只索引 `name` / `protein_short` / `rsid`，漏掉裸 `c.` 记法。文献常只引用 `c.4748T>G`，而 ClinVar name 形如 `NM_177438.3(DICER1):c.4748T>G (p.Leu1583Arg)`，裸形式从未作为独立别名入库 → 精确匹配 0 命中。数据证据：dev DB 裸 `c.` 别名 0 条。
+2. **终止密码子映射不对称**：importer 将 `Ter` 映射为 `X`（`STOP_CODON_ONE_LETTER` 历史值），而 normalizer/hgvs_normalizer 将 `Ter/*/stop/X` 统一为 `*`。结果 ClinVar 存的是 `p.R243X`，查询侧展开成 `p.R243*`，两边对不上。数据证据：`p.R243X`=18 条 vs `p.R243*`=0 条。
+3. **基因上下文消歧失效**：消歧用裸字符串相等比较基因符号，且多命中时回退到“全部保留” → 跨基因多命中塌缩成 ambiguous 或猜到错误基因的 ClinVar id。变异 external_id 是主维度 pivot，挂错基因的 id 比不挂更糟。
+4. **variant_id 从不写入**：`canonical_evidence` `active_payload` 与 `frontend_search_index` 从不写入 `variant_id` / `variant_ids` / `gene_ids` / `search_text`，即使实体已标准化。搜索索引 `variant_ids` 因此恒为空。
+
+### 解决方案
+
+7 阶段 TDD 修复（详见 `docs/planned/2026-06-20-variant-id-guarantee-plan.md`）：
+
+1. 终止密码子归一化统一（Phase 1）：importer 与 normalizer 均映射到 `*`。
+2. ClinVar 别名索引加宽（Phase 2）：新增裸 `c.` coding 别名 + `fs/del/dup/ins` 蛋白形式。
+3. 变异基因上下文消歧（Phase 3）：归一化基因符号比较；无基因信号的多命中 → UNMAPPED 而非 ambiguous 猜测。
+4. 变异 id 保证层（Phase 4）：`make_internal_variant_id` 生成 `internal:variant:<sha12>`，variant `external_id` 永不为 NULL；新增部分唯一索引保证不变量。
+5. `variant_id` 传播（Phase 5）：写入 `canonical_evidence` `active_payload` 与 `frontend_search_index`。
+6. 重建索引 + 回填脚本（Phase 6）：dev DB reindex（4.07M coding 别名，81990 死 X-aliases 删除）+ backfill（0 active variant 实体 NULL external_id，414 search_index 行有 variant_ids）。
+
+### 预防措施
+
+1. 主维度实体（`variant_id`）必须有非 NULL `external_id` 的不变量 — 新增部分唯一索引 + 代码保证层（`internal:variant:<sha12>` 回退）。
+2. 导入侧与查询侧的归一化映射必须对称（终止密码子 `Ter/*/stop/X` 统一为 `*`）。
+3. 多命中消歧不得“回退到全部”——无基因信号的多命中应 UNMAPPED 而非 ambiguous 猜测。
+4. backfill 脚本解析实体绑定应走 `evidence_entity_bindings`，不能依赖可能缺失的 payload `entity_id` key。
+
+### 教训
+
+backfill Step B 初版误用 `active_payload->>'entity_id'` 解析实体（pre-Phase-5 行无此 key），导致 `variant_ids` 全为 `[]`。运行时验证（psql 计数）发现了“updated=180”的假成功。教训：脚本的“updated”计数不等于语义正确，必须用独立 SQL 验证终态。
