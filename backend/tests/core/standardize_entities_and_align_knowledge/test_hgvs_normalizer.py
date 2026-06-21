@@ -64,3 +64,14 @@ def test_list_input_is_joined() -> None:
     aliases = expand_hgvs_aliases("['p.S242R','p.S346I']")
     assert "p.S242R" in aliases
     assert "p.S346I" in aliases
+
+
+def test_stop_codon_x_alias_maps_to_star() -> None:
+    """Literature p.R243X (X stop) normalizes to the * form for lookup."""
+    assert "p.R243*" in expand_hgvs_aliases("p.R243X")
+
+
+def test_stop_word_alt_derives_star_alias() -> None:
+    """p.Arg75stop derives the p.R75* one-letter alias."""
+    aliases = expand_hgvs_aliases("p.Arg75stop")
+    assert "p.R75*" in aliases

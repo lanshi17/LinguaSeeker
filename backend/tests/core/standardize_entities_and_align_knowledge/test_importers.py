@@ -6,6 +6,7 @@ from pathlib import Path
 from src.core.standardize_entities_and_align_knowledge.importers import (
     _clinvar_review_stars,
     _collect_alias_values,
+    _derive_hgvs_protein_alias,
     _iter_tsv_rows,
     _normalize_rsid,
     _split_comma_values,
@@ -187,7 +188,7 @@ def test_parse_clinvar_rows_adds_one_letter_protein_alias_when_name_contains_hgv
     batch = parse_clinvar_rows(path, version="clinvar_test")
 
     alias_texts = {alias.alias_text for alias in batch.aliases}
-    assert "p.R227X" in alias_texts
+    assert "p.R227*" in alias_texts
 
 
 def test_iter_clinvar_batches_yields_chunked_batches(tmp_path: Path) -> None:
@@ -367,3 +368,8 @@ def test_parse_hpo_rows_obo_flushes_on_new_non_term_stanza(tmp_path: Path) -> No
     assert [(entry.external_id, entry.display_name) for entry in batch.entries] == [
         ("HP:0000001", "Term one"),
     ]
+
+
+def test_derive_hgvs_protein_alias_maps_ter_to_star() -> None:
+    """A Ter-containing ClinVar protein name derives the `*` one-letter stop alias, not `X`."""
+    assert _derive_hgvs_protein_alias("p.Arg243Ter") == "p.R243*"
