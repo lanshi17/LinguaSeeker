@@ -10,6 +10,7 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     TerminologyCandidate,
 )
 from src.core.standardize_entities_and_align_knowledge.hgvs_normalizer import expand_hgvs_aliases
+from src.core.standardize_entities_and_align_knowledge.normalizers import normalize_gene_symbol
 from src.core.standardize_entities_and_align_knowledge.repositories import StandardizationRepository
 
 
@@ -139,15 +140,47 @@ class PreciseTerminologyMatcher:
         choices: tuple[TerminologyCandidate, ...],
         candidate: StandardizationCandidate | None,
     ) -> tuple[TerminologyCandidate, ...]:
-        """Reduce ClinVar variant ambiguities using chain gene-symbol context when available."""
-        if not choices or candidate is None:
+        """Reduce ClinVar variant ambiguities using normalized gene-symbol context.
+
+        Decision tree (D3):
+        1. Normalize the candidate gene and each choice's ClinVar ``gene_symbol``
+           with ``normalize_gene_symbol`` so casing/alias surface forms compare equal.
+        2. Partition choices into ``same_gene`` (normalized gene equals candidate).
+        3. When ``same_gene`` is non-empty, keep the best alias-type tier within it
+           and return a single deterministic winner (entry_id ascending). Same-gene
+           same-priority entries are ClinVar duplicates across transcripts/submitters
+           and must NOT collapse to ambiguous.
+        4. When the candidate gene is absent/unmapped (``same_gene`` empty), fall
+           back to a gene-agnostic best alias-type tier across ALL choices and
+           again return a single deterministic winner by entry_id.
+
+        The filter therefore returns at most one entry whenever any deterministic
+        signal exists, so ``_finalize`` produces ``STANDARDIZED`` rather than
+        ``AMBIGUOUS`` for multi-hit variants.
+        """
+        if not choices:
             return choices
-        gene_symbol = str(candidate.metadata.get("gene_symbol", "") or "").strip()
-        if not gene_symbol:
-            return choices
-        filtered = tuple(
-            item
-            for item in choices
-            if str(item.raw_payload.get("gene_symbol", "") or "").strip() == gene_symbol
+        if candidate is None:
+            return self._pick_deterministic_winner(choices)
+
+        norm_gene = normalize_gene_symbol(str(candidate.metadata.get("gene_symbol", "") or ""))
+        same_gene = tuple(
+            choice
+            for choice in choices
+            if normalize_gene_symbol(str(choice.raw_payload.get("gene_symbol", "") or "")) == norm_gene
+            and norm_gene
         )
-        return filtered or choices
+        pool = same_gene if same_gene else choices
+        best = self._apply_alias_type_priority(pool)
+        if not best:
+            best = pool
+        return self._pick_deterministic_winner(best)
+
+    @staticmethod
+    def _pick_deterministic_winner(
+        choices: tuple[TerminologyCandidate, ...],
+    ) -> tuple[TerminologyCandidate, ...]:
+        """Return a single stable winner (entry_id ascending), never ambiguous."""
+        if len(choices) <= 1:
+            return choices
+        return (min(choices, key=lambda item: item.entry_id),)
