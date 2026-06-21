@@ -13,6 +13,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     SourcePrecision,
     Track,
     TrackDocument,
+    ExtractionTarget,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import EvidenceNormalizationIssueType
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.core import EvidenceChainBuilder
@@ -182,6 +183,45 @@ def test_workflow_normalization_node_rejects_coordinate_only_hgvs() -> None:
     assert result.evidence_items[0].status == EvidenceStatus.NOT_FOUND
     assert result.normalization_issues[0].field_id == "A.variant_hgvs_g"
     assert result.normalization_issues[0].issue_type == EvidenceNormalizationIssueType.INVALID_HGVS
+
+
+def test_workflow_target_span_recovery_node_adds_missing_high_signal_field() -> None:
+    workflow = EvidenceExtractionWorkflow(provider=MagicMock())
+    source_text = "Stargardt disease results from biallelic pathogenic variants in the ABCA4 gene."
+    state = EvidenceExtractionState(
+        document=TrackDocument(
+            document_id="doc",
+            track=Track.ORIGINAL,
+            formatted_text=source_text,
+            page_spans=[],
+            extraction_target=ExtractionTarget(
+                gene_symbol="ABCA4",
+                disease_name="Stargardt disease",
+            ),
+        ),
+        evidence_items=[
+            EvidenceItem(
+                field_id="A.gene_symbol",
+                category="A",
+                field_name="Gene symbol",
+                status=EvidenceStatus.FOUND,
+                value="ABCA4",
+                confidence=0.9,
+                group_id="gene=ABCA4|variant=",
+                source=SourceLocation(
+                    context_type="text",
+                    context_ref="target",
+                    text_snippet=source_text,
+                ),
+            ),
+        ],
+    )
+
+    result = workflow._node_target_span_recovery(state)
+
+    values = {item.field_id: item.value for item in result.evidence_items if item.status == EvidenceStatus.FOUND}
+    assert values["A.gene_disease_relationship"] == "causative"
+    assert values["B.mode_of_inheritance_reported"] == "AR"
 
 
 def test_catalog_backfill_node_expands_to_full_catalog():

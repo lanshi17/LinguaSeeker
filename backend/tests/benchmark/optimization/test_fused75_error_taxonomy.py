@@ -8,7 +8,9 @@ from benchmark.optimization.fused75.adjudication_contracts import Fused75EntryAd
 from benchmark.optimization.fused75.error_taxonomy import (
     build_detailed_error_taxonomy,
     build_error_taxonomy,
+    build_fn_root_cause_taxonomy,
     write_detailed_error_taxonomy_report,
+    write_fn_root_cause_taxonomy_report,
 )
 from benchmark.optimization.fused75.evaluate_adjudicated import AdjudicatedEntryResult, AdjudicatedFieldResult, AdjudicatedMetric
 
@@ -243,3 +245,196 @@ def test_write_detailed_error_taxonomy_report_writes_stable_json(tmp_path: Path)
             }
         ],
     }
+
+
+def test_fn_root_cause_classifies_target_span_not_selected_when_quote_absent_from_artifact() -> None:
+    detailed = build_detailed_error_taxonomy(
+        (
+            _entry(
+                "fused_007",
+                (
+                    AdjudicatedFieldResult(
+                        field_id="J.clinvar_assertion",
+                        expected_value="Pathogenic",
+                        extracted_value=None,
+                        outcome="fn",
+                    ),
+                ),
+            ),
+        ),
+        adjudications=(
+            _adjudication_with_quote(
+                entry_id="fused_007",
+                field_id="J.clinvar_assertion",
+                expected_value="Pathogenic",
+                source_quote="ClinVar lists this variant as Pathogenic.",
+            ),
+        ),
+    )
+
+    report = build_fn_root_cause_taxonomy(detailed, artifact_payloads={"fused_007": {"items": []}})
+
+    assert report.counts["target_span_not_selected"] == 1
+    assert report.items[0].root_cause == "target_span_not_selected"
+
+
+def test_fn_root_cause_classifies_span_selected_field_missing_when_quote_is_in_artifact() -> None:
+    detailed = build_detailed_error_taxonomy(
+        (
+            _entry(
+                "fused_008",
+                (
+                    AdjudicatedFieldResult(
+                        field_id="B.mode_of_inheritance_reported",
+                        expected_value="AR",
+                        extracted_value=None,
+                        outcome="fn",
+                    ),
+                ),
+            ),
+        ),
+        adjudications=(
+            _adjudication_with_quote(
+                entry_id="fused_008",
+                field_id="B.mode_of_inheritance_reported",
+                expected_value="AR",
+                source_quote="The disease follows an autosomal recessive inheritance pattern.",
+            ),
+        ),
+    )
+    artifact = {
+        "reconciled_result": {
+            "evidence_items": [
+                {
+                    "field_id": "A.gene_symbol",
+                    "value": "CFTR",
+                    "source": {
+                        "text_snippet": "The disease follows an autosomal recessive inheritance pattern.",
+                    },
+                }
+            ]
+        }
+    }
+
+    report = build_fn_root_cause_taxonomy(detailed, artifact_payloads={"fused_008": artifact})
+
+    assert report.counts["span_selected_field_missing"] == 1
+    assert report.items[0].root_cause == "span_selected_field_missing"
+
+
+def test_fn_root_cause_classifies_boundary_mismatch_for_paired_same_field_error() -> None:
+    detailed = build_detailed_error_taxonomy(
+        (
+            _entry(
+                "fused_009",
+                (
+                    AdjudicatedFieldResult(
+                        field_id="B.disease_diagnosis",
+                        expected_value="Stargardt disease",
+                        extracted_value=None,
+                        outcome="fn",
+                    ),
+                    AdjudicatedFieldResult(
+                        field_id="B.disease_diagnosis",
+                        expected_value="",
+                        extracted_value="retinal dystrophy",
+                        outcome="fp",
+                    ),
+                ),
+            ),
+        )
+    )
+
+    report = build_fn_root_cause_taxonomy(detailed, artifact_payloads={"fused_009": {"items": []}})
+
+    assert report.counts["field_boundary_mismatch"] == 1
+    assert report.items[0].root_cause == "field_boundary_mismatch"
+
+
+def test_fn_root_cause_classifies_source_quote_invalid_for_unsupported_prediction_without_source_support() -> None:
+    detailed = build_detailed_error_taxonomy(
+        (
+            _entry(
+                "fused_010",
+                (
+                    AdjudicatedFieldResult(
+                        field_id="B.disease_diagnosis",
+                        expected_value="",
+                        extracted_value="unsupported disease",
+                        outcome="fp",
+                    ),
+                ),
+            ),
+        )
+    )
+    artifact = {
+        "items": [
+            {
+                "field_id": "B.disease_diagnosis",
+                "value": "unsupported disease",
+                "source": {"text_snippet": "this sentence belongs to another document"},
+            }
+        ]
+    }
+
+    report = build_fn_root_cause_taxonomy(
+        detailed,
+        artifact_payloads={"fused_010": artifact},
+        source_texts={"fused_010": "The document only discusses cystic fibrosis."},
+    )
+
+    assert report.counts["source_quote_invalid"] == 1
+    assert report.items[0].root_cause == "source_quote_invalid"
+
+
+def test_write_fn_root_cause_taxonomy_report_writes_stable_json(tmp_path: Path) -> None:
+    detailed = build_detailed_error_taxonomy(
+        (
+            _entry(
+                "fused_011",
+                (
+                    AdjudicatedFieldResult(
+                        field_id="A.variant_type",
+                        expected_value="missense",
+                        extracted_value=None,
+                        outcome="fn",
+                    ),
+                ),
+            ),
+        )
+    )
+    report = build_fn_root_cause_taxonomy(detailed, artifact_payloads={"fused_011": {"items": []}})
+    output_path = tmp_path / "root-cause.json"
+
+    write_fn_root_cause_taxonomy_report(report, output_path)
+
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert payload["counts"]["target_span_not_selected"] == 1
+    assert payload["items"][0]["entry_id"] == "fused_011"
+    assert payload["items"][0]["root_cause"] == "target_span_not_selected"
+
+
+def _adjudication_with_quote(
+    *,
+    entry_id: str,
+    field_id: str,
+    expected_value: str,
+    source_quote: str,
+) -> Fused75EntryAdjudication:
+    return Fused75EntryAdjudication(
+        entry_id=entry_id,
+        split="adjudication_dev",
+        source_path=Path("source.md"),
+        expected_path=Path("expected.json"),
+        is_complete=True,
+        labels=(
+            Fused75FieldAdjudication(
+                field_id=field_id,
+                expected_value=expected_value,
+                visibility="source_visible",
+                source_quote=source_quote,
+                source_location="source.md:1",
+                adjudicator="human",
+            ),
+        ),
+    )
