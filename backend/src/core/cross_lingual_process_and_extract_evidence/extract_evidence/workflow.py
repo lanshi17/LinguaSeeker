@@ -30,6 +30,7 @@ from .stages.quality_validation import QualityGateStage
 from .stages.role_routing import EvidenceRoleRouter
 from .stages.source_grounding import SourceGroundingStage
 from .stages.special_evidence import SpecialEvidenceStage
+from .target_span_recovery import TargetSpanFieldRecovery
 
 class EvidenceExtractionWorkflow:
     """LangGraph workflow for block-aware evidence extraction."""
@@ -49,6 +50,7 @@ class EvidenceExtractionWorkflow:
         self._chain_builder = EvidenceChainBuilder()
         self._role_router = EvidenceRoleRouter()
         self._target_guard = TargetEntityGuard()
+        self._target_span_recovery = TargetSpanFieldRecovery()
         self._item_normalizer = EvidenceItemNormalizer()
         self._graph = self._build_graph()
         self._async_graph = self._build_async_graph()
@@ -145,6 +147,13 @@ class EvidenceExtractionWorkflow:
         )
         return state
 
+    def _node_target_span_recovery(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        state.evidence_items = self._target_span_recovery.recover(
+            state.document,
+            state.evidence_items,
+        )
+        return state
+
     def _node_source_grounding(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         grounded_items, grounded_special = self._source_grounding.run(
             state.document,
@@ -197,6 +206,7 @@ class EvidenceExtractionWorkflow:
         graph.add_node("role_routing", self._node_role_routing)
         graph.add_node("value_normalization", self._node_value_normalization)
         graph.add_node("target_guard", self._node_target_guard)
+        graph.add_node("target_span_recovery", self._node_target_span_recovery)
         graph.add_node("source_grounding", self._node_source_grounding)
         graph.add_node("chain_assembly", self._node_chain_assembly)
         graph.add_node("quality_gate", self._node_quality_gate)
@@ -215,7 +225,8 @@ class EvidenceExtractionWorkflow:
         graph.add_edge("group_assignment", "role_routing")
         graph.add_edge("role_routing", "value_normalization")
         graph.add_edge("value_normalization", "target_guard")
-        graph.add_edge("target_guard", "source_grounding")
+        graph.add_edge("target_guard", "target_span_recovery")
+        graph.add_edge("target_span_recovery", "source_grounding")
         graph.add_edge("source_grounding", "chain_assembly")
         graph.add_edge("chain_assembly", "quality_gate")
         graph.add_edge("quality_gate", "catalog_backfill")
@@ -236,6 +247,7 @@ class EvidenceExtractionWorkflow:
         graph.add_node("role_routing", self._node_role_routing)
         graph.add_node("value_normalization", self._node_value_normalization)
         graph.add_node("target_guard", self._node_target_guard)
+        graph.add_node("target_span_recovery", self._node_target_span_recovery)
         graph.add_node("source_grounding", self._node_source_grounding)
         graph.add_node("chain_assembly", self._node_chain_assembly)
         graph.add_node("quality_gate", self._node_quality_gate)
@@ -254,7 +266,8 @@ class EvidenceExtractionWorkflow:
         graph.add_edge("group_assignment", "role_routing")
         graph.add_edge("role_routing", "value_normalization")
         graph.add_edge("value_normalization", "target_guard")
-        graph.add_edge("target_guard", "source_grounding")
+        graph.add_edge("target_guard", "target_span_recovery")
+        graph.add_edge("target_span_recovery", "source_grounding")
         graph.add_edge("source_grounding", "chain_assembly")
         graph.add_edge("chain_assembly", "quality_gate")
         graph.add_edge("quality_gate", "catalog_backfill")

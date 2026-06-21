@@ -1,0 +1,81 @@
+{
+  "entry_id": "fused_018",
+  "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_018/expected.json",
+  "is_complete": true,
+  "labels": [
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "F9",
+      "field_id": "A.gene_symbol",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_018/source.md:5",
+      "source_quote": "of HB. A total of five different variants (c.223C > T; c.344A > G; c.464G > C; c.187_188del; and c.1314_1314delA) were identified in six patients with severe HB. Of these, two (c.187_188del and c.1314_1314delA) were novel. No variant in the entire F9 was found in two patients with mild HB. Nonsense c.223C > T (p.Arg75*) mutation was detected in two unrelated patients. Carrier testing identified five mothers as carriers, while one younger sister was a non\u2010carrier. The carrier status of six femal",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "hemophilia B",
+      "field_id": "B.disease_diagnosis",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_018/source.md:1",
+      "source_quote": "# The genetic analysis of eight families with hemophilia B in Mongolia: Identification of two novel mutation",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_018/source.md:10",
+      "source_quote": "Rallapalli et al., 2013 ). Utilizing a combination of exon PCR, Sequence analysis, and Multiplex Ligation\u2010dependent Probe Amplification (MLPA), a 97% mutation detection rate can be achieved (Goodeve, 2015 ; Konkle et al., 2017 ). Detecting the causative mutation in F9 is crucial for establishing a mutation profile in the affected families, detecting hemophilia carriers, and enabling prenatal diagnosis (Goodeve, 2015 ). Carrier women with heterozygotic genotypes typically present as asymptomatic",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "XL",
+      "field_id": "B.mode_of_inheritance_reported",
+      "notes": "Source directly states X-linked recessive HB.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_018/source.md:10",
+      "source_quote": "Hemophilia B (HB, OMIM #306900; ICDX: D67) is an X-linked recessive bleeding disorder caused by various mutations in the coagulation factor IX gene ( F9 , MIM #300746).",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "c.223C>T",
+      "field_id": "A.variant_hgvs_c",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_018/source.md:64",
+      "source_quote": "eight families. All the identified variants and their molecular genetic information have been listed in Table 2 . Moreover, no mutation was detected in two patients with mild HB. Two unrelated patients (HB\u2010060 and HB\u2010085) had the same nonsense (c.223C>T) mutation. Two novel deletions (c.187_188del and c.1314_1314delA) were found in two patients with severe HB, respectively (see Table 2 ). Sequence chromatogram figures of the identified single point variants in patients and their relatives have",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "p.Arg75Ter",
+      "field_id": "A.variant_hgvs_p",
+      "notes": "p.Arg75* is the stop notation equivalent of p.Arg75Ter.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_018/source.md:5",
+      "source_quote": "Nonsense c.223C > T (p.Arg75*) mutation was detected in two unrelated patients.",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "missense",
+      "field_id": "A.variant_type",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_018/source.md:167",
+      "source_quote": "001 ; Knobloch et al., 1993 ; Kulkarni et al., 2021 ; Kwon et al., 2008 ; Li et al., 2014 ; M\u00e5rtensson et al., 2016 ; Parrado Jara et al., 2020 ; Yu et al., 2012 ). Thus, we cannot conclude that the above two patients have a common ancestor. Two missense mutations, p.Tyr115Cys (c.344A>G) and p.Cys155Ser (c.464G>C), were found in two severe patients with HB, respectively. The genotype and phenotype correlation of the above mutations is concordant with previous reports (Belvini et al., 2005 ; Knob",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "Pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "notes": "AI-assisted classification phrase",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_018/source.md:55",
+      "source_quote": "The effect of each variant was analyzed using most common four distinct online tools: 1st SIFT (Score: \u201cTolerent >0.05,\u201d \u201cintolerant <0.05 is deleterious or affect protein function\u201d), 2nd Mutation taster (Grantham Matrix score: 0\u2013215), 3rd Polyphen 2 program (score ranged from 0 to 1, \u201c0 is benign\u201d, \u201c1 is probably damaging\u201d) and 4th FATHMM (Tolerated and Damaging). Novel variants were documented and confirmed in the Leiden Open Variation Database (LOVD) system (accessible at https://databases.lo",
+      "visibility": "source_visible"
+    }
+  ],
+  "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_018/source.md",
+  "split": "adjudication_test"
+}

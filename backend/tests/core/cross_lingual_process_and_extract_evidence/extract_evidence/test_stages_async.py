@@ -12,6 +12,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     DocumentEvidenceMap,
     EvidenceItem,
     EvidenceStatus,
+    ExtractionTarget,
     SpecialEvidenceResponse,
     Track,
     TrackDocument,
@@ -111,6 +112,47 @@ async def test_catalog_extraction_async_runs_chunks_concurrently() -> None:
 
     assert elapsed < 0.09
     assert mock_provider.ainvoke_structured.await_count == _catalog_task_count(2)
+
+
+@pytest.mark.asyncio
+async def test_catalog_extraction_async_scopes_target_catalog_to_eligible_fields() -> None:
+    """Target-scoped async extraction should skip catalog groups with no eligible fields."""
+    mock_provider = MagicMock()
+    mock_provider.ainvoke_structured = AsyncMock(return_value=[])
+    document = TrackDocument(
+        document_id="test-doc",
+        track=Track.ORIGINAL,
+        formatted_text="",
+        page_spans=[],
+        extraction_target=ExtractionTarget(
+            gene_symbol="ABCA3",
+            disease_name="ABCA3 deficiency",
+        ),
+    )
+
+    stage = CatalogExtractionStage(provider=mock_provider)
+
+    with patch(
+        "src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction.build_block_prompt_chunks",
+        return_value=[
+            MagicMock(
+                index=1,
+                total=1,
+                text="[Block 0 | text | page 1]\nABCA3 deficiency is caused by ABCA3.",
+                total_tokens=100,
+            ),
+        ],
+    ):
+        await stage.run_async(document, DocumentEvidenceMap(relevant=True))
+
+    assert mock_provider.ainvoke_structured.await_count == 1
+    call = mock_provider.ainvoke_structured.await_args
+    assert call.kwargs["stage"] == "catalog_extraction/high_signal"
+    catalog_text = call.kwargs["prompt"].split("EVIDENCE CATALOG", maxsplit=1)[1].split("RULES:", maxsplit=1)[0]
+    assert "A.gene_symbol" in catalog_text
+    assert "B.disease_diagnosis" in catalog_text
+    assert "A.variant_hgvs_c" not in catalog_text
+    assert "F.functional_result" not in catalog_text
 
 
 @pytest.mark.asyncio
