@@ -3669,3 +3669,42 @@ Evidence DB 视图中显示 "Unknown Gene" / "Unknown Variant" 和 "Untitled" �
 - 错误分类中出现同字段 FN+FP 成对时，应先判断是否是评价规范化缺口，再改抽取逻辑。
 - 冻结 test 只做 checkpoint；test 结果不得用于继续调参。
 - 所有 Python 命令统一使用 `uv run python` 或 `uv run pytest`，避免裸 `python`。
+
+---
+
+## 2026-06-21 — Fused-75 target-span field recovery：已选证据片段未填字段
+
+### 问题描述
+
+上一轮 test 显示不应继续做字段过滤或扩大上下文：precision 会受损且 recall 不涨。本轮按 dev-only 路径先做 false-negative root-cause taxonomy，再只针对最大桶优化。
+
+### 排查过程
+
+1. 基于 `candidate-recovery-source-validation` dev 报告新增 FN root-cause taxonomy。
+2. dev 最大桶不是 `target_span_not_selected`，而是 `span_selected_field_missing=15`；其次为 `target_span_not_selected=10`。
+3. 这说明许多 adjudicated source quote 已经进入 Phase 2 artifact 的已选 snippet，但 catalog extraction 没有填出对应字段。
+4. 因此没有优先实现更宽的 target scout/alias expansion，而是在 `target_guard` 后、`source_grounding` 前加入确定性 `TargetSpanFieldRecovery`，只从已选 source snippets 恢复少数高信号字段。
+5. frozen test 生成时 `fused_013` 首次失败，错误为 `unhashable type: 'list'`。根因是 `_missing_field_ids()` 用 `item.value not in {"", None}` 判断非空值，而 `EvidenceItem.value` 合法类型包含 `list[str]`。补充 list value 回归测试后，改为显式 `_has_value()` 判断并补跑成功。
+
+### 根因分析
+
+主要指标缺口来自“证据 span 已经选中，但字段填充缺失”，不是上下文召回不足。原始 pipeline 把大量可判定字段留给 LLM catalog extraction，导致 `causative`、`AR/AD`、variant type、ClinVar assertion 等可由局部文本确定的字段漏填。
+
+### 解决方案
+
+1. 新增 `TargetSpanFieldRecovery`，只读取已存在 `found` item 的 source snippets，不扩大上下文、不覆盖已有字段。
+2. 恢复字段限制在高信号、低歧义字段：
+   - `A.gene_disease_relationship=causative`
+   - `B.mode_of_inheritance_reported=AR/AD`
+   - `A.variant_type`
+   - `J.clinvar_assertion`
+3. 新增 dev/test variant config，重新生成 dev/test artifacts 并刷新 leaderboard。
+4. 指标结果：
+   - dev source-visible F1：`0.6111 -> 0.7438`，precision `0.8036`，recall `0.6923`
+   - frozen test source-visible F1：`0.4466 -> 0.5983`，precision `0.7000`，recall `0.5224`
+
+### 预防措施
+
+- Dev taxonomy 的最大桶必须先于架构直觉；不要因为 `candidate_absent` 名称就默认扩大 context。
+- 恢复逻辑必须尊重 `EvidenceItem.value` 的完整类型联合，尤其是 `list[str]`。
+- Frozen test 仍只做一次 checkpoint；如果后续继续优化，应回到 dev taxonomy，不能根据本次 test 失败样本调参。
