@@ -47,7 +47,7 @@ from typing import Any
 from uuid import UUID
 
 from loguru import logger
-from sqlalchemy import String, cast, or_, select, text
+from sqlalchemy import or_, select, text
 
 from src.core.config import get_config
 from src.core.standardize_entities_and_align_knowledge.variant_id import (
@@ -57,6 +57,7 @@ from src.dao.postgresql import async_session_factory, build_async_engine
 from src.dao.postgresql.models import (
     CanonicalEvidenceItem,
     EntityMergeEvent,
+    EvidenceEntityBinding,
     NormalizedEntity,
 )
 from src.dao.postgresql.search_index_repo import SearchIndexRepository
@@ -164,70 +165,133 @@ def _build_search_text(
         parts.append(str(external_id))
     return " ".join(" ".join(parts).split()).lower()
 
-
 def _phase5_payload_keys(
     active_payload: dict[str, Any],
-    entity_ref: EntityRef | None,
+    entity_refs: list[EntityRef],
 ) -> dict[str, Any]:
     """Return the five Phase-5 payload keys for a canonical evidence row.
 
-    Mirrors ``StandardizationRepository.upsert_canonical_evidence``: populates
-    ``variant_id`` / ``variant_ids`` / ``gene_ids`` / ``entity_ids`` /
-    ``search_text`` from the bound entity's external id and type.
+    Mirrors ``StandardizationRepository.upsert_canonical_evidence``: derives
+    ``variant_ids`` / ``gene_ids`` / ``entity_ids`` from the bound entities'
+    external ids (deduped, order-preserving), ``variant_id`` from the first
+    variant, and ``search_text`` from the field value plus the primary
+    entity's display name and external id.
     """
-    if entity_ref is not None:
-        external_id = entity_ref.external_id
-        entity_type = entity_ref.entity_type
-        display_name = entity_ref.display_name
-    else:
-        external_id = None
-        entity_type = ""
-        display_name = ""
+    variant_ids: list[str] = []
+    gene_ids: list[str] = []
+    entity_ids_list: list[str] = []
+    for ref in entity_refs:
+        external_id = ref.external_id
+        if not external_id:
+            continue
+        if external_id not in entity_ids_list:
+            entity_ids_list.append(external_id)
+        if ref.entity_type == _VARIANT_TYPE:
+            if external_id not in variant_ids:
+                variant_ids.append(external_id)
+        elif ref.entity_type == _GENE_TYPE:
+            if external_id not in gene_ids:
+                gene_ids.append(external_id)
 
-    variant_ids = (
-        [external_id]
-        if entity_type == _VARIANT_TYPE and external_id
-        else []
-    )
-    gene_ids = (
-        [external_id]
-        if entity_type == _GENE_TYPE and external_id
-        else []
-    )
-    entity_ids_list = [external_id] if external_id else []
+    primary_ref = next((r for r in entity_refs if r.entity_type == _VARIANT_TYPE), None)
+    if primary_ref is None and entity_refs:
+        primary_ref = entity_refs[0]
+    search_external = primary_ref.external_id if primary_ref is not None else None
+    search_display = primary_ref.display_name if primary_ref is not None else ""
+
     return {
         "variant_id": variant_ids[0] if variant_ids else None,
         "variant_ids": variant_ids,
         "gene_ids": gene_ids,
         "entity_ids": entity_ids_list,
-        "search_text": _build_search_text(active_payload, external_id, display_name),
+        "search_text": _build_search_text(
+            active_payload, search_external, search_display
+        ),
     }
 
 
-def _is_variant_scoped(field_id: str, entity_ref: EntityRef | None) -> bool:
+def _is_variant_scoped(field_id: str, entity_refs: list[EntityRef]) -> bool:
     """Return whether a canonical row is variant-scoped per the backfill contract."""
     if field_id in VARIANT_FIELD_IDS:
         return True
-    return entity_ref is not None and entity_ref.entity_type == _VARIANT_TYPE
+    return any(ref.entity_type == _VARIANT_TYPE for ref in entity_refs)
+
+
+async def _load_bindings_by_run_evidence(
+    session: Any,
+    run_evidence_ids: list[UUID],
+) -> dict[UUID, list[tuple[UUID, str]]]:
+    """Batch-load evidence->entity bindings keyed by run_evidence_item_id.
+
+    Returns ``run_evidence_item_id -> [(entity_id, entity_type), ...]``. A
+    canonical row may bind multiple entities (variant + gene + disease +
+    phenotype); all are returned so callers can partition by type.
+    """
+    bindings: dict[UUID, list[tuple[UUID, str]]] = {}
+    if not run_evidence_ids:
+        return bindings
+    unique_ids = list(dict.fromkeys(run_evidence_ids))
+    stmt = select(
+        EvidenceEntityBinding.run_evidence_item_id,
+        EvidenceEntityBinding.entity_id,
+        EvidenceEntityBinding.entity_type,
+    ).where(EvidenceEntityBinding.run_evidence_item_id.in_(unique_ids))
+    for run_id, entity_id, entity_type in (await session.execute(stmt)).all():
+        bindings.setdefault(run_id, []).append((entity_id, entity_type))
+    return bindings
 
 
 async def _load_entity_refs(
     session: Any,
-    entity_ids: list[str],
-) -> dict[str, EntityRef]:
-    """Batch-load NormalizedEntity snapshots keyed by stringified entity_id."""
-    refs: dict[str, EntityRef] = {}
+    entity_ids: list[UUID],
+) -> dict[UUID, EntityRef]:
+    """Batch-load NormalizedEntity snapshots, resolving merges to survivors.
+
+    Returns a map from each requested ``entity_id`` to an ``EntityRef``
+    describing the surviving (non-merged) entity. Merge chains are followed
+    transitively (A->B->C resolves to C); the survivor's ``external_id`` /
+    ``entity_type`` / ``display_name`` are used. Pre-Phase-5 rows bind
+    entities that were later merged, so following ``merged_into_entity_id``
+    is what surfaces the real external id.
+    """
+    refs: dict[UUID, EntityRef] = {}
     if not entity_ids:
         return refs
-    stmt = select(NormalizedEntity).where(
-        cast(NormalizedEntity.entity_id, String).in_(entity_ids)
-    )
-    for entity in (await session.execute(stmt)).scalars().all():
-        refs[str(entity.entity_id)] = EntityRef(
-            entity_id=entity.entity_id,
-            external_id=entity.external_id,
-            entity_type=entity.entity_type,
-            display_name=entity.display_name,
+
+    unique_ids = list(dict.fromkeys(entity_ids))
+    entities: dict[UUID, NormalizedEntity] = {}
+    pending = unique_ids
+    while pending:
+        stmt = select(NormalizedEntity).where(NormalizedEntity.entity_id.in_(pending))
+        loaded = {e.entity_id: e for e in (await session.execute(stmt)).scalars().all()}
+        entities.update(loaded)
+        pending = [
+            e.merged_into_entity_id
+            for e in loaded.values()
+            if e.merged_into_entity_id is not None
+            and e.merged_into_entity_id not in entities
+        ]
+
+    for entity_id in unique_ids:
+        entity = entities.get(entity_id)
+        if entity is None:
+            continue
+        current = entity
+        seen: set[UUID] = set()
+        while (
+            current.merged_into_entity_id is not None
+            and current.merged_into_entity_id not in seen
+        ):
+            seen.add(current.entity_id)
+            survivor = entities.get(current.merged_into_entity_id)
+            if survivor is None:
+                break
+            current = survivor
+        refs[entity_id] = EntityRef(
+            entity_id=current.entity_id,
+            external_id=current.external_id,
+            entity_type=current.entity_type,
+            display_name=current.display_name,
         )
     return refs
 
@@ -353,10 +417,18 @@ async def _backfill_canonical_evidence(
     dry_run: bool,
 ) -> StepCounts:
     """Step B: repopulate Phase-5 payload keys on variant-scoped canonical rows."""
-    has_entity_id_expr = text("active_payload ? 'entity_id'")
+    variant_binding_exists = (
+        select(EvidenceEntityBinding.evidence_entity_binding_id)
+        .where(
+            EvidenceEntityBinding.run_evidence_item_id
+            == CanonicalEvidenceItem.current_best_run_evidence_id,
+            EvidenceEntityBinding.entity_type == _VARIANT_TYPE,
+        )
+        .exists()
+    )
     base_filter = or_(
         CanonicalEvidenceItem.field_id.in_(VARIANT_FIELD_IDS),
-        has_entity_id_expr,
+        variant_binding_exists,
     )
 
     total = (
@@ -384,25 +456,30 @@ async def _backfill_canonical_evidence(
         if not rows:
             break
 
-        entity_id_values = [
-            eid
+        run_evidence_ids = [
+            row.current_best_run_evidence_id
             for row in rows
-            if (eid := row.active_payload.get("entity_id")) is not None
-            if isinstance(eid, str)
+            if row.current_best_run_evidence_id is not None
         ]
-        entity_refs = await _load_entity_refs(session, list(dict.fromkeys(entity_id_values)))
+        bindings = await _load_bindings_by_run_evidence(session, run_evidence_ids)
+
+        bound_entity_ids = [
+            entity_id for pairs in bindings.values() for entity_id, _ in pairs
+        ]
+        entity_refs = await _load_entity_refs(session, bound_entity_ids)
 
         for row in rows:
-            entity_id_str = row.active_payload.get("entity_id")
-            entity_ref = (
-                entity_refs.get(entity_id_str)
-                if isinstance(entity_id_str, str)
-                else None
-            )
-            if not _is_variant_scoped(row.field_id, entity_ref):
+            run_id = row.current_best_run_evidence_id
+            pairs = bindings.get(run_id, []) if run_id is not None else []
+            refs = [
+                entity_refs[entity_id]
+                for entity_id, _ in pairs
+                if entity_id in entity_refs
+            ]
+            if not _is_variant_scoped(row.field_id, refs):
                 skipped += 1
                 continue
-            new_keys = _phase5_payload_keys(row.active_payload or {}, entity_ref)
+            new_keys = _phase5_payload_keys(row.active_payload or {}, refs)
             if dry_run:
                 updated += 1
                 continue
