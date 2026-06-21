@@ -57,10 +57,13 @@ AA3_TO_1 = {
     "Trp": "W",
     "Tyr": "Y",
     "Val": "V",
-    "Ter": "X",
+    "Ter": "*",
 }
 
-HGVS_PROTEIN_3LETTER_RE = re.compile(r"(p\.)(([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|Ter))")
+HGVS_PROTEIN_3LETTER_RE = re.compile(r"(p\.)(([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|Ter|\*|stop|X))")
+
+STOP_CODON_ONE_LETTER = "*"
+STOP_ALT_TOKENS = {"Ter", "*", "stop", "X"}
 
 
 @dataclass(frozen=True)
@@ -723,12 +726,13 @@ def _normalize_rsid(value: str | None) -> str | None:
 
 
 def _derive_hgvs_protein_alias(name: str) -> str | None:
-    """Derive a compact one-letter HGVS protein alias like `p.R227X` from ClinVar names."""
+    """Derive a compact one-letter HGVS protein alias like `p.R227*` from ClinVar names."""
     match = HGVS_PROTEIN_3LETTER_RE.search(name or "")
     if match is None:
         return None
     ref = AA3_TO_1.get(match.group(3))
-    alt = AA3_TO_1.get(match.group(5))
+    alt_token = match.group(5)
+    alt = STOP_CODON_ONE_LETTER if alt_token in STOP_ALT_TOKENS else AA3_TO_1.get(alt_token)
     if ref is None or alt is None:
         return None
     return f"{match.group(1)}{ref}{match.group(4)}{alt}"
