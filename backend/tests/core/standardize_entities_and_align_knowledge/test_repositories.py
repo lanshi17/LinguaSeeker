@@ -724,6 +724,101 @@ async def test_upsert_normalized_entity_persists_similarity_rationale() -> None:
     assert normalized_entity.raw_payload["semantic_candidates"][0]["external_id"] == "HGNC:1100"
 
 
+class _NormalizedEntityLookupSession:
+    """Session stub that returns previously-staged NormalizedEntity rows on lookup."""
+
+    def __init__(self) -> None:
+        self.added: list[object] = []
+
+    async def execute(self, statement):
+        if "normalized_entities" in str(statement):
+            rows = [e for e in self.added if e.__class__.__name__ == "NormalizedEntity"]
+            return FakeResult(rows)
+        return FakeResult([])
+
+    def add(self, value) -> None:
+        self.added.append(value)
+
+    async def flush(self) -> None:
+        for index, value in enumerate(self.added, start=1):
+            if hasattr(value, "entity_id") and getattr(value, "entity_id", None) is None:
+                value.entity_id = uuid.UUID(int=index)  # type: ignore[attr-defined]
+
+
+def _make_unmapped_variant_match() -> EntityMatch:
+    return EntityMatch(
+        candidate=StandardizationCandidate(
+            candidate_id="chain-1:variant",
+            entity_type=EntityType.VARIANT,
+            role=BindingRole.SUBJECT,
+            raw_text="c.4748T>G",
+            chain_id="chain-1",
+            track="original",
+            metadata={"gene_symbol": "DICER1"},
+        ),
+        status=MatchStatus.UNMAPPED,
+        external_id=None,
+        display_name="c.4748T>G",
+        rationale="no ClinVar match",
+    )
+
+
+@pytest.mark.asyncio
+async def test_upsert_normalized_entity_unmapped_variant_gets_internal_id() -> None:
+    """Unmapped variants receive a deterministic internal external_id, never NULL."""
+    session = FakeSession()
+    repo = StandardizationRepository(session)
+
+    await repo.upsert_normalized_entity(_make_unmapped_variant_match())
+
+    normalized_entity = session.added[0]
+    assert normalized_entity.external_id is not None
+    assert normalized_entity.external_id.startswith("internal:variant:")
+    assert normalized_entity.standardization_status == "unmapped"
+
+
+@pytest.mark.asyncio
+async def test_upsert_normalized_entity_unmapped_variant_is_idempotent() -> None:
+    """Repeated unmapped variant inserts collapse onto the same entity via internal-id lookup."""
+    session = _NormalizedEntityLookupSession()
+    repo = StandardizationRepository(session)
+    match = _make_unmapped_variant_match()
+
+    first_id = await repo.upsert_normalized_entity(match)
+    second_id = await repo.upsert_normalized_entity(match)
+
+    assert first_id == second_id
+    assert len(session.added) == 1
+
+
+@pytest.mark.asyncio
+async def test_upsert_normalized_entity_standardized_variant_keeps_clinvar_id() -> None:
+    """Standardized variants keep their ClinVar external_id (not overwritten by internal id)."""
+    session = FakeSession()
+    repo = StandardizationRepository(session)
+    match = EntityMatch(
+        candidate=StandardizationCandidate(
+            candidate_id="chain-1:variant",
+            entity_type=EntityType.VARIANT,
+            role=BindingRole.SUBJECT,
+            raw_text="c.4748T>G",
+            chain_id="chain-1",
+            track="original",
+            metadata={"gene_symbol": "DICER1"},
+        ),
+        status=MatchStatus.STANDARDIZED,
+        external_id="ClinVarVariation:4468",
+        display_name="c.4748T>G",
+        rationale="precise ClinVar match",
+    )
+
+    await repo.upsert_normalized_entity(match)
+
+    normalized_entity = session.added[0]
+    assert normalized_entity.external_id == "ClinVarVariation:4468"
+    assert normalized_entity.standardization_status == "standardized"
+
+
 
 def test_context_contamination_is_not_canonical_eligible() -> None:
     from src.core.standardize_entities_and_align_knowledge.repositories import (
