@@ -188,8 +188,8 @@ def test_head_revision_points_to_terminology_schema() -> None:
     assert base.down_revision is None
 
 
-def test_head_revision_points_to_pipeline_status_extraction() -> None:
-    """The Alembic head is the pipeline run leases migration."""
+def test_head_revision_points_to_variant_internal_id_index() -> None:
+    """The Alembic head is the variant internal-id index migration."""
     backend_str = str(BACKEND_DIR)
     if backend_str not in sys.path:
         sys.path.insert(0, backend_str)
@@ -204,8 +204,8 @@ def test_head_revision_points_to_pipeline_status_extraction() -> None:
     head = script.get_revision("head")
 
     assert head is not None
-    assert head.revision == "pipeline_run_leases_20260611"
-    assert head.down_revision == "2026_06_11_allow_standalone_chat_sessions"
+    assert head.revision == "variant_internal_id_20260621"
+    assert head.down_revision == "critical_indexes_20260621"
 
 
 def test_pipeline_run_leases_migration_chain() -> None:
@@ -357,6 +357,70 @@ def test_terminology_migration_relationship_identity_unique(monkeypatch) -> None
         for constraint in unique_constraints
     )
 
+
+def _load_variant_internal_id_revision_module():
+    """Load the variant internal-id index migration revision as a Python module."""
+    import importlib.util
+
+    revision_paths = list(VERSIONS_DIR.glob("*add_variant_internal_id_index.py"))
+    assert len(revision_paths) == 1
+    revision_path = revision_paths[0]
+    spec = importlib.util.spec_from_file_location("add_variant_internal_id_index", revision_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_variant_internal_id_migration_chain() -> None:
+    """The variant internal-id index migration chains after critical_indexes_20260621."""
+    module = _load_variant_internal_id_revision_module()
+    assert module.down_revision == "critical_indexes_20260621"
+
+
+def test_variant_internal_id_migration_creates_unique_index(monkeypatch) -> None:
+    """The migration creates a partial unique index on internal variant external_ids."""
+    module = _load_variant_internal_id_revision_module()
+    created: list[tuple] = []
+
+    def fake_create_index(index_name, table_name, columns, **kwargs):
+        created.append((index_name, table_name, list(columns), kwargs))
+
+    monkeypatch.setattr(module.op, "create_index", fake_create_index)
+    monkeypatch.setattr(module.op, "execute", lambda *a, **k: None)
+
+    module.upgrade()
+
+    assert any(
+        name == "uq_normalized_entities_variant_internal_id"
+        and table == "normalized_entities"
+        and cols == ["external_id"]
+        and kwargs.get("unique") is True
+        and str(kwargs.get("postgresql_where"))
+        == "external_id LIKE 'internal:variant:%'"
+        for name, table, cols, kwargs in created
+    )
+
+
+def test_variant_internal_id_migration_downgrade_drops_index(monkeypatch) -> None:
+    """The migration downgrade drops the internal variant-id unique index."""
+    module = _load_variant_internal_id_revision_module()
+    dropped: list[tuple] = []
+
+    def fake_drop_index(index_name, *args, **kwargs):
+        dropped.append((index_name, kwargs))
+
+    monkeypatch.setattr(module.op, "drop_index", fake_drop_index)
+    monkeypatch.setattr(module.op, "execute", lambda *a, **k: None)
+
+    module.downgrade()
+
+    assert any(
+        name == "uq_normalized_entities_variant_internal_id"
+        and kwargs.get("table_name") == "normalized_entities"
+        for name, kwargs in dropped
+    )
 
 # ── Database-dependent tests (skip when PostgreSQL is unavailable) ─────────
 

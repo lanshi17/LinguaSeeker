@@ -4,8 +4,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from src.core.standardize_entities_and_align_knowledge.importers import (
+    ImportBatch,
     _clinvar_review_stars,
     _collect_alias_values,
+    _derive_hgvs_protein_alias,
     _iter_tsv_rows,
     _normalize_rsid,
     _split_comma_values,
@@ -187,7 +189,7 @@ def test_parse_clinvar_rows_adds_one_letter_protein_alias_when_name_contains_hgv
     batch = parse_clinvar_rows(path, version="clinvar_test")
 
     alias_texts = {alias.alias_text for alias in batch.aliases}
-    assert "p.R227X" in alias_texts
+    assert "p.R227*" in alias_texts
 
 
 def test_iter_clinvar_batches_yields_chunked_batches(tmp_path: Path) -> None:
@@ -367,3 +369,51 @@ def test_parse_hpo_rows_obo_flushes_on_new_non_term_stanza(tmp_path: Path) -> No
     assert [(entry.external_id, entry.display_name) for entry in batch.entries] == [
         ("HP:0000001", "Term one"),
     ]
+
+
+def test_derive_hgvs_protein_alias_maps_ter_to_star() -> None:
+    """A Ter-containing ClinVar protein name derives the `*` one-letter stop alias, not `X`."""
+    assert _derive_hgvs_protein_alias("p.Arg243Ter") == "p.R243*"
+
+
+_CLINVAR_HEADER_LINE = (
+    "#AlleleID\tType\tName\tGeneID\tGeneSymbol\tHGNC_ID\tClinicalSignificance\tClinSigSimple\t"
+    "LastEvaluated\tRS# (dbSNP)\tnsv/esv (dbVar)\tRCVaccession\tPhenotypeIDS\tPhenotypeList\t"
+    "Origin\tOriginSimple\tAssembly\tChromosomeAccession\tChromosome\tStart\tStop\t"
+    "ReferenceAllele\tAlternateAllele\tCytogenetic\tReviewStatus\tNumberSubmitters\tGuidelines\t"
+    "TestedInGTR\tOtherIDs\tSubmitterCategories\tVariationID\n"
+)
+
+
+def _parse_clinvar_rows(tmp_path: Path, *row_lines: str) -> ImportBatch:
+    """Write a ClinVar TSV with the standard header plus the given data rows and parse it."""
+    path = tmp_path / "variant_summary.txt"
+    path.write_text(_CLINVAR_HEADER_LINE + "".join(line + "\n" for line in row_lines), encoding="utf-8")
+    return parse_clinvar_rows(path, version="clinvar_test")
+
+
+def test_clinvar_bare_coding_alias_indexed(tmp_path: Path) -> None:
+    """The bare `c.` coding form is indexed as a `coding` alias for exact literature matching."""
+    row = (
+        "1\tsingle nucleotide variant\tNM_177438.3(DICER1):c.4748T>G (p.Leu1583Arg)\t"
+        "177438\tDICER1\tHGNC:17098\tPathogenic\t1\t2024-01-01\t-\t-\tRCV0001\tOMIM:601200\t"
+        "Pleuropulmonary blastoma\tgermline\tgermline\tGRCh38\tNC_000014.9\t14\t1\t1\tT\tG\t-\t"
+        "criteria provided, single submitter\t1\t-\tN\t-\t-\t4468"
+    )
+
+    batch = _parse_clinvar_rows(tmp_path, row)
+
+    alias_texts = {alias.alias_text for alias in batch.aliases}
+    assert "c.4748T>G" in alias_texts
+    coding_aliases = [alias for alias in batch.aliases if alias.alias_type == "coding"]
+    assert any(alias.alias_text == "c.4748T>G" for alias in coding_aliases)
+
+
+def test_protein_fs_alias_derived() -> None:
+    """A frameshift ClinVar protein name derives the one-letter `fs` alias."""
+    assert _derive_hgvs_protein_alias("NM_000245.3(MEN1):c.3927_3931del (p.Glu1309fs)") == "p.E1309fs"
+
+
+def test_protein_del_alias_derived() -> None:
+    """An in-frame deletion ClinVar protein name derives the one-letter `del` alias."""
+    assert _derive_hgvs_protein_alias("NM_000493.3(DMD):c.1521_1523del (p.Phe508del)") == "p.F508del"
