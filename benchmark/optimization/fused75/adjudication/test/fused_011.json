@@ -1,0 +1,81 @@
+{
+  "entry_id": "fused_011",
+  "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/expected.json",
+  "is_complete": true,
+  "labels": [
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "BRCA2",
+      "field_id": "A.gene_symbol",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_011/source.md:5",
+      "source_quote": "The mechanisms by which it develops include germline (generally inherited) and somatic mutations. There are six mutations with the highest incidence in the Colombian population, called the Colombia profile, which is associated with the BRCA1 and BRCA2 genes. The aim of this study is to identify germline mutations in individuals with breast cancer, such as BRCA and other genes. Methods This study describes the frequency and type of variants in hereditary cancer genes associated with breast cance",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "BRCA2-related cancer predisposition",
+      "field_id": "B.disease_diagnosis",
+      "notes": "AI-assisted disease phrase overlap",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_011/source.md:89",
+      "source_quote": "The present study of 307 patients with breast cancer revealed germline mutations in 19% of cases. BRCA1/2 genes accounted for 31% of pathogenic mutations, while the ATM gene represented 12%. The high frequency of ATM mutations (12% overall) and its functional similarity to BRCA1/2 suggest it could be considered as BRCA3. Of the 307 patients with breast cancer, 33% had VUS, primarily in ATM (12%), BRCA2 (11%) and BRCA1 (5%). The majority of VUS (95%) were missense mutations. Investigating VUS, es",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "notes": "BRCA2 is directly tied to hereditary breast/ovarian cancer cases.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_011/source.md:12",
+      "source_quote": "It is estimated that 5%-10% of breast cancers are attributable to hereditary syndromes with autosomal dominant transmission, such as hereditary breast and ovarian cancer syndrome (HBOC). The BCRA1 and BCRA2 genes are responsible for 30%-50% of HBOC cases.",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "AD",
+      "field_id": "B.mode_of_inheritance_reported",
+      "notes": "AI-assisted MOI phrase for AD",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_011/source.md:12",
+      "source_quote": "The gene alterations can be inherited or acquired after exposure to carcinogenic agents. Risk factors such as hormonal regulation and lifestyle have also been identified [ 3 \u2013 5 ]; however, heredity represents one of the most important risk factors [ 6 , 7 ]. It is estimated that 5%\u201310% of breast cancers are attributable to hereditary syndromes with autosomal dominant transmission, such as hereditary breast and ovarian cancer syndrome (HBOC). The BCRA1 and BCRA2 genes are responsible for 30%\u201350%",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "c.6275_6276del",
+      "field_id": "A.variant_hgvs_c",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_011/source.md:74",
+      "source_quote": "is genetic variability may be due to factors such as historical migration, population mix and geographic isolation. Likewise, we observed other mutations in the BRCA genes with equal or greater frequency, such as c.1674del (4/18) in BRCA1 and c.6275_6276del (5/18) in BRCA2 . As sequencing technology and methods advance, new mutations are discovered in different genes, including BRCA1 and BRCA2. NGS has allowed us to analyse genes in greater detail and find mutations that were previously unknown,",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "p.Leu2092fs",
+      "field_id": "A.variant_hgvs_p",
+      "notes": "Expected p.Leu2092fs is not directly visible; source only lists c.6275_6276del.",
+      "source_location": null,
+      "source_quote": null,
+      "visibility": "not_source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "deletion",
+      "field_id": "A.variant_type",
+      "notes": "c.6275_6276del directly supports deletion type.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_011/source.md:74",
+      "source_quote": "Likewise, we observed other mutations in the BRCA genes with equal or greater frequency, such as c.1674del (4/18) in BRCA1 and c.6275_6276del (5/18) in BRCA2.",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "Pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_011/source.md:5",
+      "source_quote": "ncing of a panel of 111 hereditary cancer genes, including BRCA1 and BRCA2 . Results This analysis allowed the identification of variants associated with breast cancer in 307 patients from a population in southwestern Colombia, of which 19% had pathogenic and probably pathogenic mutations associated with hereditary cancer. According to the variant classification, it was found that the mutation frequency in BRCA1 was 17%, in BRCA2 was 14% and in the ATM gene was 12%; nevertheless, 57% of mutation",
+      "visibility": "source_visible"
+    }
+  ],
+  "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_011/source.md",
+  "split": "adjudication_test"
+}

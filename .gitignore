@@ -89,7 +89,11 @@ database/config/.env.neo4j
 benchmark/data/inputs/literature_acquisition/downloads/*.jsonl
 benchmark/literature_acquisition/downloads/*.jsonl
 .env
+.env.local
+.env.*
 **/*/.env
+**/*/.env.local
+**/*/.env.*
 backend/data/*
 
 # Layered configuration secrets

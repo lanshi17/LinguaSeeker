@@ -1,0 +1,81 @@
+{
+  "entry_id": "fused_015",
+  "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_015/expected.json",
+  "is_complete": true,
+  "labels": [
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "DICER1",
+      "field_id": "A.gene_symbol",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:1",
+      "source_quote": "# DICER1 platform domain missense variants inhibit miRNA biogenesis and lead to tumor susceptibility",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "DICER1-related tumor predisposition",
+      "field_id": "B.disease_diagnosis",
+      "notes": "AI-assisted disease phrase overlap",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:5",
+      "source_quote": "Abstract The endoribonuclease DICER1 plays an essential role in the microRNA (miRNA) biogenesis pathway, cleaving precursor miRNA (pre-miRNA) stem-loops to generate mature single-stranded miRNAs. Germline pathogenic variants (GPVs) in DICER1 result in DICER1 tumor predisposition syndrome (DTPS), a mainly childhood-onset tumor susceptibility disorder. Most DTPS-causing GPVs are nonsense or frameshifting, with tumor development requiring a second somatic missense hit that impairs the DICER1 RNase",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "notes": "DICER1 pathogenic variants are directly described as resulting in DTPS.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:5",
+      "source_quote": "Germline pathogenic variants (GPVs) in DICER1 result in DICER1 tumor predisposition syndrome (DTPS), a mainly childhood-onset tumor susceptibility disorder.",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "AD",
+      "field_id": "B.mode_of_inheritance_reported",
+      "notes": "Germline pathogenic variant predisposition is consistent with the expected dominant tumor predisposition context.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:5",
+      "source_quote": "Germline pathogenic variants (GPVs) in DICER1 result in DICER1 tumor predisposition syndrome (DTPS), a mainly childhood-onset tumor susceptibility disorder.",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "c.4748T>G",
+      "field_id": "A.variant_hgvs_c",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:155",
+      "source_quote": "12 | Hill DA, 2009 PMID: 19556464 | PPB | p.L1583R | c.4748T>G | RNase IIIa | Not done | Not done | LP^ | N/P | Probably damaging | Not tolerated | Damaging: Buried hydrophilic introduced, buried charge introduced",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "p.Leu1583Arg",
+      "field_id": "A.variant_hgvs_p",
+      "notes": "p.L1583R is the one-letter equivalent of expected p.Leu1583Arg.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:155",
+      "source_quote": "12 | Hill DA, 2009 PMID: 19556464 | PPB | p.L1583R | c.4748T>G | RNase IIIa | Not done | Not done | LP^ | N/P | Probably damaging | Not tolerated | Damaging: Buried hydrophilic introduced, buried charge introduced",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "missense",
+      "field_id": "A.variant_type",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:1",
+      "source_quote": "# DICER1 platform domain missense variants inhibit miRNA biogenesis and lead to tumor susceptibility",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "Likely pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_015/source.md:133",
+      "source_quote": "1A , Table 1 ). Given the unknown role of the Platform in DTPS, we decided to focus on variants in this domain. Based on our own laboratory data, we had previously indicated that we considered the variants p.G803R, p.L805P and p.L881P to be Likely Pathogenic, but we lacked further tumor sequencing information from persons with p.G803R and p.L881P germline variants. Additionally, from the variants in Table 1 , three out of six cases in which second somatic DICER1 mutations were identified in tumo",
+      "visibility": "source_visible"
+    }
+  ],
+  "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_015/source.md",
+  "split": "adjudication_test"
+}

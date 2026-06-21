@@ -1,0 +1,81 @@
+{
+  "entry_id": "fused_014",
+  "expected_path": "benchmark/data/ground_truth/clinvar_fused/fused_014/expected.json",
+  "is_complete": true,
+  "labels": [
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "DCLRE1C",
+      "field_id": "A.gene_symbol",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_014/source.md:5",
+      "source_quote": "ic or likely pathogenic variants in the analyzed SCID-related genes. In particular, patient 1 carried two heterozygous ADA variants (c.58G>A, p.Gly20Arg and c.956_960del, p.Glu319Glyfs); patient 2 harbored two discrete pathogenic variants in the DCLRE1C gene (a large deletion of exons 1\u20133 and the nonsense mutation c.241C>T, p.Arg81*), causing Artemis deficiency; and patient 3 carried a hemizygous IL2RG missense variant (c.437T>C, p.Leu146Pro), associated with X-linked SCID. All variants were con",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "severe combined immunodeficiency due to DCLRE1C deficiency",
+      "field_id": "B.disease_diagnosis",
+      "notes": "AI-assisted disease phrase overlap",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_014/source.md:1",
+      "source_quote": "# Targeted Next-Generation Sequencing in the Molecular Diagnosis of Severe Combined Immunodeficiency",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "causative",
+      "field_id": "A.gene_disease_relationship",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_014/source.md:10",
+      "source_quote": "icated in the pathogenesis of SCID. The most prevalent type of SCID worldwide, accounting for approximately half of cases, is X-linked SCID, caused by mutations in the IL2RG gene that codes for the common gamma chain protein of the IL-2 receptor. The next most common types of SCID are associated with genetic defects in the ADA , RAG1 and RAG2 genes. Last but not least, deficiencies in the DCLRE1C (Artemis) or more rarely in the CD3 , ZAP70 and IL7RG genes are also causative of the disease [ 3 ].",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "AR",
+      "field_id": "B.mode_of_inheritance_reported",
+      "notes": "AI-assisted MOI phrase for AR",
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_014/source.md:106",
+      "source_quote": "In patient P2, a female infant with persisting CMV infection of the CNS and a \u03a4 \u2212 \u0392 \u2212 \u039d\u039a + SCID phenotype, we detected the nonsense variant c.241C>T (p.Arg81*) in the DCLRE1C gene, causing Artemis deficiency. According to ClinVar database (Variation ID: 4665), DCLRE1C:c.241C>T variant meets the criteria to be classified as pathogenic for autosomal recessive SCID due to DCLRE1C deficiency. This very rare variant with a frequency of 0.0031% in the non-Finnish European population introduces a prema",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "c.241C>T",
+      "field_id": "A.variant_hgvs_c",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_014/source.md:5",
+      "source_quote": "n particular, patient 1 carried two heterozygous ADA variants (c.58G>A, p.Gly20Arg and c.956_960del, p.Glu319Glyfs); patient 2 harbored two discrete pathogenic variants in the DCLRE1C gene (a large deletion of exons 1\u20133 and the nonsense mutation c.241C>T, p.Arg81*), causing Artemis deficiency; and patient 3 carried a hemizygous IL2RG missense variant (c.437T>C, p.Leu146Pro), associated with X-linked SCID. All variants were confirmed by Sanger sequencing. Conclusions : Our method successfully ide",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "ai-assisted-reviewer",
+      "expected_value": "p.Arg81Ter",
+      "field_id": "A.variant_hgvs_p",
+      "notes": "p.Arg81* is the stop notation equivalent of p.Arg81Ter.",
+      "source_location": "benchmark/data/ground_truth/clinvar_fused/fused_014/source.md:5",
+      "source_quote": "patient 2 harbored two discrete pathogenic variants in the DCLRE1C gene (a large deletion of exons 1-3 and the nonsense mutation c.241C>T, p.Arg81*)",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "missense",
+      "field_id": "A.variant_type",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_014/source.md:5",
+      "source_quote": "56_960del, p.Glu319Glyfs); patient 2 harbored two discrete pathogenic variants in the DCLRE1C gene (a large deletion of exons 1\u20133 and the nonsense mutation c.241C>T, p.Arg81*), causing Artemis deficiency; and patient 3 carried a hemizygous IL2RG missense variant (c.437T>C, p.Leu146Pro), associated with X-linked SCID. All variants were confirmed by Sanger sequencing. Conclusions : Our method successfully identified the underlying genetic defects in all patients, thereby establishing a molecular d",
+      "visibility": "source_visible"
+    },
+    {
+      "adjudicator": "exact-match-preannotator",
+      "expected_value": "Pathogenic",
+      "field_id": "J.clinvar_assertion",
+      "notes": null,
+      "source_location": "/data/[redacted-user]/Projects/01_ACMG_Lingua/.claude/worktrees/fused75-f1-optimization/benchmark/data/ground_truth/clinvar_fused/fused_014/source.md:5",
+      "source_quote": "Background and Objectives : Severe combined immunodeficiency (SCID) represents a group of rare and potentially fatal monogenic disorders arising from pathogenic variants in a broad spectrum of genes. Diagnostic delays beyond the first few months of life have been associated with poor overall survival and hematopoietic stem cell transplantation (HSCT) outcomes. Therefore, the aim of our study was to apply an NGS assay enabling the rapid and reliable diagnosis of SCID. Materials and Methods : We d",
+      "visibility": "source_visible"
+    }
+  ],
+  "source_path": "benchmark/data/ground_truth/clinvar_fused/fused_014/source.md",
+  "split": "adjudication_test"
+}
