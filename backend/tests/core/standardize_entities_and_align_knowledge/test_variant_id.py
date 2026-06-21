@@ -9,6 +9,8 @@ from src.core.standardize_entities_and_align_knowledge.variant_id import (
 def test_internal_variant_id_stable_and_prefixed() -> None:
     vid = make_internal_variant_id("c.4748T>G", "DICER1")
     assert vid.startswith("internal:variant:")
+    # 48-bit (12 hex char) digest follows the prefix.
+    assert len(vid) == len("internal:variant:") + 12
     assert vid == make_internal_variant_id("c.4748T>G", "DICER1")
     assert vid != make_internal_variant_id("c.4748T>G", "BRCA1")
 
