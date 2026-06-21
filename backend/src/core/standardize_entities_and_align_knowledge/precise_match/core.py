@@ -143,20 +143,32 @@ class PreciseTerminologyMatcher:
         """Reduce ClinVar variant ambiguities using normalized gene-symbol context.
 
         Decision tree (D3):
-        1. Normalize the candidate gene and each choice's ClinVar ``gene_symbol``
-           with ``normalize_gene_symbol`` so casing/alias surface forms compare equal.
-        2. Partition choices into ``same_gene`` (normalized gene equals candidate).
-        3. When ``same_gene`` is non-empty, keep the best alias-type tier within it
+        1. ``choices`` empty → return ``()`` (UNMAPPED).
+        2. ``candidate is None`` → return a single deterministic winner
+           (``_pick_deterministic_winner``); no gene signal is available, so a
+           single winner is acceptable since no gene can disagree.
+        3. Normalize the candidate gene (``norm_gene``) and each choice's ClinVar
+           ``gene_symbol`` with ``normalize_gene_symbol`` so casing/alias surface
+           forms compare equal. Partition choices into ``same_gene`` (normalized
+           gene equals ``norm_gene``), only when ``norm_gene`` is truthy.
+        4. When ``same_gene`` is non-empty, keep the best alias-type tier within it
            and return a single deterministic winner (entry_id ascending). Same-gene
            same-priority entries are ClinVar duplicates across transcripts/submitters
-           and must NOT collapse to ambiguous.
-        4. When the candidate gene is absent/unmapped (``same_gene`` empty), fall
-           back to a gene-agnostic best alias-type tier across ALL choices and
-           again return a single deterministic winner by entry_id.
+           and must NOT collapse to ambiguous (STANDARDIZED — correct).
+        5. When ``same_gene`` is empty (candidate gene matches no ClinVar entry):
+           - ``len(choices) == 1`` → return ``choices`` (a single unambiguous HGVS
+             match is a strong identity signal; safe to standardize even without a
+             gene match).
+           - ``len(choices) > 1`` → return ``()`` (UNMAPPED). Multiple cross-gene
+             matches with no gene signal are genuine ambiguity; do NOT guess, since
+             a wrong-gene ClinVar ``external_id`` is the primary variant pivot and
+             must not be attached gene-agnostically. Phase 4 assigns an internal
+             variant id instead.
 
-        The filter therefore returns at most one entry whenever any deterministic
+        The filter therefore returns at most one entry whenever a deterministic
         signal exists, so ``_finalize`` produces ``STANDARDIZED`` rather than
-        ``AMBIGUOUS`` for multi-hit variants.
+        ``AMBIGUOUS`` for multi-hit variants — while never falsely standardizing a
+        multi-gene mismatch to a single wrong-gene ClinVar id.
         """
         if not choices:
             return choices
@@ -170,11 +182,15 @@ class PreciseTerminologyMatcher:
             if normalize_gene_symbol(str(choice.raw_payload.get("gene_symbol", "") or "")) == norm_gene
             and norm_gene
         )
-        pool = same_gene if same_gene else choices
-        best = self._apply_alias_type_priority(pool)
-        if not best:
-            best = pool
-        return self._pick_deterministic_winner(best)
+        if same_gene:
+            best = self._apply_alias_type_priority(same_gene) or same_gene
+            return self._pick_deterministic_winner(best)
+        # No gene-matched ClinVar entry. A single unambiguous HGVS match is a safe
+        # identity signal; multiple cross-gene matches with no gene signal are genuine
+        # ambiguity — do not guess (Phase 4 assigns an internal variant id instead).
+        if len(choices) == 1:
+            return choices
+        return ()
 
     @staticmethod
     def _pick_deterministic_winner(
