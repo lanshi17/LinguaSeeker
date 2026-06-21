@@ -25,9 +25,9 @@ def make_internal_variant_id(normalized_hgvs: str, gene_symbol: str) -> str:
         gene_symbol: The candidate gene symbol, or an empty string when absent.
 
     Returns:
-        A ``internal:variant:<sha8>`` identifier, never ``None``.
+        A ``internal:variant:<sha12>`` identifier (48-bit digest), never ``None``.
     """
     gene = normalize_gene_symbol(gene_symbol) if gene_symbol else "_"
     hgvs = normalize_variant_text(normalized_hgvs)
-    digest = hashlib.sha256(f"{gene}|{hgvs}".encode("utf-8")).hexdigest()[:8]
+    digest = hashlib.sha256(f"{gene}|{hgvs}".encode("utf-8")).hexdigest()[:12]
     return f"{_PREFIX}{digest}"

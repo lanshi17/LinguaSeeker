@@ -2,7 +2,7 @@
 
 Every variant entity now carries a non-NULL external_id: ClinVar matches use
 ``ClinVarVariation:<id>`` and unmatched variants use a deterministic synthetic
-``internal:variant:<sha8>`` id (see ``variant_id.make_internal_variant_id``).
+``internal:variant:<sha12>`` id (see ``variant_id.make_internal_variant_id``).
 This partial unique index enforces uniqueness of the synthetic internal ids so
 repeated upserts of the same unmapped variant collapse onto one
 ``normalized_entities`` row.
@@ -22,6 +22,7 @@ Create Date: 2026-06-21
 from __future__ import annotations
 
 from alembic import op
+from sqlalchemy import text
 
 
 revision = "variant_internal_id_20260621"
@@ -31,12 +32,17 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.execute(
-        "CREATE UNIQUE INDEX uq_normalized_entities_variant_internal_id "
-        "ON normalized_entities (external_id) "
-        "WHERE external_id LIKE 'internal:variant:%'"
+    op.create_index(
+        "uq_normalized_entities_variant_internal_id",
+        "normalized_entities",
+        ["external_id"],
+        unique=True,
+        postgresql_where=text("external_id LIKE 'internal:variant:%'"),
     )
 
 
 def downgrade() -> None:
-    op.execute("DROP INDEX IF EXISTS uq_normalized_entities_variant_internal_id")
+    op.drop_index(
+        "uq_normalized_entities_variant_internal_id",
+        table_name="normalized_entities",
+    )

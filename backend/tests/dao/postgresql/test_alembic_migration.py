@@ -382,32 +382,44 @@ def test_variant_internal_id_migration_chain() -> None:
 def test_variant_internal_id_migration_creates_unique_index(monkeypatch) -> None:
     """The migration creates a partial unique index on internal variant external_ids."""
     module = _load_variant_internal_id_revision_module()
-    statements: list[str] = []
+    created: list[tuple] = []
 
-    monkeypatch.setattr(module.op, "execute", lambda statement: statements.append(str(statement)))
+    def fake_create_index(index_name, table_name, columns, **kwargs):
+        created.append((index_name, table_name, list(columns), kwargs))
+
+    monkeypatch.setattr(module.op, "create_index", fake_create_index)
+    monkeypatch.setattr(module.op, "execute", lambda *a, **k: None)
 
     module.upgrade()
 
     assert any(
-        "CREATE UNIQUE INDEX" in stmt
-        and "uq_normalized_entities_variant_internal_id" in stmt
-        and "external_id LIKE 'internal:variant:%'" in stmt
-        for stmt in statements
+        name == "uq_normalized_entities_variant_internal_id"
+        and table == "normalized_entities"
+        and cols == ["external_id"]
+        and kwargs.get("unique") is True
+        and str(kwargs.get("postgresql_where"))
+        == "external_id LIKE 'internal:variant:%'"
+        for name, table, cols, kwargs in created
     )
 
 
 def test_variant_internal_id_migration_downgrade_drops_index(monkeypatch) -> None:
     """The migration downgrade drops the internal variant-id unique index."""
     module = _load_variant_internal_id_revision_module()
-    statements: list[str] = []
+    dropped: list[tuple] = []
 
-    monkeypatch.setattr(module.op, "execute", lambda statement: statements.append(str(statement)))
+    def fake_drop_index(index_name, *args, **kwargs):
+        dropped.append((index_name, kwargs))
+
+    monkeypatch.setattr(module.op, "drop_index", fake_drop_index)
+    monkeypatch.setattr(module.op, "execute", lambda *a, **k: None)
 
     module.downgrade()
 
     assert any(
-        "DROP INDEX" in stmt and "uq_normalized_entities_variant_internal_id" in stmt
-        for stmt in statements
+        name == "uq_normalized_entities_variant_internal_id"
+        and kwargs.get("table_name") == "normalized_entities"
+        for name, kwargs in dropped
     )
 
 # ── Database-dependent tests (skip when PostgreSQL is unavailable) ─────────
