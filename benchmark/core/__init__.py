@@ -24,6 +24,7 @@ from benchmark.core.matching import (
     fuzzy_match_value,
     mark_expected_fields_missing,
     normalize_comparison_text,
+    prepare_extracted_items,
 )
 from benchmark.core.paths import (
     BENCHMARK_ROOT,
@@ -59,6 +60,7 @@ __all__ = [
     "fuzzy_match_value",
     "mark_expected_fields_missing",
     "normalize_comparison_text",
+    "prepare_extracted_items",
     # aggregate
     "compute_aggregate_metrics",
     # paths
