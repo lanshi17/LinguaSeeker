@@ -1,4 +1,3 @@
-
 import type {
   EvidenceGroupDetailResponse,
   EvidenceTrackTrace,
@@ -56,14 +55,14 @@ export function BilingualComparison(props: BilingualComparisonProps) {
 
   if (detail.traces.length === 0) {
     return (
-      <p className="py-8 text-center text-sm text-gray-400">
+      <p style={{ padding: "32px 0", textAlign: "center", fontSize: 14, color: "#9ca3af" }}>
         No bilingual traces for this evidence group.
       </p>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <EvidenceSelector
         detail={detail}
         groupId={groupId}
@@ -78,34 +77,52 @@ export function BilingualComparison(props: BilingualComparisonProps) {
 export function TraceComparisonPanel({ trace }: { trace: EvidenceTrackTrace | null }) {
   if (!trace) {
     return (
-      <p className="py-8 text-center text-sm text-gray-400">No evidence selected.</p>
+      <p style={{ padding: "32px 0", textAlign: "center", fontSize: 14, color: "#9ca3af" }}>
+        No evidence selected.
+      </p>
     );
   }
 
   return (
     <>
-      <div className="mb-4 grid gap-3 rounded-md bg-slate-50 p-3 xl:grid-cols-2">
+      <style>{`
+        .bc-value-grid { display: grid; gap: 12px; }
+        .bc-compare-grid { display: grid; gap: 16px; }
+        @media (min-width: 1280px) {
+          .bc-value-grid { grid-template-columns: 1fr 1fr; }
+          .bc-compare-grid { grid-template-columns: 1fr 1fr; }
+        }
+      `}</style>
+      <div
+        className="bc-value-grid"
+        style={{
+          marginBottom: 16,
+          borderRadius: 6,
+          backgroundColor: "#f8fafc",
+          padding: 12,
+        }}
+      >
         <div>
-          <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+          <p style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
             Original value
           </p>
-          <p className="mt-1 break-words font-mono text-sm text-slate-900">
+          <p style={{ marginTop: 4, wordBreak: "break-word", fontFamily: "var(--font-mono)", fontSize: 14, color: "#0f172a", margin: "4px 0 0" }}>
             {trace.original_value ?? "—"}
           </p>
         </div>
         <div>
-          <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+          <p style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
             Translated value
           </p>
-          <p className="mt-1 break-words font-mono text-sm text-slate-900">
+          <p style={{ marginTop: 4, wordBreak: "break-word", fontFamily: "var(--font-mono)", fontSize: 14, color: "#0f172a", margin: "4px 0 0" }}>
             {trace.translated_value ?? "—"}
           </p>
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="bc-compare-grid">
         <section>
-          <h4 className="mb-2 text-xs font-medium uppercase text-gray-400">
+          <h4 style={{ marginBottom: 8, fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "#9ca3af", margin: "0 0 8px" }}>
             Original
           </h4>
           <EvidenceHighlightText
@@ -115,7 +132,7 @@ export function TraceComparisonPanel({ trace }: { trace: EvidenceTrackTrace | nu
           />
         </section>
         <section>
-          <h4 className="mb-2 text-xs font-medium uppercase text-gray-400">
+          <h4 style={{ marginBottom: 8, fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "#9ca3af", margin: "0 0 8px" }}>
             Translated
           </h4>
           <EvidenceHighlightText
@@ -142,13 +159,29 @@ function EvidenceSelector({
 }) {
   const activeId = selectedEvidenceId ?? detail.items[0]?.canonical_evidence_id ?? null;
   return (
-    <div className="rounded-md border border-gray-200 bg-white p-3">
-      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+    <div style={{ borderRadius: 6, border: "1px solid #e5e7eb", backgroundColor: "#fff", padding: 12 }}>
+      <p style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
         Evidence item
       </p>
       <select
         aria-label="Select evidence item"
-        className="mt-2 w-full rounded-md border border-gray-200 bg-white p-2 text-sm text-gray-900 focus:border-primary-500 focus:outline-none"
+        style={{
+          marginTop: 8,
+          width: "100%",
+          borderRadius: 6,
+          border: "1px solid #e5e7eb",
+          backgroundColor: "#fff",
+          padding: 8,
+          fontSize: 14,
+          color: "#111827",
+          outline: "none",
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = "var(--color-primary-500)";
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = "#e5e7eb";
+        }}
         value={activeId ?? ""}
         onChange={(event) => {
           const next = event.target.value || null;

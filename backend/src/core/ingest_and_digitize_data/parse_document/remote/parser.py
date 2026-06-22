@@ -15,6 +15,7 @@ import httpx
 from loguru import logger
 
 from src.utils.rust_io import net_io
+from src.utils.markdown_helpers import extract_abstract_from_markdown
 
 from ..base import ParserStrategy
 from ..common.converters import block_to_markdown, html_table_to_structured
@@ -376,28 +377,6 @@ class MinerURemoteParser(ParserStrategy):
                     images[rel_path] = img_file.read_bytes()
         return images
 
-    @staticmethod
-    def _extract_abstract_from_markdown(text: str) -> str | None:
-        """Extract abstract text from MinerU-generated markdown.
-
-        Looks for common academic paper patterns:
-        - "Abstract" / "ABSTRACT" heading
-        - "摘要" / "【摘要】" heading (Chinese)
-        Falls back to first substantial paragraph before "Introduction"/"Keywords".
-        """
-        if not text:
-            return None
-        # Pattern: heading-style abstract section
-        pattern = r"(?:^|\n)\s*(?:#{1,3}\s*)?(?:\*\*)?(?:Abstract|ABSTRACT|摘要|【摘要】)(?:\*\*)?\s*(?::\s*)?\n(.*?)(?=\n\s*(?:#{1,3}\s*)?(?:\*\*)?(?:Introduction|INTRODUCTION|引言|关键词|Keywords|KEYWORDS|Background|BACKGROUND|1\s*[\.\)])|\Z)"
-        m = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
-        if m:
-            abstract = m.group(1).strip()
-            # Remove trailing markdown artifacts
-            abstract = re.sub(r"\n\s*[\*\-]\s*$", "", abstract).strip()
-            if len(abstract) > 30:
-                return abstract
-        return None
-
     def _parse_extracted_content(self, extract_dir: Path) -> _MinerURawResult:
         """Parse extracted zip content into structured result."""
         json_files = list(extract_dir.rglob("*.json"))
@@ -443,7 +422,7 @@ class MinerURemoteParser(ParserStrategy):
 
         # Priority 4: full.md only
         if full_markdown:
-            abstract = self._extract_abstract_from_markdown(full_markdown)
+            abstract = extract_abstract_from_markdown(full_markdown)
             return _MinerURawResult(
                 state="done",
                 total_pages=1,
@@ -468,7 +447,7 @@ class MinerURemoteParser(ParserStrategy):
                 abstract = data.get("abstract")
                 if not abstract:
                     combined_md = "\n\n".join(p.get("markdown", "") for p in pages_data)
-                    abstract = self._extract_abstract_from_markdown(combined_md)
+                    abstract = extract_abstract_from_markdown(combined_md)
                 return _MinerURawResult(
                     state="done",
                     total_pages=len(pages_data),
@@ -500,7 +479,7 @@ class MinerURemoteParser(ParserStrategy):
         abstract = data.get("abstract")
         if not abstract:
             combined_md = "\n\n".join(full_markdown_parts)
-            abstract = self._extract_abstract_from_markdown(combined_md)
+            abstract = extract_abstract_from_markdown(combined_md)
 
         return _MinerURawResult(
             state="done",
@@ -528,7 +507,7 @@ class MinerURemoteParser(ParserStrategy):
             })
 
         combined_markdown = "\n\n".join(full_markdown_parts)
-        abstract = self._extract_abstract_from_markdown(combined_markdown)
+        abstract = extract_abstract_from_markdown(combined_markdown)
 
         return _MinerURawResult(
             state="done",
@@ -551,7 +530,7 @@ class MinerURemoteParser(ParserStrategy):
             pages_map[page_idx].append(item)
 
         if not pages_map:
-            abstract = self._extract_abstract_from_markdown(full_markdown)
+            abstract = extract_abstract_from_markdown(full_markdown)
             return _MinerURawResult(
                 state="done",
                 total_pages=1,
@@ -598,9 +577,9 @@ class MinerURemoteParser(ParserStrategy):
             ))
 
         combined_markdown = "\n\n".join(full_parts)
-        abstract = self._extract_abstract_from_markdown(combined_markdown)
+        abstract = extract_abstract_from_markdown(combined_markdown)
         if not abstract and full_markdown:
-            abstract = self._extract_abstract_from_markdown(full_markdown)
+            abstract = extract_abstract_from_markdown(full_markdown)
 
         return _MinerURawResult(
             state="done",

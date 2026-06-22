@@ -1,21 +1,24 @@
 /**
  * Shared Axios instance used by every feature service layer.
  *
- * Configuration comes from @/lib/config (layered .env files).
  * Auth is handled by the backend via session cookie or X-API-Key header;
  * no client-side token management is required.
  */
 
 import axios from "axios";
 import type { AxiosResponse } from "axios";
-import { apiConfig } from "../config";
 import { normalizeError } from "./error";
 
+const baseURL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
+const timeout = Number(import.meta.env.VITE_API_TIMEOUT) || 30_000;
+const apiKey = import.meta.env.VITE_API_KEY || "";
+
 export const apiClient = axios.create({
-  baseURL: apiConfig.baseUrl,
-  timeout: apiConfig.timeout,
+  baseURL,
+  timeout,
   headers: {
     "Content-Type": "application/json",
+    ...(apiKey ? { "X-API-Key": apiKey } : {}),
   },
 });
 

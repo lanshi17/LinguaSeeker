@@ -1,5 +1,5 @@
 import { type HTMLAttributes } from "react";
-import { cn } from "@/lib/utils/cn";
+import { Tag } from "antd";
 
 type BadgeVariant = "default" | "success" | "warning" | "error" | "info";
 
@@ -7,30 +7,29 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
 }
 
-const variantStyles: Record<BadgeVariant, string> = {
-  default: "bg-gray-100 text-gray-700",
-  success: "bg-success-100 text-success-800",
-  warning: "bg-yellow-100 text-yellow-800",
-  error: "bg-red-100 text-red-800",
-  info: "bg-blue-100 text-blue-800",
+const variantMap: Record<BadgeVariant, string> = {
+  default: "default",
+  success: "success",
+  warning: "warning",
+  error: "error",
+  info: "processing",
 };
 
 export function Badge({
   variant = "default",
   className,
   children,
+  style,
   ...props
 }: BadgeProps) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-        variantStyles[variant],
-        className,
-      )}
+    <Tag
+      color={variantMap[variant]}
+      className={className}
+      style={{ borderRadius: 9999, ...style }}
       {...props}
     >
       {children}
-    </span>
+    </Tag>
   );
 }

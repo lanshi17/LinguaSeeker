@@ -8,9 +8,7 @@ from dataclasses import dataclass
 
 from ..contracts import ContentBlock, ExtractionTarget, TrackDocument
 from ..prompts import block_readable_text
-
-
-_SPACE_RE = re.compile(r"\s+")
+from src.utils.text_normalize import normalize_text as _normalize_text
 _RELATIONSHIP_CUE_RE = re.compile(
     r"\b("
     r"cause|causes|caused|causative|pathogenic|likely pathogenic|biallelic|monoallelic|"
@@ -242,8 +240,6 @@ def _has_section_cue(block: ContentBlock, text: str) -> bool:
     return bool(_SECTION_CUE_RE.search(text))
 
 
-def _normalize_text(value: str) -> str:
-    return _SPACE_RE.sub(" ", value.casefold().strip())
 
 
 def _remove_parentheticals(value: str) -> str:

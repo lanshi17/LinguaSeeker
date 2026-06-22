@@ -4,7 +4,6 @@ import { CheckCircle2, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { useToastStore } from "@/stores/toastStore";
-import { cn } from "@/lib/utils/cn";
 import { patchEvidence } from "../services/evidenceCorrection";
 import type { ReviewStatusValue } from "../types/evidenceSearch";
 
@@ -134,56 +133,88 @@ export function EvidenceCorrectionForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t border-primary-100 bg-primary-50/30 px-5 py-4"
+      style={{
+        borderTop: "1px solid var(--color-primary-100)",
+        backgroundColor: "rgba(236, 254, 255, 0.3)",
+        padding: "16px 20px",
+      }}
     >
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-semibold text-gray-900">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <h4 style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
           Correct evidence
         </h4>
         <button
           type="button"
           onClick={onClose}
-          className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          style={{
+            borderRadius: 4,
+            padding: 4,
+            color: "#9ca3af",
+            border: "none",
+            background: "none",
+            cursor: "pointer",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#f3f4f6";
+            e.currentTarget.style.color = "#4b5563";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "transparent";
+            e.currentTarget.style.color = "#9ca3af";
+          }}
         >
-          <X className="h-4 w-4" />
+          <X style={{ width: 16, height: 16 }} />
         </button>
       </div>
 
       {cardField && (
-        <div className="space-y-1.5">
-          <label className="block text-xs font-medium text-gray-600">
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4b5563" }}>
             Value ({cardField})
           </label>
           <textarea
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             rows={2}
-            className={cn(
-              "w-full rounded-lg border px-3 py-2 text-sm text-gray-900 transition-colors",
-              "focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200",
-              valueChanged
-                ? "border-amber-300 bg-amber-50"
-                : "border-gray-200 bg-white",
-            )}
+            style={{
+              width: "100%",
+              borderRadius: 8,
+              border: `1px solid ${valueChanged ? "#fcd34d" : "#e5e7eb"}`,
+              backgroundColor: valueChanged ? "#fffbeb" : "#fff",
+              padding: "8px 12px",
+              fontSize: 14,
+              color: "#111827",
+              transition: "border-color 150ms, box-shadow 150ms",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "var(--color-primary-400)";
+              e.currentTarget.style.boxShadow = "0 0 0 2px var(--color-primary-200)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = valueChanged ? "#fcd34d" : "#e5e7eb";
+              e.currentTarget.style.boxShadow = "none";
+            }}
             placeholder="Enter corrected value..."
           />
           {valueChanged && (
-            <p className="text-[11px] text-amber-600">Value changed</p>
+            <p style={{ fontSize: 11, color: "#d97706", margin: 0 }}>Value changed</p>
           )}
         </div>
       )}
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+      <div style={{ marginTop: 12, display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}>
         <Select
           label="Review status"
           value={newStatus}
-          onChange={(e) =>
-            setNewStatus(e.target.value as ReviewStatusValue)
+          onChange={(val) =>
+            setNewStatus(val as ReviewStatusValue)
           }
           options={STATUS_OPTIONS}
         />
-        <div className="space-y-1.5">
-          <label className="block text-xs font-medium text-gray-600">
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4b5563" }}>
             Reason (optional)
           </label>
           <input
@@ -191,32 +222,71 @@ export function EvidenceCorrectionForm({
             value={changeReason}
             onChange={(e) => setChangeReason(e.target.value)}
             placeholder="Why this change?"
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200"
+            style={{
+              width: "100%",
+              borderRadius: 8,
+              border: "1px solid #e5e7eb",
+              backgroundColor: "#fff",
+              padding: "8px 12px",
+              fontSize: 14,
+              color: "#111827",
+              transition: "border-color 150ms, box-shadow 150ms",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "var(--color-primary-400)";
+              e.currentTarget.style.boxShadow = "0 0 0 2px var(--color-primary-200)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "#e5e7eb";
+              e.currentTarget.style.boxShadow = "none";
+            }}
           />
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
         <Button
           type="submit"
           size="sm"
           disabled={!hasChanges || isSubmitting}
           loading={isSubmitting}
         >
-          <Save className="mr-1.5 h-3.5 w-3.5" />
+          <Save style={{ width: 14, height: 14, marginRight: 6 }} />
           Save correction
         </Button>
 
-        <div className="flex items-center gap-1.5 border-l border-gray-200 pl-2">
-          <span className="text-[11px] text-gray-500">Quick:</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, borderLeft: "1px solid #e5e7eb", paddingLeft: 8 }}>
+          <span style={{ fontSize: 11, color: "#6b7280" }}>Quick:</span>
           {currentStatus !== "approved" && (
             <button
               type="button"
               onClick={() => handleQuickStatus("approved")}
               disabled={isSubmitting}
-              className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-50"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                borderRadius: 6,
+                backgroundColor: "#ecfdf5",
+                padding: "4px 10px",
+                fontSize: 11,
+                fontWeight: 500,
+                color: "#047857",
+                border: "none",
+                cursor: isSubmitting ? "not-allowed" : "pointer",
+                opacity: isSubmitting ? 0.5 : 1,
+                transition: "background-color 150ms",
+              }}
+              onMouseEnter={(e) => {
+                if (!isSubmitting) e.currentTarget.style.backgroundColor = "#d1fae5";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#ecfdf5";
+              }}
             >
-              <CheckCircle2 className="h-3 w-3" />
+              <CheckCircle2 style={{ width: 12, height: 12 }} />
               Approve
             </button>
           )}
@@ -225,18 +295,38 @@ export function EvidenceCorrectionForm({
               type="button"
               onClick={() => handleQuickStatus("rejected")}
               disabled={isSubmitting}
-              className="inline-flex items-center gap-1 rounded-md bg-red-50 px-2.5 py-1 text-[11px] font-medium text-red-700 transition-colors hover:bg-red-100 disabled:opacity-50"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                borderRadius: 6,
+                backgroundColor: "#fef2f2",
+                padding: "4px 10px",
+                fontSize: 11,
+                fontWeight: 500,
+                color: "#b91c1c",
+                border: "none",
+                cursor: isSubmitting ? "not-allowed" : "pointer",
+                opacity: isSubmitting ? 0.5 : 1,
+                transition: "background-color 150ms",
+              }}
+              onMouseEnter={(e) => {
+                if (!isSubmitting) e.currentTarget.style.backgroundColor = "#fee2e2";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#fef2f2";
+              }}
             >
-              <X className="h-3 w-3" />
+              <X style={{ width: 12, height: 12 }} />
               Reject
             </button>
           )}
         </div>
       </div>
 
-      <p className="mt-2 text-[10px] text-gray-400">
-        Field: <code className="rounded bg-gray-100 px-1">{fieldId}</code> ·
-        Current status: <span className="font-medium">{currentStatus}</span>
+      <p style={{ marginTop: 8, fontSize: 10, color: "#9ca3af" }}>
+        Field: <code style={{ borderRadius: 4, backgroundColor: "#f3f4f6", padding: "0 4px" }}>{fieldId}</code> ·
+        Current status: <span style={{ fontWeight: 500 }}>{currentStatus}</span>
       </p>
     </form>
   );

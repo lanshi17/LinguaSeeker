@@ -13,15 +13,90 @@ import type { LiteratureReference } from "../types/variantDb";
 import type { EvidenceGroupItem } from "@/features/evidence-search/types/evidenceSearch";
 import {
   classificationColor,
-  classificationBadgeClasses,
   classificationLabel,
 } from "../utils/pathogenicity";
 import {
   categoryLabel,
-  categoryChipStyle,
 } from "@/features/evidence-search/utils/categoryStyles";
 import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
-import { cn } from "@/lib/utils/cn";
+
+/* ── Style helpers (replace Tailwind-based classificationBadgeClasses / categoryChipStyle) ── */
+
+function badgeInlineStyle(level: import("../types/variantDb").ClassificationLevel): React.CSSProperties {
+  const color = classificationColor(level);
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    borderRadius: 6,
+    border: `1px solid ${color}40`,
+    padding: "4px 10px",
+    fontSize: 12,
+    fontWeight: 600,
+    backgroundColor: `${color}18`,
+    color: color,
+  };
+}
+
+function chipInlineStyle(category?: string | null): React.CSSProperties {
+  const hex = category && CATEGORY_COLORS[category]
+    ? CATEGORY_COLORS[category].hex
+    : "#64748B";
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    borderRadius: 4,
+    border: `1px solid ${hex}40`,
+    padding: "2px 6px",
+    fontSize: 10,
+    fontWeight: 500,
+    fontFamily: "var(--font-mono)",
+    backgroundColor: `${hex}14`,
+    color: hex,
+  };
+}
+
+/* ── Embedded responsive styles ──────────────────────────── */
+
+const embeddedCSS = `
+.vdv-hero-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+@media (min-width: 1024px) {
+  .vdv-hero-inner {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+}
+.vdv-main-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 1024px) {
+  .vdv-main-grid {
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+}
+.vdv-back-link:hover {
+  color: #374151;
+}
+.vdv-evidence-item:hover {
+  border-color: #e5e7eb;
+}
+.vdv-lit-card:hover {
+  border-color: var(--color-primary-200);
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+}
+.vdv-lit-card:hover .vdv-lit-title {
+  color: var(--color-primary-700);
+}
+.vdv-lit-card:hover .vdv-lit-chevron {
+  color: var(--color-primary-600);
+}
+`;
 
 /* ── Confidence Ring ────────────────────────────────────── */
 
@@ -30,21 +105,32 @@ function ConfidenceRing({ value, size = 56 }: { value: number; size?: number }) 
   const ringColor = pct >= 70 ? "#22C55E" : pct >= 40 ? "#FFB323" : "#FF4D6D";
   return (
     <div
-      className="edb-ring flex items-center justify-center rounded-full"
+      className="edb-ring"
       style={
         {
           width: size,
           height: size,
           "--ring-value": pct,
           color: ringColor,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "50%",
         } as React.CSSProperties
       }
     >
       <div
-        className="flex items-center justify-center rounded-full bg-white"
-        style={{ width: size - 8, height: size - 8 }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "50%",
+          backgroundColor: "#fff",
+          width: size - 8,
+          height: size - 8,
+        }}
       >
-        <span className="font-mono text-xs font-semibold text-gray-800">
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 600, color: "#1f2937" }}>
           {pct}%
         </span>
       </div>
@@ -61,20 +147,46 @@ function EvidenceItemCard({ item }: { item: EvidenceGroupItem }) {
   const confColor = confidence >= 0.7 ? "#16A34A" : confidence >= 0.4 ? "#D97706" : "#DC2626";
 
   return (
-    <div className="group flex items-start gap-3 rounded-lg border border-gray-100 bg-white p-3 transition-colors hover:border-gray-200">
+    <div className="vdv-evidence-item" style={{
+      display: "flex",
+      alignItems: "flex-start",
+      gap: 12,
+      borderRadius: 8,
+      border: "1px solid #f3f4f6",
+      backgroundColor: "#fff",
+      padding: 12,
+      transition: "border-color 0.15s",
+    }}>
       {/* Category accent */}
       <div
-        className="mt-0.5 h-8 w-1 shrink-0 rounded-full"
-        style={{ backgroundColor: catHex }}
+        style={{
+          marginTop: 2,
+          width: 4,
+          height: 32,
+          flexShrink: 0,
+          borderRadius: 9999,
+          backgroundColor: catHex,
+        }}
       />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
           <div>
-            <p className="text-sm font-medium text-gray-900 leading-snug">
+            <p style={{ fontSize: 14, fontWeight: 500, color: "#111827", lineHeight: 1.375, margin: 0 }}>
               {item.field_name ?? item.field_id}
             </p>
             {item.value && (
-              <p className="mt-0.5 text-sm text-gray-600 leading-relaxed line-clamp-2">
+              <p style={{
+                marginTop: 2,
+                fontSize: 14,
+                color: "#4b5563",
+                lineHeight: 1.625,
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                margin: 0,
+                paddingTop: 2,
+              }}>
                 {typeof item.value === "string"
                   ? item.value
                   : JSON.stringify(item.value)}
@@ -83,25 +195,25 @@ function EvidenceItemCard({ item }: { item: EvidenceGroupItem }) {
           </div>
           {cat && (
             <span
-              className={cn(
-                "shrink-0 inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-medium font-mono",
-                categoryChipStyle(cat),
-              )}
+              style={{
+                ...chipInlineStyle(cat),
+                flexShrink: 0,
+              }}
             >
               {cat}
             </span>
           )}
         </div>
-        <div className="mt-1.5 flex items-center gap-3 text-[11px] text-gray-500">
-          <span className="font-mono">{item.field_id}</span>
-          <span>·</span>
-          <span className="font-medium" style={{ color: confColor }}>
+        <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 12, fontSize: 11, color: "#6b7280" }}>
+          <span style={{ fontFamily: "var(--font-mono)" }}>{item.field_id}</span>
+          <span>&middot;</span>
+          <span style={{ fontWeight: 500, color: confColor }}>
             {Math.round(confidence * 100)}% confidence
           </span>
           {item.track && (
             <>
-              <span>·</span>
-              <span className="capitalize">{item.track}</span>
+              <span>&middot;</span>
+              <span style={{ textTransform: "capitalize" }}>{item.track}</span>
             </>
           )}
         </div>
@@ -129,26 +241,36 @@ function EvidenceCategoryPanel({
   if (catItems.length === 0) return null;
 
   return (
-    <div className="edb-card rounded-xl overflow-hidden">
+    <div className="edb-card" style={{ borderRadius: 12, overflow: "hidden" }}>
       {/* Category header */}
       <div
-        className="flex items-center gap-2.5 px-4 py-2.5 border-b border-gray-200"
-        style={{ backgroundColor: `${hex}10` }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "10px 16px",
+          borderBottom: "1px solid #e5e7eb",
+          backgroundColor: `${hex}10`,
+        }}
       >
         <div
-          className="h-2.5 w-2.5 rounded-full"
-          style={{ backgroundColor: hex }}
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: "50%",
+            backgroundColor: hex,
+          }}
         />
-        <h3 className="text-sm font-semibold text-gray-900">
-          <span className="font-mono">{category}</span>: {label}
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
+          <span style={{ fontFamily: "var(--font-mono)" }}>{category}</span>: {label}
         </h3>
-        <span className="ml-auto font-mono text-xs text-gray-500">
+        <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: 12, color: "#6b7280" }}>
           {catItems.length} field{catItems.length !== 1 ? "s" : ""}
         </span>
       </div>
 
       {/* Items */}
-      <div className="p-3 space-y-2">
+      <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
         {catItems.map((item) => (
           <EvidenceItemCard
             key={item.canonical_evidence_id}
@@ -175,42 +297,88 @@ function LiteratureReferenceCard({
   return (
     <Link
       to={`/evidence-db/${encodeURIComponent(variantSlug)}/${encodeURIComponent(reference.sourceDocumentId)}`}
-      className="group flex items-start gap-3 rounded-lg border border-gray-100 bg-white p-3 transition-all hover:border-primary-200 hover:shadow-sm"
+      className="vdv-lit-card"
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 12,
+        borderRadius: 8,
+        border: "1px solid #f3f4f6",
+        backgroundColor: "#fff",
+        padding: 12,
+        transition: "all 0.15s",
+        textDecoration: "none",
+        color: "inherit",
+      }}
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-        <BookOpen className="h-4 w-4" />
+      <div style={{
+        display: "flex",
+        width: 32,
+        height: 32,
+        flexShrink: 0,
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 8,
+        backgroundColor: "#fffbeb",
+        color: "#d97706",
+      }}>
+        <BookOpen style={{ width: 16, height: 16 }} />
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-gray-900 leading-snug line-clamp-2 group-hover:text-primary-700 transition-colors">
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <p className="vdv-lit-title" style={{
+          fontSize: 14,
+          fontWeight: 500,
+          color: "#111827",
+          lineHeight: 1.375,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+          transition: "color 0.15s",
+          margin: 0,
+        }}>
           {reference.title}
         </p>
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-gray-500">
+        <div style={{
+          marginTop: 4,
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          columnGap: 8,
+          rowGap: 2,
+          fontSize: 11,
+          color: "#6b7280",
+        }}>
           {reference.pmid && (
-            <span className="font-mono">PMID:{reference.pmid}</span>
+            <span style={{ fontFamily: "var(--font-mono)" }}>PMID:{reference.pmid}</span>
           )}
           {reference.doi && (
-            <span className="font-mono">DOI:{reference.doi.slice(0, 20)}…</span>
+            <span style={{ fontFamily: "var(--font-mono)" }}>DOI:{reference.doi.slice(0, 20)}&hellip;</span>
           )}
           <span>{reference.fieldCount} fields</span>
-          <span className="font-medium" style={{ color: confColor }}>
+          <span style={{ fontWeight: 500, color: confColor }}>
             {confidence}%
           </span>
         </div>
-        <div className="mt-1.5 flex flex-wrap gap-1">
+        <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 4 }}>
           {reference.categories.map((cat) => (
             <span
               key={cat}
-              className={cn(
-                "inline-flex items-center rounded border px-1 py-0.5 text-[10px] font-medium font-mono",
-                categoryChipStyle(cat),
-              )}
+              style={chipInlineStyle(cat)}
             >
               {cat}
             </span>
           ))}
         </div>
       </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-gray-400 group-hover:text-primary-600 transition-colors mt-1" />
+      <ChevronRight className="vdv-lit-chevron" style={{
+        width: 16,
+        height: 16,
+        flexShrink: 0,
+        color: "#9ca3af",
+        transition: "color 0.15s",
+        marginTop: 4,
+      }} />
     </Link>
   );
 }
@@ -230,16 +398,34 @@ export function VariantDetailView({
 
   if (error || !detail) {
     return (
-      <div className="space-y-4">
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <Link
           to="/evidence-db"
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
+          className="vdv-back-link"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            fontSize: 14,
+            color: "#6b7280",
+            textDecoration: "none",
+          }}
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft style={{ width: 16, height: 16 }} />
           Back to Evidence Database
         </Link>
-        <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          <AlertCircle className="h-5 w-5 shrink-0" />
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          borderRadius: 12,
+          border: "1px solid #fecaca",
+          backgroundColor: "#fef2f2",
+          padding: 16,
+          fontSize: 14,
+          color: "#b91c1c",
+        }}>
+          <AlertCircle style={{ width: 20, height: 20, flexShrink: 0 }} />
           <span>Variant not found or failed to load.</span>
         </div>
       </div>
@@ -248,7 +434,6 @@ export function VariantDetailView({
 
   const { entry, literature, allItems } = detail;
   const borderColor = classificationColor(entry.classificationLevel);
-  const badgeClasses = classificationBadgeClasses(entry.classificationLevel);
 
   const categoriesWithItems = [
     ...new Set(
@@ -263,81 +448,111 @@ export function VariantDetailView({
     .sort() as string[];
 
   return (
-    <div className="content-fade-in space-y-6">
+    <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <style>{embeddedCSS}</style>
+
       {/* Back navigation */}
       <Link
         to="/evidence-db"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        className="vdv-back-link"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          fontSize: 14,
+          color: "#6b7280",
+          textDecoration: "none",
+          transition: "color 0.15s",
+        }}
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft style={{ width: 16, height: 16 }} />
         Back to Evidence Database
       </Link>
 
       {/* Variant Hero */}
       <section
-        className="edb-hero rounded-2xl border border-gray-200 overflow-hidden"
-        style={{ borderLeftColor: borderColor, borderLeftWidth: 4 }}
+        className="edb-hero"
+        style={{
+          borderRadius: 16,
+          border: "1px solid #e5e7eb",
+          borderLeftColor: borderColor,
+          borderLeftWidth: 4,
+          overflow: "hidden",
+        }}
       >
-        <div className="p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div style={{ padding: 24 }}>
+          <div className="vdv-hero-inner">
             {/* Main info */}
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="font-mono text-xl font-bold text-gray-900">
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+                <h1 style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 20,
+                  fontWeight: 700,
+                  color: "#111827",
+                  margin: 0,
+                }}>
                   {entry.gene}
                 </h1>
-                <span
-                  className={cn(
-                    "inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-semibold",
-                    badgeClasses,
-                  )}
-                >
+                <span style={badgeInlineStyle(entry.classificationLevel)}>
                   {classificationLabel(entry.classificationLevel)}
                 </span>
               </div>
-              <p className="font-mono text-lg text-gray-700 mb-1">
+              <p style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 18,
+                color: "#374151",
+                marginBottom: 4,
+                margin: 0,
+                paddingBottom: 4,
+              }}>
                 {entry.variant}
               </p>
               {entry.disease && (
-                <p className="text-sm text-gray-600">
-                  <Stethoscope className="inline h-4 w-4 mr-1 -mt-0.5 text-gray-400" />
+                <p style={{ fontSize: 14, color: "#4b5563", margin: 0 }}>
+                  <Stethoscope style={{ display: "inline", width: 16, height: 16, marginRight: 4, verticalAlign: "-2px", color: "#9ca3af" }} />
                   {entry.disease}
                 </p>
               )}
               {entry.classification && (
-                <p className="text-xs text-gray-500 mt-1">
+                <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4, margin: 0 }}>
                   {entry.classification}
                 </p>
               )}
             </div>
 
             {/* Stats */}
-            <div className="flex items-center gap-4">
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <ConfidenceRing value={entry.avgConfidence} size={56} />
-              <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                columnGap: 24,
+                rowGap: 4,
+              }}>
                 <div>
-                  <p className="font-mono text-lg font-semibold text-gray-900">
+                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
                     {entry.evidenceGroupCount}
                   </p>
-                  <p className="text-xs text-gray-500">Evidence groups</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>Evidence groups</p>
                 </div>
                 <div>
-                  <p className="font-mono text-lg font-semibold text-gray-900">
+                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
                     {entry.literatureCount}
                   </p>
-                  <p className="text-xs text-gray-500">Literature</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>Literature</p>
                 </div>
                 <div>
-                  <p className="font-mono text-lg font-semibold text-gray-900">
+                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
                     {entry.fieldCount}
                   </p>
-                  <p className="text-xs text-gray-500">Total fields</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>Total fields</p>
                 </div>
                 <div>
-                  <p className="font-mono text-lg font-semibold text-gray-900">
+                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
                     {categoriesWithItems.length}
                   </p>
-                  <p className="text-xs text-gray-500">Categories</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>Categories</p>
                 </div>
               </div>
             </div>
@@ -346,14 +561,20 @@ export function VariantDetailView({
       </section>
 
       {/* Two-column layout: Evidence + Literature */}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="vdv-main-grid">
         {/* Main: Evidence by Category */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-medium text-gray-900">
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h2 style={{
+              fontFamily: "var(--font-display)",
+              fontSize: 18,
+              fontWeight: 500,
+              color: "#111827",
+              margin: 0,
+            }}>
               Evidence Fields
             </h2>
-            <span className="text-sm text-gray-500">
+            <span style={{ fontSize: 14, color: "#6b7280" }}>
               {allItems.length} field{allItems.length !== 1 ? "s" : ""} across{" "}
               {categoriesWithItems.length} categor
               {categoriesWithItems.length !== 1 ? "ies" : "y"}
@@ -361,14 +582,19 @@ export function VariantDetailView({
           </div>
 
           {categoriesWithItems.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-gray-300 py-12 text-center">
-              <Layers3 className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">
+            <div style={{
+              borderRadius: 12,
+              border: "1px dashed #d1d5db",
+              padding: "48px 0",
+              textAlign: "center",
+            }}>
+              <Layers3 style={{ width: 32, height: 32, color: "#d1d5db", margin: "0 auto 8px" }} />
+              <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>
                 No evidence fields found
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {categoriesWithItems.map((cat) => (
                 <EvidenceCategoryPanel
                   key={cat}
@@ -381,23 +607,34 @@ export function VariantDetailView({
         </div>
 
         {/* Sidebar: Literature References */}
-        <aside className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-medium text-gray-900">
+        <aside style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h2 style={{
+              fontFamily: "var(--font-display)",
+              fontSize: 18,
+              fontWeight: 500,
+              color: "#111827",
+              margin: 0,
+            }}>
               References
             </h2>
-            <span className="text-sm text-gray-500">
+            <span style={{ fontSize: 14, color: "#6b7280" }}>
               {literature.length} source{literature.length !== 1 ? "s" : ""}
             </span>
           </div>
 
           {literature.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-gray-300 py-12 text-center">
-              <BookOpen className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">No references found</p>
+            <div style={{
+              borderRadius: 12,
+              border: "1px dashed #d1d5db",
+              padding: "48px 0",
+              textAlign: "center",
+            }}>
+              <BookOpen style={{ width: 32, height: 32, color: "#d1d5db", margin: "0 auto 8px" }} />
+              <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>No references found</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {literature.map((ref) => (
                 <LiteratureReferenceCard
                   key={ref.sourceDocumentId}

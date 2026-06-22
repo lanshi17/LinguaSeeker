@@ -1,8 +1,7 @@
-
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { LivePulse } from "@/components/ui/LivePulse";
-import { cn } from "@/lib/utils/cn";
 import {
   Check,
   Circle,
@@ -62,26 +61,26 @@ const PHASES: PhaseMeta[] = [
   },
 ];
 
-const PHASE_STATUS_STYLES: Record<string, string> = {
-  pending: "bg-gray-50 text-gray-500 border-gray-200",
-  running: "bg-blue-50 text-blue-700 border-blue-200",
-  completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  failed: "bg-red-50 text-red-700 border-red-200",
-  skipped: "bg-gray-50 text-gray-400 border-gray-200",
+const PHASE_STATUS_STYLES: Record<string, CSSProperties> = {
+  pending: { backgroundColor: "#f9fafb", color: "#6b7280", borderColor: "#e5e7eb" },
+  running: { backgroundColor: "#eff6ff", color: "#1d4ed8", borderColor: "#bfdbfe" },
+  completed: { backgroundColor: "#ecfdf5", color: "#047857", borderColor: "#a7f3d0" },
+  failed: { backgroundColor: "#fef2f2", color: "#b91c1c", borderColor: "#fecaca" },
+  skipped: { backgroundColor: "#f9fafb", color: "#9ca3af", borderColor: "#e5e7eb" },
 };
 
 function PhaseIcon({ status }: { status: string }) {
   switch (status) {
     case "completed":
-      return <Check className="h-3.5 w-3.5" />;
+      return <Check style={{ width: 14, height: 14 }} />;
     case "running":
       return <LivePulse tone="primary" label="Phase running" />;
     case "failed":
-      return <CircleX className="h-3.5 w-3.5" />;
+      return <CircleX style={{ width: 14, height: 14 }} />;
     case "skipped":
-      return <SkipForward className="h-3.5 w-3.5" />;
+      return <SkipForward style={{ width: 14, height: 14 }} />;
     default:
-      return <Circle className="h-3.5 w-3.5" />;
+      return <Circle style={{ width: 14, height: 14 }} />;
   }
 }
 
@@ -150,19 +149,48 @@ export function PipelineStatusCard({
     Math.round((completedCount / PHASES.length) * 100),
   );
 
+  const barColor =
+    status === "failed"
+      ? "#ef4444"
+      : status === "completed"
+        ? "#10b981"
+        : undefined; // use gradient for running/pending
+
   return (
-    <div className="w-full max-w-md overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div style={{
+      width: "100%",
+      maxWidth: 448,
+      overflow: "hidden",
+      borderRadius: 12,
+      border: "1px solid #e5e7eb",
+      backgroundColor: "#fff",
+      boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+    }}>
       {/* Header: run id + status */}
-      <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-2.5">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="truncate font-mono text-[11px] text-gray-400">
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 12,
+        borderBottom: "1px solid #f3f4f6",
+        padding: "10px 16px",
+      }}>
+        <div style={{ display: "flex", minWidth: 0, alignItems: "center", gap: 8 }}>
+          <span style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            fontFamily: "var(--font-mono)",
+            fontSize: 11,
+            color: "#9ca3af",
+          }}>
             {runId.slice(0, 8)}…
           </span>
           {isRunning && <LivePulse tone="primary" />}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1 text-[11px] text-gray-500">
-            <Clock className="h-3 w-3" aria-hidden="true" />
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6b7280" }}>
+            <Clock style={{ width: 12, height: 12 }} aria-hidden="true" />
             {formatElapsed(elapsed)}
           </span>
           <Badge variant={STATUS_VARIANT[status] ?? "default"}>
@@ -172,33 +200,40 @@ export function PipelineStatusCard({
       </div>
 
       {/* Phases */}
-      <div className="px-4 pt-3">
-        <div className="flex flex-wrap items-center gap-1.5">
+      <div style={{ padding: "12px 16px 0" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
           {PHASES.map((phase, i) => {
             const phaseData = phases?.[phase.id];
             const phaseStatus = phaseData?.status ?? "pending";
             const duration = phaseData?.duration_seconds;
 
             return (
-              <div key={phase.id} className="flex items-center gap-1.5">
+              <div key={phase.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <div
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] font-medium transition-colors",
-                    PHASE_STATUS_STYLES[phaseStatus] ??
-                      PHASE_STATUS_STYLES.pending,
-                  )}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    borderRadius: 9999,
+                    border: "1px solid",
+                    padding: "4px 10px",
+                    fontSize: 11.5,
+                    fontWeight: 500,
+                    transition: "color 150ms, background-color 150ms",
+                    ...(PHASE_STATUS_STYLES[phaseStatus] ?? PHASE_STATUS_STYLES.pending),
+                  }}
                   title={phase.description}
                 >
                   <PhaseIcon status={phaseStatus} />
                   <span>{phase.label}</span>
                   {typeof duration === "number" && (
-                    <span className="opacity-60">
+                    <span style={{ opacity: 0.6 }}>
                       {duration.toFixed(0)}s
                     </span>
                   )}
                 </div>
                 {i < PHASES.length - 1 && (
-                  <div className="h-px w-2 bg-gray-200" aria-hidden="true" />
+                  <div style={{ width: 8, height: 1, backgroundColor: "#e5e7eb" }} aria-hidden="true" />
                 )}
               </div>
             );
@@ -207,27 +242,43 @@ export function PipelineStatusCard({
 
         {/* Progress bar */}
         <div
-          className="mt-3 h-1 w-full overflow-hidden rounded-full bg-gray-100"
+          style={{
+            marginTop: 12,
+            height: 4,
+            width: "100%",
+            overflow: "hidden",
+            borderRadius: 9999,
+            backgroundColor: "#f3f4f6",
+          }}
           role="progressbar"
           aria-valuenow={progressPct}
           aria-valuemin={0}
           aria-valuemax={100}
         >
           <div
-            className={cn(
-              "h-full rounded-full transition-all duration-500",
-              status === "failed"
-                ? "bg-red-500"
-                : status === "completed"
-                  ? "bg-emerald-500"
-                  : "bg-gradient-to-r from-cyan-500 to-blue-500 progress-stripe",
-            )}
-            style={{ width: `${status === "completed" ? 100 : progressPct}%` }}
+            className={barColor ? undefined : "progress-stripe"}
+            style={{
+              height: "100%",
+              borderRadius: 9999,
+              transition: "all 500ms",
+              width: `${status === "completed" ? 100 : progressPct}%`,
+              ...(barColor
+                ? { backgroundColor: barColor }
+                : {
+                    background: "linear-gradient(to right, #06b6d4, #3b82f6)",
+                  }),
+            }}
           />
         </div>
 
         {/* Hint line */}
-        <p className="mt-2 pb-3 text-[11.5px] leading-relaxed text-gray-500">
+        <p style={{
+          marginTop: 8,
+          paddingBottom: 12,
+          fontSize: 11.5,
+          lineHeight: 1.625,
+          color: "#6b7280",
+        }}>
           {hint}
         </p>
       </div>

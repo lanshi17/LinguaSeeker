@@ -105,17 +105,6 @@ export interface EvidenceDocument {
   paragraphs: EvidenceDocumentParagraph[];
 }
 
-export type EvidenceToneCounts = Record<EvidenceHighlightTone, number>;
-
-const EMPTY_TONE_COUNTS: EvidenceToneCounts = {
-  classification: 0,
-  disease: 0,
-  functional: 0,
-  gene: 0,
-  neutral: 0,
-  variant: 0,
-};
-
 function categoryFromItem(item?: EvidenceGroupItem | null) {
   if (!item) {
     return null;
@@ -164,16 +153,6 @@ export function countEvidenceCategories(
     if (cat) {
       counts[cat] = (counts[cat] ?? 0) + 1;
     }
-  }
-  return counts;
-}
-
-export function countEvidenceHighlightTones(
-  items: EvidenceGroupItem[],
-): EvidenceToneCounts {
-  const counts = { ...EMPTY_TONE_COUNTS };
-  for (const item of items) {
-    counts[evidenceToneForItem(item)] += 1;
   }
   return counts;
 }

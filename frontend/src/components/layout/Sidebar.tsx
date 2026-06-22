@@ -1,13 +1,12 @@
-import { Link, useLocation } from "react-router-dom";
-import { MessageSquare, Database, ClipboardList } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { MessageSquare, Database, ClipboardList, type LucideIcon } from "lucide-react";
+import { Menu, Typography } from "antd";
 import { useAppStore } from "@/stores/appStore";
-import { cn } from "@/lib/utils/cn";
-import type { ComponentType } from "react";
 
 interface NavItem {
   label: string;
   href: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: LucideIcon;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -25,67 +24,77 @@ interface SidebarProps {
 
 export function Sidebar({ mobile, onNavigate }: SidebarProps) {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const collapsed = useAppStore((s) => s.sidebarCollapsed);
   const effectiveCollapsed = mobile ? false : collapsed;
+
+  const selectedKey =
+    NAV_ITEMS.find(
+      (item) => pathname === item.href || pathname.startsWith(item.href + "/"),
+    )?.href ?? "";
+
+  const sidebarWidth = mobile ? 240 : effectiveCollapsed ? 80 : 240;
 
   return (
     <aside
       aria-label="Main navigation"
-      className={cn(
-        "flex h-full flex-col border-r border-gray-200 bg-white transition-[width] duration-200",
-        mobile ? "w-60" : effectiveCollapsed ? "w-16" : "w-60",
-      )}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        width: sidebarWidth,
+        borderRight: "1px solid #e5e7eb",
+        backgroundColor: "#fff",
+        transition: "width 200ms",
+      }}
     >
       {/* Brand */}
-      <div className="flex h-14 items-center border-b border-gray-200 px-4">
-        {effectiveCollapsed ? (
-          <span
-            className="text-lg font-bold text-primary-700"
-            aria-hidden="true"
-          >
-            A
-          </span>
-        ) : (
-          <span className="text-lg font-bold text-primary-700">
-            Lingua Seeker
-          </span>
-        )}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          height: 56,
+          borderBottom: "1px solid #e5e7eb",
+          padding: "0 16px",
+        }}
+      >
+        <Typography.Text
+          strong
+          style={{ fontSize: 18, color: "var(--color-primary-700)" }}
+          aria-hidden={effectiveCollapsed}
+        >
+          {effectiveCollapsed ? "A" : "Lingua Seeker"}
+        </Typography.Text>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-2 py-4" aria-label="Main">
-        {NAV_ITEMS.map((item) => {
-          const isActive =
-            pathname === item.href || pathname.startsWith(item.href + "/");
-          const Icon = item.icon;
-
-          return (
-            <Link
-              key={item.href}
-              to={item.href}
-              aria-label={effectiveCollapsed ? item.label : undefined}
-              aria-current={isActive ? "page" : undefined}
-              onClick={onNavigate}
-              className={cn(
-                "flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium",
-                "transition-colors duration-150",
-                "cursor-pointer",
-                isActive
-                  ? "bg-primary-50 text-primary-700"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-              )}
-            >
-              <Icon className="h-5 w-5 shrink-0" />
-              {!effectiveCollapsed && <span>{item.label}</span>}
-            </Link>
-          );
-        })}
-      </nav>
+      <div style={{ flex: 1, padding: "16px 0" }}>
+        <Menu
+          mode="inline"
+          selectedKeys={[selectedKey]}
+          inlineCollapsed={!mobile && effectiveCollapsed}
+          onClick={({ key }) => {
+            navigate(key);
+            onNavigate?.();
+          }}
+          items={NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            return {
+              key: item.href,
+              icon: <Icon size={20} />,
+              label: item.label,
+            };
+          })}
+          style={{ border: "none" }}
+        />
+      </div>
 
       {/* Footer */}
-      <div className="border-t border-gray-200 p-4">
+      <div style={{ borderTop: "1px solid #e5e7eb", padding: 16 }}>
         {!effectiveCollapsed && (
-          <p className="text-xs text-gray-400">Lingua Seeker v0.1.0</p>
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            Lingua Seeker v0.1.0
+          </Typography.Text>
         )}
       </div>
     </aside>

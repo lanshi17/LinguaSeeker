@@ -11,7 +11,6 @@ export {
   CATEGORY_COLORS,
   EVIDENCE_CATEGORIES,
   countEvidenceCategories,
-  countEvidenceHighlightTones,
   evidenceToneForItem,
   hasTranslatedDocumentText,
 } from "./utils/evidenceDocument";
@@ -35,6 +34,5 @@ export type {
   EvidenceDocument,
   EvidenceDocumentHighlight,
   EvidenceDocumentParagraph,
-  EvidenceToneCounts,
 } from "./utils/evidenceDocument";
 export type { LiteratureEvidenceRow } from "./utils/literatureRows";

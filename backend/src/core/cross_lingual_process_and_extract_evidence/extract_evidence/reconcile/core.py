@@ -1,7 +1,6 @@
 """Deterministic source-grounded reconcile for dual-track evidence extraction."""
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
@@ -22,9 +21,8 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconc
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.alignment import (
     build_alignment_records,
 )
-
-
-_SPACE_RE = re.compile(r"\s+")
+from src.utils.text_normalize import normalize_text as _normalize_text
+from src.utils.text_normalize import normalize_value as _normalize_value
 
 
 @dataclass(frozen=True)
@@ -261,17 +259,6 @@ def _append_note(existing: str, addition: str) -> str:
     return f"{existing.rstrip()} {addition}"
 
 
-def _normalize_value(value: str | int | float | bool | list[str] | None) -> str:
-    if isinstance(value, list):
-        parts = [_normalize_text(str(entry)) for entry in value if _normalize_text(str(entry))]
-        return "|".join(sorted(parts))
-    if value is None:
-        return ""
-    return _normalize_text(str(value))
-
-
-def _normalize_text(value: str) -> str:
-    return _SPACE_RE.sub(" ", value.strip()).casefold()
 
 
 def _deduplicate_chains(

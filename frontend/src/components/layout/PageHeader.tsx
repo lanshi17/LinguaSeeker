@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils/cn";
+import { Flex, Typography } from "antd";
 
 interface PageHeaderProps {
   title: string;
@@ -15,14 +15,22 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <div className={cn("flex items-center justify-between", className)}>
+    <Flex align="center" justify="space-between" className={className}>
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        <Typography.Title level={3} style={{ margin: 0 }}>
+          {title}
+        </Typography.Title>
         {description && (
-          <p className="mt-1 text-sm text-gray-500">{description}</p>
+          <Typography.Text type="secondary" style={{ marginTop: 4, display: "block", fontSize: 14 }}>
+            {description}
+          </Typography.Text>
         )}
       </div>
-      {actions && <div className="flex items-center gap-3">{actions}</div>}
-    </div>
+      {actions && (
+        <Flex align="center" gap={12}>
+          {actions}
+        </Flex>
+      )}
+    </Flex>
   );
 }

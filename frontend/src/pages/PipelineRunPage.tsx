@@ -4,7 +4,7 @@ import { PipelineStatusView } from "@/features/pipeline";
 export function PipelineRunPage() {
   const { runId } = useParams<{ runId: string }>();
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <PipelineStatusView runId={runId!} />
     </div>
   );

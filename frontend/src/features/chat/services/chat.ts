@@ -1,5 +1,4 @@
 import { apiClient } from "@/lib/api/client";
-import { apiConfig } from "@/lib/config";
 import type {
   BackendChatSessionResponse,
   ChatMessageResponse,
@@ -61,5 +60,5 @@ export async function appendMessage(
 
 /** Build the SSE stream URL for a chat session. */
 export function streamUrl(sessionId: string): string {
-  return `${apiConfig.baseUrl}/chat/sessions/${sessionId}/stream`;
+  return `${apiClient.defaults.baseURL}/chat/sessions/${sessionId}/stream`;
 }

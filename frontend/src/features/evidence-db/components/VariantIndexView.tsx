@@ -10,7 +10,7 @@ import {
   ChevronRight,
   AlertCircle,
 } from "lucide-react";
-import { cn } from "@/lib/utils/cn";
+import { Input } from "antd";
 import { Spinner } from "@/components/ui/Spinner";
 import { useVariantIndex } from "../hooks/useVariantIndex";
 import { VariantIndexSkeleton } from "./VariantIndexSkeleton";
@@ -20,7 +20,6 @@ import type {
 } from "../types/variantDb";
 import {
   classificationColor,
-  classificationBadgeClasses,
   classificationShortLabel,
 } from "../utils/pathogenicity";
 import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
@@ -32,6 +31,80 @@ const CLASSIFICATION_OPTIONS: { value: ClassificationLevel; label: string }[] = 
   { value: "likely_benign", label: "Likely Benign" },
   { value: "benign", label: "Benign" },
 ];
+
+/* ── Badge style helper (replaces classificationBadgeClasses Tailwind output) ── */
+
+function badgeInlineStyle(level: ClassificationLevel): React.CSSProperties {
+  const color = classificationColor(level);
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    borderRadius: 6,
+    border: `1px solid ${color}40`,
+    padding: "2px 8px",
+    fontSize: 12,
+    fontWeight: 500,
+    fontFamily: "var(--font-mono)",
+    backgroundColor: `${color}18`,
+    color: color,
+  };
+}
+
+/* ── Embedded responsive styles ──────────────────────────── */
+
+const embeddedCSS = `
+.viv-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .viv-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.viv-search-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .viv-search-bar {
+    flex-direction: row;
+    align-items: center;
+  }
+  .viv-disease-filter {
+    width: 192px;
+  }
+}
+.viv-variant-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .viv-variant-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .viv-variant-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.viv-card:hover .viv-gene {
+  color: var(--color-primary-600);
+}
+.viv-filter-pill:hover {
+  border-color: #d1d5db;
+}
+.viv-clear-btn:hover {
+  background-color: #f9fafb;
+}
+.viv-page-btn:hover {
+  background-color: #f9fafb;
+}
+`;
 
 /* ── Stat Card ──────────────────────────────────────────── */
 
@@ -48,21 +121,43 @@ function StatCard({
 }) {
   const accentColor = accent ?? "#0891B2";
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50/60 px-4 py-3">
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      borderRadius: 8,
+      border: "1px solid #f3f4f6",
+      backgroundColor: "rgba(249,250,251,0.6)",
+      padding: "12px 16px",
+    }}>
       <div
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-        style={{ backgroundColor: `${accentColor}1a` }}
+        style={{
+          display: "flex",
+          width: 36,
+          height: 36,
+          flexShrink: 0,
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: 8,
+          backgroundColor: `${accentColor}1a`,
+        }}
       >
-        <Icon className="h-4 w-4" style={{ color: accentColor }} />
+        <Icon style={{ width: 16, height: 16, color: accentColor }} />
       </div>
       <div>
         <p
-          className="font-mono text-lg font-semibold leading-tight"
-          style={{ color: accentColor }}
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: 18,
+            fontWeight: 600,
+            lineHeight: 1.25,
+            color: accentColor,
+            margin: 0,
+          }}
         >
           {typeof value === "number" ? value.toLocaleString() : value}
         </p>
-        <p className="text-xs text-gray-500">{label}</p>
+        <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{label}</p>
       </div>
     </div>
   );
@@ -84,7 +179,7 @@ function CategoryDistributionBar({
   const total = entries.reduce((sum, [, c]) => sum + c, 0);
 
   return (
-    <div className="edb-cat-strip w-full">
+    <div className="edb-cat-strip" style={{ display: "flex", width: "100%" }}>
       {entries.map(([cat, count]) => (
         <span
           key={cat}
@@ -103,36 +198,61 @@ function CategoryDistributionBar({
 
 function VariantCard({ entry }: { entry: VariantIndexEntry }) {
   const borderColor = classificationColor(entry.classificationLevel);
-  const badgeClasses = classificationBadgeClasses(entry.classificationLevel);
 
   return (
     <Link
       to={`/evidence-db/${encodeURIComponent(entry.variantSlug)}`}
-      className="edb-card edb-card-clickable group block rounded-xl overflow-hidden cursor-pointer"
+      className="edb-card edb-card-clickable viv-card"
+      style={{
+        display: "block",
+        borderRadius: 12,
+        overflow: "hidden",
+        cursor: "pointer",
+        textDecoration: "none",
+        color: "inherit",
+      }}
     >
       {/* Pathogenicity accent bar */}
       <div
-        className="h-0.5 w-full"
-        style={{ backgroundColor: borderColor }}
+        style={{ height: 2, width: "100%", backgroundColor: borderColor }}
       />
 
-      <div className="p-4">
+      <div style={{ padding: 16 }}>
         {/* Gene + Variant header */}
-        <div className="mb-2">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h3 className="font-mono text-base font-semibold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+            <div style={{ minWidth: 0 }}>
+              <h3 className="viv-gene" style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 16,
+                fontWeight: 600,
+                color: "#111827",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                transition: "color 0.15s",
+                margin: 0,
+              }}>
                 {entry.gene || "Unknown Gene"}
               </h3>
-              <p className="font-mono text-sm text-gray-500 truncate mt-0.5">
+              <p style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 14,
+                color: "#6b7280",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                marginTop: 2,
+                margin: 0,
+              }}>
                 {entry.variant || "Unknown Variant"}
               </p>
             </div>
             <span
-              className={cn(
-                "shrink-0 inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium font-mono",
-                badgeClasses,
-              )}
+              style={{
+                ...badgeInlineStyle(entry.classificationLevel),
+                flexShrink: 0,
+              }}
             >
               {classificationShortLabel(entry.classificationLevel)}
             </span>
@@ -140,34 +260,50 @@ function VariantCard({ entry }: { entry: VariantIndexEntry }) {
         </div>
 
         {/* Disease + Classification */}
-        <div className="mb-3 space-y-0.5">
+        <div style={{ marginBottom: 12, display: "flex", flexDirection: "column", gap: 2 }}>
           {entry.disease && (
-            <p className="text-sm text-gray-700 truncate">{entry.disease}</p>
+            <p style={{
+              fontSize: 14,
+              color: "#374151",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              margin: 0,
+            }}>
+              {entry.disease}
+            </p>
           )}
-          <p className="text-xs text-gray-500">
+          <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>
             {entry.classification || "No classification"}
           </p>
         </div>
 
         {/* Stats row */}
-        <div className="mb-3 flex items-center gap-4 text-xs text-gray-500">
-          <span className="flex items-center gap-1">
-            <FileText className="h-3.5 w-3.5" />
-            <span className="font-medium text-gray-700">
+        <div style={{
+          marginBottom: 12,
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          fontSize: 12,
+          color: "#6b7280",
+        }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <FileText style={{ width: 14, height: 14 }} />
+            <span style={{ fontWeight: 500, color: "#374151" }}>
               {entry.evidenceGroupCount}
             </span>
             evidence
           </span>
-          <span className="flex items-center gap-1">
-            <BookOpen className="h-3.5 w-3.5" />
-            <span className="font-medium text-gray-700">
+          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <BookOpen style={{ width: 14, height: 14 }} />
+            <span style={{ fontWeight: 500, color: "#374151" }}>
               {entry.literatureCount}
             </span>
             refs
           </span>
-          <span className="flex items-center gap-1">
-            <TrendingUp className="h-3.5 w-3.5" />
-            <span className="font-medium text-gray-700">
+          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <TrendingUp style={{ width: 14, height: 14 }} />
+            <span style={{ fontWeight: 500, color: "#374151" }}>
               {Math.round(entry.avgConfidence * 100)}%
             </span>
             conf.
@@ -191,16 +327,22 @@ function ClassificationFilter({
   onChange: (val?: ClassificationLevel) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
       <button
         type="button"
         onClick={() => onChange(undefined)}
-        className={cn(
-          "cursor-pointer rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
-          !value
-            ? "border-gray-900 bg-gray-900 text-white"
-            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300",
-        )}
+        className="viv-filter-pill"
+        style={{
+          cursor: "pointer",
+          borderRadius: 9999,
+          border: !value ? "1px solid #111827" : "1px solid #e5e7eb",
+          backgroundColor: !value ? "#111827" : "#fff",
+          color: !value ? "#fff" : "#4b5563",
+          padding: "4px 10px",
+          fontSize: 12,
+          fontWeight: 500,
+          transition: "all 0.15s",
+        }}
       >
         All
       </button>
@@ -214,17 +356,18 @@ function ClassificationFilter({
             onClick={() =>
               onChange(value === opt.value ? undefined : opt.value)
             }
-            className={cn(
-              "cursor-pointer rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
-              isActive
-                ? "border-transparent text-white"
-                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300",
-            )}
-            style={
-              isActive
-                ? { backgroundColor: hex }
-                : undefined
-            }
+            className="viv-filter-pill"
+            style={{
+              cursor: "pointer",
+              borderRadius: 9999,
+              border: isActive ? "1px solid transparent" : "1px solid #e5e7eb",
+              backgroundColor: isActive ? hex : "#fff",
+              color: isActive ? "#fff" : "#4b5563",
+              padding: "4px 10px",
+              fontSize: 12,
+              fontWeight: 500,
+              transition: "all 0.15s",
+            }}
           >
             {opt.label}
           </button>
@@ -254,11 +397,16 @@ export function VariantIndexView() {
 
   const totalPages = Math.ceil(total / pageSize);
 
+  const searchText = filters.gene ?? filters.variant ?? "";
+  const hasAnyFilter = !!(filters.gene || filters.variant || filters.disease || filters.classification);
+
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <style>{embeddedCSS}</style>
+
       {/* Hero Stats Section */}
-      <section className="edb-hero rounded-2xl border border-gray-200 p-6">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <section className="edb-hero" style={{ borderRadius: 16, border: "1px solid #e5e7eb", padding: 24 }}>
+        <div className="viv-stats-grid">
           <StatCard
             icon={Dna}
             value={stats.totalVariants}
@@ -287,55 +435,74 @@ export function VariantIndexView() {
       </section>
 
       {/* Search & Filter Bar */}
-      <section className="rounded-xl border border-gray-200 bg-white p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <section style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", padding: 16 }}>
+        <div className="viv-search-bar">
           {/* Text search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
+          <div style={{ flex: 1 }}>
+            <Input
               placeholder="Search by gene or variant..."
-              value={filters.gene ?? filters.variant ?? ""}
+              prefix={<Search style={{ width: 16, height: 16, color: "#9ca3af" }} />}
+              suffix={
+                searchText ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFilter("gene", undefined);
+                      updateFilter("variant", undefined);
+                    }}
+                    style={{
+                      cursor: "pointer",
+                      border: "none",
+                      background: "none",
+                      padding: 2,
+                      color: "#9ca3af",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <X style={{ width: 14, height: 14 }} />
+                  </button>
+                ) : undefined
+              }
+              value={searchText}
               onChange={(e) => {
                 const val = e.target.value;
                 updateFilter("gene", val || undefined);
                 if (val) updateFilter("variant", undefined);
               }}
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-primary-400 focus:bg-white focus:outline-none"
+              allowClear={false}
             />
-            {(filters.gene || filters.variant) && (
-              <button
-                type="button"
-                onClick={() => {
-                  updateFilter("gene", undefined);
-                  updateFilter("variant", undefined);
-                }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 hover:text-gray-700 cursor-pointer"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
           </div>
 
           {/* Disease filter */}
-          <div className="relative sm:w-48">
-            <input
-              type="text"
+          <div className="viv-disease-filter">
+            <Input
               placeholder="Filter by disease..."
               value={filters.disease ?? ""}
               onChange={(e) =>
                 updateFilter("disease", e.target.value || undefined)
               }
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-primary-400 focus:bg-white focus:outline-none"
             />
           </div>
 
           {/* Clear all */}
-          {(filters.gene || filters.variant || filters.disease || filters.classification) && (
+          {hasAnyFilter && (
             <button
               type="button"
               onClick={clearFilters}
-              className="cursor-pointer shrink-0 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              className="viv-clear-btn"
+              style={{
+                cursor: "pointer",
+                flexShrink: 0,
+                borderRadius: 8,
+                border: "1px solid #e5e7eb",
+                padding: "4px 12px",
+                fontSize: 12,
+                fontWeight: 500,
+                color: "#4b5563",
+                backgroundColor: "#fff",
+                transition: "background-color 0.15s",
+              }}
             >
               Clear all
             </button>
@@ -343,7 +510,7 @@ export function VariantIndexView() {
         </div>
 
         {/* Classification filter pills */}
-        <div className="mt-3 pt-3 border-t border-gray-100">
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #f3f4f6" }}>
           <ClassificationFilter
             value={filters.classification}
             onChange={(val) => updateFilter("classification", val)}
@@ -353,42 +520,61 @@ export function VariantIndexView() {
 
       {/* Results */}
       {error ? (
-        <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          <AlertCircle className="h-5 w-5 shrink-0" />
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          borderRadius: 12,
+          border: "1px solid #fecaca",
+          backgroundColor: "#fef2f2",
+          padding: 16,
+          fontSize: 14,
+          color: "#b91c1c",
+        }}>
+          <AlertCircle style={{ width: 20, height: 20, flexShrink: 0 }} />
           <span>Failed to load variant data. Please try again.</span>
         </div>
       ) : isLoading ? (
         <VariantIndexSkeleton />
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 py-20 text-center">
-          <Dna className="h-10 w-10 text-gray-300 mb-3" />
-          <p className="text-sm font-medium text-gray-700">
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: 12,
+          border: "1px dashed #d1d5db",
+          padding: "80px 0",
+          textAlign: "center",
+        }}>
+          <Dna style={{ width: 40, height: 40, color: "#d1d5db", marginBottom: 12 }} />
+          <p style={{ fontSize: 14, fontWeight: 500, color: "#374151", margin: 0 }}>
             No variants found
           </p>
-          <p className="text-xs text-gray-500 mt-1">
+          <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4, margin: 0 }}>
             Try adjusting your search filters
           </p>
         </div>
       ) : (
         <div className="content-fade-in">
           {/* Result count */}
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600">
-              <span className="font-medium text-gray-900">{total}</span>{" "}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <p style={{ fontSize: 14, color: "#4b5563", margin: 0 }}>
+              <span style={{ fontWeight: 500, color: "#111827" }}>{total}</span>{" "}
               variant{total !== 1 ? "s" : ""} found
               {isFetching && (
-                <span className="ml-2 inline-block">
-                  <Spinner className="h-3 w-3 text-primary-600 inline" />
+                <span style={{ marginLeft: 8, display: "inline-block" }}>
+                  <Spinner size="sm" />
                 </span>
               )}
             </p>
-            <p className="text-xs text-gray-500">
+            <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>
               Page {page} of {totalPages || 1}
             </p>
           </div>
 
           {/* Variant Grid */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="viv-variant-grid" style={{ marginTop: 16 }}>
             {items.map((entry, i) => (
               <div
                 key={entry.variantSlug}
@@ -402,53 +588,88 @@ export function VariantIndexView() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-2">
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              paddingTop: 8,
+            }}>
               <button
                 type="button"
                 onClick={() => setPage(page - 1)}
                 disabled={page <= 1}
-                className={cn(
-                  "flex h-9 w-9 items-center justify-center rounded-lg border text-sm transition-colors",
-                  page <= 1
-                    ? "cursor-not-allowed border-gray-100 text-gray-300"
-                    : "cursor-pointer border-gray-200 text-gray-600 hover:bg-gray-50",
-                )}
+                className={page > 1 ? "viv-page-btn" : undefined}
+                style={{
+                  display: "flex",
+                  width: 36,
+                  height: 36,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 8,
+                  border: page <= 1 ? "1px solid #f3f4f6" : "1px solid #e5e7eb",
+                  fontSize: 14,
+                  color: page <= 1 ? "#d1d5db" : "#4b5563",
+                  cursor: page <= 1 ? "not-allowed" : "pointer",
+                  backgroundColor: "#fff",
+                  transition: "background-color 0.15s",
+                }}
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft style={{ width: 16, height: 16 }} />
               </button>
               {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
                 const pageNum = i + 1;
+                const isActive = pageNum === page;
                 return (
                   <button
                     key={pageNum}
                     type="button"
                     onClick={() => setPage(pageNum)}
-                    className={cn(
-                      "flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-medium transition-colors",
-                      pageNum === page
-                        ? "cursor-pointer border-primary-600 bg-primary-600 text-white"
-                        : "cursor-pointer border-gray-200 text-gray-600 hover:bg-gray-50",
-                    )}
+                    className={!isActive ? "viv-page-btn" : undefined}
+                    style={{
+                      display: "flex",
+                      width: 36,
+                      height: 36,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: 8,
+                      border: isActive ? "1px solid var(--color-primary-600)" : "1px solid #e5e7eb",
+                      fontSize: 14,
+                      fontWeight: 500,
+                      backgroundColor: isActive ? "var(--color-primary-600)" : "#fff",
+                      color: isActive ? "#fff" : "#4b5563",
+                      cursor: "pointer",
+                      transition: "background-color 0.15s",
+                    }}
                   >
                     {pageNum}
                   </button>
                 );
               })}
               {totalPages > 7 && (
-                <span className="px-1 text-gray-400">…</span>
+                <span style={{ padding: "0 4px", color: "#9ca3af" }}>&hellip;</span>
               )}
               <button
                 type="button"
                 onClick={() => setPage(page + 1)}
                 disabled={page >= totalPages}
-                className={cn(
-                  "flex h-9 w-9 items-center justify-center rounded-lg border text-sm transition-colors",
-                  page >= totalPages
-                    ? "cursor-not-allowed border-gray-100 text-gray-300"
-                    : "cursor-pointer border-gray-200 text-gray-600 hover:bg-gray-50",
-                )}
+                className={page < totalPages ? "viv-page-btn" : undefined}
+                style={{
+                  display: "flex",
+                  width: 36,
+                  height: 36,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 8,
+                  border: page >= totalPages ? "1px solid #f3f4f6" : "1px solid #e5e7eb",
+                  fontSize: 14,
+                  color: page >= totalPages ? "#d1d5db" : "#4b5563",
+                  cursor: page >= totalPages ? "not-allowed" : "pointer",
+                  backgroundColor: "#fff",
+                  transition: "background-color 0.15s",
+                }}
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight style={{ width: 16, height: 16 }} />
               </button>
             </div>
           )}
