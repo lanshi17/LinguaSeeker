@@ -26,6 +26,18 @@ uv run --project backend python -m benchmark.datasets.parkinson_literature.fetch
 
 The fetcher reuses the backend PubMed acquisition service to resolve PMID metadata and PMCID values, then downloads open-access PMC PDFs when available.
 
+The full acquisition run is stored under `benchmark/data/processed/parkinson_literature/publications_full/`:
+
+| Metric | Count |
+|---|---:|
+| Unique publication PMIDs requested | 598 |
+| PubMed metadata resolved | 584 |
+| PMCID/PDF candidates | 249 |
+| PDFs downloaded | 176 |
+| Not open access / no PMCID | 346 |
+| Download failed | 73 |
+| Metadata missing/error | 3 |
+
 ## Architecture
 
 ```text

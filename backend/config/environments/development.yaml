@@ -31,7 +31,7 @@ embedding:
 
 rerank:
   base_url: "http://localhost:8001/v1"
-  remote_base_url: "https://linxi.chat/v1"
+  remote_base_url: "https://api.siliconflow.cn"
   remote_model: "Qwen/Qwen3-Reranker-0.6B"
 
 # ── Database Connections (Local) ─────────────────────────────────────────
