@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
-import { Outlet } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { ConnectionStatus } from "./ConnectionStatus";
+import { AnimatedOutlet } from "@/components/ui/PageTransition";
 import { useAppStore } from "@/stores/appStore";
 import { cn } from "@/lib/utils/cn";
 
@@ -79,7 +79,7 @@ export function DashboardLayout() {
             "transition-[padding] duration-200",
           )}
         >
-          <div className="mx-auto max-w-7xl"><Outlet /></div>
+          <div className="mx-auto max-w-7xl"><AnimatedOutlet /></div>
         </main>
       </div>
     </div>
