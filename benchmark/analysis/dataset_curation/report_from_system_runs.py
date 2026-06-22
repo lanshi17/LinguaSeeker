@@ -207,16 +207,26 @@ async def _query_extracted_items(session_factory, run_id: str) -> list[Extracted
 async def build_report_from_db(
     vault_path: Path | None = None,
     requested_entry_ids: Sequence[str] | None = None,
+    ground_truth_dir: Path = GROUND_TRUTH_DIR,
+    entry_id_key: str = "clingen",
+    entry_id_pattern: str = r"\b(clingen_\d+)\b",
 ) -> ReportPayload:
-    """Build a report from the best reusable DB run for each mapped ClinGen entry."""
+    """Build a report from the best reusable DB run for each mapped benchmark entry."""
     load_postgres_env_from_vault(vault_path)
     rows = await query_system_run_rows()
-    expected_entry_ids = load_expected_entry_ids()
+    expected_entry_ids = load_expected_entry_ids(ground_truth_dir)
     if requested_entry_ids:
         requested = set(requested_entry_ids)
         expected_entry_ids = [entry_id for entry_id in expected_entry_ids if entry_id in requested]
-    inventory = build_inventory(rows, expected_entry_ids)
-    expected_entries = _load_expected_entries(list(inventory.best_by_entry))
+    inventory = build_inventory(
+        rows,
+        expected_entry_ids,
+        entry_id_key=entry_id_key,
+        entry_id_pattern=entry_id_pattern,
+    )
+    expected_entries = _load_expected_entries(list(inventory.best_by_entry), ground_truth_dir=ground_truth_dir)
+    if not expected_entries:
+        return build_report_payload([], inventory_total_expected=inventory.total_expected)
 
     engine = build_async_engine()
     session_factory = async_session_factory(engine)
@@ -265,9 +275,20 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--vault", type=Path, default=None)
     parser.add_argument("--entries", nargs="+", default=None)
+    parser.add_argument("--ground-truth-dir", type=Path, default=GROUND_TRUTH_DIR)
+    parser.add_argument("--entry-id-key", default="clingen")
+    parser.add_argument("--entry-id-pattern", default=r"\b(clingen_\d+)\b")
     args = parser.parse_args()
 
-    report = asyncio.run(build_report_from_db(args.vault, args.entries))
+    report = asyncio.run(
+        build_report_from_db(
+            args.vault,
+            args.entries,
+            ground_truth_dir=args.ground_truth_dir,
+            entry_id_key=args.entry_id_key,
+            entry_id_pattern=args.entry_id_pattern,
+        )
+    )
     report_path = write_report(report)
     overall = cast(Mapping[str, object], cast(Mapping[str, object], report["aggregates"])["overall"])
     print(

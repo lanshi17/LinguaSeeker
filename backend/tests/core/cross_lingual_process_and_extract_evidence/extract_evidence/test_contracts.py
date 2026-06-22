@@ -111,6 +111,36 @@ def test_evidence_item_found_requires_confidence_in_range():
     assert item.source == source
 
 
+def test_source_location_accepts_references_context_type():
+    source = SourceLocation(
+        span_id="p1",
+        page=1,
+        start_offset=14,
+        end_offset=19,
+        context_type="references",
+        context_ref="References",
+        text_snippet="Rett syndrome",
+        source_precision=SourcePrecision.EXACT,
+    )
+
+    assert source.context_type == "references"
+
+
+def test_source_location_accepts_title_context_type():
+    source = SourceLocation(
+        span_id="p1",
+        page=1,
+        start_offset=0,
+        end_offset=12,
+        context_type="title",
+        context_ref="Title",
+        text_snippet="RSRT MECP2 Collections.",
+        source_precision=SourcePrecision.EXACT,
+    )
+
+    assert source.context_type == "title"
+
+
 def test_evidence_item_rejects_invalid_confidence():
     with pytest.raises(ValidationError):
         EvidenceItem(

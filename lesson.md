@@ -3850,3 +3850,277 @@ backfill Step B 初版误用 `active_payload->>'entity_id'` 解析实体（pre-P
 - 不要急着删一次性迁移脚本——在确认数据库里已无旧值之前保留它。
 - 状态机回归测试应包含"反序列化旧状态"的 fixture，保证枚举收缩时能提前发现历史数据兼容问题。
 
+## 2026-06-21 — RETT benchmark 命令行 import path 复盘
+
+### 问题描述
+
+验证 RETT Phase 2 artifact batch runner 时，从 `backend/` 目录执行 `uv run python -m benchmark.runners.phase2_batch ...` 报 `ModuleNotFoundError: No module named 'benchmark'`。
+
+### 排查过程
+
+1. 确认测试中可以正常导入 `benchmark.*`，说明代码本身和依赖环境可用。
+2. 对比命令执行目录：测试通过 backend pytest 配置把仓库根加入 import path；直接在 `backend/` 下运行模块时，Python 只把 `backend/` 放入 `sys.path`，仓库根的 `benchmark/` 不可见。
+3. 改用 `PYTHONPATH=. uv run --project backend python -m benchmark.runners.phase2_batch ...` 从仓库根执行，dry-run 成功输出 RETT planned rows。
+
+### 根因分析
+
+benchmark 是仓库根目录下的顶层包，不在 `backend/pyproject.toml` 包目录内。使用 backend 的 uv 环境运行顶层 benchmark 模块时，必须显式让仓库根进入 Python import path。
+
+### 解决方案
+
+RETT benchmark 命令统一从仓库根执行，并使用：
+
+```bash
+PYTHONPATH=. uv run --project backend python -m benchmark.<module> ...
+```
+
+### 预防措施
+
+- README/进度记录中的 benchmark 命令应注明仓库根执行方式。
+- 新增 benchmark CLI 时，优先验证 `PYTHONPATH=. uv run --project backend python -m ...` 形式，避免把测试环境路径注入误当成命令行可用性。
+
+
+## 2026-06-21 — evidence/search 500：PostgreSQL 的 `min(uuid)` 不存在
+
+### 问题
+浏览器控制台反复报 `GET /api/v1/evidence/search?page=1&page_size=200 500`。
+直接 curl 端点返回 500（响应体仅 `Internal Server Error`，无详细错误）；
+日志只记 HTTP status，不记 traceback，定位困难。
+
+### 排查过程
+1. 在 backend 目录内写一段独立 asyncio 复现脚本，直接调用 `SearchService.search_evidence()`，捕获并打印完整 traceback。
+2. Traceback 暴露真凶：`asyncpg.exceptions.UndefinedFunctionError: function min(uuid) does not exist`。
+3. 定位到 `search_service.py` 的 Pass 1 查询：`sa_func.min(canonical_evidence_id)`、`sa_func.min(source_document_id)` 两列都是 `UUID(as_uuid=True)`。
+4. 第一次修复：`CAST(array_agg(...) AS UUID[])[1]` → 被 PG 拒绝（`syntax error at or near "["`），因为 cast 表达式本身不能直接下标索引，需要 `(CAST(... AS UUID[]))[1]` 这种带括号的形式，而 SQLAlchemy 默认不会加。
+5. 第二次修复：拆为子查询 —— 内层 `array_agg(col ORDER BY ...)` 返回 UUID[]，外层 `sub.c.col[1]` 取下标。PG 接受。
+6. 随后又踩 `aggregate_order_by` 导入路径（在 `sqlalchemy.dialects.postgresql.ext`，不在 `sqlalchemy.sql.expression`）和 outer SELECT 引用 base-table 表达式导致的 "missing FROM-clause entry"（改用 `sub.c.group_id` 排序）。
+
+### 根因
+`search_service.search_evidence()` 在一次 Pass-1 重构里把原本 in-memory 的 GROUP BY 下沉到 DB，但作者直觉性用了 `sa_func.min(uuid_col)` —— PostgreSQL 没有为 UUID 定义 min/max 聚合。测试 `_FakeResult` mock 也没实现 `scalar_one()`，所以测试同样失败（pre-existing）。
+
+### 解决方案
+**Production（search_service.py）：**
+```python
+inner = select(
+    group_id_expr.label("group_id"),
+    sa_func.count().label("field_count"),
+    sa_func.avg(...).label("avg_confidence"),
+    sa_func.array_agg(
+        aggregate_order_by(canonical_evidence_id, created_at.asc())
+    ).label("canonical_ids"),
+    source_document_id,                  # uniform per group → 加进 GROUP BY
+    sa_func.array_agg(
+        aggregate_order_by(review_status, created_at.asc())
+    ).label("review_statuses"),
+    sa_func.max(created_at).label("created_at"),
+).group_by(group_id_expr, source_document_id).having(...)
+
+sub = inner.subquery()
+page_query = select(
+    sub.c.group_id, sub.c.field_count, sub.c.avg_confidence,
+    sub.c.canonical_ids[1].label("canonical_evidence_id"),
+    sub.c.source_document_id,
+    sub.c.review_statuses[1].label("review_status"),
+    sub.c.created_at,
+).order_by(sub.c.group_id).offset(...).limit(...)
+```
+
+**Test（test_search_service.py）：**
+- `_FakeResult.scalar_one()`：默认返回 `len(self._rows)`，count 查询不再 AttributeError。
+- 把 mock 数据拆为 `page_row`（Pass 1 子查询输出：扁平标量）+ `detail_row`（Pass 2 CEI 对象），按新执行顺序排队。
+
+### 验证
+- `curl /api/v1/evidence/search?page=1&page_size=10` → HTTP 200，total=249，first.gene="Alanyl-tRNA synthetase 1"。
+- `pytest tests/core/visualize_evidence_with_expert_in_loop/test_search_service.py` → 16/16 通过。
+- `pytest tests/core/visualize_evidence_with_expert_in_loop/ tests/api/test_evidence_api.py` → 97/97 通过。
+
+### 预防措施
+1. **写 SQL 聚合前先确认 PG 类型是否支持该聚合** —— `min/max` 不能用在 uuid/jsonb/array 上。
+2. **CAST + 下标的组合在 PG 里需要括号**，SQLAlchemy 默认不会加，遇到时优先用子查询规避。
+3. **SQLAlchemy 2.x 的 PG 特有工具都在 `sqlalchemy.dialects.postgresql.ext`**（`aggregate_order_by`、`array_agg` 的 ORDER BY 写法等），不在顶层 expression。
+4. **HTTP 500 日志只记 status 时，写一段独立复现脚本（asyncio.run + 直连 session）能极快暴露 traceback**，比改日志配置快得多。
+5. **测试 mock 跟不上生产代码时（`scalar_one` 缺失）应立即修复**，否则 pre-existing failure 会掩盖后续回归。
+
+
+## 2026-06-21 — RETT single-entry benchmark smoke run 复盘
+
+### 问题描述
+
+跑 RETT `rett_043` 内部 Phase 2 pipeline smoke benchmark 时，批处理 runner 多次卡住或失败：先是接口鉴权失败，随后本地轮询请求被代理劫持，完成后又因 LLM 真实输出的 `SourceLocation.context_type` 超出契约而导致解析失败。中途杀掉卡住的 uvicorn reload 进程后，还留下了孤儿 active pipeline run。
+
+### 排查过程
+
+1. Phase 2 submit/poll 请求返回鉴权相关失败，确认后端 pipeline API 要求 `X-API-Key`，而 `benchmark.runners.phase2_batch` 原本没有传递 API key。
+2. 给 runner 增加 `--api-key`、配置/env fallback 和 `X-API-Key` 后，轮询本地 `http://127.0.0.1:8000` 仍异常卡住；检查 HTTPX 行为后确认系统代理被用于 localhost 请求。
+3. 增加 localhost/127.0.0.1 代理绕过后，pipeline 能完成，但运行产物中出现 `context_type="references"`，随后又出现 `context_type="title"`；这两个值来自真实 LLM 输出，旧契约只允许更窄的 Literal 集合。
+4. 停止卡住的 uvicorn reload 后，数据库中残留 active pipeline run；用 `SessionBoundStatePersistence.recover_orphaned_runs(heartbeat_timeout_seconds=0)` 恢复。
+5. 运行 shell 命令时发现 `API_KEY=$(...) command --api-key "$API_KEY"` 会在临时赋值生效前展开 `"$API_KEY"`，导致参数仍为空。
+
+### 根因分析
+
+- benchmark runner 没有按生产 API 的鉴权契约传 `X-API-Key`。
+- 本地 benchmark 请求没有显式绕过代理；在存在系统代理变量时，HTTPX 可能把 localhost 请求发向代理。
+- `SourceLocation.context_type` 契约落后于真实模型输出；文献标题、参考文献段落是合理来源位置，不应被解析层拒绝。
+- uvicorn reload/shutdown 与长时间运行的 pipeline task 叠加时，容易留下没有正常终结的 active run，需要显式 orphan recovery。
+- shell 临时环境变量赋值只注入给子进程，不会改变当前 shell 参数展开顺序；同一命令里的 `"$API_KEY"` 会先用旧值。
+
+### 解决方案
+
+- `benchmark/runners/phase2_batch.py` 增加 API key 获取顺序：CLI `--api-key` > benchmark config > `LINGUA_API_KEY`/`API_KEY`，并在 submit 与 poll 请求中发送 `X-API-Key`。
+- 对 `localhost`/`127.0.0.1` base URL 禁用代理，避免本地轮询走系统代理。
+- 扩展 `SourceLocation.context_type`，允许 `"references"` 与 `"title"`。
+- 杀掉卡住的本地 uvicorn 后，运行 orphan recovery 脚本恢复残留 active run。
+- benchmark 命令分两步写：先 `export API_KEY=...`，再执行 `--api-key "$API_KEY"`。
+
+### 预防措施
+
+1. 本地 benchmark runner 也必须遵守生产 API 契约；涉及受保护接口时，测试应覆盖 header 传递和轮询路径。
+2. 所有 localhost HTTP runner 都应显式考虑代理绕过，尤其是在服务器、CI 或带全局代理的开发机上。
+3. LLM 输出契约应根据真实产物快速回填测试，避免严格 Literal 把合理来源段落误判为无效数据。
+4. 杀掉长跑 pipeline 进程后，必须检查并恢复 orphaned runs，避免后续报告误读运行状态。
+5. 需要在同一 shell 片段复用变量时，先 `export`，再执行命令；不要依赖 `VAR=$(...) command "$VAR"` 这种展开顺序。
+
+
+## 2026-06-21 — B0 baseline field-keyed LLM JSON schema drift 复盘
+
+### 问题描述
+
+扩展 RETT smoke benchmark 到 `rett_041` + `rett_043` 后，B0 naive baseline 对 `rett_043` 报错：
+
+```text
+evidence_items.0.field_id
+  Field required
+```
+
+错误输入形态是 `{"A.gene_symbol": {"value": "...", "confidence": "medium"}}`，也就是 LLM 把字段 ID 当作对象 key，而不是按 prompt 要求返回 `{"field_id": "A.gene_symbol", ...}`。扩展到 4 条目后又出现数组元素里同时包含多个字段 key 的形态：`[{"A.gene_symbol": {...}, "B.disease_diagnosis": {...}}]`。
+
+### 排查过程
+
+1. 先确认 baseline report 已写入，但 `rett_043` 状态为 error，会拉低两条目比较可信度。
+2. 查看 `BaselineLLMEvidenceItem` 与 `BaselineLLMResponse`：已有 status/confidence 的漂移兼容，但没有 evidence item 形状兼容。
+3. 对照 prompt：要求 `evidence_items` 数组，每个 item 有 `field_id`；模型输出虽然不合 schema，但语义完整，字段 ID 没丢，只是移到了 key 上。
+4. 增加回归测试：数组内单字段 map、数组内多字段 map、`evidence_items` 整体字段 map。
+5. 在 `BaselineLLMResponse` 的 `model_validator(mode="before")` 做边界 normalization，再重跑 B0。
+
+### 根因分析
+
+- Prompt-only baseline 面向真实 LLM 输出，已有若干 schema drift，但只覆盖了字段值枚举/类型漂移，没有覆盖结构漂移。
+- 模型返回的 field-keyed map 是常见 JSON 压缩表达；如果直接让 Pydantic 子项校验，会在 `BaselineLLMEvidenceItem.field_id` 层失败。
+- 这不是评分逻辑问题，应该在 LLM 响应边界把等价结构归一到内部标准契约。
+
+### 解决方案
+
+- `BaselineLLMResponse.normalize_evidence_items()` 接受三种等价形态：
+  - `{"evidence_items": {"A.gene_symbol": {...}}}`
+  - `{"evidence_items": [{"A.gene_symbol": {...}}]}`
+  - `{"evidence_items": [{"A.gene_symbol": {...}, "B.disease_diagnosis": {...}}]}`
+- helper 仅在所有 key 看起来像 `A.*`/`B.*` 字段 ID 时展开 map，并将 key 写回 `field_id`；其余字段保持原样，继续复用已有 status/confidence validator。
+- 重跑 B0 后 `rett_041`、`rett_043`、`rett_079`、`rett_081` 均 completed，4 条目 B0 F1 更新为 0.3448。
+
+### 预防措施
+
+1. Prompt-only benchmark 的 Pydantic 边界应兼容语义等价的常见 LLM JSON 形态，但 normalization 必须集中在响应边界，不能散落到评分逻辑。
+2. 每次真实 LLM 输出触发 schema drift，都要补最小回归测试，避免同类输出在后续样本中反复失败。
+3. baseline report 若包含 error 条目，只能作为失败诊断使用；用于系统对比前应确认 error 是真实 baseline 失败还是解析器过窄。
+
+
+## 2026-06-21 — zsh `status` 只读变量轮询脚本复盘
+
+### 问题描述
+
+手写 zsh 轮询 pipeline run 状态时使用变量名 `status`，脚本立刻失败：
+
+```text
+zsh: read-only variable: status
+```
+
+### 排查过程
+
+1. 脚本在第一次 curl 前后没有访问业务代码，失败点来自 shell 变量赋值。
+2. zsh 内置 `$status` 表示上一条命令退出码，是只读特殊参数。
+3. 改用 `state` 变量后，同一轮询逻辑正常执行。
+
+### 根因分析
+
+把 bash 常用变量名带到 zsh 中，撞到了 zsh 特殊参数。项目默认 shell 是 zsh，不能假设普通变量名在所有 shell 中都可写。
+
+### 解决方案
+
+轮询脚本变量从 `status` 改为 `state`。
+
+### 预防措施
+
+- 在 zsh 中写临时脚本时避免使用 `status`、`path`、`commands` 等特殊参数名。
+- 需要可移植 shell 片段时，优先使用更具体的变量名，例如 `run_state`、`pipeline_state`。
+
+
+## 2026-06-21 — RETT Phase 2 长尾运行时间复盘
+
+### 问题描述
+
+扩展 RETT benchmark 到 8 条目时，`rett_078` 和 `rett_084` 的 Phase 2 运行时间明显长于前一批短条目：`rett_078` 约 590 秒，`rett_084` 约 800 秒后才接近完成，runner 长时间无 stdout，容易误判为卡死。
+
+### 排查过程
+
+1. runner 无输出时，通过 `/api/v1/pipeline/runs` 查询最新 run 状态，确认 `current_phase=phase_2` 且 `pipeline_status=running`。
+2. 检查 live uvicorn session 输出，看到仍有对 `linxi.chat` 的 LLM 请求与 schema-constrained extraction prompt，说明服务端任务仍在执行而不是进程停止。
+3. 查 `backend/data/pipeline/*/phase_2/extraction_result.json`，确认已完成条目的 Phase 2 artifact 会先落盘，runner 等待的是当前长尾条目的终态。
+4. 没有中断 runner，等待到配置的 `--max-poll-attempts 120 --poll-interval-s 10` 范围内，最终 4 条目 batch 全部 `phase2_completed`。
+
+### 根因分析
+
+- RETT 短条目按 `source.md` 文件大小排序并不完全等价于 Phase 2 runtime；非英语/多语文章会触发格式化、翻译、目录抽取、上下文校验等多轮 LLM 调用。
+- `phase2_batch.py` 当前只在批次结束时输出汇总，中间状态主要依赖 API 轮询，因此长尾条目看起来像“无输出卡住”。
+- runner 判断 Phase 2 完成依赖 artifact/status；即使 downstream Phase 3 还在运行，只要 Phase 2 artifact 出现即可物化并参与离线 ablation。
+
+### 解决方案
+
+- 保持 concurrency=1，避免长尾非英语条目叠加触发模型服务 429 或资源争用。
+- 对长尾条目使用 API 状态轮询和 artifact 文件存在性作为进度证据，不凭 runner stdout 判断是否卡死。
+- 在 8 条目 checkpoint 中记录每个 batch 的 Phase 2 artifact report，便于后续从已完成条目继续扩展。
+
+### 预防措施
+
+1. 后续扩展到全 53 条时应按批次运行，并保留每批的 `phase2_artifact_batch_*.json`，不要一次性提交全量后只看终端输出。
+2. 对长尾条目，先确认 live LLM 请求或 artifact 写入状态，再决定是否中断；中断前要考虑 orphan run recovery。
+3. 如果要长期跑完整 RETT，runner 可以增加 per-entry progress logging，但这属于独立改进，不应阻塞当前 benchmark 数据积累。
+
+
+## 2026-06-21 — zsh 标量变量不会默认按空格拆分
+
+### 问题描述
+
+13 条目 ablation 时，用命令动态生成 entry list：
+
+```bash
+entries=$(find ... | sort | tr '\n' ' ')
+python -m benchmark.analysis.reconcile.ablation --entries $entries --write
+```
+
+终端打印的 `entries=` 看起来正确，但生成的 `reconcile_ablation_20260621_224527.json` 显示 `N=0`。
+
+### 排查过程
+
+1. 打开报告 config，发现 `entry_ids` 只有一个元素：
+   `"rett_004 rett_006 ... rett_085 "`。
+2. 这说明 argparse 收到的是一个包含空格的单一参数，而不是 13 个独立 entry id。
+3. 当前 shell 是 zsh；zsh 默认不会像 bash 那样对未加引号的标量变量做 SH_WORD_SPLIT。
+4. 改用显式 entry 参数重跑后，`reconcile_ablation_20260621_224552.json` 正常得到 `N=13`。
+
+### 根因分析
+
+把 bash 的标量变量拆词习惯带到了 zsh。`$entries` 在 zsh 中保持为一个完整字符串，因此 `--entries` 只收到一个不存在的 entry id，所有条目都被过滤掉。
+
+### 解决方案
+
+本次直接用显式 entry 参数重跑：
+
+```bash
+--entries rett_004 rett_006 rett_033 ... rett_085
+```
+
+### 预防措施
+
+- 在 zsh 中不要依赖 `$scalar` 自动按空格拆词；需要数组时用 zsh 数组，或用 Python/脚本直接传 argv。
+- benchmark 报告生成后先检查 `config.entry_ids` 和 `total_entries`，如果 `N=0` 立即停止，不要拿空报告继续做 comparison。
+- 动态生成大批 entry list 时，优先写一个小 Python wrapper 或让 CLI 支持 `--entries-file`，避免 shell 拆词差异。

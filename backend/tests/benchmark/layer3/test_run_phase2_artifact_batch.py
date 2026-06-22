@@ -9,6 +9,7 @@ import pytest
 
 from benchmark.runners.phase2_batch import (
     Phase2ArtifactBatchConfig,
+    _proxy_for_base_url,
     build_phase2_run_payload,
     load_phase2_batch_entries,
     load_phase2_batch_entries_from_coverage,
@@ -68,6 +69,64 @@ def test_build_phase2_run_payload_includes_traceable_target(tmp_path: Path) -> N
         "variant_hgvs_p": "",
         "clingen_entry_id": "clingen_003",
     }
+
+
+def test_proxy_for_base_url_bypasses_localhost(monkeypatch) -> None:
+    monkeypatch.setattr("benchmark.runners.phase2_batch.load_proxy", lambda: "http://127.0.0.1:7890")
+
+    assert _proxy_for_base_url("http://127.0.0.1:8000") is None
+    assert _proxy_for_base_url("http://localhost:8000") is None
+    assert _proxy_for_base_url("http://backend.internal:8000") == "http://127.0.0.1:7890"
+
+
+@pytest.mark.asyncio
+async def test_run_phase2_artifact_batch_sends_api_key_header(tmp_path: Path) -> None:
+    ground_truth_dir = tmp_path / "ground_truth"
+    pipeline_root = tmp_path / "pipeline"
+    _write_selection(ground_truth_dir)
+    _write_entry(ground_truth_dir, "clingen_003", source_text="A" * 120)
+    artifact_path = pipeline_root / "run-003" / "phase_2" / "extraction_result.json"
+    seen_headers: list[str | None] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen_headers.append(request.headers.get("X-API-Key"))
+        if request.method == "POST":
+            return httpx.Response(
+                202,
+                json={
+                    "processing_run_id": "run-003",
+                    "source_document_id": "source-003",
+                    "status": "accepted",
+                    "status_url": "/api/v1/pipeline/runs/run-003/status",
+                },
+            )
+        artifact_path.parent.mkdir(parents=True)
+        artifact_path.write_text('{"ok": true}', encoding="utf-8")
+        return httpx.Response(
+            200,
+            json={
+                "processing_run_id": "run-003",
+                "source_document_id": "source-003",
+                "pipeline_status": "running",
+                "current_phase": "phase_3",
+                "phases": {"phase_2": {"status": "completed"}},
+            },
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        await run_phase2_artifact_batch(
+            Phase2ArtifactBatchConfig(
+                ground_truth_dir=ground_truth_dir,
+                pipeline_root=pipeline_root,
+                entry_ids=("clingen_003",),
+                api_key="secret-key",
+                poll_interval_s=0,
+                max_poll_attempts=2,
+            ),
+            client=client,
+        )
+
+    assert seen_headers == ["secret-key", "secret-key"]
 
 
 def test_load_phase2_batch_entries_from_coverage_uses_only_missing_pipeline_rows(tmp_path: Path) -> None:

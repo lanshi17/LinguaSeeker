@@ -1,0 +1,106 @@
+{
+  "evaluation_id": "reconcile_ablation_20260621_224527",
+  "timestamp": "2026-06-21T22:45:27",
+  "config": {
+    "ground_truth_dir": "benchmark/data/ground_truth/rett",
+    "entry_ids": [
+      "rett_004 rett_006 rett_033 rett_034 rett_041 rett_043 rett_078 rett_079 rett_080 rett_081 rett_082 rett_084 rett_085 "
+    ],
+    "limit": null,
+    "report_path": "benchmark/data/reports/reconcile/reconcile_ablation_20260621_224527.json"
+  },
+  "strategies": [
+    {
+      "strategy": "dual_union",
+      "total_entries": 0,
+      "status_counts": {},
+      "aggregates": {
+        "overall": {
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "over_extractions": 0,
+          "entity_standardization_accuracy": 0.0,
+          "cross_lingual_consistency": 0.0
+        },
+        "by_field": {},
+        "by_classification": {},
+        "by_moi": {},
+        "by_entity_type": {}
+      },
+      "per_entry": []
+    },
+    {
+      "strategy": "grounded_hard_rule",
+      "total_entries": 0,
+      "status_counts": {},
+      "aggregates": {
+        "overall": {
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "over_extractions": 0,
+          "entity_standardization_accuracy": 0.0,
+          "cross_lingual_consistency": 0.0
+        },
+        "by_field": {},
+        "by_classification": {},
+        "by_moi": {},
+        "by_entity_type": {}
+      },
+      "per_entry": []
+    },
+    {
+      "strategy": "source_grounded_reconcile",
+      "total_entries": 0,
+      "status_counts": {},
+      "aggregates": {
+        "overall": {
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "over_extractions": 0,
+          "entity_standardization_accuracy": 0.0,
+          "cross_lingual_consistency": 0.0
+        },
+        "by_field": {},
+        "by_classification": {},
+        "by_moi": {},
+        "by_entity_type": {}
+      },
+      "per_entry": []
+    },
+    {
+      "strategy": "context_verifier_reconcile",
+      "total_entries": 0,
+      "status_counts": {},
+      "aggregates": {
+        "overall": {
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "over_extractions": 0,
+          "entity_standardization_accuracy": 0.0,
+          "cross_lingual_consistency": 0.0
+        },
+        "by_field": {},
+        "by_classification": {},
+        "by_moi": {},
+        "by_entity_type": {}
+      },
+      "per_entry": []
+    }
+  ]
+}

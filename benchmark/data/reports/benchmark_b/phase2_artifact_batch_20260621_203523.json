@@ -1,0 +1,22 @@
+{
+  "total_entries": 1,
+  "planned_count": 0,
+  "completed_count": 0,
+  "failed_count": 1,
+  "rows": [
+    {
+      "entry_id": "rett_043",
+      "status": "already_running",
+      "processing_run_id": null,
+      "source_document_id": null,
+      "status_url": null,
+      "phase2_status": null,
+      "pipeline_status": null,
+      "current_phase": null,
+      "artifact_path": null,
+      "artifact_exists": false,
+      "duration_s": 0.01,
+      "message": "{\"error\":{\"code\":\"CONFLICT\",\"message\":\"A pipeline run is already in progress for this source: rett_043.md|gene=MECP2|disease=rett syndrome|variant_p=|clingen=rett_043\"},\"request_id\":\"7e72a446-7fa7-42c2-9e86-1798d0bb777a\"}"
+    }
+  ]
+}

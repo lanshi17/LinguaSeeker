@@ -1,0 +1,32 @@
+{
+  "rows": [
+    {
+      "label": "SYSTEM",
+      "report_path": "benchmark/data/reports/reconcile/reconcile_ablation_20260621_224552.json",
+      "total_entries": 13,
+      "precision": 0.75,
+      "recall": 0.6045,
+      "f1": 0.6694,
+      "adjusted": false,
+      "repaired_missing_entries": 0,
+      "matched_to_system_entries": false,
+      "missing_system_entry_ids": [],
+      "extra_baseline_entry_ids": [],
+      "warning": ""
+    },
+    {
+      "label": "B0",
+      "report_path": "benchmark/data/reports/baselines/baseline_b0_20260621_224751.json",
+      "total_entries": 13,
+      "precision": 1.0,
+      "recall": 0.2437,
+      "f1": 0.392,
+      "adjusted": false,
+      "repaired_missing_entries": 0,
+      "matched_to_system_entries": true,
+      "missing_system_entry_ids": [],
+      "extra_baseline_entry_ids": [],
+      "warning": ""
+    }
+  ]
+}
