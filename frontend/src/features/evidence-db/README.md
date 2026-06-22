@@ -104,7 +104,7 @@ Routing is handled by `EvidenceDbPage` (`src/pages/EvidenceDbPage.tsx`), which r
 |----------|-------------|
 | `classifyLevel(classification)` | Maps classification string → `ClassificationLevel` |
 | `classificationColor(level)` | Hex color for dark-theme rendering |
-| `classificationBadgeClasses(level)` | Tailwind classes for badge (bg, border, text) |
+| `classificationBadgeStyle(level)` | Inline CSS style object for badge (bg, text, border) — used in VariantIndexView/VariantDetailView |
 | `classificationLabel(level)` / `classificationShortLabel(level)` | Human-readable / abbreviated labels |
 | `aggregateVariants(results)` | Groups flat `EvidenceSearchResult[]` → `VariantIndexEntry[]` |
 | `filterAndPaginateVariants(entries, filters)` | Applies filters + pagination → `VariantIndexData` |
@@ -119,7 +119,7 @@ The evidence DB uses a light theme matching the dashboard's "Accessible & Ethica
 - Evidence categories A–J: each has a hex color (defined in `@/features/evidence-search/utils/evidenceDocument.ts` `CATEGORY_COLORS`)
 - CSS utilities: `.edb-hero` (teal-tinted gradient), `.edb-card` (white card), `.edb-card-clickable` (teal hover), `.edb-ring` (confidence ring), `.edb-cat-strip`, `.edb-scroll`, `.edb-stagger` (defined in `src/globals.css`)
 
-**Highlight rendering (L3):** Category marks use `categoryMarkStyle()` Tailwind classes (e.g., `bg-amber-200 text-amber-950 ring-1 ring-amber-300`) designed for light backgrounds. Selected evidence gets a `ring-primary-500` focus ring.
+**Highlight rendering (L3):** Category marks use inline style objects from `categoryMarkStyle()` (e.g., amber bg/text/border) designed for light backgrounds. Selected evidence gets a teal `borderColor` focus ring.
 
 ## Dependencies
 
