@@ -4191,3 +4191,5 @@ python -m benchmark.analysis.reconcile.ablation --entries $entries --write
 **Solution**: The fetcher now records per-entry statuses instead of aborting: `not_open_access`, `download_failed`, and `metadata_error`. It tries EuropePMC `https://europepmc.org/articles/{PMCID}?pdf=render` first, then NCBI `https://www.ncbi.nlm.nih.gov/pmc/articles/{PMCID}/pdf/`, and records warning details for failed URLs.
 
 **Prevention**: All dataset-scale literature downloads should write a manifest even when zero PDFs are downloaded. Treat every network/provider failure as a row-level status unless the input manifest itself is unreadable.
+
+**Follow-up observation**: The full 598-PMID Parkinson acquisition ran for roughly tens of minutes and only wrote the manifest at the end. It completed successfully, but this is fragile for larger batches. Future download runners should append/update manifests incrementally after each row or small batch so long external runs are resumable after interruption.
