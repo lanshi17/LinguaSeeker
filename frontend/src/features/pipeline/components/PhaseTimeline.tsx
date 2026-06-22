@@ -1,62 +1,75 @@
-
+import type { CSSProperties } from "react";
 import type { PhaseTimelineStep } from "../types/pipeline";
-import { cn } from "@/lib/utils/cn";
 
 interface PhaseTimelineProps {
   steps: PhaseTimelineStep[];
 }
 
-const statusStyles: Record<string, string> = {
-  pending: "bg-gray-200 text-gray-500",
-  running: "bg-primary-100 text-primary-700 animate-pulse",
-  completed: "bg-success-100 text-success-700",
-  failed: "bg-red-100 text-red-700",
-  skipped: "bg-gray-100 text-gray-400",
+const STATUS_STYLES: Record<string, CSSProperties> = {
+  pending: { backgroundColor: "#e5e7eb", color: "#6b7280" },
+  running: { backgroundColor: "var(--color-primary-100)", color: "var(--color-primary-700)", animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite" },
+  completed: { backgroundColor: "var(--color-success-100)", color: "var(--color-success-700)" },
+  failed: { backgroundColor: "#fee2e2", color: "#b91c1c" },
+  skipped: { backgroundColor: "#f3f4f6", color: "#9ca3af" },
 };
 
-const connectorStyles: Record<string, string> = {
-  completed: "bg-success-400",
-  default: "bg-gray-200",
+const CONNECTOR_COLORS: Record<string, string> = {
+  completed: "var(--color-success-400)",
+  default: "#e5e7eb",
 };
 
 export function PhaseTimeline({ steps }: PhaseTimelineProps) {
   return (
-    <div className="flex items-center gap-0 overflow-x-auto px-2">
-      {steps.map((step, i) => (
-        <div key={step.phaseId} className="flex items-center">
-          {/* Phase node */}
-          <div className="flex flex-col items-center">
-            <div
-              className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold",
-                statusStyles[step.status] ?? statusStyles.pending,
-              )}
-            >
-              {i + 1}
-            </div>
-            <span className="mt-2 text-xs font-medium text-gray-600">
-              {step.label}
-            </span>
-            {step.duration != null && (
-              <span className="mt-0.5 text-xs text-gray-400">
-                {step.duration.toFixed(1)}s
+    <div style={{ display: "flex", alignItems: "center", gap: 0, overflowX: "auto", padding: "0 8px" }}>
+      {steps.map((step, i) => {
+        const nodeStyle = STATUS_STYLES[step.status] ?? STATUS_STYLES.pending;
+        const connectorColor = step.status === "completed"
+          ? CONNECTOR_COLORS.completed
+          : CONNECTOR_COLORS.default;
+
+        return (
+          <div key={step.phaseId} style={{ display: "flex", alignItems: "center" }}>
+            {/* Phase node */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div
+                style={{
+                  display: "flex",
+                  width: 40,
+                  height: 40,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "50%",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  ...nodeStyle,
+                }}
+              >
+                {i + 1}
+              </div>
+              <span style={{ marginTop: 8, fontSize: 12, fontWeight: 500, color: "#4b5563" }}>
+                {step.label}
               </span>
+              {step.duration != null && (
+                <span style={{ marginTop: 2, fontSize: 12, color: "#9ca3af" }}>
+                  {step.duration.toFixed(1)}s
+                </span>
+              )}
+            </div>
+
+            {/* Connector line */}
+            {i < steps.length - 1 && (
+              <div
+                style={{
+                  margin: "0 8px",
+                  height: 2,
+                  width: 64,
+                  backgroundColor: connectorColor,
+                }}
+              />
             )}
           </div>
-
-          {/* Connector line */}
-          {i < steps.length - 1 && (
-            <div
-              className={cn(
-                "mx-2 h-0.5 w-16",
-                step.status === "completed"
-                  ? connectorStyles.completed
-                  : connectorStyles.default,
-              )}
-            />
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

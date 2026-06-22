@@ -1,4 +1,3 @@
-
 import {
   ChevronLeft,
   ChevronRight,
@@ -71,6 +70,29 @@ function literatureTitle(row: LiteratureEvidenceRow) {
   return row.title?.trim() || "Untitled literature record";
 }
 
+const TONE_STYLES: Record<string, React.CSSProperties> = {
+  primary: {
+    borderColor: "rgba(165, 243, 252, 0.6)",
+    backgroundColor: "rgba(236, 254, 255, 0.8)",
+    color: "var(--color-primary-800, #155e75)",
+  },
+  success: {
+    borderColor: "rgba(187, 247, 208, 0.6)",
+    backgroundColor: "rgba(240, 253, 244, 0.8)",
+    color: "var(--color-success-800, #166534)",
+  },
+  amber: {
+    borderColor: "rgba(253, 230, 138, 0.6)",
+    backgroundColor: "rgba(255, 251, 235, 0.8)",
+    color: "#92400e",
+  },
+  gray: {
+    borderColor: "#e5e7eb",
+    backgroundColor: "#f9fafb",
+    color: "#374151",
+  },
+};
+
 function TokenList({
   values,
   tone,
@@ -80,29 +102,50 @@ function TokenList({
 }) {
   const visible = values.slice(0, 3);
   const hiddenCount = Math.max(0, values.length - visible.length);
-  const toneClass = {
-    primary: "border-primary-200/60 bg-primary-50/80 text-primary-800",
-    success: "border-success-200/60 bg-success-50/80 text-success-800",
-    amber: "border-amber-200/60 bg-amber-50/80 text-amber-800",
-    gray: "border-gray-200 bg-gray-50 text-gray-700",
-  }[tone];
+  const toneStyle = TONE_STYLES[tone];
 
   if (values.length === 0) {
-    return <span className="text-sm text-gray-400">\u2014</span>;
+    return <span style={{ fontSize: 14, color: "#9ca3af" }}>{"\u2014"}</span>;
   }
 
   return (
-    <div className="flex min-w-0 flex-wrap gap-1.5" title={joinedLabel(values)}>
+    <div
+      style={{ display: "flex", minWidth: 0, flexWrap: "wrap", gap: 6 }}
+      title={joinedLabel(values)}
+    >
       {visible.map((value) => (
         <span
           key={value}
-          className={`max-w-[12rem] truncate rounded-md border px-2 py-0.5 text-xs font-medium shadow-sm ${toneClass}`}
+          style={{
+            maxWidth: "12rem",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            borderRadius: 6,
+            border: "1px solid",
+            padding: "2px 8px",
+            fontSize: 12,
+            fontWeight: 500,
+            boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+            ...toneStyle,
+          }}
         >
           {value}
         </span>
       ))}
       {hiddenCount > 0 && (
-        <span className="rounded-md border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-500 shadow-sm">
+        <span
+          style={{
+            borderRadius: 6,
+            border: "1px solid #e5e7eb",
+            backgroundColor: "#fff",
+            padding: "2px 8px",
+            fontSize: 12,
+            fontWeight: 500,
+            color: "#6b7280",
+            boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+          }}
+        >
           +{hiddenCount}
         </span>
       )}
@@ -115,15 +158,25 @@ function StatBadge({
   value,
   label,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ style?: React.CSSProperties }>;
   value: string | number;
   label: string;
 }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-md bg-gray-50 px-2 py-1 text-xs">
-      <Icon className="h-3.5 w-3.5 text-gray-400" />
-      <span className="font-medium text-gray-700">{value}</span>
-      <span className="text-gray-500">{label}</span>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        borderRadius: 6,
+        backgroundColor: "#f9fafb",
+        padding: "4px 8px",
+        fontSize: 12,
+      }}
+    >
+      <Icon style={{ width: 14, height: 14, color: "#9ca3af" }} />
+      <span style={{ fontWeight: 500, color: "#374151" }}>{value}</span>
+      <span style={{ color: "#6b7280" }}>{label}</span>
     </div>
   );
 }
@@ -148,10 +201,24 @@ export function EvidenceResultsTable({
 
   if (rows.length === 0) {
     return (
-      <div className="relative overflow-hidden rounded-xl border border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-white px-6 py-16 text-center">
+      <div
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          borderRadius: 12,
+          border: "1px dashed #d1d5db",
+          background: "linear-gradient(to bottom right, #f9fafb, #fff)",
+          padding: "64px 24px",
+          textAlign: "center",
+        }}
+      >
         {/* Decorative background */}
-        <div className="absolute inset-0 opacity-[0.03]">
-          <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <div style={{ position: "absolute", inset: 0, opacity: 0.03 }}>
+          <svg
+            style={{ width: "100%", height: "100%" }}
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+          >
             <defs>
               <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
                 <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" strokeWidth="0.5" />
@@ -160,14 +227,26 @@ export function EvidenceResultsTable({
             <rect width="100" height="100" fill="url(#grid)" />
           </svg>
         </div>
-        <div className="relative">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-100 to-primary-50 shadow-inner">
-            <Search className="h-8 w-8 text-primary-500" />
+        <div style={{ position: "relative" }}>
+          <div
+            style={{
+              margin: "0 auto",
+              display: "flex",
+              height: 64,
+              width: 64,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 16,
+              background: "linear-gradient(to bottom right, var(--color-primary-100, #cffafe), var(--color-primary-50, #ecfeff))",
+              boxShadow: "inset 0 2px 4px 0 rgba(0,0,0,0.05)",
+            }}
+          >
+            <Search style={{ width: 32, height: 32, color: "var(--color-primary-500, #06b6d4)" }} />
           </div>
-          <p className="mt-5 text-base font-semibold text-gray-900">
+          <p style={{ marginTop: 20, fontSize: 16, fontWeight: 600, color: "#111827" }}>
             No literature matched this search
           </p>
-          <p className="mt-2 max-w-sm text-sm text-gray-500">
+          <p style={{ marginTop: 8, maxWidth: 384, margin: "8px auto 0", fontSize: 14, color: "#6b7280" }}>
             Try adjusting the gene, variant, disease, or PMID filters to broaden your search criteria.
           </p>
         </div>
@@ -175,203 +254,443 @@ export function EvidenceResultsTable({
     );
   }
 
+  const paginationBtnStyle: React.CSSProperties = {
+    display: "flex",
+    height: 32,
+    width: 32,
+    cursor: "pointer",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 6,
+    color: "#4b5563",
+    border: "none",
+    background: "transparent",
+    transition: "all 0.15s",
+  };
+
+  const paginationBtnDisabledStyle: React.CSSProperties = {
+    ...paginationBtnStyle,
+    cursor: "not-allowed",
+    opacity: 0.3,
+  };
+
   return (
-    <div className="content-fade-in space-y-4">
-      {/* Results header with stats and pagination */}
-      <div className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50">
-            <Database className="h-5 w-5 text-primary-600" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-900">
-              {rows.length} literature row{rows.length !== 1 ? "s" : ""}
-            </p>
-            <p className="mt-0.5 text-xs text-gray-500">
-              {total} evidence group{total !== 1 ? "s" : ""} total
-              <span className="mx-1.5 text-gray-300">·</span>
-              Showing {startItem}&ndash;{endItem}
-            </p>
-          </div>
-        </div>
-
-        {/* Modern pagination */}
-        <div className="flex items-center gap-1.5 rounded-lg bg-gray-50 p-1">
-          <button
-            onClick={() => onPageChange?.(page - 1)}
-            disabled={page <= 1}
-            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-gray-600 transition-all hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:shadow-none"
-            aria-label="Previous page"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <div className="flex h-8 min-w-[4rem] items-center justify-center rounded-md bg-white px-3 shadow-sm">
-            <span className="text-sm font-medium text-gray-900">
-              {page}
-            </span>
-            <span className="mx-1 text-gray-400">/</span>
-            <span className="text-sm text-gray-500">
-              {totalPages}
-            </span>
-          </div>
-          <button
-            onClick={() => onPageChange?.(page + 1)}
-            disabled={page >= totalPages}
-            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-gray-600 transition-all hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:shadow-none"
-            aria-label="Next page"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile cards */}
-      <div className="space-y-3 md:hidden">
-        {rows.map((row, index) => (
-          <button
-            key={row.documentId}
-            type="button"
-            onClick={() => onRowClick?.(row)}
-            className="group w-full cursor-pointer rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-all hover:border-primary-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary-500"
-            style={{ animationDelay: `${index * 50}ms` }}
-          >
-            <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-100 to-primary-50 text-primary-700 shadow-sm transition-transform group-hover:scale-105">
-                <FileText className="h-5 w-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 text-sm font-semibold leading-5 text-gray-950 group-hover:text-primary-700">
-                  {literatureTitle(row)}
-                </p>
-                <p className="mt-1 truncate font-mono text-xs text-gray-400">
-                  {row.documentId.slice(0, 8)}...
-                </p>
-              </div>
-              <Badge variant={STATUS_VARIANT[row.reviewStatus] ?? "info"}>
-                {row.reviewStatus}
-              </Badge>
+    <>
+      <style>{`
+        .edb-results-header {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        @media (min-width: 640px) {
+          .edb-results-header {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+          }
+        }
+        .edb-mobile-cards { display: block; }
+        .edb-desktop-table { display: none; }
+        @media (min-width: 768px) {
+          .edb-mobile-cards { display: none; }
+          .edb-desktop-table { display: block; }
+        }
+        .edb-line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .edb-line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .edb-card {
+          width: 100%;
+          cursor: pointer;
+          border-radius: 12px;
+          border: 1px solid #e5e7eb;
+          background: #fff;
+          padding: 16px;
+          text-align: left;
+          box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+          transition: all 0.15s;
+        }
+        .edb-card:hover {
+          border-color: var(--color-primary-200, #a5f3fc);
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .edb-card:focus-visible {
+          outline: 2px solid var(--color-primary-500, #06b6d4);
+          outline-offset: 0;
+        }
+        .edb-card:hover .edb-card-title {
+          color: var(--color-primary-700, #0e7490);
+        }
+        .edb-card:hover .edb-card-icon {
+          transform: scale(1.05);
+        }
+        .edb-table-row {
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+        .edb-table-row:hover {
+          background: linear-gradient(to right, rgba(236, 254, 255, 0.6), transparent);
+        }
+        .edb-table-row:focus-visible {
+          outline: 2px solid var(--color-primary-500, #06b6d4);
+          outline-offset: -2px;
+        }
+        .edb-table-row:hover .edb-row-title {
+          color: var(--color-primary-700, #0e7490);
+        }
+        .edb-table-row:hover .edb-row-icon {
+          transform: scale(1.05);
+        }
+      `}</style>
+      <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {/* Results header with stats and pagination */}
+        <div
+          className="edb-results-header"
+          style={{
+            borderRadius: 12,
+            border: "1px solid #e5e7eb",
+            backgroundColor: "#fff",
+            padding: "16px 20px",
+            boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div
+              style={{
+                display: "flex",
+                height: 40,
+                width: 40,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 8,
+                backgroundColor: "var(--color-primary-50, #ecfeff)",
+              }}
+            >
+              <Database style={{ width: 20, height: 20, color: "var(--color-primary-600, #0891b2)" }} />
             </div>
-            <div className="mt-4 space-y-3">
-              <div className="flex flex-wrap gap-2 text-xs text-gray-500">
-                <span className="rounded bg-gray-100 px-1.5 py-0.5">PMID {row.pmid ?? "\u2014"}</span>
-                <span className="rounded bg-gray-100 px-1.5 py-0.5">DOI {row.doi ?? "\u2014"}</span>
-              </div>
-              <TokenList values={row.genes} tone="primary" />
-              <TokenList values={row.variants} tone="success" />
-              <p className="line-clamp-2 text-sm text-gray-700">
-                {joinedLabel(row.diseases)}
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
+                {rows.length} literature row{rows.length !== 1 ? "s" : ""}
+              </p>
+              <p style={{ marginTop: 2, fontSize: 12, color: "#6b7280" }}>
+                {total} evidence group{total !== 1 ? "s" : ""} total
+                <span style={{ margin: "0 6px", color: "#d1d5db" }}>·</span>
+                Showing {startItem}&ndash;{endItem}
               </p>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-3">
-              <StatBadge icon={Layers3} value={row.groupCount} label="groups" />
-              <StatBadge icon={BarChart3} value={row.fieldCount} label="fields" />
-              <StatBadge icon={Calendar} value={formatDate(row.createdAt)} label="" />
-            </div>
-          </button>
-        ))}
-      </div>
+          </div>
 
-      {/* Desktop table */}
-      <div className="hidden overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm md:block">
-        <table className="w-full table-fixed text-sm">
-          <thead>
-            <tr className="border-b border-gray-200 bg-gradient-to-r from-gray-50 via-gray-50 to-gray-50/50">
-              <th className="w-[20%] px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Literature
-              </th>
-              <th className="w-[18%] px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Evidence Focus
-              </th>
-              <th className="w-[16%] px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Disease
-              </th>
-              <th className="w-[14%] px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Classification
-              </th>
-              <th className="w-[10%] px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Created
-              </th>
-              <th className="w-[10%] px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Review
-              </th>
-              <th className="w-[8%] px-4 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Fields
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {rows.map((row) => (
-              <tr
-                key={row.documentId}
-                role={onRowClick ? "link" : undefined}
-                tabIndex={onRowClick ? 0 : undefined}
-                aria-label={`Open literature evidence ${row.title ?? row.pmid ?? row.documentId}`}
-                onClick={() => onRowClick?.(row)}
-                onKeyDown={(e) => {
-                  if (onRowClick && (e.key === "Enter" || e.key === " ")) {
-                    e.preventDefault();
-                    onRowClick(row);
-                  }
+          {/* Modern pagination */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              borderRadius: 8,
+              backgroundColor: "#f9fafb",
+              padding: 4,
+            }}
+          >
+            <button
+              onClick={() => onPageChange?.(page - 1)}
+              disabled={page <= 1}
+              style={page <= 1 ? paginationBtnDisabledStyle : paginationBtnStyle}
+              aria-label="Previous page"
+            >
+              <ChevronLeft style={{ width: 16, height: 16 }} />
+            </button>
+            <div
+              style={{
+                display: "flex",
+                height: 32,
+                minWidth: "4rem",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 6,
+                backgroundColor: "#fff",
+                padding: "0 12px",
+                boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+              }}
+            >
+              <span style={{ fontSize: 14, fontWeight: 500, color: "#111827" }}>
+                {page}
+              </span>
+              <span style={{ margin: "0 4px", color: "#9ca3af" }}>/</span>
+              <span style={{ fontSize: 14, color: "#6b7280" }}>
+                {totalPages}
+              </span>
+            </div>
+            <button
+              onClick={() => onPageChange?.(page + 1)}
+              disabled={page >= totalPages}
+              style={page >= totalPages ? paginationBtnDisabledStyle : paginationBtnStyle}
+              aria-label="Next page"
+            >
+              <ChevronRight style={{ width: 16, height: 16 }} />
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile cards */}
+        <div className="edb-mobile-cards" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {rows.map((row, index) => (
+            <button
+              key={row.documentId}
+              type="button"
+              onClick={() => onRowClick?.(row)}
+              className="edb-card"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <span
+                  className="edb-card-icon"
+                  style={{
+                    display: "flex",
+                    height: 44,
+                    width: 44,
+                    flexShrink: 0,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 8,
+                    background: "linear-gradient(to bottom right, var(--color-primary-100, #cffafe), var(--color-primary-50, #ecfeff))",
+                    color: "var(--color-primary-700, #0e7490)",
+                    boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+                    transition: "transform 0.15s",
+                  }}
+                >
+                  <FileText style={{ width: 20, height: 20 }} />
+                </span>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <p
+                    className="edb-card-title edb-line-clamp-2"
+                    style={{ fontSize: 14, fontWeight: 600, lineHeight: "20px", color: "#030712", transition: "color 0.15s" }}
+                  >
+                    {literatureTitle(row)}
+                  </p>
+                  <p
+                    style={{
+                      marginTop: 4,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      fontFamily: "monospace",
+                      fontSize: 12,
+                      color: "#9ca3af",
+                    }}
+                  >
+                    {row.documentId.slice(0, 8)}...
+                  </p>
+                </div>
+                <Badge variant={STATUS_VARIANT[row.reviewStatus] ?? "info"}>
+                  {row.reviewStatus}
+                </Badge>
+              </div>
+              <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 12, color: "#6b7280" }}>
+                  <span style={{ borderRadius: 4, backgroundColor: "#f3f4f6", padding: "2px 6px" }}>
+                    PMID {row.pmid ?? "\u2014"}
+                  </span>
+                  <span style={{ borderRadius: 4, backgroundColor: "#f3f4f6", padding: "2px 6px" }}>
+                    DOI {row.doi ?? "\u2014"}
+                  </span>
+                </div>
+                <TokenList values={row.genes} tone="primary" />
+                <TokenList values={row.variants} tone="success" />
+                <p className="edb-line-clamp-2" style={{ fontSize: 14, color: "#374151" }}>
+                  {joinedLabel(row.diseases)}
+                </p>
+              </div>
+              <div
+                style={{
+                  marginTop: 16,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 8,
+                  borderTop: "1px solid #f3f4f6",
+                  paddingTop: 12,
                 }}
-                className="group cursor-pointer transition-all duration-150 hover:bg-gradient-to-r hover:from-primary-50/60 hover:to-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-inset"
               >
-                <td className="px-4 py-4 align-top">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-100 to-primary-50 text-primary-700 shadow-sm transition-transform group-hover:scale-105">
-                      <FileText className="h-4.5 w-4.5" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="line-clamp-2 text-sm font-semibold leading-5 text-gray-950 group-hover:text-primary-700">
-                        {literatureTitle(row)}
-                      </p>
-                      <p className="mt-1 truncate font-mono text-xs text-gray-400">
-                        {row.documentId.slice(0, 8)}...
-                      </p>
-                      <div className="mt-1.5 flex items-center gap-2 text-xs text-gray-500">
-                        <span className="rounded bg-gray-100 px-1.5 py-0.5 font-medium">
-                          PMID {row.pmid ?? "\u2014"}
-                        </span>
+                <StatBadge icon={Layers3} value={row.groupCount} label="groups" />
+                <StatBadge icon={BarChart3} value={row.fieldCount} label="fields" />
+                <StatBadge icon={Calendar} value={formatDate(row.createdAt)} label="" />
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Desktop table */}
+        <div
+          className="edb-desktop-table"
+          style={{
+            overflow: "hidden",
+            borderRadius: 12,
+            border: "1px solid #e5e7eb",
+            backgroundColor: "#fff",
+            boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+          }}
+        >
+          <table style={{ width: "100%", tableLayout: "fixed", fontSize: 14, borderCollapse: "collapse" }}>
+            <thead>
+              <tr
+                style={{
+                  borderBottom: "1px solid #e5e7eb",
+                  background: "linear-gradient(to right, #f9fafb, #f9fafb, rgba(249,250,251,0.5))",
+                }}
+              >
+                <th style={{ width: "20%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
+                  Literature
+                </th>
+                <th style={{ width: "18%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
+                  Evidence Focus
+                </th>
+                <th style={{ width: "16%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
+                  Disease
+                </th>
+                <th style={{ width: "14%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
+                  Classification
+                </th>
+                <th style={{ width: "10%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
+                  Created
+                </th>
+                <th style={{ width: "10%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
+                  Review
+                </th>
+                <th style={{ width: "8%", padding: "14px 16px", textAlign: "right", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
+                  Fields
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr
+                  key={row.documentId}
+                  role={onRowClick ? "link" : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  aria-label={`Open literature evidence ${row.title ?? row.pmid ?? row.documentId}`}
+                  onClick={() => onRowClick?.(row)}
+                  onKeyDown={(e) => {
+                    if (onRowClick && (e.key === "Enter" || e.key === " ")) {
+                      e.preventDefault();
+                      onRowClick(row);
+                    }
+                  }}
+                  className="edb-table-row"
+                  style={{ borderBottom: "1px solid #f3f4f6" }}
+                >
+                  <td style={{ padding: "16px", verticalAlign: "top" }}>
+                    <div style={{ display: "flex", minWidth: 0, alignItems: "flex-start", gap: 12 }}>
+                      <span
+                        className="edb-row-icon"
+                        style={{
+                          display: "flex",
+                          height: 40,
+                          width: 40,
+                          flexShrink: 0,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          borderRadius: 8,
+                          background: "linear-gradient(to bottom right, var(--color-primary-100, #cffafe), var(--color-primary-50, #ecfeff))",
+                          color: "var(--color-primary-700, #0e7490)",
+                          boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+                          transition: "transform 0.15s",
+                        }}
+                      >
+                        <FileText style={{ width: 18, height: 18 }} />
+                      </span>
+                      <div style={{ minWidth: 0 }}>
+                        <p
+                          className="edb-row-title edb-line-clamp-2"
+                          style={{ fontSize: 14, fontWeight: 600, lineHeight: "20px", color: "#030712", transition: "color 0.15s" }}
+                        >
+                          {literatureTitle(row)}
+                        </p>
+                        <p
+                          style={{
+                            marginTop: 4,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            fontFamily: "monospace",
+                            fontSize: 12,
+                            color: "#9ca3af",
+                          }}
+                        >
+                          {row.documentId.slice(0, 8)}...
+                        </p>
+                        <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#6b7280" }}>
+                          <span style={{ borderRadius: 4, backgroundColor: "#f3f4f6", padding: "2px 6px", fontWeight: 500 }}>
+                            PMID {row.pmid ?? "\u2014"}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </td>
-                <td className="space-y-2 px-4 py-4 align-top">
-                  <TokenList values={row.genes} tone="primary" />
-                  <TokenList values={row.variants} tone="success" />
-                </td>
-                <td className="px-4 py-4 align-top">
-                  <p className="line-clamp-3 text-gray-700" title={joinedLabel(row.diseases)}>
-                    {joinedLabel(row.diseases)}
-                  </p>
-                </td>
-                <td className="px-4 py-4 align-top">
-                  <TokenList values={row.classifications} tone="amber" />
-                </td>
-                <td className="px-4 py-4 align-top">
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                    <Calendar className="h-3.5 w-3.5 text-gray-400" />
-                    {formatDate(row.createdAt)}
-                  </div>
-                </td>
-                <td className="px-4 py-4 align-top">
-                  <Badge variant={STATUS_VARIANT[row.reviewStatus] ?? "info"}>
-                    {row.reviewStatus}
-                  </Badge>
-                  <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
-                    <BarChart3 className="h-3 w-3" />
-                    {formatPercent(row.avgConfidence)}
-                  </div>
-                </td>
-                <td className="px-4 py-4 text-right align-top">
-                  <span className="inline-flex h-7 min-w-[1.75rem] items-center justify-center rounded-md bg-gray-100 px-2 text-sm font-semibold text-gray-700">
-                    {row.fieldCount}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                  <td style={{ padding: "16px", verticalAlign: "top" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <TokenList values={row.genes} tone="primary" />
+                      <TokenList values={row.variants} tone="success" />
+                    </div>
+                  </td>
+                  <td style={{ padding: "16px", verticalAlign: "top" }}>
+                    <p
+                      className="edb-line-clamp-3"
+                      style={{ color: "#374151" }}
+                      title={joinedLabel(row.diseases)}
+                    >
+                      {joinedLabel(row.diseases)}
+                    </p>
+                  </td>
+                  <td style={{ padding: "16px", verticalAlign: "top" }}>
+                    <TokenList values={row.classifications} tone="amber" />
+                  </td>
+                  <td style={{ padding: "16px", verticalAlign: "top" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#6b7280" }}>
+                      <Calendar style={{ width: 14, height: 14, color: "#9ca3af" }} />
+                      {formatDate(row.createdAt)}
+                    </div>
+                  </td>
+                  <td style={{ padding: "16px", verticalAlign: "top" }}>
+                    <Badge variant={STATUS_VARIANT[row.reviewStatus] ?? "info"}>
+                      {row.reviewStatus}
+                    </Badge>
+                    <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#6b7280" }}>
+                      <BarChart3 style={{ width: 12, height: 12 }} />
+                      {formatPercent(row.avgConfidence)}
+                    </div>
+                  </td>
+                  <td style={{ padding: "16px", textAlign: "right", verticalAlign: "top" }}>
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        height: 28,
+                        minWidth: "1.75rem",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 6,
+                        backgroundColor: "#f3f4f6",
+                        padding: "0 8px",
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: "#374151",
+                      }}
+                    >
+                      {row.fieldCount}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,4 +1,5 @@
 import { useSearchParams, Navigate } from "react-router-dom";
+import { Typography } from "antd";
 import { EvidenceDetailView } from "@/features/evidence-search";
 import { BookOpen, Columns2 } from "lucide-react";
 
@@ -14,32 +15,42 @@ export function EvidenceDetailPage() {
 
   const isCompareView = view === "compare";
 
+  const iconStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 48,
+    height: 48,
+    flexShrink: 0,
+    borderRadius: 12,
+    background: isCompareView
+      ? "linear-gradient(to bottom right, #a855f7, #7e22ce)"
+      : "linear-gradient(to bottom right, var(--color-primary-500), var(--color-primary-700))",
+    boxShadow: isCompareView
+      ? "0 4px 6px -1px rgba(168, 85, 247, 0.25)"
+      : "0 4px 6px -1px rgba(6, 182, 212, 0.25)",
+  };
+
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Page header with icon */}
-      <div className="flex items-center gap-4">
-        <div
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-md ${
-            isCompareView
-              ? "bg-gradient-to-br from-purple-500 to-purple-700 shadow-purple-200"
-              : "bg-gradient-to-br from-primary-500 to-primary-700 shadow-primary-200"
-          }`}
-        >
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={iconStyle}>
           {isCompareView ? (
-            <Columns2 className="h-6 w-6 text-white" />
+            <Columns2 size={24} color="#fff" />
           ) : (
-            <BookOpen className="h-6 w-6 text-white" />
+            <BookOpen size={24} color="#fff" />
           )}
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          <Typography.Title level={3} style={{ margin: 0 }}>
             {isCompareView ? "Bilingual Evidence" : "Literature Detail"}
-          </h1>
-          <p className="mt-0.5 text-sm text-gray-500">
+          </Typography.Title>
+          <Typography.Text type="secondary" style={{ fontSize: 14 }}>
             {isCompareView
               ? "Read original and English full-text evidence side by side with category highlight controls."
               : "Review literature metadata, evidence distribution, and extracted fields."}
-          </p>
+          </Typography.Text>
         </div>
       </div>
 

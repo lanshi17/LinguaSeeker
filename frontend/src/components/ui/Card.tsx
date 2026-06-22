@@ -1,5 +1,5 @@
 import { type HTMLAttributes, forwardRef } from "react";
-import { cn } from "@/lib/utils/cn";
+import { Card as AntdCard } from "antd";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   /** Remove default padding. */
@@ -7,18 +7,17 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ noPadding = false, className, children, ...props }, ref) => {
+  ({ noPadding = false, className, children, style, ...props }, ref) => {
     return (
-      <div
-        ref={ref}
-        className={cn(
-          "rounded-lg border border-gray-200 bg-white shadow-sm",
-          !noPadding && "p-6",
-          className,
-        )}
-        {...props}
-      >
-        {children}
+      <div ref={ref} className={className} style={style} {...props}>
+        <AntdCard
+          styles={{
+            body: noPadding ? { padding: 0 } : undefined,
+          }}
+          style={{ width: "100%" }}
+        >
+          {children}
+        </AntdCard>
       </div>
     );
   },

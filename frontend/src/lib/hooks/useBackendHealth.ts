@@ -1,7 +1,10 @@
 
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { apiConfig } from "@/lib/config";
+
+const healthEndpoint = import.meta.env.VITE_HEALTH_ENDPOINT || "/health";
+const healthPollInterval =
+  Number(import.meta.env.VITE_HEALTH_POLL_INTERVAL) || 30_000;
 
 type HealthStatus = "connected" | "disconnected" | "checking";
 
@@ -25,7 +28,7 @@ export function useBackendHealth(): BackendHealth {
       const start = Date.now();
       try {
         const response = await axios.get<{ status: string }>(
-          apiConfig.healthEndpoint,
+          healthEndpoint,
           { timeout: 5_000 },
         );
         const latencyMs = Date.now() - start;
@@ -42,9 +45,9 @@ export function useBackendHealth(): BackendHealth {
         };
       }
     },
-    refetchInterval: apiConfig.healthPollInterval,
+    refetchInterval: healthPollInterval,
     retry: false,
-    staleTime: Math.max(apiConfig.healthPollInterval - 5_000, 10_000),
+    staleTime: Math.max(healthPollInterval - 5_000, 10_000),
   });
 
   if (!data) {

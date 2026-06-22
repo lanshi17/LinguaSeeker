@@ -1,13 +1,26 @@
-
 import { useEffect, useRef } from "react";
 import Markdown from "react-markdown";
-import { cn } from "@/lib/utils/cn";
-import { categoryMarkStyle, categoryLabel } from "../utils/categoryStyles";
-import type { EvidenceDocumentHighlight } from "../utils/evidenceDocument";
+import { categoryLabel } from "../utils/categoryStyles";
+import { CATEGORY_COLORS, type EvidenceDocumentHighlight } from "../utils/evidenceDocument";
 
 interface MarkdownDocumentViewerProps {
   markdown: string;
   highlights: EvidenceDocumentHighlight[];
+}
+
+/** Derive mark inline styles from a category's hex color. */
+function applyMarkStyle(mark: HTMLElement, category?: string | null, selected?: boolean) {
+  const hex = category ? CATEGORY_COLORS[category]?.hex : undefined;
+  mark.style.borderRadius = "4px";
+  mark.style.padding = "2px 4px";
+  mark.style.fontWeight = "600";
+  mark.style.backgroundColor = hex ? hex + "40" : "#e5e7eb";
+  mark.style.color = hex ? hex : "#030712";
+  mark.style.boxShadow = hex ? `0 0 0 1px ${hex}50` : "0 0 0 1px #d1d5db";
+  if (selected) {
+    mark.style.outline = "2px solid var(--color-primary-700, #0e7490)";
+    mark.style.outlineOffset = "2px";
+  }
 }
 
 /**
@@ -115,12 +128,7 @@ export function MarkdownDocumentViewer({
 
         const hl = highlights[cover.hlIndex];
         const mark = document.createElement("mark");
-        mark.className = cn(
-          "rounded px-1 py-0.5 font-semibold",
-          categoryMarkStyle(hl.category),
-          hl.selected &&
-            "outline outline-2 outline-offset-2 outline-primary-700",
-        );
+        applyMarkStyle(mark, hl.category, hl.selected);
         mark.setAttribute(
           "aria-label",
           `${categoryLabel(hl.category)} evidence: ${hl.label}`,
@@ -144,11 +152,95 @@ export function MarkdownDocumentViewer({
   }, [markdown, highlights]);
 
   return (
-    <div
-      ref={containerRef}
-      className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-p:leading-7 prose-a:text-primary-700 prose-strong:text-gray-900 prose-code:text-pink-700 prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-li:text-gray-800 prose-table:text-sm"
-    >
-      <Markdown>{markdown}</Markdown>
-    </div>
+    <>
+      <style>{`
+        .edb-markdown-viewer {
+          max-width: none;
+          font-size: 14px;
+          line-height: 1.75;
+          color: #1f2937;
+        }
+        .edb-markdown-viewer h1,
+        .edb-markdown-viewer h2,
+        .edb-markdown-viewer h3,
+        .edb-markdown-viewer h4,
+        .edb-markdown-viewer h5,
+        .edb-markdown-viewer h6 {
+          color: #111827;
+          font-weight: 600;
+          margin-top: 1.5em;
+          margin-bottom: 0.5em;
+        }
+        .edb-markdown-viewer h1 { font-size: 1.5em; }
+        .edb-markdown-viewer h2 { font-size: 1.25em; }
+        .edb-markdown-viewer h3 { font-size: 1.1em; }
+        .edb-markdown-viewer p {
+          color: #1f2937;
+          line-height: 1.75;
+          margin-top: 0.75em;
+          margin-bottom: 0.75em;
+        }
+        .edb-markdown-viewer a {
+          color: var(--color-primary-700, #0e7490);
+          text-decoration: underline;
+        }
+        .edb-markdown-viewer strong {
+          color: #111827;
+          font-weight: 700;
+        }
+        .edb-markdown-viewer code {
+          color: #be185d;
+          background: #f3f4f6;
+          padding: 2px 4px;
+          border-radius: 4px;
+          font-size: 12px;
+        }
+        .edb-markdown-viewer pre code {
+          display: block;
+          padding: 12px;
+          overflow-x: auto;
+        }
+        .edb-markdown-viewer li {
+          color: #1f2937;
+          margin-top: 0.25em;
+          margin-bottom: 0.25em;
+        }
+        .edb-markdown-viewer ul,
+        .edb-markdown-viewer ol {
+          padding-left: 1.5em;
+          margin-top: 0.5em;
+          margin-bottom: 0.5em;
+        }
+        .edb-markdown-viewer table {
+          font-size: 14px;
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 1em;
+          margin-bottom: 1em;
+        }
+        .edb-markdown-viewer th,
+        .edb-markdown-viewer td {
+          border: 1px solid #e5e7eb;
+          padding: 6px 12px;
+          text-align: left;
+        }
+        .edb-markdown-viewer th {
+          background: #f9fafb;
+          font-weight: 600;
+        }
+        .edb-markdown-viewer blockquote {
+          border-left: 3px solid #d1d5db;
+          padding-left: 1em;
+          margin-left: 0;
+          color: #6b7280;
+        }
+      `}</style>
+      <div
+        ref={containerRef}
+        className="edb-markdown-viewer"
+      >
+        <Markdown>{markdown}</Markdown>
+      </div>
+    </>
   );
 }

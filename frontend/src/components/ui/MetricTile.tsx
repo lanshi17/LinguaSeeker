@@ -1,5 +1,4 @@
-import type { ReactNode } from "react";
-import { cn } from "@/lib/utils/cn";
+import type { ReactNode, CSSProperties } from "react";
 
 interface MetricTileProps {
   label: string;
@@ -12,12 +11,42 @@ interface MetricTileProps {
   className?: string;
 }
 
-const toneStyles: Record<NonNullable<MetricTileProps["tone"]>, string> = {
-  default: "text-gray-900",
-  primary: "text-primary-700",
-  success: "text-success-700",
-  warning: "text-amber-700",
-  error: "text-red-700",
+const toneColors: Record<NonNullable<MetricTileProps["tone"]>, string> = {
+  default: "#111827",
+  primary: "var(--color-primary-700)",
+  success: "var(--color-success-700)",
+  warning: "#b45309",
+  error: "#b91c1c",
+};
+
+const containerStyle: CSSProperties = {
+  borderRadius: 6,
+  border: "1px solid #f3f4f6",
+  backgroundColor: "rgba(249, 250, 251, 0.6)",
+  padding: "8px 12px",
+};
+
+const labelRowStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 6,
+  fontSize: 10,
+  fontWeight: 600,
+  textTransform: "uppercase",
+  letterSpacing: "0.08em",
+  color: "#6b7280",
+};
+
+const valueRowStyle: CSSProperties = {
+  marginTop: 2,
+  display: "flex",
+  alignItems: "baseline",
+  gap: 4,
+};
+
+const unitStyle: CSSProperties = {
+  fontSize: 12,
+  color: "#6b7280",
 };
 
 /**
@@ -32,22 +61,23 @@ export function MetricTile({
   icon,
   className,
 }: MetricTileProps) {
+  const valueStyle: CSSProperties = {
+    fontFamily: "var(--font-mono)",
+    fontSize: 18,
+    fontWeight: 600,
+    fontVariantNumeric: "tabular-nums",
+    color: toneColors[tone],
+  };
+
   return (
-    <div
-      className={cn(
-        "rounded-md border border-gray-100 bg-gray-50/60 px-3 py-2",
-        className,
-      )}
-    >
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-gray-500">
+    <div className={className} style={containerStyle}>
+      <div style={labelRowStyle}>
         {icon}
         <span>{label}</span>
       </div>
-      <div className="mt-0.5 flex items-baseline gap-1">
-        <span className={cn("font-mono text-lg font-semibold tabular-nums", toneStyles[tone])}>
-          {value}
-        </span>
-        {unit && <span className="text-xs text-gray-500">{unit}</span>}
+      <div style={valueRowStyle}>
+        <span style={valueStyle}>{value}</span>
+        {unit && <span style={unitStyle}>{unit}</span>}
       </div>
     </div>
   );

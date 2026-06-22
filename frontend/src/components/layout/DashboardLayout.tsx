@@ -1,10 +1,12 @@
 import { useState, useCallback } from "react";
-import { Menu, X } from "lucide-react";
+import { Layout, Button } from "antd";
+import { MenuOutlined, CloseOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { Sidebar } from "./Sidebar";
 import { ConnectionStatus } from "./ConnectionStatus";
 import { AnimatedOutlet } from "@/components/ui/PageTransition";
 import { useAppStore } from "@/stores/appStore";
-import { cn } from "@/lib/utils/cn";
+
+const { Content } = Layout;
 
 export function DashboardLayout() {
   const collapsed = useAppStore((s) => s.sidebarCollapsed);
@@ -13,75 +15,116 @@ export function DashboardLayout() {
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
-      {/* Desktop sidebar */}
-      <div className="hidden md:block">
-        <Sidebar />
-      </div>
+    <>
+      <style>{`
+        .dl-desktop-sidebar { display: none; }
+        .dl-mobile-btn { display: flex; }
+        .dl-desktop-btn { display: none; }
+        .dl-header { padding: 0 16px; }
+        .dl-main { padding: 16px; transition: padding 200ms; }
+        @media (min-width: 768px) {
+          .dl-desktop-sidebar { display: block; }
+          .dl-mobile-btn { display: none; }
+          .dl-desktop-btn { display: flex; }
+          .dl-header { padding: 0 24px; }
+          .dl-main { padding: 24px; }
+        }
+      `}</style>
 
-      {/* Mobile sidebar overlay */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 z-40 md:hidden"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Navigation menu"
-        >
-          <div
-            className="fixed inset-0 bg-black/30"
-            onClick={closeMobileMenu}
-            aria-hidden="true"
-          />
-          <div className="fixed inset-y-0 left-0 z-50 w-60">
-            <Sidebar mobile onNavigate={closeMobileMenu} />
-          </div>
+      <div style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "#f9fafb" }}>
+        {/* Desktop sidebar */}
+        <div className="dl-desktop-sidebar">
+          <Sidebar />
         </div>
-      )}
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Top bar */}
-        <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setMobileMenuOpen((o) => !o)}
-            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-            className="cursor-pointer rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 md:hidden"
+        {/* Mobile sidebar overlay */}
+        {mobileMenuOpen && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 40,
+            }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
           >
-            {mobileMenuOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
-          </button>
+            <div
+              style={{
+                position: "fixed",
+                inset: 0,
+                backgroundColor: "rgba(0, 0, 0, 0.3)",
+              }}
+              onClick={closeMobileMenu}
+              aria-hidden="true"
+            />
+            <div
+              style={{
+                position: "fixed",
+                top: 0,
+                bottom: 0,
+                left: 0,
+                zIndex: 50,
+                width: 240,
+              }}
+            >
+              <Sidebar mobile onNavigate={closeMobileMenu} />
+            </div>
+          </div>
+        )}
 
-          {/* Desktop collapse toggle */}
-          <button
-            onClick={toggleSidebar}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="hidden cursor-pointer rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 md:block"
+        <div style={{ display: "flex", flex: 1, flexDirection: "column", overflow: "hidden" }}>
+          {/* Top bar */}
+          <header
+            className="dl-header"
+            style={{
+              display: "flex",
+              height: 56,
+              alignItems: "center",
+              justifyContent: "space-between",
+              borderBottom: "1px solid #e5e7eb",
+              backgroundColor: "#fff",
+            }}
           >
-            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fillRule="evenodd"
-                d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
+            {/* Mobile hamburger */}
+            <Button
+              type="text"
+              icon={mobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
+              onClick={() => setMobileMenuOpen((o) => !o)}
+              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              className="dl-mobile-btn"
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#6b7280",
+              }}
+            />
 
-          <ConnectionStatus />
-        </header>
+            {/* Desktop collapse toggle */}
+            <Button
+              type="text"
+              icon={<UnorderedListOutlined />}
+              onClick={toggleSidebar}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className="dl-desktop-btn"
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#6b7280",
+              }}
+            />
 
-        {/* Main content */}
-        <main
-          className={cn(
-            "flex-1 overflow-y-auto p-4 md:p-6",
-            "transition-[padding] duration-200",
-          )}
-        >
-          <div className="mx-auto max-w-7xl"><AnimatedOutlet /></div>
-        </main>
+            <ConnectionStatus />
+          </header>
+
+          {/* Main content */}
+          <Content className="dl-main" style={{ flex: 1, overflowY: "auto" }}>
+            <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+              <AnimatedOutlet />
+            </div>
+          </Content>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

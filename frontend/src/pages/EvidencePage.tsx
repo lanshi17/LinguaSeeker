@@ -1,21 +1,34 @@
+import { Typography } from "antd";
 import { EvidenceSearchView } from "@/features/evidence-search";
 import { BookOpen } from "lucide-react";
 
 export function EvidencePage() {
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Page header */}
-      <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 shadow-md shadow-primary-200">
-          <BookOpen className="h-6 w-6 text-white" />
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 48,
+            height: 48,
+            flexShrink: 0,
+            borderRadius: 12,
+            background: "linear-gradient(to bottom right, var(--color-primary-500), var(--color-primary-700))",
+            boxShadow: "0 4px 6px -1px rgba(6, 182, 212, 0.25)",
+          }}
+        >
+          <BookOpen size={24} color="#fff" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          <Typography.Title level={3} style={{ margin: 0 }}>
             Literature Evidence
-          </h1>
-          <p className="mt-0.5 text-sm text-gray-500">
+          </Typography.Title>
+          <Typography.Text type="secondary" style={{ fontSize: 14 }}>
             Search and explore literature-level evidence by gene, variant, disease, or PMID.
-          </p>
+          </Typography.Text>
         </div>
       </div>
 

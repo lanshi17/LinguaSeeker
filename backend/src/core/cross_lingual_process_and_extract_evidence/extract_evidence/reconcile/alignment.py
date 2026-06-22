@@ -11,9 +11,9 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     EvidenceStatus,
     EvidenceSupportLabel,
 )
-
-
-_SPACE_RE = re.compile(r"\s+")
+from src.utils.text_normalize import SPACE_RE as _SPACE_RE
+from src.utils.text_normalize import normalize_text as _normalize_text
+from src.utils.text_normalize import normalize_value as _normalize_value
 _RELATIONSHIP_VALUES = {
     "associated",
     "association",
@@ -247,16 +247,6 @@ def _value_text(item: EvidenceItem | None) -> str:
     return str(item.value)
 
 
-def _normalize_value(value: str | int | float | bool | list[str] | None) -> str:
-    if isinstance(value, list):
-        return "|".join(sorted(_normalize_text(str(item)) for item in value if _normalize_text(str(item))))
-    if value is None:
-        return ""
-    return _normalize_text(str(value))
-
-
-def _normalize_text(value: str) -> str:
-    return _SPACE_RE.sub(" ", value.strip()).casefold()
 
 
 def _span_id(item: EvidenceItem | None) -> str:

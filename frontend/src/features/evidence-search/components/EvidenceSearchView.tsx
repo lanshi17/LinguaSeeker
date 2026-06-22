@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Card, Typography } from "antd";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { EvidenceSearchForm } from "./EvidenceSearchForm";
 import { EvidenceResultsTable } from "./EvidenceResultsTable";
@@ -22,9 +23,9 @@ export function EvidenceSearchView() {
   } = useEvidenceSearch();
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <ErrorBoundary>
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <Card styles={{ body: { padding: 20 } }}>
           <EvidenceSearchForm
             filters={filters}
             onUpdateFilter={updateFilter}
@@ -32,18 +33,25 @@ export function EvidenceSearchView() {
             onClear={clearFilters}
             isSearching={isFetching}
           />
-        </div>
+        </Card>
       </ErrorBoundary>
 
       <ErrorBoundary>
         {error ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-10 text-center">
-            <p className="text-sm font-medium text-red-700">
+          <div style={{
+            borderRadius: 12,
+            border: "1px solid #fecaca",
+            backgroundColor: "#fef2f2",
+            padding: "40px 24px",
+            textAlign: "center",
+          }}>
+            <Typography.Text strong style={{ color: "#b91c1c", fontSize: 14 }}>
               Failed to load evidence
-            </p>
-            <p className="mt-1 text-xs text-red-600">
+            </Typography.Text>
+            <br />
+            <Typography.Text type="secondary" style={{ color: "#dc2626", fontSize: 12 }}>
               {error.message}
-            </p>
+            </Typography.Text>
           </div>
         ) : (
           <EvidenceResultsTable

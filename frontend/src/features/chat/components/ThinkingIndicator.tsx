@@ -1,6 +1,5 @@
 
 import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils/cn";
 
 interface ThinkingIndicatorProps {
   /** Rotating hint phrases. Defaults to generic reasoning hints. */
@@ -18,6 +17,13 @@ const DEFAULT_HINTS = [
   "Reasoning over the evidence",
   "Drafting a grounded reply",
 ];
+
+const dotBase: React.CSSProperties = {
+  width: 6,
+  height: 6,
+  borderRadius: "50%",
+  backgroundColor: "#0891b2",
+};
 
 /**
  * Typing-style "thinking" indicator shown while the assistant is generating.
@@ -48,24 +54,45 @@ export function ThinkingIndicator({
       role="status"
       aria-live="polite"
       aria-label={label}
-      className={cn(
-        "flex items-center gap-3 rounded-2xl border border-gray-100",
-        "bg-gradient-to-br from-white to-gray-50 px-4 py-3 shadow-sm",
-        className,
-      )}
+      className={className}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        borderRadius: 16,
+        border: "1px solid #f3f4f6",
+        background: "linear-gradient(to bottom right, #ffffff, #f9fafb)",
+        padding: "12px 16px",
+        boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+      }}
     >
-      <span className="flex items-end gap-1" aria-hidden="true">
-        <span className="thinking-dot h-1.5 w-1.5 rounded-full bg-primary-500 [animation-delay:-0.32s]" />
-        <span className="thinking-dot h-1.5 w-1.5 rounded-full bg-primary-500 [animation-delay:-0.16s]" />
-        <span className="thinking-dot h-1.5 w-1.5 rounded-full bg-primary-500" />
+      <span style={{ display: "flex", alignItems: "flex-end", gap: 4 }} aria-hidden="true">
+        <span className="thinking-dot" style={{ ...dotBase, animationDelay: "-0.32s" }} />
+        <span className="thinking-dot" style={{ ...dotBase, animationDelay: "-0.16s" }} />
+        <span className="thinking-dot" style={dotBase} />
       </span>
-      <div className="flex min-w-0 flex-col">
-        <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-gray-400">
+      <div style={{ display: "flex", minWidth: 0, flexDirection: "column" }}>
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 500,
+            textTransform: "uppercase",
+            letterSpacing: "0.12em",
+            color: "#9ca3af",
+          }}
+        >
           {label}
         </span>
         <span
           key={hintIndex}
-          className="thinking-hint truncate text-sm text-gray-600"
+          className="thinking-hint"
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            fontSize: 14,
+            color: "#4b5563",
+          }}
         >
           {hints[hintIndex]}
         </span>

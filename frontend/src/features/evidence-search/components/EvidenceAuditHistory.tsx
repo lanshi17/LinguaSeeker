@@ -40,36 +40,44 @@ export function EvidenceAuditHistory({
   );
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="border-b border-gray-100 px-5 py-3">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-          <History className="h-4 w-4 text-primary-700" />
+    <section style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+      <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 20px" }}>
+        <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
+          <History style={{ width: 16, height: 16, color: "var(--color-primary-700)" }} />
           Correction history
         </h3>
       </div>
-      <div className="p-4">
+      <div style={{ padding: 16 }}>
         {isLoading ? (
-          <div className="space-y-3">
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="space-y-1.5">
-                <Skeleton width="w-24" height="h-2" />
-                <Skeleton width="w-full" height="h-3" />
+              <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <Skeleton style={{ width: 96, height: 8 }} />
+                <Skeleton style={{ width: "100%", height: 12 }} />
               </div>
             ))}
           </div>
         ) : !relevantEvents || relevantEvents.length === 0 ? (
-          <p className="text-xs text-gray-400">No corrections yet.</p>
+          <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>No corrections yet.</p>
         ) : (
-          <ol className="space-y-3">
+          <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 12 }}>
             {relevantEvents.map((event) => (
-              <li key={event.review_event_id} className="relative pl-4">
-                <div className="absolute left-0 top-1.5 h-2 w-2 rounded-full bg-primary-400" />
-                <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500">
-                  <span className="font-mono tabular-nums">
+              <li key={event.review_event_id} style={{ position: "relative", paddingLeft: 16 }}>
+                <div style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 6,
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  backgroundColor: "var(--color-primary-400)",
+                }} />
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, fontSize: 11, color: "#6b7280" }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums" }}>
                     {formatRelative(event.created_at)}
                   </span>
                   {event.old_status && event.new_status && (
-                    <span className="flex items-center gap-1">
+                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
                       <Badge
                         variant={
                           STATUS_VARIANT[event.old_status] ?? "default"
@@ -77,7 +85,7 @@ export function EvidenceAuditHistory({
                       >
                         {event.old_status}
                       </Badge>
-                      <ArrowRight className="h-3 w-3 text-gray-400" />
+                      <ArrowRight style={{ width: 12, height: 12, color: "#9ca3af" }} />
                       <Badge
                         variant={
                           STATUS_VARIANT[event.new_status] ?? "default"
@@ -89,18 +97,18 @@ export function EvidenceAuditHistory({
                   )}
                 </div>
                 {event.field_deltas.length > 0 && (
-                  <div className="mt-1 space-y-0.5">
+                  <div style={{ marginTop: 4, display: "flex", flexDirection: "column", gap: 2 }}>
                     {event.field_deltas.map((d) => (
-                      <p key={d.field} className="text-[11px] text-gray-600">
-                        <span className="font-medium">{d.field}</span>
+                      <p key={d.field} style={{ fontSize: 11, color: "#4b5563", margin: 0 }}>
+                        <span style={{ fontWeight: 500 }}>{d.field}</span>
                         {d.old_value && (
-                          <span className="text-red-500 line-through">
+                          <span style={{ color: "#ef4444", textDecoration: "line-through" }}>
                             {" "}
                             {String(d.old_value).slice(0, 40)}
                           </span>
                         )}
                         {d.new_value && (
-                          <span className="text-emerald-700">
+                          <span style={{ color: "var(--color-success-700)" }}>
                             {" "}
                             → {String(d.new_value).slice(0, 40)}
                           </span>
@@ -110,7 +118,7 @@ export function EvidenceAuditHistory({
                   </div>
                 )}
                 {event.change_reason && (
-                  <p className="mt-0.5 text-[10px] italic text-gray-400">
+                  <p style={{ marginTop: 2, fontSize: 10, fontStyle: "italic", color: "#9ca3af" }}>
                     {event.change_reason}
                   </p>
                 )}

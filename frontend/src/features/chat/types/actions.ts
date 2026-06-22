@@ -22,27 +22,3 @@ export interface ChatAction {
   intent: ChatActionIntent;
   slots: Record<string, string | undefined>;
 }
-
-export interface ChatActionBubbleSlots {
-  confirmPipeline?: {
-    source_type?: "online" | "local";
-    query?: string;
-    identifiers?: string;
-    gene_symbol?: string;
-    disease_name?: string;
-    variant_hgvs_p?: string;
-    filename?: string;
-  };
-  startPipeline?: { sourceType?: "online" | "local"; query?: string };
-  uploadPdf?: { sourceType?: "local" };
-  searchEvidence?: {
-    gene?: string;
-    variant?: string;
-    disease?: string;
-    pmid?: string;
-    doi?: string;
-  };
-  classifyVariant?: { variant?: string };
-  interpretEvidence?: { evidenceId?: string };
-  reviewChanges?: { filter?: "all" };
-}

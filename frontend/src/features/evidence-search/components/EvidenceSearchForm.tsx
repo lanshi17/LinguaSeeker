@@ -1,4 +1,3 @@
-
 import { Search, X, Dna, FlaskConical, Stethoscope, Hash } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -25,88 +24,177 @@ export function EvidenceSearchForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Header with accent */}
-      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-primary-50 via-primary-50/50 to-transparent px-5 py-4">
-        <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-primary-400 to-primary-600" />
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-700">
-              <Search className="h-5 w-5" />
+    <>
+      <style>{`
+        .edb-search-grid {
+          display: grid;
+          gap: 16px;
+        }
+        @media (min-width: 768px) {
+          .edb-search-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+          }
+        }
+        .edb-search-field:focus-within .edb-search-icon {
+          color: var(--color-primary-500, #06b6d4);
+        }
+      `}</style>
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* Header with accent */}
+        <div
+          style={{
+            position: "relative",
+            overflow: "hidden",
+            borderRadius: 8,
+            background: "linear-gradient(to right, var(--color-primary-50, #ecfeff), var(--color-primary-50, #ecfeff) 50%, transparent)",
+            padding: "16px 20px",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              height: "100%",
+              width: 4,
+              background: "linear-gradient(to bottom, var(--color-primary-400, #22d3ee), var(--color-primary-600, #0891b2))",
+            }}
+          />
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+              <div
+                style={{
+                  display: "flex",
+                  height: 40,
+                  width: 40,
+                  flexShrink: 0,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 8,
+                  backgroundColor: "var(--color-primary-100, #cffafe)",
+                  color: "var(--color-primary-700, #0e7490)",
+                }}
+              >
+                <Search style={{ width: 20, height: 20 }} />
+              </div>
+              <div>
+                <h2 style={{ fontSize: 16, fontWeight: 600, color: "#030712", margin: 0 }}>
+                  Literature Evidence Search
+                </h2>
+                <p style={{ marginTop: 2, fontSize: 14, color: "#4b5563" }}>
+                  Search by gene, variant, disease, or publication identifier
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-base font-semibold text-gray-950">
-                Literature Evidence Search
-              </h2>
-              <p className="mt-0.5 text-sm text-gray-600">
-                Search by gene, variant, disease, or publication identifier
-              </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Button type="submit" loading={isSearching} style={{ boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+                <Search style={{ width: 16, height: 16, marginRight: 8 }} />
+                Search
+              </Button>
+              <Button type="button" variant="ghost" onClick={onClear}>
+                <X style={{ width: 16, height: 16, marginRight: 8 }} />
+                Clear
+              </Button>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button type="submit" loading={isSearching} className="shadow-sm">
-              <Search className="mr-2 h-4 w-4" />
-              Search
-            </Button>
-            <Button type="button" variant="ghost" onClick={onClear}>
-              <X className="mr-2 h-4 w-4" />
-              Clear
-            </Button>
           </div>
         </div>
-      </div>
 
-      {/* Input fields with icons */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="group relative">
-          <div className="pointer-events-none absolute left-3 top-[38px] z-10 text-gray-400 transition-colors group-focus-within:text-primary-500">
-            <Dna className="h-4 w-4" />
+        {/* Input fields with icons */}
+        <div className="edb-search-grid">
+          <div className="edb-search-field" style={{ position: "relative" }}>
+            <div
+              className="edb-search-icon"
+              style={{
+                pointerEvents: "none",
+                position: "absolute",
+                left: 12,
+                top: 38,
+                zIndex: 10,
+                color: "#9ca3af",
+                transition: "color 0.15s",
+              }}
+            >
+              <Dna style={{ width: 16, height: 16 }} />
+            </div>
+            <Input
+              label="Gene"
+              placeholder="e.g., BRCA1"
+              value={filters.gene ?? ""}
+              onChange={(e) => onUpdateFilter("gene", e.target.value)}
+              style={{ paddingLeft: 36 }}
+            />
           </div>
-          <Input
-            label="Gene"
-            placeholder="e.g., BRCA1"
-            value={filters.gene ?? ""}
-            onChange={(e) => onUpdateFilter("gene", e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <div className="group relative">
-          <div className="pointer-events-none absolute left-3 top-[38px] z-10 text-gray-400 transition-colors group-focus-within:text-primary-500">
-            <FlaskConical className="h-4 w-4" />
+          <div className="edb-search-field" style={{ position: "relative" }}>
+            <div
+              className="edb-search-icon"
+              style={{
+                pointerEvents: "none",
+                position: "absolute",
+                left: 12,
+                top: 38,
+                zIndex: 10,
+                color: "#9ca3af",
+                transition: "color 0.15s",
+              }}
+            >
+              <FlaskConical style={{ width: 16, height: 16 }} />
+            </div>
+            <Input
+              label="Variant"
+              placeholder="e.g., c.5266dupC"
+              value={filters.variant ?? ""}
+              onChange={(e) => onUpdateFilter("variant", e.target.value)}
+              style={{ paddingLeft: 36 }}
+            />
           </div>
-          <Input
-            label="Variant"
-            placeholder="e.g., c.5266dupC"
-            value={filters.variant ?? ""}
-            onChange={(e) => onUpdateFilter("variant", e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <div className="group relative">
-          <div className="pointer-events-none absolute left-3 top-[38px] z-10 text-gray-400 transition-colors group-focus-within:text-primary-500">
-            <Stethoscope className="h-4 w-4" />
+          <div className="edb-search-field" style={{ position: "relative" }}>
+            <div
+              className="edb-search-icon"
+              style={{
+                pointerEvents: "none",
+                position: "absolute",
+                left: 12,
+                top: 38,
+                zIndex: 10,
+                color: "#9ca3af",
+                transition: "color 0.15s",
+              }}
+            >
+              <Stethoscope style={{ width: 16, height: 16 }} />
+            </div>
+            <Input
+              label="Disease"
+              placeholder="e.g., Breast cancer"
+              value={filters.disease ?? ""}
+              onChange={(e) => onUpdateFilter("disease", e.target.value)}
+              style={{ paddingLeft: 36 }}
+            />
           </div>
-          <Input
-            label="Disease"
-            placeholder="e.g., Breast cancer"
-            value={filters.disease ?? ""}
-            onChange={(e) => onUpdateFilter("disease", e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <div className="group relative">
-          <div className="pointer-events-none absolute left-3 top-[38px] z-10 text-gray-400 transition-colors group-focus-within:text-primary-500">
-            <Hash className="h-4 w-4" />
+          <div className="edb-search-field" style={{ position: "relative" }}>
+            <div
+              className="edb-search-icon"
+              style={{
+                pointerEvents: "none",
+                position: "absolute",
+                left: 12,
+                top: 38,
+                zIndex: 10,
+                color: "#9ca3af",
+                transition: "color 0.15s",
+              }}
+            >
+              <Hash style={{ width: 16, height: 16 }} />
+            </div>
+            <Input
+              label="PMID"
+              placeholder="e.g., 12345678"
+              value={filters.pmid ?? ""}
+              onChange={(e) => onUpdateFilter("pmid", e.target.value)}
+              style={{ paddingLeft: 36 }}
+            />
           </div>
-          <Input
-            label="PMID"
-            placeholder="e.g., 12345678"
-            value={filters.pmid ?? ""}
-            onChange={(e) => onUpdateFilter("pmid", e.target.value)}
-            className="pl-9"
-          />
         </div>
-      </div>
-    </form>
+      </form>
+    </>
   );
 }

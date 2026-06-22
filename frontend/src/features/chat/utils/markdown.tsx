@@ -67,7 +67,14 @@ function renderInline(tokens: InlineToken[]): ReactNode[] {
         return (
           <code
             key={index}
-            className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.9em] text-gray-800"
+            style={{
+              borderRadius: 4,
+              backgroundColor: "#f3f4f6",
+              padding: "2px 4px",
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: "0.9em",
+              color: "#1f2937",
+            }}
           >
             {token.value}
           </code>
@@ -148,7 +155,10 @@ export interface ChatMarkdownProps {
 export function ChatMarkdown({ source }: ChatMarkdownProps) {
   if (!source) {
     return (
-      <span className="italic text-gray-400" data-testid="chat-empty-reply">
+      <span
+        style={{ fontStyle: "italic", color: "#9ca3af" }}
+        data-testid="chat-empty-reply"
+      >
         (no response)
       </span>
     );
@@ -157,13 +167,27 @@ export function ChatMarkdown({ source }: ChatMarkdownProps) {
   const blocks = blockify(source);
 
   return (
-    <div className="chat-markdown space-y-2 leading-relaxed">
+    <div
+      className="chat-markdown"
+      style={{ display: "flex", flexDirection: "column", gap: 8, lineHeight: 1.625 }}
+    >
+      <style>{`
+        .chat-markdown-list { list-style-type: disc; padding-left: 24px; }
+        .chat-markdown-list li::marker { color: #9ca3af; }
+      `}</style>
       {blocks.map((block, blockIndex) => {
         if (block.type === "code") {
           return (
             <pre
               key={blockIndex}
-              className="overflow-x-auto rounded-md bg-gray-900 px-3 py-2 text-sm text-gray-100"
+              style={{
+                overflowX: "auto",
+                borderRadius: 6,
+                backgroundColor: "#111827",
+                padding: "8px 12px",
+                fontSize: 14,
+                color: "#f3f4f6",
+              }}
             >
               <code
                 className={block.meta ? `language-${block.meta}` : undefined}
@@ -178,7 +202,8 @@ export function ChatMarkdown({ source }: ChatMarkdownProps) {
           return (
             <ul
               key={blockIndex}
-              className="list-disc space-y-1 pl-6 marker:text-gray-400"
+              className="chat-markdown-list"
+              style={{ display: "flex", flexDirection: "column", gap: 4 }}
             >
               {block.lines.map((item, itemIndex) => (
                 <li key={itemIndex}>{renderInline(tokenizeInline(item))}</li>

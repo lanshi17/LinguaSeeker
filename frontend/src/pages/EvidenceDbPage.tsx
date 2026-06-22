@@ -1,4 +1,5 @@
 import { useParams } from "react-router-dom";
+import { Typography } from "antd";
 import { Database } from "lucide-react";
 import { VariantIndexView, VariantDetailView, BilingualEvidenceView } from "@/features/evidence-db";
 
@@ -24,19 +25,39 @@ export function EvidenceDbPage() {
 
   // L1: variant index
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Page Header */}
-      <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 shadow-md shadow-primary-500/20">
-          <Database className="h-6 w-6 text-white" />
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 48,
+            height: 48,
+            flexShrink: 0,
+            borderRadius: 12,
+            background: "linear-gradient(to bottom right, var(--color-primary-500), var(--color-primary-700))",
+            boxShadow: "0 4px 6px -1px rgba(6, 182, 212, 0.2)",
+          }}
+        >
+          <Database size={24} color="#fff" />
         </div>
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-gray-900">
+          <Typography.Title
+            level={3}
+            style={{
+              margin: 0,
+              fontFamily: "var(--font-display)",
+              fontWeight: 600,
+              letterSpacing: "-0.025em",
+            }}
+          >
             Evidence Database
-          </h1>
-          <p className="text-sm text-gray-500">
+          </Typography.Title>
+          <Typography.Text type="secondary" style={{ fontSize: 14 }}>
             Browse variant evidence organized by mutation identifier
-          </p>
+          </Typography.Text>
         </div>
       </div>
 
