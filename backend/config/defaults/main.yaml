@@ -75,7 +75,8 @@ mineru:
 postgres:
   host: "127.0.0.1"
   port: 5432
-  db: "lingua_seeker"
+  user: "lingua_seeker"
+  db: "lingua_seeker_db"
   schema: "acmg_app"
   pool_size: 20
   max_overflow: 30

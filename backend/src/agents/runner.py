@@ -12,6 +12,8 @@ from loguru import logger
 
 from src.agents.concurrency import PipelineSemaphore
 from src.agents.contracts import PipelineGraphState, PipelineStatus
+from src.agents.content_hash import compute_content_hash
+from src.agents.processing_cache import DocumentProcessingCacheService
 from src.agents.state_persistence import SessionBoundStatePersistence, PipelineRunSummaryRow, _derive_error_phase
 
 
@@ -31,12 +33,14 @@ class PipelineRunner:
         orchestrator: Any,
         semaphore: PipelineSemaphore,
         state_persistence: SessionBoundStatePersistence,
+        processing_cache: DocumentProcessingCacheService | None = None,
         worker_id: str | None = None,
         heartbeat_interval_seconds: float = 15.0,
     ):
         self._orchestrator = orchestrator
         self._semaphore = semaphore
         self._persistence = state_persistence
+        self._processing_cache = processing_cache
         self._active_tasks: dict[str, asyncio.Task] = {}
         self._last_states: OrderedDict[str, PipelineGraphState] = OrderedDict()
         self._worker_id = worker_id or f"{socket.gethostname()}:{os.getpid()}:{id(self)}"
@@ -101,6 +105,16 @@ class PipelineRunner:
                     result = await self._orchestrator.run(initial_state)
                 self.remember_state(run_id, result)
                 logger.info("Pipeline execution completed: run={}", run_id)
+                # Cache completed result for dedup on identical future submissions
+                if self._processing_cache is not None and initial_state.content_hash:
+                    try:
+                        await self._processing_cache.cache_result(
+                            initial_state.content_hash, result
+                        )
+                    except Exception:
+                        logger.exception(
+                            "Failed to cache processing result for run={}", run_id
+                        )
                 return result
             except (Exception, asyncio.CancelledError) as e:
                 is_cancel = isinstance(e, asyncio.CancelledError)
@@ -262,3 +276,29 @@ class PipelineRunner:
                 return True
         # Cross-worker dedup: check persistence for active source keys
         return await self._persistence.has_active_source_key(source_key)
+
+    async def check_processing_cache(
+        self, content_hash: str
+    ) -> PipelineGraphState | None:
+        """Check the L1/L2 processing cache for a previously completed result.
+
+        Returns the cached PipelineGraphState if found, or None on miss.
+        The caller (API route) uses this to short-circuit re-processing of
+        identical document content.
+        """
+        if self._processing_cache is None or not content_hash:
+            return None
+        result = await self._processing_cache.get_cached_result(content_hash)
+        if result is None:
+            return None
+        return result.state
+
+    async def compute_initial_content_hash(
+        self, state: PipelineGraphState
+    ) -> str | None:
+        """Compute the content hash for an initial pipeline state.
+
+        Delegates to the content_hash module, which handles local uploads
+        (file bytes), pre-parsed markdown, and online acquisition keys.
+        """
+        return await compute_content_hash(state)
