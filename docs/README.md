@@ -46,7 +46,6 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-06-15 | [BIBM Main Paper Outline](active/2026-06-15-bibm-main-paper-outline.md) | in-progress |
 | 2026-06-15 | [BIBM Main Paper Limitations](active/2026-06-15-bibm-main-paper-limitations.md) | in-progress |
 | 2026-06-15 | [Main Paper Tables Developer Guide](active/2026-06-15-main-paper-tables-guide.md) | in-progress |
-| 2026-06-15 | [Learned Arbitrator Gate A Report](active/2026-06-15-learned-arbitrator-gate-a-report.md) | negative ablation |
 | 2026-06-15 | [BIBM Main Paper LaTeX](active/2026-06-15-bibm-main-paper-tex/) | in-progress |
 | 2026-06-15 | [ClinGen + ClinVar Fused Benchmark Dataset Plan](active/2026-06-15-clingen-clinvar-fused-benchmark-dataset-plan.md) | in-progress (Phase 1+2 complete) |
 | 2026-06-14 | [BIBM Main Paper G3 Semantic Boundary Repair Plan](active/2026-06-14-bibm-main-paper-g3-semantic-boundary-repair-plan.md) | in-progress |
@@ -56,8 +55,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-06-14 | [BIBM Main Paper Effect Improvement Plan](active/2026-06-14-bibm-main-paper-effect-improvement-plan.md) | in-progress |
 | 2026-06-14 | [BIBM Main Paper Rescue](active/2026-06-14-bibm-main-paper-rescue.md) | in-progress |
 | 2026-06-13 | [BIBM G1 Decision Memo](active/2026-06-13-bibm-g1-decision.md) | in-progress |
-| 2026-06-18 | [Multilingual Agent Acquisition Plan](active/2026-06-18-multilingual-agent-acquisition-plan.md) | in-progress |
-| 2026-06-18 | [Benchmark Framework Refactor Plan](active/2026-06-18-benchmark-framework-refactor-plan.md) | in-progress |
+| 2026-06-18 | [Multilingual Agent Acquisition Plan](active/2026-06-18-multilingual-agent-acquisition-plan.md) | substantially-implemented |
 | 2026-06-12 | [BIBM Novelty Diagnosis](active/2026-06-12-bibm-novelty.md) | in-progress |
 | — | [Methods — Literature Filtering](active/methods_literature_filtering.md) | reference |
 | 2026-05-13 | [Phase Workflow Overview](active/phase_workflow_overview.md) | reference |
@@ -72,13 +70,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
-| 2026-06-14 | [BIBM Main Paper Next Gate Plan](planned/2026-06-14-bibm-main-paper-next-gate-plan.md) | planned |
-| 2026-06-14 | [BIBM Main Paper Detailed Plan](planned/2026-06-14-bibm-main-paper-detailed-plan.md) | planned |
-| 2026-06-14 | [BIBM Main Paper Rescue Plan](planned/2026-06-14-bibm-main-paper-rescue.md) | planned |
-| 2026-06-14 | [BIBM Main Paper Effect Plan](planned/2026-06-14-bibm-main-paper-effect-plan.md) | planned |
 | 2026-06-21 | [Model Server Docker Decouple](planned/2026-06-21-model-server-docker-decouple.md) | planned |
-| 2026-06-20 | [Fused-75 Candidate Recovery Source Validation Design](planned/2026-06-20-fused75-candidate-recovery-source-validation-design.md) | planned |
-| 2026-06-20 | [Fused-75 Candidate Recovery Source Validation Plan](planned/2026-06-20-fused75-candidate-recovery-source-validation-plan.md) | planned |
 | 2026-06-20 | [Variant ID Guarantee — Fix Unknown Variant IDs](planned/2026-06-20-variant-id-guarantee-plan.md) | planned |
 
 ## Diagrams
@@ -94,6 +86,14 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
+| 2026-06-20 | [Fused-75 Candidate Recovery Source Validation Plan](archive/plans/2026-06-20-fused75-candidate-recovery-source-validation-plan.md) | superseded |
+| 2026-06-20 | [Fused-75 Candidate Recovery Source Validation Design](archive/plans/2026-06-20-fused75-candidate-recovery-source-validation-design.md) | superseded |
+| 2026-06-18 | [Benchmark Framework Refactor Plan](archive/plans/2026-06-18-benchmark-framework-refactor-plan.md) | completed (Phase 6 pending) |
+| 2026-06-15 | [Learned Arbitrator Gate A Report](archive/plans/2026-06-15-learned-arbitrator-gate-a-report.md) | negative ablation |
+| 2026-06-14 | [BIBM Main Paper Next Gate Plan](archive/plans/2026-06-14-bibm-main-paper-next-gate-plan.md) | superseded |
+| 2026-06-14 | [BIBM Main Paper Detailed Plan](archive/plans/2026-06-14-bibm-main-paper-detailed-plan.md) | superseded |
+| 2026-06-14 | [BIBM Main Paper Effect Plan](archive/plans/2026-06-14-bibm-main-paper-effect-plan.md) | superseded |
+| 2026-06-14 | [BIBM Main Paper Rescue Plan](archive/plans/2026-06-14-bibm-main-paper-rescue.md) | superseded |
 | 2026-06-22 | [Parkinson Literature XLSX Dataset Implementation Plan](archive/plans/2026-06-22-parkinson-literature-xlsx-dataset-plan.md) | completed |
 | 2026-06-21 | [Fused-75 Candidate-Absent Source-Visible Optimization Implementation Plan](archive/plans/2026-06-21-fused75-candidate-absent-source-visible-plan.md) | completed |
 | 2026-06-20 | [Target-Aware Source-Visible Extraction Results](archive/plans/2026-06-20-target-aware-source-visible-extraction-results.md) | completed |
@@ -113,7 +113,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-06-15 | [BIBM Benchmark A/B Readiness Plan](archive/plans/2026-06-15-bibm-benchmark-a-b-readiness-plan.md) | completed |
 | 2026-06-15 | [BIBM Benchmark Expansion Phase C Implementation Plan](archive/plans/2026-06-15-bibm-benchmark-expansion-phase-c-plan.md) | completed |
 
-The `archive/plans/` directory contains 93 completed/superseded plans. The `archive/codereview/` directory contains 24 resolved code reviews. See individual directories for full listings.
+The `archive/plans/` directory contains 101 completed/superseded plans. The `archive/codereview/` directory contains 24 resolved code reviews. See individual directories for full listings.
 
 ## Module README Index
 
