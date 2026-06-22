@@ -21,6 +21,50 @@ uv run python main.py --port 8002
 
 Set `DOC_PARSE_MODEL_ID=opendatalab/MinerU2.5-Pro-2604-1.2B` in `.env.local` to enable document extraction.
 
+## Docker Deployment (4-Container Split)
+
+For production or multi-GPU setups, run each model service as an independent Docker container.
+Each container gets its own GPU, port, and volume-mounted model weights.
+
+```bash
+# Pre-download model weights (one-time, ~10GB total)
+huggingface-cli download Qwen/Qwen3-Embedding-0.6B \
+  --local-dir /opt/lingua-seeker-data/models/embedding/Qwen--Qwen3-Embedding-0.6B
+huggingface-cli download BAAI/bge-reranker-v2-m3 \
+  --local-dir /opt/lingua-seeker-data/models/rerank/BAAI--bge-reranker-v2-m3
+huggingface-cli download opendatalab/MinerU2.5-Pro-2604-1.2B \
+  --local-dir /opt/lingua-seeker-data/models/vlm/opendatalab--MinerU2.5-Pro-2604-1.2B
+
+# Build and start all 4 containers
+docker compose -f docker-compose.model-server.yml up -d --build
+
+# Check health
+curl http://localhost:8002/health  # embedding
+curl http://localhost:8003/health  # rerank
+curl http://localhost:8004/health  # VLM
+curl http://localhost:8005/health  # doc-parse
+```
+
+| Container | Port | Endpoint | Model |
+|---|---|---|---|
+| model-embedding | 8002 | `POST /v1/embeddings` | Qwen3-Embedding-0.6B |
+| model-rerank | 8003 | `POST /v1/rerank` | bge-reranker-v2-m3 |
+| model-vlm | 8004 | `POST /v1/chat/completions` | MinerU2.5-Pro |
+| model-doc-parse | 8005 | `POST /file_parse` | MinerU2.5-Pro |
+
+**Backend configuration for Docker mode** (in `backend/config/defaults/main.yaml` or env vars):
+
+```yaml
+embedding:
+  base_url: "http://localhost:8002"
+rerank:
+  base_url: "http://localhost:8003"
+mineru:
+  local_model_server_url: "http://localhost:8004"
+```
+
+The original monolithic `main.py` (port 8001) remains available as a fallback for single-GPU development.
+
 ## Directory Structure
 
 ```
