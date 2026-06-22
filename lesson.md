@@ -4193,3 +4193,51 @@ python -m benchmark.analysis.reconcile.ablation --entries $entries --write
 **Prevention**: All dataset-scale literature downloads should write a manifest even when zero PDFs are downloaded. Treat every network/provider failure as a row-level status unless the input manifest itself is unreadable.
 
 **Follow-up observation**: The full 598-PMID Parkinson acquisition ran for roughly tens of minutes and only wrote the manifest at the end. It completed successfully, but this is fragile for larger batches. Future download runners should append/update manifests incrementally after each row or small batch so long external runs are resumable after interruption.
+
+## 2026-06-22: Backend must be restarted after model-server API key config changes
+
+**Problem**: RETT Phase 2 benchmark runs logged `POST /v1/embeddings -> 401 Unauthorized` from the local model-server. The standardization layer then fell back to remote embedding/rerank providers, which kept the pipeline moving but made benchmark runtime noisy and configuration-dependent.
+
+**Investigation**: Direct unauthenticated `POST http://localhost:8001/v1/embeddings` reproduced the 401. The model-server health endpoint stayed healthy, so this was not a service outage. A fresh config probe showed `api_key`, `model_server_api_key`, `embedding.api_key`, and `rerank.api_key` were all set in the current layered backend configuration. The running backend process environment, however, did not include the updated model-server key, so its local embedding/rerank providers sent requests without `Authorization`.
+
+**Root cause**: The long-running backend process had been started before the current model-server auth configuration was loaded. The provider code already supports `Authorization: Bearer <model_server_api_key>`; the problem was stale process configuration, not missing business logic.
+
+**Solution**: Stop the stale Phase 2 batch, restart the backend with `uv run uvicorn app.main:app --host 127.0.0.1 --reload ...`, then verify with a key-backed embedding probe. The probe returned HTTP 200, confirming local model-server auth was aligned.
+
+**Prevention**: After changing `backend/config/vault/*`, `API_KEY`, or `model_server_api_key`, restart both sides that cache configuration at import/startup. Before long benchmark batches, run a short auth probe against `/v1/embeddings` and `/v1/rerank` with the backend-loaded key; do not rely on remote fallback as a silent success path.
+
+## 2026-06-22: RETT Phase 2 SourceLocation `patients` section drift
+
+**Problem**: A long RETT Phase 2 batch emitted Pydantic validation errors for `SourceLocation.context_type="patients"` during catalog extraction. The pipeline could continue with partial evidence, but the affected catalog task was discarded and would reduce benchmark recall.
+
+**Investigation**: Backend logs showed `literal_error` for multiple evidence items whose source section was `patients`. Previous fixes had already admitted stable section labels such as `summary`, `case_report`, and `affiliations`, but `patients` was still absent from the `SourceLocation` Literal. A red test adding `patients` to the extractor-section contract test failed exactly with the observed validation error.
+
+**Root cause**: Real biomedical case-report and cohort-study documents use "Patients" as a stable section heading. The extraction prompt asks the model to preserve source sections, but the strict contract did not include this common heading.
+
+**Solution**: Added `patients` to the accepted `SourceLocation.context_type` Literal and the focused parameterized contract test. Verified red/green: the test failed before the contract change and passed after it; Ruff passed on the changed contract/test files.
+
+**Prevention**: Treat repeated source-section labels from real benchmark logs as contract vocabulary, not arbitrary model noise. During long benchmark batches, monitor validation errors and add stable section labels promptly so subsequent entries keep full catalog extraction coverage.
+
+## 2026-06-22: RETT Phase 2 Japanese entries blocked by external LLM quota
+
+**Problem**: After local model-server embedding auth was fixed, the active RETT Phase 2 batch still stalled and failed on a Japanese entry (`run=a847dc53-f4bb-421d-9157-118d0ee46937`). The pipeline repeatedly polled successfully, but no `phase_2/extraction_result.json` was produced.
+
+**Investigation**: Backend logs showed the run reached `lang=ja, needs_translation=True` and entered the translation node. Translation attempts first timed out, then both configured external chat-model keys returned HTTP 403 with `Sorry, your account balance is insufficient`. The same batch then advanced to the next run (`b94ce337-ea07-4949-a31f-93b7bb8e3ad8`), which also required Japanese translation and immediately hit the same 403 quota errors.
+
+**Root cause**: This was not the local `/v1/embeddings` 401 problem. Local model-server embedding and rerank requests returned HTTP 200 with the backend-loaded API key. The blocker is upstream chat-model quota exhaustion for translation-capable LLM calls.
+
+**Solution**: Do not change extraction contracts or local auth for this symptom. Let the batch finish or naturally skip failed entries, materialize any completed artifacts, and report Japanese Phase 2 failures as external LLM quota failures unless a funded translation model/key is provided.
+
+**Prevention**: Before long multilingual benchmark batches, run a small translation smoke probe using the same `LLM_MODEL` provider/key path, not just local embedding/rerank probes. Keep benchmark reports explicit about entries missing because of external model quota so the comparison denominator is auditable.
+
+## 2026-06-22: Model-server embedding 401 diagnosis must compare keyed and unkeyed probes
+
+**Problem**: A user-facing log line showed `POST /v1/embeddings -> 401 Unauthorized`, raising concern that backend/model-server auth was still misconfigured.
+
+**Investigation**: Static config probes showed `model_server_api_key`, `embedding.api_key`, `rerank.api_key`, and model-server `api_key` all resolved to the same configured secret. A black-box probe then separated the two cases: unauthenticated `/v1/embeddings` returned 401 by design, while the same request with `Authorization: Bearer <backend embedding.api_key>` returned 200.
+
+**Root cause**: The local model-server was healthy and correctly enforcing auth. The observed 401 corresponds to a caller missing the configured Bearer key, or to an old backend process before config reload; it is not an embedding model failure.
+
+**Solution**: Restarted the backend with the project script so it reloads layered config. Verified `/health` returned 200 and the backend-loaded embedding key produced HTTP 200 against the model-server.
+
+**Prevention**: For auth errors, always run paired probes (without auth and with the backend-loaded key). This confirms whether 401 is expected enforcement or a true key mismatch before changing code or rerunning long benchmark jobs.

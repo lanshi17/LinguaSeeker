@@ -1,0 +1,49 @@
+# ── Dev Infrastructure — Postgres + Redis ────────────────────────────────────
+# Lightweight compose for local development. Only the infrastructure services
+# needed by the backend are included; the backend itself runs on the host via
+# `uv run uvicorn` (started by scripts/start_backend_dev.sh).
+#
+# Usage:
+#   docker compose -f deploy/compose/dev-infra/docker-compose.yml up -d
+#   docker compose -f deploy/compose/dev-infra/docker-compose.yml down
+#
+# Environment:
+#   Copy .env.example to .env and adjust as needed, or export vars directly.
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  postgres:
+    image: pgvector/pgvector:pg18
+    container_name: lingua-dev-postgres
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dev_lingua_seeker}
+      POSTGRES_USER: ${POSTGRES_USER:-lingua_seeker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-haMSxtBGKNzgzEDwySsSkJYazwBysTAe}
+    volumes:
+      - dev_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lingua_seeker} -d ${POSTGRES_DB:-dev_lingua_seeker}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.0-alpine
+    container_name: lingua-dev-redis
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - dev_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  dev_postgres_data:
+  dev_redis_data:

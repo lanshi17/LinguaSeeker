@@ -16,6 +16,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      host: true,
       port: 3000,
       proxy: {
         // Inject the shared X-API-Key so the backend trusts proxied requests.

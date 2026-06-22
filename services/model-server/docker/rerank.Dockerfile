@@ -9,11 +9,11 @@ FROM vllm/vllm-openai:latest
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ \
     fastapi pydantic pydantic-settings loguru pyyaml pillow numpy uvicorn
 
 COPY libs/config-loader /app/libs/config-loader
-RUN pip install --no-cache-dir -e /app/libs/config-loader
+RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ -e /app/libs/config-loader
 
 COPY services/model-server/app /app/app
 COPY services/model-server/main_rerank.py /app/main.py
