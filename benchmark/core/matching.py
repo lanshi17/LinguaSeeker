@@ -98,10 +98,13 @@ def prepare_extracted_items(items: list[dict]) -> list[dict]:
 
     1. Remap legacy field IDs to current catalog equivalents.
     2. Filter malformed field IDs (must be ``Category.field_name``).
-    3. Deduplicate by (field_id, normalized value), keeping highest confidence.
+    3. Keep only ``status="found"`` items (the only ones ``compare_evidence`` considers).
+    4. Deduplicate by (field_id, normalized value), keeping highest confidence.
     """
     result: list[dict] = []
     for item in items:
+        if item.get("status") != "found":
+            continue
         field_id = item.get("field_id", "")
         field_id = _FIELD_ID_ALIASES.get(field_id, field_id)
         if "." not in field_id or not field_id.split(".", 1)[1]:

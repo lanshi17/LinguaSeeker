@@ -26,6 +26,7 @@ from benchmark.core.matching import (
     compare_evidence,
     fuzzy_match_value,
     mark_expected_fields_missing,
+    prepare_extracted_items,
 )
 from benchmark.core.paths import GROUND_TRUTH_ROOT, REPORTS_ROOT
 
@@ -368,10 +369,12 @@ async def evaluate_one(
             found_count = sum(1 for i in extracted_items if i["status"] == "found")
             metrics.found_rate = found_count / len(extracted_items) if extracted_items else 0.0
 
+            cleaned_items = prepare_extracted_items(extracted_items)
+
             # Compare evidence
             metrics.field_matches = compare_evidence(
                 entry.get("expected_evidence", []),
-                extracted_items,
+                cleaned_items,
                 mondo=mondo,
                 expected_standardization=entry.get("expected_standardization"),
             )
@@ -459,10 +462,12 @@ async def evaluate_one(
                             for r in rows
                         ]
 
+                    cleaned_items = prepare_extracted_items(extracted_items)
+
                     # Compare
                     metrics.field_matches = compare_evidence(
                         entry.get("expected_evidence", []),
-                        extracted_items,
+                        cleaned_items,
                         mondo=mondo,
                         expected_standardization=entry.get("expected_standardization"),
                     )
