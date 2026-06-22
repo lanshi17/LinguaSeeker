@@ -1,0 +1,5 @@
+# Local overrides — gitignored
+.env
+config/production.yaml
+config/vault/*.yaml
+!config/vault/README.md

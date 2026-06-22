@@ -1,0 +1,89 @@
+# Build and publish the backend image to GHCR.
+#
+# IMPORTANT: build context = repo root, not backend/. The Dockerfile needs
+# both `backend/` and `libs/config-loader/` because pyproject.toml has
+# tool.uv.sources::acmg-config-loader = { path = "../libs/config-loader" }.
+
+name: build-backend
+
+on:
+  push:
+    branches: [dev, master, "release/**"]
+    paths:
+      - "backend/**"
+      - "libs/**"
+      - ".github/workflows/build-backend.yml"
+  pull_request:
+    branches: [dev, master]
+    paths:
+      - "backend/**"
+      - "libs/**"
+      - ".github/workflows/build-backend.yml"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Extra tag to push"
+        required: false
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/lingua-seeker-backend
+
+concurrency:
+  group: build-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build & push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
+
+      # Rust + maturin builds eat disk. Default ubuntu-latest ships ~15GB
+      # of preinstalled SDKs we don't need; reclaim them.
+      - name: Free runner disk
+        run: |
+          set -eux
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                       /opt/hostedtoolcache/CodeQL || true
+          df -h
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./backend/Dockerfile
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+          provenance: false
