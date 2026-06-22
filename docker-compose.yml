@@ -5,11 +5,7 @@ services:
       - "3000:3000"
     depends_on:
       - backend
-    environment:
-      # Vite SPA uses relative /api/v1 (proxied to backend). No API_KEY here:
-      # compose has no reverse proxy to inject the X-API-Key header, so the
-      # backend trust boundary in this profile is the 127.0.0.1 port binding +
-      # the private docker network. For production key injection see deploy/ansible.
+    environment: []
 
   backend:
     build: ./backend
@@ -35,7 +31,7 @@ services:
       - API_KEY=${API_KEY:-}
 
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg18
     ports:
       - "127.0.0.1:5432:5432"
     environment:
@@ -43,7 +39,7 @@ services:
       POSTGRES_USER: lingua_seeker
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-[redacted-postgres-password]}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U lingua_seeker -d dev_lingua_seeker"]
       interval: 5s
@@ -65,4 +61,6 @@ services:
 
 volumes:
   postgres_data:
+    external: true
   redis_data:
+    external: true
