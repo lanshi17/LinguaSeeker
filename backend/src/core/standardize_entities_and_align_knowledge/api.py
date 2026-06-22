@@ -125,12 +125,12 @@ class EntityStandardizationService:
             embedding_provider=ModelServerEmbeddingProvider(
                 base_url=semantic_base_url,
                 model=self._cfg.embedding.model,
-                api_key=self._cfg.api_key,
+                api_key=self._cfg.embedding.api_key,
             ),
             rerank_provider=ModelServerRerankProvider(
                 base_url=self._cfg.rerank.base_url or self._cfg.model_server_url,
                 model=self._cfg.rerank.model,
-                api_key=self._cfg.api_key,
+                api_key=self._cfg.rerank.api_key,
             ),
             repository=PgvectorTerminologyRepository(session),
             config=SimilarityMatchConfig(
@@ -244,7 +244,7 @@ async def build_terminology_embeddings(
             provider = ModelServerEmbeddingProvider(
                 base_url=(cfg.embedding.base_url or cfg.model_server_url),
                 model=cfg.embedding.model,
-                api_key=cfg.api_key,
+                api_key=cfg.embedding.api_key,
             )
             count = await TerminologyEmbeddingIndexer(session, provider).build(
                 embedding_model=cfg.embedding.model,

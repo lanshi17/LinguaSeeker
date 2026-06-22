@@ -118,6 +118,7 @@ def wire_dependencies() -> None:
         model_id=pd_cfg.mineru_local_model_id,
         timeout=pd_cfg.mineru_local_timeout,
         dpi=pd_cfg.mineru_local_dpi,
+        api_key=cfg.model_server_api_key,
     )
     parse_orchestrator = DocumentParseOrchestrator(remote=remote_parser, local=local_parser)
     parse_service = ParseDocumentService(parse_orchestrator)

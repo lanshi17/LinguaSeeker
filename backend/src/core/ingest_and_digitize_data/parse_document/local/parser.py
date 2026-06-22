@@ -52,11 +52,13 @@ class MinerULocalParser(ParserStrategy):
         model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B",
         timeout: float = 120.0,
         dpi: int = 200,
+        api_key: str = "",
     ):
         self._base_url = model_server_url.rstrip("/")
         self._model_id = model_id
         self._timeout = timeout
         self._dpi = dpi
+        self._headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
 
     @property
     def name(self) -> str:
@@ -125,6 +127,7 @@ class MinerULocalParser(ParserStrategy):
             resp = await client.post(
                 f"{self._base_url}/v1/chat/completions",
                 json=payload,
+                headers=self._headers,
             )
             resp.raise_for_status()
         except httpx.HTTPStatusError as e:
