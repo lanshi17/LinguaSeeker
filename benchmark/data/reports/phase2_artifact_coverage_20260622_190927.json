@@ -1,0 +1,378 @@
+{
+  "total_entries": 53,
+  "covered_count": 44,
+  "needs_pipeline_count": 9,
+  "rows": [
+    {
+      "entry_id": "rett_001",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_001/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_003",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_003/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_004",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_004/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_005",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_005/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_006",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_006/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_007",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_007/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_008",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_008/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_009",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_009/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_011",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_011/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_012",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_012/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_013",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_013/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_015",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_015/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_016",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_016/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_018",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_018/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_019",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_019/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_020",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_020/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_021",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_021/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_023",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_023/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_024",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_024/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_026",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_026/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_028",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_028/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_030",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_030/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_032",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_032/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_033",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_033/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_034",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_034/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_035",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_035/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_036",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_036/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_041",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_041/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_043",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_043/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_045",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_045/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_049",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_049/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_051",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "rett_055",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_055/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_062",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "rett_063",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "rett_064",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "rett_066",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_066/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_067",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "rett_068",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_068/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_069",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "rett_070",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "rett_071",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "rett_076",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "rett_077",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_077/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_078",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_078/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_079",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_079/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_080",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_080/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_081",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_081/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_082",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_082/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_083",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_083/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_084",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_084/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_085",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_085/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "rett_087",
+      "status": "preprocessed",
+      "artifact_path": "benchmark/data/ground_truth/rett/rett_087/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    }
+  ]
+}
