@@ -19,7 +19,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-dev_lingua_seeker}
       POSTGRES_USER: ${POSTGRES_USER:-lingua_seeker}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-[redacted-postgres-password]}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - dev_postgres_data:/var/lib/postgresql
     healthcheck:

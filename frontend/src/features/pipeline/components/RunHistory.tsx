@@ -1,6 +1,6 @@
 import { Activity, RefreshCcw } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/Button";
+import { Button } from "antd";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { RunListItem } from "./RunListItem";
 import { usePipelineRuns } from "../hooks/usePipelineRuns";
@@ -56,8 +56,8 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
           )}
         </div>
         <Button
-          variant="ghost"
-          size="sm"
+          type="text"
+          size="small"
           onClick={() => refetch()}
           loading={isFetching && !isLoading}
           aria-label="Refresh runs"
@@ -179,7 +179,7 @@ function RunHistoryError({ onRetry }: { onRetry: () => void }) {
         We could not reach the pipeline service. Check the connection indicator
         at the top right and try again.
       </p>
-      <Button variant="secondary" size="sm" style={{ marginTop: 12 }} onClick={onRetry}>
+      <Button size="small" style={{ marginTop: 12 }} onClick={onRetry}>
         <RefreshCcw style={{ width: 14, height: 14 }} />
         Retry
       </Button>

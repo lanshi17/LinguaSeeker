@@ -3,10 +3,7 @@ node_modules/
 .pnp
 .pnp.js
 
-# Next.js
-.next/
-out/
-build/
+# Frontend build output (Vite)
 dist/
 
 # Python
@@ -48,7 +45,7 @@ htmlcov/
 .old_version
 
 # Database config (may contain credentials)
-database/config/database/config/.env.*
+database/config/.env
 !database/config/.env.example
 
 # Misc
@@ -90,10 +87,10 @@ benchmark/data/inputs/literature_acquisition/downloads/*.jsonl
 benchmark/literature_acquisition/downloads/*.jsonl
 .env
 .env.local
-.env.*
+.env.*.local
 **/*/.env
 **/*/.env.local
-**/*/.env.*
+**/*/.env.*.local
 backend/data/*
 
 # Layered configuration secrets

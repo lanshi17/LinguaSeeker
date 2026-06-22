@@ -22,7 +22,13 @@ fast_llm:
 reasoning_llm:
   api_key: "your-reasoning-api-key"
 
-# ── MinerU API Tokens ────────────────────────────────────────────────────
+chat_llm:
+  api_key: "your-chat-llm-api-key"
+
+translation_llm:
+  api_key: "your-translation-llm-api-key"
+
+# -- MinerU API Tokens -------------------------------------------------------
 # Flattens to MINERU_API_TOKEN, MINERU_API_TOKEN_BACKUP, MINERU_REMOTE_API_TOKEN
 mineru:
   api_token: "your-mineru-api-token"
@@ -45,7 +51,14 @@ postgres:
 redis:
   password: ""
 
-# ── Literature Acquisition API Keys ──────────────────────────────────────
+# -- Model Server Auth -------------------------------------------------------
+model_server_api_key: "your-model-server-api-key"
+
+# -- Web Search ---------------------------------------------------------------
+web_search:
+  api_key: "your-web-search-api-key"
+
+# -- Literature Acquisition API Keys ------------------------------------------
 # Optional but recommended: raises provider rate limits and unlocks full-text.
 #   PUBMED_API_KEY  -> NCBI E-utilities (3→10 req/s); applies to pmc + pubmed_service
 #   BASE_API_KEY    -> BASE (Bielefeld Academic Search Engine)

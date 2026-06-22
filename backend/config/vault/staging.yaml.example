@@ -1,0 +1,56 @@
+# ============================================================================
+# Staging Secrets Template
+# ============================================================================
+# Copy to staging.yaml and fill in your actual credentials.
+# This file is git-ignored — NEVER commit real secrets.
+# ============================================================================
+
+# -- LLM API Keys -------------------------------------------------------------
+fast_llm:
+  api_key: "your-staging-fast-llm-api-key"
+
+reasoning_llm:
+  api_key: "your-staging-reasoning-api-key"
+
+chat_llm:
+  api_key: "your-staging-chat-llm-api-key"
+
+translation_llm:
+  api_key: "your-staging-translation-llm-api-key"
+
+# -- MinerU API Tokens -------------------------------------------------------
+mineru:
+  api_token: "your-staging-mineru-api-token"
+  remote_api_token: "your-staging-mineru-remote-api-token"
+
+# -- Embedding / Rerank Remote API Keys --------------------------------------
+embedding:
+  remote_api_key: "your-staging-embedding-remote-api-key"
+
+rerank:
+  remote_api_key: "your-staging-rerank-remote-api-key"
+
+# -- Database Credentials -----------------------------------------------------
+postgres:
+  user: "lingua_seeker"
+  password: "your-staging-postgres-password"
+
+redis:
+  password: "your-staging-redis-password"
+
+# -- Model Server Auth -------------------------------------------------------
+model_server_api_key: "your-staging-model-server-api-key"
+
+# -- Web Search ---------------------------------------------------------------
+web_search:
+  api_key: "your-staging-web-search-api-key"
+
+# -- Literature Acquisition API Keys ------------------------------------------
+pubmed:
+  api_key: "your-staging-pubmed-api-key"
+
+base:
+  api_key: "your-staging-base-api-key"
+
+core:
+  api_key: "your-staging-core-api-key"

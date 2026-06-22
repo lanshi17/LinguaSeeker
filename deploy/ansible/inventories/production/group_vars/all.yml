@@ -48,7 +48,7 @@ embedding_batch_size: 10
 
 # ── Rerank ────────────────────────────────────────────────────────────────
 rerank_base_url: "http://{{ hostvars[groups['app'][0]]['ansible_host'] }}:8001/v1"
-rerank_model: "bge-reranker-v2-m3"
+rerank_model: "BAAI/bge-reranker-v2-m3"
 rerank_top_k: 10
 rerank_score_threshold: 0.7
 
@@ -89,11 +89,24 @@ unpaywall_email: "[redacted-email]"
 network_proxy: ""
 network_no_proxy: "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
 
-# ── Model Server GPU ─────────────────────────────────────────────────────
-embedding_gpu_memory_utilization: 0.35
-embedding_max_model_len: 4096
-rerank_gpu_memory_utilization: 0.20
-doc_parse_gpu_memory_utilization: 0.50
+# -- Model Server GPU --------------------------------------------------------
+embedding_gpu_memory_utilization: 0.90
+embedding_max_model_len: 8192
+rerank_gpu_memory_utilization: 0.90
+rerank_max_model_len: 8192
+doc_parse_gpu_memory_utilization: 0.90
+
+# -- Model Server (non-docker systemd mode) ----------------------------------
+ms_embedding_model_id: "Qwen/Qwen3-Embedding-0.6B"
+ms_embedding_dimension: 1024
+ms_embedding_max_model_len: 8192
+ms_embedding_gpu_memory_utilization: 0.90
+ms_rerank_model_id: "BAAI/bge-reranker-v2-m3"
+ms_rerank_gpu_memory_utilization: 0.90
+ms_rerank_max_model_len: 8192
+ms_doc_parse_backend: "vlm"
+ms_doc_parse_model_path: "opendatalab/MinerU2.5-Pro-2604-1.2B"
+ms_doc_parse_gpu_memory_utilization: 0.90
 
 # ── Backend Service ───────────────────────────────────────────────────────
 backend_port: 8000

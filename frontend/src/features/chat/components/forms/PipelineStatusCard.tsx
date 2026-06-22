@@ -265,7 +265,7 @@ export function PipelineStatusCard({
               ...(barColor
                 ? { backgroundColor: barColor }
                 : {
-                    background: "linear-gradient(to right, #06b6d4, #3b82f6)",
+                    background: "linear-gradient(to right, var(--color-primary-500, #06b6d4), #3b82f6)",
                   }),
             }}
           />

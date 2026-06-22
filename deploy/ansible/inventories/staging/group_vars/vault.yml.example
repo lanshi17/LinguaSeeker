@@ -1,0 +1,39 @@
+# ============================================================================
+# Staging Vault — Secrets Template
+# ============================================================================
+# Copy to vault.yml and encrypt with:
+#   ansible-vault encrypt inventories/staging/group_vars/vault.yml
+# ============================================================================
+
+# -- Frontend-Backend Trust Token --------------------------------------------
+vault_api_key: "change-me-to-a-strong-random-secret"
+
+# -- LLM API Keys -----------------------------------------------------------
+vault_fast_llm_api_key: "sk-xxxxxxxxxxxxxxxxxxxxxxxx"
+vault_reasoning_llm_api_key: "sk-xxxxxxxxxxxxxxxxxxxxxxxx"
+vault_chat_llm_api_key: "sk-xxxxxxxxxxxxxxxxxxxxxxxx"
+vault_translation_llm_api_key: "sk-xxxxxxxxxxxxxxxxxxxxxxxx"
+
+# -- MinerU -----------------------------------------------------------------
+vault_mineru_api_token: "xxxxxxxxxxxxxxxxxxxxxxxx"
+
+# -- Embedding / Rerank Remote API Keys --------------------------------------
+vault_embedding_remote_api_key: ""
+vault_rerank_remote_api_key: ""
+
+# -- Web Search --------------------------------------------------------------
+vault_web_search_api_key: ""
+
+# -- Model Server Auth -------------------------------------------------------
+vault_model_server_api_key: "change-me-to-a-strong-random-secret"
+
+# -- Literature Acquisition API Keys ------------------------------------------
+vault_pubmed_api_key: ""
+vault_base_api_key: ""
+vault_core_api_key: ""
+
+# -- PostgreSQL --------------------------------------------------------------
+vault_postgres_password: "change-me-to-a-strong-password"
+
+# -- Redis -------------------------------------------------------------------
+vault_redis_password: "change-me-to-a-strong-password"

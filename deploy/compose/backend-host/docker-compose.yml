@@ -35,9 +35,9 @@ services:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB:-lingua_seeker}
-      POSTGRES_USER: ${POSTGRES_USER:-lingua_seeker}
+      POSTGRES_USER: ${POSTGRES_USER:-acmg_app}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-lingua}
+      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-acmg_app}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
@@ -71,12 +71,12 @@ services:
       - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-lingua_seeker}
-      POSTGRES_USER: ${POSTGRES_USER:-lingua_seeker}
+      POSTGRES_USER: ${POSTGRES_USER:-acmg_app}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lingua_seeker} -d ${POSTGRES_DB:-lingua_seeker}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-acmg_app} -d ${POSTGRES_DB:-lingua_seeker}"]
       interval: 5s
       timeout: 5s
       retries: 10

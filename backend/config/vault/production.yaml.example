@@ -1,0 +1,56 @@
+# ============================================================================
+# Production Secrets Template
+# ============================================================================
+# Copy to production.yaml and fill in your actual credentials.
+# This file is git-ignored — NEVER commit real secrets.
+# ============================================================================
+
+# -- LLM API Keys -------------------------------------------------------------
+fast_llm:
+  api_key: "your-production-fast-llm-api-key"
+
+reasoning_llm:
+  api_key: "your-production-reasoning-api-key"
+
+chat_llm:
+  api_key: "your-production-chat-llm-api-key"
+
+translation_llm:
+  api_key: "your-production-translation-llm-api-key"
+
+# -- MinerU API Tokens -------------------------------------------------------
+mineru:
+  api_token: "your-production-mineru-api-token"
+  remote_api_token: "your-production-mineru-remote-api-token"
+
+# -- Embedding / Rerank Remote API Keys --------------------------------------
+embedding:
+  remote_api_key: "your-production-embedding-remote-api-key"
+
+rerank:
+  remote_api_key: "your-production-rerank-remote-api-key"
+
+# -- Database Credentials -----------------------------------------------------
+postgres:
+  user: "acmg_app"
+  password: "your-production-postgres-password"
+
+redis:
+  password: "your-production-redis-password"
+
+# -- Model Server Auth -------------------------------------------------------
+model_server_api_key: "your-production-model-server-api-key"
+
+# -- Web Search ---------------------------------------------------------------
+web_search:
+  api_key: "your-production-web-search-api-key"
+
+# -- Literature Acquisition API Keys ------------------------------------------
+pubmed:
+  api_key: "your-production-pubmed-api-key"
+
+base:
+  api_key: "your-production-base-api-key"
+
+core:
+  api_key: "your-production-core-api-key"

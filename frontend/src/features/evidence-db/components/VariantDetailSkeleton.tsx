@@ -6,17 +6,6 @@ import { Skeleton } from "@/components/ui/Skeleton";
  */
 export function VariantDetailSkeleton() {
   return (
-    <>
-      <style>{`
-        .vds-layout { display: grid; gap: 24px; }
-        .vds-hero-inner { display: flex; flex-direction: column; gap: 16px; }
-        .vds-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 24px; row-gap: 8px; }
-        .vds-two-col { display: grid; gap: 24px; }
-        @media (min-width: 1024px) {
-          .vds-hero-inner { flex-direction: row; align-items: flex-start; justify-content: space-between; }
-          .vds-two-col { grid-template-columns: minmax(0, 1fr) 340px; }
-        }
-      `}</style>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         {/* Back link */}
         <Skeleton variant="line" style={{ width: 160, height: 16 }} />
@@ -104,6 +93,5 @@ export function VariantDetailSkeleton() {
           </aside>
         </div>
       </div>
-    </>
   );
 }

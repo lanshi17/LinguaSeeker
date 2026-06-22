@@ -22,7 +22,7 @@ const dotBase: React.CSSProperties = {
   width: 6,
   height: 6,
   borderRadius: "50%",
-  backgroundColor: "#0891b2",
+  backgroundColor: "var(--color-primary-600, #0891b2)",
 };
 
 /**

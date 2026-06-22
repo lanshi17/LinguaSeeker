@@ -53,17 +53,6 @@ export function classificationColor(level: ClassificationLevel): string {
   }
 }
 
-/** Tailwind classes for classification badge — light theme, accessible contrast */
-export function classificationBadgeClasses(level: ClassificationLevel): string {
-  switch (level) {
-    case "pathogenic": return "bg-red-100 text-red-800 border-red-200";
-    case "likely_pathogenic": return "bg-red-50 text-red-700 border-red-200";
-    case "uncertain": return "bg-gray-100 text-gray-700 border-gray-200";
-    case "likely_benign": return "bg-teal-50 text-teal-700 border-teal-200";
-    case "benign": return "bg-teal-100 text-teal-800 border-teal-200";
-  }
-}
-
 export function classificationLabel(level: ClassificationLevel): string {
   switch (level) {
     case "pathogenic": return "Pathogenic";

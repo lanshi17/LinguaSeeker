@@ -83,3 +83,6 @@ backend/libs/*/target
 
 # Whitelist pre-built backend artefacts (uv binary + rust_io wheel)
 !backend/build-artifacts
+
+# Pre-built backend venv artefacts — only needed by backend/Dockerfile
+docker-artifacts

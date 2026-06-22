@@ -8,7 +8,7 @@ name: build-backend
 
 on:
   push:
-    branches: [dev, master, "release/**"]
+    branches: [dev, master, staging, "release/**"]
     paths:
       - "backend/**"
       - "libs/**"
