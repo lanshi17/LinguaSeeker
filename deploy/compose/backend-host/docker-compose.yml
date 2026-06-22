@@ -1,0 +1,106 @@
+# ============================================================================
+# Backend host — runs FastAPI + Postgres + Redis behind the host firewall.
+# Build context = repo root so the Dockerfile can pull both backend/ and
+# libs/config-loader/. From the repo root:
+#
+#   docker compose -f deploy/compose/backend-host/docker-compose.yml \
+#                  --env-file deploy/compose/backend-host/.env \
+#                  up -d --build
+#
+# Only the backend port is published; database + redis stay private.
+# ============================================================================
+services:
+  backend:
+    build:
+      context: ../../../
+      dockerfile: backend/Dockerfile
+    image: ${BACKEND_IMAGE:-ghcr.io/[redacted-user]/lingua-seeker-backend}:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    # 0.0.0.0:8000 is reachable from the frontend host. Lock it down with
+    # ufw / security group; X-API-Key auth is enforced inside FastAPI.
+    ports:
+      - "${BACKEND_BIND:-0.0.0.0}:${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: production
+      # Lets the backend trust X-Forwarded-* from the frontend nginx.
+      # See uvicorn --proxy-headers --forwarded-allow-ips in the Dockerfile.
+      CORS_ORIGINS: ${CORS_ORIGINS}              # e.g. https://app.example.com
+      API_KEY: ${API_KEY}                        # shared with frontend nginx
+      # ── Datastores ─────────────────────────────────────────────────
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-lingua_seeker}
+      POSTGRES_USER: ${POSTGRES_USER:-lingua_seeker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-lingua}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      # ── Model server / LLM endpoints (point at GPU host) ───────────
+      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL}
+      RERANK_BASE_URL: ${RERANK_BASE_URL}
+      FAST_LLM_BASE_URL: ${FAST_LLM_BASE_URL}
+      REASONING_LLM_BASE_URL: ${REASONING_LLM_BASE_URL}
+    volumes:
+      # Logs and persisted artefacts live on the host so a container
+      # rebuild never destroys them.
+      - backend_logs:/app/logs
+      - backend_data:/app/data
+      - backend_downloads:/app/downloads
+      - backend_output:/app/output
+      # Vault config + custom production.yaml mounted read-only.
+      - ./config/production.yaml:/app/config/environments/production.yaml:ro
+      - ./config/vault/production.yaml:/app/config/vault/production.yaml:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  postgres:
+    image: pgvector/pgvector:pg18
+    restart: unless-stopped
+    # Loopback-only — never published to the frontend host.
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lingua_seeker}
+      POSTGRES_USER: ${POSTGRES_USER:-lingua_seeker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lingua_seeker} -d ${POSTGRES_DB:-lingua_seeker}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8.0-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: >
+      redis-server --appendonly yes
+      ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
+  redis_data:
+  backend_logs:
+  backend_data:
+  backend_downloads:
+  backend_output:
