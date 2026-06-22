@@ -255,6 +255,85 @@ def test_baseline_llm_response_normalizes_schema_drift() -> None:
     assert [item.confidence for item in response.evidence_items] == [0.0, 0.0, 0.0, 0.0]
 
 
+def test_baseline_llm_response_accepts_field_keyed_item_list() -> None:
+    from benchmark.analysis.baselines.llm_common import BaselineLLMResponse
+
+    response = BaselineLLMResponse.model_validate(
+        {
+            "evidence_items": [
+                {
+                    "A.gene_symbol": {
+                        "status": "found",
+                        "value": "MECP2",
+                        "confidence": "high",
+                    }
+                },
+                {
+                    "B.disease_diagnosis": {
+                        "status": "found",
+                        "value": "Rett syndrome",
+                        "confidence": "medium",
+                    }
+                },
+            ]
+        }
+    )
+
+    assert [(item.field_id, item.value, item.confidence) for item in response.evidence_items] == [
+        ("A.gene_symbol", "MECP2", 0.9),
+        ("B.disease_diagnosis", "Rett syndrome", 0.6),
+    ]
+
+
+def test_baseline_llm_response_accepts_multi_field_keyed_list_item() -> None:
+    from benchmark.analysis.baselines.llm_common import BaselineLLMResponse
+
+    response = BaselineLLMResponse.model_validate(
+        {
+            "evidence_items": [
+                {
+                    "A.gene_symbol": {
+                        "field_id": "A.gene_symbol",
+                        "status": "found",
+                        "value": "MECP2",
+                        "confidence": 0.93,
+                    },
+                    "B.disease_diagnosis": {
+                        "field_id": "B.disease_diagnosis",
+                        "status": "found",
+                        "value": "Rett syndrome",
+                        "confidence": 0.9,
+                    },
+                }
+            ]
+        }
+    )
+
+    assert [item.field_id for item in response.evidence_items] == [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+    ]
+
+
+def test_baseline_llm_response_accepts_field_keyed_evidence_map() -> None:
+    from benchmark.analysis.baselines.llm_common import BaselineLLMResponse
+
+    response = BaselineLLMResponse.model_validate(
+        {
+            "evidence_items": {
+                "A.gene_symbol": {
+                    "status": "found",
+                    "value": "MECP2",
+                    "confidence": "high",
+                }
+            }
+        }
+    )
+
+    assert response.evidence_items[0].field_id == "A.gene_symbol"
+    assert response.evidence_items[0].value == "MECP2"
+
+
 def test_translate_then_extract_skips_translation_for_english_source() -> None:
     from benchmark.analysis.baselines.llm_common import should_translate_before_extract
 
