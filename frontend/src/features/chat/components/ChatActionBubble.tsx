@@ -108,7 +108,7 @@ export function ChatActionBubble({
         {isLoading && !dispatched && (
           <LoadingOutlined
             spin
-            style={{ marginLeft: "auto", fontSize: 12, color: "#0891b2" }}
+            style={{ marginLeft: "auto", fontSize: 12, color: "var(--color-primary-600, #0891b2)" }}
             aria-hidden="true"
           />
         )}

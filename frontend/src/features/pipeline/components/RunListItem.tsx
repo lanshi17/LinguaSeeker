@@ -45,7 +45,7 @@ const PULSE_TONE: Record<
 const statusDotColor = (status: ProcessingStatus): string => {
   switch (status) {
     case "completed":
-      return "#22c55e";
+      return "var(--color-success-500, #22c55e)";
     case "failed":
       return "#ef4444";
     case "skipped":
@@ -61,8 +61,8 @@ const progressBarBg = (
   isLive: boolean,
   status: ProcessingStatus,
 ): string => {
-  if (isLive) return "linear-gradient(to right, #38bdf8, #0891b2)";
-  if (status === "completed") return "#22c55e";
+  if (isLive) return "linear-gradient(to right, #38bdf8, var(--color-primary-600, #0891b2))";
+  if (status === "completed") return "var(--color-success-500, #22c55e)";
   if (status === "failed") return "#f87171";
   return "#d1d5db";
 };
@@ -95,60 +95,6 @@ export function RunListItem({ run, index }: RunListItemProps) {
   }
 
   return (
-    <>
-      <style>{`
-        .rli-link {
-          display: block;
-          border-radius: 8px;
-          border: 1px solid #e5e7eb;
-          background-color: #fff;
-          padding: 16px;
-          box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
-          text-decoration: none;
-          color: inherit;
-          transition: all 200ms ease-out;
-        }
-        .rli-link:hover {
-          transform: translateY(-2px);
-          border-color: #7dd3fc;
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-        }
-        .rli-link:focus-visible {
-          outline: 2px solid #0891b2;
-          outline-offset: 2px;
-        }
-        .rli-reveal {
-          overflow: hidden;
-          font-size: 10px;
-          font-family: var(--font-mono, monospace);
-          font-variant-numeric: tabular-nums;
-          color: #9ca3af;
-          max-height: 0;
-          opacity: 0;
-          transition: all 200ms;
-        }
-        .rli-link:hover .rli-reveal {
-          max-height: 16px;
-          opacity: 1;
-        }
-        .rli-copy-btn {
-          border-radius: 4px;
-          padding: 4px;
-          color: #9ca3af;
-          transition: color 150ms, background-color 150ms;
-          border: none;
-          background: none;
-          cursor: pointer;
-        }
-        .rli-copy-btn:hover {
-          background-color: #f3f4f6;
-          color: #0e7490;
-        }
-        .rli-copy-btn:focus-visible {
-          outline: 2px solid #0891b2;
-          outline-offset: 2px;
-        }
-      `}</style>
       <Link
         to={`/pipeline/${run.processing_run_id}`}
         className={`rli-link stagger-in`}
@@ -224,7 +170,7 @@ export function RunListItem({ run, index }: RunListItemProps) {
               </p>
             )}
             {run.current_phase && isLive && (
-              <p style={{ marginTop: 4, fontSize: 12, color: "#0e7490" }}>
+              <p style={{ marginTop: 4, fontSize: 12, color: "var(--color-primary-700, #0e7490)" }}>
                 <Loader2 style={{ marginRight: 4, display: "inline", width: 12, height: 12 }} className="spin" />
                 {run.current_phase}
               </p>
@@ -288,6 +234,5 @@ export function RunListItem({ run, index }: RunListItemProps) {
           </div>
         </div>
       </Link>
-    </>
   );
 }

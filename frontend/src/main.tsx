@@ -5,7 +5,6 @@ import { ConfigProvider, App as AntdApp } from "antd";
 import { theme } from "./theme";
 import { App } from "./App";
 import { QueryProvider } from "./providers";
-import { NotificationToast } from "@/components/ui/Toast";
 import "./globals.css";
 
 const root = document.getElementById("root");
@@ -18,7 +17,6 @@ createRoot(root).render(
         <AntdApp>
           <QueryProvider>
             <App />
-            <NotificationToast />
           </QueryProvider>
         </AntdApp>
       </ConfigProvider>

@@ -74,67 +74,6 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
     : null;
 
   return (
-    <>
-      <style>{`
-        @keyframes ping {
-          75%, 100% { transform: scale(2); opacity: 0; }
-        }
-        .tqp-close-btn {
-          border-radius: 6px;
-          padding: 4px;
-          color: #9ca3af;
-          transition: color 150ms, background-color 150ms;
-          border: none;
-          background: none;
-          cursor: pointer;
-        }
-        .tqp-close-btn:hover {
-          background-color: #f3f4f6;
-          color: #374151;
-        }
-        .tqp-close-btn:focus-visible {
-          outline: 2px solid #0891b2;
-          outline-offset: 2px;
-        }
-        .tqp-view-all {
-          display: flex;
-          align-items: center;
-          gap: 2px;
-          border-radius: 6px;
-          padding: 4px 8px;
-          font-size: 10.5px;
-          font-weight: 500;
-          color: #6b7280;
-          text-decoration: none;
-          transition: color 150ms, background-color 150ms;
-          margin-left: auto;
-        }
-        .tqp-view-all:hover {
-          background-color: #f3f4f6;
-          color: #1f2937;
-        }
-        .tqp-view-all:focus-visible {
-          outline: 2px solid #0891b2;
-          outline-offset: 2px;
-        }
-        .tqp-tab-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          border-radius: 6px;
-          padding: 6px 10px;
-          font-size: 11px;
-          font-weight: 500;
-          transition: color 150ms, background-color 150ms;
-          border: none;
-          background: none;
-          cursor: pointer;
-        }
-        .tqp-tab-btn:focus-visible {
-          outline: 2px solid #0891b2;
-          outline-offset: 2px;
-        }
-      `}</style>
       <aside
         style={{
           display: "flex",
@@ -158,7 +97,7 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 6,
-              background: "linear-gradient(to bottom right, #06b6d4, #2563eb)",
+              background: "linear-gradient(to bottom right, var(--color-primary-500, #06b6d4), #2563eb)",
               color: "#fff",
               boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
             }}
@@ -172,7 +111,7 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
             <p style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 10.5, color: "#6b7280" }}>
               {activeRuns.length > 0 ? (
                 <>
-                  <span style={{ fontWeight: 500, color: "#0e7490" }}>
+                  <span style={{ fontWeight: 500, color: "var(--color-primary-700, #0e7490)" }}>
                     {activeRuns.length}
                   </span>{" "}
                   active · {total} total
@@ -262,7 +201,6 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
           </span>
         </footer>
       </aside>
-    </>
   );
 }
 
@@ -341,7 +279,7 @@ function TabButton({ active, onClick, icon, label, count, pulse }: TabButtonProp
               width: 6,
               height: 6,
               borderRadius: "50%",
-              backgroundColor: "#0891b2",
+              backgroundColor: "var(--color-primary-600, #0891b2)",
             }}
           />
         </span>
@@ -356,12 +294,12 @@ function LoadingSkeleton() {
       {Array.from({ length: 3 }).map((_, i) => (
         <li key={i} style={{ borderRadius: 8, border: "1px solid #f3f4f6", backgroundColor: "#fff", padding: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Skeleton className="h-2.5 w-2.5 rounded-full" />
-            <Skeleton className="h-2.5 w-16" />
-            <Skeleton className="ml-auto h-3 w-10 rounded-full" />
+            <Skeleton variant="circle" width={10} height={10} />
+            <Skeleton width={64} height={10} />
+            <Skeleton variant="pill" width={40} height={12} style={{ marginLeft: "auto" }} />
           </div>
-          <Skeleton className="mt-2 h-2 w-3/4" />
-          <Skeleton className="mt-2 h-1.5 w-full" />
+          <Skeleton width="75%" height={8} style={{ marginTop: 8 }} />
+          <Skeleton width="100%" height={6} style={{ marginTop: 8 }} />
         </li>
       ))}
     </ul>

@@ -83,6 +83,11 @@ class MultiStageTranslator(BaseTranslator):
     # Capped at 1 to bound LLM cost on pathological inputs.
     _MAX_PER_BLOCK_RETRIES: int = 1
 
+    # Token budget for self-review input (source + translation + prompt template).
+    # Long documents can exceed the LLM context window; skip self-review when
+    # the estimated prompt size surpasses this threshold.
+    _SELF_REVIEW_INPUT_BUDGET: int = 24_000
+
     # Pre-compiled regex for _clean_terminology
     _TERM_HEADER_RE = re.compile(
         r"^(?:TERMINOLOGY_STAGE|FORMAT_STAGE|TRANSLATE_STAGE"
@@ -454,7 +459,16 @@ class MultiStageTranslator(BaseTranslator):
         the review fails or introduces new issues.
         """
         prompt = get_self_review_prompt(source_text, translated_text)
+        prompt_tokens = estimate_tokens(prompt)
         logger.info("Running self-review ({} source chars)", len(source_text))
+
+        if prompt_tokens > self._SELF_REVIEW_INPUT_BUDGET:
+            logger.warning(
+                "Self-review skipped: prompt_tokens {} exceeds budget {}",
+                prompt_tokens,
+                self._SELF_REVIEW_INPUT_BUDGET,
+            )
+            return translated_text
 
         try:
             reviewed = await invoke_with_retry(self._llm, prompt, "self_review", system_prompt)

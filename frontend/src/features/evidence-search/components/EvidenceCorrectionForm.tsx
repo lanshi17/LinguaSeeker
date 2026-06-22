@@ -1,9 +1,7 @@
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Save, X } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { Select } from "@/components/ui/Select";
-import { useToastStore } from "@/stores/toastStore";
+import { App, Button, Select } from "antd";
 import { patchEvidence } from "../services/evidenceCorrection";
 import type { ReviewStatusValue } from "../types/evidenceSearch";
 
@@ -34,7 +32,7 @@ export function EvidenceCorrectionForm({
   onClose,
 }: EvidenceCorrectionFormProps) {
   const queryClient = useQueryClient();
-  const addToast = useToastStore((s) => s.addToast);
+  const { message } = App.useApp();
 
   const [editValue, setEditValue] = useState(currentValue ?? "");
   const [newStatus, setNewStatus] = useState<ReviewStatusValue>("corrected");
@@ -67,24 +65,18 @@ export function EvidenceCorrectionForm({
           queryKey: ["evidence", "group", groupId],
         });
 
-        addToast({
-          level: "success",
-          title: "Evidence updated",
-          message: `${result.deltas} field(s) changed: ${result.old_status} → ${result.new_status}`,
-        });
+        message.success(
+          `Evidence updated: ${result.deltas} field(s) changed: ${result.old_status} → ${result.new_status}`,
+        );
         onClose();
       } catch (err) {
-        addToast({
-          level: "error",
-          title: "Failed to update evidence",
-          message: err instanceof Error ? err.message : "Unknown error",
-        });
+        message.error(err instanceof Error ? err.message : "Failed to update evidence");
       } finally {
         setIsSubmitting(false);
       }
     },
     [
-      addToast,
+      message,
       canonicalEvidenceId,
       cardField,
       changeReason,
@@ -112,22 +104,15 @@ export function EvidenceCorrectionForm({
         queryClient.invalidateQueries({
           queryKey: ["evidence", "group", groupId],
         });
-        addToast({
-          level: "success",
-          title: `Evidence ${status}`,
-        });
+        message.success(`Evidence ${status}`);
         onClose();
       } catch (err) {
-        addToast({
-          level: "error",
-          title: "Failed to update status",
-          message: err instanceof Error ? err.message : "Unknown error",
-        });
+        message.error(err instanceof Error ? err.message : "Failed to update status");
       } finally {
         setIsSubmitting(false);
       }
     },
-    [addToast, canonicalEvidenceId, groupId, isSubmitting, onClose, queryClient],
+    [message, canonicalEvidenceId, groupId, isSubmitting, onClose, queryClient],
   );
 
   return (
@@ -205,14 +190,19 @@ export function EvidenceCorrectionForm({
       )}
 
       <div style={{ marginTop: 12, display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}>
-        <Select
-          label="Review status"
-          value={newStatus}
-          onChange={(val) =>
-            setNewStatus(val as ReviewStatusValue)
-          }
-          options={STATUS_OPTIONS}
-        />
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <label style={{ display: "block", fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>
+            Review status
+          </label>
+          <Select
+            value={newStatus}
+            onChange={(val) =>
+              setNewStatus(val as ReviewStatusValue)
+            }
+            options={STATUS_OPTIONS}
+            style={{ width: "100%" }}
+          />
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4b5563" }}>
             Reason (optional)
@@ -248,8 +238,8 @@ export function EvidenceCorrectionForm({
 
       <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
         <Button
-          type="submit"
-          size="sm"
+          htmlType="submit"
+          size="small"
           disabled={!hasChanges || isSubmitting}
           loading={isSubmitting}
         >

@@ -1,6 +1,6 @@
 
 import { AlertCircle, CheckCircle2, Circle, FileText, Hash, Layers, Loader2 } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import { Card } from "antd";
 import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { LivePulse } from "@/components/ui/LivePulse";
@@ -32,7 +32,7 @@ const PHASE_LABELS: Record<string, { title: string; subtitle: string }> = {
 
 const PHASE_ICON_COLOR: Record<string, React.CSSProperties> = {
   phase_1: { color: "#0369a1", backgroundColor: "#f0f9ff", borderBottom: "1px solid #bae6fd" },
-  phase_2: { color: "#0e7490", backgroundColor: "#ecfeff", borderBottom: "1px solid #a5f3fc" },
+  phase_2: { color: "var(--color-primary-700, #0e7490)", backgroundColor: "#ecfeff", borderBottom: "1px solid #a5f3fc" },
   phase_3: { color: "#6d28d9", backgroundColor: "#f5f3ff", borderBottom: "1px solid #ddd6fe" },
 };
 
@@ -56,8 +56,8 @@ const nodeBorderColorBg = (status: ProcessingStatus): React.CSSProperties => {
 };
 
 const progressBarBg = (status: ProcessingStatus): string => {
-  if (status === "running") return "linear-gradient(to right, #7dd3fc, #0891b2)";
-  if (status === "completed") return "#22c55e";
+  if (status === "running") return "linear-gradient(to right, #7dd3fc, var(--color-primary-600, #0891b2))";
+  if (status === "completed") return "var(--color-success-500, #22c55e)";
   return "#d1d5db";
 };
 
@@ -73,7 +73,7 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
 
   return (
     <Card
-      noPadding
+      styles={{ body: { padding: 0 } }}
       className="stagger-in"
       style={{ display: "flex", flexDirection: "column", overflow: "hidden", animationDelay: `${index * 70}ms` }}
     >
@@ -206,7 +206,7 @@ function PhaseStatusBadge({ status }: { status: ProcessingStatus }) {
           padding: "2px 8px",
           fontSize: 11,
           fontWeight: 500,
-          color: "#0e7490",
+          color: "var(--color-primary-700, #0e7490)",
           border: "1px solid #a5f3fc",
         }}
       >
@@ -328,7 +328,7 @@ function NodeRow({ node }: { node: PhaseNode }) {
 
 function NodeStatusIcon({ status }: { status: ProcessingStatus }) {
   if (status === "running")
-    return <Loader2 className="spin" style={{ width: 14, height: 14, flexShrink: 0, color: "#0891b2" }} aria-hidden />;
+    return <Loader2 className="spin" style={{ width: 14, height: 14, flexShrink: 0, color: "var(--color-primary-600, #0891b2)" }} aria-hidden />;
   if (status === "completed")
     return <CheckCircle2 style={{ width: 14, height: 14, flexShrink: 0, color: "#16a34a" }} aria-hidden />;
   if (status === "failed")
@@ -374,8 +374,8 @@ function SummaryBlock({ summary }: { summary: Record<string, unknown> }) {
 function EmptyLiveHint({ phaseId }: { phaseId: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: "#6b7280" }}>
-      <Skeleton variant="line" width="w-32" className="h-2" />
-      <Skeleton variant="line" width="w-20" className="h-2" />
+      <Skeleton variant="line" width={128} height={8} />
+      <Skeleton variant="line" width={80} height={8} />
       <span style={{ marginLeft: "auto", fontStyle: "italic", color: "#9ca3af" }}>
         preparing {phaseId.replace("_", " ")}…
       </span>
@@ -400,7 +400,7 @@ function stringifyError(err: unknown): string {
 export function PhaseDetailCardSkeleton({ index = 0 }: { index?: number }) {
   return (
     <Card
-      noPadding
+      styles={{ body: { padding: 0 } }}
       className="stagger-in"
       style={{ display: "flex", flexDirection: "column", overflow: "hidden", animationDelay: `${index * 70}ms` }}
     >
@@ -414,20 +414,20 @@ export function PhaseDetailCardSkeleton({ index = 0 }: { index?: number }) {
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <Skeleton width="w-36" height="h-3" />
-          <Skeleton width="w-48" height="h-2" />
+          <Skeleton width={144} height={12} />
+          <Skeleton width={192} height={8} />
         </div>
-        <Skeleton variant="pill" width="w-16" />
+        <Skeleton variant="pill" width={64} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, padding: "12px 16px" }}>
-        <Skeleton variant="block" className="h-12" />
-        <Skeleton variant="block" className="h-12" />
-        <Skeleton variant="block" className="h-12" />
+        <Skeleton variant="block" height={48} />
+        <Skeleton variant="block" height={48} />
+        <Skeleton variant="block" height={48} />
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, borderTop: "1px solid #f3f4f6", padding: "12px 16px" }}>
-        <Skeleton width="w-full" height="h-3" />
-        <Skeleton width="w-5/6" height="h-3" />
-        <Skeleton width="w-4/6" height="h-3" />
+        <Skeleton width="100%" height={12} />
+        <Skeleton width="83%" height={12} />
+        <Skeleton width="67%" height={12} />
       </div>
       <div
         style={{
@@ -439,8 +439,8 @@ export function PhaseDetailCardSkeleton({ index = 0 }: { index?: number }) {
           padding: "8px 16px",
         }}
       >
-        <Skeleton width="w-32" height="h-2" />
-        <Skeleton width="w-20" height="h-2" />
+        <Skeleton width={128} height={8} />
+        <Skeleton width={80} height={8} />
       </div>
     </Card>
   );

@@ -25,7 +25,20 @@ def mock_translator():
     ctx.base_url = "http://test"
     ctx.temperature = 0.0
 
-    with patch("src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers.ChatOpenAI"):
+    with (
+        patch(
+            "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers.create_llm_client",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.create_llm",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.create_json_llm",
+            return_value=MagicMock(),
+        ),
+    ):
         translator = MultiStageTranslator(ctx=ctx)
 
     # Mock invoke_with_retry at module level to return simple async responses
@@ -99,3 +112,15 @@ async def test_translate_segments_truncates_large_terminology(mock_translator):
     assert result is not None
     total_calls = mock_translator._mock_invoke.call_count + mock_translator._mock_json_invoke.call_count
     assert total_calls >= 1
+
+
+@pytest.mark.asyncio
+async def test_self_review_skips_when_prompt_exceeds_budget(mock_translator):
+    """Self-review should not send full long documents beyond provider context."""
+    source_text = "这是一段很长的测试文本。" * 20000
+    translated_text = "This is a long translated test text." * 2000
+
+    result = await mock_translator._self_review(source_text, translated_text)
+
+    assert result == translated_text
+    mock_translator._mock_invoke.assert_not_called()

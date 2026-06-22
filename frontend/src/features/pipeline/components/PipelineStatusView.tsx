@@ -37,7 +37,7 @@ const statusBadgeStyles = (
     borderStyle: "solid",
   };
   if (isLive) {
-    return { ...base, backgroundColor: "#ecfeff", color: "#0e7490", borderColor: "#a5f3fc" };
+    return { ...base, backgroundColor: "#ecfeff", color: "var(--color-primary-700, #0e7490)", borderColor: "#a5f3fc" };
   }
   if (status === "completed") {
     return { ...base, backgroundColor: "#f0fdf4", color: "#15803d", borderColor: "#bbf7d0" };
@@ -63,11 +63,6 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
   if (isLoading) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-        <style>{`
-          @media (min-width: 768px) {
-            .psv-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-          }
-        `}</style>
         <PageHeader
           title="Pipeline Status"
           description={
@@ -84,7 +79,7 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
                 padding: "4px 12px",
                 fontSize: 12,
                 fontWeight: 500,
-                color: "#0e7490",
+                color: "var(--color-primary-700, #0e7490)",
                 border: "1px solid #a5f3fc",
               }}
             >
@@ -150,11 +145,6 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
 
   return (
     <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      <style>{`
-        @media (min-width: 768px) {
-          .psv-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-        }
-      `}</style>
       <PageHeader
         title="Pipeline Status"
         description={

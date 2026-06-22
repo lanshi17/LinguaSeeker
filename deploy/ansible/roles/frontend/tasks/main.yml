@@ -1,4 +1,4 @@
-# ── Frontend (Next.js via systemd, bun runtime) ──────────────────────────
+# -- Frontend (Vite+React, static build served by nginx) ----------------------
 
 - name: Install bun runtime (for deploy user)
   shell: >
@@ -13,8 +13,7 @@
     delete: yes
     rsync_opts:
       - "--exclude=node_modules"
-      - "--exclude=.next"
-      - "--exclude=out"
+      - "--exclude=dist"
   notify: Restart frontend
 
 - name: Install frontend dependencies
@@ -40,7 +39,6 @@
   environment:
     BUN_INSTALL: /home/deploy/.bun
     NODE_ENV: "{{ frontend_node_env }}"
-    NEXT_PUBLIC_API_URL: "https://{{ domain_name }}/api/v1"
 
 - name: Create lingua-seeker config directory
   file:

@@ -74,8 +74,8 @@ server {
         proxy_buffering off;
     }
 
-    # ── Static assets (Next.js) — long cache ──────────────────────────────
-    location /_next/static/ {
+    # -- Static assets (Vite) — long cache ------------------------------------
+    location /assets/ {
         proxy_pass http://frontend;
         proxy_cache_valid 200 365d;
         add_header Cache-Control "public, max-age=31536000, immutable";

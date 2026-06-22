@@ -15,22 +15,6 @@ export function DashboardLayout() {
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
   return (
-    <>
-      <style>{`
-        .dl-desktop-sidebar { display: none; }
-        .dl-mobile-btn { display: flex; }
-        .dl-desktop-btn { display: none; }
-        .dl-header { padding: 0 16px; }
-        .dl-main { padding: 16px; transition: padding 200ms; }
-        @media (min-width: 768px) {
-          .dl-desktop-sidebar { display: block; }
-          .dl-mobile-btn { display: none; }
-          .dl-desktop-btn { display: flex; }
-          .dl-header { padding: 0 24px; }
-          .dl-main { padding: 24px; }
-        }
-      `}</style>
-
       <div style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "#f9fafb" }}>
         {/* Desktop sidebar */}
         <div className="dl-desktop-sidebar">
@@ -125,6 +109,5 @@ export function DashboardLayout() {
           </Content>
         </div>
       </div>
-    </>
   );
 }

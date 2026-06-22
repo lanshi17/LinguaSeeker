@@ -43,7 +43,7 @@ on:
   workflow_run:
     workflows: [build-backend, build-frontend]
     types: [completed]
-    branches: [master]
+    branches: [master, dev]
 
 concurrency:
   # One deploy per environment at a time. Newer manual runs supersede.
@@ -70,8 +70,13 @@ jobs:
             echo "image_tag=${{ inputs.image_tag }}"     >> "$GITHUB_OUTPUT"
             echo "target=${{ inputs.target }}"           >> "$GITHUB_OUTPUT"
           else
-            # workflow_run trigger: deploy master → production with `latest`.
-            echo "environment=production" >> "$GITHUB_OUTPUT"
+            # workflow_run trigger: master → production, dev → staging.
+            BRANCH="${{ github.event.workflow_run.head_branch }}"
+            if [[ "$BRANCH" == "master" ]]; then
+              echo "environment=production" >> "$GITHUB_OUTPUT"
+            else
+              echo "environment=staging"    >> "$GITHUB_OUTPUT"
+            fi
             echo "image_tag=latest"       >> "$GITHUB_OUTPUT"
             # Only push the side whose build just finished.
             case "${{ github.event.workflow_run.name }}" in
@@ -101,9 +106,12 @@ jobs:
           script: |
             set -euo pipefail
             DEPLOY_ROOT="${DEPLOY_ROOT:-/opt/lingua-seeker}"
+            ENV="${{ needs.resolve.outputs.environment }}"
+            BRANCH="master"
+            [[ "$ENV" == "staging" ]] && BRANCH="dev"
             cd "$DEPLOY_ROOT"
-            git fetch --depth=1 origin master
-            git checkout -f origin/master
+            git fetch --depth=1 origin "$BRANCH"
+            git checkout -f "origin/$BRANCH"
 
             # GHCR auth only needed for private images. Token is short-lived.
             if [[ -n "${GHCR_TOKEN:-}" ]]; then
@@ -151,9 +159,12 @@ jobs:
           script: |
             set -euo pipefail
             DEPLOY_ROOT="${DEPLOY_ROOT:-/opt/lingua-seeker}"
+            ENV="${{ needs.resolve.outputs.environment }}"
+            BRANCH="master"
+            [[ "$ENV" == "staging" ]] && BRANCH="dev"
             cd "$DEPLOY_ROOT"
-            git fetch --depth=1 origin master
-            git checkout -f origin/master
+            git fetch --depth=1 origin "$BRANCH"
+            git checkout -f "origin/$BRANCH"
 
             if [[ -n "${GHCR_TOKEN:-}" ]]; then
               echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin

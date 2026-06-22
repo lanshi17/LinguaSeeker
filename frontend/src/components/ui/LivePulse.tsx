@@ -9,8 +9,8 @@ interface LivePulseProps {
 }
 
 const toneColors: Record<PulseTone, string> = {
-  primary: "#06b6d4",
-  success: "#22c55e",
+  primary: "var(--color-primary-500, #06b6d4)",
+  success: "var(--color-success-500, #22c55e)",
   warning: "#f59e0b",
   error: "#ef4444",
   neutral: "#9ca3af",

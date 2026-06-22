@@ -1,12 +1,9 @@
 import { type HTMLAttributes } from "react";
 
 interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
-  /** Geometric preset. Defaults to a soft text line. */
   variant?: "text" | "line" | "circle" | "block" | "pill";
-  /** Width override (CSS value or legacy Tailwind class like "w-20"). */
-  width?: string;
-  /** Height override (CSS value or legacy Tailwind class like "h-3"). */
-  height?: string;
+  width?: string | number;
+  height?: string | number;
 }
 
 const variantStyles: Record<NonNullable<SkeletonProps["variant"]>, React.CSSProperties> = {
@@ -17,15 +14,6 @@ const variantStyles: Record<NonNullable<SkeletonProps["variant"]>, React.CSSProp
   pill: { height: 24, width: 80, borderRadius: 9999 },
 };
 
-/** True when the value is a legacy Tailwind utility class (e.g. "w-20", "h-3.5"). */
-function isTailwindClass(value: string): boolean {
-  return /^[wh]-/.test(value);
-}
-
-/**
- * Animated placeholder block. Uses a slow shimmer gradient (1.6s) so the user
- * perceives movement as progress, not a frozen screen.
- */
 export function Skeleton({
   variant = "text",
   width,
@@ -36,31 +24,16 @@ export function Skeleton({
 }: SkeletonProps) {
   const baseStyle = variantStyles[variant];
 
-  // Collect any legacy Tailwind classes from width/height props into className.
-  const extraClasses: string[] = [];
-  const inlineWidth = width && !isTailwindClass(width) ? width : undefined;
-  const inlineHeight = height && !isTailwindClass(height) ? height : undefined;
-  if (width && isTailwindClass(width)) extraClasses.push(width);
-  if (height && isTailwindClass(height)) extraClasses.push(height);
-
-  const combinedClassName = [
-    "skeleton-shimmer",
-    className,
-    ...extraClasses,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   return (
     <div
       role="status"
       aria-live="polite"
       aria-busy="true"
-      className={combinedClassName}
+      className={["skeleton-shimmer", className].filter(Boolean).join(" ")}
       style={{
         ...baseStyle,
-        ...(inlineWidth ? { width: inlineWidth } : {}),
-        ...(inlineHeight ? { height: inlineHeight } : {}),
+        ...(width != null ? { width } : {}),
+        ...(height != null ? { height } : {}),
         ...style,
       }}
       {...props}

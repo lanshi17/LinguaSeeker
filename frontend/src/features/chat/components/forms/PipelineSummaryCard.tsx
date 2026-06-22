@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "antd";
 import { Badge } from "@/components/ui/Badge";
 import {
   CheckCircle2,
@@ -248,7 +248,7 @@ export function PipelineSummaryCard({
         padding: "10px 16px",
       }}>
         <Button
-          size="sm"
+          size="small"
           onClick={handleConfirm}
           disabled={!hasData || submitted}
           loading={isSubmitting || submitted}
