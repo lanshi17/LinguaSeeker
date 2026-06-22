@@ -20,6 +20,8 @@ async def test_pipeline_run_injects_content_to_state(async_client):
         mock_runner = MagicMock()
         mock_runner.start = AsyncMock(return_value=MagicMock())
         mock_runner.is_running_for_source = AsyncMock(return_value=False)
+        mock_runner.compute_initial_content_hash = AsyncMock(return_value=None)
+        mock_runner.check_processing_cache = AsyncMock(return_value=None)
         mock_get_runner.return_value = mock_runner
 
         # Patch aiofiles.open to avoid writing real files to disk
@@ -52,6 +54,8 @@ async def test_post_pipeline_run(async_client: AsyncClient):
         mock_runner = MagicMock()
         mock_runner.start = AsyncMock(return_value=MagicMock())
         mock_runner.is_running_for_source = AsyncMock(return_value=False)
+        mock_runner.compute_initial_content_hash = AsyncMock(return_value=None)
+        mock_runner.check_processing_cache = AsyncMock(return_value=None)
         mock_get_runner.return_value = mock_runner
 
         # Mock aiofiles.open to avoid writing real files
@@ -275,6 +279,8 @@ async def test_post_pipeline_run_accepts_extraction_target(async_client: AsyncCl
         mock_runner = MagicMock()
         mock_runner.start = AsyncMock(return_value=MagicMock())
         mock_runner.is_running_for_source = AsyncMock(return_value=False)
+        mock_runner.compute_initial_content_hash = AsyncMock(return_value=None)
+        mock_runner.check_processing_cache = AsyncMock(return_value=None)
         mock_get_runner.return_value = mock_runner
 
         response = await async_client.post(
@@ -307,6 +313,8 @@ async def test_post_pipeline_run_duplicate_source_key_race_returns_409(async_cli
     with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
         runner = MagicMock()
         runner.is_running_for_source = AsyncMock(return_value=False)
+        runner.compute_initial_content_hash = AsyncMock(return_value=None)
+        runner.check_processing_cache = AsyncMock(return_value=None)
         runner.start = AsyncMock(
             side_effect=IntegrityError("insert", {}, Exception("duplicate source_key"))
         )

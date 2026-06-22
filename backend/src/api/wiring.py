@@ -102,6 +102,14 @@ def wire_dependencies() -> None:
     global _redis_client
     _redis_client = build_redis_client(cfg)
 
+    # ── Document processing cache (L1 Redis + L2 PostgreSQL) ──────────
+    from src.agents.processing_cache import DocumentProcessingCacheService
+
+    processing_cache = DocumentProcessingCacheService(
+        redis_client=_redis_client,
+        session_factory=get_session_factory(),
+    )
+
     session_factory = get_session_factory()
 
     # ── Phase 1-3 services (long-lived, no session in constructor) ──
@@ -150,6 +158,7 @@ def wire_dependencies() -> None:
         orchestrator=orchestrator,
         semaphore=semaphore,
         state_persistence=persistence,
+        processing_cache=processing_cache,
     )
     # Let the orchestrator push intermediate state updates to the runner's
     # in-memory cache so the status endpoint reflects phase progress in

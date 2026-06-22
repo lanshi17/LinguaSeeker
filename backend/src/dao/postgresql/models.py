@@ -679,3 +679,35 @@ class PipelineRunState(Base):
     heartbeat_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+
+
+class DocumentProcessingCache(Base):
+    """L2 PostgreSQL cache for document processing results.
+
+    Stores the final PipelineGraphState (as JSONB) keyed by content_hash,
+    so re-submission of the same document (identical bytes or identical
+    source key + extraction target) returns the prior result without
+    re-running the pipeline.
+    """
+
+    __tablename__ = "document_processing_cache"
+    __table_args__ = (
+        Index("ix_document_processing_cache_created_at", "created_at"),
+    )
+
+    cache_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    content_hash: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
+    source_key: Mapped[str | None] = mapped_column(Text, nullable=True)
+    processing_run_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("source_documents.source_document_id"), nullable=False
+    )
+    result_state: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )

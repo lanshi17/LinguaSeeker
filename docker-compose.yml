@@ -16,16 +16,19 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/lingua_seeker
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      - DATABASE_URL=postgresql+asyncpg://lingua_seeker:${POSTGRES_PASSWORD:-haMSxtBGKNzgzEDwySsSkJYazwBysTAe}@postgres:5432/dev_lingua_seeker
+      - REDIS_URL=redis://redis:6379/0
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
-      - POSTGRES_DB=lingua_seeker
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=dev_lingua_seeker
+      - POSTGRES_USER=lingua_seeker
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-haMSxtBGKNzgzEDwySsSkJYazwBysTAe}
+      - POSTGRES_SCHEMA=lingua
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
@@ -36,17 +39,30 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
     environment:
-      POSTGRES_DB: lingua_seeker
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: dev_lingua_seeker
+      POSTGRES_USER: lingua_seeker
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-haMSxtBGKNzgzEDwySsSkJYazwBysTAe}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lingua_seeker -d dev_lingua_seeker"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:8.0-alpine
     ports:
       - "127.0.0.1:6379:6379"
-    command: redis-server --requirepass ${REDIS_PASSWORD:-} --appendonly yes
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
 volumes:
   postgres_data:
+  redis_data:
