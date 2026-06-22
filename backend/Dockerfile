@@ -6,15 +6,15 @@ FROM python:3.12-slim-trixie
 #   cd backend
 #   uv sync --no-dev --frozen                 # populate .venv
 #
-#   mkdir -p build-artifacts
-#   tar czf build-artifacts/site-packages.tar.gz \
+#   mkdir -p ../docker-artifacts
+#   tar czf ../docker-artifacts/site-packages.tar.gz \
 #       --exclude='__pycache__' --exclude='*.pyc' --dereference \
 #       -C .venv/lib/python3.12/site-packages .
 #
 #   # console scripts (uvicorn/alembic/…) with shebangs rewritten to /opt/venv
 #   tmp=$(mktemp -d) && cp -P .venv/bin/* "$tmp"/ && rm -f "$tmp"/python*
 #   sed -i "s|$(pwd)/.venv/bin/python3|/opt/venv/bin/python3|g" "$tmp"/* || true
-#   tar czf build-artifacts/venv-bin.tar.gz -C "$tmp" . && rm -rf "$tmp"
+#   tar czf ../docker-artifacts/venv-bin.tar.gz -C "$tmp" . && rm -rf "$tmp"
 #
 # Trixie ships glibc 2.41, accepting any wheel built on the host
 # (Ubuntu 24.04 glibc 2.39) without manylinux acrobatics.
@@ -49,8 +49,8 @@ RUN python3 -m venv /opt/venv \
 
 # Drop pre-built site-packages (includes rust_io + every Python dep)
 # and the console-script shims with already-rewritten shebangs.
-COPY backend/build-artifacts/site-packages.tar.gz /tmp/sp.tar.gz
-COPY backend/build-artifacts/venv-bin.tar.gz /tmp/bin.tar.gz
+COPY docker-artifacts/site-packages.tar.gz /tmp/sp.tar.gz
+COPY docker-artifacts/venv-bin.tar.gz /tmp/bin.tar.gz
 RUN tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
  && tar xzf /tmp/bin.tar.gz -C /opt/venv/bin \
  && chmod +x /opt/venv/bin/* \
@@ -69,8 +69,8 @@ RUN grep -rlIZ --binary-files=without-match '/data/yangzs/Projects/01_ACMG_Lingu
 
 WORKDIR /app
 COPY backend/ /app/
-# Strip the host venv + build artefacts so the image only ships /opt/venv.
-RUN rm -rf /app/.venv /app/build-artifacts \
+# Strip the host venv so the image only ships /opt/venv.
+RUN rm -rf /app/.venv \
  && mkdir -p /app/logs /app/data /app/downloads /app/output \
  && chown -R deploy:deploy /app /opt/venv
 

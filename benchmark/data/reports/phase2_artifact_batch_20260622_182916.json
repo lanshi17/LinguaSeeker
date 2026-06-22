@@ -1,0 +1,50 @@
+{
+  "total_entries": 3,
+  "planned_count": 0,
+  "completed_count": 2,
+  "failed_count": 1,
+  "rows": [
+    {
+      "entry_id": "rett_001",
+      "status": "phase2_completed",
+      "processing_run_id": "7db9ac0e-8aae-4c7b-b3d1-659205b48f7b",
+      "source_document_id": "4a269720-0e54-4a99-9b5f-7e06965f00d9",
+      "status_url": "/api/v1/pipeline/runs/7db9ac0e-8aae-4c7b-b3d1-659205b48f7b/status",
+      "phase2_status": "completed",
+      "pipeline_status": "running",
+      "current_phase": "phase_3",
+      "artifact_path": "/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline/7db9ac0e-8aae-4c7b-b3d1-659205b48f7b/phase_2/extraction_result.json",
+      "artifact_exists": true,
+      "duration_s": 175.32,
+      "message": "Phase 2 completed; downstream phases may still be running."
+    },
+    {
+      "entry_id": "rett_008",
+      "status": "phase2_completed",
+      "processing_run_id": "da53fa6d-5e50-4f1e-aa35-5d28fff40f1b",
+      "source_document_id": "3de333a1-caba-4bea-9fc5-c41fc0de66ca",
+      "status_url": "/api/v1/pipeline/runs/da53fa6d-5e50-4f1e-aa35-5d28fff40f1b/status",
+      "phase2_status": "completed",
+      "pipeline_status": "completed",
+      "current_phase": null,
+      "artifact_path": "/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline/da53fa6d-5e50-4f1e-aa35-5d28fff40f1b/phase_2/extraction_result.json",
+      "artifact_exists": true,
+      "duration_s": 85.19,
+      "message": "Phase 2 completed; downstream phases may still be running."
+    },
+    {
+      "entry_id": "rett_009",
+      "status": "already_running",
+      "processing_run_id": null,
+      "source_document_id": null,
+      "status_url": null,
+      "phase2_status": null,
+      "pipeline_status": null,
+      "current_phase": null,
+      "artifact_path": null,
+      "artifact_exists": false,
+      "duration_s": 0.0,
+      "message": "{\"error\":{\"code\":\"CONFLICT\",\"message\":\"A pipeline run is already in progress for this source: rett_009.md|gene=MECP2|disease=rett syndrome (classical)|variant_p=|clingen=rett_009\"},\"request_id\":\"acdc43df-3908-48fe-8260-1949ce88e126\"}"
+    }
+  ]
+}
