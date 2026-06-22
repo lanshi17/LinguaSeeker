@@ -39,10 +39,11 @@ class Settings(BaseSettings):
     # Embedding model
     embedding_model_id: str = "Qwen/Qwen3-Embedding-0.6B"
     embedding_dimension: int = 1024
-    embedding_max_model_len: int = 32768
+    embedding_max_model_len: int = 8192
 
     # Rerank model
     rerank_model_id: str = "BAAI/bge-reranker-v2-m3"
+    rerank_max_model_len: int = 8192
 
     # LLM model (placeholder — for future local LLM)
     llm_model_id: str = ""

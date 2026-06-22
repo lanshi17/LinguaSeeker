@@ -1,6 +1,5 @@
 import { Search, X, Dna, FlaskConical, Stethoscope, Hash } from "lucide-react";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+import { Button, Input } from "antd";
 import type { EvidenceSearchQuery } from "../types/evidenceSearch";
 
 interface EvidenceSearchFormProps {
@@ -34,9 +33,6 @@ export function EvidenceSearchForm({
           .edb-search-grid {
             grid-template-columns: repeat(4, minmax(0, 1fr));
           }
-        }
-        .edb-search-field:focus-within .edb-search-icon {
-          color: var(--color-primary-500, #06b6d4);
         }
       `}</style>
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -87,11 +83,11 @@ export function EvidenceSearchForm({
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Button type="submit" loading={isSearching} style={{ boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+              <Button htmlType="submit" loading={isSearching} style={{ boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
                 <Search style={{ width: 16, height: 16, marginRight: 8 }} />
                 Search
               </Button>
-              <Button type="button" variant="ghost" onClick={onClear}>
+              <Button type="text" onClick={onClear}>
                 <X style={{ width: 16, height: 16, marginRight: 8 }} />
                 Clear
               </Button>
@@ -101,96 +97,40 @@ export function EvidenceSearchForm({
 
         {/* Input fields with icons */}
         <div className="edb-search-grid">
-          <div className="edb-search-field" style={{ position: "relative" }}>
-            <div
-              className="edb-search-icon"
-              style={{
-                pointerEvents: "none",
-                position: "absolute",
-                left: 12,
-                top: 38,
-                zIndex: 10,
-                color: "#9ca3af",
-                transition: "color 0.15s",
-              }}
-            >
-              <Dna style={{ width: 16, height: 16 }} />
-            </div>
+          <div>
+            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>Gene</label>
             <Input
-              label="Gene"
+              prefix={<Dna style={{ width: 16, height: 16, color: "#9ca3af" }} />}
               placeholder="e.g., BRCA1"
               value={filters.gene ?? ""}
               onChange={(e) => onUpdateFilter("gene", e.target.value)}
-              style={{ paddingLeft: 36 }}
             />
           </div>
-          <div className="edb-search-field" style={{ position: "relative" }}>
-            <div
-              className="edb-search-icon"
-              style={{
-                pointerEvents: "none",
-                position: "absolute",
-                left: 12,
-                top: 38,
-                zIndex: 10,
-                color: "#9ca3af",
-                transition: "color 0.15s",
-              }}
-            >
-              <FlaskConical style={{ width: 16, height: 16 }} />
-            </div>
+          <div>
+            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>Variant</label>
             <Input
-              label="Variant"
+              prefix={<FlaskConical style={{ width: 16, height: 16, color: "#9ca3af" }} />}
               placeholder="e.g., c.5266dupC"
               value={filters.variant ?? ""}
               onChange={(e) => onUpdateFilter("variant", e.target.value)}
-              style={{ paddingLeft: 36 }}
             />
           </div>
-          <div className="edb-search-field" style={{ position: "relative" }}>
-            <div
-              className="edb-search-icon"
-              style={{
-                pointerEvents: "none",
-                position: "absolute",
-                left: 12,
-                top: 38,
-                zIndex: 10,
-                color: "#9ca3af",
-                transition: "color 0.15s",
-              }}
-            >
-              <Stethoscope style={{ width: 16, height: 16 }} />
-            </div>
+          <div>
+            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>Disease</label>
             <Input
-              label="Disease"
+              prefix={<Stethoscope style={{ width: 16, height: 16, color: "#9ca3af" }} />}
               placeholder="e.g., Breast cancer"
               value={filters.disease ?? ""}
               onChange={(e) => onUpdateFilter("disease", e.target.value)}
-              style={{ paddingLeft: 36 }}
             />
           </div>
-          <div className="edb-search-field" style={{ position: "relative" }}>
-            <div
-              className="edb-search-icon"
-              style={{
-                pointerEvents: "none",
-                position: "absolute",
-                left: 12,
-                top: 38,
-                zIndex: 10,
-                color: "#9ca3af",
-                transition: "color 0.15s",
-              }}
-            >
-              <Hash style={{ width: 16, height: 16 }} />
-            </div>
+          <div>
+            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>PMID</label>
             <Input
-              label="PMID"
+              prefix={<Hash style={{ width: 16, height: 16, color: "#9ca3af" }} />}
               placeholder="e.g., 12345678"
               value={filters.pmid ?? ""}
               onChange={(e) => onUpdateFilter("pmid", e.target.value)}
-              style={{ paddingLeft: 36 }}
             />
           </div>
         </div>

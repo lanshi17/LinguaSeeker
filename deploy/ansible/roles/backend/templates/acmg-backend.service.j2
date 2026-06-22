@@ -11,6 +11,7 @@ Group=deploy
 WorkingDirectory={{ backend_root }}
 Environment=ENVIRONMENT=production
 Environment=PATH=/home/deploy/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=MODEL_SERVER_API_KEY={{ model_server_api_key }}
 ExecStart=/home/deploy/.local/bin/uv run uvicorn app.main:app \
     --host 127.0.0.1 \
     --port {{ backend_port }} \

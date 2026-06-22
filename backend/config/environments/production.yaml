@@ -32,7 +32,7 @@ embedding:
 rerank:
   base_url: "http://localhost:8001/v1"
   remote_base_url: "https://api.siliconflow.cn"
-  remote_model: "Qwen/Qwen3-Reranker-0.6B"
+  remote_model: "BAAI/bge-reranker-v2-m3"
 
 # ── Database Connections (Production) ────────────────────────────────────
 postgres:

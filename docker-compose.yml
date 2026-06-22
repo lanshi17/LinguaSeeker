@@ -17,13 +17,13 @@ services:
       redis:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql+asyncpg://lingua_seeker:${POSTGRES_PASSWORD:-haMSxtBGKNzgzEDwySsSkJYazwBysTAe}@postgres:5432/dev_lingua_seeker
+      - DATABASE_URL=postgresql+asyncpg://lingua_seeker:${POSTGRES_PASSWORD}@postgres:5432/dev_lingua_seeker
       - REDIS_URL=redis://redis:6379/0
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - POSTGRES_DB=dev_lingua_seeker
       - POSTGRES_USER=lingua_seeker
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-haMSxtBGKNzgzEDwySsSkJYazwBysTAe}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=lingua
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -37,7 +37,7 @@ services:
     environment:
       POSTGRES_DB: dev_lingua_seeker
       POSTGRES_USER: lingua_seeker
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-haMSxtBGKNzgzEDwySsSkJYazwBysTAe}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:

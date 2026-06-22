@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
   // Non-VITE_ vars are NOT exposed to the client bundle — safe to use here.
   const env = loadEnv(mode, process.cwd(), "");
   const apiKey = env.API_KEY || "";
+  const backendUrl = env.BACKEND_URL || "http://localhost:8000";
 
   return {
     plugins: [react()],
@@ -19,15 +20,13 @@ export default defineConfig(({ mode }) => {
       host: true,
       port: 3000,
       proxy: {
-        // Inject the shared X-API-Key so the backend trusts proxied requests.
-        // The browser never sees this key — it lives only in server-side env.
         "/api/v1": {
-          target: "http://localhost:8000",
+          target: backendUrl,
           changeOrigin: true,
           ...(apiKey ? { headers: { "X-API-Key": apiKey } } : {}),
         },
         "/health": {
-          target: "http://localhost:8000",
+          target: backendUrl,
           changeOrigin: true,
         },
       },

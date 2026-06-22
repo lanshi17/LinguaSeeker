@@ -15,7 +15,7 @@ name: build-frontend
 
 on:
   push:
-    branches: [dev, master, "release/**"]
+    branches: [dev, master, staging, "release/**"]
     paths:
       - "frontend/**"
       - ".github/workflows/build-frontend.yml"

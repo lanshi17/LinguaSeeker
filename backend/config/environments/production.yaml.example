@@ -5,26 +5,36 @@
 # Secrets go in vault/production.yaml (git-ignored)
 # ============================================================================
 
-# ── Application ───────────────────────────────────────────────────────────
+# -- Application -------------------------------------------------------------
 environment: "production"
 debug: false
 cors_origins: "https://your-domain.com"
 
-# ── LLM Endpoints (Production) ──────────────────────────────────────────
+# -- LLM Endpoints (Production) ----------------------------------------------
 fast_llm:
   base_url: "https://api.production-llm.com/v1"
 
 reasoning_llm:
   base_url: "https://api.production-llm.com/v1"
 
-# ── Model Server (Production) ────────────────────────────────────────────
+chat_llm:
+  base_url: "https://api.production-llm.com"
+
+translation_llm:
+  base_url: "https://api.production-llm.com"
+
+# -- Model Server (Production — multi-container mode) ------------------------
 embedding:
-  base_url: "http://model-server:8001/v1"
+  base_url: "http://embedding-server:8002/v1"
+  remote_base_url: "https://api.production-embedding.com"
+  remote_model: "Qwen/Qwen3-Embedding-0.6B"
 
 rerank:
-  base_url: "http://model-server:8001/v1"
+  base_url: "http://rerank-server:8003/v1"
+  remote_base_url: "https://api.production-rerank.com"
+  remote_model: "BAAI/bge-reranker-v2-m3"
 
-# ── Database Connections (Production) ────────────────────────────────────
+# -- Database Connections (Production) ----------------------------------------
 postgres:
   host: "postgres-server"
   db: "lingua_seeker"
@@ -33,13 +43,14 @@ postgres:
 redis:
   host: "redis-server"
 
-# ── Literature Acquisition ────────────────────────────────────────────────
-# Unpaywall requires a contact email — set to your institutional address.
-# API keys (pubmed/base/core) go in vault/production.yaml.
+# -- Literature Acquisition ---------------------------------------------------
 unpaywall:
   email: "admin@your-domain.com"
 
-# ── Network / Proxy ──────────────────────────────────────────────────────
+# -- Network / Proxy ---------------------------------------------------------
 network:
   proxy: ""
   no_proxy: "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
+
+# -- Model Server GPU Settings (Production — multi-container) ----------------
+doc_parse_model_id: "opendatalab/MinerU2.5-Pro-2604-1.2B"

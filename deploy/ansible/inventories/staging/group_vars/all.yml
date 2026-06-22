@@ -1,0 +1,119 @@
+# ============================================================================
+# Staging Group Variables — Structural Config
+# ============================================================================
+# Mirrors production structure with staging-specific overrides.
+# Secrets go in vault.yml (ansible-vault encrypted).
+# ============================================================================
+
+# -- Application -------------------------------------------------------------
+acmg_environment: staging
+acmg_debug: false
+acmg_cors_origins: "https://staging.lingua-seeker.your-domain.com"
+api_key: "{{ vault_api_key }}"
+
+# -- Domain / TLS ------------------------------------------------------------
+domain_name: "staging.lingua-seeker.your-domain.com"
+tls_email: "admin@your-domain.com"
+
+# -- Fast LLM ----------------------------------------------------------------
+fast_llm_base_url: "https://api.siliconflow.cn/v1"
+fast_llm_model: "Qwen/Qwen3-8B"
+fast_llm_timeout: 60
+fast_llm_max_tokens: 16384
+
+# -- Reasoning LLM -----------------------------------------------------------
+reasoning_llm_base_url: "https://api.siliconflow.cn/v1"
+reasoning_llm_model: "Pro/deepseek-ai/DeepSeek-R1"
+reasoning_llm_reasoning_effort: "high"
+reasoning_llm_timeout: 300
+reasoning_llm_max_tokens: 32768
+
+# -- Embedding ---------------------------------------------------------------
+embedding_base_url: "http://{{ hostvars[groups['app'][0]]['ansible_host'] }}:8001/v1"
+embedding_model: "Qwen/Qwen3-Embedding-0.6B"
+embedding_dimension: 1024
+embedding_batch_size: 10
+
+# -- Rerank ------------------------------------------------------------------
+rerank_base_url: "http://{{ hostvars[groups['app'][0]]['ansible_host'] }}:8001/v1"
+rerank_model: "BAAI/bge-reranker-v2-m3"
+rerank_top_k: 10
+rerank_score_threshold: 0.7
+
+# -- MinerU Document Parsing -------------------------------------------------
+mineru_max_file_size_mb: 100
+mineru_remote_poll_interval: 2.0
+mineru_remote_max_poll_attempts: 150
+mineru_local_model_server_url: "http://{{ hostvars[groups['app'][0]]['ansible_host'] }}:8001"
+mineru_local_model_id: "opendatalab/MinerU2.5-Pro-2604-1.2B"
+mineru_local_timeout: 120.0
+mineru_local_dpi: 200
+
+# -- PostgreSQL (staging uses 'lingua' schema, same as dev) ------------------
+postgres_host: "{{ hostvars[groups['db'][0]]['ansible_host'] }}"
+postgres_port: 5432
+postgres_db: "staging_lingua_seeker"
+postgres_schema: "lingua"
+postgres_user: "lingua_seeker"
+postgres_pool_size: 10
+postgres_max_overflow: 15
+
+# -- Redis -------------------------------------------------------------------
+redis_host: "{{ hostvars[groups['db'][0]]['ansible_host'] }}"
+redis_port: 6379
+redis_db: 0
+redis_max_connections: 10
+
+# -- Web Search --------------------------------------------------------------
+web_search_base_url: "https://api.firecrawl.dev"
+web_search_timeout: 30
+web_search_max_results: 10
+
+# -- Literature Acquisition --------------------------------------------------
+unpaywall_email: "admin@your-domain.com"
+
+# -- Network / Proxy ---------------------------------------------------------
+network_proxy: ""
+network_no_proxy: "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
+
+# -- Model Server GPU --------------------------------------------------------
+embedding_gpu_memory_utilization: 0.90
+embedding_max_model_len: 8192
+rerank_gpu_memory_utilization: 0.90
+rerank_max_model_len: 8192
+doc_parse_gpu_memory_utilization: 0.90
+
+# -- Model Server (systemd mode) ---------------------------------------------
+ms_embedding_model_id: "Qwen/Qwen3-Embedding-0.6B"
+ms_embedding_dimension: 1024
+ms_embedding_max_model_len: 8192
+ms_embedding_gpu_memory_utilization: 0.90
+ms_rerank_model_id: "BAAI/bge-reranker-v2-m3"
+ms_rerank_gpu_memory_utilization: 0.90
+ms_rerank_max_model_len: 8192
+ms_doc_parse_backend: "vlm"
+ms_doc_parse_model_path: "opendatalab/MinerU2.5-Pro-2604-1.2B"
+ms_doc_parse_gpu_memory_utilization: 0.90
+
+# -- Backend Service ---------------------------------------------------------
+backend_port: 8000
+backend_workers: 2
+backend_log_level: "info"
+
+# -- Frontend Service --------------------------------------------------------
+frontend_port: 3000
+frontend_node_env: "production"
+
+# -- Model Server Service ----------------------------------------------------
+model_server_deployment: "systemd"
+model_server_port: 8001
+model_server_embedding_port: 8002
+model_server_rerank_port: 8003
+model_server_vlm_port: 8004
+model_server_doc_parse_port: 8005
+model_server_api_key: "{{ vault_model_server_api_key | default('') }}"
+
+# -- Nginx -------------------------------------------------------------------
+nginx_worker_processes: "auto"
+nginx_worker_connections: 512
+nginx_client_max_body_size: "200m"

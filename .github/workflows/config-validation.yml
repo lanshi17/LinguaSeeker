@@ -1,0 +1,109 @@
+# Validates cross-service configuration consistency across all environments.
+# Runs on every PR that touches config files, and on push to dev/master.
+
+name: config-validation
+
+on:
+  push:
+    branches: [dev, master, staging]
+    paths:
+      - "backend/config/**"
+      - "frontend/.env*"
+      - "deploy/compose/**"
+      - "deploy/ansible/**"
+      - "services/model-server/**"
+      - ".github/workflows/config-validation.yml"
+  pull_request:
+    branches: [dev, master]
+    paths:
+      - "backend/config/**"
+      - "frontend/.env*"
+      - "deploy/compose/**"
+      - "deploy/ansible/**"
+      - "services/model-server/**"
+
+jobs:
+  validate:
+    name: config consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check no hardcoded secrets in tracked files
+        run: |
+          set -euo pipefail
+          # Known secret patterns that must NOT appear in tracked files
+          SECRETS=$(git grep -rn -E '(password|api_key|secret|token)\s*[:=]\s*[A-Za-z0-9@#$%]{8,}' \
+            -- ':!*example' ':!*Example' ':!*.example' ':!*.j2' ':!*.md' ':!*.txt' \
+            || true)
+          if [[ -n "$SECRETS" ]]; then
+            echo "::error::Potential secrets found in tracked files:"
+            echo "$SECRETS"
+            exit 1
+          fi
+          echo "No hardcoded secrets found."
+
+      - name: Validate Docker Compose files
+        run: |
+          set -euo pipefail
+          # Validate each compose file parses correctly
+          # (env vars without defaults will fail if not set, so provide dummies)
+          export POSTGRES_PASSWORD=dummy REDIS_PASSWORD=dummy API_KEY=dummy
+          export CORS_ORIGINS=http://localhost EMBEDDING_BASE_URL=http://localhost:8002/v1
+          export RERANK_BASE_URL=http://localhost:8003/v1
+          export FAST_LLM_BASE_URL=http://localhost REASONING_LLM_BASE_URL=http://localhost
+          export BACKEND_URL=http://localhost:8000
+
+          for f in docker-compose.yml deploy/compose/*/docker-compose.yml; do
+            echo "--- Validating $f ---"
+            docker compose -f "$f" config --quiet && echo "OK" || { echo "FAIL: $f"; exit 1; }
+          done
+
+      - name: Validate Ansible playbooks (syntax check)
+        run: |
+          set -euo pipefail
+          pip install ansible-core --quiet
+          for inv in deploy/ansible/inventories/*/hosts.yml; do
+            env=$(basename $(dirname "$inv"))
+            echo "--- Checking $env inventory ---"
+            ansible-playbook --syntax-check \
+              deploy/ansible/playbooks/site.yml \
+              -i "$inv" 2>&1 || { echo "FAIL: $env"; exit 1; }
+          done
+
+      - name: Check environment config completeness
+        run: |
+          set -euo pipefail
+          # Verify all three environment configs exist
+          for env in development staging production; do
+            f="backend/config/environments/${env}.yaml"
+            if [[ ! -f "$f" ]]; then
+              echo "::error::Missing environment config: $f"
+              exit 1
+            fi
+            echo "Found: $f"
+          done
+
+          # Verify vault examples exist for all environments
+          for env in development staging production; do
+            f="backend/config/vault/${env}.yaml.example"
+            if [[ ! -f "$f" ]]; then
+              echo "::error::Missing vault example: $f"
+              exit 1
+            fi
+            echo "Found: $f"
+          done
+
+          echo "All environment configs present."
+
+      - name: Check model name consistency
+        run: |
+          set -euo pipefail
+          # The canonical rerank model must be BAAI/bge-reranker-v2-m3 everywhere
+          STALE=$(git grep -rn 'Qwen/Qwen3-Reranker' -- '*.yaml' '*.yml' '*.py' || true)
+          if [[ -n "$STALE" ]]; then
+            echo "::error::Stale rerank model name 'Qwen/Qwen3-Reranker' found:"
+            echo "$STALE"
+            exit 1
+          fi
+          echo "Model names consistent."

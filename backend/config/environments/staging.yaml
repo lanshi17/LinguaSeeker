@@ -1,0 +1,56 @@
+# ============================================================================
+# Staging Environment Configuration
+# ============================================================================
+# Mirrors production structure for pre-release validation.
+# Secrets go in vault/staging.yaml (git-ignored)
+# ============================================================================
+
+# -- Application -------------------------------------------------------------
+environment: "staging"
+debug: false
+cors_origins: "https://staging.furong.genemed.tech"
+
+# -- LLM Endpoints (Staging) ------------------------------------------------
+fast_llm:
+  base_url: "https://linxi.chat/v1"
+
+reasoning_llm:
+  base_url: "https://linxi.chat/v1"
+
+chat_llm:
+  base_url: "https://api.siliconflow.cn"
+
+translation_llm:
+  base_url: "https://api.siliconflow.cn"
+
+# -- Model Server (Staging — multi-container mode) ---------------------------
+embedding:
+  base_url: "http://embedding-server:8002/v1"
+  remote_base_url: "https://api.siliconflow.cn"
+  remote_model: "Qwen/Qwen3-Embedding-0.6B"
+
+rerank:
+  base_url: "http://rerank-server:8003/v1"
+  remote_base_url: "https://api.siliconflow.cn"
+  remote_model: "BAAI/bge-reranker-v2-m3"
+
+# -- Database Connections (Staging) ------------------------------------------
+postgres:
+  host: "postgres"
+  db: "staging_lingua_seeker"
+  schema: "lingua"
+
+redis:
+  host: "redis"
+
+# -- Literature Acquisition ---------------------------------------------------
+unpaywall:
+  email: "yhvguk@stu.hunau.edu.cn"
+
+# -- Network / Proxy ---------------------------------------------------------
+network:
+  proxy: ""
+  no_proxy: "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
+
+# -- Model Server GPU Settings (Staging — multi-container) -------------------
+doc_parse_model_id: "opendatalab/MinerU2.5-Pro-2604-1.2B"

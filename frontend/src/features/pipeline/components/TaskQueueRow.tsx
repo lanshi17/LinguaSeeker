@@ -107,30 +107,6 @@ export function TaskQueueRow({ run }: TaskQueueRowProps) {
   const subtitle = run.title ?? run.current_phase ?? null;
 
   return (
-    <>
-      <style>{`
-        .tqr-link {
-          display: block;
-          position: relative;
-          border-radius: 8px;
-          border: 1px solid transparent;
-          padding: 10px 12px;
-          text-decoration: none;
-          color: inherit;
-          transition: all 150ms ease-out;
-        }
-        .tqr-link:hover {
-          transform: translateY(-1px);
-          border-color: #e5e7eb;
-          background-color: #fff;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-        .tqr-link:focus-visible {
-          outline: 2px solid var(--color-primary-600);
-          outline-offset: 2px;
-          border-radius: 8px;
-        }
-      `}</style>
       <Link
         to={`/pipeline/${run.processing_run_id}`}
         className="tqr-link"
@@ -241,6 +217,5 @@ export function TaskQueueRow({ run }: TaskQueueRowProps) {
           </span>
         </div>
       </Link>
-    </>
   );
 }
