@@ -118,24 +118,55 @@ class ChatLLMConfig(BaseModel):
         return keys
 
 
+class TranslationLLMConfig(BaseModel):
+    """Dedicated translation model (cross-lingual translation)."""
+
+    api_key: str = ""
+    api_keys: list[str] = Field(default_factory=list)
+    base_url: str = ""
+    model: str = "tencent/Hunyuan-MT-7B"
+    max_tokens: int = 8192
+    timeout: int = 60
+    temperature: float | None = 0.0
+    max_retries: int = 0
+
+    @property
+    def all_api_keys(self) -> list[str]:
+        """Return all available API keys (deduplicated, preserving order)."""
+        seen: set[str] = set()
+        keys: list[str] = []
+        for k in [*self.api_keys, self.api_key]:
+            k = k.strip()
+            if k and k not in seen:
+                seen.add(k)
+                keys.append(k)
+        return keys
+
+
 class EmbeddingConfig(BaseModel):
-    """Embedding model."""
+    """Embedding model with optional remote fallback."""
 
     base_url: str = ""
     api_key: str = ""
     model: str = "Qwen/Qwen3-Embedding-0.6B"
     dimension: int = 1024
     batch_size: int = 10
+    remote_base_url: str = ""
+    remote_api_key: str = ""
+    remote_model: str = ""
 
 
 class RerankConfig(BaseModel):
-    """Rerank model."""
+    """Rerank model with optional remote fallback."""
 
     base_url: str = ""
     api_key: str = ""
     model: str = "BAAI/bge-reranker-v2-m3"
     top_k: int = 10
     score_threshold: float = 0.7
+    remote_base_url: str = ""
+    remote_api_key: str = ""
+    remote_model: str = ""
 
 
 class MinerUConfig(BaseModel):
@@ -286,6 +317,17 @@ class Settings(BaseSettings):
     chat_llm_timeout: int = 0
     chat_llm_max_retries: int = 0
 
+    # ── Translation LLM flat fields (TRANSLATION_LLM_*) ────────────────
+
+    translation_llm_api_key: str = ""
+    translation_llm_api_keys: list[str] = Field(default_factory=list)
+    translation_llm_model: str = "tencent/Hunyuan-MT-7B"
+    translation_llm_base_url: str = ""
+    translation_llm_temperature: float | None = None
+    translation_llm_max_tokens: int = 8192
+    translation_llm_timeout: int = 60
+    translation_llm_max_retries: int = 0
+
 
     # ── Embedding flat fields (EMBEDDING_*) ──────────────────────────────
 
@@ -293,6 +335,9 @@ class Settings(BaseSettings):
     embedding_model: str = "Qwen/Qwen3-Embedding-0.6B"
     embedding_dimension: int = 1024
     embedding_batch_size: int = 10
+    embedding_remote_base_url: str = ""
+    embedding_remote_api_key: str = ""
+    embedding_remote_model: str = ""
 
     # ── Rerank flat fields (RERANK_*) ────────────────────────────────────
 
@@ -300,6 +345,9 @@ class Settings(BaseSettings):
     rerank_model: str = "BAAI/bge-reranker-v2-m3"
     rerank_top_k: int = 10
     rerank_score_threshold: float = 0.7
+    rerank_remote_base_url: str = ""
+    rerank_remote_api_key: str = ""
+    rerank_remote_model: str = ""
 
     # ── MinerU flat fields (MINERU_*) ────────────────────────────────────
 
@@ -360,6 +408,7 @@ class Settings(BaseSettings):
     llm: LLMConfig = Field(default_factory=LLMConfig, exclude=True)
     reasoning: ReasoningConfig = Field(default_factory=ReasoningConfig, exclude=True)
     chat: ChatLLMConfig = Field(default_factory=ChatLLMConfig, exclude=True)
+    translation: TranslationLLMConfig = Field(default_factory=TranslationLLMConfig, exclude=True)
     embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig, exclude=True)
     rerank: RerankConfig = Field(default_factory=RerankConfig, exclude=True)
     mineru: MinerUConfig = Field(default_factory=MinerUConfig, exclude=True)
@@ -412,12 +461,25 @@ class Settings(BaseSettings):
             temperature=self.chat_llm_temperature,
             max_retries=self.chat_llm_max_retries,
         )
+        self.translation = TranslationLLMConfig(
+            api_key=self.translation_llm_api_key,
+            api_keys=self.translation_llm_api_keys,
+            base_url=self.translation_llm_base_url,
+            model=self.translation_llm_model,
+            max_tokens=self.translation_llm_max_tokens,
+            timeout=self.translation_llm_timeout,
+            temperature=self.translation_llm_temperature,
+            max_retries=self.translation_llm_max_retries,
+        )
         self.embedding = EmbeddingConfig(
             base_url=self.embedding_base_url,
             api_key=self.model_server_api_key,
             model=self.embedding_model,
             dimension=self.embedding_dimension,
             batch_size=self.embedding_batch_size,
+            remote_base_url=self.embedding_remote_base_url,
+            remote_api_key=self.embedding_remote_api_key,
+            remote_model=self.embedding_remote_model,
         )
         self.rerank = RerankConfig(
             base_url=self.rerank_base_url,
@@ -425,6 +487,9 @@ class Settings(BaseSettings):
             model=self.rerank_model,
             top_k=self.rerank_top_k,
             score_threshold=self.rerank_score_threshold,
+            remote_base_url=self.rerank_remote_base_url,
+            remote_api_key=self.rerank_remote_api_key,
+            remote_model=self.rerank_remote_model,
         )
         self.mineru = MinerUConfig(
             max_file_size_mb=self.mineru_max_file_size_mb,

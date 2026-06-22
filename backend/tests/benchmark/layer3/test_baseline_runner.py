@@ -379,3 +379,21 @@ def test_baseline_report_serializes_metadata(tmp_path: Path) -> None:
     assert payload["config"]["model"] == "gpt-5"
     assert payload["config"]["prompt_mode"] == "citation_required"
     assert payload["config"]["temperature"] == 0.0
+
+
+def test_naive_llm_baseline_uses_canonical_gpt5_metadata() -> None:
+    from benchmark.analysis.baselines.naive_llm import build_config
+
+    config = build_config(
+        ground_truth_dir=Path("benchmark/data/ground_truth/rett"),
+        reports_dir=Path("benchmark/data/reports"),
+        entry_ids=(),
+        limit=None,
+        save_report=True,
+    )
+
+    assert config.metadata["model_baseline_id"] == "B6_GPT5_PROMPT_CITE"
+    assert config.metadata["model_baseline_name"] == "GPT-5 prompt-only citation-required"
+    assert config.metadata["model"] == "gpt-5-2025-08-07"
+    assert config.metadata["provider_family"] == "openai"
+    assert config.metadata["release_cohort"] == "frontier_2025q3_aug07_sep30"

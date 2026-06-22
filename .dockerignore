@@ -1,0 +1,83 @@
+# Root-level .dockerignore — applies when build context is the repo root
+# (backend image uses context=. via deploy/compose/backend-host).
+#
+# Keep the context tiny: COPY in backend/Dockerfile only pulls `backend/`
+# and `libs/`, but the daemon still tars the WHOLE context first.
+
+# VCS / IDE
+.git
+.github
+.qoder
+.claude
+.cursor
+.vscode
+
+# Local caches and tool state
+.codegraph
+.mypy_cache
+.ruff_cache
+.pytest_cache
+.playwright-mcp
+.venv
+.cache_ggshield
+node_modules
+
+# Build artefacts (frontend ships its own image)
+frontend/dist
+frontend/node_modules
+frontend/tsconfig.tsbuildinfo
+
+# Backend artefacts (already covered by backend/.dockerignore — restated
+# here so the root tar drops them up-front instead of streaming GBs).
+backend/.venv
+backend/__pycache__
+backend/.pytest_cache
+backend/.ruff_cache
+backend/.mypy_cache
+backend/logs
+backend/downloads
+backend/output
+backend/data
+backend/benchmark
+backend/.test-build
+backend/.cache_ggshield
+backend/config/vault/development.yaml
+backend/config/vault/staging.yaml
+
+# Runtime + working directories that have no place in a build image
+logs
+data
+downloads
+output
+worktree
+worktrees
+docs/archive
+docs/active
+docs/planned
+docs/plans
+docs/codereview
+docs/diagrams
+docs/templates
+knowledges
+database/backups
+database/seeds
+database/terminology_database
+services/model-server
+
+# Notebooks, lockfiles unrelated to build
+.ipynb_checkpoints
+
+# Logs and ad-hoc dumps in the repo root
+*.log
+nohup.out
+command.log
+progress.txt
+lesson.md
+
+# Rust build artefacts — multi-GB target/ dirs MUST stay out of context
+backend/libs/*/target
+**/target
+**/Cargo.lock.bak
+
+# Whitelist pre-built backend artefacts (uv binary + rust_io wheel)
+!backend/build-artifacts

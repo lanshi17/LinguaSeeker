@@ -54,9 +54,13 @@ DualEvidenceExtractionResult
      -> HybridTerminologyMatcher
         -> PreciseTerminologyMatcher (deterministic alias lookup)
         -> SimilarityTerminologyMatcher (semantic fallback)
-           -> ModelServerEmbeddingProvider -> model-server /v1/embeddings
+           -> FallbackEmbeddingProvider
+              -> local:  ModelServerEmbeddingProvider -> model-server /v1/embeddings
+              -> remote: ModelServerEmbeddingProvider -> remote API (fallback)
            -> PgvectorTerminologyRepository -> pgvector cosine distance
-           -> ModelServerRerankProvider -> model-server /v1/rerank
+           -> FallbackRerankProvider
+              -> local:  ModelServerRerankProvider -> model-server /v1/rerank
+              -> remote: ModelServerRerankProvider -> remote API (fallback)
      -> AcmgReadyProjector (ACMG rules-engine facts)
      -> StandardizationRepository
         -> terminology_entries / terminology_aliases / terminology_relationships
@@ -200,7 +204,9 @@ Semantic matches are persisted with `match_method="similarity"` and include `sim
 
 ### Graceful Degradation
 
-If the semantic matching service is unavailable (`SemanticMatchServiceError`), `HybridTerminologyMatcher` logs a warning and returns `unmapped` with `match_method="similarity"` and a rationale describing the failure. This prevents transient model-server outages from crashing the entire standardization pipeline.
+Embedding and rerank providers use a local-first, remote-fallback strategy (mirroring the MinerU document parsing pattern). `FallbackEmbeddingProvider` and `FallbackRerankProvider` try the local model-server first; if it's unavailable (connection error, timeout, HTTP error), they fall back to a configured remote provider (e.g. SiliconFlow). If no remote is configured, the original error propagates. This prevents transient model-server outages from blocking the standardization pipeline.
+
+If both local and remote providers fail (or no remote is configured and local fails), `HybridTerminologyMatcher` logs a warning and returns `unmapped` with `match_method="similarity"` and a rationale describing the failure.
 
 ## Repository Write Boundaries
 
@@ -337,9 +343,13 @@ HybridTerminologyMatcher
     ├── PreciseTerminologyMatcher (deterministic alias lookup)
     └── unmapped?
         └── SimilarityTerminologyMatcher
-            ├── ModelServerEmbeddingProvider -> model-server /v1/embeddings
+            ├── FallbackEmbeddingProvider
+            │   ├── local  -> model-server /v1/embeddings
+            │   └── remote -> remote API (fallback)
             ├── PgvectorTerminologyRepository -> pgvector cosine retrieval
-            └── ModelServerRerankProvider -> model-server /v1/rerank
+            └── FallbackRerankProvider
+                ├── local  -> model-server /v1/rerank
+                └── remote -> remote API (fallback)
 ```
 
 ### Enabling
