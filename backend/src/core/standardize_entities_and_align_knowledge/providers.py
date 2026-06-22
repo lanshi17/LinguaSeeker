@@ -16,11 +16,13 @@ class EmbeddingProvider:
         model: str = "",
         batch_size: int = 10,
         timeout: float = 60.0,
+        api_key: str | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.batch_size = max(1, batch_size)
         self.timeout = timeout
+        self._headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
 
     async def generate_embeddings(self, texts: list[str]) -> list[list[float]]:
         """Generate embeddings for a list of text strings via model-server.
@@ -44,7 +46,7 @@ class EmbeddingProvider:
                 if self.model:
                     payload["model"] = self.model
 
-                response = await client.post(url, json=payload)
+                response = await client.post(url, json=payload, headers=self._headers)
                 response.raise_for_status()
                 data = response.json()
 

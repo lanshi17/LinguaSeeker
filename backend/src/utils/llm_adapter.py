@@ -59,37 +59,62 @@ class LLMPoolAdapter:
 
     def invoke(self, messages: list[BaseMessage], **kwargs: Any) -> Any:
         idx = self._next_index()
+        tried = {idx}
         try:
             result = self._clients[idx].invoke(messages, **kwargs)
             self._mark_success(idx)
             return result
         except Exception as exc:
             self._mark_failure(idx)
-            if _is_auth_error(exc) and self.pool_size > 1:
-                logger.warning("LLM key {} auth error, failover: {}", idx, exc)
-                # Try next key
+            if not _is_auth_error(exc) or self.pool_size <= 1:
+                raise
+            logger.warning("LLM key {} auth error, failover: {}", idx, exc)
+            # Try all remaining keys before giving up
+            while len(tried) < self.pool_size:
                 alt_idx = self._next_index()
-                if alt_idx != idx:
+                if alt_idx in tried:
+                    continue
+                tried.add(alt_idx)
+                try:
                     result = self._clients[alt_idx].invoke(messages, **kwargs)
                     self._mark_success(alt_idx)
                     return result
+                except Exception as alt_exc:
+                    self._mark_failure(alt_idx)
+                    if _is_auth_error(alt_exc):
+                        logger.warning("LLM key {} auth error, failover: {}", alt_idx, alt_exc)
+                        continue
+                    raise
             raise
 
     async def ainvoke(self, messages: list[BaseMessage], **kwargs: Any) -> Any:
         idx = self._next_index()
+        tried = {idx}
         try:
             result = await self._clients[idx].ainvoke(messages, **kwargs)
             self._mark_success(idx)
             return result
         except Exception as exc:
             self._mark_failure(idx)
-            if _is_auth_error(exc) and self.pool_size > 1:
-                logger.warning("LLM key {} auth error, failover: {}", idx, exc)
+            if not _is_auth_error(exc) or self.pool_size <= 1:
+                raise
+            logger.warning("LLM key {} auth error, failover: {}", idx, exc)
+            # Try all remaining keys before giving up
+            while len(tried) < self.pool_size:
                 alt_idx = self._next_index()
-                if alt_idx != idx:
+                if alt_idx in tried:
+                    continue
+                tried.add(alt_idx)
+                try:
                     result = await self._clients[alt_idx].ainvoke(messages, **kwargs)
                     self._mark_success(alt_idx)
                     return result
+                except Exception as alt_exc:
+                    self._mark_failure(alt_idx)
+                    if _is_auth_error(alt_exc):
+                        logger.warning("LLM key {} auth error, failover: {}", alt_idx, alt_exc)
+                        continue
+                    raise
             raise
 
     def with_structured_output(
@@ -124,6 +149,7 @@ class _StructuredOutputWrapper:
 
     def invoke(self, messages: list[BaseMessage], **kwargs: Any) -> Any:
         idx = self._pool._next_index()
+        tried = {idx}
         client = self._pool._clients[idx]
         structured = client.with_structured_output(
             self._schema, method=self._method, **self._kwargs
@@ -134,9 +160,15 @@ class _StructuredOutputWrapper:
             return result
         except Exception as exc:
             self._pool._mark_failure(idx)
-            if _is_auth_error(exc) and self._pool.pool_size > 1:
+            if not _is_auth_error(exc) or self._pool.pool_size <= 1:
+                raise
+            # Try all remaining keys before giving up
+            while len(tried) < self._pool.pool_size:
                 alt_idx = self._pool._next_index()
-                if alt_idx != idx:
+                if alt_idx in tried:
+                    continue
+                tried.add(alt_idx)
+                try:
                     alt_client = self._pool._clients[alt_idx]
                     alt_structured = alt_client.with_structured_output(
                         self._schema, method=self._method, **self._kwargs
@@ -144,10 +176,16 @@ class _StructuredOutputWrapper:
                     result = alt_structured.invoke(messages, **kwargs)
                     self._pool._mark_success(alt_idx)
                     return result
+                except Exception as alt_exc:
+                    self._pool._mark_failure(alt_idx)
+                    if _is_auth_error(alt_exc):
+                        continue
+                    raise
             raise
 
     async def ainvoke(self, messages: list[BaseMessage], **kwargs: Any) -> Any:
         idx = self._pool._next_index()
+        tried = {idx}
         client = self._pool._clients[idx]
         structured = client.with_structured_output(
             self._schema, method=self._method, **self._kwargs
@@ -158,9 +196,15 @@ class _StructuredOutputWrapper:
             return result
         except Exception as exc:
             self._pool._mark_failure(idx)
-            if _is_auth_error(exc) and self._pool.pool_size > 1:
+            if not _is_auth_error(exc) or self._pool.pool_size <= 1:
+                raise
+            # Try all remaining keys before giving up
+            while len(tried) < self._pool.pool_size:
                 alt_idx = self._pool._next_index()
-                if alt_idx != idx:
+                if alt_idx in tried:
+                    continue
+                tried.add(alt_idx)
+                try:
                     alt_client = self._pool._clients[alt_idx]
                     alt_structured = alt_client.with_structured_output(
                         self._schema, method=self._method, **self._kwargs
@@ -168,6 +212,11 @@ class _StructuredOutputWrapper:
                     result = await alt_structured.ainvoke(messages, **kwargs)
                     self._pool._mark_success(alt_idx)
                     return result
+                except Exception as alt_exc:
+                    self._pool._mark_failure(alt_idx)
+                    if _is_auth_error(alt_exc):
+                        continue
+                    raise
             raise
 
 
