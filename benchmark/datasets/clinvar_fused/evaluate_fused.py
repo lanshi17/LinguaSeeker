@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from loguru import logger
+from benchmark.core.field_normalize import normalize_field_for_matching
 
 GROUND_TRUTH_DIR = Path(__file__).resolve().parent / "ground_truth"
 REPORTS_DIR = Path(__file__).resolve().parent / "reports"
@@ -129,6 +130,8 @@ def compare_gene_disease(
         best: FieldResult | None = None
         extra_values: list[str] = []
         seen_extra: set[str] = set()
+        # Field-specific normalization (MOI, gene_disease_relationship)
+        e_field_norm = normalize_field_for_matching(field_id, expected_value).lower()
 
         for cand in candidates:
             ext_val = str(cand.get("value", ""))
@@ -140,11 +143,16 @@ def compare_gene_disease(
             elif fuzzy_match(expected_value, ext_val):
                 match_type = "fuzzy"
             else:
-                normalized = normalize_text(ext_val).lower()
-                if normalized not in seen_extra:
-                    seen_extra.add(normalized)
-                    extra_values.append(ext_val)
-                continue
+                # Field-specific normalization fallback (e.g. AD vs autosomal dominant)
+                x_field_norm = normalize_field_for_matching(field_id, ext_val).lower()
+                if e_field_norm and x_field_norm and e_field_norm == x_field_norm:
+                    match_type = "field_normalized"
+                else:
+                    normalized = normalize_text(ext_val).lower()
+                    if normalized not in seen_extra:
+                        seen_extra.add(normalized)
+                        extra_values.append(ext_val)
+                    continue
 
             if best is None or (match_type == "exact" and best.match_type != "exact"):
                 best = FieldResult(
@@ -193,10 +201,15 @@ def compare_variant_precision(
         if not candidates and expected.get("value"):
             candidates = [expected["value"]]
 
-        # Normalize gold candidates
+        # Normalize gold candidates (both text and field-specific)
         gold_normalized = set()
+        gold_field_normalized = set()
         for c in candidates:
-            gold_normalized.add(normalize_text(str(c)).lower())
+            c_str = str(c)
+            gold_normalized.add(normalize_text(c_str).lower())
+            field_norm = normalize_field_for_matching(field_id, c_str).lower()
+            if field_norm:
+                gold_field_normalized.add(field_norm)
 
         # Find all extracted values for this field_id
         extracted_for_field = [
@@ -222,6 +235,11 @@ def compare_variant_precision(
                 if ext_norm == g or ext_norm in g or g in ext_norm:
                     is_match = True
                     break
+            # Field-specific normalization fallback (e.g. p.Ile359Leu → p.I359L)
+            if not is_match and gold_field_normalized:
+                ext_field_norm = normalize_field_for_matching(field_id, ext_val).lower()
+                if ext_field_norm and ext_field_norm in gold_field_normalized:
+                    is_match = True
 
             results.append(FieldResult(
                 field_id=field_id,

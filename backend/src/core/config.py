@@ -122,6 +122,7 @@ class EmbeddingConfig(BaseModel):
     """Embedding model."""
 
     base_url: str = ""
+    api_key: str = ""
     model: str = "Qwen/Qwen3-Embedding-0.6B"
     dimension: int = 1024
     batch_size: int = 10
@@ -131,6 +132,7 @@ class RerankConfig(BaseModel):
     """Rerank model."""
 
     base_url: str = ""
+    api_key: str = ""
     model: str = "BAAI/bge-reranker-v2-m3"
     top_k: int = 10
     score_threshold: float = 0.7
@@ -316,6 +318,7 @@ class Settings(BaseSettings):
     # ── Model Server flat fields (MODEL_SERVER_*) ─────────────────────
 
     model_server_url: str = "http://localhost:8001"
+    model_server_api_key: str = ""  # API key for authenticating with model-server containers
 
     # ── Redis flat fields (REDIS_*) ──────────────────────────────────────
 
@@ -411,12 +414,14 @@ class Settings(BaseSettings):
         )
         self.embedding = EmbeddingConfig(
             base_url=self.embedding_base_url,
+            api_key=self.model_server_api_key,
             model=self.embedding_model,
             dimension=self.embedding_dimension,
             batch_size=self.embedding_batch_size,
         )
         self.rerank = RerankConfig(
             base_url=self.rerank_base_url,
+            api_key=self.model_server_api_key,
             model=self.rerank_model,
             top_k=self.rerank_top_k,
             score_threshold=self.rerank_score_threshold,

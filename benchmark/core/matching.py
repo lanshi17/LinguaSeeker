@@ -13,13 +13,22 @@ from dataclasses import replace
 from typing import Any
 
 from benchmark.core.contracts import EntryMetrics, FieldMatch
+from benchmark.core.field_normalize import normalize_field_for_matching
 
 __all__ = [
     "normalize_comparison_text",
     "fuzzy_match_value",
     "compare_evidence",
     "mark_expected_fields_missing",
+    "prepare_extracted_items",
 ]
+
+
+# Legacy field IDs from earlier extraction prompts → current catalog IDs.
+# Keeps preprocessed data compatible without regenerating.
+_FIELD_ID_ALIASES: dict[str, str] = {
+    "A.disease_name": "B.disease_diagnosis",
+}
 
 
 _PUNCT_TRANSLATION = str.maketrans({
@@ -84,6 +93,36 @@ def fuzzy_match_value(expected: str, extracted: str) -> bool:
     return False
 
 
+def prepare_extracted_items(items: list[dict]) -> list[dict]:
+    """Clean extracted items before matching.
+
+    1. Remap legacy field IDs to current catalog equivalents.
+    2. Filter malformed field IDs (must be ``Category.field_name``).
+    3. Deduplicate by (field_id, normalized value), keeping highest confidence.
+    """
+    result: list[dict] = []
+    for item in items:
+        field_id = item.get("field_id", "")
+        field_id = _FIELD_ID_ALIASES.get(field_id, field_id)
+        if "." not in field_id or not field_id.split(".", 1)[1]:
+            continue
+        result.append({**item, "field_id": field_id})
+
+    result.sort(key=lambda x: float(x.get("confidence", 0) or 0), reverse=True)
+
+    seen: set[tuple[str, str]] = set()
+    deduped: list[dict] = []
+    for item in result:
+        fid = item.get("field_id", "")
+        value = normalize_comparison_text(str(item.get("value", ""))).lower()
+        key = (fid, value)
+        if key not in seen:
+            seen.add(key)
+            deduped.append(item)
+
+    return deduped
+
+
 # Fields that benefit from ontology ancestry matching
 _DISEASE_FIELDS = {"B.disease_diagnosis", "B.disease_phenotype"}
 
@@ -125,6 +164,8 @@ def compare_evidence(
 
         # Check each candidate for value match
         best_match: FieldMatch | None = None
+        # Field-specific normalization (HGVS, MOI, variant_type, gene_disease_relationship)
+        expected_field_norm = normalize_field_for_matching(field_id, expected_value).lower()
         for cand in candidates:
             extracted_value = str(cand.get("value", ""))
             confidence = cand.get("confidence", 0.0)
@@ -137,7 +178,12 @@ def compare_evidence(
             elif fuzzy_match_value(expected_value, extracted_value):
                 match_type = "fuzzy"
             else:
-                continue
+                # Field-specific normalization fallback (e.g. p.Ile359Leu → p.I359L)
+                extracted_field_norm = normalize_field_for_matching(field_id, extracted_value).lower()
+                if expected_field_norm and extracted_field_norm and expected_field_norm == extracted_field_norm:
+                    match_type = "field_normalized"
+                else:
+                    continue
 
             candidate_match = FieldMatch(
                 field_id=field_id,
