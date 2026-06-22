@@ -1,0 +1,996 @@
+{
+  "baseline_type": "prompt_engineering",
+  "description": "Single-prompt LLM extraction vs full pipeline (dual-track + catalog + chunking + normalization)",
+  "model": "gpt-5-mini",
+  "base_url": "https://linxi.chat/v1",
+  "entry_count": 10,
+  "entry_ids": [
+    "fused_000",
+    "fused_001",
+    "fused_002",
+    "fused_003",
+    "fused_004",
+    "fused_005",
+    "fused_006",
+    "fused_007",
+    "fused_008",
+    "fused_009"
+  ],
+  "prompt_baseline": {
+    "precision": 0.2816,
+    "recall": 0.4462,
+    "f1": 0.3452,
+    "tp": 29,
+    "fp": 74,
+    "fn": 36,
+    "per_entry": [
+      {
+        "entry_id": "fused_000",
+        "tp": 5,
+        "fp": 21,
+        "fn": 3,
+        "f1": 0.2941,
+        "latency_s": 27.95,
+        "raw_items_count": 26,
+        "filtered_items_count": 26,
+        "field_results": [
+          {
+            "field_id": "A.gene_symbol",
+            "expected": "CFTR",
+            "extracted": "CFTR",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "B.disease_diagnosis",
+            "expected": "cystic fibrosis",
+            "extracted": "cystic fibrosis",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.gene_disease_relationship",
+            "expected": "causative",
+            "extracted": "causative",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "B.mode_of_inheritance_reported",
+            "expected": "AR",
+            "extracted": "AR",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "c.1521_1523del",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "p.Phe508del",
+            "extracted": "p.Phe508del",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "deletion",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "J.clinvar_assertion",
+            "expected": "Pathogenic",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "",
+            "extracted": "p.Ala559Thr",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.1675G>A",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "missense",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "",
+            "extracted": "p.Arg553Ter",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.1657C>T",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "nonsense",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.1210-34TG[11]T[5] (TG12-5T)",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "intronic TG-T repeat / splice-modifying variant",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "in-frame deletion",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "",
+            "extracted": "p.Ile507del",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "in-frame deletion",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "",
+            "extracted": "p.Arg334Trp",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "missense",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "",
+            "extracted": "p.Arg1066Cys",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "missense",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "",
+            "extracted": "p.Val201Met",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "missense",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "",
+            "extracted": "p.Asp443Tyr",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "missense",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "",
+            "extracted": "p.Phe1052Val",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "missense",
+            "outcome": "fp"
+          }
+        ]
+      },
+      {
+        "entry_id": "fused_001",
+        "tp": 5,
+        "fp": 33,
+        "fn": 2,
+        "f1": 0.2222,
+        "latency_s": 35.32,
+        "raw_items_count": 38,
+        "filtered_items_count": 38,
+        "field_results": [
+          {
+            "field_id": "A.gene_symbol",
+            "expected": "ABCA4",
+            "extracted": "ABCA4",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.gene_disease_relationship",
+            "expected": "causative",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "B.mode_of_inheritance_reported",
+            "expected": "AR",
+            "extracted": "AR",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "c.5882G>A",
+            "extracted": "c.5882G>A",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "p.Gly1961Glu",
+            "extracted": "p.(Gly1961Glu)",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "missense",
+            "extracted": "missense",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "J.clinvar_assertion",
+            "expected": "Pathogenic",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.gene_disease_relationship",
+            "expected": "",
+            "extracted": "causative (biallelic pathogenic variants cause Stargardt disease / STGD1)",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.1957C>T",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "nucleotide substitution",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.1648G>A",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "nucleotide substitution",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.768G>T",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "nucleotide substitution",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.[1622T>C;3113C>T]",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "complex allele (multiple variants in cis)",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.[5461-10T>C;5603A>T]",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "complex allele (splice-region / intronic + substitution)",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.3970del",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "deletion",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.2768del",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "deletion",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.5161_5162del",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "deletion",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.3210_3211dup",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "duplication",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.3819dupT",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "duplication",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "deletion exons 44 to 50",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "multi-exon deletion",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.859-506G>C",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "intronic (deep intronic)",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.5461-6T>C",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "intronic / splice-region",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.4539+2001G>A",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "intronic (deep intronic)",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.4540-2A>G",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "splice acceptor site variant",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.[5603A>T;6282+1G>C]",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "complex allele (substitution + canonical splice-site variant)",
+            "outcome": "fp"
+          }
+        ]
+      },
+      {
+        "entry_id": "fused_002",
+        "tp": 5,
+        "fp": 0,
+        "fn": 0,
+        "f1": 1.0,
+        "latency_s": 15.33,
+        "raw_items_count": 5,
+        "filtered_items_count": 5,
+        "field_results": [
+          {
+            "field_id": "A.gene_symbol",
+            "expected": "ACADVL",
+            "extracted": "ACADVL",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "B.disease_diagnosis",
+            "expected": "very long chain acyl-CoA dehydrogenase deficiency",
+            "extracted": "Very long-chain acyl-CoA dehydrogenase deficiency (VLCAD deficiency)",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.gene_disease_relationship",
+            "expected": "causative",
+            "extracted": "causative",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "B.mode_of_inheritance_reported",
+            "expected": "AR",
+            "extracted": "AR",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "missense",
+            "extracted": "missense",
+            "outcome": "tp"
+          }
+        ]
+      },
+      {
+        "entry_id": "fused_003",
+        "tp": 3,
+        "fp": 3,
+        "fn": 3,
+        "f1": 0.5,
+        "latency_s": 11.51,
+        "raw_items_count": 6,
+        "filtered_items_count": 6,
+        "field_results": [
+          {
+            "field_id": "A.gene_symbol",
+            "expected": "ACTA1",
+            "extracted": "ACTA1",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.gene_disease_relationship",
+            "expected": "causative",
+            "extracted": "causative",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "B.mode_of_inheritance_reported",
+            "expected": "AR",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "c.1075A>C",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "p.Ile359Leu",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "missense",
+            "extracted": "missense",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "B.mode_of_inheritance_reported",
+            "expected": "",
+            "extracted": "AD",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "NM_001100.3:c.1075A>C",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "",
+            "extracted": "p.I359L",
+            "outcome": "fp"
+          }
+        ]
+      },
+      {
+        "entry_id": "fused_004",
+        "tp": 4,
+        "fp": 2,
+        "fn": 2,
+        "f1": 0.6667,
+        "latency_s": 11.82,
+        "raw_items_count": 6,
+        "filtered_items_count": 6,
+        "field_results": [
+          {
+            "field_id": "A.gene_symbol",
+            "expected": "ACTA1",
+            "extracted": "ACTA1",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.gene_disease_relationship",
+            "expected": "causative",
+            "extracted": "causative",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "B.mode_of_inheritance_reported",
+            "expected": "AD",
+            "extracted": "AD",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "c.1075A>C",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "p.Ile359Leu",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "missense",
+            "extracted": "missense",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "NM_001100.3:c.1075A>C",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "",
+            "extracted": "p.I359L",
+            "outcome": "fp"
+          }
+        ]
+      },
+      {
+        "entry_id": "fused_005",
+        "tp": 0,
+        "fp": 0,
+        "fn": 8,
+        "f1": 0.0,
+        "latency_s": 38.29,
+        "raw_items_count": 0,
+        "filtered_items_count": 0,
+        "field_results": [
+          {
+            "field_id": "A.gene_symbol",
+            "expected": "ADA",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "B.disease_diagnosis",
+            "expected": "severe combined immunodeficiency, autosomal recessive, T cell-negative, B cell-negative, NK cell-negative, due to adenosine deaminase deficiency",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.gene_disease_relationship",
+            "expected": "causative",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "B.mode_of_inheritance_reported",
+            "expected": "AR",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "c.632G>A",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "p.Arg211His",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "missense",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "J.clinvar_assertion",
+            "expected": "Pathogenic",
+            "extracted": null,
+            "outcome": "fn"
+          }
+        ]
+      },
+      {
+        "entry_id": "fused_006",
+        "tp": 3,
+        "fp": 9,
+        "fn": 4,
+        "f1": 0.3158,
+        "latency_s": 25.46,
+        "raw_items_count": 12,
+        "filtered_items_count": 12,
+        "field_results": [
+          {
+            "field_id": "A.gene_symbol",
+            "expected": "APC",
+            "extracted": "APC",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "B.disease_diagnosis",
+            "expected": "classic or attenuated familial adenomatous polyposis",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.gene_disease_relationship",
+            "expected": "causative",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "c.3927_3931del",
+            "extracted": "c.3927_3931del",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "p.Glu1309fs",
+            "extracted": "p.Glu1309fs",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "other",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "J.clinvar_assertion",
+            "expected": "Pathogenic",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.gene_symbol",
+            "expected": "",
+            "extracted": "EGFR",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "B.disease_diagnosis",
+            "expected": "",
+            "extracted": "Aggressive fibromatosis (desmoid tumor; intra-abdominal, FAP-related)",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "B.disease_diagnosis",
+            "expected": "",
+            "extracted": "Familial adenomatous polyposis (FAP)",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.gene_disease_relationship",
+            "expected": "",
+            "extracted": "Associated (EGFR exon 19 deletion identified in the tumor; somatic, tumor-associated/therapeutic target)",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.gene_disease_relationship",
+            "expected": "",
+            "extracted": "Causative (APC truncating/deletion mutation underlying FAP and FAP-related aggressive fibromatosis)",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "",
+            "extracted": "c.2240_2254del",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "",
+            "extracted": "p.Leu747_Thr751del",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "In-frame deletion (exon 19 deletion)",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "Deletion causing frameshift",
+            "outcome": "fp"
+          }
+        ]
+      },
+      {
+        "entry_id": "fused_007",
+        "tp": 2,
+        "fp": 2,
+        "fn": 2,
+        "f1": 0.5,
+        "latency_s": 10.54,
+        "raw_items_count": 4,
+        "filtered_items_count": 4,
+        "field_results": [
+          {
+            "field_id": "A.gene_symbol",
+            "expected": "ATM",
+            "extracted": "ATM",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "B.disease_diagnosis",
+            "expected": "ataxia telangiectasia",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "other",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "J.clinvar_assertion",
+            "expected": "Pathogenic",
+            "extracted": "Pathogenic",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "B.disease_diagnosis",
+            "expected": "",
+            "extracted": "Cutaneous collagenous vasculopathy (CCV)",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "Intronic single-nucleotide substitution (c.5763-1050A>G)",
+            "outcome": "fp"
+          }
+        ]
+      },
+      {
+        "entry_id": "fused_008",
+        "tp": 2,
+        "fp": 4,
+        "fn": 4,
+        "f1": 0.3333,
+        "latency_s": 15.76,
+        "raw_items_count": 6,
+        "filtered_items_count": 6,
+        "field_results": [
+          {
+            "field_id": "A.gene_symbol",
+            "expected": "BMPR2",
+            "extracted": "BMPR2",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "B.disease_diagnosis",
+            "expected": "pulmonary arterial hypertension",
+            "extracted": "Pulmonary arterial hypertension (PAH) (includes heritable HPAH and idiopathic IPAH)",
+            "outcome": "tp"
+          },
+          {
+            "field_id": "A.gene_disease_relationship",
+            "expected": "causative",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "B.mode_of_inheritance_reported",
+            "expected": "AD",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "missense",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "J.clinvar_assertion",
+            "expected": "Pathogenic",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.gene_disease_relationship",
+            "expected": "",
+            "extracted": "Causative / definitive gene–disease relationship with PAH",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "B.mode_of_inheritance_reported",
+            "expected": "",
+            "extracted": "AD (autosomal dominant; reduced penetrance ~15–40%)",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "",
+            "extracted": "nonsense, frameshift, canonical splice site (±1, ±2), missense, synonymous, insertion, deletion, 5′-UTR",
+            "outcome": "fp"
+          },
+          {
+            "field_id": "J.clinvar_assertion",
+            "expected": "",
+            "extracted": "Pathogenic; Likely Pathogenic; Variant of Uncertain Significance (VUS); Benign; Likely Benign",
+            "outcome": "fp"
+          }
+        ]
+      },
+      {
+        "entry_id": "fused_009",
+        "tp": 0,
+        "fp": 0,
+        "fn": 8,
+        "f1": 0.0,
+        "latency_s": 57.09,
+        "raw_items_count": 0,
+        "filtered_items_count": 0,
+        "field_results": [
+          {
+            "field_id": "A.gene_symbol",
+            "expected": "BRCA1",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "B.disease_diagnosis",
+            "expected": "BRCA1-related cancer predisposition",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.gene_disease_relationship",
+            "expected": "causative",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "B.mode_of_inheritance_reported",
+            "expected": "AD",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_hgvs_c",
+            "expected": "c.181T>G",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_hgvs_p",
+            "expected": "p.Cys61Gly",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "A.variant_type",
+            "expected": "missense",
+            "extracted": null,
+            "outcome": "fn"
+          },
+          {
+            "field_id": "J.clinvar_assertion",
+            "expected": "Pathogenic",
+            "extracted": null,
+            "outcome": "fn"
+          }
+        ]
+      }
+    ]
+  },
+  "pipeline": {
+    "precision": 0.8036,
+    "recall": 0.6923,
+    "f1": 0.7438,
+    "variant": "target-span-field-recovery"
+  },
+  "comparison": {
+    "f1_gap": 0.3986,
+    "precision_gap": 0.522,
+    "recall_gap": 0.2461,
+    "tp_gain": 16,
+    "fp_reduction": -63
+  }
+}
