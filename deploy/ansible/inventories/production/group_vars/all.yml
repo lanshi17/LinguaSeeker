@@ -112,6 +112,8 @@ model_server_embedding_port: 8002
 model_server_rerank_port: 8003
 model_server_vlm_port: 8004
 model_server_doc_parse_port: 8005
+# API key for authenticating with model-server containers. Actual value in vault.yml.
+model_server_api_key: "{{ vault_model_server_api_key | default('') }}"
 
 # ── Nginx ─────────────────────────────────────────────────────────────────
 nginx_worker_processes: "auto"

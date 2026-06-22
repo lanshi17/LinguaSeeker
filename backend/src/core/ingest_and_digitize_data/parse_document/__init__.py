@@ -56,6 +56,7 @@ def create_parse_service(config=None) -> ParseDocumentService:
         model_id=config.mineru_local_model_id,
         timeout=config.mineru_local_timeout,
         dpi=config.mineru_local_dpi,
+        api_key=get_config().model_server_api_key,
     )
 
     orchestrator = DocumentParseOrchestrator(remote=remote, local=local)

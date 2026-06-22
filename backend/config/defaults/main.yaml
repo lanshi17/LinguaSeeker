@@ -110,6 +110,12 @@ network:
   proxy: ""
   no_proxy: "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
 
+# ── Model Server ────────────────────────────────────────────────────────
+# model_server_api_key: shared secret for authenticating with model-server containers.
+# Must match MODEL_SERVER_API_KEY set in docker-compose.model-server.yml.
+# Empty = no auth (model-server accepts all requests).
+model_server_api_key: ""
+
 # ── Model Server GPU Settings ────────────────────────────────────────────
 # Kept at top level for model-server compatibility
 doc_parse_model_id: ""

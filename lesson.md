@@ -4124,3 +4124,14 @@ python -m benchmark.analysis.reconcile.ablation --entries $entries --write
 - 在 zsh 中不要依赖 `$scalar` 自动按空格拆词；需要数组时用 zsh 数组，或用 Python/脚本直接传 argv。
 - benchmark 报告生成后先检查 `config.entry_ids` 和 `total_entries`，如果 `N=0` 立即停止，不要拿空报告继续做 comparison。
 - 动态生成大批 entry list 时，优先写一个小 Python wrapper 或让 CLI 支持 `--entries-file`，避免 shell 拆词差异。
+
+
+## 2026-06-22: GDR regex `\b` boundary prevented prefix matching of inflected forms
+
+**Problem**: In `normalize_gene_disease_relationship`, patterns like `\b(refut)\b` failed to match "refuted" because `\b` requires a word boundary AFTER "refut", but "refuted" has word characters ("ed") following the stem — so no boundary exists there. Same issue for "disput"→"disputed", "causat"→"causative".
+
+**Root cause**: Using `\b(stem)\b` for prefix matching is incorrect — the trailing `\b` forces the stem to be a complete word, not a prefix.
+
+**Solution**: Changed to `\b(?:refut\w*|...)` — leading `\b` anchors to word start, `\w*` absorbs any inflection suffix, and the trailing `\b` after the group ensures the full inflected word ends at a boundary.
+
+**Prevention**: When matching word stems/prefixes in regex, use `\bstem\w*\b` not `\bstem\b`. The trailing `\b` on a bare stem only matches if the stem IS the complete word.
