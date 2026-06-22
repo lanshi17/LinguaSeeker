@@ -1,54 +1,52 @@
-# MinerU Document Parsing (via Model Server)
+# MinerU Document Parsing
 
-Document parsing is integrated into the model-server on port 8001 via the `/file_parse` endpoint. No separate MinerU API server is needed.
+MinerU parsing supports two deployment modes:
 
-## Setup
+## Mode 1: Monolith (port 8001, single GPU)
 
-Install the model-server with the `parse` extra to include MinerU dependencies:
-
-```bash
-cd services/model-server
-uv pip install -e ".[parse]"
-
-# Download MinerU models (first time only)
-mineru-models-download
-```
-
-## Architecture
+All services share one model-server process. Document parsing via `/file_parse` endpoint.
 
 ```
 Backend (FastAPI :8000)
-  └─ MinerULocalParser (httpx client)
-       └─ POST http://localhost:8001/file_parse
-              └─ Model Server (unified :8001)
-                   ├─ /v1/embeddings     — Embedding model
-                   ├─ /v1/rerank         — Rerank model
-                   └─ /file_parse        — MinerU PDF parsing (VLM)
+  └─ POST http://localhost:8001/file_parse
+         └─ Model Server (unified :8001, single process)
+              ├─ /v1/embeddings     — Embedding model
+              ├─ /v1/rerank         — Rerank model
+              ├─ /v1/chat/completions — VLM extraction
+              └─ /file_parse        — MinerU PDF parsing
+```
+
+## Mode 2: Docker (4 containers, multi-GPU)
+
+Each service runs as an independent Docker container with its own GPU:
+
+```
+Backend (FastAPI :8000)
+  ├─ POST http://localhost:8002/v1/embeddings   → model-embedding container
+  ├─ POST http://localhost:8003/v1/rerank       → model-rerank container
+  ├─ POST http://localhost:8004/v1/chat/completions → model-vlm container
+  └─ POST http://localhost:8005/file_parse      → model-doc-parse container
+```
+
+```bash
+# From project root
+docker compose -f services/model-server/docker-compose.model-server.yml up -d
 ```
 
 ## Configuration
 
-The backend connects to the model-server's `/file_parse` endpoint. Configure in `backend/config/defaults/main.yaml`:
-
 ```yaml
+# backend/config/defaults/main.yaml
+embedding:
+  base_url: "http://localhost:8002"  # Docker mode (empty = fallback to monolith :8001)
+rerank:
+  base_url: "http://localhost:8003"  # Docker mode
 mineru:
-  local_api_url: "http://localhost:8001"
-  local_timeout: 600.0
-  local_backend: "vlm"
+  local_model_server_url: "http://localhost:8004"  # VLM container (Docker) or :8001 (monolith)
 ```
-
-## GPU Memory
-
-The model-server shares GPU across embedding, rerank, and MinerU VLM. Adjust memory allocation in `services/model-server/app/config.py`:
-
-| Setting | Default | Description |
-|---|---|---|
-| `embedding_gpu_memory_utilization` | 0.9 | GPU memory for embedding model |
-| `rerank_gpu_memory_utilization` | 0.9 | GPU memory for rerank model |
-| `doc_parse_gpu_memory_utilization` | 0.9 | GPU memory for MinerU VLM |
 
 ## System Requirements
 
 - Python 3.12+
-- GPU: 16GB+ VRAM recommended (embedding + rerank + VLM share GPU)
-- CUDA-compatible GPU required
+- CUDA-compatible GPU (16GB+ VRAM recommended for monolith; 8GB+ per container in Docker mode)
+- Docker + NVIDIA Container Toolkit (for Docker mode)
