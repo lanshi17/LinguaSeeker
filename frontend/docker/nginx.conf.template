@@ -1,0 +1,48 @@
+# Auto-rendered at container start from environment variables.
+# Variables: BACKEND_URL, API_KEY, FRONTEND_MAX_BODY.
+
+server {
+    listen       80;
+    server_name  _;
+
+    client_max_body_size ${FRONTEND_MAX_BODY};
+
+    # ── Static SPA assets ────────────────────────────────────────────
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Long-cache fingerprinted assets emitted by Vite.
+    location /assets/ {
+        access_log off;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files $uri =404;
+    }
+
+    # ── API → backend server (cross-host) ───────────────────────────
+    # X-API-Key is injected here; the browser never sees it.
+    location /api/ {
+        proxy_pass         ${BACKEND_URL};
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   X-API-Key         ${API_KEY};
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_buffering    off;            # SSE / chunked friendly
+    }
+
+    location = /health {
+        proxy_pass         ${BACKEND_URL}/health;
+        access_log         off;
+        proxy_set_header   X-API-Key ${API_KEY};
+    }
+
+    # ── SPA fallback ────────────────────────────────────────────────
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
