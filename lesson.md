@@ -4135,3 +4135,35 @@ python -m benchmark.analysis.reconcile.ablation --entries $entries --write
 **Solution**: Changed to `\b(?:refut\w*|...)` — leading `\b` anchors to word start, `\w*` absorbs any inflection suffix, and the trailing `\b` after the group ensures the full inflected word ends at a boundary.
 
 **Prevention**: When matching word stems/prefixes in regex, use `\bstem\w*\b` not `\bstem\b`. The trailing `\b` on a bare stem only matches if the stem IS the complete word.
+
+---
+
+## PostgreSQL 18 → Docker PG16 migration with pg_dump/pg_restore
+
+**Problem**: Host PostgreSQL 18 database needed migration to a Docker container. Only `pgvector/pgvector:pg16` image was available (pg18 image couldn't be pulled due to network issues).
+
+**Investigation**: `pg_dump -Fd -j 8` produced a 1.6GB directory-format dump. `pg_restore` into PG16 container failed with two errors:
+1. `unrecognized configuration parameter "transaction_timeout"` — PG18-specific setting not in PG16.
+2. `type "public.vector" does not exist` — base postgres image lacks pgvector extension.
+
+**Root cause**: 
+1. `transaction_timeout` is a PG18 feature; `pg_dump` from PG18 embeds `SET transaction_timeout = 0` in the dump which PG16 rejects.
+2. Standard `postgres:16-alpine` doesn't include the `vector` extension; need `pgvector/pgvector:pg16` instead.
+
+**Solution**: 
+1. Used `pgvector/pgvector:pg16` image (includes pgvector extension pre-installed).
+2. Ran `CREATE EXTENSION IF NOT EXISTS vector` and `CREATE SCHEMA IF NOT EXISTS lingua` before restore.
+3. Used `pg_restore --no-owner --no-privileges --no-tablespaces --schema=lingua` — the `transaction_timeout` errors are non-fatal warnings (pg_restore continues past them); all 20 tables and all data restored successfully.
+
+**Prevention**: When migrating between PostgreSQL major versions (especially downgrading), use `--no-owner --no-privileges` and expect version-specific SET commands to produce warnings. Always install required extensions (pgvector, pg_trgm, etc.) before restore. Prefer `pgvector/pgvector:pgNN` images over plain `postgres:pgNN-alpine` when the schema uses vector types.
+
+## Two-tier cache design: L1 Redis + L2 PostgreSQL
+
+**Design decision**: The cache uses a read-through pattern with L1 backfill:
+- Read: L1 (Redis) → miss → L2 (PostgreSQL) → hit → backfill L1 → return.
+- Write: L2 (PostgreSQL upsert) → L1 (Redis SET with TTL).
+- Both tiers degrade gracefully: L1 failure falls back to L2; L2 failure logs and continues (caller proceeds without cache).
+
+**Key insight**: The content hash must include the extraction target scope key, otherwise the same document processed for different gene-disease hypotheses would incorrectly return the wrong cached result. The hash covers: file bytes (local upload), pre-parsed markdown text, or a deterministic key from sorted identifiers/query (online), plus the `ExtractionTarget.scope_key` as a namespace suffix.
+
+**Prevention**: Always namespace content hashes by the processing intent (not just content identity). Two identical documents with different extraction targets are different processing jobs.
