@@ -6,31 +6,20 @@
 
 ### `lib/api/` — API Client
 
-- **`client.ts`**: Axios instance. Base URL `/api/v1`, 30s timeout. Response interceptor normalizes errors into `ApiError`. Auth is handled by the backend via session cookie; no client-side token management.
+- **`client.ts`**: Axios instance. Base URL from `VITE_API_BASE_URL` (default `/api/v1`), 30s timeout. Response interceptor normalizes errors into `ApiError`. Vite proxy injects API key server-side.
 - **`error.ts`**: `ApiError` class with `status`, `backendMessage`. `normalizeError()` converts Axios errors.
-
-### `lib/config/` — Configuration
-
-Typed singletons from `VITE_*` env vars. Never read `import.meta.env` outside this module.
-
-| Export | Key Fields |
-|--------|------------|
-| `appConfig` | `name`, `version`, `environment`, `debug` |
-| `apiConfig` | `baseUrl`, `timeout`, `healthEndpoint`, `healthPollInterval` |
-| `featureFlags` | `enableChat`, `enableGraph` |
 
 ### `lib/utils/` — Utilities
 
-- **`cn.ts`**: `clsx` + `tailwind-merge` for class name composition with conflict resolution.
+- **`format.ts`**: `formatDuration()`, `formatRelative()`, `formatTimestamp()` helpers.
 
 ### `lib/types/` — Shared Types
 
-- **`common.ts`**: `ProcessingStatus`, `PhaseId`, `PaginatedResponse<T>`, `ApiErrorResponse`.
+- **`common.ts`**: `ProcessingStatus`, `PhaseId` union types.
 
 ### `lib/hooks/` — Shared Hooks
 
 | Hook | Description |
 |------|-------------|
-| `useDebounce<T>(value, delay)` | Debounces a value by the given delay (ms) |
-| `useBackendHealth()` | Polls `GET /health` every 30s; returns `status`, `latencyMs`, `lastChecked` |
-| `usePolling(key, fn, opts)` | Generic TanStack Query polling wrapper with configurable interval |
+| `useBackendHealth()` | Polls `GET /health` via React Query; returns `status`, `latencyMs`, `lastChecked` |
+| `useElapsedSeconds(since)` | Returns seconds elapsed since a timestamp, updates every 250ms |
