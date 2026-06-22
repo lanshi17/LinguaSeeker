@@ -9,6 +9,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Literal
 
 import aiofiles
+from loguru import logger
 from fastapi import APIRouter, Depends, HTTPException
 from starlette.requests import Request
 from pydantic import BaseModel, Field, model_validator
@@ -388,6 +389,31 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         created_at=datetime.now().isoformat(),
         extraction_target=body.extraction_target,
     )
+
+    # Compute content hash for L1/L2 processing cache deduplication.
+    # The hash covers file bytes (local), pre-parsed markdown, or
+    # online identifiers/query — plus the extraction target scope.
+    content_hash = await runner.compute_initial_content_hash(initial_state)
+    if content_hash:
+        initial_state.content_hash = content_hash
+        # Check processing cache: if an identical document was already
+        # processed, return the cached result immediately.
+        cached_state = await runner.check_processing_cache(content_hash)
+        if cached_state is not None and cached_state.pipeline_status == PipelineStatus.COMPLETED:
+            logger.info(
+                "Processing cache hit for content_hash={}, returning cached run={}",
+                content_hash[:12],
+                cached_state.processing_run_id,
+            )
+            # Clean up temp file since we won't run the pipeline
+            if upload_file_path:
+                Path(upload_file_path).unlink(missing_ok=True)
+            return PipelineRunResponse(
+                processing_run_id=cached_state.processing_run_id,
+                source_document_id=cached_state.source_document_id,
+                status="cached",
+                status_url=f"/api/v1/pipeline/runs/{cached_state.processing_run_id}/status",
+            )
 
     from sqlalchemy.exc import IntegrityError
 

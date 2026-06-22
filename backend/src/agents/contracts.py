@@ -360,6 +360,8 @@ class PipelineGraphState(BaseModel):
 
     # Dedup key for duplicate-run prevention (N3 fix)
     source_key: str | None = None  # filename for local, query for online
+    # Content hash for L1/L2 processing cache (deduplication of identical docs)
+    content_hash: str | None = None
 
     # Overall pipeline status
     pipeline_status: PipelineStatus = PipelineStatus.PENDING
