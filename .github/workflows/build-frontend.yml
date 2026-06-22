@@ -1,0 +1,88 @@
+# Build and publish the frontend image to GHCR.
+#
+# Trigger:
+#   - push to dev / master / release branches that touch frontend code
+#   - pull-request (build only, no push from forks)
+#   - manual dispatch (optional extra tag)
+#
+# Tags emitted:
+#   - branch slug, PR ref, sha-<short>, latest (master only)
+#
+# Build context = frontend/. Keep VITE_API_BASE_URL=/api/v1 matching
+# frontend/.env so the runtime nginx proxy path lines up.
+
+name: build-frontend
+
+on:
+  push:
+    branches: [dev, master, "release/**"]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/build-frontend.yml"
+  pull_request:
+    branches: [dev, master]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/build-frontend.yml"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Extra tag to push"
+        required: false
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/lingua-seeker-frontend
+
+concurrency:
+  group: build-frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build & push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # PRs from forks get a read-only token — skip login.
+      - name: Login to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VITE_API_BASE_URL=/api/v1
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
+          provenance: false

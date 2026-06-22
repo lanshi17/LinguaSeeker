@@ -1,0 +1,42 @@
+# ============================================================================
+# Frontend host — single container: nginx serves the built SPA and reverse-
+# proxies /api/v1 + /health to the backend host across the network.
+#
+# From the repo root:
+#
+#   docker compose -f deploy/compose/frontend-host/docker-compose.yml \
+#                  --env-file deploy/compose/frontend-host/.env \
+#                  up -d --build
+#
+# For TLS, front this with a system nginx or Caddy on the host, or extend
+# the image with certbot. Keeping TLS termination outside the container
+# lets you renew certs without rebuilding the image.
+# ============================================================================
+services:
+  frontend:
+    build:
+      context: ../../../frontend
+      dockerfile: Dockerfile
+      args:
+        # Bake the SPA's API base URL into the bundle. Same-origin in prod —
+        # nginx in this same container proxies the prefix to the backend.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+    image: ${FRONTEND_IMAGE:-ghcr.io/[redacted-user]/lingua-seeker-frontend}:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    environment:
+      # Where to reach the backend container *on the other server*.
+      # MUST be a routable address from this host, e.g. http://10.0.0.20:8000
+      BACKEND_URL: ${BACKEND_URL}
+      # Shared secret injected into proxied requests as X-API-Key.
+      # The browser never sees this value.
+      API_KEY: ${API_KEY}
+      FRONTEND_MAX_BODY: ${FRONTEND_MAX_BODY:-200m}
+    healthcheck:
+      # Hits the local nginx; nginx then proxies /health to the backend.
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
