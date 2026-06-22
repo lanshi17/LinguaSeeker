@@ -17,12 +17,21 @@
     - postgres
     - redis
 
-- name: Deploy model server
+- name: Deploy model server (systemd monolith)
   hosts: app
   tags: [infra, model-server]
   roles:
     - common
     - model-server
+  when: model_server_deployment | default('systemd') == 'systemd'
+
+- name: Deploy model server (Docker 4-container)
+  hosts: app
+  tags: [infra, model-server]
+  roles:
+    - common
+    - model-server-docker
+  when: model_server_deployment | default('systemd') == 'docker'
 
 - name: Deploy backend
   hosts: app
