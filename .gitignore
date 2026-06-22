@@ -129,3 +129,5 @@ benchmark/annotation/**/images
 benchmark/datasets/rett_annotation/.venv/
 benchmark/data/reports/_unmapped/
 database/backups/
+tmp/
+backend/build-artifacts/

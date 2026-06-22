@@ -1,0 +1,3763 @@
+{
+  "evaluation_id": "baseline_b0_20260622_155112",
+  "timestamp": "2026-06-22T15:51:12",
+  "baseline_id": "B0",
+  "baseline_name": "Naive single-prompt LLM",
+  "config": {
+    "ground_truth_dir": "benchmark/data/ground_truth/rett",
+    "limit": null,
+    "entry_ids": [
+      "rett_003",
+      "rett_004",
+      "rett_005",
+      "rett_006",
+      "rett_007",
+      "rett_011",
+      "rett_015",
+      "rett_019",
+      "rett_023",
+      "rett_033",
+      "rett_034",
+      "rett_035",
+      "rett_036",
+      "rett_041",
+      "rett_043",
+      "rett_055",
+      "rett_066",
+      "rett_068",
+      "rett_077",
+      "rett_078",
+      "rett_079",
+      "rett_080",
+      "rett_081",
+      "rett_082",
+      "rett_083",
+      "rett_084",
+      "rett_085",
+      "rett_087"
+    ],
+    "report_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/data/reports/baseline_b0_20260622_155112.json",
+    "model_baseline_id": "B6_GPT5_PROMPT_CITE",
+    "model_baseline_name": "GPT-5 prompt-only citation-required",
+    "provider_family": "openai",
+    "model": "gpt-5-2025-08-07",
+    "release_cohort": "frontier_2025q3_aug07_sep30",
+    "release_date": "2025-08-07",
+    "release_notes_url": "https://openai.com/index/introducing-gpt-5-for-developers/"
+  },
+  "total_entries": 28,
+  "total_duration_s": 293.39,
+  "aggregates": {
+    "overall": {
+      "true_positives": 84,
+      "false_positives": 0,
+      "false_negatives": 268,
+      "precision": 1.0,
+      "recall": 0.2386,
+      "f1": 0.3853,
+      "over_extractions": 0,
+      "entity_standardization_accuracy": 0.0,
+      "cross_lingual_consistency": 0.0
+    },
+    "by_field": {
+      "A.gene_symbol": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "over_extractions": 0
+      },
+      "B.disease_diagnosis": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "over_extractions": 0
+      },
+      "A.gene_disease_relationship": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "over_extractions": 0
+      },
+      "B.mode_of_inheritance_reported": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "A.variant_type": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "A.functional_domain_or_hotspot": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "B.hpo_terms": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "B.clinical_phenotypes": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "B.sex": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "B.age_of_onset": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "C.de_novo_status": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "A.variant_hgvs_c": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "A.variant_hgvs_p": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      }
+    },
+    "by_classification": {
+      "Rett real-data": {
+        "count": 28,
+        "precision": 1.0,
+        "recall": 0.2386,
+        "f1": 0.3853,
+        "over_extractions": 0
+      }
+    },
+    "by_moi": {
+      "XD": {
+        "count": 27,
+        "precision": 1.0,
+        "recall": 0.2368,
+        "f1": 0.383,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      },
+      "X-linked": {
+        "count": 1,
+        "precision": 1.0,
+        "recall": 0.3,
+        "f1": 0.4615,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      }
+    },
+    "by_entity_type": {}
+  },
+  "per_entry": [
+    {
+      "entry_id": "rett_003",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 15.71,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Rett syndrome",
+          "matched": true,
+          "extracted": "Rett syndrome",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "deletion (gross rearrangement)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "MBD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001249; HP:0001250; HP:0002376; HP:0004322; HP:0001344; HP:0002072; HP:0001371; HP:0001251",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "regression of milestones; seizures; profound/severe mental retardation (intellectual disability); short stature; non-verbal / limited vocabulary (loss of speech); stereotypic hand movements (hand biting and wringing); mild knee contractures (younger twin); wide based gait; thin and wasted limbs",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "~2 years (regression at 2 years in younger twin, six months later in elder)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_004",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 7.45,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "典型 Rett 综合征 (typical Rett syndrome)",
+          "matched": true,
+          "extracted": "典型 Rett 综合征 (typical Rett syndrome)",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.502C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.R168X",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "nonsense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "inter-domain (between MBD and TRD)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0002072; HP:0002376; HP:0001344; HP:0001263; HP:0001249; HP:0000756; HP:0001251; HP:0012759; HP:0002360; HP:0011968; HP:0001250; HP:0004322",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "丧失目的性手部技能（双手功能退化、不能定向抓握）; 手部刻板动作（拍手、掐指、绞手）; 运动、语言、认知发育倒退; 语言功能丧失; 全面发育落后于同龄儿; 认知障碍; 孤独症样行为/类孤独症倾向; 步态逐渐不稳、运动功能丧失; 清醒期间断呼吸暂停; 睡眠增多（14～15 h/d）; 吞咽困难; 脑电图癫痫样放电; 体重无增加（生长发育迟缓）; 双眼频繁上翻、眨眼; 易激惹、尖叫样抗拒; 可疑痛觉障碍; 震颤",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "7个月 (约7月龄起运动、语言、认知逐渐落后)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_005",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 12.54,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Severe neonatal encephalopathy (MECP2-related, OMIM #300673)",
+          "matched": true,
+          "extracted": "Severe neonatal encephalopathy (MECP2-related, OMIM #300673)",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "NM_001110792:c.799_800insAGGAAGC",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.R267fs*6 (p.Arg267fsTer6)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "insertion (frameshift)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "TRD (aa 201-310)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001252; HP:0001263; HP:0012759; HP:0001631; HP:0001250",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "severe neonatal encephalopathy; ocular dyskinesia; oropharyngeal dyskinesia; hypotonia (abnormal muscular tension); severe developmental delay / developmental backwardness; apnea after birth (15 min); neonatal asphyxia; meconium aspiration syndrome; neonatal pneumonia; respiratory failure; hemolytic disease of the newborn; atrial septal defect; mild brain atrophy on MRI; abnormal EEG with spike-slow waves and multifocal epileptiform waves",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "male",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "neonatal period (symptoms from birth, e.g., apnea 15 min after birth)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo (parents wild-type at this site)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_006",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 6.84,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Rett syndrome",
+          "matched": true,
+          "extracted": "Rett syndrome",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.316C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.R106W",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "MBD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001263; HP:0001250; HP:0002072; HP:0001344; HP:0002194",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "语言功能降低或丧失（reduced or lost language function）; 手的技能降低（loss of hand skills）; 单一模式手的刻板动作（hand stereotypies, e.g. finger-playing, hair-grabbing）; 坐和走的功能受限（impaired sitting and walking / motor development）; 脑电图异常、癎性放电（abnormal EEG with epileptiform discharges）; 发育落后于同龄儿童（developmental delay）",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "5-42 months",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_007",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 13.13,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Rett syndrome (classic RTT) in cases 1-4; MECP2 duplication syndrome (MDS) in case 5",
+          "matched": true,
+          "extracted": "Rett syndrome (classic RTT) for cases 1-4; MECP2 duplication syndrome (MDS) for case 5",
+          "source_span": null,
+          "match_type": "fuzzy",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative (MECP2 coding-sequence mutations reported in cases 1-4 are associated with classic Rett syndrome; MECP2 gene duplication in case 5 is associated with MECP2 duplication syndrome)",
+          "source_span": null,
+          "match_type": "fuzzy",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.509C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Thr170Met",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense (heterozygous)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "Inter-domain region (between MBD and TRD)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001250; HP:0001263; HP:0002072; HP:0002376; HP:0003763; HP:0001252; HP:0000756; HP:0001344; HP:0002360; HP:0002194; HP:0000252; HP:0004322",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "loss of hand function / loss of pincer grasp (developmental regression); absent or lost speech (no purposeful vocalization); loss of motor function / delayed motor development (unable to stand or walk independently); hand stereotypies (hand-wringing, hand-mouthing, hand-patting, hand-clasping); bruxism (teeth grinding); low muscle tone / hypotonia; seizures / epilepsy (epileptiform discharges on EEG); autistic behavior (spinning, poor social interaction, autistic features); sleep disturbance (frequent night waking, disrupted sleep rhythm); microcephaly / reduced head growth (case 3 head circumference 3rd percentile); growth failure; self-injurious behavior (head hitting, arm biting); global developmental delay (developmental quotient 44.2 and 38.4); decreased pain sensitivity; delayed myelination / brain dysplasia on MRI; intellectual disability, language impairment and infantile hypotonia (MDS case)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "Female (all 5 cases)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "Development normal before 6 months; developmental regression after ~12 months of age (cases presented at 1 year 9 months to 2 years 2 months)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo (no mutation detected in either parent of any case)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_011",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 11.02,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "典型Rett综合征 (typical Rett syndrome)",
+          "matched": true,
+          "extracted": "典型Rett综合征 (typical Rett syndrome)",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.710C>G",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Pro237Arg",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "TRD (aa 201-310)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001250; HP:0001263; HP:0001249; HP:0002072; HP:0002376; HP:0000252; HP:0001252; HP:0001251; HP:0001344; HP:0000756",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "发育迟缓/发育落后 (developmental delay); 手部刻板动作，双手喜欢交握 (hand stereotypies/hand-wringing); 癫痫发作 (seizures); 技能丧失、有目的手部动作丧失及语言丧失 (loss of acquired skills, purposeful hand use and language); 智力低下 (intellectual disability); 步态异常/步态不稳 (abnormal/unsteady gait); 头围小、头部生长减慢 (small head circumference, deceleration of head growth); 四肢肌张力低下 (limb hypotonia); 异常视频脑电图 (abnormal EEG); 双上肢不自主震颤 (involuntary tremor of upper limbs); 喜欢吃手 (mouthing behavior); 孤独症行为评分异常 (abnormal autism behavior rating)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "婴幼儿期 (infancy); developmental delay noted in first year, seizures at 3 years 7 months",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo (新生变异，父母未携带)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_015",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 11.23,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "typical Rett syndrome",
+          "matched": true,
+          "extracted": "typical Rett syndrome",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.808C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.R270X",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "nonsense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "TRD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001263; HP:0004322; HP:0001344; HP:0001252; HP:0002072; HP:0000253; HP:0003763; HP:0002376; HP:0002194; HP:0000505",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "moderate developmental delay; severe growth retardation; absent speech (could not talk); hypotonia; stereotypic hand movements (hand twisting, clapping, putting hand into mouth); postnatal deceleration of head growth (head circumference <3rd centile at age 3); bruxism (gnashing teeth); developmental regression (lost head control); delayed motor milestones (sat with support at 10 months, without support at 15 months, never crawled or walked); absent eye contact and poor visual fixation; sharp wave activity on EEG (no clinical seizures)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "approximately 4 months (onset of regression in infancy)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_019",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 22.23,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "MECP2-related severe neonatal encephalopathy (with Rett syndrome spectrum)",
+          "matched": true,
+          "extracted": "MECP2-related severe neonatal encephalopathy (Rett syndrome spectrum)",
+          "source_span": null,
+          "match_type": "fuzzy",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.1477G>A",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Val493Met",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense (single nucleotide variation)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001250; HP:0001252; HP:0012759",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "neonatal encephalopathy; marked hypotonia; reduced spontaneous movements; apnea / poor respiratory effort; clonic seizures; stupor; cerebral atrophy; cerebellar dysplasia; multicystic encephalomalacia; ventriculomegaly; Grade I intraventricular hemorrhage",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "neonatal (encephalopathy at birth; seizures at 68 hours of life)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "unknown (parental sequencing not performed due to financial constraints)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_023",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 9.85,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Preserved speech variant of Rett syndrome (Zappella variant)",
+          "matched": true,
+          "extracted": "Preserved speech variant of Rett syndrome (Zappella variant)",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.961C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Arg321Trp",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "CTD-α (C-terminal domain)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001250; HP:0002072; HP:0001263; HP:0001249; HP:0002194",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "epileptic seizures; hand wringing stereotypies; intense eye contact / eye pointing; developmental delay / developmental problems; cognitive impairment / intellectual disability; echolalia; excessive activity; delayed walking (started walking at 2 years); delayed speech (started talking at 5 years); aggressive behavior; inappropriate laughing; neurogenic bladder; vesicoureteral reflux; hydroureteronephrosis; chronic renal disease",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "11 months (seizures and neurogenic bladder onset)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "likely de novo (mother tested negative for MECP2 pathogenic variant; father not reported)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_033",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "X-linked",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 7.62,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "MECP2 duplication syndrome (síndrome de duplicación MECP2)",
+          "matched": true,
+          "extracted": "MECP2 duplication syndrome (síndrome de duplicación MECP2)",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "X-linked",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "duplication (copy number gain, Xq28 including MECP2; 416 kb)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001252; HP:0001263; HP:0002376; HP:0000756; HP:0001344; HP:0001249; HP:0001250; HP:0001257; HP:0002072; HP:0002019; HP:0003763; HP:0002650; HP:0000568; HP:0002194; HP:0011968",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "hipotonía axial/temprana; retraso psicomotor / retraso global del desarrollo; regresión de los hitos del desarrollo; rasgos del espectro autista; escaso desarrollo del lenguaje / ausencia de lenguaje expresivo; discapacidad intelectual de moderada a grave; epilepsia (50-80% de los casos, frecuentemente refractaria); espasticidad progresiva; estereotipias manuales / movimientos estereotipados de las manos; estreñimiento; bruxismo; escoliosis; estrabismo divergente; dificultad para la marcha; problemas respiratorios y de nutrición; infecciones respiratorias recurrentes; reflujo gastroesofágico; sialorrea; hipermetropía; rasgos dismórficos (hipoplasia mediofacial, puente nasal estrecho, labio inferior grueso, orejas grandes y prominentes, cabello grueso, dedos cónicos, pies pequeños); hipertensión pulmonar (descrita como causa de muerte precoz)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "male (ambos casos varones)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "infancy; caso 1 remitido a los 6 meses, caso 2 a los 13 meses",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "inherited (duplicación heredada de la madre portadora; familia con múltiples portadoras: madre, dos tías maternas y abuela materna)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_034",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 11.15,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Síndrome de Rett (Rett syndrome, typical/classic)",
+          "matched": true,
+          "extracted": "Síndrome de Rett (Rett syndrome, typical/classic)",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.763C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Arg255*",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "nonsense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "TRD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001250; HP:0002376; HP:0000756; HP:0002072; HP:0001344; HP:0002360; HP:0002194",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "regressão psicomotora aos 18 meses; características autistas; estereotipias na linha média (bater palmas e esfregar as mãos); conservação do uso das mãos de forma rudimentar; crises tônico-clônicas generalizadas e crises focais disperceptivas (origem epilética); ausência de fala / não verbalizava; dificuldade na marcha; não saía da posição sentada para ortostática sem auxílio; insônia; agressividade; sensibilidade reduzida à dor; gritos sem motivo aparente; dependência integral para atividades diárias; pé plano congênito; intolerância à lactose",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "1 ano e 6 meses (início da regressão psicomotora)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "unknown (sem relatos familiares de casos semelhantes nem consanguinidade; status de novo não confirmado por estudo parental)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_035",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 7.43,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Síndrome de Rett",
+          "matched": true,
+          "extracted": "Síndrome de Rett",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.806del",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Gly269Alafs*20",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "frameshift deletion",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "TRD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001250; HP:0002376; HP:0000252; HP:0000253; HP:0012759; HP:0001252; HP:0004322; HP:0011968; HP:0001263; HP:0001249; HP:0000505",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "crisis convulsivas desde el nacimiento (crisis focales clónicas); regresión del neurodesarrollo; movimientos coreo-distónicos de cabeza y extremidades; detención del crecimiento cefálico / microcefalia (perímetro cefálico 37.6 cm, -5 DT); síntomas disautonómicos; alteraciones en patrón respiratorio / episodios de apnea; hipotonía axial; hipertonía apendicular; hiperreflexia generalizada; ausencia de seguimiento visual y auditivo; desnutrición aguda moderada / detención del crecimiento pondo-estatural; disfagia para sólidos y líquidos; deterioro cognitivo y motor; encefalopatía progresiva; atrofia cerebral difusa con pérdida de sustancia gris y blanca; depósito anormal de hierro en globus pallidus; pabellones auriculares de implantación baja, cabello escaso y ralo, paladar ojival, mentón puntiagudo, labios finos",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "male",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "neonatal (crisis convulsivas desde el nacimiento); regresión del neurodesarrollo a los 4 meses",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_036",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 9.47,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Síndrome de Rett",
+          "matched": true,
+          "extracted": "Síndrome de Rett",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.806del",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Gly269Alafs*20",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "frameshift deletion",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "TRD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001250; HP:0002376; HP:0000252; HP:0000253; HP:0012759; HP:0001263; HP:0001252; HP:0011968; HP:0004322; HP:0012171; HP:0000505; HP:0000365; HP:0001257",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "crisis convulsivas desde el nacimiento (crisis focales clónicas); regresión del neurodesarrollo a los cuatro meses; detención del crecimiento cefálico / microcefalia (perímetro cefálico -5 DT); episodios de apnea y alteraciones en el patrón respiratorio; retraso global del neurodesarrollo; hipotonía axial; hipertonía apendicular e hiperreflexia generalizada; movimientos coreo-distónicos de cabeza y extremidades; disfagia para sólidos y líquidos / dificultades de alimentación; detención del crecimiento pondo-estatural / desnutrición aguda; síntomas disautonómicos (anomalías en color y temperatura de extremidades); ausencia de seguimiento visual; ausencia de seguimiento auditivo; atrofia cerebral difusa con depósito de hierro en globus pallidus; infecciones respiratorias recurrentes; rasgos dismórficos: pabellones auriculares de implantación baja, cabello escaso y ralo, paladar ojival, mentón puntiagudo, labios finos",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "male",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "neonatal (crisis convulsivas desde el nacimiento; regresión del neurodesarrollo a los 4 meses)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_041",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 8.03,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Rett syndrome",
+          "matched": true,
+          "extracted": "Rett syndrome",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.316C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.R106W",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "MBD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001249; HP:0002072; HP:0002194",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "intellectual disability; motor impairment; hand stereotypies",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "6 to 18 months",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "unknown",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_043",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 13.33,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Rett syndrome",
+          "matched": true,
+          "extracted": "Rett syndrome",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.215C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.P72L",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "N-terminal (pre-MBD)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "predominantly female (F); some male (M) and M/F lines",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "unknown",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_055",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 8.67,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Rett syndrome",
+          "matched": true,
+          "extracted": "Rett syndrome",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.880C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Arg294X",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "nonsense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "TRD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0002376; HP:0002072; HP:0001250; HP:0000252; HP:0001252; HP:0001344; HP:0001263; HP:0012759; HP:0003763; HP:0002360; HP:0002650; HP:0004322; HP:0012171; HP:0000568",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "回復期・安定期が後続する神経症状の退行（発達退行）; 獲得した手の合目的運動の消失; 手もみ様の常同運動; てんかん（患者の60～90%に合併、多くは3～10歳に発症）; 生後の頭囲発育遅延・小頭症; 乳児期早期の筋緊張低下; 音声言語の習得後の喪失（言語退行）; 精神運動発達の停滞・発達遅滞; 歩行の異常（歩行障害、歩行失行）; 覚醒時の呼吸異常; 覚醒時の歯ぎしり（ブラキシズム）; 睡眠リズム障害; 側弯・前弯; 成長障害; 小さく冷たい手足; 斜視（先天型FOXG1で多い）",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "主に女児（female）",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "生後6～18カ月まで一見正常に発達し、その後乳児期後期から幼児期に退行が出現",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo（患者の99%以上が散発例で発端者のみに変異がみられる突然変異に起因。稀に生殖細胞モザイクや保因者母からの遺伝あり）",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_066",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 9.37,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Rett syndrome",
+          "matched": true,
+          "extracted": "Rett syndrome",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.455C>G",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Pro152Arg",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "MBD (methyl binding domain)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001263; HP:0002194; HP:0002072; HP:0002376; HP:0001344; HP:0001250; HP:0000756; HP:0001251; HP:0012759",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "언어 및 운동 발달 지연 (language and motor developmental delay, severe); 운동 발달 지연 (delayed motor development; could not stand or walk at 22 months); 수부 운동 상동증 (hand stereotypies; repetitive hand-to-mouth movements, body rocking); 발달 퇴화 (developmental regression; gradual loss of purposeful hand use/grasping); 언어 소실 / 의미 있는 단어 표현 못함 (absent meaningful speech, only 'mama'/'dada'); 수면 뇌파상 다발성 극파 (multifocal spikes on sleep EEG; no clinical seizures observed in patient); 자폐증 (autistic behavior, described as Rett feature); 보행 운동 실조증 (gait ataxia, described as Rett feature); 간헐적 과호흡 (intermittent hyperventilation, described as Rett feature; not observed in this patient)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "infancy (delayed head control noted at 3-4 months; presented at 18-22 months)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_068",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 8.52,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "congenital variant-like Rett syndrome",
+          "matched": true,
+          "extracted": "congenital variant-like Rett syndrome",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.396_397insA",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Arg133fsTer2",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "insertion (frameshift/truncating)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "MBD (aa 78-162)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001252; HP:0001263; HP:0002194; HP:0002650; HP:0011968; HP:0000756; HP:0012759",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "severe central/axial hypotonia present at birth; neurodevelopmental impairment / psychomotor delay; poor head control and impaired hand grip (delayed motor development); precocious scoliosis (T4-L1 Cobb angle 26°); reduced weight gain and recurrent emesis (feeding difficulties); autistic behaviours / poor eye contact and social impairment; sleep hypoventilation, central apneas, persistent periodic breathing, and sleep hypercapnia; poorly-organized EEG with diffuse irritating signals",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "at birth (neonatal/congenital onset)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_077",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 9.01,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Typical Rett syndrome",
+          "matched": true,
+          "extracted": "Typical Rett syndrome",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.316C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.R106W",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "MBD (methyl-CpG-binding domain)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0002376; HP:0002072; HP:0001344; HP:0001251; HP:0002650; HP:0000252; HP:0000253; HP:0003763; HP:0012759; HP:0000756; HP:0001263",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "developmental regression; loss of purposeful hand use; stereotypic hand movements (hand wringing, washing, clapping, hand-to-mouth); loss of acquired spoken language / absent meaningful words; truncal ataxia and gait apraxia; scoliosis; mild microcephaly; postnatal deceleration of head growth; severe bruxism; breath-holding spells; autistic behavior / deficits in social development; developmental delay; deterioration of motor and social skills",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "male",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "around 12 months (stereotypies and limited social responsiveness from 12 months, with regression progressing thereafter)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo (mutation absent in mother; de novo in patient or gonadal mosaicism in mother)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_078",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 12.53,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Atypical Rett syndrome",
+          "matched": true,
+          "extracted": "Atypical Rett syndrome",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Pro302Leu",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "TRD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0000252; HP:0000253; HP:0002072; HP:0001250; HP:0002376; HP:0001257; HP:0002360; HP:0003763; HP:0001344",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "microcephaly with negative head circumference deviation from 10 months; progressive slowing of head growth; stereotypic hand movements (finger licking and biting); generalized afebrile tonic-clonic seizures; psychomotor regression / developmental regression; increased generalized muscle tone (spasticity); increased deep tendon reflexes; bilateral positive Babinski; gait apraxia / difficulty walking; loss of communication skills; loss of eye contact; sleep disturbance; bruxism (teeth grinding); uncontrollable laughing attacks; eye gaze episodes; reduced pain sensitivity; self-injurious behavior",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "10 months",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "unknown",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_079",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 8.37,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Rett综合征",
+          "matched": true,
+          "extracted": "Rett综合征",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.622C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Q208X",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "nonsense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "TRD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001263; HP:0001250; HP:0002072; HP:0002376; HP:0000252; HP:0001251; HP:0003763; HP:0004322; HP:0001344; HP:0001249; HP:0012759; HP:0000756; HP:0002360; HP:0011968",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "发育迟缓; 间断抽搐/癫痫发作; 智力逐渐减退; 双手不自主拍打、搓手（手部刻板动作）; 动作刻板; 语言及技能完全丧失; 词汇量明显减少; 头部不自主前后摆动; 咬牙、眨眼（磨牙）; 头围小（小头畸形）; 反射性躯干共济失调; 手脚失用; 生长发育迟缓; 发育倒退; 大小便失禁; 呼吸问题（过度换气、呼吸暂停）; 自闭症早期症状; 睡眠问题; 咀嚼困难/吞咽困难",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "约14个月（发育倒退起始），3岁时出现抽搐",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "unknown",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_080",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 7.63,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "typical Rett syndrome",
+          "matched": true,
+          "extracted": "typical Rett syndrome",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.502C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.R168X",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "nonsense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0000756; HP:0002376; HP:0002072; HP:0001344; HP:0001251; HP:0001263; HP:0002194; HP:0001249; HP:0011968; HP:0002360; HP:0012759; HP:0004322; HP:0001250",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "孤独症/类孤独症样行为 (autistic behavior); 运动发育停滞伴倒退 (developmental regression); 双手功能退化，手部刻板动作（拍手、掐指、绞手）(hand stereotypies); 语言功能丧失 (loss of acquired speech); 步态逐渐不稳 (gait instability/ataxia); 运动、语言、认知反应逐渐落后于同龄儿 (global developmental delay); 大运动及精细运动发育落后 (delayed motor development); 认知障碍，反应迟钝 (cognitive impairment); 吞咽困难 (dysphagia/feeding difficulty); 睡眠增多 (sleep disturbance); 清醒期间断呼吸暂停 (waking apnea/breathing abnormality); 体重不增、生长发育迟缓 (growth failure); 脑电图癫痫样放电 (epileptiform discharges); 不合时宜的尖叫 (inappropriate screaming); 痛觉敏感性下降 (decreased pain sensitivity); 双眼频繁上翻 (frequent eye rolling)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "约7个月 (around 7 months of age)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_081",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 11.21,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Rett syndrome",
+          "matched": true,
+          "extracted": "Rett综合征 (Rett syndrome)",
+          "source_span": null,
+          "match_type": "fuzzy",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.509C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Thr170Met",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001263; HP:0002376; HP:0001252; HP:0004322; HP:0011968; HP:0001344; HP:0012759; HP:0002194",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "体重不增/生长障碍 (failure to gain weight / growth failure); 吸吮力弱、喂养困难、反复呛咳 (weak sucking, feeding difficulty, recurrent choking); 四肢肌张力低 (limb hypotonia); 发育迟缓 (developmental delay); 发育倒退 (developmental regression); 语言/发声能力丧失，难以发音 (loss of vocalization / absent speech); 运动功能减退，头竖立不能 (motor regression, unable to hold head up); 呼吸浅 (shallow breathing); 追视、追听反应弱 (poor visual and auditory tracking response)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "male",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "1 month 16 days (neonatal/infantile)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "inherited (maternal; mother heterozygous carrier, father wild-type)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_082",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 9.91,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Rett syndrome (classical/typical)",
+          "matched": true,
+          "extracted": "Rett syndrome (classical/typical)",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.316C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.R106W",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "MBD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001344; HP:0002072; HP:0002194; HP:0001250; HP:0001263; HP:0001249",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "loss or reduction of language/speech function; loss of hand skills with stereotypic hand movements (finger playing, hair grabbing, finger twisting, scratching); impaired sitting and walking ability; abnormal EEG with epileptiform discharges; developmental delay (some markedly delayed); intellectual disability",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "5-42 months",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo (no mutations detected in any of the patients' parents)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_083",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 14.12,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Rett syndrome (classic RTT); MECP2 duplication syndrome (MDS) in 1 case",
+          "matched": true,
+          "extracted": "Rett syndrome (classic RTT) — 4 cases; MECP2 duplication syndrome (MDS) — 1 case",
+          "source_span": null,
+          "match_type": "fuzzy",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.509C>T",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Thr170Met",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "inter-domain (between MBD and TRD)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0002072; HP:0001344; HP:0002376; HP:0001263; HP:0001250; HP:0003763; HP:0001252; HP:0002360; HP:0000252; HP:0004322; HP:0000756; HP:0001249; HP:0002194",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "loss of purposeful hand use / loss of pincer grasp; hand stereotypies (hand-wringing, hand-rubbing, hand-mouthing, hand-clapping); loss of acquired language / absent purposeful vocalization; developmental regression after ~6-18 months; global developmental delay (cannot stand, walk, crawl independently); seizures / epilepsy with abnormal EEG (epileptiform discharges); bruxism (teeth grinding); hypotonia (low lower-limb muscle tone); sleep rhythm disturbance / frequent night waking; microcephaly / reduced head growth (case 3 head circumference at 3rd percentile); growth retardation; autistic features (poor eye contact, poor name response, lack of social interest); intellectual disability / low developmental quotient (44.2, 38.4); self-injurious behavior (head-hitting, arm-biting); inappropriate screaming/laughing",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "Normal development before ~6 months, with regression onset around 6-18 months; patients presented at 1 year 9 months to 2 years 2 months",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo (no mutations detected in parents)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_084",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 10.44,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "非典型Rett综合征（先天型）/ atypical Rett syndrome, congenital variant",
+          "matched": true,
+          "extracted": "非典型Rett综合征（先天型） / atypical Rett syndrome, congenital variant",
+          "source_span": null,
+          "match_type": "fuzzy",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.194delC",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.S65X",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "frameshift deletion (single-base deletion causing premature stop; described in article as 无义突变/nonsense)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "N-terminal region upstream of MBD (aa 65); truncation removes major MECP2 functional domains",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0012759; HP:0001344; HP:0002376; HP:0002072; HP:0004322; HP:0011968; HP:0001250; HP:0001263; HP:0002194; HP:0012171",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "自主呼吸障碍/呼吸暂停 (severe abnormal breathing, apnea); 语言能力丧失/发音减少 (loss of acquired spoken language); 手部技能丧失伴发育倒退 (loss of acquired purposeful hand skills, developmental regression); 手部刻板动作（双手握拳、左手频繁触鼻）(hand stereotypies); 生长发育迟滞/生长缓慢 (growth retardation); 喂养困难/频发吐奶 (feeding difficulties, frequent vomiting); 睡眠惊厥 (seizures); 严重精神运动发育迟滞 (severe global/psychomotor developmental delay); 1岁仍不会抬头翻身、运动少 (delayed motor development); 四肢细小、末稍厥冷 (thin limbs, cold extremities); 肌张力增高 (hypertonia)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "male",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "early infancy (~2 months; apnea and sleep seizures noted at 2 months, presented at 5 months)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo (变异在父母该位点均无, both parents wild-type)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_085",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 7.94,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "典型Rett综合征 (typical Rett syndrome)",
+          "matched": true,
+          "extracted": "典型Rett综合征",
+          "source_span": null,
+          "match_type": "fuzzy",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.468C>G",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Asp156Glu",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "MBD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0002376; HP:0001263; HP:0001344; HP:0002072; HP:0003763; HP:0001251; HP:0001249",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "智能及动作发育倒退 (developmental regression); 运动及智力发育迟缓 (motor and intellectual developmental delay); 语言功能丧失/不说话 (loss of acquired speech); 双手不自主、刻板的扭绞动作 (hand-wringing stereotypies); 手部精细动作丧失 (loss of acquired hand skills); 磨牙 (bruxism); 步态不稳 (unstable gait); 轻度脑萎缩、脑发育不全 (mild cerebral atrophy)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "出生后约2岁起出现智能及动作发育倒退（具体月龄文中数字缺失，不完全明确）",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "rett_087",
+      "gene_symbol": "MECP2",
+      "disease_label": "",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 8.64,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "MECP2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "典型Rett综合征 (typical Rett syndrome)",
+          "matched": true,
+          "extracted": "典型Rett综合征 (typical Rett syndrome)",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_c",
+          "expected": "c.710C>G",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.Pro237Arg",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "missense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "TRD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.hpo_terms",
+          "expected": "HP:0001263; HP:0002072; HP:0001250; HP:0002376; HP:0001344; HP:0001249; HP:0001251; HP:0000252; HP:0001252",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.clinical_phenotypes",
+          "expected": "发育迟缓/发育落后 (developmental delay); 手部刻板动作/双手交握 (hand stereotypies); 癫痫发作 (seizures); 技能丧失及发育倒退 (loss of skills / developmental regression); 语言丧失 (loss of language); 智力低下 (intellectual disability); 步态异常/步态不稳 (abnormal/unsteady gait); 头围小 (small head circumference / microcephaly); 四肢肌张力低下 (hypotonia of limbs); 出生时足月小样儿 (small for gestational age); 上肢不自主震颤 (involuntary tremor of upper limbs); 异常脑电图 (abnormal EEG)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.sex",
+          "expected": "female",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.age_of_onset",
+          "expected": "婴幼儿期 (infancy); developmental stagnation noted in infancy, seizure onset at 3 years 7 months",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "de novo (新生变异; parents wild-type, confirmed by Sanger sequencing)",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    }
+  ]
+}

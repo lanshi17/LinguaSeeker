@@ -28,6 +28,15 @@ mineru:
   api_token: "your-mineru-api-token"
   remote_api_token: "your-mineru-remote-api-token"
 
+# ── Embedding / Rerank Remote API Keys ──────────────────────────────────
+# API keys for remote fallback providers (e.g. SiliconFlow).
+# Only needed when embedding.remote_base_url / rerank.remote_base_url are set.
+embedding:
+  remote_api_key: "your-embedding-remote-api-key"
+
+rerank:
+  remote_api_key: "your-rerank-remote-api-key"
+
 # ── Database Credentials ─────────────────────────────────────────────────
 postgres:
   user: "your-postgres-user"

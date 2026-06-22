@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import httpx
+from loguru import logger
 
 from src.core.standardize_entities_and_align_knowledge.similarity_match.contracts import (
     EmbeddingBatchResult,
@@ -84,16 +85,18 @@ class ModelServerRerankProvider:
         """Rerank documents through model-server `/v1/rerank`."""
         if isinstance(documents, str):
             documents = (documents,)
-        payload = {"query": query, "documents": list(documents), "model": self._model, "top_k": top_k}
+        doc_list = list(documents)
+        payload = {"query": query, "documents": doc_list, "model": self._model, "top_k": top_k}
         if self._client is not None:
-            return await self._post_rerank(self._client, payload)
+            return await self._post_rerank(self._client, payload, doc_list)
         async with httpx.AsyncClient(timeout=self._timeout) as client:
-            return await self._post_rerank(client, payload)
+            return await self._post_rerank(client, payload, doc_list)
 
     async def _post_rerank(
         self,
         client: httpx.AsyncClient,
         payload: dict[str, object],
+        doc_list: list[str],
     ) -> RerankBatchResult:
         response = await client.post(f"{self._api_root()}/rerank", json=payload, headers=self._headers)
         response.raise_for_status()
@@ -101,7 +104,7 @@ class ModelServerRerankProvider:
         results = tuple(
             RerankItem(
                 index=int(item["index"]),
-                document=str(item["document"]),
+                document=str(item["document"]) if item.get("document") is not None else doc_list[int(item["index"])],
                 relevance_score=float(item["relevance_score"]),
             )
             for item in body.get("results", [])
@@ -111,3 +114,70 @@ class ModelServerRerankProvider:
     def _api_root(self) -> str:
         """Normalize provider base URLs so callers may pass either host root or `/v1` root."""
         return self._base_url if self._base_url.endswith("/v1") else f"{self._base_url}/v1"
+
+
+class FallbackEmbeddingProvider:
+    """Embedding provider with local-first, remote-fallback strategy.
+
+    Warning: the remote model should match the local model. Persisted pgvector
+    embeddings are model-specific — query-time vectors from a different model
+    produce meaningless cosine similarity scores against stored vectors.
+    """
+
+    def __init__(
+        self,
+        local: ModelServerEmbeddingProvider,
+        remote: ModelServerEmbeddingProvider | None = None,
+    ) -> None:
+        self._local = local
+        self._remote = remote
+        if remote is not None and local._model != remote._model:
+            logger.warning(
+                "Embedding model mismatch: local={} remote={}. "
+                "Persisted pgvector embeddings require the same model for query-time vectors.",
+                local._model,
+                remote._model,
+            )
+
+    async def embed_texts(self, texts: str | Sequence[str]) -> EmbeddingBatchResult:
+        try:
+            return await self._local.embed_texts(texts)
+        except Exception as e:
+            if self._remote is None:
+                raise
+            logger.warning("Local embedding failed ({}), falling back to remote", e)
+            result = await self._remote.embed_texts(texts)
+            if self._local._model != self._remote._model:
+                logger.error(
+                    "CRITICAL: remote embedding used a different model ({}). "
+                    "Cosine similarity against persisted vectors will be unreliable.",
+                    self._remote._model,
+                )
+            return result
+
+
+class FallbackRerankProvider:
+    """Rerank provider with local-first, remote-fallback strategy."""
+
+    def __init__(
+        self,
+        local: ModelServerRerankProvider,
+        remote: ModelServerRerankProvider | None = None,
+    ) -> None:
+        self._local = local
+        self._remote = remote
+
+    async def rerank(
+        self,
+        query: str,
+        documents: str | Sequence[str],
+        *,
+        top_k: int | None,
+    ) -> RerankBatchResult:
+        try:
+            return await self._local.rerank(query, documents, top_k=top_k)
+        except Exception as e:
+            if self._remote is None:
+                raise
+            logger.warning("Local rerank failed ({}), falling back to remote", e)
+            return await self._remote.rerank(query, documents, top_k=top_k)

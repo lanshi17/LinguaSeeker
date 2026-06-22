@@ -34,6 +34,11 @@ class ComparisonRow:
     missing_system_entry_ids: tuple[str, ...] = ()
     extra_baseline_entry_ids: tuple[str, ...] = ()
     warning: str = ""
+    model_baseline_id: str = ""
+    model_baseline_name: str = ""
+    model: str = ""
+    provider_family: str = ""
+    release_cohort: str = ""
 
 
 @dataclass(frozen=True)
@@ -87,6 +92,11 @@ def comparison_to_payload(comparison: BaselineComparison) -> Mapping[str, object
                 "missing_system_entry_ids": list(row.missing_system_entry_ids),
                 "extra_baseline_entry_ids": list(row.extra_baseline_entry_ids),
                 "warning": row.warning,
+                "model_baseline_id": row.model_baseline_id,
+                "model_baseline_name": row.model_baseline_name,
+                "model": row.model,
+                "provider_family": row.provider_family,
+                "release_cohort": row.release_cohort,
             }
             for row in comparison.rows
         ]
@@ -193,6 +203,7 @@ def _baseline_row(
         missing_system_entry_ids=missing_system_entry_ids,
         extra_baseline_entry_ids=extra_baseline_entry_ids,
     )
+    model_metadata = _baseline_model_metadata(report)
     if match_system_entries:
         metrics = _baseline_entry_metrics(report, system_entry_ids)
         overall = cast(Mapping[str, Any], compute_aggregate_metrics(metrics)["overall"])
@@ -207,6 +218,7 @@ def _baseline_row(
             missing_system_entry_ids=missing_system_entry_ids,
             extra_baseline_entry_ids=extra_baseline_entry_ids,
             warning=warning,
+            **model_metadata,
         )
     overall = _overall(report)
     return ComparisonRow(
@@ -220,7 +232,21 @@ def _baseline_row(
         missing_system_entry_ids=missing_system_entry_ids,
         extra_baseline_entry_ids=extra_baseline_entry_ids,
         warning=warning,
+        **model_metadata,
     )
+
+
+def _baseline_model_metadata(report: Mapping[str, Any]) -> Mapping[str, str]:
+    config = report.get("config")
+    if not isinstance(config, Mapping):
+        return {}
+    return {
+        "model_baseline_id": str(config.get("model_baseline_id") or ""),
+        "model_baseline_name": str(config.get("model_baseline_name") or ""),
+        "model": str(config.get("model") or ""),
+        "provider_family": str(config.get("provider_family") or ""),
+        "release_cohort": str(config.get("release_cohort") or ""),
+    }
 
 
 def _system_entry_metrics(

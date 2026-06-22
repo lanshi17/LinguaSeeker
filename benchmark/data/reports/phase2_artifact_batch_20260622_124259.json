@@ -1,0 +1,50 @@
+{
+  "total_entries": 3,
+  "planned_count": 0,
+  "completed_count": 3,
+  "failed_count": 0,
+  "rows": [
+    {
+      "entry_id": "rett_035",
+      "status": "phase2_completed",
+      "processing_run_id": "c831b258-22c5-4cbf-a3f6-0c7b928f1baa",
+      "source_document_id": "01fd71f7-0db9-47ef-870b-bd76cbe7c5fb",
+      "status_url": "/api/v1/pipeline/runs/c831b258-22c5-4cbf-a3f6-0c7b928f1baa/status",
+      "phase2_status": "completed",
+      "pipeline_status": "completed",
+      "current_phase": null,
+      "artifact_path": "/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline/c831b258-22c5-4cbf-a3f6-0c7b928f1baa/phase_2/extraction_result.json",
+      "artifact_exists": true,
+      "duration_s": 1407.02,
+      "message": "Phase 2 completed; downstream phases may still be running."
+    },
+    {
+      "entry_id": "rett_036",
+      "status": "phase2_completed",
+      "processing_run_id": "f95bd01e-9f9f-4921-8411-7d779ccc392d",
+      "source_document_id": "27c626cd-5a81-445d-8b79-053f10087bbc",
+      "status_url": "/api/v1/pipeline/runs/f95bd01e-9f9f-4921-8411-7d779ccc392d/status",
+      "phase2_status": "completed",
+      "pipeline_status": "completed",
+      "current_phase": null,
+      "artifact_path": "/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline/f95bd01e-9f9f-4921-8411-7d779ccc392d/phase_2/extraction_result.json",
+      "artifact_exists": true,
+      "duration_s": 1196.57,
+      "message": "Phase 2 completed; downstream phases may still be running."
+    },
+    {
+      "entry_id": "rett_007",
+      "status": "phase2_completed",
+      "processing_run_id": "e3799950-edd9-4fe3-91d1-1cbc84da4283",
+      "source_document_id": "2e3de2f7-c1ff-41f5-b2cc-faa5f63d0527",
+      "status_url": "/api/v1/pipeline/runs/e3799950-edd9-4fe3-91d1-1cbc84da4283/status",
+      "phase2_status": "completed",
+      "pipeline_status": "completed",
+      "current_phase": null,
+      "artifact_path": "/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline/e3799950-edd9-4fe3-91d1-1cbc84da4283/phase_2/extraction_result.json",
+      "artifact_exists": true,
+      "duration_s": 1366.81,
+      "message": "Phase 2 completed; downstream phases may still be running."
+    }
+  ]
+}

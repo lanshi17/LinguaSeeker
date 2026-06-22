@@ -1,7 +1,7 @@
 {
   "baseline_type": "prompt_engineering",
   "description": "Single-prompt LLM extraction vs full pipeline (dual-track + catalog + chunking + normalization)",
-  "model": "gpt-5-mini",
+  "model": "gpt-5-2025-08-07",
   "base_url": "https://linxi.chat/v1",
   "entry_count": 10,
   "entry_ids": [
@@ -992,5 +992,11 @@
     "recall_gap": 0.2461,
     "tp_gain": 16,
     "fp_reduction": -63
-  }
+  },
+  "model_baseline_id": "B6_GPT5_PROMPT_CITE",
+  "model_baseline_name": "GPT-5 prompt-only citation-required",
+  "provider_family": "openai",
+  "release_cohort": "frontier_2025q3_aug07_sep30",
+  "release_date": "2025-08-07",
+  "release_notes_url": "https://openai.com/index/introducing-gpt-5-for-developers/"
 }

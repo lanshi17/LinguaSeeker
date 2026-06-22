@@ -1,0 +1,22 @@
+{
+  "total_entries": 1,
+  "planned_count": 0,
+  "completed_count": 0,
+  "failed_count": 1,
+  "rows": [
+    {
+      "entry_id": "rett_007",
+      "status": "submit_failed",
+      "processing_run_id": null,
+      "source_document_id": null,
+      "status_url": null,
+      "phase2_status": null,
+      "pipeline_status": null,
+      "current_phase": null,
+      "artifact_path": null,
+      "artifact_exists": false,
+      "duration_s": 60.1,
+      "message": "ReadTimeout: "
+    }
+  ]
+}

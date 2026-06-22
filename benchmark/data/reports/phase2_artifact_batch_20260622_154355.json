@@ -1,0 +1,36 @@
+{
+  "total_entries": 2,
+  "planned_count": 0,
+  "completed_count": 2,
+  "failed_count": 0,
+  "rows": [
+    {
+      "entry_id": "rett_066",
+      "status": "phase2_completed",
+      "processing_run_id": "26c04b92-58be-4a96-b7c1-7ac78059fcd0",
+      "source_document_id": "9db9c9c8-0a63-4ddd-88c3-af30e320fc91",
+      "status_url": "/api/v1/pipeline/runs/26c04b92-58be-4a96-b7c1-7ac78059fcd0/status",
+      "phase2_status": "completed",
+      "pipeline_status": "completed",
+      "current_phase": null,
+      "artifact_path": "/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline/26c04b92-58be-4a96-b7c1-7ac78059fcd0/phase_2/extraction_result.json",
+      "artifact_exists": true,
+      "duration_s": 190.27,
+      "message": "Phase 2 completed; downstream phases may still be running."
+    },
+    {
+      "entry_id": "rett_083",
+      "status": "phase2_completed",
+      "processing_run_id": "23e6664e-4dcd-4415-a244-65f5de88c73e",
+      "source_document_id": "16ebf1a1-453f-415b-990e-5a6b64e54aca",
+      "status_url": "/api/v1/pipeline/runs/23e6664e-4dcd-4415-a244-65f5de88c73e/status",
+      "phase2_status": "completed",
+      "pipeline_status": "completed",
+      "current_phase": null,
+      "artifact_path": "/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline/23e6664e-4dcd-4415-a244-65f5de88c73e/phase_2/extraction_result.json",
+      "artifact_exists": true,
+      "duration_s": 395.52,
+      "message": "Phase 2 completed; downstream phases may still be running."
+    }
+  ]
+}

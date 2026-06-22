@@ -17,16 +17,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Sequence
 
+from benchmark.analysis.baselines.canonical_models import CANONICAL_GPT5_PROMPT_CITE
 from benchmark.optimization.fused75.adjudication_contracts import Fused75EntryAdjudication
-from benchmark.optimization.fused75.evaluate_adjudicated import (
-    AdjudicatedMetric,
-    evaluate_adjudicated_entry,
-)
+from benchmark.optimization.fused75.evaluate_adjudicated import evaluate_adjudicated_entry
 from benchmark.optimization.fused75.run_baseline_tracks import TrackItem
 
 _DEFAULT_ADJUDICATION_ROOT = Path("benchmark/optimization/fused75/adjudication/dev")
 _DEFAULT_FUSED_ROOT = Path("benchmark/data/ground_truth/clinvar_fused")
 _DEFAULT_OUTPUT = Path("benchmark/optimization/fused75/reports/baseline_prompt_engineering.json")
+DEFAULT_PROMPT_BASELINE_MODEL = CANONICAL_GPT5_PROMPT_CITE.model
 
 _EXTRACTION_PROMPT = """\
 You are a medical genetics evidence extraction expert. Given the following research article, extract structured evidence fields relevant to ACMG/AMP variant classification and ClinGen gene-disease validity assessment.
@@ -129,7 +128,7 @@ def _parse_response(raw: str) -> tuple[TrackItem, ...]:
     text = raw.strip()
     if text.startswith("```"):
         lines = text.split("\n")
-        lines = [l for l in lines if not l.startswith("```")]
+        lines = [line for line in lines if not line.startswith("```")]
         text = "\n".join(lines)
 
     try:
@@ -163,7 +162,7 @@ async def run_prompt_baseline(
     adjudication_root: Path = _DEFAULT_ADJUDICATION_ROOT,
     fused_root: Path = _DEFAULT_FUSED_ROOT,
     output_path: Path = _DEFAULT_OUTPUT,
-    model: str = "gpt-5-mini",
+    model: str = DEFAULT_PROMPT_BASELINE_MODEL,
     base_url: str = "",
     api_key: str = "",
     limit: int | None = None,
@@ -253,7 +252,13 @@ async def run_prompt_baseline(
     report = {
         "baseline_type": "prompt_engineering",
         "description": "Single-prompt LLM extraction vs full pipeline (dual-track + catalog + chunking + normalization)",
+        "model_baseline_id": CANONICAL_GPT5_PROMPT_CITE.model_baseline_id,
+        "model_baseline_name": CANONICAL_GPT5_PROMPT_CITE.model_baseline_name,
         "model": model,
+        "provider_family": CANONICAL_GPT5_PROMPT_CITE.provider_family,
+        "release_cohort": CANONICAL_GPT5_PROMPT_CITE.release_cohort,
+        "release_date": CANONICAL_GPT5_PROMPT_CITE.release_date,
+        "release_notes_url": CANONICAL_GPT5_PROMPT_CITE.release_notes_url,
         "base_url": base_url,
         "entry_count": len(adjudications),
         "entry_ids": [a.entry_id for a in adjudications],
@@ -290,7 +295,7 @@ def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--limit", type=int, default=None, help="Limit entries (for testing)")
-    parser.add_argument("--model", type=str, default="gpt-5-mini")
+    parser.add_argument("--model", type=str, default=DEFAULT_PROMPT_BASELINE_MODEL)
     parser.add_argument("--base-url", type=str, default="")
     parser.add_argument("--api-key", type=str, default="")
     args = parser.parse_args()
@@ -312,7 +317,7 @@ def main() -> None:
     print(f"{'Method':<25} {'Precision':>10} {'Recall':>10} {'F1':>10}")
     print(f"{'Prompt-engineered LLM':<25} {pt['precision']:>10.4f} {pt['recall']:>10.4f} {pt['f1']:>10.4f}")
     print(f"{'Full Pipeline':<25} {pp['precision']:>10.4f} {pp['recall']:>10.4f} {pp['f1']:>10.4f}")
-    print(f"\nPipeline advantage:")
+    print("\nPipeline advantage:")
     print(f"  F1:        +{cmp['f1_gap']:.4f}")
     print(f"  Precision: +{cmp['precision_gap']:.4f}")
     print(f"  Recall:    +{cmp['recall_gap']:.4f}")

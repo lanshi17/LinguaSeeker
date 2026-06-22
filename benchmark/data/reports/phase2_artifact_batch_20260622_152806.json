@@ -1,0 +1,22 @@
+{
+  "total_entries": 1,
+  "planned_count": 0,
+  "completed_count": 1,
+  "failed_count": 0,
+  "rows": [
+    {
+      "entry_id": "rett_007",
+      "status": "phase2_completed",
+      "processing_run_id": "e3799950-edd9-4fe3-91d1-1cbc84da4283",
+      "source_document_id": "2e3de2f7-c1ff-41f5-b2cc-faa5f63d0527",
+      "status_url": "/api/v1/pipeline/runs/e3799950-edd9-4fe3-91d1-1cbc84da4283/status",
+      "phase2_status": "completed",
+      "pipeline_status": "completed",
+      "current_phase": null,
+      "artifact_path": "/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline/e3799950-edd9-4fe3-91d1-1cbc84da4283/phase_2/extraction_result.json",
+      "artifact_exists": true,
+      "duration_s": 5.02,
+      "message": "Phase 2 completed; downstream phases may still be running."
+    }
+  ]
+}

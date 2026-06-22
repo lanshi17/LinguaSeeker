@@ -65,6 +65,39 @@ mineru:
 
 The original monolithic `main.py` (port 8001) remains available as a fallback for single-GPU development.
 
+### Remote Fallback for Embedding & Rerank
+
+The backend supports a local-first, remote-fallback strategy for embedding and rerank providers (mirroring the MinerU document parsing pattern). When the local model-server is unavailable, requests automatically fall back to a configured remote provider (any OpenAI-compatible API).
+
+> **Embedding model must match.** Persisted pgvector embeddings are model-specific. The remote embedding model must be the same as the one used to build the index — otherwise cosine similarity scores against stored vectors are meaningless. Rerank has no such constraint (it's stateless).
+
+**Configuration** (in `backend/config/environments/<env>.yaml` or env vars):
+
+```yaml
+embedding:
+  base_url: "http://localhost:8002"        # local model-server
+  remote_base_url: "https://api.siliconflow.cn"  # remote fallback
+  remote_model: "Qwen/Qwen3-Embedding-0.6B"     # MUST match local model
+
+rerank:
+  base_url: "http://localhost:8003"        # local model-server
+  remote_base_url: "https://api.siliconflow.cn"  # remote fallback
+  remote_model: "BAAI/bge-reranker-v2-m3"  # can differ (stateless scoring)
+```
+
+Remote API keys go in `backend/config/vault/<env>.yaml` (git-ignored):
+
+```yaml
+embedding:
+  remote_api_key: "sk-..."
+rerank:
+  remote_api_key: "sk-..."
+```
+
+Or via environment variables: `EMBEDDING_REMOTE_API_KEY`, `RERANK_REMOTE_API_KEY`.
+
+If `remote_base_url` is empty, no fallback is configured and local failures propagate directly.
+
 ## Directory Structure
 
 ```

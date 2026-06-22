@@ -4167,3 +4167,27 @@ python -m benchmark.analysis.reconcile.ablation --entries $entries --write
 **Key insight**: The content hash must include the extraction target scope key, otherwise the same document processed for different gene-disease hypotheses would incorrectly return the wrong cached result. The hash covers: file bytes (local upload), pre-parsed markdown text, or a deterministic key from sorted identifiers/query (online), plus the `ExtractionTarget.scope_key` as a namespace suffix.
 
 **Prevention**: Always namespace content hashes by the processing intent (not just content identity). Two identical documents with different extraction targets are different processing jobs.
+
+## 2026-06-22: RETT Phase 2 SourceLocation context type drift
+
+**Problem**: RETT Phase 2 reruns for Spanish/Korean sources failed in extraction with Pydantic validation errors for `SourceLocation.context_type`. The LLM emitted section labels such as `summary`, `case_report`, and `affiliations`, but the contract only allowed the existing section literals.
+
+**Investigation**: The failed backend log showed `literal_error` on `22.source.context_type`, `23.source.context_type`, and `24.source.context_type`. The batch report showed failed runs had no `phase_2/extraction_result.json`, while rerunning after updating the contract produced completed artifacts for `rett_035`, `rett_036`, and `rett_007`.
+
+**Root cause**: The extractor prompt asks the model to identify source sections from document blocks, but the strict `SourceLocation` contract lagged behind real section labels emitted by multilingual case-report documents.
+
+**Solution**: Extended `SourceLocation.context_type` to include `summary`, `case_report`, and `affiliations`, and added focused contract tests for those observed values. Reran the failed entries and materialized completed artifacts immediately.
+
+**Prevention**: When Phase 2 fails on `SourceLocation.context_type`, inspect the exact emitted section labels and treat stable document-section names as contract values, not one-off bad outputs. For long RETT runs, materialize each completed artifact before starting more long-tail reruns so runtime output cleanup or restart cannot lose completed work.
+
+## 2026-06-22: Parkinson publication PDF acquisition must degrade per entry
+
+**Problem**: The Parkinson XLSX publication PDF smoke run initially aborted the whole batch when a single external call failed. One run hit EuropePMC HTTP 500 for `PMC4002225`; another hit a PubMed metadata `ReadTimeout`.
+
+**Investigation**: The first failure happened after resolving PubMed metadata successfully and attempting the PDF URL. The existing project workflow notes that direct NCBI PMC `/pdf/` URLs can return non-PDF interstitial content, so the dataset fetcher was changed to prefer EuropePMC render URLs. The second failure occurred earlier during PubMed `esummary` response reading, proving metadata lookup itself also needs per-entry failure handling.
+
+**Root cause**: The initial dataset fetcher treated external HTTP errors as fatal batch errors. Literature acquisition is inherently partial: PubMed, EuropePMC, and PMC can independently timeout, return 500, or return HTML/non-PDF responses for individual articles.
+
+**Solution**: The fetcher now records per-entry statuses instead of aborting: `not_open_access`, `download_failed`, and `metadata_error`. It tries EuropePMC `https://europepmc.org/articles/{PMCID}?pdf=render` first, then NCBI `https://www.ncbi.nlm.nih.gov/pmc/articles/{PMCID}/pdf/`, and records warning details for failed URLs.
+
+**Prevention**: All dataset-scale literature downloads should write a manifest even when zero PDFs are downloaded. Treat every network/provider failure as a row-level status unless the input manifest itself is unreadable.

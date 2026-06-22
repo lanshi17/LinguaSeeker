@@ -139,6 +139,13 @@ def _write_baseline_report(path: Path, baseline_id: str, f1: float) -> None:
     report = {
         "baseline_id": baseline_id,
         "baseline_name": f"{baseline_id} baseline",
+        "config": {
+            "model_baseline_id": "B6_GPT5_PROMPT_CITE",
+            "model_baseline_name": "GPT-5 prompt-only citation-required",
+            "model": "gpt-5-2025-08-07",
+            "provider_family": "openai",
+            "release_cohort": "frontier_2025q3_aug07_sep30",
+        },
         "total_entries": 2,
         "aggregates": {
             "overall": {
@@ -254,6 +261,24 @@ def test_build_comparison_uses_latest_baseline_per_id(tmp_path) -> None:
     comparison = build_comparison(reports_dir=reports_dir, ground_truth_dir=ground_truth_dir)
 
     assert comparison.rows[1].f1 == 0.9
+
+
+def test_build_comparison_carries_baseline_model_metadata(tmp_path) -> None:
+    reports_dir = tmp_path / "reports"
+    ground_truth_dir = tmp_path / "ground_truth"
+    reports_dir.mkdir()
+    _write_expected(ground_truth_dir, "clingen_000")
+    _write_system_report(reports_dir / "eval_20260101_000000.json")
+    _write_baseline_report(reports_dir / "baseline_b0_20260101_000000.json", "B0", f1=0.9)
+
+    comparison = build_comparison(reports_dir=reports_dir, ground_truth_dir=ground_truth_dir)
+
+    baseline_row = comparison.rows[1]
+    assert baseline_row.model_baseline_id == "B6_GPT5_PROMPT_CITE"
+    assert baseline_row.model_baseline_name == "GPT-5 prompt-only citation-required"
+    assert baseline_row.model == "gpt-5-2025-08-07"
+    assert baseline_row.provider_family == "openai"
+    assert baseline_row.release_cohort == "frontier_2025q3_aug07_sep30"
 
 
 def test_build_comparison_prefers_largest_n_baseline_before_mtime(tmp_path) -> None:

@@ -1,0 +1,63 @@
+{
+  "downloadable_count": 1,
+  "downloaded_count": 0,
+  "metadata_found_count": 4,
+  "records": [
+    {
+      "doi": "10.1111/j.1468-1331.2006.01249.x",
+      "pdf_path": "",
+      "pdf_url": "",
+      "pmcid": "",
+      "pmid": "16643317",
+      "row_number": 4,
+      "status": "not_open_access",
+      "title": "Low frequency of Parkin, Tyrosine Hydroxylase, and GTP Cyclohydrolase I gene mutations in a Danish population of early-onset Parkinson's Disease",
+      "warning": "missing_pmcid_pdf_url"
+    },
+    {
+      "doi": "10.1007/s12031-020-01635-3",
+      "pdf_path": "",
+      "pdf_url": "",
+      "pmcid": "",
+      "pmid": "32557143",
+      "row_number": 5,
+      "status": "not_open_access",
+      "title": "Gene Panel Sequencing Identifies Novel Pathogenic Mutations in Moroccan Patients with Familial Parkinson Disease",
+      "warning": "missing_pmcid_pdf_url"
+    },
+    {
+      "doi": "10.1007/s00415-005-0638-x",
+      "pdf_path": "",
+      "pdf_url": "",
+      "pmcid": "",
+      "pmid": "15729528",
+      "row_number": 6,
+      "status": "not_open_access",
+      "title": "High frequency stimulation\nof the subthalamic nucleus\nis efficacious in Parkin disease",
+      "warning": "missing_pmcid_pdf_url"
+    },
+    {
+      "doi": "10.1038/ng.491",
+      "pdf_path": "",
+      "pdf_url": "https://europepmc.org/articles/PMC4002225?pdf=render",
+      "pmcid": "PMC4002225",
+      "pmid": "19946270",
+      "row_number": 7,
+      "status": "download_failed",
+      "title": "Somatic mutations of the Parkinson's diseaseassociated gene PARK2 in glioblastoma and other human malignancies",
+      "warning": "https://europepmc.org/articles/PMC4002225?pdf=render: HTTPStatusError; https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4002225/pdf/: response_not_pdf"
+    },
+    {
+      "doi": "",
+      "pdf_path": "",
+      "pdf_url": "",
+      "pmcid": "",
+      "pmid": "10939576",
+      "row_number": 8,
+      "status": "not_open_access",
+      "title": "Novel mutations, pseudo-dominant inheritance, and possible familial affects in patients with autosomal recessive juvenile parkinsonism",
+      "warning": "missing_pmcid_pdf_url"
+    }
+  ],
+  "requested_count": 5
+}

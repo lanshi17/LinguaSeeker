@@ -40,23 +40,40 @@ chat_llm:
   max_tokens: 4096
   temperature: 0.7
 
+# ── Translation LLM (dedicated cross-lingual translation) ─────────────────
+# Uses a specialized translation model (e.g. tencent/Hunyuan-MT-7B).
+# base_url / api_key: same as fast_llm if using same endpoint.
+translation_llm:
+  model: "tencent/Hunyuan-MT-7B"
+  timeout: 60
+  max_tokens: 8192
+  temperature: 0.0
+
 # ── Embedding Model ───────────────────────────────────────────────────────
 # base_url: per-service container URL. Empty = fallback to model_server_url (monolith).
 # Docker setup: set to "http://localhost:8002"
+# remote_*: optional remote fallback (e.g. SiliconFlow, OpenAI-compatible).
+# When local model-server is unavailable, requests fall back to remote.
 embedding:
   base_url: ""
   model: "Qwen/Qwen3-Embedding-0.6B"
   dimension: 1024
   batch_size: 10
+  remote_base_url: ""
+  remote_model: ""
 
 # ── Rerank Model ──────────────────────────────────────────────────────────
 # base_url: per-service container URL. Empty = fallback to model_server_url (monolith).
 # Docker setup: set to "http://localhost:8003"
+# remote_*: optional remote fallback (e.g. SiliconFlow, OpenAI-compatible).
+# When local model-server is unavailable, requests fall back to remote.
 rerank:
   base_url: ""
-  model: "bge-reranker-v2-m3"
+  model: "Qwen/Qwen3-Reranker-0.6B"
   top_k: 10
   score_threshold: 0.7
+  remote_base_url: ""
+  remote_model: ""
 
 # ── MinerU Document Parsing ──────────────────────────────────────────────
 # All fields flatten to MINERU_* env vars
