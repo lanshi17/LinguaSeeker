@@ -59,6 +59,18 @@ class _FakeResult:
         """Return one scalar row."""
         return self._scalar
 
+    def scalar_one(self):
+        """Return one mandatory scalar row (count-style queries).
+
+        Falls back to len(self._rows) when the caller did not pass an
+        explicit `scalar=` so a count-of-rows mock yields a reasonable
+        integer by default. Tests that need a different count can pass
+        `scalar=N` explicitly.
+        """
+        if self._scalar is not None:
+            return self._scalar
+        return len(self._rows)
+
 
 class _FakeSession:
     """Queue-backed fake async session."""
@@ -77,21 +89,32 @@ async def test_search_evidence_includes_document_title():
     source_document_id = uuid4()
     evidence_id = uuid4()
     group_id = "gene=['BRCA1']"
+    created_at = datetime(2026, 6, 1, tzinfo=timezone.utc)
 
-    rows = [
-        _cei(
-            canonical_evidence_id=evidence_id,
-            source_document_id=source_document_id,
-            field_id="A.gene_symbol",
-            review_status="provisional",
-            current_best_confidence=Decimal("0.9500"),
-            active_payload={
-                "group_id": group_id,
-                "value": "BRCA1",
-            },
-            created_at=datetime(2026, 6, 1, tzinfo=timezone.utc),
-        )
-    ]
+    detail_row = _cei(
+        canonical_evidence_id=evidence_id,
+        source_document_id=source_document_id,
+        field_id="A.gene_symbol",
+        review_status="provisional",
+        current_best_confidence=Decimal("0.9500"),
+        active_payload={
+            "group_id": group_id,
+            "value": "BRCA1",
+        },
+        created_at=created_at,
+    )
+    # Pass 1 outer-SELECT row shape (after subquery): flattened scalars,
+    # no longer the ORM object. Matches `page_summary` construction in
+    # `SearchService.search_evidence`.
+    page_row = _cei(
+        group_id=group_id,
+        field_count=1,
+        avg_confidence=Decimal("0.9500"),
+        canonical_evidence_id=evidence_id,
+        source_document_id=source_document_id,
+        review_status="provisional",
+        created_at=created_at,
+    )
     identifiers = [
         _cei(
             source_document_id=source_document_id,
@@ -107,9 +130,11 @@ async def test_search_evidence_includes_document_title():
     ]
 
     service = SearchService(_FakeSession([
-        _FakeResult(rows=rows),
-        _FakeResult(scalars=identifiers),
-        _FakeResult(rows=metadata),
+        _FakeResult(scalar=1),                    # count of groups
+        _FakeResult(rows=[page_row]),             # Pass 1 page rows
+        _FakeResult(rows=[detail_row]),           # Pass 2 detail rows
+        _FakeResult(scalars=identifiers),         # SourceDocumentIdentifier
+        _FakeResult(rows=metadata),               # SourceDocument metadata
     ]))
 
     response = await service.search_evidence()
@@ -128,25 +153,34 @@ async def test_search_evidence_includes_created_at():
     group_id = "gene=['BRCA1']"
     ts = datetime(2026, 6, 10, 12, 0, 0, tzinfo=timezone.utc)
 
-    rows = [
-        _cei(
-            canonical_evidence_id=evidence_id,
-            source_document_id=source_document_id,
-            field_id="A.gene_symbol",
-            review_status="provisional",
-            current_best_confidence=Decimal("0.9500"),
-            active_payload={
-                "group_id": group_id,
-                "value": "BRCA1",
-            },
-            created_at=ts,
-        )
-    ]
+    detail_row = _cei(
+        canonical_evidence_id=evidence_id,
+        source_document_id=source_document_id,
+        field_id="A.gene_symbol",
+        review_status="provisional",
+        current_best_confidence=Decimal("0.9500"),
+        active_payload={
+            "group_id": group_id,
+            "value": "BRCA1",
+        },
+        created_at=ts,
+    )
+    page_row = _cei(
+        group_id=group_id,
+        field_count=1,
+        avg_confidence=Decimal("0.9500"),
+        canonical_evidence_id=evidence_id,
+        source_document_id=source_document_id,
+        review_status="provisional",
+        created_at=ts,
+    )
 
     service = SearchService(_FakeSession([
-        _FakeResult(rows=rows),
-        _FakeResult(scalars=[]),
-        _FakeResult(rows=[]),
+        _FakeResult(scalar=1),                    # count of groups
+        _FakeResult(rows=[page_row]),             # Pass 1 page rows
+        _FakeResult(rows=[detail_row]),           # Pass 2 detail rows
+        _FakeResult(scalars=[]),                  # SourceDocumentIdentifier (empty)
+        _FakeResult(rows=[]),                     # SourceDocument metadata (empty)
     ]))
 
     response = await service.search_evidence()

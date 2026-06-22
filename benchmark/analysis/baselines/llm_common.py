@@ -8,7 +8,7 @@ from typing import Literal
 
 import httpx
 from langchain_core.messages import HumanMessage
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from benchmark.analysis.baselines.runner import BaselineEntry, BaselineEvidenceItem
 from src.core.config import get_config
@@ -90,6 +90,52 @@ class BaselineLLMResponse(BaseModel):
     """Structured LLM response for a baseline run."""
 
     evidence_items: list[BaselineLLMEvidenceItem] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_evidence_items(cls, value: object) -> object:
+        """Accept field-keyed evidence maps from prompt-only LLM baselines."""
+        if not isinstance(value, dict):
+            return value
+        raw_items = value.get("evidence_items")
+        if isinstance(raw_items, dict):
+            value = dict(value)
+            value["evidence_items"] = [_field_keyed_item(field_id, item) for field_id, item in raw_items.items()]
+            return value
+        if isinstance(raw_items, list):
+            normalized_items: list[object] = []
+            changed = False
+            for raw_item in raw_items:
+                normalized_item = _normalize_field_keyed_list_item(raw_item)
+                changed = changed or normalized_item is not raw_item
+                if isinstance(normalized_item, list):
+                    normalized_items.extend(normalized_item)
+                else:
+                    normalized_items.append(normalized_item)
+            if changed:
+                value = dict(value)
+                value["evidence_items"] = normalized_items
+        return value
+
+
+def _normalize_field_keyed_list_item(raw_item: object) -> object | list[object]:
+    if not isinstance(raw_item, dict) or "field_id" in raw_item:
+        return raw_item
+    if not raw_item or not all(_looks_like_field_id(field_id) for field_id in raw_item):
+        return raw_item
+    return [_field_keyed_item(field_id, item) for field_id, item in raw_item.items()]
+
+
+def _field_keyed_item(field_id: str, item: object) -> object:
+    if not isinstance(item, dict):
+        return {"field_id": field_id, "value": item, "status": "found" if item not in (None, "") else "not_found"}
+    normalized = dict(item)
+    normalized.setdefault("field_id", field_id)
+    return normalized
+
+
+def _looks_like_field_id(value: object) -> bool:
+    return isinstance(value, str) and re.match(r"^[A-Z]\.[A-Za-z0-9_]+$", value) is not None
 
 
 @dataclass(frozen=True)

@@ -5,9 +5,11 @@ import argparse
 import asyncio
 import json
 from dataclasses import dataclass, replace
+import os
 from pathlib import Path
 import time
 from typing import Any, Mapping, TypedDict, cast
+from urllib.parse import urlparse
 
 import httpx
 
@@ -91,6 +93,7 @@ class Phase2ArtifactBatchConfig:
     pipeline_root: Path = DEFAULT_PIPELINE_ROOT
     reports_dir: Path = REPORTS_DIR
     base_url: str = DEFAULT_BASE_URL
+    api_key: str = ""
     entry_ids: tuple[str, ...] = ()
     coverage_report_path: Path | None = None
     limit: int | None = None
@@ -237,7 +240,7 @@ async def run_phase2_artifact_batch(
     if client is not None:
         return await _run_phase2_artifact_batch_with_client(config, entries, client)
 
-    proxy = load_proxy()
+    proxy = _proxy_for_base_url(config.base_url)
     transport_kwargs = {"proxy": proxy} if proxy else {}
     async with httpx.AsyncClient(**transport_kwargs) as owned_client:
         return await _run_phase2_artifact_batch_with_client(config, entries, owned_client)
@@ -356,6 +359,7 @@ async def _submit_entry(
     response = await client.post(
         _join_url(config.base_url, "/api/v1/pipeline/run"),
         json=build_phase2_run_payload(entry),
+        headers=_auth_headers(config),
         timeout=60.0,
     )
     response.raise_for_status()
@@ -380,7 +384,11 @@ async def _poll_entry_until_phase2_complete(
         if config.poll_interval_s > 0:
             await asyncio.sleep(config.poll_interval_s)
         try:
-            response = await client.get(_join_url(config.base_url, status_url), timeout=30.0)
+            response = await client.get(
+                _join_url(config.base_url, status_url),
+                headers=_auth_headers(config),
+                timeout=30.0,
+            )
             if response.status_code == 404:
                 continue
             response.raise_for_status()
@@ -504,6 +512,18 @@ def _join_url(base_url: str, path: str) -> str:
     return f"{base_url.rstrip('/')}/{path.lstrip('/')}"
 
 
+def _auth_headers(config: Phase2ArtifactBatchConfig) -> dict[str, str]:
+    api_key = config.api_key.strip()
+    return {"X-API-Key": api_key} if api_key else {}
+
+
+def _proxy_for_base_url(base_url: str) -> str | None:
+    host = (urlparse(base_url).hostname or "").casefold()
+    if host in {"127.0.0.1", "localhost", "::1"}:
+        return None
+    return load_proxy()
+
+
 def main(argv: list[str] | None = None) -> None:
     """CLI entrypoint for Phase 2 artifact batch generation."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -511,6 +531,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--pipeline-root", type=Path, default=DEFAULT_PIPELINE_ROOT)
     parser.add_argument("--reports-dir", type=Path, default=REPORTS_DIR)
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
+    parser.add_argument("--api-key", default=os.environ.get("LINGUA_API_KEY") or os.environ.get("API_KEY", ""))
     parser.add_argument("--entries", nargs="*", default=())
     parser.add_argument("--coverage-report", type=Path, default=None)
     parser.add_argument("--limit", type=int, default=None)
@@ -526,6 +547,7 @@ def main(argv: list[str] | None = None) -> None:
         pipeline_root=args.pipeline_root,
         reports_dir=args.reports_dir,
         base_url=args.base_url,
+        api_key=args.api_key,
         entry_ids=tuple(args.entries),
         coverage_report_path=args.coverage_report,
         limit=args.limit,
