@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/Badge";
-import { cn } from "@/lib/utils/cn";
 import { useEvidenceGroupDetail } from "../hooks/useEvidenceGroupDetail";
 import { EvidenceDetailSkeleton } from "./EvidenceDetailSkeleton";
 import { EvidenceCorrectionForm } from "./EvidenceCorrectionForm";
@@ -43,6 +42,7 @@ import {
   type EvidenceDocumentHighlight,
   type EvidenceDocumentParagraph,
 } from "../utils/evidenceDocument";
+import { categoryLabel } from "../utils/categoryStyles";
 import {
   buildBilingualCompareHref,
   findInitialEvidenceId,
@@ -67,12 +67,6 @@ const STATUS_VARIANT: Record<
   rejected: "error",
 };
 
-import {
-  categoryChipStyle,
-  categoryLabel,
-  categoryMarkStyle,
-} from "../utils/categoryStyles";
-
 const HIGHLIGHT_TONES: EvidenceHighlightTone[] = [
   "gene",
   "variant",
@@ -82,29 +76,31 @@ const HIGHLIGHT_TONES: EvidenceHighlightTone[] = [
   "neutral",
 ];
 
+/* ---- Inline style helpers derived from CATEGORY_COLORS hex ---- */
+
+function chipInlineStyle(hex?: string): React.CSSProperties {
+  if (!hex) return { borderColor: "#e5e7eb", backgroundColor: "#f9fafb", color: "#374151" };
+  return { borderColor: hex + "60", backgroundColor: hex + "15", color: hex };
+}
+
+function markInlineStyle(hex?: string, selected?: boolean): React.CSSProperties {
+  const base: React.CSSProperties = hex
+    ? { backgroundColor: hex + "40", color: hex, boxShadow: `0 0 0 1px ${hex}50` }
+    : { backgroundColor: "#e5e7eb", color: "#030712", boxShadow: "0 0 0 1px #d1d5db" };
+  if (selected) {
+    base.outline = "2px solid var(--color-primary-700, #0e7490)";
+    base.outlineOffset = "2px";
+  }
+  return base;
+}
+
+/* ---- Utility functions ---- */
+
 function formatPercent(value?: number | null) {
   if (value == null) {
     return "\u2014";
   }
   return `${(value * 100).toFixed(0)}%`;
-}
-
-function StatBadge({
-  icon: Icon,
-  value,
-  label,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  value: string | number;
-  label: string;
-}) {
-  return (
-    <div className="flex items-center gap-1.5 rounded-md bg-gray-50 px-2 py-1 text-xs">
-      <Icon className="h-3.5 w-3.5 text-gray-400" />
-      <span className="font-medium text-gray-700">{value}</span>
-      <span className="text-gray-500">{label}</span>
-    </div>
-  );
 }
 
 function categoryFromItem(item?: EvidenceGroupItem | null) {
@@ -151,6 +147,36 @@ function detailTitle(detail: EvidenceGroupDetailResponse) {
   return title || "Untitled literature record";
 }
 
+/* ---- Sub-components ---- */
+
+function StatBadge({
+  icon: Icon,
+  value,
+  label,
+}: {
+  icon: React.ComponentType<{ style?: React.CSSProperties }>;
+  value: string | number;
+  label: string;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        borderRadius: 6,
+        backgroundColor: "#f9fafb",
+        padding: "4px 8px",
+        fontSize: 12,
+      }}
+    >
+      <Icon style={{ width: 14, height: 14, color: "#9ca3af" }} />
+      <span style={{ fontWeight: 500, color: "#374151" }}>{value}</span>
+      <span style={{ color: "#6b7280" }}>{label}</span>
+    </div>
+  );
+}
+
 function MetadataToken({
   label,
   value,
@@ -158,30 +184,67 @@ function MetadataToken({
 }: {
   label: string;
   value?: string | null;
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ style?: React.CSSProperties }>;
 }) {
   return (
-    <span className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-primary-200/60 bg-white px-2.5 py-1 text-xs text-primary-900 shadow-sm">
-      {Icon && <Icon className="h-3 w-3 shrink-0 text-primary-500" />}
-      <span className="font-semibold">{label}</span>
-      <span className="truncate font-mono">{value?.trim() || "\u2014"}</span>
+    <span
+      style={{
+        display: "inline-flex",
+        maxWidth: "100%",
+        alignItems: "center",
+        gap: 6,
+        borderRadius: 6,
+        border: "1px solid rgba(165, 243, 252, 0.6)",
+        backgroundColor: "#fff",
+        padding: "4px 10px",
+        fontSize: 12,
+        color: "var(--color-primary-900, #164e63)",
+        boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+      }}
+    >
+      {Icon && <Icon style={{ width: 12, height: 12, flexShrink: 0, color: "var(--color-primary-500, #06b6d4)" }} />}
+      <span style={{ fontWeight: 600 }}>{label}</span>
+      <span
+        style={{
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          fontFamily: "monospace",
+        }}
+      >
+        {value?.trim() || "\u2014"}
+      </span>
     </span>
   );
 }
 
 function EvidenceTonePill({ item }: { item: EvidenceGroupItem }) {
   const cat = categoryFromItem(item);
+  const hex = cat && CATEGORY_COLORS[cat] ? CATEGORY_COLORS[cat].hex : undefined;
   return (
     <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium",
-        categoryChipStyle(cat),
-      )}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        borderRadius: 6,
+        border: "1px solid",
+        padding: "4px 8px",
+        fontSize: 12,
+        fontWeight: 500,
+        ...chipInlineStyle(hex),
+      }}
     >
       {cat && CATEGORY_COLORS[cat] && (
         <span
-          className="inline-block h-2 w-2 shrink-0 rounded-full"
-          style={{ backgroundColor: CATEGORY_COLORS[cat].hex }}
+          style={{
+            display: "inline-block",
+            width: 8,
+            height: 8,
+            flexShrink: 0,
+            borderRadius: "50%",
+            backgroundColor: CATEGORY_COLORS[cat].hex,
+          }}
           aria-hidden="true"
         />
       )}
@@ -214,54 +277,100 @@ function EvidenceItemSummary({
   const cardField = cardFieldForFieldId(item.field_id);
 
   return (
-    <article className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:border-primary-200 hover:shadow-md">
-      <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-primary-400 to-primary-600 opacity-0 transition-opacity group-hover:opacity-100" />
+    <article className="edb-evidence-card">
+      <div
+        className="edb-evidence-card-accent"
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          height: "100%",
+          width: 4,
+          background: "linear-gradient(to bottom, var(--color-primary-400, #22d3ee), var(--color-primary-600, #0891b2))",
+          opacity: 0,
+          transition: "opacity 0.15s",
+        }}
+      />
 
-      <div className="p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
+      <div style={{ padding: 20 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
               <EvidenceTonePill item={item} />
               <Badge variant={STATUS_VARIANT[item.review_status] ?? "default"}>
                 {item.review_status}
               </Badge>
             </div>
-            <h3 className="mt-3 text-sm font-semibold text-gray-900">
+            <h3 style={{ marginTop: 12, fontSize: 14, fontWeight: 600, color: "#111827" }}>
               {itemLabel(item)}
             </h3>
-            <p className="mt-1 font-mono text-xs text-gray-500">
+            <p style={{ marginTop: 4, fontFamily: "monospace", fontSize: 12, color: "#6b7280" }}>
               {item.field_id}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button
               type="button"
               onClick={() => setEditing((v) => !v)}
-              className={cn(
-                "inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-md border px-2.5 text-sm font-medium transition-colors",
-                editing
-                  ? "border-primary-300 bg-primary-100 text-primary-800"
-                  : "border-gray-200 bg-white text-gray-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700",
-              )}
+              style={{
+                display: "inline-flex",
+                height: 36,
+                cursor: "pointer",
+                alignItems: "center",
+                gap: 6,
+                borderRadius: 6,
+                border: "1px solid",
+                padding: "0 10px",
+                fontSize: 14,
+                fontWeight: 500,
+                transition: "color 0.15s, border-color 0.15s, background-color 0.15s",
+                ...(editing
+                  ? {
+                      borderColor: "var(--color-primary-300, #67e8f9)",
+                      backgroundColor: "var(--color-primary-100, #cffafe)",
+                      color: "var(--color-primary-800, #155e75)",
+                    }
+                  : {
+                      borderColor: "#e5e7eb",
+                      backgroundColor: "#fff",
+                      color: "#4b5563",
+                    }),
+              }}
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <Pencil style={{ width: 14, height: 14 }} />
               {editing ? "Close" : "Edit"}
             </button>
             <Link
               to={buildBilingualCompareHref(groupId, item.canonical_evidence_id)}
-              className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-primary-200 bg-primary-50 px-3 text-sm font-medium text-primary-800 transition-colors hover:bg-primary-100 focus-visible:ring-2 focus-visible:ring-primary-500"
+              className="edb-focusable-link"
+              style={{
+                display: "inline-flex",
+                height: 36,
+                cursor: "pointer",
+                alignItems: "center",
+                gap: 8,
+                borderRadius: 6,
+                border: "1px solid var(--color-primary-200, #a5f3fc)",
+                backgroundColor: "var(--color-primary-50, #ecfeff)",
+                padding: "0 12px",
+                fontSize: 14,
+                fontWeight: 500,
+                color: "var(--color-primary-800, #155e75)",
+                textDecoration: "none",
+                transition: "background-color 0.15s",
+              }}
             >
-              <Columns2 className="h-4 w-4" />
+              <Columns2 style={{ width: 16, height: 16 }} />
               Compare
             </Link>
           </div>
         </div>
 
-        <p className="mt-4 line-clamp-3 text-sm leading-6 text-gray-700">
+        <p className="edb-line-clamp-3" style={{ marginTop: 16, fontSize: 14, lineHeight: "24px", color: "#374151" }}>
           {item.value ?? "\u2014"}
         </p>
 
-        <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-3">
+        <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 8, borderTop: "1px solid #f3f4f6", paddingTop: 12 }}>
           <StatBadge icon={Percent} value={formatPercent(item.confidence)} label="confidence" />
           <StatBadge icon={Layers3} value={item.track ?? "\u2014"} label="track" />
           <StatBadge icon={FileText} value={item.page ?? "\u2014"} label="page" />
@@ -291,33 +400,67 @@ function LiteratureOverview({
   groupId: string;
 }) {
   return (
-    <div className="content-fade-in space-y-5">
+    <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <Link
         to="/evidence"
-        className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-primary-600"
+        className="edb-back-link"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          fontSize: 14,
+          fontWeight: 500,
+          color: "#6b7280",
+          textDecoration: "none",
+          transition: "color 0.15s",
+        }}
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft style={{ width: 16, height: 16 }} />
         Back to literature
       </Link>
 
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="relative border-b border-primary-100 bg-gradient-to-r from-primary-50 via-primary-50/50 to-transparent px-6 py-5">
-          <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-primary-400 to-primary-600" />
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary-800">
-                <BookOpen className="h-4 w-4" />
+      <section style={{ overflow: "hidden", borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+        <div
+          style={{
+            position: "relative",
+            borderBottom: "1px solid var(--color-primary-100, #cffafe)",
+            background: "linear-gradient(to right, var(--color-primary-50, #ecfeff), rgba(236,254,255,0.5), transparent)",
+            padding: "20px 24px",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              height: "100%",
+              width: 4,
+              background: "linear-gradient(to bottom, var(--color-primary-400, #22d3ee), var(--color-primary-600, #0891b2))",
+            }}
+          />
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+            <div style={{ minWidth: 0 }}>
+              <p
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  color: "var(--color-primary-800, #155e75)",
+                  margin: 0,
+                }}
+              >
+                <BookOpen style={{ width: 16, height: 16 }} />
                 Literature record
               </p>
-              <h2 className="mt-2 max-w-4xl text-xl font-semibold leading-7 text-gray-950">
+              <h2 style={{ marginTop: 8, maxWidth: 896, fontSize: 20, fontWeight: 600, lineHeight: "28px", color: "#030712" }}>
                 {detailTitle(detail)}
               </h2>
-              <div className="mt-3 flex max-w-4xl flex-wrap gap-2">
-                <MetadataToken
-                  label="UUID"
-                  value={detail.source_document_id}
-                  icon={Hash}
-                />
+              <div style={{ marginTop: 12, display: "flex", maxWidth: 896, flexWrap: "wrap", gap: 8 }}>
+                <MetadataToken label="UUID" value={detail.source_document_id} icon={Hash} />
                 <MetadataToken label="PMID" value={detail.pmid} icon={FileText} />
                 <MetadataToken label="DOI" value={detail.doi} icon={Link2} />
               </div>
@@ -326,7 +469,7 @@ function LiteratureOverview({
           </div>
         </div>
 
-        <div className="grid gap-0 md:grid-cols-4">
+        <div className="edb-overview-meta-grid">
           {(
             [
               { label: "Gene", value: detail.gene, Icon: Dna },
@@ -335,15 +478,24 @@ function LiteratureOverview({
               { label: "Classification", value: detail.classification, Icon: ShieldCheck },
             ] as const
           ).map(({ label, value, Icon }) => (
-            <div
-              key={label}
-              className="border-b border-gray-100 px-5 py-4 md:border-b-0 md:border-r last:md:border-r-0"
-            >
-              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                <Icon className="h-3.5 w-3.5" />
+            <div key={label} className="edb-overview-meta-cell">
+              <p
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  color: "#9ca3af",
+                  margin: 0,
+                }}
+              >
+                <Icon style={{ width: 14, height: 14 }} />
                 {label}
               </p>
-              <p className="mt-2 line-clamp-3 text-sm font-medium text-gray-900">
+              <p className="edb-line-clamp-3" style={{ marginTop: 8, fontSize: 14, fontWeight: 500, color: "#111827" }}>
                 {value ?? "\u2014"}
               </p>
             </div>
@@ -351,35 +503,28 @@ function LiteratureOverview({
         </div>
       </section>
 
-      <div className="grid gap-5 lg:grid-cols-[300px_minmax(0,1fr)]">
-        <aside className="space-y-5">
-          <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-100 px-5 py-3">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                <ListChecks className="h-4 w-4 text-primary-700" />
+      <div className="edb-overview-layout">
+        <aside style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <section style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+            <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 20px" }}>
+              <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
+                <ListChecks style={{ width: 16, height: 16, color: "var(--color-primary-700, #0e7490)" }} />
                 Evidence coverage
               </h3>
             </div>
-            <div className="grid grid-cols-2 gap-0">
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
               {[
                 { label: "Items", value: detail.item_count, icon: Database },
                 { label: "Confidence", value: formatPercent(detail.avg_confidence), icon: TrendingUp },
                 { label: "Traces", value: detail.traces.length, icon: Search },
                 { label: "Fields", value: Object.keys(detail.distribution.by_field).length, icon: FileText },
-              ].map((stat, idx) => (
-                <div
-                  key={stat.label}
-                  className={cn(
-                    "p-4",
-                    idx % 2 === 0 && "border-r border-gray-100",
-                    idx < 2 && "border-b border-gray-100",
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <stat.icon className="h-3.5 w-3.5 text-gray-400" />
-                    <p className="text-xs font-medium text-gray-500">{stat.label}</p>
+              ].map((stat) => (
+                <div key={stat.label} className="edb-coverage-stat-cell">
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <stat.icon style={{ width: 14, height: 14, color: "#9ca3af" }} />
+                    <p style={{ fontSize: 12, fontWeight: 500, color: "#6b7280", margin: 0 }}>{stat.label}</p>
                   </div>
-                  <p className="mt-1.5 text-xl font-bold text-gray-950">
+                  <p style={{ marginTop: 6, fontSize: 20, fontWeight: 700, color: "#030712" }}>
                     {stat.value}
                   </p>
                 </div>
@@ -387,76 +532,116 @@ function LiteratureOverview({
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-100 px-5 py-3">
-              <h3 className="text-sm font-semibold text-gray-900">
+          <section style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+            <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 20px" }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
                 Evidence categories
               </h3>
             </div>
-            <div className="flex flex-wrap gap-2 p-4">
-              {countEntries(detail.distribution.by_category).map(
-                ([key, count]) => (
-                  <span
-                    key={key}
-                    className="rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs font-medium text-gray-700 shadow-sm"
-                  >
-                    {categoryLabel(key)} · {count}
-                  </span>
-                ),
-              )}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: 16 }}>
+              {countEntries(detail.distribution.by_category).map(([key, count]) => (
+                <span
+                  key={key}
+                  style={{
+                    borderRadius: 6,
+                    border: "1px solid #e5e7eb",
+                    backgroundColor: "#f9fafb",
+                    padding: "6px 10px",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "#374151",
+                    boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+                  }}
+                >
+                  {categoryLabel(key)} · {count}
+                </span>
+              ))}
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-100 px-5 py-3">
-              <h3 className="text-sm font-semibold text-gray-900">
+          <section style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+            <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 20px" }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
                 Review status
               </h3>
             </div>
-            <div className="flex flex-wrap gap-2 p-4">
-              {countEntries(detail.distribution.by_status).map(
-                ([key, count]) => (
-                  <Badge key={key} variant={STATUS_VARIANT[key] ?? "default"}>
-                    {key}: {count}
-                  </Badge>
-                ),
-              )}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: 16 }}>
+              {countEntries(detail.distribution.by_status).map(([key, count]) => (
+                <Badge key={key} variant={STATUS_VARIANT[key] ?? "default"}>
+                  {key}: {count}
+                </Badge>
+              ))}
             </div>
           </section>
 
           <EvidenceAuditHistory sourceDocumentId={detail.source_document_id} />
         </aside>
 
-        <section className="space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50">
-                <ListChecks className="h-5 w-5 text-primary-600" />
+        <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              borderRadius: 12,
+              border: "1px solid #e5e7eb",
+              backgroundColor: "#fff",
+              padding: "16px 20px",
+              boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div
+                style={{
+                  display: "flex",
+                  height: 40,
+                  width: 40,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 8,
+                  backgroundColor: "var(--color-primary-50, #ecfeff)",
+                }}
+              >
+                <ListChecks style={{ width: 20, height: 20, color: "var(--color-primary-600, #0891b2)" }} />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-950">
+                <h2 style={{ fontSize: 16, fontWeight: 600, color: "#030712", margin: 0 }}>
                   Extracted evidence fields
                 </h2>
-                <p className="mt-0.5 text-sm text-gray-500">
+                <p style={{ marginTop: 2, fontSize: 14, color: "#6b7280" }}>
                   {detail.items.length} field-level evidence items
                 </p>
               </div>
             </div>
             {detail.items[0] && (
               <Link
-                to={buildBilingualCompareHref(
-                  groupId,
-                  detail.items[0].canonical_evidence_id,
-                )}
-                className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md bg-primary-700 px-3 text-sm font-medium text-white transition-colors hover:bg-primary-800 focus-visible:ring-2 focus-visible:ring-primary-500"
+                to={buildBilingualCompareHref(groupId, detail.items[0].canonical_evidence_id)}
+                className="edb-focusable-link"
+                style={{
+                  display: "inline-flex",
+                  height: 40,
+                  cursor: "pointer",
+                  alignItems: "center",
+                  gap: 8,
+                  borderRadius: 6,
+                  backgroundColor: "var(--color-primary-700, #0e7490)",
+                  padding: "0 12px",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: "#fff",
+                  textDecoration: "none",
+                  transition: "background-color 0.15s",
+                }}
               >
-                <Languages className="h-4 w-4" />
+                <Languages style={{ width: 16, height: 16 }} />
                 Full-text comparison
               </Link>
             )}
           </div>
 
-          <div className="grid gap-3">
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {detail.items.map((item) => (
               <EvidenceItemSummary
                 key={item.canonical_evidence_id}
@@ -502,15 +687,18 @@ function HighlightedParagraph({
     if (highlight.start > cursor) {
       nodes.push(paragraph.text.slice(cursor, highlight.start));
     }
+    const hex = highlight.category && CATEGORY_COLORS[highlight.category]
+      ? CATEGORY_COLORS[highlight.category].hex
+      : undefined;
     nodes.push(
       <mark
         key={`${highlight.evidenceId}-${highlight.start}-${index}`}
-        className={cn(
-          "rounded px-1 py-0.5 font-semibold",
-          categoryMarkStyle(highlight.category),
-          highlight.selected &&
-            "outline outline-2 outline-offset-2 outline-primary-700",
-        )}
+        style={{
+          borderRadius: 4,
+          padding: "2px 4px",
+          fontWeight: 600,
+          ...markInlineStyle(hex, highlight.selected),
+        }}
         aria-label={`${categoryLabel(highlight.category)} evidence: ${highlight.label}`}
       >
         {paragraph.text.slice(highlight.start, highlight.end)}
@@ -524,14 +712,22 @@ function HighlightedParagraph({
   }
 
   return (
-    <div className="border-b border-gray-100 py-4 last:border-b-0">
-      <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-        <span className="rounded-md bg-gray-100 px-2 py-1 font-medium text-gray-700">
+    <div style={{ borderBottom: "1px solid #f3f4f6", padding: "16px 0" }}>
+      <div style={{ marginBottom: 8, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, fontSize: 12, color: "#6b7280" }}>
+        <span
+          style={{
+            borderRadius: 6,
+            backgroundColor: "#f3f4f6",
+            padding: "4px 8px",
+            fontWeight: 500,
+            color: "#374151",
+          }}
+        >
           {paragraph.highlights[0]?.label ?? "Document text"}
         </span>
         <span>Page {paragraph.page ?? "\u2014"}</span>
       </div>
-      <p className="whitespace-pre-wrap text-sm leading-7 text-gray-800">
+      <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: "28px", color: "#1f2937" }}>
         {nodes.length > 0 ? nodes : paragraph.text}
       </p>
     </div>
@@ -548,16 +744,26 @@ function EvidenceDocumentReader({
   const isFullText = paragraphs.length === 1 && paragraphs[0].text.length > 500;
 
   return (
-    <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="sticky top-0 z-10 border-b border-gray-100 bg-gradient-to-r from-gray-50 via-gray-50 to-gray-50/50 px-5 py-3 backdrop-blur-sm">
-        <h3 className="text-sm font-semibold text-gray-950">{title}</h3>
-        <p className="mt-0.5 text-xs text-gray-500">
+    <section style={{ overflow: "hidden", borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          borderBottom: "1px solid #f3f4f6",
+          background: "linear-gradient(to right, #f9fafb, #f9fafb, rgba(249,250,251,0.5))",
+          padding: "12px 20px",
+          backdropFilter: "blur(4px)",
+        }}
+      >
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: "#030712", margin: 0 }}>{title}</h3>
+        <p style={{ marginTop: 2, fontSize: 12, color: "#6b7280" }}>
           {isFullText
             ? "Full document with evidence highlights"
             : `${paragraphs.length} aligned paragraph${paragraphs.length !== 1 ? "s" : ""}`}
         </p>
       </div>
-      <div className="max-h-[720px] overflow-y-auto px-5">
+      <div style={{ maxHeight: 720, overflowY: "auto", padding: "0 20px" }}>
         {paragraphs.length > 0 ? (
           isFullText ? (
             <MarkdownDocumentViewer
@@ -570,11 +776,21 @@ function EvidenceDocumentReader({
             ))
           )
         ) : (
-          <div className="flex flex-col items-center gap-3 px-2 py-12 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100">
-              <FileText className="h-6 w-6 text-gray-400" />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "48px 8px", textAlign: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                height: 48,
+                width: 48,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 12,
+                backgroundColor: "#f3f4f6",
+              }}
+            >
+              <FileText style={{ width: 24, height: 24, color: "#9ca3af" }} />
             </div>
-            <p className="text-sm text-gray-500">
+            <p style={{ fontSize: 14, color: "#6b7280" }}>
               No document text is available for this track.
             </p>
           </div>
@@ -596,55 +812,98 @@ function CategoryLayerToggle({
   category: string;
 }) {
   const cat = CATEGORY_COLORS[category];
+  const baseStyle: React.CSSProperties = {
+    display: "flex",
+    minHeight: 44,
+    cursor: count === 0 ? "not-allowed" : "pointer",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    borderRadius: 8,
+    border: "1px solid",
+    padding: "8px 12px",
+    transition: "color 0.15s, border-color 0.15s, background-color 0.15s",
+    opacity: count === 0 ? 0.5 : 1,
+  };
+
+  if (checked && cat) {
+    baseStyle.borderColor = cat.hex + "40";
+    baseStyle.backgroundColor = cat.hex + "10";
+  } else if (checked) {
+    baseStyle.borderColor = "var(--color-primary-200, #a5f3fc)";
+    baseStyle.backgroundColor = "var(--color-primary-50, #ecfeff)";
+  } else {
+    baseStyle.borderColor = "#e5e7eb";
+    baseStyle.backgroundColor = "#fff";
+  }
+
   return (
-    <label
-      className={cn(
-        "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 transition-colors",
-        checked
-          ? "border-primary-200 bg-primary-50"
-          : "border-gray-200 bg-white hover:bg-gray-50",
-        count === 0 && "cursor-not-allowed opacity-50",
-      )}
-      style={
-        checked && cat
-          ? { borderColor: cat.hex + "40", backgroundColor: cat.hex + "10" }
-          : undefined
-      }
-    >
+    <label className="edb-toggle-label" style={baseStyle}>
       <input
         type="checkbox"
         checked={checked}
         disabled={count === 0}
         onChange={onChange}
-        className="peer sr-only"
+        className="edb-toggle-input"
+        style={{ position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap", borderWidth: 0 }}
       />
-      <span className="flex min-w-0 items-center gap-2">
+      <span style={{ display: "flex", minWidth: 0, alignItems: "center", gap: 8 }}>
         <span
-          className="inline-block h-3 w-3 shrink-0 rounded-full"
-          style={{ backgroundColor: cat?.hex ?? "#9CA3AF" }}
+          style={{
+            display: "inline-block",
+            width: 12,
+            height: 12,
+            flexShrink: 0,
+            borderRadius: "50%",
+            backgroundColor: cat?.hex ?? "#9CA3AF",
+          }}
           aria-hidden="true"
         />
-        <span className="min-w-0">
-          <span className="block truncate text-sm font-medium text-gray-900">
+        <span style={{ minWidth: 0 }}>
+          <span
+            style={{
+              display: "block",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              fontSize: 14,
+              fontWeight: 500,
+              color: "#111827",
+            }}
+          >
             {cat?.label ?? category}
           </span>
-          <span className="text-xs text-gray-500">
+          <span style={{ fontSize: 12, color: "#6b7280" }}>
             {count} item{count !== 1 ? "s" : ""}
           </span>
         </span>
       </span>
       <span
-        className={cn(
-          "relative h-6 w-11 shrink-0 rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-primary-500 peer-focus-visible:ring-offset-2",
-          checked ? "bg-primary-700" : "bg-gray-300",
-        )}
+        className="edb-toggle-track"
+        style={{
+          position: "relative",
+          height: 24,
+          width: 44,
+          flexShrink: 0,
+          borderRadius: 9999,
+          transition: "background-color 0.15s",
+          backgroundColor: checked ? "var(--color-primary-700, #0e7490)" : "#d1d5db",
+        }}
         aria-hidden="true"
       >
         <span
-          className={cn(
-            "absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform",
-            checked && "translate-x-5",
-          )}
+          style={{
+            position: "absolute",
+            left: 4,
+            top: 4,
+            height: 16,
+            width: 16,
+            borderRadius: "50%",
+            backgroundColor: "#fff",
+            boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+            transition: "transform 0.15s",
+            transform: checked ? "translateX(20px)" : "translateX(0)",
+          }}
         />
       </span>
     </label>
@@ -701,8 +960,6 @@ function BilingualCompareView({
       ),
     [detail, enabledTones, selectedEvidenceId, enabledCategories],
   );
-  // Data availability ignores user-applied filters so category toggles do not mount/unmount
-  // the translated reader or reflow the document grid.
   const showTranslatedDocument = hasTranslatedDocumentText(detail);
 
   const toggleCategory = (cat: string) => {
@@ -718,41 +975,75 @@ function BilingualCompareView({
   };
 
   return (
-    <div className="content-fade-in space-y-5">
+    <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <Link
         to={`/evidence/detail?groupId=${encodeURIComponent(groupId)}`}
-        className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-primary-600"
+        className="edb-back-link"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          fontSize: 14,
+          fontWeight: 500,
+          color: "#6b7280",
+          textDecoration: "none",
+          transition: "color 0.15s",
+        }}
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft style={{ width: 16, height: 16 }} />
         Back to literature detail
       </Link>
 
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="relative border-b border-purple-100 bg-gradient-to-r from-purple-50 via-purple-50/50 to-transparent px-6 py-5">
-          <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-purple-400 to-purple-600" />
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-purple-800">
-                <Columns2 className="h-4 w-4" />
+      <section style={{ overflow: "hidden", borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+        <div
+          style={{
+            position: "relative",
+            borderBottom: "1px solid #f3e8ff",
+            background: "linear-gradient(to right, #faf5ff, rgba(250,245,255,0.5), transparent)",
+            padding: "20px 24px",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              height: "100%",
+              width: 4,
+              background: "linear-gradient(to bottom, #c084fc, #9333ea)",
+            }}
+          />
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+            <div style={{ minWidth: 0 }}>
+              <p
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  color: "#6b21a8",
+                  margin: 0,
+                }}
+              >
+                <Columns2 style={{ width: 16, height: 16 }} />
                 Bilingual full-text document
               </p>
-              <h2 className="mt-2 max-w-4xl text-xl font-semibold leading-7 text-gray-950">
+              <h2 style={{ marginTop: 8, maxWidth: 896, fontSize: 20, fontWeight: 600, lineHeight: "28px", color: "#030712" }}>
                 {detailTitle(detail)}
               </h2>
-              <div className="mt-3 flex max-w-4xl flex-wrap gap-2">
+              <div style={{ marginTop: 12, display: "flex", maxWidth: 896, flexWrap: "wrap", gap: 8 }}>
                 <MetadataToken label="UUID" value={detail.source_document_id} icon={Hash} />
                 <MetadataToken label="PMID" value={detail.pmid} icon={FileText} />
                 <MetadataToken label="DOI" value={detail.doi} icon={Link2} />
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
               {selectedItem && <EvidenceTonePill item={selectedItem} />}
               {selectedItem && (
-                <Badge
-                  variant={
-                    STATUS_VARIANT[selectedItem.review_status] ?? "default"
-                  }
-                >
+                <Badge variant={STATUS_VARIANT[selectedItem.review_status] ?? "default"}>
                   {selectedItem.review_status}
                 </Badge>
               )}
@@ -760,25 +1051,30 @@ function BilingualCompareView({
           </div>
         </div>
 
-        <div className="grid gap-0 sm:grid-cols-3">
+        <div className="edb-compare-stats-grid">
           {[
             { label: "Item confidence", value: formatPercent(selectedItem?.confidence), icon: TrendingUp },
             { label: "Alignment confidence", value: formatPercent(selectedTrace?.alignment_confidence), icon: ShieldCheck },
             { label: "Source page", value: selectedTrace?.original?.page ?? selectedTrace?.translated?.page ?? selectedItem?.page ?? "\u2014", icon: FileText },
-          ].map((stat, idx) => (
-            <div
-              key={stat.label}
-              className={cn(
-                "flex items-center gap-3 p-4",
-                idx < 2 && "border-b sm:border-b-0 sm:border-r border-gray-100",
-              )}
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-purple-100 to-purple-50">
-                <stat.icon className="h-4 w-4 text-purple-700" />
+          ].map((stat) => (
+            <div key={stat.label} className="edb-compare-stat-cell">
+              <div
+                style={{
+                  display: "flex",
+                  height: 36,
+                  width: 36,
+                  flexShrink: 0,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 8,
+                  background: "linear-gradient(to bottom right, #f3e8ff, #faf5ff)",
+                }}
+              >
+                <stat.icon style={{ width: 16, height: 16, color: "#7e22ce" }} />
               </div>
               <div>
-                <p className="text-xs text-gray-500">{stat.label}</p>
-                <p className="text-sm font-semibold text-gray-900">
+                <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{stat.label}</p>
+                <p style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
                   {stat.value}
                 </p>
               </div>
@@ -787,16 +1083,16 @@ function BilingualCompareView({
         </div>
       </section>
 
-      <div className="grid gap-5 lg:grid-cols-[340px_minmax(0,1fr)]">
-        <aside className="space-y-4">
-          <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-100 px-4 py-3">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                <SlidersHorizontal className="h-4 w-4 text-primary-700" />
+      <div className="edb-compare-layout">
+        <aside style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <section style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+            <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 16px" }}>
+              <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
+                <SlidersHorizontal style={{ width: 16, height: 16, color: "var(--color-primary-700, #0e7490)" }} />
                 Evidence categories
               </h3>
             </div>
-            <div className="space-y-2 p-4">
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 16 }}>
               {EVIDENCE_CATEGORIES.map((cat) => (
                 <CategoryLayerToggle
                   key={cat}
@@ -809,49 +1105,59 @@ function BilingualCompareView({
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-100 px-4 py-3">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                <Search className="h-4 w-4 text-primary-700" />
+          <section style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+            <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 16px" }}>
+              <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
+                <Search style={{ width: 16, height: 16, color: "var(--color-primary-700, #0e7490)" }} />
                 Evidence navigator
               </h3>
             </div>
-            <div className="max-h-[460px] space-y-2 overflow-y-auto p-4 pr-3">
+            <div style={{ maxHeight: 460, overflowY: "auto", padding: "16px 12px 16px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
               {detail.items.map((item) => {
                 const active =
                   item.canonical_evidence_id === selectedItem?.canonical_evidence_id;
                 const cat = categoryFromItem(item);
                 const catColor = cat && CATEGORY_COLORS[cat];
+                const navItemStyle: React.CSSProperties = {
+                  width: "100%",
+                  cursor: "pointer",
+                  borderRadius: 8,
+                  border: "1px solid",
+                  padding: 12,
+                  textAlign: "left",
+                  transition: "all 0.15s",
+                  background: "none",
+                };
+                if (active && catColor) {
+                  navItemStyle.borderColor = catColor.hex + "60";
+                  navItemStyle.backgroundColor = catColor.hex + "12";
+                  navItemStyle.boxShadow = "0 1px 2px 0 rgba(0,0,0,0.05)";
+                } else if (active) {
+                  navItemStyle.borderColor = "var(--color-primary-300, #67e8f9)";
+                  navItemStyle.backgroundColor = "var(--color-primary-50, #ecfeff)";
+                  navItemStyle.boxShadow = "0 1px 2px 0 rgba(0,0,0,0.05)";
+                } else {
+                  navItemStyle.borderColor = "#e5e7eb";
+                  navItemStyle.backgroundColor = "#fff";
+                }
                 return (
                   <button
                     key={item.canonical_evidence_id}
                     type="button"
                     onClick={() => setSelectedEvidenceId(item.canonical_evidence_id)}
-                    className={cn(
-                      "group w-full cursor-pointer rounded-lg border p-3 text-left transition-all focus-visible:ring-2 focus-visible:ring-primary-500",
-                      active
-                        ? "border-primary-300 bg-primary-50 shadow-sm"
-                        : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm",
-                    )}
-                    style={
-                      active && catColor
-                        ? {
-                            borderColor: catColor.hex + "60",
-                            backgroundColor: catColor.hex + "12",
-                          }
-                        : undefined
-                    }
+                    className="edb-nav-item edb-focusable-btn"
+                    style={navItemStyle}
                   >
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
                       <EvidenceTonePill item={item} />
-                      <span className="text-xs text-gray-500">
+                      <span style={{ fontSize: 12, color: "#6b7280" }}>
                         {formatPercent(item.confidence)}
                       </span>
                     </div>
-                    <p className="mt-2 line-clamp-2 text-sm font-medium text-gray-900 group-hover:text-primary-700">
+                    <p className="edb-nav-item-title edb-line-clamp-2" style={{ marginTop: 8, fontSize: 14, fontWeight: 500, color: "#111827", transition: "color 0.15s" }}>
                       {itemLabel(item)}
                     </p>
-                    <p className="mt-1 line-clamp-2 text-xs text-gray-500">
+                    <p className="edb-line-clamp-2" style={{ marginTop: 4, fontSize: 12, color: "#6b7280" }}>
                       {item.value ?? "\u2014"}
                     </p>
                   </button>
@@ -861,46 +1167,67 @@ function BilingualCompareView({
           </section>
         </aside>
 
-        <section className="space-y-4">
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="relative border-b border-gray-100 bg-gradient-to-r from-primary-50/50 to-transparent px-5 py-4">
-              <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-primary-400 to-primary-600" />
-              <div className="flex flex-wrap items-start justify-between gap-3">
+        <section style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ overflow: "hidden", borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+            <div
+              style={{
+                position: "relative",
+                borderBottom: "1px solid #f3f4f6",
+                background: "linear-gradient(to right, rgba(236,254,255,0.5), transparent)",
+                padding: "16px 20px",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  height: "100%",
+                  width: 4,
+                  background: "linear-gradient(to bottom, var(--color-primary-400, #22d3ee), var(--color-primary-600, #0891b2))",
+                }}
+              />
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                 <div>
-                  <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary-800">
-                    <Highlighter className="h-4 w-4" />
+                  <p
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      color: "var(--color-primary-800, #155e75)",
+                      margin: 0,
+                    }}
+                  >
+                    <Highlighter style={{ width: 16, height: 16 }} />
                     Active evidence
                   </p>
-                  <h3 className="mt-2 text-sm font-semibold text-gray-950">
+                  <h3 style={{ marginTop: 8, fontSize: 14, fontWeight: 600, color: "#030712" }}>
                     {selectedItem ? itemLabel(selectedItem) : "No evidence selected"}
                   </h3>
-                  <p className="mt-1 font-mono text-xs text-gray-500">
+                  <p style={{ marginTop: 4, fontFamily: "monospace", fontSize: 12, color: "#6b7280" }}>
                     {selectedItem?.field_id ?? "\u2014"}
                   </p>
                 </div>
                 {selectedItem && (
-                  <Badge
-                    variant={
-                      STATUS_VARIANT[selectedItem.review_status] ?? "default"
-                    }
-                  >
+                  <Badge variant={STATUS_VARIANT[selectedItem.review_status] ?? "default"}>
                     {selectedItem.review_status}
                   </Badge>
                 )}
               </div>
             </div>
-            <div className="px-5 py-4">
-              <p className="text-sm leading-6 text-gray-800">
+            <div style={{ padding: "16px 20px" }}>
+              <p style={{ fontSize: 14, lineHeight: "24px", color: "#1f2937" }}>
                 {selectedItem?.value ?? "\u2014"}
               </p>
             </div>
           </div>
 
           <div
-            className={cn(
-              "grid gap-4",
-              showTranslatedDocument && "xl:grid-cols-2",
-            )}
+            className={showTranslatedDocument ? "edb-doc-readers-grid edb-doc-readers-two-col" : "edb-doc-readers-grid"}
           >
             <EvidenceDocumentReader
               title="Original document"
@@ -950,39 +1277,235 @@ export function EvidenceDetailView({
 
   if (error || !detail) {
     return (
-      <div className="relative overflow-hidden rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-white px-6 py-14 text-center">
-        <div className="relative">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-100">
-            <AlertCircle className="h-7 w-7 text-red-500" />
+      <>
+        <style>{`
+          .edb-detail-error {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid #fecaca;
+            background: linear-gradient(to bottom right, #fef2f2, #fff);
+            padding: 56px 24px;
+            text-align: center;
+          }
+        `}</style>
+        <div className="edb-detail-error">
+          <div style={{ position: "relative" }}>
+            <div
+              style={{
+                margin: "0 auto",
+                display: "flex",
+                height: 56,
+                width: 56,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 16,
+                backgroundColor: "#fee2e2",
+              }}
+            >
+              <AlertCircle style={{ width: 28, height: 28, color: "#ef4444" }} />
+            </div>
+            <p style={{ marginTop: 16, fontSize: 14, fontWeight: 600, color: "#991b1b" }}>
+              Failed to load evidence detail
+            </p>
+            <p style={{ marginTop: 4, fontSize: 14, color: "#dc2626" }}>
+              {error?.message ?? "The requested evidence group could not be found."}
+            </p>
+            <Link
+              to="/evidence"
+              style={{
+                marginTop: 20,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                borderRadius: 6,
+                backgroundColor: "#dc2626",
+                padding: "8px 16px",
+                fontSize: 14,
+                fontWeight: 500,
+                color: "#fff",
+                textDecoration: "none",
+                transition: "background-color 0.15s",
+              }}
+            >
+              <ArrowLeft style={{ width: 16, height: 16 }} />
+              Back to literature
+            </Link>
           </div>
-          <p className="mt-4 text-sm font-semibold text-red-800">
-            Failed to load evidence detail
-          </p>
-          <p className="mt-1 text-sm text-red-600">
-            {error?.message ?? "The requested evidence group could not be found."}
-          </p>
-          <Link
-            to="/evidence"
-            className="mt-5 inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to literature
-          </Link>
         </div>
-      </div>
+      </>
     );
   }
 
-  if (initialView === "compare") {
-    return (
-      <BilingualCompareView
-        detail={detail}
-        groupId={groupId}
-        selectedEvidenceId={selectedEvidenceId}
-        setSelectedEvidenceId={setSelectedOverrideId}
-      />
-    );
-  }
+  return (
+    <>
+      <style>{`
+        /* Responsive grids */
+        .edb-overview-meta-grid {
+          display: grid;
+          gap: 0;
+        }
+        @media (min-width: 768px) {
+          .edb-overview-meta-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+          }
+        }
+        .edb-overview-meta-cell {
+          border-bottom: 1px solid #f3f4f6;
+          padding: 16px 20px;
+        }
+        @media (min-width: 768px) {
+          .edb-overview-meta-cell {
+            border-bottom: none;
+            border-right: 1px solid #f3f4f6;
+          }
+          .edb-overview-meta-cell:last-child {
+            border-right: none;
+          }
+        }
+        .edb-overview-layout {
+          display: grid;
+          gap: 20px;
+        }
+        @media (min-width: 1024px) {
+          .edb-overview-layout {
+            grid-template-columns: 300px minmax(0, 1fr);
+          }
+        }
+        .edb-compare-stats-grid {
+          display: grid;
+          gap: 0;
+        }
+        @media (min-width: 640px) {
+          .edb-compare-stats-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+        }
+        .edb-compare-stat-cell {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px;
+          border-bottom: 1px solid #f3f4f6;
+        }
+        .edb-compare-stat-cell:last-child {
+          border-bottom: none;
+        }
+        @media (min-width: 640px) {
+          .edb-compare-stat-cell {
+            border-bottom: none;
+            border-right: 1px solid #f3f4f6;
+          }
+          .edb-compare-stat-cell:last-child {
+            border-right: none;
+          }
+        }
+        .edb-compare-layout {
+          display: grid;
+          gap: 20px;
+        }
+        @media (min-width: 1024px) {
+          .edb-compare-layout {
+            grid-template-columns: 340px minmax(0, 1fr);
+          }
+        }
+        .edb-doc-readers-grid {
+          display: grid;
+          gap: 16px;
+        }
+        @media (min-width: 1280px) {
+          .edb-doc-readers-grid.edb-doc-readers-two-col {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
 
-  return <LiteratureOverview detail={detail} groupId={groupId} />;
+        /* Coverage stats 2-col grid borders */
+        .edb-coverage-stat-cell {
+          padding: 16px;
+        }
+        .edb-coverage-stat-cell:nth-child(odd) {
+          border-right: 1px solid #f3f4f6;
+        }
+        .edb-coverage-stat-cell:nth-child(-n+2) {
+          border-bottom: 1px solid #f3f4f6;
+        }
+
+        /* Line clamp */
+        .edb-line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .edb-line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        /* Card hover */
+        .edb-evidence-card {
+          position: relative;
+          overflow: hidden;
+          border-radius: 12px;
+          border: 1px solid #e5e7eb;
+          background: #fff;
+          box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+          transition: all 0.15s;
+        }
+        .edb-evidence-card:hover {
+          border-color: var(--color-primary-200, #a5f3fc);
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .edb-evidence-card:hover .edb-evidence-card-accent {
+          opacity: 1;
+        }
+
+        /* Back link hover */
+        .edb-back-link:hover {
+          color: var(--color-primary-600, #0891b2) !important;
+        }
+
+        /* Focus visible */
+        .edb-focusable-link:focus-visible {
+          outline: 2px solid var(--color-primary-500, #06b6d4);
+          outline-offset: 0;
+        }
+        .edb-focusable-btn:focus-visible {
+          outline: 2px solid var(--color-primary-500, #06b6d4);
+          outline-offset: 0;
+        }
+
+        /* Navigator hover */
+        .edb-nav-item:hover {
+          border-color: #d1d5db !important;
+          background-color: #f9fafb !important;
+          box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05) !important;
+        }
+        .edb-nav-item:hover .edb-nav-item-title {
+          color: var(--color-primary-700, #0e7490);
+        }
+
+        /* Toggle label hover */
+        .edb-toggle-label:hover {
+          background-color: #f9fafb;
+        }
+        /* Toggle input focus-visible */
+        .edb-toggle-input:focus-visible ~ .edb-toggle-track {
+          box-shadow: 0 0 0 2px var(--color-primary-500, #06b6d4), 0 0 0 4px #fff;
+        }
+      `}</style>
+      {initialView === "compare" ? (
+        <BilingualCompareView
+          detail={detail!}
+          groupId={groupId}
+          selectedEvidenceId={selectedEvidenceId}
+          setSelectedEvidenceId={setSelectedOverrideId}
+        />
+      ) : (
+        <LiteratureOverview detail={detail!} groupId={groupId} />
+      )}
+    </>
+  );
 }

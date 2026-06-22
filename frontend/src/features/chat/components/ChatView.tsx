@@ -88,42 +88,42 @@ interface SuggestionChip {
   description: string;
   /** Message content sent when the chip is clicked. */
   message: string;
-  accent: string; // tailwind bg class (light)
-  accentText: string; // tailwind text class
+  accentBg: string;
+  accentColor: string;
 }
 
 const SUGGESTIONS: SuggestionChip[] = [
   {
-    icon: <FlaskConical className="h-4 w-4" />,
+    icon: <FlaskConical style={{ width: 16, height: 16 }} />,
     title: "Run the pipeline",
     description: "Ingest a paper via PMID, DOI, or keyword",
     message: "Run the four-phase pipeline on PMID 34521984",
-    accent: "bg-cyan-50",
-    accentText: "text-cyan-600",
+    accentBg: "#ecfeff",
+    accentColor: "#0891b2",
   },
   {
-    icon: <Upload className="h-4 w-4" />,
+    icon: <Upload style={{ width: 16, height: 16 }} />,
     title: "Upload a PDF",
     description: "Parse, translate, and extract evidence",
     message: "I want to upload a PDF",
-    accent: "bg-violet-50",
-    accentText: "text-violet-600",
+    accentBg: "#f5f3ff",
+    accentColor: "#7c3aed",
   },
   {
-    icon: <Search className="h-4 w-4" />,
+    icon: <Search style={{ width: 16, height: 16 }} />,
     title: "Search evidence",
     description: "Query extracted evidence by gene or variant",
     message: "Search the evidence database",
-    accent: "bg-emerald-50",
-    accentText: "text-emerald-600",
+    accentBg: "#ecfdf5",
+    accentColor: "#059669",
   },
   {
-    icon: <BookOpen className="h-4 w-4" />,
+    icon: <BookOpen style={{ width: 16, height: 16 }} />,
     title: "Classify a variant",
     description: "Walk through ACMG/AMP 2015 criteria",
     message: "Help me classify a variant with ACMG criteria",
-    accent: "bg-amber-50",
-    accentText: "text-amber-600",
+    accentBg: "#fffbeb",
+    accentColor: "#d97706",
   },
 ];
 
@@ -133,63 +133,135 @@ interface WelcomeBlockProps {
 
 function WelcomeBlock({ onPick }: WelcomeBlockProps) {
   return (
-    <div className="space-y-5">
-      <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-sm">
-          <Sparkles className="h-4 w-4" aria-hidden="true" />
+    <>
+      <style>{`
+        @media (min-width: 640px) {
+          .cv-suggestions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        }
+        .cv-suggestion-chip {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          border-radius: 12px;
+          border: 1px solid #f3f4f6;
+          background-color: #fff;
+          padding: 12px;
+          text-align: left;
+          transition: all 150ms;
+          cursor: pointer;
+        }
+        .cv-suggestion-chip:hover {
+          transform: translateY(-2px);
+          border-color: #e5e7eb;
+          box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+        }
+        .cv-suggestion-chip:disabled {
+          cursor: default;
+          transform: none;
+          border-color: #f3f4f6;
+          box-shadow: none;
+        }
+      `}</style>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              height: 36,
+              width: 36,
+              flex: "none",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 12,
+              background: "linear-gradient(to bottom right, #06b6d4, #2563eb)",
+              color: "#fff",
+              boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+            }}
+          >
+            <Sparkles style={{ width: 16, height: 16 }} aria-hidden="true" />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <h2 style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.025em", color: "#111827" }}>
+              Welcome to <span style={{ color: "#0891b2" }}>Lingua Seeker</span>
+            </h2>
+            <p style={{ fontSize: 13.5, lineHeight: 1.625, color: "#4b5563" }}>
+              A literature-grounded assistant for variant and evidence
+              classification. I run a four-phase extraction pipeline and ground
+              every claim in source coordinates.
+            </p>
+          </div>
         </div>
-        <div className="space-y-1.5">
-          <h2 className="text-[15px] font-semibold tracking-tight text-gray-900">
-            Welcome to <span className="text-cyan-600">Lingua Seeker</span>
-          </h2>
-          <p className="text-[13.5px] leading-relaxed text-gray-600">
-            A literature-grounded assistant for variant and evidence
-            classification. I run a four-phase extraction pipeline and ground
-            every claim in source coordinates.
-          </p>
-        </div>
-      </div>
 
-      <div className="grid gap-2 sm:grid-cols-2">
-        {SUGGESTIONS.map((chip) => {
-          const isInteractive = Boolean(onPick);
-          return (
-            <button
-              key={chip.title}
-              type="button"
-              onClick={() => onPick?.(chip.message)}
-              disabled={!isInteractive}
-              className={[
-                "group flex items-start gap-3 rounded-xl border border-gray-100",
-                "bg-white p-3 text-left transition-all duration-150",
-                isInteractive
-                  ? "cursor-pointer hover:-translate-y-0.5 hover:border-gray-200 hover:shadow-sm"
-                  : "cursor-default",
-              ].join(" ")}
-            >
-              <span
-                className={`flex h-8 w-8 flex-none items-center justify-center rounded-lg ${chip.accent} ${chip.accentText}`}
+        <div className="cv-suggestions-grid" style={{ display: "grid", gap: 8 }}>
+          {SUGGESTIONS.map((chip) => {
+            const isInteractive = Boolean(onPick);
+            return (
+              <button
+                key={chip.title}
+                type="button"
+                onClick={() => onPick?.(chip.message)}
+                disabled={!isInteractive}
+                className="cv-suggestion-chip"
               >
-                {chip.icon}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[13px] font-medium text-gray-900">
-                  {chip.title}
+                <span
+                  style={{
+                    display: "flex",
+                    height: 32,
+                    width: 32,
+                    flex: "none",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 8,
+                    backgroundColor: chip.accentBg,
+                    color: chip.accentColor,
+                  }}
+                >
+                  {chip.icon}
                 </span>
-                <span className="mt-0.5 block truncate text-[12px] text-gray-500">
-                  {chip.description}
+                <span style={{ minWidth: 0, flex: 1 }}>
+                  <span
+                    style={{
+                      display: "block",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: "#111827",
+                    }}
+                  >
+                    {chip.title}
+                  </span>
+                  <span
+                    style={{
+                      marginTop: 2,
+                      display: "block",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      fontSize: 12,
+                      color: "#6b7280",
+                    }}
+                  >
+                    {chip.description}
+                  </span>
                 </span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
+              </button>
+            );
+          })}
+        </div>
 
-      <p className="border-t border-gray-100 pt-3 text-[11.5px] leading-relaxed text-gray-400">
-        The agent does not provide clinical diagnoses. Outputs are research-grade
-        evidence for review by qualified professionals.
-      </p>
-    </div>
+        <p
+          style={{
+            borderTop: "1px solid #f3f4f6",
+            paddingTop: 12,
+            fontSize: 11.5,
+            lineHeight: 1.625,
+            color: "#9ca3af",
+          }}
+        >
+          The agent does not provide clinical diagnoses. Outputs are research-grade
+          evidence for review by qualified professionals.
+        </p>
+      </div>
+    </>
   );
 }
 
@@ -949,7 +1021,26 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
   return (
     <XProvider>
-      <div className="flex h-full overflow-hidden bg-white">
+      <style>{`
+        .cv-tq-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          border-radius: 6px;
+          padding: 4px 8px;
+          font-size: 11.5px;
+          font-weight: 500;
+          transition: color 150ms, background-color 150ms;
+          border: none;
+          background: none;
+          cursor: pointer;
+        }
+        .cv-tq-btn:focus-visible {
+          outline: 2px solid #0891b2;
+          outline-offset: 2px;
+        }
+      `}</style>
+      <div style={{ display: "flex", height: "100%", overflow: "hidden", backgroundColor: "#fff" }}>
         {/* Conversation sidebar — gated on `mounted` to keep SSR HTML
             identical to the first client render (see hydration comment
             above). The placeholder reserves the 240px column so the
@@ -974,11 +1065,19 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         )}
 
         {/* Main chat area */}
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div style={{ display: "flex", minWidth: 0, flex: 1, flexDirection: "column" }}>
           {/* Task-queue toolbar: a slim bar above the bubble stream so the
               user can collapse/expand the right-side queue without losing
               chat scroll position. */}
-          <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-1.5">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              borderBottom: "1px solid #f3f4f6",
+              padding: "6px 16px",
+            }}
+          >
             <button
               type="button"
               onClick={toggleTaskQueue}
@@ -986,27 +1085,37 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
               aria-label={
                 taskQueueOpen ? "Hide task queue" : "Show task queue"
               }
-              className={[
-                "flex items-center gap-1.5 rounded-md px-2 py-1 text-[11.5px] font-medium transition-colors",
-                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600",
+              className="cv-tq-btn"
+              style={
                 taskQueueOpen
-                  ? "bg-gray-900 text-white shadow-sm"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-800",
-              ].join(" ")}
+                  ? { backgroundColor: "#111827", color: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }
+                  : { color: "#6b7280" }
+              }
+              onMouseEnter={(e) => {
+                if (!taskQueueOpen) {
+                  e.currentTarget.style.backgroundColor = "#f3f4f6";
+                  e.currentTarget.style.color = "#1f2937";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!taskQueueOpen) {
+                  e.currentTarget.style.backgroundColor = "";
+                  e.currentTarget.style.color = "#6b7280";
+                }
+              }}
             >
-              <ListChecks className="h-3.5 w-3.5" aria-hidden />
+              <ListChecks style={{ width: 14, height: 14 }} aria-hidden />
               <span>Task Queue</span>
             </button>
-            <span className="text-[10.5px] text-gray-400">
+            <span style={{ fontSize: 10.5, color: "#9ca3af" }}>
               {taskQueueOpen ? "Pinned on the right" : "Hidden"}
             </span>
           </div>
 
-          <div className="flex min-h-0 flex-1">
-            <div className="flex min-w-0 flex-1 flex-col">
+          <div style={{ display: "flex", minHeight: 0, flex: 1 }}>
+            <div style={{ display: "flex", minWidth: 0, flex: 1, flexDirection: "column" }}>
               <Bubble.List
-                className="flex-1 overflow-auto"
-                style={{ padding: 16 }}
+                style={{ flex: 1, overflow: "auto", padding: 16 }}
                 items={bubbleItems}
                 role={roles}
                 autoScroll
@@ -1014,8 +1123,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
               <Sender
                 ref={senderRef}
-                className="border-t border-gray-100"
-                style={{ padding: 16 }}
+                style={{ borderTop: "1px solid #f3f4f6", padding: 16 }}
                 loading={isRequesting}
                 onCancel={() => {
                   // Cancel via the provider's own AbortController for
@@ -1190,10 +1298,9 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
 
   return (
     <XProvider>
-      <div className="flex h-full flex-col overflow-hidden bg-white">
+      <div style={{ display: "flex", height: "100%", flexDirection: "column", overflow: "hidden", backgroundColor: "#fff" }}>
         <Bubble.List
-          className="flex-1 overflow-auto"
-          style={{ padding: 16 }}
+          style={{ flex: 1, overflow: "auto", padding: 16 }}
           items={bubbleItems}
           role={roles}
           autoScroll
@@ -1201,8 +1308,7 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
 
         <Sender
           ref={senderRef}
-          className="border-t border-gray-100"
-          style={{ padding: 16 }}
+          style={{ borderTop: "1px solid #f3f4f6", padding: 16 }}
           loading={isRequesting}
           onCancel={() => {
             // Cancel via the provider's own AbortController for

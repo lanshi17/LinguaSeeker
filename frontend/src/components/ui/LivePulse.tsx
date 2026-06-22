@@ -1,56 +1,52 @@
-import { cn } from "@/lib/utils/cn";
+import type { CSSProperties } from "react";
 
 type PulseTone = "primary" | "success" | "warning" | "error" | "neutral";
 
 interface LivePulseProps {
   tone?: PulseTone;
   className?: string;
-  /** Optional aria-label override. */
   label?: string;
 }
 
-const toneStyles: Record<PulseTone, { dot: string; ring: string }> = {
-  primary: {
-    dot: "bg-primary-500",
-    ring: "bg-primary-500/40",
-  },
-  success: {
-    dot: "bg-success-500",
-    ring: "bg-success-500/40",
-  },
-  warning: {
-    dot: "bg-amber-500",
-    ring: "bg-amber-500/40",
-  },
-  error: {
-    dot: "bg-red-500",
-    ring: "bg-red-500/40",
-  },
-  neutral: {
-    dot: "bg-gray-400",
-    ring: "bg-gray-400/40",
-  },
+const toneColors: Record<PulseTone, string> = {
+  primary: "#06b6d4",
+  success: "#22c55e",
+  warning: "#f59e0b",
+  error: "#ef4444",
+  neutral: "#9ca3af",
 };
 
-/**
- * A small live indicator: solid core + expanding ring. Communicates "in progress"
- * without the noise of a full spinner.
- */
+const dotStyle = (color: string): CSSProperties => ({
+  position: "relative",
+  display: "inline-flex",
+  width: 10,
+  height: 10,
+  borderRadius: "50%",
+  backgroundColor: color,
+});
+
+const ringStyle = (color: string): CSSProperties => ({
+  position: "absolute",
+  display: "inline-flex",
+  width: "100%",
+  height: "100%",
+  borderRadius: "50%",
+  backgroundColor: color,
+  opacity: 0.4,
+  animation: "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite",
+});
+
 export function LivePulse({ tone = "primary", className, label }: LivePulseProps) {
-  const { dot, ring } = toneStyles[tone];
+  const color = toneColors[tone];
   return (
     <span
-      className={cn("relative inline-flex h-2.5 w-2.5", className)}
+      className={className}
+      style={{ position: "relative", display: "inline-flex", width: 10, height: 10 }}
       role="status"
       aria-label={label ?? "In progress"}
     >
-      <span
-        className={cn(
-          "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
-          ring,
-        )}
-      />
-      <span className={cn("relative inline-flex h-2.5 w-2.5 rounded-full", dot)} />
+      <span style={ringStyle(color)} />
+      <span style={dotStyle(color)} />
     </span>
   );
 }

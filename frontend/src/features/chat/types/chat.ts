@@ -27,9 +27,3 @@ export interface ChatMessageResponse {
   entity_id?: string | null;
   created_at: string;
 }
-
-/** SSE event from GET /chat/sessions/{id}/stream. */
-export interface ChatSSEEvent {
-  event: "token" | "done" | "error";
-  data: string;
-}

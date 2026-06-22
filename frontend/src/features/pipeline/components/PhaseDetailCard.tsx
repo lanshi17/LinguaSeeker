@@ -8,7 +8,6 @@ import { MetricTile } from "@/components/ui/MetricTile";
 import { useElapsedSeconds } from "@/lib/hooks/useElapsedSeconds";
 import { formatDuration, formatTimestamp } from "@/lib/utils/format";
 import type { PhaseNode, PhaseStatus, ProcessingStatus } from "../types/pipeline";
-import { cn } from "@/lib/utils/cn";
 
 interface PhaseDetailCardProps {
   phaseId: string;
@@ -31,10 +30,35 @@ const PHASE_LABELS: Record<string, { title: string; subtitle: string }> = {
   },
 };
 
-const PHASE_ICON_COLOR: Record<string, string> = {
-  phase_1: "text-sky-700 bg-sky-50 border-sky-200",
-  phase_2: "text-primary-700 bg-primary-50 border-primary-200",
-  phase_3: "text-violet-700 bg-violet-50 border-violet-200",
+const PHASE_ICON_COLOR: Record<string, React.CSSProperties> = {
+  phase_1: { color: "#0369a1", backgroundColor: "#f0f9ff", borderBottom: "1px solid #bae6fd" },
+  phase_2: { color: "#0e7490", backgroundColor: "#ecfeff", borderBottom: "1px solid #a5f3fc" },
+  phase_3: { color: "#6d28d9", backgroundColor: "#f5f3ff", borderBottom: "1px solid #ddd6fe" },
+};
+
+const DEFAULT_HEADER_STYLE: React.CSSProperties = { backgroundColor: "#f9fafb" };
+
+const nodeBorderColorBg = (status: ProcessingStatus): React.CSSProperties => {
+  switch (status) {
+    case "running":
+      return { borderColor: "#a5f3fc", backgroundColor: "rgba(236,254,255,0.4)" };
+    case "completed":
+      return { borderColor: "#bbf7d0", backgroundColor: "rgba(240,253,244,0.3)" };
+    case "failed":
+      return { borderColor: "#fecaca", backgroundColor: "rgba(254,242,242,0.4)" };
+    case "pending":
+      return { borderColor: "#e5e7eb", backgroundColor: "rgba(249,250,251,0.5)" };
+    case "skipped":
+      return { borderColor: "#e5e7eb", backgroundColor: "rgba(249,250,251,0.3)" };
+    default:
+      return { borderColor: "#e5e7eb", backgroundColor: "rgba(249,250,251,0.5)" };
+  }
+};
+
+const progressBarBg = (status: ProcessingStatus): string => {
+  if (status === "running") return "linear-gradient(to right, #7dd3fc, #0891b2)";
+  if (status === "completed") return "#22c55e";
+  return "#d1d5db";
 };
 
 export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardProps) {
@@ -50,50 +74,76 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
   return (
     <Card
       noPadding
-      className="stagger-in flex flex-col overflow-hidden"
-      style={{ animationDelay: `${index * 70}ms` }}
+      className="stagger-in"
+      style={{ display: "flex", flexDirection: "column", overflow: "hidden", animationDelay: `${index * 70}ms` }}
     >
       <header
-        className={cn(
-          "flex items-start justify-between gap-3 border-b border-gray-100 px-4 py-3",
-          PHASE_ICON_COLOR[phaseId] ?? "bg-gray-50",
-        )}
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: 12,
+          borderBottom: "1px solid #f3f4f6",
+          padding: "12px 16px",
+          ...(PHASE_ICON_COLOR[phaseId] ?? DEFAULT_HEADER_STYLE),
+        }}
       >
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <Layers className="h-3.5 w-3.5" aria-hidden />
-            <h3 className="truncate text-[13px] font-semibold tracking-tight text-gray-900">
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Layers style={{ width: 14, height: 14 }} aria-hidden />
+            <h3
+              style={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontSize: 13,
+                fontWeight: 600,
+                letterSpacing: "-0.025em",
+                color: "#111827",
+              }}
+            >
               {meta.title}
             </h3>
           </div>
           {meta.subtitle && (
-            <p className="mt-0.5 truncate text-[11px] text-gray-600">{meta.subtitle}</p>
+            <p
+              style={{
+                marginTop: 2,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontSize: 11,
+                color: "#4b5563",
+              }}
+            >
+              {meta.subtitle}
+            </p>
           )}
         </div>
         <PhaseStatusBadge status={phase.status} />
       </header>
 
-      <div className="grid grid-cols-3 gap-2 px-4 py-3">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, padding: "12px 16px" }}>
         <MetricTile
           label="Duration"
           value={formatDuration(duration)}
-          icon={<FileText className="h-3 w-3" aria-hidden />}
+          icon={<FileText style={{ width: 12, height: 12 }} aria-hidden />}
         />
         <MetricTile
           label="Nodes"
           value={totalNodes > 0 ? `${doneNodes}/${totalNodes}` : "—"}
           tone={totalNodes > 0 && doneNodes === totalNodes ? "success" : "default"}
-          icon={<Hash className="h-3 w-3" aria-hidden />}
+          icon={<Hash style={{ width: 12, height: 12 }} aria-hidden />}
         />
         <MetricTile
           label="Items"
           value={totalCount > 0 ? totalCount.toLocaleString() : "—"}
           tone="primary"
-          icon={<Layers className="h-3 w-3" aria-hidden />}
+          icon={<Layers style={{ width: 12, height: 12 }} aria-hidden />}
         />
       </div>
 
-      <div className="border-t border-gray-100 px-4 py-3">
+      <div style={{ borderTop: "1px solid #f3f4f6", padding: "12px 16px" }}>
         {totalNodes > 0 ? (
           <NodeList nodes={nodes} />
         ) : phase.summary ? (
@@ -101,20 +151,41 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
         ) : isLive ? (
           <EmptyLiveHint phaseId={phaseId} />
         ) : (
-          <p className="text-[11px] italic text-gray-400">
+          <p style={{ fontSize: 11, fontStyle: "italic", color: "#9ca3af" }}>
             No sub-node detail available.
           </p>
         )}
       </div>
 
-      <footer className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2 text-[10px] font-mono tabular-nums text-gray-500">
+      <footer
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          borderTop: "1px solid #f3f4f6",
+          backgroundColor: "rgba(249,250,251,0.5)",
+          padding: "8px 16px",
+          fontSize: 10,
+          fontFamily: "var(--font-mono, monospace)",
+          fontVariantNumeric: "tabular-nums",
+          color: "#6b7280",
+        }}
+      >
         <span>Started {formatTimestamp(phase.started_at)}</span>
         {phase.completed_at && <span>Done {formatTimestamp(phase.completed_at)}</span>}
       </footer>
 
       {phase.error && (
-        <div className="border-t border-red-200 bg-red-50 px-4 py-2 text-[11px] text-red-700">
-          <AlertCircle className="mr-1 inline h-3 w-3" aria-hidden />
+        <div
+          style={{
+            borderTop: "1px solid #fecaca",
+            backgroundColor: "#fef2f2",
+            padding: "8px 16px",
+            fontSize: 11,
+            color: "#b91c1c",
+          }}
+        >
+          <AlertCircle style={{ marginRight: 4, display: "inline", width: 12, height: 12 }} aria-hidden />
           {stringifyError(phase.error)}
         </div>
       )}
@@ -125,7 +196,20 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
 function PhaseStatusBadge({ status }: { status: ProcessingStatus }) {
   if (status === "running") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2 py-0.5 text-[11px] font-medium text-primary-700 ring-1 ring-primary-200">
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          borderRadius: 9999,
+          backgroundColor: "rgba(255,255,255,0.7)",
+          padding: "2px 8px",
+          fontSize: 11,
+          fontWeight: 500,
+          color: "#0e7490",
+          border: "1px solid #a5f3fc",
+        }}
+      >
         <LivePulse tone="primary" />
         Running
       </span>
@@ -145,7 +229,7 @@ function PhaseStatusBadge({ status }: { status: ProcessingStatus }) {
 
 function NodeList({ nodes }: { nodes: PhaseNode[] }) {
   return (
-    <ul className="space-y-1.5" aria-label="Sub-nodes">
+    <ul style={{ display: "flex", flexDirection: "column", gap: 6 }} aria-label="Sub-nodes">
       {nodes.map((node) => (
         <NodeRow key={node.node_id} node={node} />
       ))}
@@ -167,41 +251,74 @@ function NodeRow({ node }: { node: PhaseNode }) {
 
   return (
     <li
-      className={cn(
-        "group rounded-md border px-2.5 py-1.5 transition-colors",
-        node.status === "running" && "border-primary-200 bg-primary-50/40",
-        node.status === "completed" && "border-success-200 bg-success-50/30",
-        node.status === "failed" && "border-red-200 bg-red-50/40",
-        node.status === "pending" && "border-gray-200 bg-gray-50/50",
-        node.status === "skipped" && "border-gray-200 bg-gray-50/30",
-      )}
+      style={{
+        borderRadius: 6,
+        border: "1px solid",
+        padding: "6px 10px",
+        transition: "color 150ms, background-color 150ms",
+        ...nodeBorderColorBg(node.status),
+      }}
     >
-      <div className="flex items-center gap-2">
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <NodeStatusIcon status={node.status} />
-        <span className="truncate text-[12px] font-medium text-gray-800">
+        <span
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            fontSize: 12,
+            fontWeight: 500,
+            color: "#1f2937",
+          }}
+        >
           {node.label}
         </span>
         {node.count != null && node.count > 0 && (
-          <span className="ml-auto rounded bg-white/70 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-gray-700">
+          <span
+            style={{
+              marginLeft: "auto",
+              borderRadius: 4,
+              backgroundColor: "rgba(255,255,255,0.7)",
+              padding: "2px 6px",
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: 10,
+              fontVariantNumeric: "tabular-nums",
+              color: "#374151",
+            }}
+          >
             {node.count.toLocaleString()}
           </span>
         )}
-        <span className="font-mono text-[10px] tabular-nums text-gray-500">
+        <span
+          style={{
+            fontFamily: "var(--font-mono, monospace)",
+            fontSize: 10,
+            fontVariantNumeric: "tabular-nums",
+            color: "#6b7280",
+          }}
+        >
           {formatDuration(duration)}
         </span>
       </div>
       {(node.status === "running" || node.progress != null) && (
-        <div className="mt-1 h-0.5 overflow-hidden rounded-full bg-white/60">
+        <div
+          style={{
+            marginTop: 4,
+            height: 2,
+            overflow: "hidden",
+            borderRadius: 9999,
+            backgroundColor: "rgba(255,255,255,0.6)",
+          }}
+        >
           <div
-            className={cn(
-              "h-full rounded-full transition-[width] duration-500",
-              node.status === "running"
-                ? "bg-gradient-to-r from-primary-300 to-primary-600 progress-stripe"
-                : node.status === "completed"
-                  ? "bg-success-500"
-                  : "bg-gray-300",
-            )}
-            style={{ width: `${progressPct}%` }}
+            className={node.status === "running" ? "progress-stripe" : undefined}
+            style={{
+              height: "100%",
+              borderRadius: 9999,
+              transition: "width 500ms",
+              backgroundColor: progressBarBg(node.status),
+              width: `${progressPct}%`,
+            }}
           />
         </div>
       )}
@@ -211,23 +328,41 @@ function NodeRow({ node }: { node: PhaseNode }) {
 
 function NodeStatusIcon({ status }: { status: ProcessingStatus }) {
   if (status === "running")
-    return <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-primary-600" aria-hidden />;
+    return <Loader2 className="spin" style={{ width: 14, height: 14, flexShrink: 0, color: "#0891b2" }} aria-hidden />;
   if (status === "completed")
-    return <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success-600" aria-hidden />;
+    return <CheckCircle2 style={{ width: 14, height: 14, flexShrink: 0, color: "#16a34a" }} aria-hidden />;
   if (status === "failed")
-    return <AlertCircle className="h-3.5 w-3.5 shrink-0 text-red-600" aria-hidden />;
-  return <Circle className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />;
+    return <AlertCircle style={{ width: 14, height: 14, flexShrink: 0, color: "#dc2626" }} aria-hidden />;
+  return <Circle style={{ width: 14, height: 14, flexShrink: 0, color: "#9ca3af" }} aria-hidden />;
 }
 
 function SummaryBlock({ summary }: { summary: Record<string, unknown> }) {
   const entries = Object.entries(summary).slice(0, 4);
   if (entries.length === 0) return null;
   return (
-    <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+    <dl
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+        gap: "4px 12px",
+        fontSize: 11,
+      }}
+    >
       {entries.map(([k, v]) => (
-        <div key={k} className="flex items-center justify-between gap-2 truncate">
-          <dt className="truncate text-gray-500">{k.replace(/_/g, " ")}</dt>
-          <dd className="truncate font-mono tabular-nums text-gray-800">
+        <div key={k} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, overflow: "hidden" }}>
+          <dt style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#6b7280" }}>
+            {k.replace(/_/g, " ")}
+          </dt>
+          <dd
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              fontFamily: "var(--font-mono, monospace)",
+              fontVariantNumeric: "tabular-nums",
+              color: "#1f2937",
+            }}
+          >
             {typeof v === "number" ? v.toLocaleString() : String(v)}
           </dd>
         </div>
@@ -238,10 +373,12 @@ function SummaryBlock({ summary }: { summary: Record<string, unknown> }) {
 
 function EmptyLiveHint({ phaseId }: { phaseId: string }) {
   return (
-    <div className="flex items-center gap-2 text-[11px] text-gray-500">
+    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: "#6b7280" }}>
       <Skeleton variant="line" width="w-32" className="h-2" />
       <Skeleton variant="line" width="w-20" className="h-2" />
-      <span className="ml-auto italic text-gray-400">preparing {phaseId.replace("_", " ")}…</span>
+      <span style={{ marginLeft: "auto", fontStyle: "italic", color: "#9ca3af" }}>
+        preparing {phaseId.replace("_", " ")}…
+      </span>
     </div>
   );
 }
@@ -264,27 +401,44 @@ export function PhaseDetailCardSkeleton({ index = 0 }: { index?: number }) {
   return (
     <Card
       noPadding
-      className="stagger-in flex flex-col overflow-hidden"
-      style={{ animationDelay: `${index * 70}ms` }}
+      className="stagger-in"
+      style={{ display: "flex", flexDirection: "column", overflow: "hidden", animationDelay: `${index * 70}ms` }}
     >
-      <div className="flex items-start justify-between border-b border-gray-100 px-4 py-3">
-        <div className="space-y-1.5">
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          borderBottom: "1px solid #f3f4f6",
+          padding: "12px 16px",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <Skeleton width="w-36" height="h-3" />
           <Skeleton width="w-48" height="h-2" />
         </div>
         <Skeleton variant="pill" width="w-16" />
       </div>
-      <div className="grid grid-cols-3 gap-2 px-4 py-3">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, padding: "12px 16px" }}>
         <Skeleton variant="block" className="h-12" />
         <Skeleton variant="block" className="h-12" />
         <Skeleton variant="block" className="h-12" />
       </div>
-      <div className="space-y-1.5 border-t border-gray-100 px-4 py-3">
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, borderTop: "1px solid #f3f4f6", padding: "12px 16px" }}>
         <Skeleton width="w-full" height="h-3" />
         <Skeleton width="w-5/6" height="h-3" />
         <Skeleton width="w-4/6" height="h-3" />
       </div>
-      <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2">
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          borderTop: "1px solid #f3f4f6",
+          backgroundColor: "rgba(249,250,251,0.5)",
+          padding: "8px 16px",
+        }}
+      >
         <Skeleton width="w-32" height="h-2" />
         <Skeleton width="w-20" height="h-2" />
       </div>

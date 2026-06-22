@@ -9,7 +9,6 @@ import {
   Radio,
   X,
 } from "lucide-react";
-import { cn } from "@/lib/utils/cn";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { usePipelineRuns } from "../hooks/usePipelineRuns";
 import { TaskQueueRow } from "./TaskQueueRow";
@@ -75,113 +74,195 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
     : null;
 
   return (
-    <aside
-      className={cn(
-        "flex h-full w-80 shrink-0 flex-col border-l border-gray-100 bg-[#fafbfc]",
-        "backdrop-blur-sm",
-      )}
-      aria-label="Task queue"
-    >
-      {/* Header */}
-      <header className="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
-        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-sm">
-          <ListChecks className="h-3.5 w-3.5" aria-hidden />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="text-[13px] font-semibold tracking-tight text-gray-900">
-            Task Queue
-          </h2>
-          <p className="truncate text-[10.5px] text-gray-500">
-            {activeRuns.length > 0 ? (
-              <>
-                <span className="font-medium text-primary-700">
-                  {activeRuns.length}
-                </span>{" "}
-                active · {total} total
-              </>
-            ) : (
-              <>{total} total pipelines</>
-            )}
-          </p>
-        </div>
-        {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close task queue"
-            className={cn(
-              "rounded-md p-1 text-gray-400 transition-colors",
-              "hover:bg-gray-100 hover:text-gray-700",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600",
-            )}
+    <>
+      <style>{`
+        @keyframes ping {
+          75%, 100% { transform: scale(2); opacity: 0; }
+        }
+        .tqp-close-btn {
+          border-radius: 6px;
+          padding: 4px;
+          color: #9ca3af;
+          transition: color 150ms, background-color 150ms;
+          border: none;
+          background: none;
+          cursor: pointer;
+        }
+        .tqp-close-btn:hover {
+          background-color: #f3f4f6;
+          color: #374151;
+        }
+        .tqp-close-btn:focus-visible {
+          outline: 2px solid #0891b2;
+          outline-offset: 2px;
+        }
+        .tqp-view-all {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          border-radius: 6px;
+          padding: 4px 8px;
+          font-size: 10.5px;
+          font-weight: 500;
+          color: #6b7280;
+          text-decoration: none;
+          transition: color 150ms, background-color 150ms;
+          margin-left: auto;
+        }
+        .tqp-view-all:hover {
+          background-color: #f3f4f6;
+          color: #1f2937;
+        }
+        .tqp-view-all:focus-visible {
+          outline: 2px solid #0891b2;
+          outline-offset: 2px;
+        }
+        .tqp-tab-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          border-radius: 6px;
+          padding: 6px 10px;
+          font-size: 11px;
+          font-weight: 500;
+          transition: color 150ms, background-color 150ms;
+          border: none;
+          background: none;
+          cursor: pointer;
+        }
+        .tqp-tab-btn:focus-visible {
+          outline: 2px solid #0891b2;
+          outline-offset: 2px;
+        }
+      `}</style>
+      <aside
+        style={{
+          display: "flex",
+          height: "100%",
+          width: 320,
+          flexShrink: 0,
+          flexDirection: "column",
+          borderLeft: "1px solid #f3f4f6",
+          backgroundColor: "#fafbfc",
+          backdropFilter: "blur(4px)",
+        }}
+        aria-label="Task queue"
+      >
+        {/* Header */}
+        <header style={{ display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid #f3f4f6", padding: "12px 16px" }}>
+          <span
+            style={{
+              display: "flex",
+              height: 28,
+              width: 28,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 6,
+              background: "linear-gradient(to bottom right, #06b6d4, #2563eb)",
+              color: "#fff",
+              boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+            }}
           >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </header>
-
-      {/* Tabs */}
-      <div className="flex items-center gap-1 px-3 pt-3">
-        <TabButton
-          active={tab === "active"}
-          onClick={() => setTab("active")}
-          icon={<Radio className="h-3 w-3" />}
-          label="Active"
-          count={activeRuns.length}
-          pulse={activeRuns.length > 0}
-        />
-        <TabButton
-          active={tab === "recent"}
-          onClick={() => setTab("recent")}
-          icon={<Inbox className="h-3 w-3" />}
-          label="Recent"
-          count={recentRuns.length}
-        />
-        <Link
-          to="/pipeline"
-          className={cn(
-            "ml-auto flex items-center gap-0.5 rounded-md px-2 py-1 text-[10.5px] font-medium text-gray-500",
-            "transition-colors hover:bg-gray-100 hover:text-gray-800",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600",
+            <ListChecks style={{ width: 14, height: 14 }} aria-hidden />
+          </span>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <h2 style={{ fontSize: 13, fontWeight: 600, letterSpacing: "-0.025em", color: "#111827" }}>
+              Task Queue
+            </h2>
+            <p style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 10.5, color: "#6b7280" }}>
+              {activeRuns.length > 0 ? (
+                <>
+                  <span style={{ fontWeight: 500, color: "#0e7490" }}>
+                    {activeRuns.length}
+                  </span>{" "}
+                  active · {total} total
+                </>
+              ) : (
+                <>{total} total pipelines</>
+              )}
+            </p>
+          </div>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close task queue"
+              className="tqp-close-btn"
+            >
+              <X style={{ width: 16, height: 16 }} />
+            </button>
           )}
-          title="Open pipeline page"
+        </header>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "12px 12px 0" }}>
+          <TabButton
+            active={tab === "active"}
+            onClick={() => setTab("active")}
+            icon={<Radio style={{ width: 12, height: 12 }} />}
+            label="Active"
+            count={activeRuns.length}
+            pulse={activeRuns.length > 0}
+          />
+          <TabButton
+            active={tab === "recent"}
+            onClick={() => setTab("recent")}
+            icon={<Inbox style={{ width: 12, height: 12 }} />}
+            label="Recent"
+            count={recentRuns.length}
+          />
+          <Link
+            to="/pipeline"
+            className="tqp-view-all"
+            title="Open pipeline page"
+          >
+            <span>View all</span>
+            <ChevronRight style={{ width: 12, height: 12 }} />
+          </Link>
+        </div>
+
+        {/* Body */}
+        <div style={{ minHeight: 0, flex: 1, overflowY: "auto", padding: "8px 8px 12px" }}>
+          {isLoading && runs.length === 0 ? (
+            <LoadingSkeleton />
+          ) : isError ? (
+            <ErrorState />
+          ) : visible.length === 0 ? (
+            <EmptyState message={emptyMessage} />
+          ) : (
+            <ul style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {visible.map((run) => (
+                <li key={run.processing_run_id}>
+                  <TaskQueueRow run={run} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Footer: last sync indicator */}
+        <footer
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            borderTop: "1px solid #f3f4f6",
+            padding: "8px 16px",
+            fontSize: 10,
+            color: "#9ca3af",
+          }}
         >
-          <span>View all</span>
-          <ChevronRight className="h-3 w-3" />
-        </Link>
-      </div>
-
-      {/* Body */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3 pt-2">
-        {isLoading && runs.length === 0 ? (
-          <LoadingSkeleton />
-        ) : isError ? (
-          <ErrorState />
-        ) : visible.length === 0 ? (
-          <EmptyState message={emptyMessage} />
-        ) : (
-          <ul className="space-y-1">
-            {visible.map((run) => (
-              <li key={run.processing_run_id}>
-                <TaskQueueRow run={run} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* Footer: last sync indicator */}
-      <footer className="flex items-center gap-2 border-t border-gray-100 px-4 py-2 text-[10px] text-gray-400">
-        <Activity className="h-3 w-3" aria-hidden />
-        <span className="font-mono tabular-nums">
-          {updatedAt ? `Synced ${updatedAt}` : "Syncing…"}
-        </span>
-        <span className="ml-auto flex items-center gap-1">
-          <Layers3 className="h-3 w-3" aria-hidden />
-          <span>Live</span>
-        </span>
-      </footer>
-    </aside>
+          <Activity style={{ width: 12, height: 12 }} aria-hidden />
+          <span style={{ fontFamily: "var(--font-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>
+            {updatedAt ? `Synced ${updatedAt}` : "Syncing…"}
+          </span>
+          <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 4 }}>
+            <Layers3 style={{ width: 12, height: 12 }} aria-hidden />
+            <span>Live</span>
+          </span>
+        </footer>
+      </aside>
+    </>
   );
 }
 
@@ -202,30 +283,67 @@ function TabButton({ active, onClick, icon, label, count, pulse }: TabButtonProp
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={cn(
-        "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600",
+      className="tqp-tab-btn"
+      style={
         active
-          ? "bg-gray-900 text-white shadow-sm"
-          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-      )}
+          ? { backgroundColor: "#111827", color: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }
+          : { color: "#4b5563" }
+      }
+      onMouseEnter={(e) => {
+        if (!active) {
+          e.currentTarget.style.backgroundColor = "#f3f4f6";
+          e.currentTarget.style.color = "#111827";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          e.currentTarget.style.backgroundColor = "";
+          e.currentTarget.style.color = "#4b5563";
+        }
+      }}
     >
-      <span className={cn(active ? "text-white" : "text-gray-400")}>{icon}</span>
+      <span style={{ color: active ? "#fff" : "#9ca3af" }}>{icon}</span>
       <span>{label}</span>
       {typeof count === "number" && count > 0 && (
         <span
-          className={cn(
-            "min-w-[18px] rounded-full px-1 py-px text-[9.5px] font-semibold tabular-nums",
-            active ? "bg-white/20 text-white" : "bg-gray-200 text-gray-700",
-          )}
+          style={{
+            minWidth: 18,
+            borderRadius: 9999,
+            padding: "1px 4px",
+            fontSize: 9.5,
+            fontWeight: 600,
+            fontVariantNumeric: "tabular-nums",
+            backgroundColor: active ? "rgba(255,255,255,0.2)" : "#e5e7eb",
+            color: active ? "#fff" : "#374151",
+          }}
         >
           {count}
         </span>
       )}
       {pulse && !active && (
-        <span className="relative ml-0.5 flex h-1.5 w-1.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75" />
-          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary-500" />
+        <span style={{ position: "relative", marginLeft: 2, display: "flex", width: 6, height: 6 }}>
+          <span
+            style={{
+              position: "absolute",
+              display: "inline-flex",
+              height: "100%",
+              width: "100%",
+              animation: "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite",
+              borderRadius: "50%",
+              backgroundColor: "#38bdf8",
+              opacity: 0.75,
+            }}
+          />
+          <span
+            style={{
+              position: "relative",
+              display: "inline-flex",
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              backgroundColor: "#0891b2",
+            }}
+          />
         </span>
       )}
     </button>
@@ -234,10 +352,10 @@ function TabButton({ active, onClick, icon, label, count, pulse }: TabButtonProp
 
 function LoadingSkeleton() {
   return (
-    <ul className="space-y-2 px-1">
+    <ul style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 4px" }}>
       {Array.from({ length: 3 }).map((_, i) => (
-        <li key={i} className="rounded-lg border border-gray-100 bg-white p-3">
-          <div className="flex items-center gap-2">
+        <li key={i} style={{ borderRadius: 8, border: "1px solid #f3f4f6", backgroundColor: "#fff", padding: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Skeleton className="h-2.5 w-2.5 rounded-full" />
             <Skeleton className="h-2.5 w-16" />
             <Skeleton className="ml-auto h-3 w-10 rounded-full" />
@@ -252,11 +370,20 @@ function LoadingSkeleton() {
 
 function ErrorState() {
   return (
-    <div className="mx-3 mt-6 rounded-lg border border-red-100 bg-red-50/60 p-4 text-center">
-      <p className="text-[11.5px] font-medium text-red-700">
+    <div
+      style={{
+        margin: "24px 12px 0",
+        borderRadius: 8,
+        border: "1px solid #fee2e2",
+        backgroundColor: "rgba(254,242,242,0.6)",
+        padding: 16,
+        textAlign: "center",
+      }}
+    >
+      <p style={{ fontSize: 11.5, fontWeight: 500, color: "#b91c1c" }}>
         Unable to load pipelines
       </p>
-      <p className="mt-1 text-[10.5px] leading-relaxed text-red-600/80">
+      <p style={{ marginTop: 4, fontSize: 10.5, lineHeight: 1.625, color: "rgba(220,38,38,0.8)" }}>
         Check the backend connection and try again.
       </p>
     </div>
@@ -265,12 +392,23 @@ function ErrorState() {
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="mx-3 mt-10 flex flex-col items-center text-center">
-      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-400">
-        <Inbox className="h-4 w-4" aria-hidden />
+    <div style={{ margin: "40px 12px 0", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+      <span
+        style={{
+          display: "flex",
+          height: 40,
+          width: 40,
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "50%",
+          backgroundColor: "#f3f4f6",
+          color: "#9ca3af",
+        }}
+      >
+        <Inbox style={{ width: 16, height: 16 }} aria-hidden />
       </span>
-      <p className="mt-3 text-[12px] font-medium text-gray-700">{message}</p>
-      <p className="mt-1 max-w-[220px] text-[10.5px] leading-relaxed text-gray-500">
+      <p style={{ marginTop: 12, fontSize: 12, fontWeight: 500, color: "#374151" }}>{message}</p>
+      <p style={{ marginTop: 4, maxWidth: 220, fontSize: 10.5, lineHeight: 1.625, color: "#6b7280" }}>
         Pipelines submitted from this chat will appear here in real time.
       </p>
     </div>

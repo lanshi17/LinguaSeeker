@@ -11,5 +11,4 @@ export { createAcmgChatProvider, sendChatMessage } from "./providers/acmgChatPro
 export type {
   ChatSessionResponse,
   ChatMessageResponse,
-  ChatSSEEvent,
 } from "./types/chat";

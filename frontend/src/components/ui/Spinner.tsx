@@ -1,26 +1,24 @@
-import { cn } from "@/lib/utils/cn";
-
 interface SpinnerProps {
   className?: string;
   size?: "sm" | "md" | "lg";
 }
 
-const sizeStyles = {
-  sm: "h-4 w-4",
-  md: "h-6 w-6",
-  lg: "h-10 w-10",
-};
+const sizes = { sm: 16, md: 24, lg: 40 } as const;
 
 export function Spinner({ className, size = "md" }: SpinnerProps) {
+  const px = sizes[size];
   return (
     <svg
-      className={cn("animate-spin text-primary-600", sizeStyles[size], className)}
+      className={className}
+      width={px}
+      height={px}
       viewBox="0 0 24 24"
       fill="none"
       aria-label="Loading"
+      style={{ color: "var(--color-primary-600)", animation: "spin 1s linear infinite" }}
     >
       <circle
-        className="opacity-25"
+        style={{ opacity: 0.25 }}
         cx="12"
         cy="12"
         r="10"
@@ -28,7 +26,7 @@ export function Spinner({ className, size = "md" }: SpinnerProps) {
         strokeWidth="4"
       />
       <path
-        className="opacity-75"
+        style={{ opacity: 0.75 }}
         fill="currentColor"
         d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
       />

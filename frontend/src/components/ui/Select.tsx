@@ -1,57 +1,57 @@
-import { forwardRef, type SelectHTMLAttributes } from "react";
-import { cn } from "@/lib/utils/cn";
+import { forwardRef, type HTMLAttributes } from "react";
+import { Select as AntdSelect } from "antd";
 
 interface SelectOption {
   label: string;
   value: string;
 }
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+interface SelectProps extends Omit<HTMLAttributes<HTMLDivElement>, "onChange"> {
   label?: string;
   error?: string;
   options: SelectOption[];
   placeholder?: string;
+  value?: string;
+  onChange?: (value: string) => void;
+  disabled?: boolean;
 }
 
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, placeholder, className, id, ...props }, ref) => {
+export const Select = forwardRef<HTMLDivElement, SelectProps>(
+  ({ label, error, options, placeholder, className, id, style, value, onChange, disabled, ...props }, ref) => {
     const selectId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
 
     return (
-      <div className="w-full">
+      <div ref={ref} style={{ width: "100%" }} {...props}>
         {label && (
           <label
             htmlFor={selectId}
-            className="mb-1.5 block text-sm font-medium text-gray-700"
+            style={{
+              display: "block",
+              marginBottom: 6,
+              fontSize: 14,
+              fontWeight: 500,
+              color: "rgba(0, 0, 0, 0.88)",
+            }}
           >
             {label}
           </label>
         )}
-        <select
-          ref={ref}
+        <AntdSelect
           id={selectId}
-          className={cn(
-            "h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm",
-            "text-gray-900",
-            "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20",
-            "disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500",
-            error && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
-            className,
-          )}
-          {...props}
-        >
-          {placeholder && (
-            <option value="" disabled>
-              {placeholder}
-            </option>
-          )}
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+          options={options}
+          placeholder={placeholder}
+          status={error ? "error" : undefined}
+          className={className}
+          style={{ width: "100%", ...style }}
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+        />
+        {error && (
+          <p style={{ marginTop: 4, fontSize: 14, color: "#ff4d4f" }}>
+            {error}
+          </p>
+        )}
       </div>
     );
   },

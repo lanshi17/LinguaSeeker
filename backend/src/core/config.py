@@ -576,8 +576,3 @@ class Settings(BaseSettings):
 def get_config() -> Settings:
     """Return the global Settings singleton (created once, cached forever)."""
     return Settings()
-
-
-def get_settings() -> Settings:
-    """FastAPI dependency — inject via ``cfg: Settings = Depends(get_settings)``."""
-    return get_config()

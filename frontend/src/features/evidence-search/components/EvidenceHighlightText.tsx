@@ -1,9 +1,8 @@
-
+import type { CSSProperties } from "react";
 import type {
   EvidenceChainHighlight,
   EvidenceHighlightTone,
 } from "../types/evidenceSearch";
-import { CATEGORY_COLORS } from "../utils/evidenceDocument";
 
 export type { EvidenceHighlightTone } from "../types/evidenceSearch";
 
@@ -16,13 +15,56 @@ interface EvidenceHighlightTextProps {
   category?: string | null;
 }
 
-const TONE_STYLES: Record<EvidenceHighlightTone, string> = {
-  classification: "bg-amber-200 text-amber-950 ring-1 ring-amber-300",
-  disease: "bg-rose-200 text-rose-950 ring-1 ring-rose-300",
-  functional: "bg-success-200 text-success-950 ring-1 ring-success-300",
-  gene: "bg-primary-200 text-primary-950 ring-1 ring-primary-300",
-  neutral: "bg-gray-200 text-gray-950 ring-1 ring-gray-300",
-  variant: "bg-cyan-200 text-cyan-950 ring-1 ring-cyan-300",
+const TONE_STYLES: Record<EvidenceHighlightTone, CSSProperties> = {
+  classification: {
+    backgroundColor: "#fde68a",
+    color: "#451a03",
+    boxShadow: "0 0 0 1px #fcd34d",
+  },
+  disease: {
+    backgroundColor: "#fecdd3",
+    color: "#4c0519",
+    boxShadow: "0 0 0 1px #fda4af",
+  },
+  functional: {
+    backgroundColor: "var(--color-success-200)",
+    color: "#052e16",
+    boxShadow: "0 0 0 1px var(--color-success-300)",
+  },
+  gene: {
+    backgroundColor: "var(--color-primary-200)",
+    color: "var(--color-primary-950)",
+    boxShadow: "0 0 0 1px var(--color-primary-300)",
+  },
+  neutral: {
+    backgroundColor: "#e5e7eb",
+    color: "#030712",
+    boxShadow: "0 0 0 1px #d1d5db",
+  },
+  variant: {
+    backgroundColor: "#a5f3fc",
+    color: "#083344",
+    boxShadow: "0 0 0 1px #67e8f9",
+  },
+};
+
+/** Inline-style equivalents for CATEGORY_COLORS mark classes. */
+const CATEGORY_MARK_STYLES: Record<string, CSSProperties> = {
+  A: { backgroundColor: "#fde68a", color: "#451a03", boxShadow: "0 0 0 1px #fcd34d" },
+  B: { backgroundColor: "#bfdbfe", color: "#172554", boxShadow: "0 0 0 1px #93c5fd" },
+  C: { backgroundColor: "#ddd6fe", color: "#2e1065", boxShadow: "0 0 0 1px #c4b5fd" },
+  D: { backgroundColor: "#a5f3fc", color: "#083344", boxShadow: "0 0 0 1px #67e8f9" },
+  E: { backgroundColor: "#a7f3d0", color: "#052e16", boxShadow: "0 0 0 1px #6ee7b7" },
+  F: { backgroundColor: "#bbf7d0", color: "#052e16", boxShadow: "0 0 0 1px #86efac" },
+  G: { backgroundColor: "#fed7aa", color: "#431407", boxShadow: "0 0 0 1px #fdba74" },
+  H: { backgroundColor: "#fecaca", color: "#450a0a", boxShadow: "0 0 0 1px #fca5a5" },
+  I: { backgroundColor: "#99f6e4", color: "#042f2e", boxShadow: "0 0 0 1px #5eead4" },
+  J: { backgroundColor: "#fbcfe8", color: "#500724", boxShadow: "0 0 0 1px #f9a8d4" },
+};
+
+const INACTIVE_MARK_STYLE: CSSProperties = {
+  backgroundColor: "#fef9c3",
+  color: "#111827",
 };
 
 function escapedRegExp(value: string) {
@@ -64,7 +106,14 @@ export function EvidenceHighlightText({
 }: EvidenceHighlightTextProps) {
   if (!highlight || !highlight.text) {
     return (
-      <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
+      <div style={{
+        borderRadius: 8,
+        border: "1px dashed #d1d5db",
+        backgroundColor: "#f9fafb",
+        padding: 16,
+        fontSize: 14,
+        color: "#6b7280",
+      }}>
         No source span available.
       </div>
     );
@@ -84,11 +133,30 @@ export function EvidenceHighlightText({
   const after = highlight.text.slice(end);
   const hasMark = end > start;
 
+  const markStyle: CSSProperties = active
+    ? (category && CATEGORY_MARK_STYLES[category]) || TONE_STYLES[tone]
+    : INACTIVE_MARK_STYLE;
+
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm leading-7 text-gray-800 shadow-sm">
-      <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+    <div style={{
+      borderRadius: 8,
+      border: "1px solid #e5e7eb",
+      backgroundColor: "#fff",
+      padding: 16,
+      fontSize: 14,
+      lineHeight: "28px",
+      color: "#1f2937",
+      boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+    }}>
+      <div style={{ marginBottom: 12, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, fontSize: 12, color: "#6b7280" }}>
         {label && (
-          <span className="rounded-md bg-gray-100 px-2 py-1 font-medium text-gray-700">
+          <span style={{
+            borderRadius: 6,
+            backgroundColor: "#f3f4f6",
+            padding: "4px 8px",
+            fontWeight: 500,
+            color: "#374151",
+          }}>
             {label}
           </span>
         )}
@@ -96,23 +164,27 @@ export function EvidenceHighlightText({
         {!hasMark && (
           <span
             data-testid="highlight-unavailable"
-            className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-500"
+            style={{
+              borderRadius: 4,
+              backgroundColor: "#f1f5f9",
+              padding: "2px 6px",
+              color: "#64748b",
+            }}
           >
             highlight unavailable
           </span>
         )}
       </div>
-      <p className="whitespace-pre-wrap">
+      <p style={{ whiteSpace: "pre-wrap", margin: 0 }}>
         {before}
         {hasMark ? (
           <mark
-            className={`rounded px-1 py-0.5 font-medium ${
-              active
-                ? category && CATEGORY_COLORS[category]
-                  ? CATEGORY_COLORS[category].mark
-                  : TONE_STYLES[tone]
-                : "bg-yellow-100 text-gray-900"
-            }`}
+            style={{
+              borderRadius: 4,
+              padding: "2px 4px",
+              fontWeight: 500,
+              ...markStyle,
+            }}
           >
             {marked}
           </mark>

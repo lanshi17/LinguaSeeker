@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { cn } from "@/lib/utils/cn";
 import {
   CheckCircle2,
   FileText,
@@ -40,19 +39,37 @@ interface FieldRowProps {
 
 function FieldRow({ icon, label, value, mono }: FieldRowProps) {
   return (
-    <div className="flex items-start gap-2.5 py-1.5">
-      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-gray-400">
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "6px 0" }}>
+      <span style={{
+        marginTop: 2,
+        display: "flex",
+        width: 20,
+        height: 20,
+        flexShrink: 0,
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#9ca3af",
+      }}>
         {icon}
       </span>
-      <div className="min-w-0 flex-1">
-        <span className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <span style={{
+          display: "block",
+          fontSize: 10,
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.05em",
+          color: "#9ca3af",
+        }}>
           {label}
         </span>
         <span
-          className={cn(
-            "block text-[13px] text-gray-900",
-            mono && "font-mono",
-          )}
+          style={{
+            display: "block",
+            fontSize: 13,
+            color: "#111827",
+            fontFamily: mono ? "var(--font-mono)" : undefined,
+          }}
         >
           {value}
         </span>
@@ -85,9 +102,9 @@ export function PipelineSummaryCard({
   const isOnline = slots.source_type !== "local";
   const sourceLabel = isOnline ? "Online Search" : "PDF Upload";
   const sourceIcon = isOnline ? (
-    <Globe className="h-3.5 w-3.5" />
+    <Globe style={{ width: 14, height: 14 }} />
   ) : (
-    <Upload className="h-3.5 w-3.5" />
+    <Upload style={{ width: 14, height: 14 }} />
   );
 
   const hasTarget =
@@ -98,70 +115,123 @@ export function PipelineSummaryCard({
     : true; // local upload flow: submission is valid once the user confirms
 
   return (
-    <div className="w-full max-w-md overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-primary-600" aria-hidden />
-          <span className="text-[13px] font-semibold text-gray-900">
+    <div style={{
+      width: "100%",
+      maxWidth: 448,
+      overflow: "hidden",
+      borderRadius: 12,
+      border: "1px solid #e5e7eb",
+      backgroundColor: "#fff",
+      boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+    }}>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        borderBottom: "1px solid #f3f4f6",
+        padding: "10px 16px",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <FileText style={{ width: 16, height: 16, color: "var(--color-primary-600)" }} aria-hidden />
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>
             Ready to start pipeline
           </span>
         </div>
         <Badge variant="info">
-          <span className="flex items-center gap-1">
+          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
             {sourceIcon}
             {sourceLabel}
           </span>
         </Badge>
       </div>
 
-      <div className="divide-y divide-gray-50 px-4 py-2">
+      <div style={{ padding: "8px 16px" }}>
         {isOnline && slots.identifiers && (
-          <FieldRow
-            icon={<Tag className="h-3.5 w-3.5" />}
-            label="Identifiers"
-            value={slots.identifiers}
-            mono
-          />
+          <div style={{ borderBottom: "1px solid #fafafa" }}>
+            <FieldRow
+              icon={<Tag style={{ width: 14, height: 14 }} />}
+              label="Identifiers"
+              value={slots.identifiers}
+              mono
+            />
+          </div>
         )}
         {isOnline && slots.query && (
-          <FieldRow
-            icon={<Search className="h-3.5 w-3.5" />}
-            label="Search Query"
-            value={slots.query}
-          />
+          <div style={{ borderBottom: "1px solid #fafafa" }}>
+            <FieldRow
+              icon={<Search style={{ width: 14, height: 14 }} />}
+              label="Search Query"
+              value={slots.query}
+            />
+          </div>
         )}
         {!isOnline && slots.filename && (
-          <FieldRow
-            icon={<FileText className="h-3.5 w-3.5" />}
-            label="Document"
-            value={slots.filename}
-          />
+          <div style={{ borderBottom: "1px solid #fafafa" }}>
+            <FieldRow
+              icon={<FileText style={{ width: 14, height: 14 }} />}
+              label="Document"
+              value={slots.filename}
+            />
+          </div>
         )}
         {!isOnline && !slots.filename && (
-          <FieldRow
-            icon={<Upload className="h-3.5 w-3.5" />}
-            label="Document"
-            value="Upload via /pipeline after confirmation"
-          />
+          <div style={{ borderBottom: "1px solid #fafafa" }}>
+            <FieldRow
+              icon={<Upload style={{ width: 14, height: 14 }} />}
+              label="Document"
+              value="Upload via /pipeline after confirmation"
+            />
+          </div>
         )}
         {hasTarget && (
-          <div className="py-1.5">
-            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+          <div style={{ padding: "6px 0" }}>
+            <span style={{
+              display: "block",
+              marginBottom: 4,
+              fontSize: 10,
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              color: "#9ca3af",
+            }}>
               Extraction Target
             </span>
-            <div className="flex flex-wrap gap-1.5">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {slots.gene_symbol && (
-                <span className="rounded-full bg-cyan-50 px-2 py-0.5 font-mono text-[11px] font-medium text-cyan-700">
+                <span style={{
+                  borderRadius: 9999,
+                  backgroundColor: "#ecfeff",
+                  padding: "2px 8px",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "var(--color-primary-700)",
+                }}>
                   Gene: {slots.gene_symbol}
                 </span>
               )}
               {slots.disease_name && (
-                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                <span style={{
+                  borderRadius: 9999,
+                  backgroundColor: "#ecfdf5",
+                  padding: "2px 8px",
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "#047857",
+                }}>
                   Disease: {slots.disease_name}
                 </span>
               )}
               {slots.variant_hgvs_p && (
-                <span className="rounded-full bg-violet-50 px-2 py-0.5 font-mono text-[11px] font-medium text-violet-700">
+                <span style={{
+                  borderRadius: 9999,
+                  backgroundColor: "#f5f3ff",
+                  padding: "2px 8px",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "#6d28d9",
+                }}>
                   {slots.variant_hgvs_p}
                 </span>
               )}
@@ -170,15 +240,21 @@ export function PipelineSummaryCard({
         )}
       </div>
 
-      <div className="flex items-center gap-2 border-t border-gray-100 px-4 py-2.5">
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        borderTop: "1px solid #f3f4f6",
+        padding: "10px 16px",
+      }}>
         <Button
           size="sm"
           onClick={handleConfirm}
           disabled={!hasData || submitted}
           loading={isSubmitting || submitted}
-          className="flex-1"
+          style={{ flex: 1 }}
         >
-          <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+          <CheckCircle2 style={{ width: 14, height: 14, marginRight: 6 }} />
           Confirm & Start
         </Button>
         {onModify && (
@@ -186,9 +262,30 @@ export function PipelineSummaryCard({
             type="button"
             onClick={onModify}
             disabled={isSubmitting || submitted}
-            className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[12px] text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              borderRadius: 6,
+              padding: "6px 10px",
+              fontSize: 12,
+              color: "#6b7280",
+              border: "none",
+              background: "none",
+              cursor: isSubmitting || submitted ? "not-allowed" : "pointer",
+              opacity: isSubmitting || submitted ? 0.5 : 1,
+              transition: "background-color 150ms, color 150ms",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#f9fafb";
+              e.currentTarget.style.color = "#374151";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.color = "#6b7280";
+            }}
           >
-            <MessageSquare className="h-3 w-3" />
+            <MessageSquare style={{ width: 12, height: 12 }} />
             Modify via chat
           </button>
         )}

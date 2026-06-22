@@ -1,5 +1,7 @@
-import { forwardRef, type InputHTMLAttributes } from "react";
-import { cn } from "@/lib/utils/cn";
+import { forwardRef, useCallback, type InputHTMLAttributes } from "react";
+import { Input as AntdInput, type GetRef } from "antd";
+
+type InputRef = GetRef<typeof AntdInput>;
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -7,33 +9,51 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, className, id, ...props }, ref) => {
+  ({ label, error, className, id, style, size: _htmlSize, ...props }, ref) => {
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
 
+    // Bridge antd's InputRef to expose the native HTMLInputElement.
+    const antdRef = useCallback(
+      (instance: InputRef | null) => {
+        if (typeof ref === "function") {
+          ref(instance?.input ?? null);
+        } else if (ref) {
+          (ref as React.MutableRefObject<HTMLInputElement | null>).current =
+            instance?.input ?? null;
+        }
+      },
+      [ref],
+    );
+
     return (
-      <div className="w-full">
+      <div style={{ width: "100%" }}>
         {label && (
           <label
             htmlFor={inputId}
-            className="mb-1.5 block text-sm font-medium text-gray-700"
+            style={{
+              display: "block",
+              marginBottom: 6,
+              fontSize: 14,
+              fontWeight: 500,
+              color: "rgba(0, 0, 0, 0.88)",
+            }}
           >
             {label}
           </label>
         )}
-        <input
-          ref={ref}
+        <AntdInput
+          ref={antdRef}
           id={inputId}
-          className={cn(
-            "h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm",
-            "text-gray-900 placeholder:text-gray-400",
-            "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20",
-            "disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500",
-            error && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
-            className,
-          )}
+          status={error ? "error" : undefined}
+          className={className}
+          style={style}
           {...props}
         />
-        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+        {error && (
+          <p style={{ marginTop: 4, fontSize: 14, color: "#ff4d4f" }}>
+            {error}
+          </p>
+        )}
       </div>
     );
   },

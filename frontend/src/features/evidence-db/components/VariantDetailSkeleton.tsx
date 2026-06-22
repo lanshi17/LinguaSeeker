@@ -6,80 +6,104 @@ import { Skeleton } from "@/components/ui/Skeleton";
  */
 export function VariantDetailSkeleton() {
   return (
-    <div className="space-y-6">
-      {/* Back link */}
-      <Skeleton variant="line" width="w-40" height="h-4" />
+    <>
+      <style>{`
+        .vds-layout { display: grid; gap: 24px; }
+        .vds-hero-inner { display: flex; flex-direction: column; gap: 16px; }
+        .vds-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 24px; row-gap: 8px; }
+        .vds-two-col { display: grid; gap: 24px; }
+        @media (min-width: 1024px) {
+          .vds-hero-inner { flex-direction: row; align-items: flex-start; justify-content: space-between; }
+          .vds-two-col { grid-template-columns: minmax(0, 1fr) 340px; }
+        }
+      `}</style>
+      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        {/* Back link */}
+        <Skeleton variant="line" style={{ width: 160, height: 16 }} />
 
-      {/* Variant Hero */}
-      <section className="edb-hero rounded-2xl border border-gray-200 p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <Skeleton variant="text" width="w-20" height="h-6" />
-              <Skeleton variant="pill" width="w-24" height="h-6" />
+        {/* Variant Hero */}
+        <section className="edb-hero" style={{ borderRadius: 16, border: "1px solid #e5e7eb", padding: 24 }}>
+          <div className="vds-hero-inner">
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <Skeleton variant="text" style={{ width: 80, height: 24 }} />
+                <Skeleton variant="pill" style={{ width: 96, height: 24 }} />
+              </div>
+              <Skeleton variant="text" style={{ width: 192, height: 20 }} />
+              <Skeleton variant="line" style={{ width: 144 }} />
             </div>
-            <Skeleton variant="text" width="w-48" height="h-5" />
-            <Skeleton variant="line" width="w-36" />
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <Skeleton variant="circle" style={{ width: 56, height: 56 }} />
+              <div className="vds-stats-grid">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <Skeleton variant="text" style={{ width: 40, height: 20 }} />
+                    <Skeleton variant="line" style={{ width: 80 }} />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <Skeleton variant="circle" width="w-14" height="h-14" />
-            <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="space-y-1">
-                  <Skeleton variant="text" width="w-10" height="h-5" />
-                  <Skeleton variant="line" width="w-20" />
+        </section>
+
+        {/* Two-column layout */}
+        <div className="vds-two-col">
+          {/* Main: Evidence Fields */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Skeleton variant="text" style={{ width: 112, height: 20 }} />
+              <Skeleton variant="line" style={{ width: 128 }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="stagger-in"
+                  style={{
+                    borderRadius: 12,
+                    border: "1px solid #e5e7eb",
+                    backgroundColor: "#fff",
+                    padding: 16,
+                    animationDelay: `${i * 60}ms`,
+                  }}
+                >
+                  <Skeleton variant="text" style={{ width: 96, height: 20, marginBottom: 12 }} />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Skeleton variant="text" style={{ width: "100%" }} />
+                    <Skeleton variant="text" style={{ width: "75%" }} />
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Two-column layout */}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        {/* Main: Evidence Fields */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Skeleton variant="text" width="w-28" height="h-5" />
-            <Skeleton variant="line" width="w-32" />
-          </div>
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="stagger-in rounded-xl border border-gray-200 bg-white p-4"
-                style={{ animationDelay: `${i * 60}ms` }}
-              >
-                <Skeleton variant="text" width="w-24" height="h-5" className="mb-3" />
-                <div className="space-y-2">
-                  <Skeleton variant="text" width="w-full" />
-                  <Skeleton variant="text" width="w-3/4" />
+          {/* Sidebar: References */}
+          <aside style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Skeleton variant="text" style={{ width: 80, height: 20 }} />
+              <Skeleton variant="line" style={{ width: 64 }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="stagger-in"
+                  style={{
+                    borderRadius: 8,
+                    border: "1px solid #e5e7eb",
+                    backgroundColor: "#fff",
+                    padding: 12,
+                    animationDelay: `${(i + 3) * 60}ms`,
+                  }}
+                >
+                  <Skeleton variant="text" style={{ width: "100%", marginBottom: 8 }} />
+                  <Skeleton variant="line" style={{ width: "75%" }} />
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </aside>
         </div>
-
-        {/* Sidebar: References */}
-        <aside className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Skeleton variant="text" width="w-20" height="h-5" />
-            <Skeleton variant="line" width="w-16" />
-          </div>
-          <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="stagger-in rounded-lg border border-gray-200 bg-white p-3"
-                style={{ animationDelay: `${(i + 3) * 60}ms` }}
-              >
-                <Skeleton variant="text" width="w-full" className="mb-2" />
-                <Skeleton variant="line" width="w-3/4" />
-              </div>
-            ))}
-          </div>
-        </aside>
       </div>
-    </div>
+    </>
   );
 }

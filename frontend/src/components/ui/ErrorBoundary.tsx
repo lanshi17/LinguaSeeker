@@ -3,9 +3,7 @@ import { Component, type ErrorInfo, type ReactNode } from "react";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
-  /** Optional fallback UI. Receives the error and a reset callback. */
   fallback?: ReactNode;
-  /** Called when an error is caught. Useful for logging. */
   onError?: (error: Error, info: ErrorInfo) => void;
 }
 
@@ -14,15 +12,6 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-/**
- * Catches rendering errors in its subtree and displays a fallback UI
- * instead of white-screening the entire page.
- *
- * Usage:
- *   <ErrorBoundary>
- *     <DataDrivenComponent />
- *   </ErrorBoundary>
- */
 export class ErrorBoundary extends Component<
   ErrorBoundaryProps,
   ErrorBoundaryState
@@ -51,18 +40,33 @@ export class ErrorBoundary extends Component<
       }
 
       return (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <p className="text-sm font-medium text-red-800">
+        <div style={{
+          borderRadius: 8,
+          border: "1px solid #fecaca",
+          backgroundColor: "#fef2f2",
+          padding: 24,
+          textAlign: "center",
+        }}>
+          <p style={{ fontSize: 14, fontWeight: 500, color: "#991b1b" }}>
             Something went wrong.
           </p>
           {this.state.error && (
-            <p className="mt-1 text-xs text-red-600">
+            <p style={{ marginTop: 4, fontSize: 12, color: "#dc2626" }}>
               {this.state.error.message}
             </p>
           )}
           <button
             onClick={this.reset}
-            className="mt-3 cursor-pointer text-sm font-medium text-red-700 underline hover:text-red-900"
+            style={{
+              marginTop: 12,
+              cursor: "pointer",
+              fontSize: 14,
+              fontWeight: 500,
+              color: "#b91c1c",
+              textDecoration: "underline",
+              background: "none",
+              border: "none",
+            }}
           >
             Try again
           </button>
