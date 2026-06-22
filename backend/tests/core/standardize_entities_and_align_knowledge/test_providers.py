@@ -63,6 +63,38 @@ async def test_generate_embeddings_batches_large_inputs():
 
 
 @pytest.mark.asyncio
+async def test_provider_sends_auth_header_when_api_key_set():
+    """generate_embeddings includes Authorization: Bearer header when api_key is configured."""
+    mock_response = _make_mock_response({
+        "data": [{"index": 0, "embedding": [0.1, 0.2]}],
+        "usage": {"prompt_tokens": 1, "total_tokens": 1},
+    })
+
+    with patch("httpx.AsyncClient.post", new_callable=AsyncMock, return_value=mock_response) as mock_post:
+        provider = EmbeddingProvider(base_url="http://localhost:8001", model="test", api_key="secret-key")
+        await provider.generate_embeddings(["text"])
+
+    call_args = mock_post.call_args[1]
+    assert call_args["headers"] == {"Authorization": "Bearer secret-key"}
+
+
+@pytest.mark.asyncio
+async def test_provider_omits_auth_header_when_no_api_key():
+    """generate_embeddings sends no Authorization header when api_key is not configured."""
+    mock_response = _make_mock_response({
+        "data": [{"index": 0, "embedding": [0.1, 0.2]}],
+        "usage": {"prompt_tokens": 1, "total_tokens": 1},
+    })
+
+    with patch("httpx.AsyncClient.post", new_callable=AsyncMock, return_value=mock_response) as mock_post:
+        provider = EmbeddingProvider(base_url="http://localhost:8001", model="test")
+        await provider.generate_embeddings(["text"])
+
+    call_args = mock_post.call_args[1]
+    assert call_args["headers"] == {}
+
+
+@pytest.mark.asyncio
 async def test_provider_raises_on_http_error():
     """generate_embeddings raises on non-2xx response."""
     mock_response = _make_mock_response({})

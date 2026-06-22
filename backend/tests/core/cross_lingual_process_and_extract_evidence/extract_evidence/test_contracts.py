@@ -141,7 +141,7 @@ def test_source_location_accepts_title_context_type():
     assert source.context_type == "title"
 
 
-@pytest.mark.parametrize("context_type", ["summary", "case_report", "affiliations"])
+@pytest.mark.parametrize("context_type", ["summary", "case_report", "affiliations", "patients"])
 def test_source_location_accepts_extractor_section_context_types(context_type: str):
     source = SourceLocation(
         span_id="p1",

@@ -62,7 +62,6 @@ knowledges
 database/backups
 database/seeds
 database/terminology_database
-services/model-server
 
 # Notebooks, lockfiles unrelated to build
 .ipynb_checkpoints
@@ -71,7 +70,10 @@ services/model-server
 *.log
 nohup.out
 command.log
-progress.txt
+services/model-server/.venv
+services/model-server/__pycache__
+services/model-server/logs
+services/model-server/*.log
 lesson.md
 
 # Rust build artefacts — multi-GB target/ dirs MUST stay out of context

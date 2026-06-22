@@ -117,7 +117,7 @@ class SourceLocation(BaseModel):
         "text", "table", "figure", "supplementary", "caption",
         "abstract", "introduction", "methods", "results", "discussion",
         "conclusion", "background", "references", "title", "summary",
-        "case_report", "affiliations",
+        "case_report", "affiliations", "patients",
     ]
     context_ref: str
     text_snippet: str
