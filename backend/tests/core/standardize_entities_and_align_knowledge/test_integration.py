@@ -125,6 +125,7 @@ class FakeEmbeddingConfig:
 
     def __init__(self) -> None:
         self.base_url = ""
+        self.api_key = ""
         self.model = "test-model"
         self.batch_size = 10
 
@@ -134,6 +135,7 @@ class FakeRerankConfig:
 
     def __init__(self) -> None:
         self.base_url = ""
+        self.api_key = ""
         self.model = "test-rerank-model"
         self.top_k = 10
         self.score_threshold = 0.7
