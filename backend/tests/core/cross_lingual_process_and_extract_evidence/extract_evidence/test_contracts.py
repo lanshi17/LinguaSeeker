@@ -141,6 +141,22 @@ def test_source_location_accepts_title_context_type():
     assert source.context_type == "title"
 
 
+@pytest.mark.parametrize("context_type", ["summary", "case_report", "affiliations"])
+def test_source_location_accepts_extractor_section_context_types(context_type: str):
+    source = SourceLocation(
+        span_id="p1",
+        page=1,
+        start_offset=0,
+        end_offset=12,
+        context_type=context_type,
+        context_ref=context_type.replace("_", " ").title(),
+        text_snippet="MECP2",
+        source_precision=SourcePrecision.EXACT,
+    )
+
+    assert source.context_type == context_type
+
+
 def test_evidence_item_rejects_invalid_confidence():
     with pytest.raises(ValidationError):
         EvidenceItem(

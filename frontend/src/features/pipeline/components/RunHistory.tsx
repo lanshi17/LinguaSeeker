@@ -57,7 +57,7 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
         ) : items.length === 0 ? (
           <RunHistoryEmpty hasFilter={Boolean(statusFilter && statusFilter !== "all")} />
         ) : (
-          <ol className="space-y-2">
+          <ol className="content-fade-in space-y-2">
             {items.map((run, i) => (
               <li key={run.processing_run_id}>
                 <RunListItem run={run} index={i} />

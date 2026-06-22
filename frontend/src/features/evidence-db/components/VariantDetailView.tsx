@@ -7,8 +7,8 @@ import {
   AlertCircle,
   ChevronRight,
 } from "lucide-react";
-import { Spinner } from "@/components/ui/Spinner";
 import { useVariantDetail } from "../hooks/useVariantDetail";
+import { VariantDetailSkeleton } from "./VariantDetailSkeleton";
 import type { LiteratureReference } from "../types/variantDb";
 import type { EvidenceGroupItem } from "@/features/evidence-search/types/evidenceSearch";
 import {
@@ -225,11 +225,7 @@ export function VariantDetailView({
   const { detail, isLoading, error } = useVariantDetail(variantSlug);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Spinner className="h-6 w-6 text-primary-600" />
-      </div>
-    );
+    return <VariantDetailSkeleton />;
   }
 
   if (error || !detail) {
@@ -267,7 +263,7 @@ export function VariantDetailView({
     .sort() as string[];
 
   return (
-    <div className="space-y-6">
+    <div className="content-fade-in space-y-6">
       {/* Back navigation */}
       <Link
         to="/evidence-db"

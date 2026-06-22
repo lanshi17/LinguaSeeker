@@ -11,7 +11,6 @@ import {
   EyeOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { Spinner } from "@/components/ui/Spinner";
 import { useEvidenceGroupDetail } from "@/features/evidence-search/hooks/useEvidenceGroupDetail";
 import type { EvidenceGroupItem } from "@/features/evidence-search/types/evidenceSearch";
 import {
@@ -30,6 +29,7 @@ import type {
   EvidenceDocumentParagraph,
 } from "@/features/evidence-search/utils/evidenceDocument";
 import { useVariantDetail } from "../hooks/useVariantDetail";
+import { BilingualEvidenceSkeleton } from "./BilingualEvidenceSkeleton";
 
 /* ── Highlighted Text Renderer ──────────────────────────── */
 
@@ -405,11 +405,7 @@ export function BilingualEvidenceView({
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Spinner className="h-6 w-6 text-primary-600" />
-      </div>
-    );
+    return <BilingualEvidenceSkeleton />;
   }
 
   if (error || !groupDetail) {
@@ -431,7 +427,7 @@ export function BilingualEvidenceView({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="content-fade-in space-y-5">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-gray-400">
         <Link

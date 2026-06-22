@@ -24,9 +24,9 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/Badge";
-import { Spinner } from "@/components/ui/Spinner";
 import { cn } from "@/lib/utils/cn";
 import { useEvidenceGroupDetail } from "../hooks/useEvidenceGroupDetail";
+import { EvidenceDetailSkeleton } from "./EvidenceDetailSkeleton";
 import { EvidenceCorrectionForm } from "./EvidenceCorrectionForm";
 import { EvidenceAuditHistory } from "./EvidenceAuditHistory";
 import type {
@@ -291,7 +291,7 @@ function LiteratureOverview({
   groupId: string;
 }) {
   return (
-    <div className="space-y-5">
+    <div className="content-fade-in space-y-5">
       <Link
         to="/evidence"
         className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-primary-600"
@@ -718,7 +718,7 @@ function BilingualCompareView({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="content-fade-in space-y-5">
       <Link
         to={`/evidence/detail?groupId=${encodeURIComponent(groupId)}`}
         className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-primary-600"
@@ -945,17 +945,7 @@ export function EvidenceDetailView({
   }, [detail, initialEvidenceId, selectedOverrideId]);
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-gray-200 bg-white py-16">
-        <div className="relative">
-          <div className="absolute inset-0 animate-ping rounded-full bg-primary-200 opacity-20" />
-          <Spinner />
-        </div>
-        <p className="text-sm font-medium text-gray-600">
-          Loading evidence detail...
-        </p>
-      </div>
-    );
+    return <EvidenceDetailSkeleton />;
   }
 
   if (error || !detail) {

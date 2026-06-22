@@ -116,7 +116,8 @@ class SourceLocation(BaseModel):
     context_type: Literal[
         "text", "table", "figure", "supplementary", "caption",
         "abstract", "introduction", "methods", "results", "discussion",
-        "conclusion", "background", "references", "title",
+        "conclusion", "background", "references", "title", "summary",
+        "case_report", "affiliations",
     ]
     context_ref: str
     text_snippet: str

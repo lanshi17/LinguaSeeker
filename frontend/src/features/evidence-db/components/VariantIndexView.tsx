@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { Spinner } from "@/components/ui/Spinner";
 import { useVariantIndex } from "../hooks/useVariantIndex";
+import { VariantIndexSkeleton } from "./VariantIndexSkeleton";
 import type {
   VariantIndexEntry,
   ClassificationLevel,
@@ -357,9 +358,7 @@ export function VariantIndexView() {
           <span>Failed to load variant data. Please try again.</span>
         </div>
       ) : isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <Spinner className="h-6 w-6 text-primary-600" />
-        </div>
+        <VariantIndexSkeleton />
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 py-20 text-center">
           <Dna className="h-10 w-10 text-gray-300 mb-3" />
@@ -371,7 +370,7 @@ export function VariantIndexView() {
           </p>
         </div>
       ) : (
-        <>
+        <div className="content-fade-in">
           {/* Result count */}
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-600">
@@ -453,7 +452,7 @@ export function VariantIndexView() {
               </button>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

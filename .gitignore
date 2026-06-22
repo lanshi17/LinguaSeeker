@@ -128,3 +128,4 @@ benchmark/annotation/**/images
 # Benchmark refactor (2026-06-18) — see docs/active/2026-06-18-benchmark-framework-refactor-plan.md
 benchmark/datasets/rett_annotation/.venv/
 benchmark/data/reports/_unmapped/
+database/backups/
