@@ -10,8 +10,8 @@ import {
   Calendar,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
-import { Spinner } from "@/components/ui/Spinner";
 import type { EvidenceSearchResult } from "../types/evidenceSearch";
+import { EvidenceTableSkeleton } from "./EvidenceTableSkeleton";
 import {
   buildLiteratureRows,
   type LiteratureEvidenceRow,
@@ -143,17 +143,7 @@ export function EvidenceResultsTable({
   const endItem = Math.min(page * pageSize, total);
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-gray-200 bg-white py-16">
-        <div className="relative">
-          <div className="absolute inset-0 animate-ping rounded-full bg-primary-200 opacity-20" />
-          <Spinner />
-        </div>
-        <p className="text-sm font-medium text-gray-600">
-          Loading evidence data...
-        </p>
-      </div>
-    );
+    return <EvidenceTableSkeleton />;
   }
 
   if (rows.length === 0) {
@@ -186,7 +176,7 @@ export function EvidenceResultsTable({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="content-fade-in space-y-4">
       {/* Results header with stats and pagination */}
       <div className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">

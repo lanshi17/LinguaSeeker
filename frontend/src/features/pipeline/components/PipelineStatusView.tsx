@@ -88,7 +88,7 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
   if (!data) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="content-fade-in space-y-6">
       <PageHeader
         title="Pipeline Status"
         description={
