@@ -104,9 +104,9 @@ async def translate_query(
     Args:
         query: Source query in any language.
         client: Pre-built OpenAI client (optional, built from config if omitted).
-        model: Model override (default: ``cfg.llm.model``).
-        base_url: Base URL override (default: ``cfg.llm.base_url``).
-        api_key: API key override (default: first key from ``cfg.llm.all_api_keys``).
+        model: Model override (default: ``cfg.translation.model``).
+        base_url: Base URL override (default: ``cfg.translation.base_url``).
+        api_key: API key override (default: first key from ``cfg.translation.all_api_keys``).
 
     Returns:
         TranslatedQueries with one string per target language.
@@ -119,9 +119,9 @@ async def translate_query(
 
     cfg = get_config()
 
-    resolved_model = model or (cfg.llm.model or "").strip()
-    resolved_base_url = (base_url or cfg.llm.base_url or "").strip().rstrip("/")
-    resolved_api_key = api_key or (cfg.llm.all_api_keys[0] if cfg.llm.all_api_keys else "")
+    resolved_model = model or (cfg.translation.model or "").strip()
+    resolved_base_url = (base_url or cfg.translation.base_url or "").strip().rstrip("/")
+    resolved_api_key = api_key or (cfg.translation.all_api_keys[0] if cfg.translation.all_api_keys else "")
 
     if not resolved_model or not resolved_base_url:
         raise ValueError("LLM model and base_url are required for query translation")
@@ -131,7 +131,7 @@ async def translate_query(
         client = AsyncOpenAI(base_url=resolved_base_url, api_key=resolved_api_key)
 
     try:
-        max_tokens = resolve_max_tokens(cfg.llm.max_tokens, percentage=0.25)
+        max_tokens = resolve_max_tokens(cfg.translation.max_tokens, percentage=0.25)
         resp = await client.chat.completions.create(
             model=resolved_model,
             messages=[

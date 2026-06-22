@@ -41,6 +41,8 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.core imp
     SimilarityTerminologyMatcher,
 )
 from src.core.standardize_entities_and_align_knowledge.similarity_match.providers import (
+    FallbackEmbeddingProvider,
+    FallbackRerankProvider,
     ModelServerEmbeddingProvider,
     ModelServerRerankProvider,
 )
@@ -121,17 +123,37 @@ class EntityStandardizationService:
         repository = StandardizationRepository(session)
         precise_matcher = PreciseTerminologyMatcher(repository)
         semantic_base_url = self._cfg.embedding.base_url or self._cfg.model_server_url
+        local_embedding = ModelServerEmbeddingProvider(
+            base_url=semantic_base_url,
+            model=self._cfg.embedding.model,
+            api_key=self._cfg.embedding.api_key,
+        )
+        remote_embedding = (
+            ModelServerEmbeddingProvider(
+                base_url=self._cfg.embedding.remote_base_url,
+                model=self._cfg.embedding.remote_model or self._cfg.embedding.model,
+                api_key=self._cfg.embedding.remote_api_key,
+            )
+            if self._cfg.embedding.remote_base_url
+            else None
+        )
+        local_rerank = ModelServerRerankProvider(
+            base_url=self._cfg.rerank.base_url or self._cfg.model_server_url,
+            model=self._cfg.rerank.model,
+            api_key=self._cfg.rerank.api_key,
+        )
+        remote_rerank = (
+            ModelServerRerankProvider(
+                base_url=self._cfg.rerank.remote_base_url,
+                model=self._cfg.rerank.remote_model or self._cfg.rerank.model,
+                api_key=self._cfg.rerank.remote_api_key,
+            )
+            if self._cfg.rerank.remote_base_url
+            else None
+        )
         similarity_matcher = SimilarityTerminologyMatcher(
-            embedding_provider=ModelServerEmbeddingProvider(
-                base_url=semantic_base_url,
-                model=self._cfg.embedding.model,
-                api_key=self._cfg.embedding.api_key,
-            ),
-            rerank_provider=ModelServerRerankProvider(
-                base_url=self._cfg.rerank.base_url or self._cfg.model_server_url,
-                model=self._cfg.rerank.model,
-                api_key=self._cfg.rerank.api_key,
-            ),
+            embedding_provider=FallbackEmbeddingProvider(local_embedding, remote_embedding),
+            rerank_provider=FallbackRerankProvider(local_rerank, remote_rerank),
             repository=PgvectorTerminologyRepository(session),
             config=SimilarityMatchConfig(
                 embedding_model=self._cfg.embedding.model,
@@ -234,6 +256,7 @@ async def build_terminology_embeddings(
         TerminologyEmbeddingIndexer,
     )
     from src.core.standardize_entities_and_align_knowledge.similarity_match.providers import (
+        FallbackEmbeddingProvider,
         ModelServerEmbeddingProvider,
     )
 
@@ -241,11 +264,21 @@ async def build_terminology_embeddings(
     session_factory = async_session_factory(engine)
     try:
         async with get_async_session(session_factory) as session:
-            provider = ModelServerEmbeddingProvider(
+            local = ModelServerEmbeddingProvider(
                 base_url=(cfg.embedding.base_url or cfg.model_server_url),
                 model=cfg.embedding.model,
                 api_key=cfg.embedding.api_key,
             )
+            remote = (
+                ModelServerEmbeddingProvider(
+                    base_url=cfg.embedding.remote_base_url,
+                    model=cfg.embedding.remote_model or cfg.embedding.model,
+                    api_key=cfg.embedding.remote_api_key,
+                )
+                if cfg.embedding.remote_base_url
+                else None
+            )
+            provider = FallbackEmbeddingProvider(local, remote)
             count = await TerminologyEmbeddingIndexer(session, provider).build(
                 embedding_model=cfg.embedding.model,
                 batch_size=cfg.embedding.batch_size,
