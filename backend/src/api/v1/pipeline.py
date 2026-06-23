@@ -273,6 +273,27 @@ def _state_title(state: PipelineGraphState) -> str | None:
     return None
 
 
+def _prepare_phase_rerun_state(
+    existing_state: PipelineGraphState,
+    target_phase: int,
+) -> PipelineGraphState:
+    """Reset target/downstream phase state before re-running a phase."""
+    updates: dict[str, Any] = {
+        "mode": PipelineMode.PHASE,
+        "target_phase": target_phase,
+        "pipeline_status": PipelineStatus.PENDING,
+        "error_message": None,
+        "error_phase": None,
+        "completed_at": None,
+    }
+    for phase_num in range(target_phase, 4):
+        updates[f"phase_{phase_num}_status"] = PhaseStatusDetail()
+        updates[f"phase_{phase_num}_output"] = None
+    if target_phase <= 2:
+        updates["skip_phase_3_reason"] = None
+    return existing_state.model_copy(deep=True, update=updates)
+
+
 # ── Routes ───────────────────────────────────────────────────────────────────
 
 
@@ -300,17 +321,7 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
                 status_code=409,
                 detail=f"Pipeline run {body.processing_run_id} is still active",
             )
-        initial_state = existing_state.model_copy(
-            deep=True,
-            update={
-                "mode": PipelineMode.PHASE,
-                "target_phase": body.target_phase,
-                "pipeline_status": PipelineStatus.PENDING,
-                "error_message": None,
-                "error_phase": None,
-                "completed_at": None,
-            },
-        )
+        initial_state = _prepare_phase_rerun_state(existing_state, body.target_phase)
         from sqlalchemy.exc import IntegrityError
 
         try:

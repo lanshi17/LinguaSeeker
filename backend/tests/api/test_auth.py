@@ -1,10 +1,24 @@
 """Tests for API key authentication."""
 from __future__ import annotations
 
+import hashlib
+import hmac
+import json
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+
+
+def _sign_token(payload_dict: dict, secret: str) -> str:
+    """Helper: create a signed session token matching the backend format."""
+    from src.api.auth import _b64url_encode
+    payload = _b64url_encode(json.dumps(payload_dict).encode("utf-8"))
+    signature = _b64url_encode(
+        hmac.new(secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).digest()
+    )
+    return f"{payload}.{signature}"
 
 
 @pytest.fixture
@@ -97,3 +111,119 @@ async def test_read_routes_open_when_no_api_key_configured():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             resp = await client.get("/health")
             assert resp.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Session signing key separation tests
+# ---------------------------------------------------------------------------
+
+
+def test_get_signing_key_falls_back_to_api_key():
+    """When session_signing_key is empty, _get_signing_key returns api_key."""
+    with patch("src.api.auth.get_config") as mock_cfg:
+        from src.core.config import Settings
+        mock_cfg.return_value = Settings(api_key="my-api-key", session_signing_key="")
+        from src.api.auth import _get_signing_key
+        assert _get_signing_key() == "my-api-key"
+
+
+def test_get_signing_key_uses_dedicated_key():
+    """When session_signing_key is set, _get_signing_key returns it."""
+    with patch("src.api.auth.get_config") as mock_cfg:
+        from src.core.config import Settings
+        mock_cfg.return_value = Settings(api_key="my-api-key", session_signing_key="dedicated-signing-key")
+        from src.api.auth import _get_signing_key
+        assert _get_signing_key() == "dedicated-signing-key"
+
+
+@pytest.mark.asyncio
+async def test_session_cookie_signed_with_signing_key_accepted():
+    """A session cookie signed with session_signing_key should be accepted for auth."""
+    signing_key = "dedicated-signing-key"
+    token = _sign_token({"exp": int(time.time()) + 3600}, signing_key)
+
+    with (
+        patch("src.core.config.get_config") as mock_cfg,
+        patch("src.api.auth.get_config", mock_cfg),
+        patch("src.api.v1.auth.get_config", mock_cfg),
+    ):
+        from src.core.config import Settings
+        mock_cfg.return_value = Settings(
+            api_key="my-api-key",
+            session_signing_key=signing_key,
+        )
+
+        from app.main import create_app
+        app = create_app()
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.get(
+                "/api/v1/auth/me",
+                cookies={"ce_session": token},
+            )
+            assert resp.status_code == 200
+            assert resp.json()["authenticated"] is True
+
+
+@pytest.mark.asyncio
+async def test_session_cookie_signed_with_api_key_rejected_when_signing_key_set():
+    """When session_signing_key is set, a cookie signed with api_key must be rejected."""
+    token_signed_with_api_key = _sign_token({"exp": int(time.time()) + 3600}, "my-api-key")
+
+    with (
+        patch("src.core.config.get_config") as mock_cfg,
+        patch("src.api.auth.get_config", mock_cfg),
+        patch("src.api.v1.auth.get_config", mock_cfg),
+    ):
+        from src.core.config import Settings
+        mock_cfg.return_value = Settings(
+            api_key="my-api-key",
+            session_signing_key="dedicated-signing-key",
+        )
+
+        from app.main import create_app
+        app = create_app()
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.get(
+                "/api/v1/auth/me",
+                cookies={"ce_session": token_signed_with_api_key},
+            )
+            assert resp.status_code == 200
+            assert resp.json()["authenticated"] is False
+
+
+@pytest.mark.asyncio
+async def test_login_creates_cookie_with_signing_key():
+    """POST /login should sign the session cookie with session_signing_key, not api_key."""
+    api_key = "my-api-key"
+    signing_key = "dedicated-signing-key"
+
+    with (
+        patch("src.core.config.get_config") as mock_cfg,
+        patch("src.api.auth.get_config", mock_cfg),
+        patch("src.api.v1.auth.get_config", mock_cfg),
+    ):
+        from src.core.config import Settings
+        mock_cfg.return_value = Settings(
+            api_key=api_key,
+            session_signing_key=signing_key,
+        )
+
+        from app.main import create_app
+        app = create_app()
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/v1/auth/login",
+                json={"password": api_key},
+            )
+            assert resp.status_code == 200
+
+            cookie = resp.cookies.get("ce_session")
+            assert cookie is not None
+
+            from src.api.auth import _validate_session
+            assert _validate_session(cookie, signing_key) is True
+            assert _validate_session(cookie, api_key) is False
+

@@ -4,6 +4,10 @@ from httpx import AsyncClient
 from unittest.mock import AsyncMock, MagicMock, patch
 from src.agents.contracts import (
     PipelineGraphState,
+    Phase1Output,
+    Phase2Output,
+    Phase3Output,
+    PhaseErrorDetail,
     PhaseStatus,
     PipelineMode,
     SourceType,
@@ -184,6 +188,84 @@ async def test_post_pipeline_run_phase_mode_validation(async_client: AsyncClient
 
 
 @pytest.mark.asyncio
+async def test_post_pipeline_run_phase_rerun_resets_target_phase(async_client: AsyncClient):
+    """Phase rerun resets target phase state before handing it to runner."""
+    existing_state = PipelineGraphState(
+        processing_run_id="7a77bbd1-ce2a-48d5-8d12-251512c6bdaf",
+        source_document_id="doc-456",
+        mode=PipelineMode.FULL,
+        source_type=SourceType.LOCAL,
+        pipeline_status=PipelineStatus.FAILED,
+        phase_1_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
+        phase_2_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
+        phase_3_status=PhaseStatusDetail(
+            status=PhaseStatus.FAILED,
+            started_at="2026-06-23T09:00:00",
+            completed_at="2026-06-23T09:01:00",
+            duration_seconds=60.0,
+            error=PhaseErrorDetail(
+                message="Invalid state transition",
+                retryable=False,
+                attempt=1,
+                max_retries=1,
+            ),
+            summary={"matches": 0},
+        ),
+        phase_1_output=Phase1Output(
+            pdf_path="/tmp/input.pdf",
+            md_path="/tmp/output.md",
+            metadata_path="/tmp/metadata.json",
+            output_dir="/tmp/phase_1",
+        ),
+        phase_2_output=Phase2Output(
+            output_dir="/tmp/phase_2",
+            original_json_path="/tmp/original.json",
+            translated_json_path="/tmp/translated.json",
+            source_language="zh",
+            extraction_result_path="/tmp/extraction_result.json",
+        ),
+        phase_3_output=Phase3Output(
+            match_count=1,
+            standardized_count=1,
+            ambiguous_count=0,
+            unmapped_count=0,
+        ),
+        error_message="Pipeline failed: Invalid state transition",
+        error_phase=3,
+        completed_at="2026-06-23T09:01:00",
+    )
+
+    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        mock_runner = MagicMock()
+        mock_runner.get_last_state = AsyncMock(return_value=existing_state)
+        mock_runner.start = AsyncMock(return_value=MagicMock())
+        mock_get_runner.return_value = mock_runner
+
+        response = await async_client.post(
+            "/api/v1/pipeline/run",
+            json={
+                "source_type": "local",
+                "mode": "phase",
+                "target_phase": 3,
+                "processing_run_id": existing_state.processing_run_id,
+            },
+        )
+
+    assert response.status_code == 202
+    initial_state = mock_runner.start.call_args[0][0]
+    assert initial_state.pipeline_status == PipelineStatus.PENDING
+    assert initial_state.phase_1_status.status == PhaseStatus.COMPLETED
+    assert initial_state.phase_2_status.status == PhaseStatus.COMPLETED
+    assert initial_state.phase_3_status == PhaseStatusDetail()
+    assert initial_state.phase_1_output == existing_state.phase_1_output
+    assert initial_state.phase_2_output == existing_state.phase_2_output
+    assert initial_state.phase_3_output is None
+    assert initial_state.error_message is None
+    assert initial_state.error_phase is None
+    assert initial_state.completed_at is None
+
+
+@pytest.mark.asyncio
 async def test_post_pipeline_run_local_requires_content(async_client: AsyncClient):
     """POST with source_type=local requires content_base64 (N1 fix)."""
     with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
@@ -331,4 +413,3 @@ async def test_post_pipeline_run_duplicate_source_key_race_returns_409(async_cli
         )
 
     assert response.status_code == 409
-

@@ -1,0 +1,250 @@
+# ============================================================================
+# Lingua Seeker — Single-Server Deployment (CentOS 7.9 + GPU)
+# ============================================================================
+# All services on one machine: backend + postgres + redis + 4 model-server
+# containers. Uses pre-built local images — no build step needed.
+#
+# Usage:
+#   cd /opt/lingua-seeker
+#   cp deploy/compose/single-server/.env.example .env   # fill in secrets
+#   docker compose --env-file .env up -d
+#
+# Prerequisites:
+#   - Docker CE 20.10+ (CentOS 7 compatible)
+#   - NVIDIA Container Toolkit (nvidia-ctk)
+#   - Model weights at /opt/lingua-seeker-data/models/
+#   - All 5 lingua-* images loaded (docker load -i lingua-all-images.tar)
+#
+# Architecture:
+#   nginx (host) → backend:8000 → postgres:5432 + redis:6379
+#                                   ↓
+#   embedding:8002, rerank:8003, vlm:8004, doc-parse:8005 (GPU)
+# ============================================================================
+services:
+  # ── Backend ──────────────────────────────────────────────────────────────
+  backend:
+    image: lingua-seeker-backend:local
+    container_name: lingua-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_BIND:-0.0.0.0}:${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: production
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      API_KEY: ${API_KEY}
+      SESSION_SIGNING_KEY: ${SESSION_SIGNING_KEY}
+      # ── Postgres ──
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-lingua_seeker}
+      POSTGRES_USER: ${POSTGRES_USER:-lingua_seeker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-lingua_seeker}
+      # ── Redis ──
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      # ── Model Server endpoints (per-service containers) ──
+      EMBEDDING_BASE_URL: http://model-embedding:8002/v1
+      RERANK_BASE_URL: http://model-rerank:8003/v1
+      # VLM + doc-parse share the same model; backend calls doc-parse:8005
+      MINERU_LOCAL_MODEL_SERVER_URL: http://model-doc-parse:8005
+      # ── LLM endpoints ──
+      FAST_LLM_BASE_URL: ${FAST_LLM_BASE_URL}
+      FAST_LLM_API_KEY: ${FAST_LLM_API_KEY}
+      REASONING_LLM_BASE_URL: ${REASONING_LLM_BASE_URL}
+      REASONING_LLM_API_KEY: ${REASONING_LLM_API_KEY}
+      CHAT_LLM_BASE_URL: ${CHAT_LLM_BASE_URL}
+      CHAT_LLM_API_KEY: ${CHAT_LLM_API_KEY}
+      TRANSLATION_LLM_BASE_URL: ${TRANSLATION_LLM_BASE_URL}
+      TRANSLATION_LLM_API_KEY: ${TRANSLATION_LLM_API_KEY}
+      # ── Model server auth ──
+      MODEL_SERVER_API_KEY: ${MODEL_SERVER_API_KEY:-}
+      # ── Literature acquisition ──
+      UNPAYWALL_EMAIL: ${UNPAYWALL_EMAIL:-}
+      PUBMED_API_KEY: ${PUBMED_API_KEY:-}
+      # ── MinerU ──
+      MINERU_API_TOKEN: ${MINERU_API_TOKEN:-}
+      DOC_PARSE_MODEL_ID: opendatalab/MinerU2.5-Pro-2604-1.2B
+    volumes:
+      - backend_logs:/app/logs
+      - backend_data:/app/data
+      - backend_downloads:/app/downloads
+      - backend_output:/app/output
+      # Production config (read-only)
+      - ./config/environments/production.yaml:/app/config/environments/production.yaml:ro
+      - ./config/vault/production.yaml:/app/config/vault/production.yaml:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ── PostgreSQL (with pgvector) ───────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg18
+    container_name: lingua-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lingua_seeker}
+      POSTGRES_USER: ${POSTGRES_USER:-lingua_seeker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lingua_seeker} -d ${POSTGRES_DB:-lingua_seeker}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Redis ────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:8.0-alpine
+    container_name: lingua-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ── Model Server: Embedding ──────────────────────────────────────────────
+  model-embedding:
+    image: lingua-embedding:local
+    container_name: lingua-model-embedding
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8002:8002"
+    volumes:
+      - ${MODEL_WEIGHTS_PATH:-/opt/lingua-seeker-data/models}/embedding:/models/embedding:ro
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8002
+      EMBEDDING_MODEL_ID: /models/embedding/Qwen--Qwen3-Embedding-0.6B
+      EMBEDDING_GPU_MEMORY_UTILIZATION: ${EMBEDDING_GPU_MEM:-0.90}
+      API_KEY: ${MODEL_SERVER_API_KEY:-}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── Model Server: Rerank ─────────────────────────────────────────────────
+  model-rerank:
+    image: lingua-rerank:local
+    container_name: lingua-model-rerank
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8003:8003"
+    volumes:
+      - ${MODEL_WEIGHTS_PATH:-/opt/lingua-seeker-data/models}/rerank:/models/rerank:ro
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8003
+      RERANK_MODEL_ID: /models/rerank/BAAI--bge-reranker-v2-m3
+      RERANK_GPU_MEMORY_UTILIZATION: ${RERANK_GPU_MEM:-0.90}
+      API_KEY: ${MODEL_SERVER_API_KEY:-}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── Model Server: VLM (image analysis) ───────────────────────────────────
+  model-vlm:
+    image: lingua-vlm:local
+    container_name: lingua-model-vlm
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8004:8004"
+    volumes:
+      - ${MODEL_WEIGHTS_PATH:-/opt/lingua-seeker-data/models}/vlm:/models/vlm:ro
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8004
+      DOC_PARSE_MODEL_ID: /models/vlm/opendatalab--MinerU2.5-Pro-2604-1.2B
+      DOC_PARSE_GPU_MEMORY_UTILIZATION: ${DOC_PARSE_GPU_MEM:-0.90}
+      DOC_PARSE_IMAGE_ANALYSIS: "false"
+      API_KEY: ${MODEL_SERVER_API_KEY:-}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # ── Model Server: Doc Parse (PDF parsing with VLM backend) ───────────────
+  model-doc-parse:
+    image: lingua-doc-parse:local
+    container_name: lingua-model-doc-parse
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8005:8005"
+    volumes:
+      - ${MODEL_WEIGHTS_PATH:-/opt/lingua-seeker-data/models}/vlm:/models/vlm:ro
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8005
+      DOC_PARSE_BACKEND: vlm
+      DOC_PARSE_MODEL_PATH: /models/vlm/opendatalab--MinerU2.5-Pro-2604-1.2B
+      DOC_PARSE_GPU_MEMORY_UTILIZATION: ${DOC_PARSE_GPU_MEM:-0.90}
+      API_KEY: ${MODEL_SERVER_API_KEY:-}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+volumes:
+  postgres_data:
+  redis_data:
+  backend_logs:
+  backend_data:
+  backend_downloads:
+  backend_output:

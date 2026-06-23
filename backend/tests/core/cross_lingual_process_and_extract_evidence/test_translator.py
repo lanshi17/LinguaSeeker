@@ -147,6 +147,85 @@ async def test_invoke_with_retry_non_transient_no_retry(mock_ctx):
             await invoke_with_retry(t._llm, "test prompt", "test")
 
 
+@pytest.mark.asyncio
+async def test_translate_one_segment_accepts_json_translation_list(mock_ctx):
+    """JSON translation field may be a content-block list from some providers."""
+    t = MultiStageTranslator(ctx=mock_ctx)
+    raw_json = '{"translation": ["This is translated.", {"type": "text", "text": "It is English."}]}'
+
+    with patch(
+        "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry",
+        new_callable=AsyncMock,
+        return_value=raw_json,
+    ):
+        result = await t._translate_one_segment(
+            "这是需要翻译的中文。",
+            "",
+            1,
+            1,
+        )
+
+    assert result == "This is translated.\nIt is English."
+
+
+@pytest.mark.asyncio
+async def test_translate_one_segment_falls_back_when_json_mode_truncates(mock_ctx):
+    """JSON mode truncation/parse failures fall back to plain translation."""
+    t = MultiStageTranslator(ctx=mock_ctx)
+
+    with (
+        patch(
+            "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry",
+            new_callable=AsyncMock,
+            side_effect=ValueError("Could not parse response content as the length limit was reached"),
+        ) as mock_json,
+        patch(
+            "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry",
+            new_callable=AsyncMock,
+            return_value="This text was translated successfully.",
+        ) as mock_plain,
+    ):
+        result = await t._translate_one_segment(
+            "这是需要翻译的中文。",
+            "",
+            1,
+            1,
+        )
+
+    assert result == "This text was translated successfully."
+    mock_json.assert_awaited_once()
+    mock_plain.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_translate_one_segment_falls_back_when_json_provider_raises(mock_ctx):
+    """Provider-side JSON parsing exceptions fall back to plain translation."""
+    t = MultiStageTranslator(ctx=mock_ctx)
+
+    with (
+        patch(
+            "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry",
+            new_callable=AsyncMock,
+            side_effect=RuntimeError("Could not parse response content as the length limit was reached"),
+        ) as mock_json,
+        patch(
+            "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry",
+            new_callable=AsyncMock,
+            return_value="This text was translated successfully.",
+        ) as mock_plain,
+    ):
+        result = await t._translate_one_segment(
+            "这是需要翻译的中文。",
+            "",
+            1,
+            1,
+        )
+
+    assert result == "This text was translated successfully."
+    mock_json.assert_awaited_once()
+    mock_plain.assert_awaited_once()
+
+
 # ── _build_translated_blocks tests ────────────────────────────────────
 
 _SEP = _BLOCK_SEP

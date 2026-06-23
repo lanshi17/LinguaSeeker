@@ -18,6 +18,12 @@ SESSION_COOKIE = "ce_session"
 SESSION_DURATION_SEC = 8 * 3600  # 8 hours
 
 
+def _get_signing_key() -> str:
+    """Return the session signing key, falling back to api_key."""
+    cfg = get_config()
+    return cfg.session_signing_key or cfg.api_key
+
+
 def _b64url_encode(data: bytes) -> str:
     """Return base64url encoding without padding."""
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
@@ -104,7 +110,7 @@ async def require_api_key(
 
     # Session-cookie auth (alternative for SPA clients).
     token = request.cookies.get(SESSION_COOKIE)
-    if token and _validate_session(token, cfg.api_key):
+    if token and _validate_session(token, _get_signing_key()):
         return cfg.api_key
 
     raise HTTPException(status_code=401, detail="Missing X-API-Key header")

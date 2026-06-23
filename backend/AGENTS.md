@@ -61,6 +61,15 @@ New modules should prefer **Orchestrated Vertical Slice Architecture**:
 - `.env` must be excluded in `.gitignore`.
 - Deployment, operations, environment initialization, and service orchestration config must use the repository-root `deploy/ansible/` layout. Do not place Ansible inventories, roles, variables, or playbooks under `backend/config/`, `database/config/`, or `scripts/`.
 
+#### 1.5.1 Authentication Architecture
+
+- **Dual-key model**: `api_key` handles API header auth (`X-API-Key`) and login password; `session_signing_key` handles HMAC-SHA256 signing of `ce_session` cookies. They **must** be different values in production.
+- **Auth module**: `src/api/auth.py` — `require_api_key` dependency, `_validate_session`, `_get_signing_key`.
+- **Auth routes**: `src/api/v1/auth.py` — `/login`, `/logout`, `/me` endpoints.
+- **Session format**: `<base64url_payload>.<base64url_hmac_signature>`, payload is `{"exp": <unix_ts>}`, 8-hour duration.
+- **All route handlers** must include `_api_key: str | None = Depends(require_api_key)`.
+- **SSRF guard**: All external HTTP requests must call `_validate_url_safe()` before and after redirects (DNS-based private IP check).
+
 ### 1.6 Logging & Testing
 
 - Logging: `loguru`, output to `logs/`.

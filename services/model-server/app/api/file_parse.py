@@ -6,10 +6,9 @@ import asyncio
 import base64
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from app.auth import require_api_key
 from app.utils.logger import get_logger
 
 logger = get_logger()
@@ -41,7 +40,6 @@ async def file_parse(
     return_content_list: str = Form(default="true"),
     return_images: str = Form(default="true"),
     return_md: str = Form(default="true"),
-    _api_key: str | None = Depends(require_api_key),
 ):
     """Parse an uploaded PDF file using MinerU."""
     if _service is None:

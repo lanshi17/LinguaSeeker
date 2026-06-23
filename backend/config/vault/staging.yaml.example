@@ -5,6 +5,9 @@
 # This file is git-ignored — NEVER commit real secrets.
 # ============================================================================
 
+# -- Application Auth ---------------------------------------------------------
+session_signing_key: "generate-a-random-64-char-hex-string"
+
 # -- LLM API Keys -------------------------------------------------------------
 fast_llm:
   api_key: "your-staging-fast-llm-api-key"
