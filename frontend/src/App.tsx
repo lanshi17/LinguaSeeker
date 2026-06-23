@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ChatPage } from "@/pages/ChatPage";
 import { ChatSessionPage } from "@/pages/ChatSessionPage";
+import { Spin } from "antd";
 
 const EvidencePage = lazy(() => import("@/pages/EvidencePage").then(m => ({ default: m.EvidencePage })));
 const EvidenceDetailPage = lazy(() => import("@/pages/EvidenceDetailPage").then(m => ({ default: m.EvidenceDetailPage })));
@@ -12,7 +13,7 @@ const PipelineRunPage = lazy(() => import("@/pages/PipelineRunPage").then(m => (
 
 export function App() {
   return (
-    <Suspense>
+    <Suspense fallback={<div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}><Spin size="large" /></div>}>
       <Routes>
         <Route index element={<Navigate to="/chat" replace />} />
         <Route element={<DashboardLayout />}>
