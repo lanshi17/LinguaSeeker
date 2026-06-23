@@ -23,18 +23,6 @@ export function EvidenceSearchForm({
   }
 
   return (
-    <>
-      <style>{`
-        .edb-search-grid {
-          display: grid;
-          gap: 16px;
-        }
-        @media (min-width: 768px) {
-          .edb-search-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-          }
-        }
-      `}</style>
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* Header with accent */}
         <div
@@ -135,6 +123,5 @@ export function EvidenceSearchForm({
           </div>
         </div>
       </form>
-    </>
   );
 }

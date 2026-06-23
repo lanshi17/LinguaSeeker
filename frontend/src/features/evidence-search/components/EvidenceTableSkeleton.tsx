@@ -8,15 +8,6 @@ const COL_WIDTHS = ["20%", "18%", "16%", "14%", "10%", "10%", "8%"];
  */
 export function EvidenceTableSkeleton() {
   return (
-    <>
-      <style>{`
-        .ets-desktop { display: none; }
-        .ets-mobile { display: block; }
-        @media (min-width: 768px) {
-          .ets-desktop { display: block; }
-          .ets-mobile { display: none; }
-        }
-      `}</style>
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {/* Header skeleton */}
         <div style={{
@@ -145,6 +136,5 @@ export function EvidenceTableSkeleton() {
           ))}
         </div>
       </div>
-    </>
   );
 }

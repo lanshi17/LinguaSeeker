@@ -135,81 +135,6 @@ export function EvidenceResultsTable({
   };
 
   return (
-    <>
-      <style>{`
-        .edb-results-header {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-        @media (min-width: 640px) {
-          .edb-results-header {
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-          }
-        }
-        .edb-mobile-cards { display: block; }
-        .edb-desktop-table { display: none; }
-        @media (min-width: 768px) {
-          .edb-mobile-cards { display: none; }
-          .edb-desktop-table { display: block; }
-        }
-        .edb-line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .edb-line-clamp-3 {
-          display: -webkit-box;
-          -webkit-line-clamp: 3;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .edb-card {
-          width: 100%;
-          cursor: pointer;
-          border-radius: 12px;
-          border: 1px solid #e5e7eb;
-          background: #fff;
-          padding: 16px;
-          text-align: left;
-          box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
-          transition: all 0.15s;
-        }
-        .edb-card:hover {
-          border-color: var(--color-primary-200, #a5f3fc);
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        }
-        .edb-card:focus-visible {
-          outline: 2px solid var(--color-primary-500, #06b6d4);
-          outline-offset: 0;
-        }
-        .edb-card:hover .edb-card-title {
-          color: var(--color-primary-700, #0e7490);
-        }
-        .edb-card:hover .edb-card-icon {
-          transform: scale(1.05);
-        }
-        .edb-table-row {
-          cursor: pointer;
-          transition: all 0.15s;
-        }
-        .edb-table-row:hover {
-          background: linear-gradient(to right, rgba(236, 254, 255, 0.6), transparent);
-        }
-        .edb-table-row:focus-visible {
-          outline: 2px solid var(--color-primary-500, #06b6d4);
-          outline-offset: -2px;
-        }
-        .edb-table-row:hover .edb-row-title {
-          color: var(--color-primary-700, #0e7490);
-        }
-        .edb-table-row:hover .edb-row-icon {
-          transform: scale(1.05);
-        }
-      `}</style>
       <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {/* Results header with stats and pagination */}
         <div
@@ -472,6 +397,5 @@ export function EvidenceResultsTable({
           </table>
         </div>
       </div>
-    </>
   );
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MutableRefObject } from "react";
 import { useXConversations } from "@ant-design/x-sdk";
-import { DeleteOutlined } from "@ant-design/icons";
+import { Trash2 } from "lucide-react";
 import { Modal, message as antdMessage } from "antd";
 import { useChatSessions } from "../hooks/useChatSessions";
 import {
@@ -185,7 +185,7 @@ export function useSessionConversations(
         {
           key: "delete",
           label: "Delete",
-          icon: <DeleteOutlined />,
+          icon: <Trash2 style={{ width: 14, height: 14 }} />,
           danger: true,
           onClick: ({
             domEvent,

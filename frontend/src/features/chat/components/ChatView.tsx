@@ -231,25 +231,6 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
   return (
     <XProvider>
-      <style>{`
-        .cv-tq-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          border-radius: 6px;
-          padding: 4px 8px;
-          font-size: 11.5px;
-          font-weight: 500;
-          transition: color 150ms, background-color 150ms;
-          border: none;
-          background: none;
-          cursor: pointer;
-        }
-        .cv-tq-btn:focus-visible {
-          outline: 2px solid var(--color-primary-600, #0891b2);
-          outline-offset: 2px;
-        }
-      `}</style>
       <div style={{ display: "flex", height: "100%", overflow: "hidden", backgroundColor: "#fff" }}>
         {/* Conversation sidebar — gated on `mounted` to keep SSR HTML
             identical to the first client render (see hydration comment
