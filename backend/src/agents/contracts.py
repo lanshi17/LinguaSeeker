@@ -297,6 +297,10 @@ class Phase2Output(BaseModel):
     translated_json_path: str
     source_language: str
     extraction_result_path: str  # Path to DualEvidenceExtractionResult JSON
+    original_text: str | None = None  # Persisted document text (avoid re-reading from disk)
+    translated_text: str | None = None  # Persisted translated text
+    original_blocks: list[dict] | None = None  # Structured ContentBlock dicts for rendering
+    translated_blocks: list[dict] | None = None
 
 
 class Phase3Output(BaseModel):

@@ -59,6 +59,8 @@ class SourceDocument(Base, TimestampMixin):
     )
     original_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     translated_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    original_blocks: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    translated_blocks: Mapped[list | None] = mapped_column(JSONB, nullable=True)
 
     identifiers: Mapped[list[SourceDocumentIdentifier]] = relationship(
         back_populates="source_document",

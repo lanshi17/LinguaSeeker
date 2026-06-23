@@ -259,7 +259,7 @@ async def test_get_group_detail_pivots_distribution_and_traces():
     service = SearchService(_FakeSession([
         _FakeResult(rows=rows),
         _FakeResult(scalars=identifiers),
-        _FakeResult(rows=[({"title": "BRCA1 evidence paper"}, None, None)]),
+        _FakeResult(rows=[({"title": "BRCA1 evidence paper"}, None, None, None, None)]),
         _FakeResult(scalar=None),  # PipelineRunState.state_json query
     ]))
 
@@ -331,7 +331,7 @@ async def test_get_group_detail_includes_value_anchors_for_paired_field():
     service = SearchService(_FakeSession([
         _FakeResult(rows=rows),
         _FakeResult(scalars=[]),
-        _FakeResult(rows=[({}, None, None)]),
+        _FakeResult(rows=[({}, None, None, None, None)]),
         _FakeResult(scalar=None),  # PipelineRunState.state_json query
     ]))
 
@@ -493,7 +493,7 @@ async def test_get_group_detail_handles_string_source_field():
     service = SearchService(_FakeSession([
         _FakeResult(rows=rows),
         _FakeResult(scalars=[]),
-        _FakeResult(rows=[({}, None, None)]),
+        _FakeResult(rows=[({}, None, None, None, None)]),
         _FakeResult(scalar=None),
     ]))
 
@@ -535,7 +535,7 @@ async def test_get_group_detail_skips_field_ids_without_standard_tracks():
     service = SearchService(_FakeSession([
         _FakeResult(rows=rows),
         _FakeResult(scalars=identifiers),
-        _FakeResult(rows=[({}, None, None)]),
+        _FakeResult(rows=[({}, None, None, None, None)]),
         _FakeResult(scalar=None),  # PipelineRunState.state_json query
     ]))
 
@@ -576,7 +576,7 @@ async def test_get_group_detail_single_track_field_produces_partial_trace():
     service = SearchService(_FakeSession([
         _FakeResult(rows=rows),
         _FakeResult(scalars=identifiers),
-        _FakeResult(rows=[({}, None, None)]),
+        _FakeResult(rows=[({}, None, None, None, None)]),
         _FakeResult(scalar=None),  # PipelineRunState.state_json query
     ]))
 
@@ -586,3 +586,70 @@ async def test_get_group_detail_single_track_field_produces_partial_trace():
     assert detail.traces[0].original is not None
     assert detail.traces[0].translated is None
     assert detail.title is None
+
+
+@pytest.mark.asyncio
+async def test_get_group_detail_falls_back_to_reconciled_track():
+    """When original/translated have string sources, reconciled row provides text.
+
+    Ground-truth imports store ``source`` as a plain string on the translated
+    track but have a dict source with ``text_snippet`` on the reconciled track.
+    The trace should fall back to the reconciled row's highlight.
+    """
+    source_document_id = uuid4()
+    translated_id = uuid4()
+    reconciled_id = uuid4()
+    group_id = "gene=['BRCA1']"
+
+    rows = [
+        _cei(
+            canonical_evidence_id=translated_id,
+            source_document_id=source_document_id,
+            field_id="A.gene_symbol",
+            review_status="approved",
+            current_best_confidence=Decimal("1.0"),
+            active_payload={
+                "group_id": group_id,
+                "field_name": "Gene symbol",
+                "category": "A",
+                "value": "BRCA1",
+                "track": "translated",
+                "source": "benchmark_ground_truth",
+            },
+        ),
+        _cei(
+            canonical_evidence_id=reconciled_id,
+            source_document_id=source_document_id,
+            field_id="A.gene_symbol",
+            review_status="approved",
+            current_best_confidence=Decimal("1.0"),
+            active_payload={
+                "group_id": group_id,
+                "field_name": "Gene symbol",
+                "category": "A",
+                "value": "BRCA1",
+                "track": "reconciled",
+                "source": {
+                    "text_snippet": "BRCA1 was detected in the proband.",
+                    "start_offset": 0,
+                    "end_offset": 5,
+                    "page": 1,
+                },
+            },
+        ),
+    ]
+
+    service = SearchService(_FakeSession([
+        _FakeResult(rows=rows),
+        _FakeResult(scalars=[]),
+        _FakeResult(rows=[({}, None, None, None, None)]),
+        _FakeResult(scalar=None),
+    ]))
+
+    detail = await service.get_group_detail(group_id=group_id)
+
+    assert len(detail.traces) == 1
+    trace = detail.traces[0]
+    # Reconciled row's highlight should be used as fallback
+    assert trace.original is not None
+    assert trace.original.text == "BRCA1 was detected in the proband."

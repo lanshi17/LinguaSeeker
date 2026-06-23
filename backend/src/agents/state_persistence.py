@@ -25,6 +25,7 @@ from src.agents.contracts import (
     validate_pipeline_status_transition,
 )
 from src.dao.postgresql.models import PipelineRunState, SourceDocument
+from src.utils.text_normalize import concat_document_text
 
 
 @dataclass
@@ -78,36 +79,39 @@ def _build_raw_metadata(state: PipelineGraphState) -> dict[str, object]:
     return meta
 
 
+def _read_doc_json(path: str) -> str | None:
+    """Read a Phase 2 JSON file and return concatenated document text."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    return concat_document_text(data)
+
+
+def load_phase2_text_from_paths(
+    original_json_path: str,
+    translated_json_path: str,
+) -> tuple[str | None, str | None]:
+    """Load document text from explicit file paths.
+
+    Use this variant when you have the paths directly (e.g. in Phase 2 adapter
+    right after files are written and guaranteed to exist).
+    """
+    return _read_doc_json(original_json_path), _read_doc_json(translated_json_path)
+
+
 def _load_phase2_document_text(state: PipelineGraphState) -> tuple[str | None, str | None]:
-    """Read Phase 2 JSON files and return (original_text, translated_text).
+    """Read Phase 2 JSON files from state and return (original_text, translated_text).
 
     Returns (None, None) when Phase 2 output is missing or files are unreadable.
     """
     p2 = state.phase_2_output
     if p2 is None:
         return None, None
-
-    def _concat(path: str) -> str | None:
-        try:
-            with open(path, encoding="utf-8") as f:
-                data = json.load(f)
-        except (OSError, json.JSONDecodeError):
-            return None
-        if not isinstance(data, dict):
-            return None
-        blocks = data.get("blocks", [])
-        if blocks:
-            text = "\n\n".join(
-                b.get("text", "").strip() for b in blocks if isinstance(b, dict) and b.get("text")
-            )
-            if text:
-                return text
-        formatted = data.get("formatted_text", "")
-        return formatted.strip() or None
-
-    original = _concat(p2.original_json_path)
-    translated = _concat(p2.translated_json_path)
-    return original, translated
+    return load_phase2_text_from_paths(p2.original_json_path, p2.translated_json_path)
 
 
 _TERMINAL_PHASE_STATUSES = frozenset({"completed", "skipped"})
@@ -182,16 +186,33 @@ class DirectStatePersistence:
             if new_meta.get("title"):
                 existing_sd.raw_metadata = {**existing_sd.raw_metadata, **new_meta}
 
-        # Write Phase 2 document text (original + translated) to DB
+        # Write Phase 2 document text (original + translated) to DB.
+        # Prefer pre-loaded text from Phase2Output (set by adapter while files
+        # exist). Fall back to reading from disk for backward compat with old
+        # state objects that don't carry the text inline.
+        # Only load if the DB doesn't already have the text.
         if state.phase_2_output and state.phase_2_status.status == PhaseStatus.COMPLETED:
-            original_text, translated_text = _load_phase2_document_text(state)
-            if original_text or translated_text:
-                sd = await self._session.get(SourceDocument, sd_id)
-                if sd is not None:
-                    if original_text:
+            sd = await self._session.get(SourceDocument, sd_id)
+            if sd is not None:
+                needs_original = not sd.original_text
+                needs_translated = not sd.translated_text
+                if needs_original or needs_translated:
+                    p2 = state.phase_2_output
+                    original_text = p2.original_text
+                    translated_text = p2.translated_text
+                    if original_text is None and translated_text is None:
+                        original_text, translated_text = _load_phase2_document_text(state)
+                    if needs_original and original_text:
                         sd.original_text = original_text
-                    if translated_text:
+                    if needs_translated and translated_text:
                         sd.translated_text = translated_text
+
+                # Persist structured blocks for document rendering
+                p2 = state.phase_2_output
+                if p2.original_blocks and not sd.original_blocks:
+                    sd.original_blocks = p2.original_blocks
+                if p2.translated_blocks and not sd.translated_blocks:
+                    sd.translated_blocks = p2.translated_blocks
 
         existing = await self._session.get(
             PipelineRunState, UUID(state.processing_run_id)
@@ -207,6 +228,13 @@ class DirectStatePersistence:
             )
             validate_all_phase_transitions(old_state, state, context=ctx)
         # ── End state transition guard ──
+
+        # Clear inline data before serializing to JSONB to avoid bloat.
+        if state.phase_2_output is not None:
+            state.phase_2_output.original_text = None
+            state.phase_2_output.translated_text = None
+            state.phase_2_output.original_blocks = None
+            state.phase_2_output.translated_blocks = None
 
         state_json = state.model_dump(mode="json")
         if existing:
@@ -302,16 +330,32 @@ class SessionBoundStatePersistence:
                 if existing_sd is not None and existing_sd.raw_metadata.get("title") != raw_meta["title"]:
                     existing_sd.raw_metadata = {**existing_sd.raw_metadata, **raw_meta}
 
-            # Write Phase 2 document text (original + translated) to DB
+            # Write Phase 2 document text (original + translated) to DB.
+            # Prefer pre-loaded text from Phase2Output (set by adapter while
+            # files exist). Fall back to reading from disk for backward compat.
+            # Only load if the DB doesn't already have the text.
             if state.phase_2_output and state.phase_2_status.status == PhaseStatus.COMPLETED:
-                original_text, translated_text = _load_phase2_document_text(state)
-                if original_text or translated_text:
-                    sd = await session.get(SourceDocument, sd_id)
-                    if sd is not None:
-                        if original_text:
+                sd = await session.get(SourceDocument, sd_id)
+                if sd is not None:
+                    needs_original = not sd.original_text
+                    needs_translated = not sd.translated_text
+                    if needs_original or needs_translated:
+                        p2 = state.phase_2_output
+                        original_text = p2.original_text
+                        translated_text = p2.translated_text
+                        if original_text is None and translated_text is None:
+                            original_text, translated_text = _load_phase2_document_text(state)
+                        if needs_original and original_text:
                             sd.original_text = original_text
-                        if translated_text:
+                        if needs_translated and translated_text:
                             sd.translated_text = translated_text
+
+                    # Persist structured blocks for document rendering
+                    p2 = state.phase_2_output
+                    if p2.original_blocks and not sd.original_blocks:
+                        sd.original_blocks = p2.original_blocks
+                    if p2.translated_blocks and not sd.translated_blocks:
+                        sd.translated_blocks = p2.translated_blocks
 
             # ── State transition guard ──
             # Load existing state (if any) to validate the transition is legal.
@@ -330,6 +374,13 @@ class SessionBoundStatePersistence:
                 )
                 validate_all_phase_transitions(old_state, state, context=ctx)
             # ── End state transition guard ──
+
+            # Clear inline data from state before serializing to JSONB.
+            if state.phase_2_output is not None:
+                state.phase_2_output.original_text = None
+                state.phase_2_output.translated_text = None
+                state.phase_2_output.original_blocks = None
+                state.phase_2_output.translated_blocks = None
 
             state_json = state.model_dump(mode="json")
             upsert_set: dict[str, object] = {
@@ -450,20 +501,39 @@ class SessionBoundStatePersistence:
         *,
         limit: int = 50,
         offset: int = 0,
+        status: str | None = None,
+        search: str | None = None,
     ) -> tuple[list[PipelineRunSummaryRow], int]:
         """List pipeline run summaries ordered by creation time (newest first).
 
         Returns a (items, total) tuple. Extracts summary fields from the
         JSONB state_json column to avoid full state deserialization.
+
+        Args:
+            status: Filter by pipeline_status value.
+            search: Case-insensitive substring match on title (state_json).
         """
+        from sqlalchemy import String, cast
+
         async with self._session_factory() as session:
+            base = select(PipelineRunState)
+            if status:
+                base = base.where(PipelineRunState.pipeline_status == status)
+            if search:
+                pattern = f"%{search}%"
+                base = base.where(
+                    cast(PipelineRunState.state_json["query"], String).ilike(pattern)
+                    | cast(PipelineRunState.state_json["identifiers"], String).ilike(pattern)
+                    | cast(PipelineRunState.source_key, String).ilike(pattern)
+                )
+
             count_result = await session.execute(
-                select(func.count()).select_from(PipelineRunState)
+                select(func.count()).select_from(base.subquery())
             )
             total = count_result.scalar() or 0
 
             stmt = (
-                select(PipelineRunState)
+                base
                 .order_by(PipelineRunState.created_at.desc())
                 .limit(limit)
                 .offset(offset)
