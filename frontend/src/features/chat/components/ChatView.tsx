@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { XProvider, Bubble, Sender, Conversations } from "@ant-design/x";
 import type { SenderRef } from "@ant-design/x/es/sender/interface";
-import { message as antdMessage } from "antd";
+import { App } from "antd";
 import { ListChecks } from "lucide-react";
+import { extractErrorMessage } from "@/lib/api/error";
 import { TaskQueuePanel } from "@/features/pipeline";
 import type { ChatAction } from "../types/actions";
 import { sendChatMessage } from "../providers/acmgChatProvider";
@@ -31,6 +32,7 @@ export function ChatView({ processingRunId, sessionId }: ChatViewProps) {
 // ─── Full Chat View ────────────────────────────────────────────────────
 
 function FullChatView({ processingRunId }: { processingRunId?: string }) {
+  const { message } = App.useApp();
   // The hook below reads localStorage in its initial state, which differs
   // from the SSR render and would trip React's hydration check. We render
   // a stable placeholder first, then flip `mounted` in an effect to show
@@ -139,17 +141,17 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         // Legacy intents — the chat no longer opens inline forms. Nudge the
         // user toward the conversational flow; the LLM will drive slot
         // gathering from here and eventually dispatch `confirm-pipeline`.
-        antdMessage.info(
+        message.info(
           "Describe what you want to run — I'll ask the right questions.",
         );
         return;
       }
 
-      antdMessage.info(
+      message.info(
         `${action.intent} is recognised but its dedicated form is not implemented yet.`,
       );
     },
-    [setActiveForm, setActiveFormSlots, setDispatchedActions],
+    [message, navigate, setActiveForm, setActiveFormSlots, setDispatchedActions],
   );
 
   // ── Send message: create session if needed, POST to persist, then stream AI reply ──
@@ -181,14 +183,15 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         await sendChatMessage(sessionKey, trimmed);
         captureFirstMessageLabel(sessionKey, trimmed);
         onRequest?.({ messages: [{ role: "user" as const, content: trimmed }] });
-      } catch {
-        antdMessage.error("Failed to send message");
+      } catch (err) {
+        message.error(extractErrorMessage(err, "Failed to send message"));
       }
     },
     [
       activeConversationKey,
       captureFirstMessageLabel,
       createAndActivateSession,
+      message,
       onRequest,
       setActiveForm,
       setActiveFormSlots,
@@ -224,7 +227,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     (content: string) => {
       void handleSendMessage(content).finally(() => {
         // Clear unconditionally so a failed send still resets the UI
-        // (the error is surfaced via antdMessage in the catch branch).
+        // (the error is surfaced via message in the catch branch).
         senderRef.current?.clear();
       });
     },

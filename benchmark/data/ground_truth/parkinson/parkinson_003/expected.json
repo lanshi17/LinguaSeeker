@@ -9,7 +9,7 @@
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
-      "value": "PARKIN",
+      "value": "LRRK2",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -27,6 +27,27 @@
     {
       "field_id": "A.gene_disease_relationship",
       "value": "associated",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense, nonsense, deletion, duplication",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "parkinsonism; tremor; rigidity; bradykinesia",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

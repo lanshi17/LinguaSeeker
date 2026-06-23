@@ -635,9 +635,11 @@ class GroupAssigner:
             return document.formatted_text
         block = document.blocks[block_index]
         parts = [*block.table_caption, *block.image_caption, *block.chart_caption]
-        for value in (block.text, block.content, block.table_body):
+        for value in (block.text, block.content, block.table_body, block.code_body):
             if value.strip():
                 parts.append(value.strip())
+        if block.list_items:
+            parts.extend(item.strip() for item in block.list_items if item.strip())
         return "\n".join(parts)
 
     @staticmethod
@@ -810,9 +812,11 @@ class SourceGrounder:
     @staticmethod
     def _block_readable_text(block: ContentBlock) -> str:
         parts = [*block.table_caption, *block.image_caption, *block.chart_caption]
-        for value in (block.text, block.content, block.table_body):
+        for value in (block.text, block.content, block.table_body, block.code_body):
             if value.strip():
                 parts.append(value.strip())
+        if block.list_items:
+            parts.extend(item.strip() for item in block.list_items if item.strip())
         return "\n".join(parts).strip()
 
     # Class-level constant — immutable, safe to share across instances/subclasses.
@@ -1182,9 +1186,13 @@ class SpecialEvidenceValidator:
         if 0 <= source.block_index < len(document.blocks):
             block = document.blocks[source.block_index]
             block_text_parts = [*block.table_caption, *block.image_caption, *block.chart_caption]
-            for value in (block.text, block.content, block.table_body):
+            for value in (block.text, block.content, block.table_body, block.code_body):
                 if value.strip():
                     block_text_parts.append(value.strip())
+            if block.list_items:
+                block_text_parts.extend(
+                    item.strip() for item in block.list_items if item.strip()
+                )
             if source.text_snippet in "\n".join(block_text_parts):
                 return True
         text = document.formatted_text

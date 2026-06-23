@@ -208,17 +208,57 @@ function findAnchorValue(text: string, rawValue?: string | null) {
   return { start: index, end: index + value.length };
 }
 
+function escapedRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Search for a candidate in text, tolerating whitespace differences. */
+function findWithFlexibleWhitespace(
+  text: string,
+  candidate: string,
+): { start: number; end: number } | null {
+  const flexible = escapedRegExp(candidate).replace(/\s+/g, "\\s+");
+  const match = new RegExp(flexible).exec(text);
+  if (match) {
+    return { start: match.index, end: match.index + match[0].length };
+  }
+  return null;
+}
+
 function findHighlightInFullText(
   fullText: string,
   highlight: EvidenceChainHighlight,
   value?: string | null,
 ): { start: number; end: number } | null {
+  // 1. Try global offsets from source_span — most reliable when the full
+  //    text is the same formatted_text used during extraction.
+  const span = highlight.source_span as Record<string, unknown> | undefined;
+  const spanStart = typeof span?.start_offset === "number" ? span.start_offset : undefined;
+  const spanEnd = typeof span?.end_offset === "number" ? span.end_offset : undefined;
+  if (
+    spanStart !== undefined &&
+    spanEnd !== undefined &&
+    spanStart >= 0 &&
+    spanEnd <= fullText.length &&
+    spanEnd > spanStart
+  ) {
+    const textAtOffset = fullText.slice(spanStart, spanEnd);
+    if (textAtOffset === highlight.text || textAtOffset.trim() === highlight.text.trim()) {
+      return { start: spanStart, end: spanEnd };
+    }
+  }
+
+  // 2. Try value anchor search in the full text.
   const valueAnchor = findAnchorValue(fullText, value);
   if (valueAnchor) {
     return valueAnchor;
   }
 
-  const candidates = [highlight.text.slice(highlight.highlight_start, highlight.highlight_end), highlight.text]
+  // 3. Try exact snippet text search (marked portion first, then full snippet).
+  const candidates = [
+    highlight.text.slice(highlight.highlight_start, highlight.highlight_end),
+    highlight.text,
+  ]
     .map((candidate) => candidate?.trim())
     .filter((candidate): candidate is string => Boolean(candidate && candidate.length >= 3));
 
@@ -226,6 +266,15 @@ function findHighlightInFullText(
     const index = fullText.indexOf(candidate);
     if (index >= 0) {
       return { start: index, end: index + candidate.length };
+    }
+  }
+
+  // 4. Fallback: flexible whitespace search (snippet may differ from full
+  //    text in line breaks / spacing).
+  for (const candidate of candidates) {
+    const result = findWithFlexibleWhitespace(fullText, candidate);
+    if (result) {
+      return result;
     }
   }
 
@@ -279,20 +328,23 @@ export function buildEvidenceDocument(
   const fullText = fullTextForTrack(detail, track)?.trim();
 
   if (fullText) {
-    const highlights = detail.traces.flatMap((trace): EvidenceDocumentHighlight[] => {
+    const locatedHighlights: EvidenceDocumentHighlight[] = [];
+    const snippetParagraphs: EvidenceDocumentParagraph[] = [];
+
+    detail.traces.forEach((trace, index) => {
       const highlight = traceHighlightForTrack(trace, track);
       if (!highlight) {
-        return [];
+        return;
       }
 
       const item = items.get(trace.canonical_evidence_id);
       const tone = evidenceToneForItem(item);
       if (!enabledTones.has(tone)) {
-        return [];
+        return;
       }
       const cat = categoryFromItem(item);
       if (enabledCategories && cat && !enabledCategories.has(cat)) {
-        return [];
+        return;
       }
 
       const range = findHighlightInFullText(
@@ -300,29 +352,54 @@ export function buildEvidenceDocument(
         highlight,
         traceValueForTrack(trace, track),
       );
-      if (!range || range.end <= range.start) {
-        return [];
-      }
 
-      return [{
-        evidenceId: trace.canonical_evidence_id,
-        fieldId: trace.field_id,
-        label: labelForTrace(trace),
-        tone,
-        category: categoryFromItem(item),
-        start: range.start,
-        end: range.end,
-        selected: trace.canonical_evidence_id === selectedEvidenceId,
-      }];
+      if (range && range.end > range.start) {
+        locatedHighlights.push({
+          evidenceId: trace.canonical_evidence_id,
+          fieldId: trace.field_id,
+          label: labelForTrace(trace),
+          tone,
+          category: cat,
+          start: range.start,
+          end: range.end,
+          selected: trace.canonical_evidence_id === selectedEvidenceId,
+        });
+      } else if (highlight.text) {
+        // Could not locate in the full text — show the snippet as a
+        // separate paragraph so the evidence is still visible.
+        const snippetRange = clampHighlight(highlight);
+        const snippetHighlights: EvidenceDocumentHighlight[] = [];
+        if (snippetRange.end > snippetRange.start) {
+          snippetHighlights.push({
+            evidenceId: trace.canonical_evidence_id,
+            fieldId: trace.field_id,
+            label: labelForTrace(trace),
+            tone,
+            category: cat,
+            start: snippetRange.start,
+            end: snippetRange.end,
+            selected: trace.canonical_evidence_id === selectedEvidenceId,
+          });
+        }
+        snippetParagraphs.push({
+          id: `${track}-${trace.canonical_evidence_id}-${index}`,
+          page: highlight.page,
+          text: highlight.text,
+          highlights: snippetHighlights,
+        });
+      }
     });
 
     return {
       track,
-      paragraphs: [{
-        id: `${track}-full-text`,
-        text: fullText,
-        highlights: highlights.sort((a, b) => a.start - b.start),
-      }],
+      paragraphs: [
+        {
+          id: `${track}-full-text`,
+          text: fullText,
+          highlights: locatedHighlights.sort((a, b) => a.start - b.start),
+        },
+        ...snippetParagraphs,
+      ],
     };
   }
 

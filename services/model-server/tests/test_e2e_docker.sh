@@ -73,28 +73,10 @@ fi
 docker-compose $COMPOSE stop model-rerank 2>/dev/null
 docker-compose $COMPOSE rm -f model-rerank 2>/dev/null
 
-# ── Test 3: VLM Container ──────────────────────────────────────────
-log "=== Test 3: model-vlm ==="
-docker-compose $COMPOSE up -d model-vlm
-if wait_for_health "vlm" 8004 600; then
-    # Test with a minimal base64 image (1x1 white pixel PNG)
-    B64_IMG="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
-    RESP=$(curl -sf -X POST http://localhost:8004/v1/chat/completions \
-        -H "Content-Type: application/json" \
-        -d "{\"model\": \"test\", \"messages\": [{\"role\": \"user\", \"content\": [{\"type\": \"text\", \"text\": \"Extract text\"}, {\"type\": \"image_url\", \"image_url\": {\"url\": \"data:image/png;base64,$B64_IMG\"}}]}]}" 2>&1)
-    if echo "$RESP" | python3 -c "import sys,json; d=json.load(sys.stdin); assert 'full_markdown' in d or 'choices' in d" 2>/dev/null; then
-        pass "vlm /v1/chat/completions returns extraction result"
-    else
-        fail "vlm /v1/chat/completions response invalid: $RESP"
-    fi
-fi
-docker-compose $COMPOSE stop model-vlm 2>/dev/null
-docker-compose $COMPOSE rm -f model-vlm 2>/dev/null
-
-# ── Test 4: Doc-Parse Container ─────────────────────────────────────
-log "=== Test 4: model-doc-parse ==="
+# ── Test 3: Doc-Parse Container ─────────────────────────────────────
+log "=== Test 3: model-doc-parse ==="
 docker-compose $COMPOSE up -d model-doc-parse
-if wait_for_health "doc-parse" 8005 600; then
+if wait_for_health "doc-parse" 8004 600; then
     # Create a minimal PDF for testing
     PDF_FILE=$(mktemp /tmp/test_XXXXXX.pdf)
     python3 -c "
@@ -103,7 +85,7 @@ pdf = b'%PDF-1.0\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pag
 with open('$PDF_FILE', 'wb') as f:
     f.write(pdf)
 "
-    RESP=$(curl -sf -X POST http://localhost:8005/file_parse \
+    RESP=$(curl -sf -X POST http://localhost:8004/file_parse \
         -F "file=@$PDF_FILE" 2>&1)
     rm -f "$PDF_FILE"
     if echo "$RESP" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('status')=='completed'" 2>/dev/null; then

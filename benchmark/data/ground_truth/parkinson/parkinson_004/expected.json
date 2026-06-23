@@ -9,7 +9,7 @@
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
-      "value": "PARKIN",
+      "value": "GIGYF2",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -48,6 +48,20 @@
     {
       "field_id": "A.variant_hgvs_p",
       "value": "0.006此处为等位基因频率的数据",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense, insertion, duplication",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "parkinsonism; tremor; rigidity; bradykinesia; dementia",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

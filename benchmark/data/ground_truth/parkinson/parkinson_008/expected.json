@@ -9,7 +9,7 @@
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
-      "value": "PARKIN",
+      "value": "GBA",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -34,6 +34,27 @@
     {
       "field_id": "A.variant_hgvs_p",
       "value": "N370S",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AR",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "splice_site",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "parkinsonism",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

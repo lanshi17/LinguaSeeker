@@ -1,6 +1,18 @@
 # Lesson Log
 
 
+## 2026-06-23: Evidence DB — multi-variant group rendered as one row instead of one row per variant site
+
+**Problem**: The Evidence DB variant index showed MECP2 (Pathogenic) as a single row whose variant column read `c.316C>T; c.502C>T; c.808C>T; c.913insT; c.1126C>T`. The requirement is one row per variant site, so this should have been five rows.
+
+**Investigation**: Traced the data flow. The backend `search_evidence` pivots field-level extractions into one `EvidenceSearchResult` per `(group_id, source_document_id)` pair, where `group_id = gene=<G>|variant=<V>`. A single `A.variant_hgvs_c` field value can itself contain multiple variants joined by `;`, so the whole joined string becomes both the `variant` column and the variant segment of the `group_id`. The frontend `aggregateVariants` then groups by `gene:variant:disease` using that raw joined string, collapsing all variants into one row.
+
+**Root cause**: The aggregation layer treated the variant field as a single atomic identifier. It never split semicolon-separated variant lists, so a group listing N variants produced one index row instead of N. The group_id encodes the joined string and the L2 detail fetch keys off group_id, so the join could not be removed at the backend without breaking detail navigation.
+
+**Fix**: Split in the frontend aggregation only — the layer that already owns client-side grouping. `expandVariantSites()` splits a `;`-separated `variant` value into one expanded `EvidenceSearchResult` per site, each keeping the original `group_id`/`source_document_id`. The grouping loop iterates expanded rows, so each variant site gets its own `VariantIndexEntry` (and its own slug) while still sharing the joined `group_id` for L2 detail resolution. Because splitting duplicates the same underlying group across N rows, the header stats were also rewritten to count distinct `(group_id, source_document_id)` pairs (totalEvidenceGroups), distinct source documents (totalLiterature), and distinct group_ids (avgConfidence) — otherwise the split rows would inflate the totals.
+
+**Prevention**: When a domain identifier field can carry a delimited list (here `;`-separated HGVS variants), the display/aggregation layer must split it into one entity per element before grouping. Do not assume a "variant" or "gene" field is atomic just because the type is `string`. When splitting inflates cardinality, dedupe the aggregate stats by the underlying entity key (group_id, document_id) rather than summing per-row counts.
+
 ## 2026-06-23: 全文缺失 — list/code block 类型在全链路中被静默丢弃
 
 **Problem**: 证据详情页显示"全文缺失"，D-J 证据层全部为 0，Original Text 仅显示 p.1 的少量片段。
@@ -4710,3 +4722,65 @@ Model-server 通过 `acmg-config-loader` 依赖后端的 `backend/config/` 分�
 3. Complex evidence（de_novo, segregation, functional_assay）：SYSTEM F1=0.2162 vs B0=0.0000。B0 完全无法提取。
 
 **论文可用结论**：pipeline 的主要价值来自 medium/complex 字段的 recall 和 reconcile 能力。B0 在 simple explicit 字段上 precision 接近完美（1.0），但 recall 显著低于 SYSTEM。Parkinson 作为低复杂度英文数据集，主要由 simple explicit 字段组成，因此 SYSTEM 优势不明显。
+
+---
+
+## 2026-06-23: 删除 VLM 服务，统一为 doc-parse
+
+### 问题描述
+Model-server 同时运行 VLM (8004, `/v1/chat/completions`) 和 doc-parse (8005, `/file_parse`) 两个服务，使用相同的 MinerU2.5-Pro 模型但不同 API：
+- VLM: 接收 base64 图片，OpenAI 兼容格式
+- doc-parse: 接收 PDF 文件上传，MinerU 原生 API
+
+后端 `MinerULocalParser` 调用 `/v1/chat/completions`（VLM），但 compose 配置 `MINERU_LOCAL_MODEL_SERVER_URL` 指向 doc-parse:8005，导致配置与代码不一致。
+
+### 根因分析
+1. VLM 和 doc-parse 是同一模型的两种接口，存在功能冗余
+2. 后端实际只需要 PDF 解析（发送整个 PDF 比逐页转图片更高效）
+3. doc-parse 使用 MinerU 原生 `doc_analyze` API，内部处理 PDF→图片→提取→markdown 全流程
+4. VLM 需要后端自行将 PDF 转为图片再逐页发送，增加了不必要的复杂度
+
+### 解决方案
+1. **删除 VLM 服务**: 移除 `docker/vlm.Dockerfile`, `main_vlm.py`, `app/api/vlm.py`, `app/domain/vlm.py`，从 main.py 移除 VLM 路由
+2. **保留 doc-parse**: 作为唯一的 MinerU PDF 解析端点
+3. **重写后端解析器**: `MinerULocalParser` 从调用 `/v1/chat/completions`（逐页图片）改为调用 `/file_parse`（整个 PDF 上传），删除 `helpers.py`（不再需要 `pdf_to_images` 和 `image_to_base64`）
+4. **重命名镜像**: `lingua-embedding` → `embedding-server` 等，移除项目前缀
+5. **修复配置**: `MINERU_LOCAL_MODEL_SERVER_URL` 默认值改为 `http://localhost:8005`
+6. **更新 compose/deploy**: 4 容器 → 3 容器，所有引用同步更新
+
+### 预防措施
+- 同一模型不应有多个功能重叠的 API 端点
+- 后端解析器应优先使用原生文件上传 API（更简单、更高效），而非自行拆分 PDF 为图片
+- 镜像命名应使用通用功能名（`embedding-server`），不绑定项目前缀
+
+## 2026-06-23: 统计显著性分析结论
+
+**方法**：entry-level paired bootstrap (n=5000, seed=42) + paired permutation test。
+
+**主要结论**：
+1. Merged 73 entries: SYSTEM ΔF1=+0.1224, p<0.0001, 95% CI [+0.0800, +0.1626]。**统计显著**。
+2. Rett 53: ΔF1=+0.1906, p<0.0001。**统计显著**。
+3. Parkinson 20: ΔF1=-0.0583, p=0.2158。**不显著**，且 SYSTEM 实际低于 B0。
+4. Simple explicit: ΔF1=+0.0921, p=0.0002。**统计显著**，但幅度小。
+5. Medium contextual: ΔF1=+0.2447, p<0.0001。**统计显著**，最大优势。
+6. Complex evidence: ΔF1=+0.1096, p=0.0082。**统计显著**，但 support=53 (rett de_novo only)。
+
+**Parkinson 不显著的原因**：
+- N=20 样本量小
+- 简单字段为主，B0 precision=1.0
+- SYSTEM 在 gene_disease_relationship 和 gene_symbol 上有 false positives
+
+**论文建议**：
+- 报告 merged 和 per-dataset 显著性
+- Parkinson 结果如实报告为"不显著"，解释为低复杂度数据集
+- 中/高复杂度字段的优势有强统计支持
+
+## 2026-06-23: Case studies 结构设计
+
+**4 个 case 覆盖论文核心论点**：
+1. Medium contextual（rett_003）：SYSTEM 提取 sex + age_of_onset，B0 完全缺失。展示 pipeline 对临床上下文字段的优势。
+2. Complex de_novo（rett_004）：SYSTEM 通过 cross-section reasoning 识别 de novo status。展示 multi-sentence source-grounded extraction。
+3. Variant extraction（rett_004）：SYSTEM 从中文文献提取 HGVS notation。展示 cross-lingual 能力。
+4. Parkinson limitation（parkinson_013）：B0 在简单字段上 precision 更高。如实报告 limitation。
+
+**Case 4 关键观察**：SYSTEM 提取 "PARK2"（文献中使用的别名），但 expected 是 "PRKN"（HGNC canonical）。B0 直接提取 "PRKN"。这说明 pipeline 在简单字段上可能因 reconcile 噪音而引入错误，而 naive LLM 的直接提取反而更准确。

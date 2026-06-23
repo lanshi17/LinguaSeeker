@@ -9,7 +9,7 @@
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
-      "value": "PARKIN",
+      "value": "PINK1",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -34,6 +34,27 @@
     {
       "field_id": "A.variant_hgvs_p",
       "value": "家系报道和临床特征位于此处： (Toft et al., 2007; Mellick et al., 2009，此两文章未记录) ，本文不记录",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AR",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "nonsense",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "parkinsonism; tremor; rigidity; cognitive decline; dementia",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

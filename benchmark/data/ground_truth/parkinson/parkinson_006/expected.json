@@ -1,6 +1,6 @@
 {
   "entry_id": "parkinson_006",
-  "gene_symbol": "PARK2",
+  "gene_symbol": "PRKN",
   "disease_label": "Parkinson disease",
   "mondo_id": "MONDO:0005180",
   "source_pmid": "19636047",
@@ -9,7 +9,7 @@
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
-      "value": "PARKIN",
+      "value": "PRKN",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -30,6 +30,20 @@
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense, frameshift, splice_site, insertion, duplication",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "parkinsonism; tremor; rigidity; bradykinesia; dementia",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
     }
   ],
   "expected_entities": {
@@ -38,12 +52,12 @@
       "mondo_id": "MONDO:0005180"
     },
     "gene": {
-      "text": "PARK2"
+      "text": "PRKN"
     }
   },
   "expected_standardization": {
     "disease": "MONDO:0005180",
-    "gene": "PARK2"
+    "gene": "PRKN"
   },
   "notes": "Converted from parkinson_literature dataset, PMID 19636047"
 }

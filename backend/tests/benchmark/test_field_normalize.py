@@ -87,6 +87,15 @@ class TestNormalizeGeneDiseaseRelationship:
     def test_gdr_mapping(self, input_val: str, expected: str) -> None:
         assert normalize_gene_disease_relationship(input_val) == expected
 
+    @pytest.mark.parametrize("input_val,expected", [
+        ("associated", "causative"),
+        ("related", "causative"),
+        ("linked", "causative"),
+    ])
+    def test_gdr_associated_synonyms(self, input_val: str, expected: str) -> None:
+        """Broad relationship terms normalize to 'causative' for monogenic disease genes."""
+        assert normalize_gene_disease_relationship(input_val) == expected
+
     def test_gdr_refuted_takes_priority_over_causative(self) -> None:
         """'refuted' patterns are checked before 'causative' to avoid
         matching 'causative' in 'refuted as causative'."""
@@ -218,3 +227,26 @@ class TestCompareEvidenceFieldNormalized:
         assert len(matches) == 1
         assert matches[0].matched is False
         assert matches[0].match_type == "wrong_value"
+
+    def test_gdr_associated_matches_causative(self) -> None:
+        """'associated' (ground truth) matches 'causative' (system extraction)."""
+        expected = [{"field_id": "A.gene_disease_relationship", "value": "associated"}]
+        extracted = [
+            {"field_id": "A.gene_disease_relationship", "status": "found",
+             "value": "causative", "confidence": 0.9},
+        ]
+        matches = compare_evidence(expected, extracted)
+        assert len(matches) == 1
+        assert matches[0].matched is True
+        assert matches[0].match_type == "field_normalized"
+
+    def test_gdr_associated_matches_susceptibility(self) -> None:
+        """'associated' (ground truth) should match 'susceptibility' for risk genes like GBA."""
+        expected = [{"field_id": "A.gene_disease_relationship", "value": "associated"}]
+        extracted = [
+            {"field_id": "A.gene_disease_relationship", "status": "found",
+             "value": "susceptibility", "confidence": 0.85},
+        ]
+        matches = compare_evidence(expected, extracted)
+        assert len(matches) == 1
+        assert matches[0].matched is True

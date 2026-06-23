@@ -85,4 +85,33 @@ def block_to_markdown(block: dict) -> str:
 
         return "\n\n".join(parts)
 
+    if block_type == "list":
+        items = block.get("list_items", [])
+        if items:
+            return "\n".join(f"- {item}" for item in items if item.strip())
+        return block.get("text", "")
+
+    if block_type == "equation":
+        return block.get("text", "")
+
+    if block_type == "code":
+        code_body = block.get("code_body", "")
+        if code_body:
+            return f"```\n{code_body}\n```"
+        return block.get("text", "")
+
+    if block_type == "chart":
+        caption = block.get("chart_caption", [])
+        caption_text = caption[0] if caption else ""
+        footnote = block.get("chart_footnote", [])
+        parts = []
+        if caption_text:
+            parts.append(caption_text)
+        if footnote:
+            parts.append(f"*{footnote[0]}*")
+        return "\n\n".join(parts)
+
+    if block_type in ("header", "footer", "page_number", "aside_text", "page_footnote"):
+        return block.get("text", "")
+
     return ""

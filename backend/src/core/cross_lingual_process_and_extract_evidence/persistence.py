@@ -73,7 +73,9 @@ class DocumentPersistenceService:
         base.mkdir(parents=True, exist_ok=True)
         now = datetime.now(timezone.utc)
 
-        # Save original.json (structured blocks + full markdown fallback)
+        # Save original.json — always include formatted_text so the evidence
+        # viewer can use it as the authoritative full text (source-span offsets
+        # are relative to this text).
         original_path = base / "original.json"
         original_data: dict = {
             "metadata": {
@@ -82,13 +84,13 @@ class DocumentPersistenceService:
                 "block_count": len(result.original_blocks),
             },
             "blocks": [b.to_dict() for b in result.original_blocks],
+            "formatted_text": result.formatted_original,
         }
-        if not result.original_blocks and result.formatted_original:
-            original_data["formatted_text"] = result.formatted_original
         _write_json(original_path, json.dumps(original_data, ensure_ascii=False, indent=2))
         logger.info("Saved original JSON: {}", original_path)
 
-        # Save translated.json (structured blocks + full markdown fallback)
+        # Save translated.json — always include formatted_text (the
+        # authoritative translated text used during extraction).
         translated_path = base / "translated.json"
         translated_data: dict = {
             "metadata": {
@@ -99,9 +101,8 @@ class DocumentPersistenceService:
                 "translation_warnings": result.translation_warnings,
             },
             "blocks": [b.to_dict() for b in result.translated_blocks],
+            "formatted_text": result.translated_english,
         }
-        if not result.translated_blocks and result.translated_english:
-            translated_data["formatted_text"] = result.translated_english
         _write_json(translated_path, json.dumps(translated_data, ensure_ascii=False, indent=2))
         logger.info("Saved translated JSON: {}", translated_path)
 

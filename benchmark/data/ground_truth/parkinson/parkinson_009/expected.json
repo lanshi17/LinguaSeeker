@@ -9,7 +9,7 @@
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
-      "value": "PARKIN",
+      "value": "VPS35",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -27,6 +27,20 @@
     {
       "field_id": "A.gene_disease_relationship",
       "value": "associated",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense, splice_site",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "parkinsonism; dementia",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

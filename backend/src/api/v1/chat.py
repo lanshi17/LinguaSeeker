@@ -136,18 +136,12 @@ async def stream_reply(
     service = factory.create_chat_service(session)
 
     async def event_generator():
-        async def _stream_with_heartbeat():
-            async for event in service.stream_reply(
-                session_id=session_id,
-                user_message=user_message,
-                evidence_id=evidence_id,
-            ):
-                yield f"data: {json.dumps(event)}\n\n"
-
-            yield ": keepalive\n\n"
-
-        async for chunk in _stream_with_heartbeat():
-            yield chunk
+        async for event in service.stream_reply(
+            session_id=session_id,
+            user_message=user_message,
+            evidence_id=evidence_id,
+        ):
+            yield f"data: {json.dumps(event)}\n\n"
 
     return StreamingResponse(
         event_generator(),

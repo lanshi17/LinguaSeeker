@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MutableRefObject } from "react";
 import { useXConversations } from "@ant-design/x-sdk";
 import { Trash2 } from "lucide-react";
-import { Modal, message as antdMessage } from "antd";
+import { App } from "antd";
 import { useChatSessions } from "../hooks/useChatSessions";
 import {
   loadActiveChatSession,
@@ -27,7 +27,7 @@ export function useSessionConversations(
 ) {
   const { sessions, createSession, isCreating, removeSession } =
     useChatSessions(processingRunId);
-
+  const { message, modal } = App.useApp();
   // Per-session title overrides: first user message's first
   // SESSION_TITLE_WORDS words. Default label used until then.
   const [sessionLabels, setSessionLabels] = useState<Record<string, string>>(
@@ -136,14 +136,14 @@ export function useSessionConversations(
     try {
       await createAndActivateSession();
     } catch {
-      antdMessage.error("Failed to create session");
+      message.error("Failed to create session");
     }
-  }, [createAndActivateSession]);
+  }, [createAndActivateSession, message]);
 
   // ── Delete session (client-side hide; backend has no DELETE endpoint) ──
   const handleDeleteSession = useCallback(
     (sessionId: string) => {
-      Modal.confirm({
+      modal.confirm({
         title: "Delete this chat session?",
         content:
           "The session is removed from the sidebar. The conversation itself is still reachable via direct URL.",
@@ -170,6 +170,7 @@ export function useSessionConversations(
     [
       activeConversationKey,
       handleActiveConversationChange,
+      modal,
       onSessionDeletedRef,
       removeConversation,
       removeSession,

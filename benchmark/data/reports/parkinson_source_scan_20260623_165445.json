@@ -1,0 +1,2113 @@
+[
+  {
+    "entry_id": "parkinson_000",
+    "gene_symbol": "PARK2",
+    "source_chars": 16034,
+    "categories_found": [
+      "inheritance",
+      "phenotype",
+      "population",
+      "segregation",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad ",
+          "snippet": "nt. All were responsive to dopaminergic treatment. Eight of the familial cases had an autosomal recessive mode of inheritance, whereas the index case and one of th"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "autosomal recessive",
+          "snippet": "ed 2% of all early onset PD, 10% of all familial early onset PD, and 25% of all autosomal recessive early onset PD patients. No mutations were found in the patients with sporadic"
+        },
+        {
+          "label": "recessive_pattern",
+          "match": "recessive\npattern",
+          "snippet": "ied two different parkin mutations in two index cases with a possible autosomal recessive pattern of inheritance in both. One had homozygous deletions of exons 8 and 9. The same"
+        }
+      ],
+      "segregation": [
+        {
+          "label": "cosegregation",
+          "match": "affected family members",
+          "snippet": "and to fill in a family history questionnaire to identify PD in the family. The affected family members of the proband were examined when available or, alternatively, their medical an"
+        },
+        {
+          "label": "family_study",
+          "match": "sibling",
+          "snippet": "s of exons 8 and 9. The same mutation was later identified in a single affected sibling. The second case had homozygous 820 CRT transition in exon 6 of parkin, which l"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "missense",
+          "snippet": "ere screened for parkin mutations. There were 105 normal controls. A homozygous missense muta- tion, Thr240Met, was found in exon 6 of one case and homozygous deletions"
+        },
+        {
+          "label": "splice_site",
+          "match": "splice site",
+          "snippet": "te patients (see table 1). However, on the basis of an analysis performed using splice site predictor software that evaluates the effect of such polymorphisms on the pre-R"
+        },
+        {
+          "label": "deletion",
+          "match": "Deletion",
+          "snippet": "merica.13 14 Descriptions of the pheno- types of these cases are not available. Deletion of exons 8 and 9, the second type of mutation found in our study, has been repo"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "parkinsonism",
+          "snippet": "ent disorders specialist (AK) examined all the patients and secondary causes of parkinsonism were excluded. All clinical data were prospec- tively collected. We interviewed"
+        },
+        {
+          "label": "tremor",
+          "match": "tremor",
+          "snippet": "oot with diurnal fluctuation at 45 years followed by reduced arm swing and rest tremor of the ipsilateral hand. Her UPDRS motor score was 13 and her MMSE score was 30"
+        },
+        {
+          "label": "dystonia",
+          "match": "dystonia",
+          "snippet": "he proband with exons 8 and 9 was 33 years old when symptoms appeared as action dystonia of the right foot followed by stiffness of the limbs of the same side and slown"
+        },
+        {
+          "label": "early_onset",
+          "match": "early onset",
+          "snippet": "SHORT REPORT Mutational screening of the parkin gene among South Indians with early onset Parkinson’s disease R H Madegowda*, A Kishore*, A Anand . . . . . . . . . . . ."
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "age of onset",
+          "snippet": "hospital) with early onset PD from an ethnically homogeneous Indian population (age of onset (50 years) including both familial (n = 20) and sporadic (n = 82) cases were sc"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "cohort",
+          "snippet": "y is an under- estimation because we did not perform gene dosage studies in our cohort. Future studies using more advanced techni- ques which include gene dosage stud"
+        },
+        {
+          "label": "ethnicity",
+          "match": "ethnic",
+          "snippet": "doi: 10.1136/jnnp.2004.046888 Parkin mutations are commonly encountered in multiethnic populations with familial early onset Parkinson’s disease (PD) and less frequen"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_001",
+    "gene_symbol": "LRRK2",
+    "source_chars": 9554,
+    "categories_found": [
+      "contradiction",
+      "de_novo",
+      "functional_assay",
+      "inheritance",
+      "phenotype",
+      "population",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad\n",
+          "snippet": "ients with late-onset Parkinson’s disease. Approximately 25.8% of the patients had a family history of Parkinson’s disease. Screening was carried out by PCR, denat"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar ",
+          "snippet": "ine Berlin, Germany Correspondence to: Dr Gabor C Petzold, Department of Molecular and Cellular Biology, Harvard University, 16 Divinity Avenue, Cambridge, MA 0213"
+        }
+      ],
+      "de_novo": [
+        {
+          "label": "de_novo",
+          "match": "de novo",
+          "snippet": "us it remains unclear whether the mutation is fully pene- trant or has appeared de novo and whether the parents died before manifestation of the disease. The mutation"
+        }
+      ],
+      "functional_assay": [
+        {
+          "label": "in_vitro",
+          "match": "in vitro",
+          "snippet": "protein interaction. In addition, function was demonstrated kinase for dardarin in vitro. 3 Some questions remain about the growing demand of DNA diagnostics and geneti"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "splice_site",
+          "match": "Ivs",
+          "snippet": "1624G, K1637K, S1647T) exchanges and intronic single- nucleotide polymorphisms (Ivs33-31T.C, Ivs34+32A.G, Ivs34-51A.T, Ivs35+23T.A, Ivs38+35G.A) were identified. O"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "tremor",
+          "match": "tremor",
+          "snippet": "et of the disease in this patient occurred at the age of 55 years, with resting tremor in the left hand and akinesis. After a disease duration of 10 years, the patien"
+        },
+        {
+          "label": "cognitive_decline",
+          "match": "cognitive impairment",
+          "snippet": "ease duration of 10 years, the patient has distinct on–off fluctuation and mild cognitive impairment. Two patients carried the common G2019S mutation in heterozygous state. The mut"
+        },
+        {
+          "label": "early_onset",
+          "match": "early-onset",
+          "snippet": "rs). The cohort was recruited in Germany and consisted of 10 (8%) patients with early-onset (age at onset ,45 years) and 110 (92%) patients with late-onset Parkinson’s dis"
+        },
+        {
+          "label": "late_onset",
+          "match": "late onset",
+          "snippet": "and 3–6% of sporadic cases of Parkinson’s disease, including those of early and late onset. 2 The LRRK2 gene is situated on chromosome 12p11.2–q13.1 and encodes a large p"
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "mean age",
+          "snippet": "e LRRK2 gene were screened for sequence variations in a cohort of 120 patients (mean age at onset 56.3 years). The cohort was recruited in Germany and consisted of 10 ("
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "cohort",
+          "snippet": "34, 35, 38 and 41) of the LRRK2 gene were screened for sequence variations in a cohort of 120 patients (mean age at onset 56.3 years). The cohort was recruited in Ger"
+        },
+        {
+          "label": "ethnicity",
+          "match": "ethnic",
+          "snippet": "died before manifestation of the disease. The mutation was not observed in 336 ethnically but not age-matched control chromosomes of senior healthy blood donors from"
+        }
+      ],
+      "contradiction": [
+        {
+          "label": "conflicting",
+          "match": "unclear whether",
+          "snippet": "d at the age of 68 years and her father at the age of 30 years. Thus it remains unclear whether the mutation is fully pene- trant or has appeared de novo and whether the paren"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_002",
+    "gene_symbol": "PINK1",
+    "source_chars": 18429,
+    "categories_found": [
+      "functional_assay",
+      "inheritance",
+      "phenotype",
+      "population",
+      "segregation",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad ",
+          "snippet": "nts diagnosed with Parkinson’s disease were included. Of them, 89 participants had EOP (onset (50 years); the remaining had familial late- onset disease (mean age"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar ",
+          "snippet": "rents or offspring. The remaining 22 patients had familial disease without a clear pattern of Mendelian inheritance. Of the 131 patients, 77 were men and 54 were w"
+        },
+        {
+          "label": "recessive_pattern",
+          "match": "recessive trait",
+          "snippet": "aetiology.1 Familial parkinsonism can be inherited as an autosomal dominant or recessive trait. Mutations in three genes have been associated with recessively inherited early"
+        }
+      ],
+      "segregation": [
+        {
+          "label": "cosegregation",
+          "match": "Pedigree",
+          "snippet": "wo deletion controls and two triplication controls are shown in light grey. (B) Pedigree for the family of patient P392. The patient and his father are affected and hav"
+        },
+        {
+          "label": "family_study",
+          "match": "kindred",
+          "snippet": "he PINK1 gene were first identified in three consanguineous Italian and Spanish kindreds affected with EOP.4 Mutations in this gene have now been found in families ori"
+        }
+      ],
+      "functional_assay": [
+        {
+          "label": "protein_function",
+          "match": "protein\nfunction",
+          "snippet": "are cause of recessively inherited early onset parkinsonism mediated by loss of protein function. J Med Genet 2004;41:e22. 15 Zadikoff C, Rogaeva E, Djarmati A, et al. Homozygo"
+        },
+        {
+          "label": "animal_model",
+          "match": "Drosophila",
+          "snippet": "2002;114:584–91. 19 Park J, Lee SB, Lee S, et al. Mitochondrial dysfunction in Drosophila PINK1 mutants is complemented by parkin. Nature 2006;441:1157–61. 20 Healy DG,"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "missense",
+          "snippet": "ose assessment. Mutations were examined in 350 controls . Results: Heterozygous missense mutations in PINK1 were found in 3 of 131 patients; none of the patients carrie"
+        },
+        {
+          "label": "splice_site",
+          "match": "IVS",
+          "snippet": "(%) het (%) hom (%) 1 189CRT Leu69Leu 40 2 35 3 1 344ART Gln115Leu 12 0 11 0 2 IVS1 –7 ARG – 22 78 22 77 4 837CRT Arg279Arg 1 0 0 0 5 IVS4 –5 GRA – 22 77 22 77 5"
+        },
+        {
+          "label": "deletion",
+          "match": "deletion",
+          "snippet": "malised mean PINK1 quantity by the mean albumin quantity. Positive controls for deletion and multiplication mutations were designed by using other amounts of DNA (fig 1"
+        },
+        {
+          "label": "duplication",
+          "match": "duplication",
+          "snippet": "l, a heterozygous deletion was expected at a ratio between 0.25 and 0.75, and a duplication was expected between 1.25 and 1.75. Ambiguous samples were re-run in triplicate"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "parkinsonism",
+          "snippet": "K1) gene have been identified in recessively inherited and sporadic early-onset parkinsonism (EOP). Methods: A total of 131 Norwegian patients diagnosed with Parkinson’s di"
+        },
+        {
+          "label": "tremor",
+          "match": "tremor",
+          "snippet": "ian syndrome started at age 43 years, with bradykinesia, mild rigidity, resting tremor and a marked hypomimia. The bradykinesia on the left side is now severe. Dopami"
+        },
+        {
+          "label": "rigidity",
+          "match": "rigidity",
+          "snippet": "ion. His parkinsonian syndrome started at age 43 years, with bradykinesia, mild rigidity, resting tremor and a marked hypomimia. The bradykinesia on the left side is no"
+        },
+        {
+          "label": "bradykinesia",
+          "match": "bradykinesia",
+          "snippet": "ous Gly411Ser mutation. His parkinsonian syndrome started at age 43 years, with bradykinesia, mild rigidity, resting tremor and a marked hypomimia. The bradykinesia on the"
+        },
+        {
+          "label": "dystonia",
+          "match": "dystonia",
+          "snippet": "e; none of them showed signs of early dementia, had psychiatric symptoms or had dystonia at disease onset. Only one of our patients has received dopaminergic treatment"
+        },
+        {
+          "label": "cognitive_decline",
+          "match": "dementia",
+          "snippet": "a slowly progressive parkinsonian syndrome; none of them showed signs of early dementia, had psychiatric symptoms or had dystonia at disease onset. Only one of our pat"
+        },
+        {
+          "label": "early_onset",
+          "match": "early-onset",
+          "snippet": "inase 1 (PINK1) gene have been identified in recessively inherited and sporadic early-onset parkinsonism (EOP). Methods: A total of 131 Norwegian patients diagnosed with P"
+        },
+        {
+          "label": "late_onset",
+          "match": "late-\nonset",
+          "snippet": "Of them, 89 participants had EOP (onset (50 years); the remaining had familial late- onset disease (mean age at onset 64 years). PINK1 analysis included sequencing and ge"
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "mean age",
+          "snippet": "ants had EOP (onset (50 years); the remaining had familial late- onset disease (mean age at onset 64 years). PINK1 analysis included sequencing and gene dose assessment"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "cohort",
+          "snippet": "wo proteins act in a common pathway.19 PINK1 mutation screening of sporadic EOP cohorts from other European populations have identified findings similar to those in o"
+        },
+        {
+          "label": "ethnicity",
+          "match": "European",
+          "snippet": "Mutations in this gene have now been found in families originating from several European and Asian popula- tions, making PINK1 the second most common genetic known caus"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_003",
+    "gene_symbol": "LRRK2",
+    "source_chars": 24536,
+    "categories_found": [
+      "de_novo",
+      "inheritance",
+      "phenotype",
+      "population",
+      "segregation",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "autosomal dominant",
+          "snippet": "cribed in the latter [12-14]. Mutations in the gene LRRK2 are a common cause of autosomal dominant and apparently sporadic PD. The LRRK2 mutation c.6055G > A; p.G2019S, accounts"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar,",
+          "snippet": "377/8/1 Page 2 of 6 (page number not for citation purposes) compacta [2,3]. So far, mutations in SNCA (Alpha-synu- clein; OMIM#163890), PRKN (Parkin OMIM#602544),"
+        }
+      ],
+      "de_novo": [
+        {
+          "label": "de_novo",
+          "match": "new mutation",
+          "snippet": "on 2, predicted to cause the N52fsX80 aminoacid change; B)  chromatogram of the new mutation G1183T in PRKN exon 11, apparently homozygous, predicted to cause a premature s"
+        }
+      ],
+      "segregation": [
+        {
+          "label": "family_study",
+          "match": "sibling",
+          "snippet": "history. The only affected family member that was available for testing was the sibling of S10 who presented with the same two variants, albeit with a remarkably diffe"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "missense",
+          "snippet": "t Kinase 2 OMIM#609007) have been implicated as causes of monogenic PD [4-9]. A missense mutation within SNCA encoding the protein alpha-synuclein was the first identif"
+        },
+        {
+          "label": "nonsense",
+          "match": "nonsense",
+          "snippet": "of exon 9. The pathogeneicity of the new E395X mutation is clear since it is a nonsense muta- tion that occurs upstream of a functional domain of the protein. Of these"
+        },
+        {
+          "label": "deletion",
+          "match": "deletion",
+          "snippet": "ts had the same homozygous mutation (c.154delA; p.N52fsX80), a single base pair deletion that inserts a premature stop codon downstream; one patient showed deletion of"
+        },
+        {
+          "label": "duplication",
+          "match": "duplication",
+          "snippet": "ts a premature stop codon downstream; one patient showed deletion of exon 2 and duplication of exon 5; analysis of a sixth sample (S4) showed data consistent with a homozy"
+        },
+        {
+          "label": "exon_deletion",
+          "match": "exon 2 deletion",
+          "snippet": "urthermore, we have found one patient with two heterozygous dosage variants: an exon 2 deletion and an exon 5 duplication. No mutations were found in SNCA or PINK1. Discussion"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "parkinsonism",
+          "snippet": "D [10]. Mutations in PRKN are a common cause of autosomal recessive early-onset parkinsonism [11,7], however mutations in PINK1 and DJ-1 have also been reported as associat"
+        },
+        {
+          "label": "tremor",
+          "match": "tremor",
+          "snippet": "s. Background Parkinson's disease (PD) is clinically characterized by rest- ing tremor, rigidity, bradykinesia, and postural instability [1]. The gold standard of PD"
+        },
+        {
+          "label": "rigidity",
+          "match": "rigidity",
+          "snippet": "round Parkinson's disease (PD) is clinically characterized by rest- ing tremor, rigidity, bradykinesia, and postural instability [1]. The gold standard of PD diagnosis"
+        },
+        {
+          "label": "bradykinesia",
+          "match": "bradykinesia",
+          "snippet": "inson's disease (PD) is clinically characterized by rest- ing tremor, rigidity, bradykinesia, and postural instability [1]. The gold standard of PD diagnosis remains a path"
+        },
+        {
+          "label": "early_onset",
+          "match": "early-onset",
+          "snippet": "results, screening not only LRRK2, but also PRKN, SNCA and PINK1 in a cohort of early-onset and late-onset familial Portuguese Parkinson disease patients. This series comp"
+        },
+        {
+          "label": "late_onset",
+          "match": "late-onset",
+          "snippet": "ng not only LRRK2, but also PRKN, SNCA and PINK1 in a cohort of early-onset and late-onset familial Portuguese Parkinson disease patients. This series comprises 66 patien"
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "mean age",
+          "snippet": "after observation by the movement disorders specialist. This series presented a mean age of 60.5 ± 23.1 years. Apart from the spouses of the patients, no other familiar"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "cohort",
+          "snippet": "on those results, screening not only LRRK2, but also PRKN, SNCA and PINK1 in a cohort of early-onset and late-onset familial Portuguese Parkinson disease patients. T"
+        },
+        {
+          "label": "ethnicity",
+          "match": "European",
+          "snippet": ", accounts for 1–2% of typical spo- radic PD in the North American and Northern European white population, with higher prevalence in Portuguese (6%), Ashkenazi Jewish ("
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_004",
+    "gene_symbol": "GIGYF2",
+    "source_chars": 47700,
+    "categories_found": [
+      "functional_assay",
+      "inheritance",
+      "phenotype",
+      "population",
+      "segregation",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "Autosomal-dominant",
+          "snippet": "enes contribute to the development of PD have not yet been clearly established. Autosomal-dominant transmission is associ- ated with mutations in the SNCA, LRRK2, and, probably,"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar ",
+          "snippet": "the ni- gro-striatal pathway and consequent bradykinesia, resting tremor, muscular rigidity, and postural instability that characterize PD is largely unknown. Alth"
+        },
+        {
+          "label": "dominant_pattern",
+          "match": "dominant\ninheritance",
+          "snippet": "o or three successive generations in most families is consistent with autosomal-dominant inheritance. DNA samples were available from at least one affected relative in four familie"
+        }
+      ],
+      "segregation": [
+        {
+          "label": "cosegregation",
+          "match": "Family-based",
+          "snippet": "ra- peutic approaches that apply to more common, sporadic forms of the disease. Family-based whole-genome linkage scans have identi- ﬁed 13 chromosomal loci (PARK1 to PARK1"
+        },
+        {
+          "label": "family_study",
+          "match": "sibling",
+          "snippet": "y the presence of at least one ﬁrst-degree affected relative (parent, child, or sibling), and healthy controls (n ¼ 131) were obtained from an Italian DNA bank assembl"
+        }
+      ],
+      "functional_assay": [
+        {
+          "label": "in_vitro",
+          "match": "overexpress",
+          "snippet": "ed to activated IGF-I receptors, presumably via the Grb10 adaptor. Of interest, overexpression of the GIGYF1 fragment resulted in augmented IGF-I receptor sig- naling. Sim"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "missense",
+          "snippet": "PD, plus 131 Italian and 96 French controls. A total of seven different GIGYF2 missense mutations resulting in single amino acid substitutions were present in 12 unrel"
+        },
+        {
+          "label": "deletion",
+          "match": "deletion",
+          "snippet": "und in four in- dex cases with PD and none of the controls. They consisted of a deletion of eight (Del LPQQQQQQ 1209–1216) and four codons (Del PPQQ 1221–1224) and an i"
+        },
+        {
+          "label": "insertion",
+          "match": "insertion",
+          "snippet": "except for the exon 4 (Thr112Ala) mutation, which was sequenced in reverse, and insertion (Ins QQ 1217) and deletions (Del LPQQQQQQ 1209–1216 and Del PPQQ 1221–1224), fo"
+        },
+        {
+          "label": "duplication",
+          "match": "duplication",
+          "snippet": "Durr, A., and Brice, A. (2004). Causal rela- tion between alpha-synuclein gene duplication and familial Parkinson’s disease. Lancet 364, 1169–1171. 19. Ibanez, P., De Mic"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "parkinsonism",
+          "snippet": "to do- paminergic therapy; the absence of atypical features or other causes of parkinsonism. Control DNAs were from unrelated individuals from the same populations. All co"
+        },
+        {
+          "label": "tremor",
+          "match": "tremor",
+          "snippet": "ronal loss in the ni- gro-striatal pathway and consequent bradykinesia, resting tremor, muscular rigidity, and postural instability that characterize PD is largely un"
+        },
+        {
+          "label": "rigidity",
+          "match": "rigidity",
+          "snippet": "ni- gro-striatal pathway and consequent bradykinesia, resting tremor, muscular rigidity, and postural instability that characterize PD is largely unknown. Although onl"
+        },
+        {
+          "label": "bradykinesia",
+          "match": "bradykinesia",
+          "snippet": "se of dopaminergic neuronal loss in the ni- gro-striatal pathway and consequent bradykinesia, resting tremor, muscular rigidity, and postural instability that characterize"
+        },
+        {
+          "label": "cognitive_decline",
+          "match": "Dementia",
+          "snippet": "ng tremor (%) 80 0 78.3 0 Bradykinesia (%) 99 0 93.0 0 Rigidity (%) 78 0 88.9 0 Dementia (%) 5.9 0 11.7 0 Disease duration (mean year 5 SD) 14.0 5 6.4 0 10.2 5 9.4 0 Po"
+        },
+        {
+          "label": "early_onset",
+          "match": "juvenile",
+          "snippet": "eloped PD after age 45 (n ¼ 167), there were also cases with early (n ¼ 78) and juvenile onset (n ¼ 4). Most patients had only one affected ﬁrst-degree relative. We ide"
+        },
+        {
+          "label": "late_onset",
+          "match": "Late onset",
+          "snippet": "69 5 9 48 5 12 64 5 9 Young onset, % 21 years 0 4 Early onset, % 45 years 28 50 Late onset, > 45 years 95 72 At least one ﬁrst-degree relative affected (%) 100 100 Only f"
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "onset age",
+          "snippet": "e family, suggesting age-dependent or incomplete penetrance. One index case (PD onset age 33) inherited a GIGYF2 mutation (Ile278Val) from her affected father (PD onset"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "case control",
+          "snippet": "and Rogaeva, E. (2005). LRRK2 gene in Parkinson disease: mutation analysis and case control association study. Neurology 65, 696–700. 24. Polymeropoulos, M.H., Lavedan, C."
+        },
+        {
+          "label": "ethnicity",
+          "match": "Ashkenazi",
+          "snippet": "his is the case for the G2019S mutation in the LRRK2 gene found in up to 18% of Ashkenazi Jews and 39% of North African Arabs with PD but in only 1 to 3% of their corres"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_005",
+    "gene_symbol": "PINK1",
+    "source_chars": 31459,
+    "categories_found": [
+      "contradiction",
+      "functional_assay",
+      "inheritance",
+      "phenotype",
+      "population",
+      "segregation",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad ",
+          "snippet": "disease onset (36 \u0001 12 years) than noncarriers (57 \u0001 15 years) and more often had an akinetic- rigid presentation at examination and slow progression. Conclusions"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "autosomal recessive",
+          "snippet": "inase4 and is one of three genes including parkin (PRKN) and DJ-1 implicated in autosomal recessive, early-onset forms of parkinsonism. The frequency of neurodegenerative disorder"
+        }
+      ],
+      "segregation": [
+        {
+          "label": "cosegregation",
+          "match": "pedigree",
+          "snippet": "no disclosures. 896 Copyright © 2008 by AAN Enterprises, Inc.   including large pedigrees, low rates of migra- tion, and high rates of consanguinity, facili- tate genot"
+        },
+        {
+          "label": "family_study",
+          "match": "kindred",
+          "snippet": "ous variants, or without PINK1 mutations, were compared. Methods: A total of 92 kindreds (with 208 affected and 340 unaffected subjects), 240 nonfamil- ial PD, and 368"
+        }
+      ],
+      "functional_assay": [
+        {
+          "label": "animal_model",
+          "match": "Drosophila",
+          "snippet": "aired dopamine release and reduced synaptic plasticity in the striatum.25,26 In Drosophila removal of the PINK1 homologue results in a more dramatic albeit nondo- paminer"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "deletion",
+          "match": "deletion",
+          "snippet": "opaminergic neuronal death or dysfunction, whereas targeted, complete germ-line deletion of PINK1 can lead to impaired dopamine release and reduced synaptic plasticity"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "parkinsonism",
+          "snippet": "PINK1 mutations and parkinsonism L. Ishihara-Paul, PhD M.M. Hulihan, MPH J. Kachergus, BSc R. Upmanyu, MSc L. Wa"
+        },
+        {
+          "label": "tremor",
+          "match": "tremor",
+          "snippet": "71:896–902 GLOSSARY AAO \u0002 age at onset; CRF \u0002 case report forms; ET \u0002 essential tremor; PD \u0002 Parkinson disease; UPDRS \u0002 Unified Parkinson’s Disease Rating Scale. Park"
+        },
+        {
+          "label": "rigidity",
+          "match": "rigidity",
+          "snippet": "parkin- sonism in most affected individuals were classified as mixed, with both rigidity and tremor present, but PINK1 homozygotes more often had akinetic-rigid parkins"
+        },
+        {
+          "label": "dystonia",
+          "match": "dystonia",
+          "snippet": "oration in gait/balance 17 (37) 0 (0) 23 (14) 3 (50) 25 (11) Muscle cramping or dystonia 3 (7) 0 (0) 1 (1) 0 (0) 2 (1) Other 1 (2) 0 (0) 3 (2) 0 (0) 38 (16) Type of PD"
+        },
+        {
+          "label": "cognitive_decline",
+          "match": "dementia",
+          "snippet": "K1 mutations were statistically significant (p \u0003 0.0002). Data on cognition and dementia are limited to neurologist observations as more than 60% of the study populatio"
+        },
+        {
+          "label": "early_onset",
+          "match": "early-onset",
+          "snippet": "M.J. Farrer, PhD ABSTRACT Background: PINK1 loss-of-function causes recessive, early-onset parkinsonism. In Tunisia there is a high rate of consanguineous marriage but PI"
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "mean age",
+          "snippet": "zy- gous mutations were compared to those without PINK1 variants (table 3). The mean age at onset of parkinsonism in familial PINK1 homozygous pa- tients (36 \u0001 12) was"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "carrier frequency",
+          "snippet": "kinsonism. In Tunisia there is a high rate of consanguineous marriage but PINK1 carrier frequency and disease prevalence have yet to be assessed. Objectives: The frequency of PI"
+        },
+        {
+          "label": "ethnicity",
+          "match": "ethnic",
+          "snippet": "cts, stratified by PINK1 status (table 2). All participants were of Arab-Berber ethnicity with the exception of one family which originated from Turkey and two from S"
+        }
+      ],
+      "contradiction": [
+        {
+          "label": "conflicting",
+          "match": "controversi",
+          "snippet": "spects of PINK1 parkin- sonism may be worthwhile. In the literature, it remains controversial whether PINK1 heterozygous mutations are a risk factor for idiopathic PD.21,2"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_006",
+    "gene_symbol": "PARK2",
+    "source_chars": 40224,
+    "categories_found": [
+      "contradiction",
+      "inheritance",
+      "phenotype",
+      "population",
+      "segregation",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad ",
+          "snippet": "in mutation and 9 controls with a single sequence mutation. Cases and controls had a similar frequency of single sequence mutations (3.1% vs 3.4%, p \u0001 0.83); howev"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar ",
+          "snippet": "parkin have been shown to result in Parkinson disease (PD). However, it is unclear whether haploinsufficiency (presence of a mutation in only 1 of the 2 parkin all"
+        },
+        {
+          "label": "recessive_pattern",
+          "match": "recessive inheritance",
+          "snippet": "in 3, PRKN (parkin), DJ-1, and PINK1, are typically transmitted with autosomal recessive inheritance, whereas alterations in the other 2, SNCA and LRRK2, are inherited in an autoso"
+        }
+      ],
+      "segregation": [
+        {
+          "label": "family_study",
+          "match": "sibling",
+          "snippet": "families were ascertained as part of an ongoing genetic study through a pair of siblings, both of whom were reported to have PD. The study was approved at each site’s"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "missense",
+          "snippet": "nd analyzed using Sequencher 4.5 (Gene Codes Corpo- ration, Ann Arbor, MI). All missense mutations were analyzed using SIFT (http://blocks.fhcrc.org/sift/SIFT.html) to"
+        },
+        {
+          "label": "frameshift",
+          "match": "frameshift",
+          "snippet": "les observed, 4 were cis deletions of exons 3–4, 3 were N52fs (\u000428 amino acids) frameshift mutations, 2 were R275W, 2 were cis deletions of exons 2–3, and 1 was the wild-"
+        },
+        {
+          "label": "splice_site",
+          "match": "IVS",
+          "snippet": ",040 (0.001) 0/526 (0) 4 c.518C\u0003T T173M Deleterious 1/1,040 (0.001) 0/526 (0) 4 IVS4 535G -9T\u0003A† 2/1,040 (0.002) 0/526 (0) 5 c.574A\u0003G M192V Benign 1/1,040 (0.001)"
+        },
+        {
+          "label": "deletion",
+          "match": "deletion",
+          "snippet": "a single parkin mutation, either a sequence (point mutation or small insertion/deletion) or dosage (whole exon deletion or duplication) mutation, was found at increase"
+        },
+        {
+          "label": "insertion",
+          "match": "insertion",
+          "snippet": "resence of a single parkin mutation, either a sequence (point mutation or small insertion/deletion) or dosage (whole exon deletion or duplication) mutation, was found at"
+        },
+        {
+          "label": "duplication",
+          "match": "duplication",
+          "snippet": "(point mutation or small insertion/deletion) or dosage (whole exon deletion or duplication) mutation, was found at increased frequency in cases as compared with controls."
+        },
+        {
+          "label": "point_mutation",
+          "match": "point mutation",
+          "snippet": ". We evaluated whether presence of a single parkin mutation, either a sequence (point mutation or small insertion/deletion) or dosage (whole exon deletion or duplication) mut"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "Parkinsonism",
+          "snippet": "iew Board of the National Parkinson Foundation; serves as Co-editor-in-Chief of Parkinsonism and Related Disorders; receives royalties from publishing Neurogastroenterology"
+        },
+        {
+          "label": "tremor",
+          "match": "tremor",
+          "snippet": "were remarkably similar (table 5). The core symptoms of PD (bradykinesia, rest tremor, muscular rigidity, and postural instability) were all found at comparable rate"
+        },
+        {
+          "label": "rigidity",
+          "match": "rigidity",
+          "snippet": "similar (table 5). The core symptoms of PD (bradykinesia, rest tremor, muscular rigidity, and postural instability) were all found at comparable rates. There was no dif"
+        },
+        {
+          "label": "bradykinesia",
+          "match": "bradykinesia",
+          "snippet": "tive PD individuals were remarkably similar (table 5). The core symptoms of PD (bradykinesia, rest tremor, muscular rigidity, and postural instability) were all found at co"
+        },
+        {
+          "label": "cognitive_decline",
+          "match": "cognitive impairment",
+          "snippet": "depres- sive symptomatology (GDS score \u0003 10) when individuals showing signs of cognitive impairment (MMSE \u0002 education-specific threshold) were ex- cluded from analysis (p \u0001 0.19)."
+        },
+        {
+          "label": "early_onset",
+          "match": "juvenile",
+          "snippet": "ed as pathogenic mutations.3-11 Harboring 2 parkin mutations typically leads to juvenile-onset (ages 15–25 years) or early-onset (\u000245 years) forms of PD.5,6 Several pre"
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "onset at age",
+          "snippet": "onset between 51 and 60 years, 7% for onset between 61 and 70 years, and 5% for onset at age \u000371 years (tables e-1 and e-2 on the Neurology® Web site at www.neurology.org)."
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "cohort",
+          "snippet": "utations, 16 sequence mutations). The most common muta- tion detected in our PD cohort was the cis deletion of exons 3–4 (13% of observed mutations), followed by P437"
+        },
+        {
+          "label": "ethnicity",
+          "match": "Hispanic",
+          "snippet": "n stratification, association analyses were limited to self-reported white, non-Hispanic individuals who met criteria for verified PD and did not harbor a known LRRK2 m"
+        }
+      ],
+      "contradiction": [
+        {
+          "label": "conflicting",
+          "match": "unclear whether",
+          "snippet": "s of parkin have been shown to result in Parkinson disease (PD). However, it is unclear whether haploinsufficiency (presence of a mutation in only 1 of the 2 parkin alleles) i"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_007",
+    "gene_symbol": "VPS35",
+    "source_chars": 29780,
+    "categories_found": [
+      "functional_assay",
+      "inheritance",
+      "phenotype",
+      "population",
+      "segregation",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad ",
+          "snippet": "etti,7 Joseph Ghika,2 Faycal Hentati,8 Anna Krygowska-Wajs,9 Tim Lynch,10,11 Eldad Melamed,7 Alex Rajput,12 Ali H. Rajput,12 Alessandra Solida,2 Ruey-Meei Wu,13 Ry"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar,",
+          "snippet": "elrose,3 Emna Hentati,3 Andreas Puschmann,3,4 Daniel M. Evans,1 Elizabeth Conibear,1 Wyeth W. Wasserman,1 Jan O. Aasly,5 Pierre R. Burkhard,6 Ruth Djaldetti,7 Jose"
+        },
+        {
+          "label": "dominant_pattern",
+          "match": "dominant inheritance",
+          "snippet": "i- ants. After variants on the X chro- mosome and homozygous changes (autosomal-dominant inheritance of disease was assumed), noncoding variants, synonymous changes, and variants p"
+        }
+      ],
+      "segregation": [
+        {
+          "label": "cosegregation",
+          "match": "affected members",
+          "snippet": "cling, and is evolutionarily highly conserved. VPS35 c.1858G>A was found in all affected members of the Swiss kindred and in three more families and one patient with sporadic P"
+        },
+        {
+          "label": "family_study",
+          "match": "kindred",
+          "snippet": "describes the application of next-generation sequencing technologies to a Swiss kindred presenting with autosomal-dominant, late-onset Parkinson disease (PD). The fami"
+        }
+      ],
+      "functional_assay": [
+        {
+          "label": "in_vitro",
+          "match": "in vitro",
+          "snippet": "ominant-negative versus toxic gain of function and will allow the generation of in vitro and in vivo systems that address whether gene expression or transport of speciﬁ"
+        },
+        {
+          "label": "animal_model",
+          "match": "Drosophila",
+          "snippet": "s, NP_001005842.1; Xenopus laevis, NP_001089981.1; Danio rerio, NP_001020688.2; Drosophila melanogaster, NP_726175.3; and Saccharomyces cerevisiae, NP_012381.1. An asteri"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "missense",
+          "snippet": "trols. Further sequencing of familial affected probands revealed only one other missense variant, VPS35 c.946C>T; (p.Pro316Ser), in a pedigree with one unaffected and t"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "parkinsonism",
+          "snippet": "nset Parkinson disease (PD). The family has tremor-predominant dopa- responsive parkinsonism with a mean onset of 50.6 5 7.3 years. Exome analysis suggests that an aspartic"
+        },
+        {
+          "label": "tremor",
+          "match": "tremor",
+          "snippet": "ting with autosomal-dominant, late-onset Parkinson disease (PD). The family has tremor-predominant dopa- responsive parkinsonism with a mean onset of 50.6 5 7.3 years"
+        },
+        {
+          "label": "cognitive_decline",
+          "match": "dementia",
+          "snippet": "iated with an elevation in endogenous amyloid- beta peptide.18,19 Nevertheless, dementia is not prominent in patients with parkinsonism and VPS35 p.Asp620Asn. Cognitive"
+        },
+        {
+          "label": "late_onset",
+          "match": "late-onset",
+          "snippet": "sequencing technologies to a Swiss kindred presenting with autosomal-dominant, late-onset Parkinson disease (PD). The family has tremor-predominant dopa- responsive park"
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "mean age",
+          "snippet": "nge 42–64 years) and is comparable to 48.3 5 8.6 years (range 40–64 years), the mean age of onset for other families affected by VPS35 p.Asp620Asn. However, the mutatio"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "case-control",
+          "snippet": "data (Figure S1). Both variants were subsequently genotyped in a multi- ethnic case-control series consisting of 4,326 patients and 3,309 controls. This series comprises e"
+        },
+        {
+          "label": "ethnicity",
+          "match": "European",
+          "snippet": "MIM 601501]), were not observed in 184 randomly selected US control subjects of European descent. Both variants are on the same chromosomal The American Journal of Huma"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_008",
+    "gene_symbol": "GBA",
+    "source_chars": 24093,
+    "categories_found": [
+      "contradiction",
+      "de_novo",
+      "functional_assay",
+      "inheritance",
+      "phenotype",
+      "population",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad ",
+          "snippet": "refore, the assumption has been that variants that, when  homozygous, did not lead to GD would not predispose to PD.3 We have embarked on a systematic analysis of"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar ",
+          "snippet": "m Foltynie, PhD, MRCP3 1Reta Lila Weston Laboratories and Departments of Molecular Neuroscience, UCL Institute of  Neurology, London, UK 2Department of Neurology a"
+        }
+      ],
+      "de_novo": [
+        {
+          "label": "de_novo",
+          "match": "new mutation",
+          "snippet": "ed: 15967693]  24. Rozenberg R, Fox DC, Sobreira E, Pereira LV. Detection of 12 new mutations in Gaucher disease  Brazilian patients. Blood Cells Mol Dis. 2006; 37:204–209."
+        }
+      ],
+      "functional_assay": [
+        {
+          "label": "protein_function",
+          "match": "protein function",
+          "snippet": "are not associated with GD  (Table 1). The possible effect of these variants on protein function was evaluated by in silico  prediction tools (Supporting Materials). Among the"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "splice_site",
+          "match": "IVS",
+          "snippet": "abase (http://evs.gs.washington.edu/EVS/), is 2.36% (82 of 3,469 individuals). bIVS2+1 (1), R131C (2), W184R (1), N188S (1), H255Q (1), R257Q (1), D409H (2), and R"
+        },
+        {
+          "label": "deletion",
+          "match": "Deletion",
+          "snippet": "s – – 15 M L217P/wt 42 No – – 16 F N188S/wt 49 NA – – 17 M IVS10 −4C>T/wt 29 No Deletion of exons 4,5, and 6 – 18 M E326K/wt 50 Yes – – 19 M L444P/wt 49 No – – 20 M E32"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "parkinsonism",
+          "snippet": "ssociation between PD and GBA1 was first identified through the observation of  parkinsonism and Lewy body (LB) pathology among GD cases and their first- and second- degree"
+        },
+        {
+          "label": "cognitive_decline",
+          "match": "cognitive impairment",
+          "snippet": "86. [PubMed: 19332698]  8. McNeill A, Duran R, Proukakis C, et al. Hyposmia and cognitive impairment in Gaucher disease  patients and carriers. Mov Disord. 2012; 27:526–532. [PubMe"
+        },
+        {
+          "label": "early_onset",
+          "match": "early-onset",
+          "snippet": "(PD). Our aim was to assess the  contribution of GBA1 mutations in a series of early-onset PD. Methods—One hundred and eighty-five PD patients (with an onset age of ≤50)"
+        },
+        {
+          "label": "late_onset",
+          "match": "late-onset",
+          "snippet": "quency of GBA1 mutations is much higher in this patient series  than in typical late-onset patient cohorts. Furthermore, our results reveal that the most prevalent  PD-as"
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "onset age",
+          "snippet": "ies of early-onset PD. Methods—One hundred and eighty-five PD patients (with an onset age of ≤50) and 283 age- matched controls were screened for GBA1 mutations by Sange"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "cohort",
+          "snippet": "tions is much higher in this patient series  than in typical late-onset patient cohorts. Furthermore, our results reveal that the most prevalent  PD-associated GBA1 m"
+        },
+        {
+          "label": "ethnicity",
+          "match": "Ashkenazi",
+          "snippet": "of PD.  All controls were of UK Caucasian origin, and no individual reported an Ashkenazi  background. GD patients were 73 unrelated subjects, affected with the type 1 f"
+        }
+      ],
+      "contradiction": [
+        {
+          "label": "conflicting",
+          "match": "discrepanc",
+          "snippet": "f GBA1 in PD  from Sidransky et al., which did not show this association.3 This discrepancy could be  explained by the heterogeneity of populations included in that study"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_009",
+    "gene_symbol": "VPS35",
+    "source_chars": 36865,
+    "categories_found": [
+      "contradiction",
+      "functional_assay",
+      "inheritance",
+      "phenotype",
+      "population",
+      "segregation",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad ",
+          "snippet": "rol individuals from the Udall control dataset were sequenced here by WES. All had normal neurologic ex- aminations and normal Modified Mini-Mental State Examina-"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar ",
+          "snippet": "ts in EIF4G1 and VPS35 in Parkinson disease ABSTRACT Objective: Recently, vacuolar protein sorting 35 (VPS35) and eukaryotic translation initiation factor 4 gamma"
+        }
+      ],
+      "segregation": [
+        {
+          "label": "cosegregation",
+          "match": "affected members",
+          "snippet": "including the reported path- ogenic mutation p.R1205H, which segregated in all affected members of a large family, but also in 1 unaffected 86-year-old family member. Two addi"
+        },
+        {
+          "label": "family_study",
+          "match": "sibling",
+          "snippet": "ulation could be obtained. The novel p.E525del was confirmed in 1 of 2 affected siblings. The location of the observed variants is shown in figure 1. Variations p.V541"
+        }
+      ],
+      "functional_assay": [
+        {
+          "label": "protein_function",
+          "match": "protein function",
+          "snippet": "rough ANNO- VAR. PolyPhen2 was used to predict effects of amino acid changes on protein functional status.15 Programs SpliceView, NNsplice, and ESE- finder were used to predict"
+        },
+        {
+          "label": "animal_model",
+          "match": "drosophila",
+          "snippet": "y MB, Pallanck LJ. Mitochondrial pathology and apoptotic muscle degeneration in drosophila parkin mutants. Proc Natl Acad Sci USA 2003;100:4078–4083. 27. Suzuki Y, Imai Y"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "Missense",
+          "snippet": ". Gray boxes are inter- action sites; boxed texts are the interacting proteins. Missense variations above the protein box were found in this study with frequency ,1%. U"
+        },
+        {
+          "label": "splice_site",
+          "match": "splice site",
+          "snippet": "ions. Nat Methods 2010;7:248–249. 16. Rogozin IB, Milanesi L. Analysis of donor splice sites in different eukaryotic organisms. J Mol Evol 1997;45:50–59. 17. Reese MG, Eec"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "parkinsonism",
+          "snippet": "V. Mutations in the DJ-1 gene associated with auto- somal recessive early-onset parkinsonism. Science 2003;299: 256–259. 3. Kitada T. Mutations in the parkin gene cause aut"
+        },
+        {
+          "label": "cognitive_decline",
+          "match": "dementia",
+          "snippet": "e (II.1), examined at age 90 years, had an “unclear” PD diagnosis. He displayed dementia and postural instability early in the course of symptoms and was wheelchair-bou"
+        },
+        {
+          "label": "early_onset",
+          "match": "early-onset",
+          "snippet": "2. Bonifati V. Mutations in the DJ-1 gene associated with auto- somal recessive early-onset parkinsonism. Science 2003;299: 256–259. 3. Kitada T. Mutations in the parkin g"
+        },
+        {
+          "label": "late_onset",
+          "match": "late-onset",
+          "snippet": "et al. A mutation in VPS35, encoding a subunit of the retromer complex, causes late-onset Parkinson disease. Am J Hum Genet 2011;89: 168–175. 25. Oliveira SA, Li YJ, Nou"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "Prevalence",
+          "snippet": "nal form October 8, 2012. REFERENCES 1. de Rijk MC, Launer LJ, Berger K, et al. Prevalence of Parkinson’s disease in Europe: a collaborative study of population-based coh"
+        },
+        {
+          "label": "ethnicity",
+          "match": "Hispanic",
+          "snippet": "included in an initial WES discovery dataset. All individuals are of white, non-Hispanic/ Latino descent. Among the 213 PD cases, 188 are unrelated. Two groups were use"
+        }
+      ],
+      "contradiction": [
+        {
+          "label": "conflicting",
+          "match": "inconsisten",
+          "snippet": "dditional genes have been identified, but reports on their pathogenicity remain inconsistent: HTRA2,7 UCHL1,8 and ATP13A2.9 Recently, 2 new genes have been implicated as c"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_010",
+    "gene_symbol": "LRRK2",
+    "source_chars": 37095,
+    "categories_found": [
+      "de_novo",
+      "functional_assay",
+      "inheritance",
+      "phenotype",
+      "population",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad ",
+          "snippet": "and CMRPG3B138 from Chang Gung Memorial Hospital, Taipei, Taiwan. The funders had no role in study design, data collection and analysis, decision to publish, or p"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar ",
+          "snippet": "ct of 1647T-2397T to reduce PD risk, suggesting that other, yet unknown, molecular mechanisms are involved. Located on WD40 domain, M2397T is a risk- associated po"
+        }
+      ],
+      "de_novo": [
+        {
+          "label": "de_novo",
+          "match": "new\nmutation",
+          "snippet": "t al. (2005) A clinic-based study of the LRRK2 gene in Parkinson disease yields new mutations.  Neurology  65:  741–744.  doi:10.1212/01.WNL. 0000172630.22804.73. PubMed: 1"
+        }
+      ],
+      "functional_assay": [
+        {
+          "label": "protein_function",
+          "match": "protein function",
+          "snippet": "nctional studies are needed to elucidate the effects of these LRRK2 variants on protein function. Citation: Wu Y-R, Chang K-H, Chang W-T, Hsiao Y-C, Hsu H-C, et al. (2013) Gene"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "missense",
+          "snippet": ", R1398H, R1628P, S1647T, G2385R and M2397T), one reported (R1441H) and 2 novel missense (R767H and S885N) mutations. We examined the frequency of identified LRRK2 vari"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "parkinsonism",
+          "snippet": "Lichtner P, Farrer M et al. (2004) Mutations in LRRK2 cause autosomal-dominant parkinsonism with pleomorphic pathology. Neuron 44: 601–607. doi:10.1016/j.neuron. 2004.11.0"
+        },
+        {
+          "label": "bradykinesia",
+          "match": "bradykinesia",
+          "snippet": "the population aged over sixty, and is characterized by a slowness of movement (bradykinesia) and a difficulty in initiating movement (akinesia) [1]. The pathogenesis of PD"
+        },
+        {
+          "label": "early_onset",
+          "match": "early onset",
+          "snippet": "Taiwanese population. Herein, we sequenced LRRK2 coding region in 70 Taiwanese early onset PD patients (age at onset ≤ 50), and found six amino acid-changing single nucle"
+        },
+        {
+          "label": "late_onset",
+          "match": "late onset",
+          "snippet": "onfidence interval: 1.72 - 43.35, P = 0.0155) as compared with controls. In the late onset PD (LOPD) group (AAO > 50), a significant difference in G2385R A allele (4.5% v"
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "mean age",
+          "snippet": "injury  or  tumor,  encephalitis, antipsychotic medication) were excluded. The mean age at onset of PD was 62.1±11.5 years, ranging between 19 and 93 years.  A  group"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "cohort",
+          "snippet": "protective haplotype (1647T-2397T). Gene-environmental interaction and a larger cohort study are warranted to validate our findings. Additionally, two new missense mu"
+        },
+        {
+          "label": "ethnicity",
+          "match": "ethnic",
+          "snippet": "S1647T, G2385R and M2397T A case–control study in a cohort of PD (n = 573) and ethnically matched controls (n = 503) was conducted to assess the association of the s"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_011",
+    "gene_symbol": "LRRK2",
+    "source_chars": 17198,
+    "categories_found": [
+      "inheritance",
+      "phenotype",
+      "population"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad ",
+          "snippet": "the assay was 0% in the subset of 20 individuals. Fifty- five patients (7.9%) had early-onset PD (onset < 40 years). Four patients were compound heterozygous for"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar;",
+          "snippet": "spital, Singapore 169608 Correspondence should be addressed to Azlina Ahmad-Annuar; azlina.ahmadannuar@gmail.com Received 23 May 2014; Accepted 24 July 2014; Publi"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "parkinsonism",
+          "snippet": "005 [15] Europe, Asia, and North America 100 PD probands with family history of parkinsonism, 300 controls MAF 0.01 Lu et al., 2008 [18] Taiwan 834 PD, 543 controls OR 2.13"
+        },
+        {
+          "label": "early_onset",
+          "match": "early-onset",
+          "snippet": "e assay was 0% in the subset of 20 individuals. Fifty- five patients (7.9%) had early-onset PD (onset < 40 years). Four patients were compound heterozygous for G2385R and"
+        },
+        {
+          "label": "late_onset",
+          "match": "late-onset",
+          "snippet": "nt for around 10–20% of all PD cases [3]. However, studies have shown that even late-onset sporadic PD may also have a genetic contribution [4]. One of the genes commonly"
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "mean age",
+          "snippet": "rformed using an open- source software (OpenEpi). 3. Results and Discussion The mean age at PD diagnosis was 57.4 ± 11.8 years and the mean age of controls was 59.3±9.4"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "prevalence",
+          "snippet": "variants con- tribute to PD in Malaysian patients, we sought to investigate the prevalence of G2385R and R1628P in a Malaysian PD cohort. We found that G2385R was signifi"
+        },
+        {
+          "label": "ethnicity",
+          "match": "North African",
+          "snippet": "adic forms of Parkinson’s disease (PD). The G2019S variant is commonly found in North African Arab and Caucasian PD patients, but this locus is monomorphic in Asians. The G2"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_012",
+    "gene_symbol": "GBA",
+    "source_chars": 54870,
+    "categories_found": [
+      "contradiction",
+      "functional_assay",
+      "inheritance",
+      "phenotype",
+      "population",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "autosomal dominant",
+          "snippet": "for GBA mutations and genotyped for the LRRK2 G2019S mutation, the most common autosomal dominant mutation in the Ashkenazi Jewish population. Glucocerebrosidase enzymatic activ"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar ",
+          "snippet": "f it is clearly not associated with Gaucher disease, or a variant if it is unclear or controversial (e.g. E326K). The mechanism by which GBA mutations are linked t"
+        }
+      ],
+      "functional_assay": [
+        {
+          "label": "in_vitro",
+          "match": "in vitro",
+          "snippet": "ies have found an increase in alpha synuclein levels and/or aggrega- tion, both in vitro and in vivo, in the setting of mutant GBA expression or glucocerebrosidase loss"
+        },
+        {
+          "label": "enzyme_activity",
+          "match": "Glucocerebrosidase activ",
+          "snippet": "Glucocerebrosidase activity in Parkinson’s disease with and without GBA mutations Roy N. Alcalay,1,2 Ore"
+        },
+        {
+          "label": "animal_model",
+          "match": "mouse model",
+          "snippet": "ession of glucocerebrosidase corrects alpha-synuclein pathology and memory in a mouse model of Gaucher-related synu- cleinopathy. Proc Natl Acad Sci USA 2011; 108: 12101–6"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "missense",
+          "snippet": "majority of patients with Gaucher disease carry at least one N370S mutation, a missense mutation that retains 30% of glucocerebrosidase enzymatic activity and is linke"
+        },
+        {
+          "label": "splice_site",
+          "match": "IVS",
+          "snippet": "% (7) 0.4% (1) 0.284 84GG 0.8% (4) 0.0% (0) 0.309 R496H 0.8% (4) 0.0% (0) 0.309 IVS2 + 1 0.4% (2) 0.0% (0) 51 K-27R 0.4% (2) 0.0% (0) 51 E326K variant 2.5% (13) 1."
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "parkinsonism",
+          "snippet": "Alpan O, LaMarca ME, Sidransky E. Glucocerebrosidase mutations in subjects with parkinsonism. Mol Genet Metab 2004; 81: 70–3. doi: S1096719203002646 [pii] MacLeod DA, Rhinn"
+        },
+        {
+          "label": "tremor",
+          "match": "Tremor",
+          "snippet": "ion, American Academy of Neurology Research Fellowship, International Essential Tremor Foundation, and American Parkinson’s Disease Association. Dr Chung reports gran"
+        },
+        {
+          "label": "cognitive_decline",
+          "match": "dementia",
+          "snippet": "B, Ross BM, Kisselev S, et al. Association of glucocerebrosidase mutations with dementia with lewy bodies. Arch Neurol 2009; 66: 578–83. doi: 66/ 5/578 [pii] 10.1001/ar"
+        },
+        {
+          "label": "early_onset",
+          "match": "early-onset",
+          "snippet": "L, Orbe Reilly M, et al. Cognitive performance of GBA mutation car- riers with early-onset PD: the CORE-PD study. Neurology 2012; 78: 1434–40. doi: 10.1212/WNL.0b013e3182"
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "Mean age",
+          "snippet": "sease cases and controls Parkinson’s cases (n = 517) Controls (n = 252) P-value Mean age in years, (SD) 66.0 (10.5) 65.3 (9.6) 0.324 Males, % (n) 63.4 (328) 33.3 (84) 5"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "cohort",
+          "snippet": "Parkinson’s Disease at Columbia University Medical Center in New York, NY. The cohort’s demographics (but not genotype) were previously described in a report of part"
+        },
+        {
+          "label": "ethnicity",
+          "match": "Ashkenazi",
+          "snippet": "r the LRRK2 G2019S mutation, the most common autosomal dominant mutation in the Ashkenazi Jewish population. Glucocerebrosidase enzymatic activity in dried blood spots w"
+        }
+      ],
+      "contradiction": [
+        {
+          "label": "conflicting",
+          "match": "controversi",
+          "snippet": "s clearly not associated with Gaucher disease, or a variant if it is unclear or controversial (e.g. E326K). The mechanism by which GBA mutations are linked to Parkinson’s"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_013",
+    "gene_symbol": "PARK2",
+    "source_chars": 53893,
+    "categories_found": [
+      "contradiction",
+      "functional_assay",
+      "inheritance",
+      "phenotype",
+      "population",
+      "segregation",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "autosomal dominant",
+          "snippet": "ghly penetrant mutations in the SNCA and LRRK2 genes are found in families with autosomal dominant inheritance, whereas autosomal recessive families with a typical PD phenotype c"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar ",
+          "snippet": "sequencing studies in Parkinson’s disease (PD) have focused on either a particular gene, primarily in familial and early onset PD samples, or on screening single v"
+        },
+        {
+          "label": "dominant_pattern",
+          "match": "dominant\ninheritance",
+          "snippet": "rant mutations in the SNCA and LRRK2 genes are found in families with autosomal dominant inheritance, whereas autosomal recessive families with a typical PD phenotype carry mutatio"
+        }
+      ],
+      "segregation": [
+        {
+          "label": "family_study",
+          "match": "family\nstud",
+          "snippet": "an Research Protection Office (HRPO) approval number for our ADRC Genetics Core family studies is 201104178. Samples Samples included 478 PD patients and 337 healthy indi-"
+        }
+      ],
+      "functional_assay": [
+        {
+          "label": "protein_function",
+          "match": "Protein Aggregat",
+          "snippet": "cal Therapy, Washington University, St. Louis, MO, USA. 8Hope Center Program on Protein Aggregation and Neurodegeneration, Washington University, St. Louis, MO, USA. Received:"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "missense",
+          "snippet": "PD cases. Rare variants in a European American case-control sample We validated missense and splice-affecting variants with a predicted minor allele frequency (MAF) <5"
+        },
+        {
+          "label": "splice_site",
+          "match": "splice site",
+          "snippet": "e were consid- ered for follow-up confirmation. Genotyping All rare missense or splice site variants identified by SPLINTER were validated by directly genotyping all se- q"
+        },
+        {
+          "label": "duplication",
+          "match": "duplication",
+          "snippet": "that additional variants in the LRRK2 gene also contribute to PD risk. The SNCA duplication was found in 0.8 % of familial PD patients. Novel variants were found in 0.8 %"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "parkinsonism",
+          "snippet": "man with a family history of PD (1/126; 0.8 %; Fig. 1) and a 3-year history of parkinsonism. This PD pa- tient exhibited clinical features indistinguishable from idiopathi"
+        },
+        {
+          "label": "cognitive_decline",
+          "match": "Dementia",
+          "snippet": "ts in PD genes Gene AA Location (Chr:bp) ID Ethnicity AAO PD FAM HISTORY Gender Dementia MMSE PINK1 R147C 1:20964386 1 Caucasian NA NO F NA NA LRRK2 S885C 12:40681305 2"
+        },
+        {
+          "label": "early_onset",
+          "match": "early onset",
+          "snippet": "isease (PD) have focused on either a particular gene, primarily in familial and early onset PD samples, or on screening single variants in sporadic PD cases. To date, ther"
+        },
+        {
+          "label": "late_onset",
+          "match": "late-onset",
+          "snippet": "nt Louis Movement Disorder Clinic (Table 1) [15, 21]. This cohort contains 83 % late-onset PD (LOPD) and 74 % sporadic PD cases. Rare variants in a European American case"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "case-control",
+          "snippet": "dentified through genome-wide association studies (GWAS) in a European-American case-control sample (n=815). Results: Disease-causing variants in the SNCA, LRRK2 and PARK2"
+        },
+        {
+          "label": "ethnicity",
+          "match": "European",
+          "snippet": "tein tau (MAPT)] identified through genome-wide association studies (GWAS) in a European-American case-control sample (n=815). Results: Disease-causing variants in the"
+        }
+      ],
+      "contradiction": [
+        {
+          "label": "conflicting",
+          "match": "discrepanc",
+          "snippet": "te, the GBA p.T408M variant was not significantly associated with PD [29]. This discrepancy could be explained by the heterogeneity of populations included in that study"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_014",
+    "gene_symbol": "PINK1",
+    "source_chars": 87113,
+    "categories_found": [
+      "functional_assay",
+      "inheritance",
+      "phenotype",
+      "population",
+      "segregation",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad,",
+          "snippet": "dieter Springer, PhD, Department of Neuroscience, Mayo Clinic, 4500 San Pablo Road, Jacksonville, FL 32224, USA E-mail: Springer.Wolfdieter@mayo.edu Correspondence"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar ",
+          "snippet": "Michael G. Heckman,4 Elle D. James,3 Maria Swanberg,5 Itzia Jimenez-Ferrer,5 Oskar Hansson,6,7 Grzegorz Opala,8 Joanna Siuda,8 Magdalena Boczarska-Jedynak,8 Andrze"
+        },
+        {
+          "label": "dominant_pattern",
+          "match": "dominant inheritance",
+          "snippet": "K1) p.G411S (c.1231G4A, rs45478900) mutation has been reported in families with dominant inheritance patterns of Parkinson’s disease, suggesting that it might confer a sizeable dis"
+        }
+      ],
+      "segregation": [
+        {
+          "label": "cosegregation",
+          "match": "co-segregat",
+          "snippet": "distinct steps of a sequential process (Fiesel et al., 2015b). Here, we studied co-segregation of PINK1 p.G411S with Parkinson’s disease in previously reported (Toft et al"
+        },
+        {
+          "label": "family_study",
+          "match": "sibling",
+          "snippet": "ly and genetically, and PINK1 p.G411S mutations were identiﬁed in two Ukrainian siblings (Fig. 1B). Results from additional genetic tests performed non-systematically"
+        }
+      ],
+      "functional_assay": [
+        {
+          "label": "in_vitro",
+          "match": "cell-based assay",
+          "snippet": "pendent Parkinson’s disease case-control series for this variant. In functional cell-based assays, we established a partial dominant-negative effect of p.G411S heterozygotes. M"
+        },
+        {
+          "label": "protein_function",
+          "match": "protein level",
+          "snippet": "mutation. By contrast, PINK1 p.G411S heterozygotes showed no decrease of PINK1 protein levels but a sustained, signiﬁcant reduction in kinase activity. Molecular modelling"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "nonsense",
+          "match": "nonsense",
+          "snippet": "mentary Fig. 1). Transcripts with this mutation are known to be unstable due to nonsense-mediated mRNA decay resulting in loss of PINK1 full-length pro- tein and kinase"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "parkinsonism",
+          "snippet": "isease genes revealed that heterozygous mutation carriers may also develop mild parkinsonism (Criscuolo et al., 2006; Klein et al., 2007; Eggers et al., 2010; Ricciardi et"
+        },
+        {
+          "label": "tremor",
+          "match": "tremor",
+          "snippet": "ymbols indicate Parkinson’s disease; solid grey symbols, dementia; grey circle, tremor without parkinsonism. Diagonal lines denote the person was deceased. The index"
+        },
+        {
+          "label": "rigidity",
+          "match": "rigidity",
+          "snippet": "re dynamic with several ﬂexible loops compared to the C-lobes that had the most rigidity due to tightly packed alpha-helical motifs. The superposition overlay of Gly411"
+        },
+        {
+          "label": "cognitive_decline",
+          "match": "dementia",
+          "snippet": "rol series. (B) Black symbols indicate Parkinson’s disease; solid grey symbols, dementia; grey circle, tremor without parkinsonism. Diagonal lines denote the person was"
+        },
+        {
+          "label": "early_onset",
+          "match": "early-onset",
+          "snippet": "K2/parkin, PINK1/PARK6 and PARK7/DJ1 are well- established causes of recessive, early-onset Parkinson’s dis- ease (Puschmann, 2013). Careful analysis of families with muta"
+        },
+        {
+          "label": "late_onset",
+          "match": "late-onset",
+          "snippet": "essive genes such as PARK2/parkin and PARK7/DJ1 similarly increase the risk for late-onset Parkinson’s disease over time and that disease penetrance is dependent on level"
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "Median age",
+          "snippet": "ith and without a PINK1 p.G411S mutation from the case-control series analysed. Median age at onset was 59 years for the patients carrying PINK1 p.G411S, which is higher"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "case-control",
+          "snippet": "and newly identiﬁed families, and screened ﬁve independent Parkinson’s disease case-control series for this variant. In functional cell-based assays, we established a part"
+        },
+        {
+          "label": "ethnicity",
+          "match": "European",
+          "snippet": "sease patients, 277 controls). All subjects were unrelated to each other and of European ancestry. A diagnosis of Parkinson’s disease was made by experienced neurologis"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_015",
+    "gene_symbol": "PARK2",
+    "source_chars": 61035,
+    "categories_found": [
+      "contradiction",
+      "de_novo",
+      "functional_assay",
+      "inheritance",
+      "phenotype",
+      "population",
+      "segregation",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad ",
+          "snippet": "Tienari25, Liisa Myllykangas26, Minna Oinas27, Tamas Revesz15, Andrew Lees15, Brad F. Boeve28, Ronald C. Petersen29, Tanis J. Ferman29, Valentina Escott-Price30, N"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar ",
+          "snippet": "ther neurodegenerative diseases with DLB is not substantial. Since it is now clear that genetics plays a role in DLB, these data suggest that other genetic loci pl"
+        }
+      ],
+      "de_novo": [
+        {
+          "label": "de_novo",
+          "match": "new mutation",
+          "snippet": "nz JJ, Alegre J, Gómez-Esteban JC, Lezcano E, Ros R, Ampuero I et al (2004) The new mutation, E46K, of alpha-synuclein causes Parkinson and Lewy body dementia. Ann Neurol."
+        }
+      ],
+      "segregation": [
+        {
+          "label": "cosegregation",
+          "match": "segregation with disease",
+          "snippet": "Table 1 if the evidence for pathogenicity was moderate, such as having unproven segregation with disease; eliciting a different amino acid change than was previously reported; identifi"
+        },
+        {
+          "label": "family_study",
+          "match": "sibling",
+          "snippet": "on of a subdural haematoma, as well as a family history of AD in a parent and a sibling, with onset in the seventh decade. The presenting symptom was episodes of confu"
+        }
+      ],
+      "functional_assay": [
+        {
+          "label": "in_vitro",
+          "match": "in vitro",
+          "snippet": "andic population, where it resulted in a re- duction of beta-secretase cleavage in vitro [32]. We have also looked at strong risk modulating genes: GBA, TREM2, APOE and"
+        },
+        {
+          "label": "animal_model",
+          "match": "Drosophila",
+          "snippet": "g the effects of single nucleotide polymorphisms, SnpEff: SNPs in the genome of Drosophila melanogaster strain w1118; iso-2; iso-3. Fly 6:80–92 16. Claassen DO, Parisi JE"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "missense",
+          "snippet": "wn clinical significance, as well as variants associated with strong risk. Rare missense variants of unknown significance were found in APP, CHCHD2, DCTN1, GRN, MAPT, N"
+        },
+        {
+          "label": "nonsense",
+          "match": "nonsense",
+          "snippet": "ently reported protective PLCG2 p.Pro522Arg variant. We identified a pathogenic nonsense mutation in GRN, p.Arg493* (ENST00000053867), in one patient. This vari- ant wa"
+        },
+        {
+          "label": "deletion",
+          "match": "deletion",
+          "snippet": "991 0 0.000263 AC = 34, AN = 129,176 (0) 1:155205632 GGTT/G p.Asn409del inframe deletion & splice region variant 1 0.000547 0 0 NA 1:155205634 T/C (rs76763715) p.Asn409"
+        },
+        {
+          "label": "duplication",
+          "match": "duplication",
+          "snippet": "K, Kaneko H, Tan C-F et al (2008) Patients homozygous and heterozygous for SNCA duplication in a family with parkinsonism and dementia. Arch Neurol. 65:514–519 32. Jonsson"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "parkinsonism",
+          "snippet": "raphic, it exhibits a varied clinical presentation that can in- clude dementia, parkinsonism, visual hallucinations, REM sleep behavior disorder, fluctuations in attention"
+        },
+        {
+          "label": "tremor",
+          "match": "tremor",
+          "snippet": "t hemiparesis, left spasticity, right-sided rigidity, and a slight parkinsonian tremor of the left hand were also reported. The patient was severely demented and scor"
+        },
+        {
+          "label": "rigidity",
+          "match": "rigidity",
+          "snippet": "ations. Impaired smooth pursuit, left hemiparesis, left spasticity, right-sided rigidity, and a slight parkinsonian tremor of the left hand were also reported. The pati"
+        },
+        {
+          "label": "cognitive_decline",
+          "match": "dementia",
+          "snippet": "RESEARCH Open Access Analysis of neurodegenerative disease- causing genes in dementia with Lewy bodies Tatiana Orme1, Dena Hernandez2, Owen A. Ross3, Celia Kun-Rodri"
+        },
+        {
+          "label": "early_onset",
+          "match": "Early Onset",
+          "snippet": "l Dominant Arteriopathy with Subcortical Infarcts and Leukoencephalopathy, EOAD Early Onset Alzheimer’s disease, FALS Familial Amyotrophic Lateral Sclerosis, SALS Sporadic"
+        },
+        {
+          "label": "late_onset",
+          "match": "late onset",
+          "snippet": "noglio C et al (2013) GRN Thr272fs clinical heterogeneity: a case with atypical late onset presenting with a dementia with Lewy bodies phenotype. J Alzheimers Dis. 35:669"
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "mean age",
+          "snippet": "for ‘intermediate’ or ‘high’ likelihood DLB and self-reported as Caucasian. The mean age at death in the cohort was 78.8 (±8.4) years and the male to female ratio was 1"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "cohort",
+          "snippet": "generative diseases are unclear. Here, we performed whole exome sequencing of a cohort of 1118 Caucasian DLB patients, and focused on genes causative of monogenic neu"
+        },
+        {
+          "label": "ethnicity",
+          "match": "European",
+          "snippet": "d using principal component analysis, and samples that did not cluster with the European population of the 1000 Genomes dataset were removed from analysis. Concordance"
+        }
+      ],
+      "contradiction": [
+        {
+          "label": "conflicting",
+          "match": "inconsisten",
+          "snippet": "for each sample to remove those with a discordant sex assignment. Samples with inconsistent heterozygosity rates, or that were shown to be related or duplicated were excl"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_016",
+    "gene_symbol": "GBA",
+    "source_chars": 35347,
+    "categories_found": [
+      "inheritance",
+      "phenotype",
+      "population",
+      "segregation",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad ",
+          "snippet": "was compared in carriers and noncarriers. Results: Fifteen percent of patients had a GBA1 non- synonymous variant (including missense, frameshift, and recombinant"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar,",
+          "snippet": "D,2 Danielle Majoor-Krakauer, MD, PhD,4 Vincenzo Bonifati, MD, PhD,4 Teus van Laar, MD, PhD,8 and Geert J. Groeneveld, MD, PhD1,2* 1Centre for Human Drug Research,"
+        }
+      ],
+      "segregation": [
+        {
+          "label": "family_study",
+          "match": "sibling",
+          "snippet": "D140H + p.E326K, and 135 GBA1 wild types. Com- bining all carriers, 3.6% of all siblings and parents combined had PD compared with 2.0% in siblings and par- ents of no"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "missense",
+          "snippet": "ults: Fifteen percent of patients had a GBA1 non- synonymous variant (including missense, frameshift, and recombinant alleles), compared with 6.4% of controls (OR, 2.6;"
+        },
+        {
+          "label": "frameshift",
+          "match": "frameshift",
+          "snippet": "een percent of patients had a GBA1 non- synonymous variant (including missense, frameshift, and recombinant alleles), compared with 6.4% of controls (OR, 2.6; P < 0.001)."
+        },
+        {
+          "label": "splice_site",
+          "match": "splice\nsite",
+          "snippet": "- mentary data for details. All variants that were 6 nucleotides or closer to a splice site were assessed with 4 in silico splicing programs implemented in Alamut (Alamut"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "Parkinsonism",
+          "snippet": "effect of GBA variants in a large cohort of PD patients from Colombia and Peru. Parkinsonism Relat Disord 2019; 63:204–208. 9. Whole-genome sequence variation, population s"
+        },
+        {
+          "label": "cognitive_decline",
+          "match": "dementia",
+          "snippet": "ly been reported, once in GD,27,28 sporadically in PD4,29 and once in Lewy body dementia.30 Intronic splice-site variants have rarely been systemat- ically assessed pre"
+        },
+        {
+          "label": "early_onset",
+          "match": "early onset",
+          "snippet": "e supplementary data for details). Age at diagnosis of ≤50 years was considered early onset, and > 50 years was considered late-onset PD. This study was approved by an ind"
+        },
+        {
+          "label": "late_onset",
+          "match": "late-onset",
+          "snippet": "iagnosis of ≤50 years was considered early onset, and > 50 years was considered late-onset PD. This study was approved by an independent ethics com- mittee. Written infor"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "cohort",
+          "snippet": "riant in the GBA1 gene. The entire GBA1 gene has rarely been studied in a large cohort from a single population. The objective of this study was to assess the entire"
+        },
+        {
+          "label": "ethnicity",
+          "match": "Ashkenazi",
+          "snippet": "ost populations, 4%-12% of PD patients carry a heterozygous GBA1 variant and in Ashkenazi Jewish PD patients this is approximately 20%.2,3 The risk of PD in GBA1 variant"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_017",
+    "gene_symbol": "PARK2",
+    "source_chars": 43993,
+    "categories_found": [
+      "contradiction",
+      "de_novo",
+      "inheritance",
+      "phenotype",
+      "population",
+      "segregation",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad,",
+          "snippet": ") is the most common movement dis- order (Alves, Forsaa, Pedersen, Dreetz Gjerstad, & Larsen,  2008), with a global prevalence of 6.2 million cases in 2015  that i"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar ",
+          "snippet": "dium, provided the original  work is properly cited. © 2020 The Authors. Molecular Genetics & Genomic Medicine published by Wiley Periodicals LLC. Department of Ne"
+        },
+        {
+          "label": "dominant_pattern",
+          "match": "dominant inheritance",
+          "snippet": "than in the PD patients (Table 3). 4  |  DISCUSSION The phenotype of autosomal-dominant inheritance familial  PD, which is similar to sporadic PD, suggests that monogenic  and spo"
+        }
+      ],
+      "de_novo": [
+        {
+          "label": "de_novo",
+          "match": "new mutation",
+          "snippet": "A. (2005). A clinic-based study of  the LRRK2 gene in Parkinson disease yields new mutations.  Neurology, 65(5), 741–744. https://doi.org/10.1212/01.wnl.00001​ 72630.22804"
+        }
+      ],
+      "segregation": [
+        {
+          "label": "cosegregation",
+          "match": "family-based",
+          "snippet": "andidate variants as- sociated with PD, although some were first discovered in  family-based linkage studies; however, many of these genes  were successfully replicated in"
+        },
+        {
+          "label": "family_study",
+          "match": "kindred",
+          "snippet": ", Di Iorio, G., Bonavita, V., Miller, D. C., & Duvoisin, R. C.  (1990). A large kindred with autosomal dominant Parkinson's dis- ease. Annals of Neurology, 27(3), 276–"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "missense",
+          "snippet": "were  eliminated. Second, we selected non-synonymous substitu- tions including missense and nonsense mutations as well  as small insertions and deletions, which are co"
+        },
+        {
+          "label": "nonsense",
+          "match": "nonsense",
+          "snippet": "ated. Second, we selected non-synonymous substitu- tions including missense and nonsense mutations as well  as small insertions and deletions, which are considered to"
+        },
+        {
+          "label": "splice_site",
+          "match": "splice-site",
+          "snippet": "database of functional predictions and annotations for human  nonsynonymous and splice-site SNVs. Human Mutation, 37(3),  235–241. https://doi.org/10.1002/humu.22932 Liu,"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "Parkinsonism",
+          "snippet": "the Movement Disorder Society (Postuma  et al., 2015). Patients with secondary Parkinsonism and other  forms of atypical Parkinsonism or with a family history of  PD were"
+        },
+        {
+          "label": "tremor",
+          "match": "tremor",
+          "snippet": "oms, with most showing initial motor features of slowly  progressive asymmetric tremor at rest or bradykinesia (Table  2). As previously reported, the LRRK2 p.Gly2019"
+        },
+        {
+          "label": "bradykinesia",
+          "match": "bradykinesia",
+          "snippet": "wing initial motor features of slowly  progressive asymmetric tremor at rest or bradykinesia (Table  2). As previously reported, the LRRK2 p.Gly2019Ser muta- tion is though"
+        },
+        {
+          "label": "early_onset",
+          "match": "early onset",
+          "snippet": "6 50:35 control 200 49.49 ± 9.86 106:94 Abbreviations: AAO, age at onset; EOPD, early onset Parkinson's disease;  LOPD, late-onset Parkinson's disease; N, number. FIGURE 1"
+        },
+        {
+          "label": "late_onset",
+          "match": "late-onset",
+          "snippet": "Abbreviations: AAO, age at onset; EOPD, early onset Parkinson's disease;  LOPD, late-onset Parkinson's disease; N, number. FIGURE 1  Schematic representation of LRRK2 and"
+        },
+        {
+          "label": "age_of_onset_mention",
+          "match": "mean \nage",
+          "snippet": "late-onset PD (LOPD)  with the age at onset of 60.32 ± 7.96 years. Overall, the mean  age of onset at enrollment was 51.15 ± 11.16 years for cases  (55% males) and there"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "prevalence",
+          "snippet": "rder (Alves, Forsaa, Pedersen, Dreetz Gjerstad, & Larsen,  2008), with a global prevalence of 6.2 million cases in 2015  that is estimated to rise to 12.9 million by 2040"
+        },
+        {
+          "label": "ethnicity",
+          "match": "ethnic",
+          "snippet": "o. 614334), and  CHCHD2 (OMIM No. 616244) in a case-control study with  Chinese ethnic background, indicating the possible contri- bution of other AD-PD genes. In thi"
+        }
+      ],
+      "contradiction": [
+        {
+          "label": "conflicting",
+          "match": "discrepanc",
+          "snippet": "on- trols in a Chinese population; our results corroborated Wu's  findings. The discrepancies in the association between ge- netic variants and the presence of PD in the"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_018",
+    "gene_symbol": "LRRK2",
+    "source_chars": 38339,
+    "categories_found": [
+      "contradiction",
+      "functional_assay",
+      "inheritance",
+      "phenotype",
+      "population",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "AD,",
+          "snippet": "n found in several genes inﬂuencing complex disease, most notably in late-onset AD, and the eﬀects of these genetic diﬀerences vary between populations (7–11). Int"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar ",
+          "snippet": "rates of PD are slightly higher in Latinos than for NHW (1, 2), indicating a clear disregard of the ﬁeld to include Latinos in PD research. The bias toward NHW lea"
+        }
+      ],
+      "functional_assay": [
+        {
+          "label": "protein_function",
+          "match": "protein function",
+          "snippet": "oth variants are highly conserved and are predicted to have a (strong) eﬀect on protein function. LRRK2 p.P1480L has not been reported previously in any general population, tho"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "missense",
+          "snippet": "ky VE, Gerasimova A, Bork P, et al. A method and server for predicting damaging missense mutations. Nat Methods. (2010) 7:248–9. doi: 10.1038/nmeth0410-248 36. Karczews"
+        },
+        {
+          "label": "frameshift",
+          "match": "frameshift",
+          "snippet": "Kunkle BW, Vardarajan BN, Rolati S, Hamilton-Nelson KL, Kohli MA, et al. ABCA7 frameshift deletion associated with Alzheimer disease in African Americans. Neurol Genet."
+        },
+        {
+          "label": "deletion",
+          "match": "deletion",
+          "snippet": "Vardarajan BN, Rolati S, Hamilton-Nelson KL, Kohli MA, et al. ABCA7 frameshift deletion associated with Alzheimer disease in African Americans. Neurol Genet. (2016) 2:"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "parkinsonism",
+          "match": "Parkinsonism",
+          "snippet": "arten M, Tilley BC. Minority enrollment in Parkinson’s disease clinical trials. Parkinsonism Relat Disord. (2009) 15:258–62. doi: 10.1016/j.parkreldis.2008.06.005 4. U. S."
+        },
+        {
+          "label": "tremor",
+          "match": "tremor",
+          "snippet": "in ClinVar. Both individuals presented with mild idiopathic PD with predominant tremor and postural changes and reported loss of smell and constipation. One further p"
+        },
+        {
+          "label": "rigidity",
+          "match": "rigidity",
+          "snippet": "locus. The patient presented with idiopathic PD with tremor, bradykinesia, and rigidity and underwent successful deep brain stimulation surgery. Variant LRRK2 p.R1941H"
+        },
+        {
+          "label": "bradykinesia",
+          "match": "bradykinesia",
+          "snippet": "estry at the LRRK2 locus. The patient presented with idiopathic PD with tremor, bradykinesia, and rigidity and underwent successful deep brain stimulation surgery. Variant"
+        },
+        {
+          "label": "early_onset",
+          "match": "early-onset",
+          "snippet": "a-Santana H, Tang MX, Rosado L, Ross BM, et al. Frequency of known mutations in early-onset Parkinson disease: implication for genetic counseling: the consortium on risk f"
+        },
+        {
+          "label": "late_onset",
+          "match": "late-onset",
+          "snippet": "ns have been found in several genes inﬂuencing complex disease, most notably in late-onset AD, and the eﬀects of these genetic diﬀerences vary between populations (7–11)."
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "Cohort",
+          "snippet": "JM (2020) Novel Variants in LRRK2 and GBA Identiﬁed in Latino Parkinson Disease Cohort Enriched for Caribbean Origin. Front. Neurol. 11:573733. doi: 10.3389/fneur.202"
+        },
+        {
+          "label": "ethnicity",
+          "match": "Hispanic",
+          "snippet": "ormation is available on presence of known variants originally identiﬁed in non-Hispanic white patients or novel variants in the Latino population. The Latino populatio"
+        }
+      ],
+      "contradiction": [
+        {
+          "label": "conflicting",
+          "match": "inconsisten",
+          "snippet": "ean, Latino, and African genomes in gnomAD (0.0001%). In silico predictions are inconsistent in supporting a damaging role of this variant. The individual carrying the var"
+        }
+      ]
+    }
+  },
+  {
+    "entry_id": "parkinson_019",
+    "gene_symbol": "PARK2",
+    "source_chars": 60185,
+    "categories_found": [
+      "inheritance",
+      "phenotype",
+      "population",
+      "segregation",
+      "variant_type"
+    ],
+    "findings": {
+      "inheritance": [
+        {
+          "label": "autosomal_dominant",
+          "match": "ad ",
+          "snippet": "Europeans than hitherto appreciated. We determined that 50% of TR individuals had high inbreeding coefficients (≥0.0156) with runs of homozygosity longer than 4 M"
+        },
+        {
+          "label": "autosomal_recessive",
+          "match": "ar ",
+          "snippet": "elc,p, Jeffrey M. Friedmang,l, and Tayfun Özçelika,q,r,3 aDepartment of Molecular Biology and Genetics, Bilkent University, 06800 Ankara, Turkey; bSuna and Inan K"
+        }
+      ],
+      "segregation": [
+        {
+          "label": "family_study",
+          "match": "family stud",
+          "snippet": "architecture of these populations facilitates disease gene identifi- cation in family studies and in genome-wide association studies (GWAS) of populations (11). Until now"
+        }
+      ],
+      "variant_type": [
+        {
+          "label": "missense",
+          "match": "missense",
+          "snippet": "e or low-confidence predicted loss-of-function variants (HC-pLoFs or LC-pLoFs), missense variants, non-frameshift indels, synonymous variants, non- coding variants, and"
+        },
+        {
+          "label": "frameshift",
+          "match": "frameshift",
+          "snippet": "dicted loss-of-function variants (HC-pLoFs or LC-pLoFs), missense variants, non-frameshift indels, synonymous variants, non- coding variants, and other effects such as no"
+        },
+        {
+          "label": "splice_site",
+          "match": "splice site",
+          "snippet": "nonymous variants, non- coding variants, and other effects such as nonessential splice site variants, structural variants, and protein–protein contact variants (SI Appendi"
+        },
+        {
+          "label": "insertion",
+          "match": "insertion",
+          "snippet": "ian contribution amounting to between 3 and 30%, which was calculated using Alu insertion polymorphisms, mito- chondrial, or Y chromosome loci (3, 46, 47). Similarly, we"
+        }
+      ],
+      "phenotype": [
+        {
+          "label": "tremor",
+          "match": "tremor",
+          "snippet": "myo- trophic lateral sclerosis, ataxia, delayed sleep phase disorder, essential tremor, obesity, Parkinson’s disease, polycystic ovarian syndrome, and various assorte"
+        },
+        {
+          "label": "late_onset",
+          "match": "late-onset",
+          "snippet": "reasons: carrying only one copy of the disease allele for a recessive disorder, late-onset disease, variable expression, and reduced penetrance (52, 53). Furthermore, the"
+        }
+      ],
+      "population": [
+        {
+          "label": "population_study",
+          "match": "population-based",
+          "snippet": "roved July 13, 2021 (received for review December 18, 2020) The construction of population-based variomes has contributed substantially to our understanding of the genetic basi"
+        },
+        {
+          "label": "ethnicity",
+          "match": "European",
+          "snippet": "- ropean populations with a closer genetic relationship of the TR population to Europeans than hitherto appreciated. We determined that 50% of TR individuals had high i"
+        }
+      ]
+    }
+  }
+]

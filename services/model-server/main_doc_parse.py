@@ -2,7 +2,7 @@
 
 Usage:
     uv run python main_doc_parse.py
-    uv run python main_doc_parse.py --port 8005
+    uv run python main_doc_parse.py --port 8004
 """
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default=cfg.host)
-    parser.add_argument("--port", type=int, default=8005)
+    parser.add_argument("--port", type=int, default=8004)
     args = parser.parse_args()
     logger.info("Starting doc-parse server on {host}:{port}", host=args.host, port=args.port)
     uvicorn.run(app, host=args.host, port=args.port, log_level=cfg.log_level)

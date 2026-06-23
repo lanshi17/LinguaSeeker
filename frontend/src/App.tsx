@@ -10,6 +10,7 @@ const EvidenceDetailPage = lazy(() => import("@/pages/EvidenceDetailPage").then(
 const EvidenceDbPage = lazy(() => import("@/pages/EvidenceDbPage").then(m => ({ default: m.EvidenceDbPage })));
 const PipelinePage = lazy(() => import("@/pages/PipelinePage").then(m => ({ default: m.PipelinePage })));
 const PipelineRunPage = lazy(() => import("@/pages/PipelineRunPage").then(m => ({ default: m.PipelineRunPage })));
+const AuditPage = lazy(() => import("@/pages/AuditPage").then(m => ({ default: m.AuditPage })));
 
 export function App() {
   return (
@@ -23,9 +24,10 @@ export function App() {
           <Route path="/evidence/detail" element={<EvidenceDetailPage />} />
           <Route path="/evidence-db" element={<EvidenceDbPage />} />
           <Route path="/evidence-db/:variantSlug" element={<EvidenceDbPage />} />
-          <Route path="/evidence-db/:variantSlug/:sourceDocId" element={<EvidenceDbPage />} />
+          <Route path="/evidence-db/:variantSlug/:sourceDocumentId" element={<EvidenceDbPage />} />
           <Route path="/pipeline" element={<PipelinePage />} />
           <Route path="/pipeline/:runId" element={<PipelineRunPage />} />
+          <Route path="/audit" element={<AuditPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/chat" replace />} />
       </Routes>

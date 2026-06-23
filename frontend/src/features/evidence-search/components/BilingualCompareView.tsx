@@ -283,7 +283,14 @@ function EvidenceDocumentReader({
   title: string;
   paragraphs: EvidenceDocumentParagraph[];
 }) {
-  const isFullText = paragraphs.length === 1 && paragraphs[0].text.length > 500;
+  const fullTextParagraph = paragraphs.find((p) => p.id.endsWith("-full-text"));
+  const snippetParagraphs = paragraphs.filter((p) => p !== fullTextParagraph);
+  const isFullText = Boolean(fullTextParagraph);
+  const subtitle = isFullText
+    ? snippetParagraphs.length > 0
+      ? `Full document with evidence highlights · ${snippetParagraphs.length} additional snippet${snippetParagraphs.length !== 1 ? "s" : ""}`
+      : "Full document with evidence highlights"
+    : `${paragraphs.length} aligned paragraph${paragraphs.length !== 1 ? "s" : ""}`;
 
   return (
     <section style={{ overflow: "hidden", borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
@@ -300,23 +307,25 @@ function EvidenceDocumentReader({
       >
         <h3 style={{ fontSize: 14, fontWeight: 600, color: "#030712", margin: 0 }}>{title}</h3>
         <p style={{ marginTop: 2, fontSize: 12, color: "#6b7280" }}>
-          {isFullText
-            ? "Full document with evidence highlights"
-            : `${paragraphs.length} aligned paragraph${paragraphs.length !== 1 ? "s" : ""}`}
+          {subtitle}
         </p>
       </div>
       <div style={{ maxHeight: 720, overflowY: "auto", padding: "0 20px" }}>
         {paragraphs.length > 0 ? (
-          isFullText ? (
-            <MarkdownDocumentViewer
-              markdown={paragraphs[0].text}
-              highlights={paragraphs[0].highlights}
-            />
-          ) : (
-            paragraphs.map((paragraph) => (
+          <>
+            {isFullText && fullTextParagraph && (
+              <MarkdownDocumentViewer
+                markdown={fullTextParagraph.text}
+                highlights={fullTextParagraph.highlights}
+              />
+            )}
+            {snippetParagraphs.map((paragraph) => (
               <HighlightedParagraph key={paragraph.id} paragraph={paragraph} />
-            ))
-          )
+            ))}
+            {!isFullText && paragraphs.map((paragraph) => (
+              <HighlightedParagraph key={paragraph.id} paragraph={paragraph} />
+            ))}
+          </>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "48px 8px", textAlign: "center" }}>
             <div

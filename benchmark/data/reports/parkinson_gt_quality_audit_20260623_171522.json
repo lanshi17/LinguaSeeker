@@ -1,0 +1,460 @@
+{
+  "audit_id": "parkinson_gt_quality_20260623_171522",
+  "timestamp": "2026-06-23T17:15:22",
+  "dataset": "parkinson",
+  "total_entries": 20,
+  "avg_expected_fields_per_entry": 7.45,
+  "avg_source_md_chars": 38387.1,
+  "field_frequency": {
+    "A.variant_hgvs_p": 40,
+    "A.gene_symbol": 20,
+    "B.disease_diagnosis": 20,
+    "A.gene_disease_relationship": 20,
+    "B.clinical_phenotypes": 20,
+    "A.variant_type": 18,
+    "B.mode_of_inheritance_reported": 11
+  },
+  "gene_symbol_distribution": {
+    "PRKN": 6,
+    "LRRK2": 5,
+    "PINK1": 3,
+    "GBA": 3,
+    "VPS35": 2,
+    "GIGYF2": 1
+  },
+  "entries_with_park2_or_parkin_issue": [],
+  "park2_parkin_issue_count": 0,
+  "simple_field_count": 100,
+  "medium_field_count": 49,
+  "complex_field_count": 0,
+  "simple_pct": 67.1,
+  "comparison_with_rett": {
+    "parkinson": {
+      "entries": 20,
+      "avg_fields": 7.45,
+      "simple": 100,
+      "medium": 49,
+      "complex": 0,
+      "simple_pct": 67.1,
+      "medium_pct": 32.9,
+      "complex_pct": 0.0
+    },
+    "rett": {
+      "entries": 53,
+      "avg_fields": 12.38,
+      "simple": 251,
+      "medium": 352,
+      "complex": 53,
+      "simple_pct": 38.3,
+      "medium_pct": 53.7,
+      "complex_pct": 8.1
+    },
+    "verdict": "Parkinson ground truth is significantly less complex than RETT: avg 7.5 fields/entry vs RETT 12.4, with 0% simple fields and zero complex evidence fields. This explains why SYSTEM and B0 F1 are nearly identical — the reconcile strategy cannot improve on fields that don't exist."
+  },
+  "recommended_fixes": [
+    {
+      "priority": "P1",
+      "category": "field_enrichment",
+      "description": "Zero complex evidence fields in the entire dataset. Add at least: B.mode_of_inheritance_reported, A.variant_type, C.de_novo_status where the literature supports it.",
+      "action": "Read source.md for each entry and add medium/complex fields supported by the literature. Target: ≥2 medium fields per entry."
+    },
+    {
+      "priority": "P2",
+      "category": "variant_dedup",
+      "description": "Some entries have duplicate variant_hgvs_p values (e.g. parkinson_012 has N370S twice, L444P twice). Deduplicate or annotate why duplicates exist.",
+      "action": "Deduplicate variant values in expected_evidence."
+    }
+  ],
+  "do_not_modify_data_yet": true,
+  "per_entry": [
+    {
+      "entry_id": "parkinson_000",
+      "gene_symbol": "PRKN",
+      "expected_field_count": 8,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 6,
+      "medium_contextual": 2,
+      "complex_evidence": 0,
+      "source_md_chars": 16034,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_001",
+      "gene_symbol": "LRRK2",
+      "expected_field_count": 6,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 3,
+      "medium_contextual": 3,
+      "complex_evidence": 0,
+      "source_md_chars": 9554,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_002",
+      "gene_symbol": "PINK1",
+      "expected_field_count": 6,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 3,
+      "medium_contextual": 3,
+      "complex_evidence": 0,
+      "source_md_chars": 18429,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_003",
+      "gene_symbol": "LRRK2",
+      "expected_field_count": 6,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 3,
+      "medium_contextual": 3,
+      "complex_evidence": 0,
+      "source_md_chars": 24536,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_004",
+      "gene_symbol": "GIGYF2",
+      "expected_field_count": 8,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 6,
+      "medium_contextual": 2,
+      "complex_evidence": 0,
+      "source_md_chars": 47700,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_005",
+      "gene_symbol": "PINK1",
+      "expected_field_count": 5,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 3,
+      "medium_contextual": 2,
+      "complex_evidence": 0,
+      "source_md_chars": 31459,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_006",
+      "gene_symbol": "PRKN",
+      "expected_field_count": 5,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 3,
+      "medium_contextual": 2,
+      "complex_evidence": 0,
+      "source_md_chars": 40224,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_007",
+      "gene_symbol": "VPS35",
+      "expected_field_count": 5,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 3,
+      "medium_contextual": 2,
+      "complex_evidence": 0,
+      "source_md_chars": 29780,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_008",
+      "gene_symbol": "GBA",
+      "expected_field_count": 7,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_hgvs_p",
+        "B.mode_of_inheritance_reported",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 4,
+      "medium_contextual": 3,
+      "complex_evidence": 0,
+      "source_md_chars": 24093,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_009",
+      "gene_symbol": "VPS35",
+      "expected_field_count": 5,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 3,
+      "medium_contextual": 2,
+      "complex_evidence": 0,
+      "source_md_chars": 36865,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_010",
+      "gene_symbol": "LRRK2",
+      "expected_field_count": 6,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 3,
+      "medium_contextual": 3,
+      "complex_evidence": 0,
+      "source_md_chars": 37095,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_011",
+      "gene_symbol": "LRRK2",
+      "expected_field_count": 7,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "B.mode_of_inheritance_reported",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 5,
+      "medium_contextual": 2,
+      "complex_evidence": 0,
+      "source_md_chars": 17198,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_012",
+      "gene_symbol": "GBA",
+      "expected_field_count": 16,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "B.mode_of_inheritance_reported",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 13,
+      "medium_contextual": 3,
+      "complex_evidence": 0,
+      "source_md_chars": 54870,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_013",
+      "gene_symbol": "PRKN",
+      "expected_field_count": 15,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 13,
+      "medium_contextual": 2,
+      "complex_evidence": 0,
+      "source_md_chars": 53893,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_014",
+      "gene_symbol": "PINK1",
+      "expected_field_count": 7,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_hgvs_p",
+        "B.mode_of_inheritance_reported",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 4,
+      "medium_contextual": 3,
+      "complex_evidence": 0,
+      "source_md_chars": 87113,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_015",
+      "gene_symbol": "PRKN",
+      "expected_field_count": 6,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 4,
+      "medium_contextual": 2,
+      "complex_evidence": 0,
+      "source_md_chars": 61035,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_016",
+      "gene_symbol": "GBA",
+      "expected_field_count": 14,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "A.variant_hgvs_p",
+        "B.mode_of_inheritance_reported",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 11,
+      "medium_contextual": 3,
+      "complex_evidence": 0,
+      "source_md_chars": 35347,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_017",
+      "gene_symbol": "PRKN",
+      "expected_field_count": 6,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 4,
+      "medium_contextual": 2,
+      "complex_evidence": 0,
+      "source_md_chars": 43993,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_018",
+      "gene_symbol": "LRRK2",
+      "expected_field_count": 6,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 3,
+      "medium_contextual": 3,
+      "complex_evidence": 0,
+      "source_md_chars": 38339,
+      "run_id": ""
+    },
+    {
+      "entry_id": "parkinson_019",
+      "gene_symbol": "PRKN",
+      "expected_field_count": 5,
+      "fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_type",
+        "B.clinical_phenotypes"
+      ],
+      "simple_explicit": 3,
+      "medium_contextual": 2,
+      "complex_evidence": 0,
+      "source_md_chars": 60185,
+      "run_id": ""
+    }
+  ]
+}

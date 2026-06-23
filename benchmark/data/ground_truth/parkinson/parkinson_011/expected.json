@@ -9,7 +9,7 @@
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
-      "value": "PARKIN",
+      "value": "LRRK2",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -41,6 +41,20 @@
     {
       "field_id": "A.variant_hgvs_p",
       "value": "case:control=3.1%:1.8%使用等位基因频率作为对比",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "parkinsonism",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

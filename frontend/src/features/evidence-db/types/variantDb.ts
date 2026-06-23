@@ -81,6 +81,12 @@ export interface LiteratureReference {
   bilingualItems: Map<string, { original?: EvidenceGroupItem; translated?: EvidenceGroupItem }>;
 }
 
+/** Sort direction */
+export type SortOrder = "asc" | "desc";
+
+/** Sortable column keys */
+export type SortBy = "updated";
+
 /** Search/filter state for the variant index */
 export interface VariantIndexFilters {
   gene?: string;
@@ -89,4 +95,6 @@ export interface VariantIndexFilters {
   classification?: ClassificationLevel;
   page: number;
   pageSize: number;
+  sortBy?: SortBy;
+  sortOrder?: SortOrder;
 }

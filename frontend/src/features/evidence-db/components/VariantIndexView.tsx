@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   Dna,
@@ -11,6 +11,8 @@ import {
   ChevronRight,
   AlertCircle,
   Calendar,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { AutoComplete, Input } from "antd";
 import { Spinner } from "@/components/ui/Spinner";
@@ -19,6 +21,8 @@ import { VariantIndexSkeleton } from "./VariantIndexSkeleton";
 import type {
   VariantIndexEntry,
   ClassificationLevel,
+  SortBy,
+  SortOrder,
 } from "../types/variantDb";
 import {
   classificationColor,
@@ -208,6 +212,36 @@ const embeddedCSS = `
 }
 .viv-page-btn:hover {
   background-color: #f9fafb;
+}
+.viv-page-jump-input {
+  width: 48px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: #374151;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.viv-page-jump-input:focus {
+  border-color: var(--color-primary-600);
+  box-shadow: 0 0 0 2px var(--color-primary-100, rgba(8,145,178,0.15));
+}
+.viv-page-jump-input::placeholder {
+  color: #9ca3af;
+}
+.viv-sort-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+.viv-sort-header:hover {
+  color: #374151;
 }
 `;
 
@@ -467,6 +501,50 @@ export function VariantIndexView() {
 
   const totalPages = Math.ceil(total / pageSize);
 
+  const [jumpValue, setJumpValue] = useState("");
+
+  const handleJump = useCallback(() => {
+    const num = parseInt(jumpValue, 10);
+    if (!Number.isNaN(num) && num >= 1 && num <= totalPages) {
+      setPage(num);
+      setJumpValue("");
+    }
+  }, [jumpValue, totalPages, setPage]);
+
+  // Sort toggle for "Updated" column
+  const toggleSort = useCallback(() => {
+    const currentSortBy = filters.sortBy;
+    const currentOrder = filters.sortOrder ?? "desc";
+    if (currentSortBy !== "updated") {
+      updateFilter("sortBy", "updated" as SortBy);
+      updateFilter("sortOrder", "desc" as SortOrder);
+    } else {
+      // Cycle: desc → asc → clear
+      if (currentOrder === "desc") {
+        updateFilter("sortOrder", "asc" as SortOrder);
+      } else {
+        updateFilter("sortBy", undefined as unknown as SortBy);
+        updateFilter("sortOrder", undefined as unknown as SortOrder);
+      }
+    }
+  }, [filters.sortBy, filters.sortOrder, updateFilter]);
+
+  // Generate page numbers with window around current page
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    // Always show first, last, and a window around current
+    const pages: number[] = [1];
+    const windowStart = Math.max(2, page - 1);
+    const windowEnd = Math.min(totalPages - 1, page + 1);
+    if (windowStart > 2) pages.push(-1); // -1 = left ellipsis
+    for (let p = windowStart; p <= windowEnd; p++) pages.push(p);
+    if (windowEnd < totalPages - 1) pages.push(-2); // -2 = right ellipsis
+    pages.push(totalPages);
+    return pages;
+  }, [totalPages, page]);
+
   const searchText = filters.gene ?? filters.variant ?? "";
   const hasAnyFilter = !!(filters.gene || filters.variant || filters.disease || filters.classification);
 
@@ -700,7 +778,26 @@ export function VariantIndexView() {
               <span>Refs</span>
               <span>Conf.</span>
               <span>Categories</span>
-              <span>Updated</span>
+              <button
+                type="button"
+                className="viv-sort-header"
+                onClick={toggleSort}
+                title="Sort by updated date"
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  font: "inherit",
+                  color: filters.sortBy === "updated" ? "#111827" : "#6b7280",
+                }}
+              >
+                Updated
+                {filters.sortBy === "updated" && (
+                  filters.sortOrder === "asc"
+                    ? <ArrowUp style={{ width: 12, height: 12 }} />
+                    : <ArrowDown style={{ width: 12, height: 12 }} />
+                )}
+              </button>
             </div>
             {items.map((entry, i) => (
               <div
@@ -719,8 +816,9 @@ export function VariantIndexView() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 8,
+              gap: 6,
               paddingTop: 8,
+              flexWrap: "wrap",
             }}>
               <button
                 type="button"
@@ -744,14 +842,21 @@ export function VariantIndexView() {
               >
                 <ChevronLeft style={{ width: 16, height: 16 }} />
               </button>
-              {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                const pageNum = i + 1;
-                const isActive = pageNum === page;
+              {pageNumbers.map((p, idx) => {
+                if (p < 0) {
+                  // Ellipsis placeholder
+                  return (
+                    <span key={`ellipsis-${idx}`} style={{ padding: "0 2px", color: "#9ca3af", fontSize: 14 }}>
+                      &hellip;
+                    </span>
+                  );
+                }
+                const isActive = p === page;
                 return (
                   <button
-                    key={pageNum}
+                    key={p}
                     type="button"
-                    onClick={() => setPage(pageNum)}
+                    onClick={() => setPage(p)}
                     className={!isActive ? "viv-page-btn" : undefined}
                     style={{
                       display: "flex",
@@ -762,20 +867,34 @@ export function VariantIndexView() {
                       borderRadius: 8,
                       border: isActive ? "1px solid var(--color-primary-600)" : "1px solid #e5e7eb",
                       fontSize: 14,
-                      fontWeight: 500,
+                      fontWeight: isActive ? 600 : 500,
                       backgroundColor: isActive ? "var(--color-primary-600)" : "#fff",
                       color: isActive ? "#fff" : "#4b5563",
                       cursor: "pointer",
                       transition: "background-color 0.15s",
                     }}
                   >
-                    {pageNum}
+                    {p}
                   </button>
                 );
               })}
-              {totalPages > 7 && (
-                <span style={{ padding: "0 4px", color: "#9ca3af" }}>&hellip;</span>
-              )}
+              <input
+                className="viv-page-jump-input"
+                type="text"
+                inputMode="numeric"
+                placeholder="#"
+                value={jumpValue}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, "");
+                  setJumpValue(v);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleJump();
+                }}
+                onBlur={handleJump}
+                aria-label="Jump to page"
+                title={`Jump to page (1–${totalPages})`}
+              />
               <button
                 type="button"
                 onClick={() => setPage(page + 1)}

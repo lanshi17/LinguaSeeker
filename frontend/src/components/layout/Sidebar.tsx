@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { MessageSquare, Database, ClipboardList, type LucideIcon } from "lucide-react";
+import { MessageSquare, Database, ClipboardList, ShieldCheck, type LucideIcon } from "lucide-react";
 import { Menu, Typography } from "antd";
 import { useAppStore } from "@/stores/appStore";
 
@@ -13,6 +13,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "AI Chat", href: "/chat", icon: MessageSquare },
   { label: "Tasks", href: "/pipeline", icon: ClipboardList },
   { label: "Evidence DB", href: "/evidence-db", icon: Database },
+  { label: "Audit", href: "/audit", icon: ShieldCheck },
 ];
 
 interface SidebarProps {

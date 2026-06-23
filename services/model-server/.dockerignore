@@ -6,3 +6,8 @@ logs/
 *.log
 tests/
 node_modules/
+.env
+.env.local
+.ruff_cache/
+.pytest_cache/
+uv.lock

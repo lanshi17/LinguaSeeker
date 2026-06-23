@@ -28,7 +28,7 @@ def test_mineru_local_parser_initialization():
 def test_mineru_local_parser_default_values():
     """Test parser default values."""
     parser = MinerULocalParser()
-    assert parser._base_url == "http://localhost:8001"
+    assert parser._base_url == "http://localhost:8004"
     assert parser._model_id == "opendatalab/MinerU2.5-Pro-2604-1.2B"
     assert parser._timeout == 120.0
     assert parser._dpi == 200

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Activity,
+  AlertTriangle,
   ChevronRight,
   Inbox,
   Layers3,
@@ -21,10 +22,14 @@ interface TaskQueuePanelProps {
 /** Cap the number of recent (terminal) runs rendered to keep the panel light. */
 const RECENT_LIMIT = 8;
 
-type TabKey = "active" | "recent";
+type TabKey = "active" | "recent" | "failed";
 
 function isActive(run: PipelineRunSummary): boolean {
   return run.pipeline_status === "running" || run.pipeline_status === "pending";
+}
+
+function isFailed(run: PipelineRunSummary): boolean {
+  return run.pipeline_status === "failed";
 }
 
 export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
@@ -36,16 +41,24 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
   // `data?.items` is undefined and the `?? []` fallback allocates a fresh
   // array. Matches the pattern already used for chat messages.
   const runs = useMemo(() => data?.items ?? [], [data?.items]);
-  const { activeRuns, recentRuns } = useMemo(() => {
+  const { activeRuns, recentRuns, failedRuns } = useMemo(() => {
     const active = runs.filter(isActive);
+    const failed = runs.filter(isFailed);
     // Sort active by started_at desc (newest first); terminal runs likewise.
     const activeSorted = [...active].sort((a, b) => {
       const ta = a.started_at ? new Date(a.started_at).getTime() : 0;
       const tb = b.started_at ? new Date(b.started_at).getTime() : 0;
       return tb - ta;
     });
+    const failedSorted = [...failed].sort((a, b) => {
+      const ta = a.completed_at ?? a.started_at;
+      const tb = b.completed_at ?? b.started_at;
+      const tA = ta ? new Date(ta).getTime() : 0;
+      const tB = tb ? new Date(tb).getTime() : 0;
+      return tB - tA;
+    });
     const terminal = runs
-      .filter((r) => !isActive(r))
+      .filter((r) => !isActive(r) && !isFailed(r))
       .sort((a, b) => {
         const ta = a.completed_at ?? a.started_at;
         const tb = b.completed_at ?? b.started_at;
@@ -54,15 +67,17 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
         return tB - tA;
       })
       .slice(0, RECENT_LIMIT);
-    return { activeRuns: activeSorted, recentRuns: terminal };
+    return { activeRuns: activeSorted, recentRuns: terminal, failedRuns: failedSorted };
   }, [runs]);
 
   const total = data?.total ?? 0;
-  const visible = tab === "active" ? activeRuns : recentRuns;
+  const visible = tab === "active" ? activeRuns : tab === "failed" ? failedRuns : recentRuns;
   const emptyMessage =
     tab === "active"
       ? "No active pipelines"
-      : "No recent pipelines";
+      : tab === "failed"
+        ? "No failed pipelines"
+        : "No recent pipelines";
 
   const updatedAt = dataUpdatedAt
     ? new Date(dataUpdatedAt).toLocaleTimeString(undefined, {
@@ -149,6 +164,14 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
             icon={<Inbox style={{ width: 12, height: 12 }} />}
             label="Recent"
             count={recentRuns.length}
+          />
+          <TabButton
+            active={tab === "failed"}
+            onClick={() => setTab("failed")}
+            icon={<AlertTriangle style={{ width: 12, height: 12 }} />}
+            label="Failed"
+            count={failedRuns.length}
+            pulse={failedRuns.length > 0 && tab !== "failed"}
           />
           <Link
             to="/pipeline"

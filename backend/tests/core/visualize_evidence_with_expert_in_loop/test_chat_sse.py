@@ -132,10 +132,11 @@ class TestChatRouterEnvelope:
     async def test_emits_text_then_done_when_action_is_null(
         self, db_session: AsyncSession
     ) -> None:
+        async def mock_stream(*args, **kwargs):
+            yield ("Could you share the PMID or PDF?", None)
+
         provider = MagicMock()
-        provider.route_intent = AsyncMock(
-            return_value=("Could you share the PMID or PDF?", None)
-        )
+        provider.route_intent_stream = mock_stream
         service = ChatService(db_session, chat_provider=provider)
         session = await service.create_session(processing_run_id=None, user_id=None)
 
@@ -151,21 +152,20 @@ class TestChatRouterEnvelope:
         assert types == ["text", "done"]
         assert events[0]["content"] == "Could you share the PMID or PDF?"
 
-        provider.route_intent.assert_awaited_once()
-
     async def test_emits_action_event_when_slots_complete(
         self, db_session: AsyncSession
     ) -> None:
-        provider = MagicMock()
-        provider.route_intent = AsyncMock(
-            return_value=(
+        async def mock_stream(*args, **kwargs):
+            yield (
                 "Starting the pipeline now.",
                 ChatAction(
                     intent="start-pipeline",
                     slots={"source_type": "online", "query": "PMID:34521984"},
                 ),
             )
-        )
+
+        provider = MagicMock()
+        provider.route_intent_stream = mock_stream
         service = ChatService(db_session, chat_provider=provider)
         session = await service.create_session(processing_run_id=None, user_id=None)
 
@@ -187,13 +187,14 @@ class TestChatRouterEnvelope:
     async def test_persists_action_alongside_message(
         self, db_session: AsyncSession
     ) -> None:
-        provider = MagicMock()
-        provider.route_intent = AsyncMock(
-            return_value=(
+        async def mock_stream(*args, **kwargs):
+            yield (
                 "Opening the upload form.",
                 ChatAction(intent="upload-pdf", slots={}),
             )
-        )
+
+        provider = MagicMock()
+        provider.route_intent_stream = mock_stream
         service = ChatService(db_session, chat_provider=provider)
         session = await service.create_session(processing_run_id=None, user_id=None)
 

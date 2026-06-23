@@ -88,6 +88,8 @@ class ContentBlock(BaseModel):
     image_caption: list[str] = Field(default_factory=list)
     table_caption: list[str] = Field(default_factory=list)
     chart_caption: list[str] = Field(default_factory=list)
+    code_body: str = ""
+    list_items: list[str] = Field(default_factory=list)
 
 
 class TrackDocument(BaseModel):

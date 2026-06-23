@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # ── Lingua Seeker Model Server ──────────────────────────────────────────────
-# Unified launcher for the model server (embedding, rerank, VLM, doc-parse).
+# Unified launcher for the model server (embedding, rerank, doc-parse).
 # Supports two modes:
 #   local  — run directly via uv (single-process, shares one GPU)
-#   docker — start 4 independent containers via docker compose
+#   docker — start 3 independent containers via docker compose
 #
 # Usage:
 #   # ── Local mode (default) ──
@@ -21,14 +21,14 @@
 #
 #   # Selective service startup (docker mode only):
 #   ./scripts/start_model_server.sh --mode docker up embedding rerank
-#   ./scripts/start_model_server.sh --mode docker logs vlm
+#   ./scripts/start_model_server.sh --mode docker logs doc-parse
 #
-# Available docker services: embedding, rerank, vlm, doc-parse
+# Available docker services: embedding, rerank, doc-parse
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 MODEL_SERVER_DIR="$PROJECT_ROOT/services/model-server"
 COMPOSE_FILE="$MODEL_SERVER_DIR/docker-compose.model-server.yml"
 
@@ -44,7 +44,6 @@ resolve_service_name() {
     case "$1" in
         embedding)   echo "model-embedding" ;;
         rerank)      echo "model-rerank" ;;
-        vlm)         echo "model-vlm" ;;
         doc-parse)   echo "model-doc-parse" ;;
         model-*)     echo "$1" ;;  # already full name
         *)           echo "$1" ;;  # pass through, compose will validate
@@ -69,13 +68,11 @@ while [[ $# -gt 0 ]]; do
             # Remaining args: service short names or docker compose flags
             while [[ $# -gt 0 ]]; do
                 case "$1" in
-                    embedding|rerank|vlm|doc-parse)
+                    embedding|rerank|doc-parse)
                         SERVICES+=("$(resolve_service_name "$1")")
                         shift
                         ;;
-                    model-embedding|model-rerank|model-vlm|model-doc-parse)
-                        SERVICES+=("$1")
-                        shift
+                    model-embedding|model-rerank|model-doc-parse)
                         ;;
                     -d|--build|--force-recreate|--remove-orphans|-f|--follow|--tail|--no-color)
                         EXTRA_ARGS+=("$1")

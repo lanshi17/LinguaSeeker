@@ -28,16 +28,26 @@ export async function getPipelineStatus(
   return data;
 }
 
+export interface ListPipelineRunsParams {
+  limit?: number;
+  offset?: number;
+  status?: string;
+  search?: string;
+}
+
 /**
- * List all pipeline runs (GET /pipeline/runs).
+ * List pipeline runs (GET /pipeline/runs) with server-side pagination and filtering.
  * Tolerates 404 / 501 from backends that have not yet shipped the list
  * endpoint — returns an empty list so the UI can render an empty state
  * rather than an error.
  */
-export async function listPipelineRuns(): Promise<PipelineRunListResponse> {
+export async function listPipelineRuns(
+  params: ListPipelineRunsParams = {},
+): Promise<PipelineRunListResponse> {
   try {
     const { data } = await apiClient.get<PipelineRunListResponse>(
       "/pipeline/runs",
+      { params },
     );
     return data;
   } catch (err) {

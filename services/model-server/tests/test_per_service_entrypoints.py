@@ -83,10 +83,3 @@ class TestDocParseEntryPoint:
             assert "Doc Parse" in mod.app.title
 
 
-class TestVLMEntryPoint:
-    def test_exits_when_doc_parse_model_id_empty(self):
-        """VLM server requires DOC_PARSE_MODEL_ID — should sys.exit(1) if empty."""
-        with patch("app.config.get_config", return_value=_make_config(doc_parse_model_id="")):
-            with pytest.raises(SystemExit) as exc_info:
-                importlib.import_module("main_vlm")
-            assert exc_info.value.code == 1

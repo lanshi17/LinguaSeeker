@@ -18,6 +18,10 @@ interface BackendDoneEvent {
   type: "done";
 }
 
+interface BackendKeepaliveEvent {
+  type: "keepalive";
+}
+
 interface BackendErrorEvent {
   type: "error";
   message: string;
@@ -27,6 +31,7 @@ type BackendStreamEvent =
   | BackendTextEvent
   | BackendActionEvent
   | BackendDoneEvent
+  | BackendKeepaliveEvent
   | BackendErrorEvent;
 
 function parseBackendEvent(chunk: SSEOutput | undefined): BackendStreamEvent | null {
@@ -50,6 +55,9 @@ export function appendAssistantChunk(
   const event = parseBackendEvent(chunk);
 
   if (!event) return current;
+
+  // Keepalive events are connection heartbeats — no message mutation.
+  if (event.type === "keepalive") return current;
 
   if (event.type === "text") {
     return {

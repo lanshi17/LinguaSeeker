@@ -9,7 +9,7 @@
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
-      "value": "PARKIN",
+      "value": "GBA",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -61,20 +61,6 @@
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "N370S",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.variant_hgvs_p",
-      "value": "L444P",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.variant_hgvs_p",
       "value": "84GG",
       "candidates": [],
       "source": "article",
@@ -111,6 +97,27 @@
     {
       "field_id": "A.variant_hgvs_p",
       "value": "IVS2+1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AR",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense, splice_site",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "parkinsonism; tremor; dementia",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

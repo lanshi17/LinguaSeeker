@@ -1,34 +1,31 @@
-"""Model server configuration — reads layered YAML config and env vars."""
+"""Model server configuration — environment variables only.
+
+This service is fully decoupled from the backend project. All configuration
+comes from environment variables (set by docker-compose, systemd, or shell).
+An optional ``.env`` file in the service directory is read for local dev.
+No external config files are loaded.
+"""
 
 from __future__ import annotations
 
 import os
 from functools import lru_cache
-from pathlib import Path
 
-from acmg_config_loader import load_backend_config_into_env
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-# File is at services/model-server/app/config.py.
-# parents[0] = app, parents[1] = model-server, parents[2] = services,
-# parents[3] = repo root. The backend root we need to load `config/` from is
-# `repo_root/backend/`.
-_BACKEND_ROOT = Path(__file__).resolve().parents[3] / "backend"
-
-load_backend_config_into_env(_BACKEND_ROOT)
-
-
-# ── Settings model ──────────────────────────────────────────────────────
+# ── Settings model ──────────────────────────────────────────────────────────
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         case_sensitive=False,
         extra="ignore",
+        env_file=".env",
+        env_file_encoding="utf-8",
     )
 
     # Server
-    host: str = "127.0.0.1"
+    host: str = "0.0.0.0"
     port: int = 8001
     log_level: str = "info"
     api_key: str = ""  # API key for Bearer auth; empty = disabled
