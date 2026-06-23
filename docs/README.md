@@ -55,7 +55,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-06-14 | [BIBM Main Paper Effect Improvement Plan](active/2026-06-14-bibm-main-paper-effect-improvement-plan.md) | in-progress |
 | 2026-06-14 | [BIBM Main Paper Rescue](active/2026-06-14-bibm-main-paper-rescue.md) | in-progress |
 | 2026-06-13 | [BIBM G1 Decision Memo](active/2026-06-13-bibm-g1-decision.md) | in-progress |
-| 2026-06-23 | [Cross-Service Environment Consistency Rules](active/2026-06-23-environment-consistency.md) | active |
+| 2026-06-23 | [Log Data Mining Report (drain3)](active/2026-06-23-log-data-mining-report.md) | reference |
 | 2026-06-18 | [Multilingual Agent Acquisition Plan](active/2026-06-18-multilingual-agent-acquisition-plan.md) | substantially-implemented |
 | 2026-06-12 | [BIBM Novelty Diagnosis](active/2026-06-12-bibm-novelty.md) | in-progress |
 | — | [Methods — Literature Filtering](active/methods_literature_filtering.md) | reference |
@@ -86,6 +86,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
+| 2026-06-23 | [Log Mining Remediation Plan](archive/plans/2026-06-23-log-mining-remediation-plan.md) | completed |
 | 2026-06-21 | [Model Server Docker Decouple](archive/plans/2026-06-21-model-server-docker-decouple.md) | completed |
 | 2026-06-20 | [Fused-75 Candidate Recovery Source Validation Plan](archive/plans/2026-06-20-fused75-candidate-recovery-source-validation-plan.md) | superseded |
 | 2026-06-20 | [Fused-75 Candidate Recovery Source Validation Design](archive/plans/2026-06-20-fused75-candidate-recovery-source-validation-design.md) | superseded |
