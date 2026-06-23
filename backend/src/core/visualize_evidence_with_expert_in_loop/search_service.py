@@ -127,7 +127,7 @@ def _build_highlight(
     value inside the snippet using a safe token-boundary search. When the value
     cannot be located, start and end collapse to 0 (no visible highlight).
     """
-    if not source_span:
+    if not source_span or not isinstance(source_span, dict):
         return None
 
     text = str(source_span.get("text_snippet") or "")

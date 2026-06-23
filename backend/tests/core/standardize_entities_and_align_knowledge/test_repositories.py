@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 import pytest
 
@@ -180,11 +181,18 @@ def test_build_run_item_specs_skips_audit_only_track_payloads() -> None:
                 "evidence_items": [
                     {
                         "field_id": "A.gene_symbol",
-                        "group_id": "gene=BRCA1",
+                        "group_id": "gene=BRCA1|variant=c.100A>G",
                         "status": "found",
                         "value": "BRCA1",
                         "confidence": 0.9,
-                    }
+                    },
+                    {
+                        "field_id": "A.variant_hgvs_p",
+                        "group_id": "gene=BRCA1|variant=c.100A>G",
+                        "status": "found",
+                        "value": "p.L34V",
+                        "confidence": 0.9,
+                    },
                 ],
             },
             "audit_original": {
@@ -193,11 +201,18 @@ def test_build_run_item_specs_skips_audit_only_track_payloads() -> None:
                 "evidence_items": [
                     {
                         "field_id": "A.gene_symbol",
-                        "group_id": "gene=BRCA2",
+                        "group_id": "gene=BRCA2|variant=c.200T>C",
                         "status": "found",
                         "value": "BRCA2",
                         "confidence": 0.9,
-                    }
+                    },
+                    {
+                        "field_id": "A.variant_hgvs_p",
+                        "group_id": "gene=BRCA2|variant=c.200T>C",
+                        "status": "found",
+                        "value": "p.M67T",
+                        "confidence": 0.9,
+                    },
                 ],
             },
         },
@@ -205,9 +220,10 @@ def test_build_run_item_specs_skips_audit_only_track_payloads() -> None:
 
     specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
-    assert len(specs) == 1
-    assert specs[0].track == "reconciled"
+    assert len(specs) == 2
+    assert all(spec.track == "reconciled" for spec in specs)
     assert specs[0].value == {"value": "BRCA1"}
+    assert specs[1].value == {"value": "p.L34V"}
 
 
 @pytest.mark.asyncio
@@ -1040,3 +1056,255 @@ def test_context_contamination_is_not_canonical_eligible() -> None:
     )
 
     assert "context_contamination" not in CANONICAL_ELIGIBLE_STATUSES
+
+
+# ---------------------------------------------------------------------------
+# Gene-variant coexistence persistence gate tests
+# ---------------------------------------------------------------------------
+
+
+class TestFindGeneVariantCompleteGroups:
+    """Tests for _find_gene_variant_complete_groups static method."""
+
+    def test_returns_none_when_no_payloads(self) -> None:
+        result = StandardizationRepository._find_gene_variant_complete_groups({})
+        assert result is None
+
+    def test_returns_none_when_all_payloads_are_audit_only(self) -> None:
+        payloads = {
+            "audit_original": {
+                "audit_only": True,
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found"},
+                ],
+            },
+        }
+        result = StandardizationRepository._find_gene_variant_complete_groups(payloads)
+        assert result is None
+
+    def test_returns_empty_set_when_gene_only_no_variant(self) -> None:
+        payloads = {
+            "original": {
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found"},
+                ],
+            },
+        }
+        result = StandardizationRepository._find_gene_variant_complete_groups(payloads)
+        assert result == set()
+
+    def test_returns_empty_set_when_variant_only_no_gene(self) -> None:
+        payloads = {
+            "original": {
+                "evidence_items": [
+                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "found"},
+                ],
+            },
+        }
+        result = StandardizationRepository._find_gene_variant_complete_groups(payloads)
+        assert result == set()
+
+    def test_returns_group_when_gene_and_variant_p_present(self) -> None:
+        payloads = {
+            "original": {
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found"},
+                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "found"},
+                ],
+            },
+        }
+        result = StandardizationRepository._find_gene_variant_complete_groups(payloads)
+        assert result == {"g1"}
+
+    def test_returns_group_when_gene_and_variant_c_present(self) -> None:
+        payloads = {
+            "original": {
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found"},
+                    {"field_id": "A.variant_hgvs_c", "group_id": "g1", "status": "found"},
+                ],
+            },
+        }
+        result = StandardizationRepository._find_gene_variant_complete_groups(payloads)
+        assert result == {"g1"}
+
+    def test_ignores_not_found_items(self) -> None:
+        payloads = {
+            "original": {
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found"},
+                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "not_found"},
+                ],
+            },
+        }
+        result = StandardizationRepository._find_gene_variant_complete_groups(payloads)
+        assert result == set()
+
+    def test_filters_incomplete_groups_across_tracks(self) -> None:
+        payloads = {
+            "original": {
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found"},
+                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "found"},
+                    {"field_id": "A.gene_symbol", "group_id": "g2", "status": "found"},
+                ],
+            },
+            "translated": {
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "group_id": "g3", "status": "found"},
+                    {"field_id": "A.variant_hgvs_c", "group_id": "g3", "status": "found"},
+                ],
+            },
+        }
+        result = StandardizationRepository._find_gene_variant_complete_groups(payloads)
+        assert result == {"g1", "g3"}
+
+    def test_ignores_items_without_group_id(self) -> None:
+        """Items with empty group_id are skipped; if no groups remain, returns None (no gate)."""
+        payloads = {
+            "original": {
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "group_id": "", "status": "found"},
+                    {"field_id": "A.variant_hgvs_p", "group_id": "", "status": "found"},
+                ],
+            },
+        }
+        result = StandardizationRepository._find_gene_variant_complete_groups(payloads)
+        assert result is None
+
+    def test_ignores_non_dict_items_in_payload(self) -> None:
+        payloads = {
+            "original": {
+                "evidence_items": [None, "invalid", 42],
+            },
+        }
+        result = StandardizationRepository._find_gene_variant_complete_groups(payloads)
+        assert result is None
+
+
+class TestBuildRunItemSpecsGeneVariantGate:
+    """Tests for gene-variant coexistence gate in _build_run_item_specs."""
+
+    def _make_input(self, track_payloads: dict[str, Any]) -> StandardizationInput:
+        return StandardizationInput(
+            document_id="doc-gate",
+            source_document_id="source-gate",
+            processing_run_id="run-gate",
+            candidates=(),
+            evidence_items=(),
+            track_payloads=track_payloads,
+        )
+
+    def test_persists_items_from_complete_gene_variant_groups(self) -> None:
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({
+            "original": {
+                "track": "original",
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found", "value": "BRCA1", "confidence": 0.9},
+                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "found", "value": "p.L34V", "confidence": 0.9},
+                ],
+            },
+        })
+
+        specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+        assert len(specs) == 2
+        assert {spec.field_id for spec in specs} == {"A.gene_symbol", "A.variant_hgvs_p"}
+
+    def test_filters_out_gene_only_group(self) -> None:
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({
+            "original": {
+                "track": "original",
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found", "value": "BRCA1", "confidence": 0.9},
+                    {"field_id": "B.disease_diagnosis", "group_id": "g1", "status": "found", "value": "Breast cancer", "confidence": 0.9},
+                ],
+            },
+        })
+
+        specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+        assert len(specs) == 0
+
+    def test_filters_out_variant_only_group(self) -> None:
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({
+            "original": {
+                "track": "original",
+                "evidence_items": [
+                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "found", "value": "p.L34V", "confidence": 0.9},
+                    {"field_id": "D.allele_frequency", "group_id": "g1", "status": "found", "value": 0.001, "confidence": 0.8},
+                ],
+            },
+        })
+
+        specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+        assert len(specs) == 0
+
+    def test_mixed_groups_only_complete_ones_persisted(self) -> None:
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({
+            "original": {
+                "track": "original",
+                "evidence_items": [
+                    # Complete group g1
+                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found", "value": "BRCA1", "confidence": 0.9},
+                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "found", "value": "p.L34V", "confidence": 0.9},
+                    {"field_id": "B.disease_diagnosis", "group_id": "g1", "status": "found", "value": "Breast cancer", "confidence": 0.9},
+                    # Incomplete group g2 (gene only)
+                    {"field_id": "A.gene_symbol", "group_id": "g2", "status": "found", "value": "TP53", "confidence": 0.8},
+                    {"field_id": "B.disease_diagnosis", "group_id": "g2", "status": "found", "value": "Li-Fraumeni", "confidence": 0.8},
+                ],
+            },
+        })
+
+        specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+        assert len(specs) == 3
+        assert all(spec.group_id == "g1" for spec in specs)
+
+    def test_no_gate_when_no_groups_exist(self) -> None:
+        """When there are no groups at all (no group_id items), gate is not applied."""
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({
+            "original": {
+                "track": "original",
+                "evidence_items": [
+                    {"field_id": "B.disease_diagnosis", "group_id": "", "status": "found", "value": "Cancer", "confidence": 0.9},
+                ],
+            },
+        })
+
+        specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+        # No groups found → _find_gene_variant_complete_groups returns None → gate not applied
+        assert len(specs) == 1
+
+    def test_gate_does_not_affect_fallback_match_specs(self) -> None:
+        """When track_payloads yield no specs, fallback to match-based specs is not gated."""
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({})
+
+        match = EntityMatch(
+            candidate=StandardizationCandidate(
+                candidate_id="chain-1:gene",
+                entity_type=EntityType.GENE,
+                role=BindingRole.SUBJECT,
+                raw_text="BRCA1",
+                chain_id="chain-1",
+                track="original",
+            ),
+            status=MatchStatus.STANDARDIZED,
+            external_id="HGNC:1100",
+            display_name="BRCA1",
+            rationale="exact match",
+        )
+
+        specs = repo._build_run_item_specs(input_data, matches=(match,), scope_hashes={})
+
+        # Fallback path not gated: gene-only match still persists
+        assert len(specs) == 1
+        assert specs[0].field_id == "gene_mention"

@@ -10,6 +10,6 @@
 # ──────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-cd "$(dirname "$0")/../frontend"
+cd "$(dirname "$0")/../../frontend"
 
 exec bun run dev "$@"

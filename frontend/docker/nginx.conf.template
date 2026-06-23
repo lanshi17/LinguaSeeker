@@ -11,6 +11,10 @@
 # entrypoint.sh normalizes BASE_PATH to "" (root) or "/<seg>" (subpath) before
 # envsubst, so ${BASE_PATH} interpolates cleanly into location prefixes:
 #   root:     location /assets/   |  subpath:  location /linguaseeker/assets/
+#
+# Static files: dist is laid out as dist/assets/... and dist/index.html (no
+# BASE_PATH nesting on disk). The assets location uses `alias` to strip the
+# BASE_PATH prefix; the SPA fallback rewrites to the root index.html.
 
 server {
     listen       80;
@@ -18,12 +22,13 @@ server {
 
     client_max_body_size ${FRONTEND_MAX_BODY};
 
-    # ── Static SPA assets ────────────────────────────────────────────
     root /usr/share/nginx/html;
     index index.html;
 
     # ── Long-cache fingerprinted assets emitted by Vite ─────────────
+    # alias maps the URL prefix to the on-disk assets dir (no BASE_PATH nest).
     location ${BASE_PATH}/assets/ {
+        alias /usr/share/nginx/html/assets/;
         access_log off;
         add_header Cache-Control "public, max-age=31536000, immutable";
         try_files $uri =404;
@@ -55,10 +60,14 @@ server {
     }
 
     # ── SPA fallback ────────────────────────────────────────────────
-    # try_files resolves $uri against `root`; the fallback must be the
-    # base-relative index.html so BrowserRouter basename matches.
+    # Serve index.html for any path under BASE_PATH that isn't a static file.
+    # `rewrite ... break` strips the BASE_PATH prefix in-place (no re-match,
+    # so no loop) so try_files resolves against root — dist has no BASE_PATH
+    # nesting on disk. At root mount BASE_PATH is "" so the rewrite is a no-op
+    # and this single block handles both topologies.
     location ${BASE_PATH}/ {
-        try_files $uri $uri/ ${BASE_PATH}/index.html;
+        rewrite ^${BASE_PATH}/(.*)$ /$1 break;
+        try_files $uri $uri/ /index.html;
     }
 
     # Redirect bare BASE_PATH (no trailing slash) to BASE_PATH/.

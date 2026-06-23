@@ -8,6 +8,7 @@ from hashlib import sha256
 from typing import Any
 from uuid import UUID, uuid4
 
+from loguru import logger
 from sqlalchemy import String, cast, select, text, tuple_
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
@@ -1267,15 +1268,64 @@ class StandardizationRepository:
             for chain_id, bindings in grouped.items()
         }
 
+    @staticmethod
+    def _find_gene_variant_complete_groups(track_payloads: dict[str, Any]) -> set[str] | None:
+        """Return group_ids that have both gene and variant in FOUND status.
+
+        Returns ``None`` when no groups qualify, meaning all items should be
+        persisted (no gate applied).  Returns an empty set when groups exist
+        but none have both gene and variant — effectively blocking all items.
+        """
+        group_fields: dict[str, set[str]] = defaultdict(set)
+        for payload in track_payloads.values():
+            if not isinstance(payload, dict) or payload.get("audit_only") is True:
+                continue
+            for item in payload.get("evidence_items", []):
+                if not isinstance(item, dict):
+                    continue
+                if item.get("status") != "found":
+                    continue
+                group_id = str(item.get("group_id", ""))
+                if not group_id:
+                    continue
+                field_id = str(item.get("field_id", ""))
+                group_fields[group_id].add(field_id)
+
+        if not group_fields:
+            return None
+
+        return {
+            gid
+            for gid, fields in group_fields.items()
+            if "A.gene_symbol" in fields
+            and ("A.variant_hgvs_c" in fields or "A.variant_hgvs_p" in fields)
+        }
+
     def _build_run_item_specs(
         self,
         input_data: StandardizationInput,
         matches: tuple[EntityMatch, ...],
         scope_hashes: dict[str, str],
     ) -> list[RunItemSpec]:
-        """Build run-item persistence specs from track payloads or match fallbacks."""
+        """Build run-item persistence specs from track payloads or match fallbacks.
+
+        Applies the gene-variant coexistence gate: only items belonging to a
+        group that has both ``A.gene_symbol`` and at least one variant field
+        (``A.variant_hgvs_c`` or ``A.variant_hgvs_p``) in FOUND status are
+        persisted.  Items from incomplete groups (gene-only or variant-only)
+        are silently dropped.  The fallback match-based path is not gated.
+        """
         target_scope_hash = make_entity_scope_hash(make_target_scope_bindings(input_data.extraction_target))
         specs: list[RunItemSpec] = []
+
+        allowed_groups = self._find_gene_variant_complete_groups(input_data.track_payloads)
+        if allowed_groups is not None and len(allowed_groups) == 0:
+            logger.warning(
+                "Persistence gate: no group has both gene and variant in FOUND status; "
+                "skipping all track payload items for document={}",
+                input_data.document_id,
+            )
+
         for payload in input_data.track_payloads.values():
             if not isinstance(payload, dict):
                 continue
@@ -1286,6 +1336,8 @@ class StandardizationRepository:
                 if not isinstance(item, dict):
                     continue
                 group_id = str(item.get("group_id", ""))
+                if allowed_groups is not None and group_id not in allowed_groups:
+                    continue
                 value = {"value": item.get("value")}
                 specs.append(
                     RunItemSpec(
