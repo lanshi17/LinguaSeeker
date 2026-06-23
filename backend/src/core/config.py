@@ -202,7 +202,7 @@ class PostgreSQLConfig(BaseModel):
     host: str = "127.0.0.1"
     port: int = 5432
     db: str = "lingua_seeker"
-    schema_: str = "acmg_app"
+    schema_: str = "lingua_seeker"
     user: str = ""
     password: str = ""
     pool_size: int = 20
@@ -381,7 +381,7 @@ class Settings(BaseSettings):
     postgres_host: str = "127.0.0.1"
     postgres_port: int = 5432
     postgres_db: str = "lingua_seeker"
-    postgres_schema: str = "acmg_app"
+    postgres_schema: str = "lingua_seeker"
     postgres_user: str = ""
     postgres_password: str = ""
     postgres_pool_size: int = 20

@@ -8,7 +8,7 @@
 # ── Application ───────────────────────────────────────────────────────────
 environment: "development"
 debug: true
-cors_origins: "*"
+cors_origins: "http://localhost:3000"
 
 # ── LLM Endpoints (Development) ──────────────────────────────────────────
 fast_llm:

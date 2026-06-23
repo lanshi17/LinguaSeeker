@@ -16,10 +16,10 @@ services:
       dockerfile: backend/Dockerfile
     image: ${BACKEND_IMAGE:-ghcr.io/lanshi17/lingua-seeker-backend}:${IMAGE_TAG:-latest}
     restart: unless-stopped
-    # 0.0.0.0:8000 is reachable from the frontend host. Lock it down with
-    # ufw / security group; X-API-Key auth is enforced inside FastAPI.
+    # Loopback by default — expose to the frontend host via BACKEND_BIND=0.0.0.0
+    # when needed. X-API-Key auth is enforced inside FastAPI.
     ports:
-      - "${BACKEND_BIND:-0.0.0.0}:${BACKEND_PORT:-8000}:8000"
+      - "${BACKEND_BIND:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -35,9 +35,9 @@ services:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB:-lingua_seeker}
-      POSTGRES_USER: ${POSTGRES_USER:-acmg_app}
+      POSTGRES_USER: ${POSTGRES_USER:-lingua_seeker}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-acmg_app}
+      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-lingua_seeker}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
@@ -71,12 +71,12 @@ services:
       - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-lingua_seeker}
-      POSTGRES_USER: ${POSTGRES_USER:-acmg_app}
+      POSTGRES_USER: ${POSTGRES_USER:-lingua_seeker}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-acmg_app} -d ${POSTGRES_DB:-lingua_seeker}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lingua_seeker} -d ${POSTGRES_DB:-lingua_seeker}"]
       interval: 5s
       timeout: 5s
       retries: 10

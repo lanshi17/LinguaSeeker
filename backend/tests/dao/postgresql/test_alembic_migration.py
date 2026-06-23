@@ -442,8 +442,8 @@ async def test_upgrade_head_creates_tables() -> None:
 
     # Drop all tables first for a clean test
     async with engine.begin() as conn:
-        await conn.execute(text("DROP SCHEMA IF EXISTS acmg_app CASCADE"))
-        await conn.execute(text("CREATE SCHEMA IF NOT EXISTS acmg_app"))
+        await conn.execute(text("DROP SCHEMA IF EXISTS lingua_seeker CASCADE"))
+        await conn.execute(text("CREATE SCHEMA IF NOT EXISTS lingua_seeker"))
 
     # Run migration
     config = Config(str(ALEMBIC_INI))
@@ -458,7 +458,7 @@ async def test_upgrade_head_creates_tables() -> None:
     # Verify tables
     def get_tables(conn):
         inspector = inspect(conn)
-        return set(inspector.get_table_names(schema="acmg_app"))
+        return set(inspector.get_table_names(schema="lingua_seeker"))
 
     async with engine.connect() as conn:
         tables = await conn.run_sync(get_tables)

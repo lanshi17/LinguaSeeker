@@ -81,7 +81,7 @@ postgres:
   host: {{ postgres.host | default('127.0.0.1') }}
   port: {{ postgres.port }}
   db: {{ postgres.db | default('lingua_seeker') }}
-  schema: {{ postgres.schema | default('acmg_app') }}
+  schema: {{ postgres.schema | default('lingua_seeker') }}
   user: {{ postgres.user | default('') }}
   password: {{ postgres.password | default('') }}
   pool_size: {{ postgres.pool_size }}

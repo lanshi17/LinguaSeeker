@@ -69,6 +69,7 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         version_table_schema=schema,
+        version_table_column_len=128,
         include_schemas=True,
     )
 
@@ -85,6 +86,7 @@ def do_run_migrations(connection):
         connection=connection,
         target_metadata=_create_schema_metadata(schema),
         version_table_schema=schema,
+        version_table_column_len=128,
         include_schemas=True,
     )
 

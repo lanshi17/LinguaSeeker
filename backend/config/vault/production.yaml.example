@@ -32,7 +32,7 @@ rerank:
 
 # -- Database Credentials -----------------------------------------------------
 postgres:
-  user: "acmg_app"
+  user: "lingua_seeker"
   password: "your-production-postgres-password"
 
 redis:

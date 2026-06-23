@@ -1,6 +1,6 @@
 # Alembic
 
-> Database migration environment for the LinguaSeeker backend. Manages PostgreSQL schema migrations for the `acmg_app` schema.
+> Database migration environment for the LinguaSeeker backend. Manages PostgreSQL schema migrations for the `lingua_seeker` schema.
 
 ## Directory Map
 
