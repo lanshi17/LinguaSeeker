@@ -115,6 +115,9 @@ backend_workers: 4
 backend_log_level: "info"
 
 # ── Frontend Service ──────────────────────────────────────────────────────
+# SPA mount path (no trailing slash). "" = root; "/linguaseeker" = subpath.
+# Must match the build-time VITE_BASE_PATH baked into the frontend bundle.
+frontend_base_path: ""
 frontend_port: 3000
 frontend_node_env: "production"
 
