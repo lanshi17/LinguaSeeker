@@ -141,8 +141,8 @@ export interface EvidencePatchRequest {
 
 export interface DeltaEntry {
   field: string;
-  old_value: string | null;
-  new_value: string | null;
+  old_value: string | string[] | null;
+  new_value: string | string[] | null;
 }
 
 export interface PatchResultResponse {

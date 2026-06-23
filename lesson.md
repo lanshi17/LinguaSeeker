@@ -1,7 +1,17 @@
 # Lesson Log
 
 
-## 2026-06-23: 日志挖掘修复 — transient 异常掩蔽永久错误 + 双归一化函数不一致
+## 2026-06-23: `response_format: json_object` 阻断流式输出
+
+**问题**: 交互智能体独立聊天（无 evidence_id）使用 `response_format: json_object` 强制 LLM 返回完整 JSON 对象，导致 `route_intent_stream()` 只能累积所有 chunk 后一次性返回，前端看到的是加载动画直到完整响应结束。
+
+**排查**: 对比 evidence-bound 路径（已有逐 token 流式）和 standalone agent 路径（JSON envelope），发现 `response_format: json_object` 是瓶颈 — JSON 模式下 LLM 返回的是结构化 JSON token，无法从不完整 JSON 中安全提取 `reply` 字段。
+
+**根因**: `response_format: json_object` 约束使得 LLM 输出必须是合法 JSON，无法在 JSON 完成前提取部分 reply 文本。
+
+**解决方案**: 移除 `response_format: json_object`，改用 `<<<ACTION>>>` 分隔符格式 — LLM 先流式输出纯文本 reply，需要 dispatch action 时追加分隔符 + JSON。`route_intent_stream()` 使用 offset-tracking + safe-end 模式（保留 `len(delimiter) - 1` 字符缓冲防止分隔符跨 chunk 被截断）逐 chunk yield 文本。
+
+**预防措施**: 需要 LLM 同时输出流式文本和结构化数据时，避免 `response_format: json_object`；使用分隔符 + 纯文本格式实现逐 token 流式 + 延迟结构化解析。 — transient 异常掩蔽永久错误 + 双归一化函数不一致
 
 **问题**: drain3 日志挖掘暴露两类高频问题: (1) special_evidence 272 ERROR "Stage failed structured output"; (2) snippet 453 WARN "not found in document, marking SOURCE_INVALID"。
 
@@ -4817,3 +4827,116 @@ Model-server 同时运行 VLM (8004, `/v1/chat/completions`) 和 doc-parse (8005
 4. Parkinson limitation（parkinson_013）：B0 在简单字段上 precision 更高。如实报告 limitation。
 
 **Case 4 关键观察**：SYSTEM 提取 "PARK2"（文献中使用的别名），但 expected 是 "PRKN"（HGNC canonical）。B0 直接提取 "PRKN"。这说明 pipeline 在简单字段上可能因 reconcile 噪音而引入错误，而 naive LLM 的直接提取反而更准确。
+
+## 2026-06-23: Audit Trail 修正审计链路断点
+
+### 问题描述
+Audit 页面里的 Review Evidence 抽屉允许用户编辑字段并提交修正，但提交 payload 使用的是 `field_name` 或 `field_id` 作为 PATCH 字段名。后端 Phase 4 `EvidencePatchRequest` 只接受卡片字段（`gene`、`variant`、`disease`、`classification` 等），因此实际修正会被 422 拒绝，无法形成审计事件。证据详情里的 Correction history 也传入了 `sourceDocumentId`，但请求仍拉全局最近审计事件，当前文献的事件可能被漏掉或混入无关事件。
+
+### 排查过程
+1. 检查 `FeedbackService` 和 `DeltaAuditService`，确认后端已有字段/状态变更写审计事件能力。
+2. 检查 `EvidenceCorrectionForm`，发现它使用了正确的 field_id→card-field 映射。
+3. 检查 `EvidenceReviewDrawer`，发现批量审核路径没有复用映射，而是直接发送展示字段名。
+4. 检查 `EvidenceAuditHistory`，发现 `sourceDocumentId` 只参与 query key，不参与 API 参数。
+
+### 根因分析
+前端存在两条修正入口：证据详情单字段修正路径已有映射，Audit 页面批量审核路径独立实现了 PATCH 组装逻辑，导致契约漂移。审计历史组件同样保留了 source-document 参数形状，但后端查询契约没有对应过滤条件。
+
+### 解决方案
+1. 新增 `frontend/src/features/audit/utils/reviewPatch.ts`，统一将 Phase 4 field-level item 映射为后端允许的 card-field PATCH payload。
+2. Audit Review 抽屉改用 `field_id` 作为稳定编辑键，无法映射的字段只允许状态审核。
+3. 支持状态-only 审核提交，匹配后端已有 status-only audit event 行为。
+4. `DeltaAuditService.list_audit_events()` 和 `/api/v1/delta-audit/` 新增 `source_document_id` 过滤，通过 `CanonicalEvidenceItem` 关联限定当前文献。
+5. `EvidenceAuditHistory` 改为按当前 `sourceDocumentId` 查询。
+
+### 预防措施
+前端所有 Phase 4 修正入口必须复用同一 field_id→card-field 映射 helper。新增审计历史视图时，query key 中出现的过滤维度必须同时出现在 API 请求参数和后端服务测试中。
+
+## 2026-06-23: Delta Audit API 尾斜杠导致前端审计查询重定向
+
+### 问题描述
+前端审计服务调用 `/delta-audit/`，后端只注册了 `/delta-audit`，FastAPI 返回 307 Temporary Redirect。浏览器通常会跟随重定向，但 API 测试、代理、认证头或部分客户端配置可能不会透明保留请求上下文，导致“修正已写入但审计列表查不到/测试失败”的假象。
+
+### 排查过程
+1. 新增 API 级端到端测试：通过 HTTP PATCH `/api/v1/evidence/{id}` 修改证据，再 GET `/api/v1/delta-audit/` 按 `source_document_id` 查询审计事件。
+2. 测试首次失败在 GET 响应码 307，而 PATCH 已经返回 200。
+3. 对照前端 `listAuditEvents()`，确认它一直使用带尾斜杠的路径。
+
+### 根因分析
+后端路由只声明 `@router.get("")`，而前端使用 `"/delta-audit/"`。依赖框架自动重定向会让端到端审计链路变得脆弱，尤其在测试和代理层。
+
+### 解决方案
+给同一个 handler 同时注册 `@router.get("")` 和 `@router.get("/", include_in_schema=False)`，保持 OpenAPI 只暴露一个规范路径，同时兼容现有前端调用。
+
+### 预防措施
+API 路由若已有前端调用路径，测试必须覆盖实际前端路径字符串。对 GET 查询类接口，避免依赖 307/308 重定向作为正常链路的一部分。
+
+## 2026-06-23: Audit Events React Query 缓存维度缺失
+
+### 问题描述
+`useAuditEvents()` 的请求参数支持 `source_document_id` 后，React Query 的 `queryKey` 仍只包含 `canonical_evidence_id`、`reviewer_id` 和 `limit`。如果两个视图分别查询不同文献的审计事件，它们会共享同一个缓存条目，导致第二个文献可能显示第一个文献的审计结果。
+
+### 排查过程
+1. 按 source-document 审计查询链路生成模块指南时，复查 `useAuditEvents()` 与 `listAuditEvents()` 的参数一致性。
+2. 发现 service 会发送 `source_document_id`，但 hook query key 没有该字段。
+3. 新增 hook 测试：同一个 QueryClient 下先查询 `doc-a`，再 rerender 查询 `doc-b`，期望 service 被调用两次。
+4. 测试首次失败，`listAuditEvents` 只被调用一次，确认缓存串用。
+
+### 根因分析
+查询参数扩展后没有同步更新缓存 key。React Query 以 query key 作为数据身份，缺少任何过滤维度都会造成跨过滤条件复用。
+
+### 解决方案
+将 `query.source_document_id` 加入 `useAuditEvents()` 的 query key，并保留 hook 测试防止回归。
+
+### 预防措施
+每次给列表查询新增过滤参数时，必须同时更新三处：请求参数构造、React Query key、缓存隔离测试。不能只检查 HTTP 参数是否正确。
+
+## 2026-06-23: Benchmark import script optimization
+
+### 问题描述
+优化 benchmark ground truth 导入脚本,使其完全匹配数据库字段并支持生产环境导入。
+
+### 排查过程
+1. **REPO_ROOT 路径错误**: 脚本从 `scripts/` 移到 `scripts/data/import/` 后, `parents[2]` 指向 `scripts/` 而非仓库根目录. 修正为 `parents[3]`.
+2. **唯一约束冲突**: `canonical_evidence_items` 表有 `uq_canonical_evidence_items_identity` 约束 (source_document_id, field_id, position_hash, entity_scope_hash). 当同一 field_id+track+group_id 有多个不同值的证据项时, position_hash 相同导致冲突. 根因: position_hash 只包含 (entry_id, field_id, track, group_id), 不区分不同值. 解决: 在 position_hash 中加入 text_hash.
+3. **证据项过滤过度**: 原逻辑跳过 `status != "found"` 且无 value 的项, 导致 not_found 证据项(489/500)被丢弃. 对于 benchmark 评估, not_found 项同样重要(计算 precision/recall). 解决: 移除过滤, 导入所有有 field_id 的证据项.
+
+### 根因分析
+- 路径计算未随文件迁移更新
+- 唯一约束设计假设每个 (document, field, position, entity_scope) 只有一个值, 但实际 extraction 结果中同一字段可有多个不同值(如不同患者的年龄)
+- 过滤逻辑源自 ground truth 导入场景, 不适用于包含完整 extraction 结果的场景
+
+### 解决方案
+1. `REPO_ROOT = Path(__file__).resolve().parents[3]`
+2. `position_hash = _hash(entry_id, field_id, track, group_id, text_hash)`
+3. 移除 not_found 过滤, 保留所有有 field_id 的证据项
+
+### 预防措施
+- 文件迁移后检查所有路径计算
+- 理解数据库唯一约束的语义, 确保生成的主键/哈希值在约束范围内唯一
+- 区分 ground truth 导入和完整 extraction 结果导入的过滤需求
+
+
+## 2026-06-23: B7-expanded baseline reveals SYSTEM does not outperform stronger single-prompt
+
+**Problem**: SYSTEM showed ΔF1=+0.1224 over B0-naive, but B0-naive only requested 3 fields (gene, disease, relationship). Reviewer risk: SYSTEM's advantage was due to B0's weak prompt, not pipeline methodology.
+
+**Investigation**: Created B7-expanded baseline that explicitly requests 17 fields (simple + medium + complex) in a single prompt. Same model (GPT-5), same constraints (no pipeline modules, no dual-track, no source-grounding).
+
+**Results**:
+- B7-expanded F1=0.6124 > SYSTEM F1=0.5622 (Δ=-0.0417, p=0.2066, NOT significant)
+- Medium contextual: B7 wins significantly (Δ=-0.1539, p=0.0008)
+- Complex evidence: B7 wins significantly (Δ=-0.1644, p=0.0002)
+- SYSTEM only wins on A.functional_domain_or_hotspot (Δ=+0.1569) and B.disease_diagnosis (Δ=+0.0365)
+
+**Root cause**: The expanded prompt's explicit field list is highly effective. A well-crafted single prompt with the right model can extract most medium/complex fields. The pipeline's multi-agent architecture adds overhead (translation, reconciliation, standardization) that doesn't always improve F1.
+
+**Impact on paper**:
+- Cannot claim "SYSTEM outperforms single-prompt baselines" as the main result
+- Must shift framing to: auditability, source grounding, cross-lingual robustness, error recovery
+- BIBM readiness downgraded from "borderline (moderate)" to "borderline (low)"
+- Main narrative should be: "pipeline provides methodological guarantees (auditability, source-grounding, cross-lingual consistency) that single-prompt baselines cannot match, even when aggregate F1 is comparable"
+
+**Lesson**: Always test against a competitive baseline with equivalent field coverage. A weak baseline (3 fields) inflates the apparent advantage of a complex system. The expanded baseline was the rebuttal-ready experiment the reviewer would have asked for.
+
+**Prevention**: Future benchmark experiments should include at least one "strong single-prompt" baseline that explicitly requests all target fields.

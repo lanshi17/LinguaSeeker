@@ -19,10 +19,14 @@ export async function patchEvidence(
 export async function listAuditEvents(
   canonicalEvidenceId?: string,
   limit = 50,
+  sourceDocumentId?: string,
 ): Promise<ReviewAuditEventResponse[]> {
   const params: Record<string, string | number> = { limit };
   if (canonicalEvidenceId) {
     params.canonical_evidence_id = canonicalEvidenceId;
+  }
+  if (sourceDocumentId) {
+    params.source_document_id = sourceDocumentId;
   }
   const { data } = await apiClient.get<ReviewAuditEventResponse[]>(
     "/delta-audit/",

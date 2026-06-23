@@ -1,0 +1,66 @@
+import type {
+  EvidenceGroupItem,
+  EvidencePatchRequest,
+  ReviewStatusValue,
+} from "@/features/evidence-search/types/evidenceSearch";
+
+interface BuildReviewPatchOperationsArgs {
+  items: EvidenceGroupItem[];
+  editedFields: Record<string, string>;
+  newStatus: ReviewStatusValue;
+  changeReason: string;
+}
+
+export interface ReviewPatchOperation {
+  canonicalEvidenceId: string;
+  body: EvidencePatchRequest;
+}
+
+const FIELD_ID_TO_CARD_FIELD: Record<string, string> = {
+  "A.gene_symbol": "gene",
+  "B.disease_diagnosis": "disease",
+  "B.clinical_diagnosis": "disease",
+  "J.authority_classification": "classification",
+};
+
+export function cardFieldForFieldId(fieldId: string): string | null {
+  if (FIELD_ID_TO_CARD_FIELD[fieldId]) return FIELD_ID_TO_CARD_FIELD[fieldId];
+  if (fieldId.startsWith("A.variant_hgvs_") || fieldId === "A.variant_legacy_name") {
+    return "variant";
+  }
+  return null;
+}
+
+export function buildReviewPatchOperations({
+  items,
+  editedFields,
+  newStatus,
+  changeReason,
+}: BuildReviewPatchOperationsArgs): ReviewPatchOperation[] {
+  const trimmedReason = changeReason.trim();
+
+  return items
+    .filter((item) => item.canonical_evidence_id)
+    .map((item) => {
+      const fields: Record<string, string> = {};
+      const editedValue = editedFields[item.field_id]?.trim();
+      const cardField = cardFieldForFieldId(item.field_id);
+
+      if (editedValue && editedValue !== (item.value ?? "") && cardField) {
+        fields[cardField] = editedValue;
+      }
+
+      const body: EvidencePatchRequest = {
+        fields,
+        new_status: newStatus,
+      };
+      if (trimmedReason) {
+        body.change_reason = trimmedReason;
+      }
+
+      return {
+        canonicalEvidenceId: item.canonical_evidence_id,
+        body,
+      };
+    });
+}

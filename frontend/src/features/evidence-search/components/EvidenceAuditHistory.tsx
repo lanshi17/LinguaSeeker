@@ -25,14 +25,9 @@ export function EvidenceAuditHistory({
 }: EvidenceAuditHistoryProps) {
   const { data: events, isLoading } = useQuery({
     queryKey: ["delta-audit", sourceDocumentId],
-    queryFn: () => listAuditEvents(undefined, 50),
+    queryFn: () => listAuditEvents(undefined, 50, sourceDocumentId),
     staleTime: 10_000,
-    select: (all) =>
-      all.filter(
-        (e) =>
-          all.length <= 50 ||
-          true,
-      ).slice(0, 20),
+    select: (all) => all.slice(0, 20),
   });
 
   const relevantEvents = events?.filter(

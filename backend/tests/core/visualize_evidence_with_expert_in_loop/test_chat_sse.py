@@ -11,6 +11,58 @@ from src.core.visualize_evidence_with_expert_in_loop.chat_service import (
     ChatService,
 )
 from src.core.visualize_evidence_with_expert_in_loop.contracts import ChatAction
+from src.core.visualize_evidence_with_expert_in_loop.providers import (
+    _parse_delimited,
+    _try_parse_action,
+)
+
+
+class TestParseDelimited:
+    def test_text_only_returns_reply_and_none_action(self) -> None:
+        reply, action = _parse_delimited("Hello, how can I help?")
+        assert reply == "Hello, how can I help?"
+        assert action is None
+
+    def test_delimiter_with_action_json(self) -> None:
+        raw = (
+            "Found 3 results.\n"
+            '<<<ACTION>>>\n{"intent": "search-evidence", "slots": {"gene": "GLA"}}'
+        )
+        reply, action = _parse_delimited(raw)
+        assert reply == "Found 3 results."
+        assert action is not None
+        assert action.intent == "search-evidence"
+        assert action.slots["gene"] == "GLA"
+
+    def test_delimiter_without_action_json(self) -> None:
+        reply, action = _parse_delimited("Some text<<<ACTION>>>")
+        assert reply == "Some text"
+        assert action is None
+
+    def test_empty_string(self) -> None:
+        reply, action = _parse_delimited("")
+        assert reply == ""
+        assert action is None
+
+
+class TestTryParseAction:
+    def test_valid_action_json(self) -> None:
+        raw = '{"intent": "search-evidence", "slots": {"gene": "GLA"}}'
+        action = _try_parse_action(raw)
+        assert action is not None
+        assert action.intent == "search-evidence"
+
+    def test_invalid_json_returns_none(self) -> None:
+        assert _try_parse_action("not json") is None
+
+    def test_non_dict_json_returns_none(self) -> None:
+        assert _try_parse_action('"just a string"') is None
+
+    def test_empty_string_returns_none(self) -> None:
+        assert _try_parse_action("") is None
+
+    def test_invalid_action_fields_returns_none(self) -> None:
+        assert _try_parse_action('{"foo": "bar"}') is None
 
 
 @pytest.mark.asyncio
@@ -210,3 +262,72 @@ class TestChatRouterEnvelope:
         assert len(assistant_msgs) == 1
         assert assistant_msgs[0].action is not None
         assert assistant_msgs[0].action.intent == "upload-pdf"
+
+    async def test_increments_text_chunks_before_action(
+        self, db_session: AsyncSession
+    ) -> None:
+        """Text chunks are forwarded as SSE events before the final tuple."""
+
+        async def mock_stream(*args, **kwargs):
+            yield "Sure, "
+            yield "I can "
+            yield "help with that."
+            yield (
+                "",
+                ChatAction(
+                    intent="search-evidence",
+                    slots={"gene": "GLA"},
+                ),
+            )
+
+        provider = MagicMock()
+        provider.route_intent_stream = mock_stream
+        service = ChatService(db_session, chat_provider=provider)
+        session = await service.create_session(processing_run_id=None, user_id=None)
+
+        events = []
+        async for event in service.stream_reply(
+            session_id=session.chat_session_id,
+            user_message="Search for GLA",
+            evidence_id=None,
+        ):
+            events.append(event)
+
+        text_events = [e for e in events if e["type"] == "text"]
+        assert len(text_events) == 3
+        assert "".join(e["content"] for e in text_events) == "Sure, I can help with that."
+
+        types = [e["type"] for e in events]
+        assert types == ["text", "text", "text", "action", "done"]
+
+    async def test_increments_text_then_action_persists_full_reply(
+        self, db_session: AsyncSession
+    ) -> None:
+        """The persisted message contains the full accumulated reply text."""
+
+        async def mock_stream(*args, **kwargs):
+            yield "Searching for "
+            yield "BRCA1 evidence."
+            yield (
+                "",
+                ChatAction(intent="search-evidence", slots={"gene": "BRCA1"}),
+            )
+
+        provider = MagicMock()
+        provider.route_intent_stream = mock_stream
+        service = ChatService(db_session, chat_provider=provider)
+        session = await service.create_session(processing_run_id=None, user_id=None)
+
+        async for _ in service.stream_reply(
+            session_id=session.chat_session_id,
+            user_message="Find BRCA1 evidence",
+            evidence_id=None,
+        ):
+            pass
+
+        messages = await service.list_messages(session_id=session.chat_session_id)
+        assistant_msgs = [m for m in messages if m.role == "assistant"]
+        assert len(assistant_msgs) == 1
+        assert assistant_msgs[0].content == "Searching for BRCA1 evidence."
+        assert assistant_msgs[0].action is not None
+        assert assistant_msgs[0].action.intent == "search-evidence"

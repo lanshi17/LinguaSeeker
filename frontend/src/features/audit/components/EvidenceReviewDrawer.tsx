@@ -19,6 +19,7 @@ import type {
   EvidenceSearchResult,
   ReviewStatusValue,
 } from "@/features/evidence-search/types/evidenceSearch";
+import { buildReviewPatchOperations, cardFieldForFieldId } from "../utils/reviewPatch";
 
 interface EvidenceReviewDrawerProps {
   open: boolean;
@@ -100,23 +101,17 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
 
     setIsSubmitting(true);
     try {
-      // Build patch fields from edited values
-      const fields: Record<string, string> = {};
-      for (const [key, val] of Object.entries(editedFields)) {
-        if (val.trim()) fields[key] = val.trim();
-      }
+      const operations = buildReviewPatchOperations({
+        items: detail.items,
+        editedFields,
+        newStatus,
+        changeReason,
+      });
 
-      // Patch each item in the group
       const results = await Promise.all(
-        detail.items
-          .filter((item) => item.canonical_evidence_id)
-          .map((item) =>
-            patchEvidence(item.canonical_evidence_id, {
-              fields,
-              change_reason: changeReason.trim() || undefined,
-              new_status: newStatus,
-            }),
-          ),
+        operations.map((operation) =>
+          patchEvidence(operation.canonicalEvidenceId, operation.body),
+        ),
       );
 
       const totalDeltas = results.reduce((sum, r) => sum + r.deltas, 0);
@@ -150,6 +145,12 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
   const hasFieldEdits = useMemo(
     () => Object.values(editedFields).some((v) => v.trim()),
     [editedFields],
+  );
+  const canSubmit = useMemo(
+    () =>
+      hasFieldEdits ||
+      (detail?.items.some((item) => item.review_status !== newStatus) ?? false),
+    [detail?.items, hasFieldEdits, newStatus],
   );
 
   return (
@@ -345,8 +346,9 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
                 {detail.items.map((item) => {
                   const fieldKey = item.field_name ?? item.field_id;
-                  const edited = editedFields[fieldKey] ?? "";
+                  const edited = editedFields[item.field_id] ?? "";
                   const changed = edited.trim() && edited !== (item.value ?? "");
+                  const cardField = cardFieldForFieldId(item.field_id);
                   return (
                     <div
                       key={item.field_id}
@@ -391,9 +393,14 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
                       {/* Edit input */}
                       <Input
                         size="small"
-                        placeholder="Corrected value (leave empty to keep original)"
+                        placeholder={
+                          cardField
+                            ? `Corrected ${cardField} (leave empty to keep original)`
+                            : "This field can only be status-reviewed"
+                        }
                         value={edited}
-                        onChange={(e) => handleFieldChange(fieldKey, e.target.value)}
+                        onChange={(e) => handleFieldChange(item.field_id, e.target.value)}
+                        disabled={!cardField}
                         style={{
                           borderColor: changed ? "#fcd34d" : undefined,
                         }}
@@ -441,7 +448,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
                   icon={<CheckCircle2 style={{ width: 14, height: 14 }} />}
                   onClick={handleSubmit}
                   loading={isSubmitting}
-                  disabled={!hasFieldEdits && !changeReason.trim()}
+                  disabled={!canSubmit}
                 >
                   Submit review
                 </Button>

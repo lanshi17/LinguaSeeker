@@ -1,12 +1,21 @@
 """Tests for delta audit service."""
 from __future__ import annotations
 
+from uuid import UUID, uuid4
+
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
+    DeltaEntry,
     EvidenceCardPayload,
+    ReviewStatus,
+    TargetType,
 )
 from src.core.visualize_evidence_with_expert_in_loop.delta_audit_service import (
     DeltaAuditService,
 )
+from src.dao.postgresql.models import CanonicalEvidenceItem, SourceDocument
 
 
 class TestComputeDeltas:
@@ -65,3 +74,65 @@ class TestComputeDeltas:
         assert len(deltas) == 1
         assert deltas[0].old_value == "GLA"
         assert deltas[0].new_value is None
+
+
+@pytest.mark.asyncio
+async def test_list_audit_events_filters_by_source_document(
+    db_session: AsyncSession,
+) -> None:
+    """Source-document filtering returns only events for that literature record."""
+    service = DeltaAuditService()
+    first_doc_id, first_evidence_id = await _create_evidence(db_session, "A.gene_symbol")
+    second_doc_id, second_evidence_id = await _create_evidence(
+        db_session,
+        "B.disease_diagnosis",
+    )
+
+    await service.record_audit_event(
+        db_session,
+        canonical_evidence_id=first_evidence_id,
+        reviewer_id=None,
+        target_type=TargetType.EVIDENCE_ITEM,
+        old_status=ReviewStatus.PROVISIONAL,
+        new_status=ReviewStatus.CORRECTED,
+        field_deltas=[DeltaEntry(field="gene", old_value="GLA", new_value="PRKN")],
+    )
+    await service.record_audit_event(
+        db_session,
+        canonical_evidence_id=second_evidence_id,
+        reviewer_id=None,
+        target_type=TargetType.EVIDENCE_ITEM,
+        old_status=ReviewStatus.PROVISIONAL,
+        new_status=ReviewStatus.APPROVED,
+        field_deltas=[],
+    )
+
+    events = await service.list_audit_events(
+        db_session,
+        source_document_id=first_doc_id,
+    )
+
+    assert [event.canonical_evidence_id for event in events] == [first_evidence_id]
+    assert second_doc_id != first_doc_id
+
+
+async def _create_evidence(session: AsyncSession, field_id: str) -> tuple[UUID, UUID]:
+    """Create one source document with one canonical evidence item."""
+    source_document_id = uuid4()
+    canonical_evidence_id = uuid4()
+    session.add(SourceDocument(source_document_id=source_document_id, raw_metadata={}))
+    session.add(
+        CanonicalEvidenceItem(
+            canonical_evidence_id=canonical_evidence_id,
+            source_document_id=source_document_id,
+            field_id=field_id,
+            position_hash=str(uuid4()),
+            text_hash=str(uuid4()),
+            entity_scope_hash=str(uuid4()),
+            current_best_status="found",
+            review_status="provisional",
+            active_payload={"field_id": field_id, "value": "value"},
+        )
+    )
+    await session.flush()
+    return source_document_id, canonical_evidence_id

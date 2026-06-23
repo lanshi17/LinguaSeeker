@@ -7,9 +7,9 @@ per-document aggregated view of ``canonical_evidence_items`` grouped into
 from __future__ import annotations
 
 import json
-import re
 import uuid
 from collections import OrderedDict
+from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import func, or_, select
@@ -51,6 +51,17 @@ def _coerce_str(val: Any) -> str:
         return ""
     if isinstance(val, (list, dict)):
         return json.dumps(val, ensure_ascii=False)
+    return str(val)
+
+
+def _coerce_json_number(val: Any) -> float | int | str | None:
+    """Normalize numeric values for JSONB storage."""
+    if val is None:
+        return None
+    if isinstance(val, Decimal):
+        return float(val)
+    if isinstance(val, (float, int)):
+        return val
     return str(val)
 
 
@@ -128,7 +139,9 @@ class LiteratureProfileRepository:
                 "field_name": payload.get("field_name", ""),
                 "category": payload.get("category", ""),
                 "value": _coerce_str(payload.get("value")),
-                "confidence": payload.get("confidence", row.get("current_best_confidence")),
+                "confidence": _coerce_json_number(
+                    payload.get("confidence", row.get("current_best_confidence")),
+                ),
                 "status": payload.get("status", ""),
                 "track": payload.get("track", ""),
             })
