@@ -16,7 +16,7 @@ export function useVariantIndex() {
   // Fetch all evidence — we do client-side aggregation
   const query = useQuery({
     queryKey: ["evidence-db", "all-evidence"],
-    queryFn: () => fetchAllEvidence({ page: 1, page_size: 200 }),
+    queryFn: () => fetchAllEvidence({ page: 1, page_size: 1000 }),
     staleTime: 60_000,
   });
 

@@ -18,24 +18,28 @@ services:
       context: ../../../frontend
       dockerfile: Dockerfile
       args:
-        # Bake the SPA's API base URL into the bundle. Same-origin in prod —
-        # nginx in this same container proxies the prefix to the backend.
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+        # SPA mount path baked into the bundle (Vite base). Empty = root.
+        # The built index.html references /<base>/assets/... and API/health
+        # URLs derive from import.meta.env.BASE_URL. Must match runtime BASE_PATH.
+        VITE_BASE_PATH: ${VITE_BASE_PATH:-/}
     image: ${FRONTEND_IMAGE:-ghcr.io/[redacted-user]/lingua-seeker-frontend}:${IMAGE_TAG:-latest}
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT:-80}:80"
     environment:
-      # Where to reach the backend container *on the other server*.
-      # MUST be a routable address from this host, e.g. http://10.0.0.20:8000
+      # Where to reach the backend *on the other server*. MUST be routable
+      # from this host, e.g. https://furong.genemed.tech or http://10.0.0.20:8000
       BACKEND_URL: ${BACKEND_URL}
       # Shared secret injected into proxied requests as X-API-Key.
       # The browser never sees this value.
       API_KEY: ${API_KEY}
       FRONTEND_MAX_BODY: ${FRONTEND_MAX_BODY:-200m}
+      # Runtime SPA mount path (nginx location prefixes). Must match the
+      # build-time VITE_BASE_PATH. Empty = root; /linguaseeker = subpath.
+      BASE_PATH: ${BASE_PATH:-${VITE_BASE_PATH:-/}}
     healthcheck:
-      # Hits the local nginx; nginx then proxies /health to the backend.
-      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      # Hits the local nginx; nginx then proxies <BASE_PATH>/health to backend.
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost${BASE_PATH:-/health}"]
       interval: 15s
       timeout: 5s
       retries: 5

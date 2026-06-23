@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 
 /**
  * Structural skeleton matching the VariantIndexView layout:
- * hero stats grid + search bar + variant card grid with staggered shimmer.
+ * hero stats grid + search bar + variant list with staggered shimmer.
  */
 export function VariantIndexSkeleton() {
   return (
@@ -69,37 +69,77 @@ export function VariantIndexSkeleton() {
         </div>
       </section>
 
-      {/* Variant Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-        {Array.from({ length: 6 }).map((_, i) => (
+      {/* Variant List */}
+      <div
+        style={{
+          border: "1px solid #e5e7eb",
+          borderRadius: 12,
+          overflow: "hidden",
+          background: "#fff",
+        }}
+      >
+        {/* List header skeleton */}
+        <div
+          style={{
+            display: "none",
+            gridTemplateColumns: "2fr 1.5fr 120px 100px 100px 100px 120px 90px",
+            alignItems: "center",
+            gap: 8,
+            padding: "10px 16px",
+            backgroundColor: "#f9fafb",
+            borderBottom: "1px solid #e5e7eb",
+          }}
+          className="skeleton-list-header"
+        >
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} variant="text" style={{ width: 48, height: 10 }} />
+          ))}
+        </div>
+        {/* List rows skeleton */}
+        {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
             className="stagger-in"
-            style={{ animationDelay: `${(i + 4) * 50}ms` }}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "2fr 1.5fr 120px 100px 100px 100px 120px 90px",
+              alignItems: "center",
+              gap: 8,
+              padding: "14px 16px",
+              borderBottom: i < 7 ? "1px solid #f3f4f6" : "none",
+              animationDelay: `${(i + 4) * 50}ms`,
+            }}
           >
-            <div className="edb-card" style={{ borderRadius: 12, overflow: "hidden" }}>
-              <Skeleton variant="block" style={{ height: 2, borderRadius: 0 }} />
-              <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    <Skeleton variant="text" style={{ width: 96, height: 20 }} />
-                    <Skeleton variant="line" style={{ width: 128 }} />
-                  </div>
-                  <Skeleton variant="pill" style={{ width: 40, height: 20 }} />
-                </div>
-                <Skeleton variant="text" style={{ width: "100%" }} />
-                <Skeleton variant="line" style={{ width: 112 }} />
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <Skeleton variant="line" style={{ width: 64 }} />
-                  <Skeleton variant="line" style={{ width: 56 }} />
-                  <Skeleton variant="line" style={{ width: 48 }} />
-                </div>
-                <Skeleton variant="block" style={{ height: 4, borderRadius: 2 }} />
-              </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <Skeleton variant="text" style={{ width: 120, height: 16 }} />
+              <Skeleton variant="line" style={{ width: 80 }} />
             </div>
+            <Skeleton variant="text" style={{ width: "80%" }} />
+            <Skeleton variant="pill" style={{ width: 52, height: 20 }} />
+            <Skeleton variant="line" style={{ width: 48 }} />
+            <Skeleton variant="line" style={{ width: 40 }} />
+            <Skeleton variant="line" style={{ width: 36 }} />
+            <Skeleton variant="block" style={{ height: 4, borderRadius: 2 }} />
+            <Skeleton variant="line" style={{ width: 60 }} />
           </div>
         ))}
       </div>
+
+      {/* Responsive: show simpler skeleton on small screens */}
+      <style>{`
+        @media (min-width: 768px) {
+          .skeleton-list-header {
+            display: grid !important;
+          }
+        }
+        @media (max-width: 767px) {
+          .stagger-in[style*="grid-template-columns"] {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -60,6 +60,10 @@ export interface VariantDetailData {
   literature: LiteratureReference[];
   /** All evidence items flattened from all groups */
   allItems: EvidenceGroupItem[];
+  /** Only reconciled-track items (primary display) */
+  reconciledItems: EvidenceGroupItem[];
+  /** Original + translated items keyed by canonical_evidence_id for bilingual display */
+  bilingualItems: Map<string, { original?: EvidenceGroupItem; translated?: EvidenceGroupItem }>;
 }
 
 /** L2: A single literature reference in the variant's reference list */
@@ -73,6 +77,8 @@ export interface LiteratureReference {
   avgConfidence: number;
   reviewStatus: string;
   categories: string[];
+  /** Original + translated items for bilingual display in References */
+  bilingualItems: Map<string, { original?: EvidenceGroupItem; translated?: EvidenceGroupItem }>;
 }
 
 /** Search/filter state for the variant index */

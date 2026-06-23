@@ -94,25 +94,111 @@ const embeddedCSS = `
     width: 192px;
   }
 }
-.viv-variant-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: 1fr;
-  align-items: stretch;
-  grid-auto-rows: 1fr;
+.viv-variant-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
 }
-@media (min-width: 640px) {
-  .viv-variant-grid {
-    grid-template-columns: repeat(2, 1fr);
+.viv-list-header {
+  display: none;
+}
+@media (min-width: 768px) {
+  .viv-list-header {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 120px 100px 100px 100px 120px 90px;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 }
-@media (min-width: 1024px) {
-  .viv-variant-grid {
-    grid-template-columns: repeat(3, 1fr);
+.viv-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.15s;
+}
+.viv-row:last-child {
+  border-bottom: none;
+}
+.viv-row:hover {
+  background-color: #f9fafb;
+}
+@media (min-width: 768px) {
+  .viv-row {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 120px 100px 100px 100px 120px 90px;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
   }
 }
-.viv-card:hover .viv-gene {
+.viv-row-gene {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.viv-row:hover .viv-row-gene {
   color: var(--color-primary-600);
+}
+.viv-row-variant {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+.viv-row-disease {
+  font-size: 13px;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.viv-row-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+.viv-row-stat-val {
+  font-weight: 500;
+  color: #374151;
+}
+.viv-row-mobile-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #6b7280;
+}
+@media (min-width: 768px) {
+  .viv-row-mobile-stats {
+    display: none;
+  }
 }
 .viv-filter-pill:hover {
   border-color: #d1d5db;
@@ -213,137 +299,88 @@ function CategoryDistributionBar({
   );
 }
 
-/* ── Variant Card ───────────────────────────────────────── */
+/* ── Variant Row ────────────────────────────────────────── */
 
-function VariantCard({ entry }: { entry: VariantIndexEntry }) {
-  const borderColor = classificationColor(entry.classificationLevel);
-
+function VariantRow({ entry }: { entry: VariantIndexEntry }) {
   return (
     <Link
       to={`/evidence-db/${encodeURIComponent(entry.variantSlug)}`}
-      className="edb-card edb-card-clickable viv-card"
-      style={{
-        display: "block",
-        borderRadius: 12,
-        overflow: "hidden",
-        cursor: "pointer",
-        textDecoration: "none",
-        color: "inherit",
-      }}
+      className="viv-row"
     >
-      {/* Pathogenicity accent bar */}
-      <div
-        style={{ height: 2, width: "100%", backgroundColor: borderColor }}
-      />
+      {/* Gene + Variant (primary column) */}
+      <div style={{ minWidth: 0, display: "flex", alignItems: "baseline", flexWrap: "nowrap" }} title={`${entry.gene || "Unknown Gene"} · ${entry.variant || "Unknown Variant"}`}>
+        <span className="viv-row-gene">{entry.gene || "Unknown Gene"}</span>
+        <span style={{ margin: "0 6px", color: "#d1d5db", flexShrink: 0 }}>·</span>
+        <span className="viv-row-variant">{entry.variant || "Unknown Variant"}</span>
+      </div>
+      {/* Classification shown inline on mobile */}
+      <div className="viv-row-mobile-stats" style={{ marginTop: 4 }}>
+        <span title={entry.classification || undefined}>{entry.classification || "No classification"}</span>
+      </div>
 
-      <div style={{ padding: 16 }}>
-        {/* Gene + Variant header */}
-        <div style={{ marginBottom: 8 }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-            <div style={{ minWidth: 0 }}>
-              <h3 className="viv-gene" style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 16,
-                fontWeight: 600,
-                color: "#111827",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                transition: "color 0.15s",
-                margin: 0,
-              }}>
-                {entry.gene || "Unknown Gene"}
-              </h3>
-              <p style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 14,
-                color: "#6b7280",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                marginTop: 2,
-                margin: 0,
-              }}>
-                {entry.variant || "Unknown Variant"}
-              </p>
-            </div>
-            <span
-              style={{
-                ...badgeInlineStyle(entry.classificationLevel),
-                flexShrink: 0,
-              }}
-            >
-              {classificationShortLabel(entry.classificationLevel)}
-            </span>
-          </div>
-        </div>
+      {/* Disease */}
+      <div className="viv-row-disease" title={entry.disease || undefined}>
+        {entry.disease || "—"}
+      </div>
 
-        {/* Disease + Classification */}
-        <div style={{ marginBottom: 12, display: "flex", flexDirection: "column", gap: 2 }}>
-          {entry.disease && (
-            <p style={{
-              fontSize: 14,
-              color: "#374151",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              margin: 0,
-            }}>
-              {entry.disease}
-            </p>
-          )}
-          <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>
-            {entry.classification || "No classification"}
-          </p>
-        </div>
+      {/* Classification badge */}
+      <div>
+        <span style={badgeInlineStyle(entry.classificationLevel)}>
+          {classificationShortLabel(entry.classificationLevel)}
+        </span>
+      </div>
 
-        {/* Stats row */}
-        <div style={{
-          marginBottom: 12,
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-          fontSize: 12,
-          color: "#6b7280",
-        }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <FileText style={{ width: 14, height: 14 }} />
-            <span style={{ fontWeight: 500, color: "#374151" }}>
-              {entry.evidenceGroupCount}
-            </span>
-            evidence
-          </span>
-          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <BookOpen style={{ width: 14, height: 14 }} />
-            <span style={{ fontWeight: 500, color: "#374151" }}>
-              {entry.literatureCount}
-            </span>
-            refs
-          </span>
-          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <TrendingUp style={{ width: 14, height: 14 }} />
-            <span style={{ fontWeight: 500, color: "#374151" }}>
-              {Math.round(entry.avgConfidence * 100)}%
-            </span>
-            conf.
-          </span>
-        </div>
+      {/* Evidence groups */}
+      <div className="viv-row-stat">
+        <FileText style={{ width: 14, height: 14, flexShrink: 0 }} />
+        <span className="viv-row-stat-val">{entry.evidenceGroupCount}</span>
+        <span>groups</span>
+      </div>
 
-        {/* Category distribution mini-bar */}
+      {/* Literature */}
+      <div className="viv-row-stat">
+        <BookOpen style={{ width: 14, height: 14, flexShrink: 0 }} />
+        <span className="viv-row-stat-val">{entry.literatureCount}</span>
+        <span>refs</span>
+      </div>
+
+      {/* Confidence */}
+      <div className="viv-row-stat">
+        <TrendingUp style={{ width: 14, height: 14, flexShrink: 0 }} />
+        <span className="viv-row-stat-val">{Math.round(entry.avgConfidence * 100)}%</span>
+      </div>
+
+      {/* Category distribution */}
+      <div style={{ minWidth: 0 }}>
         <CategoryDistributionBar distribution={entry.categoryDistribution} />
+      </div>
 
-        {/* Updated date */}
-        <div style={{
-          marginTop: 8,
-          display: "flex",
-          alignItems: "center",
-          gap: 4,
-          fontSize: 11,
-          color: "#9ca3af",
-        }}>
-          <Calendar style={{ width: 12, height: 12 }} />
-          <span>Updated {formatDate(entry.createdAt)}</span>
-        </div>
+      {/* Updated date */}
+      <div className="viv-row-stat" style={{ color: "#9ca3af", fontSize: 12 }} title={entry.createdAt || undefined}>
+        <Calendar style={{ width: 12, height: 12, flexShrink: 0 }} />
+        <span>{formatDate(entry.createdAt)}</span>
+      </div>
+
+      {/* Mobile compact stats */}
+      <div className="viv-row-mobile-stats">
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <FileText style={{ width: 12, height: 12 }} />
+          <span className="viv-row-stat-val">{entry.evidenceGroupCount}</span>
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <BookOpen style={{ width: 12, height: 12 }} />
+          <span className="viv-row-stat-val">{entry.literatureCount}</span>
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <TrendingUp style={{ width: 12, height: 12 }} />
+          <span className="viv-row-stat-val">{Math.round(entry.avgConfidence * 100)}%</span>
+        </span>
+        <span style={badgeInlineStyle(entry.classificationLevel)}>
+          {classificationShortLabel(entry.classificationLevel)}
+        </span>
+        <span style={{ color: "#9ca3af", fontSize: 11 }}>
+          {formatDate(entry.createdAt)}
+        </span>
       </div>
     </Link>
   );
@@ -653,15 +690,25 @@ export function VariantIndexView() {
             </p>
           </div>
 
-          {/* Variant Grid */}
-          <div className="viv-variant-grid" style={{ marginTop: 16 }}>
+          {/* Variant List */}
+          <div className="viv-variant-list" style={{ marginTop: 16 }}>
+            <div className="viv-list-header">
+              <span>Gene / Variant</span>
+              <span>Disease</span>
+              <span>Class.</span>
+              <span>Evidence</span>
+              <span>Refs</span>
+              <span>Conf.</span>
+              <span>Categories</span>
+              <span>Updated</span>
+            </div>
             {items.map((entry, i) => (
               <div
                 key={entry.variantSlug}
                 className="edb-stagger"
-                style={{ animationDelay: `${Math.min(i * 35, 350)}ms` }}
+                style={{ animationDelay: `${Math.min(i * 25, 250)}ms` }}
               >
-                <VariantCard entry={entry} />
+                <VariantRow entry={entry} />
               </div>
             ))}
           </div>

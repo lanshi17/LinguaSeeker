@@ -284,6 +284,54 @@ function EvidenceCategoryPanel({
 
 /* ── Literature Reference Card ──────────────────────────── */
 
+function BilingualItemRow({
+  fieldName,
+  original,
+  translated,
+}: {
+  fieldName: string;
+  original?: string | null;
+  translated?: string | null;
+}) {
+  return (
+    <div style={{ fontSize: 12, lineHeight: 1.5 }}>
+      <span style={{ fontWeight: 500, color: "#374151" }}>{fieldName}</span>
+      <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
+        {original && (
+          <span style={{
+            flex: 1,
+            color: "#1e40af",
+            background: "#eff6ff",
+            borderRadius: 4,
+            padding: "2px 6px",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}>
+            {original}
+          </span>
+        )}
+        {translated && (
+          <span style={{
+            flex: 1,
+            color: "#7c3aed",
+            background: "#f5f3ff",
+            borderRadius: 4,
+            padding: "2px 6px",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}>
+            {translated}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function LiteratureReferenceCard({
   reference,
   variantSlug,
@@ -293,6 +341,7 @@ function LiteratureReferenceCard({
 }) {
   const confidence = Math.round(reference.avgConfidence * 100);
   const confColor = confidence >= 70 ? "#16A34A" : confidence >= 40 ? "#D97706" : "#DC2626";
+  const bilingualEntries = [...reference.bilingualItems.entries()].slice(0, 3);
 
   return (
     <Link
@@ -370,6 +419,35 @@ function LiteratureReferenceCard({
             </span>
           ))}
         </div>
+        {/* Bilingual items preview */}
+        {bilingualEntries.length > 0 && (
+          <div style={{
+            marginTop: 8,
+            paddingTop: 8,
+            borderTop: "1px solid #f3f4f6",
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+          }}>
+            <div style={{ display: "flex", gap: 8, fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" }}>
+              <span style={{ flex: 1, color: "#1e40af" }}>Original</span>
+              <span style={{ flex: 1, color: "#7c3aed" }}>Translated</span>
+            </div>
+            {bilingualEntries.map(([id, pair]) => (
+              <BilingualItemRow
+                key={id}
+                fieldName={pair.original?.field_name ?? pair.translated?.field_name ?? id}
+                original={pair.original?.value}
+                translated={pair.translated?.value}
+              />
+            ))}
+            {reference.bilingualItems.size > 3 && (
+              <span style={{ fontSize: 11, color: "#9ca3af" }}>
+                +{reference.bilingualItems.size - 3} more&hellip;
+              </span>
+            )}
+          </div>
+        )}
       </div>
       <ChevronRight className="vdv-lit-chevron" style={{
         width: 16,
@@ -432,12 +510,12 @@ export function VariantDetailView({
     );
   }
 
-  const { entry, literature, allItems } = detail;
+  const { entry, literature, reconciledItems } = detail;
   const borderColor = classificationColor(entry.classificationLevel);
 
   const categoriesWithItems = [
     ...new Set(
-      allItems.map(
+      reconciledItems.map(
         (item) =>
           item.category ??
           (item.field_id.includes(".") ? item.field_id.split(".")[0] : null),
@@ -575,7 +653,7 @@ export function VariantDetailView({
               Evidence Fields
             </h2>
             <span style={{ fontSize: 14, color: "#6b7280" }}>
-              {allItems.length} field{allItems.length !== 1 ? "s" : ""} across{" "}
+              {reconciledItems.length} reconciled field{reconciledItems.length !== 1 ? "s" : ""} across{" "}
               {categoriesWithItems.length} categor
               {categoriesWithItems.length !== 1 ? "ies" : "y"}
             </span>
@@ -598,7 +676,7 @@ export function VariantDetailView({
               {categoriesWithItems.map((cat) => (
                 <EvidenceCategoryPanel
                   key={cat}
-                  items={allItems}
+                  items={reconciledItems}
                   category={cat}
                 />
               ))}
@@ -637,7 +715,7 @@ export function VariantDetailView({
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {literature.map((ref) => (
                 <LiteratureReferenceCard
-                  key={ref.sourceDocumentId}
+                  key={ref.groupId}
                   reference={ref}
                   variantSlug={variantSlug}
                 />
