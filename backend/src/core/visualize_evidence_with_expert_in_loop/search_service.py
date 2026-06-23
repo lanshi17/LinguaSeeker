@@ -14,6 +14,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.utils.parsing import parse_gene_from_group_id, parse_variant_from_group_id
+from src.utils.text_normalize import concat_document_text
 
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     EvidenceChainHighlight,
@@ -171,22 +172,6 @@ def _build_highlight(
     )
 
 
-
-def _concat_blocks(doc_data: dict) -> str | None:
-    """Concatenate text blocks from a persisted JSON document."""
-    blocks = doc_data.get("blocks", [])
-    if blocks:
-        text = "\n\n".join(
-            block.get("text", "").strip()
-            for block in blocks
-            if block.get("text")
-        )
-        if text:
-            return text
-    formatted = doc_data.get("formatted_text", "").strip()
-    return formatted or None
-
-
 def _load_from_dir(doc_dir: Path, track: str) -> str | None:
     """Try to load and concatenate text from a single document directory."""
     doc_file = doc_dir / f"{track}.json"
@@ -194,11 +179,10 @@ def _load_from_dir(doc_dir: Path, track: str) -> str | None:
         return None
     try:
         with open(doc_file, "r", encoding="utf-8") as f:
-            return _concat_blocks(json.load(f))
+            return concat_document_text(json.load(f))
     except Exception:
         logger.warning("Failed to load full {} text from {}", track, doc_file)
         return None
-
 
 def _load_full_document_text(
     source_document_id: str | UUID,
@@ -544,8 +528,30 @@ class SearchService:
             page_size=page_size,
         )
 
-    async def get_group_detail(self, *, group_id: str) -> EvidenceGroupDetailResponse:
-        """Return detail payload for one grouped evidence row."""
+    async def get_group_detail(
+        self,
+        *,
+        group_id: str | None = None,
+        source_document_id: str | None = None,
+    ) -> EvidenceGroupDetailResponse:
+        """Return detail payload for one grouped evidence row.
+
+        At least one of *group_id* or *source_document_id* must be given.
+        When only *source_document_id* is provided the method picks the
+        first ``group_id`` found for that document.  This is required
+        because ``group_id`` values are not unique per source document —
+        the same ``gene=<G>|variant=<V>`` string can appear across many
+        papers.
+        """
+        conditions: list = []
+        if group_id:
+            conditions.append(
+                CanonicalEvidenceItem.active_payload["group_id"].astext == group_id,
+            )
+        if source_document_id:
+            conditions.append(
+                CanonicalEvidenceItem.source_document_id == source_document_id,
+            )
         stmt = (
             select(
                 CanonicalEvidenceItem.canonical_evidence_id,
@@ -556,7 +562,7 @@ class SearchService:
                 CanonicalEvidenceItem.active_payload,
                 CanonicalEvidenceItem.updated_at,
             )
-            .where(CanonicalEvidenceItem.active_payload["group_id"].astext == group_id)
+            .where(*conditions)
             .order_by(CanonicalEvidenceItem.field_id)
         )
         result = await self._session.execute(stmt)
@@ -576,6 +582,10 @@ class SearchService:
                 deduped_rows.append(row)
         rows = deduped_rows
 
+        # If group_id was not provided, extract it from the first row
+        if not group_id:
+            group_id = (rows[0].active_payload or {}).get("group_id", "")
+
         source_document_id = rows[0].source_document_id
 
         ident_stmt = select(SourceDocumentIdentifier).where(
@@ -590,6 +600,8 @@ class SearchService:
             SourceDocument.raw_metadata,
             SourceDocument.original_text,
             SourceDocument.translated_text,
+            SourceDocument.original_blocks,
+            SourceDocument.translated_blocks,
         ).where(
             SourceDocument.source_document_id == source_document_id
         )
@@ -598,6 +610,8 @@ class SearchService:
         raw_metadata = (metadata_row[0] if metadata_row else None) or {}
         db_original_text: str | None = metadata_row[1] if metadata_row else None
         db_translated_text: str | None = metadata_row[2] if metadata_row else None
+        db_original_blocks: list[dict] | None = metadata_row[3] if metadata_row else None
+        db_translated_blocks: list[dict] | None = metadata_row[4] if metadata_row else None
         title = (
             _coerce_str(raw_metadata.get("title"))
             if isinstance(raw_metadata, dict)
@@ -675,9 +689,9 @@ class SearchService:
 
 
         # Fallback: parse gene/variant from group_id if field-level extraction missed them
-        if not gene:
+        if not gene and group_id:
             gene = parse_gene_from_group_id(group_id)
-        if not variant:
+        if not variant and group_id:
             variant = parse_variant_from_group_id(group_id)
         # Build traces by matching original/translated pairs per field_id
         items_by_field: dict[str, list] = {}
@@ -805,6 +819,8 @@ class SearchService:
                     known_output_dir=phase2_output_dir,
                 )
             ),
+            original_blocks=db_original_blocks,
+            translated_blocks=db_translated_blocks,
             gene=gene,
             variant=variant,
             disease=disease,

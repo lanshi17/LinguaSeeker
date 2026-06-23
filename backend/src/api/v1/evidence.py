@@ -29,14 +29,28 @@ router = APIRouter()
 
 @router.get("/groups/detail", response_model=EvidenceGroupDetailResponse)
 async def get_evidence_group_detail(
-    group_id: str = Query(..., description="Evidence group identifier"),
+    group_id: str | None = Query(None, description="Evidence group identifier"),
+    source_document_id: UUID | None = Query(None, description="Source document UUID to scope results"),
     session: AsyncSession = Depends(get_db_session),
     _api_key: str | None = Depends(require_api_key),
 ) -> EvidenceGroupDetailResponse:
-    """Return grouped evidence detail with distribution and traceability."""
+    """Return grouped evidence detail with distribution and traceability.
+
+    At least one of *group_id* or *source_document_id* must be provided.
+    When only *source_document_id* is given, the service picks the first
+    group found for that document.
+    """
+    if not group_id and not source_document_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Provide at least one of group_id or source_document_id",
+        )
     service = SearchService(session)
     try:
-        return await service.get_group_detail(group_id=group_id)
+        return await service.get_group_detail(
+            group_id=group_id,
+            source_document_id=str(source_document_id) if source_document_id else None,
+        )
     except NoResultFound:
         raise HTTPException(status_code=404, detail="Evidence group not found")
 

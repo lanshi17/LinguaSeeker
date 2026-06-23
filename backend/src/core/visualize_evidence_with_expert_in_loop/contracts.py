@@ -351,6 +351,8 @@ class EvidenceGroupDetailResponse(BaseModel):
     classification: str | None = None
     original_document_text: str | None = None
     translated_document_text: str | None = None
+    original_blocks: list[dict] | None = None
+    translated_blocks: list[dict] | None = None
     item_count: int
     avg_confidence: float | None = None
     distribution: EvidenceFieldDistribution

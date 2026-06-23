@@ -33,7 +33,18 @@ function buildBilingualMap(
 function buildLiteratureReferences(
   groups: EvidenceGroupDetailResponse[],
 ): LiteratureReference[] {
-  return groups.map((g) => {
+  // Deduplicate by source_document_id — the same paper should appear only
+  // once even when multiple (group_id, source_document_id) pairs exist.
+  const seenDocs = new Set<string>();
+  const deduped: EvidenceGroupDetailResponse[] = [];
+  for (const g of groups) {
+    if (!seenDocs.has(g.source_document_id)) {
+      seenDocs.add(g.source_document_id);
+      deduped.push(g);
+    }
+  }
+
+  return deduped.map((g) => {
     const categories = new Set<string>();
     for (const item of g.items) {
       const cat = item.category ?? categoryFromFieldId(item.field_id);
@@ -69,14 +80,36 @@ export function useVariantDetail(variantSlug: string) {
     return entries.find((e) => e.variantSlug === variantSlug) ?? null;
   }, [indexQuery.data, variantSlug]);
 
-  // Fetch details for each group
-  const groupIds = entry?.groupIds ?? [];
+  // Build deduplicated (group_id, source_document_id) pairs.
+  // The same group_id can appear across many source documents because it
+  // is derived from gene+variant only.  We must scope each detail fetch
+  // to a single source document to avoid mixing evidence from different
+  // papers.
+  const groupDocPairs = useMemo(() => {
+    if (!entry) return [];
+    const seen = new Set<string>();
+    const pairs: Array<{ groupId: string; sourceDocumentId: string }> = [];
+    for (const docId of entry.sourceDocumentIds) {
+      for (const gid of entry.groupIds) {
+        // One pair per (group, document) — the variant index already
+        // collected unique group IDs; we cross them with unique doc IDs.
+        const key = `${gid}\0${docId}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          pairs.push({ groupId: gid, sourceDocumentId: docId });
+        }
+      }
+    }
+    return pairs;
+  }, [entry]);
 
   const groupQueries = useQuery({
-    queryKey: ["evidence-db", "variant-groups", variantSlug, groupIds],
+    queryKey: ["evidence-db", "variant-groups", variantSlug, groupDocPairs],
     queryFn: async () => {
       const results = await Promise.allSettled(
-        groupIds.map((id) => fetchEvidenceGroupDetail(id)),
+        groupDocPairs.map((pair) =>
+          fetchEvidenceGroupDetail(pair.groupId, pair.sourceDocumentId),
+        ),
       );
       return results
         .filter(
@@ -85,7 +118,7 @@ export function useVariantDetail(variantSlug: string) {
         )
         .map((r) => r.value);
     },
-    enabled: groupIds.length > 0,
+    enabled: groupDocPairs.length > 0,
     staleTime: 60_000,
   });
 

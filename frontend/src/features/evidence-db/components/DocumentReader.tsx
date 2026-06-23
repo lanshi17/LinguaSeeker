@@ -1,6 +1,8 @@
 import { Languages, BookOpen } from "lucide-react";
 import type { EvidenceDocument } from "@/features/evidence-search/utils/evidenceDocument";
+import type { ContentBlock } from "@/features/evidence-search/types/evidenceSearch";
 import { HighlightedText } from "./HighlightedText";
+import { StructuredBlockRenderer, type BlockHighlight } from "./StructuredBlockRenderer";
 
 /* ── Document Reader Panel ──────────────────────────────── */
 
@@ -9,12 +11,20 @@ export function DocumentReader({
   track,
   document,
   accentColor,
+  blocks,
+  blockHighlights,
 }: {
   title: string;
   track: "original" | "translated";
   document: EvidenceDocument;
   accentColor: string;
+  /** Structured blocks for formatted rendering (preferred over flat paragraphs). */
+  blocks?: ContentBlock[] | null;
+  /** Highlights mapped to global character offsets for block rendering. */
+  blockHighlights?: BlockHighlight[];
 }) {
+  const hasBlocks = blocks && blocks.length > 0;
+
   return (
     <div style={{
       display: "flex",
@@ -42,11 +52,13 @@ export function DocumentReader({
           textTransform: "capitalize",
           color: "#6b7280",
         }}>
-          {track} track
+          {track} track{hasBlocks ? " · structured" : ""}
         </span>
       </div>
-      <div className="edb-scroll" style={{ maxHeight: 600, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
-        {document.paragraphs.length === 0 ? (
+      <div className="edb-scroll" style={{ maxHeight: 600, overflowY: "auto", padding: 16 }}>
+        {hasBlocks ? (
+          <StructuredBlockRenderer blocks={blocks} highlights={blockHighlights ?? []} />
+        ) : document.paragraphs.length === 0 ? (
           <div style={{
             display: "flex",
             flexDirection: "column",
@@ -61,23 +73,25 @@ export function DocumentReader({
             </p>
           </div>
         ) : (
-          document.paragraphs.map((para) => (
-            <div key={para.id} style={{ position: "relative" }}>
-              {para.page && (
-                <span style={{
-                  position: "absolute",
-                  left: -8,
-                  top: 0,
-                  fontSize: 10,
-                  color: "#9ca3af",
-                  fontFamily: "var(--font-mono)",
-                }}>
-                  p.{para.page}
-                </span>
-              )}
-              <HighlightedText paragraph={para} />
-            </div>
-          ))
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {document.paragraphs.map((para) => (
+              <div key={para.id} style={{ position: "relative" }}>
+                {para.page && (
+                  <span style={{
+                    position: "absolute",
+                    left: -8,
+                    top: 0,
+                    fontSize: 10,
+                    color: "#9ca3af",
+                    fontFamily: "var(--font-mono)",
+                  }}>
+                    p.{para.page}
+                  </span>
+                )}
+                <HighlightedText paragraph={para} />
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
