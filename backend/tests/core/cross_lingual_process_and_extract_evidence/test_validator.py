@@ -84,3 +84,56 @@ def test_validate_segment_good():
 def test_validate_segment_short_english():
     """Short English segments with no source should pass."""
     validate_segment("", "Figure 1 shows the results.")
+
+
+# ── rett_043 regression: English biomedical text with mutation notation ───
+
+
+def test_validate_accepts_english_biomedical_with_mutation_notation():
+    """English documents with gene mutation notation must not be rejected as non_english.
+
+    The lingua detector misclassifies text heavy in mutation notation
+    (e.g. p.R106W, c.C316T, IVS3-2A>g) as Latin.  The validator must
+    fall back to word-frequency heuristics instead of blindly trusting
+    the detector.
+
+    Regression test for rett_043 non_english_output failure.
+    """
+    source = (
+        "RSRT MECP2 iPSC Collection at Coriell Institute\n\n"
+        "<table><tr><td>Mutation(protein)</td><td>Mutation(DNA)</td>"
+        "<td>Isogenic control available</td><td>Sex</td><td>Source</td></tr>\n"
+        "<tr><td>p.R106W</td><td>c.C316T</td><td>Yes</td><td>F</td>"
+        "<td>lymphocytes</td></tr>\n"
+        "<tr><td>p.R133C</td><td>c.C397T</td><td>Yes</td><td>F</td>"
+        "<td>lymphocytes</td></tr>\n"
+        "<tr><td>p.T158M</td><td>c.C473T</td><td>Yes</td><td>F</td>"
+        "<td>lymphocytes</td></tr>\n"
+        "<tr><td>p.R255X</td><td>c.C763T</td><td>Yes</td><td>F</td>"
+        "<td>lymphocytes</td></tr>\n"
+        "<tr><td>p.R306C</td><td>c.C916T</td><td>Yes</td><td>F</td>"
+        "<td>lymphocytes</td></tr></table>\n\n"
+        "The collection is available for research on Rett syndrome and the "
+        "associated mutations in the MECP2 gene."
+    )
+    # Simulate what the LLM produces when "translating" an already-English doc:
+    # slightly reformatted but same content.  The detector still sees Latin.
+    translated = (
+        "RSRT MECP2 iPSC Collection at the Coriell Institute\n\n"
+        "<table><tr><td>Mutation (protein)</td><td>Mutation (DNA)</td>"
+        "<td>Isogenic control available</td><td>Sex</td><td>Source</td></tr>\n"
+        "<tr><td>p.R106W</td><td>c.C316T</td><td>Yes</td><td>F</td>"
+        "<td>lymphocytes</td></tr>\n"
+        "<tr><td>p.R133C</td><td>c.C397T</td><td>Yes</td><td>F</td>"
+        "<td>lymphocytes</td></tr>\n"
+        "<tr><td>p.T158M</td><td>c.C473T</td><td>Yes</td><td>F</td>"
+        "<td>lymphocytes</td></tr>\n"
+        "<tr><td>p.R255X</td><td>c.C763T</td><td>Yes</td><td>F</td>"
+        "<td>lymphocytes</td></tr>\n"
+        "<tr><td>p.R306C</td><td>c.C916T</td><td>Yes</td><td>F</td>"
+        "<td>lymphocytes</td></tr></table>\n\n"
+        "This collection is available for Rett syndrome research and for the "
+        "study of associated mutations in the MECP2 gene."
+    )
+    # The validator must accept this as valid English output.
+    validate_translation_output(source, translated)
