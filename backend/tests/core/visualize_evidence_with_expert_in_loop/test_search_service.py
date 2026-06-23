@@ -451,6 +451,61 @@ def test_build_highlight_returns_none_for_empty_text():
     assert _build_highlight({"text_snippet": None}) is None
 
 
+def test_build_highlight_returns_none_for_string_source():
+    """_build_highlight returns None when source_span is a string, not a dict.
+
+    Benchmark/ground-truth imports store ``source`` as a plain string
+    (e.g. ``"benchmark_ground_truth"``) instead of the usual dict with
+    ``text_snippet`` / offsets.  The function must not crash.
+    """
+    assert _build_highlight("benchmark_ground_truth") is None
+    assert _build_highlight("preprocessed") is None
+
+
+@pytest.mark.asyncio
+async def test_get_group_detail_handles_string_source_field():
+    """Group detail does not crash when active_payload['source'] is a string.
+
+    Ground-truth evidence stores source as a plain string rather than a dict.
+    """
+    source_document_id = uuid4()
+    ev_id = uuid4()
+    group_id = "gene=['BRCA1']"
+
+    rows = [
+        _cei(
+            canonical_evidence_id=ev_id,
+            source_document_id=source_document_id,
+            field_id="A.gene_symbol",
+            review_status="approved",
+            current_best_confidence=Decimal("1.0000"),
+            active_payload={
+                "group_id": group_id,
+                "field_name": "Gene symbol",
+                "category": "A",
+                "value": "BRCA1",
+                "track": "original",
+                "source": "benchmark_ground_truth",
+            },
+        ),
+    ]
+
+    service = SearchService(_FakeSession([
+        _FakeResult(rows=rows),
+        _FakeResult(scalars=[]),
+        _FakeResult(rows=[({}, None, None)]),
+        _FakeResult(scalar=None),
+    ]))
+
+    detail = await service.get_group_detail(group_id=group_id)
+
+    assert len(detail.items) == 1
+    assert detail.items[0].value == "BRCA1"
+    # String source should produce a trace with no highlight (original=None)
+    assert len(detail.traces) == 1
+    assert detail.traces[0].original is None
+
+
 @pytest.mark.asyncio
 async def test_get_group_detail_skips_field_ids_without_standard_tracks():
     """Field IDs with only non-standard tracks should be skipped in traces."""

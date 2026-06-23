@@ -15,7 +15,7 @@ import {
 export async function fetchAllEvidence(
   query: EvidenceSearchQuery = {},
 ): Promise<EvidenceSearchResponse> {
-  return _searchEvidence(query, { page: 1, page_size: 200 });
+  return _searchEvidence(query, { page: 1, page_size: 1000 });
 }
 
 export { getEvidenceGroupDetail as fetchEvidenceGroupDetail };

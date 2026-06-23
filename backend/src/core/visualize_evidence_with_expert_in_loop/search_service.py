@@ -688,6 +688,7 @@ class SearchService:
         for field_id, field_rows in items_by_field.items():
             original_row = None
             translated_row = None
+            reconciled_row = None
             for row in field_rows:
                 payload = row.active_payload or {}
                 track = payload.get("track")
@@ -709,8 +710,11 @@ class SearchService:
                             row.canonical_evidence_id,
                         )
                     translated_row = row
+                elif track == "reconciled":
+                    if reconciled_row is None:
+                        reconciled_row = row
                 else:
-                    logger.warning(
+                    logger.debug(
                         "Non-standard track value {!r} for field_id={}, "
                         "canonical_evidence_id={} — skipping in trace pairing",
                         track,
@@ -718,10 +722,14 @@ class SearchService:
                         row.canonical_evidence_id,
                     )
 
-            ref_row = original_row or translated_row
+            # Fall back to reconciled row when no original/translated exist
+            if original_row is None and translated_row is None and reconciled_row is not None:
+                original_row = reconciled_row
+
+            ref_row = original_row or translated_row or reconciled_row
             if ref_row is None:
-                logger.warning(
-                    "No original/translated track found for field_id={} — skipping trace",
+                logger.debug(
+                    "No usable track found for field_id={} — skipping trace",
                     field_id,
                 )
                 continue
@@ -745,6 +753,17 @@ class SearchService:
 
             original = _build_highlight(original_source, original_value) if original_source is not None else None
             translated = _build_highlight(translated_source, translated_value) if translated_source is not None else None
+
+            # Fall back to reconciled row's highlight when original/translated
+            # sources are non-dict (e.g. "benchmark_ground_truth" strings)
+            # and produce no usable highlight.
+            if original is None and translated is None and reconciled_row is not None:
+                rec_payload = reconciled_row.active_payload or {}
+                rec_source = rec_payload.get("source")
+                if isinstance(rec_source, dict):
+                    rec_value = _coerce_str(rec_payload.get("value"))
+                    original = _build_highlight(rec_source, rec_value)
+                    original_value = original_value or rec_value
 
             canonical_id = ref_row.canonical_evidence_id
             field_name = ref_row.active_payload.get("field_name") if ref_row.active_payload else None
