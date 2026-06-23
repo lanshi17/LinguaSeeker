@@ -519,75 +519,6 @@ export function BilingualCompareView({
   };
 
   return (
-    <>
-      <style>{`
-        .edb-compare-stats-grid {
-          display: grid;
-          gap: 0;
-        }
-        @media (min-width: 640px) {
-          .edb-compare-stats-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-          }
-        }
-        .edb-compare-stat-cell {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 16px;
-          border-bottom: 1px solid #f3f4f6;
-        }
-        .edb-compare-stat-cell:last-child {
-          border-bottom: none;
-        }
-        @media (min-width: 640px) {
-          .edb-compare-stat-cell {
-            border-bottom: none;
-            border-right: 1px solid #f3f4f6;
-          }
-          .edb-compare-stat-cell:last-child {
-            border-right: none;
-          }
-        }
-        .edb-compare-layout {
-          display: grid;
-          gap: 20px;
-        }
-        @media (min-width: 1024px) {
-          .edb-compare-layout {
-            grid-template-columns: 340px minmax(0, 1fr);
-          }
-        }
-        .edb-doc-readers-grid {
-          display: grid;
-          gap: 16px;
-        }
-        @media (min-width: 1280px) {
-          .edb-doc-readers-grid.edb-doc-readers-two-col {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-        .edb-line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .edb-nav-item:hover {
-          border-color: #d1d5db !important;
-          background-color: #f9fafb !important;
-          box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05) !important;
-        }
-        .edb-nav-item:hover .edb-nav-item-title {
-          color: var(--color-primary-700, #0e7490);
-        }
-        .edb-toggle-label:hover {
-          background-color: #f9fafb;
-        }
-        .edb-toggle-input:focus-visible ~ .edb-toggle-track {
-          box-shadow: 0 0 0 2px var(--color-primary-500, #06b6d4), 0 0 0 4px #fff;
-        }
-      `}</style>
       <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <Link
           to={`/evidence/detail?groupId=${encodeURIComponent(groupId)}`}
@@ -856,6 +787,5 @@ export function BilingualCompareView({
           </section>
         </div>
       </div>
-    </>
   );
 }

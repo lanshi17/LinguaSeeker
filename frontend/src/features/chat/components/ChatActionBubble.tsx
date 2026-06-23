@@ -1,7 +1,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { Card, Tag, Typography } from "antd";
-import { LoadingOutlined } from "@ant-design/icons";
+import { Loader2 } from "lucide-react";
 
 import type { ChatAction, ChatActionIntent } from "../types/actions";
 
@@ -106,9 +106,9 @@ export function ChatActionBubble({
           {statusLabel}
         </Text>
         {isLoading && !dispatched && (
-          <LoadingOutlined
-            spin
-            style={{ marginLeft: "auto", fontSize: 12, color: "var(--color-primary-600, #0891b2)" }}
+          <Loader2
+            className="spin"
+            style={{ marginLeft: "auto", width: 12, height: 12, color: "var(--color-primary-600, #0891b2)" }}
             aria-hidden="true"
           />
         )}

@@ -171,10 +171,6 @@ export function ChatMarkdown({ source }: ChatMarkdownProps) {
       className="chat-markdown"
       style={{ display: "flex", flexDirection: "column", gap: 8, lineHeight: 1.625 }}
     >
-      <style>{`
-        .chat-markdown-list { list-style-type: disc; padding-left: 24px; }
-        .chat-markdown-list li::marker { color: #9ca3af; }
-      `}</style>
       {blocks.map((block, blockIndex) => {
         if (block.type === "code") {
           return (

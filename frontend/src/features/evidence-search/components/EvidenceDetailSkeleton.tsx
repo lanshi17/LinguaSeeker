@@ -6,20 +6,6 @@ import { Skeleton } from "@/components/ui/Skeleton";
  */
 export function EvidenceDetailSkeleton() {
   return (
-    <>
-      <style>{`
-        .eds-meta-grid { display: grid; gap: 0; }
-        .eds-meta-cell { border-bottom: 1px solid #f3f4f6; padding: 16px 20px; }
-        .eds-two-col { display: grid; gap: 20px; }
-        @media (min-width: 768px) {
-          .eds-meta-grid { grid-template-columns: repeat(4, 1fr); }
-          .eds-meta-cell { border-bottom: none; border-right: 1px solid #f3f4f6; }
-          .eds-meta-cell:last-child { border-right: none; }
-        }
-        @media (min-width: 1024px) {
-          .eds-two-col { grid-template-columns: 300px minmax(0, 1fr); }
-        }
-      `}</style>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* Back link */}
         <Skeleton variant="line" style={{ width: 128, height: 16 }} />
@@ -110,6 +96,5 @@ export function EvidenceDetailSkeleton() {
           </div>
         </div>
       </div>
-    </>
   );
 }

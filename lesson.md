@@ -4241,3 +4241,33 @@ python -m benchmark.analysis.reconcile.ablation --entries $entries --write
 **Solution**: Restarted the backend with the project script so it reloads layered config. Verified `/health` returned 200 and the backend-loaded embedding key produced HTTP 200 against the model-server.
 
 **Prevention**: For auth errors, always run paired probes (without auth and with the backend-loaded key). This confirms whether 401 is expected enforcement or a true key mismatch before changing code or rerunning long benchmark jobs.
+
+## 2026-06-22: Model-server X-API-Key 401
+
+**Problem**: `/v1/embeddings` returned 401 when using `X-API-Key` header.
+**Root cause**: The `require_api_key` function in `services/model-server/app/auth.py` already supported both `Authorization: Bearer` and `X-API-Key` headers in the source code, but the running model-server process had not been restarted after the code change. The model-server runs with `python main.py` (no auto-reload).
+**Fix**: Restart model-server process.
+**Prevention**: After modifying model-server code, always restart the process. Consider adding auto-reload support.
+
+## 2026-06-22: Long document self-review context overflow
+
+**Problem**: Long documents (e.g. rett_063, rett_076 with 160k+ chars) caused `input tokens 69042 exceeded max_seq_len 32768` errors during self-review.
+**Root cause**: `_self_review()` sends the full source text + full translated text to the LLM in a single prompt. For long documents, this exceeds the model's context window.
+**Fix**: Added `_SELF_REVIEW_INPUT_BUDGET = 24_000` class constant to `MultiStageTranslator`. Before calling the LLM, `estimate_tokens(prompt)` is checked. If it exceeds the budget, self-review is skipped with a `logger.warning`, and the original translated text is returned unchanged.
+**Design decision**: Skip self-review rather than truncating, because truncating would introduce uncontrolled quality bias. The segmented translation already provides reasonable quality.
+**Verification**: Test `test_self_review_skips_when_prompt_exceeds_budget` confirms the guard works.
+
+## 2026-06-22: Database migration alembic_version column too narrow
+
+**Problem**: Alembic migrations failed with `StringDataRightTruncationError: value too long for type character varying(32)` when applying migration `2026_06_11_allow_standalone_chat_sessions` (42 chars).
+**Root cause**: Alembic creates `alembic_version.version_num` with `varchar(32)` by default. The `version_table_column_len=128` setting in `context.configure()` was added to `env.py` but doesn't retroactively widen an existing column. Fresh DB creation also failed because the init migration runs in a transaction and creates the table with the default width.
+**Fix**: Pre-create the `alembic_version` table with `varchar(128)` before running migrations: `CREATE TABLE lingua.alembic_version (version_num VARCHAR(128) NOT NULL, CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num));`
+**Also**: Added `version_table_column_len=128` to both `do_run_migrations` and `run_migrations_offline` in `database/migrations/env.py` for future fresh installs.
+**Prevention**: This is a fragile workaround. Consider a dedicated migration to widen the column, or use a shorter naming convention for migration slugs.
+
+## 2026-06-22: PostgreSQL missing primary keys after fresh migration
+
+**Problem**: After running `alembic upgrade head` on a fresh database, all tables were created but primary keys were missing.
+**Root cause**: Unknown - the migration code correctly defines `PrimaryKeyConstraint` for all tables. Possibly related to the transactional DDL behavior or the `version_table_column_len` fix interfering with constraint creation.
+**Fix**: Manually added primary keys via `ALTER TABLE ... ADD PRIMARY KEY (...)` statements.
+**Prevention**: After running migrations on a fresh DB, verify primary keys exist with: `SELECT conrelid::regclass, conname FROM pg_constraint WHERE connamespace = 'lingua'::regnamespace AND contype = 'p';`

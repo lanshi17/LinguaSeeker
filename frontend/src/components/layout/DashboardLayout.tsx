@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Layout, Button } from "antd";
-import { MenuOutlined, CloseOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { Menu, X, List } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { ConnectionStatus } from "./ConnectionStatus";
 import { AnimatedOutlet } from "@/components/ui/PageTransition";
@@ -73,7 +73,7 @@ export function DashboardLayout() {
             {/* Mobile hamburger */}
             <Button
               type="text"
-              icon={mobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
+              icon={mobileMenuOpen ? <X style={{ width: 18, height: 18 }} /> : <Menu style={{ width: 18, height: 18 }} />}
               onClick={() => setMobileMenuOpen((o) => !o)}
               aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
               className="dl-mobile-btn"
@@ -87,7 +87,7 @@ export function DashboardLayout() {
             {/* Desktop collapse toggle */}
             <Button
               type="text"
-              icon={<UnorderedListOutlined />}
+              icon={<List style={{ width: 18, height: 18 }} />}
               onClick={toggleSidebar}
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
               className="dl-desktop-btn"
