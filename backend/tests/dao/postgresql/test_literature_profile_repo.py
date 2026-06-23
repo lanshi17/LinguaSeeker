@@ -347,6 +347,7 @@ async def test_get_by_document_returns_profile_dict() -> None:
 
     profile_id = uuid4()
     doc_id = uuid4()
+    now = datetime.now()
 
     fake_row = MagicMock()
     fake_row.literature_profile_id = profile_id
@@ -423,13 +424,10 @@ async def test_get_by_document_returns_none_when_not_found() -> None:
 @pytest.mark.asyncio
 async def test_search_returns_items_and_total() -> None:
     """search returns (items, total_count) with expected dict keys."""
-    from datetime import datetime
-
     from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
 
     profile_id = uuid4()
     doc_id = uuid4()
-    now = datetime.now()
 
     fake_row = MagicMock()
     fake_row.literature_profile_id = profile_id
