@@ -4469,3 +4469,19 @@ python -m benchmark.analysis.reconcile.ablation --entries $entries --write
 4. nginx 配置改动必须用真实 dist 端到端验证（curl 各 location），不能只靠 `nginx -t` 语法通过就认为正确——`nginx -t` 不验证路径解析逻辑。
 
 **验证**：tsc 通过；54/54 前端测试通过（原 2 个 stale 测试已修）；docker nginx E2E：根挂载（/ →200, /chat→200, /assets→200）+ 子路径（/linguaseeker/→200, /linguaseeker→301, /linguaseeker/chat→200, /linguaseeker/assets→200）全通过；构建 CSS 中字体 URL 为 `/linguaseeker/assets/*.woff2`（base 前缀正确），零外部字体引用。
+
+## 2026-06-23: Parkinson 数据集低区分度根因
+
+**问题**：parkinson 单集 SYSTEM F1 (0.3415) 与 B0 F1 (0.3415) 完全持平，pipeline reconcile 策略无任何增益。
+
+**根因**：
+1. **字段极度稀疏**：平均仅 5.1 fields/entry，100% 为 simple_explicit（gene/disease/variant），无任何 medium 或 complex 字段。
+2. **gene_symbol 全量错误**：20/20 条目的 `expected_evidence.A.gene_symbol` 值硬编码为 "PARKIN"，但实际 gene_symbol 包含 GBA、LRRK2、SNCA 等非 PRKN 基因。
+3. **无区分度空间**：reconcile 策略依赖字段间一致性验证，当只有 4 种简单字段且 gene 值全错时，无法产生比 naive LLM 更好的结果。
+
+**对比**：RETT 数据集 12.4 fields/entry，38% simple / 54% medium / 8% complex，有 inheritance、phenotype、de_novo 等上下文字段供 reconcile 验证。
+
+**解决方向**：
+1. P0: 修正 PARK2→PRKN，修正 A.gene_symbol evidence 值匹配实际基因
+2. P1: 从 source.md 文献中提取 inheritance、variant_type、phenotype 等字段
+3. P2: 去重重复 variant 值
