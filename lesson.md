@@ -1,6 +1,39 @@
 # Lesson Log
 
 
+## 2026-06-23: 日志挖掘修复 — transient 异常掩蔽永久错误 + 双归一化函数不一致
+
+**问题**: drain3 日志挖掘暴露两类高频问题: (1) special_evidence 272 ERROR "Stage failed structured output"; (2) snippet 453 WARN "not found in document, marking SOURCE_INVALID"。
+
+**排查 Fix A**: providers.py 的 invoke_structured/ainvoke_structured 有两个 except 分支 — `_TRANSIENT_EXCEPTIONS`(含 openai.RateLimitError=429)只重试, generic `except Exception` 才在 `_is_unsupported_response_format` 时回退 JSON-text。日志里的 429 错误体实为 "'messages' must contain the word 'json' ... response_format ... invalid_request_error" — 这是**永久性**不兼容(prompt 不含 'json' 字样, 重试无效), 但因异常类型是 RateLimitError 被先归入 transient 分支重试耗尽后 raise RuntimeError, 永远到不了 generic 分支的回退。
+
+**根因 A**: 异常**类型**(transient)与错误**语义**(永久不兼容)不一致 — 一个 429 状态码携带了 response_format 永久错误的 body, 被 transient 分类器吞掉。
+
+**修复 A**: 在 transient 分支内额外检测 `_is_response_format_incompatibility(exc)`(复用并扩展 unsupported-response-format 判定, 增加 "must contain the word 'json'"), 命中则立即回退 JSON-text(该路径重写 prompt 显式索求 JSON, 绕过不兼容), 不再重试。真·限流(无 response_format 字样)仍重试。
+
+**排查 Fix B**: core.py 有两套归一化函数 — `_normalize_snippet_for_search`(regex) 与 `_normalize_text_with_index_map`(逐字符+索引映射)。两者对空格处理相反: snippet 用 `_CJK_NUMERIC_SPACE_PATTERN` 的 lookbehind 含 A-Za-z, 误删拉丁词间空格(`gene is`→`geneis`); text 逐字符保留 ascii 邻接空格。且两者均未做全角→半角、未 lowercase。导致 normalized_text.find(normalized_snippet) 对拉丁多词片段必然失败。另外 `_search_snippet` 有守卫 `if normalized_snippet != snippet` 在 snippet 自身未变时跳过归一化搜索 — 但文档侧可能仍有差异(全半角), 该守卫错误地放弃恢复。
+
+**根因 B**: 同一归一化概念有两套实现且不一致(regex vs 逐字符), 加上一个假设"snippet 不变则无收益"的守卫, 共同导致差异恢复失效。
+
+**修复 B**: 重写 `_normalize_snippet_for_search` 为逐字符逻辑, 与 `_normalize_text_with_index_map` **完全对齐**(仅当两侧邻居均 ascii 保留空格, 全角→半角 + lower, per-char), 删除两个不再使用的 CJK 空格正则, 移除 `!= snippet` 守卫(改为仅检查非空)。结果仍走 CORRECTED/AMBIGUOUS 精度, 非 EXACT, 不引入假阳性。
+
+**预防**:
+- 异常分类不能只看类型: transient 类型(RateLimitError/Timeout)可能携带永久语义的 body, transient 分支必须二次检测"不可重试"语义并提前回退/失败, 不能盲目重试到底。
+- 同一归一化/匹配概念禁止两套实现: 一旦 snippet 侧与 text 侧用不同规则, find() 必然失配。应抽出共享逻辑或保证逐字符对齐, 并用"两侧均归一化后能否互找"的测试锁定一致性。
+- "X 不变则跳过"守卫是脆弱优化: 当对侧仍可能变化时, 守卫会放弃合法恢复。优化守卫必须证明双侧均无变化才有意义, 否则只做空值检查。
+
+## 2026-06-23: 日志数据挖掘应用 drain3 模板聚类, 而非裸 grep/uniq
+
+**问题**: 需要在 160k 行日志中找出警告/错误最集中的模式。初次尝试用 `grep -oE '\| LEVEL \|' | sort | uniq -c` 做级别统计, 但单条告警往往因含时间戳/UUID/请求 ID 等变长 token 而 `uniq -c` 失效——结构相同的日志被拆成几千个"唯一"行, 无法看到"哪一类告警最多"。
+
+**排查**: 同一根因的日志行只有少量字段变化(如 canonical_evidence_id、run id、片段文本), 需要按**结构模板**归并。drain3 (logparser) 用 Drain 算法把变长 token 屏蔽成 `<*>`, 把结构相同的行聚到同一 cluster, 再按 cluster 频次排序。
+
+**根因**: 频率统计场景下, 当日志含大量高基数字段(时间戳、UUID、变长文本片段), 必须先做模板归并再计数, 否则 `uniq -c` 产生的"长尾"掩盖了真正的热点模式。
+
+**方案**: 在 backend 用 `uv add --dev drain3` 装入; 用 eval kernel 读取所有 `logs/*.log[.gz]`, 按 loguru 格式 `时间 | LEVEL | module:func:line | msg` 拆出 LEVEL 与 message, 仅对 WARNING/ERROR 的 message 喂给 `TemplateMiner.add_log_message`; 聚类后用 `cluster.log_template_tokens` 取模板字符串, 按 cluster_id 计数排序。再二次按 `module:func:line` 聚合定位热点源码位置。结论: 3173 条 W/E → 406 模板, 暴露出 873 条 trace-pairing 跳过告警、272 条 special_evidence 结构化输出 ERROR、560 条 LLM 凭证/配额问题等可定位根因。
+
+**预防**: 日志频率分析默认走 drain3 模板聚类, 不要直接 `sort | uniq -c`——高基数字段会让结构相同的行无法合并。聚类时只喂 message(剥离时间戳/级别/位置), 并保留 `module:func:line` 做二次热点定位。报告写入 docs/active/。
+
 ## 2026-06-23: Evidence DB — multi-variant group rendered as one row instead of one row per variant site
 
 **Problem**: The Evidence DB variant index showed MECP2 (Pathogenic) as a single row whose variant column read `c.316C>T; c.502C>T; c.808C>T; c.913insT; c.1126C>T`. The requirement is one row per variant site, so this should have been five rows.
