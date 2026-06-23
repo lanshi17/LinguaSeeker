@@ -66,7 +66,7 @@ class AcmgChatProvider extends AbstractChatProvider<
 
     // Create an XRequest that points to the stream endpoint.
     // The actual POST happens in ChatView before XRequest runs.
-    const baseURL = `/api/v1/chat/sessions/${sessionId}/stream`;
+    const baseURL = `${apiClient.defaults.baseURL}/chat/sessions/${sessionId}/stream`;
 
     const request = XRequest<unknown, SSEOutput>(baseURL, {
       manual: true,
