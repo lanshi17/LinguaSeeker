@@ -25,6 +25,8 @@ export interface VariantIndexEntry {
   categoryDistribution: Record<string, number>;
   /** Aggregate review status — worst-case wins */
   reviewStatus: string;
+  /** Most recent created_at from grouped evidence */
+  createdAt?: string | null;
   /** All group_ids that belong to this variant */
   groupIds: string[];
   /** All unique source_document_ids */

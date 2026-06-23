@@ -1,6 +1,26 @@
 # Lesson Log
 
 
+## 2026-06-23: Benchmark ground truth import with dual-track traceability
+
+**Problem**: Need to import benchmark ground truth data with both original and translated text tracks for traceability. Previous import only created single-track evidence items without source span data.
+
+**Investigation**: Analyzed preprocessed extraction_result.json files to understand the dual-track structure. Found that 103 entries have real pipeline extraction data with original/translated tracks, while 55 entries only have expected.json ground truth values.
+
+**Root cause**: Original import script created single-track evidence items without preserving source span information from preprocessed data. No mechanism to trace evidence back to specific text snippets in source documents.
+
+**Fix**: Rewrote import script to:
+1. Read preprocessed extraction_result.json for entries with real pipeline data
+2. Create dual-track evidence items (original + translated) for each field
+3. Preserve source_span data (text snippets, page numbers, offsets) in RunEvidenceItem
+4. For entries without preprocessed data, create synthetic dual-track evidence from expected.json
+5. Use savepoints for transaction isolation to prevent cascading failures
+6. Deduplicate evidence items with same (field_id, track, group_id) to avoid constraint violations
+
+**Prevention**: When importing benchmark data, always preserve full traceability information (source spans, page numbers, text snippets) to enable verification of evidence extraction quality. Use dual-track structure to maintain both original language and translated versions for cross-lingual validation.
+
+**Verification**: Imported 158 entries (Rett 53, ClinGen 30, ClinVar Fused 75) with 2314 original track items and 2159 translated track items. All RunEvidenceItem records contain source_span with traceability data. Import completes in 5.10s with 0 failures.
+
 ## 2026-06-23: 单密钥多用途导致 Session 伪造风险 — STRIDE 安全审查发现与修复
 
 **问题**：项目安全审查发现 `cfg.api_key` 同时承担三个职责（API 认证、Session HMAC 签名、登录密码），一旦 API Key 泄露，攻击者可伪造 session cookie 冒充合法用户。同时模型服务器 `/file_parse` 端点完全无认证，gateway 的 PDF 下载函数缺少 SSRF 防护。
@@ -4313,3 +4333,31 @@ python -m benchmark.analysis.reconcile.ablation --entries $entries --write
 **Fix**: Added `_looks_english()` fallback heuristic in `should_skip_translation()`. If the text is purely ASCII and contains ≥3 common English words (the, and, of, patients, mutations, etc.), skip translation even if the detector returns a non-English language.
 **File**: `backend/src/core/cross_lingual_process_and_extract_evidence/cross_lingual/translate/language_detector.py`
 **Verification**: rett_043 now correctly returns `should_skip=True`; Japanese text still returns `should_skip=False`.
+
+## 2026-06-23: Phase 2 non_english_output — validator language detector false positive
+
+**Problem**: rett_043 (English document with heavy gene mutation notation: p.R106W, c.C316T, etc.) failed Phase 2 with `translation_validation_failed: non_english_output`.
+
+**Root cause chain**:
+1. `lingua` language detector misclassifies mutation-heavy English as Latin/French
+2. `should_skip_translation()` already had a `_looks_english` fallback (previous fix) — correctly returns True
+3. But `validate_translation_output()` in `validator/core.py` used `_DETECTOR.detect_language_of()` directly **without** the same fallback
+4. The "unchanged" check (SequenceMatcher ≥0.85) also rejected English→English translations where the LLM merely reformatted the text
+5. When the LLM fallback produced slightly different text, the detector still classified it as non-English → rejected
+
+**Fix** (validator/core.py):
+1. "unchanged" check: added `and not _looks_english(source)` — English sources are exempt because translating English produces similar text by design
+2. "non_english_output" detector check: added `_looks_english(translated)` fallback — if the text contains ≥3 common English words, accept it even if the detector disagrees
+
+**Key insight**: The validator and `should_skip_translation` must use the same heuristic. Defense-in-depth: even if `should_skip_translation` correctly skips, the validator should also handle misclassification for any text that does go through translation.
+
+**TDD**: Wrote failing test `test_validate_accepts_english_biomedical_with_mutation_notation` first, then fixed validator. Updated `test_validate_unchanged_text` to use Spanish source (non-English) since English sources are now correctly exempt.
+
+**Verification**:
+- `pytest backend/tests/core/cross_lingual_process_and_extract_evidence/test_validator.py` → 13 passed
+- `pytest backend/tests/core/cross_lingual_process_and_extract_evidence/test_translator.py test_translator_segmentation.py` → 33 passed
+- `pytest backend/tests/api/test_pipeline_api.py backend/tests/core/standardize_entities_and_align_knowledge/test_repositories.py` → 35 passed
+- `ruff check` → all clean
+- rett_043 smoke: run c48a66a4, Phase 3 matches=2, pipeline_status=completed
+
+**Status**: Ready for 4th dataset testing.

@@ -586,11 +586,18 @@ class SearchService:
             ident.identifier_type: ident.identifier_value
             for ident in ident_result.scalars().all()
         }
-        metadata_stmt = select(SourceDocument.raw_metadata).where(
+        metadata_stmt = select(
+            SourceDocument.raw_metadata,
+            SourceDocument.original_text,
+            SourceDocument.translated_text,
+        ).where(
             SourceDocument.source_document_id == source_document_id
         )
         metadata_result = await self._session.execute(metadata_stmt)
-        raw_metadata = metadata_result.scalar_one_or_none() or {}
+        metadata_row = metadata_result.one_or_none()
+        raw_metadata = (metadata_row[0] if metadata_row else None) or {}
+        db_original_text: str | None = metadata_row[1] if metadata_row else None
+        db_translated_text: str | None = metadata_row[2] if metadata_row else None
         title = (
             _coerce_str(raw_metadata.get("title"))
             if isinstance(raw_metadata, dict)
@@ -761,17 +768,23 @@ class SearchService:
             title=title,
             pmid=identifiers.get("pmid"),
             doi=identifiers.get("doi"),
-            original_document_text=_load_full_document_text(
-                source_document_id,
-                track="original",
-                identifiers=identifiers,
-                known_output_dir=phase2_output_dir,
+            original_document_text=(
+                db_original_text
+                or _load_full_document_text(
+                    source_document_id,
+                    track="original",
+                    identifiers=identifiers,
+                    known_output_dir=phase2_output_dir,
+                )
             ),
-            translated_document_text=_load_full_document_text(
-                source_document_id,
-                track="translated",
-                identifiers=identifiers,
-                known_output_dir=phase2_output_dir,
+            translated_document_text=(
+                db_translated_text
+                or _load_full_document_text(
+                    source_document_id,
+                    track="translated",
+                    identifiers=identifiers,
+                    known_output_dir=phase2_output_dir,
+                )
             ),
             gene=gene,
             variant=variant,

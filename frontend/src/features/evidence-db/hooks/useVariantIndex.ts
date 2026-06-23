@@ -53,6 +53,7 @@ export function useVariantIndex() {
 
   return {
     ...variantData,
+    allEntries,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     error: query.error,
