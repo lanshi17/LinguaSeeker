@@ -58,8 +58,12 @@ server {
     add_header X-XSS-Protection "1; mode=block" always;
 
     # ── API → Backend ─────────────────────────────────────────────────────
-    location /api/ {
-        proxy_pass http://backend;
+    # Matches API calls whether the SPA is mounted at root (/api/) or under
+    # a subpath ({{ frontend_base_path }}/api/). X-API-Key is injected here;
+    # the browser never sees it. proxy_pass with a URI suffix strips the
+    # matched location prefix so the backend always sees /api/.
+    location {{ frontend_base_path }}/api/ {
+        proxy_pass http://backend/api/;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -75,15 +79,15 @@ server {
     }
 
     # -- Static assets (Vite) — long cache ------------------------------------
-    location /assets/ {
-        proxy_pass http://frontend;
+    location {{ frontend_base_path }}/assets/ {
+        proxy_pass http://frontend{{ frontend_base_path }}/assets/;
         proxy_cache_valid 200 365d;
         add_header Cache-Control "public, max-age=31536000, immutable";
     }
 
     # ── Frontend (everything else) ────────────────────────────────────────
-    location / {
-        proxy_pass http://frontend;
+    location {{ frontend_base_path }}/ {
+        proxy_pass http://frontend{{ frontend_base_path }}/;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -93,10 +97,16 @@ server {
         proxy_set_header Connection "upgrade";
     }
 
-    # ── Health check ──────────────────────────────────────────────────────
-    location /health {
+    # Redirect bare base path to base path/ (subpath only; skipped at root).
+{% if frontend_base_path %}
+    location = {{ frontend_base_path }} {
+        return 301 {{ frontend_base_path }}/;
+    }
+{% endif %}
+
+    # ── Health check → backend (public liveness, no auth) ─────────────────
+    location = {{ frontend_base_path }}/health {
+        proxy_pass http://backend/health;
         access_log off;
-        return 200 "ok\n";
-        add_header Content-Type text/plain;
     }
 }

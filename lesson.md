@@ -1,6 +1,18 @@
 # Lesson Log
 
 
+## 2026-06-23: Gene-variant coexistence persistence gate
+
+**问题描述**: 落库前需要确保组装的可评分证据中 gene 和 variant 必须同时存在，单独只有基因或只有变异的证据不应持久化。
+
+**排查过程**: 分析了完整落库链路：EvidenceExtractionWorkflow → DualResultAdapter → StandardizationService → StandardizationRepository._build_run_item_specs()。发现 _build_run_item_specs() 是遍历 track_payloads 并构建 RunItemSpec 的唯一入口，是最佳拦截点。
+
+**根因分析**: 原有 QualityValidator 已在 chain_assembly 阶段检查 full chain (gene+disease+variant)，但该检查仅标记 quality_report，不阻止落库。缺失的是一道硬门控。
+
+**解决方案**: 在 StandardizationRepository 中新增 _find_gene_variant_complete_groups() 静态方法，扫描所有 track_payloads 中 status=found 的 A.gene_symbol、A.variant_hgvs_c、A.variant_hgvs_p 字段，按 group_id 聚合，返回同时拥有基因和变异的 group_id 集合。在 _build_run_item_specs() 中调用该方法，跳过不在允许集合中的 group 的所有条目。门控不作用于 fallback match 路径（该路径在 track_payloads 无 specs 时才触发）。
+
+**预防措施**: 门控逻辑集中在 _build_run_item_specs() 一个位置，通过静态方法独立测试，覆盖 11 个边界场景。[done]
+
 ## 2026-06-23: Benchmark ground truth import with dual-track traceability
 
 **Problem**: Need to import benchmark ground truth data with both original and translated text tracks for traceability. Previous import only created single-track evidence items without source span data.
@@ -4409,3 +4421,51 @@ python -m benchmark.analysis.reconcile.ablation --entries $entries --write
 4. nginx `proxy_pass` 带 URI 时会重写 location 前缀，子路径透传要确认 `/linguaseeker/api/` → `/api/` 的前缀剥离正确。
 
 **验证**：`tsc --noEmit` 通过；`VITE_BASE_PATH=/linguaseeker vite build` 成功，`dist/index.html` 资源路径为 `/linguaseeker/assets/index-*.js`；前端测试 52/54 通过，2 个失败（ChatMarkdown `font-mono`、ChatActionBubble `anticon-loading`）经 stash 验证在 HEAD 即存在，属 Tailwind→antd 迁移残留，与本次无关。
+
+## 2026-06-23: 新数据集需独立生成 B0 baseline
+
+**问题**：parkinson 数据集完成 coverage 后，baseline comparison 显示 B0 F1=0.0，原因是 B0 baseline 仅包含 rett 的 53 个条目，没有 parkinson 条目。
+
+**根因**：B0 baseline 通过 `naive_llm.py --ground-truth-dir benchmark/data/ground_truth/rett` 生成，仅覆盖 rett 数据集。新数据集需要独立运行 baseline。
+
+**排查**：
+1. 检查 `baseline_b0_*.json` → `total_entries=53`，`per_entry` 全是 `rett_*`
+2. `baselines.py` 的 `_latest_baseline_reports()` 按 `baseline_id` 分组，同 ID 取 entries 最多的
+3. 需要为 parkinson 单独运行 B0 baseline，然后合并
+
+**解决方案**：
+1. `PYTHONPATH=. uv run python benchmark/analysis/baselines/naive_llm.py --ground-truth-dir benchmark/data/ground_truth/parkinson`
+2. 用 Python 脚本合并 rett + parkinson B0 reports（重新计算 aggregates）
+3. 同样合并 system eval reports（从各自 ablation 的 `context_verifier_reconcile` 策略提取）
+4. 运行 `baselines.py --system-report <merged_eval> --system-strategy context_verifier_reconcile --matched-only --write`
+
+**预防**：新数据集 benchmark 流程应包含独立 B0 baseline 生成步骤。
+
+## 2026-06-23: 前端三个既有问题修复 — stale 测试、字体本地化、nginx 子路径
+
+**问题**：子路径部署收尾时遗留三个既有问题：(1) ChatMarkdown/ChatActionBubble 两个 stale 测试断言已迁移掉的 Tailwind 类 `font-mono` 和旧 antd 类 `.anticon-loading`；(2) globals.css 用 Google Fonts CDN `@import`，严格 CSP `font-src 'self'` 会被拦；(3) docker/nginx.conf.template 和单机 lingua-seeker.conf.j2 仍是根挂载 `location /api/`，子路径下 `/linguaseeker/api/` 不匹配。
+
+**排查过程**：
+1. 读 markdown.tsx 确认 code 标签已用内联 `fontFamily: var(--font-mono, monospace)`（非 Tailwind 类）；读 ChatActionBubble.tsx 确认 spinner 已改为 lucide `Loader2` + `.spin` 类。测试断言的是实现细节而非行为。
+2. grep globals.css 确认 `@import url(fonts.googleapis.com)`，且 `--font-mono`/`--font-sans` 引用 Figtree/Fraunces/JetBrains Mono；查 public/fonts 仅有 .gitkeep。
+3. nginx 子路径：初版用 `try_files $uri` + `root` 导致 `/linguaseeker/assets/x.js` 找 `html/linguaseeker/assets/x.js`（dist 无此嵌套）→ 404/500；改 `alias` 剥前缀；SPA fallback 用 `rewrite ... break`（非 `last`）避免重匹配死循环。
+
+**根因分析**：
+1. 测试断言实现细节（CSS 类名）而非用户可见行为，组件迁移后测试必然 stale。
+2. CDN 字体与 CSP 冲突是经典问题——`@import` 走网络，`font-src 'self'` 禁止。
+3. nginx `root` + `try_files $uri` 假设 URL 路径与磁盘路径一致，子路径破坏此假设；`alias` 或 `rewrite break` 才能剥前缀。`rewrite ... last` 会重新匹配 location 导致死循环，`break` 在当前块内继续才正确。
+4. envsubst 无条件渲染，`location = ${BASE_PATH}` 根挂载时变成空 `location = `，需 entrypoint sed 清理（docker）或 jinja `{% if %}`（ansible）。
+
+**解决方案**：
+1. ChatMarkdown 测试改断言 `codeEl.style.fontFamily` 匹配 `/mono/i`；ChatActionBubble 测试改断言 `.spin`（实际渲染的 spinner 类）。
+2. 下载 12 个 woff2 到 `src/assets/fonts/`（非 public/，确保 Vite 加 base 前缀 + hash），globals.css 用本地 `@font-face` 替换 CDN `@import`，`font-display: swap` 保留。
+3. docker 模板：`location ${BASE_PATH}/assets/` 用 `alias`，`location ${BASE_PATH}/` 用 `rewrite ^${BASE_PATH}/(.*)$ /$1 break` + `try_files`，entrypoint 规范化 BASE_PATH 并 sed 移除根挂载的空 bare-redirect 块。
+4. ansible 模板：`{{ frontend_base_path }}` 参数化，jinja `{% if frontend_base_path %}` 条件渲染 bare redirect，health 从静态 `return 200` 改为 `proxy_pass backend/health`（反映真实后端状态）。
+
+**预防措施**：
+1. 组件测试断言行为（DOM 结构、可见文本、语义属性），不断言易变的 CSS 类名/实现细节。
+2. 自托管所有字体，禁止 CDN `@import`——CSP 与性能（无额外 DNS/连接）双赢；字体放 `src/assets/` 而非 `public/` 让 Vite 自动处理 base 前缀。
+3. nginx 子路径：`alias` 剥静态资源前缀，`rewrite ... break`（非 `last`）处理 SPA fallback；envsubst 模板用 entrypoint 后处理条件块，ansible 用 jinja `{% if %}`。
+4. nginx 配置改动必须用真实 dist 端到端验证（curl 各 location），不能只靠 `nginx -t` 语法通过就认为正确——`nginx -t` 不验证路径解析逻辑。
+
+**验证**：tsc 通过；54/54 前端测试通过（原 2 个 stale 测试已修）；docker nginx E2E：根挂载（/ →200, /chat→200, /assets→200）+ 子路径（/linguaseeker/→200, /linguaseeker→301, /linguaseeker/chat→200, /linguaseeker/assets→200）全通过；构建 CSS 中字体 URL 为 `/linguaseeker/assets/*.woff2`（base 前缀正确），零外部字体引用。

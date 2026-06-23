@@ -25,3 +25,9 @@ export BACKEND_URL API_KEY FRONTEND_MAX_BODY BASE_PATH
 envsubst '${BACKEND_URL} ${API_KEY} ${FRONTEND_MAX_BODY} ${BASE_PATH}' \
     < /etc/nginx/templates/default.conf.template \
     > /etc/nginx/conf.d/default.conf
+
+# At root mount (BASE_PATH empty) the bare-path redirect block renders as an
+# invalid "location = {". Remove it — root has no bare-path to redirect.
+if [ -z "$BASE_PATH" ]; then
+    sed -i '/# Redirect bare BASE_PATH/,/^    }$/d' /etc/nginx/conf.d/default.conf
+fi
