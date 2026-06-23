@@ -93,6 +93,7 @@ build-backend = "hatchling.build"
 dev = [
     "aiosqlite>=0.22.1",
     "copier>=9.0.0",
+    "drain3>=0.9.11",
     "pytest>=9.0.3",
     "pytest-asyncio>=1.3.0",
     "scikit-learn>=1.9.0",

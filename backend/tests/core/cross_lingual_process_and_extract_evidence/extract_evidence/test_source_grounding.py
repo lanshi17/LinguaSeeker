@@ -232,6 +232,77 @@ def test_source_grounding_normalizes_cjk_ocr_spacing_before_marking_invalid():
     assert grounded[0].raw_source is not None
 
 
+def test_source_grounding_normalizes_fullwidth_to_halfwidth_punctuation():
+    """A snippet using halfwidth parens must match a document using fullwidth
+    parens (and vice versa) via the normalized search path, not go SOURCE_INVALID."""
+    document = TrackDocument(
+        document_id="doc-fw",
+        track=Track.ORIGINAL,
+        formatted_text="患儿父母均未检测到突变（结果见图1）。",
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=22)],
+    )
+    item = EvidenceItem(
+        field_id="A.gene_disease_relationship",
+        category="A",
+        field_name="Gene disease relationship",
+        status=EvidenceStatus.FOUND,
+        value="父母未检测到突变",
+        raw_source=SourceLocation(
+            span_id="raw-1",
+            page=1,
+            start_offset=0,
+            end_offset=15,
+            context_type="text",
+            context_ref="results",
+            # Snippet uses HALFWIDTH parens; document uses FULLWIDTH.
+            text_snippet="父母均未检测到突变(结果见图1)",
+            source_precision=SourcePrecision.EXACT,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])
+
+    assert grounded[0].status == EvidenceStatus.FOUND
+    assert grounded[0].source is not None
+    assert grounded[0].source.source_precision == SourcePrecision.CORRECTED
+
+
+def test_source_grounding_normalizes_case_difference():
+    """A snippet whose only difference from the document is letter case must
+    match via the normalized search path, not go SOURCE_INVALID."""
+    document = TrackDocument(
+        document_id="doc-case",
+        track=Track.TRANSLATED,
+        formatted_text="The MECP2 gene is causative for Rett syndrome.",
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=46)],
+    )
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="MECP2",
+        raw_source=SourceLocation(
+            span_id="raw-1",
+            page=1,
+            start_offset=0,
+            end_offset=10,
+            context_type="text",
+            context_ref="introduction",
+            text_snippet="mecp2 gene is causative",
+            source_precision=SourcePrecision.EXACT,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])
+
+    assert grounded[0].status == EvidenceStatus.FOUND
+    assert grounded[0].source is not None
+    assert grounded[0].source.source_precision == SourcePrecision.CORRECTED
+
+
 def test_source_grounding_prefers_nearest_match_for_title_disease_diagnosis():
     text = "A case of Fabry disease\nBody text mentions Fabry disease again."
     document = TrackDocument(

@@ -109,6 +109,18 @@ class LangChainEvidenceProvider:
                 return structured.invoke([HumanMessage(content=prompt)])
             except self._TRANSIENT_EXCEPTIONS as exc:
                 last_exc = exc
+                # A transient-status exception whose body reports a
+                # response_format / json-mode incompatibility is permanent —
+                # retrying won't help.  Fall back to JSON-text instead of
+                # burning retries and raising.
+                if self._is_response_format_incompatibility(exc):
+                    logger.warning(
+                        "Stage {} transient error masks response_format incompatibility, "
+                        "falling back to JSON text: {}",
+                        stage,
+                        exc,
+                    )
+                    return self._invoke_json_text(client, prompt, output_schema)
                 logger.warning("Stage {} transient failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
             except Exception as exc:
                 last_exc = exc
@@ -148,6 +160,19 @@ class LangChainEvidenceProvider:
                 return result
             except self._TRANSIENT_EXCEPTIONS as exc:
                 last_exc = exc
+                # A transient-status exception whose body reports a
+                # response_format / json-mode incompatibility is permanent —
+                # retrying won't help.  Fall back to JSON-text (which
+                # reformulates the prompt to explicitly request JSON) instead
+                # of burning retries and raising.
+                if self._is_response_format_incompatibility(exc):
+                    logger.warning(
+                        "Stage {} transient error masks response_format incompatibility, "
+                        "falling back to JSON text: {}",
+                        stage,
+                        exc,
+                    )
+                    return await self._ainvoke_json_text(client, prompt, output_schema)
                 logger.warning("Stage {} transient failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
             except Exception as exc:
                 last_exc = exc
@@ -283,6 +308,28 @@ class LangChainEvidenceProvider:
             "unavailable" in text
             or "unsupported" in text
             or "invalid_request_error" in text
+        )
+
+    @staticmethod
+    def _is_response_format_incompatibility(exc: Exception) -> bool:
+        """True when an exception's message indicates the model cannot honour
+        the requested ``response_format`` / json_mode — a **permanent**,
+        non-retryable condition that the JSON-text fallback can route around.
+
+        Some providers surface this as a 429 (``RateLimitError``) or other
+        transient-status exception whose *body* nonetheless reports the
+        incompatibility (e.g. "must contain the word 'json'").  Such errors
+        would otherwise burn all retries then raise — detect them here so the
+        caller can fall back instead of retrying.
+        """
+        text = str(exc).lower()
+        if "response_format" not in text:
+            return False
+        return (
+            "unavailable" in text
+            or "unsupported" in text
+            or "invalid_request_error" in text
+            or "must contain the word 'json'" in text
         )
 
 

@@ -39,3 +39,13 @@ CANONICAL_GPT5_PROMPT_CITE = CanonicalModelMetadata(
     release_date="2025-08-07",
     release_notes_url="https://openai.com/index/introducing-gpt-5-for-developers/",
 )
+
+CANONICAL_GPT5_EXPANDED = CanonicalModelMetadata(
+    model_baseline_id="B7_GPT5_EXPANDED_PROMPT",
+    model_baseline_name="GPT-5 expanded single-prompt evidence extraction",
+    provider_family="openai",
+    model="gpt-5-2025-08-07",
+    release_cohort="frontier_2025q3_aug07_sep30",
+    release_date="2025-08-07",
+    release_notes_url="https://openai.com/index/introducing-gpt-5-for-developers/",
+)

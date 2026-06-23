@@ -27,6 +27,7 @@ BaselineMode = Literal[
     "single_agent_cot",
     "citation_required",
     "direct_json",
+    "expanded",
 ]
 
 
@@ -394,6 +395,11 @@ def _build_extraction_prompt(
             "contiguous quote from the document text."
         ),
         "direct_json": "Use one direct extraction pass. Do not perform multi-stage validation.",
+        "expanded": (
+            "Use one direct extraction pass. Do not use tools, retrieval, multi-agent validation, "
+            "evidence graphs, reconciliation, or any multi-stage pipeline. "
+            "Extract all fields listed below in a single call."
+        ),
     }[mode]
     citation_instruction = (
         "Each evidence item must have field_id, status (found or not_found), value, confidence, "
@@ -403,16 +409,45 @@ def _build_extraction_prompt(
         if mode == "citation_required"
         else "Each evidence item must have field_id, status (found or not_found), value, and confidence.\n"
     )
+    if mode == "expanded":
+        field_list = (
+            "Return a JSON object with an evidence_items array. Include all of the following field IDs "
+            "(use status=not_found for any field not mentioned in the document):\n"
+            "Simple factual fields:\n"
+            "- A.gene_symbol: the target gene symbol if supported\n"
+            "- B.disease_diagnosis: the target disease or phenotype if supported\n"
+            "- A.gene_disease_relationship: one of causative, disputed, refuted, uncertain, or not_found\n"
+            "- A.variant_hgvs_c: the HGVS coding-level variant notation (e.g. c.473C>T)\n"
+            "- A.variant_hgvs_p: the HGVS protein-level variant notation (e.g. p.T158M)\n"
+            "- A.variant_type: the variant type (e.g. SNV, deletion, insertion, CNV, frameshift)\n"
+            "- A.variant_consequence_class: the consequence class (e.g. missense, nonsense, frameshift, splice-site)\n"
+            "Contextual fields:\n"
+            "- B.sex: patient sex (male, female, mixed, unknown)\n"
+            "- B.age_of_onset: age of onset as reported (e.g. '2 years', 'infancy', 'adult-onset')\n"
+            "- B.mode_of_inheritance_reported: inheritance pattern (e.g. autosomal dominant, autosomal recessive, X-linked dominant, de novo)\n"
+            "- C.inheritance_source: where the inheritance info came from (e.g. 'explicit in text', 'ClinGen', 'OMIM')\n"
+            "- B.clinical_phenotypes: clinical features or phenotypes mentioned (free text)\n"
+            "Evidence strength fields:\n"
+            "- C.de_novo_status: whether the variant was confirmed de novo (de novo, not de novo, unknown)\n"
+            "- C.segregation: segregation evidence (e.g. 'cosegregation in family', 'not reported')\n"
+            "- C.functional_assay: functional assay evidence (e.g. 'loss of function shown', 'not reported')\n"
+            "- C.recurrence: recurrence or independent family evidence (e.g. 'multiple unrelated families', 'not reported')\n"
+            "- C.contradictory_evidence: any contradictory evidence mentioned (free text or 'none')\n\n"
+        )
+    else:
+        field_list = (
+            "Return a JSON object with an evidence_items array. Include exactly these field IDs:\n"
+            "- A.gene_symbol: the target gene symbol if supported\n"
+            "- B.disease_diagnosis: the target disease or phenotype if supported\n"
+            "- A.gene_disease_relationship: one of causative, disputed, refuted, uncertain, or not_found\n\n"
+        )
     return (
         "You are evaluating a baseline for ACMG/ClinGen gene-disease evidence extraction.\n"
         f"{mode_instruction}\n\n"
         "Target hypothesis:\n"
         f"- Gene: {entry.gene_symbol}\n"
         f"- Disease: {entry.disease_label}\n\n"
-        "Return a JSON object with an evidence_items array. Include exactly these field IDs:\n"
-        "- A.gene_symbol: the target gene symbol if supported\n"
-        "- B.disease_diagnosis: the target disease or phenotype if supported\n"
-        "- A.gene_disease_relationship: one of causative, disputed, refuted, uncertain, or not_found\n\n"
+        f"{field_list}"
         f"{citation_instruction}"
         "Return only JSON. Do not add Markdown fences or explanation.\n\n"
         "Document text:\n"

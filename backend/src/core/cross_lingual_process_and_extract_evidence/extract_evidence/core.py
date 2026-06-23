@@ -25,10 +25,17 @@ from .contracts import (
 
 _MAX_SNIPPET_MATCHES = 50
 _ELLIPSIS_PATTERN = re.compile(r"\.\.\.|…")
-_CJK_SPACED_TOKEN_PATTERN = re.compile(r"(?<=[\u4e00-\u9fff])\s+(?=[\u4e00-\u9fff])")
-_CJK_NUMERIC_SPACE_PATTERN = re.compile(r"(?<=[\u4e00-\u9fffA-Za-z])\s+(?=[A-Za-z0-9(（])")
 _MULTISPACE_PATTERN = re.compile(r"\s+")
 _MISSING_GROUP_VALUE = "__missing__"
+_FULLWIDTH_TO_HALFWIDTH = {
+    full: half for full, half in zip(range(0xFF01, 0xFF5F), range(0x21, 0x7F))
+}
+"""Fullwidth ASCII variants (U+FF01–U+FF5E) → halfwidth ASCII (U+0021–U+007E).
+
+A 1:1 character mapping, so it preserves index_map correspondence in
+``_normalize_text_with_index_map`` and is safe to apply to both sides of a
+fuzzy substring match without risking false positives.
+"""
 
 
 def _normalize_for_grounding(text: str) -> str:
@@ -930,7 +937,10 @@ class SourceGrounder:
             return direct_results
 
         normalized_snippet = self._normalize_snippet_for_search(snippet)
-        if normalized_snippet and normalized_snippet != snippet:
+        if normalized_snippet:
+            # Run even when the snippet itself is unchanged: the document
+            # text may still differ (fullwidth/halfwidth, case) and only
+            # become matchable after both sides are normalized.
             normalized_results = self._find_normalized_occurrences(text, spans, normalized_snippet, source)
             if normalized_results:
                 return normalized_results
@@ -1023,10 +1033,29 @@ class SourceGrounder:
         value = value.replace("...", "")
         value = value.replace("（ ）", "")
         value = value.replace("( )", "")
-        value = _CJK_SPACED_TOKEN_PATTERN.sub("", value)
-        value = _CJK_NUMERIC_SPACE_PATTERN.sub("", value)
-        value = _MULTISPACE_PATTERN.sub(" ", value)
-        return value.strip()
+        # Mirror _normalize_text_with_index_map exactly: keep a space only
+        # when both neighbours are ASCII (Latin word boundaries) and drop
+        # spaces adjacent to CJK (OCR artefacts).  Apply the same
+        # fullwidth→halfwidth + lowercase mapping per kept character so the
+        # snippet and document normalisations stay byte-consistent.
+        chars: list[str] = []
+        previous_kept = ""
+        for index, char in enumerate(value):
+            if char.isspace():
+                if (
+                    previous_kept
+                    and previous_kept.isascii()
+                    and index + 1 < len(value)
+                    and value[index + 1].isascii()
+                ):
+                    if chars and chars[-1] != " ":
+                        chars.append(" ")
+                        previous_kept = " "
+                continue
+            mapped = chr(_FULLWIDTH_TO_HALFWIDTH.get(ord(char), ord(char))).lower()
+            chars.append(mapped)
+            previous_kept = mapped
+        return "".join(chars)
 
     @staticmethod
     def _normalize_text_with_index_map(text: str) -> tuple[str, list[int]]:
@@ -1041,9 +1070,10 @@ class SourceGrounder:
                         index_map.append(index)
                         previous_kept = " "
                 continue
-            chars.append(char)
+            mapped = chr(_FULLWIDTH_TO_HALFWIDTH.get(ord(char), ord(char))).lower()
+            chars.append(mapped)
             index_map.append(index)
-            previous_kept = char
+            previous_kept = mapped
         return "".join(chars), index_map
 
     def _find_span(
