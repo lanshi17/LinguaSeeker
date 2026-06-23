@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { XProvider, Bubble, Sender, Conversations } from "@ant-design/x";
 import type { SenderRef } from "@ant-design/x/es/sender/interface";
 import { message as antdMessage } from "antd";
@@ -35,6 +36,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   // a stable placeholder first, then flip `mounted` in an effect to show
   // the real sidebar. Pattern: https://nextjs.org/docs/app/building-your-application/rendering/composition-patterns
   const [mounted, setMounted] = useState(false);
+  const navigate = useNavigate();
   useEffect(() => {
     setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect -- standard Next.js SSR/CSR hydration gate; the one-shot mount flag has no cascading-render risk because the dep array is empty.
   }, []);
@@ -111,19 +113,19 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
           if (value) params.set(slot, value);
         }
         const qs = params.toString();
-        window.location.href = qs ? `/evidence?${qs}` : "/evidence";
+        navigate(qs ? `/evidence?${qs}` : "/evidence");
         return;
       }
 
       if (action.intent === "review-changes") {
         const filter = action.slots?.filter ?? "all";
-        window.location.href = `/evidence?review_status=${filter ?? "all"}`;
+        navigate(`/evidence?review_status=${filter ?? "all"}`);
         return;
       }
 
       if (action.intent === "check-pipeline-status") {
         const runId = action.slots?.run_id;
-        window.location.href = runId ? `/pipeline/${runId}` : "/pipeline";
+        navigate(runId ? `/pipeline/${runId}` : "/pipeline");
         return;
       }
 

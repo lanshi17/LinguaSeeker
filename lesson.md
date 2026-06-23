@@ -4382,3 +4382,30 @@ python -m benchmark.analysis.reconcile.ablation --entries $entries --write
 - Gene symbol extraction from titles is heuristic; some entries may have incorrect genes
 - Expected evidence is minimal (disease + variants); no gene_disease_relationship or mode_of_inheritance
 - No baseline comparison possible (no parkinson entries in B0 baseline)
+
+## 2026-06-23: 前端子路径部署 (/linguaseeker) — 可移植路径与回归排查
+
+**问题**：前端部署到子路径 `https://genemed.tech/linguaseeker` 后，API、SSE、health、路由、静态资源都需要跟随挂载点；初查还发现 `acmgChatProvider` 硬编码 `/api/v1`（上轮已改用 `apiClient.defaults.baseURL` 但未跑测试），`vite.config.ts` 的 `base` 被错放在 `build:` 块内（Vite 顶层才识别，放在 build 下被忽略），`ChatView` 用 `window.location.href="/evidence"` 绕过 router basename 导致子路径下跳到根。
+
+**排查过程**：grep 定位所有 `import.meta.env` / 绝对路径 / `window.location` 引用；读两套 nginx 模板确认分离式拓扑（前端 genemed.tech + 后端 GPU15/furong.genemed.tech）；首次 edit 批量提交时 vite.config tag 失效，重读发现用户已改动该文件（加了错位的 `base`），据此把 base 提到顶层并参数化；跑测试发现 acmgChatProvider 7 个失败（mock 缺 `defaults.baseURL`）。
+
+**根因分析**：
+1. 子路径部署缺少单一可移植的 base 来源——多个地方各自硬编码 `/api/v1`、`/health`、`/evidence`，挂到子路径就全错。
+2. `window.location.href` 是浏览器原生 API，绕过 React Router 的 basename，子路径下站内跳转丢失前缀。
+3. Vite `base` 只在配置顶层生效，放 `build:` 下静默无效。
+4. 上轮改 `apiClient.defaults.baseURL` 后未跑前端测试，测试 mock 未同步 `apiClient` 结构变更 → 回归未发现。
+
+**解决方案**：
+1. 用 `import.meta.env.BASE_URL`（由 Vite `base` 派生）统一派生 API baseURL（`client.ts`）、health endpoint（`useBackendHealth.ts`）、Router basename（`main.tsx`），保留 `VITE_API_BASE_URL`/`VITE_HEALTH_ENDPOINT` 作为跨域逃生口。
+2. `vite.config.ts` 顶层 `base` 从 `VITE_BASE_PATH` 读取（默认 `/`，生产 `/linguaseeker/`），dev proxy 路径键也跟随 base。
+3. `ChatView` 三处跳转改用 `useNavigate()`，受 basename 自动处理，且避免整页刷新。
+4. 补 `acmgChatProvider.test.tsx` mock 的 `defaults: { baseURL: "/api/v1" }`。
+5. 新增分离式 nginx 模板：前端机注入 X-API-Key 并代理 `/linguaseeker/api/` → 后端机；后端机纯透传 `/api/` → backend（直接访问无 key 被 backend require_api_key 拒绝，比单机注入更安全）。
+
+**预防措施**：
+1. 任何涉及 base/path/apiClient 结构的改动必须跑前端测试（`bun run test`），不能只跑 type-check——上轮漏跑导致 mock 回归潜伏。
+2. Vite `base` 只能放配置顶层；子路径部署统一用 `import.meta.env.BASE_URL` 派生所有路径，禁止在业务代码硬编码 `/api/v1` 或 `/health`。
+3. SPA 内禁止用 `window.location.href` 做站内路由跳转，统一用 router `navigate()`/`<Link>`，否则绕过 basename。
+4. nginx `proxy_pass` 带 URI 时会重写 location 前缀，子路径透传要确认 `/linguaseeker/api/` → `/api/` 的前缀剥离正确。
+
+**验证**：`tsc --noEmit` 通过；`VITE_BASE_PATH=/linguaseeker vite build` 成功，`dist/index.html` 资源路径为 `/linguaseeker/assets/index-*.js`；前端测试 52/54 通过，2 个失败（ChatMarkdown `font-mono`、ChatActionBubble `anticon-loading`）经 stash 验证在 HEAD 即存在，属 Tailwind→antd 迁移残留，与本次无关。

@@ -28,9 +28,11 @@ describe("ChatMarkdown", () => {
     const { container } = render(<ChatMarkdown source="Use `foo()` here." />);
     const code = screen.getByText("foo()");
     expect(code.tagName).toBe("CODE");
-    // Also check the monospace class
+    // Inline style applies a monospace font stack (Tailwind `font-mono` class
+    // was removed during the antd migration; the renderer now sets fontFamily
+    // via the --font-mono CSS variable).
     const codeEl = container.querySelector("code");
-    expect(codeEl?.className).toMatch(/font-mono/);
+    expect(codeEl?.style.fontFamily).toMatch(/mono/i);
   });
 
   it("renders a fenced code block", () => {

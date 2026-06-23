@@ -52,8 +52,8 @@ describe("ChatActionBubble", () => {
     const bubble = screen.getByTestId("chat-action-bubble");
     expect(bubble).toHaveAttribute("aria-disabled", "true");
     expect(bubble).toHaveAttribute("aria-busy", "true");
-    // Loading spinner (antd icon with spin class or role)
-    expect(bubble.querySelector(".anticon-loading")).toBeInTheDocument();
+    // Loading spinner is a lucide-react Loader2 with the .spin class
+    expect(bubble.querySelector(".spin")).toBeInTheDocument();
   });
 
   it("dispatched state takes precedence over loading (no spinner)", () => {
@@ -68,7 +68,7 @@ describe("ChatActionBubble", () => {
     expect(screen.getByText("Dispatched")).toBeInTheDocument();
     // No loading spinner when dispatched
     const bubble = screen.getByTestId("chat-action-bubble");
-    expect(bubble.querySelector(".anticon-loading")).not.toBeInTheDocument();
+    expect(bubble.querySelector(".spin")).not.toBeInTheDocument();
   });
 
   it("renders disabled state via disabled prop", () => {

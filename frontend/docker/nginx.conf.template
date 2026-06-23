@@ -1,5 +1,16 @@
 # Auto-rendered at container start from environment variables.
-# Variables: BACKEND_URL, API_KEY, FRONTEND_MAX_BODY.
+# Variables: BACKEND_URL, API_KEY, FRONTEND_MAX_BODY, BASE_PATH.
+#
+# BASE_PATH: SPA mount path, no trailing slash.
+#   "" or "/"  → root mount (dist served at /, API at /api/).
+#   "/linguaseeker" → subpath mount (dist at /linguaseeker/, API at /linguaseeker/api/).
+#
+# The SPA MUST be built with VITE_BASE_PATH matching BASE_PATH so index.html
+# references /<base>/assets/... and API/health URLs derive from the Vite base.
+#
+# entrypoint.sh normalizes BASE_PATH to "" (root) or "/<seg>" (subpath) before
+# envsubst, so ${BASE_PATH} interpolates cleanly into location prefixes:
+#   root:     location /assets/   |  subpath:  location /linguaseeker/assets/
 
 server {
     listen       80;
@@ -11,8 +22,8 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    # Long-cache fingerprinted assets emitted by Vite.
-    location /assets/ {
+    # ── Long-cache fingerprinted assets emitted by Vite ─────────────
+    location ${BASE_PATH}/assets/ {
         access_log off;
         add_header Cache-Control "public, max-age=31536000, immutable";
         try_files $uri =404;
@@ -20,8 +31,10 @@ server {
 
     # ── API → backend server (cross-host) ───────────────────────────
     # X-API-Key is injected here; the browser never sees it.
-    location /api/ {
-        proxy_pass         ${BACKEND_URL};
+    # proxy_pass with a URI suffix rewrites the matched location prefix,
+    # so /linguaseeker/api/v1/... → ${BACKEND_URL}/api/v1/...
+    location ${BASE_PATH}/api/ {
+        proxy_pass         ${BACKEND_URL}/api/;
         proxy_http_version 1.1;
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
@@ -35,14 +48,21 @@ server {
         proxy_buffering    off;            # SSE / chunked friendly
     }
 
-    location = /health {
+    # ── Health check → backend (public liveness, no auth) ───────────
+    location = ${BASE_PATH}/health {
         proxy_pass         ${BACKEND_URL}/health;
         access_log         off;
-        proxy_set_header   X-API-Key ${API_KEY};
     }
 
     # ── SPA fallback ────────────────────────────────────────────────
-    location / {
-        try_files $uri $uri/ /index.html;
+    # try_files resolves $uri against `root`; the fallback must be the
+    # base-relative index.html so BrowserRouter basename matches.
+    location ${BASE_PATH}/ {
+        try_files $uri $uri/ ${BASE_PATH}/index.html;
+    }
+
+    # Redirect bare BASE_PATH (no trailing slash) to BASE_PATH/.
+    location = ${BASE_PATH} {
+        return 301 ${BASE_PATH}/;
     }
 }
