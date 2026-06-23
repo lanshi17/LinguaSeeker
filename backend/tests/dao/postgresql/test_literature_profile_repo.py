@@ -1,6 +1,8 @@
 """Tests for LiteratureProfileRepository."""
 from __future__ import annotations
 
+import json
+from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -307,6 +309,32 @@ async def test_build_evidence_groups_fields_contain_required_keys() -> None:
     assert field["track"] == "original"
 
 
+@pytest.mark.asyncio
+async def test_build_evidence_groups_field_confidence_is_json_serializable() -> None:
+    """Field confidence must not leak Decimal values into JSONB payloads."""
+    from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
+
+    repo = LiteratureProfileRepository(MagicMock())
+    rows = [
+        {
+            "canonical_evidence_id": str(uuid4()),
+            "field_id": "B.disease_diagnosis",
+            "review_status": "provisional",
+            "current_best_confidence": Decimal("0.91"),
+            "active_payload": {
+                "group_id": "chain_001",
+                "field_id": "B.disease_diagnosis",
+                "value": "Fabry disease",
+            },
+        },
+    ]
+
+    groups = repo._build_evidence_groups(rows)
+
+    assert groups[0]["fields"][0]["confidence"] == 0.91
+    json.dumps(groups)
+
+
 # ── get_by_document tests ────────────────────────────────────────────────────
 
 
@@ -319,7 +347,6 @@ async def test_get_by_document_returns_profile_dict() -> None:
 
     profile_id = uuid4()
     doc_id = uuid4()
-    now = datetime.now()
 
     fake_row = MagicMock()
     fake_row.literature_profile_id = profile_id

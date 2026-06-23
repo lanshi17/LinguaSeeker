@@ -22,9 +22,11 @@ if TYPE_CHECKING:
 router = APIRouter()
 
 
+@router.get("/", response_model=list[ReviewAuditEventResponse], include_in_schema=False)
 @router.get("", response_model=list[ReviewAuditEventResponse])
 async def list_audit_events(
     canonical_evidence_id: UUID | None = None,
+    source_document_id: UUID | None = None,
     reviewer_id: UUID | None = None,
     limit: int = Query(100, ge=1, le=1000),
     session: AsyncSession = Depends(get_db_session),
@@ -35,6 +37,7 @@ async def list_audit_events(
     events = await service.list_audit_events(
         session,
         canonical_evidence_id=canonical_evidence_id,
+        source_document_id=source_document_id,
         reviewer_id=reviewer_id,
         limit=limit,
     )

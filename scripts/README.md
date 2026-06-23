@@ -16,8 +16,9 @@ scripts/
 │   │   ├── delete_unmapped_entities.py        Delete unmapped genes and variants from database
 │   │   ├── refactor_benchmark_imports.py      Refactor benchmark module imports after reorganization
 │   │   └── refactor_benchmark_reports.py      Refactor benchmark report file paths after reorganization
-│   └── generate/                         Data generation scripts
-│       └── generate_ground_truth_pdfs.py      Translate ground-truth literature to 6 languages and generate PDFs
+│   ├── analyze/                          Log/data analysis scripts
+│   │   └── analyze_logs.py                   drain3 log template clustering for WARNING/ERROR mining
+│   ├── generate/                         Data generation scripts
 ├── dev/                                Development server scripts
 │   ├── start_backend_dev.sh                Start FastAPI backend with hot-reload
 │   ├── start_frontend_dev.sh               Start Vite frontend dev server
@@ -45,6 +46,41 @@ scripts/
 | `delete_unmapped_entities.py` | Python | Delete unmapped genes and variants from database |
 | `refactor_benchmark_imports.py` | Python | Refactor benchmark module imports after directory reorganization |
 | `refactor_benchmark_reports.py` | Python | Refactor benchmark report file paths after directory reorganization |
+
+
+### Data Analysis Scripts
+
+| Script | Language | Purpose |
+|--------|----------|---------|
+| `analyze_logs.py` | Python | Cluster backend logs (`logs/*.log[.gz]`) with drain3 template mining to surface dominant WARNING/ERROR patterns, source locations, and root-cause buckets |
+
+#### Analyze Logs
+
+```bash
+# Mine all WARNING/ERROR patterns across every log file
+cd backend && uv run python ../scripts/data/analyze/analyze_logs.py
+
+# Restrict to recent logs and show more detail
+cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --since 2026-06-23 --top 40
+
+# Also write a JSON report for later diffing
+cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --json reports/log-analysis-20260623.json
+
+# Only ERROR level, custom similarity threshold (lower merges more)
+cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --levels ERROR --sim-th 0.5
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--logs` | `logs/` | Log directory (`.log` and `.log.gz`) |
+| `--levels` | `WARNING ERROR` | Log levels to include |
+| `--top` | `30` | Number of top templates/locations to display |
+| `--since` | — | Earliest log date (`YYYY-MM-DD`, filename-based) to include |
+| `--json` | — | Write a JSON report to this path (in addition to stdout) |
+| `--sim-th` | `0.5` | drain3 similarity threshold; lower merges templates more aggressively |
+| `--depth` | `5` | drain3 tree depth |
+
+> Requires `drain3` (already a backend dev dependency). Read-only against `logs/`.
 
 ### Data Generation Scripts
 

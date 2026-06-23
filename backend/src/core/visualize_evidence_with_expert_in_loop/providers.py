@@ -17,6 +17,20 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import ChatAction
 # long-running LLM generations.
 _KEEPALIVE = "keepalive"
 
+_ACTION_DELIMITER = "<<<ACTION>>>"
+
+_ENVELOPE_INSTRUCTION = (
+    "FORMAT YOUR RESPONSE EXACTLY AS FOLLOWS:\n"
+    "1. First, write your natural-language reply in plain text/Markdown.\n"
+    "2. If you have enough information to dispatch an action AND the user "
+    "has confirmed, append the action on a new line:\n"
+    f"{_ACTION_DELIMITER}\n"
+    "{{\"intent\": \"...\", \"slots\": {{...}}}}\n"
+    "3. If no action is needed, do NOT include the delimiter.\n\n"
+    "NEVER include the delimiter inside your reply text. "
+    "NEVER wrap the delimiter or action in code fences."
+)
+
 
 class ReasoningLLMProvider:
     """Wrapper for REASONING_LLM_MODEL (high-accuracy reasoning).
@@ -316,22 +330,14 @@ class ChatLLMProvider:
         user_message: str,
         history: list[dict[str, str]] | None = None,
     ) -> tuple[str, ChatAction | None]:
-        """Ask the LLM for a `{reply, action}` JSON envelope.
+        """Ask the LLM for a reply with an optional action.
 
-        Returns a `(reply_text, action)` pair. ``action`` is ``None`` when the
-        agent is still gathering slots; the caller streams ``reply_text`` and
-        emits the action only when present.
+        Returns a ``(reply_text, action)`` pair.  ``action`` is ``None``
+        when the agent is still gathering slots.
         """
         self._ensure_configured()
 
-        envelope_instruction = (
-            "Respond ONLY with a single JSON object matching this schema: "
-            '{"reply": string, "action": null | {"intent": string, '
-            '"slots": object}}. '
-            "Set action=null while you still need information from the user; "
-            "set action={...} once you have enough slots to dispatch."
-        )
-        full_system = f"{system_prompt}\n\n{envelope_instruction}"
+        full_system = f"{system_prompt}\n\n{_ENVELOPE_INSTRUCTION}"
 
         messages: list[dict[str, str]] = [{"role": "system", "content": full_system}]
         if history:
@@ -342,7 +348,6 @@ class ChatLLMProvider:
             "model": self._model,
             "messages": messages,
             "max_tokens": self._max_tokens,
-            "response_format": {"type": "json_object"},
         }
         if self._temperature is not None:
             payload["temperature"] = self._temperature
@@ -359,7 +364,7 @@ class ChatLLMProvider:
         response.raise_for_status()
         data = response.json()
         raw = data["choices"][0]["message"]["content"]
-        return self._parse_envelope(raw)
+        return self._parse_delimited(raw)
 
     async def route_intent_stream(
         self,
@@ -370,21 +375,18 @@ class ChatLLMProvider:
     ) -> AsyncIterator[str | tuple[str, ChatAction | None]]:
         """Streaming variant of :meth:`route_intent`.
 
-        Yields ``_KEEPALIVE`` markers during LLM generation to keep the SSE
-        connection alive, then yields a ``(reply, action)`` tuple as the
-        final item.  Callers should convert keepalive markers into SSE
-        comments and the final tuple into typed SSE events.
+        Yields reply text chunks *as they arrive* from the LLM so callers
+        can send them to the client immediately (true token-by-token
+        streaming).  Once the ``<<<ACTION>>>`` delimiter is detected all
+        remaining text is buffered silently.  After the LLM finishes, yields
+        a ``(reply, action)`` tuple as the final item.  If no delimiter is
+        found, ``action`` is ``None``.
+
+        Callers should convert ``_KEEPALIVE`` markers into SSE heartbeats.
         """
         self._ensure_configured()
 
-        envelope_instruction = (
-            "Respond ONLY with a single JSON object matching this schema: "
-            '{"reply": string, "action": null | {"intent": string, '
-            '"slots": object}}. '
-            "Set action=null while you still need information from the user; "
-            "set action={...} once you have enough slots to dispatch."
-        )
-        full_system = f"{system_prompt}\n\n{envelope_instruction}"
+        full_system = f"{system_prompt}\n\n{_ENVELOPE_INSTRUCTION}"
 
         messages: list[dict[str, str]] = [{"role": "system", "content": full_system}]
         if history:
@@ -396,13 +398,19 @@ class ChatLLMProvider:
             "messages": messages,
             "stream": True,
             "max_tokens": self._max_tokens,
-            "response_format": {"type": "json_object"},
         }
         if self._temperature is not None:
             payload["temperature"] = self._temperature
 
         client = self._get_client()
         last_chunk_time = time.monotonic()
+        # Accumulate ALL text in a single string so offset math is trivial.
+        all_text = ""
+        # Number of characters already yielded to the caller.
+        yielded = 0
+        delimiter_found = False
+        delim_len = len(_ACTION_DELIMITER)
+
         async with client.stream(
             "POST",
             f"{self._base_url}/v1/chat/completions",
@@ -413,7 +421,6 @@ class ChatLLMProvider:
             json=payload,
         ) as response:
             response.raise_for_status()
-            accumulated: list[str] = []
             async for line in response.aiter_lines():
                 if line.startswith("data: "):
                     data_str = line[6:]
@@ -423,10 +430,35 @@ class ChatLLMProvider:
                         data = json.loads(data_str)
                         delta = data["choices"][0].get("delta", {})
                         content = delta.get("content", "")
-                        if content:
-                            accumulated.append(content)
-                            last_chunk_time = time.monotonic()
+                        if not content:
                             continue
+
+                        last_chunk_time = time.monotonic()
+
+                        if delimiter_found:
+                            # After delimiter — silently buffer action JSON.
+                            all_text += content
+                            continue
+
+                        all_text += content
+
+                        if _ACTION_DELIMITER in all_text:
+                            delimiter_found = True
+                            before = all_text.split(_ACTION_DELIMITER, 1)[0]
+                            if len(before) > yielded:
+                                yield before[yielded:]
+                                yielded = len(before)
+                            continue
+
+                        # No delimiter yet — yield safe text.
+                        # Keep a tail of ``delim_len - 1`` chars buffered
+                        # because they might be the start of the delimiter
+                        # that was split across two LLM chunks.
+                        safe_end = len(all_text) - (delim_len - 1)
+                        if safe_end > yielded:
+                            yield all_text[yielded:safe_end]
+                            yielded = safe_end
+
                     except (json.JSONDecodeError, KeyError, IndexError):
                         pass
 
@@ -437,11 +469,17 @@ class ChatLLMProvider:
             if time.monotonic() - last_chunk_time > 10:
                 yield _KEEPALIVE
 
-        raw = "".join(accumulated)
-        yield self._parse_envelope(raw)
+        # Final parse — emit the (reply, action) tuple.
+        if delimiter_found:
+            action_str = all_text.split(_ACTION_DELIMITER, 1)[1].strip()
+            action = _try_parse_action(action_str)
+            yield ("", action)
+        else:
+            yield _parse_delimited(all_text)
 
     @staticmethod
     def _parse_envelope(raw: str) -> tuple[str, ChatAction | None]:
+        """Parse the legacy ``{reply, action}`` JSON envelope."""
         try:
             envelope = json.loads(raw)
         except json.JSONDecodeError:
@@ -466,3 +504,37 @@ class ChatLLMProvider:
             return reply, None
 
         return reply, action
+
+
+def _parse_delimited(raw: str) -> tuple[str, ChatAction | None]:
+    """Parse LLM output that uses the ``<<<ACTION>>>`` delimiter format.
+
+    Text before the delimiter is the reply; the JSON after it (if present)
+    is parsed into a ``ChatAction``.
+    """
+    if _ACTION_DELIMITER not in raw:
+        return raw.strip(), None
+
+    before, after = raw.split(_ACTION_DELIMITER, 1)
+    reply = before.strip()
+    action = _try_parse_action(after)
+    return reply, action
+
+
+def _try_parse_action(raw: str) -> ChatAction | None:
+    """Attempt to parse a JSON object into a ``ChatAction``."""
+    raw = raw.strip()
+    if not raw:
+        return None
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        logger.warning("Chat action JSON parse failed: {}", raw[:200])
+        return None
+    if not isinstance(payload, dict):
+        return None
+    try:
+        return ChatAction.model_validate(payload)
+    except Exception as exc:
+        logger.warning("Chat action validation failed: {}", exc)
+        return None

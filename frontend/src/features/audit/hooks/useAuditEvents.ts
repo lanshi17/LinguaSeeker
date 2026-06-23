@@ -9,7 +9,14 @@ import type { AuditEventQuery } from "../types/audit";
  */
 export function useAuditEvents(query: AuditEventQuery = {}) {
   return useQuery({
-    queryKey: ["audit", "events", query.canonical_evidence_id, query.reviewer_id, query.limit],
+    queryKey: [
+      "audit",
+      "events",
+      query.canonical_evidence_id,
+      query.source_document_id,
+      query.reviewer_id,
+      query.limit,
+    ],
     queryFn: () => listAuditEvents(query),
     refetchInterval: 10_000,
     staleTime: 5_000,

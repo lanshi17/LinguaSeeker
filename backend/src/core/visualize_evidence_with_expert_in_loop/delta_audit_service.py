@@ -12,7 +12,7 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     ReviewStatus,
     TargetType,
 )
-from src.dao.postgresql.models import ReviewAuditEvent
+from src.dao.postgresql.models import CanonicalEvidenceItem, ReviewAuditEvent
 
 
 class DeltaAuditService:
@@ -72,11 +72,18 @@ class DeltaAuditService:
         session: AsyncSession,
         *,
         canonical_evidence_id: UUID | None = None,
+        source_document_id: UUID | None = None,
         reviewer_id: UUID | None = None,
         limit: int = 100,
     ) -> list[ReviewAuditEvent]:
         """Query review audit events with optional filters."""
         stmt = select(ReviewAuditEvent)
+        if source_document_id:
+            stmt = stmt.join(
+                CanonicalEvidenceItem,
+                CanonicalEvidenceItem.canonical_evidence_id
+                == ReviewAuditEvent.canonical_evidence_id,
+            ).where(CanonicalEvidenceItem.source_document_id == source_document_id)
         if canonical_evidence_id:
             stmt = stmt.where(
                 ReviewAuditEvent.canonical_evidence_id == canonical_evidence_id

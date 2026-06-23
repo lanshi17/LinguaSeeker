@@ -666,16 +666,19 @@ class ChatService:
                 if item is _KEEPALIVE:
                     yield {"type": "keepalive"}
                 elif isinstance(item, tuple):
-                    reply, action = item
-                # Text chunks from accumulated JSON are not yielded
-                # incrementally (the LLM returns a single JSON blob);
-                # the reply text is emitted after parsing.
+                    # Final (reply_tail, action) tuple from the provider.
+                    # reply_tail is text after the delimiter (usually empty).
+                    tail, action = item
+                    if tail:
+                        reply += tail
+                        yield {"type": "text", "content": tail}
+                elif isinstance(item, str) and item:
+                    # Incremental text chunk — forward immediately.
+                    reply += item
+                    yield {"type": "text", "content": item}
         except Exception as e:
             yield {"type": "error", "message": str(e)}
             return
-
-        if reply:
-            yield {"type": "text", "content": reply}
 
         if action is not None:
             yield {

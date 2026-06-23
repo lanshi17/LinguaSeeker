@@ -715,3 +715,38 @@ class DocumentProcessingCache(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
+
+
+class DocumentAnnotation(Base, TimestampMixin):
+    """User-created text-selection annotation on a rendered document paragraph.
+
+    Stores character-offset spans over the flattened visible text of a
+    paragraph (``original`` or ``translated`` track). The backend stores raw
+    offset numbers without interpreting the coordinate system — the frontend
+    owns offset semantics.
+    """
+
+    __tablename__ = "document_annotations"
+    __table_args__ = (
+        CheckConstraint(
+            "end_offset > start_offset AND start_offset >= 0",
+            name="ck_document_annotations_offsets_valid",
+        ),
+        Index("ix_document_annotations_doc_track", "source_document_id", "track"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    source_document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("source_documents.source_document_id"),
+        nullable=False,
+    )
+    track: Mapped[str] = mapped_column(String(16), nullable=False)
+    paragraph_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    start_offset: Mapped[int] = mapped_column(Integer, nullable=False)
+    end_offset: Mapped[int] = mapped_column(Integer, nullable=False)
+    color: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    author: Mapped[str | None] = mapped_column(String(128), nullable=True)
