@@ -78,6 +78,38 @@ def _build_raw_metadata(state: PipelineGraphState) -> dict[str, object]:
     return meta
 
 
+def _load_phase2_document_text(state: PipelineGraphState) -> tuple[str | None, str | None]:
+    """Read Phase 2 JSON files and return (original_text, translated_text).
+
+    Returns (None, None) when Phase 2 output is missing or files are unreadable.
+    """
+    p2 = state.phase_2_output
+    if p2 is None:
+        return None, None
+
+    def _concat(path: str) -> str | None:
+        try:
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            return None
+        if not isinstance(data, dict):
+            return None
+        blocks = data.get("blocks", [])
+        if blocks:
+            text = "\n\n".join(
+                b.get("text", "").strip() for b in blocks if isinstance(b, dict) and b.get("text")
+            )
+            if text:
+                return text
+        formatted = data.get("formatted_text", "")
+        return formatted.strip() or None
+
+    original = _concat(p2.original_json_path)
+    translated = _concat(p2.translated_json_path)
+    return original, translated
+
+
 _TERMINAL_PHASE_STATUSES = frozenset({"completed", "skipped"})
 _PHASE_KEYS = ("phase_1", "phase_2", "phase_3")
 
@@ -149,6 +181,17 @@ class DirectStatePersistence:
             new_meta = _build_raw_metadata(state)
             if new_meta.get("title"):
                 existing_sd.raw_metadata = {**existing_sd.raw_metadata, **new_meta}
+
+        # Write Phase 2 document text (original + translated) to DB
+        if state.phase_2_output and state.phase_2_status.status == PhaseStatus.COMPLETED:
+            original_text, translated_text = _load_phase2_document_text(state)
+            if original_text or translated_text:
+                sd = await self._session.get(SourceDocument, sd_id)
+                if sd is not None:
+                    if original_text:
+                        sd.original_text = original_text
+                    if translated_text:
+                        sd.translated_text = translated_text
 
         existing = await self._session.get(
             PipelineRunState, UUID(state.processing_run_id)
@@ -258,6 +301,17 @@ class SessionBoundStatePersistence:
                 existing_sd = await session.get(SourceDocument, sd_id)
                 if existing_sd is not None and existing_sd.raw_metadata.get("title") != raw_meta["title"]:
                     existing_sd.raw_metadata = {**existing_sd.raw_metadata, **raw_meta}
+
+            # Write Phase 2 document text (original + translated) to DB
+            if state.phase_2_output and state.phase_2_status.status == PhaseStatus.COMPLETED:
+                original_text, translated_text = _load_phase2_document_text(state)
+                if original_text or translated_text:
+                    sd = await session.get(SourceDocument, sd_id)
+                    if sd is not None:
+                        if original_text:
+                            sd.original_text = original_text
+                        if translated_text:
+                            sd.translated_text = translated_text
 
             # ── State transition guard ──
             # Load existing state (if any) to validate the transition is legal.

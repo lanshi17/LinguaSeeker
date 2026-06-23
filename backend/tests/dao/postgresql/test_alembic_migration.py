@@ -189,7 +189,7 @@ def test_head_revision_points_to_terminology_schema() -> None:
 
 
 def test_head_revision_points_to_variant_internal_id_index() -> None:
-    """The Alembic head is the variant internal-id index migration."""
+    """The Alembic head is the document full-text migration."""
     backend_str = str(BACKEND_DIR)
     if backend_str not in sys.path:
         sys.path.insert(0, backend_str)
@@ -204,8 +204,8 @@ def test_head_revision_points_to_variant_internal_id_index() -> None:
     head = script.get_revision("head")
 
     assert head is not None
-    assert head.revision == "variant_internal_id_20260621"
-    assert head.down_revision == "critical_indexes_20260621"
+    assert head.revision == "doc_text_20260623"
+    assert head.down_revision == "repair_phase3_schema_20260623"
 
 
 def test_pipeline_run_leases_migration_chain() -> None:

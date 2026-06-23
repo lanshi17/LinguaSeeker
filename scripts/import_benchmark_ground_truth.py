@@ -1,16 +1,15 @@
 """Import benchmark ground truth evidence items and literature into PostgreSQL.
 
-Reads ``expected.json`` from each ground truth entry directory (Rett, ClinGen,
-ClinVar Fused) and creates the corresponding database records:
+Reads ground truth entries (Rett, ClinGen, ClinVar Fused) and creates
+dual-track (original + translated) evidence with full source span
+traceability.
 
-- ``source_documents`` with literature metadata
-- ``source_document_identifiers`` (PMID, DOI, PMC)
-- ``processing_runs`` (synthetic benchmark import run)
-- ``run_evidence_items`` (ground truth evidence, confidence=1.0)
-- ``canonical_evidence_items`` (canonical records, review_status=approved)
-- ``normalized_entities`` (gene, disease, variant entities)
-- ``evidence_entity_bindings``
-- ``literature_profiles`` (refreshed via LiteratureProfileRepository)
+For entries with preprocessed ``extraction_result.json``, imports real
+pipeline extraction data including text snippets, page offsets, and
+confidence scores for both original and translated tracks.
+
+For entries without preprocessed data, creates synthetic dual-track
+evidence from ``expected.json`` ground truth values.
 
 Idempotent: cleans up previous benchmark imports before re-importing.
 
@@ -19,7 +18,8 @@ Usage::
     cd backend
     uv run python ../scripts/import_benchmark_ground_truth.py
     uv run python ../scripts/import_benchmark_ground_truth.py --datasets rett
-    uv run python ../scripts/import_benchmark_ground_truth.py --entry-id rett_001
+    uv run python ../scripts/import_benchmark_ground_truth.py --entry-id rett_006
+    uv run python ../scripts/import_benchmark_ground_truth.py --dry-run
 """
 from __future__ import annotations
 
@@ -69,7 +69,7 @@ DATASET_DIRS = {
 
 
 def discover_entries(gt_root: Path, datasets: list[str]) -> list[dict]:
-    """Walk ground truth directories and collect expected.json paths."""
+    """Walk ground truth directories and collect entry paths."""
     entries = []
     for ds in datasets:
         ds_dir = gt_root / DATASET_DIRS[ds]
@@ -83,6 +83,8 @@ def discover_entries(gt_root: Path, datasets: list[str]) -> list[dict]:
                     "dataset": ds,
                     "expected_path": expected,
                     "entry_dir": entry_dir,
+                    "extraction_path": entry_dir / "preprocessed" / "phase_2" / "extraction_result.json",
+                    "source_md_path": entry_dir / "source.md",
                 })
     return entries
 
@@ -96,7 +98,7 @@ def _normalize_entry(data: dict, dataset: str) -> dict:
 
     if dataset == "rett":
         variants = []
-        for v in data.get("variants", []):
+        for v in data.get("variants") or []:
             variants.append({
                 "hgvs_c": v.get("hgvs_c") or "",
                 "hgvs_p": v.get("hgvs_p") or "",
@@ -190,27 +192,141 @@ def _hash(*parts: str) -> str:
     return hashlib.sha256("|".join(parts).encode()).hexdigest()[:32]
 
 
-def _build_group_id(gene_symbol: str, field_id: str, ev: dict) -> str:
-    """Build a group_id consistent with the pipeline format."""
-    variant_value = ""
-    if "variant" in field_id.lower():
-        variant_value = str(ev.get("value", ""))
-    elif ev.get("candidates"):
-        variant_value = ""
-    if variant_value:
-        return f"gene={gene_symbol}|variant={variant_value}"
-    return f"gene={gene_symbol}|variant=__missing__"
+def _field_id_to_category(field_id: str) -> str:
+    prefix = field_id.split(".")[0] if "." in field_id else field_id
+    mapping = {
+        "A": "Gene and Variant",
+        "B": "Case and Phenotype",
+        "C": "Segregation",
+        "D": "Population",
+        "E": "Computational",
+        "F": "Functional",
+        "G": "Case-Control",
+        "H": "Contradiction",
+        "I": "Gene Function",
+        "J": "Authority",
+    }
+    return mapping.get(prefix, "Other")
+
+
+# ── Preprocessed data reader ────────────────────────────────────────────────
+
+
+def _read_preprocessed_tracks(extraction_path: Path) -> dict | None:
+    """Read extraction_result.json and return {original: [...], translated: [...]}."""
+    if not extraction_path.is_file():
+        return None
+    try:
+        data = json.loads(extraction_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+
+    result: dict[str, list] = {}
+    for track_key in ("original_result", "translated_result"):
+        track_data = data.get(track_key)
+        if not track_data or track_data.get("status") != "completed":
+            continue
+        items = track_data.get("evidence_items") or []
+        track_name = "original" if track_key == "original_result" else "translated"
+        result[track_name] = items
+
+    if not result.get("original"):
+        return None
+    return result
+
+
+def _build_evidence_specs(tracks: dict | None, norm: dict) -> list[dict]:
+    """Build a unified list of evidence specs from preprocessed or ground truth data.
+
+    Each spec describes one evidence item for one track, with source span
+    for traceability.
+    """
+    specs: list[dict] = []
+    seen_keys: set[tuple] = set()
+
+    if tracks:
+        for track_name in ("original", "translated"):
+            for item in tracks.get(track_name, []):
+                field_id = item.get("field_id", "")
+                if "." not in field_id:
+                    continue
+                status = item.get("status", "found")
+                value = str(item.get("value", ""))
+                if status != "found" and (not value or value == "None"):
+                    continue
+                group_id = item.get("group_id", "")
+                dedup_key = (field_id, track_name, group_id)
+                if dedup_key in seen_keys:
+                    continue
+                seen_keys.add(dedup_key)
+                specs.append({
+                    "track": track_name,
+                    "field_id": field_id,
+                    "value": value,
+                    "confidence": float(item.get("confidence", 1.0)),
+                    "status": status,
+                    "source_span": item.get("source") or {},
+                    "raw_source": item.get("raw_source") or {},
+                    "group_id": group_id,
+                    "target_gene": item.get("target_gene", ""),
+                    "target_disease": item.get("target_disease", ""),
+                    "field_name": item.get("field_name", ""),
+                    "category": item.get("category", ""),
+                    "notes": item.get("notes", ""),
+                    "evidence_role": item.get("evidence_role", "primary"),
+                    "acmg_codes": item.get("assigned_acmg_codes") or [],
+                    "article_language": item.get("article_language", ""),
+                    "data_source": "preprocessed",
+                })
+    else:
+        for ev in norm.get("expected_evidence", []):
+            field_id = ev.get("field_id", "")
+            value = str(ev.get("value", ""))
+            base_span = {
+                "source": "benchmark_ground_truth",
+                "entry_id": norm["entry_id"],
+            }
+            for track_name in ("original", "translated"):
+                specs.append({
+                    "track": track_name,
+                    "field_id": field_id,
+                    "value": value,
+                    "confidence": 1.0,
+                    "status": "found",
+                    "source_span": {**base_span, "track": track_name},
+                    "raw_source": {},
+                    "group_id": "",
+                    "target_gene": norm["gene_symbol"],
+                    "target_disease": norm["disease_label"],
+                    "field_name": field_id,
+                    "category": _field_id_to_category(field_id),
+                    "notes": "",
+                    "evidence_role": "primary",
+                    "acmg_codes": [],
+                    "article_language": norm.get("language", "en") if track_name == "original" else "en",
+                    "data_source": "ground_truth",
+                })
+
+    return specs
 
 
 # ── Core import ──────────────────────────────────────────────────────────────
 
 
-async def _import_entry(session, norm: dict, dataset: str) -> None:
-    """Import one ground truth entry into the database."""
+async def _import_entry(
+    session,
+    norm: dict,
+    dataset: str,
+    entry_dir: Path,
+) -> dict:
+    """Import one ground truth entry with dual-track traceability.
+
+    Returns stats dict with counts.
+    """
     entry_id = norm["entry_id"]
     id_type, id_value = _get_lit_id(norm)
 
-    # Find existing source document by identifier.
+    # ── Cleanup existing ──
     result = await session.execute(
         select(SourceDocumentIdentifier.source_document_id)
         .where(
@@ -219,9 +335,25 @@ async def _import_entry(session, norm: dict, dataset: str) -> None:
         )
     )
     existing_doc_id = result.scalar_one_or_none()
-
     if existing_doc_id:
         await _delete_doc_cascade(session, existing_doc_id)
+
+    # ── Read preprocessed data ──
+    extraction_path = entry_dir / "preprocessed" / "phase_2" / "extraction_result.json"
+    tracks = _read_preprocessed_tracks(extraction_path)
+    has_preprocessed = tracks is not None
+
+    # ── Read source.md for article text storage ──
+    source_md_path = entry_dir / "source.md"
+    article_text_length = 0
+    if source_md_path.is_file():
+        try:
+            article_text_length = len(source_md_path.read_text(encoding="utf-8"))
+        except OSError:
+            pass
+
+    # ── Build evidence specs ──
+    specs = _build_evidence_specs(tracks, norm)
 
     source_document_id = uuid.uuid4()
     processing_run_id = uuid.uuid4()
@@ -234,7 +366,7 @@ async def _import_entry(session, norm: dict, dataset: str) -> None:
         except (ValueError, TypeError):
             pass
 
-    source_doc = SourceDocument(
+    session.add(SourceDocument(
         source_document_id=source_document_id,
         raw_metadata={
             "title": norm["title"],
@@ -250,9 +382,12 @@ async def _import_entry(session, norm: dict, dataset: str) -> None:
             "mondo_id": norm["mondo_id"],
             "moi": norm["moi"],
             "classification": norm["classification"],
+            "has_preprocessed": has_preprocessed,
+            "article_text_chars": article_text_length,
+            "has_source_md": source_md_path.is_file(),
+            "dual_track": True,
         },
-    )
-    session.add(source_doc)
+    ))
     await session.flush()
 
     # ── SourceDocumentIdentifier ──
@@ -271,14 +406,22 @@ async def _import_entry(session, norm: dict, dataset: str) -> None:
     await session.flush()
 
     # ── ProcessingRun ──
+    evidence_count = len(specs)
     session.add(ProcessingRun(
         processing_run_id=processing_run_id,
         source_document_id=source_document_id,
         parser_version="benchmark_ground_truth",
         extraction_version="benchmark_ground_truth",
         run_status="completed",
-        input_artifacts={"dataset": dataset, "entry_id": entry_id},
-        output_artifacts={"evidence_count": len(norm["expected_evidence"])},
+        input_artifacts={
+            "dataset": dataset,
+            "entry_id": entry_id,
+            "data_source": "preprocessed" if has_preprocessed else "ground_truth",
+        },
+        output_artifacts={
+            "evidence_count": evidence_count,
+            "tracks": ["original", "translated"],
+        },
     ))
     await session.flush()
 
@@ -315,65 +458,91 @@ async def _import_entry(session, norm: dict, dataset: str) -> None:
         if eid:
             variant_entities[display] = eid
 
-    # ── RunEvidenceItem + CanonicalEvidenceItem + bindings ──
-    for ev in norm["expected_evidence"]:
-        field_id = ev["field_id"]
-        value_str = str(ev.get("value", ""))
-        group_id = _build_group_id(norm["gene_symbol"], field_id, ev)
+    # ── Dual-track evidence items ──
+    track_counts = {"original": 0, "translated": 0}
 
-        position_hash = _hash(entry_id, field_id)
+    for spec in specs:
+        track = spec["track"]
+        field_id = spec["field_id"]
+        value_str = spec["value"]
+        group_id = spec.get("group_id") or f"gene={norm['gene_symbol']}|variant=__missing__"
+
+        # Include track and group_id in position_hash so original/translated
+        # and different groups are distinct canonical items.
+        position_hash = _hash(entry_id, field_id, track, group_id)
         text_hash = _hash(value_str)
-        entity_scope_hash = _hash(norm["gene_symbol"], norm.get("disease_label", ""))
+        entity_scope_hash = _hash(
+            spec.get("target_gene") or norm["gene_symbol"],
+            spec.get("target_disease") or norm.get("disease_label", ""),
+        )
 
-        run_ev_item = RunEvidenceItem(
+        # Build source_span with full traceability data
+        source_span = dict(spec.get("source_span") or {})
+        source_span.setdefault("track", track)
+        source_span.setdefault("entry_id", entry_id)
+
+        run_ev = RunEvidenceItem(
             processing_run_id=processing_run_id,
             source_document_id=source_document_id,
-            track="ground_truth",
+            track=track,
             field_id=field_id,
-            status="found",
+            status=spec.get("status", "found"),
             value=value_str,
-            confidence=Decimal("1.0000"),
+            confidence=Decimal(str(min(spec.get("confidence", 1.0), 1.0))),
             position_hash=position_hash,
             text_hash=text_hash,
             entity_scope_hash=entity_scope_hash,
-            source_span={"source": "benchmark_ground_truth", "entry_id": entry_id},
+            source_span=source_span,
             raw_payload={
                 "dataset": dataset,
-                "evaluation_type": ev.get("evaluation_type", ""),
-                "candidates": ev.get("candidates", []),
+                "group_id": group_id,
+                "target_gene": spec.get("target_gene", ""),
+                "target_disease": spec.get("target_disease", ""),
+                "notes": spec.get("notes", ""),
+                "evidence_role": spec.get("evidence_role", "primary"),
+                "acmg_codes": spec.get("acmg_codes", []),
+                "article_language": spec.get("article_language", ""),
+                "data_source": spec.get("data_source", ""),
+                "raw_source": spec.get("raw_source", {}),
+                "field_name": spec.get("field_name", ""),
             },
         )
-        session.add(run_ev_item)
+        session.add(run_ev)
         await session.flush()
 
+        # ── CanonicalEvidenceItem ──
+        category = spec.get("category") or _field_id_to_category(field_id)
         canonical = CanonicalEvidenceItem(
             source_document_id=source_document_id,
             field_id=field_id,
             position_hash=position_hash,
             text_hash=text_hash,
             entity_scope_hash=entity_scope_hash,
-            current_best_run_evidence_id=run_ev_item.run_evidence_item_id,
-            current_best_status="found",
-            current_best_confidence=Decimal("1.0000"),
+            current_best_run_evidence_id=run_ev.run_evidence_item_id,
+            current_best_status=spec.get("status", "found"),
+            current_best_confidence=Decimal(str(min(spec.get("confidence", 1.0), 1.0))),
             conflict_flag=False,
             review_status="approved",
             active_payload={
                 "value": value_str,
                 "group_id": group_id,
-                "track": "ground_truth",
+                "track": track,
                 "field_id": field_id,
-                "field_name": field_id,
+                "field_name": spec.get("field_name", field_id),
                 "source": "benchmark_ground_truth",
                 "entity_id": str(gene_entity_id) if gene_entity_id else None,
-                "status": "found",
-                "confidence": 1.0,
-                "category": _field_id_to_category(field_id),
+                "status": spec.get("status", "found"),
+                "confidence": spec.get("confidence", 1.0),
+                "category": category,
+                "text_snippet": (spec.get("source_span") or {}).get("text_snippet", ""),
+                "page": (spec.get("source_span") or {}).get("page"),
+                "data_source": spec.get("data_source", ""),
             },
         )
         session.add(canonical)
         await session.flush()
 
-        # Evidence entity bindings.
+        # ── Evidence entity bindings ──
         bindings = [("gene", gene_entity_id, norm["gene_symbol"])]
         if disease_entity_id:
             bindings.append(("disease", disease_entity_id, norm["disease_label"]))
@@ -384,7 +553,7 @@ async def _import_entry(session, norm: dict, dataset: str) -> None:
             if eid is None:
                 continue
             session.add(EvidenceEntityBinding(
-                run_evidence_item_id=run_ev_item.run_evidence_item_id,
+                run_evidence_item_id=run_ev.run_evidence_item_id,
                 entity_id=eid,
                 entity_type=role,
                 role=role,
@@ -392,29 +561,22 @@ async def _import_entry(session, norm: dict, dataset: str) -> None:
                 raw_entity_text=raw_text,
             ))
 
+        track_counts[track] = track_counts.get(track, 0) + 1
+
     await session.flush()
 
     # ── LiteratureProfile ──
     repo = LiteratureProfileRepository(session)
     await repo.refresh_for_document(source_document_id)
 
-
-def _field_id_to_category(field_id: str) -> str:
-    """Map field_id prefix to ACMG evidence category name."""
-    prefix = field_id.split(".")[0] if "." in field_id else field_id
-    mapping = {
-        "A": "Gene and Variant",
-        "B": "Case and Phenotype",
-        "C": "Segregation",
-        "D": "Population",
-        "E": "Computational",
-        "F": "Functional",
-        "G": "Case-Control",
-        "H": "Contradiction",
-        "I": "Gene Function",
-        "J": "Authority",
+    return {
+        "has_preprocessed": has_preprocessed,
+        "original_count": track_counts.get("original", 0),
+        "translated_count": track_counts.get("translated", 0),
     }
-    return mapping.get(prefix, "Other")
+
+
+# ── Entity helpers ───────────────────────────────────────────────────────────
 
 
 async def _upsert_entity(
@@ -547,7 +709,9 @@ async def _delete_doc_cascade(session, source_document_id: uuid.UUID) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Import benchmark ground truth into DB")
+    parser = argparse.ArgumentParser(
+        description="Import benchmark ground truth into DB with dual-track traceability"
+    )
     parser.add_argument(
         "--datasets", nargs="+",
         default=["rett", "clingen", "clinvar_fused"],
@@ -585,19 +749,36 @@ async def main() -> None:
     )
 
     if args.dry_run:
+        preprocessed_count = 0
         for e in entries:
+            has_pre = e["extraction_path"].is_file()
+            if has_pre:
+                preprocessed_count += 1
             data = json.loads(e["expected_path"].read_text())
             norm = _normalize_entry(data, e["dataset"])
             id_type, id_value = _get_lit_id(norm)
-            logger.info(
-                "  {} [{}] {} ({}={}, {} evidence items)",
-                e["entry_dir"].name,
-                e["dataset"],
-                norm["title"][:60],
-                id_type,
-                id_value,
-                len(norm["expected_evidence"]),
-            )
+            tracks = _read_preprocessed_tracks(e["extraction_path"])
+            if tracks:
+                n_orig = len(tracks.get("original", []))
+                n_trans = len(tracks.get("translated", []))
+                logger.info(
+                    "  {} [{}] {} ({}={}, preprocessed: {} orig + {} trans)",
+                    e["entry_dir"].name, e["dataset"],
+                    norm["title"][:50], id_type, id_value,
+                    n_orig, n_trans,
+                )
+            else:
+                n_ev = len(norm["expected_evidence"])
+                logger.info(
+                    "  {} [{}] {} ({}={}, ground_truth: {} x2 tracks)",
+                    e["entry_dir"].name, e["dataset"],
+                    norm["title"][:50], id_type, id_value,
+                    n_ev,
+                )
+        logger.info(
+            "Summary: {} entries ({} with preprocessed, {} ground truth only)",
+            len(entries), preprocessed_count, len(entries) - preprocessed_count,
+        )
         return
 
     if not entries:
@@ -610,6 +791,7 @@ async def main() -> None:
 
     imported = 0
     failed = 0
+    stats = {"preprocessed": 0, "ground_truth": 0, "original_items": 0, "translated_items": 0}
 
     async with factory() as session:
         async with session.begin():
@@ -617,8 +799,17 @@ async def main() -> None:
                 data = json.loads(entry_info["expected_path"].read_text())
                 norm = _normalize_entry(data, entry_info["dataset"])
                 try:
-                    await _import_entry(session, norm, entry_info["dataset"])
+                    async with session.begin_nested():
+                        result = await _import_entry(
+                            session, norm, entry_info["dataset"], entry_info["entry_dir"],
+                        )
                     imported += 1
+                    if result["has_preprocessed"]:
+                        stats["preprocessed"] += 1
+                    else:
+                        stats["ground_truth"] += 1
+                    stats["original_items"] += result["original_count"]
+                    stats["translated_items"] += result["translated_count"]
                     if imported % 10 == 0:
                         logger.info("Imported {}/{} entries", imported, len(entries))
                 except Exception:
@@ -631,9 +822,15 @@ async def main() -> None:
 
     logger.info(
         "Import complete: {} imported, {} failed ({:.2f}s)",
-        imported,
-        failed,
-        time.perf_counter() - started_at,
+        imported, failed, time.perf_counter() - started_at,
+    )
+    logger.info(
+        "  Preprocessed: {} entries | Ground truth: {} entries",
+        stats["preprocessed"], stats["ground_truth"],
+    )
+    logger.info(
+        "  Original track: {} items | Translated track: {} items",
+        stats["original_items"], stats["translated_items"],
     )
 
 

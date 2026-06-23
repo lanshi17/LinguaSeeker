@@ -6,7 +6,7 @@ from difflib import SequenceMatcher
 
 from lingua import Language
 
-from ..language_detector import _CJK_RE, _DETECTOR
+from ..language_detector import _CJK_RE, _DETECTOR, _looks_english
 
 
 def validate_translation_output(source_text: str, translated_text: str) -> None:
@@ -39,15 +39,21 @@ def validate_translation_output(source_text: str, translated_text: str) -> None:
     # Check if translation is essentially unchanged from source.
     # Skip for short texts (<100 chars) where shared technical terms
     # (gene names, mutation notation) inflate the similarity ratio.
+    # Also skip when the source is already English — translating an English
+    # document produces similar text by design.
     if source and len(source) >= 100:
         ratio = SequenceMatcher(None, source.lower(), translated.lower()).ratio()
-        if ratio >= 0.85:
+        if ratio >= 0.85 and not _looks_english(source):
             raise ValueError("translation_validation_failed: unchanged")
 
-    # Check detected language of output
+    # Check detected language of output.
+    # The lingua detector misclassifies text heavy in gene mutation notation
+    # (p.R106W, c.C316T, etc.) as Latin/French.  Fall back to word-frequency
+    # heuristic when the detector disagrees.
     detected = _DETECTOR.detect_language_of(translated[:4000])
     if detected is not None and detected != Language.ENGLISH:
-        raise ValueError("translation_validation_failed: non_english_output")
+        if not _looks_english(translated):
+            raise ValueError("translation_validation_failed: non_english_output")
 
 
 def summarize_validation_error(exc: Exception) -> str:

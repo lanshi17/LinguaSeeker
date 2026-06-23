@@ -59,6 +59,10 @@ class _FakeResult:
         """Return one scalar row."""
         return self._scalar
 
+    def one_or_none(self):
+        """Return one row or None (for multi-column selects)."""
+        return self._rows[0] if self._rows else None
+
     def scalar_one(self):
         """Return one mandatory scalar row (count-style queries).
 
@@ -255,7 +259,7 @@ async def test_get_group_detail_pivots_distribution_and_traces():
     service = SearchService(_FakeSession([
         _FakeResult(rows=rows),
         _FakeResult(scalars=identifiers),
-        _FakeResult(scalar={"title": "BRCA1 evidence paper"}),
+        _FakeResult(rows=[({"title": "BRCA1 evidence paper"}, None, None)]),
         _FakeResult(scalar=None),  # PipelineRunState.state_json query
     ]))
 
@@ -327,7 +331,7 @@ async def test_get_group_detail_includes_value_anchors_for_paired_field():
     service = SearchService(_FakeSession([
         _FakeResult(rows=rows),
         _FakeResult(scalars=[]),
-        _FakeResult(scalar={}),
+        _FakeResult(rows=[({}, None, None)]),
         _FakeResult(scalar=None),  # PipelineRunState.state_json query
     ]))
 
@@ -476,7 +480,7 @@ async def test_get_group_detail_skips_field_ids_without_standard_tracks():
     service = SearchService(_FakeSession([
         _FakeResult(rows=rows),
         _FakeResult(scalars=identifiers),
-        _FakeResult(scalar={}),
+        _FakeResult(rows=[({}, None, None)]),
         _FakeResult(scalar=None),  # PipelineRunState.state_json query
     ]))
 
@@ -517,7 +521,7 @@ async def test_get_group_detail_single_track_field_produces_partial_trace():
     service = SearchService(_FakeSession([
         _FakeResult(rows=rows),
         _FakeResult(scalars=identifiers),
-        _FakeResult(scalar={}),
+        _FakeResult(rows=[({}, None, None)]),
         _FakeResult(scalar=None),  # PipelineRunState.state_json query
     ]))
 

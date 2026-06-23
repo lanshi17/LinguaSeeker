@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   Dna,
@@ -9,8 +10,9 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertCircle,
+  Calendar,
 } from "lucide-react";
-import { Input } from "antd";
+import { AutoComplete, Input } from "antd";
 import { Spinner } from "@/components/ui/Spinner";
 import { useVariantIndex } from "../hooks/useVariantIndex";
 import { VariantIndexSkeleton } from "./VariantIndexSkeleton";
@@ -50,6 +52,21 @@ function badgeInlineStyle(level: ClassificationLevel): React.CSSProperties {
   };
 }
 
+/* ── Date formatter ─────────────────────────────────────── */
+
+function formatDate(isoString?: string | null): string {
+  if (!isoString) return "—";
+  try {
+    return new Date(isoString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return "—";
+  }
+}
+
 /* ── Embedded responsive styles ──────────────────────────── */
 
 const embeddedCSS = `
@@ -81,6 +98,8 @@ const embeddedCSS = `
   display: grid;
   gap: 16px;
   grid-template-columns: 1fr;
+  align-items: stretch;
+  grid-auto-rows: 1fr;
 }
 @media (min-width: 640px) {
   .viv-variant-grid {
@@ -312,6 +331,19 @@ function VariantCard({ entry }: { entry: VariantIndexEntry }) {
 
         {/* Category distribution mini-bar */}
         <CategoryDistributionBar distribution={entry.categoryDistribution} />
+
+        {/* Updated date */}
+        <div style={{
+          marginTop: 8,
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          fontSize: 11,
+          color: "#9ca3af",
+        }}>
+          <Calendar style={{ width: 12, height: 12 }} />
+          <span>Updated {formatDate(entry.createdAt)}</span>
+        </div>
       </div>
     </Link>
   );
@@ -386,6 +418,7 @@ export function VariantIndexView() {
     page,
     pageSize,
     stats,
+    allEntries,
     isLoading,
     isFetching,
     error,
@@ -399,6 +432,44 @@ export function VariantIndexView() {
 
   const searchText = filters.gene ?? filters.variant ?? "";
   const hasAnyFilter = !!(filters.gene || filters.variant || filters.disease || filters.classification);
+
+  // Build candidate lists from all data for autocomplete
+  const { geneCandidates, variantCandidates, diseaseCandidates } = useMemo(() => {
+    const genes = new Set<string>();
+    const variants = new Set<string>();
+    const diseases = new Set<string>();
+    for (const e of allEntries) {
+      if (e.gene) genes.add(e.gene);
+      if (e.variant) variants.add(e.variant);
+      if (e.disease) diseases.add(e.disease);
+    }
+    const toOptions = (set: Set<string>, filterText: string) => {
+      const q = filterText.toLowerCase();
+      return [...set]
+        .filter((v) => v.toLowerCase().includes(q))
+        .sort()
+        .slice(0, 20)
+        .map((v) => ({ value: v, label: v }));
+    };
+    return {
+      geneCandidates: toOptions(genes, searchText),
+      variantCandidates: toOptions(variants, searchText),
+      diseaseCandidates: toOptions(diseases, filters.disease ?? ""),
+    };
+  }, [allEntries, searchText, filters.disease]);
+
+  // Merge gene + variant candidates for the unified search field
+  const searchCandidates = useMemo(() => {
+    const seen = new Set<string>();
+    const merged: { value: string; label: string }[] = [];
+    for (const opt of [...geneCandidates, ...variantCandidates]) {
+      if (!seen.has(opt.value)) {
+        seen.add(opt.value);
+        merged.push(opt);
+      }
+    }
+    return merged;
+  }, [geneCandidates, variantCandidates]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -437,52 +508,61 @@ export function VariantIndexView() {
       {/* Search & Filter Bar */}
       <section style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", padding: 16 }}>
         <div className="viv-search-bar">
-          {/* Text search */}
+          {/* Text search — gene or variant autocomplete */}
           <div style={{ flex: 1 }}>
-            <Input
-              placeholder="Search by gene or variant..."
-              prefix={<Search style={{ width: 16, height: 16, color: "#9ca3af" }} />}
-              suffix={
-                searchText ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      updateFilter("gene", undefined);
-                      updateFilter("variant", undefined);
-                    }}
-                    style={{
-                      cursor: "pointer",
-                      border: "none",
-                      background: "none",
-                      padding: 2,
-                      color: "#9ca3af",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <X style={{ width: 14, height: 14 }} />
-                  </button>
-                ) : undefined
-              }
+            <AutoComplete
+              style={{ width: "100%" }}
+              options={searchCandidates}
               value={searchText}
-              onChange={(e) => {
-                const val = e.target.value;
+              onChange={(val) => {
                 updateFilter("gene", val || undefined);
                 if (val) updateFilter("variant", undefined);
               }}
-              allowClear={false}
-            />
+              popupMatchSelectWidth={true}
+            >
+              <Input
+                placeholder="Search by gene or variant..."
+                prefix={<Search style={{ width: 16, height: 16, color: "#9ca3af" }} />}
+                suffix={
+                  searchText ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateFilter("gene", undefined);
+                        updateFilter("variant", undefined);
+                      }}
+                      style={{
+                        cursor: "pointer",
+                        border: "none",
+                        background: "none",
+                        padding: 2,
+                        color: "#9ca3af",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <X style={{ width: 14, height: 14 }} />
+                    </button>
+                  ) : undefined
+                }
+                allowClear={false}
+              />
+            </AutoComplete>
           </div>
 
-          {/* Disease filter */}
+          {/* Disease filter — autocomplete */}
           <div className="viv-disease-filter">
-            <Input
-              placeholder="Filter by disease..."
+            <AutoComplete
+              style={{ width: "100%" }}
+              options={diseaseCandidates}
               value={filters.disease ?? ""}
-              onChange={(e) =>
-                updateFilter("disease", e.target.value || undefined)
+              onChange={(val) =>
+                updateFilter("disease", val || undefined)
               }
-            />
+              popupMatchSelectWidth={true}
+            >
+              <Input placeholder="Filter by disease..." />
+            </AutoComplete>
           </div>
 
           {/* Clear all */}

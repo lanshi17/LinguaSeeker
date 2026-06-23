@@ -21,7 +21,12 @@ def test_validate_cjk_heavy_output():
 
 
 def test_validate_unchanged_text():
-    source = "This text should not be identical to the translation output."
+    # Non-English source (Spanish) that was not actually translated should be flagged.
+    source = (
+        "Este texto no debería ser idéntico a la salida de la traducción. "
+        "Los resultados de las pruebas genéticas del paciente deben ser "
+        "verificados por el equipo médico antes de tomar decisiones clínicas."
+    )
     with pytest.raises(ValueError, match="unchanged"):
         validate_translation_output(source, source)
 
@@ -93,12 +98,14 @@ def test_validate_accepts_english_biomedical_with_mutation_notation():
     """English documents with gene mutation notation must not be rejected as non_english.
 
     The lingua detector misclassifies text heavy in mutation notation
-    (e.g. p.R106W, c.C316T, IVS3-2A>g) as Latin.  The validator must
-    fall back to word-frequency heuristics instead of blindly trusting
+    (e.g. p.R106W, c.C316T, IVS3-2A>g) as Latin or French.  The validator
+    must fall back to word-frequency heuristics instead of blindly trusting
     the detector.
 
     Regression test for rett_043 non_english_output failure.
     """
+    # Source: English document with heavy mutation notation (table).
+    # The detector misclassifies this as Latin/French.
     source = (
         "RSRT MECP2 iPSC Collection at Coriell Institute\n\n"
         "<table><tr><td>Mutation(protein)</td><td>Mutation(DNA)</td>"
@@ -116,11 +123,11 @@ def test_validate_accepts_english_biomedical_with_mutation_notation():
         "The collection is available for research on Rett syndrome and the "
         "associated mutations in the MECP2 gene."
     )
-    # Simulate what the LLM produces when "translating" an already-English doc:
-    # slightly reformatted but same content.  The detector still sees Latin.
+    # Simulate LLM output: table-heavy English with some rewritten prose.
+    # The detector still misclassifies this (returns FRENCH/LATIN).
     translated = (
-        "RSRT MECP2 iPSC Collection at the Coriell Institute\n\n"
-        "<table><tr><td>Mutation (protein)</td><td>Mutation (DNA)</td>"
+        "RSRT MECP2 iPSC Collection at Coriell Institute\n\n"
+        "<table><tr><td>Mutation(protein)</td><td>Mutation(DNA)</td>"
         "<td>Isogenic control available</td><td>Sex</td><td>Source</td></tr>\n"
         "<tr><td>p.R106W</td><td>c.C316T</td><td>Yes</td><td>F</td>"
         "<td>lymphocytes</td></tr>\n"
@@ -132,8 +139,10 @@ def test_validate_accepts_english_biomedical_with_mutation_notation():
         "<td>lymphocytes</td></tr>\n"
         "<tr><td>p.R306C</td><td>c.C916T</td><td>Yes</td><td>F</td>"
         "<td>lymphocytes</td></tr></table>\n\n"
-        "This collection is available for Rett syndrome research and for the "
-        "study of associated mutations in the MECP2 gene."
+        "The collection is available for research on Rett syndrome and the "
+        "associated mutations in the MECP2 gene. These lines are available "
+        "for the research community to study disease mechanisms and develop "
+        "potential therapies for patients with Rett syndrome."
     )
     # The validator must accept this as valid English output.
     validate_translation_output(source, translated)
