@@ -8,6 +8,7 @@ import { apiClient } from "@/lib/api/client";
 
 vi.mock("@/lib/api/client", () => ({
   apiClient: {
+    defaults: { baseURL: "/api/v1" },
     post: vi.fn(),
   },
 }));

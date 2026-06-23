@@ -10,9 +10,14 @@ import "./globals.css";
 const root = document.getElementById("root");
 if (!root) throw new Error("Root element not found");
 
+// basename follows the Vite base (SPA mount point), e.g. "/linguaseeker".
+// import.meta.env.BASE_URL always ends with "/"; strip the trailing slash so
+// BrowserRouter gets a clean prefix (empty string → root, no basename).
+const routerBasename = import.meta.env.BASE_URL.replace(/\/+$/, "") || undefined;
+
 createRoot(root).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={routerBasename}>
       <ConfigProvider theme={theme}>
         <AntdApp>
           <QueryProvider>

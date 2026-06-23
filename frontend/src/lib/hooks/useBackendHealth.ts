@@ -2,7 +2,8 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
-const healthEndpoint = import.meta.env.VITE_HEALTH_ENDPOINT || "/health";
+const healthEndpoint =
+  import.meta.env.VITE_HEALTH_ENDPOINT || `${import.meta.env.BASE_URL}health`;
 const healthPollInterval =
   Number(import.meta.env.VITE_HEALTH_POLL_INTERVAL) || 30_000;
 

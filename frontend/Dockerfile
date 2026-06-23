@@ -9,10 +9,11 @@ FROM oven/bun:1.1-alpine AS builder
 
 WORKDIR /app
 
-# Same-origin in production: the bundled SPA hits /api/v1 on its own host,
-# the runtime nginx proxies that prefix to the backend server.
-ARG VITE_API_BASE_URL=/api/v1
-ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+# Subpath mount point (e.g. /linguaseeker). The built index.html references
+# /<base>/assets/... and API/health URLs derive from import.meta.env.BASE_URL,
+# so the runtime nginx only needs to proxy <base>/api/ → backend.
+ARG VITE_BASE_PATH=/
+ENV VITE_BASE_PATH=${VITE_BASE_PATH}
 ENV NODE_ENV=production
 
 COPY package.json bun.lock* bun.lockb* ./
@@ -37,9 +38,12 @@ COPY docker/entrypoint.sh /docker-entrypoint.d/40-render-conf.sh
 RUN chmod +x /docker-entrypoint.d/40-render-conf.sh
 
 # Defaults — override at deploy time via -e or compose `environment:`.
+# BASE_PATH must match the build-time VITE_BASE_PATH (SPA asset/API URLs
+# are baked into the bundle relative to the Vite base).
 ENV BACKEND_URL=http://backend:8000 \
     API_KEY="" \
-    FRONTEND_MAX_BODY=200m
+    FRONTEND_MAX_BODY=200m \
+    BASE_PATH=""
 
 EXPOSE 80
 
