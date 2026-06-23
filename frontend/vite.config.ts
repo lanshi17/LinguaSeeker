@@ -9,7 +9,15 @@ export default defineConfig(({ mode }) => {
   const apiKey = env.API_KEY || "";
   const backendUrl = env.BACKEND_URL || "http://localhost:8000";
 
+  // Subpath mount point (e.g. "/linguaseeker"). Vite `base` must end with "/"
+  // and live at the TOP level (not under build:). Production sets VITE_BASE_PATH
+  // so index.html references /<mount>/assets/... and API/health URLs derive
+  // from import.meta.env.BASE_URL (see lib/api/client.ts, useBackendHealth.ts).
+  const rawBasePath = env.VITE_BASE_PATH || "/";
+  const base = rawBasePath.endsWith("/") ? rawBasePath : `${rawBasePath}/`;
+
   return {
+    base,
     plugins: [react()],
     resolve: {
       alias: {
@@ -20,12 +28,12 @@ export default defineConfig(({ mode }) => {
       host: true,
       port: 3000,
       proxy: {
-        "/api/v1": {
+        [`${base}api/v1`]: {
           target: backendUrl,
           changeOrigin: true,
           ...(apiKey ? { headers: { "X-API-Key": apiKey } } : {}),
         },
-        "/health": {
+        [`${base}health`]: {
           target: backendUrl,
           changeOrigin: true,
         },
@@ -34,7 +42,6 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: "dist",
       sourcemap: true,
-      base: "/linguaseeker/",
     },
   };
 });

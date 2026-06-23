@@ -11,8 +11,17 @@ set -eu
 : "${API_KEY:?API_KEY must be set; matches backend api_key in vault}"
 : "${FRONTEND_MAX_BODY:=200m}"
 
-export BACKEND_URL API_KEY FRONTEND_MAX_BODY
+# Normalize BASE_PATH to "" (root mount) or "/<segment>" (subpath mount).
+# Accepts "", "/", "/linguaseeker", "/linguaseeker/" — all canonicalized
+# so the nginx template's location prefixes interpolate cleanly.
+raw_base="${BASE_PATH:-}"
+# Strip trailing slashes, then a lone "/" becomes "".
+base="${raw_base%/}"
+base="${base#/}"
+BASE_PATH="${base:+/$base}"
 
-envsubst '${BACKEND_URL} ${API_KEY} ${FRONTEND_MAX_BODY}' \
+export BACKEND_URL API_KEY FRONTEND_MAX_BODY BASE_PATH
+
+envsubst '${BACKEND_URL} ${API_KEY} ${FRONTEND_MAX_BODY} ${BASE_PATH}' \
     < /etc/nginx/templates/default.conf.template \
     > /etc/nginx/conf.d/default.conf
