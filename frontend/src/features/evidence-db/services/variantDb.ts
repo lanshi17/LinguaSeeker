@@ -18,4 +18,17 @@ export async function fetchAllEvidence(
   return _searchEvidence(query, { page: 1, page_size: 1000 });
 }
 
-export { getEvidenceGroupDetail as fetchEvidenceGroupDetail };
+/**
+ * Fetch evidence group detail, optionally scoped to a specific source document.
+ *
+ * ``group_id`` values are NOT unique per source document — the same
+ * ``gene=<G>|variant=<V>`` string can appear across many papers.  Passing
+ * ``sourceDocumentId`` ensures the response contains only items from that
+ * particular document.
+ */
+export async function fetchEvidenceGroupDetail(
+  groupId: string,
+  sourceDocumentId?: string,
+): Promise<EvidenceGroupDetailResponse> {
+  return getEvidenceGroupDetail(groupId, sourceDocumentId);
+}

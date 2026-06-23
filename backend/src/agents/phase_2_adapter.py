@@ -47,6 +47,19 @@ _RETRYABLE_ERRORS = build_retryable_errors() + (CatalogExtractionError,)
 _PERMANENT_OS_ERRORS = (FileNotFoundError, PermissionError, IsADirectoryError)
 
 
+def _load_blocks_from_json(json_path: str) -> list[dict] | None:
+    """Load block dicts from a persisted Phase 2 JSON file."""
+    try:
+        with open(json_path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    blocks = data.get("blocks")
+    return blocks if isinstance(blocks, list) and blocks else None
+
+
 class Phase2Adapter:
     """Thin adapter wrapping TranslationService + EvidenceExtractionService.
 
@@ -172,12 +185,38 @@ class Phase2Adapter:
             async with aiofiles.open(extraction_result_path, "w") as f:
                 await f.write(json.dumps(dual_result.model_dump(mode="json")))
 
+            # Persist document text and structured blocks while files are
+            # guaranteed to exist on disk. Blocks enable structured rendering
+            # (headings, tables, lists) in the evidence detail viewer.
+            from src.agents.state_persistence import load_phase2_text_from_paths
+            original_text, translated_doc_text = load_phase2_text_from_paths(
+                cross_lingual_output.original_json_path,
+                cross_lingual_output.translated_json_path,
+            )
+
+            # Capture structured blocks from translation result or disk
+            original_blocks_dicts: list[dict] | None = None
+            translated_blocks_dicts: list[dict] | None = None
+            if translation_result is not None:
+                if translation_result.original_blocks:
+                    original_blocks_dicts = [b.to_dict() for b in translation_result.original_blocks]
+                if translation_result.translated_blocks:
+                    translated_blocks_dicts = [b.to_dict() for b in translation_result.translated_blocks]
+            else:
+                # Retry path: load blocks from persisted JSON files
+                original_blocks_dicts = _load_blocks_from_json(cross_lingual_output.original_json_path)
+                translated_blocks_dicts = _load_blocks_from_json(cross_lingual_output.translated_json_path)
+
             state.phase_2_output = Phase2Output(
                 output_dir=cross_lingual_output.output_dir,
                 original_json_path=cross_lingual_output.original_json_path,
                 translated_json_path=cross_lingual_output.translated_json_path,
                 source_language=cross_lingual_output.source_language,
                 extraction_result_path=extraction_result_path,
+                original_text=original_text,
+                translated_text=translated_doc_text,
+                original_blocks=original_blocks_dicts,
+                translated_blocks=translated_blocks_dicts,
             )
 
             state.phase_2_status = PhaseStatusDetail(

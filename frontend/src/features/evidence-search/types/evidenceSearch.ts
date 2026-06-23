@@ -83,6 +83,29 @@ export interface EvidenceTrackTrace {
   alignment_confidence?: number | null;
 }
 
+/** Structured document block following MinerU content_list.json format. */
+export interface ContentBlock {
+  type: string;
+  page_idx?: number;
+  bbox?: number[];
+  text?: string;
+  text_level?: number;
+  img_path?: string;
+  content?: string;
+  image_caption?: string[];
+  image_footnote?: string[];
+  sub_type?: string;
+  table_body?: string;
+  table_caption?: string[];
+  table_footnote?: string[];
+  text_format?: string;
+  code_body?: string;
+  code_caption?: string[];
+  list_items?: string[];
+  chart_caption?: string[];
+  chart_footnote?: string[];
+}
+
 export interface EvidenceGroupDetailResponse {
   group_id: string;
   source_document_id: string;
@@ -91,6 +114,8 @@ export interface EvidenceGroupDetailResponse {
   doi?: string | null;
   original_document_text?: string | null;
   translated_document_text?: string | null;
+  original_blocks?: ContentBlock[] | null;
+  translated_blocks?: ContentBlock[] | null;
   gene?: string | null;
   variant?: string | null;
   disease?: string | null;

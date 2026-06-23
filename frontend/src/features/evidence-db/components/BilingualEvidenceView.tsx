@@ -12,9 +12,9 @@ import {
   hasTranslatedDocumentText,
   countEvidenceCategories,
 } from "@/features/evidence-search/utils/evidenceDocument";
-import { useVariantDetail } from "../hooks/useVariantDetail";
 import { BilingualEvidenceSkeleton } from "./BilingualEvidenceSkeleton";
 import { DocumentReader } from "./DocumentReader";
+import type { BlockHighlight } from "./StructuredBlockRenderer";
 import { ActiveEvidenceCard } from "./ActiveEvidenceCard";
 import { LiteratureHeader } from "./LiteratureHeader";
 import { BilingualSidebar } from "./BilingualSidebar";
@@ -36,24 +36,11 @@ export function BilingualEvidenceView({
     string | undefined
   >(undefined);
 
-  const { detail: variantDetail, isLoading: isVariantLoading } =
-    useVariantDetail(variantSlug);
-
-  const groupId = useMemo(() => {
-    if (!variantDetail) return null;
-    const group = variantDetail.evidenceGroups.find(
-      (g) => g.source_document_id === sourceDocumentId,
-    );
-    return group?.group_id ?? variantDetail.entry.groupIds[0] ?? null;
-  }, [variantDetail, sourceDocumentId]);
-
   const {
     detail: groupDetail,
-    isLoading: isGroupLoading,
+    isLoading,
     error,
-  } = useEvidenceGroupDetail(groupId ?? "");
-
-  const isLoading = isVariantLoading || isGroupLoading;
+  } = useEvidenceGroupDetail(undefined, sourceDocumentId);
 
   const originalDoc = useMemo(
     () =>
@@ -86,6 +73,50 @@ export function BilingualEvidenceView({
   const hasTranslation = groupDetail
     ? hasTranslatedDocumentText(groupDetail)
     : false;
+
+  // Build block-level highlights from traces for structured rendering
+  const buildBlockHighlights = useMemo((): { original: BlockHighlight[]; translated: BlockHighlight[] } => {
+    if (!groupDetail) return { original: [], translated: [] };
+    const items = new Map(groupDetail.items.map((item) => [item.canonical_evidence_id, item] as const));
+    const origHighlights: BlockHighlight[] = [];
+    const transHighlights: BlockHighlight[] = [];
+
+    for (const trace of groupDetail.traces) {
+      const item = items.get(trace.canonical_evidence_id);
+      if (!item) continue;
+
+      // Check category filter
+      const cat = item.category ?? (item.field_id.includes(".") ? item.field_id.split(".")[0] : null);
+      if (enabledCategories && cat && !enabledCategories.has(cat)) continue;
+
+      if (trace.original?.text) {
+        origHighlights.push({
+          evidenceId: trace.canonical_evidence_id,
+          fieldId: trace.field_id,
+          label: item.field_name ?? trace.field_id,
+          tone: cat ?? "neutral",
+          category: cat,
+          globalStart: trace.original.highlight_start,
+          globalEnd: trace.original.highlight_end,
+          selected: trace.canonical_evidence_id === selectedEvidenceId,
+        });
+      }
+      if (trace.translated?.text) {
+        transHighlights.push({
+          evidenceId: trace.canonical_evidence_id,
+          fieldId: trace.field_id,
+          label: item.field_name ?? trace.field_id,
+          tone: cat ?? "neutral",
+          category: cat,
+          globalStart: trace.translated.highlight_start,
+          globalEnd: trace.translated.highlight_end,
+          selected: trace.canonical_evidence_id === selectedEvidenceId,
+        });
+      }
+    }
+
+    return { original: origHighlights, translated: transHighlights };
+  }, [groupDetail, selectedEvidenceId, enabledCategories]);
 
   const categoryCounts = useMemo(
     () => (groupDetail ? countEvidenceCategories(groupDetail.items) : {}),
@@ -217,6 +248,8 @@ export function BilingualEvidenceView({
               track="original"
               document={originalDoc ?? { track: "original", paragraphs: [] }}
               accentColor="#3B82F6"
+              blocks={groupDetail?.original_blocks}
+              blockHighlights={buildBlockHighlights.original}
             />
             {hasTranslation && (
               <DocumentReader
@@ -226,6 +259,8 @@ export function BilingualEvidenceView({
                   translatedDoc ?? { track: "translated", paragraphs: [] }
                 }
                 accentColor="#8B5CF6"
+                blocks={groupDetail?.translated_blocks}
+                blockHighlights={buildBlockHighlights.translated}
               />
             )}
           </div>
