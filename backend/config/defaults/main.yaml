@@ -94,7 +94,7 @@ postgres:
   port: 5432
   user: "lingua_seeker"
   db: "lingua_seeker"
-  schema: "acmg_app"
+  schema: "lingua_seeker"
   pool_size: 20
   max_overflow: 30
 

@@ -38,7 +38,7 @@ rerank:
 postgres:
   host: "postgres-server"
   db: "lingua_seeker"
-  schema: "acmg_app"
+  schema: "lingua_seeker"
 
 redis:
   host: "redis-server"
