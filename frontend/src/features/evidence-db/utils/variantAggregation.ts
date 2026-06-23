@@ -77,6 +77,13 @@ export function aggregateVariants(results: EvidenceSearchResult[]): VariantIndex
     const reviewStatuses = items.map((r) => r.review_status);
     const classificationLevel = classifyLevel(classification);
 
+    // Pick the most recent created_at
+    const createdAt = items
+      .map((r) => r.created_at)
+      .filter(Boolean)
+      .sort()
+      .pop() ?? null;
+
     entries.push({
       variantSlug: slug,
       gene,
@@ -90,6 +97,7 @@ export function aggregateVariants(results: EvidenceSearchResult[]): VariantIndex
       fieldCount: totalFields,
       categoryDistribution,
       reviewStatus: computeReviewStatus(reviewStatuses),
+      createdAt,
       groupIds,
       sourceDocumentIds,
       representative: first,
