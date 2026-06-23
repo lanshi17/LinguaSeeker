@@ -152,95 +152,11 @@ export function MarkdownDocumentViewer({
   }, [markdown, highlights]);
 
   return (
-    <>
-      <style>{`
-        .edb-markdown-viewer {
-          max-width: none;
-          font-size: 14px;
-          line-height: 1.75;
-          color: #1f2937;
-        }
-        .edb-markdown-viewer h1,
-        .edb-markdown-viewer h2,
-        .edb-markdown-viewer h3,
-        .edb-markdown-viewer h4,
-        .edb-markdown-viewer h5,
-        .edb-markdown-viewer h6 {
-          color: #111827;
-          font-weight: 600;
-          margin-top: 1.5em;
-          margin-bottom: 0.5em;
-        }
-        .edb-markdown-viewer h1 { font-size: 1.5em; }
-        .edb-markdown-viewer h2 { font-size: 1.25em; }
-        .edb-markdown-viewer h3 { font-size: 1.1em; }
-        .edb-markdown-viewer p {
-          color: #1f2937;
-          line-height: 1.75;
-          margin-top: 0.75em;
-          margin-bottom: 0.75em;
-        }
-        .edb-markdown-viewer a {
-          color: var(--color-primary-700, #0e7490);
-          text-decoration: underline;
-        }
-        .edb-markdown-viewer strong {
-          color: #111827;
-          font-weight: 700;
-        }
-        .edb-markdown-viewer code {
-          color: #be185d;
-          background: #f3f4f6;
-          padding: 2px 4px;
-          border-radius: 4px;
-          font-size: 12px;
-        }
-        .edb-markdown-viewer pre code {
-          display: block;
-          padding: 12px;
-          overflow-x: auto;
-        }
-        .edb-markdown-viewer li {
-          color: #1f2937;
-          margin-top: 0.25em;
-          margin-bottom: 0.25em;
-        }
-        .edb-markdown-viewer ul,
-        .edb-markdown-viewer ol {
-          padding-left: 1.5em;
-          margin-top: 0.5em;
-          margin-bottom: 0.5em;
-        }
-        .edb-markdown-viewer table {
-          font-size: 14px;
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 1em;
-          margin-bottom: 1em;
-        }
-        .edb-markdown-viewer th,
-        .edb-markdown-viewer td {
-          border: 1px solid #e5e7eb;
-          padding: 6px 12px;
-          text-align: left;
-        }
-        .edb-markdown-viewer th {
-          background: #f9fafb;
-          font-weight: 600;
-        }
-        .edb-markdown-viewer blockquote {
-          border-left: 3px solid #d1d5db;
-          padding-left: 1em;
-          margin-left: 0;
-          color: #6b7280;
-        }
-      `}</style>
       <div
         ref={containerRef}
         className="edb-markdown-viewer"
       >
         <Markdown>{markdown}</Markdown>
       </div>
-    </>
   );
 }

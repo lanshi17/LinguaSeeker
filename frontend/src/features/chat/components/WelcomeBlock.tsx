@@ -57,35 +57,6 @@ export interface WelcomeBlockProps {
 
 export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
   return (
-    <>
-      <style>{`
-        @media (min-width: 640px) {
-          .cv-suggestions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-        }
-        .cv-suggestion-chip {
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          border-radius: 12px;
-          border: 1px solid #f3f4f6;
-          background-color: #fff;
-          padding: 12px;
-          text-align: left;
-          transition: all 150ms;
-          cursor: pointer;
-        }
-        .cv-suggestion-chip:hover {
-          transform: translateY(-2px);
-          border-color: #e5e7eb;
-          box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
-        }
-        .cv-suggestion-chip:disabled {
-          cursor: default;
-          transform: none;
-          border-color: #f3f4f6;
-          box-shadow: none;
-        }
-      `}</style>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
           <div
@@ -185,6 +156,5 @@ export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
           evidence for review by qualified professionals.
         </p>
       </div>
-    </>
   );
 }

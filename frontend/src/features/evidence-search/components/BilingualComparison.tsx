@@ -85,14 +85,6 @@ export function TraceComparisonPanel({ trace }: { trace: EvidenceTrackTrace | nu
 
   return (
     <>
-      <style>{`
-        .bc-value-grid { display: grid; gap: 12px; }
-        .bc-compare-grid { display: grid; gap: 16px; }
-        @media (min-width: 1280px) {
-          .bc-value-grid { grid-template-columns: 1fr 1fr; }
-          .bc-compare-grid { grid-template-columns: 1fr 1fr; }
-        }
-      `}</style>
       <div
         className="bc-value-grid"
         style={{

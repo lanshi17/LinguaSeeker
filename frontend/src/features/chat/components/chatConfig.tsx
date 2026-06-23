@@ -1,5 +1,5 @@
 import { Avatar } from "antd";
-import { RobotOutlined, UserOutlined } from "@ant-design/icons";
+import { Bot, User } from "lucide-react";
 import type { ChatAction, ChatActionIntent } from "../types/actions";
 
 /** Max words of the first user message used as the session title. */
@@ -25,13 +25,13 @@ export const roles = {
   assistant: {
     placement: "start" as const,
     avatar: (
-      <Avatar icon={<RobotOutlined />} style={{ backgroundColor: "var(--color-primary-600, #0891b2)" }} />
+      <Avatar icon={<Bot style={{ fontSize: 18 }} />} style={{ backgroundColor: "var(--color-primary-600, #0891b2)" }} />
     ),
   },
   user: {
     placement: "end" as const,
     avatar: (
-      <Avatar icon={<UserOutlined />} style={{ backgroundColor: "var(--color-success-500, #22c55e)" }} />
+      <Avatar icon={<User style={{ fontSize: 18 }} />} style={{ backgroundColor: "var(--color-success-500, #22c55e)" }} />
     ),
   },
 };
