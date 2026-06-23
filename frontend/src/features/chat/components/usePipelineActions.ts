@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { message as antdMessage } from "antd";
+import { App } from "antd";
 import { apiClient } from "@/lib/api/client";
 import { extractErrorMessage } from "@/lib/api/error";
 import type { createAcmgChatProvider } from "../providers/acmgChatProvider";
@@ -34,6 +34,7 @@ export function usePipelineActions({
   setActiveForm,
   setPipelineStatus,
 }: UsePipelineActionsParams) {
+  const { message } = App.useApp();
   const pollPipelineStatus = useCallback(
     async (runId: string) => {
       const TERMINAL = new Set(["completed", "failed", "cancelled"]);
@@ -121,13 +122,14 @@ export function usePipelineActions({
         pollPipelineStatus(runId);
       } catch (err: unknown) {
         console.error("[Pipeline] start failed:", err);
-        antdMessage.error(
+        message.error(
           `Failed to start pipeline: ${extractErrorMessage(err)}`,
         );
       }
     },
     [
       activeProvider,
+      message,
       onRequest,
       pollPipelineStatus,
       setActiveForm,

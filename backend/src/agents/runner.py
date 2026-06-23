@@ -208,9 +208,13 @@ class PipelineRunner:
         *,
         limit: int = 50,
         offset: int = 0,
+        status: str | None = None,
+        search: str | None = None,
     ) -> tuple[list[PipelineRunSummaryRow], int]:
         """List pipeline run summaries (newest first)."""
-        return await self._persistence.list_runs(limit=limit, offset=offset)
+        return await self._persistence.list_runs(
+            limit=limit, offset=offset, status=status, search=search,
+        )
 
     async def shutdown(self, timeout: float = 60.0) -> None:
         """Wait for active pipeline tasks to complete before server shutdown.

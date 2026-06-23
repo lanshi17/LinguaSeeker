@@ -32,20 +32,6 @@ wheels = [
 ]
 
 [[package]]
-name = "acmg-config-loader"
-version = "0.1.0"
-source = { editable = "../../libs/config-loader" }
-dependencies = [
-    { name = "pyyaml" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.2.0" },
-    { name = "pyyaml", specifier = ">=6.0.0" },
-]
-
-[[package]]
 name = "aiofiles"
 version = "25.1.0"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
@@ -1737,7 +1723,6 @@ name = "lingua-seeker-model-server"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "acmg-config-loader" },
     { name = "fastapi" },
     { name = "loguru" },
     { name = "mineru", extra = ["vlm"] },
@@ -1763,7 +1748,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "acmg-config-loader", editable = "../../libs/config-loader" },
     { name = "fastapi", specifier = ">=0.111.0" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.27.0" },
     { name = "loguru", specifier = ">=0.7.0" },

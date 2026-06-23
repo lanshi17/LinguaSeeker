@@ -180,7 +180,7 @@ class ParseDocumentConfig(BaseModel):
 
     mineru_remote_poll_interval: float = 2.0
     mineru_remote_max_poll_attempts: int = 150
-    mineru_local_model_server_url: str = "http://localhost:8001"
+    mineru_local_model_server_url: str = "http://localhost:8004"
     mineru_local_model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B"
     mineru_local_timeout: float = 120.0
     mineru_local_dpi: int = 200
@@ -359,7 +359,7 @@ class Settings(BaseSettings):
 
     mineru_remote_poll_interval: float = 2.0
     mineru_remote_max_poll_attempts: int = 150
-    mineru_local_model_server_url: str = "http://localhost:8001"
+    mineru_local_model_server_url: str = "http://localhost:8004"
     mineru_local_model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B"
     mineru_local_timeout: float = 120.0
     mineru_local_dpi: int = 200

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import time
 from collections.abc import AsyncIterator
 
 import httpx
@@ -9,6 +10,12 @@ from loguru import logger
 
 from src.core.config import get_config
 from src.core.visualize_evidence_with_expert_in_loop.contracts import ChatAction
+
+# Sentinel yielded by stream methods when no LLM chunk arrives within the
+# keepalive interval.  Callers should convert this to an SSE comment or
+# heartbeat event to prevent the client connection from closing during
+# long-running LLM generations.
+_KEEPALIVE = "keepalive"
 
 
 class ReasoningLLMProvider:
@@ -353,6 +360,85 @@ class ChatLLMProvider:
         data = response.json()
         raw = data["choices"][0]["message"]["content"]
         return self._parse_envelope(raw)
+
+    async def route_intent_stream(
+        self,
+        *,
+        system_prompt: str,
+        user_message: str,
+        history: list[dict[str, str]] | None = None,
+    ) -> AsyncIterator[str | tuple[str, ChatAction | None]]:
+        """Streaming variant of :meth:`route_intent`.
+
+        Yields ``_KEEPALIVE`` markers during LLM generation to keep the SSE
+        connection alive, then yields a ``(reply, action)`` tuple as the
+        final item.  Callers should convert keepalive markers into SSE
+        comments and the final tuple into typed SSE events.
+        """
+        self._ensure_configured()
+
+        envelope_instruction = (
+            "Respond ONLY with a single JSON object matching this schema: "
+            '{"reply": string, "action": null | {"intent": string, '
+            '"slots": object}}. '
+            "Set action=null while you still need information from the user; "
+            "set action={...} once you have enough slots to dispatch."
+        )
+        full_system = f"{system_prompt}\n\n{envelope_instruction}"
+
+        messages: list[dict[str, str]] = [{"role": "system", "content": full_system}]
+        if history:
+            messages.extend(history)
+        messages.append({"role": "user", "content": user_message})
+
+        payload: dict[str, object] = {
+            "model": self._model,
+            "messages": messages,
+            "stream": True,
+            "max_tokens": self._max_tokens,
+            "response_format": {"type": "json_object"},
+        }
+        if self._temperature is not None:
+            payload["temperature"] = self._temperature
+
+        client = self._get_client()
+        last_chunk_time = time.monotonic()
+        async with client.stream(
+            "POST",
+            f"{self._base_url}/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self._api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        ) as response:
+            response.raise_for_status()
+            accumulated: list[str] = []
+            async for line in response.aiter_lines():
+                if line.startswith("data: "):
+                    data_str = line[6:]
+                    if data_str.strip() == "[DONE]":
+                        break
+                    try:
+                        data = json.loads(data_str)
+                        delta = data["choices"][0].get("delta", {})
+                        content = delta.get("content", "")
+                        if content:
+                            accumulated.append(content)
+                            last_chunk_time = time.monotonic()
+                            continue
+                    except (json.JSONDecodeError, KeyError, IndexError):
+                        pass
+
+                if time.monotonic() - last_chunk_time > 10:
+                    yield _KEEPALIVE
+                    last_chunk_time = time.monotonic()
+
+            if time.monotonic() - last_chunk_time > 10:
+                yield _KEEPALIVE
+
+        raw = "".join(accumulated)
+        yield self._parse_envelope(raw)
 
     @staticmethod
     def _parse_envelope(raw: str) -> tuple[str, ChatAction | None]:

@@ -122,13 +122,12 @@ frontend_port: 3000
 frontend_node_env: "production"
 
 # ── Model Server Service ─────────────────────────────────────────────────
-# Deployment mode: "systemd" (monolith, port 8001) or "docker" (4 containers, ports 8002-8005)
+# Deployment mode: "systemd" (monolith, port 8001) or "docker" (3 containers, ports 8002-8004)
 model_server_deployment: "systemd"
 model_server_port: 8001
 model_server_embedding_port: 8002
 model_server_rerank_port: 8003
-model_server_vlm_port: 8004
-model_server_doc_parse_port: 8005
+model_server_doc_parse_port: 8004
 # API key for authenticating with model-server containers. Actual value in vault.yml.
 model_server_api_key: "{{ vault_model_server_api_key | default('') }}"
 

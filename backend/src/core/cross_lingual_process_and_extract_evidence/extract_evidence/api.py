@@ -213,6 +213,8 @@ def _parse_content_blocks(blocks: list[dict[str, Any]]) -> list[ContentBlock]:
             image_caption=[str(v) for v in block.get("image_caption", [])],
             table_caption=[str(v) for v in block.get("table_caption", [])],
             chart_caption=[str(v) for v in block.get("chart_caption", [])],
+            code_body=str(block.get("code_body", "")),
+            list_items=[str(v) for v in block.get("list_items", [])],
         ))
     return parsed
 
@@ -259,4 +261,7 @@ def _block_text(block: dict[str, Any]) -> str:
         value = block.get(key)
         if isinstance(value, str) and value.strip():
             return value.strip()
+    list_items = block.get("list_items")
+    if isinstance(list_items, list) and list_items:
+        return "\n".join(item for item in list_items if isinstance(item, str) and item.strip())
     return ""

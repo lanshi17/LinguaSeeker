@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Standalone FastAPI inference service (Embedding, Rerank, VLM) for Cross Evidence"
 requires-python = ">=3.12"
 dependencies = [
-    "acmg-config-loader",
     "vllm>=0.8.0",
     "mineru[vlm]>=3.3.0",
     "mineru_vl_utils>=1.0.4",
@@ -46,9 +45,6 @@ url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
 [[tool.uv.index]]
 name = "aliyun"
 url = "https://mirrors.aliyun.com/pypi/simple/"
-
-[tool.uv.sources]
-acmg-config-loader = { path = "../../libs/config-loader", editable = true }
 
 [tool.pytest.ini_options]
 markers = [

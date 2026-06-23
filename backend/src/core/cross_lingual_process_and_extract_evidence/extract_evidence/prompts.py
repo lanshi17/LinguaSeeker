@@ -37,9 +37,11 @@ def block_readable_text(block: ContentBlock) -> str:
     parts.extend(block.table_caption)
     parts.extend(block.image_caption)
     parts.extend(block.chart_caption)
-    for value in (block.text, block.content, block.table_body):
+    for value in (block.text, block.content, block.table_body, block.code_body):
         if value.strip():
             parts.append(value.strip())
+    if block.list_items:
+        parts.extend(item.strip() for item in block.list_items if item.strip())
     return "\n".join(parts).strip()
 
 

@@ -1,5 +1,5 @@
 import type { EvidenceSearchResult } from "@/features/evidence-search/types/evidenceSearch";
-import type { VariantIndexEntry, VariantIndexData, VariantIndexFilters, ClassificationLevel } from "../types/variantDb";
+import type { VariantIndexEntry, VariantIndexData, VariantIndexFilters, ClassificationLevel, SortOrder } from "../types/variantDb";
 import { classifyLevel, severityRank } from "./pathogenicity";
 
 function makeVariantSlug(gene: string, variant: string, disease: string): string {
@@ -16,6 +16,21 @@ function computeReviewStatus(statuses: string[]): string {
 }
 
 /**
+ * Expand a search result whose `variant` field lists multiple variant sites
+ * separated by ';' into one result per variant site.  Each expanded copy
+ * keeps the same group_id / source_document_id so L2 detail navigation
+ * still resolves the underlying evidence group.  Results with a single
+ * variant (or no ';') pass through unchanged.
+ */
+function expandVariantSites(result: EvidenceSearchResult): EvidenceSearchResult[] {
+  const raw = result.variant ?? "";
+  if (!raw.includes(";")) return [result];
+  const sites = raw.split(";").map((v) => v.trim()).filter(Boolean);
+  if (sites.length <= 1) return [result];
+  return sites.map((variant) => ({ ...result, variant }));
+}
+
+/**
  * Aggregate flat search results into variant-centric entries.
  * Groups by gene:variant:disease composite key.
  */
@@ -23,16 +38,22 @@ export function aggregateVariants(results: EvidenceSearchResult[]): VariantIndex
   const grouped = new Map<string, EvidenceSearchResult[]>();
 
   for (const result of results) {
-    const gene = result.gene ?? "";
-    const variant = result.variant ?? "";
-    const disease = result.disease ?? "";
-    const slug = makeVariantSlug(gene, variant, disease);
+    // One row per variant site: a single evidence group may list several
+    // variants in one field value (e.g. "c.316C>T; c.502C>T").  Split so
+    // each variant gets its own index row while sharing the underlying
+    // group_id for detail navigation.
+    for (const row of expandVariantSites(result)) {
+      const gene = row.gene ?? "";
+      const variant = row.variant ?? "";
+      const disease = row.disease ?? "";
+      const slug = makeVariantSlug(gene, variant, disease);
 
-    const existing = grouped.get(slug);
-    if (existing) {
-      existing.push(result);
-    } else {
-      grouped.set(slug, [result]);
+      const existing = grouped.get(slug);
+      if (existing) {
+        existing.push(row);
+      } else {
+        grouped.set(slug, [row]);
+      }
     }
   }
 
@@ -45,7 +66,7 @@ export function aggregateVariants(results: EvidenceSearchResult[]): VariantIndex
     const disease = first.disease ?? "";
     const classification = first.classification ?? "";
 
-    const groupIds = items.map((r) => r.group_id);
+    const groupIds = [...new Set(items.map((r) => r.group_id))];
     const sourceDocumentIds = [...new Set(items.map((r) => r.source_document_id))];
 
     // Weighted average confidence
@@ -139,18 +160,43 @@ export function filterAndPaginateVariants(
     filtered = filtered.filter((e) => e.classificationLevel === filters.classification);
   }
 
+  // Apply user-controlled sort (overrides the default aggregateVariants order)
+  if (filters.sortBy === "updated") {
+    const order: SortOrder = filters.sortOrder ?? "desc";
+    filtered = [...filtered].sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return order === "asc" ? aTime - bTime : bTime - aTime;
+    });
+  }
+
   const total = filtered.length;
   const start = (filters.page - 1) * filters.pageSize;
   const items = filtered.slice(start, start + filters.pageSize);
 
-  // Compute aggregate stats
+  // Compute aggregate stats.
+  // Count distinct entities so that a multi-variant evidence group split
+  // into several index rows (one per variant site) is not double-counted.
+  const groupDocPairs = new Set<string>();
+  const distinctDocs = new Set<string>();
+  const groupConfidences = new Map<string, number>();
+  for (const e of entries) {
+    for (const gid of e.groupIds) {
+      if (!groupConfidences.has(gid)) groupConfidences.set(gid, e.avgConfidence);
+      for (const docId of e.sourceDocumentIds) {
+        groupDocPairs.add(`${gid}\0${docId}`);
+      }
+    }
+    for (const docId of e.sourceDocumentIds) distinctDocs.add(docId);
+  }
+
   const stats = {
     totalVariants: entries.length,
-    totalEvidenceGroups: entries.reduce((s, e) => s + e.evidenceGroupCount, 0),
-    totalLiterature: entries.reduce((s, e) => s + e.literatureCount, 0),
+    totalEvidenceGroups: groupDocPairs.size,
+    totalLiterature: distinctDocs.size,
     avgConfidence:
-      entries.length > 0
-        ? entries.reduce((s, e) => s + e.avgConfidence, 0) / entries.length
+      groupConfidences.size > 0
+        ? [...groupConfidences.values()].reduce((s, c) => s + c, 0) / groupConfidences.size
         : 0,
     classificationDistribution: {
       pathogenic: 0,

@@ -70,19 +70,10 @@
   until: rerank_health.status == 200
   failed_when: false
 
-- name: Wait for VLM server
-  uri:
-    url: "http://localhost:{{ model_server_vlm_port | default(8004) }}/health"
-    method: GET
-  register: vlm_health
-  retries: 60
-  delay: 10
-  until: vlm_health.status == 200
-  failed_when: false
 
 - name: Wait for doc-parse server
   uri:
-    url: "http://localhost:{{ model_server_doc_parse_port | default(8005) }}/health"
+    url: "http://localhost:{{ model_server_doc_parse_port | default(8004) }}/health"
     method: GET
   register: doc_health
   retries: 60

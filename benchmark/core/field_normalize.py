@@ -146,11 +146,27 @@ _GDR_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
 ]
 
 
+# Broad relationship terms that map to the most common ClinGen enum.
+# Used when ground truth uses a generic term like "associated" instead of
+# the more specific ClinGen value (causative/susceptibility/uncertain/etc.).
+_GDR_BROAD_TERMS: dict[str, str] = {
+    "associated": "causative",
+    "related": "causative",
+    "linked": "causative",
+    "implicated": "causative",
+    "susceptibility": "causative",
+    "risk factor": "causative",
+    "predisposition": "causative",
+}
+
+
 def normalize_gene_disease_relationship(value: str) -> str:
     """Normalize a gene-disease relationship description to canonical enum.
 
     Maps both enum values and free-text statements:
     - "causative" → "causative"
+    - "associated" → "causative" (broad term synonym)
+    - "susceptibility" → "causative" (broad term synonym)
     - "MECP2 mutations cause Rett syndrome" → "causative"
     - "The relationship is uncertain" → "uncertain"
     - "Evidence is limited" → "uncertain"
@@ -168,6 +184,10 @@ def normalize_gene_disease_relationship(value: str) -> str:
     # Already canonical
     if lower in _GDR_CANONICAL:
         return lower
+
+    # Broad relationship terms → canonical
+    if lower in _GDR_BROAD_TERMS:
+        return _GDR_BROAD_TERMS[lower]
 
     # Pattern matching for free-text
     for canonical, pattern in _GDR_PATTERNS:

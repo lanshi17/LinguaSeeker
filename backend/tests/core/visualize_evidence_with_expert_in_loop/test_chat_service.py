@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.visualize_evidence_with_expert_in_loop.chat_service import (
     ChatService,
 )
+from src.utils.exceptions import NotFoundException
 
 
 def test_detect_intent_uses_module_level_compiled_patterns():
@@ -59,6 +60,32 @@ class TestChatService:
 
         assert msg.role == "user"
         assert msg.content == "What is the gene?"
+
+    async def test_append_message_nonexistent_session_raises_not_found(
+        self, db_session: AsyncSession
+    ) -> None:
+        """Appending to a non-existent session raises NotFoundException (404)."""
+        service = ChatService(db_session)
+        fake_id = uuid.uuid4()
+
+        with pytest.raises(NotFoundException, match="ChatSession"):
+            await service.append_message(
+                session_id=fake_id,
+                role="user",
+                content="hello",
+                evidence_id=None,
+                entity_id=None,
+            )
+
+    async def test_list_messages_nonexistent_session_raises_not_found(
+        self, db_session: AsyncSession
+    ) -> None:
+        """Listing messages for a non-existent session raises NotFoundException."""
+        service = ChatService(db_session)
+        fake_id = uuid.uuid4()
+
+        with pytest.raises(NotFoundException, match="ChatSession"):
+            await service.list_messages(session_id=fake_id)
 
     async def test_list_messages_ordered(self, db_session: AsyncSession) -> None:
         """Lists messages in chronological order."""

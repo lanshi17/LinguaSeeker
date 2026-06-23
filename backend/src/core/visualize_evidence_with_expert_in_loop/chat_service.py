@@ -16,6 +16,7 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     ChatSessionResponse,
     EvidenceCardPayload,
 )
+from src.core.visualize_evidence_with_expert_in_loop.providers import _KEEPALIVE
 from src.dao.postgresql.models import (
     CanonicalEvidenceItem,
     ChatMessage,
@@ -24,11 +25,14 @@ from src.dao.postgresql.models import (
     NormalizedEntity,
     RunEvidenceItem,
 )
+from src.utils.exceptions import NotFoundException
 
 if TYPE_CHECKING:
     from src.core.visualize_evidence_with_expert_in_loop.providers import (
         ChatLLMProvider,
     )
+
+_KEEPALIVE_INTERVAL = 10  # seconds between SSE keepalive events
 
 CHAT_AGENT_CAPABILITIES_PROMPT = (
     "You are the Lingua Seeker orchestration assistant. You help clinical "
@@ -172,6 +176,16 @@ class ChatService:
             message_count=0,
         )
 
+    async def _require_session(self, *, session_id: UUID) -> ChatSession:
+        """Fetch a chat session or raise NotFoundException if it doesn't exist."""
+        result = await self._session.execute(
+            select(ChatSession).where(ChatSession.chat_session_id == session_id)
+        )
+        session = result.scalar_one_or_none()
+        if session is None:
+            raise NotFoundException("ChatSession", str(session_id))
+        return session
+
     async def append_message(
         self,
         *,
@@ -183,6 +197,7 @@ class ChatService:
         action: ChatAction | None = None,
     ) -> ChatMessageResponse:
         """Append a message to a chat session."""
+        await self._require_session(session_id=session_id)
         message = ChatMessage(
             chat_session_id=session_id,
             role=role,
@@ -203,6 +218,7 @@ class ChatService:
         limit: int = 100,
     ) -> list[ChatMessageResponse]:
         """List messages in a session, ordered chronologically."""
+        await self._require_session(session_id=session_id)
         stmt = (
             select(ChatMessage)
             .where(ChatMessage.chat_session_id == session_id)
@@ -559,6 +575,7 @@ class ChatService:
             {"type": "done"} on completion
             {"type": "error", "message": "..."} on failure
         """
+        await self._require_session(session_id=session_id)
         intent = self._detect_intent(user_message)
 
         if intent == "correction" and evidence_id:
@@ -602,13 +619,18 @@ class ChatService:
 
         buffered: list[str] = []
         try:
-            async for chunk in provider.stream(
-                system_prompt=system_prompt,
-                user_message=user_message,
-                context=context,
+            async for event in self._stream_with_keepalive(
+                provider.stream(
+                    system_prompt=system_prompt,
+                    user_message=user_message,
+                    context=context,
+                ),
             ):
-                buffered.append(chunk)
-                yield {"type": "text", "content": chunk}
+                if event is _KEEPALIVE:
+                    yield {"type": "keepalive"}
+                else:
+                    buffered.append(event)
+                    yield {"type": "text", "content": event}
             yield {"type": "done"}
         except Exception as e:
             yield {"type": "error", "message": str(e)}
@@ -632,12 +654,22 @@ class ChatService:
         user_message: str,
     ):
         history = await self._load_router_history(session_id=session_id)
+
+        reply: str = ""
+        action: ChatAction | None = None
         try:
-            reply, action = await provider.route_intent(
+            async for item in provider.route_intent_stream(
                 system_prompt=system_prompt,
                 user_message=user_message,
                 history=history,
-            )
+            ):
+                if item is _KEEPALIVE:
+                    yield {"type": "keepalive"}
+                elif isinstance(item, tuple):
+                    reply, action = item
+                # Text chunks from accumulated JSON are not yielded
+                # incrementally (the LLM returns a single JSON blob);
+                # the reply text is emitted after parsing.
         except Exception as e:
             yield {"type": "error", "message": str(e)}
             return
@@ -661,6 +693,29 @@ class ChatService:
                 content=reply or "",
                 action=action,
             )
+
+    @staticmethod
+    async def _stream_with_keepalive(source):
+        """Wrap an async iterator, yielding keepalive sentinels on stalls.
+
+        If no item arrives from *source* within ``_KEEPALIVE_INTERVAL``
+        seconds, yields ``_KEEPALIVE`` so the caller can emit an SSE
+        heartbeat and keep the client connection open.
+        """
+        import asyncio
+
+        ait = source.__aiter__()
+        try:
+            while True:
+                try:
+                    item = await asyncio.wait_for(ait.__anext__(), _KEEPALIVE_INTERVAL)
+                    yield item
+                except StopAsyncIteration:
+                    break
+                except TimeoutError:
+                    yield _KEEPALIVE
+        finally:
+            await ait.aclose()
 
     async def _load_router_history(
         self,

@@ -1,9 +1,11 @@
 import { apiClient } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/error";
 import type {
   BackendChatSessionResponse,
   ChatMessageResponse,
   ChatSessionResponse,
 } from "../types/chat";
+import { removeLocalChatSession } from "../utils/localSessions";
 import { buildAppendMessageBody } from "../utils/messageRequests";
 
 function normalizeSession(session: BackendChatSessionResponse): ChatSessionResponse {
@@ -39,11 +41,18 @@ export async function listMessages(
   sessionId: string,
   limit = 100,
 ): Promise<ChatMessageResponse[]> {
-  const { data } = await apiClient.get<ChatMessageResponse[]>(
-    `/chat/sessions/${sessionId}/messages`,
-    { params: { limit } },
-  );
-  return data;
+  try {
+    const { data } = await apiClient.get<ChatMessageResponse[]>(
+      `/chat/sessions/${sessionId}/messages`,
+      { params: { limit } },
+    );
+    return data;
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) {
+      removeLocalChatSession(undefined, sessionId);
+    }
+    throw err;
+  }
 }
 
 export async function appendMessage(

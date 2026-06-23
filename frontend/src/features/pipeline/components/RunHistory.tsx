@@ -1,10 +1,40 @@
-import { Activity, RefreshCcw } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Activity, RefreshCcw, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Button } from "antd";
+import { Button, Input } from "antd";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { RunListItem } from "./RunListItem";
 import { usePipelineRuns } from "../hooks/usePipelineRuns";
 import type { ProcessingStatus } from "../types/pipeline";
+
+const PAGE_SIZE = 20;
+
+/* ── Embedded styles for pagination ────────────────────────── */
+
+const paginationCSS = `
+.rh-page-btn:hover {
+  background-color: #f9fafb;
+}
+.rh-page-jump-input {
+  width: 48px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: #374151;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.rh-page-jump-input:focus {
+  border-color: var(--color-primary-600);
+  box-shadow: 0 0 0 2px var(--color-primary-100, rgba(8,145,178,0.15));
+}
+.rh-page-jump-input::placeholder {
+  color: #9ca3af;
+}
+`;
 
 interface RunHistoryProps {
   className?: string;
@@ -12,12 +42,33 @@ interface RunHistoryProps {
 }
 
 export function RunHistory({ className, statusFilter }: RunHistoryProps) {
-  const { data, isLoading, error, refetch, isFetching } = usePipelineRuns();
-  const allItems = data?.items ?? [];
-  const items =
-    statusFilter && statusFilter !== "all"
-      ? allItems.filter((r) => r.pipeline_status === statusFilter)
-      : allItems;
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [jumpValue, setJumpValue] = useState("");
+
+  const { data, isLoading, error, refetch, isFetching } = usePipelineRuns({
+    page,
+    pageSize: PAGE_SIZE,
+    status: statusFilter && statusFilter !== "all" ? statusFilter : undefined,
+    search: search || undefined,
+  });
+
+  const items = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  const handleJump = useCallback(() => {
+    const num = parseInt(jumpValue, 10);
+    if (!Number.isNaN(num) && num >= 1 && num <= totalPages) {
+      setPage(num);
+      setJumpValue("");
+    }
+  }, [jumpValue, totalPages]);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, []);
 
   return (
     <section
@@ -29,6 +80,7 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
         boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
       }}
     >
+      <style>{paginationCSS}</style>
       <header style={{
         display: "flex",
         alignItems: "center",
@@ -51,7 +103,7 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
               fontVariantNumeric: "tabular-nums",
               color: "#4b5563",
             }}>
-              {items.length}
+              {total}
             </span>
           )}
         </div>
@@ -67,21 +119,166 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
         </Button>
       </header>
 
+      {/* Search bar */}
+      <div style={{ padding: "12px 20px 0" }}>
+        <Input
+          placeholder="Search by title, identifier, or source key..."
+          prefix={<Search style={{ width: 14, height: 14, color: "#9ca3af" }} />}
+          suffix={
+            search ? (
+              <button
+                type="button"
+                onClick={() => handleSearchChange("")}
+                style={{
+                  cursor: "pointer",
+                  border: "none",
+                  background: "none",
+                  padding: 2,
+                  color: "#9ca3af",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <X style={{ width: 14, height: 14 }} />
+              </button>
+            ) : undefined
+          }
+          value={search}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          allowClear={false}
+          style={{ borderRadius: 8 }}
+        />
+      </div>
+
       <div style={{ padding: 12 }}>
         {isLoading ? (
           <RunHistorySkeleton />
         ) : error ? (
           <RunHistoryError onRetry={() => refetch()} />
         ) : items.length === 0 ? (
-          <RunHistoryEmpty hasFilter={Boolean(statusFilter && statusFilter !== "all")} />
+          <RunHistoryEmpty hasFilter={Boolean(statusFilter && statusFilter !== "all") || !!search} />
         ) : (
-          <ol className="content-fade-in" style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
-            {items.map((run, i) => (
-              <li key={run.processing_run_id}>
-                <RunListItem run={run} index={i} />
-              </li>
-            ))}
-          </ol>
+          <>
+            <ol className="content-fade-in" style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+              {items.map((run, i) => (
+                <li key={run.processing_run_id}>
+                  <RunListItem run={run} index={i} />
+                </li>
+              ))}
+            </ol>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                paddingTop: 16,
+                marginTop: 12,
+                borderTop: "1px solid #f3f4f6",
+              }}>
+                <button
+                  type="button"
+                  onClick={() => setPage(page - 1)}
+                  disabled={page <= 1}
+                  className={page > 1 ? "rh-page-btn" : undefined}
+                  style={{
+                    display: "flex",
+                    width: 36,
+                    height: 36,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 8,
+                    border: page <= 1 ? "1px solid #f3f4f6" : "1px solid #e5e7eb",
+                    fontSize: 14,
+                    color: page <= 1 ? "#d1d5db" : "#4b5563",
+                    cursor: page <= 1 ? "not-allowed" : "pointer",
+                    backgroundColor: "#fff",
+                    transition: "background-color 0.15s",
+                  }}
+                >
+                  <ChevronLeft style={{ width: 16, height: 16 }} />
+                </button>
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                  const pageNum = i + 1;
+                  const isActive = pageNum === page;
+                  return (
+                    <button
+                      key={pageNum}
+                      type="button"
+                      onClick={() => setPage(pageNum)}
+                      className={!isActive ? "rh-page-btn" : undefined}
+                      style={{
+                        display: "flex",
+                        width: 36,
+                        height: 36,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 8,
+                        border: isActive ? "1px solid var(--color-primary-600)" : "1px solid #e5e7eb",
+                        fontSize: 14,
+                        fontWeight: 500,
+                        backgroundColor: isActive ? "var(--color-primary-600)" : "#fff",
+                        color: isActive ? "#fff" : "#4b5563",
+                        cursor: "pointer",
+                        transition: "background-color 0.15s",
+                      }}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                {totalPages > 7 && (
+                  <>
+                    <span style={{ padding: "0 4px", color: "#9ca3af" }}>&hellip;</span>
+                    <input
+                      className="rh-page-jump-input"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder={String(totalPages)}
+                      value={jumpValue}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/\D/g, "");
+                        setJumpValue(v);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleJump();
+                      }}
+                      onBlur={handleJump}
+                      aria-label="Jump to page"
+                      title={`Jump to page (1–${totalPages})`}
+                    />
+                  </>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setPage(page + 1)}
+                  disabled={page >= totalPages}
+                  className={page < totalPages ? "rh-page-btn" : undefined}
+                  style={{
+                    display: "flex",
+                    width: 36,
+                    height: 36,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 8,
+                    border: page >= totalPages ? "1px solid #f3f4f6" : "1px solid #e5e7eb",
+                    fontSize: 14,
+                    color: page >= totalPages ? "#d1d5db" : "#4b5563",
+                    cursor: page >= totalPages ? "not-allowed" : "pointer",
+                    backgroundColor: "#fff",
+                    transition: "background-color 0.15s",
+                  }}
+                >
+                  <ChevronRight style={{ width: 16, height: 16 }} />
+                </button>
+                <span style={{ marginLeft: 8, fontSize: 12, color: "#6b7280" }}>
+                  Page {page} of {totalPages}
+                </span>
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>

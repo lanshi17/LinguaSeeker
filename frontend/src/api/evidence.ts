@@ -28,11 +28,19 @@ export async function searchEvidence(
 }
 
 export async function getEvidenceGroupDetail(
-  groupId: string,
+  groupId?: string,
+  sourceDocumentId?: string,
 ): Promise<EvidenceGroupDetailResponse> {
+  const params: Record<string, string> = {};
+  if (groupId) {
+    params.group_id = groupId;
+  }
+  if (sourceDocumentId) {
+    params.source_document_id = sourceDocumentId;
+  }
   const { data } = await apiClient.get<EvidenceGroupDetailResponse>(
     "/evidence/groups/detail",
-    { params: { group_id: groupId } },
+    { params },
   );
   return data;
 }
