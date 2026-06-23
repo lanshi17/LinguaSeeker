@@ -996,6 +996,44 @@ async def test_upsert_canonical_evidence_update_path_refreshes_payload_keys() ->
     assert payload["search_text"]
 
 
+@pytest.mark.asyncio
+async def test_upsert_canonical_evidence_matches_existing_uuid_document_id() -> None:
+    """Existing canonical lookup matches UUID DB values against string run rows."""
+    from src.dao.postgresql.models import CanonicalEvidenceItem
+
+    session = _CanonicalPayloadSession()
+    repo = StandardizationRepository(session)
+    match = _make_variant_match()
+
+    entity_id = await repo.upsert_normalized_entity(match)
+    input_data = _make_input(match)
+    await repo.insert_run_evidence_items(input_data, (match,))
+
+    run_row, _ = repo._run_item_rows[0]
+    existing_item = CanonicalEvidenceItem(
+        source_document_id=uuid.UUID(input_data.source_document_id),
+        field_id=run_row.field_id,
+        position_hash=run_row.position_hash,
+        text_hash=run_row.text_hash,
+        entity_scope_hash=run_row.entity_scope_hash,
+        current_best_run_evidence_id=uuid.uuid4(),
+        current_best_status="source_invalid",
+        current_best_confidence=0.5,
+        conflict_flag=False,
+        active_payload={"old": True},
+    )
+    session.existing_canonical = [existing_item]
+
+    await repo.upsert_canonical_evidence(input_data, (match,), (entity_id,))
+
+    canonical_rows = [
+        value for value in session.added if value.__class__.__name__ == "CanonicalEvidenceItem"
+    ]
+    assert canonical_rows == []
+    assert existing_item.current_best_run_evidence_id == run_row.run_evidence_item_id
+    assert existing_item.current_best_status == "found"
+
+
 def test_context_contamination_is_not_canonical_eligible() -> None:
     from src.core.standardize_entities_and_align_knowledge.repositories import (
         CANONICAL_ELIGIBLE_STATUSES,

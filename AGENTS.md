@@ -329,6 +329,31 @@
   - `deploy/ansible/inventories/<env>/hosts.yml` + `group_vars/all.yml` + `group_vars/vault.yml.example`
 - 新增环境时，必须参照现有环境创建完整的配置文件集，**禁止**仅创建部分文件。
 
+### 29. 认证与网络安全
+
+#### 29.1 密钥职责分离
+
+- `api_key`（API 认证密钥）和 `session_signing_key`（Session 签名密钥）**必须**使用不同的值。
+- `api_key` 仅用于 `X-API-Key` 请求头认证和登录密码比对。
+- `session_signing_key` 仅用于 HMAC-SHA256 签名 `ce_session` cookie。
+- 生产环境**禁止**依赖回退行为（`session_signing_key` 为空时自动使用 `api_key`）。
+- 新增环境时，必须在 `vault/<env>.yaml` 中同时配置两个独立密钥。
+
+#### 29.2 SSRF 防护
+
+- 所有发起外部 HTTP 请求的代码**必须**在请求前和重定向后校验目标 URL，拒绝私有/保留 IP 地址。
+- 使用 `_validate_url_safe()` 函数（DNS 解析 + 私有 IP 检查），已实现于：
+  - `backend/src/core/ingest_and_digitize_data/parse_document/orchestrator.py`
+  - `backend/src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/gateway.py`
+- 新增外部 HTTP 请求代码时，**必须**复用上述函数或等效的 SSRF 校验逻辑。
+
+#### 29.3 模型服务器安全边界
+
+- 模型服务器（`services/model-server/`）是**内部公共服务**，不设置应用层认证，可被内部网络中的任意服务访问。
+- 安全边界依赖**网络隔离**：绑定到内网 IP 或通过防火墙/安全组限制访问来源。
+- **禁止**将模型服务器端口暴露到公网（`0.0.0.0` 绑定或无防火墙规则）。
+- Docker Compose 部署时，模型服务器端口应绑定到 `127.0.0.1` 或内网 IP。
+
 ---
 
 ## 三、违反处理

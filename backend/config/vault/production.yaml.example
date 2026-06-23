@@ -5,6 +5,12 @@
 # This file is git-ignored — NEVER commit real secrets.
 # ============================================================================
 
+# -- Application Auth ---------------------------------------------------------
+# Session signing key (HMAC-SHA256 secret for ce_session cookies).
+# MUST differ from api_key to prevent session forgery if api_key is leaked.
+# Falls back to api_key if empty (not recommended for production).
+session_signing_key: "generate-a-random-64-char-hex-string"
+
 # -- LLM API Keys -------------------------------------------------------------
 fast_llm:
   api_key: "your-production-fast-llm-api-key"

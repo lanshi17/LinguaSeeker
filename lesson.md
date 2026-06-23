@@ -1,7 +1,29 @@
 # Lesson Log
 
-# Lesson Log
 
+## 2026-06-23: 单密钥多用途导致 Session 伪造风险 — STRIDE 安全审查发现与修复
+
+**问题**：项目安全审查发现 `cfg.api_key` 同时承担三个职责（API 认证、Session HMAC 签名、登录密码），一旦 API Key 泄露，攻击者可伪造 session cookie 冒充合法用户。同时模型服务器 `/file_parse` 端点完全无认证，gateway 的 PDF 下载函数缺少 SSRF 防护。
+
+**排查过程**：使用 STRIDE 威胁模型对 dev 分支进行系统审查。逐一检查认证授权、密钥管理、数据库安全、输入验证、CORS、模型服务器、Docker 部署、SSRF 防护八个维度。发现 7 个安全发现（1 Critical、2 High、4 Medium）。
+
+**根因分析**：
+1. **单密钥多用途**：开发初期用 `api_key` 同时做认证和签名，快速原型阶段合理，但未在上线前分离。
+2. **模型服务器设计意图**：模型服务器为内部公共服务，不设应用层认证，安全边界依赖网络隔离。初始审查误判 `/file_parse` 无认证为漏洞，实为设计决策。
+3. **SSRF 防护不一致**：`parse_document/orchestrator.py` 已实现 `_validate_url_safe()`，但 `gateway.py` 的下载函数未复用。
+
+**解决方案**：
+1. 新增 `session_signing_key` 配置字段，`_get_signing_key()` 实现向后兼容回退。
+2. 在 `gateway.py` 的两个下载函数中添加 SSRF 校验（请求前 + 重定向后）。
+3. Docker Compose 默认绑定 `127.0.0.1`，Dockerfile `--forwarded-allow-ips` 限制为内网。
+4. 开发环境 CORS 从 `*` 改为 `http://localhost:3000`。
+
+**预防措施**：
+- 新增 Rule 29 到 AGENTS.md：密钥职责分离、SSRF 防护、模型服务器网络隔离安全边界。
+- 新增 Section 1.5.1 到 backend/AGENTS.md：认证架构文档化。
+- 所有 vault 模板和 Ansible 配置已更新，新环境部署时必须配置独立 `session_signing_key`。
+- 新增 5 个单元测试验证密钥分离逻辑。
+- 未来新增 HTTP 端点时，必须检查认证依赖；新增外部请求时，必须检查 SSRF 校验。
 
 ## 2026-06-20: "Acquisition failed: None" — response model had no error field, so warnings were discarded
 

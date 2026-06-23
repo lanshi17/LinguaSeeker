@@ -7,6 +7,7 @@
 
 # -- Frontend-Backend Trust Token --------------------------------------------
 vault_api_key: "change-me-to-a-strong-random-secret"
+vault_session_signing_key: "change-me-to-a-different-random-secret-for-session-hmac"
 
 # -- LLM API Keys -----------------------------------------------------------
 vault_fast_llm_api_key: "sk-xxxxxxxxxxxxxxxxxxxxxxxx"

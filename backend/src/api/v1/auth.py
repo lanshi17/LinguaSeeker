@@ -19,6 +19,7 @@ from src.api.auth import (
     SESSION_COOKIE,
     SESSION_DURATION_SEC,
     _b64url_encode,
+    _get_signing_key,
     _validate_session,
 )
 from src.core.config import get_config
@@ -78,11 +79,12 @@ async def login(body: LoginRequest, response: Response) -> LoginResponse:
     if not hmac.compare_digest(body.password, secret):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
+    signing_key = _get_signing_key()
     expires_at = int(time.time()) + SESSION_DURATION_SEC
     payload = _b64url_encode(json.dumps({"exp": expires_at}).encode("utf-8"))
     signature = _b64url_encode(
         hmac.new(
-            secret.encode("utf-8"),
+            signing_key.encode("utf-8"),
             payload.encode("utf-8"),
             hashlib.sha256,
         ).digest()
@@ -127,10 +129,10 @@ async def me(request: Request) -> AuthMeResponse:
         valid and not expired, otherwise ``authenticated=False``.
     """
     cfg = get_config()
-    secret = cfg.api_key
+    signing_key = _get_signing_key()
     token = request.cookies.get(SESSION_COOKIE)
 
-    if not secret or not token or not _validate_session(token, secret):
+    if not cfg.api_key or not token or not _validate_session(token, signing_key):
         return AuthMeResponse(authenticated=False)
 
     return AuthMeResponse(authenticated=True)

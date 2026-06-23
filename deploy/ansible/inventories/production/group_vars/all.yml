@@ -22,6 +22,7 @@ acmg_cors_origins: "https://lingua-seeker.your-domain.com"
 # Injected by nginx as the X-API-Key header on /api/ requests; the browser never sees it.
 # The backend binds to 127.0.0.1, so it is only reachable via nginx.
 api_key: "{{ vault_api_key }}"
+session_signing_key: "{{ vault_session_signing_key }}"
 
 # ── Domain / TLS ──────────────────────────────────────────────────────────
 domain_name: "lingua-seeker.your-domain.com"
