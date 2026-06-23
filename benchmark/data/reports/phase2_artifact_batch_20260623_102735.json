@@ -1,0 +1,22 @@
+{
+  "total_entries": 1,
+  "planned_count": 0,
+  "completed_count": 0,
+  "failed_count": 1,
+  "rows": [
+    {
+      "entry_id": "rett_043",
+      "status": "phase2_failed",
+      "processing_run_id": "5539f5b3-60e9-41b6-a7b1-12c634fd903e",
+      "source_document_id": "3218d4de-6857-4c5c-b897-05c15cb13eb4",
+      "status_url": "/api/v1/pipeline/runs/5539f5b3-60e9-41b6-a7b1-12c634fd903e/status",
+      "phase2_status": "failed",
+      "pipeline_status": "failed",
+      "current_phase": null,
+      "artifact_path": "/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline/5539f5b3-60e9-41b6-a7b1-12c634fd903e/phase_2/extraction_result.json",
+      "artifact_exists": false,
+      "duration_s": 309.21,
+      "message": "Phase 2 unexpected error: translation_validation_failed: non_english_output"
+    }
+  ]
+}

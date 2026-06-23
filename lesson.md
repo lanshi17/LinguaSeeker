@@ -4293,3 +4293,23 @@ python -m benchmark.analysis.reconcile.ablation --entries $entries --write
 **Root cause**: Unknown - the migration code correctly defines `PrimaryKeyConstraint` for all tables. Possibly related to the transactional DDL behavior or the `version_table_column_len` fix interfering with constraint creation.
 **Fix**: Manually added primary keys via `ALTER TABLE ... ADD PRIMARY KEY (...)` statements.
 **Prevention**: After running migrations on a fresh DB, verify primary keys exist with: `SELECT conrelid::regclass, conname FROM pg_constraint WHERE connamespace = 'lingua'::regnamespace AND contype = 'p';`
+
+## 2026-06-23: Phase 3 SQL transaction abort on missing table
+
+**Problem**: Phase 3 failed with `InFailedSQLTransactionError: current transaction is aborted, commands ignored until end of transaction block`.
+**Root cause chain**:
+1. `terminology_embeddings` table didn't exist (old DB before fresh migration)
+2. `find_nearest()` query → `UndefinedTableError` → PostgreSQL aborts the transaction
+3. Python `except Exception` in `similarity_match/core.py:60` catches and wraps as `SemanticMatchServiceError`
+4. But the SQLAlchemy session's transaction remains in aborted state
+5. Next candidate's `find_nearest()` → `InFailedSQLTransactionError` (cascading failure)
+**Fix**: Added SAVEPOINT in `PgvectorTerminologyRepository.find_nearest()` via `session.begin_nested()`. On `SQLAlchemyError`, rollback to savepoint instead of aborting the outer transaction.
+**File**: `backend/src/core/standardize_entities_and_align_knowledge/similarity_match/repositories.py`
+
+## 2026-06-23: Language detector misclassifies English biomedical text as Latin
+
+**Problem**: rett_043 (2600 chars, English MECP2 mutation tables) was detected as `la` (Latin), triggering unnecessary translation which then failed with `non_english_output`.
+**Root cause**: The `lingua` library's language detector is confused by heavy gene mutation notation (p.R106W, c.C316T, exon 4 partial deletion, IVS3-2A>g) which resembles Latin morphology.
+**Fix**: Added `_looks_english()` fallback heuristic in `should_skip_translation()`. If the text is purely ASCII and contains ≥3 common English words (the, and, of, patients, mutations, etc.), skip translation even if the detector returns a non-English language.
+**File**: `backend/src/core/cross_lingual_process_and_extract_evidence/cross_lingual/translate/language_detector.py`
+**Verification**: rett_043 now correctly returns `should_skip=True`; Japanese text still returns `should_skip=False`.
