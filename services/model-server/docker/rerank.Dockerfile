@@ -17,7 +17,6 @@ RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ -e /ap
 
 COPY services/model-server/app /app/app
 COPY services/model-server/main_rerank.py /app/main.py
-COPY services/model-server/config /app/config
 
 ENV HOST=0.0.0.0
 ENV PORT=8003

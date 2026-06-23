@@ -65,8 +65,8 @@ mineru_local_dpi: 200
 postgres_host: "{{ hostvars[groups['db'][0]]['ansible_host'] }}"
 postgres_port: 5432
 postgres_db: "lingua_seeker"
-postgres_schema: "acmg_app"
-postgres_user: "acmg_app"
+postgres_schema: "lingua_seeker"
+postgres_user: "lingua_seeker"
 postgres_pool_size: 20
 postgres_max_overflow: 30
 

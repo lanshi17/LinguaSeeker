@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import re
+import socket
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import httpx
 import time as _time
@@ -19,6 +21,37 @@ from src.utils.rust_io import net_io
 from src.utils.text import sanitize_filename
 
 from .contracts import OnlineAcquisitionGatewayRequest, OnlineAcquisitionGatewayResult, OnlineAcquisitionSourceTraceEntry
+
+
+def _is_private_ip(hostname: str) -> bool:
+    """Return True if *hostname* resolves to a private/reserved IP address."""
+    try:
+        addrinfos = socket.getaddrinfo(hostname, None, proto=socket.IPPROTO_TCP)
+    except socket.gaierror:
+        return True
+
+    for _family, _type, _proto, _canonname, sockaddr in addrinfos:
+        ip = ipaddress.ip_address(sockaddr[0])
+        if (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_reserved
+            or ip.is_multicast
+        ):
+            return True
+    return False
+
+
+def _validate_url_safe(url: str) -> None:
+    """Raise ValueError if *url* targets a private/reserved IP (SSRF guard)."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"Unsupported URL scheme: {parsed.scheme}")
+    hostname = parsed.hostname or ""
+    if not hostname or _is_private_ip(hostname):
+        raise ValueError(f"URL targets a private/reserved address: {url}")
+
 
 _PDF_LINK_PATTERNS = [
     re.compile(r'href=["\']([^"\']*\.pdf[^"\']*)["\']', re.IGNORECASE),
@@ -100,15 +133,21 @@ async def _download_pdf_from_candidates(
                 continue
             visited.add(url)
             try:
+                _validate_url_safe(url)
                 response = await client.get(url)
                 response.raise_for_status()
+                final_url = str(response.url)
+                if final_url != url:
+                    _validate_url_safe(final_url)
+            except ValueError as ssrf_exc:
+                warnings.append(f"ssrf_blocked:{url}:{ssrf_exc}")
+                continue
             except Exception as exc:
                 warnings.append(f"download_failed:{url}:{exc}")
                 continue
 
             content = response.content or b""
             content_type = str(response.headers.get("content-type") or "").lower()
-            final_url = str(response.url)
 
             if content.startswith(b"%PDF"):
                 target.write_bytes(content)
@@ -162,6 +201,13 @@ async def download_file_from_url(
         if current_url in visited:
             continue
         visited.add(current_url)
+
+        try:
+            _validate_url_safe(current_url)
+        except ValueError as ssrf_exc:
+            warnings.append(f"ssrf_blocked:{current_url}:{ssrf_exc}")
+            continue
+
         proxy = proxy_resolver(current_url)
 
         # Try Rust download first (faster, has built-in retry)
@@ -175,6 +221,13 @@ async def download_file_from_url(
                 if status == 0 or status >= 400:
                     warnings.append(f"download_http_{status}:{current_url}")
                     continue
+
+                if final_url != current_url:
+                    try:
+                        _validate_url_safe(final_url)
+                    except ValueError as ssrf_exc:
+                        warnings.append(f"ssrf_blocked_redirect:{current_url}:{ssrf_exc}")
+                        continue
 
                 if file_bytes and file_bytes[:4] == b"%PDF":
                     target.write_bytes(file_bytes)
@@ -209,6 +262,13 @@ async def download_file_from_url(
                 content = resp.content or b""
                 content_type = str(resp.headers.get("content-type") or "").lower()
                 final_url = str(resp.url)
+
+                if final_url != current_url:
+                    try:
+                        _validate_url_safe(final_url)
+                    except ValueError as ssrf_exc:
+                        warnings.append(f"ssrf_blocked_redirect:{current_url}:{ssrf_exc}")
+                        continue
 
                 if content.startswith(b"%PDF"):
                     target.write_bytes(content)

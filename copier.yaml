@@ -61,7 +61,7 @@ postgres_db:
 postgres_schema:
   type: str
   help: Default PostgreSQL schema name
-  default: acmg_app
+  default: lingua_seeker
 
 author_name:
   type: str

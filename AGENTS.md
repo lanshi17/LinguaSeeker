@@ -286,6 +286,49 @@
 - **语言**：TypeScript（strict mode）。
 - **API 代理**：通过 Vite `server.proxy` 配置将 `/api/v1/*` 代理到后端。
 
+### 28. 跨服务环境一致性
+
+- 项目使用 **三环境策略**：`development`（本地开发）、`staging`（预发布验证）、`production`（生产）。
+- 所有服务（前端、后端、模型服务、数据库、容器）的配置值必须在各环境间保持一致，具体规范见 `docs/active/2026-06-23-environment-consistency.md`。
+
+#### 28.1 数据库命名规范
+
+| 环境 | 数据库名 | Schema | 用户 |
+|---|---|---|---|
+| Development | `dev_lingua_seeker` | `lingua_seeker` | `lingua_seeker` |
+| Staging | `staging_lingua_seeker` | `lingua_seeker` | `lingua_seeker` |
+| Production | `lingua_seeker` | `lingua_seeker` | `lingua_seeker` |
+
+- Schema 在所有环境中统一为 `lingua_seeker`，**禁止**使用环境特定的 schema 名（如 `acmg_app`、`public`）。
+- 数据库密码必须通过 `.env` 文件或 `backend/config/vault/` 注入，**禁止**在 `docker-compose.yml` 中硬编码默认密码。
+
+#### 28.2 配置文件单一来源
+
+| 配置域 | 权威来源 |
+|---|---|
+| 后端应用配置 | `backend/config/defaults/main.yaml` + `environments/<env>.yaml` + `vault/<env>.yaml` |
+| 前端环境变量 | `frontend/.env`（基础）+ `.env.<mode>`（环境覆盖）+ `.env.<mode>.local`（密钥，git-ignored） |
+| 模型服务配置 | 共享 `backend/config/`，通过 `acmg_config_loader` 加载；`services/model-server/app/config.py` 定义 Settings |
+| 部署编排 | Docker Compose（dev/staging）：`deploy/compose/`；Ansible（production）：`deploy/ansible/` |
+| 数据库凭证 | `backend/config/vault/<env>.yaml`（单一凭证来源） |
+
+#### 28.3 模型标识符一致性
+
+- 所有环境中的模型名称必须保持一致：
+  - Embedding：`Qwen/Qwen3-Embedding-0.6B`
+  - Rerank：`BAAI/bge-reranker-v2-m3`
+  - Doc Parse：`opendatalab/MinerU2.5-Pro-2604-1.2B`
+- 添加或更改模型时，必须同时更新 `backend/config/defaults/main.yaml`、`services/model-server/app/config.py`、`deploy/ansible/inventories/*/group_vars/all.yml`。
+
+#### 28.4 环境配置文件完整性
+
+- 每个环境必须具备以下文件：
+  - `backend/config/environments/<env>.yaml`
+  - `backend/config/vault/<env>.yaml.example`
+  - `frontend/.env.<mode>`
+  - `deploy/ansible/inventories/<env>/hosts.yml` + `group_vars/all.yml` + `group_vars/vault.yml.example`
+- 新增环境时，必须参照现有环境创建完整的配置文件集，**禁止**仅创建部分文件。
+
 ---
 
 ## 三、违反处理
