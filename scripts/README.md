@@ -1,59 +1,94 @@
 # Scripts
 
-> Project-level operational scripts for LinguaSeeker -- development servers, terminology management, and ground-truth generation. Run from the project root.
+> Project-level operational scripts for LinguaSeeker -- data management, cleanup, generation, and development servers. Run from the project root.
 
 ## Directory Structure
 
 ```
 scripts/
-├── generate_ground_truth_pdfs.py       Translate ground-truth literature to 6 languages and generate PDFs
-├── import_terminology.py               CLI tool to import terminology database files into PostgreSQL
-├── refactor_benchmark_imports.py       Refactor benchmark module imports after reorganization
-├── refactor_benchmark_reports.py       Refactor benchmark report file paths after reorganization
-├── start_backend_dev.sh                Start FastAPI backend with hot-reload
-└── start_model_server.sh               Start model server (embedding/rerank/VLM) on port 8001
+├── data/
+│   ├── import/                           Data import scripts
+│   │   ├── import_benchmark_ground_truth.py   Import benchmark ground truth with dual-track traceability
+│   │   ├── import_terminology.py              Import terminology database files into PostgreSQL
+│   │   ├── backfill_variant_ids.py            Backfill variant identifiers for existing data
+│   │   └── reindex_clinvar_aliases.py         Reindex ClinVar aliases for search optimization
+│   ├── cleanup/                          Data cleanup and refactoring scripts
+│   │   ├── delete_unmapped_entities.py        Delete unmapped genes and variants from database
+│   │   ├── refactor_benchmark_imports.py      Refactor benchmark module imports after reorganization
+│   │   └── refactor_benchmark_reports.py      Refactor benchmark report file paths after reorganization
+│   └── generate/                         Data generation scripts
+│       └── generate_ground_truth_pdfs.py      Translate ground-truth literature to 6 languages and generate PDFs
+├── dev/                                Development server scripts
+│   ├── start_backend_dev.sh                Start FastAPI backend with hot-reload
+│   ├── start_frontend_dev.sh               Start Vite frontend dev server
+│   └── start_model_server.sh               Start model server (embedding/rerank/VLM) on port 8001
+└── README.md                           This file
 ```
 
 > Terminology embedding builds live in `backend/scripts/build_terminology_embeddings.py`.
 
 ## Scripts
 
+### Data Import Scripts
+
+| Script | Language | Purpose |
+|--------|----------|---------|
+| `import_benchmark_ground_truth.py` | Python | Import benchmark ground truth with dual-track traceability (original + translated) |
+| `import_terminology.py` | Python | Import local terminology files (hgnc, omim, hpo, clingen, clinvar) into PostgreSQL reference tables |
+| `backfill_variant_ids.py` | Python | Backfill variant identifiers for existing data |
+| `reindex_clinvar_aliases.py` | Python | Reindex ClinVar aliases for search optimization |
+
+### Data Cleanup Scripts
+
+| Script | Language | Purpose |
+|--------|----------|---------|
+| `delete_unmapped_entities.py` | Python | Delete unmapped genes and variants from database |
+| `refactor_benchmark_imports.py` | Python | Refactor benchmark module imports after directory reorganization |
+| `refactor_benchmark_reports.py` | Python | Refactor benchmark report file paths after directory reorganization |
+
+### Data Generation Scripts
+
 | Script | Language | Purpose |
 |--------|----------|---------|
 | `generate_ground_truth_pdfs.py` | Python | Translate ground-truth literature to zh/ja/ko/fr/de/es via LLM API, generate PDFs with weasyprint |
-| `import_terminology.py` | Python | Import local terminology files (hgnc, omim, hpo, clingen, clinvar) into PostgreSQL reference tables |
-| `refactor_benchmark_imports.py` | Python | Refactor benchmark module imports after directory reorganization |
-| `refactor_benchmark_reports.py` | Python | Refactor benchmark report file paths after directory reorganization |
+
+### Development Server Scripts
+
+| Script | Language | Purpose |
+|--------|----------|---------|
 | `start_backend_dev.sh` | Shell | Start uvicorn with hot-reload, excluding logs/temp/migration files from watch |
+| `start_frontend_dev.sh` | Shell | Start Vite frontend dev server |
 | `start_model_server.sh` | Shell | Start the model server microservice (lazy-loads embedding, rerank, VLM models on first request) |
 
 ## Usage
 
-### Start Backend Dev Server
+### Import Benchmark Ground Truth
 
 ```bash
-./scripts/start_backend_dev.sh              # default port 8000
-./scripts/start_backend_dev.sh --port 8001  # custom port
-```
+# Import all datasets
+cd backend && uv run python ../scripts/data/import/import_benchmark_ground_truth.py
 
-### Start Model Server
+# Import specific dataset
+cd backend && uv run python ../scripts/data/import/import_benchmark_ground_truth.py --datasets rett
 
-```bash
-./scripts/start_model_server.sh              # default port 8001
-./scripts/start_model_server.sh --port 8002  # custom port
+# Import single entry
+cd backend && uv run python ../scripts/data/import/import_benchmark_ground_truth.py --entry-id rett_001
+
+# Dry run
+cd backend && uv run python ../scripts/data/import/import_benchmark_ground_truth.py --dry-run
 ```
 
 ### Import Terminology Data
 
 ```bash
 # Import all sources with a version tag
-uv run python scripts/import_terminology.py --version 2024-01
+uv run python scripts/data/import/import_terminology.py --version 2024-01
 
 # Import specific sources only
-uv run python scripts/import_terminology.py --version 2024-01 --sources hgnc omim hpo
+uv run python scripts/data/import/import_terminology.py --version 2024-01 --sources hgnc omim hpo
 
 # Import and generate embeddings in one step
-uv run python scripts/import_terminology.py --version 2024-01 --generate-embeddings
+uv run python scripts/data/import/import_terminology.py --version 2024-01 --generate-embeddings
 ```
 
 | Flag | Required | Default | Description |
@@ -63,18 +98,44 @@ uv run python scripts/import_terminology.py --version 2024-01 --generate-embeddi
 | `--terminology-root` | No | `database/terminology_database` | Path to local terminology files |
 | `--generate-embeddings` | No | `false` | Generate pgvector embeddings after import |
 
+### Delete Unmapped Entities
+
+```bash
+# Dry run to see what would be deleted
+cd backend && uv run python ../scripts/data/cleanup/delete_unmapped_entities.py --dry-run
+
+# Actually delete unmapped entities
+cd backend && uv run python ../scripts/data/cleanup/delete_unmapped_entities.py
+```
+
 ### Generate Ground-Truth PDFs
 
 ```bash
-uv run python scripts/generate_ground_truth_pdfs.py
+uv run python scripts/data/generate/generate_ground_truth_pdfs.py
 ```
 
 Reads from `benchmark/layer3/ground_truth/` and outputs to `benchmark/pipeline/input/ground_truth/`.
 
+### Start Development Servers
+
+```bash
+# Backend (default port 8000)
+./scripts/dev/start_backend_dev.sh
+./scripts/dev/start_backend_dev.sh --port 8001  # custom port
+
+# Frontend
+./scripts/dev/start_frontend_dev.sh
+
+# Model Server (default port 8001)
+./scripts/dev/start_model_server.sh
+./scripts/dev/start_model_server.sh --port 8002  # custom port
+```
+
 ## Prerequisites
 
 - **uv** -- Python dependency management (see [CLAUDE.md](../CLAUDE.md))
-- **PostgreSQL** -- Must be running and migrated for terminology scripts
+- **bun** -- Frontend dependency management
+- **PostgreSQL** -- Must be running and migrated for data scripts
 - **Model server** -- Must be running on port 8001 for embedding generation (see `backend/scripts/`)
 - **LLM API** -- Must be configured for `generate_ground_truth_pdfs.py`
 - **weasyprint** -- Required for PDF generation (installed via backend dependencies)
@@ -84,4 +145,5 @@ Reads from `benchmark/layer3/ground_truth/` and outputs to `benchmark/pipeline/i
 - All Python scripts use the backend's virtual environment via `uv run`. No separate dependencies needed.
 - Shell scripts auto-`cd` to the correct directory (`backend/` or `services/model-server/`) relative to their own location.
 - `start_backend_dev.sh` watches `src/` and `app/` for changes, excluding logs, pycache, and migrations to avoid spurious reloads during pipeline execution.
-- `import_terminology.py` uses `loguru` for structured logging to stderr.
+- `import_terminology.py` and `delete_unmapped_entities.py` use `loguru` for structured logging to stderr.
+- `import_benchmark_ground_truth.py` supports idempotent imports with cascade cleanup on re-import.
