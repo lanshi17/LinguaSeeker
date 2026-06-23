@@ -27,6 +27,7 @@ from .postprocess import (
     trim_repetitive_content,
 )
 from .providers import (
+    _to_text,
     create_json_llm,
     create_llm,
     invoke_json_with_retry,
@@ -638,10 +639,11 @@ class MultiStageTranslator(BaseTranslator):
                 try:
                     raw = await invoke_json_with_retry(self._json_llm, json_prompt, stage, system_prompt)
                     data = json.loads(raw)
-                    translated = data.get("translation", "")
+                    translated = _to_text(data.get("translation", ""))
                     if not translated:
                         raise ValueError("empty translation field")
-                except (json.JSONDecodeError, KeyError, ValueError):
+                except Exception as exc:
+                    logger.warning("JSON translation failed for segment {}/{}: {}", idx, total, exc)
                     # Fallback to non-JSON mode
                     translated = await invoke_with_retry(self._llm, prompt, stage, system_prompt)
             else:

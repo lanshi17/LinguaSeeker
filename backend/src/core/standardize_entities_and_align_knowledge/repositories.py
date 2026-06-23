@@ -53,6 +53,8 @@ CANONICAL_STATUS_PRIORITY = {
 
 CANONICAL_ELIGIBLE_STATUSES = {"found", "source_invalid", "ocr_gap", "table_ungrounded"}
 
+CanonicalIdentityKey = tuple[str, str, str, str]
+
 RELATIONSHIP_SUBJECT_TYPE = {
     "gene_associated_with_disease": EntityType.GENE,
     "phenotype_associated_with_gene": EntityType.PHENOTYPE,
@@ -934,6 +936,21 @@ class StandardizationRepository:
         index_repo = SearchIndexRepository(self.session)
         await index_repo.refresh()
 
+    @staticmethod
+    def _canonical_identity_key(
+        source_document_id: object,
+        field_id: str,
+        position_hash: str,
+        entity_scope_hash: str,
+    ) -> CanonicalIdentityKey:
+        """Normalize canonical identity values for in-memory lookup keys."""
+        return (
+            str(source_document_id),
+            field_id,
+            position_hash,
+            entity_scope_hash,
+        )
+
     async def upsert_canonical_evidence(
         self,
         input_data: StandardizationInput,
@@ -972,7 +989,12 @@ class StandardizationRepository:
                 batch_result = await self.session.execute(batch_stmt)
                 for item in batch_result.scalars().all():
                     existing_lookup[
-                        (item.source_document_id, item.field_id, item.position_hash, item.entity_scope_hash)
+                        self._canonical_identity_key(
+                            item.source_document_id,
+                            item.field_id,
+                            item.position_hash,
+                            item.entity_scope_hash,
+                        )
                     ] = item
 
         # Batch-load normalized-entity externals so each canonical payload can
@@ -997,7 +1019,12 @@ class StandardizationRepository:
             if row.status not in CANONICAL_ELIGIBLE_STATUSES:
                 continue
             existing = existing_lookup.get(
-                (row.source_document_id, row.field_id, row.position_hash, row.entity_scope_hash)
+                self._canonical_identity_key(
+                    row.source_document_id,
+                    row.field_id,
+                    row.position_hash,
+                    row.entity_scope_hash,
+                )
             )
             entity_id = entity_ids_by_candidate_id.get(spec.candidate_id)
             entity_tuple = entity_externals_by_id.get(entity_id)
@@ -1045,7 +1072,12 @@ class StandardizationRepository:
                 # in this batch go through the update path instead of
                 # triggering a duplicate-key IntegrityError.
                 existing_lookup[
-                    (row.source_document_id, row.field_id, row.position_hash, row.entity_scope_hash)
+                    self._canonical_identity_key(
+                        row.source_document_id,
+                        row.field_id,
+                        row.position_hash,
+                        row.entity_scope_hash,
+                    )
                 ] = new_item
                 continue
 

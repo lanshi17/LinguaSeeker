@@ -9,6 +9,17 @@ _DETECTOR = LanguageDetectorBuilder.from_all_languages().build()
 
 _CJK_RE = re.compile(r"[㐀-鿿぀-ヿ가-힯]")
 
+# Common English words used as a fallback heuristic when the primary
+# detector misclassifies heavily-technical ASCII text (e.g. gene mutation
+# notation) as Latin or another language.
+_EN_WORD_RE = re.compile(
+    r"\b(the|and|of|in|to|with|for|on|at|is|are|was|were|be|been|"
+    r"has|have|had|by|from|this|that|these|those|not|but|or|as|if|"
+    r"when|which|their|there|we|our|patients|mutations|analysis|"
+    r"diagnosis|clinical|available|control|collection)\b",
+    re.IGNORECASE,
+)
+
 _LANG_MAP = {
     Language.ENGLISH: "en",
     Language.CHINESE: "zh",
@@ -38,6 +49,16 @@ def detect_language(text: str, sample_size: int = 4000) -> str:
     return _LANG_MAP.get(detected, detected.iso_code_639_1.name.lower())
 
 
+def _looks_english(sample: str) -> bool:
+    """Fallback heuristic: does the text contain enough common English words?
+
+    Useful when the primary detector misclassifies technical ASCII text
+    (e.g. biomedical mutation notation) as Latin or another language.
+    """
+    words = _EN_WORD_RE.findall(sample)
+    return len(words) >= 3
+
+
 def should_skip_translation(text: str) -> bool:
     """Return ``True`` if the text is already English or empty."""
     sample = str(text or "").strip()
@@ -47,4 +68,11 @@ def should_skip_translation(text: str) -> bool:
     if cjk_count / len(sample) > 0.05:
         return False
     lang = detect_language(sample)
-    return lang == "en"
+    if lang == "en":
+        return True
+    # Fallback: technical English documents (e.g. gene variant tables) may be
+    # mis-detected as Latin or other languages.  If the text is predominantly
+    # ASCII and contains common English words, treat it as English.
+    if sample.isascii() and _looks_english(sample):
+        return True
+    return False

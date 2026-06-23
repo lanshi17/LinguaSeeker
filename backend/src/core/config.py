@@ -281,6 +281,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     debug: bool = False
     api_key: str = ""  # X-API-Key for route auth; empty = disabled (insecure)
+    session_signing_key: str = ""  # HMAC secret for ce_session cookies; falls back to api_key if empty
 
     # ── Preferred fast LLM flat fields (FAST_LLM_*) ────────────────────
 

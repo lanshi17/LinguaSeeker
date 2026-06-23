@@ -10,6 +10,7 @@ acmg_environment: staging
 acmg_debug: false
 acmg_cors_origins: "https://staging.lingua-seeker.your-domain.com"
 api_key: "{{ vault_api_key }}"
+session_signing_key: "{{ vault_session_signing_key }}"
 
 # -- Domain / TLS ------------------------------------------------------------
 domain_name: "staging.lingua-seeker.your-domain.com"

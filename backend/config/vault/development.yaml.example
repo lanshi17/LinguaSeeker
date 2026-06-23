@@ -5,6 +5,11 @@
 # This file is git-ignored — NEVER commit real secrets.
 # ============================================================================
 
+# ── Session Signing Key (HMAC-SHA256 for ce_session cookies) ──────────────
+# MUST differ from api_key to prevent session forgery if api_key is leaked.
+# Generate with: python3 -c "import secrets; print(secrets.token_hex(32))"
+session_signing_key: "generate-a-random-64-char-hex-string"
+
 # ── LLM API Keys ──────────────────────────────────────────────────────────
 # Single key (backward compatible):
 #   fast_llm:
