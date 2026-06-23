@@ -57,6 +57,8 @@ class SourceDocument(Base, TimestampMixin):
         ForeignKey("processing_runs.processing_run_id", use_alter=True),
         nullable=True,
     )
+    original_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    translated_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     identifiers: Mapped[list[SourceDocumentIdentifier]] = relationship(
         back_populates="source_document",
