@@ -1,0 +1,49 @@
+{
+  "entry_id": "parkinson_006",
+  "gene_symbol": "PARK2",
+  "disease_label": "Parkinson disease",
+  "mondo_id": "MONDO:0005180",
+  "source_pmid": "19636047",
+  "source_doi": "10.1212/WNL.0b013e3181af7a33",
+  "source_title": "Parkin dosage mutations have greater\npathogenicity in familial PD than simple\nsequence mutations",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "PARKIN",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Parkinson disease",
+      "candidates": [
+        "Parkinson disease",
+        "Parkinson's disease"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "associated",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_entities": {
+    "disease": {
+      "text": "Parkinson disease",
+      "mondo_id": "MONDO:0005180"
+    },
+    "gene": {
+      "text": "PARK2"
+    }
+  },
+  "expected_standardization": {
+    "disease": "MONDO:0005180",
+    "gene": "PARK2"
+  },
+  "notes": "Converted from parkinson_literature dataset, PMID 19636047"
+}

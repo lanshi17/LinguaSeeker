@@ -1,0 +1,119 @@
+{
+  "entry_id": "parkinson_013",
+  "gene_symbol": "PARK2",
+  "disease_label": "Parkinson disease",
+  "mondo_id": "MONDO:0005180",
+  "source_pmid": "27094865",
+  "source_doi": "10.1186/s13024-016-0097-0",
+  "source_title": "Resequencing analysis of five Mendelian genes and the top genes from genome-wide association studies in Parkinson’s Disease",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "PARKIN",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Parkinson disease",
+      "candidates": [
+        "Parkinson disease",
+        "Parkinson's disease"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "associated",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "H294Q",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "L483P",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "L1795F",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "M318L",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "T408M",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "Y2189C",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "E365K",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "N409S",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "A339S",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "R402H",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_entities": {
+    "disease": {
+      "text": "Parkinson disease",
+      "mondo_id": "MONDO:0005180"
+    },
+    "gene": {
+      "text": "PARK2"
+    }
+  },
+  "expected_standardization": {
+    "disease": "MONDO:0005180",
+    "gene": "PARK2"
+  },
+  "notes": "Converted from parkinson_literature dataset, PMID 27094865"
+}

@@ -1,0 +1,49 @@
+{
+  "entry_id": "parkinson_010",
+  "gene_symbol": "LRRK2",
+  "disease_label": "Parkinson disease",
+  "mondo_id": "MONDO:0005180",
+  "source_pmid": "24339985",
+  "source_doi": "10.1371/journal.pone.0082001",
+  "source_title": "Genetic variants ofLRRK2 in Taiwanese Parkinson's disease",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "PARKIN",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Parkinson disease",
+      "candidates": [
+        "Parkinson disease",
+        "Parkinson's disease"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "associated",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_entities": {
+    "disease": {
+      "text": "Parkinson disease",
+      "mondo_id": "MONDO:0005180"
+    },
+    "gene": {
+      "text": "LRRK2"
+    }
+  },
+  "expected_standardization": {
+    "disease": "MONDO:0005180",
+    "gene": "LRRK2"
+  },
+  "notes": "Converted from parkinson_literature dataset, PMID 24339985"
+}

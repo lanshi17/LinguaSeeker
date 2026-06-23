@@ -1,0 +1,56 @@
+{
+  "entry_id": "parkinson_017",
+  "gene_symbol": "PARK2",
+  "disease_label": "Parkinson disease",
+  "mondo_id": "MONDO:0005180",
+  "source_pmid": "32794657",
+  "source_doi": "10.1002/mgg3.1449",
+  "source_title": "Analysis of rare variants of autosomal-dominant genes in a Chinese population with sporadic Parkinson's disease",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "PARKIN",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Parkinson disease",
+      "candidates": [
+        "Parkinson disease",
+        "Parkinson's disease"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "associated",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "有两种可能，还有一种是C/T",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_entities": {
+    "disease": {
+      "text": "Parkinson disease",
+      "mondo_id": "MONDO:0005180"
+    },
+    "gene": {
+      "text": "PARK2"
+    }
+  },
+  "expected_standardization": {
+    "disease": "MONDO:0005180",
+    "gene": "PARK2"
+  },
+  "notes": "Converted from parkinson_literature dataset, PMID 32794657"
+}

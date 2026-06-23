@@ -1,0 +1,17 @@
+{
+  "entry_id": "parkinson_012",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/data/processed/parkinson_literature/publications_full/pdfs/26117366.pdf",
+  "language": "en",
+  "parse_status": "parsed",
+  "annotation_status": "generated",
+  "review_status": "ground_truth",
+  "reviewer": "auto-convert",
+  "review_notes": "",
+  "rejection_reason": "",
+  "generated_at": "",
+  "reviewed_at": "",
+  "promoted_at": "",
+  "llm_model": "",
+  "parse_backend": "pymupdf",
+  "variant_count": 12
+}

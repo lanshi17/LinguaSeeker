@@ -4361,3 +4361,24 @@ python -m benchmark.analysis.reconcile.ablation --entries $entries --write
 - rett_043 smoke: run c48a66a4, Phase 3 matches=2, pipeline_status=completed
 
 **Status**: Ready for 4th dataset testing.
+
+## 2026-06-23: Fourth dataset — parkinson_literature conversion
+
+**Source**: `benchmark/data/processed/parkinson_literature/` (598 records, 176 downloaded PDFs, 152 with variant data)
+
+**Conversion**: Only 20 PMIDs had both downloaded PDFs and variant data (table2_seq_study_var.jsonl). Converted using `benchmark/scripts/convert_parkinson_to_ground_truth.py`:
+- PDFs parsed with pymupdf (fitz) → source.md
+- Gene symbols extracted from publication titles using regex patterns
+- Expected evidence built from variant table (disease_diagnosis=Parkinson disease, variant_hgvs_p from Field name)
+- 4 entries had no identifiable gene in title → assigned PARK2 as default
+
+**Key differences from other datasets**:
+- Smallest dataset (20 entries vs 53 for rett/clinvar_fused, 28 for clingen)
+- Lower F1 (0.3415 vs 0.6277 for rett) — expected for a new dataset without tuned ground truth
+- B0 baseline has 0 F1 because baseline entries are from rett, not parkinson
+- Variant data has Chinese annotations in some rows (from original curation)
+
+**Known issues**:
+- Gene symbol extraction from titles is heuristic; some entries may have incorrect genes
+- Expected evidence is minimal (disease + variants); no gene_disease_relationship or mode_of_inheritance
+- No baseline comparison possible (no parkinson entries in B0 baseline)

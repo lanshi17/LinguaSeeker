@@ -1,0 +1,63 @@
+{
+  "entry_id": "parkinson_011",
+  "gene_symbol": "LRRK2",
+  "disease_label": "Parkinson disease",
+  "mondo_id": "MONDO:0005180",
+  "source_pmid": "25243190",
+  "source_doi": "10.1155/2014/867321",
+  "source_title": "LRRK2 G2385R and R1628P mutations are associated with an increased risk of Parkinson's disease in the Malaysian population",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "PARKIN",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Parkinson disease",
+      "candidates": [
+        "Parkinson disease",
+        "Parkinson's disease"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "associated",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "case:control=2.6%:0.1%,使用等位基因频率作为对比",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "case:control=3.1%:1.8%使用等位基因频率作为对比",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_entities": {
+    "disease": {
+      "text": "Parkinson disease",
+      "mondo_id": "MONDO:0005180"
+    },
+    "gene": {
+      "text": "LRRK2"
+    }
+  },
+  "expected_standardization": {
+    "disease": "MONDO:0005180",
+    "gene": "LRRK2"
+  },
+  "notes": "Converted from parkinson_literature dataset, PMID 25243190"
+}
