@@ -1,67 +1,30 @@
+/**
+ * Shared user-annotation layer for document paragraphs.
+ *
+ * Renders translucent overlay rectangles over annotation spans (anchored to
+ * the paragraph's flattened visible text), a selection popover to create new
+ * annotations, and an edit popover for note/color/delete.
+ *
+ * Coordinate system: offsets are into the paragraph container's visible text
+ * (flattened textContent of all descendant text nodes). The layer is visually
+ * and structurally decoupled from evidence-highlight DOM wrapping — overlays
+ * are absolutely positioned divs, so they never conflict with `<mark>` splits.
+ */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
-import "katex/dist/katex.min.css";
 import { Input, Button, Popover, Tooltip, message } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
-import { categoryLabel } from "../utils/categoryStyles";
-import { CATEGORY_COLORS, type EvidenceDocumentHighlight } from "../utils/evidenceDocument";
 import {
   ANNOTATION_COLORS,
   DEFAULT_ANNOTATION_COLOR,
+  type AnnotationTrack,
   type UserAnnotation,
 } from "../types/annotations";
-
-interface MarkdownDocumentViewerProps {
-  markdown: string;
-  highlights: EvidenceDocumentHighlight[];
-  /** Stable id of the paragraph this viewer renders (for annotation anchoring). */
-  paragraphId: string;
-  /** Which track (original/translated) — attached to created annotations. */
-  track: "original" | "translated";
-  /** User-authored annotations anchored to this paragraph's visible text. */
-  annotations?: UserAnnotation[];
-  /** Create a new annotation from a text selection. */
-  onCreateAnnotation?: (payload: {
-    paragraph_id: string;
-    track: "original" | "translated";
-    start_offset: number;
-    end_offset: number;
-    color: string;
-  }) => void;
-  /** Update an existing annotation (color/note). */
-  onUpdateAnnotation?: (
-    id: string,
-    payload: { color?: string | null; note?: string | null },
-  ) => void;
-  /** Delete an annotation. */
-  onDeleteAnnotation?: (id: string) => void;
-}
-
-/** Derive mark inline styles from a category's hex color. */
-function applyMarkStyle(mark: HTMLElement, category?: string | null, selected?: boolean) {
-  const hex = category ? CATEGORY_COLORS[category]?.hex : undefined;
-  mark.style.borderRadius = "4px";
-  mark.style.padding = "2px 4px";
-  mark.style.fontWeight = "600";
-  mark.style.backgroundColor = hex ? hex + "40" : "#e5e7eb";
-  mark.style.color = hex ? hex : "#030712";
-  mark.style.boxShadow = hex ? `0 0 0 1px ${hex}50` : "0 0 0 1px #d1d5db";
-  if (selected) {
-    mark.style.outline = "2px solid var(--color-primary-700, #0e7490)";
-    mark.style.outlineOffset = "2px";
-  }
-}
 
 interface TextNodeOffset {
   node: Text;
   start: number;
 }
 
-/** Walk text nodes in document order, recording each one's start offset in
- *  the container's flattened visible text. */
 function collectTextNodeOffsets(container: HTMLElement): TextNodeOffset[] {
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
   const offsets: TextNodeOffset[] = [];
@@ -76,7 +39,6 @@ function collectTextNodeOffsets(container: HTMLElement): TextNodeOffset[] {
   return offsets;
 }
 
-/** Resolve a global visible-text offset to a (textNode, localOffset) point. */
 function offsetToPoint(
   offsets: TextNodeOffset[],
   offset: number,
@@ -100,7 +62,6 @@ interface OverlayRect {
   height: number;
 }
 
-/** Compute absolute-positioned overlay rects for each annotation. */
 function computeAnnotationOverlays(
   container: HTMLElement,
   annotations: UserAnnotation[],
@@ -119,7 +80,7 @@ function computeAnnotationOverlays(
       range.setStart(startPt.node, startPt.localOffset);
       range.setEnd(endPt.node, endPt.localOffset);
     } catch {
-      continue; // IndexSizeError on stale nodes
+      continue;
     }
 
     for (const rect of range.getClientRects()) {
@@ -142,8 +103,6 @@ interface SelectionInfo {
   rect: DOMRect;
 }
 
-/** Map a DOM node+offset to a global visible-text offset. Handles element
- *  anchors (e.g. a <mark>) by summing preceding text-node lengths. */
 function findPointForNode(
   offsets: TextNodeOffset[],
   node: Node,
@@ -154,8 +113,6 @@ function findPointForNode(
     if (!entry) return null;
     return entry.start + Math.min(offset, node.textContent?.length ?? 0);
   }
-  // Element node: sum lengths of text-node descendants that precede `offset`
-  // in child order.
   let acc = 0;
   const childNodes = node.childNodes;
   for (let i = 0; i < Math.min(offset, childNodes.length); i++) {
@@ -169,8 +126,6 @@ function findPointForNode(
   return acc;
 }
 
-/** Compute visible-text offsets for the current selection if it lies entirely
- *  within `container` and is non-collapsed. */
 function selectionInContainer(container: HTMLElement): SelectionInfo | null {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
@@ -190,123 +145,43 @@ function selectionInContainer(container: HTMLElement): SelectionInfo | null {
   };
 }
 
-export function MarkdownDocumentViewer({
-  markdown,
-  highlights,
+export interface AnnotationLayerProps {
+  /** Ref to the container whose visible text the annotations anchor to. */
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  paragraphId: string;
+  track: AnnotationTrack;
+  annotations: UserAnnotation[];
+  /** Dependency array trigger: recompute overlays when these change (e.g.
+   *  markdown/highlights that reshape the DOM). */
+  recomputeDeps?: unknown[];
+  onCreateAnnotation?: (payload: {
+    paragraph_id: string;
+    track: AnnotationTrack;
+    start_offset: number;
+    end_offset: number;
+    color: string;
+  }) => void;
+  onUpdateAnnotation?: (
+    id: string,
+    payload: { color?: string | null; note?: string | null },
+  ) => void;
+  onDeleteAnnotation?: (id: string) => void;
+}
+
+export function AnnotationLayer({
+  containerRef,
   paragraphId,
   track,
-  annotations = [],
+  annotations,
+  recomputeDeps = [],
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
-}: MarkdownDocumentViewerProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+}: AnnotationLayerProps) {
   const [overlays, setOverlays] = useState<OverlayRect[]>([]);
   const [selection, setSelection] = useState<SelectionInfo | null>(null);
   const [activeAnnotationId, setActiveAnnotationId] = useState<string | null>(null);
 
-  // ---- Evidence highlight pass (raw-Markdown offsets, unchanged) ----
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || highlights.length === 0) return;
-
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
-    const textNodes: Text[] = [];
-    let walkNode: Text | null;
-    while ((walkNode = walker.nextNode() as Text | null)) {
-      if (walkNode.textContent) textNodes.push(walkNode);
-    }
-
-    const marks: HTMLElement[] = [];
-    let rawPos = 0;
-
-    for (const textNode of textNodes) {
-      const content = textNode.textContent ?? "";
-      if (!content) continue;
-
-      const idx = markdown.indexOf(content, rawPos);
-      if (idx < 0) continue;
-
-      const nodeStart = idx;
-      const nodeEnd = idx + content.length;
-      rawPos = nodeEnd;
-
-      const splitSet = new Set<number>();
-      const covering: Array<{ hlIndex: number; start: number; end: number }> = [];
-
-      for (let hi = 0; hi < highlights.length; hi++) {
-        const hl = highlights[hi];
-        if (hl.end <= nodeStart || hl.start >= nodeEnd) continue;
-
-        const localStart = Math.max(0, hl.start - nodeStart);
-        const localEnd = Math.min(content.length, hl.end - nodeStart);
-        if (localEnd <= localStart) continue;
-
-        if (localStart > 0) splitSet.add(localStart);
-        if (localEnd < content.length) splitSet.add(localEnd);
-        covering.push({ hlIndex: hi, start: localStart, end: localEnd });
-      }
-
-      if (covering.length === 0) continue;
-
-      const splits = Array.from(splitSet).sort((a, b) => a - b);
-
-      for (let i = splits.length - 1; i >= 0; i--) {
-        const offset = splits[i];
-        const currentLength = textNode.length;
-        if (offset <= 0 || offset >= currentLength) continue;
-        textNode.splitText(offset);
-      }
-
-      const segments: Array<{ node: Text; start: number; end: number }> = [];
-      let cursor: Text | null = textNode;
-      let segmentStart = 0;
-      const boundaries = [...splits, content.length];
-
-      for (const boundary of boundaries) {
-        if (!cursor) break;
-        if (boundary <= segmentStart) {
-          cursor = cursor.nextSibling as Text | null;
-          continue;
-        }
-        segments.push({ node: cursor, start: segmentStart, end: boundary });
-        segmentStart = boundary;
-        cursor = cursor.nextSibling as Text | null;
-      }
-
-      for (const seg of segments) {
-        const cover = covering.find(
-          (c) => c.start < seg.end && c.end > seg.start,
-        );
-        if (!cover) continue;
-        if (!seg.node.parentNode) continue;
-
-        const hl = highlights[cover.hlIndex];
-        const mark = document.createElement("mark");
-        applyMarkStyle(mark, hl.category, hl.selected);
-        mark.setAttribute(
-          "aria-label",
-          `${categoryLabel(hl.category)} evidence: ${hl.label}`,
-        );
-        mark.dataset.evidenceId = hl.evidenceId;
-        seg.node.parentNode.insertBefore(mark, seg.node);
-        mark.appendChild(seg.node);
-        marks.push(mark);
-      }
-    }
-
-    return () => {
-      for (const mark of marks) {
-        if (!mark.parentNode) continue;
-        while (mark.firstChild) {
-          mark.parentNode.insertBefore(mark.firstChild, mark);
-        }
-        mark.parentNode.removeChild(mark);
-      }
-    };
-  }, [markdown, highlights]);
-
-  // ---- Annotation overlay pass (visible-text offsets) ----
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -324,9 +199,9 @@ export function MarkdownDocumentViewer({
     const ro = new ResizeObserver(recompute);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [annotations, markdown, highlights]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [annotations, ...recomputeDeps]);
 
-  // ---- Selection → create-annotation popover ----
   useEffect(() => {
     if (!onCreateAnnotation) return;
     const el = containerRef.current;
@@ -334,14 +209,13 @@ export function MarkdownDocumentViewer({
 
     const handleMouseUp = () => {
       requestAnimationFrame(() => {
-        const info = selectionInContainer(el);
-        setSelection(info);
+        setSelection(selectionInContainer(el));
       });
     };
 
     document.addEventListener("mouseup", handleMouseUp);
     return () => document.removeEventListener("mouseup", handleMouseUp);
-  }, [onCreateAnnotation]);
+  }, [containerRef, onCreateAnnotation]);
 
   const activeAnnotation = activeAnnotationId
     ? annotations.find((a) => a.id === activeAnnotationId) ?? null
@@ -362,18 +236,7 @@ export function MarkdownDocumentViewer({
   };
 
   return (
-    <div style={{ position: "relative" }} data-paragraph-id={paragraphId}>
-      <div ref={containerRef} className="edb-markdown-viewer">
-        <Markdown
-          remarkPlugins={[remarkGfm, remarkMath]}
-          rehypePlugins={[rehypeKatex]}
-        >
-          {markdown}
-        </Markdown>
-      </div>
-
-      {/* User annotation overlays — translucent fill + underline, distinct
-          from evidence marks, and click-targetable. */}
+    <>
       {overlays.map((ov) => {
         const ann = annotations.find((a) => a.id === ov.id);
         if (!ann) return null;
@@ -401,7 +264,6 @@ export function MarkdownDocumentViewer({
         );
       })}
 
-      {/* Selection popover: pick a color to create an annotation. */}
       {selection && onCreateAnnotation && (
         <div
           style={{
@@ -440,7 +302,6 @@ export function MarkdownDocumentViewer({
         </div>
       )}
 
-      {/* Annotation edit popover (note/color/delete). */}
       <Popover
         open={activeAnnotation != null}
         onOpenChange={(open) => {
@@ -462,11 +323,9 @@ export function MarkdownDocumentViewer({
       >
         <span style={{ display: "none" }} />
       </Popover>
-    </div>
+    </>
   );
 }
-
-/* ---- Inline annotation editor ---- */
 
 function AnnotationEditor({
   annotation,

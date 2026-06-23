@@ -9,6 +9,9 @@ export async function listAuditEvents(
   if (query.canonical_evidence_id) {
     params.canonical_evidence_id = query.canonical_evidence_id;
   }
+  if (query.source_document_id) {
+    params.source_document_id = query.source_document_id;
+  }
   if (query.reviewer_id) {
     params.reviewer_id = query.reviewer_id;
   }
