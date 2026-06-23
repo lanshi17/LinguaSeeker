@@ -6,16 +6,16 @@ import { VariantIndexView, VariantDetailView, BilingualEvidenceView } from "@/fe
 /**
  * Evidence Database page — routes between three levels via URL params:
  *
- * L1 /evidence-db                          — variant index (all variants)
- * L2 /evidence-db/:variantSlug             — single variant detail + references
- * L3 /evidence-db/:variantSlug/:sourceDocId — bilingual evidence comparison
+ * L1 /evidence-db                                — variant index (all variants)
+ * L2 /evidence-db/:variantSlug                   — single variant detail + references
+ * L3 /evidence-db/:variantSlug/:sourceDocumentId — bilingual evidence comparison
  */
 export function EvidenceDbPage() {
-  const { variantSlug, sourceDocId } = useParams();
+  const { variantSlug, sourceDocumentId } = useParams();
 
   // L3: bilingual evidence comparison
-  if (variantSlug && sourceDocId) {
-    return <BilingualEvidenceView variantSlug={variantSlug} sourceDocumentId={sourceDocId} />;
+  if (variantSlug && sourceDocumentId) {
+    return <BilingualEvidenceView variantSlug={variantSlug} sourceDocumentId={sourceDocumentId} />;
   }
 
   // L2: variant detail

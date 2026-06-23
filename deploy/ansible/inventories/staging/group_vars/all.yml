@@ -113,8 +113,7 @@ model_server_deployment: "systemd"
 model_server_port: 8001
 model_server_embedding_port: 8002
 model_server_rerank_port: 8003
-model_server_vlm_port: 8004
-model_server_doc_parse_port: 8005
+model_server_doc_parse_port: 8004
 model_server_api_key: "{{ vault_model_server_api_key | default('') }}"
 
 # -- Nginx -------------------------------------------------------------------

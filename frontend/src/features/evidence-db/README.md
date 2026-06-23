@@ -64,7 +64,7 @@ Routing is handled by `EvidenceDbPage` (`src/pages/EvidenceDbPage.tsx`), which r
 
 ### Data Flow
 
-1. **L1**: `fetchAllEvidence()` fetches all evidence search results (page_size=200) → `aggregateVariants()` groups by `gene:variant:disease` composite key → `filterAndPaginateVariants()` applies client-side filters and pagination → React Query caches with 60s stale time.
+1. **L1**: `fetchAllEvidence()` fetches all evidence search results (page_size=200) → `aggregateVariants()` splits multi-variant values (e.g. `c.316C>T; c.502C>T`) into one row per variant site, then groups by `gene:variant:disease` composite key → `filterAndPaginateVariants()` applies client-side filters and pagination → React Query caches with 60s stale time.
 
 2. **L2**: Reuses the L1 index query to find the variant entry → fetches `EvidenceGroupDetailResponse` for each `group_id` via `Promise.allSettled` → flattens all evidence items across groups → builds `LiteratureReference[]` for the sidebar.
 
@@ -106,8 +106,8 @@ Routing is handled by `EvidenceDbPage` (`src/pages/EvidenceDbPage.tsx`), which r
 | `classificationColor(level)` | Hex color for dark-theme rendering |
 | `classificationBadgeStyle(level)` | Inline CSS style object for badge (bg, text, border) — used in VariantIndexView/VariantDetailView |
 | `classificationLabel(level)` / `classificationShortLabel(level)` | Human-readable / abbreviated labels |
-| `aggregateVariants(results)` | Groups flat `EvidenceSearchResult[]` → `VariantIndexEntry[]` |
-| `filterAndPaginateVariants(entries, filters)` | Applies filters + pagination → `VariantIndexData` |
+| `aggregateVariants(results)` | Splits multi-variant values into one row per variant site, then groups flat `EvidenceSearchResult[]` → `VariantIndexEntry[]` (split rows share the original `group_id` for L2 detail navigation) |
+| `filterAndPaginateVariants(entries, filters)` | Applies filters + pagination → `VariantIndexData`; aggregate stats count distinct evidence groups / literature to avoid double-counting split rows |
 
 ## Design: Unified Medical-Teal Light Theme
 

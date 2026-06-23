@@ -13,16 +13,6 @@ from .schemas import (
     RerankResponse,
     RerankResult,
     RerankUsage,
-    VLMContentPart,
-    VLMDocumentMetadata,
-    VLMExtractRequest,
-    VLMExtractResponse,
-    VLMFigurePosition,
-    VLMImageUrl,
-    VLMMessage,
-    VLMPageContent,
-    VLMTableStructure,
-    VLMUsage,
 )
 
 __all__ = [
@@ -40,14 +30,4 @@ __all__ = [
     "RerankResponse",
     "RerankResult",
     "RerankUsage",
-    "VLMContentPart",
-    "VLMDocumentMetadata",
-    "VLMExtractRequest",
-    "VLMExtractResponse",
-    "VLMFigurePosition",
-    "VLMImageUrl",
-    "VLMMessage",
-    "VLMPageContent",
-    "VLMTableStructure",
-    "VLMUsage",
 ]

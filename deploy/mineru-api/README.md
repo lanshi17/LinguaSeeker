@@ -25,7 +25,7 @@ Backend (FastAPI :8000)
   ├─ POST http://localhost:8002/v1/embeddings   → model-embedding container
   ├─ POST http://localhost:8003/v1/rerank       → model-rerank container
   ├─ POST http://localhost:8004/v1/chat/completions → model-vlm container
-  └─ POST http://localhost:8005/file_parse      → model-doc-parse container
+  └─ POST http://localhost:8004/file_parse      → model-doc-parse container
 ```
 
 ```bash

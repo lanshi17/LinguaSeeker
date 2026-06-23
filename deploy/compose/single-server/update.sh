@@ -48,15 +48,15 @@ update_model_server() {
 
     # 2. Build thin overlays for each service
     cd "$DEPLOY_DIR"
-    for svc in embedding rerank vlm doc-parse; do
-        echo "  Patching lingua-${svc}..."
-        docker build -t "lingua-${svc}:local" \
-          --build-arg "BASE_IMAGE=lingua-${svc}:local" \
+    for svc in embedding rerank doc-parse; do
+        echo "  Patching ${svc}-server..."
+        docker build -t "${svc}-server:local" \
+          --build-arg "BASE_IMAGE=${svc}-server:local" \
           -f deploy/compose/single-server/patch-model-server.Dockerfile . 2>&1 | tail -3
     done
 
     # 3. Restart
-    docker-compose up -d model-embedding model-rerank model-vlm model-doc-parse
+    docker-compose up -d model-embedding model-rerank model-doc-parse
     echo "  ✓ model-server updated"
 }
 
@@ -82,12 +82,12 @@ esac
 
 echo ""
 echo "=== Health check ==="
-for svc in backend:8000 model-embedding:8002 model-rerank:8003 model-vlm:8004 model-doc-parse:8005; do
+for svc in backend:8000 model-embedding:8002 model-rerank:8003 model-doc-parse:8004; do
     name="${svc%%:*}"
     port="${svc#*:}"
     if curl -fsS "http://localhost:${port}/health" &>/dev/null; then
         echo "  ✓ $name"
     else
-        echo "  ✗ $name (still starting? check: docker logs lingua-${name#model-})"
+        echo "  ✗ $name (still starting? check: docker logs ${name#model-}-server)"
     fi
 done

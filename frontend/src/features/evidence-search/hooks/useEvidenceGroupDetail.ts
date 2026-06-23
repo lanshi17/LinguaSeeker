@@ -2,11 +2,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { getEvidenceGroupDetail } from "../services/evidenceSearch";
 
-export function useEvidenceGroupDetail(groupId: string) {
+export function useEvidenceGroupDetail(groupId?: string, sourceDocumentId?: string) {
   const query = useQuery({
-    queryKey: ["evidence", "group-detail", groupId],
-    queryFn: () => getEvidenceGroupDetail(groupId),
-    enabled: !!groupId,
+    queryKey: ["evidence", "group-detail", groupId, sourceDocumentId],
+    queryFn: () => getEvidenceGroupDetail(groupId, sourceDocumentId),
+    enabled: !!groupId || !!sourceDocumentId,
   });
 
   return {

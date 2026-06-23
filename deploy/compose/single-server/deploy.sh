@@ -40,9 +40,9 @@ if ! docker info 2>&1 | grep -q "Runtimes.*nvidia"; then
     [[ "$yn" =~ ^[Yy] ]] || exit 1
 fi
 
-for img in lingua-seeker-backend:local lingua-embedding:local lingua-rerank:local lingua-vlm:local lingua-doc-parse:local; do
+for img in lingua-seeker-backend:local embedding-server:local rerank-server:local doc-parse-server:local; do
     if ! docker image inspect "$img" &>/dev/null; then
-        echo "ERROR: Image $img not found. Run: docker load -i lingua-all-images.tar"
+        echo "ERROR: Image $img not found. Run: docker load -i model-server-all-images.tar"
         exit 1
     fi
     echo "  ✓ $img"
@@ -166,8 +166,7 @@ SERVICES=(
     "backend:8000/health"
     "embedding:8002/health"
     "rerank:8003/health"
-    "vlm:8004/health"
-    "doc-parse:8005/health"
+    "doc-parse:8004/health"
 )
 
 for entry in "${SERVICES[@]}"; do
@@ -180,7 +179,7 @@ for entry in "${SERVICES[@]}"; do
             break
         fi
         sleep 5
-        [ $i -eq 60 ] && echo " TIMEOUT (check logs: docker logs lingua-model-$name)"
+        [ $i -eq 60 ] && echo " TIMEOUT (check logs: docker logs $name-server)"
     done
 done
 

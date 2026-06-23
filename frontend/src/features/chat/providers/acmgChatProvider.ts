@@ -22,7 +22,9 @@ import { AbstractChatProvider, XRequest } from "@ant-design/x-sdk";
 import type { SSEOutput } from "@ant-design/x-sdk";
 import type { TransformMessage } from "@ant-design/x-sdk/es/chat-providers/AbstractChatProvider";
 import { apiClient } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/error";
 import type { ChatBubbleMessage } from "../utils/messageHistory";
+import { removeLocalChatSession } from "../utils/localSessions";
 import { buildAppendMessageBody } from "../utils/messageRequests";
 import { appendAssistantChunk } from "../utils/sse";
 
@@ -203,8 +205,17 @@ export async function sendChatMessage(
   content: string,
   evidenceId?: string,
 ): Promise<void> {
-  await apiClient.post(
-    `/chat/sessions/${sessionId}/messages`,
-    buildAppendMessageBody(content, evidenceId),
-  );
+  try {
+    await apiClient.post(
+      `/chat/sessions/${sessionId}/messages`,
+      buildAppendMessageBody(content, evidenceId),
+    );
+  } catch (err) {
+    // Stale session in localStorage (e.g. DB was reset). Remove it so
+    // it doesn't reappear on next page load, then surface the error.
+    if (err instanceof ApiError && err.status === 404) {
+      removeLocalChatSession(undefined, sessionId);
+    }
+    throw err;
+  }
 }

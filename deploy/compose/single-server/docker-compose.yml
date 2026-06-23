@@ -1,7 +1,7 @@
 # ============================================================================
 # Lingua Seeker — Single-Server Deployment (CentOS 7.9 + GPU)
 # ============================================================================
-# All services on one machine: backend + postgres + redis + 4 model-server
+# All services on one machine: backend + postgres + redis + 3 model-server
 # containers. Uses pre-built local images — no build step needed.
 #
 # Usage:
@@ -13,12 +13,12 @@
 #   - Docker CE 20.10+ (CentOS 7 compatible)
 #   - NVIDIA Container Toolkit (nvidia-ctk)
 #   - Model weights at /opt/lingua-seeker-data/models/
-#   - All 5 lingua-* images loaded (docker load -i lingua-all-images.tar)
+#   - All 4 images loaded (docker load -i model-server-all-images.tar)
 #
 # Architecture:
 #   nginx (host) → backend:8000 → postgres:5432 + redis:6379
 #                                   ↓
-#   embedding:8002, rerank:8003, vlm:8004, doc-parse:8005 (GPU)
+#   embedding:8002, rerank:8003, doc-parse:8004 (GPU)
 # ============================================================================
 services:
   # ── Backend ──────────────────────────────────────────────────────────────
@@ -52,8 +52,8 @@ services:
       # ── Model Server endpoints (per-service containers) ──
       EMBEDDING_BASE_URL: http://model-embedding:8002/v1
       RERANK_BASE_URL: http://model-rerank:8003/v1
-      # VLM + doc-parse share the same model; backend calls doc-parse:8005
-      MINERU_LOCAL_MODEL_SERVER_URL: http://model-doc-parse:8005
+      # Doc-parse: MinerU native PDF parsing via /file_parse
+      MINERU_LOCAL_MODEL_SERVER_URL: http://model-doc-parse:8004
       # ── LLM endpoints ──
       FAST_LLM_BASE_URL: ${FAST_LLM_BASE_URL}
       FAST_LLM_API_KEY: ${FAST_LLM_API_KEY}
@@ -70,7 +70,6 @@ services:
       PUBMED_API_KEY: ${PUBMED_API_KEY:-}
       # ── MinerU ──
       MINERU_API_TOKEN: ${MINERU_API_TOKEN:-}
-      DOC_PARSE_MODEL_ID: opendatalab/MinerU2.5-Pro-2604-1.2B
     volumes:
       - backend_logs:/app/logs
       - backend_data:/app/data
@@ -125,8 +124,8 @@ services:
 
   # ── Model Server: Embedding ──────────────────────────────────────────────
   model-embedding:
-    image: lingua-embedding:local
-    container_name: lingua-model-embedding
+    image: embedding-server:local
+    container_name: embedding-server
     restart: unless-stopped
     ports:
       - "127.0.0.1:8002:8002"
@@ -154,8 +153,8 @@ services:
 
   # ── Model Server: Rerank ─────────────────────────────────────────────────
   model-rerank:
-    image: lingua-rerank:local
-    container_name: lingua-model-rerank
+    image: rerank-server:local
+    container_name: rerank-server
     restart: unless-stopped
     ports:
       - "127.0.0.1:8003:8003"
@@ -181,10 +180,10 @@ services:
       retries: 5
       start_period: 60s
 
-  # ── Model Server: VLM (image analysis) ───────────────────────────────────
-  model-vlm:
-    image: lingua-vlm:local
-    container_name: lingua-model-vlm
+  # ── Model Server: Doc Parse (PDF parsing with MinerU VLM backend) ────────
+  model-doc-parse:
+    image: doc-parse-server:local
+    container_name: doc-parse-server
     restart: unless-stopped
     ports:
       - "127.0.0.1:8004:8004"
@@ -193,36 +192,6 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: 8004
-      DOC_PARSE_MODEL_ID: /models/vlm/opendatalab--MinerU2.5-Pro-2604-1.2B
-      DOC_PARSE_GPU_MEMORY_UTILIZATION: ${DOC_PARSE_GPU_MEM:-0.90}
-      DOC_PARSE_IMAGE_ANALYSIS: "false"
-      API_KEY: ${MODEL_SERVER_API_KEY:-}
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
-
-  # ── Model Server: Doc Parse (PDF parsing with VLM backend) ───────────────
-  model-doc-parse:
-    image: lingua-doc-parse:local
-    container_name: lingua-model-doc-parse
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8005:8005"
-    volumes:
-      - ${MODEL_WEIGHTS_PATH:-/opt/lingua-seeker-data/models}/vlm:/models/vlm:ro
-    environment:
-      HOST: 0.0.0.0
-      PORT: 8005
       DOC_PARSE_BACKEND: vlm
       DOC_PARSE_MODEL_PATH: /models/vlm/opendatalab--MinerU2.5-Pro-2604-1.2B
       DOC_PARSE_GPU_MEMORY_UTILIZATION: ${DOC_PARSE_GPU_MEM:-0.90}
@@ -235,7 +204,7 @@ services:
               count: 1
               capabilities: [gpu]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
       interval: 30s
       timeout: 10s
       retries: 5

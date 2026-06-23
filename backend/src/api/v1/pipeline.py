@@ -458,11 +458,20 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
 async def list_pipeline_runs(
     limit: int = 50,
     offset: int = 0,
+    status: str | None = None,
+    search: str | None = None,
     _api_key: str | None = Depends(require_api_key),
 ):
-    """List all pipeline runs as compact summaries (newest first)."""
+    """List all pipeline runs as compact summaries (newest first).
+
+    Args:
+        status: Filter by pipeline_status (pending, running, completed, failed).
+        search: Case-insensitive substring match on title / identifiers / source_key.
+    """
     runner = get_pipeline_runner()
-    rows, total = await runner.list_runs(limit=limit, offset=offset)
+    rows, total = await runner.list_runs(
+        limit=limit, offset=offset, status=status, search=search,
+    )
 
     items = []
     for row in rows:

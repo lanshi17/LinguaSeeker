@@ -715,7 +715,7 @@ export function VariantDetailView({
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {literature.map((ref) => (
                 <LiteratureReferenceCard
-                  key={ref.groupId}
+                  key={ref.sourceDocumentId}
                   reference={ref}
                   variantSlug={variantSlug}
                 />

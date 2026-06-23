@@ -3,7 +3,8 @@ import { XProvider, Bubble, Sender } from "@ant-design/x";
 import type { SenderRef } from "@ant-design/x/es/sender/interface";
 import { useXChat } from "@ant-design/x-sdk";
 import type { MessageInfo } from "@ant-design/x-sdk/es/x-chat";
-import { message as antdMessage } from "antd";
+import { App } from "antd";
+import { extractErrorMessage } from "@/lib/api/error";
 import {
   createAcmgChatProvider,
   sendChatMessage,
@@ -20,6 +21,7 @@ import { WelcomeBlock } from "./WelcomeBlock";
 import { roles } from "./chatConfig";
 
 export function SingleSessionChat({ sessionId }: { sessionId: string }) {
+  const { message } = App.useApp();
   const provider = useMemo(
     () => createAcmgChatProvider(sessionId),
     [sessionId],
@@ -72,21 +74,21 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
   }, [sessionId, setMessages, provider]);
 
   const handleQuickAction = useCallback(
-    (message: string) => {
+    (msg: string) => {
       const task = (async () => {
         try {
-          await sendChatMessage(sessionId, message);
+          await sendChatMessage(sessionId, msg);
           // Use onRequest to properly manage useXChat state
           if (onRequest) {
-            onRequest({ messages: [{ role: "user" as const, content: message }] });
+            onRequest({ messages: [{ role: "user" as const, content: msg }] });
           }
-        } catch {
-          antdMessage.error("Failed to send message");
+        } catch (err) {
+          message.error(extractErrorMessage(err, "Failed to send message"));
         }
       })();
       void task;
     },
-    [onRequest, sessionId],
+    [message, onRequest, sessionId],
   );
 
   const bubbleItems = useMemo(() => {
@@ -151,13 +153,13 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
           } else {
             console.warn("[ChatView] onRequest is undefined - message sent but not displayed");
           }
-        } catch {
-          antdMessage.error("Failed to send message");
-        }
+      } catch (err) {
+        message.error(extractErrorMessage(err, "Failed to send message"));
+      }
       })();
       void task.finally(() => senderRef.current?.clear());
     },
-    [onRequest, sessionId],
+    [message, onRequest, sessionId],
   );
 
   return (
