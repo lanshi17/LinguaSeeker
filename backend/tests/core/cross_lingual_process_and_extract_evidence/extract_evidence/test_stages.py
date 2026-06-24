@@ -49,7 +49,7 @@ def test_evidence_map_stage_calls_fast_tier():
     stage = RelevanceScanStage(provider)
     result = stage.run(_doc())
 
-    assert result.relevant is True
+    assert result.evidence_map.relevant is True
     provider.invoke_structured.assert_called_once()
     call_kwargs = provider.invoke_structured.call_args
     assert call_kwargs.kwargs["tier"] == EvidenceModelTier.FAST
@@ -138,8 +138,9 @@ def test_catalog_extraction_stage_scopes_target_catalog_to_eligible_fields() -> 
 
     CatalogExtractionStage(provider).run(document, DocumentEvidenceMap(relevant=True))
 
-    assert provider.invoke_structured.call_count == 1
-    call = provider.invoke_structured.call_args
+    # First call is the normal catalog extraction; retry may fire a second call
+    assert provider.invoke_structured.call_count >= 1
+    call = provider.invoke_structured.call_args_list[0]
     assert call.kwargs["stage"] == "catalog_extraction/high_signal"
     prompt = call.kwargs["prompt"]
     catalog_text = prompt.split("EVIDENCE CATALOG", maxsplit=1)[1].split("RULES:", maxsplit=1)[0]
@@ -637,9 +638,9 @@ def test_evidence_map_stage_chunks_long_document_and_merges_maps():
     stage = RelevanceScanStage(provider, input_budget_tokens=300)
     result = stage.run(document)
 
-    assert result.relevant is True
-    assert result.gene_terms == ["GLA", "BRCA1"]
-    assert result.variant_terms == ["c.5266dupC"]
+    assert result.evidence_map.relevant is True
+    assert result.evidence_map.gene_terms == ["GLA", "BRCA1"]
+    assert result.evidence_map.variant_terms == ["c.5266dupC"]
     assert provider.invoke_structured.call_count >= 2
     assert all(
         call.kwargs["stage"].startswith("relevance_scan/")

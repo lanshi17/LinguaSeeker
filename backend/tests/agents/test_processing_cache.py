@@ -179,7 +179,7 @@ class TestContentHash:
         h = await compute_content_hash(state)
         assert h is not None
         # Should be deterministic
-        expected_key = "identifiers:pmid:12345,pmid:67890"
+        expected_key = "identifiers:12345,67890"
         assert h == compute_hash_from_text(expected_key)
 
     @pytest.mark.asyncio
@@ -233,6 +233,31 @@ class TestContentHash:
         h1 = await compute_content_hash(state1)
         h2 = await compute_content_hash(state2)
         assert h1 == h2  # Order-independent
+
+    @pytest.mark.asyncio
+    async def test_compute_content_hash_normalizes_identifier_prefixes(self):
+        """Identifier hash must match pipeline source-key normalization."""
+        state_with_prefix = PipelineGraphState(
+            processing_run_id="run-1",
+            source_document_id="doc-1",
+            mode=PipelineMode.FULL,
+            source_type=SourceType.ONLINE,
+            identifiers=["PMID: 12345", "DOI: 10.1000/example"],
+            action="download",
+        )
+        state_without_prefix = PipelineGraphState(
+            processing_run_id="run-2",
+            source_document_id="doc-2",
+            mode=PipelineMode.FULL,
+            source_type=SourceType.ONLINE,
+            identifiers=["12345", "10.1000/example"],
+            action="download",
+        )
+
+        h_with_prefix = await compute_content_hash(state_with_prefix)
+        h_without_prefix = await compute_content_hash(state_without_prefix)
+
+        assert h_with_prefix == h_without_prefix
 
 
 # ── Cache service tests ──────────────────────────────────────────────────

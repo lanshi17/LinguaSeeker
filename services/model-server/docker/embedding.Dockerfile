@@ -6,23 +6,45 @@
 #   cd services/model-server
 #   docker build -f docker/embedding.Dockerfile -t embedding-server .
 # -------------------------------------------------------------------
-FROM vllm/vllm-openai:latest
+FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
 
 WORKDIR /app
 
- # 禁用 NVIDIA Container Toolkit 的严格版本检查，强制放行
-ENV NVIDIA_DISABLE_REQUIRE=1
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    HOST=0.0.0.0 \
+    PORT=8002
 
-# Install extra Python deps not in vLLM base image
-RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ \
-    fastapi pydantic pydantic-settings loguru pyyaml pillow numpy uvicorn
+# vLLM 0.4.x 编译时需要
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy model-server application code
-COPY app /app/app
-COPY main_embedding.py /app/main.py
+# 固定兼容版本
+RUN pip install \
+    -i https://mirrors.aliyun.com/pypi/simple/ \
+    fastapi==0.115.0 \
+    uvicorn==0.30.6 \
+    pydantic==2.9.2 \
+    pydantic-settings==2.5.2 \
+    loguru==0.7.2 \
+    pyyaml==6.0.2 \
+    pillow \
+    numpy \
+    transformers==4.41.2 \
+    accelerate==0.33.0 \
+    sentence-transformers==3.0.1
 
-ENV HOST=0.0.0.0
-ENV PORT=8002
+# Driver 525 推荐锁定旧版
+RUN pip install \
+    -i https://mirrors.aliyun.com/pypi/simple/ \
+    vllm==0.4.3
+
+COPY app ./app
+COPY main_embedding.py ./main.py
 
 EXPOSE 8002
 

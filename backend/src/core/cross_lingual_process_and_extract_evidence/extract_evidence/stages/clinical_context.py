@@ -8,6 +8,7 @@ extraction guidance per field.
 from __future__ import annotations
 
 import asyncio
+import re
 
 from loguru import logger
 
@@ -96,7 +97,7 @@ class ClinicalContextStage:
                     "clinical_context chunk {}/{} failed, skipping",
                     chunk.index, chunk.total,
                 )
-        return self._merge(all_new, current_items)
+        return self._merge(all_new, current_items, document.formatted_text)
 
     async def run_async(
         self,
@@ -147,37 +148,75 @@ class ClinicalContextStage:
                 continue
             if isinstance(result, list):
                 all_new.extend(result)
-        return self._merge(all_new, current_items)
+        return self._merge(all_new, current_items, document.formatted_text)
 
     # ------------------------------------------------------------------
     # Merge logic
     # ------------------------------------------------------------------
 
+    # Counters for audit / evaluation diagnostics.
+    # Reset on each _merge call via instance state; class-level defaults
+    # allow external inspection after a run.
+    _rejection_reasons: dict[str, int] = {}
+
     @staticmethod
+    def _normalize_ws(text: str) -> str:
+        """Collapse runs of whitespace to single spaces and strip."""
+        return re.sub(r"\s+", " ", text).strip()
+
+    @classmethod
     def _merge(
+        cls,
         new_items: list[EvidenceItem],
         existing_items: list[EvidenceItem],
+        document_text: str = "",
     ) -> list[EvidenceItem]:
         """Return *supplementary* items that should be added to evidence_items.
 
         Rules:
         - Only consider items whose field_id is in CLINICAL_CONTEXT_FIELDS.
         - Skip items with status != FOUND.
+        - Source-visible gate: reject items whose source.text_snippet is not
+          found in the document text after whitespace normalization.
+          Case-sensitive matching is used to avoid false positives from
+          case-insensitive substring checks (e.g. gene symbols vs disease
+          names).  Whitespace normalization handles OCR/table/translation
+          formatting differences.
         - If existing has a FOUND item for the same field_id with equal or
           higher confidence, skip.
         - If existing has the same value for the same field_id, skip (dedup).
         """
         target_fields = set(CLINICAL_CONTEXT_FIELDS)
+        doc_norm = cls._normalize_ws(document_text)
         existing_by_field: dict[str, list[EvidenceItem]] = {}
         for item in existing_items:
             if item.field_id in target_fields:
                 existing_by_field.setdefault(item.field_id, []).append(item)
 
+        rejection_counts: dict[str, int] = {}
         to_add: list[EvidenceItem] = []
         for item in new_items:
             if item.field_id not in target_fields:
                 continue
             if item.status != EvidenceStatus.FOUND:
+                rejection_counts[f"{item.field_id}:not_found"] = (
+                    rejection_counts.get(f"{item.field_id}:not_found", 0) + 1
+                )
+                continue
+
+            # Source-visible gate: snippet must appear in document
+            snippet = cls._normalize_ws(
+                item.source.text_snippet if item.source else ""
+            )
+            if not snippet:
+                rejection_counts[f"{item.field_id}:empty_snippet"] = (
+                    rejection_counts.get(f"{item.field_id}:empty_snippet", 0) + 1
+                )
+                continue
+            if snippet not in doc_norm:
+                rejection_counts[f"{item.field_id}:not_in_document"] = (
+                    rejection_counts.get(f"{item.field_id}:not_in_document", 0) + 1
+                )
                 continue
 
             existing_for_field = existing_by_field.get(item.field_id, [])
@@ -188,14 +227,27 @@ class ClinicalContextStage:
                 default=-1.0,
             )
             if best_existing_confidence >= item.confidence:
+                rejection_counts[f"{item.field_id}:lower_confidence"] = (
+                    rejection_counts.get(f"{item.field_id}:lower_confidence", 0) + 1
+                )
                 continue
 
             # Check: duplicate value
             new_value = str(item.value).strip().casefold()
             if any(str(e.value).strip().casefold() == new_value for e in existing_for_field):
+                rejection_counts[f"{item.field_id}:duplicate_value"] = (
+                    rejection_counts.get(f"{item.field_id}:duplicate_value", 0) + 1
+                )
                 continue
 
             to_add.append(item)
+
+        # Log rejection summary for evaluation audit
+        if rejection_counts:
+            cls._rejection_reasons = rejection_counts
+            for reason, count in sorted(rejection_counts.items()):
+                logger.debug("clinical_context rejected: {} ×{}", reason, count)
+
         return to_add
 
     # ------------------------------------------------------------------

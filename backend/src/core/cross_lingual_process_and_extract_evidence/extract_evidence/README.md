@@ -62,10 +62,12 @@ EvidenceExtractionService (public facade)
       │
       ├─ [entry] relevance_scan ────> RelevanceScanStage (FAST tier)
       │    ├─ relevant? -> not_relevant -> END
+      │    ├─ channel classification -> DocumentChannelClassification
       │    └─ relevant? -> catalog_extraction
       │
       ├─ catalog_extraction ────────> CatalogExtractionStage (STRONG tier)
-      │    └─ extracts sparse EvidenceItem[] from high_signal + supporting groups
+      │    └─ extracts sparse EvidenceItem[] from channel-eligible fields
+      │    └─ injects channel-specific extraction strategy guidance
       │
       ├─ special_evidence ──────────> SpecialEvidenceStage (STRONG tier)
       │    └─ second pass for functional/case-control/authority/contradiction
@@ -102,10 +104,8 @@ EvidenceExtractionService (public facade)
 ```
 
 ### Data flow
-
-```
-TrackDocument -> [relevance_scan] -> DocumentEvidenceMap
-                                -> [catalog_extraction] -> sparse EvidenceItem[]
+TrackDocument -> [relevance_scan] -> DocumentEvidenceMap + DocumentChannelClassification
+                                -> [catalog_extraction] -> sparse EvidenceItem[] (channel-filtered)
                                 -> [special_evidence] -> sparse SpecialEvidenceRecord[]
                                 -> [language_metadata] -> language-stamped items
                                 -> [group_assignment] -> grouped items + grouped special records
@@ -117,7 +117,8 @@ TrackDocument -> [relevance_scan] -> DocumentEvidenceMap
                                 -> [chain_assembly] -> EvidenceChain[]
                                 -> [quality_gate] -> QualityReport
                                 -> [catalog_backfill] -> full 166-row catalog per group
-                               -> EvidenceExtractionResult
+                                   (NOT_APPLICABLE for channel-excluded, NOT_ATTEMPTED for target-excluded)
+                               -> EvidenceExtractionResult (with channel_classification + field_eligibility_summary)
 
 DualTrackDocuments -> run(original)  -> original EvidenceExtractionResult
                    -> run(translated) -> translated EvidenceExtractionResult  (concurrent via asyncio.gather)
@@ -248,9 +249,9 @@ class EvidenceModelTier(str, Enum):
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `normalize` | `(items: list[EvidenceItem]) -> list[EvidenceItem]` | Legacy global full-catalog normalization helper, kept for older callers and tests. |
-| `normalize_grouped` | `(items: list[EvidenceItem]) -> list[EvidenceItem]` | Expands grouped sparse evidence to a full per-group catalog, keeping the best candidate per field within each group. |
+| `normalize_grouped` | `(items, channel_excluded_field_ids=frozenset(), target_excluded_field_ids=frozenset()) -> list[EvidenceItem]` | Expands grouped sparse evidence to a full per-group catalog. Channel-excluded fields get `NOT_APPLICABLE`, target-excluded fields get `NOT_ATTEMPTED`, eligible-but-absent fields get `NOT_FOUND`. |
 
-Status rank: FOUND(3) > SOURCE_INVALID(2) > TABLE_UNGROUNDED(1) = OCR_GAP(1) = CONTEXT_CONTAMINATION(1) > NOT_FOUND(0). Tiebreaker: confidence.
+Status rank: FOUND(3) > SOURCE_INVALID(2) > TABLE_UNGROUNDED(1) = OCR_GAP(1) = CONTEXT_CONTAMINATION(1) > NOT_FOUND(0) > NOT_APPLICABLE(-1) > NOT_ATTEMPTED(-2). Tiebreaker: confidence.
 
 ### `RawSourceNormalizer` (`core.py`)
 

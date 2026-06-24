@@ -19,13 +19,16 @@ from .contracts import (
     DualEvidenceExtractionResult,
     DualTrackDocuments,
     EvidenceExtractionResult,
+    EvidenceStatus,
     ExtractionTarget,
+    FieldEligibilitySummary,
     PageSpan,
     Track,
     TrackDocument,
 )
 from .providers import LangChainEvidenceProvider
 from .reconcile.api import CrossTrackReconcileService
+from .field_profile import ExtractionProfile, resolve_profile_fields
 from .workflow import EvidenceExtractionWorkflow
 
 
@@ -42,16 +45,49 @@ class EvidenceExtractionService:
         cfg = get_config()
         service = EvidenceExtractionService(cfg=cfg)
         result = await service.run(document)
+
+    ``extraction_profile`` controls which catalog fields are sent to the LLM.
+    The default (``ExtractionProfile.NONE``) extracts all non-curation fields.
+    Benchmark runners should explicitly select a publication profile such as
+    ``ExtractionProfile.DATASET_D_PUBLICATION`` to restrict the field set.
     """
 
-    def __init__(self, cfg: Any):
+    def __init__(
+        self,
+        cfg: Any,
+        extraction_profile: ExtractionProfile | str | None = ExtractionProfile.NONE,
+    ):
         self._ctx = EvidenceExtractionConfigContext.from_config(cfg)
         self._provider = LangChainEvidenceProvider(self._ctx)
-        self._workflow = EvidenceExtractionWorkflow(provider=self._provider)
+        profile_fields = resolve_profile_fields(extraction_profile)
+        self._workflow = EvidenceExtractionWorkflow(
+            provider=self._provider, field_profile=profile_fields,
+        )
         self._reconcile_service = CrossTrackReconcileService()
 
-    async def run(self, document: TrackDocument) -> EvidenceExtractionResult:
-        state = await self._workflow.run_async(document)
+    async def run(
+        self,
+        document: TrackDocument,
+        extraction_profile: ExtractionProfile | str | None = None,
+    ) -> EvidenceExtractionResult:
+        workflow = self._workflow_for(extraction_profile)
+        state = await workflow.run_async(document)
+
+        # Compute field eligibility summary from state
+        not_applicable_count = sum(
+            1 for item in state.evidence_items if item.status == EvidenceStatus.NOT_APPLICABLE
+        )
+        not_attempted_count = sum(
+            1 for item in state.evidence_items if item.status == EvidenceStatus.NOT_ATTEMPTED
+        )
+        field_eligibility_summary = FieldEligibilitySummary(
+            eligible_field_count=len(state.evidence_items) - not_applicable_count - not_attempted_count,
+            channel_excluded_field_count=len(state.channel_excluded_field_ids),
+            target_excluded_field_count=len(state.target_excluded_field_ids),
+            not_applicable_count=not_applicable_count,
+            not_attempted_count=not_attempted_count,
+        )
+
         return EvidenceExtractionResult(
             status=state.status,
             document_id=document.document_id,
@@ -65,12 +101,18 @@ class EvidenceExtractionService:
             extraction_target=document.extraction_target,
             phenotype_evidence=state.phenotype_evidence,
             discarded_evidence=state.discarded_evidence,
+            channel_classification=state.channel_classification,
+            field_eligibility_summary=field_eligibility_summary,
         )
 
-    async def run_dual(self, documents: DualTrackDocuments) -> DualEvidenceExtractionResult:
+    async def run_dual(
+        self,
+        documents: DualTrackDocuments,
+        extraction_profile: ExtractionProfile | str | None = None,
+    ) -> DualEvidenceExtractionResult:
         original_result, translated_result = await asyncio.gather(
-            self.run(documents.original),
-            self.run(documents.translated),
+            self.run(documents.original, extraction_profile=extraction_profile),
+            self.run(documents.translated, extraction_profile=extraction_profile),
         )
         context_pack = _build_runtime_context_pack(documents, original_result, translated_result)
         reconcile_output = self._reconcile_service.run_with_output(
@@ -104,6 +146,24 @@ class EvidenceExtractionService:
         raise RuntimeError(
             "run_dual_sync() cannot be called from within a running event loop. "
             "Use run_dual() instead."
+        )
+
+    def _workflow_for(
+        self,
+        extraction_profile: ExtractionProfile | str | None,
+    ) -> EvidenceExtractionWorkflow:
+        """Return the workflow for the given profile override.
+
+        Returns the default workflow when ``extraction_profile`` is ``None``
+        (no override).  Creates a fresh workflow with the requested profile
+        otherwise.  The default workflow is cached; per-profile workflows are
+        created on demand.
+        """
+        if extraction_profile is None:
+            return self._workflow
+        profile_fields = resolve_profile_fields(extraction_profile)
+        return EvidenceExtractionWorkflow(
+            provider=self._provider, field_profile=profile_fields,
         )
 
     @staticmethod

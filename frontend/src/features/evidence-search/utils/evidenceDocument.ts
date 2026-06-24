@@ -178,108 +178,130 @@ function clampHighlight(
   return { start, end };
 }
 
-function isSafeAnchorValue(value: string) {
-  if (value.length === 1) {
-    return false;
+/** Multilingual aliases for common evidence terms. Non-English source
+ *  documents use localised spellings for disease names and variant types;
+ *  without these aliases the highlight search (which keys on the English
+ *  standardised value) misses every occurrence in the original language.
+ *  Keys are lower-cased English values; values are translated surface
+ *  forms. Only include aliases that are specific enough to avoid false
+ *  positives (e.g. "причин" matches the common Russian word "по причине"). */
+const EVIDENCE_ALIASES: Record<string, string[]> = {
+  // Disease names
+  "rett syndrome": ["синдром ретта", "синдромом ретта", "синдрому ретта", "ретт", "rett综合征", "rett症候群", "rett 증후군", "레트 증후군"],
+  // Variant types / consequences — specific biomedical terms only
+  missense: ["миссенс"],
+  "missense_variant": ["миссенс"],
+  frameshift: ["сдвиг рамки", "frameshift"],
+  "frameshift mutation": ["сдвиг рамки"],
+  nonsense: ["нонсенс"],
+  "stop_gained": ["нонсенс"],
+  "de novo": ["de novo"],
+};
+
+/** Extract searchable sub-entities from a long evidence value. Long values
+ *  (e.g. "c.468C>G (p.D156E) in MECP2, heterozygous") are composite
+ *  descriptions whose individual parts (HGVS notation, gene symbols,
+ *  parenthesised content, comma-separated phrases) can be matched
+ *  independently in the document text even when the full sentence cannot.
+ *  Only invoked for values longer than 30 chars; output is capped to avoid
+ *  combinatorial blow-up. */
+const STOP_WORDS = new Set(["THE", "AND", "FOR", "NOT", "BUT", "WITH", "PRO", "IN", "AT", "ON", "OF", "TO", "AS", "BY", "AN", "OR"]);
+function extractSubEntities(value: string): string[] {
+  // Short values are searched as-is; no need to break them down.
+  if (value.length <= 30) return [];
+  const entities: string[] = [];
+  // HGVS notation: c.468C>G (missense), p.R168X (stop-gain), p.D156E, c.913insT, etc.
+  entities.push(...(value.match(/[cp]\.\d+[ACGT]>[ACGT][ACGT]?|[cp]\.\d+[A-Z]\d*[A-Z]|c\.\d+ins[A-Z]+/gi) || []));
+  // Gene symbols: all-caps words 3–8 chars, excluding stop words
+  entities.push(...((value.match(/\b[A-Z]{3,8}\b/g) || []).filter((g) => !STOP_WORDS.has(g))));
+  // Parenthesised content (e.g. "p.D156E" from "c.468C>G (p.D156E)")
+  entities.push(...(value.match(/\(([^)]+)\)/g) || []).map((p) => p.slice(1, -1).trim()));
+  // Comma / semicolon separated phrases (e.g. "c.913insT" from "frameshift, c.913insT")
+  for (const part of value.split(/[,;]/).map((s) => s.trim())) {
+    if (part.length >= 3 && part.length <= 40 && part !== value.trim()) entities.push(part);
   }
-  if (value.length === 2) {
-    return value === value.toUpperCase();
-  }
-  return true;
+  return [...new Set(entities)].filter((e) => e.length >= 3).slice(0, 12);
 }
 
-function findAnchorValue(text: string, rawValue?: string | null) {
-  const value = rawValue?.trim();
-  if (!value || !isSafeAnchorValue(value)) {
-    return null;
+/** Generate search-term variants for an evidence value so it can be matched
+ *  in non-English source text:
+ *  1. HGVS notation uses Latin `c.`/`p.` prefixes, but Russian documents
+ *     often render them with look-alike Cyrillic `с.`/`р.`. We also strip
+ *     HGVS prefixes to match bare mutation strings (e.g. "468C>G" when the
+ *     source writes "с.468C>G").
+ *  2. Curated multilingual aliases for disease names and variant types
+ *     that are commonly localised in source documents.
+ *  3. Sub-entity extraction for long values — breaks composite sentences
+ *     into individually matchable fragments. */
+function expandSearchTerms(value: string): string[] {
+  const v = value.trim();
+  const terms = [v];
+  // HGVS prefix variants: Latin c./p. ↔ Cyrillic с./р.
+  const hgvs = v.match(/^([cp])\.(.+)/i);
+  if (hgvs) {
+    const prefix = hgvs[1].toLowerCase();
+    const rest = hgvs[2];
+    const cyrillic = prefix === "c" ? "с" : "р";
+    terms.push(`${cyrillic}.${rest}`);
+    terms.push(rest); // bare mutation without prefix
   }
-  if (value.length === 2) {
-    const match = new RegExp(`(^|[^A-Za-z0-9])(${value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})(?![A-Za-z0-9])`).exec(text);
-    if (!match || match.index < 0) {
-      return null;
+  // Multilingual aliases for localised disease names / variant types
+  const aliases = EVIDENCE_ALIASES[v.toLowerCase()];
+  if (aliases) terms.push(...aliases);
+  // Sub-entity extraction for long composite values
+  terms.push(...extractSubEntities(v));
+  return [...new Set(terms)];
+}
+
+/** Check if a search term is HGVS notation (c.XXX or p.XXX). Such terms
+ *  often appear in source text with inserted spaces (e.g. "c.502 C>T" vs
+ *  "c.502C>T"), so we match them with flexible whitespace. */
+function isHgvsTerm(term: string): boolean {
+  return /^[cp]\.\d+/i.test(term);
+}
+
+/** Find ALL case-insensitive occurrences of any of `searchTerms` in `text`.
+ *  Returns start/end offset pairs into the original `text`, deduplicated so
+ *  that when a short term (e.g. "ретт") is a substring of a longer alias
+ *  (e.g. "синдром ретта") only the longer match is kept. Longer matches are
+ *  sorted first so they claim their range before shorter substrings.
+ *  HGVS terms are matched with flexible whitespace to handle spacing
+ *  variants in the source text (e.g. "c.502 C>T" matching "c.502C>T"). */
+function findAllOccurrences(text: string, searchTerms: string[]): Array<{ start: number; end: number }> {
+  const raw: Array<{ start: number; end: number; len: number }> = [];
+  for (const rawTerm of searchTerms) {
+    const needle = rawTerm.trim();
+    if (needle.length < 3) continue;
+    if (isHgvsTerm(needle)) {
+      // Build a whitespace-flexible regex for HGVS notation.
+      // Escape regex special chars, then replace literal spaces with \s*.
+      const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*");
+      const re = new RegExp(escaped, "gi");
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(text)) !== null) {
+        raw.push({ start: m.index, end: m.index + m[0].length, len: m[0].length });
+        if (m.index === re.lastIndex) re.lastIndex++;
+      }
+    } else {
+      const lower = text.toLowerCase();
+      const needleLower = needle.toLowerCase();
+      let idx = 0;
+      while ((idx = lower.indexOf(needleLower, idx)) >= 0) {
+        raw.push({ start: idx, end: idx + needle.length, len: needle.length });
+        idx += needle.length;
+      }
     }
-    const start = match.index + match[1].length;
-    return { start, end: start + value.length };
   }
-  const index = text.toLowerCase().indexOf(value.toLowerCase());
-  if (index < 0) {
-    return null;
+  // Sort by length desc so longer matches claim ranges first, then by start.
+  raw.sort((a, b) => b.len - a.len || a.start - b.start);
+  const positions: Array<{ start: number; end: number }> = [];
+  for (const r of raw) {
+    if (positions.some((p) => r.start < p.end && r.end > p.start)) continue;
+    positions.push({ start: r.start, end: r.end });
   }
-  return { start: index, end: index + value.length };
+  return positions;
 }
 
-function escapedRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-/** Search for a candidate in text, tolerating whitespace differences. */
-function findWithFlexibleWhitespace(
-  text: string,
-  candidate: string,
-): { start: number; end: number } | null {
-  const flexible = escapedRegExp(candidate).replace(/\s+/g, "\\s+");
-  const match = new RegExp(flexible).exec(text);
-  if (match) {
-    return { start: match.index, end: match.index + match[0].length };
-  }
-  return null;
-}
-
-function findHighlightInFullText(
-  fullText: string,
-  highlight: EvidenceChainHighlight,
-  value?: string | null,
-): { start: number; end: number } | null {
-  // 1. Try global offsets from source_span — most reliable when the full
-  //    text is the same formatted_text used during extraction.
-  const span = highlight.source_span as Record<string, unknown> | undefined;
-  const spanStart = typeof span?.start_offset === "number" ? span.start_offset : undefined;
-  const spanEnd = typeof span?.end_offset === "number" ? span.end_offset : undefined;
-  if (
-    spanStart !== undefined &&
-    spanEnd !== undefined &&
-    spanStart >= 0 &&
-    spanEnd <= fullText.length &&
-    spanEnd > spanStart
-  ) {
-    const textAtOffset = fullText.slice(spanStart, spanEnd);
-    if (textAtOffset === highlight.text || textAtOffset.trim() === highlight.text.trim()) {
-      return { start: spanStart, end: spanEnd };
-    }
-  }
-
-  // 2. Try value anchor search in the full text.
-  const valueAnchor = findAnchorValue(fullText, value);
-  if (valueAnchor) {
-    return valueAnchor;
-  }
-
-  // 3. Try exact snippet text search (marked portion first, then full snippet).
-  const candidates = [
-    highlight.text.slice(highlight.highlight_start, highlight.highlight_end),
-    highlight.text,
-  ]
-    .map((candidate) => candidate?.trim())
-    .filter((candidate): candidate is string => Boolean(candidate && candidate.length >= 3));
-
-  for (const candidate of candidates) {
-    const index = fullText.indexOf(candidate);
-    if (index >= 0) {
-      return { start: index, end: index + candidate.length };
-    }
-  }
-
-  // 4. Fallback: flexible whitespace search (snippet may differ from full
-  //    text in line breaks / spacing).
-  for (const candidate of candidates) {
-    const result = findWithFlexibleWhitespace(fullText, candidate);
-    if (result) {
-      return result;
-    }
-  }
-
-  return null;
-}
 
 function fullTextForTrack(
   detail: EvidenceGroupDetailResponse,
@@ -297,12 +319,6 @@ function traceHighlightForTrack(
   return track === "original" ? trace.original : trace.translated;
 }
 
-function traceValueForTrack(
-  trace: EvidenceTrackTrace,
-  track: "original" | "translated",
-) {
-  return track === "original" ? trace.original_value : trace.translated_value;
-}
 
 function itemByEvidenceId(detail: EvidenceGroupDetailResponse) {
   return new Map(
@@ -329,70 +345,57 @@ export function buildEvidenceDocument(
 
   if (fullText) {
     const locatedHighlights: EvidenceDocumentHighlight[] = [];
-    const snippetParagraphs: EvidenceDocumentParagraph[] = [];
 
-    detail.traces.forEach((trace, index) => {
-      const highlight = traceHighlightForTrack(trace, track);
-      const value = traceValueForTrack(trace, track);
+    // Evidence values of any length are searched in the full text. Short
+    // values (gene symbols, HGVS variants) are processed first so a longer
+    // phrase containing them does not shadow the entity match; sub-entity
+    // extraction (in expandSearchTerms) lets long composite values match
+    // their individual parts. Occupied ranges prevent overlap.
+    const MAX_VALUE_LEN = 200;
+    const valuedItems = detail.items
+      .filter((item) => {
+        const v = item.value?.trim();
+        return v && v.length >= 3 && v.length <= MAX_VALUE_LEN;
+      })
+      .sort((a, b) => (a.value!.length) - (b.value!.length));
 
-      const item = items.get(trace.canonical_evidence_id);
+    const occupied: Array<{ start: number; end: number }> = [];
+
+    for (const item of valuedItems) {
       const tone = evidenceToneForItem(item);
-      if (!enabledTones.has(tone)) {
-        return;
-      }
+      if (!enabledTones.has(tone)) continue;
       const cat = categoryFromItem(item);
-      if (enabledCategories && cat && !enabledCategories.has(cat)) {
-        return;
-      }
+      if (enabledCategories && cat && !enabledCategories.has(cat)) continue;
 
-      // Locate the evidence span in the full text. When the trace carries a
-      // structured highlight (trace.original/translated), use its offsets;
-      // otherwise fall back to anchoring on the trace value (e.g. "MECP2",
-      // "c.468C>G") so evidence is still highlighted when highlight spans
-      // were not persisted by the backend.
-      let range: { start: number; end: number } | null = null;
-      if (highlight) {
-        range = findHighlightInFullText(fullText, highlight, value);
-      } else if (value) {
-        range = findAnchorValue(fullText, value);
+      // Search every occurrence of the evidence value (and its cross-script
+      // trace.original_value when present (it may carry the source-language
+      // spelling). We intentionally do NOT use trace.source_span offsets:
+      // those mark sentence-length context snippets, not the entity itself.
+      const trace = detail.traces.find(
+        (t) => t.canonical_evidence_id === item.canonical_evidence_id,
+      );
+      const trackValue = track === "original" ? trace?.original_value : trace?.translated_value;
+      const searchTerms = expandSearchTerms(item.value!);
+      if (trackValue && trackValue.trim() && !searchTerms.includes(trackValue.trim())) {
+        searchTerms.push(trackValue.trim());
       }
-
-      if (range && range.end > range.start) {
+      const positions = findAllOccurrences(fullText, searchTerms);
+      for (const pos of positions) {
+        if (occupied.some((o) => pos.start < o.end && pos.end > o.start)) continue;
+        occupied.push(pos);
         locatedHighlights.push({
-          evidenceId: trace.canonical_evidence_id,
-          fieldId: trace.field_id,
-          label: labelForTrace(trace),
+          evidenceId: item.canonical_evidence_id,
+          fieldId: item.field_id,
+          label: item.field_name ?? item.field_id,
           tone,
           category: cat,
-          start: range.start,
-          end: range.end,
-          selected: trace.canonical_evidence_id === selectedEvidenceId,
-        });
-      } else if (highlight?.text) {
-        // Could not locate in the full text — show the snippet as a
-        // separate paragraph so the evidence is still visible.
-        const snippetRange = clampHighlight(highlight);
-        const snippetHighlights: EvidenceDocumentHighlight[] = [];
-        if (snippetRange.end > snippetRange.start) {
-          snippetHighlights.push({
-            evidenceId: trace.canonical_evidence_id,
-            fieldId: trace.field_id,
-            label: labelForTrace(trace),
-            tone,
-            category: cat,
-            start: snippetRange.start,
-            end: snippetRange.end,
-            selected: trace.canonical_evidence_id === selectedEvidenceId,
-          });
-        }
-        snippetParagraphs.push({
-          id: `${track}-${trace.canonical_evidence_id}-${index}`,
-          page: highlight.page,
-          text: highlight.text,
-          highlights: snippetHighlights,
+          start: pos.start,
+          end: pos.end,
+          selected: item.canonical_evidence_id === selectedEvidenceId,
         });
       }
-    });
+
+    }
 
     return {
       track,
@@ -402,7 +405,6 @@ export function buildEvidenceDocument(
           text: fullText,
           highlights: locatedHighlights.sort((a, b) => a.start - b.start),
         },
-        ...snippetParagraphs,
       ],
     };
   }
@@ -443,4 +445,111 @@ export function buildEvidenceDocument(
       }];
     }),
   };
+}
+
+/** Build block-level highlights by searching evidence values in the
+ *  concatenated text of structured blocks. Used when trace-based
+ *  highlight spans are empty/unavailable — mirrors the fullText search
+ *  logic in `buildEvidenceDocument` but maps offsets to the block text
+ *  coordinate space (blocks joined with "\n\n" separators). */
+export function buildBlockHighlightsFromValues(
+  blocks: import("../types/evidenceSearch").ContentBlock[],
+  detail: EvidenceGroupDetailResponse,
+  track: "original" | "translated",
+  selectedEvidenceId?: string | null,
+  enabledCategories?: ReadonlySet<string> | null,
+): Array<{
+  evidenceId: string;
+  fieldId: string;
+  label: string;
+  tone: EvidenceHighlightTone;
+  category?: string | null;
+  globalStart: number;
+  globalEnd: number;
+  selected: boolean;
+}> {
+  // Build concatenated text matching StructuredBlockRenderer's buildBlockRanges
+  let fullText = "";
+  for (const block of blocks) {
+    let text = "";
+    switch (block.type) {
+      case "table":
+        text = [
+          ...(block.table_caption ?? []),
+          block.text ?? "",
+          ...(block.table_footnote ?? []),
+        ].filter(Boolean).join("\n");
+        break;
+      case "list":
+        text = (block.list_items ?? []).join("\n");
+        break;
+      case "image":
+      case "chart":
+        text = [
+          ...(block.image_caption ?? block.chart_caption ?? []),
+          block.content ?? "",
+          ...(block.image_footnote ?? block.chart_footnote ?? []),
+        ].filter(Boolean).join("\n");
+        break;
+      default:
+        text = block.text ?? "";
+    }
+    if (text) {
+      fullText += text + "\n\n";
+    }
+  }
+  if (!fullText) return [];
+
+  const highlights: Array<{
+    evidenceId: string;
+    fieldId: string;
+    label: string;
+    tone: EvidenceHighlightTone;
+    category?: string | null;
+    globalStart: number;
+    globalEnd: number;
+    selected: boolean;
+  }> = [];
+
+  const MAX_VALUE_LEN = 200;
+  const valuedItems = detail.items
+    .filter((item) => {
+      const v = item.value?.trim();
+      return v && v.length >= 3 && v.length <= MAX_VALUE_LEN;
+    })
+    .sort((a, b) => (a.value!.length) - (b.value!.length));
+
+  const occupied: Array<{ start: number; end: number }> = [];
+
+  for (const item of valuedItems) {
+    const tone = evidenceToneForItem(item);
+    const cat = categoryFromItem(item);
+    if (enabledCategories && cat && !enabledCategories.has(cat)) continue;
+
+    const tr = detail.traces.find(
+      (t) => t.canonical_evidence_id === item.canonical_evidence_id,
+    );
+    const trackValue = track === "original" ? tr?.original_value : tr?.translated_value;
+    const searchTerms = expandSearchTerms(item.value!);
+    if (trackValue && trackValue.trim() && !searchTerms.includes(trackValue.trim())) {
+      searchTerms.push(trackValue.trim());
+    }
+    const positions = findAllOccurrences(fullText, searchTerms);
+    for (const pos of positions) {
+      if (occupied.some((o) => pos.start < o.end && pos.end > o.start)) continue;
+      occupied.push(pos);
+      highlights.push({
+        evidenceId: item.canonical_evidence_id,
+        fieldId: item.field_id,
+        label: item.field_name ?? item.field_id,
+        tone,
+        category: cat,
+        globalStart: pos.start,
+        globalEnd: pos.end,
+        selected: item.canonical_evidence_id === selectedEvidenceId,
+      });
+    }
+  }
+
+  return highlights;
 }

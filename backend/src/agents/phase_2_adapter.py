@@ -166,7 +166,10 @@ class Phase2Adapter:
             )
 
             # Run dual-track extraction via the service facade
-            dual_result = await self._extraction.run_dual(dual_documents)
+            dual_result = await self._extraction.run_dual(
+                dual_documents,
+                extraction_profile=state.extraction_profile,
+            )
 
             # Check if document is relevant
             both_not_relevant = (

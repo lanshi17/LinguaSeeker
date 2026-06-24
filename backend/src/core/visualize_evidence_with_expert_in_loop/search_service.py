@@ -172,6 +172,198 @@ def _build_highlight(
     )
 
 
+def _load_blocks_from_dir(doc_dir: Path, track: str) -> list[dict] | None:
+    """Try to load structured blocks from a single document directory."""
+    doc_file = doc_dir / f"{track}.json"
+    if not doc_file.exists():
+        return None
+    try:
+        with open(doc_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        logger.warning("Failed to load {} blocks from {}", track, doc_file)
+        return None
+    if not isinstance(data, dict):
+        return None
+    blocks = data.get("blocks")
+    if isinstance(blocks, list) and blocks:
+        return blocks
+    return None
+
+def _load_full_document_blocks(
+    source_document_id: str | UUID,
+    track: str = "original",
+    identifiers: dict[str, str] | None = None,
+    known_output_dir: str | None = None,
+) -> list[dict] | None:
+    """Load structured blocks for a source document from pipeline output.
+
+    Mirrors :func:`_load_full_document_text` but returns the ``blocks``
+    array from the JSON (each block has ``type``, ``bbox``, ``page_idx``,
+    ``text``, etc.) instead of the concatenated text.
+    """
+    if known_output_dir:
+        result = _load_blocks_from_dir(Path(known_output_dir), track)
+        if result:
+            return result
+
+    backend_root = Path(__file__).resolve().parents[3]
+    doc_id_str = str(source_document_id)
+
+    pipeline_root = backend_root / "data" / "pipeline"
+    if pipeline_root.exists():
+        for pipeline_dir in pipeline_root.iterdir():
+            if not pipeline_dir.is_dir():
+                continue
+            doc_dir = pipeline_dir / "phase_2" / doc_id_str
+            result = _load_blocks_from_dir(doc_dir, track)
+            if result:
+                return result
+
+    legacy_root = backend_root / "output" / "cross_lingual"
+    if legacy_root.exists():
+        for lang_dir in legacy_root.iterdir():
+            if not lang_dir.is_dir():
+                continue
+            result = _load_blocks_from_dir(lang_dir / doc_id_str, track)
+            if result:
+                return result
+
+        if identifiers:
+            search_keys = [
+                v.replace("/", "_")
+                for v in identifiers.values()
+                if v
+            ]
+            for lang_dir in legacy_root.iterdir():
+                if not lang_dir.is_dir():
+                    continue
+                for child in lang_dir.iterdir():
+                    if not child.is_dir():
+                        continue
+                    if child.name in search_keys or child.name.replace("/", "_") in search_keys:
+                        result = _load_blocks_from_dir(child, track)
+                        if result:
+                            return result
+
+    return None
+
+def _markdown_to_blocks(markdown: str) -> list[dict] | None:
+    """Parse a markdown document into MinerU-style ContentBlock dicts.
+
+    Used as a last-resort fallback when neither the database nor the
+    pipeline output directory contains structured blocks. The resulting
+    blocks carry ``type``, ``text``, ``text_level``, and ``img_path``
+    (no ``bbox`` — that requires MinerU's PDF parsing), which is enough
+    for the frontend ``StructuredBlockRenderer`` to render headings,
+    paragraphs, images, and HTML tables with proper formatting.
+    """
+    if not markdown or not markdown.strip():
+        return None
+    blocks: list[dict] = []
+    lines = markdown.split("\n")
+    i = 0
+    n = len(lines)
+    while i < n:
+        line = lines[i]
+        stripped = line.strip()
+        # Heading: # / ## / ### ...
+        heading = re.match(r"^(#{1,6})\s+(.+)$", stripped)
+        if heading:
+            blocks.append({
+                "type": "title",
+                "text_level": len(heading.group(1)),
+                "text": heading.group(2).strip(),
+                "page_idx": 0,
+            })
+            i += 1
+            continue
+        # Image: ![alt](path)
+        image = re.match(r"^!\[([^\]]*)\]\(([^)]+)\)\s*$", stripped)
+        if image:
+            blocks.append({
+                "type": "image",
+                "img_path": image.group(2).strip(),
+                "image_caption": [image.group(1)] if image.group(1) else [],
+                "page_idx": 0,
+            })
+            i += 1
+            continue
+        # HTML table: <table>...</table>
+        if stripped.lower().startswith("<table"):
+            table_lines = [line]
+            i += 1
+            while i < n and "</table>" not in lines[i].lower():
+                table_lines.append(lines[i])
+                i += 1
+            if i < n:
+                table_lines.append(lines[i])
+                i += 1
+            blocks.append({
+                "type": "table",
+                "table_body": "\n".join(table_lines),
+                "text": "",
+                "page_idx": 0,
+            })
+            continue
+        # Markdown table: | ... | with separator row
+        if stripped.startswith("|") and i + 1 < n and re.match(r"^\|[\s:|-]+\|?\s*$", lines[i + 1].strip()):
+            table_lines = [line, lines[i + 1]]
+            i += 2
+            while i < n and lines[i].strip().startswith("|"):
+                table_lines.append(lines[i])
+                i += 1
+            header_cells = [c.strip() for c in table_lines[0].strip("|").split("|")]
+            rows = [[c.strip() for c in tl.strip("|").split("|")] for tl in table_lines[2:]]
+            html = '<table><thead><tr>' + "".join(f"<th>{c}</th>" for c in header_cells) + "</tr></thead><tbody>"
+            for row in rows:
+                html += "<tr>" + "".join(f"<td>{c}</td>" for c in row) + "</tr>"
+            html += "</tbody></table>"
+            blocks.append({
+                "type": "table",
+                "table_body": html,
+                "text": "",
+                "page_idx": 0,
+            })
+            continue
+        # List items: - / * / 1.
+        if re.match(r"^[-*]\s+", stripped) or re.match(r"^\d+\.\s+", stripped):
+            items: list[str] = []
+            while i < n and (re.match(r"^[-*]\s+", lines[i].strip()) or re.match(r"^\d+\.\s+", lines[i].strip())):
+                items.append(re.sub(r"^[-*]\s+|^\d+\.\s+", "", lines[i].strip()))
+                i += 1
+            blocks.append({
+                "type": "list",
+                "list_items": items,
+                "text": "\n".join(items),
+                "page_idx": 0,
+            })
+            continue
+        # Blank line: skip
+        if not stripped:
+            i += 1
+            continue
+        # Text paragraph: collect contiguous non-blank, non-special lines
+        para_lines = [line]
+        i += 1
+        while i < n:
+            nxt = lines[i].strip()
+            if not nxt or re.match(r"^#{1,6}\s+", nxt) or re.match(r"^!\[", nxt):
+                break
+            if nxt.lower().startswith("<table"):
+                break
+            if nxt.startswith("|") and i + 1 < n and re.match(r"^\|[\s:|-]+\|?\s*$", lines[i + 1].strip()):
+                break
+            if re.match(r"^[-*]\s+", nxt) or re.match(r"^\d+\.\s+", nxt):
+                break
+            para_lines.append(lines[i])
+            i += 1
+        blocks.append({
+            "type": "text",
+            "text": "\n".join(para_lines).strip(),
+            "page_idx": 0,
+        })
+    return blocks if blocks else None
 def _load_from_dir(doc_dir: Path, track: str) -> str | None:
     """Try to load and concatenate text from a single document directory."""
     doc_file = doc_dir / f"{track}.json"
@@ -819,8 +1011,44 @@ class SearchService:
                     known_output_dir=phase2_output_dir,
                 )
             ),
-            original_blocks=db_original_blocks,
-            translated_blocks=db_translated_blocks,
+            original_blocks=(
+                db_original_blocks
+                or _load_full_document_blocks(
+                    source_document_id,
+                    track="original",
+                    identifiers=identifiers,
+                    known_output_dir=phase2_output_dir,
+                )
+                or _markdown_to_blocks(
+                    db_original_text
+                    or _load_full_document_text(
+                        source_document_id,
+                        track="original",
+                        identifiers=identifiers,
+                        known_output_dir=phase2_output_dir,
+                    )
+                    or ""
+                )
+            ),
+            translated_blocks=(
+                db_translated_blocks
+                or _load_full_document_blocks(
+                    source_document_id,
+                    track="translated",
+                    identifiers=identifiers,
+                    known_output_dir=phase2_output_dir,
+                )
+                or _markdown_to_blocks(
+                    db_translated_text
+                    or _load_full_document_text(
+                        source_document_id,
+                        track="translated",
+                        identifiers=identifiers,
+                        known_output_dir=phase2_output_dir,
+                    )
+                    or ""
+                )
+            ),
             gene=gene,
             variant=variant,
             disease=disease,

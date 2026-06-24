@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, type MutableRefObject, type UIEvent } from "react";
 import { Languages, BookOpen } from "lucide-react";
 import type { EvidenceDocument } from "@/features/evidence-search/utils/evidenceDocument";
 import type { ContentBlock } from "@/features/evidence-search/types/evidenceSearch";
@@ -35,6 +35,8 @@ export function DocumentReader({
   blockHighlights,
   sourceDocumentId,
   annotations = [],
+  scrollContainerRef,
+  onContainerScroll,
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
@@ -51,8 +53,12 @@ export function DocumentReader({
   sourceDocumentId?: string;
   /** User-authored annotations for this track's document. */
   annotations?: UserAnnotation[];
+  /** External ref attached to the scrollable content container (for scroll sync). */
+  scrollContainerRef?: MutableRefObject<HTMLDivElement | null>;
+  /** Scroll event handler for the scrollable content container (for scroll sync). */
+  onContainerScroll?: (e: UIEvent<HTMLDivElement>) => void;
 } & AnnotationHandlers) {
-  const contentRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const hasBlocks = blocks && blocks.length > 0;
   // The whole document (structured blocks or flat paragraphs) is one
   // annotation unit anchored to the rendered visible text of this panel.
@@ -95,7 +101,11 @@ export function DocumentReader({
         </span>
       </div>
       <div
-        ref={contentRef}
+        ref={(el: HTMLDivElement | null) => {
+          contentRef.current = el;
+          if (scrollContainerRef) scrollContainerRef.current = el;
+        }}
+        onScroll={onContainerScroll}
         className="edb-scroll"
         style={{ maxHeight: 600, overflowY: "auto", padding: 16, position: "relative" }}
       >

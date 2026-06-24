@@ -74,7 +74,7 @@ async def test_relevance_scan_async_runs_chunks_concurrently() -> None:
 
     assert elapsed < 0.09
     assert mock_provider.ainvoke_structured.await_count == 2
-    assert result.relevant is True
+    assert result.evidence_map.relevant is True
 
 
 @pytest.mark.asyncio
@@ -145,8 +145,9 @@ async def test_catalog_extraction_async_scopes_target_catalog_to_eligible_fields
     ):
         await stage.run_async(document, DocumentEvidenceMap(relevant=True))
 
-    assert mock_provider.ainvoke_structured.await_count == 1
-    call = mock_provider.ainvoke_structured.await_args
+    # First call is normal catalog extraction; retry may fire a second call
+    assert mock_provider.ainvoke_structured.await_count >= 1
+    call = mock_provider.ainvoke_structured.call_args_list[0]
     assert call.kwargs["stage"] == "catalog_extraction/high_signal"
     catalog_text = call.kwargs["prompt"].split("EVIDENCE CATALOG", maxsplit=1)[1].split("RULES:", maxsplit=1)[0]
     assert "A.gene_symbol" in catalog_text
@@ -211,7 +212,7 @@ async def test_stage_async_survives_chunk_failure() -> None:
         result = await stage.run_async(_make_document())
 
     # Should still return a merged result from the successful chunk
-    assert result.relevant is True
+    assert result.evidence_map.relevant is True
     assert call_count == 2
 
 

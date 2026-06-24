@@ -13,18 +13,26 @@ from typing import Optional
 from uuid import UUID
 
 from loguru import logger
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.agents.contracts import (
+    PipelineMode,
     PhaseStatus,
     PipelineGraphState,
     PipelineStatus,
     validate_all_phase_transitions,
     validate_pipeline_status_transition,
 )
-from src.dao.postgresql.models import PipelineRunState, SourceDocument
+from src.dao.postgresql.models import (
+    CanonicalEvidenceItem,
+    EvidenceEntityBinding,
+    LiteratureProfile,
+    PipelineRunState,
+    RunEvidenceItem,
+    SourceDocument,
+)
 from src.utils.text_normalize import concat_document_text
 
 
@@ -114,6 +122,90 @@ def _load_phase2_document_text(state: PipelineGraphState) -> tuple[str | None, s
     return load_phase2_text_from_paths(p2.original_json_path, p2.translated_json_path)
 
 
+def _is_phase2_rerun(state: PipelineGraphState) -> bool:
+    """Return True when a save belongs to a Phase 2-or-earlier rerun."""
+    return (
+        state.mode == PipelineMode.PHASE
+        and state.target_phase is not None
+        and state.target_phase <= 2
+    )
+
+
+def _state_json_without_inline_phase2_data(state: PipelineGraphState) -> dict[str, object]:  # noqa: dict-return
+    """Serialize state for JSONB without mutating the live pipeline state."""
+    persisted_state = state.model_copy(deep=True)
+    if persisted_state.phase_2_output is not None:
+        persisted_state.phase_2_output.original_text = None
+        persisted_state.phase_2_output.translated_text = None
+        persisted_state.phase_2_output.original_blocks = None
+        persisted_state.phase_2_output.translated_blocks = None
+    return persisted_state.model_dump(mode="json")
+
+
+async def _reset_phase_rerun_artifacts(
+    session: AsyncSession,
+    *,
+    processing_run_id: str,
+    source_document_id: str,
+    target_phase: int,
+) -> None:
+    """Clear stale DB artifacts before re-running a phase in-place."""
+    run_id = UUID(processing_run_id)
+    doc_id = UUID(source_document_id)
+
+    if target_phase <= 2:
+        source_document = await session.get(SourceDocument, doc_id)
+        if source_document is not None:
+            source_document.original_text = None
+            source_document.translated_text = None
+            source_document.original_blocks = None
+            source_document.translated_blocks = None
+
+    if target_phase <= 3:
+        try:
+            from src.dao.postgresql.search_index_repo import frontend_search_index
+
+            canonical_ids = select(CanonicalEvidenceItem.canonical_evidence_id).where(
+                CanonicalEvidenceItem.source_document_id == doc_id
+            )
+            await session.execute(
+                delete(frontend_search_index).where(
+                    frontend_search_index.c.canonical_evidence_id.in_(canonical_ids)
+                )
+            )
+        except Exception:
+            logger.debug(
+                "Skipping frontend_search_index cleanup during phase rerun reset",
+                exc_info=True,
+            )
+
+        run_item_ids = select(RunEvidenceItem.run_evidence_item_id).where(
+            RunEvidenceItem.processing_run_id == run_id
+        )
+        await session.execute(
+            update(CanonicalEvidenceItem)
+            .where(CanonicalEvidenceItem.current_best_run_evidence_id.in_(run_item_ids))
+            .values(current_best_run_evidence_id=None)
+        )
+        await session.execute(
+            delete(EvidenceEntityBinding).where(
+                EvidenceEntityBinding.run_evidence_item_id.in_(run_item_ids)
+            )
+        )
+        await session.execute(
+            delete(RunEvidenceItem).where(RunEvidenceItem.processing_run_id == run_id)
+        )
+        await session.execute(
+            delete(CanonicalEvidenceItem).where(
+                CanonicalEvidenceItem.source_document_id == doc_id,
+                CanonicalEvidenceItem.review_status == "provisional",
+            )
+        )
+        await session.execute(
+            delete(LiteratureProfile).where(LiteratureProfile.source_document_id == doc_id)
+        )
+
+
 _TERMINAL_PHASE_STATUSES = frozenset({"completed", "skipped"})
 _PHASE_KEYS = ("phase_1", "phase_2", "phase_3")
 
@@ -194,8 +286,9 @@ class DirectStatePersistence:
         if state.phase_2_output and state.phase_2_status.status == PhaseStatus.COMPLETED:
             sd = await self._session.get(SourceDocument, sd_id)
             if sd is not None:
-                needs_original = not sd.original_text
-                needs_translated = not sd.translated_text
+                replace_existing = _is_phase2_rerun(state)
+                needs_original = replace_existing or not sd.original_text
+                needs_translated = replace_existing or not sd.translated_text
                 if needs_original or needs_translated:
                     p2 = state.phase_2_output
                     original_text = p2.original_text
@@ -209,9 +302,9 @@ class DirectStatePersistence:
 
                 # Persist structured blocks for document rendering
                 p2 = state.phase_2_output
-                if p2.original_blocks and not sd.original_blocks:
+                if p2.original_blocks and (replace_existing or not sd.original_blocks):
                     sd.original_blocks = p2.original_blocks
-                if p2.translated_blocks and not sd.translated_blocks:
+                if p2.translated_blocks and (replace_existing or not sd.translated_blocks):
                     sd.translated_blocks = p2.translated_blocks
 
         existing = await self._session.get(
@@ -229,14 +322,7 @@ class DirectStatePersistence:
             validate_all_phase_transitions(old_state, state, context=ctx)
         # ── End state transition guard ──
 
-        # Clear inline data before serializing to JSONB to avoid bloat.
-        if state.phase_2_output is not None:
-            state.phase_2_output.original_text = None
-            state.phase_2_output.translated_text = None
-            state.phase_2_output.original_blocks = None
-            state.phase_2_output.translated_blocks = None
-
-        state_json = state.model_dump(mode="json")
+        state_json = _state_json_without_inline_phase2_data(state)
         if existing:
             existing.state_json = state_json
             existing.pipeline_status = state.pipeline_status.value
@@ -257,6 +343,22 @@ class DirectStatePersistence:
                 heartbeat_at=heartbeat_at,
             )
             self._session.add(new_record)
+        await self._session.commit()
+
+    async def reset_phase_rerun_artifacts(
+        self,
+        *,
+        processing_run_id: str,
+        source_document_id: str,
+        target_phase: int,
+    ) -> None:
+        """Clear stale downstream artifacts before an in-place phase rerun."""
+        await _reset_phase_rerun_artifacts(
+            self._session,
+            processing_run_id=processing_run_id,
+            source_document_id=source_document_id,
+            target_phase=target_phase,
+        )
         await self._session.commit()
 
     async def load(self, processing_run_id: str) -> Optional[PipelineGraphState]:
@@ -337,8 +439,9 @@ class SessionBoundStatePersistence:
             if state.phase_2_output and state.phase_2_status.status == PhaseStatus.COMPLETED:
                 sd = await session.get(SourceDocument, sd_id)
                 if sd is not None:
-                    needs_original = not sd.original_text
-                    needs_translated = not sd.translated_text
+                    replace_existing = _is_phase2_rerun(state)
+                    needs_original = replace_existing or not sd.original_text
+                    needs_translated = replace_existing or not sd.translated_text
                     if needs_original or needs_translated:
                         p2 = state.phase_2_output
                         original_text = p2.original_text
@@ -352,9 +455,9 @@ class SessionBoundStatePersistence:
 
                     # Persist structured blocks for document rendering
                     p2 = state.phase_2_output
-                    if p2.original_blocks and not sd.original_blocks:
+                    if p2.original_blocks and (replace_existing or not sd.original_blocks):
                         sd.original_blocks = p2.original_blocks
-                    if p2.translated_blocks and not sd.translated_blocks:
+                    if p2.translated_blocks and (replace_existing or not sd.translated_blocks):
                         sd.translated_blocks = p2.translated_blocks
 
             # ── State transition guard ──
@@ -375,14 +478,7 @@ class SessionBoundStatePersistence:
                 validate_all_phase_transitions(old_state, state, context=ctx)
             # ── End state transition guard ──
 
-            # Clear inline data from state before serializing to JSONB.
-            if state.phase_2_output is not None:
-                state.phase_2_output.original_text = None
-                state.phase_2_output.translated_text = None
-                state.phase_2_output.original_blocks = None
-                state.phase_2_output.translated_blocks = None
-
-            state_json = state.model_dump(mode="json")
+            state_json = _state_json_without_inline_phase2_data(state)
             upsert_set: dict[str, object] = {
                 "state_json": state_json,
                 "pipeline_status": state.pipeline_status.value,
@@ -412,6 +508,23 @@ class SessionBoundStatePersistence:
                 )
             )
             await session.execute(stmt)
+            await session.commit()
+
+    async def reset_phase_rerun_artifacts(
+        self,
+        *,
+        processing_run_id: str,
+        source_document_id: str,
+        target_phase: int,
+    ) -> None:
+        """Clear stale downstream artifacts before an in-place phase rerun."""
+        async with self._session_factory() as session:
+            await _reset_phase_rerun_artifacts(
+                session,
+                processing_run_id=processing_run_id,
+                source_document_id=source_document_id,
+                target_phase=target_phase,
+            )
             await session.commit()
 
     async def load(self, processing_run_id: str) -> Optional[PipelineGraphState]:

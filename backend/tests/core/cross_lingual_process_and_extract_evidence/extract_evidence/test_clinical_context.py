@@ -282,6 +282,7 @@ def test_clinical_context_fills_not_found_fields():
 # ---------------------------------------------------------------------------
 
 def test_clinical_context_replaces_lower_confidence_found():
+    text = "The patient had seizures and loss of acquired hand skills."
     existing = [
         _found_item("B.clinical_phenotypes", "seizures", confidence=0.5),
     ]
@@ -292,22 +293,22 @@ def test_clinical_context_replaces_lower_confidence_found():
             category="B",
             field_name="Key clinical phenotypes",
             status=EvidenceStatus.FOUND,
-            value="seizures; developmental regression; stereotypic hand movements",
+            value="seizures; loss of acquired hand skills",
             confidence=0.85,
             source=SourceLocation(
                 context_type="text",
                 context_ref="",
-                text_snippet="seizures; developmental regression",
+                text_snippet="seizures and loss of acquired hand skills",
             ),
         ),
     ]
 
     stage = ClinicalContextStage(provider)
-    result = stage.run(_doc(), existing, DocumentEvidenceMap(relevant=True))
+    result = stage.run(_doc(text), existing, DocumentEvidenceMap(relevant=True))
 
     pheno = [i for i in result if i.field_id == "B.clinical_phenotypes"]
     assert len(pheno) == 1
-    assert "developmental regression" in pheno[0].value
+    assert "loss of acquired hand skills" in pheno[0].value
 
 
 # ---------------------------------------------------------------------------

@@ -17,6 +17,16 @@ from src.agents.contracts import (
 )
 
 
+@pytest.fixture(autouse=True)
+def reset_pipeline_rate_limiter():
+    """Keep pipeline API behavior tests isolated from shared rate-limit state."""
+    from src.api import rate_limit
+
+    rate_limit.limiter._storage.reset()
+    yield
+    rate_limit.limiter._storage.reset()
+
+
 @pytest.mark.asyncio
 async def test_pipeline_run_injects_content_to_state(async_client):
     """POST /api/v1/pipeline/run injects base64 content into state via temp file."""
@@ -335,10 +345,12 @@ async def test_post_pipeline_run_target_phase_range_validation(async_client: Asy
 
 @pytest.mark.asyncio
 async def test_post_pipeline_run_duplicate_prevention(async_client: AsyncClient):
-    """POST with same source_document_id while run is in-progress returns 409 (N3 fix)."""
+    """Local uploads deduplicate active runs by content hash, not filename."""
     with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
         mock_runner = MagicMock()
         mock_runner.is_running_for_source = AsyncMock(return_value=True)
+        mock_runner.compute_initial_content_hash = AsyncMock(return_value="abc123")
+        mock_runner.check_processing_cache = AsyncMock(return_value=None)
         mock_get_runner.return_value = mock_runner
 
         response = await async_client.post(
@@ -352,6 +364,34 @@ async def test_post_pipeline_run_duplicate_prevention(async_client: AsyncClient)
         )
 
         assert response.status_code == 409
+        mock_runner.is_running_for_source.assert_awaited_once_with("content:abc123")
+
+
+@pytest.mark.asyncio
+async def test_post_pipeline_run_same_filename_different_hash_not_blocked(async_client: AsyncClient):
+    """Same filename should not block active runs when content hash differs."""
+    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        mock_runner = MagicMock()
+        mock_runner.start = AsyncMock(return_value=MagicMock())
+        mock_runner.is_running_for_source = AsyncMock(return_value=False)
+        mock_runner.compute_initial_content_hash = AsyncMock(return_value="different-hash")
+        mock_runner.check_processing_cache = AsyncMock(return_value=None)
+        mock_get_runner.return_value = mock_runner
+
+        response = await async_client.post(
+            "/api/v1/pipeline/run",
+            json={
+                "source_type": "local",
+                "filename": "same.pdf",
+                "content_base64": "dGVzdA==",
+                "mode": "full",
+            },
+        )
+
+    assert response.status_code == 202
+    initial_state = mock_runner.start.call_args[0][0]
+    assert initial_state.source_key == "content:different-hash"
+    mock_runner.is_running_for_source.assert_awaited_once_with("content:different-hash")
 
 
 
