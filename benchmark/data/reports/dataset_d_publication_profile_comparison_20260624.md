@@ -292,3 +292,31 @@ The gate is now field-aware with two tiers:
 ### 10.5 Status
 
 Targeted validation for `rett_001` pending — requires server restart and cache clearing.
+
+### 10.6 Targeted Validation Results
+
+**rett_001 post-fix evaluation:**
+
+| Metric | Before Fix | After Fix | Delta |
+|--------|-----------|-----------|-------|
+| Matched fields | 0/8 | 2/8 | +2 |
+| Precision | 0% | 100% | +100% |
+| Recall | 0% | 25% | +25% |
+| F1 | 0% | 40% | +40% |
+
+**Field-level results:**
+
+| Field | Before | After | Notes |
+|-------|--------|-------|-------|
+| A.gene_symbol | FN | **TP** | Identity gate: gene survives without variant |
+| B.disease_diagnosis | FN | **TP** | Identity gate: disease survives without variant |
+| A.variant_hgvs_p | FN | FN | Variant-dependent: still requires full gate |
+| A.variant_type | FN | FN | Variant-dependent |
+| A.gene_disease_relationship | FN | FN | Variant-dependent |
+| A.functional_domain_or_hotspot | FN | FN | Variant-dependent |
+| B.mode_of_inheritance_reported | FN | FN | Identity field but not matched by evaluator |
+| C.de_novo_status | FN | FN | Identity field but not matched by evaluator |
+
+**Key finding:** The identity gate correctly persists `A.gene_symbol` and `B.disease_diagnosis` through Phase 3 even without a co-located variant. Precision is 100% — no false positives introduced.
+
+**Remaining gap:** 6 fields still FN. Of these, 4 are variant-dependent (expected to remain FN without better variant extraction) and 2 are identity fields that Phase 2 didn't extract as FOUND for this entry (B.mode_of_inheritance_reported, C.de_novo_status).

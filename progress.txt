@@ -974,3 +974,7 @@
 - Variant-dependent evidence still requires full gene+variant co-location
 - 43 repository tests pass, 6 new tests added, Ruff clean
 - Targeted validation for rett_001 pending (server restart + cache clear needed)
+- Targeted validation PASSED: rett_001 improved 0/8 → 2/8 (P=100%, R=25%, F1=40%)
+- A.gene_symbol and B.disease_diagnosis now survive Phase 3 without variant co-location
+- No false positives introduced (precision 100%)
+- Fix is narrow and publication-safe

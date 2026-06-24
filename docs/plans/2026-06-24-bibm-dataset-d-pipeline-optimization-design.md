@@ -276,3 +276,7 @@ Field-aware two-tier gate:
 - 196 Phase 3 tests pass (3 pre-existing failures unrelated)
 - Ruff clean
 - Targeted validation for rett_001 pending
+
+### 9.5 Targeted Validation
+
+rett_001: 0/8 → 2/8 (P=100%, R=25%, F1=40%). Identity fields (gene, disease) now survive Phase 3. No false positives. Remaining 6 FN are variant-dependent fields or identity fields not extracted as FOUND by Phase 2.

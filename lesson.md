@@ -5408,3 +5408,9 @@ Key design choice: only `A.gene_symbol` and `B.disease_diagnosis` can make a gro
 4. 43 repository tests pass, 6 new targeted tests added
 
 **Pattern:** When a persistence gate is all-or-nothing, consider making it field-aware with tiered thresholds rather than relaxing the gate globally.
+
+### Validation Result (2026-06-24)
+
+rett_001: 0/8 → 2/8. The field-aware gate works. Precision 100% — no noise introduced. The remaining 6 FN are expected: 4 variant-dependent (need better variant extraction) and 2 identity fields not extracted as FOUND by Phase 2 for this entry.
+
+Cache clearing was needed: PostgreSQL `lingua.document_processing_cache` held stale results keyed by `content_hash`. Redis `docproc:*` keys also needed flushing. The `--no-preprocessed` flag only skips local preprocessed files, not server-side caches.

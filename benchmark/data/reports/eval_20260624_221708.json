@@ -1,0 +1,310 @@
+{
+  "evaluation_id": "eval_clingen_90fc6863",
+  "timestamp": "2026-06-24T22:17:08",
+  "config": {
+    "base_url": "http://localhost:8000",
+    "concurrency": 1,
+    "limit": null
+  },
+  "total_entries": 1,
+  "total_duration_s": 487.9,
+  "aggregates": {
+    "overall": {
+      "true_positives": 2,
+      "false_positives": 0,
+      "false_negatives": 6,
+      "precision": 1.0,
+      "recall": 0.25,
+      "f1": 0.4,
+      "over_extractions": 0,
+      "entity_standardization_accuracy": 0.0,
+      "cross_lingual_consistency": 0.0
+    },
+    "by_field": {
+      "A.gene_symbol": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "over_extractions": 0
+      },
+      "B.disease_diagnosis": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "over_extractions": 0
+      },
+      "A.gene_disease_relationship": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "B.mode_of_inheritance_reported": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "A.variant_hgvs_p": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "A.variant_type": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "A.functional_domain_or_hotspot": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "C.de_novo_status": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      }
+    },
+    "by_classification": {
+      "Rett real-data": {
+        "count": 1,
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "over_extractions": 0
+      }
+    },
+    "by_moi": {
+      "XD": {
+        "count": 1,
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      }
+    },
+    "by_entity_type": {
+      "gene": 0.0,
+      "disease": 0.0
+    }
+  },
+  "per_entry": [
+    {
+      "entry_id": "rett_001",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "run_id": "398436b8-40b1-4508-87e2-56d0bf971d56",
+      "status_url": "/api/v1/pipeline/runs/398436b8-40b1-4508-87e2-56d0bf971d56/status",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "last_pipeline_status": null,
+      "last_current_phase": null,
+      "duration_s": 487.67,
+      "evidence_count": 8,
+      "found_rate": 0.25,
+      "grounding_rate": 0.0,
+      "standardization_accuracy": 0.0,
+      "track_consistency": 0.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MECP2",
+          "matched": true,
+          "extracted": "{'value': 'MECP2'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "original-p1",
+            "block_type": "text",
+            "end_offset": 2447,
+            "block_index": -1,
+            "context_ref": "Document Block 1",
+            "context_type": "introduction",
+            "start_offset": 2276,
+            "text_snippet": "Rett syndrome (RTT) is a debilitating neurodevelopmental disorder (Hagberg, 1985) caused by mutations in the methyl-CpG binding protein 2 (MECP2) gene (Amir et al., 1999).",
+            "source_precision": "corrected"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Rett syndrome",
+          "matched": true,
+          "extracted": "{'value': 'Rett syndrome'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "original-p1",
+            "block_type": "text",
+            "end_offset": 87,
+            "block_index": -1,
+            "context_ref": "Article title",
+            "context_type": "title",
+            "start_offset": 2,
+            "text_snippet": "Mechanism and consequence of abnormal calcium homeostasis in Rett syndrome astrocytes",
+            "source_precision": "corrected"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "expected": "XD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "A.variant_hgvs_p",
+          "expected": "p.R294X",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "A.variant_type",
+          "expected": "nonsense",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "A.functional_domain_or_hotspot",
+          "expected": "TRD",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "C.de_novo_status",
+          "expected": "unknown",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        }
+      ],
+      "entity_matches": {
+        "gene": {
+          "matched": false,
+          "expected_id": "HGNC:6992",
+          "actual_id": "HGNC:6990",
+          "status": "standardized"
+        },
+        "disease": {
+          "matched": false,
+          "expected_id": "MONDO:0010726",
+          "actual_id": "OMIM:312750",
+          "status": "standardized"
+        }
+      }
+    }
+  ]
+}
