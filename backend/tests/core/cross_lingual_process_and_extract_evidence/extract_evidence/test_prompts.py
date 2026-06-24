@@ -1,4 +1,8 @@
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import EVIDENCE_FIELD_SPECS
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.channel_contracts import (
+    DocumentChannelClassification,
+    DocumentEvidenceChannel,
+)
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     ContentBlock,
     Track,
@@ -7,6 +11,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.prompts import (
     build_block_prompt_text,
     get_catalog_extraction_prompt,
+    get_channel_strategy_guidance,
     get_evidence_map_prompt,
     relationship_decision_guidance,
 )
@@ -326,3 +331,139 @@ def test_catalog_prompt_omits_target_section_when_not_provided() -> None:
 
     assert "TARGET GENE:" not in prompt
     assert "TARGET DISEASE:" not in prompt
+
+
+# ---------------------------------------------------------------------------
+# Channel strategy guidance tests
+# ---------------------------------------------------------------------------
+
+def _cls(channels: list[DocumentEvidenceChannel]) -> DocumentChannelClassification:
+    return DocumentChannelClassification(
+        selected_channels=list(channels),
+        confidence=0.9,
+        rationale="test",
+        supporting_block_ids=[],
+    )
+
+
+def _catalog_prompt(channel_classification=None) -> str:
+    return get_catalog_extraction_prompt(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        text="GLA c.1000G>A Fabry disease",
+        catalog=EVIDENCE_FIELD_SPECS,
+        evidence_map_summary="GLA Fabry disease",
+        channel_classification=channel_classification,
+    )
+
+
+def test_channel_strategy_none_returns_generic():
+    guidance = get_channel_strategy_guidance(None)
+    assert "DOCUMENT-CHANNEL STRATEGY" in guidance
+    assert "standard catalog rules" in guidance
+
+
+def test_channel_strategy_unknown_returns_generic():
+    guidance = get_channel_strategy_guidance(_cls([DocumentEvidenceChannel.UNKNOWN]))
+    assert "DOCUMENT-CHANNEL STRATEGY" in guidance
+    assert "standard catalog rules" in guidance
+    assert "CASE-REPORT STRATEGY" not in guidance
+    assert "FUNCTIONAL-STUDY STRATEGY" not in guidance
+
+
+def test_channel_strategy_case_report_emphasizes_patient_proband_family():
+    guidance = get_channel_strategy_guidance(_cls([DocumentEvidenceChannel.CASE_REPORT]))
+    assert "CASE-REPORT STRATEGY" in guidance
+    assert "phenotype" in guidance.lower()
+    assert "proband" in guidance.lower()
+    assert "family" in guidance.lower()
+    assert "segregation" in guidance.lower()
+    assert "de novo" in guidance.lower()
+    assert "zygosity" in guidance.lower()
+
+
+def test_channel_strategy_functional_study_blocks_in_silico_as_functional():
+    guidance = get_channel_strategy_guidance(_cls([DocumentEvidenceChannel.FUNCTIONAL_STUDY]))
+    assert "FUNCTIONAL-STUDY STRATEGY" in guidance
+    assert "assay" in guidance.lower()
+    assert "controls" in guidance.lower()
+    assert "quantitative" in guidance.lower()
+    assert "in silico" in guidance.lower()
+    assert "Do not treat in silico" in guidance
+
+
+def test_channel_strategy_cohort_study_emphasizes_aggregate():
+    guidance = get_channel_strategy_guidance(_cls([DocumentEvidenceChannel.COHORT_STUDY]))
+    assert "COHORT-STUDY STRATEGY" in guidance
+    assert "cohort" in guidance.lower()
+    assert "sample size" in guidance.lower() or "cohort size" in guidance.lower()
+    assert "statistical" in guidance.lower()
+    assert "odds ratio" in guidance.lower()
+    assert "population frequency" in guidance.lower()
+
+
+def test_channel_strategy_mixed_concrete_concatenates_without_duplicate_generic():
+    guidance = get_channel_strategy_guidance(
+        _cls([DocumentEvidenceChannel.CASE_REPORT, DocumentEvidenceChannel.FUNCTIONAL_STUDY])
+    )
+    assert "CASE-REPORT STRATEGY" in guidance
+    assert "FUNCTIONAL-STUDY STRATEGY" in guidance
+    # No generic text when concrete channels are present
+    assert "standard catalog rules" not in guidance
+
+def test_channel_strategy_bare_mixed_expands_to_all_concrete():
+    """Bare MIXED expands effective_channels to all three concrete channels."""
+    guidance = get_channel_strategy_guidance(_cls([DocumentEvidenceChannel.MIXED]))
+    assert "CASE-REPORT STRATEGY" in guidance
+    assert "FUNCTIONAL-STUDY STRATEGY" in guidance
+    assert "COHORT-STUDY STRATEGY" in guidance
+    assert "standard catalog rules" not in guidance
+
+
+def test_catalog_prompt_case_report_contains_strategy_and_not_functional_strategy():
+    prompt = _catalog_prompt(_cls([DocumentEvidenceChannel.CASE_REPORT]))
+    assert "CASE-REPORT STRATEGY" in prompt
+    assert "FUNCTIONAL-STUDY STRATEGY" not in prompt
+    assert "COHORT-STUDY STRATEGY" not in prompt
+
+
+def test_catalog_prompt_functional_study_contains_assay_strategy():
+    prompt = _catalog_prompt(_cls([DocumentEvidenceChannel.FUNCTIONAL_STUDY]))
+    assert "FUNCTIONAL-STUDY STRATEGY" in prompt
+    assert "CASE-REPORT STRATEGY" not in prompt
+
+
+def test_catalog_prompt_cohort_study_contains_cohort_strategy():
+    prompt = _catalog_prompt(_cls([DocumentEvidenceChannel.COHORT_STUDY]))
+    assert "COHORT-STUDY STRATEGY" in prompt
+    assert "FUNCTIONAL-STUDY STRATEGY" not in prompt
+
+
+def test_catalog_prompt_mixed_contains_both_strategy_sections():
+    prompt = _catalog_prompt(
+        _cls([DocumentEvidenceChannel.CASE_REPORT, DocumentEvidenceChannel.FUNCTIONAL_STUDY])
+    )
+    assert "CASE-REPORT STRATEGY" in prompt
+    assert "FUNCTIONAL-STUDY STRATEGY" in prompt
+
+
+def test_catalog_prompt_unknown_uses_generic_strategy():
+    prompt = _catalog_prompt(_cls([DocumentEvidenceChannel.UNKNOWN]))
+    assert "DOCUMENT-CHANNEL STRATEGY" in prompt
+    assert "standard catalog rules" in prompt
+    assert "CASE-REPORT STRATEGY" not in prompt
+
+
+def test_catalog_prompt_none_classification_uses_generic_strategy():
+    prompt = _catalog_prompt(None)
+    assert "DOCUMENT-CHANNEL STRATEGY" in prompt
+    assert "standard catalog rules" in prompt
+
+def test_catalog_prompt_strategy_appears_between_catalog_scope_and_rules():
+    prompt = _catalog_prompt(_cls([DocumentEvidenceChannel.CASE_REPORT]))
+    scope_pos = prompt.index("CATALOG SCOPE:")
+    # Use rfind for "CASE-REPORT STRATEGY" — the strategy block heading may
+    # collide with catalog field text; the injected section is the last match.
+    strategy_pos = prompt.rindex("CASE-REPORT STRATEGY")
+    rules_pos = prompt.rindex("RULES:")
+    assert scope_pos < strategy_pos < rules_pos

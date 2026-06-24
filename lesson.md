@@ -5101,3 +5101,266 @@ When a field consistently returns not_found despite being in the extraction cata
 4. What does a simpler baseline (fewer fields per call) achieve?
 
 The "field overload" hypothesis is confirmed: reducing fields per prompt from 62 to 6 improves extraction of neglected fields.
+
+### 问题8: 表格不渲染 — react-markdown 不渲染裸 HTML
+
+**问题描述**: 文献里的表格不渲染。
+
+**排查过程**: 通过 API 检查 30 个文档,发现 20 个文档的 `original_document_text` 含 HTML `<table>`(MinerU 把表格转成 HTML 嵌入 markdown),但所有文档 `original_blocks` 为空 → 全走 markdown 分支。react-markdown 默认不渲染裸 HTML 标签,`<table>` 被忽略。
+
+**根因分析**: MinerU 表格块 `table_body` 是 HTML `<table>` 字符串,拼入 markdown 全文。react-markdown 出于安全默认不渲染原始 HTML,需 `rehype-raw` 插件解析。
+
+**解决方案**: ① `MarkdownDocumentViewer` 加 `rehype-raw` 插件(rehypePlugins=[rehypeRaw, rehypeKatex],raw 在 katex 前),让 react-markdown 渲染 HTML 表格。② 加 `.edb-markdown-viewer table/th/td` CSS(边框、padding、表头背景、斑马纹)。
+
+**验证**: 有表格文档渲染出 8 个 table,第一个 9 行(含表头 Nucleotide change/Amino Acid Change/Cases),border/padding 样式生效。
+
+**预防措施**: 当 markdown 源含 HTML 片段(MinerU 表格/公式)时,必须加 rehype-raw;react-markdown 默认安全的 HTML 过滤会导致内容丢失。
+
+## [2026-06-24] Field-Budgeted Pipeline Optimization — Diagnosis & Fix
+
+### Problem
+SYSTEM (F1=0.5622) underperforms B7-expanded (F1=0.6124) on merged_73 dataset. Prior "broader extraction" attempts (ClinicalContextStage, target-aware-source-visible) regressed precision.
+
+### Root Cause Analysis (per-field error data)
+
+**Never-extracted fields (FN dominant):**
+- B.clinical_phenotypes: 0 TP, 71 FN — no extraction guidance
+- B.hpo_terms: 0 TP, 50 FN — no extraction guidance
+
+**Wrong-value fields (FP dominant):**
+- B.mode_of_inheritance_reported: 3 TP, 20 FP, 41 FN — target_span_recovery adds values without source validation
+- B.age_of_onset: 17 TP, 27 FP, 2 FN — extracted too aggressively
+- C.de_novo_status: 8 TP, 13 FP, 32 FN — inferred from insufficient evidence
+
+**Key insight:** The SYSTEM's precision advantage (0.7751 vs B7's 0.7044) comes from source grounding and target guard. The recall gap comes from (1) missing fields and (2) wrong values on medium-contextual fields. Fixing wrong values improves both precision AND F1.
+
+### Solution: Three-Part Optimization
+
+1. **Field profile (DATASET_D_FIELDS):** Restrict catalog from 143 to 20 fields (13 scored + 7 identity). Reduces prompt size and attention dilution.
+
+2. **Field-specific extraction rules:** Added 4 rules:
+   - B.clinical_phenotypes: extract symptoms, not diagnosis names
+   - B.mode_of_inheritance_reported: require explicit text, don't infer from zygosity
+   - C.de_novo_status: require parental testing evidence
+   - B.hpo_terms: extract HPO phenotype terms
+
+3. **Source-visible gate on ClinicalContextStage:** Reject extracted items whose source.text_snippet is not a verbatim substring of the document text. This prevents the "missing→wrong_value" problem seen in smoke tests.
+
+### Verification
+- 359/359 tests passing (11 new)
+- All lint passes
+
+### Lesson
+When a pipeline underperforms a simpler baseline, check per-field FP/FN breakdown before adding extraction stages. The SYSTEM had precision problems (20 FP on B.mode_of_inheritance_reported) that look like recall problems in aggregate. "Extract more" without source validation = more FP = lower F1. The fix is: (1) restrict field scope, (2) add targeted guidance, (3) validate source visibility.
+
+### 问题9: 高亮算法没真正匹配文中证据项
+
+**问题描述**: 用户指出"实际并没有实现匹配文中的证据项并高亮"。
+
+**排查过程**: 抓取数据发现:① rett_069 文档 166 条 trace 全部 `original: null`,原算法 `if (!highlight) return;` 跳过,只对 3 条有 `original_value` 的 trace 用 `findAnchorValue` 找第一次出现,仅高亮 2 个。② FOXG1 文档 5 条 trace 有 `original`,但其 `source_span` 标记的是**整段证据上下文片段**(96-130 字符的句子),不是 value 实体,高亮了 4 个整句。③ 14 个有 value 的 item 里只有 3 个有对应 trace,其余 11 个被完全跳过。
+
+**根因分析**: 原算法遍历 traces 而非 items,依赖 trace.original(结构化高亮 span)或 trace.original_value,但:trace.original 多为 null;有 original 时其 source_span 是上下文片段偏移而非实体偏移;item.value(真正的证据实体)未被用于全文匹配。
+
+**解决方案**: 重写 `buildEvidenceDocument` 的 fullText 分支,改为遍历**有 value 的 items**:
+1. 过滤 entity-like value(3–60 字符,排除整句上下文和过短串)
+2. 短 value 优先(升序),避免长句遮蔽短实体
+3. 对每个 value 用 `findAllOccurrences` 在全文 case-insensitive 搜索**所有出现位置**,全部高亮
+4. `occupied` 区间去重,避免重叠
+5. 完全放弃 trace.source_span 高亮(它是上下文片段,不是实体)
+
+**验证**: FOXG1 文档从 4 个整句 → 86 个实体高亮(FOXG1×71+Foxg1×5+FoxG1×2+nonsense×6+c.385G>T×1+Rett syndrome congenital variant×1);rett_069 24 个(MECP2×7+Rett syndrome×16+p.D156E×1)。`causative` 等非原文术语正确跳过(0 匹配)。
+
+**预防措施**: 高亮算法应基于"要高亮的实体"(item.value),而非"证据上下文"(trace.original.text/source_span)。后端 source_span 标记的是片段不是实体,不能直接用于实体高亮。
+
+## [2026-06-24] Extraction Profile Opt-In — Behavioral Correction
+
+### Problem
+The initial implementation silently defaulted `EvidenceExtractionService` to `DATASET_D_FIELDS` for all production extraction. This is weak for BIBM publication — dataset-specific field restriction should be explicit and auditable.
+
+### Correction
+Changed to `ExtractionProfile` enum with explicit opt-in:
+- `ExtractionProfile.NONE` = production default (all 143 non-curation fields)
+- `ExtractionProfile.DATASET_D_PUBLICATION` = benchmark-selected (20 fields)
+
+The profile is threaded through the full request chain: HTTP payload → PipelineGraphState → Phase2Adapter → service. No hidden env vars or silent defaults.
+
+### Source-Visible Gate Hardening
+Initial gate used raw `casefold()` substring matching, which would reject valid evidence with different whitespace (OCR, tables, translation). Fixed with `re.sub(r"\s+", " ", text).strip()` normalization before matching. Case-sensitive matching is deliberately kept to avoid false positives.
+
+### Lesson
+Publication-grade optimization must be auditable. When restricting evaluation scope, the restriction should be:
+1. Explicitly named (enum, not magic frozenset)
+2. Opt-in (not a hidden default)
+3. Threaded through the full request chain (not env vars)
+4. Logged and counter-tracked for evaluation audit
+
+## [2026-06-24] Pipeline Rerun/Cache State Hardening
+
+### 问题描述
+Pipeline phase rerun、processing cache、SourceDocument 渲染字段和前后端状态契约之间存在多处不一致: phase rerun 只重置内存 state,但数据库旧证据仍可能保留;持久化层为裁剪 JSONB 直接修改运行态对象;Phase2 rerun 不覆盖旧文档文本/blocks;online identifier hash 与 source_key 规范不一致;local upload active dedup 使用 filename。
+
+### 排查过程
+沿 `start_pipeline_run -> PipelineRunner.start -> PipelineOrchestrator.run -> Phase2/Phase3Adapter -> SessionBoundStatePersistence.save` 追踪数据流,并补 RED 测试验证:
+- `PMID:12345` 与 `12345` hash 不一致
+- `save()` 后 `state.phase_2_output.original_text` 被置空
+- Phase2 rerun 后 `SourceDocument.original_text` 仍为旧值
+- Phase rerun 启动前没有调用旧产物清理
+- local upload duplicate check 使用 `filename` 而不是 content hash
+
+### 根因分析
+1. Phase rerun 的状态重置只发生在 `PipelineGraphState`,没有同步清理 Phase3 写入的持久化产物。
+2. 持久化层把"压缩 JSONB"和"运行态对象"混在同一个对象上操作,导致副作用泄漏到 runner memory cache 和 processing cache。
+3. SourceDocument 文本/blocks 写入逻辑只填空值,没有区分首次运行和 phase rerun。
+4. source_key 与 content_hash 各自实现 identifier normalization,规则漂移。
+5. 本地上传在文件内容 hash 计算前就做 active-run dedup,只能退化使用 filename。
+
+### 解决方案
+- `PipelineRunner.start()` 在 phase rerun durable claim 前调用 `reset_phase_rerun_artifacts()`。
+- 持久化层清理旧 run evidence、bindings、provisional canonical evidence、literature profile 和 search projection,Phase2 rerun 同时清空/刷新 SourceDocument 文本和 blocks。
+- JSONB 序列化改为基于 `state.model_copy(deep=True)` 裁剪 inline Phase2 大字段,不修改原始 state。
+- 新增共享 `normalize_identifier()` 并复用于 source_key 与 processing cache hash。
+- local upload 在 content hash 生成后使用 `content:<hash>` 作为 active-run source_key。
+- Pipeline status API 使用具名 Pydantic response models,并补齐前端期望的 `nodes`/`count` 字段。
+
+### 预防措施
+Pipeline 的"状态"与"产物"必须一起定义重跑语义。任何 phase rerun 如果复用 `processing_run_id`,必须先清理该 run/document 下游持久化产物;任何持久化压缩都必须作用于副本;dedup key 和 cache key 必须共享同一规范化函数。
+
+### 问题10: 非英文文献原文高亮只匹配英文术语,俄文表述未高亮
+
+**问题描述**: 用户指出俄文文献(rett_069)的高亮标注在俄文原文中只能匹配到英文术语(MECP2/Rett syndrome),但俄文本地化表述("синдром Ретта")完全没有高亮。
+
+**排查过程**:
+1. 检查数据:166条trace全部`original: null`、`original_value`也是英文标准化值、`translated_value`全null——后端不存储原文语种的实体表述。
+2. 俄文原文含34个"синдром Ретта"(各种格变体),但英文value "Rett syndrome"匹配不到俄文音译。
+3. HGVS `c.468C>G`在俄文写作`с.468C>G`(西里尔字母с而非拉丁c),导致`indexOf`匹配失败。
+
+**根因分析**: 高亮算法用英文标准值(`item.value`)在全文搜索,对非英文原文有三类匹配缺口:
+- 疾病名本地化("Rett syndrome"→"синдром Ретта")——音译差异,无通用规则
+- HGVS前缀跨字符集(c.→с.)——拉丁/西里尔形似字母差异
+- 变异类型本地化("missense"→"миссенс")——语义翻译
+
+**解决方案**: 在`expandSearchTerms()`中扩展搜索候选词:
+1. **HGVS前缀变体**:拉丁`c.`/`p.`→西里尔`с.`/`р.`,并剥离前缀搜裸突变串("468C>G")
+2. **多语言别名表**`EVIDENCE_ALIASES`:对高频ACMG证据术语(疾病名、变异类型)建立英→俄/中/日/韩映射,扩展搜索
+3. **`findAllOccurrences`项内去重**:候选词长度降序排序优先长匹配,区间去重避免短词("ретт")遮蔽长短语("синдром ретта")
+4. 移除`causative`→`причин`等过于通用的别名(匹配到"по причине"误报)
+
+**验证**: rett_069从24个→53个高亮(28个俄文疾病名:Синдром Ретта/синдромом Ретта/Ретт);930480bf原文从36→75(含СИНДРОМ РЕТТА/с.468C>G西里尔变体)。误报("причин")已消除。
+
+**预防措施**: 非英文原文高亮需多语言策略:通用符号(MECP2)直接匹配;HGVS需跨字符集变体;疾病名/变异类型需领域别名表。别名表只收录足够特异的术语,避免通用词产生误报。
+
+### 问题11: 长句子类型的证据值无法匹配高亮
+
+**问题描述**: 用户指出"只能匹配短语单词,无法匹配长句子"——长复合值(如"c.502C>T (p.R168X) and c.763C>T (p.R255X) introduce stop cod...")无法在文中高亮。
+
+**排查过程**:
+1. 发现原算法有`MAX_ENTITY_LEN=60`上限,长值被直接跳过——但即使移除上限,长值(英文整句)在非英文原文里也不存在。
+2. 分析8ff64507法语文档:长值"c.502C>T (p.R168X)..."整体不在原文,但其子实体p.R168X在原文出现4次、p.R255X出现5次、p.R106W出现5次。
+3. 发现HGVS原文写法有空白变体:"c.502C>T"在文中写作"c.502 C>T"——indexOf精确匹配失败。
+
+**根因分析**: 长值是无法整体匹配的(跨语言整句),但其嵌入式实体(HGVS记号、基因符号、括号内容)可在文中匹配。需要:(1)拆解长值为子实体;(2)HGVS用空白灵活匹配(正则`\s*`替代空格)。
+
+**解决方案**:
+1. `extractSubEntities()`: 对>30字符的长值提取子实体——HGVS记号(c./p.含missense和stop-gain)、全大写基因符号(排除停用词)、括号内容、逗号分隔短语,上限12个
+2. 移除60字符上限→200字符上限,允许句子级值参与搜索
+3. `findAllOccurrences()`对HGVS项用正则空白灵活匹配:`c.502\s*C\s*T`匹配`c.502C>T`和`c.502 C>T`
+4. 项内去重:长匹配优先,区间重叠去重
+
+**验证**: 8ff64507从0个高亮→34个(MECP2×20+p.R106W×5+p.R168X×4+p.R255X×5);rett_069保持53个(无回退)。
+
+**预防措施**: 长证据值是复合描述,应拆解为独立的可搜索实体。HGVS记号在原文可能有空白变体,需用正则而非indexOf匹配。
+
+## [2026-06-24] Processing Cache Bug — Evaluation Runs Used Stale Cached Results
+
+### Problem
+The first two evaluation runs (v1 with concurrency=2, v2 with concurrency=1) completed entries in 5 seconds each. The results appeared to be from the pipeline but were actually from the server's processing cache (content hash dedup).
+
+### Root Cause
+The content hash in `backend/src/agents/content_hash.py` was computed from:
+- Document content bytes/text
+- Extraction target scope key
+
+But NOT from the extraction profile. So the same document processed with `ExtractionProfile.NONE` and `ExtractionProfile.DATASET_D_PUBLICATION` produced the same content hash and returned cached results.
+
+### Fix
+Updated `_get_scope_key()` in `content_hash.py` to include `state.extraction_profile` in the scope key. Now `profile=dataset_d_publication` produces a different hash than `profile=none`.
+
+### Verification
+After the fix, entries take 236-613s each (real pipeline execution) instead of 5s (cached).
+
+### Lesson
+When adding a new configuration dimension (extraction profile), always include it in the cache key. The content hash is the dedup key for the processing cache — any parameter that changes pipeline behavior must be part of the hash. Otherwise, evaluations with different configurations silently return stale results.
+
+### Also Fixed
+Added 429 retry logic to `benchmark/core/pipeline_client.py` to handle LLM API rate limits during evaluation.
+
+### 问题12: bbox/结构化块失效——original_blocks全为NULL
+
+**问题描述**: 用户问"不是有bbox吗 为什么失效了"——StructuredBlockRenderer(结构化块渲染,含bbox)从未激活。
+
+**排查过程**:
+1. 检查50个文档:全部`original_blocks=None`、`translated_blocks=None`——DB从未存入blocks。
+2. 查`import_benchmark_ground_truth.py`:只存`original_text`/`translated_text`,不存blocks(第630-635行)。
+3. 查`search_service.py`的detail端点:`original_blocks=db_original_blocks`直接用DB值,无fallback(文本有fallback但blocks没有)。
+4. 查磁盘:`backend/output/cross_lingual/*/original.json`含blocks+bbox(22个文档),但这些文档不在evidence search结果中(目录名与PMID/DOI不匹配)。
+5. benchmark文档(rett_069等)只有`source.md`(纯markdown),无MinerU结构化输出——blocks数据根本不存在。
+
+**根因分析**: 两层缺失:(1)DB不存blocks(导入脚本缺陷);(2)API无fallback从磁盘加载blocks;(3)benchmark文档无MinerU结构化输出,blocks数据源不存在。
+
+**解决方案**: 三级fallback:
+1. **DB blocks**(优先)→ 2. **磁盘JSON blocks**(`_load_full_document_blocks`,从pipeline/cross_lingual输出加载)→ 3. **Markdown解析为blocks**(`_markdown_to_blocks`,从文档文本解析标题/段落/图片/表格/列表为MinerU-style ContentBlock)
+2. 重写`buildBlockHighlights`:从trace-based(全部null)改为value-based搜索(`buildBlockHighlightsFromValues`),在block文本坐标空间搜索证据值
+
+**验证**: rett_069从0个blocks→106个(32标题+69文本+1图片+4列表),54个高亮;930480bf原文75高亮+译文8高亮,双栏结构化渲染正常。
+
+**预防措施**: API应有多级fallback:DB→磁盘→动态解析。导入脚本应同时持久化blocks。Markdown-to-blocks解析是benchmark文档(无MinerU输出)的唯一结构化渲染途径。
+
+## [2026-06-24] Root Cause: Phase 2 Catalog Extraction Intermittent Failure
+
+### Problem
+7/11 completed Dataset D evaluation entries produce 0 matched scored fields.
+Initial hypothesis was field-profile restriction too aggressive.
+
+### Actual Root Cause
+**Phase 2 catalog_extraction intermittently fails to produce core identity fields.**
+DB analysis shows:
+- Zero-match entries: A.gene_symbol and B.disease_diagnosis are ABSENT from the database entirely (never produced by catalog_extraction)
+- Nonzero-match entries: same fields present with status=found
+- Source documents all contain abundant target text (MECP2 mentioned 27-85 times)
+- The pipeline completes successfully — it's not a timeout/error issue
+
+### Evidence
+- rett_001: 36 items in DB, 7 found. Found items: gene_mention (Phase 3), I.* (supporting group). NO A.gene_symbol, NO B.disease_diagnosis.
+- rett_006: 8 items in DB, ALL found. A.gene_symbol found, B.disease_diagnosis found.
+- Both source documents contain MECP2 26-85 times.
+
+### Diagnosis
+The catalog_extraction LLM call for the high_signal group (62 fields) intermittently
+returns empty or incomplete results. The supporting group extraction (F.*, I.*) works
+more reliably because it has different field types.
+
+The ClinicalContextStage adds B.clinical_phenotypes but the values don't match
+ground truth format (evaluator marks as wrong_value). This is a secondary issue.
+
+### Lesson
+When benchmark results show 0-match entries, check the DATABASE for evidence items
+before assuming the field profile or prompt is wrong. The absence of fields from the
+DB means the LLM extraction itself failed, not downstream filtering.
+
+The correct fix is NOT to add more extraction stages — it's to improve extraction
+reliability (retry-on-empty, catalog group decomposition, or prompt simplification).
+
+## [2026-06-24] Pre-existing Bugs Fixed During Core Identity Retry Implementation
+
+### field_eligibility.py: NameError for `channel_rejected`
+The `decide_with_channels` method referenced `channel_rejected` which was never defined.
+Should have been `rejected` (defined at line 147). This caused any document with
+channel_classification to crash. Fix: `channel_rejected` → `rejected`.
+
+### test_field_eligibility.py: Missing `excluded_field_ids` argument
+`FieldEligibilityDecision` constructor was updated to require `excluded_field_ids`
+but the test wasn't updated. Fix: added `excluded_field_ids=frozenset()`.
+
+### Lesson
+When adding required fields to dataclasses/dataclass-like contracts, grep for all
+constructor call sites (including tests) to avoid silent breakage.

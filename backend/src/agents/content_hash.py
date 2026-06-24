@@ -11,11 +11,18 @@ pipeline. The hash incorporates:
 from __future__ import annotations
 
 import hashlib
+import re
 from pathlib import Path
 
 import aiofiles
 
 from src.agents.contracts import PipelineGraphState
+
+
+def normalize_identifier(identifier: str) -> str:
+    """Normalize literature identifiers consistently across dedup layers."""
+    value = identifier.strip().lower()
+    return re.sub(r"^(pmid|doi|pmcid)\s*:\s*", "", value)
 
 
 def compute_hash_from_bytes(content: bytes, scope_key: str | None = None) -> str:
@@ -88,7 +95,7 @@ def _build_online_hash_key(state: PipelineGraphState) -> str | None:
     deduplicate). Falls back to the query string.
     """
     if state.identifiers:
-        normalized = ",".join(sorted(i.strip().lower() for i in state.identifiers if i.strip()))
+        normalized = ",".join(sorted(normalize_identifier(i) for i in state.identifiers if i.strip()))
         return f"identifiers:{normalized}"
     if state.query:
         return f"query:{state.query.strip()}"
@@ -96,10 +103,17 @@ def _build_online_hash_key(state: PipelineGraphState) -> str | None:
 
 
 def _get_scope_key(state: PipelineGraphState) -> str | None:
-    """Extract the extraction target scope key from state, if present."""
+    """Extract the extraction target scope key from state, if present.
+
+    The scope key includes the extraction profile so that the same document
+    processed with different profiles does not collide in the cache.
+    """
+    parts: list[str] = []
     if state.extraction_target is not None:
-        return state.extraction_target.scope_key
-    return None
+        parts.append(state.extraction_target.scope_key)
+    if state.extraction_profile and state.extraction_profile != "none":
+        parts.append(f"profile={state.extraction_profile}")
+    return "|".join(parts) if parts else None
 
 
 async def compute_content_hash(state: PipelineGraphState) -> str | None:

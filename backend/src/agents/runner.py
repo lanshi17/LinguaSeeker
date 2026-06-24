@@ -11,7 +11,7 @@ from typing import Any
 from loguru import logger
 
 from src.agents.concurrency import PipelineSemaphore
-from src.agents.contracts import PipelineGraphState, PipelineStatus
+from src.agents.contracts import PipelineGraphState, PipelineMode, PipelineStatus
 from src.agents.content_hash import compute_content_hash
 from src.agents.processing_cache import DocumentProcessingCacheService
 from src.agents.state_persistence import SessionBoundStatePersistence, PipelineRunSummaryRow, _derive_error_phase
@@ -62,6 +62,13 @@ class PipelineRunner:
         """
         run_id = initial_state.processing_run_id
         now = datetime.now(timezone.utc)
+
+        if initial_state.mode == PipelineMode.PHASE and initial_state.target_phase is not None:
+            await self._persistence.reset_phase_rerun_artifacts(
+                processing_run_id=initial_state.processing_run_id,
+                source_document_id=initial_state.source_document_id,
+                target_phase=initial_state.target_phase,
+            )
 
         # Durable claim: persist initial state with ownership before background task
         await self._persistence.save(

@@ -5,8 +5,11 @@ import json
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
+from .channel_contracts import DocumentEvidenceChannel
+
 if TYPE_CHECKING:
     from .catalog import EvidenceFieldSpec
+    from .channel_contracts import DocumentChannelClassification
     from .contracts import ContentBlock, ExtractionTarget, Track, TrackDocument
 
 
@@ -19,6 +22,10 @@ _EVIDENCE_MAP_JSON_EXAMPLE = {
     "authority_references": ["ClinVar"],
     "contradictions": [],
     "structure_hints": ["Table 1: clinical features"],
+    "selected_channels": ["case_report"],
+    "confidence": 0.82,
+    "rationale": "Single-proband case report describing phenotype and a de novo variant.",
+    "supporting_block_ids": ["block_3", "block_7"],
 }
 
 
@@ -120,6 +127,21 @@ CRITICAL: Do NOT return empty lists if the document contains biomedical content.
 
 If you are unsure whether the document is relevant, set relevant to TRUE.
 
+CHANNEL CLASSIFICATION:
+Classify the document into one or more evidence channels based on the study design and evidence type present.
+Set "selected_channels" to a non-empty array of exactly one of these labels (use lowercase):
+- "case_report": individual patient/proband/family evidence — phenotype description, variant identification, segregation, de novo, pedigree.
+- "functional_study": wet-lab, cell-model, animal-model, or patient-cell assay evidence — functional readout, controls, quantitative results, rescue experiments.
+- "cohort_study": aggregate cohort, case-control, recurrence, association, enrichment, or burden/statistical evidence across multiple individuals.
+- "mixed": use when two or more concrete channels are materially present in the document.
+- "unknown": use ONLY when the document type cannot be determined from the available text.
+
+For "mixed", instead of the "mixed" label you MAY list the concrete channels that apply (e.g. ["case_report", "functional_study"]) — both forms are accepted. Prefer listing concrete channels when the evidence is clearly separable.
+
+Set "confidence" to a float in [0.0, 1.0] reflecting how certain you are of the channel assignment.
+Set "rationale" to a one-sentence justification citing the study design features that drove the classification.
+Set "supporting_block_ids" to the block identifiers (e.g. "block_3") that contain the evidence supporting the classification; use an empty array if block IDs are not available.
+
 JSON OUTPUT:
 Return only a single valid json object. Do not wrap it in markdown code fences or add commentary.
 Return JSON matching this schema (fill in values found in the document):
@@ -163,6 +185,71 @@ def disease_boundary_guidance() -> str:
 - Do NOT over-specialize or under-specialize the target disease name. Preserve the target-level disease boundary supported by the evidence span."""
 
 
+
+_CASE_REPORT_STRATEGY = """CASE-REPORT STRATEGY:
+This document is classified as an individual case report or family study. Prioritize extraction of patient/proband/family-level evidence:
+- Phenotype: extract clinical phenotypes, HPO terms, biochemical markers, and disease diagnosis for the affected individual(s).
+- Onset and age: extract age of onset, current/last follow-up age, and disease progression details.
+- Inheritance: extract reported mode of inheritance, consanguinity, and zygosity context.
+- Segregation: extract de novo status, parentage confirmation, parental genotypes/phenotypes, and segregation counts (G+/P+, G-/P- etc.).
+- Variant observations: extract the variant(s) observed in affected individuals, including HGVS notation, variant type, and protein effect.
+- Do not extract cohort-level statistics, case-control odds ratios, or population frequency data unless clearly individual-level evidence is present."""
+
+_FUNCTIONAL_STUDY_STRATEGY = """FUNCTIONAL-STUDY STRATEGY:
+This document is classified as a functional/experimental study. Prioritize extraction of assay-level evidence:
+- Assay system: extract assay type, assay system, and physiologic context (patient-derived vs model organism vs in vitro).
+- Tested variant: extract the specific variant tested in the assay and its molecular consequence.
+- Controls: extract positive controls, negative controls, total controls, and control quality.
+- Quantitative result: extract functional result, quantitative result, OddsPath, and evidence strength tier.
+- Result classification: distinguish normal, abnormal, and inconclusive functional results.
+- Disease mechanism: extract declared disease mechanism and check assay-disease mechanism consistency.
+- CRITICAL: Do not treat in silico computational predictions (PP3/BP4) as functional evidence. Only wet-lab, cell-model, animal-model, or patient-cell assays qualify as F.* functional evidence."""
+
+_COHORT_STUDY_STRATEGY = """COHORT-STUDY STRATEGY:
+This document is classified as a cohort, case-control, or population study. Prioritize extraction of aggregate-level evidence:
+- Cohort size: extract study design, case count, control count, and case definition.
+- Statistics: extract odds ratio, confidence interval, p-value, and statistical method.
+- Population frequency: extract allele frequency, allele count, allele number, and population subgroup from population databases.
+- Detection quality: extract control matching quality, detection methodology equivalence, and bias/confounding factors.
+- Recurrence: extract case-control status and any enrichment/burden evidence.
+- Do not extract single-case phenotypes, individual patient onset, or family segregation details unless the document clearly reports individual-level evidence alongside the aggregate data."""
+
+_GENERIC_STRATEGY = """DOCUMENT-CHANNEL STRATEGY:
+No specific document channel was detected. Extract evidence using the standard catalog rules above. Do not over-specialize extraction strategy; treat each eligible field according to its general catalog definition."""
+
+
+def get_channel_strategy_guidance(
+    channel_classification: DocumentChannelClassification | None,
+) -> str:
+    """Return extraction strategy guidance tailored to the document channel(s).
+
+    - ``None`` or ``UNKNOWN``: conservative generic guidance.
+    - Concrete channels: the corresponding strategy block.
+    - ``mixed`` (bare, no concrete): generic guidance.
+    - Multiple concrete channels: concatenated guidance blocks for each,
+      without duplicating generic text.
+    """
+    if channel_classification is None:
+        return _GENERIC_STRATEGY
+
+    effective = channel_classification.effective_channels
+    if not effective:
+        return _GENERIC_STRATEGY
+
+    blocks: list[str] = []
+    _STRATEGY_MAP = {
+        DocumentEvidenceChannel.CASE_REPORT: _CASE_REPORT_STRATEGY,
+        DocumentEvidenceChannel.FUNCTIONAL_STUDY: _FUNCTIONAL_STUDY_STRATEGY,
+        DocumentEvidenceChannel.COHORT_STUDY: _COHORT_STUDY_STRATEGY,
+    }
+    for channel in effective:
+        block = _STRATEGY_MAP.get(channel)
+        if block and block not in blocks:
+            blocks.append(block)
+    if not blocks:
+        return _GENERIC_STRATEGY
+    return "\n".join(blocks)
+
 def get_catalog_extraction_prompt(
     document_id: str,
     track: Track,
@@ -170,10 +257,12 @@ def get_catalog_extraction_prompt(
     catalog: tuple[EvidenceFieldSpec, ...],
     evidence_map_summary: str,
     extraction_target: ExtractionTarget | None = None,
+    channel_classification: DocumentChannelClassification | None = None,
 ) -> str:
     catalog_text = _catalog_compact_text(catalog)
     target_section = _target_prompt_section(extraction_target)
     relationship_guidance = relationship_decision_guidance()
+    channel_strategy = get_channel_strategy_guidance(channel_classification)
     boundary_guidance = disease_boundary_guidance()
     return f"""You are extracting structured evidence from a biomedical document for a SPECIFIC target gene-disease pair.
 
@@ -205,6 +294,8 @@ CATALOG SCOPE:
 - Extract only the listed eligible fields. Do not add fields outside this catalog.
 - Set status="not_found" for listed eligible fields when the document does not support a value.
 
+{channel_strategy}
+
 RULES:
 1. For each catalog field, set status="found" with the extracted value, or status="not_found" if absent.
 2. Do not score or classify ACMG/GDV evidence.
@@ -232,6 +323,10 @@ RULES:
 21. For B.age_of_onset, extract referral, diagnosis, first symptoms, or presentation age. Do NOT use developmental milestones as B.age_of_onset, for example sitting, walking, or speaking ages unless the sentence explicitly states symptom onset.
 22. Computational predictions support PP3/BP4 only. Do not treat in silico predictions as F.functional_result, F.assay_type, or other functional evidence fields unless there is a real wet-lab, cell, animal, or patient-derived assay.
 23. E.prediction_tools_list requires named tools such as SpliceAI, CADD, REVEL, PolyPhen-2, SIFT, MutationTaster, or MaxEntScan. Generic phrases like "in silico tools" are insufficient and must be not_found.
+24. For B.clinical_phenotypes, extract the patient's observed clinical features, symptoms, and signs — NOT the disease diagnosis name. Examples of valid phenotypes: seizures, developmental regression, ataxia, intellectual disability, loss of acquired hand skills, stereotypic hand movements, tremor, rigidity, bradykinesia, hypotonia, spasticity. Multiple phenotypes should be separated by semicolons. Do NOT use disease names (e.g. "Parkinson disease", "Rett syndrome") as phenotypes.
+25. For B.mode_of_inheritance_reported, extract ONLY if the document explicitly states the inheritance pattern (e.g. "autosomal dominant", "autosomal recessive", "X-linked"). Do NOT infer inheritance from variant zygosity alone. If the document says "heterozygous variant" without stating the inheritance pattern, set not_found.
+26. For C.de_novo_status, extract ONLY if the document explicitly confirms de novo status with parental or family testing evidence (e.g. "confirmed de novo", "de novo in the proband", "not inherited from parents"). Do NOT infer de novo from absence of family history alone.
+27. For B.hpo_terms, extract HPO phenotype terms or clinical feature descriptions that correspond to HPO concepts. Use the HPO term name or ID if provided in the document. Multiple terms: separate with semicolons.
 
 DOCUMENT BLOCKS:
 {text}
@@ -357,6 +452,52 @@ Track: {track.value}
 
 CURRENT EXTRACTION SUMMARY (what has already been extracted):
 {current_items_summary}
+
+DOCUMENT TEXT:
+{text}
+"""
+
+
+def get_core_identity_retry_prompt(
+    document_id: str,
+    track: Track,
+    text: str,
+    extraction_target: ExtractionTarget,
+) -> str:
+    """Compact retry prompt targeting only core identity fields.
+
+    Used when the normal catalog extraction fails to produce FOUND items
+    for ``A.gene_symbol`` or ``B.disease_diagnosis``.  The prompt is
+    deliberately small (4 fields, no full catalog) to maximise extraction
+    reliability on these critical fields.
+    """
+    return f"""You are extracting core identity fields from a biomedical document.
+
+TARGET GENE: {extraction_target.gene_symbol}
+TARGET DISEASE: {extraction_target.disease_name}
+
+Extract ONLY these four fields. For each, set status="found" with the
+extracted value, or status="not_found" if the document does not support it.
+
+FIELDS:
+- A.gene_symbol: Extract the target gene symbol ({extraction_target.gene_symbol}) ONLY if it
+  appears in the document text, title, abstract, or is unambiguously stated as the gene under study.
+  Do NOT extract other genes mentioned for comparison or background.
+- B.disease_diagnosis: Extract the target disease ({extraction_target.disease_name}) ONLY if the
+  document discusses this disease (or a close named synonym) in relation to the target gene/variant.
+  Do NOT extract unrelated diseases.
+- A.variant_hgvs_c: Extract an exact HGVS coding-level variant string (e.g. "c.880C>T") ONLY if
+  it appears verbatim in the document. Do NOT infer or construct variant strings.
+- A.variant_hgvs_p: Extract an exact HGVS protein-level variant string (e.g. "p.R294X") ONLY if
+  it appears verbatim in the document. Do NOT infer or construct variant strings.
+
+RULES:
+1. Do not infer values that are not explicitly stated in the document.
+2. For found items, provide source with context_type, context_ref, and text_snippet (verbatim substring).
+3. Confidence should reflect certainty (0.0-1.0).
+
+Document ID: {document_id}
+Track: {track.value}
 
 DOCUMENT TEXT:
 {text}

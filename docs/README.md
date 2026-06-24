@@ -86,7 +86,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 ## Recently Archived
 
 | Date | Title | Status |
-|------|-------|--------|
+| 2026-06-24 | [Three-Channel Evidence Extraction Design](archive/plans/2026-06-24-three-channel-evidence-extraction-design.md) | completed |
 | 2026-06-23 | [Log Mining Remediation Plan](archive/plans/2026-06-23-log-mining-remediation-plan.md) | completed |
 | 2026-06-22 | [Parkinson Literature XLSX Dataset Implementation Plan](archive/plans/2026-06-22-parkinson-literature-xlsx-dataset-plan.md) | completed |
 | 2026-06-21 | [Model Server Docker Decouple](archive/plans/2026-06-21-model-server-docker-decouple.md) | completed |

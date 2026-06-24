@@ -81,6 +81,11 @@ if __name__ == "__main__":  # pragma: no cover - CLI parity with the old entry p
         default=None,
         help="API key for X-API-Key header authentication",
     )
+    parser.add_argument(
+        "--extraction-profile",
+        default="none",
+        help="Extraction field profile (none, dataset_d_publication)",
+    )
     args = parser.parse_args()
     asyncio.run(
         run_evaluation(
@@ -91,5 +96,6 @@ if __name__ == "__main__":  # pragma: no cover - CLI parity with the old entry p
             ground_truth_root=args.ground_truth_root,
             force_reextract=args.no_preprocessed,
             api_key=args.api_key,
+            extraction_profile=args.extraction_profile,
         )
     )

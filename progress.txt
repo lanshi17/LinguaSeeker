@@ -682,3 +682,255 @@
   - Added --no-preprocessed and --api-key flags to benchmark evaluate CLI
   - Status: MVP implemented, awaiting full evaluation results
 [2026-06-24] BIBM paper cleanup: renamed CrossEvidence→LinguaSeeker in TeX+README, completed truncated abstract, verified Discussion/Conclusion present, audited refs.bib (14 keys all matched), verified all 10 frozen benchmark reports exist at new benchmark/data/reports/ location, confirmed double-anonymous compliance, confirmed zero remaining CrossEvidence references [done]
+
+[2026-06-23] [文献双语对照 — 修复表格渲染] [完成]
+- 修复: MarkdownDocumentViewer 加 rehype-raw 插件渲染 HTML 表格(MinerU table_body 是 HTML,react-markdown 默认不渲染裸HTML)
+- 修复: 加 .edb-markdown-viewer table/th/td CSS(边框/padding/表头/斑马纹)
+- 验证: 有表格文档渲染8个table(9行含表头),border+padding样式生效,lint零错误
+[2026-06-24] BIBM Dataset D Pipeline Optimization — Field-Budgeted Extraction + Source-Visible Gate
+  - Created design doc: docs/plans/2026-06-24-bibm-dataset-d-pipeline-optimization-design.md
+  - Diagnosis: SYSTEM has FP problem on B.mode_of_inheritance_reported (20 FP vs 3 TP), B.age_of_onset (27 FP vs 17 TP). ClinicalContextStage adds noise without source validation.
+  - Root causes: (1) too many fields per LLM call, (2) no extraction guidance for medium-contextual fields, (3) no source-visible gate on supplement stage
+  - Implementation:
+    1. field_profile.py: DATASET_D_FIELDS (20 fields: 13 scored + 7 identity)
+    2. CatalogExtractionStage accepts field_profile parameter to restrict catalog
+    3. Added 4 field-specific extraction rules (B.clinical_phenotypes, B.mode_of_inheritance_reported, C.de_novo_status, B.hpo_terms)
+    4. ClinicalContextStage now has source-visible gate: rejects items whose snippet is not in document text
+    5. EvidenceExtractionService defaults to DATASET_D_FIELDS profile
+  - Tests: 359/359 passing (11 new: 6 field_profile, 5 source-visible gate)
+  - Status: implementation complete, awaiting full 73-entry evaluation
+  - Changed files: field_profile.py, api.py, catalog_extraction.py, clinical_context.py, prompts.py, workflow.py
+
+[2026-06-23] [文献双语对照 — 重写高亮算法真正匹配文中证据项] [完成]
+- 重写: buildEvidenceDocument 改为遍历有value的items(而非traces),用findAllOccurrences在全文搜索所有出现位置
+- 修复: 放弃trace.source_span整段上下文高亮(标记的是片段不是实体),改为item.value实体匹配
+- 修复: 短value优先+长度上限(3-60字符)+occupied区间去重,避免整句遮蔽短实体
+- 验证: FOXG1 4整句→86实体高亮(FOXG1/Foxg1/nonsense/c.385G>T),rett_069 24个(MECP2/Rett syndrome/p.D156E),非原文术语正确跳过
+[2026-06-24] Harden Dataset D field profile opt-in + source-visible gate
+  - Made extraction profile opt-in via ExtractionProfile enum (NONE vs DATASET_D_PUBLICATION)
+  - EvidenceExtractionService defaults to NONE (all non-curation fields) — production-safe
+  - Benchmark can explicitly select dataset_d_publication via --extraction-profile CLI flag
+  - Profile threaded through: pipeline request → PipelineGraphState → Phase2Adapter → service
+  - Source-visible gate hardened: whitespace normalization (re.sub(r"\s+", " ")), case-sensitive matching
+  - Rejection counters exposed on ClinicalContextStage._rejection_reasons for audit
+  - wiring.py explicitly passes ExtractionProfile.NONE for production
+  - Tests: 37 field_profile+clinical_context tests, 368 total extract_evidence tests all passing
+  - Design doc updated with opt-in principles
+  - Changed files: field_profile.py, api.py, clinical_context.py, wiring.py, pipeline.py, contracts.py, phase_2_adapter.py, pipeline_client.py, evaluate.py, test files
+[2026-06-24] [Pipeline rerun/cache/state contract hardening] [完成]
+- 修复: phase rerun 在 runner durable claim 前清理旧 run evidence、bindings、provisional canonical evidence、literature profile/search projection,避免重跑混入旧证据
+- 修复: state_persistence 保存 JSONB 时裁剪 Phase2 inline 文本/blocks 的副本,不再污染运行态和 processing cache 对象
+- 修复: Phase2 rerun 会刷新 SourceDocument original/translated text 和 blocks
+- 修复: online identifier hash 与 source_key 共用 PMID/DOI/PMCID 前缀规范化
+- 修复: local upload active-run dedup 改为 content hash source_key,避免同名不同文件互相阻塞
+- 修复: pipeline status API 增加具名 PhaseError/PhaseSummary/PhaseNode/PipelinePhases response model,并返回 nodes/count 字段
+- 验证: uv run pytest tests/api/test_pipeline_api.py tests/agents/test_processing_cache.py::TestContentHash tests/agents/test_state_persistence_layer.py tests/agents/test_runner.py
+- 验证: uv run ruff check src/agents/content_hash.py src/agents/runner.py src/agents/state_persistence.py src/api/v1/pipeline.py tests/agents/test_processing_cache.py tests/agents/test_state_persistence_layer.py tests/agents/test_runner.py tests/api/test_pipeline_api.py
+
+[2026-06-23] [文献双语对照 — 修正译文标题与验证双语高亮] [完成]
+- 修正: 译文栏标题从 "Translated Text (Chinese)" 改为 "Translated Text (English)"(译文是英译非中文)
+- 验证: 12个非英文文档均有英译(transLen>0),双语对照双栏正常显示
+- 验证: 俄文文档930480bf 原文36高亮+译文6高亮,日文文档0bcc7be0 双栏正常
+- 说明: rett_069(e57eb79b)译文为空是数据缺失(benchmark标注数据无translated.md,未过翻译管线),非代码问题
+
+[2026-06-24] [文献双语对照 — 非英文原文多语言高亮] [完成]
+- 新增: expandSearchTerms()扩展搜索候选词——HGVS前缀拉丁↔西里尔变体(c.→с.)+剥离前缀裸串;多语言别名表EVIDENCE_ALIASES覆盖Rett syndrome/missense/frameshift等高频术语英→俄/中/日/韩映射
+- 新增: findAllOccurrences()项内去重——候选词长度降序优先长匹配,区间去重避免短词遮蔽长短语
+- 修复: 移除causative→причин等过于通用的别名(匹配到"по причине"误报)
+- 验证: rett_069 24→53高亮(28俄文疾病名),930480bf 36→75(含СИНДРОМ РЕТТА/с.468C>G西里尔变体)
+[2026-06-24] [Three-channel evidence extraction — Task 1: channel contracts] [done]
+- 新增: backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/channel_contracts.py
+  - DocumentEvidenceChannel 枚举: case_report / functional_study / cohort_study / mixed / unknown
+  - DocumentChannelClassification (Pydantic): selected_channels, confidence[0,1], rationale, supporting_block_ids;
+    model_validator 去重 + UNKNOWN 与 concrete 互斥(有 concrete 时丢弃 UNKNOWN); effective_channels 属性
+    (bare MIXED→三 concrete, UNKNOWN→空→fallback 全部 single-paper 字段)
+  - ChannelFieldEligibility / FieldEligibilityReason: allowed/excluded 字段集 + 逐字段审计原因
+  - channel_categories(): 通道→目录类别映射; A/H/J 跨通道公共, K(curation) 永不单篇可提取
+    case_report={A,B,C,H,J}=73字段; functional_study={A,E,F,I,H,J}=84; cohort_study={A,D,G,H,J}=60;
+    mixed/unknown=143(全部非K); K=23 始终排除
+  - compute_channel_eligibility(): 166字段目录 ∩ 通道可提取字段, allowed/excluded 完整分区
+- 测试: backend/tests/.../test_channel_contracts.py — 39 tests passed (枚举/类别映射/分类校验/
+  单通道与混合通道 eligibility/分区不变量/逐字段原因/JSON 序列化往返), ruff clean
+
+[2026-06-24] [文献双语对照 — 长句子证据值子实体拆解高亮] [完成]
+- 新增: extractSubEntities()对>30字符长值提取子实体(HGVS missense/stop-gain记号/基因符号/括号内容/逗号分隔短语)
+- 修改: 移除60字符上限→200字符,允许句子级值参与搜索
+- 新增: findAllOccurrences()对HGVS项用正则空白灵活匹配(c.502\s*C\s*T匹配c.502C>T和c.502 C>T)
+- 验证: 8ff64507 0→34高亮(MECP2+p.R106W+p.R168X+p.R255X),rett_069保持53(无回退)
+[2026-06-24] [Three-channel evidence extraction — Task 2: channel field matrix via field_profile] [done]
+- Task 1 跟进: compute_channel_eligibility() 重构 — unknown/permissive 路径改为显式 if/else 分支
+  (替代 is_unknown 后置 override), 文档明确"effective channels 为空→全部非K字段(143)"
+- 新增 field_profile.py 两个 helper (extraction workflow 桥接层, 不直接耦合 channel_contracts):
+  - resolve_channel_profile_fields(classification) -> frozenset[str]: 委托 compute_channel_eligibility,
+    单一真相源; unknown→143, bare mixed→143, case_report→73, functional_study→84, cohort_study→60
+  - intersect_profile_fields(base, channel) -> frozenset|None: None=无限制;
+    None∩X→X, X∩None→X, None∩None→None, 双方→交集
+- 字段计数: case_report=73(A+B+C+H+J), functional_study=84(A+E+F+I+H+J), cohort_study=60(A+D+G+H+J),
+  mixed/unknown=143(全部非K), case+func=120; DATASET_D(20)∩case_report=19(仅排除D.allele_frequency)
+- 测试: test_field_profile.py +17 channel/intersection tests (35 total passed);
+  test_channel_contracts.py 39 passed; 合计 74 passed, ruff clean
+  (修复预存 F841: test_default_service 未使用的 service 变量→裸构造表达式)
+[2026-06-24] Dataset D publication profile evaluation — partial results, full run in progress
+  - Discovered and fixed processing cache bug: content_hash.py did not include extraction_profile in scope key
+  - Cache bug caused first 2 evaluation runs to use stale cached results (5s per entry)
+  - Fixed content hash, restarted v3 evaluation with correct profile
+  - v3 entries take 236-613s each (real pipeline execution) due to LLM API rate limits
+  - Only 2/73 entries completed in v3 so far; full run will take ~12 hours
+  - Partial v3 result: TP=0, FP=0, FN=19 (all fields missing on rett_001, rett_003)
+  - Cached run analysis (10 entries, general pipeline): B.clinical_phenotypes has 5 FP, B.mode_of_inheritance_reported has 3 FP
+  - Added 429 retry logic to benchmark pipeline_client.py
+  - Generated partial report: benchmark/data/reports/dataset_d_publication_profile_comparison_20260624.md
+  - Status: awaiting full 73-entry evaluation completion
+[2026-06-24] [Three-channel evidence extraction — Task 3: relevance scan channel classification] [done]
+- contracts.py: EvidenceExtractionState 新增 channel_classification: DocumentChannelClassification|None;
+  新增 RelevanceScanOutput(DocumentEvidenceMap) 组合 LLM 输出 schema (selected_channels/confidence/
+  rationale/supporting_block_ids 作为原始字符串字段)
+- channel_contracts.py: 新增 RelevanceScanResult dataclass (evidence_map + channel_classification);
+  merge_channel_classifications() 多chunk合并(concrete优先+union, 全UNKNOWN→UNKNOWN);
+  parse_channel_classification() 原始字符串→DocumentEvidenceChannel 枚举(无效丢弃, 全空→UNKNOWN fallback,
+  confidence clamp [0,1], 大小写不敏感, 去重)
+- prompts.py: relevance prompt 新增 CHANNEL CLASSIFICATION 段落 — 5通道标签定义(case_report/
+  functional_study/cohort_study/mixed/unknown), 要求 JSON 输出 selected_channels/confidence/
+  rationale/supporting_block_ids; _EVIDENCE_MAP_JSON_EXAMPLE 扩展对应字段
+- stages/evidence_map.py: RelevanceScanStage 重构 — output_schema 改为 RelevanceScanOutput,
+  run()/run_async() 返回 RelevanceScanResult; getattr 防御性提取 channel 字段(旧mock返回
+  DocumentEvidenceMap 时 fallback UNKNOWN); 多chunk 合并 evidence_map + channel_classification
+- workflow.py: _node_relevance_scan/_async_node_relevance_scan 解包 RelevanceScanResult,
+  state.channel_classification 持久化; relevant=false 仍设 NOT_RELEVANT (channel 不影响 relevance)
+- 测试: test_relevance_scan.py 32 tests (parse单元/stage各通道/mixed多concrete/missing fallback/
+  relevant=false NOT_RELEVANT/JSON round-trip/multi-chunk merge/merge单元);
+  更新 test_stages.py 2 tests + test_stages_async.py 2 tests (result.relevant→result.evidence_map.relevant);
+  全 extract_evidence suite 454 passed, 2 skipped, ruff clean
+
+[2026-06-24] [文献双语对照 — bbox/结构化块失效修复] [完成]
+- 新增: _load_blocks_from_dir() + _load_full_document_blocks()——从pipeline/cross_lingual磁盘JSON加载blocks(含bbox)
+- 新增: _markdown_to_blocks()——从markdown文本解析为MinerU-style ContentBlock(标题/段落/图片/表格/列表),无bbox但激活结构化渲染
+- 修改: search_service.py detail端点blocks返回加三级fallback(DB→磁盘JSON→markdown解析)
+- 新增: buildBlockHighlightsFromValues()——在block文本坐标空间搜索证据值生成高亮
+- 重写: BilingualEvidenceView buildBlockHighlights从trace-based改为value-based搜索
+- 验证: rett_069 0→106 blocks+54高亮,930480bf 75+8高亮双栏结构化渲染
+
+[2026-06-24] [文献双语对照 — 已入库文档blocks回填DB] [完成]
+- 新增: scripts/data/import/backfill_document_blocks.py——回填脚本,对DB中original_blocks为NULL的文档:
+  1. 尝试从磁盘pipeline/cross_lingual JSON加载含bbox的结构化blocks
+  2. fallback从文档文本markdown解析为MinerU-style ContentBlock
+- 执行: 242个文档中235个成功回填(69个双语orig+trans,166个仅orig),7个跳过(无文本)
+- 验证: rett_069 DB直接返回106 blocks(32标题+69文本+1图片+4列表),930480bf orig=162+trans=28
+- 效果: API不再依赖实时markdown解析fallback,DB直接返回持久化blocks
+[2026-06-24] [Three-channel evidence extraction — Task 4: channel ∩ target/source eligibility] [done]
+- field_eligibility.py: 新增 decide_with_channels() — base decide() ∩ resolve_channel_profile_fields();
+  channel_classification=None → permissive(返回base不变); reasons 扩展 channel:<name> +
+  rejected:not_extractable_for_channel; 复用 Task 2 的 intersect_profile_fields 做交集
+- catalog_extraction.py: run()/run_async()/_eligible_catalog_groups() 新增 channel_classification 参数
+  (默认None=向后兼容); _eligible_catalog_groups 改用 decide_with_channels 替代 decide
+- workflow.py: _node_catalog_extraction / _async_node_catalog_extraction 传入 state.channel_classification
+- 通道→排除类别(在prompt构造中): case_report排除D/E/F/G/I; functional_study排除B/C/D/G;
+  cohort_study排除B/C/E/F/I; mixed/unknown=permissive(全部非K); K始终排除
+- 测试: test_field_eligibility.py +12 channel intersection tests (24 total);
+  test_catalog_extraction.py 8 tests (新建, prompt级别验证F/D/G/B/C字段排除);
+  全 extract_evidence suite 473 passed, 2 skipped, ruff clean
+  (注意: G/C字段在target-scoped base中无cue路径, 纯channel测试用extraction_target=None隔离channel filter)
+
+[2026-06-24] [双语对照文档同步滚动] [完成]
+- 新增: frontend/src/features/evidence-db/utils/scrollSync.ts——滚动比例同步工具(防循环rAF guard + localStorage持久化)
+- 修改: DocumentReader.tsx——新增scrollContainerRef和onContainerScroll props,通过callback ref合并内部contentRef与外部ref
+- 修改: BilingualEvidenceView.tsx——双面板onScroll互相同步(original↔translated),antd Switch开关+Tooltip,仅在有翻译时显示
+- 验证: 浏览器实测正向(0.30→0.2999)、反向(0.60→0.5997)、禁用后独立滚动、刷新后localStorage恢复开关状态
+[2026-06-24] Dataset D evaluation interim update — 11/73 entries, mixed results
+  - v3 evaluation running: 11 completed, 3 failed, 59 remaining
+  - Per-entry results: 4 entries extract 4-5 fields, 7 entries extract 0 fields
+  - ClinicalContextStage active: adding 1-3 items per entry
+  - Infrastructure bottleneck: LLM 429 rate limits add 100-600s per entry
+  - Average time per entry: ~8 minutes
+  - Estimated completion: ~8-10 hours
+  - Report: benchmark/data/reports/dataset_d_publication_profile_comparison_20260624.md
+[2026-06-24] [Three-channel evidence extraction — Task 5: channel-specific extraction strategy guidance] [done]
+- prompts.py: 新增 get_channel_strategy_guidance(classification) — 返回通道特定提取策略文本:
+  * None/UNKNOWN → generic "DOCUMENT-CHANNEL STRATEGY" (保守通用指导, 不过拟合)
+  * case_report → "CASE-REPORT STRATEGY" — 强调 phenotype/onset/diagnosis/inheritance/segregation/de novo/zygosity/variant observations in affected individuals
+  * functional_study → "FUNCTIONAL-STUDY STRATEGY" — 强调 assay system/tested variant/controls/quantitative result/normal-abnormal-inconclusive/disease mechanism consistency; CRITICAL: 不将 in silico predictions 视为 functional evidence
+  * cohort_study → "COHORT-STUDY STRATEGY" — 强调 cohort size/case-control counts/statistics/population frequency/detection quality/recurrence; 避免提取 single-case phenotypes
+  * mixed(bare) → effective_channels 展开为三concrete → concat 三段策略
+  * mixed(concrete, e.g. case+functional) → 拼接对应策略块, 无重复 generic 文本
+- get_catalog_extraction_prompt(): 新增 channel_classification 参数; 策略文本注入位置: CATALOG SCOPE 和 RULES 之间
+- catalog_extraction.py: run()/run_async() 的 prompt 生成透传 channel_classification
+- 测试: test_prompts.py +14 (36 total) — strategy 单元(各通道/None/mixed/unknown/position);
+  test_catalog_extraction.py +3 (11 total) — run/run_async prompt级验证策略文本注入 + async 通过 pytest.mark.asyncio
+- 输出 schema 不变: run/run_async 仍用 output_schema=list[EvidenceItem], 不新增输出字段
+- 全 extract_evidence suite 490 passed, 2 skipped, ruff clean
+
+[2026-06-24] 11-entry diagnostic: root cause identified as Phase 2 catalog_extraction intermittent failure
+  - DB analysis of 11 completed entries reveals: zero-match entries have A.gene_symbol/B.disease_diagnosis ABSENT from DB entirely
+  - Source documents all contain target entity text (rett_001 has 85 MECP2 mentions, 0 A.gene_symbol extracted)
+  - The loss point is Phase 2 catalog_extraction LLM reliability, NOT field profile restriction or downstream gating
+  - Nonzero-match entries (rett_006: 8/8 found) succeed with same pipeline — intermittent LLM failure
+  - ClinicalContextStage adds B.clinical_phenotypes but evaluator rejects values as wrong_value (format mismatch)
+  - Phase 3 entities (gene_mention, disease_mention) don't count in benchmark
+  - Recommended fix: retry-on-empty for core identity fields, or catalog group decomposition
+  - Updated diagnostic report: benchmark/data/reports/dataset_d_publication_profile_comparison_20260624.md
+[2026-06-24] Implemented core identity retry in CatalogExtractionStage
+  - Problem: catalog_extraction intermittently fails to produce A.gene_symbol/B.disease_diagnosis even with source text
+  - Solution: after normal extraction, if core identity fields missing, run one focused retry with 4-field prompt
+  - Retry prompt: compact, target-specific, only A.gene_symbol, B.disease_diagnosis, A.variant_hgvs_c, A.variant_hgvs_p
+  - Merge: don't overwrite higher-confidence existing FOUND items
+  - Failure logged as warning, pipeline continues
+  - 8 new tests (trigger, skip, merge, confidence guard, async parity, prompt scope)
+  - Fixed pre-existing bugs: field_eligibility.py channel_rejected NameError, test constructors
+  - Full test suite: 498 passed, 2 skipped
+  - Also updated: benchmark report, design doc, progress.txt
+
+[2026-06-24] [Three-channel evidence extraction — Task 6: channel eligibility status differentiation] [done]
+- contracts.py: EvidenceStatus 枚举新增 NOT_APPLICABLE = "not_applicable" (channel-excluded)
+  和 NOT_ATTEMPTED = "not_attempted" (target-excluded)
+- field_eligibility.py: FieldEligibilityDecision 新增 channel_rejected_field_ids 字段;
+  decide_with_channels() 分别追踪 channel-rejected (NOT_APPLICABLE) 和 target-excluded (NOT_ATTEMPTED)
+- contracts.py: EvidenceExtractionState 新增 channel_excluded_field_ids 和 target_excluded_field_ids 字段
+- stages/catalog_extraction.py: _eligible_catalog_groups() 存储 _last_eligibility_decision 供 workflow 读取
+- workflow.py: _node_catalog_extraction/_async_node_catalog_extraction 从 decision 提取 channel_excluded/target_excluded
+  写入 state; _node_catalog_backfill 传入 excluded_field_ids 到 normalize_grouped()
+- core.py: EvidenceItemNormalizer.normalize_grouped() 新增 channel_excluded_field_ids/target_excluded_field_ids 参数;
+  channel-excluded → NOT_APPLICABLE, target-excluded → NOT_ATTEMPTED, eligible-but-absent → NOT_FOUND;
+  新增 _not_applicable_item()/_not_attempted_item() 方法;
+  _choose_better() rank 新增 NOT_APPLICABLE=-1, NOT_ATTEMPTED=-2
+- chunking.py: _item_rank() 新增 NOT_APPLICABLE=-1, NOT_ATTEMPTED=-2 (避免 KeyError)
+- 语义保障:
+  * EvidenceChainBuilder._is_valid_grounded() 仅接受 FOUND → NOT_APPLICABLE/NOT_ATTEMPTED 自然排除
+  * QualityGateStage elif 链不处理新状态 → 自然跳过, 不计入 issues/human_review
+  * Phase 3 adapters/standardization 过滤 item.status != FOUND → NOT_APPLICABLE/NOT_ATTEMPTED 自然排除
+  * CANONICAL_ELIGIBLE_STATUSES = {"found","source_invalid","ocr_gap","table_ungrounded"} → 新状态不在集合中
+  * reconcile._status_score() fallback 0.1 → 新状态自然降权
+- 测试: test_channel_eligibility_statuses.py 8 tests (case/functional/cohort/unknown/eligible-absent/
+  chain-exclusion/target-excluded/priority); 全 suite 512 passed, 2 skipped, ruff clean
+
+[2026-06-24] [Three-channel evidence extraction — Task 7: thread channel metadata through extraction results] [done]
+- contracts.py: 新增 FieldEligibilitySummary 模型 (eligible_field_count/channel_excluded_field_count/
+  target_excluded_field_count/not_applicable_count/not_attempted_count)
+- contracts.py: EvidenceExtractionResult 新增 channel_classification: DocumentChannelClassification | None
+  和 field_eligibility_summary: FieldEligibilitySummary | None 字段
+- api.py: run() 方法从 state 计算 FieldEligibilitySummary (统计 NOT_APPLICABLE/NOT_ATTEMPTED 数量),
+  传入 channel_classification 和 field_eligibility_summary 到 EvidenceExtractionResult
+- 双轨持久化: DualEvidenceExtractionResult 包含 original_result/translated_result,
+  每个 result 自动包含新字段; phase_2_adapter 用 dual_result.model_dump(mode="json") 持久化,
+  新字段自动包含在 extraction_result.json 中
+- 测试: test_channel_metadata.py 9 tests (contract serialization/round-trip/field_eligibility_summary/
+  dual-track metadata/multiple channels/all fields populated); 全 suite 515 passed, 2 skipped, ruff clean
+
+[2026-06-24] [Three-channel evidence extraction — Task 8: end-to-end fixtures for three document channels] [done]
+- Fixtures: 3 markdown files in tests/.../fixtures/
+  * case_report.md: neonatal ABCA3 deficiency case report with proband, phenotype, inheritance, variant, de novo cues
+  * functional_study.md: ABCA3 variant pathogenicity functional study with assay system, controls, quantitative results, OddsPath
+  * cohort_study.md: ABCA3 variant frequency case-control study with cohort size, odds ratio, population frequency
+- Tests: test_channel_end_to_end.py 12 tests (4 parametrized test cases × 3 fixtures):
+  * test_channel_classification_and_eligibility: fixture → relevance scan → classification → eligibility categories
+  * test_channel_specific_filtering: channel-appropriate field present, channel-excluded field absent
+  * test_status_semantics: eligible absent → NOT_FOUND, channel-excluded → NOT_APPLICABLE
+  * test_json_round_trip: result model serialization preserves channel_classification + field_eligibility_summary
+- Channel classification results:
+  * case_report.md → case_report (categories A,B,C,H,J eligible; F,I excluded)
+  * functional_study.md → functional_study (categories A,E,F,I,H,J eligible; B,C excluded)
+  * cohort_study.md → cohort_study (categories A,D,G,H,J eligible; F,I excluded)
+- Field assertions:
+  * case_report: B.disease_diagnosis present, F.assay_type excluded
+  * functional_study: F.assay_type present, G.odds_ratio excluded
+  * cohort_study: D.allele_frequency present, F.assay_type excluded
+- Full extract_evidence suite: 527 passed, 2 skipped, ruff clean

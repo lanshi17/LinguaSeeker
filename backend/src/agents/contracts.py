@@ -408,3 +408,8 @@ class PipelineGraphState(BaseModel):
 
     # Target gene-disease hypothesis for evidence extraction (Phase 2/3)
     extraction_target: ExtractionTarget | None = None
+
+    # Extraction field profile name (passed through to EvidenceExtractionService).
+    # ``"none"`` = all non-curation fields (production default).
+    # ``"dataset_d_publication"`` = 20-field BIBM evaluation profile.
+    extraction_profile: str = "none"

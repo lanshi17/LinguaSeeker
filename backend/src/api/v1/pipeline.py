@@ -12,7 +12,7 @@ import aiofiles
 from loguru import logger
 from fastapi import APIRouter, Depends, HTTPException
 from starlette.requests import Request
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.api.auth import require_api_key
 from src.api.rate_limit import limiter
@@ -26,6 +26,7 @@ from src.agents.contracts import (
     PipelineStatus,
     SourceType,
 )
+from src.agents.content_hash import normalize_identifier
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     ExtractionTarget,
 )
@@ -64,6 +65,12 @@ class PipelineRunRequest(BaseModel):
     # Target gene-disease hypothesis (Phase 2/3 evidence extraction)
     extraction_target: ExtractionTarget | None = Field(default=None, alias="target")
 
+    # Extraction field profile — controls which catalog fields are sent to the
+    # LLM.  ``"none"`` (default) extracts all non-curation fields.
+    # ``"dataset_d_publication"`` restricts to the 20 fields scored in the
+    # merged_73 BIBM evaluation.  Must be explicitly set by benchmark runners.
+    extraction_profile: str = "none"
+
     @model_validator(mode="after")
     def validate_request(self) -> "PipelineRunRequest":
         """Validate phase mode and source-specific requirements (N1 fix)."""
@@ -101,8 +108,54 @@ class PhaseStatusResponse(BaseModel):
     started_at: str | None = None
     completed_at: str | None = None
     duration_seconds: float | None = None
-    error: dict[str, Any] | None = None
-    summary: dict[str, Any] | None = None
+    error: "PhaseErrorResponse | None" = None
+    summary: "PhaseSummaryResponse | None" = None
+    nodes: list["PhaseNodeResponse"] = Field(default_factory=list)
+    count: int | None = None
+
+
+class PhaseErrorResponse(BaseModel):
+    """Structured phase error returned by pipeline status API."""
+
+    message: str
+    retryable: bool
+    attempt: int
+    max_retries: int
+
+
+class PhaseSummaryResponse(BaseModel):
+    """Flexible phase summary payload with a named API type."""
+
+    model_config = ConfigDict(extra="allow")
+
+
+class PhaseNodeMetricsResponse(BaseModel):
+    """Flexible per-node metrics payload with a named API type."""
+
+    model_config = ConfigDict(extra="allow")
+
+
+class PhaseNodeResponse(BaseModel):
+    """Fine-grained phase sub-node status for UI progress rendering."""
+
+    node_id: str
+    label: str
+    status: str
+    progress: float | None = None
+    started_at: str | None = None
+    completed_at: str | None = None
+    duration_seconds: float | None = None
+    count: int | None = None
+    metrics: PhaseNodeMetricsResponse | None = None
+    error: PhaseErrorResponse | str | None = None
+
+
+class PipelinePhasesResponse(BaseModel):
+    """Pipeline phases keyed by stable phase id."""
+
+    phase_1: PhaseStatusResponse
+    phase_2: PhaseStatusResponse
+    phase_3: PhaseStatusResponse
 
 
 class PipelineRunResponse(BaseModel):
@@ -122,7 +175,7 @@ class PipelineStatusResponse(BaseModel):
     pipeline_status: str
     current_phase: str | None = None
     skip_phase_3_reason: str | None = None
-    phases: dict[str, PhaseStatusResponse]
+    phases: PipelinePhasesResponse
     error_message: str | None = None
     error_phase: int | None = None
     started_at: str | None = None
@@ -181,26 +234,23 @@ def _normalize_identifiers(identifiers: list[str]) -> str:
     'PMID:', 'DOI:', 'PMCID:' to ensure equivalent identifiers
     produce the same key.
     """
-    import re
-
     normalized: list[str] = []
     for raw in identifiers:
-        val = raw.strip().lower()
-        # Strip common prefixes: pmid:, doi:, pmcid:
-        val = re.sub(r"^(pmid|doi|pmcid)\s*:\s*", "", val)
-        normalized.append(val)
+        normalized.append(normalize_identifier(raw))
     return ",".join(sorted(normalized))
 
 
-def _build_source_key(body: PipelineRunRequest) -> str | None:
+def _build_source_key(body: PipelineRunRequest, content_hash: str | None = None) -> str | None:
     """Build the dedup source key, including extraction target scope when present.
 
     For online runs with identifiers, identifiers are always the primary key
-    (query text varies but the same PMID should deduplicate). For other cases,
-    filename takes priority, then query.
+    (query text varies but the same PMID should deduplicate). Local uploads use
+    content hash when available so same filenames do not block different files.
     """
     base_key: str | None = None
-    if body.identifiers:
+    if body.source_type == "local" and content_hash:
+        base_key = f"content:{content_hash}"
+    elif body.identifiers:
         base_key = _normalize_identifiers(body.identifiers)
     else:
         base_key = body.filename or body.query or None
@@ -225,22 +275,23 @@ def _determine_current_phase(state: PipelineGraphState) -> str | None:
 
 def _phase_detail_to_response(detail: PhaseStatusDetail) -> PhaseStatusResponse:
     """Convert PhaseStatusDetail to API response model."""
-    error_dict = None
+    error_response = None
     if detail.error:
-        error_dict = {
-            "message": detail.error.message,
-            "retryable": detail.error.retryable,
-            "attempt": detail.error.attempt,
-            "max_retries": detail.error.max_retries,
-        }
+        error_response = PhaseErrorResponse(
+            message=detail.error.message,
+            retryable=detail.error.retryable,
+            attempt=detail.error.attempt,
+            max_retries=detail.error.max_retries,
+        )
 
     return PhaseStatusResponse(
         status=detail.status.value,
         started_at=detail.started_at,
         completed_at=detail.completed_at,
         duration_seconds=detail.duration_seconds,
-        error=error_dict,
-        summary=detail.summary,
+        error=error_response,
+        summary=PhaseSummaryResponse.model_validate(detail.summary) if detail.summary else None,
+        count=detail.summary.get("count") if detail.summary and isinstance(detail.summary.get("count"), int) else None,
     )
 
 
@@ -339,14 +390,6 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
             status_url=f"/api/v1/pipeline/runs/{existing_state.processing_run_id}/status",
         )
 
-    # N3: Duplicate run prevention — check if same source is already being processed
-    source_key = _build_source_key(body)
-    if source_key and await runner.is_running_for_source(source_key):
-        raise HTTPException(
-            status_code=409,
-            detail=f"A pipeline run is already in progress for this source: {source_key}",
-        )
-
     processing_run_id = str(uuid.uuid4())
     source_document_id = str(uuid.uuid4())
 
@@ -382,6 +425,7 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
     # returns metadata and is used by the separate /literature/search
     # endpoint — using it here would leave Phase 1 without a PDF.
     online_action = "download" if body.source_type == "online" else None
+    source_key = _build_source_key(body)
 
     initial_state = PipelineGraphState(
         processing_run_id=processing_run_id,
@@ -399,6 +443,7 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         literature_types=body.literature_types,
         created_at=datetime.now().isoformat(),
         extraction_target=body.extraction_target,
+        extraction_profile=body.extraction_profile,
     )
 
     # Compute content hash for L1/L2 processing cache deduplication.
@@ -407,6 +452,7 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
     content_hash = await runner.compute_initial_content_hash(initial_state)
     if content_hash:
         initial_state.content_hash = content_hash
+        initial_state.source_key = _build_source_key(body, content_hash)
         # Check processing cache: if an identical document was already
         # processed, return the cached result immediately.
         cached_state = await runner.check_processing_cache(content_hash)
@@ -425,6 +471,13 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
                 status="cached",
                 status_url=f"/api/v1/pipeline/runs/{cached_state.processing_run_id}/status",
             )
+
+    # N3: Duplicate run prevention — check if same source is already being processed.
+    if initial_state.source_key and await runner.is_running_for_source(initial_state.source_key):
+        raise HTTPException(
+            status_code=409,
+            detail=f"A pipeline run is already in progress for this source: {initial_state.source_key}",
+        )
 
     from sqlalchemy.exc import IntegrityError
 
@@ -509,11 +562,11 @@ async def get_pipeline_status(processing_run_id: str, _api_key: str | None = Dep
             detail=f"Pipeline run {processing_run_id} not found",
         )
 
-    phases = {
-        "phase_1": _phase_detail_to_response(state.phase_1_status),
-        "phase_2": _phase_detail_to_response(state.phase_2_status),
-        "phase_3": _phase_detail_to_response(state.phase_3_status),
-    }
+    phases = PipelinePhasesResponse(
+        phase_1=_phase_detail_to_response(state.phase_1_status),
+        phase_2=_phase_detail_to_response(state.phase_2_status),
+        phase_3=_phase_detail_to_response(state.phase_3_status),
+    )
 
     elapsed = _compute_elapsed(state.started_at, state.completed_at)
     title = _state_title(state)
