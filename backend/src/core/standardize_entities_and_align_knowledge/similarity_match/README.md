@@ -1,6 +1,6 @@
 # Similarity Match Module
 
-> Phase 3 submodule — semantic terminology matching via pgvector embedding retrieval + cross-encoder reranking, with model-server integration and embedding index management.
+> Phase 3 submodule -- semantic terminology matching via pgvector embedding retrieval + cross-encoder reranking, with model-server integration and embedding index management.
 
 ## Quick Start
 
@@ -20,15 +20,15 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.reposito
 )
 
 config = SimilarityMatchConfig(
-    embedding_model="bge-m3",
+    embedding_model="Qwen/Qwen3-Embedding-0.6B",
     rerank_top_k=10,
     rerank_score_threshold=0.5,
 )
 
 # Local-first with remote fallback
-local_emb = ModelServerEmbeddingProvider(base_url="http://localhost:8001", model="bge-m3")
-remote_emb = ModelServerEmbeddingProvider(base_url="https://api.siliconflow.cn", model="BAAI/bge-m3")
-local_rerank = ModelServerRerankProvider(base_url="http://localhost:8001", model="bge-reranker-v2-m3")
+local_emb = ModelServerEmbeddingProvider(base_url="http://localhost:8001", model="Qwen/Qwen3-Embedding-0.6B")
+remote_emb = ModelServerEmbeddingProvider(base_url="https://api.siliconflow.cn", model="Qwen/Qwen3-Embedding-0.6B")
+local_rerank = ModelServerRerankProvider(base_url="http://localhost:8001", model="BAAI/bge-reranker-v2-m3")
 remote_rerank = ModelServerRerankProvider(base_url="https://api.siliconflow.cn", model="BAAI/bge-reranker-v2-m3")
 
 matcher = SimilarityTerminologyMatcher(
@@ -42,18 +42,18 @@ result = await matcher.match(candidate)
 
 ## Architecture
 
-```
+```text
 SimilarityTerminologyMatcher [core.py]
-│
-├─ embed_texts()          → model-server  POST /v1/embeddings
-├─ find_nearest()         → pgvector      cosine similarity search
-├─ rerank()               → model-server  POST /v1/rerank
-├─ _merge_rerank_scores() → sort by relevance_score desc
-│
-└─ Decision logic:
-    top_score < threshold    → UNMAPPED
-    top - second < margin    → AMBIGUOUS (too close to call)
-    otherwise                → STANDARDIZED
+|
++-- embed_texts()          -> model-server  POST /v1/embeddings
++-- find_nearest()         -> pgvector      cosine similarity search
++-- rerank()               -> model-server  POST /v1/rerank
++-- _merge_rerank_scores() -> sort by relevance_score desc
+|
++-- Decision logic:
+    top_score < threshold    -> UNMAPPED
+    top - second < margin    -> AMBIGUOUS (too close to call)
+    otherwise                -> STANDARDIZED
 ```
 
 ### Supporting modules
@@ -61,9 +61,9 @@ SimilarityTerminologyMatcher [core.py]
 | Module | Purpose |
 |--------|---------|
 | `providers.py` | HTTP clients for model-server embedding + rerank APIs, plus local-first remote-fallback wrappers |
-| `repositories.py` | pgvector cosine similarity queries |
-| `indexer.py` | Batch embedding generation for terminology entries |
-| `contracts.py` | Typed dataclasses for provider responses |
+| `repositories.py` | pgvector cosine similarity queries via `PgvectorTerminologyRepository` |
+| `indexer.py` | Batch embedding generation and upsert for terminology entries via `TerminologyEmbeddingIndexer` |
+| `contracts.py` | Frozen dataclasses for provider responses (`EmbeddingBatchResult`, `RerankItem`, `RerankBatchResult`) |
 
 ## Public API
 
@@ -80,7 +80,7 @@ class SimilarityTerminologyMatcher:
 ```python
 @dataclass(frozen=True)
 class SimilarityMatchConfig:
-    embedding_model: str          # model name for embeddings (e.g. "bge-m3")
+    embedding_model: str          # model name for embeddings (e.g. "Qwen/Qwen3-Embedding-0.6B")
     rerank_top_k: int             # max candidates to retrieve + rerank
     rerank_score_threshold: float # minimum score for STANDARDIZED
     min_rerank_margin: float = 0.05  # gap between top and second for unambiguous
@@ -90,7 +90,7 @@ class SimilarityMatchConfig:
 
 ```python
 class ModelServerEmbeddingProvider:
-    def __init__(self, *, base_url: str, model: str, client=None, timeout=60.0)
+    def __init__(self, *, base_url: str, model: str, client=None, timeout=60.0, api_key=None)
     async def embed_texts(self, texts: str | Sequence[str]) -> EmbeddingBatchResult
 ```
 
@@ -100,7 +100,7 @@ Routes through `{base_url}/v1/embeddings` (OpenAI-compatible). Auto-appends `/v1
 
 ```python
 class ModelServerRerankProvider:
-    def __init__(self, *, base_url: str, model: str, client=None, timeout=60.0)
+    def __init__(self, *, base_url: str, model: str, client=None, timeout=60.0, api_key=None)
     async def rerank(self, query: str, documents: str | Sequence[str], *, top_k: int | None) -> RerankBatchResult
 ```
 
@@ -136,19 +136,29 @@ class TerminologyEmbeddingIndexer:
                     source_dbs: set[str] | None = None) -> int
 ```
 
-Generates embeddings for all imported terminology entries. Deletes stale embeddings before re-generating, batches writes with flush + commit per batch.
+Generates embeddings for all imported terminology entries. Deletes stale embeddings before re-generating, batches writes with flush + commit per batch. Returns the count of embeddings written.
+
+### `PgvectorTerminologyRepository`
+
+```python
+class PgvectorTerminologyRepository:
+    def __init__(self, session)
+    async def find_nearest(self, *, entity_type, query_vector, embedding_model, limit) -> tuple[SimilarityCandidate, ...]
+```
+
+Retrieves nearest terminology entries by cosine distance. Uses a SAVEPOINT so a failed vector query does not abort the outer transaction.
 
 ### `build_embedding_text(entry: TerminologyEntry) -> str`
 
-Builds deterministic embedding text from `display_name + aliases + external_id + source_db`, deduplicated.
+Builds deterministic embedding text from `display_name + aliases + external_id + source_db`, deduplicated and newline-joined.
 
 ### Data Types (contracts)
 
 | Type | Description |
 |------|-------------|
-| `EmbeddingBatchResult` | Model, vectors as `tuple[tuple[float, ...], ...]` |
+| `EmbeddingBatchResult` | Model name, vectors as `tuple[tuple[float, ...], ...]` |
 | `RerankItem` | Index, document text, relevance_score |
-| `RerankBatchResult` | Model, results as `tuple[RerankItem, ...]` |
+| `RerankBatchResult` | Model name, results as `tuple[RerankItem, ...]` |
 
 ## Internal Design
 
@@ -174,7 +184,7 @@ Builds deterministic embedding text from `display_name + aliases + external_id +
 1. Queries `TerminologyEntry` filtered by `entity_types` and `source_dbs`
 2. Deletes stale embeddings for those entries (batched 5000 at a time)
 3. Generates embeddings via model-server in batches
-4. Upserts into `TerminologyEmbedding` table
+4. Upserts into `TerminologyEmbedding` table using PostgreSQL `INSERT ... ON CONFLICT`
 5. Commits after each batch (resumable on failure)
 
 ## Usage Patterns
@@ -183,7 +193,7 @@ Builds deterministic embedding text from `display_name + aliases + external_id +
 
 ```python
 config = SimilarityMatchConfig(
-    embedding_model="bge-m3",
+    embedding_model="Qwen/Qwen3-Embedding-0.6B",
     rerank_top_k=20,           # wider retrieval for higher recall
     rerank_score_threshold=0.6, # stricter threshold
     min_rerank_margin=0.1,      # wider margin for unambiguous
@@ -217,10 +227,10 @@ print(f"Generated {count} embeddings")
 import httpx
 async with httpx.AsyncClient(timeout=30.0) as client:
     emb = ModelServerEmbeddingProvider(
-        base_url="http://localhost:8001", model="bge-m3", client=client,
+        base_url="http://localhost:8001", model="Qwen/Qwen3-Embedding-0.6B", client=client,
     )
     rerank = ModelServerRerankProvider(
-        base_url="http://localhost:8001", model="reranker", client=client,
+        base_url="http://localhost:8001", model="BAAI/bge-reranker-v2-m3", client=client,
     )
     # Both providers share the same connection pool
 ```
@@ -239,11 +249,11 @@ local_emb = ModelServerEmbeddingProvider(base_url="http://localhost:8001", model
 remote_emb = ModelServerEmbeddingProvider(base_url="https://api.siliconflow.cn", model="Qwen/Qwen3-Embedding-0.6B", api_key="sk-...")
 embedding = FallbackEmbeddingProvider(local_emb, remote_emb)
 
-# If remote is not configured, pass None — local failures propagate directly
+# If remote is not configured, pass None -- local failures propagate directly
 embedding = FallbackEmbeddingProvider(local_emb, None)
 ```
 
-> **Important:** The remote embedding model **must** match the local model. Persisted pgvector vectors are model-specific — a different model produces incompatible vectors and meaningless cosine similarity scores. A warning is logged at init time and a CRITICAL error at fallback time if models differ. Rerank has no such constraint (stateless scoring).
+> **Important:** The remote embedding model **must** match the local model. Persisted pgvector vectors are model-specific -- a different model produces incompatible vectors and meaningless cosine similarity scores. A warning is logged at init time and a CRITICAL error at fallback time if models differ. Rerank has no such constraint (stateless scoring).
 
 The `EntityStandardizationService` and `build_terminology_embeddings` automatically construct fallback providers from config when `embedding.remote_base_url` / `rerank.remote_base_url` are set.
 
@@ -275,18 +285,16 @@ Implement the repository interface used by `find_nearest()`:
 
 ```python
 class MyVectorRepository:
-    async def find_nearest(self, *, entity_type, query_vector, embedding_model, limit) -> list[...]:
+    async def find_nearest(self, *, entity_type, query_vector, embedding_model, limit) -> tuple[SimilarityCandidate, ...]:
         ...
 ```
 
 ## Performance Notes
 
-- Embedding generation: ~100 ms per text (GPU-dependent)
-- pgvector cosine search: ~1-5 ms for 100K vectors with IVFFlat index
-- Rerank scoring: ~50 ms per query (cross-encoder inference)
-- Total per-candidate: ~150 ms (embeddings cached per-document)
-- Embedding index build: ~10 min for 100K entries at batch_size=32
+- pgvector cosine search with HNSW index (m=16, ef_construction=200) provides fast approximate nearest neighbor search
+- Embedding generation is batched (configurable batch_size)
 - `httpx.AsyncClient` supports connection reuse via `client=` parameter
+- The `PgvectorTerminologyRepository` uses SAVEPOINTs so failed vector queries do not abort the outer transaction
 
 ## Dependencies
 
@@ -295,13 +303,14 @@ class MyVectorRepository:
 | `httpx` | Async HTTP client for model-server |
 | `sqlalchemy` | pgvector queries, embedding upsert |
 | `hashlib` | Embedding text hash for idempotent upsert |
-| Parent contracts (`...contracts`) | EntityMatch, StandardizationCandidate |
+| Parent contracts (`...contracts`) | EntityMatch, SimilarityCandidate, StandardizationCandidate |
 | `src.dao.postgresql.models` | TerminologyEntry, TerminologyEmbedding ORM |
 
 ## Testing
 
 ```bash
-uv run pytest tests/ -k "similarity_match" -v
+cd backend
+uv run pytest tests/core/standardize_entities_and_align_knowledge/ -k "similarity_match" -v
 ```
 
-Tests cover: matcher decision logic, provider HTTP mocking, indexer batch operations, and embedding text construction.
+Tests cover: matcher decision logic, provider HTTP mocking, indexer batch operations, embedding text construction, and pgvector repository queries.

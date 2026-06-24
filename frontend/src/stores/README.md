@@ -4,19 +4,19 @@
 
 ## Stores
 
-### `appStore` — Application UI State
+### `appStore.ts` -- Application UI State
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `sidebarCollapsed` | `boolean` | Sidebar icon-only mode |
+| `sidebarCollapsed` | `boolean` | Whether the sidebar is in icon-only collapsed mode |
 | `toggleSidebar()` | `() => void` | Toggle collapsed state |
-| `setSidebarCollapsed(v)` | `(v: boolean) => void` | Set explicitly |
+| `setSidebarCollapsed(v)` | `(v: boolean) => void` | Set collapsed state explicitly |
 
-Used by `DashboardLayout` and `Sidebar` components.
+Used by `DashboardLayout` (collapse toggle) and `Sidebar` (width and label rendering).
 
-## When NOT to Use
+## When NOT to Use Zustand
 
-- Feature-specific data -> feature hooks / TanStack Query.
-- Form state -> `useState` / `useReducer`.
-- Server state -> TanStack Query.
-- Notifications -> antd `App.useApp()` message/notification API.
+- **Feature-specific data** -- use feature hooks with TanStack Query.
+- **Form state** -- use `useState` / `useReducer` in components.
+- **Server state** -- use TanStack Query (`useQuery`, `useMutation`).
+- **Notifications** -- use antd `App.useApp()` `message` / `notification` API.

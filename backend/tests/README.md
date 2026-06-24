@@ -21,6 +21,7 @@ uv run pytest tests/agents/test_orchestrator.py::test_full_pipeline -v
 
 # Run tests by marker
 uv run pytest -m "not e2e" -v  # Skip end-to-end tests
+uv run pytest -m "integration" -v  # Run integration tests only
 ```
 
 ## Directory Map
@@ -35,6 +36,7 @@ tests/
 │   ├── test_contracts.py                    # Agent contract validation
 │   ├── test_state_persistence*.py           # State persistence layer tests
 │   ├── test_state_transition_guard.py       # Transition guard logic
+│   ├── test_processing_cache.py             # Processing cache
 │   ├── test_phase_1_adapter.py              # Phase 1 adapter
 │   ├── test_phase_1_pre_parsed_handoff.py   # Pre-parsed markdown handoff
 │   ├── test_phase_2_adapter.py              # Phase 2 adapter
@@ -43,6 +45,7 @@ tests/
 │   └── test_phase_4_factory.py              # Phase 4 factory
 ├── api/                                     # API route and middleware tests
 │   ├── conftest.py                          # Test client and mock fixtures
+│   ├── test_annotations_api.py              # Document annotation CRUD endpoints
 │   ├── test_auth.py                         # API key authentication
 │   ├── test_body_size_limit.py              # Body size middleware
 │   ├── test_rate_limiting.py                # Rate limiter behavior
@@ -64,22 +67,25 @@ tests/
 ├── core/                                    # Business logic tests
 │   ├── cross_lingual_process_and_extract_evidence/   # Phase 2
 │   │   ├── extract_evidence/                           # Evidence extraction
-│   │   │   ├── stages/                                 # Pipeline stages
-│   │   │   ├── reconcile/                              # Reconciliation
-│   │   │   ├── verify/                                 # Verification
+│   │   │   ├── reconcile/                              # Reconciliation sub-package
+│   │   │   ├── verify/                                 # Verification sub-package
 │   │   │   ├── test_catalog.py                         # Catalog extraction
 │   │   │   ├── test_chain_builder.py                   # Chain builder
 │   │   │   ├── test_chunking.py                        # Text chunking
 │   │   │   ├── test_contracts.py                       # Contract validation
 │   │   │   ├── test_group_assignment.py                # Group assignment
-│   │   │   ├── test_normalizer.py                      # Value normalization
+│   │   │   ├── test_normalization.py                   # Value normalization
 │   │   │   ├── test_prompts.py                         # Prompt templates
 │   │   │   ├── test_providers.py                       # LLM providers
 │   │   │   ├── test_quality_validation.py              # Quality checks
 │   │   │   ├── test_role_routing.py                    # Role routing
 │   │   │   ├── test_source_grounding.py                # Source grounding
 │   │   │   ├── test_target_guard.py                    # Target guard
-│   │   │   ├── test_workflow.py                        # Workflow orchestration
+│   │   │   ├── test_target_span_recovery.py            # Target span recovery
+│   │   │   ├── test_field_eligibility.py               # Field eligibility
+│   │   │   ├── test_block_selection.py                 # Block selection
+│   │   │   ├── test_stages.py / test_stages_async.py   # Pipeline stages
+│   │   │   ├── test_workflow.py / test_workflow_async.py # Workflow orchestration
 │   │   │   └── test_e2e_*.py                           # E2E extraction tests
 │   │   ├── test_translator.py                          # Translation service
 │   │   ├── test_segmenter.py                           # Text segmentation
@@ -88,22 +94,30 @@ tests/
 │   │   ├── test_formatter.py                           # Output formatting
 │   │   ├── test_validator.py                           # Translation validation
 │   │   ├── test_drift_tracking.py                      # Drift tracking
+│   │   ├── test_persistence.py                         # Persistence layer
 │   │   └── test_e2e_*.py                               # E2E translation tests
 │   ├── ingest_and_digitize_data/                      # Phase 1
 │   │   ├── document_acquisition/                       # Acquisition service
 │   │   │   ├── local_upload/                           # Local file upload
 │   │   │   └── online_acquisition/                     # Online search/download
-│   │   └── parse_document/                             # Document parsing
-│   │       ├── test_mineru_parser.py                   # MinerU remote parser
-│   │       ├── test_mineru_local_parser.py             # MinerU local parser
-│   │       ├── test_orchestrator.py                    # Parse orchestrator
-│   │       └── test_e2e_*.py                           # E2E parsing tests
+│   │   ├── parse_document/                             # Document parsing
+│   │   │   ├── test_mineru_parser.py                   # MinerU remote parser
+│   │   │   ├── test_mineru_local_parser.py             # MinerU local parser
+│   │   │   ├── test_orchestrator.py                    # Parse orchestrator
+│   │   │   └── test_e2e_*.py                           # E2E parsing tests
+│   │   └── test_rust_io_facade.py                      # Rust I/O facade
 │   ├── standardize_entities_and_align_knowledge/       # Phase 3
 │   │   ├── context_pack/                               # Context pack
+│   │   ├── precise_match/                              # Precise matching (tested via parent)
+│   │   ├── similarity_match/                           # Similarity matching (tested via parent)
 │   │   ├── test_matchers.py                            # Entity matching
 │   │   ├── test_normalizers.py                         # Entity normalization
 │   │   ├── test_importers.py                           # Terminology importers
-│   │   ├── test_similarity_*.py                        # Similarity search
+│   │   ├── test_hgvs_normalizer.py                     # HGVS normalization
+│   │   ├── test_variant_id.py                          # Variant ID handling
+│   │   ├── test_cross_lingual_disease.py               # Cross-lingual disease names
+│   │   ├── test_acmg_projection.py                     # ACMG projection
+│   │   ├── test_similarity_*.py                        # Similarity search and indexing
 │   │   └── test_literature_profile_refresh.py          # Profile refresh
 │   ├── visualize_evidence_with_expert_in_loop/         # Phase 4
 │   │   ├── test_feedback_service.py                    # Feedback service
@@ -116,27 +130,37 @@ tests/
 │   │   └── test_contracts*.py                          # Contract validation
 │   ├── test_config.py                                  # Config loading
 │   ├── test_config_loader.py                           # Layered config loader
-│   └── test_grounding.py                               # Grounding utilities
+│   ├── test_database_config.py                         # Database config
+│   ├── test_grounding.py                               # Grounding utilities
+│   ├── test_formatter.py                               # Shared formatter
+│   └── test_search_service.py                          # Shared search service
 ├── dao/
 │   ├── postgresql/                          # ORM, connection, repo tests
 │   │   ├── test_models.py                   # Model validation
 │   │   ├── test_connection.py               # Engine and session lifecycle
 │   │   ├── test_literature_profile_repo.py  # Literature profile repo
+│   │   ├── test_literature_profile_model.py # Literature profile model
+│   │   ├── test_literature_profile_created_at.py  # Created-at field
 │   │   ├── test_search_index_repo.py        # Search index repo
 │   │   ├── test_alembic_migration.py        # Migration integrity
 │   │   ├── test_pgvector_migration.py       # pgvector migration
 │   │   └── test_type_contract_compliance.py # Type contract compliance
-│   └── redis/
-│       ├── test_connection.py               # Redis connection
-│       └── test_cache_repo.py               # Cache repository
+│   ├── redis/
+│   │   ├── test_connection.py               # Redis connection
+│   │   └── test_cache_repo.py               # Cache repository
+│   └── test_chat_message_fk.py              # Chat message foreign key
 ├── benchmark/                               # Evaluation and benchmark tests
-│   └── layer3/                              # Layer 3 benchmark suite
-│       ├── clinvar_fused/                   # ClinVar fused evaluation
-│       ├── test_evaluate_matching.py        # Matching evaluation
-│       ├── test_baseline_runner.py          # Baseline runner
-│       ├── test_diagnose_*.py               # Diagnostic tests
-│       ├── test_reconcile_*.py              # Reconciliation evaluation
-│       └── test_prompt_model_sweep_*.py     # Prompt/model sweep
+│   ├── layer3/                              # Layer 3 benchmark suite
+│   │   ├── clinvar_fused/                   # ClinVar fused evaluation
+│   │   ├── test_evaluate_matching.py        # Matching evaluation
+│   │   ├── test_baseline_runner.py          # Baseline runner
+│   │   ├── test_diagnose_*.py               # Diagnostic tests
+│   │   ├── test_reconcile_*.py              # Reconciliation evaluation
+│   │   ├── test_prompt_model_*.py           # Prompt/model sweep
+│   │   ├── test_main_paper_*.py             # Paper table generators
+│   │   └── test_*.py                        # Various benchmark tests
+│   ├── optimization/                        # Fused75 optimization tests
+│   └── test_*.py                            # Top-level benchmark tests
 ├── integration/                             # Full integration tests
 │   ├── test_app_startup.py                  # App startup sequence
 │   └── test_literature_profile_e2e.py       # Literature profile E2E
@@ -144,6 +168,7 @@ tests/
 │   ├── test_e2e_multilingual.py             # Multilingual acquisition
 │   ├── test_e2e_providers.py                # Provider E2E
 │   ├── test_e2e_workflow.py                 # Workflow E2E
+│   ├── test_literature_type_classifier.py   # Literature type classification
 │   ├── test_parallel_search.py              # Parallel search
 │   ├── test_ranking.py                      # Result ranking
 │   └── test_provider_health.py              # Provider health checks
@@ -183,12 +208,12 @@ Integration tests require live external services (PostgreSQL, Redis, LLM endpoin
 
 End-to-end tests exercise the full pipeline with real services:
 - Located in `core/*/test_e2e_*.py` and `online_acquisition/test_e2e_*.py`
-- Require configured `.env.local` with all service endpoints
+- Require configured service endpoints
 - Run manually: `uv run pytest -m e2e -v`
 
 ### Benchmark Tests
 
-Benchmark and evaluation tests in `benchmark/layer3/`:
+Benchmark and evaluation tests in `benchmark/layer3/` and `benchmark/optimization/`:
 - Evaluate extraction quality, reconciliation accuracy, and prompt/model baselines
 - Generate report tables and diagnostic artifacts
 - Require populated database and test datasets
@@ -233,14 +258,14 @@ async def test_translation_service():
 | Area | Status | Notes |
 |------|--------|-------|
 | Agent orchestrator | Good | Unit tests for graph construction, routing, state persistence |
-| API routes | Good | Request validation, error responses, auth, rate limiting |
+| API routes | Good | Request validation, error responses, auth, rate limiting, annotations |
 | Phase 1 (acquisition) | Good | Facade, local upload, gateway, normalizers, parsers |
 | Phase 2 (extraction) | Good | Catalog, chunking, prompts, providers, reconciliation, workflow |
 | Phase 2 (translation) | Good | Translator, formatter, validator, prompts, drift tracking |
-| Phase 3 (standardization) | Good | Matching, alignment, similarity, importers, context pack |
+| Phase 3 (standardization) | Good | Matching, alignment, similarity, importers, context pack, HGVS |
 | Phase 4 (review/feedback) | Good | Feedback, chat, audit, source linking, search |
 | DAO | Good | Models, connection, repos, migrations, type compliance |
-| Benchmark | Good | Layer 3 evaluation suite for extraction quality and baselines |
+| Benchmark | Good | Layer 3 evaluation suite + optimization tests |
 | Rust integration | Partial | Tests mock `rust_io`; no GPU/hardware tests |
 | Web scrapers | Partial | Dispatcher tested; individual scrapers need live sites |
 

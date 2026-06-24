@@ -1,4 +1,4 @@
-# Configuration Management — Ansible-Style Layered Structure
+# Configuration Management -- Ansible-Style Layered Structure
 
 This directory implements an **Ansible-inspired layered configuration architecture** that separates concerns: base defaults, environment-specific overrides, secrets, and rendered templates.
 
@@ -9,25 +9,27 @@ backend/config/
 ├── defaults/
 │   └── main.yaml              # Base structural defaults (safe to commit)
 ├── environments/
-│   ├── development.yaml       # Dev-specific structural overrides (safe to commit)
-│   ├── production.yaml.example
-│   └── staging.yaml.example   # Other environments (safe to commit)
+│   ├── development.yaml       # Dev-specific overrides (safe to commit)
+│   ├── staging.yaml           # Staging-specific overrides (safe to commit)
+│   ├── production.yaml        # Production overrides (safe to commit)
+│   └── production.yaml.example
 ├── vault/
-│   ├── .gitignore             # Ignores all .yaml/.yml files
 │   ├── development.yaml       # Dev secrets (git-ignored, NEVER commit)
+│   ├── development.yaml.example
 │   ├── production.yaml        # Prod secrets (git-ignored, NEVER commit)
-│   └── *.yaml.example         # Example secret templates (safe to commit)
+│   ├── production.yaml.example
+│   └── staging.yaml.example
 ├── templates/
-│   └── config.yaml.j2         # Optional Jinja2 template for debugging exports
+│   └── config.yaml.j2         # Jinja2 template for debugging exports
 └── README.md                  # This file
 ```
 
-## Loading Order (Priority: Low → High)
+## Loading Order (Priority: Low -> High)
 
-1. **`defaults/main.yaml`** — Base structural defaults (models, ports, timeouts, etc.)
-2. **`environments/<env>.yaml`** — Environment-specific structural overrides (hosts, URLs, pool sizes)
-3. **`vault/<env>.yaml`** — Secrets (API keys, passwords, tokens) — **git-ignored**
-4. **Environment variables** — Highest priority, override all YAML values
+1. **`defaults/main.yaml`** -- Base structural defaults (models, ports, timeouts, etc.)
+2. **`environments/<env>.yaml`** -- Environment-specific structural overrides (hosts, URLs, pool sizes)
+3. **`vault/<env>.yaml`** -- Secrets (API keys, passwords, tokens) -- **git-ignored**
+4. **Environment variables** -- Highest priority, override all YAML values
 
 ## Design Principles
 
@@ -138,53 +140,20 @@ class Settings(BaseSettings):
 ```
 
 The shared loader automatically converts:
-- `new_service.host` → `NEW_SERVICE_HOST`
-- `new_service.port` → `NEW_SERVICE_PORT`
-- `new_service.api_key` → `NEW_SERVICE_API_KEY`
+- `new_service.host` -> `NEW_SERVICE_HOST`
+- `new_service.port` -> `NEW_SERVICE_PORT`
+- `new_service.api_key` -> `NEW_SERVICE_API_KEY`
 
 ## Security Best Practices
 
-1. **Never commit secrets** — `vault/*.yaml` files are git-ignored
+1. **Never commit secrets** -- `vault/*.yaml` files are git-ignored
 2. **Use environment variables** for CI/CD secrets (highest priority)
-3. **Rotate secrets regularly** — update vault files and restart services
-4. **Audit access** — restrict vault file permissions (`chmod 600`)
-5. **Use example files** — commit `*.yaml.example` templates with placeholder values
-
-## Troubleshooting
-
-### Config not loading?
-
-```bash
-# Check which files are being loaded
-ENVIRONMENT=development uv run python -c "from src.core.config import get_config; print(get_config().environment)"
-
-# Should print: development
-```
-
-### Secrets not applied?
-
-```bash
-# Verify vault file exists
-ls -la backend/config/vault/development.yaml
-
-# Check file permissions
-chmod 600 backend/config/vault/development.yaml
-```
-
-### Environment variable not overriding?
-
-```bash
-# Environment variables are uppercase and highest priority
-export POSTGRES_HOST=override-host
-uv run python -c "from src.core.config import get_config; print(get_config().postgres_host)"
-
-# Should print: override-host
-```
+3. **Rotate secrets regularly** -- update vault files and restart services
+4. **Audit access** -- restrict vault file permissions (`chmod 600`)
+5. **Use example files** -- commit `*.yaml.example` templates with placeholder values
 
 ## References
 
 - **Config Loader**: `backend/src/core/config_loader.py` (`load_backend_config_into_env()`)
 - **Typed Settings**: `backend/src/core/config.py` (`Settings`, `get_config()`)
 - **Render Script**: `backend/scripts/render_config.py`
-- **Ansible Inspiration**: [Ansible Best Practices — Directory Layout](https://docs.ansible.com/ansible/latest/tips_tricks/sample_setup.html)
-- **Project Standards**: `AGENTS.md` § 16 (Environment Variables & Secrets Management)

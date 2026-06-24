@@ -1,6 +1,6 @@
 # Alembic
 
-> Database migration environment for the LinguaSeeker backend. Manages PostgreSQL schema migrations for the `lingua_seeker` schema.
+> Database migration scaffold for the LinguaSeeker backend. This directory provides the Alembic versions directory; the actual migration environment (`env.py`, `alembic.ini`) lives in `database/`.
 
 ## Directory Map
 
@@ -35,7 +35,7 @@ uv run alembic current
 
 Alembic configuration is in `database/alembic.ini` (project root `database/` directory). The migration environment (`env.py`) is in `database/migrations/`.
 
-The target metadata is `src.dao.postgresql.models.Base` — the SQLAlchemy declarative base containing all write-model tables.
+The target metadata is `src.dao.postgresql.models.Base` -- the SQLAlchemy declarative base containing all write-model tables.
 
 ## Architecture
 
@@ -44,11 +44,12 @@ database/
 ├── alembic.ini              # Alembic configuration
 ├── migrations/
 │   ├── env.py               # Migration environment (imports Base.metadata)
-│   └── script.py.mako       # Migration template
+│   ├── script.py.mako       # Migration template
+│   └── versions/            # Migration scripts (symlinked or copied)
 └── seeds/                   # Seed data (placeholder)
 
 backend/alembic/
-└── versions/                # Migration scripts location
+└── versions/                # Migration scripts location (backend-local)
 ```
 
 ## Key Design Decisions

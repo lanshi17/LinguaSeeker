@@ -31,7 +31,7 @@ translated EvidenceExtractionResult┘
                                       └─ EvidenceExtractionResult(track=RECONCILED)
 ```
 
-The slice is split into three layers:
+The slice is split into five layers:
 
 - `core.py` handles deterministic candidate building, scoring, and field decisions.
 - `contextual.py` adds target-context verifier scores and relationship/disease canonicalization.

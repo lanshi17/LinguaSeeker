@@ -10,13 +10,6 @@ Full pipeline benchmark (Phases 1-3) that submits case-report PDFs through the H
 
 Phase 4 is not exercised -- the pipeline stops at `COMPLETED`.
 
-## New Module Locations
-
-| Old path | New path | Purpose |
-|----------|----------|---------|
-| `benchmark.pipeline.benchmark` | `benchmark.runners.pipeline_e2e` | Pipeline benchmark HTTP client + orchestrator |
-| `benchmark.pipeline.evidence_metrics` | `benchmark.core.evidence_metrics` | PG evidence metrics collection |
-
 ## Files
 
 | File | Purpose |
@@ -28,7 +21,14 @@ Phase 4 is not exercised -- the pipeline stops at `COMPLETED`.
 | `input/` | Test PDFs organized by language and literature type |
 | `reports/` | Timestamped JSON reports (tracked in git) |
 
-### Input Languages
+## New Module Locations
+
+| Old path | New path | Purpose |
+|----------|----------|---------|
+| `benchmark.pipeline.benchmark` | `benchmark.runners.pipeline_e2e` | Pipeline benchmark HTTP client + orchestrator |
+| `benchmark.pipeline.evidence_metrics` | `benchmark.core.evidence_metrics` | PG evidence metrics collection |
+
+## Input Languages
 
 The `input/` directory contains language subdirectories, each with literature type folders:
 
@@ -46,7 +46,9 @@ The `input/` directory contains language subdirectories, each with literature ty
 
 Each language directory contains: `case_report/`, `functional/`, `sequencing/`, `unclassified/`.
 
-### Canonical Runner
+A `ground_truth/` subdirectory under `input/` holds per-language case report PDFs generated from benchmark datasets.
+
+## Canonical Runner
 
 The actual runner code lives at `benchmark/runners/pipeline_e2e.py` and provides:
 
@@ -56,13 +58,6 @@ The actual runner code lives at `benchmark/runners/pipeline_e2e.py` and provides
 - `process_one_pdf()` -- per-PDF orchestration
 - `generate_report()` -- aggregated JSON report generation
 - `run_benchmark()` -- top-level orchestrator
-
-### Evidence Metrics
-
-Evidence metrics collection lives at `benchmark/core/evidence_metrics.py` and provides:
-
-- `query_evidence_metrics()` -- queries PG for evidence quality after a pipeline run
-- `EvidenceMetrics` -- aggregated metrics: run/canonical evidence counts, entity bindings, field coverage, track breakdown, status breakdown, found rate, source grounding, category coverage, key field detection
 
 ## Prerequisites
 
@@ -120,7 +115,7 @@ uv run python -m benchmark.runners.pipeline_e2e --resume
 
 ## Report Schema
 
-Reports are written to `reports/report_{timestamp}.json`:
+Reports are written to `reports/report_{timestamp}.json` with the following structure:
 
 ```json
 {
@@ -138,41 +133,20 @@ Reports are written to `reports/report_{timestamp}.json`:
     "phase_3": { "avg_duration_s": 17.8, "failures": 0 }
   },
   "by_evidence": {
-    "total_run_evidence": 42,
-    "total_canonical_evidence": 38,
-    "total_entity_bindings": 15,
-    "avg_evidence_per_pdf": 6.0,
-    "avg_confidence": 0.8521,
-    "total_field_coverage": 25,
-    "pdfs_with_evidence": 7,
-    "avg_found_rate": 0.7143,
+    "total_run_evidence": 42, "total_canonical_evidence": 38,
+    "total_entity_bindings": 15, "avg_evidence_per_pdf": 6.0,
+    "avg_confidence": 0.8521, "total_field_coverage": 25,
+    "pdfs_with_evidence": 7, "avg_found_rate": 0.7143,
     "avg_grounding_rate": 0.8571,
     "key_field_rates": { "A.gene_symbol": 1.0, "B.disease_diagnosis": 0.8571 }
   },
-  "results": [
-    {
-      "file": "en/case_report/en_pmc7075944_covid19.pdf",
-      "lang": "en",
-      "literature_type": "case_report",
-      "status": "passed",
-      "processing_run_id": "uuid",
-      "total_duration_s": 55.2,
-      "phases": { "phase_1": {}, "phase_2": {}, "phase_3": {} },
-      "evidence_metrics": {
-        "run_evidence_count": 6,
-        "found_rate": 0.8333,
-        "source_grounding": { "grounding_rate": 0.8, "exact": 4, "corrected": 0, "ambiguous": 0, "no_source": 1 },
-        "category_coverage": [],
-        "key_field_found": { "A.gene_symbol": true, "B.disease_diagnosis": true }
-      }
-    }
-  ]
+  "results": [ /* per-PDF detail */ ]
 }
 ```
 
 ## Evidence Quality Metrics
 
-The benchmark collects two layers of evidence metrics from PostgreSQL after each successful run:
+Two layers of evidence metrics collected from PostgreSQL after each run:
 
 ### Layer 1: Quantity
 

@@ -51,6 +51,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
 
   // Selected item state
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [selectedSourceDocId, setSelectedSourceDocId] = useState<string | null>(null);
 
   // Search query
   const { data: searchResults, isFetching: isSearching } = useQuery({
@@ -68,8 +69,9 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
 
   // Detail query for selected item
   const { data: detail, isFetching: isDetailLoading } = useQuery({
-    queryKey: ["audit", "evidence-detail", selectedGroupId],
-    queryFn: () => getEvidenceGroupDetail(selectedGroupId!),
+    queryKey: ["audit", "evidence-detail", selectedGroupId, selectedSourceDocId],
+    queryFn: () =>
+      getEvidenceGroupDetail(selectedGroupId!, selectedSourceDocId ?? undefined),
     enabled: !!selectedGroupId && open,
     staleTime: 10_000,
   });
@@ -82,11 +84,13 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
 
   const handleSearch = useCallback(() => {
     setSelectedGroupId(null);
+    setSelectedSourceDocId(null);
     setSearchTriggered(true);
   }, []);
 
   const handleSelectItem = useCallback((item: EvidenceSearchResult) => {
     setSelectedGroupId(item.group_id);
+    setSelectedSourceDocId(item.source_document_id);
     setEditedFields({});
     setNewStatus("approved");
     setChangeReason("");
@@ -124,18 +128,21 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
 
       // Reset
       setSelectedGroupId(null);
+      setSelectedSourceDocId(null);
       setEditedFields({});
       setChangeReason("");
       setSearchTriggered(false);
+      onClose();
     } catch (err) {
       message.error(err instanceof Error ? err.message : "Failed to submit review");
     } finally {
       setIsSubmitting(false);
     }
-  }, [detail, editedFields, changeReason, newStatus, message, queryClient]);
+  }, [detail, editedFields, changeReason, newStatus, message, onClose, queryClient]);
 
   const handleClose = useCallback(() => {
     setSelectedGroupId(null);
+    setSelectedSourceDocId(null);
     setSearchTriggered(false);
     setEditedFields({});
     setChangeReason("");
@@ -216,7 +223,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
                 </Typography.Text>
                 {searchResults.items.map((item) => (
                   <button
-                    key={item.group_id}
+                    key={`${item.group_id}::${item.source_document_id}`}
                     type="button"
                     onClick={() => handleSelectItem(item)}
                     style={{
@@ -285,6 +292,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
             type="button"
             onClick={() => {
               setSelectedGroupId(null);
+              setSelectedSourceDocId(null);
               setEditedFields({});
             }}
             className="edb-back-link"
@@ -422,6 +430,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
                     New status
                   </Typography.Text>
                   <Select
+                    aria-label="Review status"
                     value={newStatus}
                     onChange={(val) => setNewStatus(val as ReviewStatusValue)}
                     options={STATUS_OPTIONS}

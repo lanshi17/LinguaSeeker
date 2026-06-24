@@ -1,6 +1,6 @@
 # Agents (Orchestrator)
 
-> Pipeline orchestrator layer for LinguaSeeker. Owns LangGraph topology, pipeline state, phase adapters, concurrency control, and state persistence. Contains zero business rules — all domain logic lives in `core/` feature slices.
+> Pipeline orchestrator layer for LinguaSeeker. Owns LangGraph topology, pipeline state, phase adapters, concurrency control, content-hash dedup, and state persistence. Contains zero business rules -- all domain logic lives in `core/` feature slices.
 
 ## Quick Start
 
@@ -27,6 +27,7 @@ result = await task  # or poll with runner.get_last_state(run_id)
 ┌─────────────────────────────────────────────────────────┐
 │                  PipelineRunner                          │
 │  asyncio.Task management, semaphore, crash recovery      │
+│  processing cache check, content hash computation        │
 └────────────────────┬────────────────────────────────────┘
                      │
 ┌────────────────────▼────────────────────────────────────┐
@@ -57,15 +58,17 @@ result = await task  # or poll with runner.get_last_state(run_id)
 
 | File | Purpose |
 |------|---------|
-| `contracts.py` | All typed contracts: `PipelineGraphState`, enums, error hierarchy, phase output models |
-| `orchestrator.py` | `PipelineOrchestrator` — LangGraph graph wiring, phase execution, routing decisions |
-| `runner.py` | `PipelineRunner` — background asyncio.Task management, semaphore, crash recovery |
-| `concurrency.py` | `PipelineSemaphore`, `RetryablePhaseExecutor` — concurrency limit + retry with exponential backoff |
-| `state_persistence.py` | `SessionBoundStatePersistence`, `DirectStatePersistence` — PostgreSQL state save/load |
-| `phase_1_adapter.py` | `Phase1Adapter` — wraps acquisition + parsing services |
-| `phase_2_adapter.py` | `Phase2Adapter` — wraps translation + evidence extraction services |
-| `phase_3_adapter.py` | `Phase3Adapter` — wraps entity standardization service |
-| `phase_4_factory.py` | `Phase4ServiceFactory` — creates Phase 4 services (feedback, chat, source_linker, delta_audit) with per-request sessions. Long-lived dependencies (cfg, ChatLLMProvider) injected at construction. |
+| `contracts.py` | All typed contracts: `PipelineGraphState`, enums, error hierarchy, state transition guards, phase output models |
+| `orchestrator.py` | `PipelineOrchestrator` -- LangGraph graph wiring, phase execution, routing decisions |
+| `runner.py` | `PipelineRunner` -- background asyncio.Task management, semaphore, crash recovery, processing cache, run listing |
+| `concurrency.py` | `PipelineSemaphore`, `RetryablePhaseExecutor` -- concurrency limit + retry with exponential backoff |
+| `state_persistence.py` | `SessionBoundStatePersistence`, `DirectStatePersistence` -- PostgreSQL state save/load, orphan recovery, run listing |
+| `processing_cache.py` | `DocumentProcessingCacheService` -- two-tier (L1 Redis + L2 PostgreSQL) cache for identical-document dedup |
+| `content_hash.py` | `compute_content_hash` and helpers -- SHA-256 hashing of file bytes, markdown, or online keys for dedup |
+| `phase_1_adapter.py` | `Phase1Adapter` -- wraps acquisition + parsing services |
+| `phase_2_adapter.py` | `Phase2Adapter` -- wraps translation + evidence extraction services |
+| `phase_3_adapter.py` | `Phase3Adapter` -- wraps entity standardization service |
+| `phase_4_factory.py` | `Phase4ServiceFactory` -- creates Phase 4 services (feedback, chat, source_linker, delta_audit) with per-request sessions. Long-lived dependencies (cfg, ChatLLMProvider) injected at construction. |
 
 ## Public API
 
@@ -75,6 +78,7 @@ result = await task  # or poll with runner.get_last_state(run_id)
 |--------|-----------|-------------|
 | `__init__` | `(phase_adapters, state_persistence, retry_executor)` | Wire adapters, persistence, and retry logic |
 | `run` | `async (state: PipelineGraphState) -> PipelineGraphState` | Execute pipeline (full or single-phase mode) |
+| `on_state_change` | `Callable[[str, PipelineGraphState], None] \| None` | Optional callback invoked after each state persistence so the runner can keep its in-memory cache in sync |
 
 ### `PipelineRunner`
 
@@ -85,11 +89,34 @@ result = await task  # or poll with runner.get_last_state(run_id)
 | `get_last_state_cached` | `(run_id: str) -> PipelineGraphState \| None` | Fast path: memory cache only |
 | `is_running` | `(run_id: str) -> bool` | Check if a run is currently active |
 | `is_running_for_source` | `async (source_key: str) -> bool` | Dedup check by filename/query; checks memory cache then persistence for cross-worker dedup |
+| `list_runs` | `async (limit, offset, status, search) -> tuple[list[PipelineRunSummaryRow], int]` | List pipeline run summaries (newest first) with optional status/search filters |
+| `check_processing_cache` | `async (content_hash: str) -> PipelineGraphState \| None` | Check L1/L2 processing cache for a previously completed result with the same content hash |
+| `compute_initial_content_hash` | `async (state: PipelineGraphState) -> str \| None` | Compute the SHA-256 content hash for an initial pipeline state (file bytes, markdown, or online key) |
 | `recover_orphaned_runs` | `async (heartbeat_timeout_seconds=300) -> int` | Mark heartbeat-stale non-terminal runs as FAILED |
 | `shutdown` | `async (timeout=60.0) -> None` | Graceful shutdown: wait for active tasks, cancel stragglers |
 | `remember_state` | `(run_id: str, state: PipelineGraphState) -> None` | Store state in LRU cache (max 100 entries) |
 
-Constructor: `__init__(orchestrator, semaphore, state_persistence, worker_id=None, heartbeat_interval_seconds=15.0)`
+Constructor: `__init__(orchestrator, semaphore, state_persistence, processing_cache=None, worker_id=None, heartbeat_interval_seconds=15.0)`
+
+### `DocumentProcessingCacheService`
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `get_cached_result` | `async (content_hash: str) -> CacheLookupResult \| None` | L1 Redis lookup, then L2 PostgreSQL with L1 backfill |
+| `cache_result` | `async (content_hash: str, state: PipelineGraphState) -> None` | Upsert into L2 PostgreSQL, then set L1 Redis with TTL |
+
+L1 key format: `docproc:{content_hash}`. TTL: 1 hour.
+
+### `compute_content_hash`
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `compute_content_hash` | `async (state: PipelineGraphState) -> str \| None` | Dispatches to file-hash, text-hash, or online-key-hash depending on source type. Returns `None` for phase re-run mode. |
+| `compute_hash_from_file` | `async (file_path, scope_key=None) -> str` | Stream file in 1 MB chunks, SHA-256 |
+| `compute_hash_from_text` | `(text, scope_key=None) -> str` | SHA-256 of encoded text |
+| `compute_hash_from_bytes` | `(content, scope_key=None) -> str` | SHA-256 of raw bytes |
+
+All hash functions optionally append an extraction target scope key so the same document processed for different gene-disease hypotheses does not collide.
 
 ### `PipelineGraphState`
 
@@ -104,6 +131,7 @@ class PipelineGraphState(BaseModel):
     target_phase: int | None            # 1-3 for single-phase mode
     # Dedup
     source_key: str | None              # filename (local) or query (online)
+    content_hash: str | None            # SHA-256 for L1/L2 processing cache
     # Overall pipeline status
     pipeline_status: PipelineStatus     # PENDING -> RUNNING -> COMPLETED | FAILED
     # Per-phase status (structured with timing and errors)
@@ -112,7 +140,7 @@ class PipelineGraphState(BaseModel):
     phase_3_status: PhaseStatusDetail
     # Phase outputs (typed models)
     phase_1_output: Phase1Output | None # pdf_path, md_path, metadata_path, output_dir, images_dir
-    phase_2_output: Phase2Output | None # output_dir, translation paths, source_language, extraction_result_path
+    phase_2_output: Phase2Output | None # output_dir, translation paths, source_language, extraction_result_path, original_text, translated_text, original_blocks, translated_blocks
     phase_3_output: Phase3Output | None # match/standardized/ambiguous/unmapped counts
     # Error tracking
     error_message: str | None
@@ -154,7 +182,7 @@ State transition guards validate all pipeline and phase status transitions. Vali
 |--------|-----------|-------------|
 | `execute_with_retry` | `async (operation, state, phase_name) -> Any` | Execute with exponential backoff on `RetryablePhaseError` |
 
-Default: 2 retries, 30s base backoff (30s → 60s).
+Default: 2 retries, 30s base backoff (30s -> 60s).
 
 ## Internal Design
 
@@ -179,6 +207,16 @@ Worker ownership is tracked via `owner_worker_id` and `heartbeat_at` columns. Th
 Additional persistence methods:
 - `heartbeat(run_id, worker_id)` -- refresh ownership timestamp for active runs
 - `has_active_source_key(source_key)` -- cross-worker dedup check
+- `list_runs(limit, offset, status, search)` -- paginated run summaries (newest first)
+
+### Processing Cache (L1/L2)
+
+When a pipeline run completes, the final state is cached by content hash. On subsequent submissions with the same content hash, the cached result is returned immediately without re-running the pipeline.
+
+Read path: L1 Redis -> L2 PostgreSQL (with L1 backfill) -> miss.
+Write path: L2 PostgreSQL upsert -> L1 Redis set (1-hour TTL).
+
+The content hash incorporates file bytes (local uploads), markdown text (pre-parsed), or a deterministic key from identifiers/query (online acquisition). An extraction target scope key is appended so the same document processed for different gene-disease hypotheses does not collide.
 
 ### Single-Phase Mode
 
@@ -256,6 +294,17 @@ state = PipelineGraphState(
 result = await runner.start(state)
 ```
 
+### Processing cache check
+
+```python
+content_hash = await runner.compute_initial_content_hash(initial_state)
+if content_hash:
+    cached = await runner.check_processing_cache(content_hash)
+    if cached is not None and cached.pipeline_status == PipelineStatus.COMPLETED:
+        # Short-circuit: return cached result without re-running pipeline
+        return cached
+```
+
 ## Testing
 
 ```bash
@@ -270,5 +319,6 @@ uv run pytest tests/agents/ -v
 | `langgraph` | `StateGraph`, `END` -- pipeline state machine |
 | `pydantic` | `PipelineGraphState` and all typed contracts |
 | `sqlalchemy[asyncio]` | State persistence to `pipeline_run_states` via upsert + state transition guards |
+| `redis` | L1 processing cache (volatile, fast) |
 | `loguru` | Structured logging per phase |
 | `aiofiles` | Async file I/O in phase adapters |

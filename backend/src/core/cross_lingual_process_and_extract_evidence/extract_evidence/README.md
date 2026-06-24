@@ -137,7 +137,7 @@ class EvidenceExtractionService:
         """cfg must have cfg.llm (FAST_LLM) and cfg.reasoning (REASONING_LLM)."""
 
     async def run(self, document: TrackDocument) -> EvidenceExtractionResult:
-        """Run the full 13-stage pipeline asynchronously."""
+        """Run the full 12-stage pipeline asynchronously."""
 
     async def run_dual(self, documents: DualTrackDocuments) -> DualEvidenceExtractionResult:
         """Run original and translated tracks concurrently, then reconcile."""

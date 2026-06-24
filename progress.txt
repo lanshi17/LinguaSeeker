@@ -640,3 +640,44 @@
 - Paper framing must shift to auditability/source-grounding, not F1 improvement
 - Readiness: borderline, confidence: low
 - Tests: 298 passed, ruff clean
+
+[2026-06-23] [文献双语对照标注功能 — 排版增强+交互标注+后端持久化] [完成]
+- 前端: MarkdownDocumentViewer 接入 remark-gfm/remark-math/rehype-katex (GFM表格+LaTeX公式+图片)
+- 前端: 新增 AnnotationLayer 共享组件 (选区→可见文本偏移量映射 + 覆盖层渲染 + 选色浮层 + 批注编辑)
+- 前端: HighlightedParagraph/EvidenceDocumentReader/BilingualCompareView 接入标注 CRUD (React Query)
+- 前端: 新增 annotations types + API client (list/create/update/delete)
+- 后端: 新增 DocumentAnnotation 模型 + document_annotation_repo DAO + /api/v1/documents/{id}/annotations CRUD 路由
+- 后端: Alembic 迁移 doc_ann_20260623 (down_revision=content_blocks_20260623)
+- 测试: 后端 24 passed (含标注API 4项 + 迁移链), 前端 type-check/build/lint 通过
+
+[2026-06-23] [Audit Trail 端到端修正审计链路优化] [完成]
+- 前端: Review Evidence 抽屉按 group_id + source_document_id 获取证据详情,避免同 group 跨文献混淆
+- 前端: 字段修正提交仅 PATCH 实际变更字段,不再对同组未变更 sibling 字段发起冗余状态更新
+- 前端: 提交成功后关闭抽屉并刷新 Audit Trail 查询,让新审计事件回到主表可见
+- 验证: 浏览器端完成 evidence search -> disease 字段修正 -> Phase 4 PATCH -> audit table/detail -> source_document_id scoped audit API
+
+[2026-06-23] [Audit Trail Corrected 状态浏览器验证补强] [完成]
+- 前端: Review Evidence 状态选择器新增可访问名称 `Review status`,支持稳定键盘/自动化定位
+- 测试: 新增 EvidenceReviewDrawer 组件测试,覆盖状态选择器可访问名称
+- 验证: 浏览器端完成 `Corrected` 状态字段修正审计,Audit Detail 显示 provisional -> corrected 及 disease 字段旧值/新值
+[2026-06-23] Fix duplicate React key warning in EvidenceReviewDrawer: Search results list used key={item.group_id} where group_id is gene=<G>|variant=<V> — NOT unique across papers (per variantDb.ts comment), so multiple results sharing gene+variant (e.g. gene=BRCA2|variant=__missing__) produced duplicate keys. Also found latent selection bug: handleSelectItem stored only group_id, so getEvidenceGroupDetail could not disambiguate which source document to load (API supports sourceDocumentId param for exactly this). Fixed in frontend/src/features/audit/components/EvidenceReviewDrawer.tsx: (1) added selectedSourceDocId state; (2) handleSelectItem now sets both group_id and source_document_id; (3) detail query passes sourceDocumentId to getEvidenceGroupDetail and includes it in queryKey; (4) search results list key changed to `${group_id}::${source_document_id}` composite; (5) all reset points (handleSearch/handleSubmit/handleClose/back button) reset both states. type-check + lint clean for changed file. [done]
+
+[2026-06-23] [文献双语对照标注 — 修复evidence-db模块渲染+即时更新] [完成]
+- 修复: 标注+排版增强从错误的evidence-search模块(BilingualCompareView)改接入evidence-db模块(BilingualEvidenceView/DocumentReader)
+- 修复: DocumentReader无blocks时full-text段落用MarkdownDocumentViewer渲染(解析##/#为标题),而非HighlightedText纯文本显示原始markdown
+- 修复: 创建标注后覆盖层即时更新 — 用queryClient.setQueryData乐观更新替代invalidateQueries
+- 验证: markdown排版渲染(32个标题)、选区标注浮层、创建/编辑/删除全链路、刷新持久化
+
+[2026-06-23] [文献双语对照 — 修复多彩高亮+图片渲染] [完成]
+- 修复: buildEvidenceDocument trace.highlight为null时用original_value/translated_value经findAnchorValue在全文定位(恢复多彩证据高亮)
+- 修复: 后端加图片服务路由 GET /api/v1/documents/{id}/images/{image_name} (rglob候选目录,防路径遍历)
+- 修复: 前端MarkdownDocumentViewer自定义img组件,相对路径images/xxx.jpg重写为API URL
+- 验证: 2个多彩证据高亮mark、1张图片200 image/jpeg完整加载(naturalW:1348)
+[2026-06-24] Implement ClinicalContextExtractor MVP for medium-contextual field recall improvement
+  - Added focused clinical context extraction stage (6 fields: B.clinical_phenotypes, B.sex, B.age_of_onset, B.mode_of_inheritance_reported, C.inheritance_source, C.de_novo_status)
+  - New files: stages/clinical_context.py, test_clinical_context.py (17 tests)
+  - Modified: prompts.py (get_clinical_context_prompt), workflow.py (clinical_context node between special_evidence and language_metadata)
+  - Smoke test (3 entries): clinical_context stage running, B.clinical_phenotypes changed from missing to wrong_value for rett_003
+  - Full 73-entry eval running in background
+  - Added --no-preprocessed and --api-key flags to benchmark evaluate CLI
+  - Status: MVP implemented, awaiting full evaluation results

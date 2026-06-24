@@ -1,8 +1,8 @@
 # Model Server
 
 > Standalone FastAPI microservice providing OpenAI-compatible Embedding, Rerank, and MinerU PDF document parsing APIs.
-> All inference runs through vllm. Models lazy-load per request and are unloaded after inference so the services can
-> share a single GPU.
+> Embedding and Rerank run through vllm with per-request lazy loading and unload, so the services can
+> share a single GPU. Doc-parse uses MinerU's internal VLM pipeline.
 
 **This service is fully decoupled from the backend project.** It has zero runtime or build-time dependencies on
 `backend/` or `libs/config-loader`. All configuration comes from environment variables (or an optional `.env` file).
@@ -128,7 +128,7 @@ X-API-Key: <key>
 
 The Lingua Seeker backend supports a local-first, remote-fallback strategy for embedding and rerank providers (mirroring the MinerU document parsing pattern). When the local model-server is unavailable, requests automatically fall back to a configured remote provider (any OpenAI-compatible API).
 
-> **Embedding model must match.** Persisted pgvector embeddings are model-specific. The remote embedding model must be the same as the one used to build the index — otherwise cosine similarity scores against stored vectors are meaningless. Rerank has no such constraint (it's stateless).
+> **Embedding model must match.** Persisted pgvector embeddings are model-specific. The remote embedding model must be the same as the one used to build the index -- otherwise cosine similarity scores against stored vectors are meaningless. Rerank has no such constraint (it's stateless).
 
 This fallback logic lives in the **backend**, not in the model-server. Configure it in `backend/config/environments/<env>.yaml`:
 
@@ -163,7 +163,7 @@ If `remote_base_url` is empty, no fallback is configured and local failures prop
 services/model-server/
 ├── .env.example                 # Standalone config template (copy to .env)
 ├── .dockerignore                # Docker build context exclusions
-├── docker-compose.model-server.yml  # 4-container compose (build context = .)
+├── docker-compose.model-server.yml  # 3-container compose (build context = .)
 ├── pyproject.toml               # Dependencies (no acmg-config-loader)
 ├── uv.lock                      # Locked dependency versions
 ├── main.py                      # Monolith entry (all services, port 8001)
@@ -179,13 +179,13 @@ services/model-server/
 │   ├── auth.py                  # API key authentication middleware
 │   ├── config.py                # Settings via pydantic-settings (env vars + .env only)
 │   ├── api/
-│   │   ├── health.py            # GET /health — model readiness per service
-│   │   ├── embedding.py         # POST /v1/embeddings — text to vector
-│   │   ├── rerank.py            # POST /v1/rerank — query-document relevance scoring
-│   │   ├── file_parse.py        # POST /v1/parse/file — file-based document extraction
+│   │   ├── health.py            # GET /health -- model readiness per service
+│   │   ├── embedding.py         # POST /v1/embeddings -- text to vector
+│   │   ├── rerank.py            # POST /v1/rerank -- query-document relevance scoring
+│   │   ├── file_parse.py        # POST /file_parse -- PDF document extraction (MinerU)
 │   ├── domain/
 │   │   ├── base.py              # ABC BaseModelService (lazy loading + unload lifecycle)
-│   │   ├── doc_parse.py         # DocumentParseService (file-based MinerU extraction)
+│   │   ├── doc_parse.py         # DocParseService (file-based MinerU extraction)
 │   │   ├── embedding.py         # EmbeddingService (Qwen3-Embedding-0.6B via vllm)
 │   │   ├── rerank.py            # RerankService (bge-reranker-v2-m3 via vllm)
 │   ├── models/
@@ -200,35 +200,35 @@ services/model-server/
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│                    main.py                       │
-│  instantiate services → bind to routes → FastAPI │
-└─────┬──────────────┬──────────────┬─────────────┘
-      │              │              │
-      ▼              ▼              ▼
-┌──────────┐  ┌──────────┐  ┌──────────┐
-│ /v1/emb… │  │ /v1/rer… │  │ /file_par │   ← API layer (thin, stateless)
-└────┬─────┘  └────┬─────┘  └────┬─────┘
-     │bind()       │bind()       │bind()
-     ▼             ▼             ▼
-┌──────────┐  ┌──────────┐  ┌──────────┐
-│Embedding │  │ Rerank   │  │ DocParse │   ← Domain layer (lazy-loaded models)
-│ Service  │  │ Service  │  │ Service  │
-└────┬─────┘  └────┬─────┘  └────┬─────┘
-     │             │             │
-     ▼             ▼             ▼
-┌─────────────────────────────────────────┐
-│              vllm.LLM                    │   ← Unified inference engine
-│ pooling/embed │ pooling/score │ MinerU  │
-└─────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│                       main.py                        │
+│  instantiate services -> bind to routes -> FastAPI    │
+└──────┬──────────────┬──────────────┬─────────────────┘
+       │              │              │
+       ▼              ▼              ▼
+┌───────────┐  ┌───────────┐  ┌─────────────┐
+│ /v1/emb…  │  │ /v1/rer…  │  │ /file_parse  │  <- API layer (thin, stateless)
+└─────┬─────┘  └─────┬─────┘  └──────┬──────┘
+      │bind()        │bind()         │bind()
+      ▼              ▼               ▼
+┌───────────┐  ┌───────────┐  ┌─────────────┐
+│ Embedding │  │  Rerank   │  │ DocParse    │  <- Domain layer
+│  Service  │  │  Service  │  │  Service    │
+└─────┬─────┘  └─────┬─────┘  └──────┬──────┘
+      │              │               │
+      ▼              ▼               ▼
+┌──────────────────────────────┐  ┌──────────────┐
+│         vllm.LLM             │  │ MinerU       │
+│ pooling/embed│pooling/score  │  │ doc_analyze  │  <- Inference backends
+└──────────────────────────────┘  └──────────────┘
 ```
 
 **Data flow:**
-1. HTTP request arrives → FastAPI route handler
-2. Route calls `_service.infer(…)` on the bound domain service
-3. Service calls `self.ensure_loaded()` → triggers `_load()` on first call (lazy init)
-4. `_load()` creates a `vllm.LLM` instance → downloads model weights from HuggingFace Hub
-5. The API route calls `unload()` in a `finally` block after inference to release vllm engine resources
+1. HTTP request arrives -> FastAPI route handler
+2. Route calls `_service.infer(...)` on the bound domain service
+3. For Embedding/Rerank: `ensure_loaded()` triggers `_load()` on first call, which creates a `vllm.LLM` instance
+4. After inference, the API route calls `unload()` in a `finally` block to release vllm engine resources
+5. For Doc-parse: MinerU's internal `ModelSingleton` handles VLM model lifecycle; no manual load/unload
 
 **Wiring pattern:** Each API module exposes a module-level `bind(service)` function.
 `main.py` creates service instances, calls `bind()`, then `include_router()` on the FastAPI app.
@@ -236,9 +236,10 @@ This decouples route definition from service construction and makes mocking triv
 
 ## Public API
 
-### BaseModelService
+### BaseModelService (Abstract)
 
-Abstract base for all model services. Owns lazy loading and readiness tracking.
+Base for EmbeddingService and RerankService. Owns lazy loading and readiness tracking.
+DocParseService does NOT extend this class (it uses MinerU's own model lifecycle).
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
@@ -250,32 +251,35 @@ Abstract base for all model services. Owns lazy loading and readiness tracking.
 
 Properties: `model_id: str`, `ready: bool`
 
-### EmbeddingService
+### EmbeddingService (extends BaseModelService)
 
 Vector embeddings via `Qwen/Qwen3-Embedding-0.6B` (configurable).
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `__init__` | `(model_id="Qwen/Qwen3-Embedding-0.6B", gpu_memory_utilization=0.9)` | — |
+| `__init__` | `(model_id="Qwen/Qwen3-Embedding-0.6B", gpu_memory_utilization=0.9, max_model_len=32768)` | -- |
 | `infer` | `(texts: list[str], normalize: bool = True) -> np.ndarray` | Returns `(N, D)` float64 array; L2-normalized by default |
 
-### RerankService
+### RerankService (extends BaseModelService)
 
 Relevance scoring via `BAAI/bge-reranker-v2-m3` (configurable).
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `__init__` | `(model_id="BAAI/bge-reranker-v2-m3", gpu_memory_utilization=0.9)` | — |
+| `__init__` | `(model_id="BAAI/bge-reranker-v2-m3", gpu_memory_utilization=0.9)` | -- |
 | `infer` | `(query: str, documents: list[str]) -> np.ndarray` | Returns `(N,)` float64 scores |
 
-### DocParseService
+### DocParseService (standalone, does NOT extend BaseModelService)
 
-PDF document parsing via MinerU's native `doc_analyze` API.
+PDF document parsing via MinerU's native `doc_analyze` API. Uses MinerU's internal `ModelSingleton` for VLM model lifecycle rather than the vllm lazy-load/unload pattern.
 
-| Method | Signature | Description |
+| Method/Property | Signature | Description |
 |--------|-----------|-------------|
 | `__init__` | `(backend="vlm", gpu_memory_utilization=0.9, model_path="")` | `model_path` points to local VLM weights |
-| `parse` | `(pdf_bytes: bytes, file_name: str) -> DocParseResult` | Full PDF → markdown + content_list + images |
+| `is_available` | `() -> bool` | Check if MinerU is importable |
+| `parse` | `(pdf_bytes: bytes, file_name: str) -> DocParseResult` | Full PDF -> markdown + content_list + images |
+| `backend` | property `-> str` | Configured MinerU backend identifier |
+| `ready` | property `-> bool` | Delegates to `is_available()` |
 
 Supporting types:
 
@@ -285,12 +289,12 @@ Supporting types:
 
 | Method | Path | Request Model | Response Model | Description |
 |--------|------|--------------|----------------|-------------|
-| `GET` | `/health` | — | `HealthResponse` | Service readiness per model |
-| `POST` | `/v1/embeddings` | `EmbeddingRequest` | `EmbeddingResponse` | Text → vector embeddings |
+| `GET` | `/health` | -- | `HealthResponse` | Service readiness per model |
+| `POST` | `/v1/embeddings` | `EmbeddingRequest` | `EmbeddingResponse` | Text -> vector embeddings |
 | `POST` | `/v1/rerank` | `RerankRequest` | `RerankResponse` | Query-document relevance scores |
-| `POST` | `/file_parse` | multipart file | `FileParseResponse` | PDF → markdown + content_list (MinerU native) |
+| `POST` | `/file_parse` | multipart file | `FileParseResponse` | PDF -> markdown + content_list (MinerU native) |
 
-#### Bind functions (API ← Service wiring)
+#### Bind functions (API <- Service wiring)
 
 Each API module exposes a `bind(service)` function and a module-level `_service` variable:
 
@@ -324,10 +328,15 @@ All request/response models are Pydantic `BaseModel` subclasses. Key types:
 | `RerankRequest` | `query: str`, `documents: list[str]`, `top_k: int \| None`, `model: str` |
 | `RerankResponse` | `model: str`, `results: list[RerankResult]`, `usage: RerankUsage` |
 | `HealthResponse` | `status: str`, `models: dict[str, bool]` |
+| `FileParseResponse` | `task_id: str`, `status: str`, `backend: str`, `version: str`, `results: dict` |
+| `ChatRequest` | `model`, `messages`, `max_tokens`, `temperature`, `stream` (reserved, unused) |
+| `ChatResponse` | `id`, `model`, `choices`, `usage` (reserved, unused) |
+| `VLMExtractRequest` | `model`, `messages`, `max_tokens`, `temperature` (reserved, unused) |
+| `VLMExtractResponse` | `model`, `metadata`, `pages`, `full_markdown`, `choices`, `usage` (reserved, unused) |
 
 ### Configuration (app/config.py)
 
-`Settings` is a `pydantic-settings.BaseSettings` singleton. The model-server is fully decoupled from the backend project — all configuration comes from **environment variables** (or an optional `.env` file in the service directory). See `.env.example` for the full template.
+`Settings` is a `pydantic-settings.BaseSettings` singleton. The model-server is fully decoupled from the backend project -- all configuration comes from **environment variables** (or an optional `.env` file in the service directory). See `.env.example` for the full template.
 
 | Env var | Default | Purpose |
 |---------|---------|---------|
@@ -349,6 +358,7 @@ All request/response models are Pydantic `BaseModel` subclasses. Key types:
 | `DOC_PARSE_IMAGE_ANALYSIS` | `false` | Enable chart/figure analysis in MinerU |
 | `DOC_PARSE_GPU_MEMORY_UTILIZATION` | `0.9` | vllm GPU memory fraction for doc-parse |
 | `VLLM_GPU_MEMORY_UTILIZATION` | `0.9` | vllm GPU memory fraction (shared default) |
+| `LLM_MODEL_ID` | `""` | Placeholder for future local LLM (unused) |
 
 **Local dev:** `cp .env.example .env` and edit values. pydantic-settings reads `.env` automatically.
 
@@ -358,56 +368,58 @@ Access via `from app.config import get_config; cfg = get_config()`.
 
 ## Internal Design
 
-### Lazy loading
+### Lazy loading (Embedding & Rerank)
 
-All services extend `BaseModelService`, which wraps vllm model creation in a lazy-per-request pattern:
+EmbeddingService and RerankService extend `BaseModelService`, which wraps vllm model creation in a lazy-per-request pattern:
 
-1. `__init__` stores the model ID — **no GPU memory allocated**
-2. First `infer()` call triggers `ensure_loaded()` → `_load()`
-3. `_load()` creates `vllm.LLM(…)` — downloads weights, allocates VRAM
+1. `__init__` stores the model ID -- **no GPU memory allocated**
+2. First `infer()` call triggers `ensure_loaded()` -> `_load()`
+3. `_load()` creates `vllm.LLM(...)` -- downloads weights, allocates VRAM
 4. `_ready` flag flips to `True`
 5. The API route calls `unload()` after the request, shutting down the vllm engine and flipping `_ready` back to `False`
 
 Startup time is < 1s (no model loading). Each request pays model load/warm-up cost, which keeps the service usable on
 single-GPU developer machines where multiple vllm engines cannot stay resident together.
 
+### MinerU model lifecycle (Doc-parse)
+
+DocParseService does NOT use the vllm lazy-load pattern. It wraps MinerU's `doc_analyze` API, which manages its own VLM model via MinerU's internal `ModelSingleton`. Availability is checked at runtime via `is_available()` (tries to import MinerU). If MinerU is not installed, `/file_parse` returns HTTP 503.
+
 ### vllm engine integration
 
-Each domain service configures vllm differently:
-
 ```
-EmbeddingService → vllm.LLM(runner="pooling", convert="embed") → model.embed(texts, use_tqdm=False)
-RerankService    → vllm.LLM(runner="pooling")                  → model.score(query, documents, use_tqdm=False)
-DocParseService  → MinerU doc_analyze(backend="vlm", model_path=…)
-                   → pdf_bytes → pages, markdown, images
+EmbeddingService -> vllm.LLM(runner="pooling", convert="embed") -> model.embed(texts, use_tqdm=False)
+RerankService    -> vllm.LLM(runner="pooling")                  -> model.score(query, documents, use_tqdm=False)
+DocParseService  -> MinerU doc_analyze(backend="vlm", model_path=...)
+                   -> pdf_bytes -> pages, markdown, images
 ```
-
-The doc-parse path uses MinerU's native `doc_analyze` API directly, which handles
-PDF → image conversion → VLM extraction → markdown internally.
 
 - **Single process, one vllm engine during an active request.** API routes unload engines after inference to avoid
   cross-service GPU memory contention.
-- **No async in the model layer.** `infer()` methods are synchronous; FastAPI runs them in thread pools by default.
+- **No async in the model layer.** `infer()` methods are synchronous; FastAPI runs them in thread pools by default
+  (doc-parse explicitly uses `asyncio.to_thread`).
 - **Not horizontally sharded.** All inference runs on the GPU(s) visible to the single uvicorn process.
 
 ### Error handling
 
-- **API layer:** Unexpected `Exception` → 500.
-- **Request validation:** Pydantic `ValidationError` on malformed input → FastAPI auto-returns 422.
+- **API layer:** Unexpected `Exception` -> 500.
+- **Request validation:** Pydantic `ValidationError` on malformed input -> FastAPI auto-returns 422.
 - **Service unavailable:** `/file_parse` returns 503 when MinerU is not installed.
-- **No retry logic** — callers (the backend gateway) must implement retries.
+- **No retry logic** -- callers (the backend gateway) must implement retries.
 
 ### Logging
 
 - **Framework:** `loguru`, replacing stdlib `logging` via `_InterceptHandler`.
 - **Console:** INFO level, compact format: `HH:mm:ss | LEVEL | message`.
 - **File:** `logs/model-server_YYYY-MM-DD.log` at DEBUG level, rotated daily, retained 14 days.
-- **Request monitoring:** ASGI middleware logs every request: `METHOD /path → STATUS (Xms)`.
+- **Request monitoring:** ASGI middleware logs every request: `METHOD /path -> STATUS (Xms)`.
 
 ## Usage Patterns
 
 > Port numbers below assume the **monolith** (`main.py`, port 8001).
 > In Docker 3-container mode, use per-service ports: 8002 (embedding), 8003 (rerank), 8004 (doc-parse).
+
+### 1. Embed texts
 
 ```python
 import httpx
@@ -507,9 +519,9 @@ class LLMService(BaseModelService):
 
 3. **Create API route** in `app/api/llm.py` with a `bind()` function, following the existing pattern.
 
-4. **Add schemas** in `app/models/schemas.py` (chat schemas are already reserved — `ChatRequest`, `ChatResponse`, etc.).
+4. **Add schemas** in `app/models/schemas.py` (chat schemas are already reserved -- `ChatRequest`, `ChatResponse`, etc.).
 
-5. **Wire in `main.py`:** instantiate → `bind()` → `include_router()` → register for health.
+5. **Wire in `main.py`:** instantiate -> `bind()` -> `include_router()` -> register for health.
 
 6. **Add tests** in `tests/`, mocking `vllm.LLM` as the existing tests do.
 
@@ -522,7 +534,7 @@ The doc-parse path (`app/domain/doc_parse.py`) wraps MinerU's `doc_analyze` API.
 - **vllm can leave child processes alive if not shut down.** Keep `unload()` in request-finally paths so vllm engine
   resources are released even when inference raises.
 - **Model download on first load.** If HuggingFace Hub is slow or blocked, `_load()` hangs. Pre-download models to `HF_HOME` or set `HF_ENDPOINT` to a mirror.
-- **Don't call `infer()` from async coroutines without thread offloading.** vllm's `.embed()` and `.score()` are synchronous GPU operations. FastAPI's default thread pool handles this, but raw `asyncio.create_task(svc.infer(…))` will block the event loop.
+- **Don't call `infer()` from async coroutines without thread offloading.** vllm's `.embed()` and `.score()` are synchronous GPU operations. FastAPI's default thread pool handles this, but raw `asyncio.create_task(svc.infer(...))` will block the event loop.
 - **Doc-parse requires MinerU.** If `mineru[vlm]` is not installed, `/file_parse` returns 503. Check `/health` before calling.
 
 ## Performance Notes
@@ -542,29 +554,29 @@ The service has **no dependency on `acmg-config-loader`** or any other in-repo p
 
 | Dependency | Version | Purpose |
 |------------|---------|---------|
-| `fastapi` | ≥0.111.0 | REST API framework |
-| `uvicorn` | ≥0.30.0 | ASGI server |
-| `pydantic` | ≥2.7.0 | Request/response validation |
-| `pydantic-settings` | ≥2.3.0 | Configuration from env vars + `.env` |
-| `vllm` | ≥0.8.0 | Unified LLM inference engine (embed, score, generate) |
-| `mineru[vlm]` | ≥3.3.0 | MinerU document parsing pipeline |
-| `mineru_vl_utils` | ≥1.0.4 | MinerU VLM client utilities |
-| `loguru` | ≥0.7.0 | Structured logging |
-| `numpy` | ≥1.26.0 | Vector math (embedding normalization, score arrays) |
-| `Pillow` | ≥10.0.0 | Image decoding from base64 |
-| `pyyaml` | ≥6.0.0 | YAML parsing (mineru config) |
-| `transformers` | ≥4.57.6 | Tokenizer / model utilities |
-| `httpx` | ≥0.27.0 (dev) | Test client |
-| `pytest` | ≥8.2.0 (dev) | Test framework |
-| `pytest-asyncio` | ≥0.23.0 (dev) | Async test support |
-| `ruff` | ≥0.5.0 (dev) | Linter |
+| `fastapi` | >=0.111.0 | REST API framework |
+| `uvicorn` | >=0.30.0 | ASGI server |
+| `pydantic` | >=2.7.0 | Request/response validation |
+| `pydantic-settings` | >=2.3.0 | Configuration from env vars + `.env` |
+| `vllm` | >=0.8.0 | Unified LLM inference engine (embed, score, generate) |
+| `mineru[vlm]` | >=3.3.0 | MinerU document parsing pipeline |
+| `mineru_vl_utils` | >=1.0.4 | MinerU VLM client utilities |
+| `loguru` | >=0.7.0 | Structured logging |
+| `numpy` | >=1.26.0 | Vector math (embedding normalization, score arrays) |
+| `Pillow` | >=10.0.0 | Image decoding from base64 |
+| `pyyaml` | >=6.0.0 | YAML parsing (mineru config) |
+| `transformers` | >=4.57.6 | Tokenizer / model utilities |
+| `httpx` | >=0.27.0 (dev) | Test client |
+| `pytest` | >=8.2.0 (dev) | Test framework |
+| `pytest-asyncio` | >=0.23.0 (dev) | Async test support |
+| `ruff` | >=0.5.0 (dev) | Linter |
 
 ## Testing
 
 ```bash
 cd services/model-server
 
-# Run all tests (no GPU required — vllm.LLM is mocked via conftest stubs)
+# Run all tests (no GPU required -- vllm.LLM is mocked via conftest stubs)
 uv run pytest
 
 # Run a single test file
@@ -578,10 +590,13 @@ uv run pytest -m "not integration"
 ```
 
 **Test strategy:**
-- All domain tests mock `vllm.LLM` — tests run on CPU, no GPU needed.
+- All domain tests mock `vllm.LLM` -- tests run on CPU, no GPU needed.
 - API tests use `fastapi.testclient.TestClient` with mocked services.
 - Schema tests validate Pydantic model construction and serialization.
 - Config tests (`test_model_server_config.py`) verify env-var-only configuration parsing via `monkeypatch`.
+- Per-service entrypoint tests (`test_per_service_entrypoints.py`) verify the split `main_embedding.py` / `main_rerank.py` / `main_doc_parse.py` files.
+- Auth tests (`test_auth.py`) verify Bearer/X-API-Key validation.
+- Docker E2E tests (`test_e2e_docker.sh`) validate the 3-container compose setup.
 
 **Coverage gaps:**
 - No integration tests with real GPU/vllm (requires hardware not available in CI).

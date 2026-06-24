@@ -4940,3 +4940,164 @@ API 路由若已有前端调用路径，测试必须覆盖实际前端路径字�
 **Lesson**: Always test against a competitive baseline with equivalent field coverage. A weak baseline (3 fields) inflates the apparent advantage of a complex system. The expanded baseline was the rebuttal-ready experiment the reviewer would have asked for.
 
 **Prevention**: Future benchmark experiments should include at least one "strong single-prompt" baseline that explicitly requests all target fields.
+
+---
+
+## 2026-06-23 文献双语对照标注功能开发
+
+### 问题1: Alembic 多 head 冲突
+
+**问题描述**: 新增迁移 `doc_ann_20260623` 的 `down_revision` 设为 `doc_text_20260623`,但已有迁移 `content_blocks_20260623` 也以 `doc_text_20260623` 为 `down_revision`,形成分叉,Alembic 报 MultipleHeads 错误。
+
+**排查过程**: 运行 `test_alembic_migration.py` 时报 `Multiple head revisions are present: content_blocks_20260623, doc_ann_20260623`。grep 所有迁移文件的 revision/down_revision 发现两个迁移指向同一父节点。
+
+**根因分析**: 新增迁移前未检查当前 head。当时 head 是 `content_blocks_20260623`(非 `doc_text_20260623`),但 subagent 按 context 指定的 `doc_text_20260623` 作为 down_revision。
+
+**解决方案**: 将 `down_revision` 改为 `content_blocks_20260623`,形成线性链: `repair_phase3_schema_20260623` → `doc_text_20260623` → `content_blocks_20260623` → `doc_ann_20260623`。
+
+**预防措施**: 新增 Alembic 迁移前,必须运行 `alembic heads` 确认当前唯一 head,以该 head 作为 `down_revision`。禁止假设某个已知 revision 是 head。
+
+### 问题2: 子代理任务标记失败但产物完整
+
+**问题描述**: 后端实现委托给 task subagent,返回 `status=failed (exit 1)`,但实际所有文件(模型/DAO/路由/迁移/测试)均已正确创建,ruff 通过,4 项测试通过。
+
+**排查过程**: 检查 subagent transcript 发现它在最后一步(可能是验证命令)失败,但所有文件写入操作在此之前已完成。通过 grep/ls 逐个验证文件存在性 + ruff + pytest 确认产物正确。
+
+**根因分析**: subagent 的退出码反映最后一条命令,不反映中间产物。文件写入是渐进式的,最后命令失败不回滚已写文件。
+
+**预防措施**: subagent 返回 failed 时,不要盲目重试。先检查实际产出文件状态,验证内容正确性,仅补全缺失部分。
+
+### 问题3: 标注坐标系设计 — 可见文本偏移 vs 原始 Markdown 偏移
+
+**问题描述**: 现有证据高亮基于原始 Markdown 字符偏移量(通过 `indexOf` 反向映射到渲染后 DOM)。用户交互选区在渲染后 DOM 上,无法直接对应原始 Markdown 偏移。
+
+**决策**: 用户标注采用独立的"渲染后可见文本(flattened textContent)偏移量"坐标系,与证据高亮的原始 Markdown 偏移量分离。标注用绝对定位覆盖层 div 渲染,证据高亮用 DOM `<mark>` wrap,两者零冲突。
+
+---
+
+## 2026-06-23 Audit Trail 端到端修正审计链路优化
+
+### 问题1: Review Evidence 对未变更 sibling 字段过度 PATCH
+
+**问题描述**: 浏览器端只修正 disease 字段时,前端会对同证据组多个字段一起提交 PATCH。每个 PATCH 都触发 literature profile/search index 刷新,真实浏览器流程出现 50-90 秒级提交耗时。
+
+**排查过程**: Playwright 端到端脚本等待审计行超时后,检查后端日志发现多个 `PATCH /api/v1/evidence/{id}` 请求顺序完成,单次请求耗时随刷新叠加明显增长。再对比前端提交构造逻辑,发现它会为未编辑字段生成 status-only operation。
+
+**根因分析**: `buildReviewPatchOperations()` 没有区分"存在字段修正"和"纯状态审核"两类场景。字段修正场景下,未变更 sibling 字段不应参与本次提交。
+
+**解决方案**: 当存在至少一个映射字段修正时,只提交包含实际字段 delta 的 evidence item；只有完全没有字段修正时,才为状态变化的条目生成 status-only operation。
+
+**预防措施**: Review 类批量提交必须用真实浏览器或集成测试观察网络请求数量。单元测试除了验证字段映射,还要验证未变更 sibling 字段不会被提交。
+
+### 问题2: Playwright 等待策略与动态轮询页面不匹配
+
+**问题描述**: Audit Trail 页面有健康检查和审计轮询,使用 `networkidle` 或只等待表格文本会产生误判；脚本还曾因 placeholder/DOM 结构假设错误而在提交前失败。
+
+**排查过程**: 失败时输出页面正文和网络错误,确认多次失败分别停在搜索框 placeholder、字段输入 DOM、Ant Design Select 定位、以及 Playwright API 方法差异,而非后端 PATCH 失败。通过 `curl` 验证审计 API 已正确写入事件。
+
+**根因分析**: 测试脚本复用了过时 UI 假设,并把"页面轮询刷新"当成主要完成信号。动态 Antd 页面应优先等待用户动作触发的确定性响应,例如 PATCH 返回和 scoped audit API 返回。
+
+**解决方案**: 浏览器验证改为 `domcontentloaded` 后使用实际 placeholder/role 定位,提交时等待 `/api/v1/evidence/{id}` PATCH 响应,随后用 `/api/v1/delta-audit/?source_document_id=...` 断言审计事件。
+
+**预防措施**: 对轮询页面做 E2E 时,禁止把 `networkidle` 当作完成条件。每个跨服务动作都要有一个明确的 API 响应或数据库可见性断言。
+
+### 问题3: Antd Select 缺少稳定语义名称导致 Corrected 状态验证脆弱
+
+**问题描述**: Review Evidence 抽屉中的 New status 下拉在视觉上可用,但 combobox 没有可访问名称。Playwright 和 Testing Library 无法通过语义定位 `Review status`,只能依赖 `.ant-select-selector` 等易碎 CSS 选择器。
+
+**排查过程**: 组件测试先复现 `getByRole("combobox", { name: "Review status" })` 失败；浏览器脚本也在选择 `Corrected` 时因 Antd 隐藏 option 节点和可见 option 节点并存而误点隐藏节点。
+
+**根因分析**: 控件可视 label 使用普通文本 `New status`,没有通过 `aria-label` 或 label 关联到实际 combobox。自动化只能匹配内部实现细节。
+
+**解决方案**: 给 Select 增加 `aria-label="Review status"`,并将浏览器脚本的 option 定位限制到可见 `.ant-select-dropdown:not(.ant-select-dropdown-hidden)`。
+
+**预防措施**: 所有关键表单控件必须能通过 role + accessible name 定位。Antd Select/DatePicker 等复合控件尤其要补显式 `aria-label`。
+
+### 问题4: EvidenceReviewDrawer 重复 key — group_id 跨论文非唯一
+
+**问题描述**: 前端控制台报 `Encountered two children with the same key: gene=BRCA2|variant=__missing__`，出现在 EvidenceReviewDrawer 搜索结果列表。
+
+**排查过程**: 搜索结果列表用 `key={item.group_id}` 渲染。group_id 是 `gene=<G>|variant=<V>` 字符串。查看 variantDb.ts 注释明确写道：group_id 跨论文不唯一，同一 gene/variant 组合会出现在多篇论文中。因此多篇 BRCA2 + 缺失 variant 的结果产生相同 key。进一步发现 handleSelectItem 只存 group_id，getEvidenceGroupDetail 未传 sourceDocumentId，导致点击同一 group_id 的不同结果加载到同一份详情（API 已支持 sourceDocumentId 参数做文档级过滤）。
+
+**根因分析**: group_id 是业务分组键（gene+variant），不是行级唯一键。把它同时用作 React key 和详情查询的唯一标识，在跨论文同组场景下双重失效。
+
+**解决方案**: (1) React key 改用 `group_id::source_document_id` 复合键；(2) 选中时同时记录 group_id 与 source_document_id，详情查询传入 sourceDocumentId 做文档级过滤，queryKey 含两者以保证缓存隔离。
+
+**预防措施**: 后端返回的分组键（如 group_id）不能假设为行级唯一。用作 React key 前必须确认唯一性，否则用复合键（分组键 + 文档/记录 ID）。涉及详情查询时，检查 API 是否需要额外的 disambiguator 参数。
+
+### 问题4: 诊断错误 — 改错组件模块
+
+**问题描述**: 用户报告"还是没有渲染",我最初把标注+排版增强全部接到了 `evidence-search` 模块的 `BilingualCompareView`(挂在 `/evidence/detail?view=compare`)。但用户实际访问的是 `/evidence-db/:variantSlug/:sourceDocumentId`,使用的是 `evidence-db` 模块的 `BilingualEvidenceView` / `DocumentReader` / `StructuredBlockRenderer`——完全独立的一套组件。改动对用户完全不可见。
+
+**排查过程**: 用户给出 XPath 指向 `<p>` 元素。通过浏览器导航到用户实际页面,发现 `.edb-scroll` 内容是 `## 标题` 原始 Markdown 文本(纯文本显示,未解析)。检查路由配置确认 `/evidence-db/:variantSlug/:sourceDocumentId` 渲染 `BilingualEvidenceView`,而非 `BilingualCompareView`。
+
+**根因分析**: codegraph 探索时 `BilingualCompareView` 出现在"双语对照"相关符号中,我假设它是唯一入口,未验证用户实际访问的路由。项目有两个并行的证据展示模块:`evidence-search`(BilingualCompareView)和 `evidence-db`(BilingualEvidenceView),功能相似但独立。
+
+**解决方案**: 把标注层(AnnotationLayer 共享组件,可复用)+ Markdown 排版渲染(MarkdownDocumentViewer)接入 `evidence-db` 模块的 `DocumentReader`:无 blocks 时 full-text 段落用 MarkdownDocumentViewer 渲染(解析 `##`/`#` 为标题),而非 HighlightedText(纯文本)。
+
+**预防措施**: 改动前必须确认用户实际访问的路由与组件。用浏览器导航到用户页面验证,而非假设 codegraph 找到的组件就是目标。项目有并行模块时,逐一确认。
+
+### 问题5: 创建标注后覆盖层不即时更新
+
+**问题描述**: 创建标注后端成功(200),但前端覆盖层不即时显示,需手动刷新页面才出现。
+
+**排查过程**: 对比创建前后覆盖层数:创建后仍为旧数量,刷新后才增加。调 API 确认后端已持久化。监控网络请求发现 React Query 的 `invalidateQueries` 未可靠触发 refetch 更新 UI。
+
+**根因分析**: `invalidateQueries` 是异步 refetch,在某些时机下未即时反映到 UI(可能与 React Query 版本/配置/batching 有关)。
+
+**解决方案**: 改用 `queryClient.setQueryData` 乐观更新——mutation onSuccess 直接操作缓存数组(增/改/删),UI 即时反映,不依赖 refetch。
+
+**预防措施**: 对需要即时 UI 反馈的 mutation,优先用 `setQueryData` 乐观更新缓存,而非仅 `invalidateQueries`。
+
+### 问题6: 多彩证据高亮丢失 — trace.highlight 为 null
+
+**问题描述**: 渲染成功但无多彩高亮标注(系统按类别A-J的彩色证据高亮)。
+
+**排查过程**: 浏览器抓取 evidence detail API 数据,发现 166 条 trace 全部 `original: null`/`translated: null`(`withHighlight: 0`)。`buildEvidenceDocument` 的 fullText 分支 line 336 `if (!highlight) return;` 直接跳过,locatedHighlights 为空。
+
+**根因分析**: 后端 trace 未填充 highlight 字段(original/translated highlight span),但部分 trace 有 `original_value`(如 "MECP2"、"c.468C>G"、"Rett syndrome")。旧逻辑只在有 highlight 时定位,highlight 为 null 即放弃。
+
+**解决方案**: `buildEvidenceDocument` 增加 fallback——highlight 为 null 但有 `original_value`/`translated_value` 时,用 `findAnchorValue(fullText, value)` 在全文按值定位生成高亮。偏移量基于原始 markdown 文本,与 MarkdownDocumentViewer 的证据高亮坐标系一致。
+
+### 问题7: 图片不渲染 — 相对路径 404
+
+**问题描述**: markdown 里的 `![alt](images/xxx.jpg)` 图片不显示。
+
+**排查过程**: 图片 src 是相对路径 `images/<hash>.jpg`,前端无静态资源服务,404。实际图片文件在 `backend/output/cross_lingual/<lang>/<doc>/images/` 和 `benchmark/annotation/<status>/<doc>/images/`。
+
+**解决方案**: ① 后端加图片服务路由 `GET /api/v1/documents/{id}/images/{image_name}`,在候选图片根目录(cross_lingual output + annotation)下 rglob `images/<image_name>` 返回 FileResponse,防路径遍历(拒绝含 `/`/`..` 的 image_name)。② 前端 MarkdownDocumentViewer 自定义 `img` 组件,把相对路径 `images/xxx.jpg` 重写为 API URL,绝对 URL/data URI 不动。③ 认证靠 ce_session cookie(同源 `<img>` 自动带),无需 header。
+
+**预防措施**: 文档渲染涉及静态资源时,前端相对路径必须映射到后端服务路由;不要假设前端能直接访问后端文件系统。
+
+## [2026-06-24] Clinical Context Extractor — Root Cause & Fix
+
+### Problem
+B.clinical_phenotypes F1=0 across all 71 ground truth entries. Pipeline always returned status=not_found for this field, while B7-expanded baseline (single prompt, 17 fields) achieved F1=0.3235.
+
+### Root Cause Analysis
+1. **Attention dilution**: high_signal catalog group has 62 fields per LLM call. B.clinical_phenotypes gets no dedicated guidance.
+2. **Prompt instruction gap**: 23 rules in catalog_extraction prompt all focus on A.gene_symbol, A.gene_disease_relationship, B.disease_diagnosis, B.age_of_onset. Zero rules for B.clinical_phenotypes.
+3. **Field description too short**: catalog line is just "B.clinical_phenotypes*: Key clinical phenotypes [PP4]" — no extraction guidance.
+4. **special_evidence doesn't cover phenotypes**: Second pass focuses on functional/case-control/authority/contradiction only.
+5. **B7-expanded proves it's possible**: 17 fields in one prompt + explicit field descriptions → F1=0.3235.
+
+### Solution
+Added ClinicalContextStage — a focused supplement pass after special_evidence with:
+- 6 fields (≤10 limit)
+- Explicit per-field extraction guidance (phenotypes ≠ diagnosis, semicolon-separated list, etc.)
+- Merge strategy: only add if no higher-confidence existing item for same field
+- Failure resilient: LLM errors logged as warning, pipeline continues
+
+### Verification
+- 17 new unit tests, all passing
+- Smoke test: clinical_context stage adds 2-4 items per track
+- rett_003 B.clinical_phenotypes changed from missing → wrong_value (partial improvement)
+
+### Lesson
+When a field consistently returns not_found despite being in the extraction catalog, check:
+1. Is there explicit extraction guidance for that field in the prompt?
+2. Is the field description specific enough?
+3. Is there a focused supplement pass covering it?
+4. What does a simpler baseline (fewer fields per call) achieve?
+
+The "field overload" hypothesis is confirmed: reducing fields per prompt from 62 to 6 improves extraction of neglected fields.

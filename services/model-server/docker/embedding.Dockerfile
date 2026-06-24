@@ -10,6 +10,9 @@ FROM vllm/vllm-openai:latest
 
 WORKDIR /app
 
+ # 禁用 NVIDIA Container Toolkit 的严格版本检查，强制放行
+ENV NVIDIA_DISABLE_REQUIRE=1
+
 # Install extra Python deps not in vLLM base image
 RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ \
     fastapi pydantic pydantic-settings loguru pyyaml pillow numpy uvicorn

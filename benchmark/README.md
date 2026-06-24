@@ -1,36 +1,44 @@
 # Benchmark Framework
 
-Reorganized layout of the ACMG-Lingua benchmark suite (2026-06-18 refactor).
+Benchmark suite for the Lingua Seeker evidence extraction pipeline. Covers literature acquisition, cross-lingual evidence extraction, entity standardization, and pipeline end-to-end evaluation.
 
-## Top-level map
+## Directory Layout
 
 ```
 benchmark/
-├── core/         shared primitives: contracts, matching, aggregate, paths, pdf,
-│                 pipeline_client, evidence_metrics, mondo_hierarchy
-├── datasets/     dataset-specific dataset assembly + evaluators
-│   ├── clingen/        ClinGen entries + Rett curation
-│   ├── clinvar_fused/  ClinVar-fused variants
-│   └── rett_annotation/ MinerU-driven annotation toolkit (independent uv project)
-├── runners/      experiment entry points that hit pipelines / providers / LLMs
-├── analysis/     offline reporters that read previously generated reports
-│   ├── reconcile/         ablation, case studies, oracle bound, contextual diagnosis
-│   ├── traceability/      citation validity / span boundary / traceable F1
-│   ├── baselines/         B0..B10 LLM baselines + prompt-only sweeps + summary tables
-│   ├── arbitrator/        arbitrator dataset + policy evaluator
-│   ├── benchmark_b/       multilingual pilot selection + Phase 2 metrics
-│   ├── dataset_curation/  readiness, source inventory, expansion, alignment, leakage
-│   ├── paper_artifacts/   paper-specific tables (G1/G2/main paper/rescue)
-│   └── diagnostics/       grounding, native gain, extraction, baselines, block recall, reconcile errors
-└── data/         every artifact (gitignored where appropriate)
-    ├── ground_truth/{clingen,clinvar_fused,rett}
-    ├── inputs/{pipeline,literature_acquisition}
-    ├── reports/{eval,reconcile,traceability,baseline,benchmark_b,
-    │            curation,paper,diagnostics,clinvar_fused,pipeline_e2e}
-    └── baselines/manifests
+├── core/              Shared primitives: contracts, matching, aggregate, paths, pdf,
+│                      pipeline_client, evidence_metrics, field_normalize, mondo_hierarchy
+├── config/            Centralized configuration: Ansible-managed file configs + runtime defaults
+├── datasets/          Dataset-specific assembly + evaluators
+│   ├── clingen/       ClinGen entries + Rett curation
+│   ├── clinvar_fused/ ClinVar-fused variants (Dataset 2)
+│   ├── parkinson_literature/  Parkinson XLSX workbook curation + PDF fetching
+│   └── rett_annotation/       MinerU-driven annotation toolkit (independent uv project)
+├── runners/           Experiment entry points that hit pipelines / providers / LLMs
+├── analysis/          Offline reporters organized by theme
+│   ├── reconcile/     Ablation, case studies, oracle bound, contextual diagnosis
+│   ├── traceability/  Citation validity / span boundary / traceable F1
+│   ├── baselines/     B0..B10 LLM baselines + prompt-only sweeps + summary tables
+│   ├── arbitrator/    Arbitrator dataset + policy evaluator
+│   ├── benchmark_b/   Multilingual pilot selection + Phase 2 metrics
+│   ├── dataset_curation/  Readiness, source inventory, expansion, alignment, leakage
+│   ├── paper_artifacts/   Paper-specific tables (G1/G2/main paper/rescue)
+│   └── diagnostics/   Grounding, native gain, extraction, baselines, block recall, reconcile errors
+├── layer3/            DEPRECATED SHIM: redirects to core/datasets/runners/analysis (Phase 6 removal)
+├── literature_acquisition/  DEPRECATED SHIM: redirects to runners (Phase 6 removal)
+├── pipeline/          DEPRECATED SHIM + test PDFs + reports (runner moved to runners/)
+├── annotation/        Legacy annotation data (source PDFs + markdown)
+├── optimization/      Prompt optimization experiments (fused75 ablations, adjudication)
+├── scripts/           Benchmark utility scripts
+├── data/              All artifacts (gitignored where appropriate)
+│   ├── ground_truth/  {clingen, clinvar_fused, rett}
+│   ├── inputs/        {pipeline, literature_acquisition}
+│   └── reports/       {eval, reconcile, traceability, baseline, benchmark_b,
+│                       curation, paper, diagnostics, clinvar_fused, pipeline_e2e}
+└── README.md
 ```
 
-## Stable imports
+## Stable Imports
 
 Cross-cutting primitives live in `benchmark.core`:
 
@@ -44,43 +52,78 @@ from benchmark.core import (
 )
 ```
 
-`GROUND_TRUTH_ROOT` and `REPORTS_ROOT` always resolve to `benchmark/data/...`. The
-legacy `GROUND_TRUTH_DIR` / `REPORTS_DIR` aliases are still exported but will be
-removed once the deprecation shims drop.
+`GROUND_TRUTH_ROOT` and `REPORTS_ROOT` always resolve to `benchmark/data/...`.
 
-## Common entry points
+## Common Entry Points
 
-|Goal|Command|
-|---|---|
-|Run pipeline benchmark|`python -m benchmark.runners.pipeline_e2e --help`|
-|Layer-3 ClinGen eval|`python -m benchmark.layer3.evaluate --help` _(legacy, shim — prefer running via `benchmark.runners`)_|
-|Download literature|`python -m benchmark.runners.literature_acquisition download --help`|
-|Rett literature pipeline|`python -m benchmark.runners.literature_rett --help`|
-|Build paper tables|`python -m benchmark.analysis.paper_artifacts.main_paper_tables --help`|
-|Pilot selection|`python -m benchmark.analysis.benchmark_b.pilot_selection --help`|
-|Grounding diagnostics|`python -m benchmark.analysis.diagnostics.grounding`|
+| Goal | Command |
+|------|---------|
+| Run pipeline benchmark | `python -m benchmark.runners.pipeline_e2e --help` |
+| Layer-3 ClinGen eval | `python -m benchmark.layer3.evaluate --help` (legacy shim) |
+| Download literature | `python -m benchmark.runners.literature_acquisition download --help` |
+| Rett literature pipeline | `python -m benchmark.runners.literature_rett --help` |
+| ClinVar fused selection | `python -m benchmark.datasets.clinvar_fused.select_fused_entries` |
+| ClinVar fused evaluation | `python -m benchmark.datasets.clinvar_fused.evaluate_fused --write` |
+| Build paper tables | `python -m benchmark.analysis.paper_artifacts.main_paper_tables --help` |
+| Pilot selection | `python -m benchmark.analysis.benchmark_b.pilot_selection --help` |
+| Grounding diagnostics | `python -m benchmark.analysis.diagnostics.grounding` |
 
-## Compat shims (deprecation, removed in Phase 6)
+## Configuration
 
-The 2026-06-18 refactor preserved every legacy dotted path while the codebase
-caught up. Imports under these prefixes still resolve but emit a
-`DeprecationWarning` pointing at the new home:
+Two complementary mechanisms in `benchmark/config/`:
 
-* `benchmark.layer3.evaluate` → `benchmark.core`
-* `benchmark.layer3.mondo_hierarchy` → `benchmark.core.mondo_hierarchy`
-* `benchmark.layer3.analysis.<x>` → `benchmark.analysis.<group>.<module>`
-* `benchmark.layer3.baselines.<x>` → `benchmark.analysis.baselines.<x>`
-* `benchmark.layer3.{select_entries,fetch_literature,download_pdfs,generate_*,visualize,preprocess}` → `benchmark.datasets.clingen.*` / `benchmark.runners.clingen_preprocess`
-* `benchmark.layer3.clinvar_fused.<x>` → `benchmark.datasets.clinvar_fused.<x>`
-* `benchmark.pipeline.benchmark` → `benchmark.runners.pipeline_e2e`
-* `benchmark.pipeline.evidence_metrics` → `benchmark.core.evidence_metrics`
-* `benchmark.literature_acquisition.{benchmark,rett_download}` → `benchmark.runners.{literature_acquisition,literature_rett}`
-* `benchmark.annotation.<x>` → `benchmark.datasets.rett_annotation.<x>`
-* `benchmark.analysis.diagnose_grounding` / `benchmark.analysis.diagnose_native_gain` → `benchmark.analysis.diagnostics.{grounding,native_gain}`
+- **Ansible** renders tunable/secret config files into consumer locations (Rett annotation config, acquisition configs)
+- **`defaults.py`** is the canonical source for runtime code constants (pipeline URL, status sets, filter thresholds, seed queries)
 
-## See also
+See `benchmark/config/README.md` for full documentation.
 
-* Plan: `docs/active/2026-06-18-benchmark-framework-refactor-plan.md`
-* Migration script: `scripts/refactor_benchmark_imports.py`
-* Reports bucketing: `scripts/refactor_benchmark_reports.py`
-* Per-bucket README is kept in each subpackage.
+## Deprecation Shims
+
+The 2026-06-18 refactor preserved every legacy dotted path while the codebase caught up. Imports under these prefixes still resolve but emit `DeprecationWarning`:
+
+| Legacy prefix | New location |
+|---------------|-------------|
+| `benchmark.layer3.evaluate` | `benchmark.core` |
+| `benchmark.layer3.mondo_hierarchy` | `benchmark.core.mondo_hierarchy` |
+| `benchmark.layer3.analysis.<x>` | `benchmark.analysis.<group>.<module>` |
+| `benchmark.layer3.baselines.<x>` | `benchmark.analysis.baselines.<x>` |
+| `benchmark.layer3.{select_entries,fetch_literature,...}` | `benchmark.datasets.clingen.*` / `benchmark.runners.clingen_preprocess` |
+| `benchmark.layer3.clinvar_fused.<x>` | `benchmark.datasets.clinvar_fused.<x>` |
+| `benchmark.pipeline.benchmark` | `benchmark.runners.pipeline_e2e` |
+| `benchmark.pipeline.evidence_metrics` | `benchmark.core.evidence_metrics` |
+| `benchmark.literature_acquisition.{benchmark,rett_download}` | `benchmark.runners.{literature_acquisition,literature_rett}` |
+| `benchmark.annotation.<x>` | `benchmark.datasets.rett_annotation.<x>` |
+
+All shims are scheduled for removal in Phase 6.
+
+## Datasets
+
+### Dataset 1: ClinGen-30 (Benchmark A)
+
+30 entries from ClinGen Gene-Disease Summary CSV. 3 expected fields per entry (gene_symbol, disease_diagnosis, gene_disease_relationship). Full P/R/F1 evaluation.
+
+### Dataset 2: ClinVar Fused
+
+ClinGen Definitive/Strong x ClinVar >=2-star Pathogenic/LP variants. 8 expected fields across gene-disease (P/R/F1) and variant (precision-only) layers. Supports multilingual source articles (en + zh/ja/ko translations).
+
+### Dataset 3: Rett Syndrome / MECP2
+
+89 PDFs across 11 languages. AI-assisted annotation with human review. Covers all A-J evidence field categories (up to 143 fields per entry).
+
+### Parkinson Literature
+
+XLSX workbook curation utility (7 sheets, 6291 rows) with PMC PDF downloading. Structural audit, not yet a benchmark ground truth dataset.
+
+## Testing
+
+```bash
+# Full benchmark test suite
+cd backend && uv run pytest tests/benchmark/ -q
+```
+
+## See Also
+
+- Plan: `docs/active/2026-06-18-benchmark-framework-refactor-plan.md`
+- Migration script: `scripts/refactor_benchmark_imports.py`
+- Reports bucketing: `scripts/refactor_benchmark_reports.py`
+- Per-bucket README in each subpackage

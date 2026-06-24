@@ -4,14 +4,25 @@
 
 ## Current Status
 
-This directory is currently empty. Seed data is loaded at runtime via:
+This directory is currently empty (only `.gitkeep`). Seed data is loaded at runtime via the terminology import script:
 
 ```bash
 # Import terminology database files into PostgreSQL
-python scripts/import_terminology.py --sources hgnc omim hpo clingen clinvar
+uv run python scripts/data/import/import_terminology.py \
+  --terminology-root database/terminology_database \
+  --version 2026.05
 
-# With embedding generation
-python scripts/import_terminology.py --sources hgnc --generate-embeddings
+# Import specific sources
+uv run python scripts/data/import/import_terminology.py \
+  --terminology-root database/terminology_database \
+  --version 2026.05 \
+  --sources hgnc clinvar
+
+# Import with pgvector embeddings
+uv run python scripts/data/import/import_terminology.py \
+  --terminology-root database/terminology_database \
+  --version 2026.05 \
+  --generate-embeddings
 ```
 
 ## Purpose

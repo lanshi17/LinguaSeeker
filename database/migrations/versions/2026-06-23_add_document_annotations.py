@@ -4,7 +4,7 @@ Stores per-paragraph character-offset annotations (original/translated track)
 so the bilingual reader can persist user highlights and notes.
 
 Revision ID: doc_ann_20260623
-Revises: doc_text_20260623
+Revises: content_blocks_20260623
 Create Date: 2026-06-23
 """
 from __future__ import annotations
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision = "doc_ann_20260623"
-down_revision = "doc_text_20260623"
+down_revision = "content_blocks_20260623"
 branch_labels = None
 depends_on = None
 

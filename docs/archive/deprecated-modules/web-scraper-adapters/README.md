@@ -1,55 +1,55 @@
 # Web Scraper Adapters (Archived)
 
-**归档日期**: 2026-06-16  
-**状态**: 已弃用，不再使用  
-**原路径**: `backend/src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/web/`
+**Archived:** 2026-06-16
+**Status:** Deprecated, no longer in use
+**Original path:** `backend/src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/web/`
 
-## 模块说明
+## Overview
 
-此模块包含 9 个基于浏览器的 web 抓取适配器，用于处理需要 JavaScript 渲染的学术网站。这些适配器通过 crawl4ai + Playwright 实现自动化 UI 交互和结构化数据提取。
+This module contained 9 browser-based web scraper adapters for academic sites that require JavaScript rendering. The adapters used crawl4ai + Playwright for automated UI interaction and structured data extraction.
 
-### 归档原因
+### Reason for Deprecation
 
-- 维护成本高：每个站点需要独立的 XPath/CSS 定位器和 UI 交互流程
-- 稳定性差：目标站点 UI 变更频繁导致定位器失效
-- 性能瓶颈：浏览器自动化开销大，不适合大规模采集
-- 替代方案：优先使用 Rust-based HTTP API 提供商（net_io）
+- **High maintenance cost:** Each site required independent XPath/CSS locators and UI interaction flows.
+- **Poor stability:** Target site UI changes frequently broke locators.
+- **Performance bottleneck:** Browser automation overhead made large-scale acquisition impractical.
+- **Replacement:** Rust-based HTTP API providers (`net_io`) handle the same sites more reliably.
 
-### 原模块结构
+### Original Module Structure
 
 ```
 web/
-├── base.py           # 共享工具函数（crawl4ai_search、PDF下载、HTML解析）
-├── locators.py       # XPath/CSS 选择器常量
-├── pubscholar.py     # PubScholar（中文，中科院/国家科学图书馆）
-├── chinaxiv.py       # ChinaXiv（中文预印本）
-├── hans_publishers.py # Hans Publishers（中文期刊）
-├── cyberleninka.py   # CyberLeninka（俄罗斯开放获取）
-├── koreascience.py   # KoreaScience（韩国期刊）
-├── redalyc.py        # Redalyc / La Referencia（西班牙语/葡萄牙语）
+├── base.py           # Shared utilities (crawl4ai_search, PDF download, HTML parsing)
+├── locators.py       # XPath/CSS selector constants
+├── pubscholar.py     # PubScholar (Chinese, CNIC/CAS)
+├── chinaxiv.py       # ChinaXiv (Chinese preprints)
+├── hans_publishers.py # Hans Publishers (Chinese journals)
+├── cyberleninka.py   # CyberLeninka (Russian open access)
+├── koreascience.py   # KoreaScience (Korean journals)
+├── redalyc.py        # Redalyc / La Referencia (Spanish/Portuguese)
 └── __init__.py
 ```
 
-### 技术栈
+### Technology Stack
 
-- **crawl4ai** + **Playwright**: 浏览器自动化
-- **selectolax**: HTML 解析备选方案
-- **Rust net_io**: PDF 链接提取加速
-- **LLMExtractionStrategy**: LLM 辅助结构化提取
+- **crawl4ai** + **Playwright**: Browser automation
+- **selectolax**: HTML parsing fallback
+- **Rust net_io**: PDF link extraction acceleration
+- **LLMExtractionStrategy**: LLM-assisted structured extraction
 
-### 迁移指南
+### Migration Guide
 
-如需恢复使用，可将此目录移回原位置：
+To restore these adapters, move the archived directory back to its original location:
 
 ```bash
 mv docs/archive/deprecated-modules/web-scraper-adapters/web/ \
    backend/src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/
 ```
 
-但建议优先使用现有的 Rust-based 文献获取提供商（Crossref、OpenAlex、EuropePMC、PMC、DOAJ、JStage、Unpaywall）。
+However, prefer the existing Rust-based literature providers (Crossref, OpenAlex, EuropePMC, PMC, DOAJ, JStage, Unpaywall) instead.
 
-## 相关文档
+## Related Documents
 
-- 原 README: `web/README.md`
-- 文献获取网关: `backend/src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/gateway.py`
+- Provider README: `web/README.md`
+- Literature acquisition gateway: `backend/src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/gateway.py`
 - Rust I/O: `backend/libs/net-io/`

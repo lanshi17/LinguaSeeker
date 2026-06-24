@@ -17,14 +17,14 @@ docs/
 
 ## Classification Rules
 
-- `active/` — In-progress implementation plans and living reference documents.
-- `planned/` — Planned work that has not started (`YYYY-MM-DD-<topic>.md`).
-- `codereview/` — Active code review reports.
-- `diagrams/` — Mermaid flowcharts (`.mmd`) for the four pipeline phases.
-- `archive/plans/` — Completed or superseded plans (everything that ships, lands, or is dropped goes here).
-- `archive/codereview/` — Completed code reviews.
-- `archive/deprecated-modules/` — READMEs preserved from modules that have since been removed.
-- `templates/` — Reusable documentation templates.
+- `active/` -- In-progress implementation plans and living reference documents.
+- `planned/` -- Planned work that has not started (`YYYY-MM-DD-<topic>.md`).
+- `codereview/` -- Active code review reports.
+- `diagrams/` -- Mermaid flowcharts (`.mmd`) for the four pipeline phases.
+- `archive/plans/` -- Completed or superseded plans (everything that ships, lands, or is dropped goes here).
+- `archive/codereview/` -- Completed code reviews.
+- `archive/deprecated-modules/` -- READMEs preserved from modules that have since been removed.
+- `templates/` -- Reusable documentation templates.
 
 ### When to Move Documents
 
@@ -42,23 +42,24 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
-| 2026-06-15 | [BIBM Main Paper Manuscript Draft](active/2026-06-15-bibm-main-paper-manuscript-draft.md) | in-progress |
-| 2026-06-15 | [BIBM Main Paper Outline](active/2026-06-15-bibm-main-paper-outline.md) | in-progress |
-| 2026-06-15 | [BIBM Main Paper Limitations](active/2026-06-15-bibm-main-paper-limitations.md) | in-progress |
-| 2026-06-15 | [Main Paper Tables Developer Guide](active/2026-06-15-main-paper-tables-guide.md) | in-progress |
-| 2026-06-15 | [BIBM Main Paper LaTeX](active/2026-06-15-bibm-main-paper-tex/) | in-progress |
-| 2026-06-15 | [ClinGen + ClinVar Fused Benchmark Dataset Plan](active/2026-06-15-clingen-clinvar-fused-benchmark-dataset-plan.md) | in-progress (Phase 1+2 complete) |
-| 2026-06-14 | [BIBM Main Paper G3 Semantic Boundary Repair Plan](active/2026-06-14-bibm-main-paper-g3-semantic-boundary-repair-plan.md) | in-progress |
-| 2026-06-14 | [Traceability Metrics Developer Guide](active/2026-06-14-traceability-metrics-guide.md) | in-progress |
-| 2026-06-14 | [BIBM Main Paper Detailed Execution Plan](active/2026-06-14-bibm-main-paper-detailed-execution-plan.md) | in-progress |
-| 2026-06-14 | [BIBM Main Paper Roadmap](active/2026-06-14-bibm-main-paper-roadmap.md) | in-progress |
-| 2026-06-14 | [BIBM Main Paper Effect Improvement Plan](active/2026-06-14-bibm-main-paper-effect-improvement-plan.md) | in-progress |
-| 2026-06-14 | [BIBM Main Paper Rescue](active/2026-06-14-bibm-main-paper-rescue.md) | in-progress |
-| 2026-06-13 | [BIBM G1 Decision Memo](active/2026-06-13-bibm-g1-decision.md) | in-progress |
+| 2026-06-23 | [Environment Consistency Standard](active/2026-06-23-environment-consistency.md) | reference |
 | 2026-06-23 | [Log Data Mining Report (drain3)](active/2026-06-23-log-data-mining-report.md) | reference |
+| 2026-06-21 | [BIBM Main Paper TeX](active/2026-06-15-bibm-main-paper-tex/) | in-progress |
+| 2026-06-21 | [BIBM Main Paper Manuscript Draft](active/2026-06-15-bibm-main-paper-manuscript-draft.md) | in-progress |
+| 2026-06-20 | [BIBM Main Paper Outline](active/2026-06-15-bibm-main-paper-outline.md) | in-progress |
+| 2026-06-20 | [BIBM Main Paper Limitations](active/2026-06-15-bibm-main-paper-limitations.md) | in-progress |
+| 2026-06-20 | [Main Paper Tables Developer Guide](active/2026-06-15-main-paper-tables-guide.md) | in-progress |
+| 2026-06-20 | [ClinGen + ClinVar Fused Benchmark Dataset Plan](active/2026-06-15-clingen-clinvar-fused-benchmark-dataset-plan.md) | in-progress (Phase 1+2 complete) |
+| 2026-06-20 | [BIBM Main Paper Detailed Execution Plan](active/2026-06-14-bibm-main-paper-detailed-execution-plan.md) | in-progress |
+| 2026-06-20 | [BIBM Main Paper Roadmap](active/2026-06-14-bibm-main-paper-roadmap.md) | in-progress |
+| 2026-06-20 | [BIBM Main Paper Effect Improvement Plan](active/2026-06-14-bibm-main-paper-effect-improvement-plan.md) | in-progress |
+| 2026-06-20 | [BIBM Main Paper G3 Semantic Boundary Repair Plan](active/2026-06-14-bibm-main-paper-g3-semantic-boundary-repair-plan.md) | in-progress |
 | 2026-06-18 | [Multilingual Agent Acquisition Plan](active/2026-06-18-multilingual-agent-acquisition-plan.md) | substantially-implemented |
+| 2026-06-15 | [BIBM Main Paper Rescue](active/2026-06-14-bibm-main-paper-rescue.md) | in-progress |
+| 2026-06-14 | [Traceability Metrics Developer Guide](active/2026-06-14-traceability-metrics-guide.md) | in-progress |
+| 2026-06-13 | [BIBM G1 Decision Memo](active/2026-06-13-bibm-g1-decision.md) | in-progress |
 | 2026-06-12 | [BIBM Novelty Diagnosis](active/2026-06-12-bibm-novelty.md) | in-progress |
-| — | [Methods — Literature Filtering](active/methods_literature_filtering.md) | reference |
+| -- | [Methods -- Literature Filtering](active/methods_literature_filtering.md) | reference |
 | 2026-05-13 | [Phase Workflow Overview](active/phase_workflow_overview.md) | reference |
 | 2026-05-09 | [PRD](active/PRD.md) | reference |
 | 2026-05-09 | [Application Flow](active/APP_FLOW.md) | reference |
@@ -71,7 +72,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
-| 2026-06-20 | [Variant ID Guarantee — Fix Unknown Variant IDs](planned/2026-06-20-variant-id-guarantee-plan.md) | planned |
+| 2026-06-20 | [Variant ID Guarantee -- Fix Unknown Variant IDs](planned/2026-06-20-variant-id-guarantee-plan.md) | planned |
 
 ## Diagrams
 
@@ -87,17 +88,11 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | Date | Title | Status |
 |------|-------|--------|
 | 2026-06-23 | [Log Mining Remediation Plan](archive/plans/2026-06-23-log-mining-remediation-plan.md) | completed |
+| 2026-06-22 | [Parkinson Literature XLSX Dataset Implementation Plan](archive/plans/2026-06-22-parkinson-literature-xlsx-dataset-plan.md) | completed |
 | 2026-06-21 | [Model Server Docker Decouple](archive/plans/2026-06-21-model-server-docker-decouple.md) | completed |
+| 2026-06-21 | [Fused-75 Candidate-Absent Source-Visible Optimization Implementation Plan](archive/plans/2026-06-21-fused75-candidate-absent-source-visible-plan.md) | completed |
 | 2026-06-20 | [Fused-75 Candidate Recovery Source Validation Plan](archive/plans/2026-06-20-fused75-candidate-recovery-source-validation-plan.md) | superseded |
 | 2026-06-20 | [Fused-75 Candidate Recovery Source Validation Design](archive/plans/2026-06-20-fused75-candidate-recovery-source-validation-design.md) | superseded |
-| 2026-06-18 | [Benchmark Framework Refactor Plan](archive/plans/2026-06-18-benchmark-framework-refactor-plan.md) | completed (Phase 6 pending) |
-| 2026-06-15 | [Learned Arbitrator Gate A Report](archive/plans/2026-06-15-learned-arbitrator-gate-a-report.md) | negative ablation |
-| 2026-06-14 | [BIBM Main Paper Next Gate Plan](archive/plans/2026-06-14-bibm-main-paper-next-gate-plan.md) | superseded |
-| 2026-06-14 | [BIBM Main Paper Detailed Plan](archive/plans/2026-06-14-bibm-main-paper-detailed-plan.md) | superseded |
-| 2026-06-14 | [BIBM Main Paper Effect Plan](archive/plans/2026-06-14-bibm-main-paper-effect-plan.md) | superseded |
-| 2026-06-14 | [BIBM Main Paper Rescue Plan](archive/plans/2026-06-14-bibm-main-paper-rescue.md) | superseded |
-| 2026-06-22 | [Parkinson Literature XLSX Dataset Implementation Plan](archive/plans/2026-06-22-parkinson-literature-xlsx-dataset-plan.md) | completed |
-| 2026-06-21 | [Fused-75 Candidate-Absent Source-Visible Optimization Implementation Plan](archive/plans/2026-06-21-fused75-candidate-absent-source-visible-plan.md) | completed |
 | 2026-06-20 | [Target-Aware Source-Visible Extraction Results](archive/plans/2026-06-20-target-aware-source-visible-extraction-results.md) | completed |
 | 2026-06-20 | [Target-Aware Source-Visible Extraction Implementation Plan](archive/plans/2026-06-20-target-aware-source-visible-extraction-plan.md) | completed |
 | 2026-06-20 | [Target-Aware Source-Visible Extraction Design](archive/plans/2026-06-20-target-aware-source-visible-extraction-design.md) | completed |
@@ -105,26 +100,28 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-06-19 | [Fused-75 F1 Dynamic Pipeline Optimization Implementation Plan](archive/plans/2026-06-19-fused75-f1-dynamic-pipeline-optimization-plan.md) | completed |
 | 2026-06-19 | [Fused-75 F1 Dynamic Pipeline Optimization Design](archive/plans/2026-06-19-fused75-f1-dynamic-pipeline-optimization-design.md) | completed |
 | 2026-06-19 | [Evidence Extraction Pipeline Revision](archive/plans/2026-06-19-evidence-extraction-pipeline-revision.md) | completed |
+| 2026-06-18 | [Benchmark Framework Refactor Plan](archive/plans/2026-06-18-benchmark-framework-refactor-plan.md) | completed (Phase 6 pending) |
 | 2026-06-17 | [Worktree Merge Plan](archive/plans/2026-06-17-worktree-merge-plan.md) | executed |
 | 2026-06-16 | [MinerU Local SDK Migration](archive/plans/2026-06-16-mineru-local-sdk-migration.md) | completed |
 | 2026-06-16 | [Benchmark B Completion Plan](archive/plans/2026-06-16-benchmark-b-completion-plan.md) | done-with-partial-pilot |
-| 2026-06-16 | [Plan A — Drop 4 Free-Text `_notes` Fields](archive/plans/2026-06-16-plan-a-drop-notes-fields.md) | completed |
+| 2026-06-16 | [Plan A -- Drop 4 Free-Text `_notes` Fields](archive/plans/2026-06-16-plan-a-drop-notes-fields.md) | completed |
 | 2026-06-16 | [Sparse Evidence Output Plan](archive/plans/2026-06-16-sparse-evidence-output-superseded.md) | superseded |
+| 2026-06-15 | [Learned Arbitrator Gate A Report](archive/plans/2026-06-15-learned-arbitrator-gate-a-report.md) | negative ablation |
 | 2026-06-15 | [BIBM Main Paper Pipeline Optimization & Benchmark Plan](archive/plans/2026-06-15-bibm-main-paper-pipeline-optimization-and-benchmark-plan.md) | completed |
 | 2026-06-15 | [BIBM Main Paper Claim Matrix](archive/plans/2026-06-15-bibm-main-paper-claim-matrix.md) | completed |
 | 2026-06-15 | [BIBM Benchmark A/B Readiness Plan](archive/plans/2026-06-15-bibm-benchmark-a-b-readiness-plan.md) | completed |
 | 2026-06-15 | [BIBM Benchmark Expansion Phase C Implementation Plan](archive/plans/2026-06-15-bibm-benchmark-expansion-phase-c-plan.md) | completed |
 
-The `archive/plans/` directory contains 102 completed/superseded plans. The `archive/codereview/` directory contains 24 resolved code reviews. See individual directories for full listings.
+The `archive/plans/` directory contains 103 completed/superseded plans. The `archive/codereview/` directory contains 24 resolved code reviews. See individual directories for full listings.
 
 ## Module README Index
 
 Every `backend/` module has its own `README.md` developer guide. Key modules:
 
-- **[backend/app/](../backend/app/README.md)** — FastAPI application entry point
-- **[backend/src/agents/](../backend/src/agents/README.md)** — Pipeline orchestrator (LangGraph)
-- **[backend/src/api/](../backend/src/api/README.md)** — HTTP boundary, dependency injection
-- **[backend/src/core/](../backend/src/core/README.md)** — Vertical feature slices
-- **[backend/src/dao/](../backend/src/dao/README.md)** — Persistence layer
-- **[backend/libs/](../backend/libs/README.md)** — Rust native extensions (rust-io, net-io, files-io)
-- **[services/model-server/](../services/model-server/README.md)** — Embedding/Rerank/LLM server
+- **[backend/app/](../backend/app/README.md)** -- FastAPI application entry point
+- **[backend/src/agents/](../backend/src/agents/README.md)** -- Pipeline orchestrator (LangGraph)
+- **[backend/src/api/](../backend/src/api/README.md)** -- HTTP boundary, dependency injection
+- **[backend/src/core/](../backend/src/core/README.md)** -- Vertical feature slices
+- **[backend/src/dao/](../backend/src/dao/README.md)** -- Persistence layer
+- **[backend/libs/](../backend/libs/README.md)** -- Rust native extensions (rust-io, net-io, files-io)
+- **[services/model-server/](../services/model-server/README.md)** -- Embedding/Rerank/LLM server

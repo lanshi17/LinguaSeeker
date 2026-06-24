@@ -2,19 +2,20 @@
 
 **Status:** in-progress
 **Created:** 2026-06-15
-**Completed:** —
-**PR:** —
+**Completed:** --
+**PR:** --
 
-This directory contains the IEEEtran-style TeX draft for the BIBM main paper.
+This directory contains the IEEEtran-style TeX manuscript for the BIBM main paper: "CrossEvidence: Citation-Valid Cross-Lingual Biomedical Evidence Reconciliation."
 
 ## Files
 
-- `main.tex` - anonymous double-column draft
-- `refs.bib` - bibliography for the draft
-- `figures/method_figure.tex` - vector method figure built with TikZ
+- `main.tex` -- anonymous double-column IEEE conference draft (315 lines). Includes abstract, introduction, related work, method, experiments, and results sections. Reports context-verifier reconciliation achieving P=0.9205, R=0.9759, F1=0.9474 on an N=30 ClinGen/ACMG benchmark.
+- `refs.bib` -- BibTeX bibliography (153 lines, ~30 entries).
+- `figures/method_figure.tex` -- TikZ vector method figure (25 lines) showing the dual-track evidence graph pipeline: original/translated track extraction, typed evidence graph, verifier-aware reconciliation, and audit trail.
 
-## Notes
+## Build Notes
 
-- The draft is written for a BIBM-style IEEE conference submission.
+- Uses `\documentclass[conference]{IEEEtran}` for BIBM submission format.
+- Method name macro: `\methodname` expands to `CrossEvidence`.
 - Tables are kept compact and scientific in tone.
 - The method figure is intentionally schematic rather than decorative.

@@ -6,7 +6,7 @@
 #   cd services/model-server
 #   docker build -f docker/rerank.Dockerfile -t rerank-server .
 # -------------------------------------------------------------------
-FROM vllm/vllm-openai:latest
+FROM vllm/vllm-openai:v0.8.5
 
 WORKDIR /app
 
