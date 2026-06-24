@@ -1212,7 +1212,8 @@ class TestBuildRunItemSpecsGeneVariantGate:
         assert len(specs) == 2
         assert {spec.field_id for spec in specs} == {"A.gene_symbol", "A.variant_hgvs_p"}
 
-    def test_filters_out_gene_only_group(self) -> None:
+    def test_identity_fields_survive_gene_only_group(self) -> None:
+        """Gene+disease without variant: identity fields persist, not dropped."""
         repo = StandardizationRepository(FakeSession())
         input_data = self._make_input({
             "original": {
@@ -1226,7 +1227,9 @@ class TestBuildRunItemSpecsGeneVariantGate:
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
-        assert len(specs) == 0
+        # Identity fields (gene, disease) persist via identity gate
+        assert len(specs) == 2
+        assert {spec.field_id for spec in specs} == {"A.gene_symbol", "B.disease_diagnosis"}
 
     def test_filters_out_variant_only_group(self) -> None:
         repo = StandardizationRepository(FakeSession())
@@ -1244,17 +1247,18 @@ class TestBuildRunItemSpecsGeneVariantGate:
 
         assert len(specs) == 0
 
-    def test_mixed_groups_only_complete_ones_persisted(self) -> None:
+    def test_mixed_groups_complete_and_identity_persisted(self) -> None:
+        """Gene+variant group persists all; gene-only group persists identity fields."""
         repo = StandardizationRepository(FakeSession())
         input_data = self._make_input({
             "original": {
                 "track": "original",
                 "evidence_items": [
-                    # Complete group g1
+                    # Complete group g1 (gene+variant)
                     {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found", "value": "BRCA1", "confidence": 0.9},
                     {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "found", "value": "p.L34V", "confidence": 0.9},
                     {"field_id": "B.disease_diagnosis", "group_id": "g1", "status": "found", "value": "Breast cancer", "confidence": 0.9},
-                    # Incomplete group g2 (gene only)
+                    # Identity-only group g2 (gene+disease, no variant)
                     {"field_id": "A.gene_symbol", "group_id": "g2", "status": "found", "value": "TP53", "confidence": 0.8},
                     {"field_id": "B.disease_diagnosis", "group_id": "g2", "status": "found", "value": "Li-Fraumeni", "confidence": 0.8},
                 ],
@@ -1263,8 +1267,12 @@ class TestBuildRunItemSpecsGeneVariantGate:
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
-        assert len(specs) == 3
-        assert all(spec.group_id == "g1" for spec in specs)
+        # g1: all 3 fields via full gate; g2: 2 identity fields via identity gate
+        assert len(specs) == 5
+        g1_specs = [s for s in specs if s.group_id == "g1"]
+        g2_specs = [s for s in specs if s.group_id == "g2"]
+        assert len(g1_specs) == 3
+        assert len(g2_specs) == 2
 
     def test_no_gate_when_no_groups_exist(self) -> None:
         """When there are no groups at all (no group_id items), gate is not applied."""
@@ -1308,3 +1316,105 @@ class TestBuildRunItemSpecsGeneVariantGate:
         # Fallback path not gated: gene-only match still persists
         assert len(specs) == 1
         assert specs[0].field_id == "gene_mention"
+
+    def test_variant_only_group_still_blocked(self) -> None:
+        """Group with only variant (no gene/disease anchor) is still blocked."""
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({
+            "original": {
+                "track": "original",
+                "evidence_items": [
+                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "found", "value": "p.L34V", "confidence": 0.7},
+                    {"field_id": "D.allele_frequency", "group_id": "g1", "status": "found", "value": 0.001, "confidence": 0.8},
+                ],
+            },
+        })
+
+        specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+        # No gene or disease anchor → group not passable → all blocked
+        assert len(specs) == 0
+
+    def test_variant_dependent_fields_blocked_in_identity_only_group(self) -> None:
+        """Non-identity fields are blocked when group has no variant co-location."""
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({
+            "original": {
+                "track": "original",
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found", "value": "MECP2", "confidence": 0.9},
+                    {"field_id": "B.disease_diagnosis", "group_id": "g1", "status": "found", "value": "Rett syndrome", "confidence": 0.9},
+                    {"field_id": "D.allele_frequency", "group_id": "g1", "status": "found", "value": 0.001, "confidence": 0.8},
+                    {"field_id": "C.segregation_cosegregation_with_disease", "group_id": "g1", "status": "found", "value": "yes", "confidence": 0.7},
+                ],
+            },
+        })
+
+        specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+        # Only identity fields pass; variant-dependent fields are blocked
+        assert len(specs) == 2
+        assert {spec.field_id for spec in specs} == {"A.gene_symbol", "B.disease_diagnosis"}
+
+    def test_rett_001_scenario_gene_disease_no_variant(self) -> None:
+        """Reproduce rett_001: gene found, disease rescued by retry, variant not found.
+
+        Before the fix this produced 0 specs.  After the fix, identity fields
+        (gene, disease) survive via the identity gate.
+        """
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({
+            "original": {
+                "track": "original",
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found", "value": "MECP2", "confidence": 0.9},
+                    {"field_id": "A.variant_hgvs_c", "group_id": "g1", "status": "not_found", "value": None, "confidence": 0.0},
+                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "not_found", "value": None, "confidence": 0.0},
+                    {"field_id": "B.disease_diagnosis", "group_id": "g1", "status": "found", "value": "Rett syndrome", "confidence": 0.85},
+                    {"field_id": "B.clinical_phenotypes", "group_id": "g1", "status": "found", "value": "loss of purposeful hand skills", "confidence": 0.8},
+                    {"field_id": "B.sex", "group_id": "g1", "status": "found", "value": "Female", "confidence": 0.9},
+                    {"field_id": "B.age_of_onset", "group_id": "g1", "status": "not_found", "value": None, "confidence": 0.0},
+                    {"field_id": "B.mode_of_inheritance_reported", "group_id": "g1", "status": "found", "value": "X-linked dominant", "confidence": 0.7},
+                ],
+            },
+        })
+
+        specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+        # All identity fields pass (both found and not_found status)
+        found_field_ids = {spec.field_id for spec in specs if spec.status == "found"}
+        assert "A.gene_symbol" in found_field_ids
+        assert "B.disease_diagnosis" in found_field_ids
+        assert "B.clinical_phenotypes" in found_field_ids
+        assert "B.sex" in found_field_ids
+        assert "B.mode_of_inheritance_reported" in found_field_ids
+        # 5 found + 3 not_found = 8 total identity fields
+        assert len(specs) == 8
+
+    def test_find_identity_passable_groups(self) -> None:
+        """Groups with gene or disease in FOUND are passable."""
+        payloads = {
+            "original": {
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found"},
+                    {"field_id": "B.disease_diagnosis", "group_id": "g2", "status": "found"},
+                    {"field_id": "A.variant_hgvs_p", "group_id": "g3", "status": "found"},
+                ],
+            },
+        }
+        result = StandardizationRepository._find_identity_passable_groups(payloads)
+        # g1 has gene, g2 has disease, g3 has only variant (not an anchor)
+        assert result == {"g1", "g2"}
+
+    def test_find_identity_passable_groups_returns_empty_for_no_anchors(self) -> None:
+        """Groups without gene or disease are not passable."""
+        payloads = {
+            "original": {
+                "evidence_items": [
+                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "found"},
+                    {"field_id": "B.clinical_phenotypes", "group_id": "g2", "status": "found"},
+                ],
+            },
+        }
+        result = StandardizationRepository._find_identity_passable_groups(payloads)
+        assert result == set()
