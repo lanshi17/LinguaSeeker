@@ -681,3 +681,4 @@
   - Full 73-entry eval running in background
   - Added --no-preprocessed and --api-key flags to benchmark evaluate CLI
   - Status: MVP implemented, awaiting full evaluation results
+[2026-06-24] BIBM paper cleanup: renamed CrossEvidence→LinguaSeeker in TeX+README, completed truncated abstract, verified Discussion/Conclusion present, audited refs.bib (14 keys all matched), verified all 10 frozen benchmark reports exist at new benchmark/data/reports/ location, confirmed double-anonymous compliance, confirmed zero remaining CrossEvidence references [done]

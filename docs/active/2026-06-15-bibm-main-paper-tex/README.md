@@ -5,7 +5,7 @@
 **Completed:** --
 **PR:** --
 
-This directory contains the IEEEtran-style TeX manuscript for the BIBM main paper: "CrossEvidence: Citation-Valid Cross-Lingual Biomedical Evidence Reconciliation."
+This directory contains the IEEEtran-style TeX manuscript for the BIBM main paper: "LinguaSeeker: Citation-Valid Cross-Lingual Biomedical Evidence Reconciliation."
 
 ## Files
 
@@ -16,6 +16,6 @@ This directory contains the IEEEtran-style TeX manuscript for the BIBM main pape
 ## Build Notes
 
 - Uses `\documentclass[conference]{IEEEtran}` for BIBM submission format.
-- Method name macro: `\methodname` expands to `CrossEvidence`.
+- Method name macro: `\methodname` expands to `LinguaSeeker`.
 - Tables are kept compact and scientific in tone.
 - The method figure is intentionally schematic rather than decorative.
