@@ -1,14 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
   AlertCircle,
   ChevronRight,
 } from "lucide-react";
+import { Switch, Tooltip } from "antd";
 import { useEvidenceGroupDetail } from "@/features/evidence-search/hooks/useEvidenceGroupDetail";
 import {
   EVIDENCE_CATEGORIES,
   buildEvidenceDocument,
+  buildBlockHighlightsFromValues,
   hasTranslatedDocumentText,
   countEvidenceCategories,
 } from "@/features/evidence-search/utils/evidenceDocument";
@@ -19,6 +21,11 @@ import { ActiveEvidenceCard } from "./ActiveEvidenceCard";
 import { LiteratureHeader } from "./LiteratureHeader";
 import { BilingualSidebar } from "./BilingualSidebar";
 import { bevEmbeddedCSS } from "./bevStyles";
+import {
+  createScrollSyncHandler,
+  loadScrollSyncSetting,
+  saveScrollSyncSetting,
+} from "../utils/scrollSync";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createAnnotation,
@@ -48,6 +55,29 @@ export function BilingualEvidenceView({
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<
     string | undefined
   >(undefined);
+
+  // ── Scroll sync state ──────────────────────────────────────────────
+  const [isScrollSyncEnabled, setIsScrollSyncEnabled] = useState(loadScrollSyncSetting);
+  const isProgrammaticScroll = useRef(false);
+  const originalScrollRef = useRef<HTMLDivElement | null>(null);
+  const translatedScrollRef = useRef<HTMLDivElement | null>(null);
+
+  const toggleScrollSync = useCallback((enabled: boolean) => {
+    setIsScrollSyncEnabled(enabled);
+    saveScrollSyncSetting(enabled);
+  }, []);
+
+  // original → translated, and translated → original
+  const handleOriginalScroll = createScrollSyncHandler(
+    translatedScrollRef,
+    isProgrammaticScroll,
+    isScrollSyncEnabled,
+  );
+  const handleTranslatedScroll = createScrollSyncHandler(
+    originalScrollRef,
+    isProgrammaticScroll,
+    isScrollSyncEnabled,
+  );
 
   const {
     detail: groupDetail,
@@ -137,53 +167,26 @@ export function BilingualEvidenceView({
   const hasTranslation = groupDetail
     ? hasTranslatedDocumentText(groupDetail)
     : false;
-
-  // Build block-level highlights from traces for structured rendering
+  // Build block-level highlights by searching evidence values in the
+  // concatenated block text. Falls back from trace-based spans (often
+  // empty) to value-based full-text search — same algorithm as
+  // buildEvidenceDocument but mapped to the block offset coordinate space.
   const buildBlockHighlights = useMemo((): { original: BlockHighlight[]; translated: BlockHighlight[] } => {
     if (!groupDetail) return { original: [], translated: [] };
-    const items = new Map(groupDetail.items.map((item) => [item.canonical_evidence_id, item] as const));
-    const origHighlights: BlockHighlight[] = [];
-    const transHighlights: BlockHighlight[] = [];
-
-    for (const trace of groupDetail.traces) {
-      const item = items.get(trace.canonical_evidence_id);
-      if (!item) continue;
-
-      // Check category filter
-      const cat = item.category ?? (item.field_id.includes(".") ? item.field_id.split(".")[0] : null);
-      if (enabledCategories && cat && !enabledCategories.has(cat)) continue;
-
-      if (trace.original?.text) {
-        origHighlights.push({
-          evidenceId: trace.canonical_evidence_id,
-          fieldId: trace.field_id,
-          label: item.field_name ?? trace.field_id,
-          tone: cat ?? "neutral",
-          category: cat,
-          globalStart: trace.original.highlight_start,
-          globalEnd: trace.original.highlight_end,
-          selected: trace.canonical_evidence_id === selectedEvidenceId,
-        });
-      }
-      if (trace.translated?.text) {
-        transHighlights.push({
-          evidenceId: trace.canonical_evidence_id,
-          fieldId: trace.field_id,
-          label: item.field_name ?? trace.field_id,
-          tone: cat ?? "neutral",
-          category: cat,
-          globalStart: trace.translated.highlight_start,
-          globalEnd: trace.translated.highlight_end,
-          selected: trace.canonical_evidence_id === selectedEvidenceId,
-        });
-      }
-    }
-
-    return { original: origHighlights, translated: transHighlights };
+    const origBlocks = groupDetail.original_blocks;
+    const transBlocks = groupDetail.translated_blocks;
+    return {
+      original: origBlocks && origBlocks.length > 0
+        ? buildBlockHighlightsFromValues(origBlocks, groupDetail, "original", selectedEvidenceId, enabledCategories)
+        : [],
+      translated: transBlocks && transBlocks.length > 0
+        ? buildBlockHighlightsFromValues(transBlocks, groupDetail, "translated", selectedEvidenceId, enabledCategories)
+        : [],
+    };
   }, [groupDetail, selectedEvidenceId, enabledCategories]);
 
   const categoryCounts = useMemo(
-    () => (groupDetail ? countEvidenceCategories(groupDetail.items) : {}),
+    () => (groupDetail ? countEvidenceCategories(groupDetail.items.filter((i) => i.value?.trim())) : {}),
     [groupDetail],
   );
 
@@ -304,8 +307,22 @@ export function BilingualEvidenceView({
               }
             />
           )}
+          {/* Sync control + bilingual panels */}
+          {hasTranslation && (
+            <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8 }}>
+              <Tooltip title="Synchronize scroll position between original and translated panels by scroll ratio">
+                <span style={{ fontSize: 13, color: "#6b7280", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  Sync scrolling
+                  <Switch
+                    size="small"
+                    checked={isScrollSyncEnabled}
+                    onChange={toggleScrollSync}
+                  />
+                </span>
+              </Tooltip>
+            </div>
+          )}
 
-          {/* Bilingual panels */}
           <div className={`bev-bilingual-grid${hasTranslation ? " bev-bilingual-grid--dual" : ""}`}>
             <DocumentReader
               title="Original Text"
@@ -316,13 +333,15 @@ export function BilingualEvidenceView({
               blockHighlights={buildBlockHighlights.original}
               sourceDocumentId={sourceDocumentId}
               annotations={originalAnnotations}
+              scrollContainerRef={originalScrollRef}
+              onContainerScroll={handleOriginalScroll}
               onCreateAnnotation={handleCreateAnnotation}
               onUpdateAnnotation={handleUpdateAnnotation}
               onDeleteAnnotation={handleDeleteAnnotation}
             />
             {hasTranslation && (
               <DocumentReader
-                title="Translated Text (Chinese)"
+                title="Translated Text (English)"
                 track="translated"
                 document={
                   translatedDoc ?? { track: "translated", paragraphs: [] }
@@ -332,6 +351,8 @@ export function BilingualEvidenceView({
                 blockHighlights={buildBlockHighlights.translated}
                 sourceDocumentId={sourceDocumentId}
                 annotations={translatedAnnotations}
+                scrollContainerRef={translatedScrollRef}
+                onContainerScroll={handleTranslatedScroll}
                 onCreateAnnotation={handleCreateAnnotation}
                 onUpdateAnnotation={handleUpdateAnnotation}
                 onDeleteAnnotation={handleDeleteAnnotation}

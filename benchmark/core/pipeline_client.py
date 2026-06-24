@@ -178,6 +178,7 @@ async def submit_and_poll(
     filename: str,
     pre_parsed_markdown: str | None = None,
     extraction_target: dict | None = None,
+    extraction_profile: str = "none",
 ) -> dict:
     """Submit document and poll until completion.
 
@@ -194,6 +195,7 @@ async def submit_and_poll(
         "source_type": "local",
         "mode": "full",
         "filename": filename,
+        "extraction_profile": extraction_profile,
     }
     if pre_parsed_markdown:
         payload["pre_parsed_markdown"] = pre_parsed_markdown
@@ -213,6 +215,18 @@ async def submit_and_poll(
         unique_name = filename.rsplit(".", 1)
         unique_name = f"{unique_name[0]}_{int(_time.time())}.{unique_name[1]}" if len(unique_name) == 2 else f"{filename}_{int(_time.time())}"
         payload["filename"] = unique_name
+        resp = await client.post(
+            f"{base_url}/api/v1/pipeline/run",
+            json=payload,
+            timeout=60.0,
+        )
+    # Rate limit retry with backoff
+    for _retry in range(5):
+        if resp.status_code != 429:
+            break
+        retry_after = int(resp.headers.get("Retry-After", "10"))
+        logger.warning("Rate limited (429), waiting {}s before retry", retry_after)
+        await asyncio.sleep(retry_after)
         resp = await client.post(
             f"{base_url}/api/v1/pipeline/run",
             json=payload,
@@ -301,6 +315,7 @@ async def evaluate_one(
     ground_truth_dir: Path | None = None,
     mondo: Any | None = None,
     force_reextract: bool = False,
+    extraction_profile: str = "none",
 ) -> EntryMetrics:
     """Evaluate one ground truth entry.
 
@@ -419,6 +434,7 @@ async def evaluate_one(
                 filename=f"{entry_id}.md",
                 pre_parsed_markdown=md_text,
                 extraction_target=extraction_target,
+                extraction_profile=extraction_profile,
             )
             metrics.duration_s = round(time.time() - t0, 2)
             metrics.pipeline_status = status_data.get("pipeline_status", "unknown")
@@ -514,6 +530,7 @@ async def run_evaluation(
     ground_truth_root: Path = GROUND_TRUTH_ROOT,
     force_reextract: bool = False,
     api_key: str | None = None,
+    extraction_profile: str = "none",
 ):
     """Main evaluation orchestrator."""
     logger.remove()
@@ -565,6 +582,7 @@ async def run_evaluation(
                 ground_truth_dir=ground_truth_root,
                 mondo=mondo,
                 force_reextract=force_reextract,
+                extraction_profile=extraction_profile,
             )
             all_metrics.append(m)
             status_icon = "\u2713" if m.pipeline_status == "completed" else "\u2717"

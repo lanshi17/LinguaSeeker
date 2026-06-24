@@ -74,6 +74,9 @@ def wire_dependencies() -> None:
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
         EvidenceExtractionService,
     )
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.field_profile import (
+        ExtractionProfile,
+    )
     from src.core.cross_lingual_process_and_extract_evidence.workflow import (
         TranslationService,
     )
@@ -131,7 +134,9 @@ def wire_dependencies() -> None:
     parse_orchestrator = DocumentParseOrchestrator(remote=remote_parser, local=local_parser)
     parse_service = ParseDocumentService(parse_orchestrator)
     translation_service = TranslationService(cfg=cfg)
-    extraction_service = EvidenceExtractionService(cfg=cfg)
+    extraction_service = EvidenceExtractionService(
+        cfg=cfg, extraction_profile=ExtractionProfile.NONE,
+    )
     standardization_service = EntityStandardizationService(cfg=cfg)
 
     # ── Phase adapters ──

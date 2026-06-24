@@ -3,6 +3,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
 import "katex/dist/katex.min.css";
 import { categoryLabel } from "../utils/categoryStyles";
 import { CATEGORY_COLORS, type EvidenceDocumentHighlight } from "../utils/evidenceDocument";
@@ -192,9 +193,15 @@ export function MarkdownDocumentViewer({
       data-paragraph-id={paragraphId}
       style={{ position: "relative" }}
     >
+      <style>{`
+        .edb-markdown-viewer table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
+        .edb-markdown-viewer th, .edb-markdown-viewer td { border: 1px solid #d1d5db; padding: 6px 10px; text-align: left; vertical-align: top; }
+        .edb-markdown-viewer th { background-color: #f3f4f6; font-weight: 600; }
+        .edb-markdown-viewer tr:nth-child(even) td { background-color: #f9fafb; }
+      `}</style>
       <Markdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex]}
+        rehypePlugins={[rehypeRaw, rehypeKatex]}
         components={
           sourceDocumentId
             ? {

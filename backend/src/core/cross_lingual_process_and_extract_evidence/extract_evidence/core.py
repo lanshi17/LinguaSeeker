@@ -101,7 +101,12 @@ class EvidenceItemNormalizer:
             normalized.append(self._normalize_one(spec, item))
         return normalized
 
-    def normalize_grouped(self, items: list[EvidenceItem]) -> list[EvidenceItem]:
+    def normalize_grouped(
+        self,
+        items: list[EvidenceItem],
+        channel_excluded_field_ids: frozenset[str] = frozenset(),
+        target_excluded_field_ids: frozenset[str] = frozenset(),
+    ) -> list[EvidenceItem]:
         grouped: dict[str, list[EvidenceItem]] = {}
         for item in items:
             group_id = item.group_id or make_group_id("", "")
@@ -120,7 +125,13 @@ class EvidenceItemNormalizer:
             for spec in self._catalog:
                 item = by_field.get(spec.field_id)
                 if item is None:
-                    item = self._not_found_item(spec).model_copy(update={"group_id": group_id})
+                    # Determine status based on eligibility
+                    if spec.field_id in channel_excluded_field_ids:
+                        item = self._not_applicable_item(spec).model_copy(update={"group_id": group_id})
+                    elif spec.field_id in target_excluded_field_ids:
+                        item = self._not_attempted_item(spec).model_copy(update={"group_id": group_id})
+                    else:
+                        item = self._not_found_item(spec).model_copy(update={"group_id": group_id})
                 elif not item.group_id:
                     item = item.model_copy(update={"group_id": group_id})
                 normalized.append(self._normalize_one(spec, item))
@@ -168,6 +179,28 @@ class EvidenceItemNormalizer:
             confidence=0.0,
         )
 
+    def _not_applicable_item(self, spec: EvidenceFieldSpec) -> EvidenceItem:
+        return EvidenceItem(
+            field_id=spec.field_id,
+            category=spec.category_id,
+            field_name=spec.field_name,
+            status=EvidenceStatus.NOT_APPLICABLE,
+            value=None,
+            confidence=0.0,
+            notes="Field excluded by document channel eligibility.",
+        )
+
+    def _not_attempted_item(self, spec: EvidenceFieldSpec) -> EvidenceItem:
+        return EvidenceItem(
+            field_id=spec.field_id,
+            category=spec.category_id,
+            field_name=spec.field_name,
+            status=EvidenceStatus.NOT_ATTEMPTED,
+            value=None,
+            confidence=0.0,
+            notes="Field not attempted due to target/source eligibility or other constraints.",
+        )
+
     @staticmethod
     def _choose_better(current: EvidenceItem, candidate: EvidenceItem) -> EvidenceItem:
         rank = {
@@ -176,6 +209,8 @@ class EvidenceItemNormalizer:
             EvidenceStatus.TABLE_UNGROUNDED: 1,
             EvidenceStatus.OCR_GAP: 1,
             EvidenceStatus.NOT_FOUND: 0,
+            EvidenceStatus.NOT_APPLICABLE: -1,
+            EvidenceStatus.NOT_ATTEMPTED: -2,
             EvidenceStatus.CONTEXT_CONTAMINATION: 0,
         }
         current_score = (rank[current.status], current.confidence)

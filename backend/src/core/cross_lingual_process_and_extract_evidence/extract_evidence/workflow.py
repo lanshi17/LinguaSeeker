@@ -40,9 +40,12 @@ class EvidenceExtractionWorkflow:
         self,
         provider: LangChainEvidenceProvider,
         input_budget_tokens: int = DEFAULT_INPUT_BUDGET_TOKENS,
+        field_profile: frozenset[str] | None = None,
     ):
         self._relevance_scan = RelevanceScanStage(provider, input_budget_tokens=input_budget_tokens)
-        self._catalog_extraction = CatalogExtractionStage(provider, input_budget_tokens=input_budget_tokens)
+        self._catalog_extraction = CatalogExtractionStage(
+            provider, input_budget_tokens=input_budget_tokens, field_profile=field_profile,
+        )
         self._special_evidence = SpecialEvidenceStage(provider, input_budget_tokens=input_budget_tokens)
         self._clinical_context = ClinicalContextStage(provider, input_budget_tokens=input_budget_tokens)
         self._group_assignment = GroupAssignmentStage()
@@ -58,15 +61,22 @@ class EvidenceExtractionWorkflow:
         self._async_graph = self._build_async_graph()
 
     def _node_relevance_scan(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
-        emap = self._relevance_scan.run(state.document)
-        state.evidence_map = emap
-        if not emap.relevant:
+        scan_result = self._relevance_scan.run(state.document)
+        state.evidence_map = scan_result.evidence_map
+        state.channel_classification = scan_result.channel_classification
+        if not scan_result.evidence_map.relevant:
             state.status = EvidenceExtractionStatus.NOT_RELEVANT
         return state
 
     def _node_catalog_extraction(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
-        items = self._catalog_extraction.run(state.document, state.evidence_map)
+        items = self._catalog_extraction.run(
+            state.document, state.evidence_map, state.channel_classification,
+        )
         state.evidence_items = items
+        decision = self._catalog_extraction._last_eligibility_decision
+        if decision is not None:
+            state.channel_excluded_field_ids = decision.channel_rejected_field_ids
+            state.target_excluded_field_ids = decision.excluded_field_ids - decision.channel_rejected_field_ids
         return state
 
     def _node_special_evidence(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
@@ -96,15 +106,22 @@ class EvidenceExtractionWorkflow:
         return state
 
     async def _async_node_relevance_scan(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
-        emap = await self._relevance_scan.run_async(state.document)
-        state.evidence_map = emap
-        if not emap.relevant:
+        scan_result = await self._relevance_scan.run_async(state.document)
+        state.evidence_map = scan_result.evidence_map
+        state.channel_classification = scan_result.channel_classification
+        if not scan_result.evidence_map.relevant:
             state.status = EvidenceExtractionStatus.NOT_RELEVANT
         return state
 
     async def _async_node_catalog_extraction(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
-        items = await self._catalog_extraction.run_async(state.document, state.evidence_map)
+        items = await self._catalog_extraction.run_async(
+            state.document, state.evidence_map, state.channel_classification,
+        )
         state.evidence_items = items
+        decision = self._catalog_extraction._last_eligibility_decision
+        if decision is not None:
+            state.channel_excluded_field_ids = decision.channel_rejected_field_ids
+            state.target_excluded_field_ids = decision.excluded_field_ids - decision.channel_rejected_field_ids
         return state
 
     async def _async_node_special_evidence(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
@@ -211,8 +228,16 @@ class EvidenceExtractionWorkflow:
         Runs AFTER quality_gate so the gate's metrics reflect real extracted
         items, not synthesized NOT_FOUND placeholders. Downstream alignment
         and reporting consume the backfilled matrix.
+
+        Fields excluded by channel eligibility get status NOT_APPLICABLE.
+        Fields excluded by target/source eligibility get status NOT_ATTEMPTED.
+        Eligible fields absent from extraction get status NOT_FOUND.
         """
-        state.evidence_items = self._item_normalizer.normalize_grouped(state.evidence_items)
+        state.evidence_items = self._item_normalizer.normalize_grouped(
+            state.evidence_items,
+            channel_excluded_field_ids=state.channel_excluded_field_ids,
+            target_excluded_field_ids=state.target_excluded_field_ids,
+        )
         return state
 
     def _node_not_relevant(self, state: EvidenceExtractionState) -> EvidenceExtractionState:

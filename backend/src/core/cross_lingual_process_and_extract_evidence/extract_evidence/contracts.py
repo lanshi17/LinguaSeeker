@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
+from .channel_contracts import DocumentChannelClassification
 
 
 class Track(str, Enum):
@@ -131,6 +132,8 @@ class SourceLocation(BaseModel):
 class EvidenceStatus(str, Enum):
     FOUND = "found"
     NOT_FOUND = "not_found"
+    NOT_APPLICABLE = "not_applicable"
+    NOT_ATTEMPTED = "not_attempted"
     SOURCE_INVALID = "source_invalid"
     OCR_GAP = "ocr_gap"
     TABLE_UNGROUNDED = "table_ungrounded"
@@ -244,6 +247,26 @@ class DocumentEvidenceMap(BaseModel):
     structure_hints: list[str] = Field(default_factory=list)
 
 
+class RelevanceScanOutput(DocumentEvidenceMap):
+    """Combined LLM output for the relevance scan.
+
+    Extends :class:`DocumentEvidenceMap` with document-channel classification
+    fields.  The LLM returns a single JSON object carrying both the evidence
+    map and the channel labels; this model captures all of it so the stage
+    can split the result into a ``DocumentEvidenceMap`` and a
+    ``DocumentChannelClassification``.
+
+    ``selected_channels`` are raw strings (e.g. ``"case_report"``) because the
+    LLM cannot produce enum values directly; :func:`parse_channel_classification`
+    converts them to :class:`DocumentEvidenceChannel` with validation.
+    """
+
+    selected_channels: list[str] = Field(default_factory=list)
+    confidence: float = Field(ge=0.0, le=1.0, default=0.0)
+    rationale: str = ""
+    supporting_block_ids: list[str] = Field(default_factory=list)
+
+
 class SpecialEvidenceRecord(BaseModel):
     record_type: Literal["functional", "case_control", "authority", "contradiction"]
     description: str
@@ -321,6 +344,17 @@ class EvidenceNormalizationIssue(BaseModel):
     normalized_value: str | int | float | bool | list[str] | None = None
 
 
+class FieldEligibilitySummary(BaseModel):
+    """Summary of field eligibility decisions for an extraction pass."""
+
+    eligible_field_count: int = 0
+    channel_excluded_field_count: int = 0
+    target_excluded_field_count: int = 0
+    not_applicable_count: int = 0
+    not_attempted_count: int = 0
+
+
+
 class EvidenceExtractionResult(BaseModel):
     status: EvidenceExtractionStatus
     document_id: str
@@ -334,6 +368,8 @@ class EvidenceExtractionResult(BaseModel):
     extraction_target: ExtractionTarget | None = None
     phenotype_evidence: list[EvidenceItem] = Field(default_factory=list)
     discarded_evidence: list[EvidenceItem] = Field(default_factory=list)
+    channel_classification: DocumentChannelClassification | None = None
+    field_eligibility_summary: FieldEligibilitySummary | None = None
 
 
 
@@ -366,6 +402,9 @@ class DualEvidenceExtractionResult(BaseModel):
 class EvidenceExtractionState(BaseModel):
     document: TrackDocument
     evidence_map: DocumentEvidenceMap | None = None
+    channel_classification: DocumentChannelClassification | None = None
+    channel_excluded_field_ids: frozenset[str] = Field(default_factory=frozenset)
+    target_excluded_field_ids: frozenset[str] = Field(default_factory=frozenset)
     evidence_items: list[EvidenceItem] = Field(default_factory=list)
     evidence_chains: list[EvidenceChain] = Field(default_factory=list)
     special_evidence: list[SpecialEvidenceRecord] = Field(default_factory=list)

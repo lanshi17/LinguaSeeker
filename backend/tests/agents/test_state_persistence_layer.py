@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.agents.contracts import (
+    Phase2Output,
     PipelineGraphState,
     PhaseStatus,
     PipelineMode,
@@ -143,6 +144,48 @@ async def test_session_bound_save_uses_upsert():
     mock_session.get.assert_awaited()
     # session.add is NOT used — writes go through upsert
     mock_session.add.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_session_bound_save_does_not_mutate_inline_phase2_payload():
+    """Persisting state must trim JSONB via a copy, not mutate live state."""
+    mock_session = AsyncMock()
+    mock_session.execute = AsyncMock()
+    mock_session.commit = AsyncMock()
+    mock_session.get = AsyncMock(return_value=None)
+
+    mock_factory = MagicMock()
+    mock_factory.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_factory.return_value.__aexit__ = AsyncMock(return_value=False)
+
+    persistence = SessionBoundStatePersistence(mock_factory)
+    state = PipelineGraphState(
+        processing_run_id=str(uuid.uuid4()),
+        source_document_id=str(uuid.uuid4()),
+        mode=PipelineMode.FULL,
+        source_type=SourceType.LOCAL,
+        pipeline_status=PipelineStatus.RUNNING,
+        phase_2_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
+        phase_2_output=Phase2Output(
+            output_dir="/tmp/phase_2",
+            original_json_path="/tmp/phase_2/original.json",
+            translated_json_path="/tmp/phase_2/translated.json",
+            source_language="zh",
+            extraction_result_path="/tmp/phase_2/extraction_result.json",
+            original_text="original text",
+            translated_text="translated text",
+            original_blocks=[{"type": "text", "text": "original"}],
+            translated_blocks=[{"type": "text", "text": "translated"}],
+        ),
+    )
+
+    await persistence.save(state)
+
+    assert state.phase_2_output is not None
+    assert state.phase_2_output.original_text == "original text"
+    assert state.phase_2_output.translated_text == "translated text"
+    assert state.phase_2_output.original_blocks == [{"type": "text", "text": "original"}]
+    assert state.phase_2_output.translated_blocks == [{"type": "text", "text": "translated"}]
 
 
 @pytest.mark.asyncio
@@ -338,3 +381,57 @@ async def test_direct_persistence_updates_title_on_existing_source_document(
 
     await db_session.refresh(sd)
     assert sd.raw_metadata.get("title") == "Late Title"
+
+
+@pytest.mark.asyncio
+async def test_direct_persistence_phase2_rerun_refreshes_document_text_and_blocks(
+    db_session: AsyncSession,
+):
+    """Phase 2 rerun output should replace stale SourceDocument render payloads."""
+    from src.dao.postgresql.models import SourceDocument
+
+    sd_id = str(uuid.uuid4())
+    state = PipelineGraphState(
+        processing_run_id=str(uuid.uuid4()),
+        source_document_id=sd_id,
+        mode=PipelineMode.FULL,
+        source_type=SourceType.LOCAL,
+        pipeline_status=PipelineStatus.RUNNING,
+        phase_2_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
+        phase_2_output=Phase2Output(
+            output_dir="/tmp/phase_2",
+            original_json_path="/tmp/phase_2/original.json",
+            translated_json_path="/tmp/phase_2/translated.json",
+            source_language="zh",
+            extraction_result_path="/tmp/phase_2/extraction_result.json",
+            original_text="old original",
+            translated_text="old translated",
+            original_blocks=[{"text": "old original"}],
+            translated_blocks=[{"text": "old translated"}],
+        ),
+    )
+    persistence = DirectStatePersistence(db_session)
+    await persistence.save(state)
+
+    state.mode = PipelineMode.PHASE
+    state.target_phase = 2
+    state.pipeline_status = PipelineStatus.RUNNING
+    state.phase_2_output = Phase2Output(
+        output_dir="/tmp/phase_2",
+        original_json_path="/tmp/phase_2/original.json",
+        translated_json_path="/tmp/phase_2/translated.json",
+        source_language="zh",
+        extraction_result_path="/tmp/phase_2/extraction_result.json",
+        original_text="new original",
+        translated_text="new translated",
+        original_blocks=[{"text": "new original"}],
+        translated_blocks=[{"text": "new translated"}],
+    )
+    await persistence.save(state)
+
+    sd = await db_session.get(SourceDocument, uuid.UUID(sd_id))
+    assert sd is not None
+    assert sd.original_text == "new original"
+    assert sd.translated_text == "new translated"
+    assert sd.original_blocks == [{"text": "new original"}]
+    assert sd.translated_blocks == [{"text": "new translated"}]

@@ -84,18 +84,18 @@ LangGraph Pipeline (workflow.py)
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `__init__` | `(provider, input_budget_tokens=DEFAULT)` | Inject LLM provider and token budget |
-| `run` | `(document: TrackDocument) -> DocumentEvidenceMap` | Scan document for present evidence categories. Chunks long documents, merges results. |
-| `run_async` | `(document: TrackDocument) -> DocumentEvidenceMap` | Async version — runs chunk LLM calls concurrently with semaphore (concurrency = 5). |
+| `run` | `(document: TrackDocument) -> RelevanceScanResult` | Scan document for present evidence categories and classify document channel. Chunks long documents, merges results. Returns `RelevanceScanResult` with `evidence_map` and `channel_classification`. |
+| `run_async` | `(document: TrackDocument) -> RelevanceScanResult` | Async version — runs chunk LLM calls concurrently with semaphore (concurrency = 5). |
 
 ### `CatalogExtractionStage` (`catalog_extraction.py`)
 
-Extracts structured fields from the 166-field catalog. Only sends the LLM-extractable groups to the model: high_signal (62 fields, A/B/D/E/J) and supporting (81 fields, C/F/G/H/I). The curation group (23 fields, K) is cross-paper GDV metadata and is filtered out here.
+Extracts structured fields from the 166-field catalog. Only sends the LLM-extractable groups to the model: high_signal (62 fields, A/B/D/E/J) and supporting (81 fields, C/F/G/H/I). The curation group (23 fields, K) is cross-paper GDV metadata and is filtered out here. Channel classification restricts field eligibility and injects channel-specific extraction strategy.
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `__init__` | `(provider, input_budget_tokens=STRONG_DEFAULT)` | Inject LLM provider |
-| `run` | `(document, evidence_map) -> list[EvidenceItem]` | Extract catalog fields. Uses recall-first block selection for target-scoped documents, chunked prompts for long documents, and sparse item merging. Runs group x chunk serially. |
-| `run_async` | `(document, evidence_map) -> list[EvidenceItem]` | Async version — runs chunk x group tasks concurrently via `asyncio.Semaphore(5)`. Raises `CatalogExtractionError` when all tasks fail. |
+| `run` | `(document, evidence_map, channel_classification=None) -> list[EvidenceItem]` | Extract catalog fields with channel-aware eligibility filtering and strategy guidance. Uses recall-first block selection for target-scoped documents, chunked prompts for long documents, and sparse item merging. |
+| `run_async` | `(document, evidence_map, channel_classification=None) -> list[EvidenceItem]` | Async version — runs chunk x group tasks concurrently via `asyncio.Semaphore(5)`. Raises `CatalogExtractionError` when all tasks fail. |
 
 ### `SpecialEvidenceStage` (`special_evidence.py`)
 

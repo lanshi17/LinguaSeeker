@@ -88,6 +88,51 @@ async def test_runner_executes_in_background(
 
 
 @pytest.mark.asyncio
+async def test_runner_cleans_rerun_artifacts_before_phase_rerun_claim(
+    mock_orchestrator, mock_semaphore
+):
+    """Phase reruns must clear stale downstream DB artifacts before restarting."""
+    calls: list[str] = []
+
+    async def _reset_phase_rerun_artifacts(**_kwargs):
+        calls.append("reset")
+
+    async def _save(*_args, **_kwargs):
+        calls.append("save")
+
+    mock_persistence = MagicMock(
+        reset_phase_rerun_artifacts=AsyncMock(side_effect=_reset_phase_rerun_artifacts),
+        save=AsyncMock(side_effect=_save),
+    )
+    state = PipelineGraphState(
+        processing_run_id="run-123",
+        source_document_id="doc-456",
+        mode=PipelineMode.PHASE,
+        source_type=SourceType.LOCAL,
+        target_phase=2,
+    )
+    completed = state.model_copy(deep=True)
+    completed.pipeline_status = PipelineStatus.COMPLETED
+    mock_orchestrator.run.return_value = completed
+
+    runner = PipelineRunner(
+        orchestrator=mock_orchestrator,
+        semaphore=mock_semaphore,
+        state_persistence=mock_persistence,
+    )
+
+    task = await runner.start(state)
+    await task
+
+    mock_persistence.reset_phase_rerun_artifacts.assert_awaited_once_with(
+        processing_run_id="run-123",
+        source_document_id="doc-456",
+        target_phase=2,
+    )
+    assert calls[:2] == ["reset", "save"]
+
+
+@pytest.mark.asyncio
 async def test_runner_captures_errors(
     sample_state, mock_orchestrator, mock_semaphore, mock_persistence
 ):
