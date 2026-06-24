@@ -1,6 +1,6 @@
 # Backend
 
-> FastAPI backend for LinguaSeeker -- a multi-agent platform for medical genetics literature automation and structured evidence extraction.
+> FastAPI backend for Lingua Seeker -- a multi-agent platform for medical genetics literature automation and structured evidence extraction.
 
 ## Directory Structure
 
@@ -23,11 +23,16 @@ backend/
 ├── config/               # Layered YAML config (defaults, environments, vault)
 ├── libs/                 # Rust PyO3 native extensions
 │   ├── rust-io/          #   Facade crate (cdylib) -- Python module `rust_io`
-│   ├── net-io/           #   HTTP I/O: 14 literature providers + MinerU API
+│   ├── net-io/           #   HTTP I/O: literature providers + MinerU API
 │   └── files-io/         #   File I/O: local + S3, archives, SHA-256 dedup
 ├── alembic/              # Alembic scaffold (real migrations in database/migrations/)
+├── benchmark/            # Benchmark optimization tools
+├── data/                 # Runtime data directory (git-ignored)
+├── downloads/            # Downloaded artifacts (git-ignored)
+├── output/               # Pipeline output artifacts (git-ignored)
 ├── scripts/              # E2E and operational scripts
 ├── tests/                # pytest test suite
+├── Dockerfile            # Container image definition
 ├── pyproject.toml        # Python project config (uv)
 └── uv.lock               # Locked dependencies
 ```
@@ -72,10 +77,10 @@ The backend follows **Orchestrated Vertical Slice Architecture**:
 
 | Phase | Module | Purpose |
 |-------|--------|---------|
-| 1 | `ingest_and_digitize_data/` | Literature acquisition + MinerU PDF parsing |
+| 1 | `ingest_and_digitize_data/` | Literature acquisition (online search + local upload) + MinerU PDF parsing |
 | 2 | `cross_lingual_process_and_extract_evidence/` | Translation + dual-track evidence extraction |
 | 3 | `standardize_entities_and_align_knowledge/` | Entity matching + knowledge alignment |
-| 4 | `visualize_evidence_with_expert_in_loop/` | Expert review, feedback, audit, export |
+| 4 | `visualize_evidence_with_expert_in_loop/` | Expert review, feedback, chat, audit, export |
 
 ### Configuration
 
@@ -95,8 +100,11 @@ Typed validation via `src/core/config.py` (`Settings`, `get_config()`).
 | SQLAlchemy (async) | PostgreSQL ORM |
 | Redis (async) | Caching and rate limiting |
 | LangGraph | Agent orchestration |
+| LangChain / LangChain-OpenAI | LLM client abstraction |
 | Pydantic | Data validation and settings |
 | loguru | Structured logging |
+| pgvector | Vector similarity search |
+| slowapi | Rate limiting |
 
 ## Further Reading
 
@@ -104,5 +112,4 @@ Typed validation via `src/core/config.py` (`Settings`, `get_config()`).
 - [config/](config/README.md) -- Configuration management
 - [libs/](libs/README.md) -- Rust native extensions
 - [scripts/](scripts/README.md) -- E2E and operational scripts
-- [services/model-server/](../services/model-server/README.md) -- Model inference service (top-level)
 - [tests/](tests/README.md) -- Test suite

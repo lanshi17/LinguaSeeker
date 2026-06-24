@@ -10,7 +10,7 @@
  * and structurally decoupled from evidence-highlight DOM wrapping — overlays
  * are absolutely positioned divs, so they never conflict with `<mark>` splits.
  */
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { Input, Button, Popover, Tooltip, message } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import {

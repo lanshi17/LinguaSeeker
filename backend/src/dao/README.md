@@ -1,6 +1,6 @@
 # DAO
 
-> Async PostgreSQL, Redis cache, and read-side search-index helpers for the backend persistence layer.
+> Async PostgreSQL persistence, Redis read-cache, and read-side search-index helpers for the backend data access layer.
 
 ## Sub-package Organization
 
@@ -20,13 +20,16 @@ src.core.config.Settings
         v
 postgresql/connection.py  ->  AsyncEngine / async_sessionmaker / session context
         |
-        +--> postgresql/models.py                    normalized write-model metadata
-        +--> postgresql/contracts.py                 typed infrastructure contracts
-        +--> postgresql/search_index_repo.py         flattened read projection queries
-        +--> postgresql/literature_profile_repo.py   per-document evidence group aggregation
-        +--> redis/connection.py                   async Redis client builder
+        +--> postgresql/models.py                    ORM models (Alembic-managed)
+        +--> postgresql/contracts.py                 Typed infrastructure contracts
+        +--> postgresql/search_index_repo.py         Flattened read projection queries
+        +--> postgresql/literature_profile_repo.py   Per-document evidence group aggregation
+        +--> postgresql/document_annotation_repo.py  Document annotation CRUD
+        +--> redis/connection.py                   Async Redis client builder
         +--> redis/cache_repo.py                     Redis read-cache and invalidation
 ```
+
+Singleton lifecycle is managed by `src.api.wiring`: `wire_dependencies()` creates engine, session factory, and Redis client on startup; `dispose_engine()` and `dispose_redis()` release resources on shutdown.
 
 The normalized PostgreSQL write model is migration-managed through `Base.metadata` in `postgresql/models.py`. The `frontend_search_index` table in `postgresql/search_index_repo.py` uses standalone `MetaData` so Alembic autogenerate does not treat the manual read projection as core write-model drift.
 
@@ -45,10 +48,10 @@ The normalized PostgreSQL write model is migration-managed through `Base.metadat
 
 `Base` is the Alembic target metadata for the normalized schema. Key model groups:
 
-- **Document lifecycle:** `SourceDocument`, `SourceDocumentIdentifier`, `ProcessingRun`, `PipelineRunState`
-- **Evidence:** `RunEvidenceItem`, `CanonicalEvidenceItem`
-- **Entity and terminology:** `NormalizedEntity`, `EvidenceEntityBinding`, `EntityMergeEvent`, `TerminologyEntry`, `TerminologyAlias`, `TerminologyRelationship`, `TerminologyEmbedding`
-- **Phase 4:** `User`, `ReviewAuditEvent`, `ChatSession`, `ChatMessage`, `LiteratureProfile`
+- **Document lifecycle:** `SourceDocument`, `SourceDocumentIdentifier`, `ProcessingRun`, `PipelineRunState`, `DocumentProcessingCache`
+- **Evidence:** `RunEvidenceItem`, `CanonicalEvidenceItem`, `EvidenceEntityBinding`
+- **Entity and terminology:** `NormalizedEntity`, `EntityMergeEvent`, `TerminologyEntry`, `TerminologyAlias`, `TerminologyRelationship`, `TerminologyEmbedding`
+- **Phase 4:** `User`, `ReviewAuditEvent`, `LiteratureProfile`, `ChatSession`, `ChatMessage`, `DocumentAnnotation`
 
 ### postgresql/literature_profile_repo.py
 
@@ -56,20 +59,30 @@ The normalized PostgreSQL write model is migration-managed through `Base.metadat
 |---|---|
 | `refresh_for_document` | Rebuild the `literature_profiles` row for a given `source_document_id` from canonical evidence |
 | `get_by_document` | Retrieve a single literature profile by `source_document_id` |
-| `search` | Search literature profiles with optional filters |
+| `search` | Search literature profiles with optional filters (gene, variant, disease, pmid, doi), paginated |
 
 ### postgresql/search_index_repo.py
 
 | Method | Description |
 |---|---|
-| `search` | Queries `frontend_search_index` with OR-combined filters (gene_ids, variant_ids, doi, pmid, field_id) |
+| `search` | Queries `frontend_search_index` with OR-combined filters (gene, variant, disease, gene_ids, variant_ids, doi, pmid, field_id) |
 | `refresh` | Truncates and rebuilds the read projection from canonical evidence and source identifiers |
+
+### postgresql/document_annotation_repo.py
+
+| Function | Description |
+|---|---|
+| `list_annotations` | Return annotations for a document, optionally filtered by track |
+| `get_annotation` | Fetch a single annotation by UUID |
+| `create_annotation` | Insert a new annotation and return the persisted row |
+| `update_annotation` | Patch mutable fields (color, note) of an annotation |
+| `delete_annotation` | Delete an annotation by UUID |
 
 ### redis/connection.py
 
 | Function | Description |
 |---|---|
-| `build_redis_client` | Creates an async Redis client from config (host, port, db, password) |
+| `build_redis_client` | Creates an async Redis client from config (host, port, db, password, max_connections) |
 
 ### redis/cache_repo.py
 

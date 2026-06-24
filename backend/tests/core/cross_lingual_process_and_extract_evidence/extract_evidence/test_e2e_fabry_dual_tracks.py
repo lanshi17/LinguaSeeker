@@ -95,6 +95,8 @@ class FabryFixtureProvider:
             ]
         if stage.startswith("special_evidence"):
             return []
+        if stage.startswith("clinical_context"):
+            return []
         raise AssertionError(f"unexpected stage: {stage}")
 
     async def ainvoke_structured(
@@ -173,8 +175,10 @@ async def test_fabry_output_fixture_runs_original_and_translated_tracks_independ
         ("relevance_scan", Track.ORIGINAL): 1,
         ("catalog_extraction", Track.ORIGINAL): 2,
         ("special_evidence", Track.ORIGINAL): 1,
+        ("clinical_context", Track.ORIGINAL): 1,
         ("relevance_scan", Track.TRANSLATED): 1,
         ("catalog_extraction", Track.TRANSLATED): 2,
         ("special_evidence", Track.TRANSLATED): 1,
+        ("clinical_context", Track.TRANSLATED): 1,
     }
     assert stage_types == expected_stage_types

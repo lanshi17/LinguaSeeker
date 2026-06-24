@@ -1,6 +1,8 @@
 # Web Scrapers
 
 > Browser-based web scrapers for academic sites that lack public APIs or require JavaScript rendering. Each scraper implements search and download for a specific regional academic publisher.
+>
+> **Status:** Deprecated (archived 2026-06-16). Replaced by Rust-based `net_io` HTTP providers.
 
 ## Quick Start
 
@@ -9,7 +11,7 @@ from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.w
 
 # Search via a specific web provider
 result = await call_web_provider("pubscholar", "search", {
-    "query": "BRCA1 变异",
+    "query": "BRCA1 variant",
     "limit": 10,
 })
 ```
@@ -37,7 +39,7 @@ web/
 
 ## Public API
 
-### `base.py` — Shared Utilities
+### `base.py` -- Shared Utilities
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
@@ -59,7 +61,7 @@ Each provider module exports `_search()` and optionally `_download()` functions:
 | `koreascience.py` | KoreaScience | Korean | KISTI journal platform |
 | `redalyc.py` | Redalyc | Spanish/Portuguese | Latin American journals |
 
-### `locators.py` — Site Selectors
+### `locators.py` -- Site Selectors
 
 CSS selectors and XPath expressions for each site's search results, article pages, and PDF links.
 

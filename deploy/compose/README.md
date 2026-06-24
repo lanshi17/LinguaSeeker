@@ -1,137 +1,128 @@
-# 跨主机前后端分离部署 (Docker Compose)
+# deploy/compose -- Docker Compose Deployment
 
-> 部署目标：前端容器与后端容器分别运行在两台独立的服务器上，通过私有网络互联。
+Docker Compose configurations for deploying Lingua Seeker in various topologies.
 
-```
-┌────────────────────────────────────────────────────────────────────┐
-│                        浏览器 (公网/内网)                          │
-└────────────────────────┬───────────────────────────────────────────┘
-                         │ HTTPS  (域名 -> 前端主机)
-                         ▼
-        ┌──────────────────────────────────────────────┐
-        │   前端主机  (deploy/compose/frontend-host)   │
-        │   ┌────────────────────────────────────┐     │
-        │   │ nginx:alpine                       │     │
-        │   │  - 静态托管 /usr/share/nginx/html   │     │
-        │   │  - /api/  → ${BACKEND_URL}         │     │
-        │   │  - /health → ${BACKEND_URL}/health │     │
-        │   │  - 注入 X-API-Key                  │     │
-        │   └────────────────────────────────────┘     │
-        └─────────────────────────┬────────────────────┘
-                                  │ 内网 HTTP (建议私有 IP / VPC / WireGuard)
-                                  ▼
-        ┌──────────────────────────────────────────────┐
-        │   后端主机  (deploy/compose/backend-host)    │
-        │   ┌─────────────┐  ┌────────────┐ ┌────────┐ │
-        │   │  backend    │  │ postgres   │ │ redis  │ │
-        │   │  FastAPI    │◀▶│ pgvector   │ │  8.0   │ │
-        │   │  :8000      │  │ :5432 内网 │ │ :6379  │ │
-        │   └─────────────┘  └────────────┘ └────────┘ │
-        └──────────────────────────────────────────────┘
-                                  │
-                                  ▼
-        ┌──────────────────────────────────────────────┐
-        │   GPU 主机 (可选, services/model-server)     │
-        │   embedding / rerank / VLM  :8001            │
-        └──────────────────────────────────────────────┘
-```
-
-## 1. 目录速览
+## Variants
 
 ```
 deploy/compose/
-├── frontend-host/
-│   ├── docker-compose.yml      # 单容器：nginx + 已构建的 SPA
-│   └── .env.example            # BACKEND_URL / API_KEY / 端口
-└── backend-host/
-    ├── docker-compose.yml      # backend + postgres + redis
-    ├── .env.example            # CORS / 密码 / 模型服务地址
-    └── config/                 # 挂载到容器的 production.yaml + vault
+├── dev-infra/               # Local dev: Postgres + Redis only (backend runs on host)
+│   └── docker-compose.yml
+├── staging/                 # Pre-release: backend + Postgres + Redis
+│   └── docker-compose.yml
+├── backend-host/            # Cross-host: backend + Postgres + Redis (backend server)
+│   ├── docker-compose.yml
+│   ├── .env.example
+│   └── config/              # Mounted production.yaml + vault/
+├── frontend-host/           # Cross-host: nginx + SPA (frontend server)
+│   ├── docker-compose.yml
+│   └── .env.example
+└── single-server/           # All-in-one: backend + Postgres + Redis + 3 GPU model containers
+    ├── docker-compose.yml
+    ├── .env.example
+    ├── deploy.sh            # Initial deployment script
+    ├── update.sh            # Incremental code-only update script
+    ├── patch-backend.Dockerfile
+    └── patch-model-server.Dockerfile
 ```
 
-镜像构建逻辑：
+| Variant | Services | Use Case |
+|---------|----------|----------|
+| `dev-infra/` | Postgres + Redis | Local development; backend started via `uv run uvicorn` on host |
+| `staging/` | Backend + Postgres + Redis | Pre-release validation; model server runs separately |
+| `backend-host/` | Backend + Postgres + Redis | Backend half of cross-host deployment |
+| `frontend-host/` | Nginx + SPA | Frontend half of cross-host deployment |
+| `single-server/` | Backend + Postgres + Redis + Embedding + Rerank + Doc Parse | All-in-one GPU server |
 
-| 镜像 | Dockerfile | 构建上下文 |
-| ---- | ---------- | ---------- |
-| 前端 | `frontend/Dockerfile`  | `frontend/`（多阶段：bun 构建 → nginx 托管） |
-| 后端 | `backend/Dockerfile`   | 仓库根（需要 `backend/` 与 `libs/config-loader/`） |
+## Cross-Host Deployment (backend-host + frontend-host)
 
-## 2. 关键设计
+```
+Browser
+    | HTTPS (domain -> frontend-host)
+    v
++---------------------------------------+
+|  frontend-host (nginx:alpine)         |
+|  - Static SPA /usr/share/nginx/html   |
+|  - /api/ -> ${BACKEND_URL}            |
+|  - /health -> ${BACKEND_URL}/health   |
+|  - Injects X-API-Key header           |
++-----------------+---------------------+
+                  | Internal HTTP (private IP / VPC / WireGuard)
+                  v
++---------------------------------------+
+|  backend-host                         |
+|  +----------+ +----------+ +--------+ |
+|  | backend  | | postgres | | redis  | |
+|  | FastAPI  | | pgvector | | 8.0    | |
+|  | :8000    | | :5432    | | :6379  | |
+|  +----------+ +----------+ +--------+ |
++---------------------------------------+
+                  |
+                  v (optional)
++---------------------------------------+
+|  GPU Host (services/model-server)     |
+|  embedding / rerank / doc-parse :8001 |
++---------------------------------------+
+```
 
-- **同源 SPA**：前端构建时把 `VITE_API_BASE_URL=/api/v1` 写入 bundle；浏览器永远向当前域发请求，CORS 由前端 nginx 在反代时统一携带 `Host`、`X-Forwarded-*` 头送达后端。
-- **X-API-Key 注入点**：仅在前端容器 nginx 中通过 `proxy_set_header X-API-Key` 注入；浏览器不持有任何凭证，前端 bundle 不出现密钥。
-- **后端外网暴露面**：后端容器 `:8000` 默认绑 `0.0.0.0`，请用系统防火墙 / 安全组只放行前端主机 IP。Postgres / Redis 仅绑 `127.0.0.1`，前端永远不直接访问。
-- **配置注入**：`production.yaml` 与 `vault/production.yaml` 以只读卷挂入后端容器；环境变量优先级最高，可在 `.env` 中覆盖任何键。
-- **跨容器 CORS**：`CORS_ORIGINS` 必须填浏览器实际访问的源（含 scheme + 端口），如 `https://app.example.com`。
+### Key Design Decisions
 
-## 3. 部署步骤
+- **SPA origin** -- Frontend builds with `VITE_API_BASE_URL=/api/v1`; the browser always requests the current domain. CORS is handled by the frontend Nginx reverse-proxying to the backend.
+- **X-API-Key injection** -- Injected by the frontend Nginx via `proxy_set_header X-API-Key`; the browser never sees the credential.
+- **Backend exposure** -- Backend port defaults to `127.0.0.1`; set `BACKEND_BIND=0.0.0.0` and use a firewall to allow only the frontend host IP. Postgres and Redis bind to `127.0.0.1` only.
+- **Config injection** -- `production.yaml` and `vault/production.yaml` are mounted read-only into the backend container. Environment variables in `.env` have the highest priority.
+- **CORS** -- `CORS_ORIGINS` must match the actual browser origin (scheme + port), e.g. `https://app.example.com`.
 
-### 3.1 后端主机
+## Single-Server Deployment
+
+Designed for CentOS 7.9+ GPU servers. Runs all services locally: backend, Postgres, Redis, and 3 model-server containers (embedding, rerank, doc-parse) each with GPU access.
+
+### Prerequisites
+
+- Docker CE 20.10+ with NVIDIA Container Toolkit
+- Pre-built images loaded: `lingua-seeker-backend:local`, `embedding-server:local`, `rerank-server:local`, `doc-parse-server:local`
+- Model weights at `/opt/lingua-seeker-data/models/` (embedding, rerank, vlm subdirectories)
+
+### Initial Deploy
 
 ```bash
-# 0. 准备配置
-cd deploy/compose/backend-host
-cp .env.example .env                                 # 填密码、CORS、API_KEY、模型地址
-mkdir -p config/vault
-cp ../../../backend/config/environments/production.yaml.example  config/production.yaml
-cp ../../../backend/config/vault/production.yaml.example         config/vault/production.yaml
-chmod 600 config/vault/production.yaml
-
-# 1. 构建并启动
-docker compose --env-file .env up -d --build
-
-# 2. 数据库迁移（首次或升级时）
-docker compose exec backend uv run alembic upgrade head
-
-# 3. 健康检查
-curl -fsS http://127.0.0.1:8000/health
+cd deploy/compose/single-server
+cp .env.example .env   # edit with real secrets
+./deploy.sh            # checks prerequisites, copies files, starts services, health check
 ```
 
-防火墙：
+### Incremental Updates
 
 ```bash
-sudo ufw allow from <前端主机 IP> to any port 8000 proto tcp
+# Code-only updates (no dependency rebuild, runs on target server):
+./update.sh backend          # update backend only
+./update.sh model-server     # update all 3 model containers
+./update.sh all              # update everything
 ```
 
-### 3.2 前端主机
+Uses thin overlay Dockerfiles (`patch-backend.Dockerfile`, `patch-model-server.Dockerfile`) that copy only changed source files onto existing images for fast rebuilds.
+
+## Dev Infrastructure
+
+Lightweight compose for local development. Only Postgres and Redis; the backend runs on the host via `uv run uvicorn`.
 
 ```bash
-cd deploy/compose/frontend-host
-cp .env.example .env
-# 必填：
-#   BACKEND_URL=http://<后端主机私有 IP>:8000
-#   API_KEY=<与后端一致>
-docker compose --env-file .env up -d --build
-
-# 健康检查（容器内 nginx → 后端）
-curl -fsS http://127.0.0.1/health
+docker compose -f deploy/compose/dev-infra/docker-compose.yml up -d
 ```
 
-公网 TLS 推荐放在容器之外：宿主机用 Caddy / 系统 nginx 监听 443，把流量转发到本机 `:80`，证书续期独立于镜像生命周期。
+## Images
 
-### 3.3 GPU 模型服务（可选）
+| Service | Dockerfile | Build Context |
+|---------|-----------|---------------|
+| Frontend | `frontend/Dockerfile` | `frontend/` (multi-stage: bun build -> nginx) |
+| Backend | `backend/Dockerfile` | repo root (needs `backend/` and `libs/config-loader/`) |
+| Embedding | `services/model-server/docker/embedding.Dockerfile` | `services/model-server/` |
+| Rerank | `services/model-server/docker/rerank.Dockerfile` | `services/model-server/` |
+| Doc Parse | `services/model-server/docker/doc-parse.Dockerfile` | `services/model-server/` |
 
-`services/model-server/docker-compose.model-server.yml` 已经支持独立部署，把它放到 GPU 主机上，再把 `EMBEDDING_BASE_URL` / `RERANK_BASE_URL` 等指向该主机即可。
+## Relationship with Ansible
 
-## 4. 升级与回滚
-
-```bash
-# 升级（前端）
-cd deploy/compose/frontend-host
-git pull
-IMAGE_TAG=$(date +%Y%m%d-%H%M) docker compose build
-IMAGE_TAG=$(date +%Y%m%d-%H%M) docker compose up -d
-
-# 回滚：把 IMAGE_TAG 改回旧值再 up -d，nginx 镜像支持秒级切换。
-```
-
-后端的回滚要小心数据库迁移：升级前先 `alembic revision history`，必要时使用 `alembic downgrade <rev>`。
-
-## 5. 与 Ansible 部署的关系
-
-- Ansible (`deploy/ansible/`) 仍是裸机 / systemd 部署的事实来源；
-- 本目录是“同一份配置契约的容器化部署形态”，二者共用：
-  - `backend/config/` 配置加载顺序；
-  - `vault/production.yaml` 机密；
-  - `cors_origins`、`api_key` 等结构化字段。
-- 选择一种部署方式即可；不要同时在同一台机器上启用两套。
+- Ansible (`deploy/ansible/`) is the bare-metal / systemd deployment path.
+- This directory is the containerized deployment path using the same configuration contracts.
+- Both share: `backend/config/` loading order, `vault/production.yaml` secrets, `cors_origins`, `api_key` structure.
+- Choose one approach per server; do not run both on the same machine.

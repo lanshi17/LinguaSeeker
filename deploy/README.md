@@ -1,56 +1,82 @@
 # deploy
 
-> Deployment configuration for the LinguaSeeker platform.
+Deployment configuration for the Lingua Seeker platform.
 
 ## Structure
 
 ```
 deploy/
-└── ansible/            # Ansible-based production deployment
-    ├── roles/          # common, postgres, redis, backend, model-server, frontend, nginx
-    ├── playbooks/      # site.yml, healthcheck.yml
-    ├── inventories/    # production/
-    └── templates/      # Shared templates
+├── ansible/                    # Bare-metal / systemd deployment (production + staging)
+│   ├── roles/                  # common, postgres, redis, backend, model-server,
+│   │                           #   model-server-docker, frontend, nginx
+│   ├── playbooks/              # site.yml, healthcheck.yml
+│   └── inventories/            # production/, staging/
+├── compose/                    # Docker Compose deployment variants
+│   ├── dev-infra/              # Local dev: Postgres + Redis only
+│   ├── staging/                # Pre-release: backend + Postgres + Redis
+│   ├── backend-host/           # Cross-host: backend + Postgres + Redis
+│   ├── frontend-host/          # Cross-host: nginx + SPA (proxies to backend-host)
+│   └── single-server/          # All-in-one: backend + Postgres + Redis + 3 GPU model containers
+└── mineru-api/                 # MinerU document parsing deployment notes
 ```
 
-See [ansible/README.md](ansible/README.md) for full deployment documentation.
+## Deployment Options
+
+| Mode | Directory | Use Case |
+|------|-----------|----------|
+| Ansible bare-metal | `ansible/` | Production and staging servers with systemd services |
+| Cross-host Compose | `compose/backend-host/` + `compose/frontend-host/` | Separate frontend and backend servers via Docker |
+| Single-server Compose | `compose/single-server/` | All-in-one GPU server (CentOS 7.9+) |
+| Staging Compose | `compose/staging/` | Pre-release validation with Docker |
+| Dev infrastructure | `compose/dev-infra/` | Local development (Postgres + Redis only; backend runs on host) |
 
 ## Deployment Topology
 
 ```
 Internet
-    │
-    ▼
-┌─────────┐
-│  Nginx   │  TLS termination, reverse proxy
-│  :443    │
-└────┬────┘
-     │
-     ├──→ Frontend (Next.js :3000)
-     ├──→ Backend  (FastAPI :8000)
-     │        │
-     │        ├──→ PostgreSQL (:5432)
-     │        ├──→ Redis (:6379)
-     │        └──→ Model Server (:8001)
-     │                └── GPU inference (Embedding, Rerank, VLM)
-     └──→ Static assets
+    |
+    v
++---------+
+|  Nginx  |  TLS termination, reverse proxy, X-API-Key injection
+|  :443   |
++----+----+
+     |
+     +---> Frontend (Vite + React SPA :3000)
+     +---> Backend  (FastAPI :8000)
+              |
+              +---> PostgreSQL (:5432)
+              +---> Redis (:6379)
+              +---> Model Server (:8001 monolith, or :8002-8004 multi-container)
+                      +-- Embedding (Qwen3-Embedding-0.6B)
+                      +-- Rerank (bge-reranker-v2-m3)
+                      +-- Doc Parse (MinerU2.5-Pro)
 ```
 
 ## Requirements
 
-- Ubuntu 22.04+ target server(s)
-- Ansible >= 2.14 with `community.docker` collection
-- SSH access to target server(s)
-- GPU server for model-server (NVIDIA driver + CUDA)
+- Ubuntu 22.04+ / Debian 12+ (Ansible mode) or CentOS 7.9+ (single-server Compose)
+- GPU server with NVIDIA driver + CUDA for model inference
+- For Ansible: Ansible >= 2.14 with `community.docker` collection
+- For Compose: Docker CE 20.10+ with NVIDIA Container Toolkit
 
-## Quick Deploy
+## Quick Start
 
+**Ansible (production):**
 ```bash
 cd deploy/ansible
-
-# Full deployment
 ansible-playbook playbooks/site.yml
-
-# Health check only
-ansible-playbook playbooks/healthcheck.yml
 ```
+
+**Docker Compose (single-server):**
+```bash
+cd deploy/compose/single-server
+cp .env.example .env  # edit with real secrets
+./deploy.sh
+```
+
+**Dev infrastructure only:**
+```bash
+docker compose -f deploy/compose/dev-infra/docker-compose.yml up -d
+```
+
+See subdirectory READMEs for detailed instructions.

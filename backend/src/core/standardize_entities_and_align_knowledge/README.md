@@ -52,7 +52,9 @@ DualEvidenceExtractionResult
   -> StandardizationInput
   -> StandardizationService
      -> HybridTerminologyMatcher
+        -> CrossLingualDiseaseResolver (token-ILIKE + Jaccard fallback for non-English disease names)
         -> PreciseTerminologyMatcher (deterministic alias lookup)
+           -> expand_hgvs_aliases() (HGVS normalization for variant matching)
         -> SimilarityTerminologyMatcher (semantic fallback)
            -> FallbackEmbeddingProvider
               -> local:  ModelServerEmbeddingProvider -> model-server /v1/embeddings
@@ -75,13 +77,17 @@ The slice follows the repo's vertical-slice layout:
 - `api.py`: public facade (`EntityStandardizationService`) and terminology import/embedding entry points
 - `contracts.py`: typed service contracts
 - `adapters.py`: Phase 2 to Phase 3 boundary adapter
-- `importers.py`: local terminology file parsers
+- `importers.py`: local terminology file parsers (HGNC, OMIM, HPO, ClinGen, ClinVar)
 - `matchers.py`: matcher facade with `HybridTerminologyMatcher`
 - `precise_match/`: deterministic source-priority matching
 - `similarity_match/`: semantic matching via pgvector and model-server (providers, repositories, indexer, contracts)
 - `repositories.py`: write boundary to SQLAlchemy ORM models
 - `normalizers.py`: shared text normalization, scope hashing, and cross-lingual disease mapping
+- `cross_lingual_disease.py`: deterministic cross-lingual disease name resolution via token-based ILIKE + Jaccard similarity
+- `hgvs_normalizer.py`: HGVS variant notation normalization (three-letter to one-letter, transcript prefix stripping, list expansion)
+- `variant_id.py`: deterministic internal variant identifiers for unmatched variants
 - `acmg_projection.py`: projects standardized entities into ACMG-ready evidence facts
+- `providers.py`: standalone embedding provider (legacy, used for direct API calls)
 - `core.py`: orchestration only
 - `context_pack/`: context pack assembly helpers
 
@@ -167,13 +173,14 @@ Current parsers:
 Important implementation details:
 
 - ClinVar rows stream through `_iter_tsv_rows()` and `iter_clinvar_batches()`; the parser does not load the whole file into memory.
+- A reduced core TSV (`build_clinvar_core_tsv()`) is generated from the raw export to strip unnecessary columns before import.
 - `is_importable_clinvar_review_status()` excludes 0-star or evidence-free ClinVar rows.
 - `upsert_terminology_batch()` resolves relationship subjects and objects by either external ID or alias lookup.
 - Bulk upsert uses PostgreSQL `INSERT ... ON CONFLICT` for production sessions; falls back to per-row upsert for test doubles. An optional COPY-based staging path (`_copy_upsert_*`) uses `asyncpg.copy_records_to_table` via temp tables for high-throughput scenarios.
 
 ## Matcher Rules
 
-`HybridTerminologyMatcher` runs precise matching first, then falls back to semantic matching for unmapped candidates.
+`HybridTerminologyMatcher` runs precise matching first, then falls back to cross-lingual disease resolution (for disease candidates), and finally to semantic matching for remaining unmapped candidates.
 
 ### Precise Matching
 
@@ -188,11 +195,28 @@ Alias priority within a source:
 
 `primary > alias > previous_symbol > name > rsid`
 
-If exactly one candidate remains after ranking, the result is `standardized`. If multiple remain, it is `ambiguous`. If none remain, it falls through to semantic matching.
+If exactly one candidate remains after ranking, the result is `standardized`. If multiple remain, it is `ambiguous`. If none remain, it falls through to cross-lingual resolution (disease only) and then semantic matching.
+
+### Variant Matching
+
+Variant matching uses `expand_hgvs_aliases()` from `hgvs_normalizer.py` to produce all equivalent HGVS forms (three-letter to one-letter amino acid conversion, transcript prefix stripping, list literal expansion, stop codon normalization). Each form is looked up in the repository and results are merged by `entry_id` to avoid double-counting.
+
+For multi-hit ClinVar results, gene-symbol context filtering (`_filter_variant_candidates_by_gene_context`) narrows candidates using the candidate's `gene_symbol` metadata against ClinVar entries' gene symbols. When no gene match exists and multiple cross-gene variants match, the result is `UNMAPPED` rather than `AMBIGUOUS`, and Phase 4 assigns an internal variant ID via `variant_id.py`.
+
+### Cross-Lingual Disease Resolution
+
+For DISEASE candidates that miss the precise matcher, `CrossLingualDiseaseResolver` in `cross_lingual_disease.py` attempts a deterministic fallback before semantic matching:
+
+1. Normalize via `normalize_disease_lookup_text()` (applies the hardcoded Chinese-to-English disease name map).
+2. Split the normalized name into significant tokens (filtering stopwords).
+3. Query disease aliases whose `normalized_alias` ILIKE-matches every token.
+4. Pick the match with the highest token-set Jaccard overlap.
+
+This enables resolution of non-English disease names without LLM calls or embedding inference.
 
 ### Semantic Matching
 
-When precise matching returns `unmapped`, the system:
+When precise matching returns `unmapped` (and cross-lingual resolution does not apply or fails), the system:
 
 1. Embeds the candidate text via model-server `/v1/embeddings`
 2. Retrieves nearest neighbors from `terminology_embeddings` using pgvector cosine distance
@@ -250,6 +274,10 @@ After persistence, the repository (called from `StandardizationService`) refresh
 - `refresh_search_index()` -- rebuilds `frontend_search_index` via `SearchIndexRepository`
 
 The repository is the only place allowed to translate Phase 3 contracts into ORM rows.
+
+## ACMG Projection
+
+`AcmgReadyProjector` in `acmg_projection.py` projects standardized entities into compact key-value evidence for downstream rules-based ACMG consumers. It extracts standardized HPO phenotype IDs from proband phenotype fields (`B.hpo_terms`, `B.clinical_phenotypes`) and builds an `AcmgReadyEvidenceSet` with the highest confidence from the source evidence items.
 
 ## Usage Patterns
 
@@ -330,7 +358,9 @@ Change those together and add a repository/service test before modifying product
 
 ## Cross-Lingual Normalization
 
-`normalizers.py` provides cross-lingual normalization for disease names. A built-in Chinese-to-English disease name mapping (`_CROSS_LINGUAL_DISEASE_MAP`) covers common medical genetics terms (e.g., "法布雷病" -> "fabry disease"). The `normalize_disease_lookup_text()` function applies this mapping automatically, enabling the precise matcher to resolve Chinese disease names against English terminology entries.
+`normalizers.py` provides cross-lingual normalization for disease names. A built-in Chinese-to-English disease name mapping (`_CROSS_LINGUAL_DISEASE_MAP`) covers common medical genetics terms (e.g., "fabry disease" and others). The `normalize_disease_lookup_text()` function applies this mapping automatically, enabling the precise matcher to resolve Chinese disease names against English terminology entries.
+
+Beyond the hardcoded map, `CrossLingualDiseaseResolver` in `cross_lingual_disease.py` provides a database-query-only fallback using PostgreSQL `ILIKE` with token-based Jaccard similarity scoring.
 
 ## Vector Similarity Search (pgvector)
 
@@ -341,6 +371,7 @@ Phase 3 supports optional semantic similarity search via pgvector as a fallback 
 ```text
 HybridTerminologyMatcher
     ├── PreciseTerminologyMatcher (deterministic alias lookup)
+    ├── CrossLingualDiseaseResolver (disease-only, token-ILIKE fallback)
     └── unmapped?
         └── SimilarityTerminologyMatcher
             ├── FallbackEmbeddingProvider
@@ -418,3 +449,5 @@ Coverage areas currently present:
 - embedding dimension validation
 - cross-lingual disease normalization
 - ACMG projection
+- HGVS alias expansion
+- internal variant ID generation

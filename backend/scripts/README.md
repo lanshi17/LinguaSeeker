@@ -11,6 +11,7 @@
 | `e2e_extract_evidence.py` | End-to-end evidence extraction only | `uv run python scripts/e2e_extract_evidence.py` |
 | `e2e_standardize_entities.py` | End-to-end entity standardization only | `uv run python scripts/e2e_standardize_entities.py` |
 | `e2e_visualize_feedback.py` | End-to-end Phase 4 visualization + feedback | `uv run python scripts/e2e_visualize_feedback.py` |
+| `backfill_metadata.py` | Backfill metadata for existing pipeline records | `uv run python scripts/backfill_metadata.py` |
 | `build_terminology_embeddings.py` | Build pgvector embeddings for terminology subsets | `uv run python scripts/build_terminology_embeddings.py [--entity-types ...] [--source-dbs ...]` |
 | `render_config.py` | Render merged layered config for debugging | `uv run python scripts/render_config.py --env development` |
 

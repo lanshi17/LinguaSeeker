@@ -1,6 +1,6 @@
-# Evidence DB — Variant-Centric Evidence Database
+# Evidence DB -- Variant-Centric Evidence Database
 
-> Three-level browse experience for clinical genetics evidence, organized by variant identifier. Users drill from a variant index → variant detail with evidence fields and literature references → bilingual document comparison with multi-color category highlighting.
+> Three-level browse experience for clinical genetics evidence, organized by variant identifier. Users drill from a variant index to variant detail with evidence fields and literature references to bilingual document comparison with multi-color category highlighting.
 
 ## Quick Start
 
@@ -25,50 +25,70 @@ Routing is handled by `EvidenceDbPage` (`src/pages/EvidenceDbPage.tsx`), which r
 | L2 | `/evidence-db/:variantSlug` | `VariantDetailView` |
 | L3 | `/evidence-db/:variantSlug/:sourceDocId` | `BilingualEvidenceView` |
 
+## Structure
+
+```
+features/evidence-db/
+|-- index.ts                             # Barrel exports
+|-- types/
+|   +-- variantDb.ts                     # VariantIndexEntry, VariantDetailData, LiteratureReference, etc.
+|-- services/
+|   +-- variantDb.ts                     # fetchAllEvidence, fetchEvidenceGroupDetail
+|-- hooks/
+|   |-- useVariantIndex.ts              # Fetch + aggregate + filter + paginate variant index
+|   +-- useVariantDetail.ts             # Fetch variant entry + all group details
+|-- components/
+|   |-- VariantIndexView.tsx            # L1: searchable variant grid with stats and pagination
+|   |-- VariantIndexSkeleton.tsx        # Loading skeleton for variant index
+|   |-- VariantDetailView.tsx           # L2: variant hero with evidence by category and literature sidebar
+|   |-- VariantDetailSkeleton.tsx       # Loading skeleton for variant detail
+|   |-- BilingualEvidenceView.tsx       # L3: bilingual document reader with category highlighting
+|   |-- BilingualEvidenceSkeleton.tsx   # Loading skeleton for bilingual view
+|   |-- BilingualSidebar.tsx            # Sidebar for bilingual comparison navigation
+|   |-- ActiveEvidenceCard.tsx          # Card showing currently selected evidence item
+|   |-- DocumentReader.tsx              # Full document reader with highlight rendering
+|   |-- HighlightedText.tsx             # Inline highlight span renderer
+|   |-- LiteratureHeader.tsx            # Literature document header (title, PMID, DOI)
+|   |-- SidebarControls.tsx             # Sidebar filter/toggle controls
+|   |-- StructuredBlockRenderer.tsx     # Renders MinerU structured content blocks (tables, images, code, lists)
+|   +-- bevStyles.ts                    # Shared inline style constants for the bilingual evidence view
++-- utils/
+    |-- variantAggregation.ts           # aggregateVariants, filterAndPaginateVariants
+    +-- pathogenicity.ts                # classifyLevel, classificationColor, classificationBadgeStyle, classificationLabel
+```
+
 ## Architecture
 
 ```
-                    ┌─────────────────────────────────────────────────┐
-                    │              EvidenceDbPage                      │
-                    │         (useParams router dispatch)              │
-                    └──────┬──────────────┬───────────────────────────┘
-                           │              │
-              ┌────────────▼──┐  ┌───────▼──────────┐  ┌──────────────────┐
-              │ VariantIndex  │  │ VariantDetail    │  │ BilingualEvidence │
-              │    View       │  │     View         │  │      View         │
-              │ (L1 grid)     │  │ (L2 detail)      │  │ (L3 comparison)   │
-              └───────┬───────┘  └────────┬─────────┘  └────────┬──────────┘
-                      │                   │                     │
-                      ▼                   ▼                     ▼
-              ┌──────────────────────────────────────────────────────────┐
-              │                    Hooks Layer                           │
-              │  useVariantIndex    useVariantDetail    useEvidenceGroup  │
-              │  (React Query)      (React Query)        Detail (RQ)      │
-              └──────────────────────────────────────────────────────────┘
-                      │                   │                     │
-                      ▼                   ▼                     ▼
-              ┌──────────────────────────────────────────────────────────┐
-              │                  Services Layer                          │
-              │  fetchAllEvidence     fetchEvidenceGroupDetail           │
-              │  (GET /evidence/search)  (GET /evidence/groups/detail)   │
-              └──────────────────────────────────────────────────────────┘
-                      │
-                      ▼
-              ┌──────────────────────────────────────────────────────────┐
-              │              Aggregation Layer (client-side)             │
-              │  aggregateVariants → groups flat results by              │
-              │  gene:variant:disease into VariantIndexEntry[]           │
-              │  filterAndPaginateVariants → applies filters + pagination│
-              └──────────────────────────────────────────────────────────┘
+                    EvidenceDbPage
+                    (useParams router dispatch)
+                           |
+              +------------+-------------+
+              |            |             |
+         VariantIndex  VariantDetail  BilingualEvidence
+           View (L1)     View (L2)       View (L3)
+              |            |             |
+              v            v             v
+         useVariantIndex  useVariantDetail
+         (React Query)    (React Query)
+              |            |
+              v            v
+         fetchAllEvidence  fetchEvidenceGroupDetail
+         (GET /evidence/search)  (GET /evidence/groups/detail)
+              |
+              v
+         aggregateVariants -> groups flat results by
+         gene:variant:disease into VariantIndexEntry[]
+         filterAndPaginateVariants -> applies filters + pagination
 ```
 
 ### Data Flow
 
-1. **L1**: `fetchAllEvidence()` fetches all evidence search results (page_size=200) → `aggregateVariants()` splits multi-variant values (e.g. `c.316C>T; c.502C>T`) into one row per variant site, then groups by `gene:variant:disease` composite key → `filterAndPaginateVariants()` applies client-side filters and pagination → React Query caches with 60s stale time.
+1. **L1**: `fetchAllEvidence()` fetches all evidence search results (page_size=1000) -> `aggregateVariants()` splits multi-variant values into one row per variant site, then groups by `gene:variant:disease` composite key -> `filterAndPaginateVariants()` applies client-side filters and pagination -> React Query caches with 60s stale time.
 
-2. **L2**: Reuses the L1 index query to find the variant entry → fetches `EvidenceGroupDetailResponse` for each `group_id` via `Promise.allSettled` → flattens all evidence items across groups → builds `LiteratureReference[]` for the sidebar.
+2. **L2**: Reuses the L1 index query to find the variant entry -> fetches `EvidenceGroupDetailResponse` for each (group_id, source_document_id) pair via `Promise.allSettled` -> flattens all evidence items -> builds `LiteratureReference[]` with bilingual item maps for the sidebar.
 
-3. **L3**: Finds the `group_id` matching the `sourceDocumentId` from L2's data → fetches full group detail → `buildEvidenceDocument()` constructs paragraphs with highlight ranges from traces → category toggles filter which highlights are visible → evidence navigator selects a specific field to emphasize.
+3. **L3**: Uses `useEvidenceGroupDetail` from `@/features/evidence-search` to fetch the full group detail -> `buildEvidenceDocument()` constructs paragraphs with highlight ranges from traces -> category toggles filter which highlights are visible -> evidence navigator selects a specific field to emphasize.
 
 ## Public API
 
@@ -76,7 +96,7 @@ Routing is handled by `EvidenceDbPage` (`src/pages/EvidenceDbPage.tsx`), which r
 
 | Component | Props | Description |
 |-----------|-------|-------------|
-| `VariantIndexView` | — | L1: searchable variant grid with stats, classification filters, pagination |
+| `VariantIndexView` | -- | L1: searchable variant grid with stats, classification filters, pagination |
 | `VariantDetailView` | `variantSlug: string` | L2: variant hero with confidence ring, evidence by category, literature sidebar |
 | `BilingualEvidenceView` | `variantSlug: string`, `sourceDocumentId: string` | L3: bilingual document reader with category highlighting |
 
@@ -84,76 +104,65 @@ Routing is handled by `EvidenceDbPage` (`src/pages/EvidenceDbPage.tsx`), which r
 
 | Hook | Returns | Description |
 |------|---------|-------------|
-| `useVariantIndex` | `{ items, total, page, pageSize, stats, isLoading, isFetching, error, filters, updateFilter, setPage, clearFilters }` | Fetches + aggregates + filters variant index data |
-| `useVariantDetail` | `{ detail, isLoading, isFetching, error }` | Fetches variant entry + all group details for a single variant |
+| `useVariantIndex` | `{ items, total, page, pageSize, stats, isLoading, isFetching, error, filters, updateFilter, setPage, clearFilters, refetch }` | Fetches + aggregates + filters variant index data client-side |
+| `useVariantDetail` | `{ detail, isLoading, isFetching, error }` | Fetches variant entry + all group details for a single variant, builds bilingual maps |
 
 ### Types
 
 | Type | Description |
 |------|-------------|
-| `VariantIndexEntry` | Aggregated variant: slug, gene, variant, disease, classification, counts, category distribution, groupIds |
-| `VariantIndexData` | Paginated response: items, total, page, pageSize, stats |
-| `VariantDetailData` | L2 response: entry, evidenceGroups, literature, allItems |
-| `LiteratureReference` | Sidebar reference: sourceDocumentId, title, pmid, doi, groupId, fieldCount, categories |
-| `VariantIndexFilters` | Filter state: gene, variant, disease, classification, page, pageSize |
+| `VariantIndexEntry` | Aggregated variant: slug, gene, variant, disease, classification, counts, category distribution, groupIds, sourceDocumentIds, representative |
+| `VariantIndexData` | Paginated response: items, total, page, pageSize, stats (classificationDistribution) |
+| `VariantDetailData` | L2 response: entry, evidenceGroups, literature, allItems, reconciledItems, bilingualItems |
+| `LiteratureReference` | Sidebar reference: sourceDocumentId, title, pmid, doi, groupId, fieldCount, categories, bilingualItems |
+| `VariantIndexFilters` | Filter state: gene, variant, disease, classification, page, pageSize, sortBy, sortOrder |
 | `ClassificationLevel` | `"pathogenic" \| "likely_pathogenic" \| "uncertain" \| "likely_benign" \| "benign"` |
 
 ### Utils
 
 | Function | Description |
 |----------|-------------|
-| `classifyLevel(classification)` | Maps classification string → `ClassificationLevel` |
+| `classifyLevel(classification)` | Maps classification string -> `ClassificationLevel` |
 | `classificationColor(level)` | Hex color for dark-theme rendering |
-| `classificationBadgeStyle(level)` | Inline CSS style object for badge (bg, text, border) — used in VariantIndexView/VariantDetailView |
+| `classificationBadgeStyle(level)` | Inline CSS style object for badge (bg, text, border) |
 | `classificationLabel(level)` / `classificationShortLabel(level)` | Human-readable / abbreviated labels |
-| `aggregateVariants(results)` | Splits multi-variant values into one row per variant site, then groups flat `EvidenceSearchResult[]` → `VariantIndexEntry[]` (split rows share the original `group_id` for L2 detail navigation) |
-| `filterAndPaginateVariants(entries, filters)` | Applies filters + pagination → `VariantIndexData`; aggregate stats count distinct evidence groups / literature to avoid double-counting split rows |
+| `aggregateVariants(results)` | Splits multi-variant values into one row per variant site, groups flat `EvidenceSearchResult[]` -> `VariantIndexEntry[]` |
+| `filterAndPaginateVariants(entries, filters)` | Applies filters + pagination -> `VariantIndexData` |
 
-## Design: Unified Medical-Teal Light Theme
+## Design
 
-The evidence DB uses a light theme matching the dashboard's "Accessible & Ethical" design system (WCAG AAA, medical teal primary). Consistent with the rest of the application: white cards on gray-50 background, teal-600 primary, Figtree/Fraunces/JetBrains Mono typography.
+The evidence DB uses a light theme matching the dashboard's design system. CSS utility classes defined in `globals.css`:
 
-**Color system:**
-- Primary: `#0891B2` (teal-600) — shared with dashboard
-- Pathogenicity scale: `#B91C1C` (P) → `#DC2626` (LP) → `#6B7280` (VUS) → `#0D9488` (LB) → `#0F766E` (B) — all WCAG AA on white
-- Evidence categories A–J: each has a hex color (defined in `@/features/evidence-search/utils/evidenceDocument.ts` `CATEGORY_COLORS`)
-- CSS utilities: `.edb-hero` (teal-tinted gradient), `.edb-card` (white card), `.edb-card-clickable` (teal hover), `.edb-ring` (confidence ring), `.edb-cat-strip`, `.edb-scroll`, `.edb-stagger` (defined in `src/globals.css`)
+- `.edb-hero` -- teal-tinted gradient header
+- `.edb-card` -- white card container
+- `.edb-card-clickable` -- white card with teal hover
+- `.edb-ring` -- confidence ring indicator
+- `.edb-cat-strip` -- category color strip
+- `.edb-scroll` -- scrollable container
+- `.edb-stagger` -- staggered entrance animation
 
-**Highlight rendering (L3):** Category marks use inline style objects from `categoryMarkStyle()` (e.g., amber bg/text/border) designed for light backgrounds. Selected evidence gets a teal `borderColor` focus ring.
+**Pathogenicity scale**: `#B91C1C` (P) -> `#DC2626` (LP) -> `#6B7280` (VUS) -> `#0D9488` (LB) -> `#0F766E` (B)
+
+## API Endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/v1/evidence/search` | GET | Fetch all evidence search results (page_size=1000 for aggregation) |
+| `/api/v1/evidence/groups/detail` | GET | Fetch full detail for a single evidence group (items + traces + document text) |
+
+## Testing
+
+```bash
+cd frontend
+bun run test tests/evidence-db/variantAggregation.test.tsx
+```
 
 ## Dependencies
 
 | Dependency | Purpose |
 |------------|---------|
-| `@tanstack/react-query` | Data fetching, caching (60s stale time shared across L1–L3) |
+| `@tanstack/react-query` | Data fetching, caching (60s stale time shared across L1-L3) |
 | `react-router-dom` | URL param routing, `Link` navigation |
 | `lucide-react` | Icons |
 | `@/features/evidence-search` | Shared types (`EvidenceSearchResult`, `EvidenceGroupDetailResponse`), utils (`CATEGORY_COLORS`, `buildEvidenceDocument`, `categoryLabel`), hooks (`useEvidenceGroupDetail`) |
 | `@/lib/api/client` | Axios instance for API calls |
-
-## API Endpoints Used
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/v1/evidence/search` | GET | Fetch all evidence search results (page_size=200 for aggregation) |
-| `/api/v1/evidence/groups/detail` | GET | Fetch full detail for a single evidence group (items + traces + document text) |
-
-## Extension Guide
-
-### Adding a new filter dimension
-
-1. Add the field to `VariantIndexFilters` in `types/variantDb.ts`
-2. Add filter logic in `filterAndPaginateVariants()` in `utils/variantAggregation.ts`
-3. Add UI control in `VariantIndexView.tsx` and wire via `updateFilter()`
-
-### Changing the color palette
-
-- **Pathogenicity colors**: Edit `classificationColor()` and `classificationBadgeStyle()` in `utils/pathogenicity.ts`
-- **Category colors**: Edit `CATEGORY_COLORS` in `@/features/evidence-search/utils/evidenceDocument.ts` (shared with evidence-search feature)
-- **Dark theme utilities**: Edit the `.edb-*` classes in `src/globals.css`
-
-### Adding a new level
-
-1. Create the component in `components/`
-2. Add the route in `App.tsx` and the param dispatch in `EvidenceDbPage.tsx`
-3. Export from `index.ts`

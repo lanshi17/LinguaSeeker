@@ -51,48 +51,48 @@ src/
 +-- py.rs               # #[pyfunction] layer: param parsing, provider dispatch, MinerU wrappers
 +-- client.rs           # reqwest HttpClient with retry, timeout, proxy, auth
 +-- error.rs            # GatewayError enum + PyErr conversion
-+-- types.rs            # Shared types: Action, FetchParams, FetchResult, MinerU*
-+-- scraper.rs          # HTML scraping and PDF link extraction
++-- types.rs            # Shared types: Action, FetchParams, FetchResult, MinerU* structs
++-- scraper.rs          # HTML scraping, CSS selector queries, PDF link extraction
 +-- mineru.rs           # MinerU document parsing API client (v4)
 +-- providers/          # Literature data source implementations
     +-- mod.rs
-    +-- openalex.rs       # OpenAlex REST API
     +-- crossref.rs       # Crossref REST API
+    +-- openalex.rs       # OpenAlex REST API
     +-- europepmc.rs      # Europe PMC REST API
-    +-- arxiv.rs          # arXiv API
     +-- pmc.rs            # PubMed Central E-utilities
-    +-- biorxiv.rs        # bioRxiv + medRxiv API (two separate providers)
-    +-- scielo.rs         # SciELO search
-    +-- cinii.rs          # CiNii (Japan) API
-    +-- jstage.rs         # J-STAGE (Japan Science and Technology)
     +-- doaj.rs           # Directory of Open Access Journals
-    +-- unpaywall.rs      # Unpaywall OA status lookup
-    +-- openaire.rs       # OpenAIRE research graph
-    +-- core_search.rs    # CORE search API
+    +-- jstage.rs         # J-STAGE (Japan Science and Technology)
+    +-- scielo.rs         # SciELO search
     +-- base_search.rs    # BASE (Bielefeld Academic Search Engine)
+    +-- core_search.rs    # CORE search API
+    +-- openaire.rs       # OpenAIRE research graph
+    +-- arxiv.rs          # arXiv API
+    +-- biorxiv.rs        # bioRxiv + medRxiv API (two providers)
+    +-- cinii.rs          # CiNii (Japan) API
+    +-- unpaywall.rs      # Unpaywall OA status lookup
 ```
 
 ## Literature Providers (15)
 
 | Provider | Search | Download | Source |
 |----------|--------|----------|--------|
-| `openalex` | YES | NO | OpenAlex REST API |
 | `crossref` | YES | NO | Crossref REST API |
+| `openalex` | YES | NO | OpenAlex REST API |
 | `europepmc` | YES | NO | Europe PMC REST API |
-| `arxiv` | YES | NO | arXiv API |
 | `pmc` | YES | NO | PubMed Central E-utilities (supports NCBI API key via `PUBMED_API_KEY` env var) |
+| `doaj` | YES | YES | Directory of Open Access Journals |
+| `jstage` | YES | YES | J-STAGE |
+| `scielo` | YES | NO | SciELO search |
+| `base` | YES | NO | BASE academic search |
+| `core` | YES | NO | CORE search API |
+| `openaire` | YES | NO | OpenAIRE research graph |
+| `arxiv` | YES | NO | arXiv API |
 | `biorxiv` | YES | NO | bioRxiv preprint API |
 | `medrxiv` | YES | NO | medRxiv preprint API |
-| `scielo` | YES | NO | SciELO search |
 | `cinii` | YES | NO | CiNii (Japan) API |
-| `jstage` | YES | YES | J-STAGE |
-| `doaj` | YES | YES | Directory of Open Access Journals |
 | `unpaywall` | YES | YES | Unpaywall OA status lookup |
-| `openaire` | YES | NO | OpenAIRE research graph |
-| `core_search` | YES | NO | CORE search API |
-| `base_search` | YES | NO | BASE academic search |
 
-Requesting `download` for providers that do not support it returns an error. Unknown provider names return `FetchResult::failure()`.
+Requesting `download` for providers that do not support it returns an error. Unknown provider names return `FetchResult` with `success: false`.
 
 ## Python API
 
@@ -167,4 +167,4 @@ cd backend/libs/net-io
 cargo test
 ```
 
-Unit tests cover: HTTP client retry/backoff, error-to-PyErr mapping, HTML scraping, PDF link extraction, and individual provider search functions. Integration with real provider APIs requires network access.
+Unit tests cover: HTTP client retry/backoff, error-to-PyErr mapping, HTML scraping, PDF link extraction, MinerU request body construction, and individual provider search functions. Integration with real provider APIs requires network access.

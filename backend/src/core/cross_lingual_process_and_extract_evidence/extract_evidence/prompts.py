@@ -312,3 +312,52 @@ DOCUMENT TEXT:
 Select the location that best matches the context where this evidence is discussed (not just mentioned in passing).
 Return the index (0-based) of the best candidate.
 """
+
+
+def get_clinical_context_prompt(
+    document_id: str,
+    track: Track,
+    text: str,
+    current_items_summary: str,
+) -> str:
+    return f"""You are extracting clinical context from a biomedical document.
+
+FOCUS: Extract ONLY the following fields. Do NOT extract any other fields.
+
+FIELDS:
+- B.clinical_phenotypes: Patient's clinical presentation, symptoms, neurological features,
+  developmental regression, seizures, movement abnormalities, tremor, rigidity, bradykinesia,
+  ataxia, intellectual disability, motor delay, speech delay, hypotonia, spasticity.
+  Multiple phenotypes: separate with semicolons (e.g. "seizures; developmental regression; ataxia").
+  Do NOT copy the disease diagnosis as a phenotype. Extract actual observed symptoms and signs.
+- B.sex: Explicit sex or gender of the patient (e.g. "male", "female"). Only extract if clearly stated.
+- B.age_of_onset: Age at first symptoms, diagnosis, or presentation. Only extract explicit ages
+  (e.g. "3 years", "onset at age 2", "neonatal"). Do NOT use developmental milestones
+  (sitting, walking, talking) unless they are explicitly described as symptom onset.
+- B.mode_of_inheritance_reported: Inheritance pattern stated in the document
+  (e.g. "autosomal recessive", "autosomal dominant", "X-linked", "AD", "AR", "XL").
+  Only extract if explicitly stated.
+- C.inheritance_source: Whether the variant was inherited or arose de novo
+  (e.g. "inherited from mother", "paternal", "maternal", "de novo"). Must have family/
+  parental/genotyping evidence.
+- C.de_novo_status: Whether the variant was confirmed as de novo
+  (e.g. "confirmed de novo", "likely de novo", "inherited"). Requires parental testing
+  or family study evidence.
+
+RULES:
+1. Each found item MUST include a source with text_snippet that is a verbatim substring of the document.
+2. Set status="found" with extracted value, or status="not_found" if the document does not contain the information.
+3. Do not invent information not present in the document.
+4. Confidence should reflect extraction certainty (0.0-1.0).
+5. For B.clinical_phenotypes, look in case descriptions, clinical findings, patient presentations,
+   results sections, tables with clinical features. Do NOT use disease names as phenotypes.
+
+Document ID: {document_id}
+Track: {track.value}
+
+CURRENT EXTRACTION SUMMARY (what has already been extracted):
+{current_items_summary}
+
+DOCUMENT TEXT:
+{text}
+"""

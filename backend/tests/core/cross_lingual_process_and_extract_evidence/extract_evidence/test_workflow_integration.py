@@ -54,6 +54,8 @@ class FakeProvider:
             ]
         if stage == "special_evidence":
             return SpecialEvidenceResponse(records=[])
+        if stage == "clinical_context":
+            return []
         raise AssertionError(stage)
 
 
@@ -74,8 +76,8 @@ async def test_workflow_runs_block_group_ground_chain_quality_order():
     # catalog_extraction dispatches per group (catalog_extraction/<group>);
     # catalog_backfill (Phase 2) is pure CPU and does NOT call the provider.
     assert provider.stages[0] == "relevance_scan"
-    assert provider.stages[-1] == "special_evidence"
-    catalog_stages = provider.stages[1:-1]
+    assert provider.stages[-1] == "clinical_context"
+    catalog_stages = provider.stages[1:-2]
     assert catalog_stages == ["catalog_extraction/high_signal", "catalog_extraction/supporting"]
     assert all(s.startswith("catalog_extraction/") for s in catalog_stages)
     assert "catalog_backfill" not in provider.stages
@@ -112,6 +114,8 @@ class ChunkingProvider:
             ]
         if stage.startswith("special_evidence"):
             return SpecialEvidenceResponse(records=[])
+        if stage.startswith("clinical_context"):
+            return []
         raise AssertionError(stage)
 
 

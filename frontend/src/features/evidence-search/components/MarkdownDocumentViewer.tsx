@@ -1,18 +1,13 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import { Input, Button, Popover, Tooltip, message } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
 import { categoryLabel } from "../utils/categoryStyles";
 import { CATEGORY_COLORS, type EvidenceDocumentHighlight } from "../utils/evidenceDocument";
-import {
-  ANNOTATION_COLORS,
-  DEFAULT_ANNOTATION_COLOR,
-  type UserAnnotation,
-} from "../types/annotations";
+import { AnnotationLayer } from "./annotationLayer";
+import type { AnnotationTrack, UserAnnotation } from "../types/annotations";
 
 interface MarkdownDocumentViewerProps {
   markdown: string;
@@ -20,24 +15,34 @@ interface MarkdownDocumentViewerProps {
   /** Stable id of the paragraph this viewer renders (for annotation anchoring). */
   paragraphId: string;
   /** Which track (original/translated) — attached to created annotations. */
-  track: "original" | "translated";
+  track: AnnotationTrack;
+  /** Source document id — used to rewrite relative image paths to the API. */
+  sourceDocumentId?: string;
   /** User-authored annotations anchored to this paragraph's visible text. */
   annotations?: UserAnnotation[];
-  /** Create a new annotation from a text selection. */
   onCreateAnnotation?: (payload: {
     paragraph_id: string;
-    track: "original" | "translated";
+    track: AnnotationTrack;
     start_offset: number;
     end_offset: number;
     color: string;
   }) => void;
-  /** Update an existing annotation (color/note). */
   onUpdateAnnotation?: (
     id: string,
     payload: { color?: string | null; note?: string | null },
   ) => void;
-  /** Delete an annotation. */
   onDeleteAnnotation?: (id: string) => void;
+}
+
+/** Rewrite a relative image src (e.g. "images/xxx.jpg") to the document
+ *  image API endpoint. Absolute URLs and data URIs are left untouched. */
+function resolveImageSrc(src: string | undefined, sourceDocumentId: string): string | undefined {
+  if (!src) return src;
+  if (/^(https?:|data:|\/)/.test(src)) return src;
+  // Relative path like "images/<hash>.jpg" → extract basename, hit API.
+  const basename = src.split("/").pop() ?? src;
+  const base = import.meta.env.VITE_API_BASE_URL || `${import.meta.env.BASE_URL}api/v1`;
+  return `${base}/documents/${encodeURIComponent(sourceDocumentId)}/images/${encodeURIComponent(basename)}`;
 }
 
 /** Derive mark inline styles from a category's hex color. */
@@ -55,157 +60,31 @@ function applyMarkStyle(mark: HTMLElement, category?: string | null, selected?: 
   }
 }
 
-interface TextNodeOffset {
-  node: Text;
-  start: number;
-}
-
-/** Walk text nodes in document order, recording each one's start offset in
- *  the container's flattened visible text. */
-function collectTextNodeOffsets(container: HTMLElement): TextNodeOffset[] {
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
-  const offsets: TextNodeOffset[] = [];
-  let acc = 0;
-  let walkNode: Text | null;
-  while ((walkNode = walker.nextNode() as Text | null)) {
-    const content = walkNode.textContent ?? "";
-    if (!content) continue;
-    offsets.push({ node: walkNode, start: acc });
-    acc += content.length;
-  }
-  return offsets;
-}
-
-/** Resolve a global visible-text offset to a (textNode, localOffset) point. */
-function offsetToPoint(
-  offsets: TextNodeOffset[],
-  offset: number,
-): { node: Text; localOffset: number } | null {
-  if (offsets.length === 0) return null;
-  for (const { node, start } of offsets) {
-    const len = node.textContent?.length ?? 0;
-    if (offset <= start + len) {
-      return { node, localOffset: Math.max(0, Math.min(len, offset - start)) };
-    }
-  }
-  const last = offsets[offsets.length - 1];
-  return { node: last.node, localOffset: last.node.textContent?.length ?? 0 };
-}
-
-interface OverlayRect {
-  id: string;
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-}
-
-/** Compute absolute-positioned overlay rects for each annotation. */
-function computeAnnotationOverlays(
-  container: HTMLElement,
-  annotations: UserAnnotation[],
-): OverlayRect[] {
-  const offsets = collectTextNodeOffsets(container);
-  const containerRect = container.getBoundingClientRect();
-  const overlays: OverlayRect[] = [];
-
-  for (const ann of annotations) {
-    const startPt = offsetToPoint(offsets, ann.start_offset);
-    const endPt = offsetToPoint(offsets, ann.end_offset);
-    if (!startPt || !endPt) continue;
-
-    const range = document.createRange();
-    try {
-      range.setStart(startPt.node, startPt.localOffset);
-      range.setEnd(endPt.node, endPt.localOffset);
-    } catch {
-      continue; // IndexSizeError on stale nodes
-    }
-
-    for (const rect of range.getClientRects()) {
-      if (rect.width < 1 || rect.height < 1) continue;
-      overlays.push({
-        id: ann.id,
-        top: rect.top - containerRect.top + container.scrollTop,
-        left: rect.left - containerRect.left + container.scrollLeft,
-        width: rect.width,
-        height: rect.height,
-      });
-    }
-  }
-  return overlays;
-}
-
-interface SelectionInfo {
-  start_offset: number;
-  end_offset: number;
-  rect: DOMRect;
-}
-
-/** Map a DOM node+offset to a global visible-text offset. Handles element
- *  anchors (e.g. a <mark>) by summing preceding text-node lengths. */
-function findPointForNode(
-  offsets: TextNodeOffset[],
-  node: Node,
-  offset: number,
-): number | null {
-  if (node.nodeType === Node.TEXT_NODE) {
-    const entry = offsets.find((o) => o.node === node);
-    if (!entry) return null;
-    return entry.start + Math.min(offset, node.textContent?.length ?? 0);
-  }
-  // Element node: sum lengths of text-node descendants that precede `offset`
-  // in child order.
-  let acc = 0;
-  const childNodes = node.childNodes;
-  for (let i = 0; i < Math.min(offset, childNodes.length); i++) {
-    const child = childNodes[i];
-    for (const { node: textNode, start } of offsets) {
-      if (child.contains(textNode) || child === textNode) {
-        acc = start + (textNode.textContent?.length ?? 0);
-      }
-    }
-  }
-  return acc;
-}
-
-/** Compute visible-text offsets for the current selection if it lies entirely
- *  within `container` and is non-collapsed. */
-function selectionInContainer(container: HTMLElement): SelectionInfo | null {
-  const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) return null;
-  const range = sel.getRangeAt(0);
-  if (range.collapsed) return null;
-  if (!container.contains(range.commonAncestorContainer)) return null;
-
-  const offsets = collectTextNodeOffsets(container);
-  const startPt = findPointForNode(offsets, range.startContainer, range.startOffset);
-  const endPt = findPointForNode(offsets, range.endContainer, range.endOffset);
-  if (startPt == null || endPt == null || endPt <= startPt) return null;
-
-  return {
-    start_offset: startPt,
-    end_offset: endPt,
-    rect: range.getBoundingClientRect(),
-  };
-}
-
+/**
+ * Render markdown content (GFM tables, LaTeX math via KaTeX) with evidence
+ * highlight overlays, plus an optional user-annotation layer.
+ *
+ * Evidence highlights use raw-Markdown character offsets: after react-markdown
+ * renders the DOM, text nodes are walked and mapped back to raw positions via
+ * `indexOf`, then matching ranges are wrapped with `<mark>`. User annotations
+ * use a separate visible-text offset coordinate system rendered as absolutely
+ * positioned overlay divs (see AnnotationLayer) — the two never share DOM
+ * mutations, so they coexist without conflict.
+ */
 export function MarkdownDocumentViewer({
   markdown,
   highlights,
   paragraphId,
   track,
+  sourceDocumentId,
   annotations = [],
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
 }: MarkdownDocumentViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [overlays, setOverlays] = useState<OverlayRect[]>([]);
-  const [selection, setSelection] = useState<SelectionInfo | null>(null);
-  const [activeAnnotationId, setActiveAnnotationId] = useState<string | null>(null);
 
-  // ---- Evidence highlight pass (raw-Markdown offsets, unchanged) ----
+  // ---- Evidence highlight pass (raw-Markdown offsets) ----
   useEffect(() => {
     const el = containerRef.current;
     if (!el || highlights.length === 0) return;
@@ -306,236 +185,39 @@ export function MarkdownDocumentViewer({
     };
   }, [markdown, highlights]);
 
-  // ---- Annotation overlay pass (visible-text offsets) ----
-  useLayoutEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const recompute = () => {
-      if (annotations.length === 0) {
-        setOverlays([]);
-        return;
-      }
-      setOverlays(computeAnnotationOverlays(el, annotations));
-    };
-
-    recompute();
-
-    const ro = new ResizeObserver(recompute);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [annotations, markdown, highlights]);
-
-  // ---- Selection → create-annotation popover ----
-  useEffect(() => {
-    if (!onCreateAnnotation) return;
-    const el = containerRef.current;
-    if (!el) return;
-
-    const handleMouseUp = () => {
-      requestAnimationFrame(() => {
-        const info = selectionInContainer(el);
-        setSelection(info);
-      });
-    };
-
-    document.addEventListener("mouseup", handleMouseUp);
-    return () => document.removeEventListener("mouseup", handleMouseUp);
-  }, [onCreateAnnotation]);
-
-  const activeAnnotation = activeAnnotationId
-    ? annotations.find((a) => a.id === activeAnnotationId) ?? null
-    : null;
-
-  const handleCreate = (color: string) => {
-    if (!selection || !onCreateAnnotation) return;
-    onCreateAnnotation({
-      paragraph_id: paragraphId,
-      track,
-      start_offset: selection.start_offset,
-      end_offset: selection.end_offset,
-      color,
-    });
-    window.getSelection()?.removeAllRanges();
-    setSelection(null);
-    message.success("标注已创建");
-  };
-
   return (
-    <div style={{ position: "relative" }} data-paragraph-id={paragraphId}>
-      <div ref={containerRef} className="edb-markdown-viewer">
-        <Markdown
-          remarkPlugins={[remarkGfm, remarkMath]}
-          rehypePlugins={[rehypeKatex]}
-        >
-          {markdown}
-        </Markdown>
-      </div>
-
-      {/* User annotation overlays — translucent fill + underline, distinct
-          from evidence marks, and click-targetable. */}
-      {overlays.map((ov) => {
-        const ann = annotations.find((a) => a.id === ov.id);
-        if (!ann) return null;
-        const color = ann.color ?? DEFAULT_ANNOTATION_COLOR;
-        return (
-          <div
-            key={`${ov.id}-${ov.top}-${ov.left}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setActiveAnnotationId(ann.id);
-            }}
-            style={{
-              position: "absolute",
-              top: ov.top,
-              left: ov.left,
-              width: ov.width,
-              height: ov.height,
-              backgroundColor: color + "55",
-              borderBottom: `2px solid ${color}`,
-              cursor: "pointer",
-              borderRadius: 2,
-            }}
-            aria-label={ann.note ? `标注: ${ann.note}` : "用户标注"}
-          />
-        );
-      })}
-
-      {/* Selection popover: pick a color to create an annotation. */}
-      {selection && onCreateAnnotation && (
-        <div
-          style={{
-            position: "fixed",
-            top: Math.max(8, selection.rect.top - 48),
-            left: selection.rect.left + selection.rect.width / 2 - 90,
-            zIndex: 1050,
-            display: "flex",
-            gap: 6,
-            alignItems: "center",
-            padding: "6px 8px",
-            background: "#fff",
-            borderRadius: 8,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-          }}
-        >
-          {ANNOTATION_COLORS.map((c) => (
-            <Tooltip key={c} title="创建标注">
-              <button
-                type="button"
-                onClick={() => handleCreate(c)}
-                style={{
-                  width: 22,
-                  height: 22,
-                  borderRadius: "50%",
-                  border: "2px solid #fff",
-                  boxShadow: "0 0 0 1px #d1d5db",
-                  backgroundColor: c,
-                  cursor: "pointer",
-                  padding: 0,
-                }}
-                aria-label={`使用 ${c} 创建标注`}
-              />
-            </Tooltip>
-          ))}
-        </div>
-      )}
-
-      {/* Annotation edit popover (note/color/delete). */}
-      <Popover
-        open={activeAnnotation != null}
-        onOpenChange={(open) => {
-          if (!open) setActiveAnnotationId(null);
-        }}
-        trigger="click"
-        title="编辑标注"
-        content={
-          activeAnnotation ? (
-            <AnnotationEditor
-              annotation={activeAnnotation}
-              onUpdate={onUpdateAnnotation}
-              onDelete={onDeleteAnnotation}
-              onDone={() => setActiveAnnotationId(null)}
-            />
-          ) : null
+    <div
+      ref={containerRef}
+      className="edb-markdown-viewer"
+      data-paragraph-id={paragraphId}
+      style={{ position: "relative" }}
+    >
+      <Markdown
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+        components={
+          sourceDocumentId
+            ? {
+                img: ({ src, alt, ...rest }) => {
+                  const resolved = resolveImageSrc(src, sourceDocumentId);
+                  return <img src={resolved} alt={alt} {...rest} />;
+                },
+              }
+            : undefined
         }
-        placement="right"
       >
-        <span style={{ display: "none" }} />
-      </Popover>
-    </div>
-  );
-}
-
-/* ---- Inline annotation editor ---- */
-
-function AnnotationEditor({
-  annotation,
-  onUpdate,
-  onDelete,
-  onDone,
-}: {
-  annotation: UserAnnotation;
-  onUpdate?: (id: string, payload: { color?: string | null; note?: string | null }) => void;
-  onDelete?: (id: string) => void;
-  onDone: () => void;
-}) {
-  const [note, setNote] = useState(annotation.note ?? "");
-  const [color, setColor] = useState(annotation.color ?? DEFAULT_ANNOTATION_COLOR);
-
-  const handleSave = () => {
-    onUpdate?.(annotation.id, { color, note: note.trim() || null });
-    onDone();
-    message.success("已保存");
-  };
-
-  const handleDelete = () => {
-    onDelete?.(annotation.id);
-    onDone();
-    message.success("已删除");
-  };
-
-  return (
-    <div style={{ width: 260, display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {ANNOTATION_COLORS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => setColor(c)}
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: "50%",
-              border: color === c ? "2px solid #111827" : "2px solid #fff",
-              boxShadow: "0 0 0 1px #d1d5db",
-              backgroundColor: c,
-              cursor: "pointer",
-              padding: 0,
-            }}
-            aria-label={`选择颜色 ${c}`}
-          />
-        ))}
-      </div>
-      <Input.TextArea
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        placeholder="批注..."
-        autoSize={{ minRows: 2, maxRows: 5 }}
+        {markdown}
+      </Markdown>
+      <AnnotationLayer
+        containerRef={containerRef}
+        paragraphId={paragraphId}
+        track={track}
+        annotations={annotations}
+        recomputeDeps={[markdown, highlights]}
+        onCreateAnnotation={onCreateAnnotation}
+        onUpdateAnnotation={onUpdateAnnotation}
+        onDeleteAnnotation={onDeleteAnnotation}
       />
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-        <Button
-          danger
-          size="small"
-          icon={<DeleteOutlined />}
-          onClick={handleDelete}
-          disabled={!onDelete}
-        >
-          删除
-        </Button>
-        <Button type="primary" size="small" onClick={handleSave} disabled={!onUpdate}>
-          保存
-        </Button>
-      </div>
     </div>
   );
 }

@@ -14,15 +14,17 @@ scripts/
 │   │   └── reindex_clinvar_aliases.py         Reindex ClinVar aliases for search optimization
 │   ├── cleanup/                          Data cleanup and refactoring scripts
 │   │   ├── delete_unmapped_entities.py        Delete unmapped genes and variants from database
+│   │   ├── delete_incomplete_gene_variant_groups.py  Delete evidence items from groups without gene-variant coexistence
 │   │   ├── refactor_benchmark_imports.py      Refactor benchmark module imports after reorganization
 │   │   └── refactor_benchmark_reports.py      Refactor benchmark report file paths after reorganization
 │   ├── analyze/                          Log/data analysis scripts
 │   │   └── analyze_logs.py                   drain3 log template clustering for WARNING/ERROR mining
 │   ├── generate/                         Data generation scripts
+│   │   └── generate_ground_truth_pdfs.py     Translate ground-truth literature and generate PDFs
 ├── dev/                                Development server scripts
-│   ├── start_backend_dev.sh                Start FastAPI backend with hot-reload
+│   ├── start_backend_dev.sh                Start FastAPI backend with hot-reload and optional infra
 │   ├── start_frontend_dev.sh               Start Vite frontend dev server
-│   └── start_model_server.sh               Start model server (embedding/rerank/VLM) on port 8001
+│   └── start_model_server.sh               Start model server (local or docker mode)
 └── README.md                           This file
 ```
 
@@ -44,9 +46,9 @@ scripts/
 | Script | Language | Purpose |
 |--------|----------|---------|
 | `delete_unmapped_entities.py` | Python | Delete unmapped genes and variants from database |
+| `delete_incomplete_gene_variant_groups.py` | Python | Delete evidence items from groups that lack both gene and variant fields in FOUND status, and items with empty group_id |
 | `refactor_benchmark_imports.py` | Python | Refactor benchmark module imports after directory reorganization |
 | `refactor_benchmark_reports.py` | Python | Refactor benchmark report file paths after directory reorganization |
-
 
 ### Data Analysis Scripts
 
@@ -75,8 +77,8 @@ cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --levels ERR
 | `--logs` | `logs/` | Log directory (`.log` and `.log.gz`) |
 | `--levels` | `WARNING ERROR` | Log levels to include |
 | `--top` | `30` | Number of top templates/locations to display |
-| `--since` | — | Earliest log date (`YYYY-MM-DD`, filename-based) to include |
-| `--json` | — | Write a JSON report to this path (in addition to stdout) |
+| `--since` | -- | Earliest log date (`YYYY-MM-DD`, filename-based) to include |
+| `--json` | -- | Write a JSON report to this path (in addition to stdout) |
 | `--sim-th` | `0.5` | drain3 similarity threshold; lower merges templates more aggressively |
 | `--depth` | `5` | drain3 tree depth |
 
@@ -92,9 +94,9 @@ cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --levels ERR
 
 | Script | Language | Purpose |
 |--------|----------|---------|
-| `start_backend_dev.sh` | Shell | Start uvicorn with hot-reload, excluding logs/temp/migration files from watch |
+| `start_backend_dev.sh` | Shell | Start uvicorn with hot-reload; supports `--with-infra` to start Postgres + Redis containers, or `--infra` for infra management only |
 | `start_frontend_dev.sh` | Shell | Start Vite frontend dev server |
-| `start_model_server.sh` | Shell | Start the model server microservice (lazy-loads embedding, rerank, VLM models on first request) |
+| `start_model_server.sh` | Shell | Start model server in local mode (uv, single-process) or docker mode (3 independent containers: embedding, rerank, doc-parse) |
 
 ## Usage
 
@@ -144,6 +146,16 @@ cd backend && uv run python ../scripts/data/cleanup/delete_unmapped_entities.py 
 cd backend && uv run python ../scripts/data/cleanup/delete_unmapped_entities.py
 ```
 
+### Delete Incomplete Gene-Variant Groups
+
+```bash
+# Dry run
+cd backend && uv run python ../scripts/data/cleanup/delete_incomplete_gene_variant_groups.py --dry-run
+
+# Actually delete
+cd backend && uv run python ../scripts/data/cleanup/delete_incomplete_gene_variant_groups.py
+```
+
 ### Generate Ground-Truth PDFs
 
 ```bash
@@ -158,13 +170,25 @@ Reads from `benchmark/layer3/ground_truth/` and outputs to `benchmark/pipeline/i
 # Backend (default port 8000)
 ./scripts/dev/start_backend_dev.sh
 ./scripts/dev/start_backend_dev.sh --port 8001  # custom port
+./scripts/dev/start_backend_dev.sh --with-infra  # start Postgres + Redis first
+
+# Infra management only (no backend)
+./scripts/dev/start_backend_dev.sh --infra up -d
+./scripts/dev/start_backend_dev.sh --infra down
+./scripts/dev/start_backend_dev.sh --infra status
 
 # Frontend
 ./scripts/dev/start_frontend_dev.sh
 
-# Model Server (default port 8001)
+# Model Server (local mode, default port 8001)
 ./scripts/dev/start_model_server.sh
 ./scripts/dev/start_model_server.sh --port 8002  # custom port
+
+# Model Server (docker mode, 3 containers)
+./scripts/dev/start_model_server.sh --mode docker up -d
+./scripts/dev/start_model_server.sh --mode docker down
+./scripts/dev/start_model_server.sh --mode docker status
+./scripts/dev/start_model_server.sh --mode docker up embedding rerank  # selective
 ```
 
 ## Prerequisites
@@ -172,7 +196,7 @@ Reads from `benchmark/layer3/ground_truth/` and outputs to `benchmark/pipeline/i
 - **uv** -- Python dependency management (see [CLAUDE.md](../CLAUDE.md))
 - **bun** -- Frontend dependency management
 - **PostgreSQL** -- Must be running and migrated for data scripts
-- **Model server** -- Must be running on port 8001 for embedding generation (see `backend/scripts/`)
+- **Model server** -- Must be running for embedding generation (see `services/model-server/`)
 - **LLM API** -- Must be configured for `generate_ground_truth_pdfs.py`
 - **weasyprint** -- Required for PDF generation (installed via backend dependencies)
 

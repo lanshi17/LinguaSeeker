@@ -71,7 +71,7 @@ print(output.translated_json_path) # ./output/doc_001/translated.json
 |------|---------|
 | `contracts.py` | All data types: `SentenceRegion`, `ContentBlock`, `FormattedDocument`, `TranslationSegment`, `TranslationResult`, `PipelineState`, `CrossLingualOutput`, drift reports |
 | `config_context.py` | `TranslationConfigContext` — extracts `cfg.translation` subset, injected into translator |
-| `middleware.py` | `traced_node` decorator — LangSmith tracing + loguru logging per graph node |
+| (via `src.utils.observability`) | `traced_node` decorator — LangSmith tracing + loguru logging per graph node |
 | `router.py` | `LanguageRouter` — single-responsibility routing decision |
 | `workflow.py` | `TranslationService` — LangGraph graph wiring, `run()` / `run_sync()` / `save()` public API |
 | `persistence.py` | `DocumentPersistenceService` — local filesystem persistence (original/translated JSON + metadata + images) |

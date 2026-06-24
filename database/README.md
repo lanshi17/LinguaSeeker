@@ -1,27 +1,29 @@
 # database/
 
-> Database infrastructure layer: PostgreSQL schema migrations, container configuration, seed data, and reference terminology for LinguaSeeker.
+> Database infrastructure layer: PostgreSQL schema migrations, container configuration, seed data, reference terminology, and backups for Lingua Seeker.
 
 ## Directory Structure
 
 ```
 database/
-├── alembic.ini                          Alembic bootstrap config (script_location, logging, file template)
-├── alembic.ini.jinja                    Jinja2 template for generating alembic.ini
+├── alembic.ini                        Alembic bootstrap config (script_location, logging, file template)
+├── alembic.ini.jinja                  Jinja2 template for generating alembic.ini
+├── backups/                           PostgreSQL pg_dump backups (git-ignored)
 ├── config/
-│   ├── .env                             Container environment (PostgreSQL, Redis, Neo4j, Qdrant, MinIO creds)
-│   ├── .env.example                     Full template with inline documentation
-│   ├── .env.example.jinja               Jinja2 template for .env.example generation
-│   ├── .env.neo4j                       Neo4j auth string
-│   ├── containers.conf                  Podman runtime: proxy bypass, cgroups, subnet reservation
-│   └── qdrant_config.json              Qdrant TLS certificate configuration
+│   ├── .env                           Container environment (PostgreSQL, Redis, Neo4j, Qdrant creds)
+│   ├── .env.example                   Full template with inline documentation
+│   ├── .env.example.jinja             Jinja2 template for .env.example generation
+│   ├── .env.neo4j                     Neo4j auth string
+│   ├── containers.conf                Podman runtime: proxy bypass, cgroups, subnet reservation
+│   └── qdrant_config.json             Qdrant TLS certificate configuration (TLS disabled)
 ├── migrations/
-│   ├── env.py                           Async migration environment (offline/online, imports Base.metadata)
-│   ├── script.py.mako                   Migration script template (upgrade/downgrade stubs)
-│   └── versions/                        16 migration files (init schema through chat message action)
+│   ├── env.py                         Async migration environment (offline/online, imports Base.metadata)
+│   ├── env.py.jinja                   Jinja template for env.py generation
+│   ├── script.py.mako                 Mako template for new migration scripts
+│   └── versions/                      23 migration files (init schema through document annotations)
 ├── seeds/
-│   └── .gitkeep                         Placeholder for future seed data
-└── terminology_database/                Biomedical reference data (see terminology_database/README.md)
+│   └── .gitkeep                       Placeholder for future seed data
+└── terminology_database/              Biomedical reference data (see terminology_database/README.md)
 ```
 
 ## Quick Start
@@ -44,7 +46,7 @@ uv run alembic -c database/alembic.ini upgrade head --sql
 
 ```
 backend/src/core/config.py
-    │  PostgreSQLConfig, RedisConfig, Neo4jConfig, MinIOConfig
+    │  PostgreSQLConfig, RedisConfig, Neo4jConfig
     │  pydantic-settings from .env / .env.local
     │
     ├──► database/alembic.ini ──► database/migrations/env.py
@@ -52,7 +54,7 @@ backend/src/core/config.py
     │                                  src.dao.postgresql.models.Base.metadata
     │
     ├──► database/migrations/versions/
-    │       16 migration files (head → 2026-06-13 chat message action)
+    │       23 migration files (head → 2026-06-23 document annotations)
     │
     ▼
 backend/src/dao/postgresql/models.py
@@ -66,19 +68,20 @@ backend/src/dao/postgresql/models.py
 - Config lives in `backend/src/core/config.py`. `env.py` imports `get_config()` to derive the PostgreSQL DSN at migration time.
 - The `.env` files in `database/config/` supply container-level environment to Podman/Docker Compose services. The backend reads from root `.env` / `.env.local`.
 - Alembic uses `use_alter=True` for circular FK between `canonical_evidence_items` and `run_evidence_items`.
+- Migrations target a configurable PostgreSQL schema (not `public`), set via `cfg.postgresql.schema_`.
 
 ## Migrations
 
-The `versions/` directory contains 16 migration files:
+The `versions/` directory contains 23 migration files:
 
 | Migration | Purpose |
 |-----------|---------|
-| `4a82b5793055_init_mvp_schema` | Initial MVP schema (9 tables) |
+| `init_mvp_schema` | Initial MVP schema (9 tables) |
 | `add_terminology_reference_tables` | HGNC, OMIM, HPO, ClinVar, ClinGen, MONDO reference tables |
 | `add_terminology_embeddings_pgvector` | pgvector embeddings for terminology matching |
 | `add_nulls_not_distinct_relationship_constraint` | NOT NULL constraint fix |
 | `add_review_and_chat_tables` | Expert review and AI chat tables |
-| `4ce26825046c_initial_schema` | Schema consolidation |
+| `initial_schema` | Schema consolidation |
 | `add_fk_chat_message_evidence_entity` | Chat-evidence entity foreign key |
 | `add_literature_profiles` | CQRS read-model literature profiles table |
 | `add_performance_indexes` | Performance index additions |
@@ -88,7 +91,14 @@ The `versions/` directory contains 16 migration files:
 | `add_created_at_to_search_index` | Add created_at timestamp to search index |
 | `add_pipeline_run_leases` | Pipeline run lease/lock mechanism |
 | `allow_standalone_chat_sessions` | Allow chat sessions without pipeline run |
-| `add_chat_message_action` | Chat message action field |
+| `add_chat_message_action` | Chat message action field (JSONB) |
+| `add_critical_indexes` | Hot-path performance indexes (P0/P1/P2 priorities) |
+| `add_variant_internal_id_index` | Partial unique index for synthetic variant external IDs |
+| `add_document_processing_cache` | L2 PostgreSQL cache for pipeline results (JSONB) |
+| `repair_phase3_schema` | Repair missing Phase 3 runtime tables (terminology_embeddings, frontend_search_index) |
+| `add_document_full_text` | Store original/translated full text in source_documents |
+| `add_content_blocks` | Store structured content blocks (JSONB) in source_documents |
+| `add_document_annotations` | Per-paragraph character-offset annotations for bilingual reader |
 
 ### Alembic CLI Reference
 
@@ -104,7 +114,7 @@ The `versions/` directory contains 16 migration files:
 
 ### `database/config/.env` / `.env.example`
 
-Container environment variables consumed by `podman-compose.yml` services:
+Container environment variables consumed by Podman/Docker Compose services:
 
 | Variable | Service | Purpose |
 |----------|---------|---------|
@@ -113,13 +123,16 @@ Container environment variables consumed by `podman-compose.yml` services:
 | `REDIS_PASSWORD` | Redis | AUTH password |
 | `NEO4J_AUTH` | Neo4j | `user/password` single variable |
 | `QDRANT_API_KEY` / `QDRANT_HOST` / `QDRANT_PORT` | Qdrant | Connection endpoints |
-| `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` | MinIO | S3-compatible storage credentials |
 
 ### Other config files
 
-- **`containers.conf`** -- Podman runtime: proxy bypass, cgroup v2, reserved subnet.
-- **`qdrant_config.json`** -- Qdrant TLS certificate configuration.
+- **`containers.conf`** -- Podman runtime: proxy bypass, cgroup v2, reserved subnet `10.89.0.0/16`.
+- **`qdrant_config.json`** -- Qdrant TLS configuration (TLS disabled).
 - **`.env.neo4j`** -- Neo4j auth string only.
+
+## Backups
+
+The `backups/` directory stores PostgreSQL `pg_dump` backups (git-ignored). Each backup is a timestamped subdirectory containing compressed `.dat.gz` files and a `toc.dat` manifest, produced by `pg_dump -Fd` (directory format).
 
 ## Usage Patterns
 
@@ -141,7 +154,7 @@ uv run alembic -c database/alembic.ini current
 
 ```
 database/config/.env ──► podman-compose.yml (container env)
-                         injected into PostgreSQL, Redis, Neo4j, Qdrant, MinIO
+                         injected into PostgreSQL, Redis, Neo4j, Qdrant
 
 backend/.env / .env.local ──► backend/src/core/config.py (pydantic-settings)
                               │
@@ -155,6 +168,7 @@ backend/.env / .env.local ──► backend/src/core/config.py (pydantic-setting
 - Don't put Neo4j config files on bind mounts. Use `NEO4J_AUTH=user/password` as a single variable.
 - JSONB columns are opaque storage. Validate payload shapes at the API/service layer (Pydantic), not in migrations.
 - `Base.metadata` IS the migration target. Use standalone `MetaData()` for read projections.
+- Repair migrations (e.g., `repair_phase3_schema`) check table/index existence before creating. Safe to re-run.
 
 ## Testing
 

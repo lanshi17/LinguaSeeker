@@ -1,6 +1,6 @@
 # Tests
 
-> Frontend test suite for LinguaSeeker. Uses **Vitest** with React Testing Library. Test organization mirrors the `src/` source structure.
+> Frontend test suite for LinguaSeeker. Uses **Vitest** with jsdom environment and React Testing Library. Test organization mirrors the `src/` source structure.
 
 ## Quick Start
 
@@ -8,68 +8,66 @@
 cd frontend
 
 # Run all tests
-npm run test
-
-# Run in watch mode
-npm run test -- --watch
+bun run test
 
 # Run a specific test file
-npm run test -- tests/features/chat/sse.test.ts
-
-# Run tests by path pattern
-npm run test -- --testPathPattern=features/chat
+bun run test tests/features/chat/sse.test.ts
 
 # Run with coverage
-npm run test -- --coverage
+bun run test --coverage
+
+# Type checking
+bun run type-check
 ```
 
 ## Directory Map
 
 ```
 tests/
-├── config/
-│   └── layeredConfig.test.ts           Layered configuration loading
-├── evidence-search/
-│   ├── BilingualComparison.test.tsx     Bilingual comparison component
-│   ├── literatureRows.test.ts           Literature row rendering
-│   └── EvidenceHighlightText.test.tsx   Evidence text highlighting
-├── features/
-│   ├── auth/                            (placeholder)
-│   ├── chat/
-│   │   ├── ChatMarkdown.test.tsx        Chat markdown rendering
-│   │   ├── intent.test.ts               Chat intent detection
-│   │   ├── localSessions.test.ts        Local session persistence
-│   │   ├── messageHistory.test.ts       Message history management
-│   │   ├── messageRequests.test.ts      Message request handling
-│   │   └── sse.test.ts                  SSE streaming
-│   ├── delta-audit/                     (placeholder)
-│   ├── document-viewer/                 (placeholder)
-│   ├── evidence/                        (placeholder)
-│   ├── graph/                           (placeholder)
-│   ├── literature/                      (placeholder)
-│   ├── pipeline/                        (placeholder)
-│   ├── source-link/                     (placeholder)
-│   └── task-flow/                       (placeholder)
-├── components/
-│   └── ui/                              (placeholder)
-└── lib/
-    └── api/                             (placeholder)
+|-- audit/
+|   |-- reviewPatch.test.tsx               Review patch operation building
+|   +-- useAuditEvents.test.tsx            Audit events hook
+|-- config/
+|   +-- layeredConfig.test.ts              Layered configuration loading
+|-- evidence-db/
+|   +-- variantAggregation.test.tsx        Variant aggregation utilities
+|-- evidence-search/
+|   |-- BilingualComparison.test.tsx       Bilingual comparison component
+|   |-- EvidenceHighlightText.test.tsx     Evidence text highlighting
+|   +-- literatureRows.test.ts             Literature row aggregation
++-- features/
+    +-- chat/
+        |-- acmgChatProvider.test.tsx      Chat provider behavior
+        |-- ChatActionBubble.test.tsx      Action bubble rendering
+        |-- ChatMarkdown.test.tsx          Markdown rendering in chat
+        |-- localSessions.test.ts          Local session persistence
+        |-- messageHistory.test.ts         Message history management
+        |-- messageRequests.test.ts        Message request construction
+        |-- messageStore.test.tsx          Message store behavior
+        |-- sse.test.ts                    SSE event parsing
+        +-- useChatSessions.test.tsx       Chat sessions hook
 ```
 
 ## Test Coverage by Area
 
 | Area | File(s) | What is tested |
 |------|---------|----------------|
+| **Audit** | `reviewPatch.test.tsx` | `buildReviewPatchOperations()` and `cardFieldForFieldId()` |
+| | `useAuditEvents.test.tsx` | Audit events React Query hook |
 | **Config** | `layeredConfig.test.ts` | Layered config loading, env override, defaults |
+| **Evidence DB** | `variantAggregation.test.tsx` | Variant aggregation and filtering utilities |
 | **Evidence Search** | `BilingualComparison.test.tsx` | Side-by-side bilingual evidence display |
-| | `literatureRows.test.ts` | Literature row rendering and formatting |
 | | `EvidenceHighlightText.test.tsx` | Evidence text highlight markup |
-| **Chat** | `ChatMarkdown.test.tsx` | Markdown rendering in chat messages |
-| | `intent.test.ts` | Chat intent classification logic |
+| | `literatureRows.test.ts` | Literature row building, grouping by source_document_id, confidence averaging |
+| **Chat** | `acmgChatProvider.test.tsx` | Chat provider request/response behavior |
+| | `ChatActionBubble.test.tsx` | Action intent bubble rendering |
+| | `ChatMarkdown.test.tsx` | Markdown rendering in chat messages |
 | | `localSessions.test.ts` | Session persistence in localStorage |
-| | `messageHistory.test.ts` | Message history state management |
+| | `messageHistory.test.ts` | Message history state management and conversion |
 | | `messageRequests.test.ts` | Message request construction and dispatch |
-| | `sse.test.ts` | SSE connection, reconnection, and event parsing |
+| | `messageStore.test.tsx` | Message store state management |
+| | `sse.test.ts` | SSE event parsing: text, action, done, keepalive, error |
+| | `useChatSessions.test.tsx` | Chat sessions React Query hook |
 
 ## Writing Tests
 
@@ -79,11 +77,10 @@ Use React Testing Library for component rendering and interaction:
 
 ```tsx
 import { render, screen } from "@testing-library/react";
-import { ChatMarkdown } from "@/features/chat/components/ChatMarkdown";
 
-it("renders markdown content", () => {
-  render(<ChatMarkdown content="**bold** text" />);
-  expect(screen.getByText("bold")).toBeInTheDocument();
+it("renders content", () => {
+  render(<MyComponent />);
+  expect(screen.getByText("expected text")).toBeInTheDocument();
 });
 ```
 
@@ -92,10 +89,11 @@ it("renders markdown content", () => {
 Plain TypeScript tests for hooks, utilities, and services:
 
 ```ts
-import { detectIntent } from "@/features/chat/utils/intent";
+import { buildLiteratureRows } from "@/features/evidence-search/utils/literatureRows";
 
-it("detects question intent", () => {
-  expect(detectIntent("What is the ACMG classification?")).toBe("question");
+it("groups results by source document", () => {
+  const rows = buildLiteratureRows([...]);
+  expect(rows).toHaveLength(2);
 });
 ```
 
@@ -104,3 +102,18 @@ it("detects question intent", () => {
 - Test files: `<ModuleName>.test.ts` or `<ModuleName>.test.tsx`
 - Test functions: `it("<behavior description>")` or `test("<behavior description>")`
 - Directory structure mirrors `src/` (e.g., `tests/features/chat/` tests `src/features/chat/`)
+
+## Configuration
+
+Test runner: Vitest with jsdom environment. Config in `frontend/vitest.config.ts`.
+
+```ts
+// vitest.config.ts
+{
+  plugins: [react()],
+  resolve: { alias: { "@": "src" } },
+  test: { environment: "jsdom", include: ["tests/**/*.test.tsx"] },
+}
+```
+
+Note: The include pattern matches `.test.tsx` files. Pure `.test.ts` files are also run by Vitest but may require the `tsconfig.test.json` configuration.

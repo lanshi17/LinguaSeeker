@@ -38,8 +38,7 @@ export function buildReviewPatchOperations({
   changeReason,
 }: BuildReviewPatchOperationsArgs): ReviewPatchOperation[] {
   const trimmedReason = changeReason.trim();
-
-  return items
+  const candidates = items
     .filter((item) => item.canonical_evidence_id)
     .map((item) => {
       const fields: Record<string, string> = {};
@@ -50,6 +49,21 @@ export function buildReviewPatchOperations({
         fields[cardField] = editedValue;
       }
 
+      return { item, fields };
+    });
+
+  const hasFieldCorrections = candidates.some(
+    (candidate) => Object.keys(candidate.fields).length > 0,
+  );
+
+  return candidates
+    .filter((candidate) => {
+      if (hasFieldCorrections) {
+        return Object.keys(candidate.fields).length > 0;
+      }
+      return candidate.item.review_status !== newStatus;
+    })
+    .map(({ item, fields }) => {
       const body: EvidencePatchRequest = {
         fields,
         new_status: newStatus,
