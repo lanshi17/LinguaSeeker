@@ -216,6 +216,15 @@ of extracting these critical identity fields.
 
 **Files:** `stages/catalog_extraction.py`, `prompts.py` (get_core_identity_retry_prompt)
 
+### Post-Retry Validation Result
+
+Targeted evaluation on rett_001 and rett_005 confirms:
+- **Retry triggers correctly** and rescues B.disease_diagnosis
+- **Results still 0/8** because Phase 3 gene-variant coexistence gate drops all items when no group has both A.gene_symbol AND a variant in FOUND status
+- The retry fix alone is insufficient. The coexistence gate is the dominant failure mode for 0-match entries.
+
+**Next required fix:** Either extend retry trigger to also fire when gene is found but variant is missing, or relax the coexistence gate to allow identity fields (gene, disease) to persist independently.
+
 ## 8. Files to Modify
 
 | File | Change |
@@ -234,3 +243,36 @@ of extracting these critical identity fields.
 - Reconcile logic — unchanged
 - Source grounding — unchanged
 - Translation — unchanged
+
+## 9. Phase 3 Coexistence Gate Fix (2026-06-24)
+
+### 9.1 Problem
+
+The gene-variant coexistence gate in `repositories.py:_find_gene_variant_complete_groups` was all-or-nothing: when no evidence group had both `A.gene_symbol` AND a variant in FOUND status, ALL track payload items were silently dropped. This caused identity fields (gene, disease) extracted by Phase 2 to be lost at Phase 3.
+
+### 9.2 Solution
+
+Field-aware two-tier gate:
+
+| Tier | Condition | Fields Accepted |
+|------|-----------|----------------|
+| Full gate | Group has gene + variant in FOUND | All fields |
+| Identity gate | Group has gene OR disease in FOUND (anchor) | Identity fields only |
+
+**Anchor fields** (can make a group passable): `A.gene_symbol`, `B.disease_diagnosis`
+**Identity fields** (can survive independently): 10 fields including gene, disease, variant HGVS, clinical phenotypes, sex, age, inheritance, de novo
+**Variant-dependent fields** (still require full gate): functional, segregation, pathogenicity, allele frequency, etc.
+
+### 9.3 Changes
+
+| File | Change |
+|------|--------|
+| `standardize_entities_and_align_knowledge/repositories.py` | Added `_GATE_IDENTITY_FIELDS`, `_GATE_ANCHOR_FIELDS`, `_find_identity_passable_groups()`, modified `_build_run_item_specs()` |
+| `tests/.../test_repositories.py` | 6 new tests, 2 updated tests |
+
+### 9.4 Validation
+
+- 43 repository tests pass
+- 196 Phase 3 tests pass (3 pre-existing failures unrelated)
+- Ruff clean
+- Targeted validation for rett_001 pending

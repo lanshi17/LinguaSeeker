@@ -1268,6 +1268,21 @@ class StandardizationRepository:
             for chain_id, bindings in grouped.items()
         }
 
+    # Identity fields that can persist without variant co-location.
+    # These represent core facts extractable independently of variant evidence.
+    _GATE_IDENTITY_FIELDS: frozenset[str] = frozenset({
+        "A.gene_symbol",
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "B.disease_diagnosis",
+        "B.clinical_phenotypes",
+        "B.sex",
+        "B.age_of_onset",
+        "B.mode_of_inheritance_reported",
+        "C.inheritance_source",
+        "C.de_novo_status",
+    })
+
     @staticmethod
     def _find_gene_variant_complete_groups(track_payloads: dict[str, Any]) -> set[str] | None:
         """Return group_ids that have both gene and variant in FOUND status.
@@ -1301,6 +1316,41 @@ class StandardizationRepository:
             and ("A.variant_hgvs_c" in fields or "A.variant_hgvs_p" in fields)
         }
 
+    # Only these fields can make a group passable for identity-field survival.
+    # Variant alone (without gene or disease) does not qualify.
+    _GATE_ANCHOR_FIELDS: frozenset[str] = frozenset({
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+    })
+
+    @staticmethod
+    def _find_identity_passable_groups(track_payloads: dict[str, Any]) -> set[str]:
+        """Return group_ids with at least one anchor identity field in FOUND status.
+
+        A group is "identity passable" when it has ``A.gene_symbol`` or
+        ``B.disease_diagnosis`` in FOUND status.  This allows identity fields
+        (gene, disease, variant, clinical context) to persist even without
+        variant co-location, while still blocking groups that have neither
+        gene nor disease (e.g. variant-only noise).
+        """
+        anchor_fields = StandardizationRepository._GATE_ANCHOR_FIELDS
+        passable: set[str] = set()
+        for payload in track_payloads.values():
+            if not isinstance(payload, dict) or payload.get("audit_only") is True:
+                continue
+            for item in payload.get("evidence_items", []):
+                if not isinstance(item, dict):
+                    continue
+                if item.get("status") != "found":
+                    continue
+                group_id = str(item.get("group_id", ""))
+                if not group_id:
+                    continue
+                field_id = str(item.get("field_id", ""))
+                if field_id in anchor_fields:
+                    passable.add(group_id)
+        return passable
+
     def _build_run_item_specs(
         self,
         input_data: StandardizationInput,
@@ -1309,23 +1359,42 @@ class StandardizationRepository:
     ) -> list[RunItemSpec]:
         """Build run-item persistence specs from track payloads or match fallbacks.
 
-        Applies the gene-variant coexistence gate: only items belonging to a
-        group that has both ``A.gene_symbol`` and at least one variant field
-        (``A.variant_hgvs_c`` or ``A.variant_hgvs_p``) in FOUND status are
-        persisted.  Items from incomplete groups (gene-only or variant-only)
-        are silently dropped.  The fallback match-based path is not gated.
+        Applies a two-tier gene-variant coexistence gate:
+
+        1. **Full gate**: items from groups with both ``A.gene_symbol`` and at
+           least one variant in FOUND status are always persisted (all fields).
+        2. **Identity gate**: identity fields (gene, disease, variant HGVS,
+           clinical phenotypes, sex, age of onset, inheritance, de novo) from
+           groups anchored by ``A.gene_symbol`` or ``B.disease_diagnosis`` in
+           FOUND status are persisted even without variant co-location.
+
+        Variant-dependent downstream evidence (functional, segregation,
+        pathogenicity) still requires the full gene+variant co-location.
+        The fallback match-based path is not gated.
         """
         target_scope_hash = make_entity_scope_hash(make_target_scope_bindings(input_data.extraction_target))
         specs: list[RunItemSpec] = []
 
         allowed_groups = self._find_gene_variant_complete_groups(input_data.track_payloads)
-        if allowed_groups is not None and len(allowed_groups) == 0:
-            logger.warning(
-                "Persistence gate: no group has both gene and variant in FOUND status; "
-                "skipping all track payload items for document={}",
-                input_data.document_id,
-            )
+        identity_passable: set[str] = set()
+        if allowed_groups is not None:
+            identity_passable = self._find_identity_passable_groups(input_data.track_payloads)
+            if len(allowed_groups) == 0:
+                if identity_passable:
+                    logger.info(
+                        "Persistence gate: no group has gene+variant; "
+                        "allowing identity fields from {} group(s) for document={}",
+                        len(identity_passable),
+                        input_data.document_id,
+                    )
+                else:
+                    logger.warning(
+                        "Persistence gate: no group has both gene and variant in FOUND status; "
+                        "skipping all track payload items for document={}",
+                        input_data.document_id,
+                    )
 
+        identity_fields = self._GATE_IDENTITY_FIELDS
         for payload in input_data.track_payloads.values():
             if not isinstance(payload, dict):
                 continue
@@ -1336,8 +1405,12 @@ class StandardizationRepository:
                 if not isinstance(item, dict):
                     continue
                 group_id = str(item.get("group_id", ""))
+                field_id = str(item.get("field_id", ""))
+                # Full gate: gene+variant complete groups accept all fields.
                 if allowed_groups is not None and group_id not in allowed_groups:
-                    continue
+                    # Identity gate: allow identity fields from passable groups.
+                    if group_id not in identity_passable or field_id not in identity_fields:
+                        continue
                 value = {"value": item.get("value")}
                 specs.append(
                     RunItemSpec(

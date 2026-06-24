@@ -5364,3 +5364,47 @@ but the test wasn't updated. Fix: added `excluded_field_ids=frozenset()`.
 ### Lesson
 When adding required fields to dataclasses/dataclass-like contracts, grep for all
 constructor call sites (including tests) to avoid silent breakage.
+
+## [2026-06-24] Phase 3 Gene-Variant Coexistence Gate — Actual Bottleneck for 0-Match Entries
+
+### Problem
+Core identity retry correctly rescues B.disease_diagnosis at Phase 2 level, but benchmark still reports 0 matched fields.
+
+### Root Cause
+Phase 3 `StandardizationRepository._find_gene_variant_complete_groups()` (repositories.py:1272) implements a gene-variant coexistence gate:
+- Only items belonging to a group with BOTH `A.gene_symbol` AND `A.variant_hgvs_c`/`A.variant_hgvs_p` in FOUND status are persisted.
+- When no group satisfies this condition, ALL track payload items are silently dropped.
+- Only Phase 3 fallback entities (gene_mention, disease_mention) survive via the match-based fallback path (line 1367).
+
+### Evidence (rett_001 post-retry)
+- Phase 2: A.gene_symbol found by normal extraction, B.disease_diagnosis rescued by retry
+- Phase 2: A.variant_hgvs_c/p NOT found (variant extraction failed)
+- Phase 3: No group has gene+variant → ALL items dropped
+- DB: Only 6 items (B.clinical_phenotypes not_found, gene_mention found x2, disease_mention found x2, variant_mention not_found)
+
+### Lesson
+When Phase 2 extraction succeeds but DB shows no evidence items, check the Phase 3 persistence gate before assuming Phase 2 failed. The coexistence gate is a silent data loss point.
+
+The retry correctly fixes Phase 2 extraction, but Phase 3 filtering is the actual bottleneck. Two fixes needed:
+1. Extend retry trigger to also fire when gene is found but no variant is found
+2. Consider relaxing the coexistence gate for identity fields (gene, disease) that are independently valuable
+
+### Phase 3 Coexistence Gate Fix (2026-06-24)
+
+**Problem:** Gene-variant coexistence gate was all-or-nothing. When no group had both gene+variant in FOUND, ALL items were dropped — including identity fields (gene, disease) that Phase 2 correctly extracted.
+
+**Root Cause:** `_find_gene_variant_complete_groups` returned empty set → `_build_run_item_specs` skipped all items. No field-level distinction.
+
+**Fix:** Two-tier field-aware gate:
+- Full gate: gene+variant groups accept all fields (unchanged)
+- Identity gate: gene/disease-anchored groups accept identity fields independently
+
+Key design choice: only `A.gene_symbol` and `B.disease_diagnosis` can make a group "passable" (anchor fields). Variant-only groups remain blocked. This prevents noisy variant-only extractions from leaking through.
+
+**Why this is safe for publication:**
+1. Identity fields are independently verifiable facts, not variant-dependent assertions
+2. Variant-dependent evidence (functional, segregation, pathogenicity) still requires full co-location
+3. Variant-only noise groups remain blocked
+4. 43 repository tests pass, 6 new targeted tests added
+
+**Pattern:** When a persistence gate is all-or-nothing, consider making it field-aware with tiered thresholds rather than relaxing the gate globally.
