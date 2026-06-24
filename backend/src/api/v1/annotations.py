@@ -9,16 +9,26 @@ paragraph).
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
 from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.auth import require_api_key
 from src.api.deps import get_db_session
 from src.dao.postgresql import document_annotation_repo as repo
+
+# Candidate image root directories (project-relative). MinerU extracts
+# images into ``<doc>/images/`` under these roots.
+_PROJECT_ROOT = Path(__file__).resolve().parents[4]
+_IMAGE_ROOTS = [
+    _PROJECT_ROOT / "backend" / "output" / "cross_lingual",
+    _PROJECT_ROOT / "benchmark" / "annotation",
+]
 
 router = APIRouter()
 
@@ -176,3 +186,45 @@ async def delete_annotation(
     if annotation is None or annotation.source_document_id != source_document_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Annotation not found")
     await repo.delete_annotation(session, annotation_id)
+
+
+# ── Document image serving ───────────────────────────────────────────────────
+
+
+def _resolve_document_image(image_name: str) -> Path | None:
+    """Locate an image file by name under the candidate image roots.
+
+    Searches every ``images/`` subdirectory for a file matching *image_name*
+    (basename only — path separators are rejected to prevent traversal).
+    Returns the first match, or None.
+    """
+    if "/" in image_name or "\\" in image_name or ".." in image_name:
+        return None
+    for root in _IMAGE_ROOTS:
+        if not root.exists():
+            continue
+        for hit in root.rglob(f"images/{image_name}"):
+            return hit
+    return None
+
+
+@router.get(
+    "/{source_document_id}/images/{image_name}",
+    response_class=FileResponse,
+)
+async def get_document_image(
+    source_document_id: UUID,
+    image_name: str,
+    _api_key: str | None = Depends(require_api_key),
+) -> FileResponse:
+    """Serve an extracted document image by filename.
+
+    Markdown full-text references images as relative paths
+    (``images/<hash>.jpg``); this route resolves them to the extracted
+    image files stored under the cross-lingual output / annotation roots.
+    """
+    del source_document_id  # images are content-addressed by hash filename
+    path = _resolve_document_image(image_name)
+    if path is None or not path.is_file():
+        raise HTTPException(status_code=404, detail="Image not found")
+    return FileResponse(path)

@@ -1,6 +1,6 @@
 # Extract Evidence Stages
 
-> Individual stage classes for the 12-stage evidence extraction LangGraph pipeline. Each stage is a focused unit that transforms `EvidenceExtractionState` data through one step of the extraction workflow. Deterministic stages are provider-free; LLM stages take a `LangChainEvidenceProvider`.
+> Individual stage classes for the 13-stage evidence extraction LangGraph pipeline. Each stage is a focused unit that transforms `EvidenceExtractionState` data through one step of the extraction workflow. Deterministic stages are provider-free; LLM stages take a `LangChainEvidenceProvider`.
 
 ## Quick Start
 
@@ -58,17 +58,21 @@ LangGraph Pipeline (workflow.py)
   ├─ Stage 8:  TargetEntityGuard            [core.py via workflow.py]
   │    Filter evidence items against the ExtractionTarget gene-disease pair
   │
-  ├─ Stage 9:  SourceGroundingStage         [source_grounding.py]
+  ├─ Stage 9:  TargetSpanFieldRecovery      [target_span_recovery.py]
+  │    Recover missing high-signal fields from already selected source snippets
+  │    Deterministic, no LLM calls
+  │
+  ├─ Stage 10: SourceGroundingStage         [source_grounding.py]
   │    Validate and repair source spans via SourceGrounder
   │    raw_source → block/text grounding → OCR_GAP/SOURCE_INVALID
   │
-  ├─ Stage 10: EvidenceChainBuilder         [core.py via workflow.py]
+  ├─ Stage 11: EvidenceChainBuilder         [core.py via workflow.py]
   │    Build full / partial / singleton variant-centered chains
   │
-  ├─ Stage 11: QualityGateStage             [quality_validation.py]
+  ├─ Stage 12: QualityGateStage             [quality_validation.py]
   │    Chain-aware quality validation and intra-track conflict detection
   │
-  └─ Stage 12: Catalog Backfill             [core.py via workflow.py]
+  └─ Stage 13: Catalog Backfill             [core.py via workflow.py]
        Expand sparse items to the full 166-row catalog per group
        Runs AFTER quality_gate so the gate's metrics reflect real extracted items
 ```

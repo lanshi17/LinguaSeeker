@@ -1,36 +1,40 @@
 # Terminology Database
 
-> Biomedical reference terminology data for LinguaSeeker Phase 3 entity standardization and knowledge alignment.
+> Biomedical reference terminology data for Lingua Seeker Phase 3 entity standardization and knowledge alignment. All data files are downloaded, not version-controlled.
 
 ## Directory Structure
 
 ```
 terminology_database/
-├── clinvar/
-│   ├── variant_summary.txt              Full ClinVar variant summary (~3.7 GB)
-│   ├── clinvar.vcf.gz                   ClinVar VCF format (GRCh38)
-│   └── variant_summary.core.tsv         Reduced TSV for import (~700 MB)
+├── README.md
 ├── clingen/
-│   ├── Clingen-Dosage-Sensitivity.csv   Dosage sensitivity scores
-│   └── Clingen-Gene-Disease-Summary.csv Gene-disease validity curations
+│   ├── Clingen-Dosage-Sensitivity.csv       Dosage sensitivity scores
+│   └── Clingen-Gene-Disease-Summary.csv     Gene-disease validity curations
+├── clinvar/
+│   ├── variant_summary.txt                  Full ClinVar variant summary (~3.7 GB)
+│   ├── clinvar.vcf.gz                       ClinVar VCF format (GRCh38, ~192 MB)
+│   └── variant_summary.core.tsv             Reduced TSV for import (~700 MB)
 ├── dbSNP/
-│   └── dbsnp_b157.sqlite               dbSNP b157 SQLite for rsID lookups
+│   └── dbsnp_b157.sqlite                    dbSNP b157 SQLite for rsID lookups (~1.2 GB)
 ├── hgnc/
-│   └── hgnc_complete_set.txt            Complete HGNC gene nomenclature dataset
+│   └── hgnc_complete_set.txt                Complete HGNC gene nomenclature dataset
 ├── hpo/
-│   ├── hp.obo                           HPO ontology (OBO format)
-│   ├── hp.json                          HPO ontology (JSON format)
-│   ├── phenotype.hpoa                   Phenotype annotation file
-│   ├── genes_to_phenotype.txt           Gene-to-phenotype associations
-│   └── phenotype_to_genes.txt           Phenotype-to-gene associations
-├── omim/
-│   ├── mimTitles.txt                    OMIM title entries
-│   ├── genemap2.txt                     OMIM gene map
-│   └── morbidmap.txt                    OMIM morbid map
-└── mondo/
-    ├── mondo.json                       MONDO disease ontology
-    └── mondo_hierarchy_cache.json       Derived hierarchy lookup (label_to_id, id_to_parents)
+│   ├── hp.obo                               HPO ontology (OBO format)
+│   ├── hp.json                              HPO ontology (JSON format)
+│   ├── phenotype.hpoa                       Phenotype annotation file
+│   ├── genes_to_phenotype.txt               Gene-to-phenotype associations
+│   └── phenotype_to_genes.txt               Phenotype-to-gene associations
+├── mondo/
+│   ├── .gitignore                           Ignores downloaded ontology files
+│   ├── mondo.json                           MONDO disease ontology
+│   └── mondo_hierarchy_cache.json           Derived hierarchy lookup (label_to_id, id_to_parents)
+└── omim/
+    ├── mimTitles.txt                        OMIM title entries
+    ├── genemap2.txt                         OMIM gene map
+    └── morbidmap.txt                        OMIM morbid map
 ```
+
+**Note:** Only `README.md` is tracked in git. All data files are git-ignored and must be downloaded separately.
 
 ## Data Sources Summary
 
@@ -122,7 +126,7 @@ build_clinvar_core_tsv(
 
 ### MONDO Hierarchy Cache
 
-`mondo_hierarchy_cache.json` is derived from `mondo.json` for fast disease ancestry matching. Contains `label_to_id` (disease name to MONDO ID) and `id_to_parents` (MONDO ID to parent MONDO IDs, transitive closure).
+`mondo_hierarchy_cache.json` is derived from `mondo.json` for fast disease ancestry matching. Contains `label_to_id` (disease name to MONDO ID) and `id_to_parents` (MONDO ID to parent MONDO IDs, transitive closure). Listed in `mondo/.gitignore` -- regenerated when ontology is updated.
 
 ### dbSNP SQLite Conversion
 
@@ -134,18 +138,18 @@ The raw dbSNP VCF is converted to `dbsnp_b157.sqlite` for efficient rsID-based l
 cd /data/[redacted-user]/Projects/01_ACMG_Lingua
 
 # Import all sources
-uv run python scripts/import_terminology.py \
+uv run python scripts/data/import/import_terminology.py \
   --terminology-root database/terminology_database \
   --version 2026.05
 
 # Import specific sources
-uv run python scripts/import_terminology.py \
+uv run python scripts/data/import/import_terminology.py \
   --terminology-root database/terminology_database \
   --version 2026.05 \
   --sources hgnc clinvar
 
 # Import with pgvector embeddings
-uv run python scripts/import_terminology.py \
+uv run python scripts/data/import/import_terminology.py \
   --terminology-root database/terminology_database \
   --version 2026.05 \
   --generate-embeddings
@@ -168,7 +172,7 @@ uv run python scripts/import_terminology.py \
 2. Re-run preprocessing (ClinVar core TSV, MONDO hierarchy cache).
 3. Import with a new `--version` tag:
    ```bash
-   uv run python scripts/import_terminology.py \
+   uv run python scripts/data/import/import_terminology.py \
      --terminology-root database/terminology_database \
      --version 2026.06 \
      --generate-embeddings

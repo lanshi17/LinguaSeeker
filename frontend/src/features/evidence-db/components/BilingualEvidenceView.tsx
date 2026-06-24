@@ -19,6 +19,19 @@ import { ActiveEvidenceCard } from "./ActiveEvidenceCard";
 import { LiteratureHeader } from "./LiteratureHeader";
 import { BilingualSidebar } from "./BilingualSidebar";
 import { bevEmbeddedCSS } from "./bevStyles";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  createAnnotation,
+  deleteAnnotation,
+  listAnnotations,
+  updateAnnotation,
+} from "@/api/annotations";
+import type {
+  AnnotationCreateRequest,
+  AnnotationTrack,
+  AnnotationUpdateRequest,
+  UserAnnotation,
+} from "@/features/evidence-search/types/annotations";
 
 /* ── Main View ──────────────────────────────────────────── */
 
@@ -41,6 +54,57 @@ export function BilingualEvidenceView({
     isLoading,
     error,
   } = useEvidenceGroupDetail(undefined, sourceDocumentId);
+  const queryClient = useQueryClient();
+  const annotationsQuery = useQuery({
+    queryKey: ["annotations", sourceDocumentId],
+    queryFn: () => listAnnotations(sourceDocumentId),
+    enabled: Boolean(sourceDocumentId),
+  });
+  const allAnnotations: UserAnnotation[] = annotationsQuery.data ?? [];
+
+  const createMutation = useMutation({
+    mutationFn: (payload: AnnotationCreateRequest) => createAnnotation(sourceDocumentId, payload),
+    onSuccess: (created) => {
+      queryClient.setQueryData<UserAnnotation[]>(["annotations", sourceDocumentId], (prev) => [
+        ...(prev ?? []),
+        created,
+      ]);
+    },
+  });
+  const updateMutation = useMutation({
+    mutationFn: (vars: { id: string; payload: AnnotationUpdateRequest }) =>
+      updateAnnotation(sourceDocumentId, vars.id, vars.payload),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<UserAnnotation[]>(["annotations", sourceDocumentId], (prev) =>
+        (prev ?? []).map((a) => (a.id === updated.id ? updated : a)),
+      );
+    },
+  });
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteAnnotation(sourceDocumentId, id),
+    onSuccess: (_void, deletedId) => {
+      queryClient.setQueryData<UserAnnotation[]>(["annotations", sourceDocumentId], (prev) =>
+        (prev ?? []).filter((a) => a.id !== deletedId),
+      );
+    },
+  });
+
+  const handleCreateAnnotation = (payload: {
+    paragraph_id: string;
+    track: AnnotationTrack;
+    start_offset: number;
+    end_offset: number;
+    color: string;
+  }) => void createMutation.mutate(payload);
+  const handleUpdateAnnotation = (
+    id: string,
+    payload: { color?: string | null; note?: string | null },
+  ) => void updateMutation.mutate({ id, payload });
+  const handleDeleteAnnotation = (id: string) => void deleteMutation.mutate(id);
+
+  const originalAnnotations = allAnnotations.filter((a) => a.track === "original");
+  const translatedAnnotations = allAnnotations.filter((a) => a.track === "translated");
+
 
   const originalDoc = useMemo(
     () =>
@@ -250,6 +314,11 @@ export function BilingualEvidenceView({
               accentColor="#3B82F6"
               blocks={groupDetail?.original_blocks}
               blockHighlights={buildBlockHighlights.original}
+              sourceDocumentId={sourceDocumentId}
+              annotations={originalAnnotations}
+              onCreateAnnotation={handleCreateAnnotation}
+              onUpdateAnnotation={handleUpdateAnnotation}
+              onDeleteAnnotation={handleDeleteAnnotation}
             />
             {hasTranslation && (
               <DocumentReader
@@ -261,6 +330,11 @@ export function BilingualEvidenceView({
                 accentColor="#8B5CF6"
                 blocks={groupDetail?.translated_blocks}
                 blockHighlights={buildBlockHighlights.translated}
+                sourceDocumentId={sourceDocumentId}
+                annotations={translatedAnnotations}
+                onCreateAnnotation={handleCreateAnnotation}
+                onUpdateAnnotation={handleUpdateAnnotation}
+                onDeleteAnnotation={handleDeleteAnnotation}
               />
             )}
           </div>

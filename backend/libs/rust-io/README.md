@@ -6,7 +6,7 @@
 
 ```python
 import rust_io.net as net_io
-import rust_io.files as files
+import rust_io.files as files_io
 
 # Literature acquisition
 result = await net_io.fetch_one("crossref", "search", {"query": "CRISPR"})
@@ -18,13 +18,13 @@ dl = await net_io.download_file("https://example.com/paper.pdf")
 task = await net_io.mineru_create_task("https://example.com/paper.pdf", token="...")
 
 # File I/O
-f = files.File("/tmp/data/report.txt")
+f = files_io.File("/tmp/data/report.txt")
 f.write("patient variant report")
 content = f.read(as_text=True)
 
 # SHA-256 hashing and dedup
-sha = files.compute_sha256("/tmp/data/report.txt")
-dup_result = files.check_duplicate("/tmp/data/report.txt", [sha])
+sha = files_io.compute_sha256("/tmp/data/report.txt")
+dup_result = files_io.check_duplicate("/tmp/data/report.txt", [sha])
 ```
 
 ## Build & Install
@@ -34,7 +34,7 @@ cd backend
 uv run maturin develop --release -m libs/rust-io/Cargo.toml
 ```
 
-Requires Python >= 3.10.
+Requires Python >= 3.12.
 
 ## Architecture
 

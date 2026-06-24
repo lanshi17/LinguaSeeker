@@ -12,6 +12,9 @@ FROM vllm/vllm-openai:latest
 
 WORKDIR /app
 
+# 关键新增：禁用 NVIDIA Container Toolkit 的严格版本检查，强制放行
+ENV NVIDIA_DISABLE_REQUIRE=1
+
 # Install extra deps NOT in vllm base. torch is already pinned at 2.11+cu129
 # in the base image — pip won't upgrade it since these deps don't require newer.
 RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ \

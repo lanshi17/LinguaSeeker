@@ -63,6 +63,8 @@ Note: Security headers middleware (`SecurityHeadersMiddleware`, `SecurityHeaders
 
 ### Mounted Routes
 
+All routes are under the `/api/v1` prefix, mounted via `src/api/v1/router.py`:
+
 | Prefix | Router | Tags |
 |--------|--------|------|
 | `/api/v1/pipeline` | `pipeline.router` | pipeline |
@@ -70,6 +72,8 @@ Note: Security headers middleware (`SecurityHeadersMiddleware`, `SecurityHeaders
 | `/api/v1/delta-audit` | `delta_audit.router` | delta-audit |
 | `/api/v1/source-link` | `source_link.router` | source-link |
 | `/api/v1/chat` | `chat.router` | chat |
+| `/api/v1/auth` | `auth.router` | auth |
+| `/api/v1/documents` | `annotations.router` | annotations |
 | `/health` | inline | -- |
 
 ### Error Handlers

@@ -46,15 +46,21 @@ ExtractionTarget/document metadata
 
 The module is intentionally read-only. It does not call an LLM and does not use benchmark answer labels at runtime.
 
+## Module Layout
+
+- `__init__.py`: exports `GeneContext`, `DiseaseContext`, `TargetContextPack`, `build_context_pack_from_expected_json`, `build_context_pack_from_runtime_target`
+- `contracts.py`: frozen dataclasses for `GeneContext`, `DiseaseContext`, `TargetContextPack`
+- `core.py`: builder functions and all alias expansion logic
+
 ## Public API
 
 | API | Signature | Description |
 | --- | --- | --- |
-| `build_context_pack_from_expected_json` | `build_context_pack_from_expected_json(path: Path) -> TargetContextPack` | Builds a no-leakage context pack from safe ClinGen benchmark metadata plus adjacent `source.md` text when available. |
-| `build_context_pack_from_runtime_target` | `build_context_pack_from_runtime_target(*, entry_id: str, gene_symbol: str, disease_label: str, hgnc_id: str | None = None, mondo_id: str | None = None, moi: str = "", source_pmid: str | None = None, source_pmc: str | None = None) -> TargetContextPack` | Builds a production-safe context pack from runtime target metadata without reading benchmark ground truth. |
-| `GeneContext` | `GeneContext(symbol: str, hgnc_id: str | None, aliases: tuple[str, ...])` | Target gene context. |
-| `DiseaseContext` | `DiseaseContext(label: str, mondo_id: str | None, aliases: tuple[str, ...], ancestor_labels: tuple[str, ...])` | Target disease context and aliases. |
-| `TargetContextPack` | `TargetContextPack(entry_id: str, gene: GeneContext, disease: DiseaseContext, moi: str, source_pmid: str | None, source_pmc: str | None)` | Immutable context passed into verifier/reconciliation logic. |
+| `build_context_pack_from_expected_json` | `(path: Path) -> TargetContextPack` | Builds a no-leakage context pack from safe ClinGen benchmark metadata plus adjacent `source.md` text when available. |
+| `build_context_pack_from_runtime_target` | `(*, entry_id: str, gene_symbol: str, disease_label: str, hgnc_id: str \| None = None, mondo_id: str \| None = None, moi: str = "", source_pmid: str \| None = None, source_pmc: str \| None = None) -> TargetContextPack` | Builds a production-safe context pack from runtime target metadata without reading benchmark ground truth. |
+| `GeneContext` | `(symbol: str, hgnc_id: str \| None, aliases: tuple[str, ...])` | Target gene context. |
+| `DiseaseContext` | `(label: str, mondo_id: str \| None, aliases: tuple[str, ...], ancestor_labels: tuple[str, ...])` | Target disease context and aliases. |
+| `TargetContextPack` | `(entry_id: str, gene: GeneContext, disease: DiseaseContext, moi: str, source_pmid: str \| None, source_pmc: str \| None)` | Immutable context passed into verifier/reconciliation logic. |
 
 ## Internal Design
 
@@ -69,6 +75,8 @@ Disease aliasing has three layers:
 3. Source-observed MONDO disease aliases from `database/terminology_database/mondo/mondo_hierarchy_cache.json`.
 
 The MONDO layer is conservative. A candidate label must be a non-obsolete disease/disorder/syndrome label, must appear in `source.md`, and must occur near the target gene plus a target disease cue. Prefix aliases from comma-separated MONDO labels are accepted only if the prefix still looks like a disease/disorder/syndrome label. This prevents symptoms such as `epilepsy` or `developmental delay` from becoming target aliases.
+
+Dash normalization handles Unicode dash variants (en-dash, em-dash, etc.) via `str.maketrans` to ensure consistent matching across typographic sources.
 
 ## No-Leakage Rules
 

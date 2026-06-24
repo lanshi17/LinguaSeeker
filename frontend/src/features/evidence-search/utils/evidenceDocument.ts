@@ -333,9 +333,7 @@ export function buildEvidenceDocument(
 
     detail.traces.forEach((trace, index) => {
       const highlight = traceHighlightForTrack(trace, track);
-      if (!highlight) {
-        return;
-      }
+      const value = traceValueForTrack(trace, track);
 
       const item = items.get(trace.canonical_evidence_id);
       const tone = evidenceToneForItem(item);
@@ -347,11 +345,17 @@ export function buildEvidenceDocument(
         return;
       }
 
-      const range = findHighlightInFullText(
-        fullText,
-        highlight,
-        traceValueForTrack(trace, track),
-      );
+      // Locate the evidence span in the full text. When the trace carries a
+      // structured highlight (trace.original/translated), use its offsets;
+      // otherwise fall back to anchoring on the trace value (e.g. "MECP2",
+      // "c.468C>G") so evidence is still highlighted when highlight spans
+      // were not persisted by the backend.
+      let range: { start: number; end: number } | null = null;
+      if (highlight) {
+        range = findHighlightInFullText(fullText, highlight, value);
+      } else if (value) {
+        range = findAnchorValue(fullText, value);
+      }
 
       if (range && range.end > range.start) {
         locatedHighlights.push({
@@ -364,7 +368,7 @@ export function buildEvidenceDocument(
           end: range.end,
           selected: trace.canonical_evidence_id === selectedEvidenceId,
         });
-      } else if (highlight.text) {
+      } else if (highlight?.text) {
         // Could not locate in the full text — show the snippet as a
         // separate paragraph so the evidence is still visible.
         const snippetRange = clampHighlight(highlight);

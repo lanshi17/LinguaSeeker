@@ -9,8 +9,8 @@ Multi-Agent infrastructure platform for medical genetics literature automation a
 | Frontend | Vite, React 18, TypeScript (strict), Ant Design, Zustand, React Query, Axios, React Router |
 | Backend | Python 3.12, FastAPI, SQLAlchemy 2.0 (async), Alembic, LangGraph |
 | Native I/O | Rust (PyO3/maturin extensions: rust-io, files-io, net-io) |
-| Model Server | vLLM-based 4-container setup: Embedding, Rerank, VLM, Doc-Parse |
-| Database | PostgreSQL 18 (pgvector), Redis 8.0 |
+| Model Server | FastAPI microservices: Embedding (:8002), Rerank (:8003), Doc-Parse (:8004), or unified (:8001) |
+| Database | PostgreSQL 16 (pgvector), Redis 8.0 |
 | Infra | Docker Compose, Ansible |
 
 ## Project Structure
@@ -36,7 +36,7 @@ Multi-Agent infrastructure platform for medical genetics literature automation a
 │   ├── alembic/                    # Migration scaffold
 │   └── pyproject.toml              # Python project (uv-managed)
 ├── services/                       # Standalone microservices
-│   └── model-server/               # Embedding/Rerank/VLM/Doc-Parse (ports 8002-8005)
+│   └── model-server/               # Embedding/Rerank/Doc-Parse model inference
 ├── frontend/                       # Vite + React application
 │   ├── src/                        # Application source
 │   │   ├── pages/                  # Route-level page components
@@ -66,7 +66,8 @@ Multi-Agent infrastructure platform for medical genetics literature automation a
 ├── benchmark/                      # Pipeline benchmarking + evaluation
 ├── scripts/                        # Project-level utility scripts
 ├── knowledges/                     # Knowledge base documents (ACMG guidelines, etc.)
-├── data/                           # Runtime data
+├── data/                           # Sample PDFs for testing
+├── libs/                           # Shared Python libraries (config-loader)
 ├── docker-compose.yml              # Local development orchestration
 ├── AGENTS.md                       # Project rules and conventions
 ├── progress.txt                    # Progress tracking
@@ -118,15 +119,17 @@ cd backend/libs/rust-io     # or files-io, net-io
 cargo test
 ```
 
-**Model server (4 containers):**
+**Model server (independent services):**
 
 ```bash
 cd services/model-server
-# Each service can run independently:
+# Run specialized services independently:
 uv run python main_embedding.py --port 8002
 uv run python main_rerank.py --port 8003
-uv run python main_vlm.py --port 8004
-uv run python main_doc_parse.py --port 8005
+uv run python main_doc_parse.py --port 8004
+
+# Or run the unified server:
+uv run python main.py --port 8001
 ```
 
 ## Development Commands
@@ -147,7 +150,7 @@ uv run python main_doc_parse.py --port 8005
 
 ### Single-Server (All-in-one)
 
-All services on one machine — backend, postgres, redis, and 4 GPU model-server containers.
+All services on one machine -- backend, postgres, redis, and GPU model-server containers.
 
 ```bash
 # 1. Load pre-built images
@@ -177,14 +180,14 @@ Bare-metal / systemd deployment via Ansible roles. See [deploy/ansible/](deploy/
 
 ## Branch Strategy
 
-- **`dev`** — primary development branch
-- **`master`** — merged manually only, no direct pushes
+- **`dev`** -- primary development branch
+- **`master`** -- merged manually only, no direct pushes
 
 ## Conventions
 
 See [AGENTS.md](./AGENTS.md) for full project rules. Key points:
 
-- Package managers: `uv` (Python), `bun` (Node.js), `cargo` (Rust) — never system-level
+- Package managers: `uv` (Python), `bun` (Node.js), `cargo` (Rust) -- never system-level
 - Logging: `loguru`, output to `logs/` with timestamp naming
 - Testing: `pytest` (backend), `vitest` (frontend), `cargo test` (Rust)
 - Code style: Google Style Guide enforced via Ruff (Python) and ESLint (TypeScript)

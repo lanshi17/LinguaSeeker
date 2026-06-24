@@ -65,7 +65,7 @@ DocumentAcquisitionService.acquire()
   ▼
 ParseDocumentService.parse_local_files_and_save()
   ├── remote → MinerURemoteParser (cloud API)
-  └── local  → MinerULocalParser (model server :8001)
+  └── local  → MinerULocalParser (model server :8004)
   │
   ▼
 Output: {md_path, metadata_path, images_dir}
@@ -74,7 +74,7 @@ Output: {md_path, metadata_path, images_dir}
 ## Sub-module Reference
 
 - **[document_acquisition/](./document_acquisition/README.md)** — Unified acquisition facade, multi-provider search, download fallback chains, web scrapers
-- **[parse_document/](./parse_document/README.md)** — MinerU document parsing (local VLM + remote API), output normalization
+- **[parse_document/](./parse_document/README.md)** — MinerU document parsing (local /file_parse + remote API), output normalization
 
 ## Testing
 

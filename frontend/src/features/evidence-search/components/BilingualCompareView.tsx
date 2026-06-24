@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -29,6 +29,15 @@ import {
 } from "../utils/evidenceDocument";
 import { categoryLabel } from "../utils/categoryStyles";
 import { MarkdownDocumentViewer } from "./MarkdownDocumentViewer";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  createAnnotation,
+  deleteAnnotation,
+  listAnnotations,
+  updateAnnotation,
+} from "@/api/annotations";
+import type { AnnotationCreateRequest, AnnotationTrack, AnnotationUpdateRequest, UserAnnotation } from "../types/annotations";
+import { AnnotationLayer } from "./annotationLayer";
 
 /* ---- Constants ---- */
 
@@ -216,11 +225,35 @@ function normalizedHighlights(paragraph: EvidenceDocumentParagraph) {
   return normalized;
 }
 
+/** Shared CRUD handler shape for user annotations. */
+interface AnnotationHandlers {
+  onCreateAnnotation?: (payload: {
+    paragraph_id: string;
+    track: AnnotationTrack;
+    start_offset: number;
+    end_offset: number;
+    color: string;
+  }) => void;
+  onUpdateAnnotation?: (
+    id: string,
+    payload: { color?: string | null; note?: string | null },
+  ) => void;
+  onDeleteAnnotation?: (id: string) => void;
+}
+
 function HighlightedParagraph({
   paragraph,
+  track,
+  annotations = [],
+  onCreateAnnotation,
+  onUpdateAnnotation,
+  onDeleteAnnotation,
 }: {
   paragraph: EvidenceDocumentParagraph;
-}) {
+  track: AnnotationTrack;
+  annotations?: UserAnnotation[];
+} & AnnotationHandlers) {
+  const contentRef = useRef<HTMLDivElement>(null);
   const highlights = normalizedHighlights(paragraph);
   const nodes: ReactNode[] = [];
   let cursor = 0;
@@ -269,9 +302,21 @@ function HighlightedParagraph({
         </span>
         <span>Page {paragraph.page ?? "\u2014"}</span>
       </div>
-      <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: "28px", color: "#1f2937" }}>
-        {nodes.length > 0 ? nodes : paragraph.text}
-      </p>
+      <div ref={contentRef} style={{ position: "relative" }}>
+        <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: "28px", color: "#1f2937" }}>
+          {nodes.length > 0 ? nodes : paragraph.text}
+        </p>
+        <AnnotationLayer
+          containerRef={contentRef}
+          paragraphId={paragraph.id}
+          track={track}
+          annotations={annotations}
+          recomputeDeps={[paragraph.text, paragraph.highlights]}
+          onCreateAnnotation={onCreateAnnotation}
+          onUpdateAnnotation={onUpdateAnnotation}
+          onDeleteAnnotation={onDeleteAnnotation}
+        />
+      </div>
     </div>
   );
 }
@@ -279,10 +324,17 @@ function HighlightedParagraph({
 function EvidenceDocumentReader({
   title,
   paragraphs,
+  track,
+  annotations = [],
+  onCreateAnnotation,
+  onUpdateAnnotation,
+  onDeleteAnnotation,
 }: {
   title: string;
   paragraphs: EvidenceDocumentParagraph[];
-}) {
+  track: AnnotationTrack;
+  annotations?: UserAnnotation[];
+} & AnnotationHandlers) {
   const fullTextParagraph = paragraphs.find((p) => p.id.endsWith("-full-text"));
   const snippetParagraphs = paragraphs.filter((p) => p !== fullTextParagraph);
   const isFullText = Boolean(fullTextParagraph);
@@ -291,6 +343,9 @@ function EvidenceDocumentReader({
       ? `Full document with evidence highlights · ${snippetParagraphs.length} additional snippet${snippetParagraphs.length !== 1 ? "s" : ""}`
       : "Full document with evidence highlights"
     : `${paragraphs.length} aligned paragraph${paragraphs.length !== 1 ? "s" : ""}`;
+
+  const annotationsFor = (paraId: string) =>
+    annotations.filter((a) => a.paragraph_id === paraId);
 
   return (
     <section style={{ overflow: "hidden", borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
@@ -317,13 +372,35 @@ function EvidenceDocumentReader({
               <MarkdownDocumentViewer
                 markdown={fullTextParagraph.text}
                 highlights={fullTextParagraph.highlights}
+                paragraphId={fullTextParagraph.id}
+                track={track}
+                annotations={annotationsFor(fullTextParagraph.id)}
+                onCreateAnnotation={onCreateAnnotation}
+                onUpdateAnnotation={onUpdateAnnotation}
+                onDeleteAnnotation={onDeleteAnnotation}
               />
             )}
             {snippetParagraphs.map((paragraph) => (
-              <HighlightedParagraph key={paragraph.id} paragraph={paragraph} />
+              <HighlightedParagraph
+                key={paragraph.id}
+                paragraph={paragraph}
+                track={track}
+                annotations={annotationsFor(paragraph.id)}
+                onCreateAnnotation={onCreateAnnotation}
+                onUpdateAnnotation={onUpdateAnnotation}
+                onDeleteAnnotation={onDeleteAnnotation}
+              />
             ))}
             {!isFullText && paragraphs.map((paragraph) => (
-              <HighlightedParagraph key={paragraph.id} paragraph={paragraph} />
+              <HighlightedParagraph
+                key={paragraph.id}
+                paragraph={paragraph}
+                track={track}
+                annotations={annotationsFor(paragraph.id)}
+                onCreateAnnotation={onCreateAnnotation}
+                onUpdateAnnotation={onUpdateAnnotation}
+                onDeleteAnnotation={onDeleteAnnotation}
+              />
             ))}
           </>
         ) : (
@@ -514,6 +591,58 @@ export function BilingualCompareView({
     [detail, enabledTones, selectedEvidenceId, enabledCategories],
   );
   const showTranslatedDocument = hasTranslatedDocumentText(detail);
+  const sourceDocumentId = detail.source_document_id;
+  const queryClient = useQueryClient();
+  const annotationsQuery = useQuery({
+    queryKey: ["annotations", sourceDocumentId],
+    queryFn: () => listAnnotations(sourceDocumentId),
+    enabled: Boolean(sourceDocumentId),
+  });
+  const allAnnotations: UserAnnotation[] = annotationsQuery.data ?? [];
+
+  const createMutation = useMutation({
+    mutationFn: (payload: AnnotationCreateRequest) =>
+      createAnnotation(sourceDocumentId, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["annotations", sourceDocumentId] });
+    },
+  });
+  const updateMutation = useMutation({
+    mutationFn: (vars: { id: string; payload: AnnotationUpdateRequest }) =>
+      updateAnnotation(sourceDocumentId, vars.id, vars.payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["annotations", sourceDocumentId] });
+    },
+  });
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteAnnotation(sourceDocumentId, id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["annotations", sourceDocumentId] });
+    },
+  });
+
+  const handleCreateAnnotation = (payload: {
+    paragraph_id: string;
+    track: AnnotationTrack;
+    start_offset: number;
+    end_offset: number;
+    color: string;
+  }) => {
+    void createMutation.mutate(payload);
+  };
+  const handleUpdateAnnotation = (
+    id: string,
+    payload: { color?: string | null; note?: string | null },
+  ) => {
+    void updateMutation.mutate({ id, payload });
+  };
+  const handleDeleteAnnotation = (id: string) => {
+    void deleteMutation.mutate(id);
+  };
+
+  const originalAnnotations = allAnnotations.filter((a) => a.track === "original");
+  const translatedAnnotations = allAnnotations.filter((a) => a.track === "translated");
+
 
   const toggleCategory = (cat: string) => {
     setEnabledCategories((current) => {
@@ -785,11 +914,21 @@ export function BilingualCompareView({
               <EvidenceDocumentReader
                 title="Original document"
                 paragraphs={originalDocument.paragraphs}
+                track="original"
+                annotations={originalAnnotations}
+                onCreateAnnotation={handleCreateAnnotation}
+                onUpdateAnnotation={handleUpdateAnnotation}
+                onDeleteAnnotation={handleDeleteAnnotation}
               />
               {showTranslatedDocument && (
                 <EvidenceDocumentReader
                   title="English translation"
                   paragraphs={translatedDocument.paragraphs}
+                  track="translated"
+                  annotations={translatedAnnotations}
+                  onCreateAnnotation={handleCreateAnnotation}
+                  onUpdateAnnotation={handleUpdateAnnotation}
+                  onDeleteAnnotation={handleDeleteAnnotation}
                 />
               )}
             </div>

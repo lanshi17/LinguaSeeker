@@ -70,6 +70,17 @@ if __name__ == "__main__":  # pragma: no cover - CLI parity with the old entry p
         default=GROUND_TRUTH_DIR,
         help="Ground truth root containing selection.json and entry directories",
     )
+    parser.add_argument(
+        "--no-preprocessed",
+        action="store_true",
+        default=False,
+        help="Force re-extraction through the pipeline, ignoring cached preprocessed results",
+    )
+    parser.add_argument(
+        "--api-key",
+        default=None,
+        help="API key for X-API-Key header authentication",
+    )
     args = parser.parse_args()
     asyncio.run(
         run_evaluation(
@@ -78,5 +89,7 @@ if __name__ == "__main__":  # pragma: no cover - CLI parity with the old entry p
             args.limit,
             args.entries,
             ground_truth_root=args.ground_truth_root,
+            force_reextract=args.no_preprocessed,
+            api_key=args.api_key,
         )
     )

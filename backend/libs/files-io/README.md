@@ -7,12 +7,12 @@
 ```python
 import rust_io.files as files_io
 
-# Local file — write and read
+# Local file -- write and read
 f = files_io.File("/tmp/data/report.txt")
 f.write("patient variant report")
 print(f.read(as_text=True))  # "patient variant report"
 
-# S3 file — same API, pass credentials
+# S3 file -- same API, pass credentials
 s3f = files_io.File(
     "s3://my-bucket/reports/report.txt",
     access_key="AKIA...",
@@ -33,7 +33,7 @@ Python caller
      |
      v
 +---------------------+
-|   files_io (PyO3)   |   <-- lib.rs: #[pymodule]
+|   files_io (PyO3)   |   <-- lib.rs: pub mod declarations
 |                     |
 |  File (pyclass)     |   <-- py/file.rs
 |  batch_copy()       |   <-- py/parallel.rs
@@ -41,6 +41,9 @@ Python caller
 |  batch_copy_async() |
 |  check_duplicate()  |   <-- py/dedup.rs
 |  batch_hash()       |
+|  compute_sha256()   |   <-- py/utils.rs
+|  write_file()       |
+|  validate_pdf_magic()|
 +----------+----------+
            |
            v
@@ -88,9 +91,9 @@ File(
 | `read_chunk` | `(offset: int, size: int) -> bytes` | Read `size` bytes starting at `offset`. Uses `seek` for local, HTTP Range for S3. |
 | `write` | `(data: bytes \| str) -> None` | Write data to file. Accepts `bytes` or `str`. Creates parent directories automatically. |
 | `exists` | `() -> bool` | Check if the file exists. |
-| `metadata` | `() -> dict` | Returns dict with `size`, `mtime`, `is_file`, `is_dir`, `is_symlink`, `permissions`, and backend-specific extras (e.g. `etag`, `inode`). |
+| `metadata` | `() -> dict` | Returns dict with `size`, `mtime`, `is_file`, `is_dir`, `is_symlink`, `permissions`, and backend-specific extras. |
 | `rename` | `(dst: str) -> None` | Move/rename the file. For S3, this is copy + delete. |
-| `copy` | `(dst: str) -> None` | Copy the file to a new location. Supports cross-backend if destination is S3. |
+| `copy` | `(dst: str) -> None` | Copy the file to a new location. |
 | `remove` | `() -> None` | Delete the file. |
 | `remove_dir_all` | `() -> None` | Recursively delete a directory (local) or all objects under a prefix (S3). |
 | `list_dir` | `() -> list[str]` | List entries in a directory or S3 prefix. |
@@ -107,9 +110,12 @@ File(
 |----------|-----------|-------------|
 | `batch_copy` | `(sources: list[str], destinations: list[str], access_key=None, secret_key=None, endpoint=None, region=None) -> dict` | Copy multiple files sequentially. Auto-selects local or S3 backend per path. Returns `{"success": [...], "failed": [{"path", "error"}]}`. |
 | `batch_compress` | `(dir_paths: list[str], output_paths: list[str], format: str = "zip") -> dict` | Compress multiple directories. Returns same result structure as `batch_copy`. |
-| `batch_copy_async` | `(sources, destinations, access_key=None, secret_key=None, endpoint=None, region=None) -> Awaitable[dict]` | Async version of `batch_copy`. |
+| `batch_copy_async` | `(sources, destinations, access_key=None, secret_key=None, endpoint=None, region=None) -> Awaitable[dict]` | Async version of `batch_copy`. Copies run sequentially inside a single `spawn_blocking` task. |
 | `check_duplicate` | `(file_path: str, known_hashes: list[str]) -> dict` | Hash a file and check against known hashes. Returns `{"hash": str, "is_duplicate": bool}`. |
 | `batch_hash` | `(file_paths: list[str]) -> dict` | Hash multiple files. Returns `{"hashes": {path: hash}, "errors": {path: message}}`. |
+| `compute_sha256` | `(file_path: str) -> str` | Compute SHA-256 hex digest of a file. |
+| `write_file` | `(file_path: str, data: bytes) -> None` | Write raw bytes to a local file path. |
+| `validate_pdf_magic` | `(data: bytes) -> bool` | Check if bytes start with the `%PDF` magic header. |
 
 ### `FileOps` trait (Rust)
 
@@ -195,6 +201,7 @@ The async variants (`copy_async`, `compress_async`, `extract_async`, `batch_copy
 All archive extraction functions (`zip::extract`, `tar_gz::extract_tar`, `tar_gz::extract_tar_gz`) validate that:
 1. Entry paths contain no `..` or root components
 2. Resolved output paths stay within the designated output directory
+3. Symlink and hardlink entries are rejected
 
 This prevents zip-slip attacks where a malicious archive writes files outside the target directory.
 
@@ -204,14 +211,14 @@ SHA-256 is used for content hashing because it provides collision resistance nee
 
 ### Error handling
 
-All Rust errors are collected into `FileError`, which implements `From` for `PyErr`. Each variant maps to the semantically appropriate Python exception (see `FileError` table above) — `?` propagation automatically produces the correct exception type at the PyO3 boundary.
+All Rust errors are collected into `FileError`, which implements `From` for `PyErr`. Each variant maps to the semantically appropriate Python exception (see `FileError` table above) -- `?` propagation automatically produces the correct exception type at the PyO3 boundary.
 
 ## Usage Patterns
 
 ### Basic file operations
 
 ```python
-import files_io
+import rust_io.files as files_io
 
 # Write and read
 f = files_io.File("/tmp/output/variant_report.txt")
@@ -230,7 +237,7 @@ f.rename("/tmp/archive/variant_report_v1.txt")
 ### Archive a results directory
 
 ```python
-import files_io
+import rust_io.files as files_io
 
 # Compress a directory of analysis results
 src_dir = "/data/results/run_20260507"
@@ -246,7 +253,7 @@ print(f"Extracted {count} files")
 ### Batch copy with mixed local/S3 paths
 
 ```python
-import files_io
+import rust_io.files as files_io
 
 sources = [
     "/data/variants/sample_001.vcf",
@@ -273,7 +280,7 @@ print(f"Failed: {result['failed']}")
 
 ```python
 import asyncio
-import files_io
+import rust_io.files as files_io
 
 async def process_files():
     f = files_io.File("/data/large_dataset/")
@@ -296,7 +303,7 @@ asyncio.run(process_files())
 ### Content deduplication
 
 ```python
-import files_io
+import rust_io.files as files_io
 
 # Build a set of known file hashes
 paths = ["/data/file1.txt", "/data/file2.txt", "/data/file3.txt"]
@@ -334,15 +341,6 @@ else:
 - **`content_hash` on S3 downloads the full object.** For large S3 files, consider hashing server-side (ETag) or pre-computing hashes on upload.
 - **S3 `list_dir` uses delimiter-based listing.** It distinguishes common prefixes (pseudo-directories) from objects, but returns all entries as flat strings with the prefix stripped. S3 has no real directory hierarchy.
 
-## Performance Notes
-
-- **Hash chunk size:** 1 MB. Balances memory usage against syscall overhead for typical genomic data files.
-- **`write_stream` buffer:** 1 MB for local writes. S3 writes buffer the full payload.
-- **S3 shared runtime:** A single `tokio::runtime::Runtime` is shared across all `S3Backend` instances via `OnceLock`. This avoids the overhead of creating a new runtime per file operation.
-- **Async variants** use `spawn_blocking` to offload I/O to the tokio blocking thread pool. This prevents blocking the Python async event loop but does not make the underlying I/O itself async -- the operations are still synchronous at the Rust level.
-- **Archive compression** uses Deflate (zip) or default compression (tar.gz). No tuning knobs are exposed; for large archives, consider compressing in Python with chunked writes if memory is a concern.
-- **S3 pagination:** `remove_dir_all` and `list_dir` handle S3 pagination via continuation tokens, so they work correctly for prefixes with more than 1000 objects.
-
 ## Dependencies
 
 | Dependency | Version | Purpose |
@@ -367,37 +365,20 @@ Build system: [maturin](https://www.maturin.rs/) (>= 1.13). Requires Python >= 3
 
 ## Testing
 
-Run the 14 Python integration tests with:
+Run the Python integration tests with:
 
 ```bash
 cd backend/libs/files-io
 uv run pytest tests/test_files_io.py -v
 ```
 
-Test coverage (Python, 14 tests):
-- **Read/write:** bytes, text, context manager usage
-- **Metadata:** dict structure, size, type flags
-- **File operations:** exists, rename, copy, remove, remove_dir_all, list_dir
-- **Content hashing:** same-content equality, different-content inequality
-- **Archives:** zip compress/extract, tar.gz compress/extract
-- **Deduplication:** check_duplicate, batch_hash
-
-Run the 10 Rust tests with:
+Run the Rust tests with:
 
 ```bash
 cd backend/libs/files-io
 cargo test
 ```
 
-Rust test coverage (10 tests):
-- **Error mapping:** 5 tests verifying FileError → PyErr conversion (IO→IOError, Path→ValueError, Archive→ValueError, S3→ConnectionError, Other→RuntimeError)
-- **Archive security:** 4 tests — zip symlink rejection, tar symlink rejection, tar.gz symlink rejection, zip path traversal through existing symlink parent (Unix-only)
-- **Compatibility:** 1 test — legacy utility functions match expected behavior
-
-
-Not covered by the current test suite:
-- S3 backend (requires a running S3-compatible service)
-- Async variants (copy_async, compress_async, extract_async, batch_copy_async)
-- Error paths (invalid paths, permission denied, corrupt archives)
-- read_chunk
-- write_stream and ensure_dir (internal-only, marked #[allow(dead_code)])
+Rust test coverage includes:
+- **Error mapping:** FileError to PyErr conversion (IO, Path, Archive, S3, TaskJoin, Other)
+- **Archive security:** zip symlink rejection, tar symlink rejection, tar.gz symlink rejection, zip path traversal through existing symlink parent (Unix-only)

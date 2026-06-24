@@ -6,7 +6,7 @@
 
 ```
 rust-io  (cdylib + rlib)  <-  the ONLY crate built as a Python extension
- |-- net-io    (rlib)      <-  HTTP/web I/O: 14 literature providers + MinerU API
+ |-- net-io    (rlib)      <-  HTTP/web I/O: 15 literature providers + MinerU API
  |-- files-io  (rlib)      <-  File I/O: local + S3, archives, SHA-256 dedup
 ```
 
@@ -70,7 +70,7 @@ Each crate has its own `Cargo.lock` (not a workspace). After adding/updating dep
 | Variable | Used by | Description |
 |----------|---------|-------------|
 | `UNPAYWALL_EMAIL` | `net-io` (Unpaywall) | Required for Unpaywall API |
-| `PUBMED_API_KEY` | `net-io` (PMC) + Python `pubmed_service` | Optional; raises NCBI E-utilities rate limit 3→10 req/s |
+| `PUBMED_API_KEY` | `net-io` (PMC) + Python `pubmed_service` | Optional; raises NCBI E-utilities rate limit 3 to 10 req/s |
 | `BASE_API_KEY` | `net-io` (BASE) | Optional; BASE academic search API key |
 | `CORE_API_KEY` | `net-io` (CORE) | Optional; CORE search API key |
 | `AWS_ACCESS_KEY_ID` | `files-io` (S3) | AWS credential chain (optional if passed explicitly) |
@@ -82,5 +82,5 @@ S3 credentials resolve via the `aws-sdk-s3` default chain (env vars, `~/.aws/cre
 ## Sub-crate Reference
 
 - **[rust-io](./rust-io/README.md)** -- Facade crate: submodule registration, full Python API reference
-- **[net-io](./net-io/README.md)** -- HTTP I/O: 14 literature providers, MinerU API v4, scraper
+- **[net-io](./net-io/README.md)** -- HTTP I/O: 15 literature providers, MinerU API v4, scraper
 - **[files-io](./files-io/README.md)** -- File I/O: `File` class, `FileOps` trait, backends, archives, dedup

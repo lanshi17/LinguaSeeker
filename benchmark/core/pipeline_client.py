@@ -300,6 +300,7 @@ async def evaluate_one(
     semaphore: asyncio.Semaphore,
     ground_truth_dir: Path | None = None,
     mondo: Any | None = None,
+    force_reextract: bool = False,
 ) -> EntryMetrics:
     """Evaluate one ground truth entry.
 
@@ -338,7 +339,7 @@ async def evaluate_one(
 
     # Check for preprocessed Phase 1+2 data
     preprocessed_path = ground_truth_dir / entry_id / "preprocessed" / "phase_2" / "extraction_result.json"
-    use_preprocessed = preprocessed_path.exists()
+    use_preprocessed = preprocessed_path.exists() and not force_reextract
 
     if use_preprocessed:
         # Load preprocessed extraction results directly (skip pipeline)
@@ -511,6 +512,8 @@ async def run_evaluation(
     limit: int | None = None,
     entry_ids: list[str] | None = None,
     ground_truth_root: Path = GROUND_TRUTH_ROOT,
+    force_reextract: bool = False,
+    api_key: str | None = None,
 ):
     """Main evaluation orchestrator."""
     logger.remove()
@@ -547,8 +550,11 @@ async def run_evaluation(
 
     t0 = time.time()
     all_metrics: list[EntryMetrics] = []
+    client_kwargs = dict(transport_kwargs)
+    if api_key:
+        client_kwargs["headers"] = {"X-API-Key": api_key}
 
-    async with httpx.AsyncClient(**transport_kwargs) as client:
+    async with httpx.AsyncClient(**client_kwargs) as client:
         for entry in entries:
             m = await evaluate_one(
                 client,
@@ -558,6 +564,7 @@ async def run_evaluation(
                 semaphore,
                 ground_truth_dir=ground_truth_root,
                 mondo=mondo,
+                force_reextract=force_reextract,
             )
             all_metrics.append(m)
             status_icon = "\u2713" if m.pipeline_status == "completed" else "\u2717"

@@ -9,7 +9,7 @@ src/api/
 ├── __init__.py
 ├── wiring.py           # DI assembly: engine -> session_factory -> Redis -> adapters -> orchestrator -> runner -> Phase4Factory
 ├── deps.py             # FastAPI dependencies: get_db_session, get_phase4_factory
-├── auth.py             # API-key authentication (require_api_key via X-API-Key header)
+├── auth.py             # API-key + session-cookie authentication (require_api_key)
 ├── body_size_limit.py  # Request body size middleware (BodySizeLimitMiddleware)
 ├── rate_limit.py       # Rate limiting singleton (slowapi, Redis-backed with in-memory fallback)
 └── v1/
@@ -19,7 +19,9 @@ src/api/
     ├── evidence.py     # Evidence search, detail, and feedback endpoints
     ├── chat.py         # Chat session and message endpoints (SSE streaming)
     ├── source_link.py  # Source traceability endpoints
-    └── delta_audit.py  # Delta audit log endpoints
+    ├── delta_audit.py  # Delta audit log endpoints
+    ├── annotations.py  # Document annotation CRUD endpoints
+    └── auth.py         # Session-cookie login/logout/me endpoints
 ```
 
 ## Public API
@@ -35,7 +37,7 @@ Module-level singletons initialized once during app lifespan.
 | `dispose_engine()` | `async () -> None` | Teardown engine on shutdown |
 | `get_redis_client()` | `AsyncRedis \| None` | Return current Redis client (or `None` before wiring) |
 | `dispose_redis()` | `async () -> None` | Teardown Redis client on shutdown |
-| `wire_dependencies()` | `() -> None` | Assemble full service graph: Redis, engine, session, acquisition/parse/translation/extraction/standardization services, phase adapters, orchestrator, runner, Phase4Factory |
+| `wire_dependencies()` | `() -> None` | Assemble full service graph: Redis, engine, session, processing cache, acquisition/parse/translation/extraction/standardization services, phase adapters, orchestrator, runner, Phase4Factory |
 
 ### deps.py
 
@@ -51,7 +53,10 @@ FastAPI `Depends()` providers.
 
 | Symbol | Type | Description |
 |--------|------|-------------|
-| `require_api_key()` | `async (...) -> str \| None` | FastAPI dependency that validates `X-API-Key` header against configured `API_KEY`. Returns `None` if no key is configured (auth disabled). Uses constant-time comparison via `hmac.compare_digest`. |
+| `require_api_key()` | `async (...) -> str \| None` | FastAPI dependency that validates `X-API-Key` header or `ce_session` cookie against configured `API_KEY`. Returns `None` if no key is configured (auth disabled). Uses constant-time comparison via `hmac.compare_digest`. |
+| `SESSION_COOKIE` | `str` | Cookie name: `ce_session` |
+| `SESSION_DURATION_SEC` | `int` | Session lifetime: 28800 (8 hours) |
+| `_validate_session(token, secret)` | `-> bool` | Validate an HMAC-SHA256 signed session token (payload.signature format) |
 
 ### body_size_limit.py
 

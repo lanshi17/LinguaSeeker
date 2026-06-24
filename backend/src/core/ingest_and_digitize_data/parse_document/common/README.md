@@ -50,7 +50,15 @@ md = block_to_markdown({"type": "text", "text": "Patient data..."})
 
 `TableParser` is a simple state-machine HTML parser using stdlib `html.parser.HTMLParser`. It tracks `<td>`/`<th>` cell boundaries and accumulates text content. No external dependencies.
 
-`block_to_markdown` handles MinerU content_list block types: `text`, `title`, `table` (via `html_table_to_markdown`), and falls through to text extraction for other types.
+`block_to_markdown` handles MinerU content_list block types:
+- `text` — with optional `text_level` for Markdown headings
+- `image` — with caption, image path, and footnote
+- `table` — with caption, HTML body converted via `html_table_to_markdown`, and footnote
+- `list` — bullet list items
+- `equation` — equation text
+- `code` — fenced code blocks
+- `chart` — with caption and footnote
+- `header`, `footer`, `page_number`, `aside_text`, `page_footnote` — passthrough text
 
 ## Dependencies
 

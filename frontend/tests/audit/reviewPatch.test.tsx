@@ -59,6 +59,39 @@ describe("buildReviewPatchOperations", () => {
     ]);
   });
 
+  it("skips unchanged sibling fields when at least one field has a mapped correction", () => {
+    const operations = buildReviewPatchOperations({
+      items: [
+        item({
+          canonical_evidence_id: "00000000-0000-0000-0000-000000000001",
+          field_id: "A.gene_symbol",
+          value: "GLA",
+        }),
+        item({
+          canonical_evidence_id: "00000000-0000-0000-0000-000000000002",
+          field_id: "B.disease_diagnosis",
+          value: "Fabry disease",
+        }),
+      ],
+      editedFields: {
+        "B.disease_diagnosis": "Fabry disease type I",
+      },
+      newStatus: "corrected",
+      changeReason: "Disease correction only",
+    });
+
+    expect(operations).toEqual([
+      {
+        canonicalEvidenceId: "00000000-0000-0000-0000-000000000002",
+        body: {
+          fields: { disease: "Fabry disease type I" },
+          change_reason: "Disease correction only",
+          new_status: "corrected",
+        },
+      },
+    ]);
+  });
+
   it("creates status-only operations for unchanged or unmapped fields", () => {
     const operations = buildReviewPatchOperations({
       items: [

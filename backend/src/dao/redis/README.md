@@ -8,7 +8,7 @@
 from src.api.wiring import get_redis_client
 from src.dao.redis.cache_repo import CacheRepository
 
-# Use the wiring singleton — already configured from application settings
+# Use the wiring singleton -- already configured from application settings
 client = get_redis_client()
 cache = CacheRepository(client)
 
@@ -29,8 +29,8 @@ await cache.invalidate_all(document_ids=["doc-123"])
 ```
 src/dao/redis/
 ├── __init__.py       # Lazy imports via __getattr__
-├── connection.py     # build_redis_client() — pure builder, no singleton state
-└── cache_repo.py     # CacheRepository — get/set/invalidate for documents, evidence, entities
+├── connection.py     # build_redis_client() -- pure builder, no singleton state
+└── cache_repo.py     # CacheRepository -- get/set/invalidate for documents, evidence, entities
 ```
 
 ## Public API
@@ -52,7 +52,7 @@ client = build_redis_client()
 
 ### `CacheRepository`
 
-Constructed with an `redis.asyncio.Redis` client instance.
+Constructed with a `redis.asyncio.Redis` client instance.
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
@@ -83,10 +83,10 @@ connection.py          wiring.py                   main.py lifespan
 build_redis_client() → get_redis_client() singleton → dispose_redis() on shutdown
 ```
 
-1. **`connection.py`** — Pure builder. `build_redis_client(settings)` reads config and returns a new `redis.asyncio.Redis` instance. Holds no state.
-2. **`src/api/wiring.py`** — Holds the module-level `_redis_client` singleton. `wire_dependencies()` calls `build_redis_client()` once during startup. `get_redis_client()` returns the singleton (or `None` before wiring). `dispose_redis()` calls `aclose()` and clears the reference.
-3. **`app/main.py` lifespan** — Calls `wire_dependencies()` on startup. On shutdown, calls `dispose_redis()` (and `dispose_engine()`) to release resources.
-4. **Health checks** — `src/utils/health.py` imports `get_redis_client` from wiring and runs a `PING` against the existing singleton. No second client is created.
+1. **`connection.py`** -- Pure builder. `build_redis_client(settings)` reads config and returns a new `redis.asyncio.Redis` instance. Holds no state.
+2. **`src/api/wiring.py`** -- Holds the module-level `_redis_client` singleton. `wire_dependencies()` calls `build_redis_client()` once during startup. `get_redis_client()` returns the singleton (or `None` before wiring). `dispose_redis()` calls `aclose()` and clears the reference.
+3. **`app/main.py` lifespan** -- Calls `wire_dependencies()` on startup. On shutdown, calls `dispose_redis()` (and `dispose_engine()`) to release resources.
+4. **Health checks** -- `src/utils/health.py` imports `get_redis_client` from wiring and runs a `PING` against the existing singleton. No second client is created.
 
 ## Internal Design
 
@@ -96,17 +96,13 @@ build_redis_client() → get_redis_client() singleton → dispose_redis() on shu
 
 ### Lazy Imports
 
-`__init__.py` uses `__getattr__`-based lazy imports to avoid eagerly loading `redis.asyncio` when only the models or connection helpers are needed.
+`__init__.py` uses `__getattr__`-based lazy imports to avoid eagerly loading `redis.asyncio` when only the connection helpers or cache repository are needed.
 
-## Configuration
+## Dependencies
 
-| Env Var | Default | Description |
-|---------|---------|-------------|
-| `REDIS_HOST` | `localhost` | Redis server host |
-| `REDIS_PORT` | `6379` | Redis server port |
-| `REDIS_PASSWORD` | `""` | Auth password |
-| `REDIS_DB` | `0` | Database number |
-| `REDIS_MAX_CONNECTIONS` | `20` | Connection pool size |
+| Dependency | Purpose |
+|------------|---------|
+| `redis.asyncio` | Async Redis client |
 
 ## Testing
 
@@ -116,10 +112,3 @@ uv run pytest tests/dao/redis/ -v
 ```
 
 Integration tests requiring live Redis are marked skipped by default.
-
-## Dependencies
-
-| Dependency | Purpose |
-|------------|---------|
-| `redis.asyncio` | Async Redis client |
-| `loguru` | Structured logging |
