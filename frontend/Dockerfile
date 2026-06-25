@@ -5,7 +5,7 @@
 #   Everything injected through ARG must be non-secret: it ships to the
 #   browser. Real secrets (API_KEY) stay on the nginx server below.
 # ────────────────────────────────────────────────────────────────────
-FROM oven/bun:1.1-alpine AS builder
+FROM oven/bun:1.3-alpine AS builder
 
 WORKDIR /app
 
