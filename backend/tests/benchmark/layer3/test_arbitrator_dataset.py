@@ -63,12 +63,12 @@ class TestDatasetSummary:
 class TestBuildDatasetIntegration:
     def test_build_dataset_runs_on_real_data(self) -> None:
         from benchmark.analysis.arbitrator.dataset import build_dataset
-        from benchmark.core import GROUND_TRUTH_DIR
+        from benchmark.core.paths import GROUND_TRUTH_CLINGEN_ROOT
 
-        if not GROUND_TRUTH_DIR.exists():
-            pytest.skip("ground_truth directory not available")
+        if not GROUND_TRUTH_CLINGEN_ROOT.exists():
+            pytest.skip("clingen ground_truth directory not available")
 
-        samples, summary = build_dataset(GROUND_TRUTH_DIR)
+        samples, summary = build_dataset(GROUND_TRUTH_CLINGEN_ROOT)
         assert summary.entries_covered > 0
         assert summary.candidate_count > 0
         assert summary.positive_count > 0

@@ -42,6 +42,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
+| 2026-06-25 | [Lingua Seeker v1.0.0 Release Checklist](active/2026-06-25-v1-release-checklist.md) | in-progress |
 | 2026-06-23 | [Environment Consistency Standard](active/2026-06-23-environment-consistency.md) | reference |
 | 2026-06-23 | [Log Data Mining Report (drain3)](active/2026-06-23-log-data-mining-report.md) | reference |
 | 2026-06-21 | [BIBM Main Paper TeX](active/2026-06-15-bibm-main-paper-tex/) | in-progress |

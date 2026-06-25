@@ -28,7 +28,7 @@ from benchmark.core.matching import (
     mark_expected_fields_missing,
     prepare_extracted_items,
 )
-from benchmark.core.paths import GROUND_TRUTH_ROOT, REPORTS_ROOT
+from benchmark.core.paths import GROUND_TRUTH_ROOT, GROUND_TRUTH_UNIFIED_ROOT, REPORTS_ROOT
 
 try:
     from benchmark.core.mondo_hierarchy import MondoHierarchy
@@ -42,6 +42,7 @@ from src.dao.postgresql.models import EvidenceEntityBinding, NormalizedEntity, R
 __all__ = [
     "POLL_INTERVAL_S",
     "MAX_POLL_ATTEMPTS",
+    "QUEUED_STATUSES",
     "TERMINAL_STATUSES",
     "preflight_database_connection",
     "submit_and_poll",
@@ -56,6 +57,7 @@ __all__ = [
 POLL_INTERVAL_S = 5.0
 MAX_POLL_ATTEMPTS = 360  # 30 min max per entry
 TERMINAL_STATUSES = {"completed", "failed"}
+QUEUED_STATUSES = {"queued"}  # normal waiting state, not an error
 
 
 def _run_id_from_status_url(status_url: str) -> str | None:
@@ -257,6 +259,8 @@ async def submit_and_poll(
             status_data["status_url"] = status_url
             last_status = status_data
             ps = status_data.get("pipeline_status", "")
+            if ps in QUEUED_STATUSES and _attempt % 12 == 0:
+                logger.info("Task queued (waiting for slot), poll {}/{}", _attempt + 1, module.MAX_POLL_ATTEMPTS)
             if ps in TERMINAL_STATUSES:
                 return status_data
         except Exception:
@@ -337,6 +341,8 @@ async def evaluate_one(
         classification=classification,
         language="en",
         moi=moi,
+        source_dataset=entry.get("source_dataset", ""),
+        original_entry_id=entry.get("original_entry_id", ""),
     )
 
     # Check for source text
@@ -520,6 +526,107 @@ async def evaluate_one(
     return metrics
 
 
+# ── Entry loading / sharding ───────────────────────────────────────────
+
+
+def _load_entries(ground_truth_root: Path) -> list[dict]:
+    """Load entries from ``selection.json`` or ``manifest.json``.
+
+    The unified dataset uses ``manifest.json`` with a different schema than
+    legacy datasets that ship ``selection.json``.  This function normalizes
+    both into the flat entry format expected by :func:`evaluate_one`.
+
+    Returns:
+        List of dicts with at least ``entry_id``, ``gene_symbol``,
+        ``classification``, ``moi``, ``disease_label``.  Unified entries
+        additionally carry ``source_dataset`` and ``original_entry_id``.
+    """
+    selection_path = ground_truth_root / "selection.json"
+    manifest_path = ground_truth_root / "manifest.json"
+
+    if selection_path.exists():
+        return json.loads(selection_path.read_text(encoding="utf-8"))
+
+    if manifest_path.exists():
+        raw = json.loads(manifest_path.read_text(encoding="utf-8"))
+        entries: list[dict] = []
+        for item in raw.get("entries", []):
+            entry_dir = ground_truth_root / item["unified_id"]
+            expected_path = entry_dir / "expected.json"
+            if not expected_path.exists():
+                continue
+            expected = json.loads(expected_path.read_text(encoding="utf-8"))
+            # Manifest carries gene/disease metadata; expected.json carries
+            # the evaluation-specific fields (evidence, standardization, entities).
+            # Merge them, preferring expected.json for evaluation fields.
+            entry = {
+                "entry_id": item["unified_id"],
+                "gene_symbol": expected.get("gene_symbol") or item.get("gene_symbol", ""),
+                "classification": expected.get("classification") or item.get("classification", ""),
+                "moi": expected.get("moi") or item.get("moi", ""),
+                "disease_label": expected.get("disease_label") or item.get("disease_label", ""),
+                "source_dataset": item.get("source_dataset", expected.get("source_dataset", "")),
+                "original_entry_id": item.get("original_entry_id", expected.get("original_entry_id", "")),
+                "expected_evidence": expected.get("expected_evidence", []),
+                "expected_standardization": expected.get("expected_standardization", {}),
+                "expected_entities": expected.get("expected_entities", {}),
+            }
+            entries.append(entry)
+        return entries
+
+    raise FileNotFoundError(
+        f"No selection.json or manifest.json found in {ground_truth_root}"
+    )
+
+
+def _apply_shard(
+    entries: list[dict],
+    *,
+    entry_ids: list[str] | None = None,
+    shard_index: int | None = None,
+    shard_size: int | None = None,
+    limit: int | None = None,
+) -> list[dict]:
+    """Filter entries by explicit IDs, shard slice, or limit.
+
+    Priority: ``entry_ids`` > ``shard_index``+``shard_size`` > ``limit``.
+    """
+    result = entries
+
+    if entry_ids:
+        id_set = set(entry_ids)
+        result = [e for e in result if e["entry_id"] in id_set]
+    elif shard_index is not None and shard_size is not None:
+        start = shard_index * shard_size
+        result = result[start : start + shard_size]
+    elif limit:
+        result = result[:limit]
+
+    return result
+
+
+def _compute_stratified_metrics(all_metrics: list[EntryMetrics]) -> dict[str, dict]:
+    """Compute P/R/F1 grouped by ``source_dataset`` for unified evaluations.
+
+    Returns a dict keyed by source_dataset name (e.g. ``clingen``,
+    ``clinvar_fused``, ``rett``, ``parkinson``), each containing the same
+    shape as ``compute_aggregate_metrics()["overall"]`` plus a ``count``.
+    """
+    from benchmark.core.aggregate import compute_aggregate_metrics
+
+    groups: dict[str, list[EntryMetrics]] = {}
+    for m in all_metrics:
+        key = m.source_dataset or "unknown"
+        groups.setdefault(key, []).append(m)
+
+    result: dict[str, dict] = {}
+    for key, metrics_list in sorted(groups.items()):
+        agg = compute_aggregate_metrics(metrics_list)
+        result[key] = {**agg["overall"], "count": len(metrics_list)}
+
+    return result
+
+
 # ── Top-level orchestrator ─────────────────────────────────────────────
 
 async def run_evaluation(
@@ -531,22 +638,40 @@ async def run_evaluation(
     force_reextract: bool = False,
     api_key: str | None = None,
     extraction_profile: str = "none",
+    shard_index: int | None = None,
+    shard_size: int | None = None,
 ):
-    """Main evaluation orchestrator."""
+    """Main evaluation orchestrator.
+
+    Supports three entry-selection modes (in priority order):
+
+    1. ``entry_ids`` \u2014 evaluate only the listed entry IDs.
+    2. ``shard_index`` + ``shard_size`` \u2014 evaluate one deterministic shard
+       (``entries[shard_index*shard_size : (shard_index+1)*shard_size]``).
+    3. ``limit`` \u2014 evaluate the first N entries.
+
+    When the ground truth root contains ``manifest.json`` (unified dataset),
+    entries are loaded from the manifest automatically.  Legacy datasets that
+    ship ``selection.json`` continue to work unchanged.
+    """
     logger.remove()
     logger.add(sys.stderr, level="INFO", format="{time:HH:mm:ss} | {level:<7} | {message}")
     REPORTS_ROOT.mkdir(parents=True, exist_ok=True)
 
-    # Load ground truth
-    selection_path = ground_truth_root / "selection.json"
-    entries = json.loads(selection_path.read_text(encoding="utf-8"))
-    entries = [e for e in entries if (ground_truth_root / e["entry_id"] / "source.md").exists()]
-    if entry_ids:
-        id_set = set(entry_ids)
-        entries = [e for e in entries if e["entry_id"] in id_set]
-    if limit:
-        entries = entries[:limit]
-    logger.info("Evaluating {} entries", len(entries))
+    # Load ground truth \u2014 supports both selection.json (legacy) and
+    # manifest.json (unified) via _load_entries().
+    all_entries = _load_entries(ground_truth_root)
+    entries = [e for e in all_entries if (ground_truth_root / e["entry_id"] / "source.md").exists()]
+    entries = _apply_shard(
+        entries,
+        entry_ids=entry_ids,
+        shard_index=shard_index,
+        shard_size=shard_size,
+        limit=limit,
+    )
+    is_unified = ground_truth_root == GROUND_TRUTH_UNIFIED_ROOT or (ground_truth_root / "manifest.json").exists()
+    ds_label = "unified" if is_unified else ground_truth_root.name
+    logger.info("Evaluating {} entries from {} dataset", len(entries), ds_label)
 
     # Setup
     proxy = load_proxy()
@@ -601,11 +726,19 @@ async def run_evaluation(
 
     aggregates = compute_aggregate_metrics(all_metrics)
 
-    # Build report
-    report = {
-        "evaluation_id": f"eval_clingen_{uuid.uuid4().hex[:8]}",
+    # Build report \u2014 include provenance and shard metadata
+    report: dict[str, Any] = {
+        "evaluation_id": f"eval_{ds_label}_{uuid.uuid4().hex[:8]}",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "config": {"base_url": base_url, "concurrency": concurrency, "limit": limit},
+        "config": {
+            "base_url": base_url,
+            "concurrency": concurrency,
+            "limit": limit,
+            "ground_truth_root": str(ground_truth_root),
+            "dataset": ds_label,
+            "shard_index": shard_index,
+            "shard_size": shard_size,
+        },
         "total_entries": len(entries),
         "total_duration_s": round(elapsed, 2),
         "aggregates": aggregates,
@@ -615,6 +748,8 @@ async def run_evaluation(
                 "gene_symbol": m.gene_symbol,
                 "classification": m.classification,
                 "moi": m.moi,
+                "source_dataset": m.source_dataset,
+                "original_entry_id": m.original_entry_id,
                 "run_id": m.run_id,
                 "status_url": m.status_url,
                 "pipeline_status": m.pipeline_status,
@@ -651,14 +786,24 @@ async def run_evaluation(
         ],
     }
 
-    # Save report
+    # Add by_source_dataset stratification when running unified
+    if is_unified:
+        report["aggregates"]["by_source_dataset"] = _compute_stratified_metrics(all_metrics)
+        report["aggregates"]["timeout_and_errors"] = [
+            {"entry_id": m.entry_id, "source_dataset": m.source_dataset, "pipeline_status": m.pipeline_status, "error_message": m.error_message}
+            for m in all_metrics
+            if m.pipeline_status in ("timeout", "error", "failed")
+        ]
+
+    # Save report \u2014 include shard suffix when applicable
     ts = time.strftime("%Y%m%d_%H%M%S")
-    report_path = REPORTS_ROOT / f"eval_{ts}.json"
+    shard_suffix = f"_shard{shard_index}" if shard_index is not None else ""
+    report_path = REPORTS_ROOT / f"eval_{ds_label}_{ts}{shard_suffix}.json"
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # Print summary
     o = aggregates["overall"]
-    logger.info("=== Layer 3 Evaluation Complete ===")
+    logger.info("=== Evaluation Complete ({}) ===", ds_label)
     logger.info("  Entries: {} | Duration: {:.0f}s", len(entries), elapsed)
     logger.info("  Field P/R/F1: {:.1%} / {:.1%} / {:.1%}", o["precision"], o["recall"], o["f1"])
     logger.info("  TP={} FP={} FN={}", o["true_positives"], o["false_positives"], o["false_negatives"])
@@ -669,6 +814,9 @@ async def run_evaluation(
     for moi, m in aggregates.get("by_moi", {}).items():
         logger.info("  MOI={}: F1={:.1%} StdAcc={:.1%} TrackCons={:.1%} (n={})",
                      moi, m["f1"], m["standardization_accuracy"], m["track_consistency"], m["count"])
+    if is_unified:
+        for sds, m in report["aggregates"].get("by_source_dataset", {}).items():
+            logger.info("  source={}: P={:.1%} R={:.1%} F1={:.1%} (n={})", sds, m["precision"], m["recall"], m["f1"], m["count"])
     logger.info("Report: {}", report_path)
 
     await engine.dispose()

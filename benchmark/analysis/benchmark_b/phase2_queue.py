@@ -8,12 +8,13 @@ from pathlib import Path
 import time
 from typing import Any, Mapping, TypedDict, cast
 
-from benchmark.core import GROUND_TRUTH_DIR, REPORTS_DIR
+from benchmark.core import REPORTS_DIR
+from benchmark.core.paths import GROUND_TRUTH_CLINGEN_ROOT
 
 
 MAIN_MULTILINGUAL_LANGUAGES = ("ja", "ko", "zh")
-DEFAULT_PILOT_SELECTION_PATH = GROUND_TRUTH_DIR / "benchmark_b_pilot_selection.json"
-DEFAULT_OUTPUT_PATH = GROUND_TRUTH_DIR / "benchmark_b_phase2_queue.json"
+DEFAULT_PILOT_SELECTION_PATH = GROUND_TRUTH_CLINGEN_ROOT / "benchmark_b_pilot_selection.json"
+DEFAULT_OUTPUT_PATH = GROUND_TRUTH_CLINGEN_ROOT / "benchmark_b_phase2_queue.json"
 
 
 class BenchmarkBPhase2QueueItemPayload(TypedDict):
@@ -60,7 +61,7 @@ class BenchmarkBPhase2QueuePayload(TypedDict):
 class BenchmarkBPhase2QueueConfig:
     """Configuration for Benchmark B Phase 2 queue generation."""
 
-    selection_path: Path = GROUND_TRUTH_DIR / "selection.json"
+    selection_path: Path = GROUND_TRUTH_CLINGEN_ROOT / "selection.json"
     pilot_selection_path: Path = DEFAULT_PILOT_SELECTION_PATH
     source_inventory_path: Path | None = None
     output_path: Path = DEFAULT_OUTPUT_PATH
@@ -247,7 +248,7 @@ def format_benchmark_b_phase2_queue(report: BenchmarkBPhase2QueueReport) -> str:
 def main(argv: list[str] | None = None) -> None:
     """CLI entrypoint for Benchmark B Phase 2 queue generation."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--selection-path", type=Path, default=GROUND_TRUTH_DIR / "selection.json")
+    parser.add_argument("--selection-path", type=Path, default=GROUND_TRUTH_CLINGEN_ROOT / "selection.json")
     parser.add_argument("--pilot-selection-path", type=Path, default=DEFAULT_PILOT_SELECTION_PATH)
     parser.add_argument("--source-inventory-path", type=Path, default=None)
     parser.add_argument("--output-path", type=Path, default=DEFAULT_OUTPUT_PATH)

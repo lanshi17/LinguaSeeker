@@ -72,8 +72,9 @@ class DatasetSummary:
 
 def build_dataset(ground_truth_dir: Path = GROUND_TRUTH_DIR) -> tuple[list[CandidateSample], DatasetSummary]:
     """Build the labeled candidate dataset from Phase 2 artifacts."""
-    selection_path = ground_truth_dir / "selection.json"
-    selection_items = json.loads(selection_path.read_text(encoding="utf-8"))
+    from benchmark.core.pipeline_client import _load_entries
+
+    selection_items = _load_entries(ground_truth_dir)
 
     samples: list[CandidateSample] = []
     entries_covered = 0

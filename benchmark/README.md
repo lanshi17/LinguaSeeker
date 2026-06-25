@@ -31,7 +31,7 @@ benchmark/
 ├── optimization/      Prompt optimization experiments (fused75 ablations, adjudication)
 ├── scripts/           Benchmark utility scripts
 ├── data/              All artifacts (gitignored where appropriate)
-│   ├── ground_truth/  {clingen, clinvar_fused, rett}
+│   ├── ground_truth/  {unified, clingen, clinvar_fused, rett, parkinson}
 │   ├── inputs/        {pipeline, literature_acquisition}
 │   └── reports/       {eval, reconcile, traceability, baseline, benchmark_b,
 │                       curation, paper, diagnostics, clinvar_fused, pipeline_e2e}
@@ -47,19 +47,25 @@ from benchmark.core import (
     FieldMatch, EntryMetrics,
     compare_evidence, fuzzy_match_value, normalize_comparison_text,
     compute_aggregate_metrics,
-    GROUND_TRUTH_ROOT, REPORTS_ROOT, RAW_PDF_ROOT,
+    GROUND_TRUTH_ROOT, GROUND_TRUTH_UNIFIED_ROOT, GROUND_TRUTH_CLINGEN_ROOT,
+    REPORTS_ROOT, RAW_PDF_ROOT,
     submit_and_poll, evaluate_one, run_evaluation,
 )
 ```
 
-`GROUND_TRUTH_ROOT` and `REPORTS_ROOT` always resolve to `benchmark/data/...`.
+`GROUND_TRUTH_ROOT` points to the **unified** dataset (150 entries) by default.
+Legacy dataset roots (`GROUND_TRUTH_CLINGEN_ROOT`, etc.) remain available for
+dataset-specific analysis tools.
 
 ## Common Entry Points
 
 | Goal | Command |
 |------|---------|
+| Run unified benchmark (default) | `python -m benchmark.layer3.evaluate --help` |
+| Run unified benchmark (shard) | `python -m benchmark.layer3.evaluate --shard-index 0 --shard-size 10` |
+| Run unified benchmark (subset) | `python -m benchmark.layer3.evaluate --entries gs_000 gs_001 gs_002` |
+| Run legacy ClinGen eval | `python -m benchmark.layer3.evaluate --ground-truth-root benchmark/data/ground_truth/clingen` |
 | Run pipeline benchmark | `python -m benchmark.runners.pipeline_e2e --help` |
-| Layer-3 ClinGen eval | `python -m benchmark.layer3.evaluate --help` (legacy shim) |
 | Download literature | `python -m benchmark.runners.literature_acquisition download --help` |
 | Rett literature pipeline | `python -m benchmark.runners.literature_rett --help` |
 | ClinVar fused selection | `python -m benchmark.datasets.clinvar_fused.select_fused_entries` |
@@ -98,23 +104,9 @@ All shims are scheduled for removal in Phase 6.
 
 ## Datasets
 
-### Dataset 1: ClinGen-30 (Benchmark A)
+### Unified Gold-Standard Dataset (Default)
 
-30 entries from ClinGen Gene-Disease Summary CSV. 3 expected fields per entry (gene_symbol, disease_diagnosis, gene_disease_relationship). Full P/R/F1 evaluation.
-
-### Dataset 2: ClinVar Fused
-
-ClinGen Definitive/Strong x ClinVar >=2-star Pathogenic/LP variants. 8 expected fields across gene-disease (P/R/F1) and variant (precision-only) layers. Supports multilingual source articles (en + zh/ja/ko translations).
-
-### Dataset 3: Rett Syndrome / MECP2
-
-89 PDFs across 11 languages. AI-assisted annotation with human review. Covers all A-J evidence field categories (up to 143 fields per entry).
-
-### Parkinson Literature
-
-XLSX workbook curation utility (7 sheets, 6291 rows) with PMC PDF downloading. Structural audit, not yet a benchmark ground truth dataset.
-
-### Unified Gold-Standard Dataset
+**The default benchmark dataset since 2026-06-25.** Schema-unified superset of all four source datasets. 150 entries under `benchmark/data/ground_truth/unified/gs_NNN/`. `GROUND_TRUTH_ROOT` points here by default.
 
 Schema-unified superset of the four source datasets, materialized under
 `benchmark/data/ground_truth/unified/gs_NNN/` by
@@ -177,6 +169,60 @@ python benchmark/scripts/validate_manifest.py
 This verifies: every `gs_NNN` directory has a manifest entry, every
 manifest entry points to an existing `expected.json`, no duplicate IDs,
 and required provenance fields are non-empty.
+
+#### Batch / Shard Execution
+
+The unified dataset supports batch execution for incremental evaluation:
+
+```bash
+# Run the full unified dataset (150 entries)
+cd backend && uv run python -m benchmark.layer3.evaluate
+
+# Run a single shard (10 entries per shard)
+uv run python -m benchmark.layer3.evaluate --shard-index 0 --shard-size 10
+
+# Run specific entries
+uv run python -m benchmark.layer3.evaluate --entries gs_000 gs_001 gs_002 gs_003 gs_004
+
+# Resume from a failed shard — re-run only the failed entries
+uv run python -m benchmark.layer3.evaluate --entries gs_007 gs_015
+
+# Run with concurrency
+uv run python -m benchmark.layer3.evaluate --shard-index 0 --shard-size 20 --concurrency 4
+```
+
+Each shard produces an independent report file (`eval_unified_<ts>_shardN.json`),
+so completed shards are never overwritten. Results include `by_source_dataset`
+stratification and full provenance (`source_dataset`, `original_entry_id`).
+
+#### Queued Task Handling
+
+The pipeline client treats `queued` as a normal waiting state (PostgreSQL
+single-task queue). Tasks transition `queued` → `running` → `completed/failed`
+automatically; the poll loop logs progress every 60 seconds while queued.
+
+### Legacy Datasets (Deprecated)
+
+The following datasets are retained for backward compatibility but are **no
+longer the default**. Use them by passing `--ground-truth-root` explicitly:
+
+```bash
+# ClinGen-30 (3 entries, 3 expected fields)
+uv run python -m benchmark.layer3.evaluate \
+    --ground-truth-root benchmark/data/ground_truth/clingen
+
+# ClinVar Fused (76 entries, 8 expected fields)
+uv run python -m benchmark.layer3.evaluate \
+    --ground-truth-root benchmark/data/ground_truth/clinvar_fused
+```
+
+| Dataset | Path | Entries | Status |
+|---------|------|---------|--------|
+| ClinGen-30 (Benchmark A) | `ground_truth/clingen/` | 34 | **Deprecated** — use unified |
+| ClinVar Fused | `ground_truth/clinvar_fused/` | 76 | **Deprecated** — use unified |
+| Rett Syndrome / MECP2 | `ground_truth/rett/` | 54 | **Deprecated** — use unified |
+| Parkinson Literature | `ground_truth/parkinson/` | 21 | **Deprecated** — use unified |
+| Merged 73 | `ground_truth/merged_73/` | 73 | **Deprecated** — use unified |
 
 ## Testing
 
