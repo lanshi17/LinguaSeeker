@@ -70,10 +70,6 @@ database/terminology_database
 *.log
 nohup.out
 command.log
-services/model-server/.venv
-services/model-server/__pycache__
-services/model-server/logs
-services/model-server/*.log
 lesson.md
 
 # Rust build artefacts — multi-GB target/ dirs MUST stay out of context

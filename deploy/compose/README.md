@@ -17,22 +17,20 @@ deploy/compose/
 ├── frontend-host/           # Cross-host: nginx + SPA (frontend server)
 │   ├── docker-compose.yml
 │   └── .env.example
-└── single-server/           # All-in-one: backend + Postgres + Redis + 3 GPU model containers
+└── single-server/           # All-in-one: backend + Postgres + Redis (inference services external)
     ├── docker-compose.yml
     ├── .env.example
     ├── deploy.sh            # Initial deployment script
     ├── update.sh            # Incremental code-only update script
-    ├── patch-backend.Dockerfile
-    └── patch-model-server.Dockerfile
-```
+    └── patch-backend.Dockerfile
 
 | Variant | Services | Use Case |
 |---------|----------|----------|
 | `dev-infra/` | Postgres + Redis | Local development; backend started via `uv run uvicorn` on host |
-| `staging/` | Backend + Postgres + Redis | Pre-release validation; model server runs separately |
+| `staging/` | Backend + Postgres + Redis | Pre-release validation; inference services external |
 | `backend-host/` | Backend + Postgres + Redis | Backend half of cross-host deployment |
 | `frontend-host/` | Nginx + SPA | Frontend half of cross-host deployment |
-| `single-server/` | Backend + Postgres + Redis + Embedding + Rerank + Doc Parse | All-in-one GPU server |
+| `single-server/` | Backend + Postgres + Redis | All-in-one server (inference services external) |
 
 ## Cross-Host Deployment (backend-host + frontend-host)
 
@@ -60,8 +58,9 @@ Browser
                   |
                   v (optional)
 +---------------------------------------+
-|  GPU Host (services/model-server)     |
-|  embedding / rerank / doc-parse :8001 |
+|  Inference Services (external project)|
+|  embedding :8002 / rerank :8003      |
+|  doc-parse :8004                      |
 +---------------------------------------+
 ```
 
@@ -74,14 +73,13 @@ Browser
 - **CORS** -- `CORS_ORIGINS` must match the actual browser origin (scheme + port), e.g. `https://app.example.com`.
 
 ## Single-Server Deployment
-
-Designed for CentOS 7.9+ GPU servers. Runs all services locally: backend, Postgres, Redis, and 3 model-server containers (embedding, rerank, doc-parse) each with GPU access.
+Designed for CentOS 7.9+ servers. Runs backend, Postgres, and Redis locally. Inference services (embedding, rerank, doc-parse) are external Docker containers deployed separately.
 
 ### Prerequisites
 
-- Docker CE 20.10+ with NVIDIA Container Toolkit
-- Pre-built images loaded: `lingua-seeker-backend:local`, `embedding-server:local`, `rerank-server:local`, `doc-parse-server:local`
-- Model weights at `/opt/lingua-seeker-data/models/` (embedding, rerank, vlm subdirectories)
+- Docker CE 20.10+
+- Backend image loaded: `lingua-seeker-backend:local`
+- External inference services running (embedding :8002, rerank :8003, doc-parse :8004)
 
 ### Initial Deploy
 
@@ -96,11 +94,8 @@ cp .env.example .env   # edit with real secrets
 ```bash
 # Code-only updates (no dependency rebuild, runs on target server):
 ./update.sh backend          # update backend only
-./update.sh model-server     # update all 3 model containers
-./update.sh all              # update everything
 ```
-
-Uses thin overlay Dockerfiles (`patch-backend.Dockerfile`, `patch-model-server.Dockerfile`) that copy only changed source files onto existing images for fast rebuilds.
+Uses thin overlay Dockerfiles (`patch-backend.Dockerfile`) that copy only changed source files onto existing images for fast rebuilds.
 
 ## Dev Infrastructure
 
@@ -116,9 +111,8 @@ docker compose -f deploy/compose/dev-infra/docker-compose.yml up -d
 |---------|-----------|---------------|
 | Frontend | `frontend/Dockerfile` | `frontend/` (multi-stage: bun build -> nginx) |
 | Backend | `backend/Dockerfile` | repo root (needs `backend/` and `libs/config-loader/`) |
-| Embedding | `services/model-server/docker/embedding.Dockerfile` | `services/model-server/` |
-| Rerank | `services/model-server/docker/rerank.Dockerfile` | `services/model-server/` |
-| Doc Parse | `services/model-server/docker/doc-parse.Dockerfile` | `services/model-server/` |
+
+> **Note**: Embedding, Rerank, and Doc-Parse inference services are built and published by a separate project. They are not part of this repository's build lifecycle.
 
 ## Relationship with Ansible
 

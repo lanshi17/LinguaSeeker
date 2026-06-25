@@ -142,6 +142,12 @@ async def lifespan(app: FastAPI):
     wire_dependencies()
     logger.info("Pipeline orchestrator initialized")
 
+    # Start the job dispatcher (background polling for queued jobs)
+    _dispatcher = _wiring.get_dispatcher()
+    if _dispatcher is not None:
+        _dispatcher.start()
+        logger.info("Job dispatcher started")
+
     # Ensure standalone tables (independent MetaData, not managed by Alembic) exist
     # Use advisory lock to prevent multi-worker races on table creation and recovery
     from src.dao.postgresql.search_index_repo import search_index_metadata
@@ -183,10 +189,16 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # Graceful shutdown: wait for in-flight pipeline tasks to complete so
-    # they can persist their state to PostgreSQL before the engine is disposed.
-    # This prevents orphaned PENDING/RUNNING rows when uvicorn --reload or
-    # SIGTERM interrupts a long-running LLM call.
+    # Graceful shutdown: stop dispatcher first (no new jobs claimed),
+    # then wait for in-flight pipeline tasks to complete so they can
+    # persist their state to PostgreSQL before the engine is disposed.
+    _dispatcher = _wiring.get_dispatcher()
+    if _dispatcher is not None:
+        try:
+            await _dispatcher.stop(timeout=90.0)
+        except Exception as exc:
+            logger.debug("Job dispatcher stop skipped: {}", exc)
+
     try:
         runner = get_pipeline_runner()
         # Timeout must exceed the LLM request timeout (default 60s) to avoid

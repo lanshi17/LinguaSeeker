@@ -44,8 +44,8 @@ postgres:
 redis:
   password: "your-production-redis-password"
 
-# -- Model Server Auth -------------------------------------------------------
-model_server_api_key: "your-production-model-server-api-key"
+# -- Inference Service Auth --------------------------------------------------
+inference_api_key: "your-inference-service-api-key"
 
 # -- Web Search ---------------------------------------------------------------
 web_search:

@@ -9,7 +9,7 @@ Multi-Agent infrastructure platform for medical genetics literature automation a
 | Frontend | Vite, React 18, TypeScript (strict), Ant Design, Zustand, React Query, Axios, React Router |
 | Backend | Python 3.12, FastAPI, SQLAlchemy 2.0 (async), Alembic, LangGraph |
 | Native I/O | Rust (PyO3/maturin extensions: rust-io, files-io, net-io) |
-| Model Server | FastAPI microservices: Embedding (:8002), Rerank (:8003), Doc-Parse (:8004), or unified (:8001) |
+| Inference | External Docker containers: Embedding (:8002), Rerank (:8003), Doc-Parse (:8004) — built by separate project |
 | Database | PostgreSQL 16 (pgvector), Redis 8.0 |
 | Infra | Docker Compose, Ansible |
 
@@ -35,8 +35,6 @@ Multi-Agent infrastructure platform for medical genetics literature automation a
 │   ├── tests/                      # Backend tests
 │   ├── alembic/                    # Migration scaffold
 │   └── pyproject.toml              # Python project (uv-managed)
-├── services/                       # Standalone microservices
-│   └── model-server/               # Embedding/Rerank/Doc-Parse model inference
 ├── frontend/                       # Vite + React application
 │   ├── src/                        # Application source
 │   │   ├── pages/                  # Route-level page components
@@ -54,12 +52,12 @@ Multi-Agent infrastructure platform for medical genetics literature automation a
 │   └── config/                     # DB config files
 ├── deploy/                         # Deployment configurations
 │   ├── compose/                    # Docker Compose deployment
-│   │   ├── single-server/          # All-in-one deployment (backend + model-server)
+│   │   ├── single-server/          # All-in-one deployment (backend + external inference services)
 │   │   ├── backend-host/           # Backend + Postgres + Redis
 │   │   ├── frontend-host/          # Nginx + pre-built SPA
 │   │   └── staging/                # Staging environment
 │   └── ansible/                    # Ansible deployment automation
-│       ├── roles/                  # backend, frontend, postgres, redis, nginx, model-server
+│       ├── roles/                  # backend, frontend, postgres, redis, nginx
 │       ├── playbooks/              # site.yml, healthcheck.yml
 │       └── inventories/            # production/
 ├── docs/                           # Documentation (active, planned, archive)
@@ -119,17 +117,18 @@ cd backend/libs/rust-io     # or files-io, net-io
 cargo test
 ```
 
-**Model server (independent services):**
+**Inference services (external):**
 
-```bash
-cd services/model-server
-# Run specialized services independently:
-uv run python main_embedding.py --port 8002
-uv run python main_rerank.py --port 8003
-uv run python main_doc_parse.py --port 8004
+Model inference (Embedding, Rerank, Doc-Parse) is provided by external Docker containers built and published by a separate project. Configure the service URLs in `backend/config/`:
 
-# Or run the unified server:
-uv run python main.py --port 8001
+```yaml
+# In backend/config/environments/<env>.yaml or defaults/main.yaml
+embedding:
+  base_url: "http://localhost:8002/v1"
+rerank:
+  base_url: "http://localhost:8003/v1"
+mineru:
+  local_parse_url: "http://localhost:8004"
 ```
 
 ## Development Commands
@@ -150,21 +149,18 @@ uv run python main.py --port 8001
 
 ### Single-Server (All-in-one)
 
-All services on one machine -- backend, postgres, redis, and GPU model-server containers.
+Backend, postgres, and redis on one machine. Inference services (embedding/rerank/doc-parse) are external Docker containers deployed separately.
 
 ```bash
-# 1. Load pre-built images
-docker load -i lingua-all-images.tar
-
-# 2. Prepare config
+# 1. Prepare config
 cd /opt/lingua-seeker
 cp deploy/compose/single-server/.env.example .env  # edit secrets
 # Create config/environments/production.yaml + config/vault/production.yaml
 
-# 3. Start all services
+# 2. Start services
 docker-compose --env-file .env up -d
 
-# 4. Database migration (first time)
+# 3. Database migration (first time)
 docker exec lingua-backend uv run alembic upgrade head
 ```
 

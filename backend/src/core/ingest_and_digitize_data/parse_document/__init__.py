@@ -52,11 +52,11 @@ def create_parse_service(config=None) -> ParseDocumentService:
     )
 
     local = MinerULocalParser(
-        model_server_url=config.mineru_local_model_server_url,
+        parse_url=config.mineru_local_parse_url,
         model_id=config.mineru_local_model_id,
         timeout=config.mineru_local_timeout,
         dpi=config.mineru_local_dpi,
-        api_key=get_config().model_server_api_key,
+        api_key=get_config().inference_api_key,
     )
 
     orchestrator = DocumentParseOrchestrator(remote=remote, local=local)

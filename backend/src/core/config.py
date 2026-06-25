@@ -180,7 +180,7 @@ class ParseDocumentConfig(BaseModel):
 
     mineru_remote_poll_interval: float = 2.0
     mineru_remote_max_poll_attempts: int = 150
-    mineru_local_model_server_url: str = "http://localhost:8004"
+    mineru_local_parse_url: str = "http://localhost:8004"
     mineru_local_model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B"
     mineru_local_timeout: float = 120.0
     mineru_local_dpi: int = 200
@@ -359,15 +359,14 @@ class Settings(BaseSettings):
 
     mineru_remote_poll_interval: float = 2.0
     mineru_remote_max_poll_attempts: int = 150
-    mineru_local_model_server_url: str = "http://localhost:8004"
+    mineru_local_parse_url: str = "http://localhost:8004"
     mineru_local_model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B"
     mineru_local_timeout: float = 120.0
     mineru_local_dpi: int = 200
 
-    # ── Model Server flat fields (MODEL_SERVER_*) ─────────────────────
+    # ── Inference Service flat fields (INFERENCE_*) ──────────────────
 
-    model_server_url: str = "http://localhost:8001"
-    model_server_api_key: str = ""  # API key for authenticating with model-server containers
+    inference_api_key: str = ""  # API key for authenticating with inference service containers
 
     # ── Redis flat fields (REDIS_*) ──────────────────────────────────────
 
@@ -474,7 +473,7 @@ class Settings(BaseSettings):
         )
         self.embedding = EmbeddingConfig(
             base_url=self.embedding_base_url,
-            api_key=self.model_server_api_key,
+            api_key=self.inference_api_key,
             model=self.embedding_model,
             dimension=self.embedding_dimension,
             batch_size=self.embedding_batch_size,
@@ -484,7 +483,7 @@ class Settings(BaseSettings):
         )
         self.rerank = RerankConfig(
             base_url=self.rerank_base_url,
-            api_key=self.model_server_api_key,
+            api_key=self.inference_api_key,
             model=self.rerank_model,
             top_k=self.rerank_top_k,
             score_threshold=self.rerank_score_threshold,
@@ -498,7 +497,7 @@ class Settings(BaseSettings):
         self.parse_document = ParseDocumentConfig(
             mineru_remote_poll_interval=self.mineru_remote_poll_interval,
             mineru_remote_max_poll_attempts=self.mineru_remote_max_poll_attempts,
-            mineru_local_model_server_url=self.mineru_local_model_server_url,
+            mineru_local_parse_url=self.mineru_local_parse_url,
             mineru_local_model_id=self.mineru_local_model_id,
             mineru_local_timeout=self.mineru_local_timeout,
             mineru_local_dpi=self.mineru_local_dpi,

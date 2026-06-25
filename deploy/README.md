@@ -7,8 +7,8 @@ Deployment configuration for the Lingua Seeker platform.
 ```
 deploy/
 ├── ansible/                    # Bare-metal / systemd deployment (production + staging)
-│   ├── roles/                  # common, postgres, redis, backend, model-server,
-│   │                           #   model-server-docker, frontend, nginx
+│   ├── roles/                  # common, postgres, redis, backend, frontend, nginx
+│   │
 │   ├── playbooks/              # site.yml, healthcheck.yml
 │   └── inventories/            # production/, staging/
 ├── compose/                    # Docker Compose deployment variants
@@ -16,7 +16,7 @@ deploy/
 │   ├── staging/                # Pre-release: backend + Postgres + Redis
 │   ├── backend-host/           # Cross-host: backend + Postgres + Redis
 │   ├── frontend-host/          # Cross-host: nginx + SPA (proxies to backend-host)
-│   └── single-server/          # All-in-one: backend + Postgres + Redis + 3 GPU model containers
+│   └── single-server/          # All-in-one: backend + Postgres + Redis (inference services external)
 └── mineru-api/                 # MinerU document parsing deployment notes
 ```
 
@@ -46,11 +46,10 @@ Internet
               |
               +---> PostgreSQL (:5432)
               +---> Redis (:6379)
-              +---> Model Server (:8001 monolith, or :8002-8004 multi-container)
-                      +-- Embedding (Qwen3-Embedding-0.6B)
-                      +-- Rerank (bge-reranker-v2-m3)
-                      +-- Doc Parse (MinerU2.5-Pro)
-```
+             +---> External Inference Services (separate project)
+                     +-- Embedding (:8002)
+                     +-- Rerank (:8003)
+                     +-- Doc Parse (:8004)
 
 ## Requirements
 

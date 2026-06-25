@@ -1,8 +1,8 @@
 # ============================================================================
 # Lingua Seeker — Single-Server Deployment (CentOS 7.9 + GPU)
 # ============================================================================
-# All services on one machine: backend + postgres + redis + 3 model-server
-# containers. Uses pre-built local images — no build step needed.
+# All services on one machine: backend + postgres + redis. Inference services (embedding/rerank/doc-parse) are external.
+# Uses pre-built local images — no build step needed.
 #
 # Usage:
 #   cd /opt/lingua-seeker
@@ -12,8 +12,6 @@
 # Prerequisites:
 #   - Docker CE 20.10+ (CentOS 7 compatible)
 #   - NVIDIA Container Toolkit (nvidia-ctk)
-#   - Model weights at /opt/lingua-seeker-data/models/
-#   - All 4 images loaded (docker load -i model-server-all-images.tar)
 #
 # Architecture:
 #   nginx (host) → backend:8000 → postgres:5432 + redis:6379
@@ -49,11 +47,11 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      # ── Model Server endpoints (per-service containers) ──
+      # ── External Inference Service endpoints ──
       EMBEDDING_BASE_URL: http://model-embedding:8002/v1
       RERANK_BASE_URL: http://model-rerank:8003/v1
       # Doc-parse: MinerU native PDF parsing via /file_parse
-      MINERU_LOCAL_MODEL_SERVER_URL: http://model-doc-parse:8004
+      MINERU_LOCAL_PARSE_URL: http://model-doc-parse:8004
       # ── LLM endpoints ──
       FAST_LLM_BASE_URL: ${FAST_LLM_BASE_URL}
       FAST_LLM_API_KEY: ${FAST_LLM_API_KEY}
@@ -63,8 +61,8 @@ services:
       CHAT_LLM_API_KEY: ${CHAT_LLM_API_KEY}
       TRANSLATION_LLM_BASE_URL: ${TRANSLATION_LLM_BASE_URL}
       TRANSLATION_LLM_API_KEY: ${TRANSLATION_LLM_API_KEY}
-      # ── Model server auth ──
-      MODEL_SERVER_API_KEY: ${MODEL_SERVER_API_KEY:-}
+      # ── Inference Service auth ──
+      INFERENCE_API_KEY: ${INFERENCE_API_KEY:-}
       # ── Literature acquisition ──
       UNPAYWALL_EMAIL: ${UNPAYWALL_EMAIL:-}
       PUBMED_API_KEY: ${PUBMED_API_KEY:-}
@@ -121,94 +119,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-
-  # ── Model Server: Embedding ──────────────────────────────────────────────
-  model-embedding:
-    image: embedding-server:local
-    container_name: embedding-server
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8002:8002"
-    volumes:
-      - ${MODEL_WEIGHTS_PATH:-/opt/lingua-seeker-data/models}/embedding:/models/embedding:ro
-    environment:
-      HOST: 0.0.0.0
-      PORT: 8002
-      EMBEDDING_MODEL_ID: /models/embedding/Qwen--Qwen3-Embedding-0.6B
-      EMBEDDING_GPU_MEMORY_UTILIZATION: ${EMBEDDING_GPU_MEM:-0.90}
-      API_KEY: ${MODEL_SERVER_API_KEY:-}
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-
-  # ── Model Server: Rerank ─────────────────────────────────────────────────
-  model-rerank:
-    image: rerank-server:local
-    container_name: rerank-server
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8003:8003"
-    volumes:
-      - ${MODEL_WEIGHTS_PATH:-/opt/lingua-seeker-data/models}/rerank:/models/rerank:ro
-    environment:
-      HOST: 0.0.0.0
-      PORT: 8003
-      RERANK_MODEL_ID: /models/rerank/BAAI--bge-reranker-v2-m3
-      RERANK_GPU_MEMORY_UTILIZATION: ${RERANK_GPU_MEM:-0.90}
-      API_KEY: ${MODEL_SERVER_API_KEY:-}
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-
-  # ── Model Server: Doc Parse (PDF parsing with MinerU VLM backend) ────────
-  model-doc-parse:
-    image: doc-parse-server:local
-    container_name: doc-parse-server
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8004:8004"
-    volumes:
-      - ${MODEL_WEIGHTS_PATH:-/opt/lingua-seeker-data/models}/vlm:/models/vlm:ro
-    environment:
-      HOST: 0.0.0.0
-      PORT: 8004
-      DOC_PARSE_BACKEND: vlm
-      DOC_PARSE_MODEL_PATH: /models/vlm/opendatalab--MinerU2.5-Pro-2604-1.2B
-      DOC_PARSE_GPU_MEMORY_UTILIZATION: ${DOC_PARSE_GPU_MEM:-0.90}
-      API_KEY: ${MODEL_SERVER_API_KEY:-}
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
 
 volumes:
   postgres_data:

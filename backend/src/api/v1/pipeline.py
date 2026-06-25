@@ -30,6 +30,7 @@ from src.agents.content_hash import normalize_identifier
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     ExtractionTarget,
 )
+from src.dao.postgresql.job_queue import JobQueueRepository
 
 router = APIRouter()
 
@@ -208,6 +209,7 @@ class PipelineRunListResponse(BaseModel):
 # ── Global pipeline runner (initialized in app lifespan) ─────────────────────
 
 _pipeline_runner = None
+_job_queue: JobQueueRepository | None = None
 
 
 def get_pipeline_runner():
@@ -222,6 +224,17 @@ def set_pipeline_runner(runner):
     """Set the global pipeline runner instance."""
     global _pipeline_runner
     _pipeline_runner = runner
+
+
+def get_job_queue() -> JobQueueRepository | None:
+    """Get the global job queue repository."""
+    return _job_queue
+
+
+def set_job_queue(jq: JobQueueRepository) -> None:
+    """Set the global job queue repository."""
+    global _job_queue
+    _job_queue = jq
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -351,12 +364,13 @@ def _prepare_phase_rerun_state(
 @router.post("/run", response_model=PipelineRunResponse, status_code=202)
 @limiter.limit("10/minute")
 async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_key: str | None = Depends(require_api_key)):
-    """Start a new pipeline run.
+    """Enqueue a new pipeline run job.
 
-    Returns immediately with processing_run_id. Poll status_url for progress.
-    N3 fix: Checks for duplicate in-progress runs before starting.
+    Returns immediately with processing_run_id and status_url.
+    The background dispatcher picks up queued jobs one at a time.
     """
     runner = get_pipeline_runner()
+    jq = get_job_queue()
 
     # Phase re-run: resume from existing state for target_phase 2/3
     if body.mode == "phase" and body.processing_run_id:
@@ -366,27 +380,36 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
                 status_code=404,
                 detail=f"Pipeline run {body.processing_run_id} not found",
             )
-        # Reject if the run is still active (local task or durable DB state)
         if existing_state.pipeline_status in (PipelineStatus.PENDING, PipelineStatus.RUNNING):
             raise HTTPException(
                 status_code=409,
                 detail=f"Pipeline run {body.processing_run_id} is still active",
             )
-        initial_state = _prepare_phase_rerun_state(existing_state, body.target_phase)
-        from sqlalchemy.exc import IntegrityError
 
-        try:
-            task = await runner.start(initial_state)
-        except IntegrityError:
-            raise HTTPException(
-                status_code=409,
-                detail="A pipeline run is already in progress for this source",
+        request_data: dict[str, Any] = {
+            "mode": "phase",
+            "source_type": body.source_type,
+            "target_phase": body.target_phase,
+            "processing_run_id_ref": body.processing_run_id,
+        }
+
+        if jq is not None:
+            job_id = uuid.uuid4()
+            await jq.enqueue(
+                job_id=job_id,
+                processing_run_id=uuid.UUID(existing_state.processing_run_id),
+                source_document_id=uuid.UUID(existing_state.source_document_id),
+                request_data=request_data,
             )
+        else:
+            # Fallback: direct start when job queue is not configured
+            initial_state = _prepare_phase_rerun_state(existing_state, body.target_phase)
+            await runner.start(initial_state)
 
         return PipelineRunResponse(
             processing_run_id=existing_state.processing_run_id,
             source_document_id=existing_state.source_document_id,
-            status="accepted",
+            status="queued" if jq is not None else "accepted",
             status_url=f"/api/v1/pipeline/runs/{existing_state.processing_run_id}/status",
         )
 
@@ -396,7 +419,6 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
     # Decode base64 content and write to temp file if provided
     upload_file_path = None
     if body.content_base64:
-        # Enforce file size limit
         max_size_bytes = get_config().mineru.max_file_size_mb * 1024 * 1024
         estimated_size = len(body.content_base64) * 3 // 4
         if estimated_size > max_size_bytes:
@@ -409,8 +431,6 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
             content_bytes = base64.b64decode(body.content_base64, validate=True)
         except binascii.Error as exc:
             raise HTTPException(status_code=422, detail=f"Invalid base64 content: {exc}") from exc
-        # Sanitize filename: strip directory components to prevent path traversal
-        # Normalize backslashes (Windows) before PurePosixPath extraction
         raw_fname = body.filename or f"{processing_run_id}.bin"
         fname = PurePosixPath(raw_fname.replace("\\", "/")).name
         temp_dir = Path(__file__).resolve().parent.parent.parent.parent / "data" / "pipeline" / "uploads"
@@ -419,15 +439,12 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         async with aiofiles.open(upload_file_path, "wb") as f:
             await f.write(content_bytes)
 
-    # The pipeline always needs a downloaded document to parse.
-    # The "download" action encompasses both search and download
-    # (link acquisition + PDF download). The "search" action only
-    # returns metadata and is used by the separate /literature/search
-    # endpoint — using it here would leave Phase 1 without a PDF.
     online_action = "download" if body.source_type == "online" else None
     source_key = _build_source_key(body)
 
-    initial_state = PipelineGraphState(
+    # Compute content hash for L1/L2 processing cache deduplication.
+    # Build a temporary state just for hash computation.
+    temp_state = PipelineGraphState(
         processing_run_id=processing_run_id,
         source_document_id=source_document_id,
         mode=PipelineMode(body.mode),
@@ -445,16 +462,11 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         extraction_target=body.extraction_target,
         extraction_profile=body.extraction_profile,
     )
-
-    # Compute content hash for L1/L2 processing cache deduplication.
-    # The hash covers file bytes (local), pre-parsed markdown, or
-    # online identifiers/query — plus the extraction target scope.
-    content_hash = await runner.compute_initial_content_hash(initial_state)
+    content_hash = await runner.compute_initial_content_hash(temp_state)
     if content_hash:
-        initial_state.content_hash = content_hash
-        initial_state.source_key = _build_source_key(body, content_hash)
-        # Check processing cache: if an identical document was already
-        # processed, return the cached result immediately.
+        temp_state.content_hash = content_hash
+        temp_state.source_key = _build_source_key(body, content_hash)
+        source_key = temp_state.source_key
         cached_state = await runner.check_processing_cache(content_hash)
         if cached_state is not None and cached_state.pipeline_status == PipelineStatus.COMPLETED:
             logger.info(
@@ -462,7 +474,6 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
                 content_hash[:12],
                 cached_state.processing_run_id,
             )
-            # Clean up temp file since we won't run the pipeline
             if upload_file_path:
                 Path(upload_file_path).unlink(missing_ok=True)
             return PipelineRunResponse(
@@ -472,37 +483,60 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
                 status_url=f"/api/v1/pipeline/runs/{cached_state.processing_run_id}/status",
             )
 
-    # N3: Duplicate run prevention — check if same source is already being processed.
-    if initial_state.source_key and await runner.is_running_for_source(initial_state.source_key):
-        raise HTTPException(
-            status_code=409,
-            detail=f"A pipeline run is already in progress for this source: {initial_state.source_key}",
-        )
-
-    from sqlalchemy.exc import IntegrityError
-
-    try:
-        task = await runner.start(initial_state)
-    except IntegrityError:
+    # N3: Duplicate run prevention
+    if source_key and await runner.is_running_for_source(source_key):
+        if upload_file_path:
+            Path(upload_file_path).unlink(missing_ok=True)
         raise HTTPException(
             status_code=409,
             detail=f"A pipeline run is already in progress for this source: {source_key}",
         )
 
-    # Clean up temp file after pipeline completes (success or failure)
-    if upload_file_path:
-        def _cleanup_temp_file(t: object) -> None:
-            try:
-                Path(upload_file_path).unlink(missing_ok=True)
-            except OSError:
-                pass
+    # Build request data for the job queue
+    request_data: dict[str, Any] = {
+        "mode": body.mode,
+        "source_type": body.source_type,
+        "target_phase": body.target_phase,
+        "source_key": source_key,
+        "upload_file_path": upload_file_path,
+        "pre_parsed_markdown": body.pre_parsed_markdown,
+        "query": body.query,
+        "identifiers": body.identifiers,
+        "action": online_action,
+        "relevance_gate": body.relevance_gate,
+        "literature_types": body.literature_types,
+        "created_at": datetime.now().isoformat(),
+        "extraction_profile": body.extraction_profile,
+    }
+    if body.extraction_target is not None:
+        request_data["extraction_target"] = body.extraction_target.model_dump()
 
-        task.add_done_callback(_cleanup_temp_file)
+    if jq is not None:
+        job_id = uuid.uuid4()
+        await jq.enqueue(
+            job_id=job_id,
+            processing_run_id=uuid.UUID(processing_run_id),
+            source_document_id=uuid.UUID(source_document_id),
+            request_data=request_data,
+        )
+    else:
+        # Fallback: direct start when job queue is not configured
+        from sqlalchemy.exc import IntegrityError
+
+        try:
+            await runner.start(temp_state)
+        except IntegrityError:
+            if upload_file_path:
+                Path(upload_file_path).unlink(missing_ok=True)
+            raise HTTPException(
+                status_code=409,
+                detail=f"A pipeline run is already in progress for this source: {source_key}",
+            )
 
     return PipelineRunResponse(
         processing_run_id=processing_run_id,
         source_document_id=source_document_id,
-        status="accepted",
+        status="queued" if jq is not None else "accepted",
         status_url=f"/api/v1/pipeline/runs/{processing_run_id}/status",
     )
 
@@ -550,9 +584,27 @@ async def list_pipeline_runs(
 async def get_pipeline_status(processing_run_id: str, _api_key: str | None = Depends(require_api_key)):
     """Get the current status of a pipeline run.
 
-    Checks in-memory cache first, then falls back to PostgreSQL.
+    Checks job queue first (for queued/running jobs), then falls back to
+    the in-memory cache and PostgreSQL for pipeline state details.
     """
     runner = get_pipeline_runner()
+    jq = get_job_queue()
+
+    # Check job queue first — a queued job may not have pipeline state yet
+    if jq is not None:
+        job_status = await jq.get_status(processing_run_id)
+        if job_status == "queued":
+            _empty_phases = PipelinePhasesResponse(
+                phase_1=PhaseStatusResponse(status="pending"),
+                phase_2=PhaseStatusResponse(status="pending"),
+                phase_3=PhaseStatusResponse(status="pending"),
+            )
+            return PipelineStatusResponse(
+                processing_run_id=processing_run_id,
+                source_document_id="",
+                pipeline_status="queued",
+                phases=_empty_phases,
+            )
 
     state = await runner.get_last_state(processing_run_id)
 

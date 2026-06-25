@@ -40,14 +40,14 @@ chat_llm:
   timeout: {{ chat_llm.timeout }}
 
 
-# ── Embedding (local model-server) ──────────────────────────────────────
+# ── Embedding (external inference service) ─────────────────────────────
 embedding:
   base_url: {{ embedding.base_url | default('') }}
   model: {{ embedding.model }}
   dimension: {{ embedding.dimension }}
   batch_size: {{ embedding.batch_size }}
 
-# ── Rerank (local model-server) ─────────────────────────────────────────
+# ── Rerank (external inference service) ────────────────────────────────
 rerank:
   base_url: {{ rerank.base_url | default('') }}
   model: {{ rerank.model }}
@@ -60,13 +60,13 @@ mineru:
   api_token: {{ mineru.api_token | default('') }}
   remote_poll_interval: {{ mineru.remote_poll_interval }}
   remote_max_poll_attempts: {{ mineru.remote_max_poll_attempts }}
-  local_model_server_url: {{ mineru.local_model_server_url }}
+  local_parse_url: {{ mineru.local_parse_url }}
   local_model_id: {{ mineru.local_model_id }}
   local_timeout: {{ mineru.local_timeout }}
   local_dpi: {{ mineru.local_dpi }}
 
-# ── Model Server ────────────────────────────────────────────────────────
-model_server_url: http://{{ api_host if api_host != '0.0.0.0' else 'localhost' }}:{{ model_server_port | default(8001) }}
+# ── Inference Service Auth ────────────────────────────────────────────
+inference_api_key: "{{ inference_api_key | default('') }}"
 
 # ── Redis ───────────────────────────────────────────────────────────────
 redis:
@@ -112,7 +112,7 @@ network:
   proxy: {{ network.proxy | default('') }}
   no_proxy: "{{ network.no_proxy | default('') }}"
 
-# ── Model Server GPU settings ──────────────────────────────────────────
+# ── Inference Service GPU settings ──────────────────────────────────────
 doc_parse_model_id: "{{ doc_parse_model_id | default('') }}"
 embedding_gpu_memory_utilization: {{ embedding_gpu_memory_utilization | default(0.35) }}
 embedding_max_model_len: {{ embedding_max_model_len | default(4096) }}
