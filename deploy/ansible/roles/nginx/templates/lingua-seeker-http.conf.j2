@@ -21,9 +21,12 @@ server {
         root /var/www/certbot;
     }
 
-    # API — even before TLS, allow health checks
-    location /api/ {
-        proxy_pass http://backend;
+    # API — even before TLS, allow health checks.
+    # Matches /api/ at root or /<base>/api/ under a subpath mount.
+    # proxy_pass with URI suffix strips the matched prefix so the backend
+    # always sees /api/...
+    location {{ frontend_base_path }}/api/ {
+        proxy_pass http://backend/api/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -32,11 +35,17 @@ server {
         proxy_set_header X-API-Key {{ api_key }};
     }
 
-    location / {
-        proxy_pass http://frontend;
+    location {{ frontend_base_path }}/ {
+        proxy_pass http://frontend{{ frontend_base_path }}/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto http;
     }
+
+{% if frontend_base_path %}
+    location = {{ frontend_base_path }} {
+        return 301 {{ frontend_base_path }}/;
+    }
+{% endif %}
 }

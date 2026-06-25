@@ -883,9 +883,72 @@ body {
   .ets-mobile { display: none; }
 }
 
+/* ── Print-only utility (hidden on screen, visible in print) ── */
+.print-only {
+  display: none !important;
+}
+
 /* Print styles */
 @media print {
-  .no-print {
+  /* Show print-only elements */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Hide interactive/navigation chrome */
+  .no-print,
+  .dl-desktop-sidebar,
+  .dl-header,
+  .dl-mobile-sidebar-overlay {
     display: none !important;
+  }
+
+  /* Reset layout containers that clip print content.
+     Inline height:100vh / overflow:hidden on DashboardLayout root and
+     inner wrapper would clip paginated content — override with !important. */
+  .dl-root,
+  .dl-body {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  /* Reset main content scroll/padding for natural page flow */
+  .dl-main {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Force background colors and borders to print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  /* Keep evidence cards intact across page breaks */
+  .edb-evidence-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Section headers stay with following content */
+  h2, h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Remove box shadows for cleaner print output */
+  section {
+    box-shadow: none !important;
+  }
+
+  /* Page margins */
+  @page {
+    margin: 1.5cm;
   }
 }

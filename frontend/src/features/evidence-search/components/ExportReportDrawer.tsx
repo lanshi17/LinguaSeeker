@@ -1,0 +1,466 @@
+import { useState, useMemo, useCallback } from "react";
+import { Drawer, Button, Slider, Checkbox, Select, Tag, message, Tooltip } from "antd";
+import {
+  Download,
+  FileText,
+  FileJson,
+  FileSpreadsheet,
+  File,
+  Eye,
+  Settings2,
+  Check,
+} from "lucide-react";
+import type {
+  EvidenceGroupDetailResponse,
+  EvidenceGroupItem,
+} from "../types/evidenceSearch";
+import {
+  REPORT_FORMATS,
+  DEFAULT_EXPORT_OPTIONS,
+  exportEvidenceReport,
+  buildPreview,
+  countFilteredItems,
+} from "../utils/evidenceReport";
+import type { ReportFormat, ExportOptions } from "../utils/evidenceReport";
+import { CATEGORY_COLORS } from "../utils/evidenceDocument";
+import { categoryLabel } from "../utils/categoryStyles";
+
+/* ── Constants ────────────────────────────────────────────────────── */
+
+const FORMAT_ICONS: Record<ReportFormat, React.ComponentType<{ style?: React.CSSProperties }>> = {
+  markdown: FileText,
+  json: FileJson,
+  csv: FileSpreadsheet,
+  pdf: File,
+};
+
+const STATUS_OPTIONS = ["provisional", "approved", "corrected", "rejected"];
+
+/* ── Helpers ──────────────────────────────────────────────────────── */
+
+function categoryFromItem(item: EvidenceGroupItem): string | null {
+  if (item.category) return item.category;
+  return item.field_id.includes(".") ? item.field_id.split(".", 1)[0] : null;
+}
+
+/* ── Component ────────────────────────────────────────────────────── */
+
+interface ExportReportDrawerProps {
+  detail: EvidenceGroupDetailResponse;
+  open: boolean;
+  onClose: () => void;
+}
+
+export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawerProps) {
+  const [selectedFormat, setSelectedFormat] = useState<ReportFormat>("markdown");
+  const [options, setOptions] = useState<ExportOptions>({ ...DEFAULT_EXPORT_OPTIONS });
+  const [showPreview, setShowPreview] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  // Available categories derived from the actual items.
+  const availableCategories = useMemo(() => {
+    const cats = new Set<string>();
+    for (const item of detail.items) {
+      const cat = categoryFromItem(item);
+      if (cat) cats.add(cat);
+    }
+    return [...cats].sort();
+  }, [detail.items]);
+
+  const filteredCount = useMemo(() => countFilteredItems(detail, options), [detail, options]);
+
+  const preview = useMemo(() => {
+    if (!showPreview) return "";
+    return buildPreview(detail, selectedFormat, options);
+  }, [detail, selectedFormat, options, showPreview]);
+
+  const updateOpts = useCallback(
+    (patch: Partial<ExportOptions>) => setOptions((prev) => ({ ...prev, ...patch })),
+    [],
+  );
+
+  const handleExport = useCallback(() => {
+    setExporting(true);
+    try {
+      exportEvidenceReport(detail, selectedFormat, options);
+      void message.success(`Exported as ${selectedFormat.toUpperCase()} successfully`);
+    } catch {
+      void message.error("Export failed. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  }, [detail, selectedFormat, options]);
+
+  const FormatIcon = FORMAT_ICONS[selectedFormat];
+
+  return (
+    <Drawer
+      title={
+        <span style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 16, fontWeight: 600 }}>
+          <Download style={{ width: 20, height: 20, color: "var(--color-primary-600, #0891b2)" }} />
+          Export Evidence Report
+        </span>
+      }
+      open={open}
+      onClose={onClose}
+      width={480}
+      styles={{ body: { padding: "16px 24px" } }}
+      extra={
+        <Button
+          type="primary"
+          icon={<Download style={{ width: 16, height: 16 }} />}
+          loading={exporting}
+          onClick={handleExport}
+          disabled={filteredCount === 0}
+        >
+          Export {selectedFormat.toUpperCase()}
+        </Button>
+      }
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        {/* ── Format selector ── */}
+        <section>
+          <h3
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 13,
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              color: "#6b7280",
+              margin: "0 0 12px",
+            }}
+          >
+            <File style={{ width: 14, height: 14 }} />
+            Format
+          </h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
+            {REPORT_FORMATS.map((f) => {
+              const Icon = FORMAT_ICONS[f.format];
+              const active = selectedFormat === f.format;
+              return (
+                <button
+                  key={f.format}
+                  type="button"
+                  onClick={() => setSelectedFormat(f.format)}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 10,
+                    padding: "12px 14px",
+                    borderRadius: 8,
+                    border: `1.5px solid ${active ? "var(--color-primary-400, #22d3ee)" : "#e5e7eb"}`,
+                    backgroundColor: active ? "var(--color-primary-50, #ecfeff)" : "#fff",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all 150ms",
+                  }}
+                >
+                  <Icon
+                    style={{
+                      width: 18,
+                      height: 18,
+                      flexShrink: 0,
+                      marginTop: 1,
+                      color: active
+                        ? "var(--color-primary-600, #0891b2)"
+                        : "#9ca3af",
+                    }}
+                  />
+                  <div style={{ minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: active ? "var(--color-primary-800, #155e75)" : "#111827",
+                      }}
+                    >
+                      {f.label}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+                      {f.description}
+                    </div>
+                  </div>
+                  {active && (
+                    <Check
+                      style={{
+                        width: 16,
+                        height: 16,
+                        flexShrink: 0,
+                        marginLeft: "auto",
+                        color: "var(--color-primary-600, #0891b2)",
+                      }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ── Export options ── */}
+        <section>
+          <h3
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 13,
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              color: "#6b7280",
+              margin: "0 0 12px",
+            }}
+          >
+            <Settings2 style={{ width: 14, height: 14 }} />
+            Options
+          </h3>
+
+          <div
+            style={{
+              borderRadius: 8,
+              border: "1px solid #e5e7eb",
+              backgroundColor: "#fff",
+            }}
+          >
+            {/* Include traces */}
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "12px 16px",
+                borderBottom: "1px solid #f3f4f6",
+                cursor: "pointer",
+                fontSize: 14,
+                color: "#374151",
+              }}
+            >
+              <span>Include bilingual traces</span>
+              <Checkbox
+                checked={options.includeTraces}
+                onChange={(e) => updateOpts({ includeTraces: e.target.checked })}
+              />
+            </label>
+
+            {/* Include bilingual text */}
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "12px 16px",
+                borderBottom: "1px solid #f3f4f6",
+                cursor: "pointer",
+                fontSize: 14,
+                color: "#374151",
+              }}
+            >
+              <span>Include full bilingual text</span>
+              <Checkbox
+                checked={options.includeBilingualText}
+                onChange={(e) => updateOpts({ includeBilingualText: e.target.checked })}
+              />
+            </label>
+
+            {/* Confidence threshold */}
+            <div
+              style={{
+                padding: "12px 16px",
+                borderBottom: "1px solid #f3f4f6",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 8,
+                  fontSize: 14,
+                  color: "#374151",
+                }}
+              >
+                <span>Minimum confidence</span>
+                <span
+                  style={{
+                    fontFamily: "var(--font-mono, monospace)",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "var(--color-primary-700, #0e7490)",
+                  }}
+                >
+                  {(options.confidenceThreshold * 100).toFixed(0)}%
+                </span>
+              </div>
+              <Slider
+                min={0}
+                max={1}
+                step={0.05}
+                value={options.confidenceThreshold}
+                onChange={(v) => updateOpts({ confidenceThreshold: v })}
+                styles={{ track: { backgroundColor: "var(--color-primary-500, #06b6d4)" } }}
+                tooltip={{
+                  formatter: (v) => `${((v ?? 0) * 100).toFixed(0)}%`,
+                }}
+              />
+            </div>
+
+            {/* Status filter */}
+            <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
+              <div
+                style={{
+                  fontSize: 14,
+                  color: "#374151",
+                  marginBottom: 8,
+                }}
+              >
+                Review status filter
+              </div>
+              <Select
+                mode="multiple"
+                allowClear
+                placeholder="All statuses"
+                value={options.statusFilter.length > 0 ? options.statusFilter : undefined}
+                onChange={(v) => updateOpts({ statusFilter: v ?? [] })}
+                options={STATUS_OPTIONS.map((s) => ({ label: s, value: s }))}
+                style={{ width: "100%" }}
+                maxTagCount="responsive"
+              />
+            </div>
+
+            {/* Category filter */}
+            <div style={{ padding: "12px 16px" }}>
+              <div
+                style={{
+                  fontSize: 14,
+                  color: "#374151",
+                  marginBottom: 8,
+                }}
+              >
+                Category filter
+              </div>
+              <Select
+                mode="multiple"
+                allowClear
+                placeholder="All categories (A–J)"
+                value={options.categoryFilter.length > 0 ? options.categoryFilter : undefined}
+                onChange={(v) => updateOpts({ categoryFilter: v ?? [] })}
+                options={availableCategories.map((c) => ({
+                  label: `${c} — ${categoryLabel(c)}`,
+                  value: c,
+                }))}
+                style={{ width: "100%" }}
+                maxTagCount="responsive"
+                optionRender={(opt) => {
+                  const cat = opt.value as string;
+                  const hex = CATEGORY_COLORS[cat]?.hex ?? "#6b7280";
+                  return (
+                    <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: "50%",
+                          backgroundColor: hex,
+                          flexShrink: 0,
+                        }}
+                      />
+                      {opt.label as string}
+                    </span>
+                  );
+                }}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* ── Summary bar ── */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderRadius: 8,
+            border: "1px solid #e5e7eb",
+            backgroundColor: "#f9fafb",
+            padding: "10px 16px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <FormatIcon
+              style={{ width: 16, height: 16, color: "var(--color-primary-600, #0891b2)" }}
+            />
+            <span style={{ fontSize: 13, color: "#374151" }}>
+              <strong style={{ color: "#111827" }}>{filteredCount}</strong> of{" "}
+              {detail.item_count} items
+            </span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {filteredCount < detail.item_count && (
+              <Tag
+                color="orange"
+                style={{ margin: 0, fontSize: 11 }}
+              >
+                Filtered
+              </Tag>
+            )}
+            <Tag
+              color="cyan"
+              style={{ margin: 0, fontSize: 11 }}
+            >
+              {selectedFormat.toUpperCase()}
+            </Tag>
+          </div>
+        </div>
+
+        {/* ── Preview toggle ── */}
+        <div>
+          <Button
+            block
+            icon={<Eye style={{ width: 14, height: 14 }} />}
+            onClick={() => setShowPreview((v) => !v)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              height: 40,
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 500,
+            }}
+          >
+            {showPreview ? "Hide preview" : "Show preview"}
+          </Button>
+
+          {showPreview && (
+            <Tooltip title="Preview shows the first portion of the exported content">
+              <pre
+                style={{
+                  marginTop: 12,
+                  maxHeight: 320,
+                  overflow: "auto",
+                  borderRadius: 8,
+                  border: "1px solid #e5e7eb",
+                  backgroundColor: "#f9fafb",
+                  padding: 16,
+                  fontSize: 12,
+                  lineHeight: "20px",
+                  fontFamily: "var(--font-mono, monospace)",
+                  color: "#374151",
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                }}
+              >
+                {preview}
+              </pre>
+            </Tooltip>
+          )}
+        </div>
+      </div>
+    </Drawer>
+  );
+}
