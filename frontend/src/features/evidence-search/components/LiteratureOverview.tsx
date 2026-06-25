@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { Button } from "antd";
 import {
   ArrowLeft,
   BookOpen,
   Columns2,
   Database,
+  Download,
   Dna,
   FileText,
   FlaskConical,
@@ -23,6 +25,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/Badge";
 import { EvidenceCorrectionForm } from "./EvidenceCorrectionForm";
 import { EvidenceAuditHistory } from "./EvidenceAuditHistory";
+import { ExportReportDrawer } from "./ExportReportDrawer";
 import type {
   EvidenceGroupDetailResponse,
   EvidenceGroupItem,
@@ -243,7 +246,7 @@ function EvidenceItemSummary({
               {item.field_id}
             </p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="no-print" style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button
               type="button"
               onClick={() => setEditing((v) => !v)}
@@ -336,11 +339,31 @@ export function LiteratureOverview({
   detail: EvidenceGroupDetailResponse;
   groupId: string;
 }) {
+  const [exportOpen, setExportOpen] = useState(false);
+
   return (
     <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Print-only report header — hidden on screen, visible in print */}
+      <div className="print-only">
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#030712", margin: 0 }}>
+          Evidence Report
+        </h1>
+        <p style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: "8px 0 4px" }}>
+          {detailTitle(detail)}
+        </p>
+        <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>
+          {detail.pmid && `PMID: ${detail.pmid}`}
+          {detail.pmid && detail.doi && " · "}
+          {detail.doi && `DOI: ${detail.doi}`}
+        </p>
+        <p style={{ fontSize: 12, color: "#6b7280", margin: "4px 0 0" }}>
+          Generated: {new Date().toLocaleString()}
+        </p>
+        <hr style={{ margin: "16px 0", border: "none", borderTop: "1px solid #e5e7eb" }} />
+      </div>
       <Link
         to="/evidence"
-        className="edb-back-link"
+        className="edb-back-link no-print"
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -402,7 +425,17 @@ export function LiteratureOverview({
                 <MetadataToken label="DOI" value={detail.doi} icon={Link2} />
               </div>
             </div>
-            <Badge variant={STATUS_VARIANT.approved}>Traceable</Badge>
+            <div className="edb-overview-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Badge variant={STATUS_VARIANT.approved}>Traceable</Badge>
+              <Button
+                type="primary"
+                className="no-print"
+                icon={<Download style={{ width: 16, height: 16 }} />}
+                onClick={() => setExportOpen(true)}
+              >
+                Export
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -555,7 +588,7 @@ export function LiteratureOverview({
             {detail.items[0] && (
               <Link
                 to={buildBilingualCompareHref(groupId, detail.items[0].canonical_evidence_id)}
-                className="edb-focusable-link"
+                className="edb-focusable-link no-print"
                 style={{
                   display: "inline-flex",
                   height: 40,
@@ -589,6 +622,12 @@ export function LiteratureOverview({
           </div>
         </section>
       </div>
+
+      <ExportReportDrawer
+        detail={detail}
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+      />
     </div>
   );
 }

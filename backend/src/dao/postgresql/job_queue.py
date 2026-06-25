@@ -79,7 +79,6 @@ class JobQueueRepository:
                 .order_by(PipelineJob.priority.desc(), PipelineJob.created_at.asc())
                 .limit(1)
                 .with_for_update(skip_locked=True)
-                .subquery()
                 .cte("candidate")
             )
             # Update: transition the locked row to running
