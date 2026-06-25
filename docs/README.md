@@ -72,6 +72,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
+| 2026-06-24 | [BIBM Dataset D Pipeline Optimization Design](planned/2026-06-24-bibm-dataset-d-pipeline-optimization-design.md) | proposed |
 | 2026-06-20 | [Variant ID Guarantee -- Fix Unknown Variant IDs](planned/2026-06-20-variant-id-guarantee-plan.md) | planned |
 
 ## Diagrams
@@ -86,6 +87,8 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 ## Recently Archived
 
 | Date | Title | Status |
+|------|-------|--------|
+| 2026-06-25 | [Pipeline Job Queue Design](archive/plans/2026-06-25-pipeline-job-queue.md) | completed |
 | 2026-06-24 | [Three-Channel Evidence Extraction Design](archive/plans/2026-06-24-three-channel-evidence-extraction-design.md) | completed |
 | 2026-06-23 | [Log Mining Remediation Plan](archive/plans/2026-06-23-log-mining-remediation-plan.md) | completed |
 | 2026-06-22 | [Parkinson Literature XLSX Dataset Implementation Plan](archive/plans/2026-06-22-parkinson-literature-xlsx-dataset-plan.md) | completed |

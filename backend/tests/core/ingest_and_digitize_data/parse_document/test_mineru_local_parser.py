@@ -201,7 +201,7 @@ class TestMinerULocalParserParse:
 
     @pytest.fixture
     def parser(self):
-        return MinerULocalParser(model_server_url="http://localhost:8001")
+        return MinerULocalParser(parse_url="http://localhost:8001")
 
     @pytest.mark.asyncio
     async def test_parse_single_page(self, parser):
@@ -275,7 +275,7 @@ class TestMinerULocalParserParse:
         with patch("pathlib.Path.read_bytes", return_value=b"%PDF fake"), patch(
             "httpx.AsyncClient", return_value=mock_client
         ):
-            with pytest.raises(MinerUAPIError, match="Model-server returned 500"):
+            with pytest.raises(MinerUAPIError, match="MinerU service returned 500"):
                 await parser.parse("/tmp/test.pdf")
 
     @pytest.mark.asyncio
@@ -290,7 +290,7 @@ class TestMinerULocalParserParse:
         with patch("pathlib.Path.read_bytes", return_value=b"%PDF fake"), patch(
             "httpx.AsyncClient", return_value=mock_client
         ):
-            with pytest.raises(MinerUAPIError, match="Request to model-server failed"):
+            with pytest.raises(MinerUAPIError, match="Request to MinerU service failed"):
                 await parser.parse("/tmp/test.pdf")
 
     @pytest.mark.asyncio

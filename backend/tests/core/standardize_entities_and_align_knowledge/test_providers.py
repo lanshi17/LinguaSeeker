@@ -16,8 +16,8 @@ def _make_mock_response(data):
 
 
 @pytest.mark.asyncio
-async def test_generate_embeddings_calls_model_server():
-    """generate_embeddings POSTs to model-server and returns embeddings."""
+async def test_generate_embeddings_calls_inference_service():
+    """generate_embeddings POSTs to inference service and returns embeddings."""
     mock_response = _make_mock_response({
         "data": [
             {"index": 0, "embedding": [0.1, 0.2, 0.3]},

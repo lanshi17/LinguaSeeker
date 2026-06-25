@@ -147,7 +147,6 @@ class FakeConfig:
     def __init__(self) -> None:
         self.embedding = FakeEmbeddingConfig()
         self.rerank = FakeRerankConfig()
-        self.model_server_url = "http://localhost:8001"
         self.api_key = ""
 
 

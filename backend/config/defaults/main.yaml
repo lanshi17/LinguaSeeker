@@ -50,10 +50,9 @@ translation_llm:
   temperature: 0.0
 
 # ── Embedding Model ───────────────────────────────────────────────────────
-# base_url: per-service container URL. Empty = fallback to model_server_url (monolith).
-# Docker setup: set to "http://localhost:8002"
+# base_url: per-service container URL. Docker setup: set to "http://localhost:8002/v1"
 # remote_*: optional remote fallback (e.g. SiliconFlow, OpenAI-compatible).
-# When local model-server is unavailable, requests fall back to remote.
+# When the local embedding container is unavailable, requests fall back to remote.
 embedding:
   base_url: ""
   model: "Qwen/Qwen3-Embedding-0.6B"
@@ -63,10 +62,9 @@ embedding:
   remote_model: ""
 
 # ── Rerank Model ──────────────────────────────────────────────────────────
-# base_url: per-service container URL. Empty = fallback to model_server_url (monolith).
-# Docker setup: set to "http://localhost:8003"
+# base_url: per-service container URL. Docker setup: set to "http://localhost:8003/v1"
 # remote_*: optional remote fallback (e.g. SiliconFlow, OpenAI-compatible).
-# When local model-server is unavailable, requests fall back to remote.
+# When the local rerank container is unavailable, requests fall back to remote.
 rerank:
   base_url: ""
   model: "BAAI/bge-reranker-v2-m3"
@@ -77,13 +75,13 @@ rerank:
 
 # ── MinerU Document Parsing ──────────────────────────────────────────────
 # All fields flatten to MINERU_* env vars
-# local_model_server_url: VLM container endpoint.
+# local_parse_url: VLM container endpoint.
 # Docker setup: set to "http://localhost:8004"
 mineru:
   max_file_size_mb: 100
   remote_poll_interval: 2.0
   remote_max_poll_attempts: 150
-  local_model_server_url: "http://localhost:8004"
+  local_parse_url: "http://localhost:8004"
   local_model_id: "opendatalab/MinerU2.5-Pro-2604-1.2B"
   local_timeout: 120.0
   local_dpi: 200
@@ -128,14 +126,13 @@ network:
   proxy: ""
   no_proxy: "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
 
-# ── Model Server ────────────────────────────────────────────────────────
-# model_server_api_key: shared secret for authenticating with model-server containers.
-# Must match MODEL_SERVER_API_KEY set in docker-compose.model-server.yml.
-# Empty = no auth (model-server accepts all requests).
-model_server_api_key: ""
+# ── Inference Service Auth ─────────────────────────────────────────────
+# inference_api_key: shared secret for authenticating with inference service containers.
+# Used by embedding, rerank, and doc-parse containers.
+# Empty = no auth (services accept all requests).
+inference_api_key: ""
 
-# ── Model Server GPU Settings ────────────────────────────────────────────
-# Kept at top level for model-server compatibility
+# ── Inference Service GPU Settings ───────────────────────────────────────
 doc_parse_model_id: ""
 embedding_gpu_memory_utilization: 0.90
 embedding_max_model_len: 8192

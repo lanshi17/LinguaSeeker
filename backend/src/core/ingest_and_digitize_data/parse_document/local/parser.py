@@ -1,4 +1,4 @@
-"""Local MinerU parser via the model-server doc-parse ``/file_parse`` endpoint."""
+"""Local MinerU parser via the external MinerU FastAPI service ``/file_parse`` endpoint."""
 from __future__ import annotations
 
 import asyncio
@@ -15,22 +15,22 @@ from src.utils.markdown_helpers import extract_abstract_from_markdown
 
 
 class MinerULocalParser(ParserStrategy):
-    """PDF parser using the local model-server ``/file_parse`` endpoint.
+    """PDF parser using the external MinerU FastAPI service ``/file_parse`` endpoint.
 
-    Uploads the raw PDF as multipart form data.  The model-server runs MinerU
+    Uploads the raw PDF as multipart form data.  The external MinerU FastAPI service runs MinerU
     natively and returns full markdown plus a per-block ``content_list``; blocks
     are grouped by ``page_idx`` to reconstruct per-page ``PageContent`` objects.
     """
 
     def __init__(
         self,
-        model_server_url: str = "http://localhost:8004",
+        parse_url: str = "http://localhost:8004",
         model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B",
         timeout: float = 120.0,
         dpi: int = 200,
         api_key: str = "",
     ):
-        self._base_url = model_server_url.rstrip("/")
+        self._base_url = parse_url.rstrip("/")
         # ``model_id`` and ``dpi`` are retained for backward-compatibility — the
         # doc-parse service selects its own model and renders the PDF internally,
         # so they are no longer consulted at runtime.
@@ -44,7 +44,7 @@ class MinerULocalParser(ParserStrategy):
         return "mineru-local"
 
     async def parse(self, pdf_path: str) -> ParseResult:
-        """Parse a PDF by uploading it to the model-server ``/file_parse`` endpoint.
+        """Parse a PDF by uploading it to the MinerU service ``/file_parse`` endpoint.
 
         Args:
             pdf_path: Path to the PDF file.
@@ -89,10 +89,10 @@ class MinerULocalParser(ParserStrategy):
                 return resp.json()
         except httpx.HTTPStatusError as e:
             raise MinerUAPIError(
-                f"Model-server returned {e.response.status_code}: {e.response.text}"
+                f"MinerU service returned {e.response.status_code}: {e.response.text}"
             ) from e
         except httpx.RequestError as e:
-            raise MinerUAPIError(f"Request to model-server failed: {e}") from e
+            raise MinerUAPIError(f"Request to MinerU service failed: {e}") from e
 
     @staticmethod
     def _parse_file_parse_response(data: dict) -> ParseResult:
@@ -110,7 +110,7 @@ class MinerULocalParser(ParserStrategy):
         """
         results = data.get("results") or {}
         if not results:
-            raise MinerUAPIError("Model-server returned empty results.")
+            raise MinerUAPIError("MinerU service returned empty results.")
 
         # ``results`` is keyed by the uploaded filename; take the first entry.
         file_result = next(iter(results.values()))

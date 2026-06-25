@@ -1,7 +1,6 @@
 """Integration tests for parse_document module.
 
-These tests require a running model-server (port 8001) with VLM_MODEL_ID configured.
-Mark with @pytest.mark.integration to skip in CI.
+These tests require a running MinerU service (port 8004). Mark with @pytest.mark.integration to skip in CI.
 """
 from __future__ import annotations
 
@@ -47,7 +46,7 @@ def service():
     from src.core.config import get_config
 
     cfg = get_config()
-    return ParseDocumentService(model_server_url=cfg.model_server_url)
+    return ParseDocumentService(parse_url=cfg.parse_document.mineru_local_parse_url)
 
 
 @pytest.fixture
@@ -58,15 +57,12 @@ def local_parser():
     import httpx
 
     try:
-        resp = httpx.get(f"{cfg.model_server_url}/health", timeout=5.0)
+        resp = httpx.get(f"{cfg.parse_document.mineru_local_parse_url}/health", timeout=5.0)
         resp.raise_for_status()
-        models = resp.json().get("models", {})
-        if not isinstance(models, dict) or not models.get("vlm", False):
-            pytest.skip(f"model-server VLM not available at {cfg.model_server_url}")
     except Exception:
-        pytest.skip(f"model-server not available at {cfg.model_server_url}")
+        pytest.skip(f"MinerU service not available at {cfg.parse_document.mineru_local_parse_url}")
 
-    return MinerULocalParser(model_server_url=cfg.model_server_url)
+    return MinerULocalParser(parse_url=cfg.parse_document.mineru_local_parse_url)
 
 
 def _save_output(lang: str, pdf_path: str, parser_name: str, result: ParseResult) -> Path:

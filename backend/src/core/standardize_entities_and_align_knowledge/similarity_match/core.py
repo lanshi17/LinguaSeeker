@@ -44,7 +44,7 @@ class SimilarityTerminologyMatcher:
 
         Raises:
             SemanticMatchServiceError: If embedding, rerank, or retrieval fails due to
-                infrastructure errors (network, model-server, database).
+                infrastructure errors (network, inference service, database).
         """
         try:
             embedding_result = await self._embedding_provider.embed_texts(candidate.raw_text)

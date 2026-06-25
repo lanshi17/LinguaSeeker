@@ -6,9 +6,9 @@ from src.core.visualize_evidence_with_expert_in_loop.providers import (
 
 
 def test_reasoning_provider_uses_reasoning_config():
-    """ReasoningLLMProvider reads base_url from reasoning config, not model-server."""
+    """ReasoningLLMProvider reads base_url from reasoning config."""
     provider = ReasoningLLMProvider()
-    # Should use cfg.reasoning.base_url (direct API), not cfg.model_server_url
+    # Should use cfg.reasoning.base_url (direct API)
     assert provider._base_url is not None
 
 

@@ -1,4 +1,4 @@
-"""External service providers for Phase 3 — embedding generation via model-server."""
+"""External service providers for Phase 3 — embedding generation via inference service."""
 from __future__ import annotations
 
 from typing import Any
@@ -7,7 +7,7 @@ import httpx
 
 
 class EmbeddingProvider:
-    """Calls the model-server /v1/embeddings API to generate text embeddings."""
+    """Calls the inference service /v1/embeddings API to generate text embeddings."""
 
     def __init__(
         self,
@@ -25,7 +25,7 @@ class EmbeddingProvider:
         self._headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
 
     async def generate_embeddings(self, texts: list[str]) -> list[list[float]]:
-        """Generate embeddings for a list of text strings via model-server.
+        """Generate embeddings for a list of text strings via inference service.
 
         Args:
             texts: Input text strings.

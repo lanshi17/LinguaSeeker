@@ -1,4 +1,4 @@
-"""Model-server providers for semantic standardization matching."""
+"""HTTP providers for semantic standardization matching."""
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -13,8 +13,8 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.contract
 )
 
 
-class ModelServerEmbeddingProvider:
-    """Client for model-server OpenAI-compatible embeddings."""
+class EmbeddingHttpProvider:
+    """HTTP client for OpenAI-compatible embedding services."""
     def __init__(
         self,
         *,
@@ -31,7 +31,7 @@ class ModelServerEmbeddingProvider:
         self._headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
 
     async def embed_texts(self, texts: str | Sequence[str]) -> EmbeddingBatchResult:
-        """Embed texts through model-server `/v1/embeddings`."""
+        """Embed texts through service `/v1/embeddings`."""
         if isinstance(texts, str):
             texts = (texts,)
         payload = {"input": list(texts), "model": self._model}
@@ -57,8 +57,8 @@ class ModelServerEmbeddingProvider:
         return self._base_url if self._base_url.endswith("/v1") else f"{self._base_url}/v1"
 
 
-class ModelServerRerankProvider:
-    """Client for model-server rerank scoring."""
+class RerankHttpProvider:
+    """HTTP client for rerank scoring services."""
 
     def __init__(
         self,
@@ -82,7 +82,7 @@ class ModelServerRerankProvider:
         *,
         top_k: int | None,
     ) -> RerankBatchResult:
-        """Rerank documents through model-server `/v1/rerank`."""
+        """Rerank documents through service `/v1/rerank`."""
         if isinstance(documents, str):
             documents = (documents,)
         doc_list = list(documents)
@@ -126,8 +126,8 @@ class FallbackEmbeddingProvider:
 
     def __init__(
         self,
-        local: ModelServerEmbeddingProvider,
-        remote: ModelServerEmbeddingProvider | None = None,
+        local: EmbeddingHttpProvider,
+        remote: EmbeddingHttpProvider | None = None,
     ) -> None:
         self._local = local
         self._remote = remote
@@ -161,8 +161,8 @@ class FallbackRerankProvider:
 
     def __init__(
         self,
-        local: ModelServerRerankProvider,
-        remote: ModelServerRerankProvider | None = None,
+        local: RerankHttpProvider,
+        remote: RerankHttpProvider | None = None,
     ) -> None:
         self._local = local
         self._remote = remote

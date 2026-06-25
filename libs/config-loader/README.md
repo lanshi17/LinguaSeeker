@@ -1,6 +1,6 @@
 # acmg-config-loader
 
-Shared layered YAML configuration loader used by backend services and the model server. Loads configuration files in order of increasing specificity, then flattens nested keys into uppercase environment variables. Existing environment variables always win (never overwritten).
+Shared layered YAML configuration loader used by backend services and inference services. Loads configuration files in order of increasing specificity, then flattens nested keys into uppercase environment variables. Existing environment variables always win (never overwritten).
 
 ## Loading Order
 
@@ -25,7 +25,7 @@ The function accepts an optional `environ` dict for testing; defaults to `os.env
 ## Consumers
 
 - `backend/` (FastAPI app)
-- `services/model-server/` (inference microservice)
+- `services/` (inference microservices)
 
 ## Dependencies
 

@@ -27,7 +27,7 @@ def setup_logging(*, environment: str = "development", debug: bool = False) -> N
 
     Call once during application startup (lifespan). Both parameters are
     keyword-only with defaults so that callers that don't pass them (e.g.
-    the model server's ``setup_logging()``) remain backward-compatible.
+    external services' ``setup_logging()``) remain backward-compatible.
 
     Idempotent: subsequent calls are no-ops. Tests bypass this by calling
     ``_logger.remove()`` directly via the ``_isolate_loguru`` fixture.

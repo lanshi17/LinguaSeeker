@@ -43,7 +43,7 @@ caller
        └─ ParseDocumentService             # service.py — public facade
             └─ DocumentParseOrchestrator   # orchestrator.py — remote-first fallback
                  ├─ MinerURemoteParser     # remote/parser.py — cloud API lifecycle + batch upload (name="mineru-remote")
-                 └─ MinerULocalParser      # local/parser.py — model-server VLM (name="mineru-local")
+                 └─ MinerULocalParser      # local/parser.py — external MinerU FastAPI service (name="mineru-local")
 
 Common layer:
   common/converters.py — block_to_markdown(), html_table_to_markdown(), html_table_to_structured()
@@ -55,7 +55,7 @@ Data flow (remote):
     → _MinerURawResult → _build_result() → ParseResult
 
 Data flow (local):
-  PDF file → read_bytes → POST /file_parse (multipart upload to model-server)
+  PDF file → read_bytes → POST /file_parse (multipart upload to MinerU service)
     → response JSON with md_content + content_list + images
     → _build_pages (group by page_idx) + _decode_images → ParseResult
 
@@ -81,7 +81,7 @@ parse_document/
 │   └── parsers.py        # TableParser(HTMLParser) — extracts <th>/<td> rows
 ├── local/
 │   ├── __init__.py
-│   └── parser.py         # MinerULocalParser — model-server /file_parse endpoint
+│   └── parser.py         # MinerULocalParser — MinerU service /file_parse endpoint
 └── remote/
     ├── __init__.py
     └── parser.py         # MinerURemoteParser — cloud API lifecycle + batch upload (name="mineru-remote")
@@ -102,7 +102,7 @@ service = create_parse_service()
 
 # Custom config overrides
 config = ParseDocumentConfig(
-    mineru_local_model_server_url="http://localhost:8004",
+    mineru_local_parse_url="http://localhost:8004",
 )
 service = create_parse_service(config=config)
 ```
@@ -189,7 +189,7 @@ Batch constraints: 1–50 files, all local paths must exist, optional `data_ids`
 
 ```python
 MinerULocalParser(
-    model_server_url: str = "http://localhost:8004",
+    parse_url: str = "http://localhost:8004",
     model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B",
     timeout: float = 120.0,
     dpi: int = 200,
@@ -197,7 +197,7 @@ MinerULocalParser(
 )
 ```
 
-PDF parsing via the model-server doc-parse `/file_parse` endpoint:
+PDF parsing via the external MinerU FastAPI service `/file_parse` endpoint:
 1. **Read PDF bytes** from disk (via `asyncio.to_thread`)
 2. **POST `/file_parse`** — multipart form upload with `return_content_list=true`, `return_images=true`, `return_md=true`
 3. **`_parse_file_parse_response(data)`** — converts the `FileParseResponse` JSON:
@@ -207,7 +207,7 @@ PDF parsing via the model-server doc-parse `/file_parse` endpoint:
 
 **Abstract extraction**: `extract_abstract_from_markdown()` from `src.utils.markdown_helpers` extracts abstract text from the markdown using regex patterns for English ("Abstract", "ABSTRACT") and Chinese ("摘要", "【摘要】") headings.
 
-**Authentication**: When `api_key` is non-empty, requests include an `Authorization: Bearer <api_key>` header for model-server authentication.
+**Authentication**: When `api_key` is non-empty, requests include an `Authorization: Bearer <api_key>` header for MinerU service authentication.
 
 ### Data Contracts
 
@@ -339,7 +339,7 @@ If none yield content, raises `MinerUAPIError`.
 
 ### Local Parser: File Parse Endpoint
 
-`MinerULocalParser` uploads the entire PDF as multipart form data to the model-server `/file_parse` endpoint. The model-server runs MinerU natively and returns structured markdown plus per-block `content_list`. Images are returned as base64 data-URIs and decoded to raw bytes. PDF bytes are read from disk via `asyncio.to_thread` to avoid blocking the async event loop.
+`MinerULocalParser` uploads the entire PDF as multipart form data to the MinerU service `/file_parse` endpoint. The MinerU service runs MinerU natively and returns structured markdown plus per-block `content_list`. Images are returned as base64 data-URIs and decoded to raw bytes. PDF bytes are read from disk via `asyncio.to_thread` to avoid blocking the async event loop.
 
 ### Abstract Extraction
 
@@ -415,7 +415,7 @@ Batch parsing is a remote MinerU capability exposed through `MinerURemoteParser`
 from src.core.ingest_and_digitize_data.parse_document import MinerULocalParser
 
 parser = MinerULocalParser(
-    model_server_url="http://localhost:8004",
+    parse_url="http://localhost:8004",
     timeout=120.0,
 )
 result = await parser.parse("https://example.com/paper.pdf")
@@ -499,7 +499,7 @@ New backends should produce data in this shape; `pages_from_raw()` handles `Page
 
 - **Remote parser latency**: Task-based API with polling — typical turnaround is 30–300 seconds (2s poll interval × up to 150 attempts = 5 minutes max). Reducing `MINERU_REMOTE_POLL_INTERVAL` improves responsiveness at the cost of API rate limits.
 - **Local parser memory**: The entire PDF is read into memory as bytes and sent as a single multipart upload. Memory usage scales with PDF file size.
-- **Local parser throughput**: Single request to `/file_parse` — the model-server handles all internal processing. The `MINERU_LOCAL_TIMEOUT` governs the total request ceiling.
+- **Local parser throughput**: Single request to `/file_parse` — the MinerU service handles all internal processing. The `MINERU_LOCAL_TIMEOUT` governs the total request ceiling.
 - **Zip extraction**: Remote parser downloads the full result zip into memory (`response.content`). Large documents with many figures should monitor memory — extracted images are also held in `ParseResult.images` as raw bytes.
 - **SHA-256 dedup**: Computed in Rust via `rust_io.files.check_duplicate()` — I/O bound, not CPU bound.
 
@@ -507,7 +507,7 @@ New backends should produce data in this shape; `pages_from_raw()` handles `Page
 
 | Dependency | Purpose |
 |------------|---------|
-| `httpx` | Async HTTP client for model-server `/file_parse` calls and remote zip download |
+| `httpx` | Async HTTP client for MinerU service `/file_parse` calls and remote zip download |
 | `pydantic` | Data contracts with validation (BaseModel) |
 | `loguru` | Structured logging |
 | `rust_io.files` (via `src.utils.rust_io`) | File I/O (`File.write`) and SHA-256 dedup (`check_duplicate`) |
@@ -523,7 +523,7 @@ Environment variables loaded via `src.core.config`:
 | `MINERU_API_TOKEN` | `mineru_api_token` (top-level) | `""` |
 | `MINERU_REMOTE_POLL_INTERVAL` | `parse_document.mineru_remote_poll_interval` | `2.0` |
 | `MINERU_REMOTE_MAX_POLL_ATTEMPTS` | `parse_document.mineru_remote_max_poll_attempts` | `150` |
-| `MINERU_LOCAL_MODEL_SERVER_URL` | `parse_document.mineru_local_model_server_url` | `"http://localhost:8004"` |
+| `MINERU_LOCAL_PARSE_URL` | `parse_document.mineru_local_parse_url` | `"http://localhost:8004"` |
 | `MINERU_LOCAL_MODEL_ID` | `parse_document.mineru_local_model_id` | `"opendatalab/MinerU2.5-Pro-2604-1.2B"` |
 | `MINERU_LOCAL_TIMEOUT` | `parse_document.mineru_local_timeout` | `120.0` |
 | `MINERU_LOCAL_DPI` | `parse_document.mineru_local_dpi` | `200` |
@@ -537,7 +537,7 @@ cd backend
 uv run pytest tests/core/ingest_and_digitize_data/parse_document/ -v \
     --ignore=tests/core/ingest_and_digitize_data/parse_document/test_integration.py
 
-# Integration tests (requires model-server on port 8004)
+# Integration tests (requires MinerU service on port 8004)
 uv run pytest tests/core/ingest_and_digitize_data/parse_document/test_integration.py -v
 
 # E2E content-list parsing tests

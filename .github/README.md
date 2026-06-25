@@ -120,7 +120,7 @@ The deploy script includes migration and health checks:
 
 ## Config Validation
 
-`config-validation.yml` runs on PRs and pushes that touch configuration files. It validates cross-service configuration consistency across all environments, checking that backend config, frontend `.env`, Docker Compose, Ansible inventories, and model server settings are aligned.
+`config-validation.yml` runs on PRs and pushes that touch configuration files. It validates cross-service configuration consistency across all environments, checking that backend config, frontend `.env`, Docker Compose, and Ansible inventories are aligned.
 
 ## Relationship with Ansible
 

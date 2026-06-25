@@ -7,11 +7,13 @@ from redis.asyncio import Redis as AsyncRedis
 
 from src.core.config import get_config
 from src.dao.postgresql.connection import async_session_factory, build_async_engine
+from src.dao.postgresql.job_queue import JobQueueRepository
 from src.dao.redis.connection import build_redis_client
 
 _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
 _redis_client: AsyncRedis | None = None
+_dispatcher = None
 
 
 def get_session_factory() -> async_sessionmaker[AsyncSession]:
@@ -52,6 +54,11 @@ async def dispose_redis() -> None:
     if _redis_client is not None:
         await _redis_client.aclose()
         _redis_client = None
+
+
+def get_dispatcher():
+    """Return the singleton job dispatcher (or None if not yet initialized)."""
+    return _dispatcher
 
 
 def wire_dependencies() -> None:
@@ -125,11 +132,11 @@ def wire_dependencies() -> None:
         max_poll_attempts=pd_cfg.mineru_remote_max_poll_attempts,
     )
     local_parser = MinerULocalParser(
-        model_server_url=pd_cfg.mineru_local_model_server_url,
+        parse_url=pd_cfg.mineru_local_parse_url,
         model_id=pd_cfg.mineru_local_model_id,
         timeout=pd_cfg.mineru_local_timeout,
         dpi=pd_cfg.mineru_local_dpi,
-        api_key=cfg.model_server_api_key,
+        api_key=cfg.inference_api_key,
     )
     parse_orchestrator = DocumentParseOrchestrator(remote=remote_parser, local=local_parser)
     parse_service = ParseDocumentService(parse_orchestrator)
@@ -174,7 +181,24 @@ def wire_dependencies() -> None:
 
     phase4_factory = Phase4ServiceFactory(cfg=cfg)
 
+    # ── Job queue + dispatcher ──
+
+    from src.agents.dispatcher import SingleJobDispatcher
+    from src.api.v1.pipeline import set_job_queue
+
+    job_queue = JobQueueRepository(session_factory)
+    dispatcher = SingleJobDispatcher(
+        runner=runner,
+        job_queue=job_queue,
+        poll_interval=2.0,
+    )
+
     # ── Inject into global registries (consumed by API routes) ──
 
     set_pipeline_runner(runner)
     set_phase4_factory(phase4_factory)
+    set_job_queue(job_queue)
+
+    # Store dispatcher reference for lifespan start/stop
+    global _dispatcher
+    _dispatcher = dispatcher

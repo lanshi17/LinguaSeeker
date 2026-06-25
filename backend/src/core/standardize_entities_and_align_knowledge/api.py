@@ -43,8 +43,8 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.core imp
 from src.core.standardize_entities_and_align_knowledge.similarity_match.providers import (
     FallbackEmbeddingProvider,
     FallbackRerankProvider,
-    ModelServerEmbeddingProvider,
-    ModelServerRerankProvider,
+    EmbeddingHttpProvider,
+    RerankHttpProvider,
 )
 from src.core.standardize_entities_and_align_knowledge.similarity_match.repositories import (
     PgvectorTerminologyRepository,
@@ -122,14 +122,14 @@ class EntityStandardizationService:
         """Standardize one dual-track evidence extraction result."""
         repository = StandardizationRepository(session)
         precise_matcher = PreciseTerminologyMatcher(repository)
-        semantic_base_url = self._cfg.embedding.base_url or self._cfg.model_server_url
-        local_embedding = ModelServerEmbeddingProvider(
+        semantic_base_url = self._cfg.embedding.base_url
+        local_embedding = EmbeddingHttpProvider(
             base_url=semantic_base_url,
             model=self._cfg.embedding.model,
             api_key=self._cfg.embedding.api_key,
         )
         remote_embedding = (
-            ModelServerEmbeddingProvider(
+            EmbeddingHttpProvider(
                 base_url=self._cfg.embedding.remote_base_url,
                 model=self._cfg.embedding.remote_model or self._cfg.embedding.model,
                 api_key=self._cfg.embedding.remote_api_key,
@@ -137,13 +137,13 @@ class EntityStandardizationService:
             if self._cfg.embedding.remote_base_url
             else None
         )
-        local_rerank = ModelServerRerankProvider(
-            base_url=self._cfg.rerank.base_url or self._cfg.model_server_url,
+        local_rerank = RerankHttpProvider(
+            base_url=self._cfg.rerank.base_url,
             model=self._cfg.rerank.model,
             api_key=self._cfg.rerank.api_key,
         )
         remote_rerank = (
-            ModelServerRerankProvider(
+            RerankHttpProvider(
                 base_url=self._cfg.rerank.remote_base_url,
                 model=self._cfg.rerank.remote_model or self._cfg.rerank.model,
                 api_key=self._cfg.rerank.remote_api_key,
@@ -256,21 +256,21 @@ async def build_terminology_embeddings(
         TerminologyEmbeddingIndexer,
     )
     from src.core.standardize_entities_and_align_knowledge.similarity_match.providers import (
+        EmbeddingHttpProvider,
         FallbackEmbeddingProvider,
-        ModelServerEmbeddingProvider,
     )
 
     engine = build_async_engine(cfg)
     session_factory = async_session_factory(engine)
     try:
         async with get_async_session(session_factory) as session:
-            local = ModelServerEmbeddingProvider(
-                base_url=(cfg.embedding.base_url or cfg.model_server_url),
+            local = EmbeddingHttpProvider(
+                base_url=cfg.embedding.base_url,
                 model=cfg.embedding.model,
                 api_key=cfg.embedding.api_key,
             )
             remote = (
-                ModelServerEmbeddingProvider(
+                EmbeddingHttpProvider(
                     base_url=cfg.embedding.remote_base_url,
                     model=cfg.embedding.remote_model or cfg.embedding.model,
                     api_key=cfg.embedding.remote_api_key,

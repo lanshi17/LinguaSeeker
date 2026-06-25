@@ -2,11 +2,11 @@
 
 Tests both parsing modes against real PDFs in backend/downloads/:
 
-- **Local mode**: MinerULocalParser → model-server VLM endpoint (port 8001)
+- **Local mode**: MinerULocalParser → external MinerU FastAPI service (port 8004)
 - **API mode**: upload local PDF via MinerU cloud API → poll batch result → parse
 
 Requires:
-- model-server running on localhost:8001 (for local mode)
+- MinerU service running on localhost:8004 (for local mode)
 - MINERU_API_TOKEN env var set (for API mode)
 - rust_io.net PyO3 extension built
 
@@ -339,19 +339,17 @@ def local_parser():
     from src.core.config import get_config
 
     cfg = get_config()
-    parser = MinerULocalParser(model_server_url=cfg.model_server_url)
+    parse_url = cfg.parse_document.mineru_local_parse_url
+    parser = MinerULocalParser(parse_url=parse_url)
 
     # Quick connectivity check
     import httpx
 
     try:
-        resp = httpx.get(f"{cfg.model_server_url}/health", timeout=5.0)
+        resp = httpx.get(f"{parse_url}/health", timeout=5.0)
         resp.raise_for_status()
-        models = resp.json().get("models", {})
-        if not isinstance(models, dict) or not models.get("vlm", False):
-            pytest.skip(f"model-server VLM not available at {cfg.model_server_url}")
     except Exception:
-        pytest.skip(f"model-server not available at {cfg.model_server_url}")
+        pytest.skip(f"MinerU service not available at {parse_url}")
 
     return parser
 
@@ -361,7 +359,7 @@ def local_parser():
 
 @pytest.mark.integration
 class TestMinerULocalE2E:
-    """E2E tests for MinerU local mode (model-server VLM)."""
+    """E2E tests for MinerU local mode (external MinerU FastAPI service)."""
 
     @pytest.mark.asyncio
     async def test_single_pdf(self, pdf_inventory, local_parser):

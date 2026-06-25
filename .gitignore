@@ -136,4 +136,3 @@ benchmark/config/vault/secrets.yml
 # ── Old version reference ─────────────────────────────────────────────────
 .old_version
 docker-artifacts/
-services/model-server/*.tar

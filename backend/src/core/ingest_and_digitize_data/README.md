@@ -65,7 +65,7 @@ DocumentAcquisitionService.acquire()
   ▼
 ParseDocumentService.parse_local_files_and_save()
   ├── remote → MinerURemoteParser (cloud API)
-  └── local  → MinerULocalParser (model server :8004)
+  └── local  → MinerULocalParser (MinerU service :8004)
   │
   ▼
 Output: {md_path, metadata_path, images_dir}

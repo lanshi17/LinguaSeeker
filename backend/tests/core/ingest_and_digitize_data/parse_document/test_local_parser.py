@@ -14,7 +14,7 @@ def test_mineru_local_parser_name():
 def test_mineru_local_parser_initialization():
     """Test parser initialization with config."""
     parser = MinerULocalParser(
-        model_server_url="http://localhost:8002",
+        parse_url="http://localhost:8002",
         model_id="test-model",
         timeout=60.0,
         dpi=150,

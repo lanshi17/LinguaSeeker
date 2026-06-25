@@ -167,7 +167,7 @@ load_backend_config_into_env(_BACKEND_ROOT)  # 加载 backend/config/ 到 os.env
 
 | 变更类型 | 需同步更新的文件 |
 |---|---|
-| 模型名称 | `defaults/main.yaml`, `config.py` Settings, `all.yml` (all inventories), `docker-compose.model-server.yml` |
+| 模型名称 | `defaults/main.yaml`, `config.py` Settings, `all.yml` (all inventories) |
 | 数据库 schema | `defaults/main.yaml`, `config.py` (2处), `all.yml` (all inventories), compose files, `.env.example` |
 | 新增配置字段 | `defaults/main.yaml`, 对应 `environments/*.yaml`, vault examples, `config.py` Settings |
 | GPU 内存设置 | `defaults/main.yaml`, `all.yml` (all inventories), `config.py` Settings |

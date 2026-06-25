@@ -89,7 +89,7 @@ async def test_similarity_matcher_accepts_high_rerank_score() -> None:
 
 class FailingEmbeddingProvider:
     async def embed_texts(self, texts):
-        raise ConnectionError("model-server unreachable")
+        raise ConnectionError("inference service unreachable")
 
 
 class FailingRerankProvider:
@@ -127,7 +127,7 @@ async def test_similarity_matcher_wraps_embedding_provider_error() -> None:
         ),
     )
 
-    with pytest.raises(SemanticMatchServiceError, match="model-server unreachable"):
+    with pytest.raises(SemanticMatchServiceError, match="inference service unreachable"):
         await matcher.match(_build_candidate())
 
 
