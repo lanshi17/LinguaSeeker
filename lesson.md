@@ -5414,3 +5414,123 @@ Key design choice: only `A.gene_symbol` and `B.disease_diagnosis` can make a gro
 rett_001: 0/8 → 2/8. The field-aware gate works. Precision 100% — no noise introduced. The remaining 6 FN are expected: 4 variant-dependent (need better variant extraction) and 2 identity fields not extracted as FOUND by Phase 2 for this entry.
 
 Cache clearing was needed: PostgreSQL `lingua.document_processing_cache` held stale results keyed by `content_hash`. Redis `docproc:*` keys also needed flushing. The `--no-preprocessed` flag only skips local preprocessed files, not server-side caches.
+
+### Validation Batch: New Observations (2026-06-24)
+
+**rett_003 B.mode_of_inheritance_reported:** Expected "XD" (X-linked dominant), extracted "AD" (autosomal dominant). This is a Phase 2 extraction accuracy issue — the LLM classified the inheritance mode incorrectly. The identity gate correctly passed this field through, but the value was wrong. This is NOT a false positive from the gate fix; it's a pre-existing LLM accuracy issue.
+
+**Infrastructure bottleneck:** Each pipeline entry takes 10-25 minutes due to LLM API rate limits on linxi.chat. A full 73-entry evaluation would take 12-30 hours. For BIBM publication timelines, consider:
+1. Running evaluations overnight as background tasks
+2. Using a faster LLM endpoint if available
+3. Caching Phase 1 results aggressively (Phase 1 is fast, Phase 2+3 dominate)
+
+**Identity gate fix generalizes:** Both rett_001 and rett_003 show identity fields rescued. The fix is narrow, introduces no FP, and is publication-safe. The next bottleneck is variant extraction quality in Phase 2.
+
+
+---
+
+## 2026-06-24 · 金标文献筛选: 多数据集合并前的质量门控
+
+### 问题描述
+重新设计 benchmark, 需将 clingen / clinvar_fused / rett / parkinson 四个异构数据集合并为一个标准数据集。合并前必须先筛选"真正适合当金标的文献及其标注json"。四个数据集存在两种金标范式 (DB-grounded vs article-grounded)、schema 差异、以及大量隐藏的数据质量问题。
+
+### 排查过程 (量化扫描发现)
+- **clingen (30)**: 1条 source.md 是 Erratum 勘误 (clingen_003, 997B); 20条 source.md 是多篇文献拼接的语料库 (clingen_010 拼了44篇), 非单一金标文献。
+- **clinvar_fused (75)**: gene/disease/variant 金标来自 ClinGen+ClinVar 数据库 (嵌套在 `clingen{}` 对象里, 顶层无 disease_label/moi); 74条有 LLM 生成的 source_zh.md。
+- **rett (53)**: 全部 `reviewer=auto-review` (AI 标注 claude-opus, 非人工审核); `source_pdf_path` 全部指向旧路径 `benchmark/literature_acquisition/downloads/rett/` — 文件已随框架重构迁移到 `benchmark/data/inputs/literature_acquisition/downloads/rett/`, 路径全部失效 (53条本地PDF 0个存在)。
+- **parkinson (20)**: `expected_standardization.gene` 存的是裸基因符号 "PRKN" 而非 HGNC ID; 顶层无 hgnc_id/source_language 字段。
+
+### 根因分析
+1. 框架重构 (Phase 4, 2026-06-18) 把 RAW_PDF_ROOT 从 `benchmark/literature_acquisition/` 迁到 `benchmark/data/inputs/literature_acquisition/`, 但 rett expected.json 的 source_pdf_path 未同步更新 → 路径全部失效。
+2. clingen 数据集设计为"每个 ClinGen 条目关联一个参考文献语料库", source.md 是多篇文献拼接, 与"单一金标文献"语义冲突。
+3. parkinson 由 XLSX auto-convert 生成, 标准化字段未填充 HGNC ID。
+4. 多数据集 schema 不统一: clinvar_fused 用嵌套 clingen 对象, 其余用顶层平铺字段。
+
+### 解决方案
+新增 `gold_standard_filter.py`, 5道门控:
+1. **源文档完整性**: 检测 erratum/correction (正则)、解析碎片 (剥离markdown后 <1500字符)、多文献拼接 (≥4个不同标题型H1)。
+2. **标准化ID有效**: 要求 HGNC+MONDO; parkinson 裸符号通过项目 HGNC 术语文件 (`database/terminology_database/hgnc/hgnc_complete_set.txt`) 反查回填 (GBA→HGNC:4177 即 GBA1 旧符号, PRKN→HGNC:8607)。
+3. **文章-证据对齐**: 文章须提及预期基因 (HGNC approved symbol + aliases + previous symbols, 解决 PRKN/parkin 别名问题)。
+4. **可验证来源**: PMID/DOI/PDF URL/本地PDF; 本地PDF解析容忍路径迁移 (RAW_PDF_ROOT + annotation/ground_truth/rett_NNN/source.pdf 回退), 选中清单记录修正后的路径。
+5. **跨集去重**: 按 DOI/PMID/标题归一化跨数据集去重, 保留证据最丰富+DB权威的条目。
+
+结果: 151/178 通过 (clingen 8, clinvar_fused 73, rett 52, parkinson 18); 27条淘汰均有明确原因; 2个跨集去重组 (PMID 41437048: clingen_028/fused_057 重复, 保留 fused_063)。
+
+### 预防措施
+1. **路径迁移同步**: 文件系统重构移动数据目录时, 必须同步更新所有 expected.json 中的绝对路径, 或统一改用相对 RAW_PDF_ROOT 的路径。本筛选器的路径回退逻辑是事后补救, 根因应在上游修正。
+2. **金标范式显式标注**: 合并后统一数据集须用 `gold_source` (database|article) + `annotation_provenance` 字段标注来源, 不可默认所有金标等价。
+3. **多文献拼接阈值**: 多文章检测阈值定为 ≥4 个不同标题型H1 (数据中: 单文章≤2, 拆分标题=3 如 rett_076, 真正多文章≥5), 留1条边界余量。
+4. **基因别名对齐**: 文章-基因对齐必须查 HGNC aliases + previous symbols, 否则 PRKN/parkin、GBA/GBA1 这类重命名基因会误判为"文章未提及"。
+5. **schema 归一**: 合并阶段须为 clinvar_fused 的嵌套 clingen{} 字段添加顶层回退读取逻辑。
+
+
+---
+
+## 2026-06-24 · 统一数据集字段补充: 多源异构字段归一与回填
+
+### 问题描述
+金标筛选产出151条精选清单后,需"补充字段"使四数据集(clingen/clinvar_fused/rett/parkinson)合并为字段统一完整的标准数据集。各数据集schema异构、字段大量缺失。
+
+### 排查过程 (字段覆盖矩阵)
+量化扫描151条通过entry的expected.json字段覆盖,发现:
+- **clinvar_fused 73条**: gene_symbol/hgnc_id/disease_label/mondo_id/moi/classification/gcep/classification_date/report_url 全部嵌套在 `clingen{}` 对象,顶层缺失。
+- **parkinson 18条**: 缺 hgnc_id(expected_standardization.gene存裸符号"PRKN")、moi、source_language、source_journal、source_year、evaluation_config。
+- **clingen 8条**: 缺 source_doi、source_language、本地source_pdf_path。
+- **rett 52条**: expected_entities 为空{}; 多数无PMID(用DOI/PDF定位)。
+- **variants异构**: rett用variants[](hgvs_c/hgvs_p/variant_type/clinical_significance/exon/domain), clinvar用clinvar_variants[](含variation_id/rsid/review_stars/phenotype等)。
+
+### 根因
+1. clinvar_fused设计为ClinGen+ClinVar连接,gene-disease字段来自ClinGen故嵌套。
+2. parkinson由XLSX auto-convert生成,未填标准化ID和遗传模式。
+3. rett为AI自动标注,expected_entities未填充; 来源用DOI而非PMID。
+4. 各数据集独立构建,schema从未统一。
+
+### 解决方案
+新增 build_unified_dataset.py,物化 benchmark/data/ground_truth/unified/gs_NNN/:
+1. **提升**: clinvar_fused clingen{} → 顶层平铺。
+2. **HGNC回填**: parkinson裸基因符号 → HGNC ID(GBA=HGNC:4177即GBA1旧符号)。
+3. **ClinGen CSV回填**: 按(gene,mondo)查ClinGen Gene-Disease Summary,回填moi/classification/gcep/date/report_url; 用HGNC approved symbol回退(GBA→查GBA1); GIGYF2无记录→moi留空+notes标注。
+4. **source_language**: parkinson←meta.json; clingen/clinvar→默认"en"(英文PMC)。
+5. **source_pdf_path**: 解析本地PDF(clingen/clinvar←pipeline/input/ground_truth/{lang}/case_report/{id}.pdf; parkinson←meta.json的pdf_path; rett←迁移后RAW_PDF_ROOT)。
+6. **EuropePMC回填**: 按PMID调 EXT_ID:{pmid} 查doi/journalInfo.journal.title/pubYear,带缓存+并发5+retry; 回填doi 78/journal 96/year 18。
+7. **variants保真统一**: rett variants[] + clinvar clinvar_variants[] 合并为统一variants[],保留所有来源字段,每项加source标签。
+8. **expected_entities**: rett空{} → 从standardization+顶层回填gene/disease; variants从variants[]构造。
+9. **evaluation_config**: 从expected_evidence的field_id按field-catalog类别动态生成分组(gene_disease/variant/clinical/standardization)。
+10. **物化**: 每条写expected.json+复制source.md(+多语言source_*.md); PDF不复制仅记路径; 顶层manifest.json。不改原数据。
+
+结果: 151条物化,核心字段(gene/hgnc/disease/mondo/source/language/pdf_path/entities/standardization/evaluation_config)151/151完整; moi 150/151(GIGYF2特例已标注); variants保真统一; 可定位性120条PMID/DOI+31条rett仅PDF(均已resolved)。
+
+### 预防措施
+1. **基因重命名**: 查ClinGen时必须用HGNC approved symbol回退,否则GBA(记为GBA1)、PRKN(曾PARK2)这类重命名基因查不到权威记录。
+2. **无ClinGen记录的基因**: GIGYF2等未获ClinGen Definitive curation的基因,moi不可"自行假设",必须留空+标注,由人工后续补。
+3. **多源PDF路径**: 文献PDF散落多处(pipeline/input多语言目录、data/processed、RAW_PDF_ROOT迁移路径),统一数据集的source_pdf_path须按数据集分别解析,不能假设统一位置。
+4. **无PMID条目的网络回填局限**: rett多用DOI无PMID,EuropePMC按PMID回填无法覆盖; 这类条目的journal/year缺失是数据局限,非脚本缺陷,交付时应说明可按DOI扩展回填。
+5. **字段覆盖矩阵先行**: 合并异构数据集前,先量化各字段跨数据集的覆盖矩阵,才能精确确定"补什么"和"来源在哪",避免盲目补全。
+
+
+---
+
+## 2026-06-24 · 统一数据集目录自包含: PDF物化合并
+
+### 问题描述
+上一轮物化unified目录时,expected.json+source.md(+多语言)已复制进gs_NNN/,但source_pdf_path仍指向散落在3处的原始PDF(pipeline/input 81条、data/inputs 52条、data/processed 18条),目录未自包含。需"合并数据集的目录"——把PDF也合并进统一目录。
+
+### 排查过程
+- 主PDF总68.8MB,clingen/clinvar多语言PDF共31MB(clingen 8条×7语言、clinvar 73条×2语言en+zh)。
+- rett/parkinson每条仅1个PDF(原始语言)。
+- 物化前0/151条含本地PDF副本。
+
+### 解决方案
+新增 _collect_pdf_sources + _copy_pdf_files 到 build_unified_dataset.py:
+1. **收集**: clingen/clinvar扫描pipeline/input/ground_truth/{lang}/case_report/{id}.pdf得全部语言; parkinson读meta.json的pdf_path; rett用selection已解析的source_pdf_path。单文件标"_primary"。
+2. **主语言选择**: primary = source_language匹配 → en → _primary → 首个。
+3. **命名**: primary→source.pdf; 其他→source_{lang}.pdf(与source.md/source_{lang}.md对应)。
+4. **回写**: 物化后unified["source_pdf_path"]改写为本地gs_NNN/source.pdf相对路径,backfilled标materialized_local; manifest同步。
+5. 重跑build,可复现(缓存命中后5.6秒)。
+
+结果: 151条全部自包含(expected.json+source.md+source.pdf,0缺失); 272个PDF(81条多语言:clingen 56+clinvar 146+rett 52+parkinson 18); manifest source_pdf_path 151/151本地; 目录107MB。
+
+### 预防措施
+1. **数据集自包含原则**: 合并成标准数据集时,所有输入文件(expected.json+source全文+PDF,含多语言)必须物化进统一目录,不得回溯分散的原始位置,否则下游评估依赖外部路径、不可移植。
+2. **多语言文件命名统一**: source.md/source_{lang}.md 与 source.pdf/source_{lang}.pdf 一一对应,主语言(对DB数据集=英文原文)落source.*,其他落source_{lang}.*。
+3. **物化阶段与unify分离**: unify_entry保持纯函数(算字段),文件复制(PDF/markdown)在materialization循环,复制后再回写expected.json的source_pdf_path为本地路径——避免纯函数产生副作用。

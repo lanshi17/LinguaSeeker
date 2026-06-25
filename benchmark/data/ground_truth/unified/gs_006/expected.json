@@ -1,0 +1,72 @@
+{
+  "unified_id": "gs_006",
+  "original_entry_id": "clingen_020",
+  "source_dataset": "clingen",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_gene_validity_csv",
+  "source": "clingen_literature",
+  "gene_symbol": "GJA1",
+  "hgnc_id": "HGNC:4274",
+  "disease_label": "congenital heart disease",
+  "mondo_id": "MONDO:0005453",
+  "moi": "UD",
+  "classification": "Limited",
+  "gcep": "Congenital Heart Disease Gene Curation Expert Panel",
+  "classification_date": "2024-06-04T16:00:00.000Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9be0581c-6ed0-4104-8da8-87b697548212-2024-06-04T160000.000Z",
+  "source_pmid": "",
+  "source_doi": "",
+  "source_pmc": "PMC12940485",
+  "source_pdf_url": "https://europepmc.org/article/PMC/12940485?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_006/source.pdf",
+  "source_title": "Tetralogy of Fallot: Genetic, Epigenetic and Clinical Insights into a Multifactorial Congenital Heart Disease",
+  "source_journal": "",
+  "source_year": "2026",
+  "source_language": "en",
+  "variants": [],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "GJA1"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "congenital heart disease"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "uncertain"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:4274",
+    "disease": "MONDO:0005453"
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "GJA1",
+      "hgnc_id": "HGNC:4274"
+    },
+    "disease": {
+      "text": "congenital heart disease",
+      "mondo_id": "MONDO:0005453"
+    }
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "evaluation_config": "derived_from_evidence"
+  }
+}

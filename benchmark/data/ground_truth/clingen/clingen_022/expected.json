@@ -12,15 +12,24 @@
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
-      "value": "ARHGEF28"
+      "value": "ARHGEF28",
+      "evaluation_type": "precision_recall",
+      "candidates": [],
+      "source": "article"
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "amyotrophic lateral sclerosis"
+      "value": "amyotrophic lateral sclerosis",
+      "evaluation_type": "precision_recall",
+      "candidates": [],
+      "source": "article"
     },
     {
       "field_id": "A.gene_disease_relationship",
-      "value": "uncertain"
+      "value": "uncertain",
+      "evaluation_type": "precision_recall",
+      "candidates": [],
+      "source": "article"
     }
   ],
   "expected_entities": {

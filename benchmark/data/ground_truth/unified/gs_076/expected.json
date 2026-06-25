@@ -1,0 +1,211 @@
+{
+  "unified_id": "gs_076",
+  "original_entry_id": "fused_070",
+  "source_dataset": "clinvar_fused",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_clinvar_join",
+  "source": "clingen_clinvar_fused",
+  "gene_symbol": "MTOR",
+  "hgnc_id": "HGNC:3942",
+  "disease_label": "overgrowth syndrome and/or cerebral malformations due to abnormalities in MTOR pathway genes",
+  "mondo_id": "MONDO:0100283",
+  "moi": "AD",
+  "classification": "Definitive",
+  "gcep": "Brain Malformations Gene Curation Expert Panel",
+  "classification_date": "2021-07-29T21:32:56.506Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_92ce0145-031d-41c4-8b74-0f9411629b64-2021-07-29T213256.506Z",
+  "source_pmid": "37938323",
+  "source_doi": "10.1007/s00428-023-03688-2",
+  "source_pmc": "PMC10700445",
+  "source_pdf_url": "https://europepmc.org/article/PMC/10700445?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_076/source.pdf",
+  "source_title": "mTOR eosinophilic renal cell carcinoma: a distinctive tumor characterized by mTOR mutation, loss of chromosome 1, cathepsin-K expression, and response to target therapy.",
+  "source_journal": "Virchows Archiv : an international journal of pathology",
+  "source_year": "2023",
+  "source_language": "en",
+  "variants": [
+    {
+      "source": "clinvar",
+      "variation_id": "156702",
+      "hgvs_name": "NM_004958.4(MTOR):c.5930C>A (p.Thr1977Lys)",
+      "hgvs_c": "c.5930C>A",
+      "hgvs_p": "p.Thr1977Lys",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs587777893",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MedGen:C3661900|MONDO:MONDO:0100283,MedGen:CN300503|MONDO:MONDO:0014716,MedGen:C4225259,OMIM:616638,Orphanet:457485|Human Phenotype Ontology:HP:0032051,MONDO:MONDO:0011818,MedGen:C1846385,OMIM:607341,Orphanet:268994",
+      "phenotype_list": "not provided|Overgrowth syndrome and/or cerebral malformations due to abnormalities in MTOR pathway genes|Macrocephaly-intellectual disability-neurodevelopmental disorder-small thorax syndrome|Isolated focal cortical dysplasia type II",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "156703",
+      "hgvs_name": "NM_004958.4(MTOR):c.6644C>T (p.Ser2215Phe)",
+      "hgvs_c": "c.6644C>T",
+      "hgvs_p": "p.Ser2215Phe",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs587777894",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MedGen:C3661900|Human Phenotype Ontology:HP:0032051,MONDO:MONDO:0011818,MedGen:C1846385,OMIM:607341,Orphanet:268994|MONDO:MONDO:0100283,MedGen:CN300503",
+      "phenotype_list": "not provided|Isolated focal cortical dysplasia type II|Overgrowth syndrome and/or cerebral malformations due to abnormalities in MTOR pathway genes",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "374796",
+      "hgvs_name": "NM_004958.4(MTOR):c.4447T>C (p.Cys1483Arg)",
+      "hgvs_c": "c.4447T>C",
+      "hgvs_p": "p.Cys1483Arg",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs1057519914",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "Human Phenotype Ontology:HP:0007206,MONDO:MONDO:0020492,MedGen:C0431391,Orphanet:99802|MONDO:MONDO:0100283,MedGen:CN300503",
+      "phenotype_list": "Hemimegalencephaly|Overgrowth syndrome and/or cerebral malformations due to abnormalities in MTOR pathway genes",
+      "review_stars": 3
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MTOR",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "overgrowth syndrome and/or cerebral malformations due to abnormalities in MTOR pathway genes",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.5930C>A",
+      "candidates": [
+        "c.5930C>A",
+        "c.6644C>T",
+        "c.4447T>C"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Thr1977Lys",
+      "candidates": [
+        "p.Thr1977Lys",
+        "p.Ser2215Phe",
+        "p.Cys1483Arg"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:3942",
+    "disease": "MONDO:0100283",
+    "variant_candidates": [
+      "ClinVarVariation:156702",
+      "ClinVarVariation:156703",
+      "ClinVarVariation:374796"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "MTOR",
+      "hgnc_id": "HGNC:3942"
+    },
+    "disease": {
+      "text": "overgrowth syndrome and/or cerebral malformations due to abnormalities in MTOR pathway genes",
+      "mondo_id": "MONDO:0100283"
+    },
+    "variants": [
+      {
+        "text": "c.5930C>A",
+        "variation_id": "ClinVarVariation:156702",
+        "rsid": "rs587777893"
+      },
+      {
+        "text": "c.6644C>T",
+        "variation_id": "ClinVarVariation:156703",
+        "rsid": "rs587777894"
+      },
+      {
+        "text": "c.4447T>C",
+        "variation_id": "ClinVarVariation:374796",
+        "rsid": "rs1057519914"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "clingen_report_url": "lifted_clingen_block",
+    "gene_symbol": "lifted_clingen_block",
+    "hgnc_id": "lifted_clingen_block",
+    "disease_label": "lifted_clingen_block",
+    "mondo_id": "lifted_clingen_block",
+    "moi": "lifted_clingen_block",
+    "classification": "lifted_clingen_block",
+    "gcep": "lifted_clingen_block",
+    "classification_date": "lifted_clingen_block",
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid"
+  }
+}

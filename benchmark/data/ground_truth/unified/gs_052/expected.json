@@ -1,0 +1,211 @@
+{
+  "unified_id": "gs_052",
+  "original_entry_id": "fused_044",
+  "source_dataset": "clinvar_fused",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_clinvar_join",
+  "source": "clingen_clinvar_fused",
+  "gene_symbol": "LDLR",
+  "hgnc_id": "HGNC:6547",
+  "disease_label": "hypercholesterolemia, familial, 1",
+  "mondo_id": "MONDO:0007750",
+  "moi": "SD",
+  "classification": "Definitive",
+  "gcep": "General Gene Curation Expert Panel",
+  "classification_date": "2021-02-24T17:00:00.000Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_81788cfe-7520-4821-b80b-3ee0b2018909-2021-02-24T170000.000Z",
+  "source_pmid": "39600113",
+  "source_doi": "10.1002/mgg3.70030",
+  "source_pmc": "PMC11599428",
+  "source_pdf_url": "https://europepmc.org/article/PMC/11599428?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_052/source.pdf",
+  "source_title": "Pathogenicity of the LDLR c.97C&gt;T (p.Gln33Ter) Mutation in Familial Hypercholesterolemia.",
+  "source_journal": "Molecular genetics & genomic medicine",
+  "source_year": "2024",
+  "source_language": "en",
+  "variants": [
+    {
+      "source": "clinvar",
+      "variation_id": "3683",
+      "hgvs_name": "NM_000527.5(LDLR):c.97C>T (p.Gln33Ter)",
+      "hgvs_c": "c.97C>T",
+      "hgvs_p": "p.Gln33Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs121908024",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0007750,MedGen:C0745103,OMIM:143890,Orphanet:391665|MedGen:C3661900|MONDO:MONDO:0005439,MedGen:C0020445,OMIM:PS143890|MedGen:CN230736",
+      "phenotype_list": "Hypercholesterolemia, familial, 1|not provided|Familial hypercholesterolemia|Cardiovascular phenotype",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "3685",
+      "hgvs_name": "NM_000527.5(LDLR):c.259T>G (p.Trp87Gly)",
+      "hgvs_c": "c.259T>G",
+      "hgvs_p": "p.Trp87Gly",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs121908025",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0007750,MedGen:C0745103,OMIM:143890,Orphanet:391665|MedGen:C3661900|MONDO:MONDO:0005439,MedGen:C0020445,OMIM:PS143890|MONDO:MONDO:0018328,MedGen:C0342881,Orphanet:391665|MedGen:CN230736|MedGen:C0242339",
+      "phenotype_list": "Hypercholesterolemia, familial, 1|not provided|Familial hypercholesterolemia|Homozygous familial hypercholesterolemia|Cardiovascular phenotype|Dyslipidemia",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "3686",
+      "hgvs_name": "NM_000527.5(LDLR):c.530C>T (p.Ser177Leu)",
+      "hgvs_c": "c.530C>T",
+      "hgvs_p": "p.Ser177Leu",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs121908026",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0007750,MedGen:C0745103,OMIM:143890,Orphanet:391665|MedGen:C3661900|MONDO:MONDO:0005439,MedGen:C0020445,OMIM:PS143890|MedGen:CN230736",
+      "phenotype_list": "Hypercholesterolemia, familial, 1|not provided|Familial hypercholesterolemia|Cardiovascular phenotype",
+      "review_stars": 3
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "LDLR",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "hypercholesterolemia, familial, 1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "SD",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.97C>T",
+      "candidates": [
+        "c.97C>T",
+        "c.259T>G",
+        "c.530C>T"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Gln33Ter",
+      "candidates": [
+        "p.Gln33Ter",
+        "p.Trp87Gly",
+        "p.Ser177Leu"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6547",
+    "disease": "MONDO:0007750",
+    "variant_candidates": [
+      "ClinVarVariation:3683",
+      "ClinVarVariation:3685",
+      "ClinVarVariation:3686"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "LDLR",
+      "hgnc_id": "HGNC:6547"
+    },
+    "disease": {
+      "text": "hypercholesterolemia, familial, 1",
+      "mondo_id": "MONDO:0007750"
+    },
+    "variants": [
+      {
+        "text": "c.97C>T",
+        "variation_id": "ClinVarVariation:3683",
+        "rsid": "rs121908024"
+      },
+      {
+        "text": "c.259T>G",
+        "variation_id": "ClinVarVariation:3685",
+        "rsid": "rs121908025"
+      },
+      {
+        "text": "c.530C>T",
+        "variation_id": "ClinVarVariation:3686",
+        "rsid": "rs121908026"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "clingen_report_url": "lifted_clingen_block",
+    "gene_symbol": "lifted_clingen_block",
+    "hgnc_id": "lifted_clingen_block",
+    "disease_label": "lifted_clingen_block",
+    "mondo_id": "lifted_clingen_block",
+    "moi": "lifted_clingen_block",
+    "classification": "lifted_clingen_block",
+    "gcep": "lifted_clingen_block",
+    "classification_date": "lifted_clingen_block",
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid"
+  }
+}

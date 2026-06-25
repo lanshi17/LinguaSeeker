@@ -1,0 +1,178 @@
+{
+  "unified_id": "gs_143",
+  "original_entry_id": "rett_079",
+  "source_dataset": "rett",
+  "gold_source": "article",
+  "annotation_provenance": "ai_auto_review",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Rett综合征",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "classification": "Rett real-data",
+  "gcep": "Rett literature benchmark",
+  "classification_date": "",
+  "clingen_report_url": "",
+  "source_pmid": "",
+  "source_doi": "10.16068/j.1000-1824.2018.01.01",
+  "source_pmc": "",
+  "source_pdf_url": "",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_143/source.pdf",
+  "source_title": "Rett综合征1例",
+  "source_journal": "延边大学医学学报",
+  "source_year": "2018",
+  "source_language": "zh",
+  "variants": [
+    {
+      "source": "rett",
+      "hgvs_c": "c.622C>T",
+      "hgvs_p": "p.Q208X",
+      "variant_type": "nonsense",
+      "clinical_significance": "pathogenic",
+      "domain": "TRD"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett综合征",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.622C>T",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Q208X",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "nonsense",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "TRD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001263; HP:0001250; HP:0002072; HP:0002376; HP:0000252; HP:0001251; HP:0003763; HP:0004322; HP:0001344; HP:0001249; HP:0012759; HP:0000756; HP:0002360; HP:0011968",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "发育迟缓; 间断抽搐/癫痫发作; 智力逐渐减退; 双手不自主拍打、搓手（手部刻板动作）; 动作刻板; 语言及技能完全丧失; 词汇量明显减少; 头部不自主前后摆动; 咬牙、眨眼（磨牙）; 头围小（小头畸形）; 反射性躯干共济失调; 手脚失用; 生长发育迟缓; 发育倒退; 大小便失禁; 呼吸问题（过度换气、呼吸暂停）; 自闭症早期症状; 睡眠问题; 咀嚼困难/吞咽困难",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "约14个月（发育倒退起始），3岁时出现抽搐",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "unknown",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "MECP2",
+      "hgnc_id": "HGNC:6992"
+    },
+    "disease": {
+      "text": "Rett综合征",
+      "mondo_id": "MONDO:0010726"
+    },
+    "variants": [
+      {
+        "text": "c.622C>T"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "expected_entities": "derived_from_standardization",
+    "source_pdf_path": "materialized_local"
+  }
+}

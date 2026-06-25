@@ -1,0 +1,251 @@
+{
+  "unified_id": "gs_146",
+  "original_entry_id": "rett_082",
+  "source_dataset": "rett",
+  "gold_source": "article",
+  "annotation_provenance": "ai_auto_review",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Rett syndrome (classical/typical)",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "classification": "Rett real-data",
+  "gcep": "Rett literature benchmark",
+  "classification_date": "",
+  "clingen_report_url": "",
+  "source_pmid": "",
+  "source_doi": "10.7499/j.issn.1008-8830.2014.04.017",
+  "source_pmc": "",
+  "source_pdf_url": "",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_146/source.pdf",
+  "source_title": "Clinical features and MECP2 mutations in children with Rett syndrome",
+  "source_journal": "Chinese Journal of Contemporary Pediatrics (中国当代儿科杂志)",
+  "source_year": "2014",
+  "source_language": "zh",
+  "variants": [
+    {
+      "source": "rett",
+      "hgvs_c": "c.316C>T",
+      "hgvs_p": "p.R106W",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic",
+      "exon": "3",
+      "domain": "MBD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.1126C>T",
+      "hgvs_p": "p.P376S",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic",
+      "exon": "4",
+      "domain": "CTS (C-terminal segment)"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.808C>T",
+      "hgvs_p": "p.R270X",
+      "variant_type": "nonsense",
+      "clinical_significance": "pathogenic",
+      "exon": "4",
+      "domain": "TRD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.502C>T",
+      "hgvs_p": "p.R168X",
+      "variant_type": "nonsense",
+      "clinical_significance": "pathogenic",
+      "exon": "4",
+      "domain": "outside functional domains (truncates protein before TRD)"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.913insT",
+      "hgvs_p": "p.K305fs",
+      "variant_type": "frameshift (insertion)",
+      "clinical_significance": "pathogenic (novel, first reported)",
+      "exon": "4",
+      "domain": "TRD"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome (classical/typical)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.316C>T",
+      "candidates": [
+        "c.316C>T",
+        "c.1126C>T",
+        "c.808C>T",
+        "c.502C>T",
+        "c.913insT"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.R106W",
+      "candidates": [
+        "p.R106W",
+        "p.P376S",
+        "p.R270X",
+        "p.R168X",
+        "p.K305fs"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "nonsense",
+        "nonsense",
+        "frameshift (insertion)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "MBD",
+      "candidates": [
+        "MBD",
+        "CTS (C-terminal segment)",
+        "TRD",
+        "outside functional domains (truncates protein before TRD)",
+        "TRD"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001344; HP:0002072; HP:0002194; HP:0001250; HP:0001263; HP:0001249",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "loss or reduction of language/speech function; loss of hand skills with stereotypic hand movements (finger playing, hair grabbing, finger twisting, scratching); impaired sitting and walking ability; abnormal EEG with epileptiform discharges; developmental delay (some markedly delayed); intellectual disability",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "5-42 months",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "de novo (no mutations detected in any of the patients' parents)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "MECP2",
+      "hgnc_id": "HGNC:6992"
+    },
+    "disease": {
+      "text": "Rett syndrome (classical/typical)",
+      "mondo_id": "MONDO:0010726"
+    },
+    "variants": [
+      {
+        "text": "c.316C>T"
+      },
+      {
+        "text": "c.1126C>T"
+      },
+      {
+        "text": "c.808C>T"
+      },
+      {
+        "text": "c.502C>T"
+      },
+      {
+        "text": "c.913insT"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "expected_entities": "derived_from_standardization",
+    "source_pdf_path": "materialized_local"
+  }
+}

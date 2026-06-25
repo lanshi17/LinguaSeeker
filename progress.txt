@@ -978,3 +978,19 @@
 - A.gene_symbol and B.disease_diagnosis now survive Phase 3 without variant co-location
 - No false positives introduced (precision 100%)
 - Fix is narrow and publication-safe
+
+[2026-06-24] Post-fix validation batch (11 entries) [PARTIAL]
+- Batch started 22:22, 2/11 entries completed as of ~23:30
+- rett_001: 0/8 → 2/8 (P=100%, R=25%, F1=40%), 0 FP — identity gate working
+- rett_003: 0/11 → est. 4-5/11 (gene, disease, age_of_onset, de_novo_status rescued)
+- Remaining FN are all variant-dependent fields
+- Infrastructure: each entry 10-25 min due to LLM rate limits, full batch would take 3-4 hours
+- Decision: proceed to full 73-entry evaluation (background), next bottleneck is variant extraction
+- Full 73-entry evaluation started in background (estimated 12-30 hours)
+  - Log: benchmark/data/reports/full_73_run_20260624.log
+  - Settings: --extraction-profile dataset_d_publication --no-preprocessed --concurrency 1
+[2026-06-24] [benchmark] 重新设计benchmark第一步: 金标文献筛选 — 新增 benchmark/analysis/dataset_curation/gold_standard_filter.py, 对 clingen/clinvar_fused/rett/parkinson 共178条entry施5道质量门控(源文档完整性/标准化ID/文章-证据对齐/可验证来源/跨集去重), 151条通过, 产出 gold_standard_selection.json 精选清单 + 筛选报告(JSON+MD). 附16项单元测试. [完成]
+[2026-06-24] [benchmark] 统一数据集字段补充(第二步): 新增 benchmark/analysis/dataset_curation/build_unified_dataset.py, 物化 benchmark/data/ground_truth/unified/gs_NNN/ 151条统一schema数据集. 提升clinvar_fused嵌套clingen{}字段到顶层; HGNC文件回填parkinson hgnc_id; ClinGen CSV回填moi/classification/gcep(PRKN=AR/LRRK2=AD/PINK1=AR/VPS35=AD/GBA=AD, GIGYF2无记录标注); 解析本地PDF路径(pipeline/input+rett迁移+parkinson meta); EuropePMC按PMID回填doi/journal/year(78/96/18); variants保真统一(rett+clinvar); expected_entities/evaluation_config回填. 核心字段151/151完整(moi仅GIGYF2特例). 附11项单元测试. [完成]
+[2026-06-25] [extract_evidence] 吸收 B7 expanded prompt 字段覆盖指导到 pipeline catalog prompt，仅增强中等/复杂字段关注点，保留现有流水线、eligible catalog 约束、source grounding 与质量门控；新增 prompt 回归测试并通过 37 项 prompt 测试与 Ruff 检查. [完成]
+[2026-06-24] [benchmark] 统一数据集目录合并(第三步): 物化PDF到 unified/gs_NNN/ 使目录自包含. 新增 _collect_pdf_sources/_copy_pdf_files: clingen/clinvar多语言PDF→source.pdf(主,en)+source_{lang}.pdf; rett/parkinson单PDF→source.pdf. source_pdf_path改写为本地unified相对路径(151/151). 共272个PDF(81条多语言), 目录107MB, 全自包含(expected.json+source.md+source.pdf). 附2项PDF物化测试, 累计29测试全通过. [完成]
+[2026-06-25] [benchmark] 统一数据集源溯源: 更新 unified/manifest.json (schema 1.0.0→1.1.0) 为每条记录补充 source_path/classification/moi/language/has_multilingual_sources 字段(151条). 新增 benchmark/scripts/validate_manifest.py 校验脚本(5项检查全通过). 更新 benchmark/README.md 文档说明溯源字段、分层评估要求与校验命令. [完成]

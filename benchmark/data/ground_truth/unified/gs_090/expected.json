@@ -1,0 +1,112 @@
+{
+  "unified_id": "gs_090",
+  "original_entry_id": "parkinson_009",
+  "source_dataset": "parkinson",
+  "gold_source": "article",
+  "annotation_provenance": "xlsx_auto_convert",
+  "source": "parkinson_literature",
+  "gene_symbol": "VPS35",
+  "hgnc_id": "HGNC:13487",
+  "disease_label": "Parkinson disease",
+  "mondo_id": "MONDO:0005180",
+  "moi": "AD",
+  "classification": "Definitive",
+  "gcep": "Parkinson's Disease Gene Curation Expert Panel",
+  "classification_date": "2021-11-03T13:45:17.796Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b0e546d6-8a44-4e9d-83aa-f781ec4ec166-2021-11-03T134517.796Z",
+  "source_pmid": "23408866",
+  "source_doi": "10.1212/WNL.0b013e31828727d4",
+  "source_pmc": "",
+  "source_pdf_url": "",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_090/source.pdf",
+  "source_title": "Whole exome sequencing of rare variants in EIF4G1 and VPS35 in Parkinson disease",
+  "source_journal": "Neurology",
+  "source_year": "2013",
+  "source_language": "en",
+  "variants": [],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "VPS35",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Parkinson disease",
+      "candidates": [
+        "Parkinson disease",
+        "Parkinson's disease"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "associated",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense, splice_site",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "parkinsonism; dementia",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "disease": "MONDO:0005180",
+    "gene": "HGNC:13487"
+  },
+  "expected_entities": {
+    "disease": {
+      "text": "Parkinson disease",
+      "mondo_id": "MONDO:0005180"
+    },
+    "gene": {
+      "text": "VPS35",
+      "hgnc_id": "HGNC:13487"
+    }
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship"
+    ],
+    "variant_fields": [
+      "A.variant_type"
+    ],
+    "clinical_fields": [
+      "B.clinical_phenotypes"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "Converted from parkinson_literature dataset, PMID 23408866",
+  "backfilled": {
+    "hgnc_id": "hgnc_file",
+    "moi": "clingen_csv",
+    "classification": "clingen_csv",
+    "gcep": "clingen_csv",
+    "classification_date": "clingen_csv",
+    "clingen_report_url": "clingen_csv",
+    "source_language": "meta_json",
+    "source_pdf_path": "materialized_local",
+    "source_journal": "europepmc_pmid",
+    "source_year": "europepmc_pmid",
+    "evaluation_config": "derived_from_evidence"
+  }
+}

@@ -1,0 +1,211 @@
+{
+  "unified_id": "gs_018",
+  "original_entry_id": "fused_010",
+  "source_dataset": "clinvar_fused",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_clinvar_join",
+  "source": "clingen_clinvar_fused",
+  "gene_symbol": "BRCA2",
+  "hgnc_id": "HGNC:1101",
+  "disease_label": "Fanconi anemia complementation group D1",
+  "mondo_id": "MONDO:0011584",
+  "moi": "AR",
+  "classification": "Definitive",
+  "gcep": "Hereditary Cancer Gene Curation Expert Panel",
+  "classification_date": "2019-04-19T16:00:00.000Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_48faf04b-ffc4-4163-8570-22f5c29c4064-2019-04-19T160000.000Z",
+  "source_pmid": "41970070",
+  "source_doi": "10.7759/cureus.105002",
+  "source_pmc": "PMC13065338",
+  "source_pdf_url": "https://europepmc.org/article/PMC/13065338?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_018/source.pdf",
+  "source_title": "BRCA1/2 and CHEK2 Pathogenic Variants in Urological Cancers: A Portuguese Single-Center Experience.",
+  "source_journal": "Cureus",
+  "source_year": "2026",
+  "source_language": "en",
+  "variants": [
+    {
+      "source": "clinvar",
+      "variation_id": "9322",
+      "hgvs_name": "NM_000059.3(BRCA2):c.2808_2811del (p.Ala938Profs)",
+      "hgvs_c": "c.2808_2811del",
+      "hgvs_p": "p.Ala938Profs",
+      "variant_type": "deletion",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs80359351",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0012933,MedGen:C2675520,OMIM:612555,Orphanet:145|MONDO:MONDO:0003582,MeSH:D061325,MedGen:C0677776,Orphanet:145|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MONDO:MONDO:0011450,MedGen:C2676676,OMIM:604370,Orphanet:145|Human Phenotype Ontology:HP:0010623,Human Phenotype Ontology:HP:0100013,MONDO:MONDO:0021100,MeSH:D001943,MedGen:C1458155|MONDO:MONDO:0016419,MedGen:C0346153,OMIM:114480,Orphanet:227535|MedGen:CN221562|MONDO:MONDO:0007254,MedGen:C0006142|MedGen:CN239275|MONDO:MONDO:0006003,MedGen:CN277893|MONDO:MONDO:0003582,MeSH:D061325,MedGen:C0677776,Orphanet:145;MONDO:MONDO:0011584,MedGen:C1838457,OMIM:605724,Orphanet:319462|Human Phenotype Ontology:HP:0012126,MONDO:MONDO:0001056,MeSH:D013274,MedGen:C0024623,OMIM:613659|8 conditions|MONDO:MONDO:0700269,MedGen:CN377758||",
+      "phenotype_list": "Breast-ovarian cancer, familial, susceptibility to, 2|Hereditary breast ovarian cancer syndrome|Hereditary cancer-predisposing syndrome|not provided|Breast-ovarian cancer, familial, susceptibility to, 1|Breast neoplasm|Familial cancer of breast|Breast and/or ovarian cancer|Malignant tumor of breast|BRCA2-related disorder|Uterine corpus cancer|Hereditary breast ovarian cancer syndrome;Fanconi anemia complementation group D1|Gastric cancer|8 conditions|BRCA2-related cancer predisposition|Inherited breast cancer and ovarian cancer|Inherited ovarian cancer (without breast cancer)",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "9325",
+      "hgvs_name": "NM_000059.4(BRCA2):c.5946del (p.Ser1982fs)",
+      "hgvs_c": "c.5946del",
+      "hgvs_p": "p.Ser1982fs",
+      "variant_type": "deletion",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs80359550",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0012933,MedGen:C2675520,OMIM:612555,Orphanet:145|MONDO:MONDO:0013235,MedGen:C3150546,OMIM:613347,Orphanet:1333|MONDO:MONDO:0011584,MedGen:C1838457,OMIM:605724,Orphanet:319462|MONDO:MONDO:0003582,MeSH:D061325,MedGen:C0677776,Orphanet:145|MONDO:MONDO:0016419,MedGen:C0346153,OMIM:114480,Orphanet:227535|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MedGen:CN239275|Human Phenotype Ontology:HP:0010623,Human Phenotype Ontology:HP:0100013,MONDO:MONDO:0021100,MeSH:D001943,MedGen:C1458155|MedGen:CN221562|Human Phenotype Ontology:HP:0100615,MONDO:MONDO:0021068,MeSH:D010051,MedGen:C0919267|MONDO:MONDO:0003582,MeSH:D061325,MedGen:C0677776,Orphanet:145;MONDO:MONDO:0011584,MedGen:C1838457,OMIM:605724,Orphanet:319462|Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089|MONDO:MONDO:0700269,MedGen:CN377758|8 conditions||",
+      "phenotype_list": "Breast-ovarian cancer, familial, susceptibility to, 2|Pancreatic cancer, susceptibility to, 2|Fanconi anemia complementation group D1|Hereditary breast ovarian cancer syndrome|Familial cancer of breast|Hereditary cancer-predisposing syndrome|not provided|BRCA2-related disorder|Breast neoplasm|Breast and/or ovarian cancer|Ovarian neoplasm|Hereditary breast ovarian cancer syndrome;Fanconi anemia complementation group D1|Endometrial carcinoma|BRCA2-related cancer predisposition|8 conditions|Inherited ovarian cancer (without breast cancer)|Inherited breast cancer and ovarian cancer",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "9342",
+      "hgvs_name": "NM_000059.4(BRCA2):c.658_659del (p.Val220fs)",
+      "hgvs_c": "c.658_659del",
+      "hgvs_p": "p.Val220fs",
+      "variant_type": "deletion",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs80359604",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "Human Phenotype Ontology:HP:0002885,MONDO:MONDO:0007959,MeSH:D008527,MedGen:C0025149,OMIM:155255,Orphanet:616|MONDO:MONDO:0011584,MedGen:C1838457,OMIM:605724,Orphanet:319462|MONDO:MONDO:0008679,MedGen:CN033288,OMIM:194070,Orphanet:654|MONDO:MONDO:0013093,MedGen:C2751641,OMIM:613029,Orphanet:182067,Orphanet:360|MONDO:MONDO:0012933,MedGen:C2675520,OMIM:612555,Orphanet:145|MONDO:MONDO:0003582,MeSH:D061325,MedGen:C0677776,Orphanet:145|MedGen:C3661900|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MONDO:MONDO:0011450,MedGen:C2676676,OMIM:604370,Orphanet:145|MedGen:CN221562|MONDO:MONDO:0016419,MedGen:C0346153,OMIM:114480,Orphanet:227535|MONDO:MONDO:0007254,MedGen:C0006142|Human Phenotype Ontology:HP:0012125,MONDO:MONDO:0008315,MedGen:C0376358,Orphanet:1331|MONDO:MONDO:0006003,MedGen:CN277893|Human Phenotype Ontology:HP:0012126,MONDO:MONDO:0001056,MeSH:D013274,MedGen:C0024623,OMIM:613659|MedGen:CN239275|8 conditions|MONDO:MONDO:0700269,MedGen:CN377758|MONDO:MONDO:0012933,MedGen:C2675520,OMIM:612555,Orphanet:145;MONDO:MONDO:0011584,MedGen:C1838457,OMIM:605724,Orphanet:319462;MONDO:MONDO:0016419,MedGen:C0346153,OMIM:114480,Orphanet:227535;MONDO:MONDO:0700275,MedGen:C2931456,OMIM:176807,Orphanet:1331;MONDO:MONDO:0013235,MedGen:C3150546,OMIM:613347,Orphanet:1333|",
+      "phenotype_list": "Medulloblastoma|Fanconi anemia complementation group D1|Wilms tumor 1|Glioma susceptibility 3|Breast-ovarian cancer, familial, susceptibility to, 2|Hereditary breast ovarian cancer syndrome|not provided|Hereditary cancer-predisposing syndrome|Breast-ovarian cancer, familial, susceptibility to, 1|Breast and/or ovarian cancer|Familial cancer of breast|Malignant tumor of breast|Prostate cancer|Uterine corpus cancer|Gastric cancer|BRCA2-related disorder|8 conditions|BRCA2-related cancer predisposition|Breast-ovarian cancer, familial, susceptibility to, 2;Fanconi anemia complementation group D1;Familial cancer of breast;Familial prostate cancer;Pancreatic cancer, susceptibility to, 2|Inherited breast cancer and ovarian cancer",
+      "review_stars": 3
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "BRCA2",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Fanconi anemia complementation group D1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AR",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.2808_2811del",
+      "candidates": [
+        "c.2808_2811del",
+        "c.5946del",
+        "c.658_659del"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Ala938Profs",
+      "candidates": [
+        "p.Ala938Profs",
+        "p.Ser1982fs",
+        "p.Val220fs"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "deletion",
+      "candidates": [
+        "deletion",
+        "deletion",
+        "deletion"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:1101",
+    "disease": "MONDO:0011584",
+    "variant_candidates": [
+      "ClinVarVariation:9322",
+      "ClinVarVariation:9325",
+      "ClinVarVariation:9342"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "BRCA2",
+      "hgnc_id": "HGNC:1101"
+    },
+    "disease": {
+      "text": "Fanconi anemia complementation group D1",
+      "mondo_id": "MONDO:0011584"
+    },
+    "variants": [
+      {
+        "text": "c.2808_2811del",
+        "variation_id": "ClinVarVariation:9322",
+        "rsid": "rs80359351"
+      },
+      {
+        "text": "c.5946del",
+        "variation_id": "ClinVarVariation:9325",
+        "rsid": "rs80359550"
+      },
+      {
+        "text": "c.658_659del",
+        "variation_id": "ClinVarVariation:9342",
+        "rsid": "rs80359604"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "clingen_report_url": "lifted_clingen_block",
+    "gene_symbol": "lifted_clingen_block",
+    "hgnc_id": "lifted_clingen_block",
+    "disease_label": "lifted_clingen_block",
+    "mondo_id": "lifted_clingen_block",
+    "moi": "lifted_clingen_block",
+    "classification": "lifted_clingen_block",
+    "gcep": "lifted_clingen_block",
+    "classification_date": "lifted_clingen_block",
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "unified_id": "gs_002",
+  "original_entry_id": "clingen_002",
+  "source_dataset": "clingen",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_gene_validity_csv",
+  "source": "clingen_literature",
+  "gene_symbol": "ABCA3",
+  "hgnc_id": "HGNC:33",
+  "disease_label": "interstitial lung disease due to ABCA3 deficiency",
+  "mondo_id": "MONDO:0012582",
+  "moi": "AR",
+  "classification": "Definitive",
+  "gcep": "Interstitial Lung Disease Gene Curation Expert Panel",
+  "classification_date": "2024-09-17T16:00:00.000Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f3e2d402-69a2-496f-af67-ba3aae132eab-2024-09-17T160000.000Z",
+  "source_pmid": "34481500",
+  "source_doi": "10.1186/s13023-021-02013-x",
+  "source_pmc": "PMC8418291",
+  "source_pdf_url": "https://europepmc.org/article/PMC/8418291?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_002/source.pdf",
+  "source_title": "The frequency of rare and monogenic diseases in pediatric organ transplant recipients in Italy.",
+  "source_journal": "Orphanet journal of rare diseases",
+  "source_year": "2021",
+  "source_language": "en",
+  "variants": [],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "ABCA3"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "interstitial lung disease due to ABCA3 deficiency"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:33",
+    "disease": "MONDO:0012582"
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "ABCA3",
+      "hgnc_id": "HGNC:33"
+    },
+    "disease": {
+      "text": "interstitial lung disease due to ABCA3 deficiency",
+      "mondo_id": "MONDO:0012582"
+    }
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid",
+    "evaluation_config": "derived_from_evidence"
+  }
+}

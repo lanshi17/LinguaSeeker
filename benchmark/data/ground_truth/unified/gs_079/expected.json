@@ -1,0 +1,211 @@
+{
+  "unified_id": "gs_079",
+  "original_entry_id": "fused_073",
+  "source_dataset": "clinvar_fused",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_clinvar_join",
+  "source": "clingen_clinvar_fused",
+  "gene_symbol": "MYO15A",
+  "hgnc_id": "HGNC:7594",
+  "disease_label": "nonsyndromic genetic hearing loss",
+  "mondo_id": "MONDO:0019497",
+  "moi": "AR",
+  "classification": "Definitive",
+  "gcep": "Hearing Loss Gene Curation Expert Panel",
+  "classification_date": "2017-11-21T17:00:00.000Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2cf0898e-5e63-4327-9341-fdf26490beee-2017-11-21T170000.000Z",
+  "source_pmid": "35346193",
+  "source_doi": "10.1186/s12920-022-01201-3",
+  "source_pmc": "PMC8962197",
+  "source_pdf_url": "https://europepmc.org/article/PMC/8962197?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_079/source.pdf",
+  "source_title": "Analysis of the genotype-phenotype correlation of MYO15A variants in Chinese non-syndromic hearing loss patients.",
+  "source_journal": "BMC medical genomics",
+  "source_year": "2022",
+  "source_language": "en",
+  "variants": [
+    {
+      "source": "clinvar",
+      "variation_id": "6950",
+      "hgvs_name": "NM_016239.4(MYO15A):c.6337A>T (p.Ile2113Phe)",
+      "hgvs_c": "c.6337A>T",
+      "hgvs_p": "p.Ile2113Phe",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "rsid": "rs121908965",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0010860,MedGen:C1838263,OMIM:600316,Orphanet:90636|MONDO:MONDO:0019497,MedGen:C5680182,Orphanet:87884|MedGen:C3661900",
+      "phenotype_list": "Autosomal recessive nonsyndromic hearing loss 3|Nonsyndromic genetic hearing loss|not provided",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "449526",
+      "hgvs_name": "NM_016239.4(MYO15A):c.4176C>A (p.Tyr1392Ter)",
+      "hgvs_c": "c.4176C>A",
+      "hgvs_p": "p.Tyr1392Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs1199192203",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MedGen:C3661900|MONDO:MONDO:0019497,MedGen:C5680182,Orphanet:87884|MONDO:MONDO:0010860,MedGen:C1838263,OMIM:600316,Orphanet:90636",
+      "phenotype_list": "not provided|Nonsyndromic genetic hearing loss|Autosomal recessive nonsyndromic hearing loss 3",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "500061",
+      "hgvs_name": "NM_016239.4(MYO15A):c.1137del (p.Tyr380fs)",
+      "hgvs_c": "c.1137del",
+      "hgvs_p": "p.Tyr380fs",
+      "variant_type": "deletion",
+      "clinical_significance": "Likely pathogenic",
+      "rsid": "rs769260536",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MedGen:C3661900|MONDO:MONDO:0010860,MedGen:C1838263,OMIM:600316,Orphanet:90636|Human Phenotype Ontology:HP:0000365,Human Phenotype Ontology:HP:0000404,Human Phenotype Ontology:HP:0001728,Human Phenotype Ontology:HP:0001729,Human Phenotype Ontology:HP:0001754,Human Phenotype Ontology:HP:0008560,Human Phenotype Ontology:HP:0008563,MONDO:MONDO:0005365,MedGen:C1384666|MedGen:C5680250,Orphanet:96210|MONDO:MONDO:0019497,MedGen:C5680182,Orphanet:87884",
+      "phenotype_list": "not provided|Autosomal recessive nonsyndromic hearing loss 3|Hearing impairment|Rare genetic deafness|Nonsyndromic genetic hearing loss",
+      "review_stars": 3
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MYO15A",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "nonsyndromic genetic hearing loss",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AR",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.6337A>T",
+      "candidates": [
+        "c.6337A>T",
+        "c.4176C>A",
+        "c.1137del"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Ile2113Phe",
+      "candidates": [
+        "p.Ile2113Phe",
+        "p.Tyr1392Ter",
+        "p.Tyr380fs"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "deletion"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Likely pathogenic",
+      "candidates": [
+        "Likely pathogenic",
+        "Pathogenic",
+        "Likely pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:7594",
+    "disease": "MONDO:0019497",
+    "variant_candidates": [
+      "ClinVarVariation:6950",
+      "ClinVarVariation:449526",
+      "ClinVarVariation:500061"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "MYO15A",
+      "hgnc_id": "HGNC:7594"
+    },
+    "disease": {
+      "text": "nonsyndromic genetic hearing loss",
+      "mondo_id": "MONDO:0019497"
+    },
+    "variants": [
+      {
+        "text": "c.6337A>T",
+        "variation_id": "ClinVarVariation:6950",
+        "rsid": "rs121908965"
+      },
+      {
+        "text": "c.4176C>A",
+        "variation_id": "ClinVarVariation:449526",
+        "rsid": "rs1199192203"
+      },
+      {
+        "text": "c.1137del",
+        "variation_id": "ClinVarVariation:500061",
+        "rsid": "rs769260536"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "clingen_report_url": "lifted_clingen_block",
+    "gene_symbol": "lifted_clingen_block",
+    "hgnc_id": "lifted_clingen_block",
+    "disease_label": "lifted_clingen_block",
+    "mondo_id": "lifted_clingen_block",
+    "moi": "lifted_clingen_block",
+    "classification": "lifted_clingen_block",
+    "gcep": "lifted_clingen_block",
+    "classification_date": "lifted_clingen_block",
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid"
+  }
+}

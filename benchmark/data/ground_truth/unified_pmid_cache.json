@@ -1,0 +1,450 @@
+{
+  "16788020": {
+    "source_doi": "10.1136/jnnp.2005.083022",
+    "source_journal": "Journal of neurology, neurosurgery, and psychiatry",
+    "source_year": "2006"
+  },
+  "18211709": {
+    "source_doi": "10.1186/1471-2377-8-1",
+    "source_journal": "BMC neurology",
+    "source_year": "2008"
+  },
+  "18358451": {
+    "source_doi": "10.1016/j.ajhg.2008.01.015",
+    "source_journal": "American journal of human genetics",
+    "source_year": "2008"
+  },
+  "21763482": {
+    "source_doi": "10.1016/j.ajhg.2011.06.001",
+    "source_journal": "American journal of human genetics",
+    "source_year": "2011"
+  },
+  "23225227": {
+    "source_doi": "10.1002/mds.25248",
+    "source_journal": "Movement disorders : official journal of the Movement Disorder Society",
+    "source_year": "2013"
+  },
+  "18685134": {
+    "source_doi": "10.1212/01.wnl.0000323812.40708.1f",
+    "source_journal": "Neurology",
+    "source_year": "2008"
+  },
+  "19636047": {
+    "source_doi": "10.1212/wnl.0b013e3181af7a33",
+    "source_journal": "Neurology",
+    "source_year": "2009"
+  },
+  "17172567": {
+    "source_doi": "10.1136/jnnp.2006.097840",
+    "source_journal": "Journal of neurology, neurosurgery, and psychiatry",
+    "source_year": "2007"
+  },
+  "23408866": {
+    "source_doi": "10.1212/wnl.0b013e31828727d4",
+    "source_journal": "Neurology",
+    "source_year": "2013"
+  },
+  "25243190": {
+    "source_doi": "10.1155/2014/867321",
+    "source_journal": "BioMed research international",
+    "source_year": "2014"
+  },
+  "26634332": {
+    "source_doi": "10.1111/trf.13416",
+    "source_journal": "Transfusion",
+    "source_year": "2016"
+  },
+  "24339985": {
+    "source_doi": "10.1371/journal.pone.0082001",
+    "source_journal": "PloS one",
+    "source_year": "2013"
+  },
+  "26117366": {
+    "source_doi": "10.1093/brain/awv179",
+    "source_journal": "Brain : a journal of neurology",
+    "source_year": "2015"
+  },
+  "27094865": {
+    "source_doi": "10.1186/s13024-016-0097-0",
+    "source_journal": "Molecular neurodegeneration",
+    "source_year": "2016"
+  },
+  "27807026": {
+    "source_doi": "10.1093/brain/aww261",
+    "source_journal": "Brain : a journal of neurology",
+    "source_year": "2017"
+  },
+  "31704230": {
+    "source_doi": "10.1016/j.ajo.2019.10.019",
+    "source_journal": "American journal of ophthalmology",
+    "source_year": "2020"
+  },
+  "16227559": {
+    "source_doi": "10.1136/jnnp.2004.046888",
+    "source_journal": "Journal of neurology, neurosurgery, and psychiatry",
+    "source_year": "2005"
+  },
+  "31217710": {
+    "source_doi": "10.5152/turkpediatriars.2018.4402",
+    "source_journal": "Turk pediatri arsivi",
+    "source_year": "2019"
+  },
+  "32618053": {
+    "source_doi": "10.1002/mds.28112",
+    "source_journal": "Movement disorders : official journal of the Movement Disorder Society",
+    "source_year": "2020"
+  },
+  "30485715": {
+    "source_doi": "10.1002/mgg3.518",
+    "source_journal": "Molecular genetics & genomic medicine",
+    "source_year": "2019"
+  },
+  "32754152": {
+    "source_doi": "10.3389/fimmu.2020.01417",
+    "source_journal": "Frontiers in immunology",
+    "source_year": "2020"
+  },
+  "33281709": {
+    "source_doi": "10.3389/fneur.2020.573733",
+    "source_journal": "Frontiers in neurology",
+    "source_year": "2020"
+  },
+  "31773066": {
+    "source_doi": "10.23922/jarc.2017-028",
+    "source_journal": "Journal of the anus, rectum and colon",
+    "source_year": "2018"
+  },
+  "33606990": {
+    "source_doi": "10.1016/j.stemcr.2021.01.010",
+    "source_journal": "Stem cell reports",
+    "source_year": "2021"
+  },
+  "31996268": {
+    "source_doi": "10.1186/s40478-020-0879-z",
+    "source_journal": "Acta neuropathologica communications",
+    "source_year": "2020"
+  },
+  "34393998": {
+    "source_doi": "10.3389/fendo.2021.684018",
+    "source_journal": "Frontiers in endocrinology",
+    "source_year": "2021"
+  },
+  "34964038": {
+    "source_doi": "10.1097/hs9.0000000000000668",
+    "source_journal": "HemaSphere",
+    "source_year": "2022"
+  },
+  "34481500": {
+    "source_doi": "10.1186/s13023-021-02013-x",
+    "source_journal": "Orphanet journal of rare diseases",
+    "source_year": "2021"
+  },
+  "36140355": {
+    "source_doi": "10.3390/biomedicines10092254",
+    "source_journal": "Biomedicines",
+    "source_year": "2022"
+  },
+  "35346193": {
+    "source_doi": "10.1186/s12920-022-01201-3",
+    "source_journal": "BMC medical genomics",
+    "source_year": "2022"
+  },
+  "37539106": {
+    "source_doi": "10.1016/j.heliyon.2023.e18330",
+    "source_journal": "Heliyon",
+    "source_year": "2023"
+  },
+  "37333613": {
+    "source_doi": "10.1093/narcan/zcad030",
+    "source_journal": "NAR cancer",
+    "source_year": "2023"
+  },
+  "34066320": {
+    "source_doi": "10.3390/genes12050693",
+    "source_journal": "Genes",
+    "source_year": "2021"
+  },
+  "37124559": {
+    "source_doi": "10.1016/j.hroo.2023.02.003",
+    "source_journal": "Heart rhythm O2",
+    "source_year": "2023"
+  },
+  "37938323": {
+    "source_doi": "10.1007/s00428-023-03688-2",
+    "source_journal": "Virchows Archiv : an international journal of pathology",
+    "source_year": "2023"
+  },
+  "37895245": {
+    "source_doi": "10.3390/genes14101896",
+    "source_journal": "Genes",
+    "source_year": "2023"
+  },
+  "38594301": {
+    "source_doi": "10.1038/s41598-024-57415-1",
+    "source_journal": "Scientific reports",
+    "source_year": "2024"
+  },
+  "38651394": {
+    "source_doi": "10.3390/ijns10020029",
+    "source_journal": "International journal of neonatal screening",
+    "source_year": "2024"
+  },
+  "38022513": {
+    "source_doi": "10.3389/fimmu.2023.1269097",
+    "source_journal": "Frontiers in immunology",
+    "source_year": "2023"
+  },
+  "38759022": {
+    "source_doi": "10.3233/jnd-240020",
+    "source_journal": "Journal of neuromuscular diseases",
+    "source_year": "2024"
+  },
+  "39268837": {
+    "source_doi": "10.1002/mgg3.2495",
+    "source_journal": "Molecular genetics & genomic medicine",
+    "source_year": "2024"
+  },
+  "38962751": {
+    "source_doi": "10.1093/noajnl/vdae075",
+    "source_journal": "Neuro-oncology advances",
+    "source_year": "2024"
+  },
+  "38891946": {
+    "source_doi": "10.3390/ijms25115759",
+    "source_journal": "International journal of molecular sciences",
+    "source_year": "2024"
+  },
+  "39843543": {
+    "source_doi": "10.1038/s41598-025-86114-8",
+    "source_journal": "Scientific reports",
+    "source_year": "2025"
+  },
+  "39600113": {
+    "source_doi": "10.1002/mgg3.70030",
+    "source_journal": "Molecular genetics & genomic medicine",
+    "source_year": "2024"
+  },
+  "40259930": {
+    "source_doi": "10.3389/fgene.2025.1559773",
+    "source_journal": "Frontiers in genetics",
+    "source_year": "2025"
+  },
+  "40259910": {
+    "source_doi": "10.3332/ecancer.2025.1859",
+    "source_journal": "Ecancermedicalscience",
+    "source_year": "2025"
+  },
+  "40042769": {
+    "source_doi": "10.1007/s12264-024-01346-4",
+    "source_journal": "Neuroscience bulletin",
+    "source_year": "2025"
+  },
+  "40565512": {
+    "source_doi": "10.3390/genes16060621",
+    "source_journal": "Genes",
+    "source_year": "2025"
+  },
+  "40400026": {
+    "source_doi": "10.1186/s13073-025-01467-z",
+    "source_journal": "Genome medicine",
+    "source_year": "2025"
+  },
+  "40688999": {
+    "source_doi": "10.7759/cureus.86330",
+    "source_journal": "Cureus",
+    "source_year": "2025"
+  },
+  "40661831": {
+    "source_doi": "10.1155/humu/2475635",
+    "source_journal": "Human mutation",
+    "source_year": "2025"
+  },
+  "40727479": {
+    "source_doi": "10.3389/fonc.2025.1537714",
+    "source_journal": "Frontiers in oncology",
+    "source_year": "2025"
+  },
+  "40995169": {
+    "source_doi": "10.1016/j.jdcr.2025.05.019",
+    "source_journal": "JAAD case reports",
+    "source_year": "2025"
+  },
+  "40989062": {
+    "source_doi": "10.1016/j.radcr.2025.08.011",
+    "source_journal": "Radiology case reports",
+    "source_year": "2025"
+  },
+  "41112090": {
+    "source_doi": "10.2147/phmt.s537441",
+    "source_journal": "Pediatric health, medicine and therapeutics",
+    "source_year": "2025"
+  },
+  "39940884": {
+    "source_doi": "10.3390/ijms26031116",
+    "source_journal": "International journal of molecular sciences",
+    "source_year": "2025"
+  },
+  "41266470": {
+    "source_doi": "10.1038/s41598-025-24941-5",
+    "source_journal": "Scientific reports",
+    "source_year": "2025"
+  },
+  "41011036": {
+    "source_doi": "10.3390/medicina61091644",
+    "source_journal": "Medicina (Kaunas, Lithuania)",
+    "source_year": "2025"
+  },
+  "41437048": {
+    "source_doi": "10.1186/s12967-025-07420-3",
+    "source_journal": "Journal of translational medicine",
+    "source_year": "2025"
+  },
+  "41419202": {
+    "source_doi": "10.1016/j.jbc.2025.111070",
+    "source_journal": "The Journal of biological chemistry",
+    "source_year": "2026"
+  },
+  "41116046": {
+    "source_doi": "10.1038/s41431-025-01959-x",
+    "source_journal": "European journal of human genetics : EJHG",
+    "source_year": "2026"
+  },
+  "39453496": {
+    "source_doi": "10.1007/s10875-024-01821-7",
+    "source_journal": "Journal of clinical immunology",
+    "source_year": "2024"
+  },
+  "41567619": {
+    "__error__": "Server disconnected without sending a response."
+  },
+  "41504202": {
+    "source_doi": "10.31083/rn44110",
+    "source_journal": "Revista de neurologia",
+    "source_year": "2025"
+  },
+  "41267082": {
+    "source_doi": "10.1186/s40900-025-00808-x",
+    "source_journal": "Research involvement and engagement",
+    "source_year": "2025"
+  },
+  "41689081": {
+    "source_doi": "10.1186/s40246-026-00912-3",
+    "source_journal": "Human genomics",
+    "source_year": "2026"
+  },
+  "41743127": {
+    "source_doi": "10.1155/crnm/1397400",
+    "source_journal": "Case reports in neurological medicine",
+    "source_year": "2026"
+  },
+  "41613296": {
+    "source_doi": "10.1210/jcemcr/luaf341",
+    "source_journal": "JCEM case reports",
+    "source_year": "2026"
+  },
+  "41744643": {
+    "source_doi": "10.3390/biology15040334",
+    "source_journal": "Biology",
+    "source_year": "2026"
+  },
+  "41677386": {
+    "source_doi": "10.1167/iovs.67.2.32",
+    "source_journal": "Investigative ophthalmology & visual science",
+    "source_year": "2026"
+  },
+  "41567338": {
+    "source_doi": "10.3389/fopht.2025.1660483",
+    "source_journal": "Frontiers in ophthalmology",
+    "source_year": "2025"
+  },
+  "41893039": {
+    "source_doi": "10.3390/jpm16030171",
+    "source_journal": "Journal of personalized medicine",
+    "source_year": "2026"
+  },
+  "41765964": {
+    "source_doi": "10.1007/s00277-026-06892-7",
+    "source_journal": "Annals of hematology",
+    "source_year": "2026"
+  },
+  "41784841": {
+    "source_doi": "10.1007/s00018-026-06144-x",
+    "source_journal": "Cellular and molecular life sciences : CMLS",
+    "source_year": "2026"
+  },
+  "41929524": {
+    "source_doi": "10.1155/humu/2418005",
+    "source_journal": "Human mutation",
+    "source_year": "2026"
+  },
+  "41955018": {
+    "source_doi": "10.1172/jci.insight.198568",
+    "source_journal": "JCI insight",
+    "source_year": "2026"
+  },
+  "41987265": {
+    "source_doi": "10.1186/s12967-026-08119-9",
+    "source_journal": "Journal of translational medicine",
+    "source_year": "2026"
+  },
+  "41909668": {
+    "source_doi": "10.3389/fimmu.2026.1703097",
+    "source_journal": "Frontiers in immunology",
+    "source_year": "2026"
+  },
+  "41970070": {
+    "source_doi": "10.7759/cureus.105002",
+    "source_journal": "Cureus",
+    "source_year": "2026"
+  },
+  "42015116": {
+    "source_doi": "10.1186/s12885-026-16017-y",
+    "source_journal": "BMC cancer",
+    "source_year": "2026"
+  },
+  "42176491": {
+    "source_doi": "10.1016/j.htct.2026.106472",
+    "source_journal": "Hematology, transfusion and cell therapy",
+    "source_year": "2026"
+  },
+  "42087576": {
+    "source_doi": "10.1002/ppul.71648",
+    "source_journal": "Pediatric pulmonology",
+    "source_year": "2026"
+  },
+  "42033631": {
+    "source_doi": "10.1007/s12311-026-02008-z",
+    "source_journal": "Cerebellum (London, England)",
+    "source_year": "2026"
+  },
+  "42181449": {
+    "source_doi": "10.7759/cureus.107581",
+    "source_journal": "Cureus",
+    "source_year": "2026"
+  },
+  "42220599": {
+    "source_doi": "10.1210/jcemcr/luag144",
+    "source_journal": "JCEM case reports",
+    "source_year": "2026"
+  },
+  "42273373": {
+    "source_doi": "10.3389/fnins.2026.1819200",
+    "source_journal": "Frontiers in neuroscience",
+    "source_year": "2026"
+  },
+  "41928125": {
+    "source_doi": "10.1186/s12883-026-04853-1",
+    "source_journal": "BMC neurology",
+    "source_year": "2026"
+  },
+  "42228743": {
+    "source_doi": "10.1371/journal.pcbi.1014342",
+    "source_journal": "PLoS computational biology",
+    "source_year": "2026"
+  },
+  "41516100": {
+    "source_doi": "10.3390/ijms27010221",
+    "source_journal": "International journal of molecular sciences",
+    "source_year": "2025"
+  }
+}

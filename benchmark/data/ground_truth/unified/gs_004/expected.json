@@ -1,0 +1,74 @@
+{
+  "unified_id": "gs_004",
+  "original_entry_id": "clingen_008",
+  "source_dataset": "clingen",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_gene_validity_csv",
+  "source": "clingen_literature",
+  "gene_symbol": "ABCG8",
+  "hgnc_id": "HGNC:13887",
+  "disease_label": "sitosterolemia",
+  "mondo_id": "MONDO:0008863",
+  "moi": "AR",
+  "classification": "Definitive",
+  "gcep": "Hemostasis/Thrombosis Gene Curation Expert Panel",
+  "classification_date": "2020-07-14T20:28:06.911Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_af59edc2-1148-4dca-b804-192639017b65-2020-07-14T202806.911Z",
+  "source_pmid": "42176491",
+  "source_doi": "10.1016/j.htct.2026.106472",
+  "source_pmc": "PMC13223928",
+  "source_pdf_url": "https://europepmc.org/article/PMC/13223928?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_004/source.pdf",
+  "source_title": "Novel ABCG8 Mutation in Pediatric Sitosterolemia: A Case Report of Siblings with Hemolytic Anemia.",
+  "source_journal": "Hematology, transfusion and cell therapy",
+  "source_year": "2026",
+  "source_language": "en",
+  "variants": [],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "ABCG8"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "sitosterolemia"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:13887",
+    "disease": "MONDO:0008863"
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "ABCG8",
+      "hgnc_id": "HGNC:13887"
+    },
+    "disease": {
+      "text": "sitosterolemia",
+      "mondo_id": "MONDO:0008863"
+    }
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid",
+    "evaluation_config": "derived_from_evidence"
+  }
+}

@@ -1,0 +1,211 @@
+{
+  "unified_id": "gs_078",
+  "original_entry_id": "fused_072",
+  "source_dataset": "clinvar_fused",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_clinvar_join",
+  "source": "clingen_clinvar_fused",
+  "gene_symbol": "MYH7",
+  "hgnc_id": "HGNC:7577",
+  "disease_label": "MYH7-related skeletal myopathy",
+  "mondo_id": "MONDO:0008050",
+  "moi": "AD",
+  "classification": "Definitive",
+  "gcep": "Congenital Myopathies and Myasthenic Syndromes Gene Curation Expert Panel",
+  "classification_date": "2021-05-13T16:00:00.000Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8974721a-f333-4fb7-b8b7-043233d3d100-2021-05-13T160000.000Z",
+  "source_pmid": "41516100",
+  "source_doi": "10.3390/ijms27010221",
+  "source_pmc": "PMC12785989",
+  "source_pdf_url": "https://europepmc.org/article/PMC/12785989?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_078/source.pdf",
+  "source_title": "Hypertrophic Cardiomyopathy Genotype-Phenotype Analysis in Lithuanian Single-Center Cohort.",
+  "source_journal": "International journal of molecular sciences",
+  "source_year": "2025",
+  "source_language": "en",
+  "variants": [
+    {
+      "source": "clinvar",
+      "variation_id": "42875",
+      "hgvs_name": "NM_000257.4(MYH7):c.1988G>A (p.Arg663His)",
+      "hgvs_c": "c.1988G>A",
+      "hgvs_p": "p.Arg663His",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs371898076",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0024573,MeSH:D024741,MedGen:C0949658,OMIM:PS192600,Orphanet:99739|MedGen:C3661900|MONDO:MONDO:0008647,MedGen:C3495498,OMIM:192600|Human Phenotype Ontology:HP:0001639,MONDO:MONDO:0005045,MeSH:D002312,MedGen:C0007194,Orphanet:217569|MedGen:CN230736|MONDO:MONDO:0009708,MedGen:C1850709,OMIM:255160,Orphanet:636970;MONDO:MONDO:0008409,MedGen:C1842160,OMIM:608358,Orphanet:437572,Orphanet:636965;MONDO:MONDO:0013262,MedGen:C1834481,OMIM:613426,Orphanet:154,Orphanet:54260;MONDO:MONDO:0008647,MedGen:C3495498,OMIM:192600;MONDO:MONDO:0008050,MedGen:C4552004,OMIM:160500,Orphanet:59135|MedGen:CN169374|6 conditions|Human Phenotype Ontology:HP:0001638,MONDO:MONDO:0004994,MedGen:C0878544,Orphanet:167848|",
+      "phenotype_list": "Primary familial hypertrophic cardiomyopathy|not provided|Hypertrophic cardiomyopathy 1|Hypertrophic cardiomyopathy|Cardiovascular phenotype|Myopathy, myosin storage, autosomal recessive;Myosin storage myopathy;Dilated cardiomyopathy 1S;Hypertrophic cardiomyopathy 1;MYH7-related skeletal myopathy|not specified|6 conditions|Cardiomyopathy|MYH7-related disorder",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "42992",
+      "hgvs_name": "NM_000257.4(MYH7):c.4130C>T (p.Thr1377Met)",
+      "hgvs_c": "c.4130C>T",
+      "hgvs_p": "p.Thr1377Met",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs397516201",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0024573,MeSH:D024741,MedGen:C0949658,OMIM:PS192600,Orphanet:99739|MedGen:C3661900|Human Phenotype Ontology:HP:0001639,MONDO:MONDO:0005045,MeSH:D002312,MedGen:C0007194,Orphanet:217569|MedGen:CN230736|Human Phenotype Ontology:HP:0001638,MONDO:MONDO:0004994,MedGen:C0878544,Orphanet:167848|MONDO:MONDO:0008647,MedGen:C3495498,OMIM:192600|6 conditions||MONDO:MONDO:0008647,MedGen:C3495498,OMIM:192600;MONDO:MONDO:0009708,MedGen:C1850709,OMIM:255160,Orphanet:636970;MONDO:MONDO:0008409,MedGen:C1842160,OMIM:608358,Orphanet:437572,Orphanet:636965;MONDO:MONDO:0013262,MedGen:C1834481,OMIM:613426,Orphanet:154,Orphanet:54260;MONDO:MONDO:0008050,MedGen:C4552004,OMIM:160500,Orphanet:59135",
+      "phenotype_list": "Primary familial hypertrophic cardiomyopathy|not provided|Hypertrophic cardiomyopathy|Cardiovascular phenotype|Cardiomyopathy|Hypertrophic cardiomyopathy 1|6 conditions|MYH7-related disorder|Hypertrophic cardiomyopathy 1;Myopathy, myosin storage, autosomal recessive;Myosin storage myopathy;Dilated cardiomyopathy 1S;MYH7-related skeletal myopathy",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "43003",
+      "hgvs_name": "NM_000257.4(MYH7):c.4258C>T (p.Arg1420Trp)",
+      "hgvs_c": "c.4258C>T",
+      "hgvs_p": "p.Arg1420Trp",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "rsid": "rs145213771",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0024573,MeSH:D024741,MedGen:C0949658,OMIM:PS192600,Orphanet:99739|Human Phenotype Ontology:HP:0001639,MONDO:MONDO:0005045,MeSH:D002312,MedGen:C0007194,Orphanet:217569|Human Phenotype Ontology:HP:0001638,MONDO:MONDO:0004994,MedGen:C0878544,Orphanet:167848|MedGen:C3661900|6 conditions|MONDO:MONDO:0008050,MedGen:C4552004,OMIM:160500,Orphanet:59135|MONDO:MONDO:0009708,MedGen:C1850709,OMIM:255160,Orphanet:636970|MONDO:MONDO:0008409,MedGen:C1842160,OMIM:608358,Orphanet:437572,Orphanet:636965|MONDO:MONDO:0013262,MedGen:C1834481,OMIM:613426,Orphanet:154,Orphanet:54260|MONDO:MONDO:0008647,MedGen:C3495498,OMIM:192600|MONDO:MONDO:0008409,MedGen:C1842160,OMIM:608358,Orphanet:437572,Orphanet:636965;MONDO:MONDO:0009708,MedGen:C1850709,OMIM:255160,Orphanet:636970;MONDO:MONDO:0013262,MedGen:C1834481,OMIM:613426,Orphanet:154,Orphanet:54260;MONDO:MONDO:0008050,MedGen:C4552004,OMIM:160500,Orphanet:59135;MONDO:MONDO:0008647,MedGen:C3495498,OMIM:192600|MedGen:CN230736",
+      "phenotype_list": "Primary familial hypertrophic cardiomyopathy|Hypertrophic cardiomyopathy|Cardiomyopathy|not provided|6 conditions|MYH7-related skeletal myopathy|Myopathy, myosin storage, autosomal recessive|Myosin storage myopathy|Dilated cardiomyopathy 1S|Hypertrophic cardiomyopathy 1|Myosin storage myopathy;Myopathy, myosin storage, autosomal recessive;Dilated cardiomyopathy 1S;MYH7-related skeletal myopathy;Hypertrophic cardiomyopathy 1|Cardiovascular phenotype",
+      "review_stars": 3
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MYH7",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "MYH7-related skeletal myopathy",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.1988G>A",
+      "candidates": [
+        "c.1988G>A",
+        "c.4130C>T",
+        "c.4258C>T"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg663His",
+      "candidates": [
+        "p.Arg663His",
+        "p.Thr1377Met",
+        "p.Arg1420Trp"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Likely pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:7577",
+    "disease": "MONDO:0008050",
+    "variant_candidates": [
+      "ClinVarVariation:42875",
+      "ClinVarVariation:42992",
+      "ClinVarVariation:43003"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "MYH7",
+      "hgnc_id": "HGNC:7577"
+    },
+    "disease": {
+      "text": "MYH7-related skeletal myopathy",
+      "mondo_id": "MONDO:0008050"
+    },
+    "variants": [
+      {
+        "text": "c.1988G>A",
+        "variation_id": "ClinVarVariation:42875",
+        "rsid": "rs371898076"
+      },
+      {
+        "text": "c.4130C>T",
+        "variation_id": "ClinVarVariation:42992",
+        "rsid": "rs397516201"
+      },
+      {
+        "text": "c.4258C>T",
+        "variation_id": "ClinVarVariation:43003",
+        "rsid": "rs145213771"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "clingen_report_url": "lifted_clingen_block",
+    "gene_symbol": "lifted_clingen_block",
+    "hgnc_id": "lifted_clingen_block",
+    "disease_label": "lifted_clingen_block",
+    "mondo_id": "lifted_clingen_block",
+    "moi": "lifted_clingen_block",
+    "classification": "lifted_clingen_block",
+    "gcep": "lifted_clingen_block",
+    "classification_date": "lifted_clingen_block",
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid"
+  }
+}

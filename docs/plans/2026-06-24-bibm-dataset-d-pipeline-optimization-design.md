@@ -280,3 +280,11 @@ Field-aware two-tier gate:
 ### 9.5 Targeted Validation
 
 rett_001: 0/8 → 2/8 (P=100%, R=25%, F1=40%). Identity fields (gene, disease) now survive Phase 3. No false positives. Remaining 6 FN are variant-dependent fields or identity fields not extracted as FOUND by Phase 2.
+
+### 9.6 Validation Batch Results
+
+Partial batch (2/11 entries completed due to LLM rate limits):
+- rett_001: 0/8 → 2/8 (P=100%, R=25%, F1=40%), 0 FP
+- rett_003: 0/11 → est. 4-5/11, identity fields rescued
+
+Decision: proceed to full 73-entry evaluation. Next bottleneck: variant extraction quality in Phase 2.

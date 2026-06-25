@@ -1,0 +1,283 @@
+{
+  "unified_id": "gs_120",
+  "original_entry_id": "rett_030",
+  "source_dataset": "rett",
+  "gold_source": "article",
+  "annotation_provenance": "ai_auto_review",
+  "source": "rett_literature",
+  "gene_symbol": "FOXG1",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Rett syndrome, congenital variant",
+  "mondo_id": "MONDO:0010726",
+  "moi": "AD (autosomal dominant; FOXG1 maps to 14q12, not X-linked)",
+  "classification": "Rett real-data",
+  "gcep": "Rett literature benchmark",
+  "classification_date": "",
+  "clingen_report_url": "",
+  "source_pmid": "",
+  "source_doi": "10.21203/rs.3.rs-1953777/v1",
+  "source_pmc": "",
+  "source_pdf_url": "",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_120/source.pdf",
+  "source_title": "Identification of a mutation of FOXG1 gene and comprehensive analysis for molecular factors in Chinese FOXG1-related Rett syndrome",
+  "source_journal": "Research Square (preprint)",
+  "source_year": "2022",
+  "source_language": "en",
+  "variants": [
+    {
+      "source": "rett",
+      "hgvs_c": "c.385G>T",
+      "hgvs_p": "p.Glu129Ter",
+      "variant_type": "nonsense (stop gain)",
+      "clinical_significance": "Pathogenic",
+      "exon": "1 (FOXG1 is single-exon)",
+      "domain": "N-terminal (upstream of forkhead domain)"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.460dup",
+      "variant_type": "frameshift (duplication)",
+      "clinical_significance": "Pathogenic",
+      "exon": "1"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.506dup",
+      "variant_type": "frameshift (duplication)",
+      "clinical_significance": "Pathogenic",
+      "exon": "1"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.858dup",
+      "variant_type": "frameshift (duplication)",
+      "clinical_significance": "Pathogenic",
+      "exon": "1"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.974dup",
+      "variant_type": "frameshift (duplication)",
+      "clinical_significance": "Pathogenic",
+      "exon": "1"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.590G>T",
+      "hgvs_p": "p.Ser197Ile",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "exon": "1",
+      "domain": "Forkhead domain (FHD, DNA-binding)"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.694A>T",
+      "hgvs_p": "p.Asn232Tyr",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "exon": "1",
+      "domain": "Forkhead domain (FHD, DNA-binding)"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.1439A>G",
+      "hgvs_p": "p.Gln480Arg",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "exon": "1",
+      "domain": "C-terminal disordered region"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "FOXG1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome, congenital variant",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD (autosomal dominant; FOXG1 maps to 14q12, not X-linked)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.385G>T",
+      "candidates": [
+        "c.385G>T",
+        "c.460dup",
+        "c.506dup",
+        "c.858dup",
+        "c.974dup",
+        "c.590G>T",
+        "c.694A>T",
+        "c.1439A>G"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Glu129Ter",
+      "candidates": [
+        "p.Glu129Ter",
+        "p.Ser197Ile",
+        "p.Asn232Tyr",
+        "p.Gln480Arg"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "nonsense (stop gain)",
+      "candidates": [
+        "nonsense (stop gain)",
+        "frameshift (duplication)",
+        "frameshift (duplication)",
+        "frameshift (duplication)",
+        "frameshift (duplication)",
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "N-terminal (upstream of forkhead domain)",
+      "candidates": [
+        "N-terminal (upstream of forkhead domain)",
+        "Forkhead domain (FHD, DNA-binding)",
+        "Forkhead domain (FHD, DNA-binding)",
+        "C-terminal disordered region"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001263; HP:0000252; HP:0004322; HP:0001252; HP:0011968; HP:0002360; HP:0003763; HP:0001250; HP:0001344; HP:0002072; HP:0002194; HP:0000756; HP:0002376; HP:0000505; HP:0000365; HP:0001249",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "psychomotor developmental delay; microcephaly; short stature; hypotonia of the limbs; feeding difficulties; sleep disturbance / sleep rhythm disorder; bruxism while awake; generalized tonic-clonic seizures (onset 18 months); lack of speech development; stereotypic hand movements (shaking, flapping; no purposeful grasp); delayed motor development (no head control, cannot sit/stand/roll); impaired social interaction / poor eye contact; developmental regression (reported in subset of cohort); abnormal EEG (generalized temporal spike and spike-slow waves); corpus callosum hypoplasia; underdevelopment of frontal and temporal lobes; delayed myelination; prolonged flash VEP latencies (visual pathway); prolonged ABR latencies (auditory pathway); intellectual disability",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "After birth (developmental delay diagnosed at 7 months; seizure onset at 18 months); proband evaluated at 1 year 11 months",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "de novo (ACMG criteria PVS1+PS2+PM2; PS2 indicates de novo; trio-WES performed)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "FOXG1",
+      "hgnc_id": "HGNC:6992"
+    },
+    "disease": {
+      "text": "Rett syndrome, congenital variant",
+      "mondo_id": "MONDO:0010726"
+    },
+    "variants": [
+      {
+        "text": "c.385G>T"
+      },
+      {
+        "text": "c.460dup"
+      },
+      {
+        "text": "c.506dup"
+      },
+      {
+        "text": "c.858dup"
+      },
+      {
+        "text": "c.974dup"
+      },
+      {
+        "text": "c.590G>T"
+      },
+      {
+        "text": "c.694A>T"
+      },
+      {
+        "text": "c.1439A>G"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "expected_entities": "derived_from_standardization",
+    "source_pdf_path": "materialized_local"
+  }
+}

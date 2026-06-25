@@ -1,0 +1,74 @@
+{
+  "unified_id": "gs_000",
+  "original_entry_id": "clingen_000",
+  "source_dataset": "clingen",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_gene_validity_csv",
+  "source": "clingen_literature",
+  "gene_symbol": "AARS1",
+  "hgnc_id": "HGNC:20",
+  "disease_label": "Charcot-Marie-Tooth disease axonal type 2N",
+  "mondo_id": "MONDO:0013212",
+  "moi": "AD",
+  "classification": "Definitive",
+  "gcep": "Charcot-Marie-Tooth Disease Gene Curation Expert Panel",
+  "classification_date": "2024-03-14T16:00:00.000Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_92de3832-c272-4993-8586-288c6331dec2-2024-03-14T160000.000Z",
+  "source_pmid": "41743127",
+  "source_doi": "10.1155/crnm/1397400",
+  "source_pmc": "PMC12929025",
+  "source_pdf_url": "https://europepmc.org/article/PMC/12929025?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_000/source.pdf",
+  "source_title": "Familial Occurrence of Anti-NF155 Autoimmune Nodopathy in Father and Son: Expanding the Spectrum of IgG4-Related Nodopathies.",
+  "source_journal": "Case reports in neurological medicine",
+  "source_year": "2026",
+  "source_language": "en",
+  "variants": [],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "AARS1"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Charcot-Marie-Tooth disease axonal type 2N"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:20",
+    "disease": "MONDO:0013212"
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "AARS1",
+      "hgnc_id": "HGNC:20"
+    },
+    "disease": {
+      "text": "Charcot-Marie-Tooth disease axonal type 2N",
+      "mondo_id": "MONDO:0013212"
+    }
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid",
+    "evaluation_config": "derived_from_evidence"
+  }
+}

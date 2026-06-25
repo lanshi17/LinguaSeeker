@@ -1,0 +1,211 @@
+{
+  "unified_id": "gs_020",
+  "original_entry_id": "fused_012",
+  "source_dataset": "clinvar_fused",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_clinvar_join",
+  "source": "clingen_clinvar_fused",
+  "gene_symbol": "CDKL5",
+  "hgnc_id": "HGNC:11411",
+  "disease_label": "CDKL5 disorder",
+  "mondo_id": "MONDO:0100039",
+  "moi": "XL",
+  "classification": "Definitive",
+  "gcep": "Rett and Angelman-like Disorders Gene Curation Expert Panel",
+  "classification_date": "2018-07-02T14:57:31.072Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a80cd86d-b085-4f35-9379-12a53ef367e2-2018-07-02T145731.072Z",
+  "source_pmid": "40042769",
+  "source_doi": "10.1007/s12264-024-01346-4",
+  "source_pmc": "PMC12014890",
+  "source_pdf_url": "https://europepmc.org/article/PMC/12014890?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_020/source.pdf",
+  "source_title": "A Novel Mouse Model Unveils Protein Deficiency in Truncated CDKL5 Mutations.",
+  "source_journal": "Neuroscience bulletin",
+  "source_year": "2025",
+  "source_language": "en",
+  "variants": [
+    {
+      "source": "clinvar",
+      "variation_id": "11500",
+      "hgvs_name": "NM_001323289.2(CDKL5):c.2500C>T (p.Gln834Ter)",
+      "hgvs_c": "c.2500C>T",
+      "hgvs_p": "p.Gln834Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs122460158",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0010396,MedGen:C4750718,OMIM:300672,Orphanet:1934,Orphanet:3451,Orphanet:505652|MONDO:MONDO:0017746,MedGen:C2748910,Orphanet:3095|MONDO:MONDO:0010396,MedGen:C4750718,OMIM:300672,Orphanet:1934,Orphanet:3451,Orphanet:505652;MedGen:CN128785|MONDO:MONDO:0100039,MedGen:CN296942",
+      "phenotype_list": "Developmental and epileptic encephalopathy, 2|Atypical Rett syndrome|Developmental and epileptic encephalopathy, 2;Angelman syndrome-like|CDKL5 disorder",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "11502",
+      "hgvs_name": "NM_001323289.2(CDKL5):c.119C>T (p.Ala40Val)",
+      "hgvs_c": "c.119C>T",
+      "hgvs_p": "p.Ala40Val",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs122460159",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0010396,MedGen:C4750718,OMIM:300672,Orphanet:1934,Orphanet:3451,Orphanet:505652|MONDO:MONDO:0017746,MedGen:C2748910,Orphanet:3095|MONDO:MONDO:0010396,MedGen:C4750718,OMIM:300672,Orphanet:1934,Orphanet:3451,Orphanet:505652;MedGen:CN128785|MONDO:MONDO:0100039,MedGen:CN296942|MedGen:C3661900",
+      "phenotype_list": "Developmental and epileptic encephalopathy, 2|Atypical Rett syndrome|Developmental and epileptic encephalopathy, 2;Angelman syndrome-like|CDKL5 disorder|not provided",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "11503",
+      "hgvs_name": "NM_001323289.2(CDKL5):c.215T>C (p.Ile72Thr)",
+      "hgvs_c": "c.215T>C",
+      "hgvs_p": "p.Ile72Thr",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs62641235",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0010396,MedGen:C4750718,OMIM:300672,Orphanet:1934,Orphanet:3451,Orphanet:505652|MedGen:C3661900|MONDO:MONDO:0010726,MedGen:C0035372,OMIM:312750,Orphanet:3095,Orphanet:778|MONDO:MONDO:0100039,MedGen:CN296942|MONDO:MONDO:0010396,MedGen:C4750718,OMIM:300672,Orphanet:1934,Orphanet:3451,Orphanet:505652;MedGen:CN128785|Human Phenotype Ontology:HP:0001250,Human Phenotype Ontology:HP:0001275,Human Phenotype Ontology:HP:0001303,Human Phenotype Ontology:HP:0002125,Human Phenotype Ontology:HP:0002182,Human Phenotype Ontology:HP:0002279,Human Phenotype Ontology:HP:0002306,Human Phenotype Ontology:HP:0002348,Human Phenotype Ontology:HP:0002391,Human Phenotype Ontology:HP:0002417,Human Phenotype Ontology:HP:0002430,Human Phenotype Ontology:HP:0002431,Human Phenotype Ontology:HP:0002432,Human Phenotype Ontology:HP:0002434,Human Phenotype Ontology:HP:0002437,Human Phenotype Ontology:HP:0002466,Human Phenotype Ontology:HP:0002479,Human Phenotype Ontology:HP:0002794,Human Phenotype Ontology:HP:0006997,Human Phenotype Ontology:HP:0010520,MedGen:C0036572",
+      "phenotype_list": "Developmental and epileptic encephalopathy, 2|not provided|Rett syndrome|CDKL5 disorder|Developmental and epileptic encephalopathy, 2;Angelman syndrome-like|Seizure",
+      "review_stars": 3
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "CDKL5",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "CDKL5 disorder",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XL",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.2500C>T",
+      "candidates": [
+        "c.2500C>T",
+        "c.119C>T",
+        "c.215T>C"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Gln834Ter",
+      "candidates": [
+        "p.Gln834Ter",
+        "p.Ala40Val",
+        "p.Ile72Thr"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:11411",
+    "disease": "MONDO:0100039",
+    "variant_candidates": [
+      "ClinVarVariation:11500",
+      "ClinVarVariation:11502",
+      "ClinVarVariation:11503"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "CDKL5",
+      "hgnc_id": "HGNC:11411"
+    },
+    "disease": {
+      "text": "CDKL5 disorder",
+      "mondo_id": "MONDO:0100039"
+    },
+    "variants": [
+      {
+        "text": "c.2500C>T",
+        "variation_id": "ClinVarVariation:11500",
+        "rsid": "rs122460158"
+      },
+      {
+        "text": "c.119C>T",
+        "variation_id": "ClinVarVariation:11502",
+        "rsid": "rs122460159"
+      },
+      {
+        "text": "c.215T>C",
+        "variation_id": "ClinVarVariation:11503",
+        "rsid": "rs62641235"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "clingen_report_url": "lifted_clingen_block",
+    "gene_symbol": "lifted_clingen_block",
+    "hgnc_id": "lifted_clingen_block",
+    "disease_label": "lifted_clingen_block",
+    "mondo_id": "lifted_clingen_block",
+    "moi": "lifted_clingen_block",
+    "classification": "lifted_clingen_block",
+    "gcep": "lifted_clingen_block",
+    "classification_date": "lifted_clingen_block",
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid"
+  }
+}

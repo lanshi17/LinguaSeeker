@@ -1,0 +1,211 @@
+{
+  "unified_id": "gs_080",
+  "original_entry_id": "fused_074",
+  "source_dataset": "clinvar_fused",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_clinvar_join",
+  "source": "clingen_clinvar_fused",
+  "gene_symbol": "MYO7A",
+  "hgnc_id": "HGNC:7606",
+  "disease_label": "Usher syndrome type 1",
+  "mondo_id": "MONDO:0010168",
+  "moi": "AR",
+  "classification": "Definitive",
+  "gcep": "Hearing Loss Gene Curation Expert Panel",
+  "classification_date": "2018-06-28T16:00:00.000Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1e897a2f-d4cf-4e13-85d8-f37405a09b18-2018-06-28T160000.000Z",
+  "source_pmid": "38594301",
+  "source_doi": "10.1038/s41598-024-57415-1",
+  "source_pmc": "PMC11003999",
+  "source_pdf_url": "https://europepmc.org/article/PMC/11003999?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_080/source.pdf",
+  "source_title": "The prevalence and clinical features of MYO7A-related hearing loss including DFNA11, DFNB2 and USH1B.",
+  "source_journal": "Scientific reports",
+  "source_year": "2024",
+  "source_language": "en",
+  "variants": [
+    {
+      "source": "clinvar",
+      "variation_id": "43186",
+      "hgvs_name": "NM_000260.4(MYO7A):c.2558G>A (p.Arg853His)",
+      "hgvs_c": "c.2558G>A",
+      "hgvs_p": "p.Arg853His",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "rsid": "rs111033437",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MedGen:CN169374|MedGen:C3661900|MONDO:MONDO:0011032,MedGen:C1832475,OMIM:601317,Orphanet:90635;MONDO:MONDO:0010807,MedGen:C1838701,OMIM:600060,Orphanet:90636;MONDO:MONDO:0010168,MedGen:C1568247,OMIM:276900,Orphanet:231169,Orphanet:886|MONDO:MONDO:0011032,MedGen:C1832475,OMIM:601317,Orphanet:90635|MONDO:MONDO:0019497,MedGen:C5680182,Orphanet:87884||MeSH:D030342,MedGen:C0950123|MONDO:MONDO:0700087,MedGen:C2931206",
+      "phenotype_list": "not specified|not provided|Autosomal dominant nonsyndromic hearing loss 11;Autosomal recessive nonsyndromic hearing loss 2;Usher syndrome type 1|Autosomal dominant nonsyndromic hearing loss 11|Nonsyndromic genetic hearing loss|MYO7A-related disorder|Inborn genetic diseases|Usher syndrome type 1B",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "43196",
+      "hgvs_name": "NM_000260.4(MYO7A):c.2904G>T (p.Glu968Asp)",
+      "hgvs_c": "c.2904G>T",
+      "hgvs_p": "p.Glu968Asp",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "rsid": "rs111033233",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MedGen:C5680250,Orphanet:96210|MedGen:C3661900|MONDO:MONDO:0010807,MedGen:C1838701,OMIM:600060,Orphanet:90636|MONDO:MONDO:0700087,MedGen:C2931206|Human Phenotype Ontology:HP:0000556,Human Phenotype Ontology:HP:0007736,Human Phenotype Ontology:HP:0007910,Human Phenotype Ontology:HP:0007974,Human Phenotype Ontology:HP:0007982,MONDO:MONDO:0019118,MeSH:D058499,MedGen:C0854723,Orphanet:71862|MONDO:MONDO:0011032,MedGen:C1832475,OMIM:601317,Orphanet:90635;MONDO:MONDO:0010168,MedGen:C1568247,OMIM:276900,Orphanet:231169,Orphanet:886;MONDO:MONDO:0010807,MedGen:C1838701,OMIM:600060,Orphanet:90636",
+      "phenotype_list": "Rare genetic deafness|not provided|Autosomal recessive nonsyndromic hearing loss 2|Usher syndrome type 1B|Retinal dystrophy|Autosomal dominant nonsyndromic hearing loss 11;Usher syndrome type 1;Autosomal recessive nonsyndromic hearing loss 2",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "43230",
+      "hgvs_name": "NM_000260.4(MYO7A):c.401T>A (p.Ile134Asn)",
+      "hgvs_c": "c.401T>A",
+      "hgvs_p": "p.Ile134Asn",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs111033181",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MedGen:C5680250,Orphanet:96210|MONDO:MONDO:0010168,MedGen:C1568247,OMIM:276900,Orphanet:231169,Orphanet:886;MONDO:MONDO:0010807,MedGen:C1838701,OMIM:600060,Orphanet:90636|Human Phenotype Ontology:HP:0000556,Human Phenotype Ontology:HP:0007736,Human Phenotype Ontology:HP:0007910,Human Phenotype Ontology:HP:0007974,Human Phenotype Ontology:HP:0007982,MONDO:MONDO:0019118,MeSH:D058499,MedGen:C0854723,Orphanet:71862|MedGen:C3661900|MONDO:MONDO:0019501,MeSH:D052245,MedGen:CN469326,OMIM:PS276900,Orphanet:886||MONDO:MONDO:0011032,MedGen:C1832475,OMIM:601317,Orphanet:90635;MONDO:MONDO:0010168,MedGen:C1568247,OMIM:276900,Orphanet:231169,Orphanet:886;MONDO:MONDO:0010807,MedGen:C1838701,OMIM:600060,Orphanet:90636|MONDO:MONDO:0700087,MedGen:C2931206",
+      "phenotype_list": "Rare genetic deafness|Usher syndrome type 1;Autosomal recessive nonsyndromic hearing loss 2|Retinal dystrophy|not provided|Usher syndrome|MYO7A-related disorder|Autosomal dominant nonsyndromic hearing loss 11;Usher syndrome type 1;Autosomal recessive nonsyndromic hearing loss 2|Usher syndrome type 1B",
+      "review_stars": 3
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MYO7A",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Usher syndrome type 1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AR",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.2558G>A",
+      "candidates": [
+        "c.2558G>A",
+        "c.2904G>T",
+        "c.401T>A"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg853His",
+      "candidates": [
+        "p.Arg853His",
+        "p.Glu968Asp",
+        "p.Ile134Asn"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Likely pathogenic",
+      "candidates": [
+        "Likely pathogenic",
+        "Likely pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:7606",
+    "disease": "MONDO:0010168",
+    "variant_candidates": [
+      "ClinVarVariation:43186",
+      "ClinVarVariation:43196",
+      "ClinVarVariation:43230"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "MYO7A",
+      "hgnc_id": "HGNC:7606"
+    },
+    "disease": {
+      "text": "Usher syndrome type 1",
+      "mondo_id": "MONDO:0010168"
+    },
+    "variants": [
+      {
+        "text": "c.2558G>A",
+        "variation_id": "ClinVarVariation:43186",
+        "rsid": "rs111033437"
+      },
+      {
+        "text": "c.2904G>T",
+        "variation_id": "ClinVarVariation:43196",
+        "rsid": "rs111033233"
+      },
+      {
+        "text": "c.401T>A",
+        "variation_id": "ClinVarVariation:43230",
+        "rsid": "rs111033181"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "clingen_report_url": "lifted_clingen_block",
+    "gene_symbol": "lifted_clingen_block",
+    "hgnc_id": "lifted_clingen_block",
+    "disease_label": "lifted_clingen_block",
+    "mondo_id": "lifted_clingen_block",
+    "moi": "lifted_clingen_block",
+    "classification": "lifted_clingen_block",
+    "gcep": "lifted_clingen_block",
+    "classification_date": "lifted_clingen_block",
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid"
+  }
+}

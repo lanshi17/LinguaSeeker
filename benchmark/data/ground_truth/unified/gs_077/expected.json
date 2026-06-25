@@ -1,0 +1,209 @@
+{
+  "unified_id": "gs_077",
+  "original_entry_id": "fused_071",
+  "source_dataset": "clinvar_fused",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_clinvar_join",
+  "source": "clingen_clinvar_fused",
+  "gene_symbol": "MYBPC3",
+  "hgnc_id": "HGNC:7551",
+  "disease_label": "hypertrophic cardiomyopathy",
+  "mondo_id": "MONDO:0005045",
+  "moi": "AD",
+  "classification": "Definitive",
+  "gcep": "Hereditary Cardiovascular Disease Gene Curation Expert Panel",
+  "classification_date": "2021-10-07T16:00:00.000Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7e65896e-33f5-439d-8749-aba08a539dd0-2021-10-07T160000.000Z",
+  "source_pmid": "",
+  "source_doi": "",
+  "source_pmc": "PMC11242481",
+  "source_pdf_url": "https://europepmc.org/article/PMC/11242481?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_077/source.pdf",
+  "source_title": "Patterns of Left Ventricular Remodelling in Children and Young Patients with Hypertrophic Cardiomyopathy",
+  "source_journal": "",
+  "source_year": "2024",
+  "source_language": "en",
+  "variants": [
+    {
+      "source": "clinvar",
+      "variation_id": "42537",
+      "hgvs_name": "NM_000256.3(MYBPC3):c.1483C>G (p.Arg495Gly)",
+      "hgvs_c": "c.1483C>G",
+      "hgvs_p": "p.Arg495Gly",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "rsid": "rs397515905",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MedGen:C3661900|Human Phenotype Ontology:HP:0001639,MONDO:MONDO:0005045,MeSH:D002312,MedGen:C0007194,Orphanet:217569|MedGen:CN230736|MONDO:MONDO:0008647,MedGen:C3495498,OMIM:192600|Human Phenotype Ontology:HP:0001638,MONDO:MONDO:0004994,MedGen:C0878544,Orphanet:167848|MONDO:MONDO:0014163,MedGen:C3715165,OMIM:615396,Orphanet:154,Orphanet:54260|MONDO:MONDO:0007268,MedGen:C1861862,OMIM:115197",
+      "phenotype_list": "not provided|Hypertrophic cardiomyopathy|Cardiovascular phenotype|Hypertrophic cardiomyopathy 1|Cardiomyopathy|Left ventricular noncompaction 10|Hypertrophic cardiomyopathy 4",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "42541",
+      "hgvs_name": "NM_000256.3(MYBPC3):c.1505G>A (p.Arg502Gln)",
+      "hgvs_c": "c.1505G>A",
+      "hgvs_p": "p.Arg502Gln",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs397515907",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0007268,MedGen:C1861862,OMIM:115197|MedGen:C3661900|Human Phenotype Ontology:HP:0001639,MONDO:MONDO:0005045,MeSH:D002312,MedGen:C0007194,Orphanet:217569|MedGen:CN230736|Human Phenotype Ontology:HP:0001638,MONDO:MONDO:0004994,MedGen:C0878544,Orphanet:167848|MONDO:MONDO:0024573,MeSH:D024741,MedGen:C0949658,OMIM:PS192600,Orphanet:99739|MONDO:MONDO:0014163,MedGen:C3715165,OMIM:615396,Orphanet:154,Orphanet:54260|",
+      "phenotype_list": "Hypertrophic cardiomyopathy 4|not provided|Hypertrophic cardiomyopathy|Cardiovascular phenotype|Cardiomyopathy|Primary familial hypertrophic cardiomyopathy|Left ventricular noncompaction 10|MYBPC3-related disorder",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "164113",
+      "hgvs_name": "NM_000256.3(MYBPC3):c.1484G>A (p.Arg495Gln)",
+      "hgvs_c": "c.1484G>A",
+      "hgvs_p": "p.Arg495Gln",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "rsid": "rs200411226",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "Human Phenotype Ontology:HP:0001639,MONDO:MONDO:0005045,MeSH:D002312,MedGen:C0007194,Orphanet:217569|MONDO:MONDO:0024573,MeSH:D024741,MedGen:C0949658,OMIM:PS192600,Orphanet:99739|MONDO:MONDO:0007268,MedGen:C1861862,OMIM:115197|MedGen:C3661900|MedGen:CN230736|MONDO:MONDO:0014163,MedGen:C3715165,OMIM:615396,Orphanet:154,Orphanet:54260;MONDO:MONDO:0007268,MedGen:C1861862,OMIM:115197|Human Phenotype Ontology:HP:0001638,MONDO:MONDO:0004994,MedGen:C0878544,Orphanet:167848||MONDO:MONDO:0014163,MedGen:C3715165,OMIM:615396,Orphanet:154,Orphanet:54260||",
+      "phenotype_list": "Hypertrophic cardiomyopathy|Primary familial hypertrophic cardiomyopathy|Hypertrophic cardiomyopathy 4|not provided|Cardiovascular phenotype|Left ventricular noncompaction 10;Hypertrophic cardiomyopathy 4|Cardiomyopathy|See cases|Left ventricular noncompaction 10|MYBPC3-related disorder|MYBPC3-related cardiomyopathies",
+      "review_stars": 3
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MYBPC3",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "hypertrophic cardiomyopathy",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.1483C>G",
+      "candidates": [
+        "c.1483C>G",
+        "c.1505G>A",
+        "c.1484G>A"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg495Gly",
+      "candidates": [
+        "p.Arg495Gly",
+        "p.Arg502Gln",
+        "p.Arg495Gln"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Likely pathogenic",
+      "candidates": [
+        "Likely pathogenic",
+        "Pathogenic",
+        "Likely pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:7551",
+    "disease": "MONDO:0005045",
+    "variant_candidates": [
+      "ClinVarVariation:42537",
+      "ClinVarVariation:42541",
+      "ClinVarVariation:164113"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "MYBPC3",
+      "hgnc_id": "HGNC:7551"
+    },
+    "disease": {
+      "text": "hypertrophic cardiomyopathy",
+      "mondo_id": "MONDO:0005045"
+    },
+    "variants": [
+      {
+        "text": "c.1483C>G",
+        "variation_id": "ClinVarVariation:42537",
+        "rsid": "rs397515905"
+      },
+      {
+        "text": "c.1505G>A",
+        "variation_id": "ClinVarVariation:42541",
+        "rsid": "rs397515907"
+      },
+      {
+        "text": "c.1484G>A",
+        "variation_id": "ClinVarVariation:164113",
+        "rsid": "rs200411226"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "clingen_report_url": "lifted_clingen_block",
+    "gene_symbol": "lifted_clingen_block",
+    "hgnc_id": "lifted_clingen_block",
+    "disease_label": "lifted_clingen_block",
+    "mondo_id": "lifted_clingen_block",
+    "moi": "lifted_clingen_block",
+    "classification": "lifted_clingen_block",
+    "gcep": "lifted_clingen_block",
+    "classification_date": "lifted_clingen_block",
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local"
+  }
+}

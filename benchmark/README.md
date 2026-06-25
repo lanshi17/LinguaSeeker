@@ -114,6 +114,70 @@ ClinGen Definitive/Strong x ClinVar >=2-star Pathogenic/LP variants. 8 expected 
 
 XLSX workbook curation utility (7 sheets, 6291 rows) with PMC PDF downloading. Structural audit, not yet a benchmark ground truth dataset.
 
+### Unified Gold-Standard Dataset
+
+Schema-unified superset of the four source datasets, materialized under
+`benchmark/data/ground_truth/unified/gs_NNN/` by
+`benchmark.analysis.dataset_curation.build_unified_dataset`. Built from
+`gold_standard_selection.json` (the 151-entry output of
+`gold_standard_filter.py`). Each `gs_NNN/` directory is **fully
+self-contained**: `expected.json` (unified schema), `source.md`
+(+ multilingual `source_*.md`), and `source.pdf` (+ multilingual
+`source_*.pdf` for clingen/clinvar_fused). Every entry shares one flat,
+field-complete schema: gene/disease/mondo/moi identifiers, ClinGen
+classification metadata, locatable source (PMID/DOI/PMC/PDF), language,
+fidelity-unified `variants[]`, and a dynamically generated
+`evaluation_config`. Missing fields are back-filled from the HGNC
+terminology file, the ClinGen Gene-Disease Summary CSV (with
+approved-symbol fallback), `meta.json`, materialized local PDFs, and
+EuropePMC (doi/journal/year by PMID, cached). `gold_source` tags each
+entry as `database` (clingen/clinvar_fused) or `article`
+(rett/parkinson); `annotation_provenance` records the curation origin;
+`backfilled` records each supplemented field's source. A top-level
+`manifest.json` indexes all entries. Original source datasets are never
+modified.
+
+#### Source Provenance
+
+Every unified entry carries provenance back to its original dataset. The
+authoritative source is `unified/manifest.json` (schema version 1.1.0).
+Each manifest entry includes:
+
+| Field | Description |
+|-------|-------------|
+| `unified_id` / `entry_id` | `gs_NNN` identifier |
+| `source_dataset` | Origin dataset: `clingen`, `clinvar_fused`, `rett`, `parkinson` |
+| `original_entry_id` / `source_entry_id` | Original ID before unification (e.g. `rett_001`) |
+| `source_path` | Original ground-truth directory path |
+| `gene_symbol`, `disease_name` | Gene and disease identifiers |
+| `classification` | ClinGen classification or curation label |
+| `moi` | Mode of inheritance |
+| `language` | Source article language |
+| `has_multilingual_sources` | Whether multilingual PDFs/MDs are present |
+
+`expected.json` inside each `gs_NNN/` also carries `source_dataset` and
+`original_entry_id` for convenience, but the manifest is authoritative.
+
+#### Stratified Evaluation
+
+When reporting benchmark metrics on the unified dataset, **stratify
+results by `source_dataset`**. Aggregate numbers alone obscure
+per-dataset performance differences (e.g. clingen gene-disease entries
+vs. rett variant-heavy entries). Use the manifest to group entries and
+compute per-stratum precision, recall, and F1.
+
+#### Validation
+
+Run the manifest integrity check before any evaluation:
+
+```bash
+python benchmark/scripts/validate_manifest.py
+```
+
+This verifies: every `gs_NNN` directory has a manifest entry, every
+manifest entry points to an existing `expected.json`, no duplicate IDs,
+and required provenance fields are non-empty.
+
 ## Testing
 
 ```bash

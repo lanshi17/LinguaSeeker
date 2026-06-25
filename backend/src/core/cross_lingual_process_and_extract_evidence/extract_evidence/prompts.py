@@ -250,6 +250,20 @@ def get_channel_strategy_guidance(
         return _GENERIC_STRATEGY
     return "\n".join(blocks)
 
+
+def expanded_field_coverage_guidance() -> str:
+    """Return B7-inspired field coverage guidance scoped to the eligible catalog."""
+    return """EXPANDED FIELD COVERAGE GUIDANCE:
+Use the eligible catalog as the source of truth. When these field IDs are listed, apply the following stronger coverage cues:
+- Simple factual fields: A.gene_symbol, B.disease_diagnosis, A.gene_disease_relationship.
+- Variant detail fields: A.variant_hgvs_c, A.variant_hgvs_p, A.variant_type, A.variant_consequence_class.
+- Contextual patient fields: B.sex, B.age_of_onset, B.mode_of_inheritance_reported, B.clinical_phenotypes, B.hpo_terms.
+- Segregation/de novo fields: C.inheritance_source, C.de_novo_status, C.segregation_observed, C.segregation_count.
+- Functional evidence fields: F.assay_type, F.assay_system, F.functional_result, F.quantitative_result, F.assay_controls.
+- Cohort/statistical fields: G.study_design, G.case_count, G.control_count, G.odds_ratio, G.confidence_interval, G.p_value.
+Do not add any field outside the eligible catalog. This guidance expands attention to medium and complex fields without changing the current pipeline, validation, or source-grounding requirements."""
+
+
 def get_catalog_extraction_prompt(
     document_id: str,
     track: Track,
@@ -264,6 +278,7 @@ def get_catalog_extraction_prompt(
     relationship_guidance = relationship_decision_guidance()
     channel_strategy = get_channel_strategy_guidance(channel_classification)
     boundary_guidance = disease_boundary_guidance()
+    expanded_guidance = expanded_field_coverage_guidance()
     return f"""You are extracting structured evidence from a biomedical document for a SPECIFIC target gene-disease pair.
 
 {target_section}
@@ -293,6 +308,8 @@ CATALOG SCOPE:
 - This catalog is pre-scoped to eligible fields for the current extraction pass.
 - Extract only the listed eligible fields. Do not add fields outside this catalog.
 - Set status="not_found" for listed eligible fields when the document does not support a value.
+
+{expanded_guidance}
 
 {channel_strategy}
 

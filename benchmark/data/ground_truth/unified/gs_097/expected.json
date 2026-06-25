@@ -1,0 +1,177 @@
+{
+  "unified_id": "gs_097",
+  "original_entry_id": "parkinson_016",
+  "source_dataset": "parkinson",
+  "gold_source": "article",
+  "annotation_provenance": "xlsx_auto_convert",
+  "source": "parkinson_literature",
+  "gene_symbol": "GBA",
+  "hgnc_id": "HGNC:4177",
+  "disease_label": "Parkinson disease",
+  "mondo_id": "MONDO:0005180",
+  "moi": "AD",
+  "classification": "Definitive",
+  "gcep": "Parkinson's Disease Gene Curation Expert Panel",
+  "classification_date": "2022-05-03T13:48:10.206Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9201c03f-10de-447c-9b84-194f14b549b6-2022-05-03T134810.206Z",
+  "source_pmid": "32618053",
+  "source_doi": "10.1002/mds.28112",
+  "source_pmc": "",
+  "source_pdf_url": "",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_097/source.pdf",
+  "source_title": "A Large-Scale Full GBA1 Gene Screening in Parkinson's Disease in the Netherlands",
+  "source_journal": "Movement disorders : official journal of the Movement Disorder Society",
+  "source_year": "2020",
+  "source_language": "en",
+  "variants": [],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "GBA",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Parkinson disease",
+      "candidates": [
+        "Parkinson disease",
+        "Parkinson's disease"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "associated",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "T369M",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "E326K",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "A495P",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "V499=",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "G241R",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "H294Q",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "R496H",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "N370S",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AR",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense, frameshift, splice_site",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "parkinsonism; cognitive decline; dementia",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "disease": "MONDO:0005180",
+    "gene": "HGNC:4177"
+  },
+  "expected_entities": {
+    "disease": {
+      "text": "Parkinson disease",
+      "mondo_id": "MONDO:0005180"
+    },
+    "gene": {
+      "text": "GBA",
+      "hgnc_id": "HGNC:4177"
+    }
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_p",
+      "A.variant_type"
+    ],
+    "clinical_fields": [
+      "B.clinical_phenotypes"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": "Converted from parkinson_literature dataset, PMID 32618053",
+  "backfilled": {
+    "hgnc_id": "hgnc_file",
+    "moi": "clingen_csv",
+    "classification": "clingen_csv",
+    "gcep": "clingen_csv",
+    "classification_date": "clingen_csv",
+    "clingen_report_url": "clingen_csv",
+    "source_language": "meta_json",
+    "source_pdf_path": "materialized_local",
+    "source_journal": "europepmc_pmid",
+    "source_year": "europepmc_pmid",
+    "evaluation_config": "derived_from_evidence"
+  }
+}

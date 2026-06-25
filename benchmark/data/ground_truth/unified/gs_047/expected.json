@@ -1,0 +1,211 @@
+{
+  "unified_id": "gs_047",
+  "original_entry_id": "fused_039",
+  "source_dataset": "clinvar_fused",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_clinvar_join",
+  "source": "clingen_clinvar_fused",
+  "gene_symbol": "ITGA2B",
+  "hgnc_id": "HGNC:6138",
+  "disease_label": "platelet-type bleeding disorder 16",
+  "mondo_id": "MONDO:0008552",
+  "moi": "AD",
+  "classification": "Definitive",
+  "gcep": "Hemostasis/Thrombosis Gene Curation Expert Panel",
+  "classification_date": "2023-11-06T17:00:00.000Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_380c4fb9-aa51-4d34-9349-7938667612b7-2023-11-06T170000.000Z",
+  "source_pmid": "34066320",
+  "source_doi": "10.3390/genes12050693",
+  "source_pmc": "PMC8148153",
+  "source_pdf_url": "https://europepmc.org/article/PMC/8148153?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_047/source.pdf",
+  "source_title": "Genetic Confirmation and Identification of Novel Variants for Glanzmann Thrombasthenia and Other Inherited Platelet Function Disorders: A Study by the Korean Pediatric Hematology Oncology Group (KPHOG).",
+  "source_journal": "Genes",
+  "source_year": "2021",
+  "source_language": "en",
+  "variants": [
+    {
+      "source": "clinvar",
+      "variation_id": "2892",
+      "hgvs_name": "NM_000419.5(ITGA2B):c.1750C>T (p.Arg584Ter)",
+      "hgvs_c": "c.1750C>T",
+      "hgvs_p": "p.Arg584Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs137852906",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0100326,MedGen:C0040015,OMIM:PS273800,Orphanet:849|MONDO:MONDO:0031332,MedGen:CN300358,OMIM:273800|MONDO:MONDO:0031332,MedGen:CN300358,OMIM:273800;MONDO:MONDO:0008552,MedGen:C5442010,OMIM:187800,Orphanet:140957|MedGen:C3661900",
+      "phenotype_list": "Glanzmann thrombasthenia|Glanzmann thrombasthenia 1|Glanzmann thrombasthenia 1;Platelet-type bleeding disorder 16|not provided",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "2901",
+      "hgvs_name": "NM_000419.5(ITGA2B):c.641T>C (p.Leu214Pro)",
+      "hgvs_c": "c.641T>C",
+      "hgvs_p": "p.Leu214Pro",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs137852911",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0100326,MedGen:C0040015,OMIM:PS273800,Orphanet:849|MONDO:MONDO:0031332,MedGen:CN300358,OMIM:273800|MedGen:C3661900|MONDO:MONDO:0031332,MedGen:CN300358,OMIM:273800;MONDO:MONDO:0008552,MedGen:C5442010,OMIM:187800,Orphanet:140957",
+      "phenotype_list": "Glanzmann thrombasthenia|Glanzmann thrombasthenia 1|not provided|Glanzmann thrombasthenia 1;Platelet-type bleeding disorder 16",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "225393",
+      "hgvs_name": "NM_000419.5(ITGA2B):c.2333A>C (p.Gln778Pro)",
+      "hgvs_c": "c.2333A>C",
+      "hgvs_p": "p.Gln778Pro",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs74475415",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0100326,MedGen:C0040015,OMIM:PS273800,Orphanet:849|MONDO:MONDO:0031332,MedGen:CN300358,OMIM:273800||MONDO:MONDO:0031332,MedGen:CN300358,OMIM:273800;MONDO:MONDO:0008552,MedGen:C5442010,OMIM:187800,Orphanet:140957",
+      "phenotype_list": "Glanzmann thrombasthenia|Glanzmann thrombasthenia 1|ITGA2B-related disorder|Glanzmann thrombasthenia 1;Platelet-type bleeding disorder 16",
+      "review_stars": 3
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "ITGA2B",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "platelet-type bleeding disorder 16",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.1750C>T",
+      "candidates": [
+        "c.1750C>T",
+        "c.641T>C",
+        "c.2333A>C"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg584Ter",
+      "candidates": [
+        "p.Arg584Ter",
+        "p.Leu214Pro",
+        "p.Gln778Pro"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6138",
+    "disease": "MONDO:0008552",
+    "variant_candidates": [
+      "ClinVarVariation:2892",
+      "ClinVarVariation:2901",
+      "ClinVarVariation:225393"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "ITGA2B",
+      "hgnc_id": "HGNC:6138"
+    },
+    "disease": {
+      "text": "platelet-type bleeding disorder 16",
+      "mondo_id": "MONDO:0008552"
+    },
+    "variants": [
+      {
+        "text": "c.1750C>T",
+        "variation_id": "ClinVarVariation:2892",
+        "rsid": "rs137852906"
+      },
+      {
+        "text": "c.641T>C",
+        "variation_id": "ClinVarVariation:2901",
+        "rsid": "rs137852911"
+      },
+      {
+        "text": "c.2333A>C",
+        "variation_id": "ClinVarVariation:225393",
+        "rsid": "rs74475415"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "clingen_report_url": "lifted_clingen_block",
+    "gene_symbol": "lifted_clingen_block",
+    "hgnc_id": "lifted_clingen_block",
+    "disease_label": "lifted_clingen_block",
+    "mondo_id": "lifted_clingen_block",
+    "moi": "lifted_clingen_block",
+    "classification": "lifted_clingen_block",
+    "gcep": "lifted_clingen_block",
+    "classification_date": "lifted_clingen_block",
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid"
+  }
+}

@@ -1,0 +1,211 @@
+{
+  "unified_id": "gs_036",
+  "original_entry_id": "fused_028",
+  "source_dataset": "clinvar_fused",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_clinvar_join",
+  "source": "clingen_clinvar_fused",
+  "gene_symbol": "GP1BB",
+  "hgnc_id": "HGNC:4440",
+  "disease_label": "Bernard-Soulier syndrome",
+  "mondo_id": "MONDO:0009276",
+  "moi": "AR",
+  "classification": "Definitive",
+  "gcep": "Hemostasis/Thrombosis Gene Curation Expert Panel",
+  "classification_date": "2019-06-06T16:00:00.000Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2064876d-ea54-4ace-be76-f700cfefbf90-2019-06-06T160000.000Z",
+  "source_pmid": "26634332",
+  "source_doi": "10.1111/trf.13416",
+  "source_pmc": "PMC5019240",
+  "source_pdf_url": "https://europepmc.org/article/PMC/5019240?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_036/source.pdf",
+  "source_title": "Comprehensive red blood cell and platelet antigen prediction from whole genome sequencing: proof of principle.",
+  "source_journal": "Transfusion",
+  "source_year": "2016",
+  "source_language": "en",
+  "variants": [
+    {
+      "source": "clinvar",
+      "variation_id": "16038",
+      "hgvs_name": "NM_000407.5(GP1BB):c.338A>G (p.Tyr113Cys)",
+      "hgvs_c": "c.338A>G",
+      "hgvs_p": "p.Tyr113Cys",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "rsid": "rs121909750",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MedGen:CN071127|MONDO:MONDO:0009276,MeSH:D001606,MedGen:C0005129,OMIM:231200,Orphanet:274",
+      "phenotype_list": "MACROTHROMBOCYTOPENIA, FAMILIAL, BERNARD-SOULIER TYPE|Bernard Soulier syndrome",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "16040",
+      "hgvs_name": "NM_000407.5(GP1BB):c.137G>A (p.Trp46Ter)",
+      "hgvs_c": "c.137G>A",
+      "hgvs_p": "p.Trp46Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "rsid": "rs121909752",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MedGen:C1856447|Human Phenotype Ontology:HP:0001873,Human Phenotype Ontology:HP:0001906,Human Phenotype Ontology:HP:0004838,Human Phenotype Ontology:HP:0008175,Human Phenotype Ontology:HP:0008268,Human Phenotype Ontology:HP:0008302,MONDO:MONDO:0002049,MeSH:D013921,MedGen:C0040034|Human Phenotype Ontology:HP:0011877,MedGen:C1096367|Human Phenotype Ontology:HP:0040185,MedGen:C2751260|MONDO:MONDO:0009276,MeSH:D001606,MedGen:C0005129,OMIM:231200,Orphanet:274|MedGen:C3661900",
+      "phenotype_list": "Bernard-Soulier syndrome, type B|Thrombocytopenia|Increased mean platelet volume|Macrothrombocytopenia|Bernard Soulier syndrome|not provided",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "627039",
+      "hgvs_name": "NM_000407.5(GP1BB):c.236_244del (p.Pro79_Leu81del)",
+      "hgvs_c": "c.236_244del",
+      "hgvs_p": "p.Pro79_Leu81del",
+      "variant_type": "deletion",
+      "clinical_significance": "Likely pathogenic",
+      "rsid": "rs1601248578",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "Human Phenotype Ontology:HP:0001873,Human Phenotype Ontology:HP:0001906,Human Phenotype Ontology:HP:0004838,Human Phenotype Ontology:HP:0008175,Human Phenotype Ontology:HP:0008268,Human Phenotype Ontology:HP:0008302,MONDO:MONDO:0002049,MeSH:D013921,MedGen:C0040034|MONDO:MONDO:0009276,MeSH:D001606,MedGen:C0005129,OMIM:231200,Orphanet:274|MedGen:C3661900",
+      "phenotype_list": "Thrombocytopenia|Bernard Soulier syndrome|not provided",
+      "review_stars": 3
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "GP1BB",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Bernard-Soulier syndrome",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AR",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.338A>G",
+      "candidates": [
+        "c.338A>G",
+        "c.137G>A",
+        "c.236_244del"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Tyr113Cys",
+      "candidates": [
+        "p.Tyr113Cys",
+        "p.Trp46Ter",
+        "p.Pro79_Leu81del"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "deletion"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Likely pathogenic",
+      "candidates": [
+        "Likely pathogenic",
+        "Likely pathogenic",
+        "Likely pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:4440",
+    "disease": "MONDO:0009276",
+    "variant_candidates": [
+      "ClinVarVariation:16038",
+      "ClinVarVariation:16040",
+      "ClinVarVariation:627039"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "GP1BB",
+      "hgnc_id": "HGNC:4440"
+    },
+    "disease": {
+      "text": "Bernard-Soulier syndrome",
+      "mondo_id": "MONDO:0009276"
+    },
+    "variants": [
+      {
+        "text": "c.338A>G",
+        "variation_id": "ClinVarVariation:16038",
+        "rsid": "rs121909750"
+      },
+      {
+        "text": "c.137G>A",
+        "variation_id": "ClinVarVariation:16040",
+        "rsid": "rs121909752"
+      },
+      {
+        "text": "c.236_244del",
+        "variation_id": "ClinVarVariation:627039",
+        "rsid": "rs1601248578"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "clingen_report_url": "lifted_clingen_block",
+    "gene_symbol": "lifted_clingen_block",
+    "hgnc_id": "lifted_clingen_block",
+    "disease_label": "lifted_clingen_block",
+    "mondo_id": "lifted_clingen_block",
+    "moi": "lifted_clingen_block",
+    "classification": "lifted_clingen_block",
+    "gcep": "lifted_clingen_block",
+    "classification_date": "lifted_clingen_block",
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid"
+  }
+}

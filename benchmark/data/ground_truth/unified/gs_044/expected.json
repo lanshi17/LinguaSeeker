@@ -1,0 +1,211 @@
+{
+  "unified_id": "gs_044",
+  "original_entry_id": "fused_036",
+  "source_dataset": "clinvar_fused",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_clinvar_join",
+  "source": "clingen_clinvar_fused",
+  "gene_symbol": "IDUA",
+  "hgnc_id": "HGNC:5391",
+  "disease_label": "mucopolysaccharidosis type 1",
+  "mondo_id": "MONDO:0001586",
+  "moi": "AR",
+  "classification": "Definitive",
+  "gcep": "General Gene Curation Expert Panel",
+  "classification_date": "2020-05-27T16:00:00.000Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_042f8964-a8e1-4880-b873-73460088e8bf-2020-05-27T160000.000Z",
+  "source_pmid": "40989062",
+  "source_doi": "10.1016/j.radcr.2025.08.011",
+  "source_pmc": "PMC12452867",
+  "source_pdf_url": "https://europepmc.org/article/PMC/12452867?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_044/source.pdf",
+  "source_title": "Neuroimaging and spinal manifestations of mucopolysaccharidosis type I: Insights from a pediatric case.",
+  "source_journal": "Radiology case reports",
+  "source_year": "2025",
+  "source_language": "en",
+  "variants": [
+    {
+      "source": "clinvar",
+      "variation_id": "11908",
+      "hgvs_name": "NM_000203.5(IDUA):c.1205G>A (p.Trp402Ter)",
+      "hgvs_c": "c.1205G>A",
+      "hgvs_p": "p.Trp402Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs121965019",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0011758,MedGen:C0086795,OMIM:607014,Orphanet:93473|MedGen:C3661900|MONDO:MONDO:0001586,MedGen:C0023786,Orphanet:579|MONDO:MONDO:0011759,MedGen:C0086431,OMIM:607015,Orphanet:93476;MONDO:MONDO:0011760,MedGen:C0026708,OMIM:607016,Orphanet:93474;MONDO:MONDO:0011758,MedGen:C0086795,OMIM:607014,Orphanet:93473|MONDO:MONDO:0011759,MedGen:C0086431,OMIM:607015,Orphanet:93476||MeSH:D030342,MedGen:C0950123||MONDO:MONDO:0001586,MedGen:C0023786,Orphanet:579;MONDO:MONDO:0011758,MedGen:C0086795,OMIM:607014,Orphanet:93473|",
+      "phenotype_list": "Hurler syndrome|not provided|Mucopolysaccharidosis type 1|Mucopolysaccharidosis, MPS-I-H/S;Mucopolysaccharidosis, MPS-I-S;Hurler syndrome|Mucopolysaccharidosis, MPS-I-H/S|See cases|Inborn genetic diseases|IDUA-related disorder|Mucopolysaccharidosis type 1;Hurler syndrome|Autosomal recessive IDUA-related disorders",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "11910",
+      "hgvs_name": "NM_000203.5(IDUA):c.1598C>G (p.Pro533Arg)",
+      "hgvs_c": "c.1598C>G",
+      "hgvs_p": "p.Pro533Arg",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs121965021",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0011758,MedGen:C0086795,OMIM:607014,Orphanet:93473|MONDO:MONDO:0001586,MedGen:C0023786,Orphanet:579|MedGen:C3661900|MONDO:MONDO:0011759,MedGen:C0086431,OMIM:607015,Orphanet:93476;MONDO:MONDO:0011760,MedGen:C0026708,OMIM:607016,Orphanet:93474;MONDO:MONDO:0011758,MedGen:C0086795,OMIM:607014,Orphanet:93473|MeSH:D030342,MedGen:C0950123|MONDO:MONDO:0011760,MedGen:C0026708,OMIM:607016,Orphanet:93474",
+      "phenotype_list": "Hurler syndrome|Mucopolysaccharidosis type 1|not provided|Mucopolysaccharidosis, MPS-I-H/S;Mucopolysaccharidosis, MPS-I-S;Hurler syndrome|Inborn genetic diseases|Mucopolysaccharidosis, MPS-I-S",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "11915",
+      "hgvs_name": "NM_000203.5(IDUA):c.928C>T (p.Gln310Ter)",
+      "hgvs_c": "c.928C>T",
+      "hgvs_p": "p.Gln310Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "rsid": "rs121965023",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0011758,MedGen:C0086795,OMIM:607014,Orphanet:93473|MONDO:MONDO:0001586,MedGen:C0023786,Orphanet:579",
+      "phenotype_list": "Hurler syndrome|Mucopolysaccharidosis type 1",
+      "review_stars": 3
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "IDUA",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "mucopolysaccharidosis type 1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AR",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.1205G>A",
+      "candidates": [
+        "c.1205G>A",
+        "c.1598C>G",
+        "c.928C>T"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Trp402Ter",
+      "candidates": [
+        "p.Trp402Ter",
+        "p.Pro533Arg",
+        "p.Gln310Ter"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Likely pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:5391",
+    "disease": "MONDO:0001586",
+    "variant_candidates": [
+      "ClinVarVariation:11908",
+      "ClinVarVariation:11910",
+      "ClinVarVariation:11915"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "IDUA",
+      "hgnc_id": "HGNC:5391"
+    },
+    "disease": {
+      "text": "mucopolysaccharidosis type 1",
+      "mondo_id": "MONDO:0001586"
+    },
+    "variants": [
+      {
+        "text": "c.1205G>A",
+        "variation_id": "ClinVarVariation:11908",
+        "rsid": "rs121965019"
+      },
+      {
+        "text": "c.1598C>G",
+        "variation_id": "ClinVarVariation:11910",
+        "rsid": "rs121965021"
+      },
+      {
+        "text": "c.928C>T",
+        "variation_id": "ClinVarVariation:11915",
+        "rsid": "rs121965023"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "clingen_report_url": "lifted_clingen_block",
+    "gene_symbol": "lifted_clingen_block",
+    "hgnc_id": "lifted_clingen_block",
+    "disease_label": "lifted_clingen_block",
+    "mondo_id": "lifted_clingen_block",
+    "moi": "lifted_clingen_block",
+    "classification": "lifted_clingen_block",
+    "gcep": "lifted_clingen_block",
+    "classification_date": "lifted_clingen_block",
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid"
+  }
+}

@@ -1,0 +1,211 @@
+{
+  "unified_id": "gs_027",
+  "original_entry_id": "fused_019",
+  "source_dataset": "clinvar_fused",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_clinvar_join",
+  "source": "clingen_clinvar_fused",
+  "gene_symbol": "FBN1",
+  "hgnc_id": "HGNC:3603",
+  "disease_label": "Marfan syndrome",
+  "mondo_id": "MONDO:0007947",
+  "moi": "AD",
+  "classification": "Definitive",
+  "gcep": "General Gene Curation Expert Panel",
+  "classification_date": "2019-03-04T17:00:00.000Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d3fc0bea-4d6e-449e-885c-b204e6a0b2bf-2019-03-04T170000.000Z",
+  "source_pmid": "30485715",
+  "source_doi": "10.1002/mgg3.518",
+  "source_pmc": "PMC6393656",
+  "source_pdf_url": "https://europepmc.org/article/PMC/6393656?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_027/source.pdf",
+  "source_title": "Autosomal dominant Marfan syndrome caused by a previously reported recessive FBN1 variant.",
+  "source_journal": "Molecular genetics & genomic medicine",
+  "source_year": "2019",
+  "source_language": "en",
+  "variants": [
+    {
+      "source": "clinvar",
+      "variation_id": "16439",
+      "hgvs_name": "NM_000138.5(FBN1):c.8326C>T (p.Arg2776Ter)",
+      "hgvs_c": "c.8326C>T",
+      "hgvs_p": "p.Arg2776Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs137854466",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0007947,MedGen:C0024796,OMIM:154700,Orphanet:284963,Orphanet:558|MedGen:C3661900|MONDO:MONDO:0019625,MedGen:C4707243,OMIM:PS607086,Orphanet:91387;MONDO:MONDO:0007947,MedGen:C0024796,OMIM:154700,Orphanet:284963,Orphanet:558||MONDO:MONDO:0019625,MedGen:C4707243,OMIM:PS607086,Orphanet:91387",
+      "phenotype_list": "Marfan syndrome|not provided|Familial thoracic aortic aneurysm and aortic dissection;Marfan syndrome|Isolated thoracic aortic aneurysm|Familial thoracic aortic aneurysm and aortic dissection",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "16466",
+      "hgvs_name": "NM_000138.5(FBN1):c.1453C>T (p.Arg485Cys)",
+      "hgvs_c": "c.1453C>T",
+      "hgvs_p": "p.Arg485Cys",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs137854485",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MedGen:C4016059|MedGen:CN169374|MONDO:MONDO:0007947,MedGen:C0024796,OMIM:154700,Orphanet:284963,Orphanet:558|MONDO:MONDO:0007947,MedGen:C0024796,OMIM:154700,Orphanet:284963,Orphanet:558;MONDO:MONDO:0019625,MedGen:C4707243,OMIM:PS607086,Orphanet:91387|MONDO:MONDO:0019625,MedGen:C4707243,OMIM:PS607086,Orphanet:91387|MedGen:C3661900",
+      "phenotype_list": "MARFAN SYNDROME, AUTOSOMAL RECESSIVE|not specified|Marfan syndrome|Marfan syndrome;Familial thoracic aortic aneurysm and aortic dissection|Familial thoracic aortic aneurysm and aortic dissection|not provided",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "36118",
+      "hgvs_name": "NM_000138.5(FBN1):c.7726C>T (p.Arg2576Cys)",
+      "hgvs_c": "c.7726C>T",
+      "hgvs_p": "p.Arg2576Cys",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs147195031",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0007947,MedGen:C0024796,OMIM:154700,Orphanet:284963,Orphanet:558|MedGen:C4016059|MONDO:MONDO:0019625,MedGen:C4707243,OMIM:PS607086,Orphanet:91387;MONDO:MONDO:0007947,MedGen:C0024796,OMIM:154700,Orphanet:284963,Orphanet:558|MedGen:C3661900||MONDO:MONDO:0019625,MedGen:C4707243,OMIM:PS607086,Orphanet:91387||MedGen:CN229799",
+      "phenotype_list": "Marfan syndrome|MARFAN SYNDROME, AUTOSOMAL RECESSIVE|Familial thoracic aortic aneurysm and aortic dissection;Marfan syndrome|not provided|Isolated thoracic aortic aneurysm|Familial thoracic aortic aneurysm and aortic dissection|FBN1-related disorder|Marfan Syndrome/Loeys-Dietz Syndrome/Familial Thoracic Aortic Aneurysms and Dissections",
+      "review_stars": 3
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "FBN1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Marfan syndrome",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.8326C>T",
+      "candidates": [
+        "c.8326C>T",
+        "c.1453C>T",
+        "c.7726C>T"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg2776Ter",
+      "candidates": [
+        "p.Arg2776Ter",
+        "p.Arg485Cys",
+        "p.Arg2576Cys"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:3603",
+    "disease": "MONDO:0007947",
+    "variant_candidates": [
+      "ClinVarVariation:16439",
+      "ClinVarVariation:16466",
+      "ClinVarVariation:36118"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "FBN1",
+      "hgnc_id": "HGNC:3603"
+    },
+    "disease": {
+      "text": "Marfan syndrome",
+      "mondo_id": "MONDO:0007947"
+    },
+    "variants": [
+      {
+        "text": "c.8326C>T",
+        "variation_id": "ClinVarVariation:16439",
+        "rsid": "rs137854466"
+      },
+      {
+        "text": "c.1453C>T",
+        "variation_id": "ClinVarVariation:16466",
+        "rsid": "rs137854485"
+      },
+      {
+        "text": "c.7726C>T",
+        "variation_id": "ClinVarVariation:36118",
+        "rsid": "rs147195031"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "clingen_report_url": "lifted_clingen_block",
+    "gene_symbol": "lifted_clingen_block",
+    "hgnc_id": "lifted_clingen_block",
+    "disease_label": "lifted_clingen_block",
+    "mondo_id": "lifted_clingen_block",
+    "moi": "lifted_clingen_block",
+    "classification": "lifted_clingen_block",
+    "gcep": "lifted_clingen_block",
+    "classification_date": "lifted_clingen_block",
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid"
+  }
+}

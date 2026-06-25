@@ -1,0 +1,209 @@
+{
+  "unified_id": "gs_075",
+  "original_entry_id": "fused_069",
+  "source_dataset": "clinvar_fused",
+  "gold_source": "database",
+  "annotation_provenance": "clingen_clinvar_join",
+  "source": "clingen_clinvar_fused",
+  "gene_symbol": "MTM1",
+  "hgnc_id": "HGNC:7448",
+  "disease_label": "X-linked myotubular myopathy",
+  "mondo_id": "MONDO:0010683",
+  "moi": "XL",
+  "classification": "Definitive",
+  "gcep": "Congenital Myopathies and Myasthenic Syndromes Gene Curation Expert Panel",
+  "classification_date": "2019-11-22T17:00:00.000Z",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2b60f008-871f-4c5f-aa46-099d09fb66df-2019-11-22T170000.000Z",
+  "source_pmid": "41955018",
+  "source_doi": "10.1172/jci.insight.198568",
+  "source_pmc": "PMC13232722",
+  "source_pdf_url": "https://europepmc.org/article/PMC/13232722?pdf=render",
+  "source_pdf_path": "benchmark/data/ground_truth/unified/gs_075/source.pdf",
+  "source_title": "Pharmacological PIK3C2B inhibition rescues XLMTM phenotype in mouse models and identifies molecular markers of disease.",
+  "source_journal": "JCI insight",
+  "source_year": "2026",
+  "source_language": "en",
+  "variants": [
+    {
+      "source": "clinvar",
+      "variation_id": "11055",
+      "hgvs_name": "NM_000252.3(MTM1):c.205C>T (p.Arg69Cys)",
+      "hgvs_c": "c.205C>T",
+      "hgvs_p": "p.Arg69Cys",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs132630304",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0010683,MedGen:C0410203,OMIM:310400,Orphanet:596|MedGen:C3661900|MONDO:MONDO:0018947,MedGen:C0175709,OMIM:PS160150,Orphanet:595",
+      "phenotype_list": "Severe X-linked myotubular myopathy|not provided|Centronuclear myopathy",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "11057",
+      "hgvs_name": "NM_000252.3(MTM1):c.141_144del",
+      "hgvs_c": "c.141_144del",
+      "variant_type": "deletion",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs587783791",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0010683,MedGen:C0410203,OMIM:310400,Orphanet:596|MedGen:C3661900||MONDO:MONDO:0018947,MedGen:C0175709,OMIM:PS160150,Orphanet:595",
+      "phenotype_list": "Severe X-linked myotubular myopathy|not provided|MTM1-related disorder|Centronuclear myopathy",
+      "review_stars": 3
+    },
+    {
+      "source": "clinvar",
+      "variation_id": "11060",
+      "hgvs_name": "NM_000252.3(MTM1):c.670C>T (p.Arg224Ter)",
+      "hgvs_c": "c.670C>T",
+      "hgvs_p": "p.Arg224Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "rsid": "rs132630306",
+      "review_status": "reviewed by expert panel",
+      "phenotype_ids": "MONDO:MONDO:0010683,MedGen:C0410203,OMIM:310400,Orphanet:596|MONDO:MONDO:0018947,MedGen:C0175709,OMIM:PS160150,Orphanet:595|MedGen:C3661900",
+      "phenotype_list": "Severe X-linked myotubular myopathy|Centronuclear myopathy|not provided",
+      "review_stars": 3
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MTM1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "X-linked myotubular myopathy",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XL",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.205C>T",
+      "candidates": [
+        "c.205C>T",
+        "c.141_144del",
+        "c.670C>T"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg69Cys",
+      "candidates": [
+        "p.Arg69Cys",
+        "p.Arg224Ter"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "deletion",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:7448",
+    "disease": "MONDO:0010683",
+    "variant_candidates": [
+      "ClinVarVariation:11055",
+      "ClinVarVariation:11057",
+      "ClinVarVariation:11060"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "MTM1",
+      "hgnc_id": "HGNC:7448"
+    },
+    "disease": {
+      "text": "X-linked myotubular myopathy",
+      "mondo_id": "MONDO:0010683"
+    },
+    "variants": [
+      {
+        "text": "c.205C>T",
+        "variation_id": "ClinVarVariation:11055",
+        "rsid": "rs132630304"
+      },
+      {
+        "text": "c.141_144del",
+        "variation_id": "ClinVarVariation:11057",
+        "rsid": "rs587783791"
+      },
+      {
+        "text": "c.670C>T",
+        "variation_id": "ClinVarVariation:11060",
+        "rsid": "rs132630306"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "notes": "",
+  "backfilled": {
+    "clingen_report_url": "lifted_clingen_block",
+    "gene_symbol": "lifted_clingen_block",
+    "hgnc_id": "lifted_clingen_block",
+    "disease_label": "lifted_clingen_block",
+    "mondo_id": "lifted_clingen_block",
+    "moi": "lifted_clingen_block",
+    "classification": "lifted_clingen_block",
+    "gcep": "lifted_clingen_block",
+    "classification_date": "lifted_clingen_block",
+    "source_language": "default_en",
+    "source_pdf_path": "materialized_local",
+    "source_doi": "europepmc_pmid",
+    "source_journal": "europepmc_pmid"
+  }
+}
