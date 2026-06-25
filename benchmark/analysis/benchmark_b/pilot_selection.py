@@ -8,7 +8,8 @@ from pathlib import Path
 import time
 from typing import Mapping, TypedDict
 
-from benchmark.core import GROUND_TRUTH_DIR, REPORTS_DIR
+from benchmark.core import REPORTS_DIR
+from benchmark.core.paths import GROUND_TRUTH_CLINGEN_ROOT
 
 SOURCE_CORPUS_ROOT = Path(__file__).resolve().parents[2] / "pipeline" / "input"
 
@@ -55,9 +56,9 @@ class BenchmarkBPilotSelectionPayload(TypedDict):
 class BenchmarkBPilotSelectionConfig:
     """Configuration for Benchmark B pilot freezing."""
 
-    selection_path: Path = GROUND_TRUTH_DIR / "selection.json"
+    selection_path: Path = GROUND_TRUTH_CLINGEN_ROOT / "selection.json"
     source_corpus_root: Path = SOURCE_CORPUS_ROOT
-    output_path: Path = GROUND_TRUTH_DIR / "benchmark_b_pilot_selection.json"
+    output_path: Path = GROUND_TRUTH_CLINGEN_ROOT / "benchmark_b_pilot_selection.json"
     target_size: int = 10
 
 
@@ -220,9 +221,9 @@ def format_benchmark_b_pilot_selection(report: BenchmarkBPilotSelectionReport) -
 def main(argv: list[str] | None = None) -> None:
     """CLI entrypoint for freezing a Benchmark B pilot."""
     parser = argparse.ArgumentParser(description="Freeze a multilingual Benchmark B pilot selection.")
-    parser.add_argument("--selection-path", type=Path, default=GROUND_TRUTH_DIR / "selection.json")
+    parser.add_argument("--selection-path", type=Path, default=GROUND_TRUTH_CLINGEN_ROOT / "selection.json")
     parser.add_argument("--source-corpus-root", type=Path, default=SOURCE_CORPUS_ROOT)
-    parser.add_argument("--output-path", type=Path, default=GROUND_TRUTH_DIR / "benchmark_b_pilot_selection.json")
+    parser.add_argument("--output-path", type=Path, default=GROUND_TRUTH_CLINGEN_ROOT / "benchmark_b_pilot_selection.json")
     parser.add_argument("--target-size", type=int, default=10)
     parser.add_argument("--write", action="store_true")
     args = parser.parse_args(argv)

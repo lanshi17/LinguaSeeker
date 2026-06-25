@@ -2,6 +2,14 @@
 
 Multi-Agent infrastructure platform for medical genetics literature automation and structured evidence extraction. It provides a four-phase evidence pipeline: literature acquisition and digitization, cross-lingual dual evidence extraction and fusion, entity standardization and knowledge alignment, and bilingual visualization with expert-in-the-loop feedback.
 
+## Release Status
+
+**Current release:** `v1.0.0`
+
+The first stable release freezes the current FastAPI backend, Vite + React frontend, Rust native I/O extensions, database schema contract, and deployment configuration shape. Production deployments should pin backend and frontend images to the same immutable tag, preferably `v1.0.0` or the matching `sha-<short>` image tag from GitHub Actions.
+
+Release execution is tracked in [docs/active/2026-06-25-v1-release-checklist.md](docs/active/2026-06-25-v1-release-checklist.md). Do not deploy from a dirty worktree; run the release checklist verification commands before tagging or rolling out.
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -146,6 +154,23 @@ mineru:
 | `cd backend/libs/rust-io && cargo bench` | Run Rust benchmarks |
 
 ## Deployment
+
+### Release Deployment (`v1.0.0`)
+
+For the first stable release, build and deploy both images with the same tag:
+
+```bash
+# Build/publish through GitHub Actions workflow_dispatch with tag=v1.0.0,
+# then deploy manually with image_tag=v1.0.0.
+```
+
+Before deployment, confirm all environments use the canonical database contract:
+
+| Environment | Database | Schema | User |
+|-------------|----------|--------|------|
+| Development | `dev_lingua_seeker` | `lingua_seeker` | `lingua_seeker` |
+| Staging | `staging_lingua_seeker` | `lingua_seeker` | `lingua_seeker` |
+| Production | `lingua_seeker` | `lingua_seeker` | `lingua_seeker` |
 
 ### Single-Server (All-in-one)
 

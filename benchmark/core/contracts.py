@@ -58,3 +58,6 @@ class EntryMetrics:
     evidence_count: int = 0
     found_rate: float = 0.0
     grounding_rate: float = 0.0
+    # Provenance fields (populated when running against unified dataset)
+    source_dataset: str = ""
+    original_entry_id: str = ""

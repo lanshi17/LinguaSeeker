@@ -68,7 +68,19 @@ if __name__ == "__main__":  # pragma: no cover - CLI parity with the old entry p
         "--ground-truth-root",
         type=Path,
         default=GROUND_TRUTH_DIR,
-        help="Ground truth root containing selection.json and entry directories",
+        help="Ground truth root (default: unified dataset)",
+    )
+    parser.add_argument(
+        "--shard-index",
+        type=int,
+        default=None,
+        help="Shard index for batch execution (requires --shard-size)",
+    )
+    parser.add_argument(
+        "--shard-size",
+        type=int,
+        default=None,
+        help="Number of entries per shard (requires --shard-index)",
     )
     parser.add_argument(
         "--no-preprocessed",
@@ -97,5 +109,7 @@ if __name__ == "__main__":  # pragma: no cover - CLI parity with the old entry p
             force_reextract=args.no_preprocessed,
             api_key=args.api_key,
             extraction_profile=args.extraction_profile,
+            shard_index=args.shard_index,
+            shard_size=args.shard_size,
         )
     )
