@@ -136,3 +136,32 @@ benchmark/config/vault/secrets.yml
 # ── Old version reference ─────────────────────────────────────────────────
 .old_version
 docker-artifacts/
+
+# Development tooling (excluded from production)
+.claude/
+.qoder/
+.sisyphus/
+.codegraph/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.playwright-mcp/
+.cache_ggshield
+.worktrees/
+.venv
+logs/
+docker-artifacts/
+command.log
+reasonix.toml
+opencode.jsonc
+.mcp.json
+.copier-answers.yml
+copier_defaults.yaml
+backend/.cache_ggshield
+backend/.coverage
+backend/output/
+backend/data/
+frontend/command.log
+frontend/.ruff_cache/
+frontend/tsconfig.tsbuildinfo
+deploy/.work_logs.sh
