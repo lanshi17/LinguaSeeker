@@ -37,6 +37,7 @@ import asyncio
 import json
 import sys
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from loguru import logger
@@ -102,27 +103,29 @@ def _load_unified_entry(unified_id: str) -> dict[str, Any] | None:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _build_target_overrides(expected: dict[str, Any]) -> dict[str, str]:
-    """Extract gene/disease/MONDO/HGNC to override the rett defaults."""
-    return {
-        "gene_symbol": str(expected.get("gene_symbol") or ""),
-        "hgnc_id": str(expected.get("hgnc_id") or ""),
-        "disease_label": str(expected.get("disease_label") or ""),
-        "mondo_id": str(expected.get("mondo_id") or ""),
-        "moi": str(expected.get("moi") or ""),
-    }
+def _source_expected_path(unified: dict[str, Any]) -> Path | None:
+    """Locate the source-dataset ``expected.json`` for a unified entry.
+
+    Re-annotation fixes must land in the *source* dataset so that the next
+    ``build_unified_dataset`` run propagates them (the unified tree is a
+    materialized artifact, not the source of truth).
+    """
+    dataset = unified.get("source_dataset")
+    original_id = unified.get("original_entry_id")
+    if not dataset or not original_id:
+        return None
+    return BENCHMARK_ROOT / "data" / "ground_truth" / dataset / original_id / "expected.json"
 
 
 def _merge_reannotation(
     existing: dict[str, Any],
     new_expected: Any,
-    overrides: dict[str, str],
 ) -> dict[str, Any]:
-    """Merge re-annotated evidence + variants into the unified expected.json.
+    """Merge re-annotated evidence + variants into a source expected.json.
 
-    Only ``expected_evidence`` and ``variants`` are replaced. All identifier /
+    Only ``expected_evidence`` and ``variants`` are replaced; all identifier /
     source / standardization / evaluation_config fields are preserved from the
-    existing unified entry.
+    existing entry.
     """
     new_evidence = [
         item.model_dump() if hasattr(item, "model_dump") else dict(item)
@@ -140,7 +143,6 @@ def _merge_reannotation(
             var["source"] = "article"
     merged["expected_evidence"] = new_evidence
     merged["variants"] = new_variants
-    merged.setdefault("backfilled", {})["reannotated_with"] = "opus-4-8"
     return merged
 
 
@@ -150,12 +152,21 @@ async def reannotate_one(
     model: str,
     write: bool,
 ) -> ReannotationResult:
-    """Re-annotate a single unified entry."""
+    """Re-annotate a single unified entry, writing the fix to the *source* dataset."""
     config_module = modules["config"]
     annotator = modules["annotator"]
     expected = _load_unified_entry(unified_id)
     if expected is None:
         return ReannotationResult(unified_id, "", "failed", error="entry not found")
+    source_expected_path = _source_expected_path(expected)
+    if source_expected_path is None or not source_expected_path.exists():
+        return ReannotationResult(
+            unified_id,
+            expected.get("original_entry_id", ""),
+            "failed",
+            error="source expected.json not found",
+        )
+    source_expected = json.loads(source_expected_path.read_text(encoding="utf-8"))
 
     source_md_path = UNIFIED_ROOT / unified_id / "source.md"
     if not source_md_path.exists():
@@ -166,7 +177,12 @@ async def reannotate_one(
             error="source.md missing",
         )
     source_text = source_md_path.read_text(encoding="utf-8", errors="replace")
-    overrides = _build_target_overrides(expected)
+    # The rett annotator sends the full text when it cannot split by headings;
+    # for 40-60KB articles that is too slow for opus-4-8. Cap the input so the
+    # abstract + methods + results (where variants live) stay within budget.
+    max_input_chars = 18000
+    if len(source_text) > max_input_chars:
+        source_text = source_text[:max_input_chars] + "\n\n[truncated]"
     language = str(expected.get("source_language") or "en")
 
     # Build a config with the requested model, reusing the rett .env API key.
@@ -209,10 +225,10 @@ async def reannotate_one(
             error="empty annotation returned",
         )
 
-    merged = _merge_reannotation(expected, new_expected, overrides)
-    old_variants = expected.get("variants", [])
+    merged = _merge_reannotation(source_expected, new_expected)
+    old_variants = source_expected.get("variants", [])
     changes = {
-        "evidence_before": len(expected.get("expected_evidence", [])),
+        "evidence_before": len(source_expected.get("expected_evidence", [])),
         "evidence_after": len(merged["expected_evidence"]),
         "variants_before": len(old_variants),
         "variants_after": len(merged["variants"]),
@@ -221,11 +237,13 @@ async def reannotate_one(
     }
 
     if write:
-        out_path = UNIFIED_ROOT / unified_id / "expected.json"
-        out_path.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
+        # Write the fix to the *source* dataset so build_unified_dataset
+        # propagates it; the unified tree is a materialized artifact.
+        source_expected_path.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
         logger.info(
-            "wrote corrected {} ({} evidence, {} variants)",
+            "wrote corrected {} -> {} ({} evidence, {} variants)",
             unified_id,
+            source_expected_path.name,
             len(merged["expected_evidence"]),
             len(merged["variants"]),
         )

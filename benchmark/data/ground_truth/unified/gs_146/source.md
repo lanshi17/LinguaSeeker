@@ -1,111 +1,216 @@
-doi: 10.7499/j.issn.1008-8830.2014.04.017
+# 5 例 Rett 综合征样表型患儿的基因突变分析
 
-论著·临床研究
+刘文晶，姜秀芳，尤玉慧，秦志强，韩启军，袁兆红\*
 
-# Rett综合征的临床特点及MECP2基因突变分析
+（济宁医学院附属医院儿童康复科，山东济宁 272029）
 
-赵培伟 1 　何学莲 1 　林俊 2 　吴革菲 3 　乐鑫 1 　毕博 2 　胡家胜 3 　刘智胜 3
+\*通讯作者：13562707506@126.com
 
-（武汉市儿童医院 1. 中心实验室；2. 康复科；3. 神经内科，湖北 武汉　430016）
+【摘要】目的 探讨 5 例 Rett 综合征（RTT）样表型患儿的临床特征及对遗传学结果进行分析。方法 收集 5 例 RTT样表型患儿的临床资料，应用全外显子组测序技术及拷贝数变异检测对患儿及其父母进行遗传学分析，寻找致病性变异。结果 结合患儿的临床特征及基因突变分析结果，4 例患儿诊断为 RTT，1 例患儿诊断为 MECP2 重复综合征（MDS）。结论 具有 RTT 样表型的遗传性疾病中，可能存在多种基因突变形式，应将基因诊断作为重要的辅助诊断标准。
 
-［摘要］ 目的 分析典型的 Rett 综合征患者的临床特点，并对患儿甲基化 CpG 结合蛋白 -2（MECP2）基因进行突变分析。方法 使用 PCR 扩增和测序的方法对近期诊断的 9 例 RETT 综合征患儿及其父母 MECP2基因的 3 个外显子进行检测。结果 在 9 例患儿中发现 5 例存在 MECP2 基因的杂合突变，突变率超过 50%，其中1例为碱基插入导致的移码突变（c.913insT）；其余4例为点突变，分别为位于外显子3的c.316C>T（R106W），位于外显子 4 的 c.502C>T（R168X）、c.808C>T（R270X）和 c.1126C>T（P376S），其中 c.913insT 为首次发现的突变，这些患儿父母均未检测到突变。2 例患儿 MECP2 基因突变位于转录抑制区域，与其他患儿相比，这 2个患儿语言功能几乎丧失，且发育明显落后。结论 该研究确诊的5例Rett综合征的患儿存在MECP2基因突变，且多数位于外显子4上；MECP2 蛋白转录抑制区域突变可能影响患儿语言功能及发育明显落后。
+关键词：Rett 综合征；MECP2 重复综合征；MECP2 基因
 
-［中国当代儿科杂志，2014，16（4）：393-396］
+DOI:10.13404/j.cnki.cjbhh.2023.04.008
 
-［关键词］ Rett 综合征；MECP2 基因；突变；儿童
+Gene mutation analysis of 5 children with Rett syndrome-like phenotype
 
-# Clinical features and MECP2 mutations in children with Rett syndrome
+LIU Wenjing, JIANG Xiufang, YOU Yuhui, QIN Zhiqiang, HAN Qijun, YUAN Zhaohong
 
-ZHAO Pei-Wei, HE Xue-Lian, LIN Jun, WU Ge-Fei, YUE Xin, BI Bo, HU Jia-Sheng, LIU Zhi-Sheng. Clinical Research Center, Wuhan Children's Hospital, Wuhan 430016, China (Liu Z-S, Email: liuzsc@126.com)
+(Department of Child Rehabilitation,Affiliated Hospital of Jining Medical University, Jining, Shandong 272029, China)
 
-Abstract: Objective To study the clinical features and mutations in methyl-CpG-binding protein 2 (MECP2) gene among children with classical Rett syndrome in China. Methods PCR and direct sequencing were employed to analyze the three exons of MECP2 gene in 9 children recently diagnosed with Rett syndrome and their parents. Results Heterozygous mutations were identified in 5 out of 9 patients, with a mutation rate of over 50%; there was one case of insert mutation (c.913insT) and 4 cases of missense mutation (exon 3: c.316C>T (R106W); exon 4: c.502C>T (R168X), c.808C>T (R270X), and c.1126C>T (P376S)). A new mutation (c.913insT) was found. No mutations were detected in their parents. Two patients had MECP2 mutations in the transcriptional repression domain (TRD). They had almost lost language functions and were found to have significantly delayed development compared with other patients. Conclusions Mutations in MECP2 gene were detected in 5 confirmed cases of Rett syndrome, and most of them were on exon 4. Mutations in the TRD of MECP2 protein may affect the language ability and development in children with Rett syndrome. [Chin J Contemp Pediatr, 2014, 16(4): 393-396]
+ABSTRACT Objective To investigate the clinical characteristics and genetic results of 5 children with Rett syndrome (RTT)-like phenotype. Methods The clinical data of 5 children with RTT-like phenotype were collected, and the genetic analysis of the children and their parents was carried out by using the whole exon sequencing technology and copy number variation detection to find the pathogenic variation. Results According to the clinical features and gene mutation analysis results, 4 cases were diagnosed as RTT and 1 case was diagnosed as MECP2 duplication syndrome (MDS). Conclusion There may be multiple forms of gene mutation in hereditary diseases with RTT-like phenotype, and gene diagnosis should be taken as an important auxiliary diagnostic standard.
 
-Key words: Rett syndrome; MECP2 gene; Mutation; Child
+KEY WORDS Rett syndrome; MECP2 duplication syndrome; MECP2 gene
 
-Rett 综合征（Rett syndrome, RTT）是一种严重影响儿童精神运动发育的疾病，由 Rett 于 1966年首次报道，是女性严重智力低下的重要原因；女性的发病率为 1/10 000\~1/15 000[1]。1999 年 Amir等 [2] 用定位候选基因的方法确定 RTT 的致病基因是位于染色体Xq28区域的甲基化CpG结合蛋白-2（MECP2）基因，随后研究人员开始对 RTT 进行
+Rett 综合征（Rett syndrome，RTT）是一种罕见的与X 染色体相关的神经发育障碍，主要影响女性，95%以上的患者携带甲基 CpG 结合蛋白 2（methyl-CpG-bindingprotein 2，MECP2）基因的新生突变[1]。许多遗传性疾病与 RTT 具有重叠特征，表现为 RTT 样表型，近五年内，检测到相关的基因超过 80 多个，其中一些基因被确定为RTT 样表型的原因[2]。在具有重叠表型的患者中，不同基因的致病性给临床诊断带来巨大挑战。本文报道 5例 RTT样表型患儿，探讨其临床表型及分子遗传学特征，为提高临床医师的诊断水平提供参考。
 
-MECP2 基因检测，目前世界范围内已经报道了超过 780 多 种 突 变 类 型（The Human Gene MutationDatabase, http://www.hgmd.org）。研究发现大约在90%\~95% 的典型 RTT 及 40%\~50% 的非典型 RTT患者中可检测到 MECP2 基因突变 [3]，我国总的突变检出率约为 84%[4]。本研究通过对 9 例散发 RTT患儿的临床特点及 MECP2 基因测序分析，了解这些 RTT 患儿突变情况，为临床诊断在分子水平提供依据。
+## 1 资料与方法
 
-## 资料与方法
+## 1.1 研究对象
 
-## 1.1　研究对象
+收集 2017 年至 2020 年济宁医学院附属医院儿童康复科收治的 5 例 RTT 样表型的患儿的临床资料，均为女性，年龄 1 岁 9 月至 2 岁 2 月。该项目得到济宁医学院附属医院医学科研伦理委员会批准（2022-11-C011），患儿家长签署知情同意书。
 
-选取 2012 年至今在本院神经内科和康复科诊断的 9 例 RTT 患儿为研究对象，均为女孩，发病年龄 5\~42 个月。临床诊断符合 2001 年欧洲小儿神经会议制定的国际 RTT 诊断标准 [5]。本研究得到武汉市儿童医院伦理委员会的批准。
+病例 1：女，2 岁 1 月，因“至今不会喊爸爸、妈妈”就诊。6 月龄前发育未见明显异常。目前呼名反应差，无有意识发音，不会用手势语，会走，喜欢转圈、看广告，不喜欢和小朋友玩，有搓手、吃手、大叫、磨牙等动作。手功能存在倒退，丧失拇食指捏物能力。双下肢肌张力偏低。既往史：有单侧眼球异常运动，诊断“癫痫”，抗癫痫药物治疗控制可。辅助检查：颅脑 MRI 检查未见异常。视频脑电图检查：不正常脑电图。出生史：出生时皮肤发青，生后缺氧史不详，未住院治疗。家族史无异常。
 
-## 1.2　基因突变检测
+病例 2：女，2 岁 2 月，因“至今不会独站”就诊。整体发育有倒退。目前眼神交流少，呼名反应差，无有意识发音，无主动抓物意识，不会独站、独走，不会指认常见的人和物。喜欢吃手、拍床、拍头、拍屁股。有不自主眨眼、抬头等动作，数秒可缓解。夜醒频繁。头围：45 cm。辅助检查：颅脑 MRI、血尿代谢筛查未见明显异常。视频脑电图提示痫样放电。孕产史：母孕期有脐带绕颈，家族史无异常。
 
-取患儿及其父母外周静脉抗凝血 2mL，分离白细胞后用酚 - 氯仿方法提取基因组DNA。扩增 MECP2 编码区所需要的引物由上海生工公司合成，3 个外显子序列分别为：1F：5'-GCTAGGTAAGCTGGGAAATAGC-3'，1R：5'-CACAGTTTGGCACAGTTATGTC-3'；2F：5'-AAGATCTGAGTGTATGATGGCC-3'，2R：5'-GCACATACATTTTCCTGCTCC-3'；3F：5'-GTTTGTCAGAGCGTTGTCAC-3'，3R：5'-AAGCTTTGTCAGAGCCCTAC-3'。PCR 总反应体系为 25 μL，其中含 100 ng DNA 1 μL，50 pmol/L 上下 游 引 物 各 1 μL，200 μmol/L dNTP 2 μL，1U TaqDNA 聚合酶（TAKARA 公司 5U/μL）0.2 μL，用无菌蒸馏水补到 25 μL。在 Bio-rad PCR 仪器上进行扩增，PCR 条件为 94℃变性 30 s，56℃退火 30 s，72℃延伸 30s，循环 32 次。产物经 2% 琼脂糖凝胶电泳合格后进行测序分析。
+病例 3：女，1 岁 9 月，因“至今不会独站”就诊，目前患儿呼名反应差，无有意识发音，不会指认常见的人和物，不会爬、独站，双手不会交换玩具。手部存在无意识拍手、互握等刻板动作，口部有咀嚼、磨牙动作。既往会抓物入口、简单手势语，目前手功能丧失。头围44.5 cm，3 rd。辅助检查：0\~6 岁儿童神经心理发育评估：发育商：44.2，颅脑 MRI、血尿代谢筛查未见明显异常。视频脑电图提示痫样放电。出生史及家族史无异常。
 
-## 2　结果
+病例 4：女，2 岁 2 月，因“至今不会喊爸爸、妈妈”就诊，1 岁前发育里程碑稍落后，1 岁后发育出现倒退，对指捏物灵活性较前下降，呼名不理，执行指令差，对玩具不感兴趣，喜欢搓手、吃手，有大叫、打头、咬胳膊等自残行为。睡眠节律紊乱。1 岁 5 月龄会走。辅助检查：0\~6 岁儿童神经心理发育评估：发育商：38.4。视频脑电图提示痫样放电，颅脑 MRI 考虑髓鞘发育迟缓可能。出生史及家族史无异常。
 
-9 例患儿均具有 RTT 的症状：即语言功能降低或者丧失；手的技能降低，且部分患儿存在单一模式手的刻板动作；坐和走的功能受限；多数患者脑电图显示异常；发育落后于同龄儿童。这9 例患儿中发现 5 例存在 MECP2 基因突变，1 例为碱基插入造成的移码突变（c.913insT），该突变导致 MECP2 基因所编码的蛋白从第 305 位氨基酸起序列发生改变，且在第330位氨基酸处提前终止，该突变未见报道，为新发现突变；2 例为错义突变（R106W 和 P376S）；2 例为无义突变（R168X 和R270X）。在这些突变中，1 例突变位于外显子 3上（R106W），其余几个突变均位于外显子4上（表1\~2）。所有患儿父母均未检测到突变。
+病例 5：女，1 岁 9 月，因“至今无有意识发音”就诊，患儿 6 月龄前发育尚可，会翻身，至今不会爬、扶站，与人交流差，可完成简单动作模仿，听不懂指令。头围 47 cm。肌张力偏低。辅助检查：血尿代谢筛查未见明显异常。颅脑 MRI 显示脑发育不良。出生史及家族史无异常。
 
-9 例患儿中，1 个突变位于甲基化 CpG 结合区（MBD），2 个突变位于转录抑制区（TRD），1 个位于蛋白 C 末端区域（CTS），还有 1 个突变位于功能区以外的区域，突变在 MeCP2 蛋白上的分布如图 1 所示。通过分析发现 2 例（D、G）TRD 功能区有突变的患儿均表现出不说话、脑电图癎性放电以及发育明显落后的临床特点。
+## 1.2 基因突变检测
 
-表1　RTT患者的临床特点
+抽取患儿及其父母外周血 2 mL，委托北京康旭医学检验所进行全外显子基因测序及拷贝数变异检测（qPCR-SYBR Green I 染料法）。
 
-<table><tr><td>患者</td><td>年龄(月)</td><td>语言功能</td><td>坐和走</td><td>手的功能</td><td>手的刻板动作</td><td>脑电图</td><td>发育</td><td>MECP2 突变</td></tr><tr><td>A</td><td>27</td><td>几个字语言</td><td>可独立坐和行走</td><td>部分丧失</td><td>玩手指</td><td>异常脑电图</td><td>落后</td><td>Y</td></tr><tr><td>B</td><td>12</td><td>-</td><td>能独坐</td><td>未见明显异常</td><td>未见明显单一动作</td><td>多种形式癇性放电</td><td>落后</td><td>Y</td></tr><tr><td>C</td><td>18</td><td>几个字语言</td><td>能独坐</td><td>部分丧失</td><td>未见明显单一动作</td><td>异常脑电图</td><td>落后</td><td>ND</td></tr><tr><td>D</td><td>23</td><td>几乎不说话</td><td>可坐,不能独立行走</td><td>部分丧失</td><td>抓头发</td><td>多种形式癇性放电</td><td>明显落后</td><td>Y</td></tr><tr><td>E</td><td>42</td><td>几个字语言</td><td>可独坐和行走</td><td>未见明显异常</td><td>未见明显单一动作</td><td>异常脑电图</td><td>落后</td><td>ND</td></tr><tr><td>F</td><td>21</td><td>几个字语言</td><td>可独坐不能独站,扶墙可行走</td><td>部分丧失</td><td>扳手指</td><td>大量癇性放电</td><td>落后</td><td>Y</td></tr><tr><td>G</td><td>35</td><td>几乎不说话</td><td>可坐,不能独立行走</td><td>部分丧失</td><td>玩手指</td><td>大量癇性放电</td><td>明显落后</td><td>Y</td></tr><tr><td>H</td><td>5</td><td>-</td><td>-</td><td>未见异常</td><td>未见明显单一动作</td><td>基本正常</td><td>落后</td><td>ND</td></tr><tr><td>I</td><td>18</td><td>几个字语言</td><td>可独坐和行走</td><td>部分丧失</td><td>频繁挠头</td><td>异常脑电图</td><td>落后</td><td>ND</td></tr></table>
+## 2 结果
 
-注： Y 表示有突变；ND表示未见突变；－表示信息不详。
+## 2.1 基因突变分析
 
-![](images/4ad4c3ca1de1882ed04f2ac46c627453cdac76f3ae6c6b343957b0256b9c3543.jpg)
+对 5 例患儿及其父母进行了全外显子检测，检测结果如下：病例 1\~4 存在染色体 Xq28 区域 MECP2 基因突变（见表 1），病例 5 通过拷贝数变异验证，发现 Xq28区域存在重复变异，片段大小为 0.299 MB。患儿父母均未检测到突变（结果见图 1\~图 5）。
+
+表 1 患者 MECP2 基因突变情况
+
+<table><tr><td>病例</td><td>突变类型</td><td>核苷酸改变</td><td>氨基酸改变</td><td>变异类型</td></tr><tr><td>1</td><td>错义突变</td><td>c.509C&gt;T</td><td>p.Thr170Met</td><td>杂合</td></tr><tr><td>2</td><td>无义突变</td><td>c.538C&gt;T</td><td>p.Arg180Ter</td><td>杂合</td></tr><tr><td>3</td><td>移码突变</td><td>c.842delG</td><td>p.Gly281AlafsTer20</td><td>杂合</td></tr><tr><td>4</td><td>移码突变</td><td>c.844delC</td><td>p.Arg282GlufsTer19</td><td>杂合</td></tr></table>
+
+![](images/31a6b66e51d204ca142d52c74b2b961bfc955d4f940f4e670977b2b6bd13a275.jpg)
 
 <details>
 <summary>text_image</summary>
 
-ATG
-5'UTR 26 27 235 377 378 486 625 930 1461 10015
-R106W
-R168X
-R270X
-K305fs
-P376S
-TGA
-未编码
-MBD
-TRD
-CTS
-功能区以外区域
+120
+T T T G A G T T C A C G G T A A G T G G G
+100
 </details>
 
-图1　MECP2蛋白的结构与功能区划分 [6] 及患者MECP2基因突变的位置分布
+图 1 病例 1 基因测序图
 
-表 2　RTT 患者 MECP2 基因突变情况
+![](images/9c9a1490938ebf87e06f68bab2e2f184a9da25c2471d5597a1c8cab73ad22d9d.jpg)
 
-<table><tr><td>患者</td><td>突变类型</td><td>外显子</td><td>核苷酸改变</td><td>氨基酸改变</td><td>功能区</td></tr><tr><td>A</td><td>错义突变</td><td>3</td><td>c.316C&gt;T</td><td>R106W</td><td>MBD</td></tr><tr><td>B</td><td>错义突变</td><td>4</td><td>c.1126C&gt;T</td><td>P376S</td><td>CTS</td></tr><tr><td>D</td><td>无义突变</td><td>4</td><td>c.808C&gt;T</td><td>R270X</td><td>TRD</td></tr><tr><td>F</td><td>无义突变</td><td>4</td><td>c.502C&gt;T</td><td>R168X</td><td>—</td></tr><tr><td>G</td><td>移码突变</td><td>4</td><td>c.913insT</td><td>K305fs</td><td>TRD</td></tr></table>
+<details>
+<summary>text_image</summary>
 
-注：MBD 为甲基化 CpG 结合区；TRD 为转录抑制区；CTS为C末端区；－表示功能区以外的区域。
+160
+C C C C T C C C G G ■ C G A G A G C A G A A
+170
+</details>
 
-## 讨论
+图 2 病例 2 基因测序图
 
-RTT是引起女孩智力低下最常见的原因之一，多数为散发，临床上分为典型和非典型两类。RTT患儿一般在 6\~18 个月之前表型基本正常，之后会逐渐表现出智力低下等临床症状[7]。
+![](images/210073eaad421826f0b462238aca6b3eda41dfaf073c58dd65589ecf7bbc676d.jpg)
 
-该病的致病基因MECP2 编码X连锁的甲基化CpG 结合蛋白 -2，是一种高丰度的染色质结合蛋白 [8]。该蛋白共有486个氨基酸，包含2 个主要功能区：即 MBD 和 TRD[9]。MECP2 不仅可以通过调节 DNA 甲基化途径影响甲基化过程，还可以作为转录抑制因子调节基因转录，从而维持与修饰神经元成熟。因此，如果 MECP2 基因产生突变导致其编码的蛋白功能异常，可能对神经系统的生长和发育造成损害[10]。
+<details>
+<summary>text_image</summary>
 
-本研究的 9 例患儿中 5 例 MECP2 基因发生突变，其中 4 例为 C 突变为 T，与国外报道的 80%以上的点突变为C突变为T一致 [11]。
+190
+200
+C C A G G A A A C G G G C C G A A A G C C G G
+C A A G A A A C G G G
+C C A A G A A A C G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+G G G
+A A A A A C C C C
+A A A A A C C C C
+A A A A A C C C C
+A A A A A C C C C
+A A A A A C C C C
+A A A A A C C C C
+A A A A A C C C C
+A A A A A C C C C
+A A A A A C C C C
+A A A A A C C C C
+A A A A A C C C/C
+A A A A A C C C/C
+A A A A A C C C/C
+A A A A A C C C/C
+A A A A A C C C/C
+A A A A A C C C/C
+A A A A A C C C/C
+A A A A A C C C/C
+A A A A A C C C/C
+A A A A A C C C/C
+A A A A A C C C/CGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCCGCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTCCCTTCGCTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTGAAGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTGGGTggTGAGTTCACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAAAGTTCACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAAGTTCACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAACAAAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCATTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCUGTAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTTCAATTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTGTAATTTCAATTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGCTTAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGCATTGTAATTTCAATTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGACTTGCTTAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACCAGTTCACC<nl>
+</details>
 
-患者 A 突变位于 MBD 区域，该区含有 85 个氨基酸，为蛋白质染色质定位所需 [2,9]，该突变可能改变蛋白的二级结构，导致MECP2蛋白与5-甲基胞嘧啶的结合能力下降。患者 D 和 G 突变位于TRD 功能区，该区由 104 个氨基酸组成，它与组蛋白脱乙酰化酶和转录因子 SIN3A 相互作用发挥转录抑制作用 [2,9]。患儿 D 的 MECP2 基因突变以后使得第270位氨基酸由精氨酸变为终止密码子；而患儿 G 的 MECP2 基因外显子 4 插入一个碱基，产生移码突变使从第 305 位氨基酸（赖氨酸）起氨基酸序列改变，并在第 330 位氨基酸处提前终止，这 2 例患儿均产生截短的 MECP2 蛋白。这两个突变可能改变了 TRD 的结构，影响了其转录抑制功能。患儿 B 突变位于 CTS 区域，推测该区域的突变影响 TRD 的功能。患者 F 突变虽不在这几个功能区内，但是该突变使 MECP2 蛋白截短，在 TRD区域前表达终止，因此 F 患者的 MECP2 蛋白功能部分或者全部丧失。
+图 3 病例 3 基因测序图
 
-有研究对北美国际 Rett 数据库（IRSA, http://MECP2.chw.edu.au）中的病例统计分析发现超过80%的RTT患者存在MECP2基因突变，剩余的近20% 突变检测阴性；因此推测可能有其他致病基因。研究发现一些 RTT 患者中细胞周期依懒性激酶样 5 蛋白（CDKL5）存在突变 [11]。接下来本课题组将对 MECP2 突变阴性的患者进行 CDKL5 致病基因的检测。
+![](images/50a26180977d94521c83c26ee3ac677d231ccc612a181d85a2b5ff521fa995f2.jpg)
 
-国内外都有 MECP2 基因突变和 RTT 患儿表型的研究，包括突变类型以及突变位置的不同对患者的影响，但是结论不一致 [12-13]，可能原因是病例数较少及对临床症状的评分标准不同。本研究发现位于 TRD 区域的突变表现出不说话、脑电图癎性放电以及发育明显落后的临床特点，但是本研究病例较少，不能得出肯定结论，将收集更多病例进行统计分析，明确基因型和表型的关系。
+<details>
+<summary>text_image</summary>
 
-综上所述，本研究结果和国内外其他研究组基本一致，MECP2基因检测可帮助临床进行诊断，特别是对于临床症状未显现出来的患儿可以尽早确诊，从而做到早诊断、早干预。
+G A A A A C G G G G C C G A A A G C C G G G
+A G A A A C G G G G C C G A A A G C C G G G
+</details>
 
-## ［参　考　文　献］
+图 4 病例 4 基因测序图
 
-[1] Abhishek B, Jorge C, Mriganka S. Rett syndrome: genes, synapasea, circuits, and therapeutics[J]. Front Psychiatry, 2012, 34(3): 1-13. 
-[2] Amir RE, Van den Vewer IB, Wan M, et al. Rett syndrome is caused by mutations in X-linked MECP2, encoding methyl-CpGbinding protein 2[J]. Nat Genet, 1999, 23(2): 185-188. 
-[3] Weaving LS, Ellaway CJ, Gecz J, et al. RETT syndrome: clinical review and genetic update[J]. J Med Genet, 2005, 42(1): 1-7. 
-[4] 张晶晶 , 包新华 , 曹广娜 , 等 . 中国 Rett 综合征患儿突变基因的亲缘分析 [J]. 中国医学遗传学杂志 , 2010, 27(2): 121-124. 
-[5] Hagberg B, Hanefeld F, Percy A, et al. An update on clinically applicable diagnostic criteria in Rett syndrome[J]. Eur J Paediatric Neurol, 2002, 6(5): 293-297. 
-[6] Mimi Wan, Stephen SJ, Zhang XY, et al. Rett syndrome and beyond: recurrent spontaneous and familial MECP2 mutations at CpG hotspots[J]. Am J Hum Genet, 1999, 65(6): 1520-1529. 
-[7] 李颖杰 , 朱金玲 , 张淑红 , 等 . Rett 综合征的研究进展 [J]. 国际遗传学杂志 , 2007, 30(3): 229-233. 
-[8] 潘虹 , 王艳萍 , 孟洪第 , 等 . Rett 综合征 MECP2 基因突变分析 [J]. 中华医学遗传学杂志 , 2002, 19(4): 276-280. 
-[9] Nan X, Campoy FJ, Bird A. MeCP2 is a transcriptional repressor with abundant binding sites in genomic chromatin[J]. Cell, 1997, 88(4): 471-481. 
-[10] Van den Veyver IB, Zoghbi HY. Methyl-CpG-binding protein 2 mutations in Rett syndrome[J]. Curr Opin Genet Dev, 2000, 10(3): 275-279. 
-[11] Zhang XY, Bao XH, Zhang JJ, et al. Molecular characteristics of Chinese patients with Rett syndrome[J]. Eur J Med Genet, 2012, 55(12): 677-681. 
-[12] 李美蓉 , 潘虹 , 包新华 , 等 . Rett 综合征患儿 MECP2 基因型和表型关系研究 [J]. 中华儿科杂志 , 2009, 47(2): 124-128. 
-[13] Schanen C, Houwink EJ, Dorrani N, et al. Phenotypic manifestations of MECP2 mutation in classical an atypic Rett syndrome[J]. Am J Med Genet, 2004, 126(2): 129-140.
+![](images/b5cd7c2520a9b26a0d318745887a45379ad856d4c3ca50a1f86f2b0df7cac49c.jpg)
 
-（本文编辑：万静）
+<details>
+<summary>bar chart</summary>
+
+| 类别 | 数值 |
+|---|---|
+| 正常样本女 | 1.0 |
+| 黄淑菲-1144 | 1.5 |
+</details>
+
+图 5 病例 5 QPCR 验证结果
+
+## 2.2 诊断
+
+根据 2010 年修订版 RTT 诊断标准，同时结合患儿的临床特征及基因突变分析（见表 2），病例 1\~4 诊断为经典型 RTT。病例 5 临床特征与 RTT 有重叠，但通过基因突变分析，诊断为 MECP2 重复综合征（methyl-CpG-binding protein 2 duplication syndrome，MDS）。女性 MDS患者临床特征高度可变，常不具有男性患者的经典特征（见表 3）。
+
+表 2 病例 1-4 临床特征及诊断标准
+
+<table><tr><td>临床表现</td><td>病例1</td><td>病例2</td><td>病例3</td><td>病例4</td></tr><tr><td>A1 手功能部分或完全丧失</td><td>+</td><td>+</td><td>+</td><td>+</td></tr><tr><td>A2 语言功能部分或完全丧失</td><td>+</td><td>+</td><td>+</td><td>+</td></tr><tr><td>A3 运动功能障碍或完全丧失</td><td>+</td><td>+</td><td>+</td><td>+</td></tr><tr><td>A4 手的刻板动作</td><td>+</td><td>+</td><td>+</td><td>+</td></tr><tr><td>B1 神经系统损伤</td><td>-</td><td>-</td><td>-</td><td>-</td></tr><tr><td>B2 生后6个月内全面精神、运动发育迟缓</td><td>-</td><td>-</td><td>-</td><td>-</td></tr><tr><td>C1 呼吸异常</td><td>-</td><td>-</td><td>-</td><td>-</td></tr><tr><td>C2 磨牙</td><td>+</td><td>-</td><td>+</td><td>-</td></tr><tr><td>C3 睡眠节律紊乱</td><td>-</td><td>+</td><td>-</td><td>+</td></tr><tr><td>C4 肌张力异常</td><td>+</td><td>-</td><td>-</td><td>-</td></tr><tr><td>C5 周围血管舒缩障碍</td><td>-</td><td>-</td><td>-</td><td>-</td></tr><tr><td>C6 脊柱侧凸或后凸</td><td>-</td><td>-</td><td>-</td><td>-</td></tr><tr><td>C7 生长迟缓</td><td>-</td><td>+</td><td>+</td><td>-</td></tr><tr><td>C8 手足厥冷、细小</td><td>-</td><td>-</td><td>-</td><td>-</td></tr><tr><td>C9 不合时宜发笑、尖叫</td><td>+</td><td>-</td><td>-</td><td>+</td></tr><tr><td>C10 痛觉敏感性降低</td><td>-</td><td>+</td><td>-</td><td>+</td></tr><tr><td>C11 眼神交流强烈</td><td>-</td><td>-</td><td>-</td><td>-</td></tr></table>
+
+注：A1-A4 为主要标准，B1-B2 为排除标准，C1-C11 为支持标准。“+”表示阳性体征，“–”表示阴性体征。
+
+表 3 本女性 MDS 患者与男性 MDS 患者表型的比较
+
+<table><tr><td>临床表现</td><td>本女性 MDS 患者</td><td>男性 MDS 患者表型(重-极重度)[3]</td></tr><tr><td>智力残疾/发育迟缓</td><td>+</td><td>+</td></tr><tr><td>语言障碍</td><td>+</td><td>+</td></tr><tr><td>自闭症或自闭症特征</td><td>+</td><td>+</td></tr><tr><td>婴儿肌张力减退</td><td>+</td><td>+</td></tr><tr><td>癫痫</td><td>-</td><td>+/-</td></tr><tr><td>发育倒退</td><td>-</td><td>+</td></tr><tr><td>反复感染</td><td>-</td><td>+/-</td></tr><tr><td>肠道和膀胱功能障碍</td><td>-</td><td>+/-</td></tr><tr><td>畸形特征</td><td>-</td><td>+</td></tr></table>
+
+## 3 讨论
+
+RTT 是女性智力发育迟缓的常见的遗传性疾病，发病率约为 1/10 万，临床上分为典型和非典型两类。其诊断是基于临床标准，典型 RTT 的临床特点是 6\~18 个月相对正常的发育过程，随后出现一段快速退化期，表现为语言和运动技能的丧失、手部刻板动作、头部生长减速、癫痫、共济失调、呼吸异常、睡眠障碍、磨牙、咀嚼困难和自闭症样症状等，之后是平稳期和晚期运动退化阶段[4]。
+
+本研究中 4 例 RTT 患儿检测出 MECP2 基因编码区突变，包括错义突变、无义突变、移码突变，致病性均有文献报道。MECP2 基因编码区突变导致了 96%的经典RTT病例，人类基因突变数据库中已经鉴定出555个RTT相关的 MECP2 突变[5]，这些突变会导致 MeCP2 功能的丧失。MeCP2 在维持神经元成熟、活性及可塑性方面发挥重要作用。一小部分非典型RTT可能与CDKL5 FOXG1基因突变相关[6]。
+
+国内外都有 RTT 患儿 MECP2 基因突变和表型相关性的研究[7]，包括突变类型、突变位置不同对患者的影响，但结论不一，可能因评分标准不同、样本量差异、年龄因素等影响。然而，与其他突变组（R133C、R294X、R306X和C末端截断）相比，一些突变（早期截断突变，如R168X、R255X 和 R270X，大量缺失和特定点突变，如 R106W）的严重程度增加[8]。本研究样本量少，不能得出相关结论。
+
+病例 5 的临床特征与 RTT 有部分重叠，通过拷贝数变异验证发现 Xq28 区域存在重复变异，重复区域大小为0.299 Mb，其区域内包含 FLNA，IRAK1，OPN1MW2，TKTL1 ， OPN1LW ， OPN1MW3 ， TEX28 ， OPN1MW ，MIR718、MECP2 基因。既往报道的 Xq28 重复在大小和位置上有所不同，但大多数是染色体内重复，范围为0.3\~2.3 Mb，其中 MECP2 基因是导致严重表型的关键剂量敏感基因。MECP2 基因功能的缺失与 RTT 相关，但位点的重复会导致另一种独特但又相关的神经发育障碍，即 MDS，主要影响男性，世界各地已报道了近 200 例MDS[9]。这些患者表现为肌张力减退、严重精神运动发育迟缓、语言受限或缺乏、自闭症特征以及反复呼吸道感染。女性由于高度倾斜的 X 染色体失活和优先失活携带重复变异的 X 染色体通常不受影响，或仅具有很轻微的临床表型。然而，Reardon 等[10]认为 X 染色体失活比率低于 70∶30 时，女性患者就可能出现相应的临床表现。
+
+MDS 女性患者的临床特征都是高度可变的，包括非特异性的轻到中度智力迟钝，并结合不同的症状（自闭症特征、儿童早期反复感染、便秘和晚发性神经系统特征），本病例与男性典型临床特征也具差异性，可能是由于突变的类型、基因含量、X 失活模式和其他遗传与环境因素影响。Novara 等[11]报道了三名 MDS 女性患者，各患者均存在轻度至中度认知障碍，并伴有学习困难和言语迟缓，不伴有刻板重复行为。其中 2 例病例有轻微的面部畸形特征：宽鼻梁、凸颌、轻度眼距过远。脑电图和颅脑 MRI 无特异性表现。Scott 等[3]报道了一名癫痫控制困难、智力残疾和性情快乐、无发育倒退的 25 岁女性，基因突变分析发现 X 染色体 q 臂存在重复区域，涉及以下基因：IRAK1 MECP2 OPN1LW OPN1MWOPN1MW2 TEX28 TKTL1，与本病例存在 6 个基因位点的重复，但与本病例具有明显不同的表型特征。可能与基因在神经元中的差异性表达有关。Bijlsma 等[12-13]报道 1 例发现了三拷贝女性 MDS，该女孩表现为严重智力迟钝、癫痫发作，但没有其他症状，比两拷贝基因患者临床症状更严重，说明 MECP2 基因拷贝数与临床症状相关。
+
+MECP2 被认为是神经表型中的关键因素，然而区域中的其他基因可能存在相互调控，共同参与致病。本区域中其他基因描述：IRAK1 参与细胞免疫，在 MDS 男性患者中已有免疫缺陷报道：OPN1LW OPN1MW 与色觉相关，并与夜盲症有关；FLNA 与肠道假性梗阻和先天性巨结肠有关[9]。患者的突变来源可为新发，父亲或母亲来源均有报道[14]。
+
+RTT 和 MDS 是具有共同和独特特征的发育性脑病。Cutri-French 等[15]对类 RTT 相关疾病的临床特征进行横断面比较发现，MDS 在临床严重程度评分均较低，与经典型 RTT 有显著差异。经典型 RTT 出现发育倒退的中位年龄为 18 个月，MDS 的倒退中位年龄为 36 个月，虽两者无显著差异，但 MDS 有后期倒退趋势。MDS 癫痫发作中位年龄较大（64 个月），严重程度评分最低，经典型 RTT 患者发作中位年龄为 47.5 个月。在经典 RTT 中，最常见的癫痫发作类型是全身性癫痫发作（26.9%）、强直性阵挛性癫痫发作（15.1%）和复杂的部分癫痫发作（13.6%）。在 MDS 中，全身性癫痫发作（22.5%）、强直性阵挛性癫痫发作（22.5%）和弛缓性癫痫发作（14.3%）是最常见报道。在 MDS 中，小头围与疾病的严重程度和癫痫早发具有相关性。此外 MDS 表现出更严重的自闭症特征，后发的难治性癫痫发作和反复的呼吸道感染。本MDS 病例在就诊时表现明显的自闭症特征，还未出现癫痫发作，可能与年龄尚小，而 MDS 癫痫具有后发性有关。虽然两种疾病存在相似性，但显著的发育、临床和遗传差异值得将它们作为不同的疾病来考虑。
+
+综上，具有 RTT 样表型的遗传性疾病中，可能存在多种基因突变形式，基于临床的诊断可能具有误导性，应将基因诊断作为重要的辅助诊断标准，将遗传疾病的临床定义转向疾病的分子或生物学定义。虽然这类疾病具有相似性，但发育、临床和遗传差异值得将它们作为不同的疾病来考虑。我们应基于不同的诊断结果，给予更精准的个体化治疗方案和遗传咨询。
+
+## 参 考 文 献
+
+[1] Pejhan S, Rastegar M. Role of DNA methyl-CpG-binding protein MeCP2 in Rett syndrome pathobiology and mechanism of disease[J]. Biomolecules, 2021, 11(1): 75. 
+[2] Vidal S, Xiol C, Pascual-Alonso A, et al. Genetic landscape of Rett syndrome spectrum: Improvements and challenges[J]. Int J Mol Sci, 2019, 20(16): 3925. 
+[3] Scott SJ, Laffin J, Haun J, et al. MECP2 duplication: Possible cause of severe phenotype in females[J]. Am J Med Genet A, 2014, 164A(4): 1029-1034. 
+[4] Pecorelli A, Cordone V, Schiavone ML, et al. Altered bone status in Rett syndrome[J]. Life (Basel), 2021, 11(6): 521. 
+[5] Kyle SM, Vashi N, Justice MJ. Rett syndrome: A neurological disorder with metabolic components[J]. Open Biol, 2018, 8(2): 170216. 
+[6] Wang J, Zhang Q, Chen Y, et al. Rett and Rett-like syndrome: Expanding the genetic spectrum to KIF1A and GRIN1 gene[J]. Mol Genet Genomic Med, 2019, 7(11): e968. 
+[7] Frullanti E, Papa FT, Grillo E, et al. Analysis of the phenotypes 
+in the Rett networked database[J]. Int J Genomics, 2019, 2019: 6956934. 
+[8] Fu C, Armstrong D, Marsh E, et al. Consensus guidelines on managing Rett syndrome across the lifespan[J]. BMJ Paediatr Open, 2020, 4(1): e717. 
+[9] Yi Z, Pan H, Li L, et al. Chromosome Xq28 duplication encompassing MECP2: Clinical and molecular analysis of 16 new patients from 10 families in China[J]. Eur J Med Genet, 2016, 59(6-7): 347-353. 
+[10] Reardon W, Donoghue V, Murphy A M, et al. Progressive cerebellar degenerative changes in the severe mental retardation syndrome caused by duplication of MECP2 and adjacent loci on Xq28[J]. Eur J Pediatr, 2010,169(8):941-949. 
+[11] Novara F, Simonati A, Sicca F, et al. MECP2 duplication phenotype in symptomatic females: Report of three further cases[J]. Mol Cytogenet, 2014, 7(1): 10. 
+[12] Bijlsma EK, Collins A, Papa FT, et al. Xq28 duplications including MECP2 in five females: Expanding the phenotype to severe mental retardation[J]. Eur J Med Genet, 2012, 55(6-7): 404-413. 
+[13] Peters SU, Fu C, Suter B, et al. Characterizing the phenotypic effect of Xq28 duplication size in MECP2 duplication syndrome[J]. Clin Genet, 2019, 95(5): 575-581. 
+[14] Grasshoff U, Bonin M, Goehring I, et al. De novo MECP2 duplication in two females with random X-inactivation and moderate mental retardation[J]. Eur J Hum Genet, 2011, 19(5): 507-512. 
+[15] Cutri-French C, Armstrong D, Saby J, et al. Comparison of core features in four developmental encephalopathies in the Rett natural history study[J]. Ann Neurol, 2020, 88(2): 396-406.
+
+收稿日期：2022-12-06

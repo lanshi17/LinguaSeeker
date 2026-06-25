@@ -1,6 +1,6 @@
 {
   "unified_id": "gs_131",
-  "original_entry_id": "rett_055",
+  "original_entry_id": "rett_062",
   "source_dataset": "rett",
   "gold_source": "article",
   "annotation_provenance": "ai_auto_review",
@@ -19,19 +19,24 @@
   "source_pmc": "",
   "source_pdf_url": "",
   "source_pdf_path": "benchmark/data/ground_truth/unified/gs_131/source.pdf",
-  "source_title": "Rett 症候群の病態理解 —病因遺伝子（MECP2，CDKL5，FOXG1）変異に関連した臨床的特徴について—",
-  "source_journal": "",
+  "source_title": "レット症候群：自閉性障害をもつ特異な発達障害",
+  "source_journal": "SRL宝函",
   "source_year": "2013",
   "source_language": "ja",
   "variants": [
     {
       "source": "rett",
-      "hgvs_c": "c.880C>T",
-      "hgvs_p": "p.Arg294X",
-      "variant_type": "nonsense",
+      "hgvs_p": "p.Arg133Cys",
+      "variant_type": "missense",
       "clinical_significance": "pathogenic",
-      "exon": "4",
-      "domain": "TRD"
+      "domain": "MBD"
+    },
+    {
+      "source": "rett",
+      "hgvs_p": "p.Ala140Val",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic",
+      "domain": "MBD"
     }
   ],
   "expected_evidence": [
@@ -64,64 +69,66 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "A.variant_hgvs_c",
-      "value": "c.880C>T",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.Arg294X",
-      "candidates": [],
+      "value": "p.Arg133Cys",
+      "candidates": [
+        "p.Arg133Cys",
+        "p.Ala140Val"
+      ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_type",
-      "value": "nonsense",
-      "candidates": [],
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense"
+      ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "TRD",
-      "candidates": [],
+      "value": "MBD",
+      "candidates": [
+        "MBD",
+        "MBD"
+      ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0002072; HP:0001250; HP:0000252; HP:0001252; HP:0001344; HP:0001263; HP:0012759; HP:0003763; HP:0002360; HP:0002650; HP:0004322; HP:0012171; HP:0000568",
+      "value": "HP:0000252; HP:0000253; HP:0002072; HP:0002376; HP:0001250; HP:0001252; HP:0001251; HP:0012759; HP:0000756; HP:0002650; HP:0004322; HP:0000568; HP:0002360; HP:0003763; HP:0011968; HP:0002019; HP:0012171; HP:0001263; HP:0001249; HP:0001257; HP:0001344; HP:0001371",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "回復期・安定期が後続する神経症状の退行（発達退行）; 獲得した手の合目的運動の消失; 手もみ様の常同運動; てんかん（患者の60～90%に合併、多くは3～10歳に発症）; 生後の頭囲発育遅延・小頭症; 乳児期早期の筋緊張低下; 音声言語の習得後の喪失（言語退行）; 精神運動発達の停滞・発達遅滞; 歩行の異常（歩行障害、歩行失行）; 覚醒時の呼吸異常; 覚醒時の歯ぎしり（ブラキシズム）; 睡眠リズム障害; 側弯・前弯; 成長障害; 小さく冷たい手足; 斜視（先天型FOXG1で多い）",
+      "value": "出生後の頭囲成長減速による後天性・進行性小頭症; 手の常同運動（手もみ・手をねじる・手叩き・口に入れる）; 獲得した手の合目的的運動機能および音声言語機能の退行; てんかん（全般性強直間代発作、複雑部分発作、非定型欠神発作、無呼吸発作）; 乳児期の筋緊張低下; 失調性歩行・歩行障害; 呼吸異常（過呼吸、無呼吸、息止め）; 自閉的行動・自閉症状; 進行性側彎などの骨格変形; 成長障害・体重増加不良; 内斜視; 睡眠リズム障害; 歯ぎしり; 嚥下・摂食障害; 便秘・機能的巨大結腸; 冷たい小さな手足（末梢血管運動障害）; 精神運動発達遅滞; 知的障害; 痙性・筋強直; ジストニア・拘縮",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.sex",
-      "value": "主に女児（female）",
+      "value": "female (predominantly; rare male cases with Klinefelter syndrome or somatic mosaicism)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "生後6～18カ月まで一見正常に発達し、その後乳児期後期から幼児期に退行が出現",
+      "value": "infancy (apparent regression typically after 6-18 months; major features by ~3 years)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo（患者の99%以上が散発例で発端者のみに変異がみられる突然変異に起因。稀に生殖細胞モザイクや保因者母からの遺伝あり）",
+      "value": "unknown",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -142,7 +149,10 @@
     },
     "variants": [
       {
-        "text": "c.880C>T"
+        "text": "p.Arg133Cys"
+      },
+      {
+        "text": "p.Ala140Val"
       }
     ]
   },

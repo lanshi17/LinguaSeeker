@@ -1,13 +1,13 @@
 {
   "unified_id": "gs_135",
-  "original_entry_id": "rett_067",
+  "original_entry_id": "rett_068",
   "source_dataset": "rett",
   "gold_source": "article",
   "annotation_provenance": "ai_auto_review",
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome",
+  "disease_label": "congenital variant-like Rett syndrome",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "classification": "Rett real-data",
@@ -19,111 +19,18 @@
   "source_pmc": "",
   "source_pdf_url": "",
   "source_pdf_path": "benchmark/data/ground_truth/unified/gs_135/source.pdf",
-  "source_title": "Mutational Analysis of MECP2 Gene in 34 Rett Syndrome",
-  "source_journal": "Journal of the Korean Pediatric Society (J Korean Pediatr Soc 2002;45:1263-1272)",
-  "source_year": "2002",
-  "source_language": "ko",
+  "source_title": "Hypoventilation and sleep hypercapnia in a case of congenital variant-like Rett syndrome",
+  "source_journal": "",
+  "source_year": "2022",
+  "source_language": "en",
   "variants": [
     {
       "source": "rett",
-      "hgvs_c": "c.298C>G",
-      "hgvs_p": "p.L100V",
-      "variant_type": "missense",
-      "clinical_significance": "novel (first identified in this study)",
-      "exon": "Exon 3",
-      "domain": "MBD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.397C>T",
-      "hgvs_p": "p.R133C",
-      "variant_type": "missense",
-      "exon": "Exon 4",
-      "domain": "MBD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.468C>G",
-      "hgvs_p": "p.D156E",
-      "variant_type": "missense",
-      "exon": "Exon 4",
-      "domain": "MBD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.473C>T",
-      "hgvs_p": "p.T158M",
-      "variant_type": "missense",
-      "clinical_significance": "high frequency (11.8%)",
-      "exon": "Exon 4",
-      "domain": "MBD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.482G>A",
-      "hgvs_p": "p.G161E",
-      "variant_type": "missense",
-      "clinical_significance": "novel (first identified in this study)",
-      "exon": "Exon 4",
-      "domain": "MBD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.502C>T",
-      "hgvs_p": "p.R168X",
-      "variant_type": "nonsense",
-      "exon": "Exon 4"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.602C>T",
-      "hgvs_p": "p.A201V",
-      "variant_type": "missense",
-      "exon": "Exon 4",
-      "domain": "TRD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.763C>T",
-      "hgvs_p": "p.R255X",
-      "variant_type": "nonsense",
-      "exon": "Exon 4",
-      "domain": "TRD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.808C>T",
-      "hgvs_p": "p.R270X",
-      "variant_type": "nonsense",
-      "clinical_significance": "high frequency (11.8%)",
-      "exon": "Exon 4",
-      "domain": "TRD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.916C>T",
-      "hgvs_p": "p.R306C",
-      "variant_type": "missense",
-      "clinical_significance": "high frequency (8.8%)",
-      "exon": "Exon 4",
-      "domain": "TRD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.932C>T",
-      "hgvs_p": "p.T311M",
-      "variant_type": "missense",
-      "clinical_significance": "novel (first identified in this study; located in 3'-UTR region)",
-      "exon": "Exon 4",
-      "domain": "3'-UTR"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.965C>T",
-      "hgvs_p": "p.P322L",
-      "variant_type": "missense",
-      "exon": "Exon 4",
-      "domain": "NCoR/SMRT"
+      "hgvs_c": "c.396_397insA",
+      "hgvs_p": "p.Arg133fsTer2",
+      "variant_type": "insertion (frameshift/truncating)",
+      "clinical_significance": "pathogenic (novel, never reported in dbSNP, 1000 Genomes, ExAC, gnomAD)",
+      "domain": "MBD (aa 78-162)"
     }
   ],
   "expected_evidence": [
@@ -136,7 +43,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome",
+      "value": "congenital variant-like Rett syndrome",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -157,91 +64,42 @@
     },
     {
       "field_id": "A.variant_hgvs_c",
-      "value": "c.298C>G",
-      "candidates": [
-        "c.298C>G",
-        "c.397C>T",
-        "c.468C>G",
-        "c.473C>T",
-        "c.482G>A",
-        "c.502C>T",
-        "c.602C>T",
-        "c.763C>T",
-        "c.808C>T",
-        "c.916C>T",
-        "c.932C>T",
-        "c.965C>T"
-      ],
+      "value": "c.396_397insA",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.L100V",
-      "candidates": [
-        "p.L100V",
-        "p.R133C",
-        "p.D156E",
-        "p.T158M",
-        "p.G161E",
-        "p.R168X",
-        "p.A201V",
-        "p.R255X",
-        "p.R270X",
-        "p.R306C",
-        "p.T311M",
-        "p.P322L"
-      ],
+      "value": "p.Arg133fsTer2",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_type",
-      "value": "missense",
-      "candidates": [
-        "missense",
-        "missense",
-        "missense",
-        "missense",
-        "missense",
-        "nonsense",
-        "missense",
-        "nonsense",
-        "nonsense",
-        "missense",
-        "missense",
-        "missense"
-      ],
+      "value": "insertion (frameshift/truncating)",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD",
-      "candidates": [
-        "MBD",
-        "MBD",
-        "MBD",
-        "MBD",
-        "MBD",
-        "TRD",
-        "TRD",
-        "TRD",
-        "3'-UTR"
-      ],
+      "value": "MBD (aa 78-162)",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0002072; HP:0001250; HP:0000253; HP:0001251; HP:0000756; HP:0012759; HP:0004322; HP:0001252; HP:0001344",
+      "value": "HP:0001252; HP:0001263; HP:0002194; HP:0002650; HP:0011968; HP:0000756; HP:0012759",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "developmental regression after 6-18 months of relatively normal development; stereotypic hand movements (hand-wringing); tremors; gait apraxia; seizures (present in 58.8%); EEG abnormalities (87.5% of those tested); deceleration of head growth; ataxic cerebral palsy; autistic features; abnormal breathing pattern (hyperventilation and/or apnea); growth retardation (especially hands and feet); mild hypotonia in early developmental stage; loss of acquired purposeful hand skills; loss of language/speech (vocabulary limited to 4-5 words at most); loss of cognitive and motor abilities",
+      "value": "severe central/axial hypotonia present at birth; neurodevelopmental impairment / psychomotor delay; poor head control and impaired hand grip (delayed motor development); precocious scoliosis (T4-L1 Cobb angle 26°); reduced weight gain and recurrent emesis (feeding difficulties); autistic behaviours / poor eye contact and social impairment; sleep hypoventilation, central apneas, persistent periodic breathing, and sleep hypercapnia; poorly-organized EEG with diffuse irritating signals",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -255,14 +113,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "6-18 months (regression onset); parents first noticed abnormality at mean 14 months; characteristic hand stereotypies recognized at mean 21.8 months",
+      "value": "at birth (neonatal/congenital onset)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "sporadic (all 34 cases sporadic; sporadic RTT typically arises de novo)",
+      "value": "de novo",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -278,45 +136,12 @@
       "hgnc_id": "HGNC:6992"
     },
     "disease": {
-      "text": "Rett syndrome",
+      "text": "congenital variant-like Rett syndrome",
       "mondo_id": "MONDO:0010726"
     },
     "variants": [
       {
-        "text": "c.298C>G"
-      },
-      {
-        "text": "c.397C>T"
-      },
-      {
-        "text": "c.468C>G"
-      },
-      {
-        "text": "c.473C>T"
-      },
-      {
-        "text": "c.482G>A"
-      },
-      {
-        "text": "c.502C>T"
-      },
-      {
-        "text": "c.602C>T"
-      },
-      {
-        "text": "c.763C>T"
-      },
-      {
-        "text": "c.808C>T"
-      },
-      {
-        "text": "c.916C>T"
-      },
-      {
-        "text": "c.932C>T"
-      },
-      {
-        "text": "c.965C>T"
+        "text": "c.396_397insA"
       }
     ]
   },

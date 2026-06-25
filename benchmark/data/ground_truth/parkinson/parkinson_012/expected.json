@@ -15,112 +15,398 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Parkinson disease",
+      "field_id": "A.gene_disease_relationship",
+      "value": "GBA mutations have been associated with Parkinson's disease in numerous studies; established in patients with two GBA alleles (Gaucher disease) and in single-mutation carriers (heterozygotes)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_legacy_name",
+      "value": "N370S; L444P; 84GG; R496H; E326K; T369M; G2019S (LRRK2)",
       "candidates": [
-        "Parkinson disease",
-        "Parkinson's disease"
+        "N370S",
+        "L444P",
+        "84GG",
+        "R496H",
+        "E326K",
+        "T369M",
+        "G2019S (LRRK2)"
       ],
       "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.gene_disease_relationship",
-      "value": "associated",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.variant_hgvs_p",
-      "value": "LRRK2 G2019S",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.variant_hgvs_p",
-      "value": "N370S",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.variant_hgvs_p",
-      "value": "L444P",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.variant_hgvs_p",
-      "value": "G241R",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.variant_hgvs_p",
-      "value": "84GG",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.variant_hgvs_p",
-      "value": "R496H",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.variant_hgvs_p",
-      "value": "E326K",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.variant_hgvs_p",
-      "value": "T369M",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.variant_hgvs_p",
-      "value": "G2019S;LRRK2",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "A.variant_hgvs_p",
-      "value": "IVS2+1",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "AR",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
+      "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_type",
-      "value": "missense, splice_site",
+      "value": "Missense (e.g. N370S, L444P, R496H); 84GG and other GBA mutations/variants",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "Mutations lead to reduction in glucocerebrosidase enzymatic activity; N370S retains 30% of enzymatic activity",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.identity_by_descent_variant",
+      "value": "Up to 6% of Ashkenazi Jews are carriers of GBA mutations; N370S is the most common Gaucher mutation in Ashkenazi Jews; LRRK2 G2019S is the most common autosomal dominant mutation in the Ashkenazi Jewish population",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "517 Parkinson's disease patients",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Parkinson's disease",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "parkinsonism; tremor; dementia",
+      "value": "Parkinson's disease (UK Parkinson's Disease Brain Bank criteria); assessed with UPDRS and Montreal Cognitive Assessment",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.biochemical_markers",
+      "value": "Glucocerebrosidase enzymatic activity in dried blood spots (mmol/l/h)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "Patients with Parkinson's disease were more likely to be male than controls (by design, spouse controls)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.ancestry_or_population",
+      "value": "Mixed cohort with assessment of Ashkenazi Jewish ancestry; patients and controls similar in Ashkenazi Jewish ancestry",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "LRRK2 G2019S described as autosomal dominant mutation",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "Cases defined by UK Parkinson's Disease Brain Bank criteria (family history not excluded); sensitivity analysis excluded onset <=40 years to remove potential parkin (PARK2)/PINK1 cases that were not tested",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.additional_pathogenic_variant",
+      "value": "All participants genotyped for LRRK2 G2019S mutation",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Genotyping for 10 GBA mutations/variants and LRRK2 G2019S, followed by full sequencing of the GBA gene in all patients and controls",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sequencing_method_quality",
+      "value": "DNA extracted by salting-out; PCR with AmpliTaq Gold; Sanger sequencing on 3730XL DNA Analyzer; chromatograms analysed with Genalys 3.3b; sequencing success rate 96%; all mutations detected by screening replicated by sequencing",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.phase_status",
+      "value": "For Parkinson's disease cases with compound heterozygote GBA mutations/variants, family members were analysed to confirm whether mutations were in cis (same allele) or trans (opposite allele)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.in_trans_confirmation",
+      "value": "Compound heterozygote phase confirmed via family member analysis",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.cis_or_trans_context",
+      "value": "Cis (same allele) versus trans (opposite allele) determined by family analysis for compound heterozygotes",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "D.homozygote_count",
+      "value": "Seven GBA homozygotes and compound heterozygotes among Parkinson's disease patients",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.population_subgroup",
+      "value": "Ashkenazi Jewish",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.healthy_carrier_observation",
+      "value": "Among controls, 17 GBA heterozygotes (6.7% of 252); 35.2% (6 of 17) of control GBA carriers reported at least one Ashkenazi Jewish grandparent; up to 6% of Ashkenazi Jews are GBA carriers",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "F.assay_type",
+      "value": "Glucocerebrosidase enzymatic activity assay (lysosomal enzyme activity)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.assay_system",
+      "value": "Dried blood spots; mass spectrometry-based (tandem MS/MS) multiplex assay measuring glucocerebrosidase and four additional lysosomal enzymes; API 4000 triple quadrupole mass spectrometer with Multiple Reaction Monitoring",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.tested_variant",
+      "value": "N370S; L444P; 84GG; R496H; E326K; T369M; G2019S (LRRK2)",
+      "candidates": [
+        "N370S",
+        "L444P",
+        "84GG",
+        "R496H",
+        "E326K",
+        "T369M",
+        "G2019S (LRRK2)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.functional_result",
+      "value": "Lower glucocerebrosidase enzymatic activity strongly associated with GBA mutations and modestly with idiopathic Parkinson's disease; GBA homozygotes/compound heterozygotes < GBA heterozygotes < non-carriers; LRRK2 G2019S carriers had higher activity than non-carriers",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.quantitative_result",
+      "value": "Homozygotes/compound heterozygotes 0.85 mmol/l/h vs heterozygotes 7.88 mmol/l/h (P<0.001); heterozygotes 7.88 vs non-carriers 11.93 mmol/l/h (P<0.001); all PD 11.14 vs controls 11.85 mmol/l/h (P=0.011); idiopathic PD 11.53 vs controls 12.11 mmol/l/h (P=0.036); LRRK2 G2019S carriers 13.69 vs non-carriers 11.93 mmol/l/h (P=0.002); per-mutation reductions N370S P<0.001, L444P P<0.001, 84GG P=0.003, R496H P=0.018, E326K P=0.009, T369M P<0.001",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.positive_controls",
+      "value": "Disease positive samples included in each plate for quality control",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.negative_controls",
+      "value": "Blank filter paper background activity subtracted from dried blood spot activity",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.control_quality",
+      "value": "Two quality control samples with previously established activity levels for each enzyme included on each plate; each batch included at least three replicates of two quality control samples with established activity ranges; sample activity normalized to mean of QC samples from same run",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.replicates_or_statistics",
+      "value": "Student t-test, ANOVA, chi-square, Fisher's exact test, Pearson correlation, logistic regression; P values reported; activity normalized to batch QC controls",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.patient_cell_evidence",
+      "value": "Glucocerebrosidase enzymatic activity measured directly in patient dried blood spots (whole blood)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.physiologic_context",
+      "value": "Patient-derived material (dried blood spots / whole blood)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.declared_disease_mechanism",
+      "value": "Loss of glucocerebrosidase function proposed to contribute to pathogenesis of Parkinson's disease; high activity in LRRK2 G2019S carriers may reflect a distinct pathogenic mechanism",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.molecular_consequence",
+      "value": "Reduced enzymatic activity (e.g. N370S retains 30% activity)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.disease_mechanism_consistency",
+      "value": "Reduced glucocerebrosidase enzymatic activity consistent with proposed loss-of-function mechanism",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.assay_validation_method",
+      "value": "Validated dried blood spot methodology (Zhang et al., 2008) clinically approved to screen for Gaucher disease; Genzyme scientists blinded to Parkinson's disease and genetic status",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.study_design",
+      "value": "Case-control comparison of Parkinson's disease patients and non-blood related controls (mostly spouses) from Columbia University Medical Center",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_count",
+      "value": "517",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.control_count",
+      "value": "252",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_definition",
+      "value": "Parkinson's disease per United Kingdom Parkinson's Disease Brain Bank criteria (cases with family history not excluded)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.control_matching",
+      "value": "Non-blood related controls, mostly spouses; patients and controls similar in age, education and Ashkenazi Jewish ancestry; patients more likely male by design",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.variant_count_cases",
+      "value": "GBA mutations/variants 17.0% (88: seven homozygotes/compound heterozygotes and 81 heterozygotes); LRRK2 G2019S 7.5% (39)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.variant_count_controls",
+      "value": "GBA 6.7% (17 heterozygotes); LRRK2 G2019S 0.8% (2)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.p_value",
+      "value": "GBA mutations/variants P<0.001; LRRK2 G2019S P<0.001; glucocerebrosidase activity PD vs controls P=0.011 (idiopathic PD P=0.036; adjusted P=0.012)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.statistical_method",
+      "value": "Student t-test, chi-square test, Fisher's exact test, ANOVA, Pearson correlation, logistic regression (SPSS Statistics v19.0)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.detection_methodology_quality",
+      "value": "Evaluation of Parkinson's cases and controls was identical; all participants fully sequenced for GBA and genotyped for LRRK2 G2019S; Genzyme scientists blinded to disease and genetic status",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.bias_confounding_factors",
+      "value": "Spouse controls leading to sex imbalance (patients more likely male); analyses adjusted for age and gender",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.healthy_carrier_contradiction",
+      "value": "Most GBA homozygotes and compound heterozygotes (Gaucher disease patients) will never develop Parkinson's disease despite diminished glucocerebrosidase enzymatic activity, suggesting an additional mechanism",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "GBA encodes the lysosomal enzyme glucocerebrosidase, a glucosylceramide hydrolase that plays an important role in sphingolipid degradation, especially in the macrophage/monocyte cell lineage; diminished activity in Gaucher disease causes glucocerebroside accumulation in spleen, liver and bone marrow",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_expression_pattern",
+      "value": "Lysosomal enzyme; activity prominent in macrophage/monocyte cell lineage",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.functional_alteration_patient_cells",
+      "value": "Reduced glucocerebrosidase enzymatic activity in GBA mutation carriers' blood; prior report of increased cytosolic reactive oxygen species in fibroblasts from GBA heterozygotes with and without Parkinson's disease (McNeill et al., 2014)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.experimental_replication",
+      "value": "All GBA mutations detected by screening were replicated by full sequencing",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.known_pathogenic_variant_reference",
+      "value": "N370S linked to Type 1 (non-neuronopathic) Gaucher disease; GBA mutations previously associated with Gaucher disease",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
     }
   ],
   "expected_entities": {
@@ -136,5 +422,105 @@
     "disease": "MONDO:0005180",
     "gene": "GBA"
   },
-  "notes": "Converted from parkinson_literature dataset, PMID 26117366"
+  "notes": "Converted from parkinson_literature dataset, PMID 26117366",
+  "variants": [
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic GBA mutation (Gaucher disease, Type 1); associated with Parkinson's disease",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "Retains 30% of glucocerebrosidase enzymatic activity; milder mutation",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": "",
+      "source": "article"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic GBA mutation; associated with Parkinson's disease",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "Reduced glucocerebrosidase enzymatic activity",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": "",
+      "source": "article"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "other",
+      "clinical_significance": "severe GBA mutation; higher Parkinson's disease risk",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "Reduced glucocerebrosidase enzymatic activity; classified as 'severe' mutation",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": "",
+      "source": "article"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "missense",
+      "clinical_significance": "GBA mutation; associated with Parkinson's disease",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "Reduced glucocerebrosidase enzymatic activity",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": "",
+      "source": "article"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "other",
+      "clinical_significance": "GBA variant associated with Parkinson's risk but not Gaucher disease",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "Reduced glucocerebrosidase enzymatic activity",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": "",
+      "source": "article"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "other",
+      "clinical_significance": "GBA variant associated with Parkinson's risk but not Gaucher disease",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "Reduced glucocerebrosidase enzymatic activity",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": "",
+      "source": "article"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "hgvs_g": "",
+      "variant_type": "missense",
+      "clinical_significance": "LRRK2 G2019S; most common autosomal dominant Parkinson's mutation in Ashkenazi Jewish population",
+      "exon": "",
+      "domain": "",
+      "protein_effect": "Higher glucocerebrosidase enzymatic activity in carriers vs non-carriers",
+      "null_variant_detail": "",
+      "protein_length_change": "",
+      "same_amino_acid_known_variant": "",
+      "source": "article"
+    }
+  ]
 }

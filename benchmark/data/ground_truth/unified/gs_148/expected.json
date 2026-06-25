@@ -1,13 +1,13 @@
 {
   "unified_id": "gs_148",
-  "original_entry_id": "rett_084",
+  "original_entry_id": "rett_085",
   "source_dataset": "rett",
   "gold_source": "article",
   "annotation_provenance": "ai_auto_review",
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "非典型Rett综合征（先天型）/ atypical Rett syndrome, congenital variant",
+  "disease_label": "典型Rett综合征 (typical Rett syndrome)",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "classification": "Rett real-data",
@@ -15,22 +15,28 @@
   "classification_date": "",
   "clingen_report_url": "",
   "source_pmid": "",
-  "source_doi": "",
+  "source_doi": "10.3969/j.issn.1004-583X.2017.11.020",
   "source_pmc": "",
   "source_pdf_url": "",
   "source_pdf_path": "benchmark/data/ground_truth/unified/gs_148/source.pdf",
-  "source_title": "MECP2 基因新发突变致男童 Rett 综合征 1 例报告",
-  "source_journal": "",
-  "source_year": "2018",
+  "source_title": "Rett综合征一例及其MECP2基因新突变",
+  "source_journal": "临床荟萃 (Clinical Focus)",
+  "source_year": "2017",
   "source_language": "zh",
   "variants": [
     {
       "source": "rett",
-      "hgvs_c": "c.194delC",
-      "hgvs_p": "p.S65X",
-      "variant_type": "frameshift deletion (single-base deletion causing premature stop; described in article as 无义突变/nonsense)",
+      "hgvs_c": "c.468C>G",
+      "hgvs_p": "p.Asp156Glu",
+      "variant_type": "missense",
       "clinical_significance": "pathogenic",
-      "domain": "N-terminal region upstream of MBD (aa 65); truncation removes major MECP2 functional domains"
+      "domain": "MBD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.426",
+      "variant_type": "synonymous",
+      "clinical_significance": "benign"
     }
   ],
   "expected_evidence": [
@@ -43,7 +49,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "非典型Rett综合征（先天型）/ atypical Rett syndrome, congenital variant",
+      "value": "典型Rett综合征 (typical Rett syndrome)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -64,63 +70,69 @@
     },
     {
       "field_id": "A.variant_hgvs_c",
-      "value": "c.194delC",
-      "candidates": [],
+      "value": "c.468C>G",
+      "candidates": [
+        "c.468C>G",
+        "c.426"
+      ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.S65X",
+      "value": "p.Asp156Glu",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_type",
-      "value": "frameshift deletion (single-base deletion causing premature stop; described in article as 无义突变/nonsense)",
-      "candidates": [],
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "synonymous"
+      ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "N-terminal region upstream of MBD (aa 65); truncation removes major MECP2 functional domains",
+      "value": "MBD",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0012759; HP:0001344; HP:0002376; HP:0002072; HP:0004322; HP:0011968; HP:0001250; HP:0001263; HP:0002194; HP:0012171",
+      "value": "HP:0002376; HP:0001263; HP:0001344; HP:0002072; HP:0003763; HP:0001251; HP:0001249",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "自主呼吸障碍/呼吸暂停 (severe abnormal breathing, apnea); 语言能力丧失/发音减少 (loss of acquired spoken language); 手部技能丧失伴发育倒退 (loss of acquired purposeful hand skills, developmental regression); 手部刻板动作（双手握拳、左手频繁触鼻）(hand stereotypies); 生长发育迟滞/生长缓慢 (growth retardation); 喂养困难/频发吐奶 (feeding difficulties, frequent vomiting); 睡眠惊厥 (seizures); 严重精神运动发育迟滞 (severe global/psychomotor developmental delay); 1岁仍不会抬头翻身、运动少 (delayed motor development); 四肢细小、末稍厥冷 (thin limbs, cold extremities); 肌张力增高 (hypertonia)",
+      "value": "智能及动作发育倒退 (developmental regression); 运动及智力发育迟缓 (motor and intellectual developmental delay); 语言功能丧失/不说话 (loss of acquired speech); 双手不自主、刻板的扭绞动作 (hand-wringing stereotypies); 手部精细动作丧失 (loss of acquired hand skills); 磨牙 (bruxism); 步态不稳 (unstable gait); 轻度脑萎缩、脑发育不全 (mild cerebral atrophy)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.sex",
-      "value": "male",
+      "value": "female",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "early infancy (~2 months; apnea and sleep seizures noted at 2 months, presented at 5 months)",
+      "value": "出生后约2岁起出现智能及动作发育倒退（具体月龄文中数字缺失，不完全明确）",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo (变异在父母该位点均无, both parents wild-type)",
+      "value": "de novo",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -136,12 +148,15 @@
       "hgnc_id": "HGNC:6992"
     },
     "disease": {
-      "text": "非典型Rett综合征（先天型）/ atypical Rett syndrome, congenital variant",
+      "text": "典型Rett综合征 (typical Rett syndrome)",
       "mondo_id": "MONDO:0010726"
     },
     "variants": [
       {
-        "text": "c.194delC"
+        "text": "c.468C>G"
+      },
+      {
+        "text": "c.426"
       }
     ]
   },

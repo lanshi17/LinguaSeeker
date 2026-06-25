@@ -1,6 +1,6 @@
 {
   "unified_id": "gs_134",
-  "original_entry_id": "rett_066",
+  "original_entry_id": "rett_067",
   "source_dataset": "rett",
   "gold_source": "article",
   "annotation_provenance": "ai_auto_review",
@@ -19,19 +19,111 @@
   "source_pmc": "",
   "source_pdf_url": "",
   "source_pdf_path": "benchmark/data/ground_truth/unified/gs_134/source.pdf",
-  "source_title": "A Case of Rett Syndrome with MECP2 Gene Mutation",
-  "source_journal": "Journal of the Korean Pediatric Society (J Korean Pediatr Soc)",
+  "source_title": "Mutational Analysis of MECP2 Gene in 34 Rett Syndrome",
+  "source_journal": "Journal of the Korean Pediatric Society (J Korean Pediatr Soc 2002;45:1263-1272)",
   "source_year": "2002",
   "source_language": "ko",
   "variants": [
     {
       "source": "rett",
-      "hgvs_c": "c.455C>G",
-      "hgvs_p": "p.Pro152Arg",
+      "hgvs_c": "c.298C>G",
+      "hgvs_p": "p.L100V",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
-      "exon": "4",
-      "domain": "MBD (methyl binding domain)"
+      "clinical_significance": "novel (first identified in this study)",
+      "exon": "Exon 3",
+      "domain": "MBD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.397C>T",
+      "hgvs_p": "p.R133C",
+      "variant_type": "missense",
+      "exon": "Exon 4",
+      "domain": "MBD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.468C>G",
+      "hgvs_p": "p.D156E",
+      "variant_type": "missense",
+      "exon": "Exon 4",
+      "domain": "MBD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.473C>T",
+      "hgvs_p": "p.T158M",
+      "variant_type": "missense",
+      "clinical_significance": "high frequency (11.8%)",
+      "exon": "Exon 4",
+      "domain": "MBD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.482G>A",
+      "hgvs_p": "p.G161E",
+      "variant_type": "missense",
+      "clinical_significance": "novel (first identified in this study)",
+      "exon": "Exon 4",
+      "domain": "MBD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.502C>T",
+      "hgvs_p": "p.R168X",
+      "variant_type": "nonsense",
+      "exon": "Exon 4"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.602C>T",
+      "hgvs_p": "p.A201V",
+      "variant_type": "missense",
+      "exon": "Exon 4",
+      "domain": "TRD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.763C>T",
+      "hgvs_p": "p.R255X",
+      "variant_type": "nonsense",
+      "exon": "Exon 4",
+      "domain": "TRD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.808C>T",
+      "hgvs_p": "p.R270X",
+      "variant_type": "nonsense",
+      "clinical_significance": "high frequency (11.8%)",
+      "exon": "Exon 4",
+      "domain": "TRD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.916C>T",
+      "hgvs_p": "p.R306C",
+      "variant_type": "missense",
+      "clinical_significance": "high frequency (8.8%)",
+      "exon": "Exon 4",
+      "domain": "TRD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.932C>T",
+      "hgvs_p": "p.T311M",
+      "variant_type": "missense",
+      "clinical_significance": "novel (first identified in this study; located in 3'-UTR region)",
+      "exon": "Exon 4",
+      "domain": "3'-UTR"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.965C>T",
+      "hgvs_p": "p.P322L",
+      "variant_type": "missense",
+      "exon": "Exon 4",
+      "domain": "NCoR/SMRT"
     }
   ],
   "expected_evidence": [
@@ -65,42 +157,91 @@
     },
     {
       "field_id": "A.variant_hgvs_c",
-      "value": "c.455C>G",
-      "candidates": [],
+      "value": "c.298C>G",
+      "candidates": [
+        "c.298C>G",
+        "c.397C>T",
+        "c.468C>G",
+        "c.473C>T",
+        "c.482G>A",
+        "c.502C>T",
+        "c.602C>T",
+        "c.763C>T",
+        "c.808C>T",
+        "c.916C>T",
+        "c.932C>T",
+        "c.965C>T"
+      ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.Pro152Arg",
-      "candidates": [],
+      "value": "p.L100V",
+      "candidates": [
+        "p.L100V",
+        "p.R133C",
+        "p.D156E",
+        "p.T158M",
+        "p.G161E",
+        "p.R168X",
+        "p.A201V",
+        "p.R255X",
+        "p.R270X",
+        "p.R306C",
+        "p.T311M",
+        "p.P322L"
+      ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_type",
       "value": "missense",
-      "candidates": [],
+      "candidates": [
+        "missense",
+        "missense",
+        "missense",
+        "missense",
+        "missense",
+        "nonsense",
+        "missense",
+        "nonsense",
+        "nonsense",
+        "missense",
+        "missense",
+        "missense"
+      ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD (methyl binding domain)",
-      "candidates": [],
+      "value": "MBD",
+      "candidates": [
+        "MBD",
+        "MBD",
+        "MBD",
+        "MBD",
+        "MBD",
+        "TRD",
+        "TRD",
+        "TRD",
+        "3'-UTR"
+      ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001263; HP:0002194; HP:0002072; HP:0002376; HP:0001344; HP:0001250; HP:0000756; HP:0001251; HP:0012759",
+      "value": "HP:0002376; HP:0002072; HP:0001250; HP:0000253; HP:0001251; HP:0000756; HP:0012759; HP:0004322; HP:0001252; HP:0001344",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "언어 및 운동 발달 지연 (language and motor developmental delay, severe); 운동 발달 지연 (delayed motor development; could not stand or walk at 22 months); 수부 운동 상동증 (hand stereotypies; repetitive hand-to-mouth movements, body rocking); 발달 퇴화 (developmental regression; gradual loss of purposeful hand use/grasping); 언어 소실 / 의미 있는 단어 표현 못함 (absent meaningful speech, only 'mama'/'dada'); 수면 뇌파상 다발성 극파 (multifocal spikes on sleep EEG; no clinical seizures observed in patient); 자폐증 (autistic behavior, described as Rett feature); 보행 운동 실조증 (gait ataxia, described as Rett feature); 간헐적 과호흡 (intermittent hyperventilation, described as Rett feature; not observed in this patient)",
+      "value": "developmental regression after 6-18 months of relatively normal development; stereotypic hand movements (hand-wringing); tremors; gait apraxia; seizures (present in 58.8%); EEG abnormalities (87.5% of those tested); deceleration of head growth; ataxic cerebral palsy; autistic features; abnormal breathing pattern (hyperventilation and/or apnea); growth retardation (especially hands and feet); mild hypotonia in early developmental stage; loss of acquired purposeful hand skills; loss of language/speech (vocabulary limited to 4-5 words at most); loss of cognitive and motor abilities",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -114,14 +255,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "infancy (delayed head control noted at 3-4 months; presented at 18-22 months)",
+      "value": "6-18 months (regression onset); parents first noticed abnormality at mean 14 months; characteristic hand stereotypies recognized at mean 21.8 months",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo",
+      "value": "sporadic (all 34 cases sporadic; sporadic RTT typically arises de novo)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -142,7 +283,40 @@
     },
     "variants": [
       {
-        "text": "c.455C>G"
+        "text": "c.298C>G"
+      },
+      {
+        "text": "c.397C>T"
+      },
+      {
+        "text": "c.468C>G"
+      },
+      {
+        "text": "c.473C>T"
+      },
+      {
+        "text": "c.482G>A"
+      },
+      {
+        "text": "c.502C>T"
+      },
+      {
+        "text": "c.602C>T"
+      },
+      {
+        "text": "c.763C>T"
+      },
+      {
+        "text": "c.808C>T"
+      },
+      {
+        "text": "c.916C>T"
+      },
+      {
+        "text": "c.932C>T"
+      },
+      {
+        "text": "c.965C>T"
       }
     ]
   },

@@ -1,276 +1,254 @@
-# Case Report: Prenatal Diagnosis for a Rett Syndrome Family Caused by a Novel MECP2 Deletion With Heteroduplexes of PCR Product
+# Rett 症候群の病態理解
 
-Honghong Zhang1\*, Yixi Sun2,3, Yuxia Zhu1, Jiali Hong1 and Miaomiao Zheng1
+—病因遺伝子（MECP2，CDKL5，FOXG1）変異に関連した臨床的特徴について—
 
-1 Department of Pediatrics, Hangzhou Children’s Hospital, Hangzhou, China, 2 Department of Reproductive Genetics, Women’s Hospital, School of Medicine, Zhejiang University, Hangzhou, China, 3 Key Laboratory of Reproductive Genetics, Ministry of Education, Zhejiang University, Hangzhou, China
+## 高 橋 悟
 
-## OPEN ACCESS
+要旨 Rett 症候群は，主に女児に発症する神経発達障害である．その診断は，臨床症状に基づいて行われ，回復期や安定期が後続する神経症状の退行があることを必要要件とする．病因遺伝子は，メチル化 DNA に結合して遺伝子の転写を制御する methyl-CpG-binding protein 2（MECP2）をコードする．Rett 症候群に類似するが異なった臨床経過を示すものを非典型的 Rett 症候群とよび，“早期発症てんかん型”や“先天型”が知られている．前者の病因遺伝子は，樹状突起棘に局在するリン酸化酵素 cyclin-dependent kinase-like 5（CDKL5）をコードしている．後者の病因遺伝子は，終脳の発生に重要な転写因子 forkhead box G1（FOXG1）をコードしている．このように非典型的 Rett 症候群の病態は，典型的 Rett 症候群とは異なることを理解する必要がある．
 
-## Edited by:
+見出し語 Rett 症候群，遺伝子異常，MECP2，CDKL5，FOXG1
 
-Aglaia Vignoli,
+## はじめに
 
-University of Milan, Italy
+Rett 症候群は，主に女児に発症し，多彩な神経症状が年齢依存性に出現する神経発達障害である．発生率は，およそ女児出生 1 万人に 1 人の割合である．1966 年にオーストリアの小児神経科医 Rett が初めて報告し，1999 年に米国の Amir らによって病因遺伝子である methyl-CpG binding protein 2 遺伝子（MECP2）が同定された $^{1)}$ ．診断は，その特徴的な臨床症状に基づいて行われる $^{2)}$ ．典型例のおよそ 90%において，MECP2 に病的変異が同定される $^{3)}$ ．一方，Rett 症候群に類似するが異なった臨床経過を示す患者は，その診断基準 $^{2)}$ に合致すれば非典型的 Rett 症候群と診断される．乳児期より難治性のけいれん発作が頻発する早期発症てんかん型（early seizure variant）や生後早期から発達遅滞が明らかとなる先天型（congenital variant）が知られている．非典型例で MECP2 に病的変異が同定される頻度は 50～70%と低く，MECP2 以外の病因遺伝子の存在が想定されていた．2004 年に早期発症てんかん型の病因遺伝子として cyclin-dependent kinase-like 5 遺伝子（CDKL5）が同定され $^{4)}$ ，2008 年には先天型の病因遺伝子として forkhead box G1 遺伝子（FOXG1）が同定された $^{5)}$ ．Rett 症候群の病態解明と治療法開発のためには，均一な患者集団
 
-## Reviewed by:
+旭川医科大学小児科
 
-Bruria Ben-Zeev,
+連絡先 〒078-8510 旭川市緑ヶ丘東2条1丁目1-1
 
-Sheba Medical Center, Israel
+旭川医科大学小児科（高橋 悟）
 
-Thea Giacomini,
+E-mail: satoru5p@asahikawa-med.ac.jp
 
-Istituto Giannina Gaslini (IRCCS), Italy
+(受付日：2013.9.5)
 
-Maurizio Elia,
+で研究を進めることが大切であり，小児神経科医の果たす役割は大きい．本稿では，病因遺伝子として同定されている3つの遺伝子（MECP2，CDKL5，FOXG1）に関連した臨床症状の特徴を述べる．
 
-Oasi Research Institute (IRCCS), Italy
+## I 典型的 Rett 症候群の臨床症状
 
-## \*Correspondence:
+Rett 症候群の女児は，生後 6 カ月あるいは 18 カ月までは一見正常に発達するといわれている。それは乳児期早期に，手がかからない，哺乳力が弱い，視線が合いにくい，筋緊張が低いといった何らかの異常を有していることに気付かれていないことが多いためである $^{6)7)}$ 。しかし，乳児期後期から幼児期になると，精神運動発達の停滞が明らかとなり，言語および運動機能が急速に退行する。特に，一度獲得した手の合目的運動の消失とそれに引き続き出現する手もみ様の常同運動は特徴的な所見である。幼児期の急速な退行現象のあと，神経症状は安定期に入る。てんかんは，患者の 60～90% に合併し，多くは 3 歳から 10 歳までの間に発症する。したがって，3 歳未満でてんかんを発症することは稀である $^{8)9)}$ 。Rett 症候群の診断基準は 2010 年に改訂され（表 1），その中では回復期・安定期が後続する神経症状の退行があることが強調されている。本症では，生後の頭囲発育が遅れ，小頭症を呈することはよく知られている。しかし，小頭症は全ての患者に見られるものではないため $^{10)}$ ，診断上の必要要件には含まれていない。
 
-Honghong Zhang
+## Ⅱ 非典型的 Rett 症候群の臨床症状
 
-honghong8282@126.com
+非典型的 Rett 症候群の診断においても，回復期や安定期の
 
-## Specialty section:
+表 1 Rett 症候群診断基準改訂版（2010 年版）
 
-This article was submitted to
+典型的 Rett 症候群の診断要件
 
-Pediatric Neurology,
+1. 回復期や安定期が後続する退行期があること
 
-a section of the journal
+2. すべての主要診断基準と全ての除外基準を満たすこと
 
-Frontiers in Pediatrics
+3. 支持的診断基準を満たす必要はないが, 典型的レット症候群では認められることが多い
 
-Received: 28 July 2021
+非典型的 Rett 症候群の診断要件
 
-Accepted: 04 October 2021
+1. 回復期や安定期が後続する退行期があること
 
-Published: 27 October 2021
+2. 主要診断基準 4 項目のうち 2 つ以上を満たすこと
 
-## Citation:
+3. 支持的診断基準 11 項目のうち 5 つ以上を満たすこと
 
-Zhang H, Sun Y, Zhu Y, Hong J and Zheng M (2021) Case Report: Prenatal Diagnosis for a Rett Syndrome Family Caused by a Novel MECP2 Deletion With Heteroduplexes of PCR Product.
+主要診断基準
 
-Front. Pediatr. 9:748641.
+1. 目的のある手の運動機能を習得した後に, その機能を部分的, あるいは完全に失う
 
-doi: 10.3389/fped.2021.748641
+2. 音声言語を習得後に, その機能を部分的, あるいは完全に失う
 
-Rett syndrome is an X-linked dominant, postnatal neurological disorder. Approximately 80–90% of classic Rett syndrome patients harbor mutations in the coding region of MECP2. Somatic or germline MECP2 mosaicism is not rare, and paternal germline MECP2 mosaicism occurs in especially high proportions. Here, we report the case of a Chinese girl with Rett syndrome in whom a heterozygous deletion was found in exon 4 of MECP2 using multiplex ligation-dependent probe amplification. To obtain an accurate region of deletion, we narrowed down the deletion region using real-time quantitative PCR, and subsequent long-range PCR was performed to detect the deletion breakpoints. Surprisingly, three DNA bands from long-range PCR products were observed after gel electrophoresis. To exclude somatic mosaicism, we performed T-A cloning and DNA sequencing, the middle DNA band was proved to be a heteroduplex of the PCR product in vitro. Meanwhile, a prenatal diagnosis was performed for the pregnant mother of the patient. Our study showed that the patient was heterozygous for the deletion of 713-base pairs in exon 4 of MECP2 (MECP2: c.441\_1153del713), resulting in a frameshift and premature termination of the 487 amino acid protein at the 154th codon. In summary, we reported a novel heterozygous deletion in the MECP2 gene with heteroduplexes of the PCR product in vitro, which can help in the genetic counseling and prenatal diagnosis of disorders of MECP2 defects.
+3. 歩行の異常：歩行障害，歩行失行
 
-Keywords: Rett syndrome, MECP2, prenatal diagnosis, mosaicism, heteroduplexes
+4. 手の常同運動：手を叩いたり，擦り合わせたり，口に入れるなどの自動運動
 
-## INTRODUCTION
+1. 原因が明らかな脳障害（周産期の脳損傷，神経代謝性疾患，感染による脳炎・脳症など）
 
-Rett syndrome (MIM#312750) is an X-linked, dominant, post-natal neurological disorder with a prevalence of ∼1 in 10,000–15,000 female births. Patients with classic Rett syndrome display delayed development between the period of 6–18 months, after a period of apparently normal development. It is characterized by a distinctive set of clinical features, including loss of motor skills and communicative abilities, acquired microcephaly, and the development of stereotypical hand movements (1).
+2. 生後6カ月以前に明らかとなった精神運動発達遅滞
 
-In 1999, mutations in the X-linked gene, methyl-CpG-binding protein 2 (MECP2) at Xq28 were first reported in patients with Rett syndrome. Approximately 80–90% of classic Rett syndrome patients harbor mutations in the coding region of MECP2, and approximately up to 15% of these mutations are gross deletions and other rearrangements, which can be detected by MLPA or southern blot (2–7).
+1. 覚醒時の呼吸異常
 
-MECP2 mutations have been reported in patients with somatic mosaicism; females or even males with somatic MECP2 mosaicism can survive to birth and exhibit clinical features similar to a full mutation in females or an atypical Rett syndrome phenotype (8–11). Paternal or maternal germline MECP2 mosaicism are also not rare (2, 12–14). Therefore, special attention should be paid to somatic and germline MECP2 mosaicism. In this study, we present a novel heterozygous deletion in the MECP2 gene in a Chinese girl with Rett syndrome. A variety of methods (including multiplex ligation-dependent probe amplification (MLPA), real-time quantitative PCR (qPCR), long-chain PCR, DNA sequencing, gel electrophoresis, and T-A cloning) were used to detect the precise mutation, excluding somatic mosaicism. We also performed prenatal diagnosis for her pregnant mother to avoid germline MECP2 mosaicism.
+2. 覚醒時の歯ぎしり
 
-## CASE PRESENTATION
+3. 睡眠リズム障害
 
-The pedigree is a family from Zhejiang province in China. The proband was a 4-year-old girl who was diagnosed with typical Rett syndrome. This girl was born by normal delivery at 38 weeks gestation. She held up her head at 3 months and could sit at 6 months, and she was able to stand with support at 10 months. At 11 months she had said “papa” and “mama,” but after 13 months she no longer spoke these words. Emotionally she was noted to be more distant and no longer responded to her parents’ call by turning her head toward them. Subsequent loss of acquired purposeful hand skills began at 15 months, and has since developed a range of stereotypical hand movements such as frequent hand wringing. Epilepsy had previously developed at 30 months and was managed with sodium valproate and lamotrigine. However, her molecular diagnosis was unclear, and her healthy mother was 20 weeks along in her pregnancy. Considering the risk of recurrence, the affected pregnant woman requested prenatal diagnosis for her fetus who may have also been at risk of Rett syndrome. This study was approved by the Ethics Committee of Women’s Hospital affiliated to the Zhejiang University School of Medicine, and informed consent was obtained from all subjects.
+4. 筋緊張異常
 
-To perform the prenatal diagnosis, we first had to know the genetic basis of Rett syndrome in the proband. Peripheral blood samples were drawn from three family members, and genomic DNA was extracted using standard protocols. We carried out a routine polymerase chain reaction (PCR) to amplify the encoding exons of MECP2; exon 4 (exon 3 before the discovery of a new 5 UTR exon) was amplified as five overlapping fragments (4a, 4b, 4c, 4d, and 4e) (12), and no mutations were found in the four exons of MECP2.
+5. 末梢血管運動反射異常
 
-We then detected the deletions using MLPA (MRC-Holland, kit P015C), which covers all four MECP2 exons and the flanking genes IRAK1, L1CAM, and SYBL1. MLPA screening suggested that the proband had a hemizygous copy number for MLPA probes 10842-L12494 and 01347-L12498. Additionally, a heterozygous deletion of exon 4 in MECP2 was found in the proband (Figure 1A).
+6. 側弯·前弯
 
-We then used three pairs of real-time qPCR primers to narrow down and identify the deletion breakpoints (see Supplemental Information, Supplementary Figures 1A,B, Figure 1B). The product of long-range PCR (upon running a gel electrophoresis) showed three DNA bands of the proband (Figure 1C). The DNA was cut and purified using a DNA gel extraction kit, and the DNA bands were cloned into the pMD19- T vector via T/A ligation. After plasmid extraction, a PCR and a DNA sequencing were performed. The DNA sequence of the top band was the same as the wild-type. Surprisingly, not only the bottom band, but also the middle one, showed a 713-base pair deletion in exon 4 of MECP2 (c.441\_1153del713) (Figure 1D).
+7. 成長障害
 
-We then identified that the middle band was a heteroduplex of the wild chain and a c.441\_1153del713 mutated chain. As shown in Figure 1F, for base pairing, the mutated chain combined with the wild chain around the common parts (parts A and C), but the unpaired part (part B) of the wild chain may form a particular structure. PCR amplification of the wild chain cannot be performed; therefore, the PCR product of the middle band only showed the c.441\_1153del713 mutation of MECP2. As shown in Figure 1E, by the classical method of producing heteroduplexes, untreated PCR products (left) and those treated with heating and re-annealing were the same, further proving that the middle band was heteroduplex (Figure 1E).
+8. 小さく冷たい手足
 
-In summary, we found a novel heterozygous deletion in c.441\_1153del713 of MECP2 (NM\_004992.4) in the proband. This mutation resulted in a frame shift of MECP2, and premature termination of the 487 amino acid protein at the 154th codon, creating a large loss from the methyl-CpG binding domain to the C-terminal domain.
+9. 不適切な笑いや叫び
 
-## DISCUSSION
+10. 痛覚への反応鈍麻
 
-Approximately 80–90% of classic Rett syndrome patients harbor mutations in the coding region of MECP2. Furthermore, ∼70% of Rett syndrome-causing MECP2 mutations are C to T transitions at eight CpG dinucleotide mutation hotspots located within exons 3 and 4, and small deletions in the 3’ end of exon 4 comprise ∼10% of all mutated alleles (4, 15). Routine PCR-based DNA sequencing usually does not detect these deletions.
+11. じっと見つめるしぐさ
 
-MLPA is useful for detecting large deletions in a single gene, but small deletions or polymorphisms that might affect the binding of the MLPA probe, resulting in a false positive, have occurred in Rett syndrome diagnosis (4). In addition, the mosaic could not be detected using MLPA. Therefore, it is necessary to identify MLPA results using other detection methods, such as real-time quantitative PCR and long-range PCR. Combined with the MLPA results, real-time quantitative PCR can narrow down the region of deletion. Primer sites in the dizygous regions immediately flanking the breakpoints were selected for long-range PCR amplification across the deletion junction, and DNA sequencing was performed to determine the accurate deletion region.
+〔文献2）より和訳（厚生労働省障害者対策総合研究事業（神経・筋疾患分野）「レット症候群の早期診断と治療をめざした統合的研究」研究班による）〕
 
-Long-range PCR products with heterozygous deletion mutations usually showed two DNA bands after agarose gel electrophoresis. The proband in our study revealed three bands.
+後続する退行があることが、診断上の必須要件とされている(表1).
 
-![](images/420122653500845c14b5bbdadc5a986f63df83ec452347dcdd0d87c948bbc25f.jpg)
+## 1. 早期発症てんかん型（early seizure variant）
 
-<details>
-<summary>bar chart</summary>
+典型的 Rett 症候群に類似の臨床経過をとるが，乳児期から難治性のてんかんを発症する点が異なる．てんかんの発症は，生後 1 週から 5 カ月と乳児期早期からである．その臨床経過は，年齢依存性に 3 つのステージに分けることができる $^{11)}$ ．発症時（ステージ 1）には，焦点性発作や全身性強直間代発作を頻回に繰り返すが，発作間欠期脳波では異常を認めないことが多い．その後，点頭てんかんへ変容し（ステージ 2），さらに強直発作やミオクロニー発作を主体とし発作間欠期脳波では多焦点性異常波を示す症候性てんかん（ステージ 3）へと変容していく．本症の患者は，乳児期早期から筋緊張低下が著明で重度の発達遅滞があり，明らかな退行期を認めないために非典型的 Rett 症候群とは診断できないことも多い．病因遺伝子として同定された CDKL5 は X 染色体 Xp22 に存在するが，女児に限らず，男児も本症を発症する点には注意を要する $^{12)}$ ．
 
-| Category | Value |
-| --- | --- |
-| X-018.5 CDKL5Exon 05 | 100 |
-| X-018.5 CDKL5Exon 08 | 90 |
-| X-018.5 CDKL5Exon 11 | 80 |
-| X-018.5 CDKL5Exon 12 | 95 |
-| X-018.5 CDKL5Exon 17 | 100 |
-| X-024.9 ARX Exon 05 | 95 |
-| X-024.9 ARX Exon 02 | 90 |
-| X-152.6 SLC6A8 | 95 |
-| X-152.7 TID3G | 85 |
-| X-152.8 L1C/AM | 90 |
-| X-152.9 IRK1 Exon 03B | 100 |
-| X-153.0MECP2 Exon 04E | 95 |
-| X-152.9 IRK1 Exon 03A | 85 |
-| X-153.0MECP2 Exon 04D | 90 |
-| X-153.0MECP2 Exon 04C | 75 |
-| X-153.0MECP2 Exon 04B | 65 |
-| X-153.0MECP2 Exon 04A | 80 |
-| X-153.0MECP2 Exon 03B | 95 |
-| X-153.0MECP2 Exon 03A | 90 |
-| X-153.0MECP2 Exon 02B | 95 |
-| X-153.0MECP2 Exon 02A | 85 |
-| X-153.0MECP2 Exon 01D | 95 |
-| X-153.0MECP2 Exon 01C | 95 |
-| X-153.0MECP2 Exon 01B | 85 |
-| X-153.0MECP2 Exon 01A | 90 |
-| X-153.2 FNA | 75 |
-| X-153.3 CDI1 | 85 |
-| X-153.7 DKC1 | 95 |
-| X-153.8 FVII | 90 |
-| X-154.8 VAMP7 | 80 |
-| 01-107.7 NTNG1 Exon 01 | 95 |
-| 01-107.7 NTNG1 Exon 03 | 75 |
-| 01-107.7 NTNG1 Exon 05 | 85 |
-| 01-107.7 NTNG1 Exon 06 | 80 |
-| c | 90 |
-| c | 95 |
-| c | 90 |
-| c | 95 |
-| c | 85 |
-| c | 90 |
-| c | 85 |
-| c | 75 |
-| c | 95 |
-| c | 80 |
-</details>
-
-D 
-![](images/ab68f92ea82132c0e56e90a56e9f7b264d1e2abd4fba4a5e88fb354f5a9358b4.jpg)
+典型的 Rett 症候群診断のために除外すべき病態（除外基準） 
+非典型的 Rett 症候群診断のための支持的診断基準 
+![](images/a1ce308bf1f14349c89ae4058f948583fd80e56b966ff79f1c915ce3c3442628.jpg)
 
 <details>
-<summary>text_image</summary>
+<summary>line chart</summary>
 
-Top DNA band
-MECP2 wild type
-A G G T A G G C G A C A C A T C C C
-440 441
-Bottom and middle DNAbands
-MECP2 c.441-1153del713
-440
-1154
+| Month | A (cm) |
+|-------|--------|
+| 0 | 33 |
+| 4 | 41 |
+| 6 | 42 |
+| 8 | 43 |
+| 12 | 44 |
 </details>
 
-![](images/2c8f0f7ab7f22a8f9e6254479d1713f103236da5a1bc97e16774e55ed12c91bb.jpg)
+![](images/5494c399d7fc7821bfc3e2944fc8cd68a60216a1064d924ded382a3293726011.jpg)
 
 <details>
-<summary>bar chart</summary>
+<summary>line chart</summary>
 
-| Group | Ratio |
-| ------------ | ----- |
-| female control | 1.0 |
-| I1 | 1.0 |
-| I2 | 0.5 |
-| II1 | 0.4 |
-| II2 | 0.5 |
+| 年龄 (歳) | 3 | 10 | 25 | 50 | 75 | 90 | 97 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 43 | | | | | | |
+| 2 | | 45 | | | | | |
+| 3 | | | 46 | | | | |
+| 6 | | | | | | | 66 |
 </details>
 
-![](images/0ef71977bccf2a61d6703087b06a3967e7437e9baa66c09f86fa93ba1779951f.jpg)
+![](images/502a3b850f062e2a9a7eb9380afc167ab1b1bf90a3175d6fa6a105531fb5542f.jpg)
 
 <details>
-<summary>text_image</summary>
+<summary>line chart</summary>
 
-c
-I1 I2
-II1 II2
+| Month | Value |
+|-------|-------|
+| 0 | 31 |
+| 12 | 48 |
 </details>
 
-E 
-![](images/9f5fdee1a9f5159571c1245b2a65648f4af6b6147e1aadf44f448b02f131283d.jpg)
+![](images/625899e08c6551c7c5d68c252b3ceb987e7b7346d15677f59edc2cb64f3a9d3f.jpg)
 
 <details>
-<summary>text_image</summary>
+<summary>line chart</summary>
 
-Control
-I1 I2 II1 II2
-Heating and
-Reannealing
-I1 I2 II1 II2
+| 年龄 (歳) | 值 |
+| --------- | ----- |
+| 1 | 43.0 |
+| 2 | 44.0 |
+| 3 | 45.0 |
+| 4 | 46.0 |
+| 6 | 48.0 |
 </details>
 
-F
-
-![](images/c662b7093c96097d3ed8e936ebd333b6e93fadd8970ed070255801f0f2569733.jpg)
+![](images/f7d9b663bc30f881b0497446172bdbb558a181ff31e13ca88dc3075d82470d4a.jpg)
 
 <details>
-<summary>text_image</summary>
+<summary>line chart</summary>
 
-441 1153
-A B C
-Top DNA band
-A B C
-B
-Middle DNA band
-A C
-A C
-Bottom DNA band
-A C
-A C
+| Month | C (cm) |
+|-------|--------|
+| 0 | 31 |
+| 2 | 36 |
+| 4 | 38 |
+| 6 | 38 |
+| 8 | 42 |
+| 10 | 44 |
+| 12 | 46 |
 </details>
 
-FIGURE 1 | (A) Detection of MECP2 exon alterations via multiplex ligation-dependent probe amplification (MLPA). The arrows illustrate the presumed deletions, as the area of the peaks from the female proband DNA is approximately half that of the female controls. (B) The MECP2 amplicon with MECP2-real time quantitative PCR-2 primers to narrow down the deletion breakpoints and determine the results of MLPA. MECP2 relative amount of female proband, and male fetus were half that of female control. (C) The products of long-range PCR were analyzed with 1.5% agarose gel electrophoresis. The PCR product from the proband showed three DNA bands, whereas PCR product bands of the proband’s parents and the fetus, were single. (D) Three DNA bands of long-range PCR from the proband were separately cut, T-A cloned, and finally sequenced after plasmid extraction. The sequence of top DNA band was wild type; both, bottom and middle DNA bands show 713-base pairs deletion in exon 4 (c.441\_1153del713), and the single band of proband’s parents and the fetus were of the wild type. (E) There was no difference between the PCR products untreated (left) and treated with heating and reannealing (right) in electrophoresis analysis. The treated PCR products were denatured at 95 ◦C for 3 min, followed by gradual reannealing for 30 min with a temperature ramp of −1 ◦C/min to optimize for the formation of heteroduplexes and homoduplexes. (F) Schematic diagram of three DNA bands after PCR. The top DNA band was homoduplex of wild type, the bottom DNA band was homoduplex of mutant type, the middle DNA band was heteroduplex of wild type and mutant type. Part B (red): 713-base pairs deletion in exon 4 (c.441\_1153del713) of MECP2.
+![](images/f43ff05d852bb5f8e4b5465270f79b7343218ddde27f6a9be3ea10cbfd2086a5.jpg)
 
-We first thought that the proband was a triple mosaicism for one normal MECP2 gene allele and two different deletions alleles in vivo, resulting in the formation of three DNA bands after PCR in vitro. We initially suspected that a double strand DNA break occurred in MECP2 during gene replication, and a variant of replication slippage occurred on both newly synthesized strands between the repeat motifs of microhomology, leading to the formation of the two different MECP2 gene deletions in vivo, the similar mechanism has been reported in the AR gene (15). If this was truth, the MECP2 deletions should be de novo mutations, occurring early in embryonic development of the proband. The probability of germline MECP2 mosaicism in the parents could be ruled out, there seemed be no need to perform prenatal diagnosis for the proband’s mother.
+<details>
+<summary>line chart</summary>
 
-But by T-A cloning and comparing with the PCR product untreated and treated with heating and re-annealing, we found our previous assumption was wrong, the middle DNA band was proven to be heteroduplexes. Heteroduplexes are usually formed either during PCR cycling or by mixing of PCR product of mutant and wild-type DNAs in vitro, some large insertions or deletions may create stable heteroduplexes, and this stability is insensitive to variability in electrophoretic conditions (16). As far as we know, there is no evidence to show that a large number of heteroduplexes can exist in vivo. For the proband, the middle DNA band is just the heteroduplexes formed by PCR product in vitro, not in vivo. So the middle DNA band can’t inherit from her mother. But MECP2 deletion (bottom DNA band) of the proband really exists in vivo, and the deletion may not be de novo, it is probably inherited from the parent, who is germline mosaicism with MECP2 deletion.
+| 年龄 (歳) | 城度 (cm) |
+| --------- | --------- |
+| 1 | 40 |
+| 2 | 41 |
+| 3 | 42 |
+| 4 | 43 |
+| 5 | 44 |
+| 6 | 45 |
+</details>
 
-Although Rett syndrome is usually sporadic, it is commonly accepted that pregnant women who have a family history of
+図 1 Rett 症候群の頭囲発育
 
-Rett syndrome, should be offered an invasive prenatal diagnosis (17). Maternal and paternal MECP2 germline mosaicism have been both reported in Rett syndrome families. Recently, Zhang et al. indicated that the cohort level of paternal germline MECP2 mosaicism was 23.8% (5/21) by the detection of sperm (14). Meanwhile, maternal germline MECP2 mosaicism was also verified in many Rett syndrome families, despite lack of the direct detection (2, 12, 13). In the case, we didn’t find the MECP2 deletion in the blood of the parents, and not found the MECP2 mosaicism in the sperm of the proband’s father (data not show), but the maternal germline mosaicism can’t be ruled out. For the family, the recurrence risk of Rett syndrome still existed, it is necessary for the proband’s mother to perform prenatal diagnosis.
+A：典型的 Rett 症候群（MECP2 变異：c. 880C>T，p. Arg294X） 
+B：早期発症てんかん型（CDKL5 変異：c. 2112C>A, p. Tyr704X） 
+C：先天型（FOXG1变異：c.689G>A，p.Arg230His）
 
-In summary, we reported a novel MECP2 heterozygous deletion in a Rett syndrome family. The proband was heterozygous for the deletion of 713-base pairs in exon 4 of MECP2, resulting in a frameshift and premature termination. To avoid recurrent risk, we performed prenatal diagnosis for her pregnant mother. Life is precious, which makes prenatal diagnosis a grave responsibility. It is necessary to obtain a clear molecular diagnosis, but each molecular diagnostic technique has its drawbacks. To avoid misdiagnosis, we performed prenatal diagnosis with multiple methods. In the case, we reported a novel heterozygous deletion in the MECP2 gene with heteroduplexes of the PCR product in vitro, and provided a reference for the prenatal diagnosis of genetic diseases with complicated mutations, not limited to Rett syndrome.
+典型的 Rett 症候群患者の頭囲発育は乳児期後半から停滞している．一方，FOXG1 変異が同定された先天型の症例では，乳児期早期より頭囲の発育が不良で，著しい小頭症を呈している．
 
-## DATA AVAILABILITY STATEMENT
+## 2. 先天型（congenital variant）
 
-The original contributions presented in the study are included in the article/Supplementary Material, further inquiries can be directed to the corresponding authors.
+乳児期早期から重度の発達遅滞を呈するために、退行期を同定できない症例が多い。そのような場合には、FOXG1 関連脳症と診断することが提唱されている $^{9)}$ 。本症でみられる常同運動は，典型的 Rett 症候群でみられる手もみ様運動とは異なり，舌を繰り返して突出させ，上肢の不規則で激しい動きを伴う点が特徴的である $^{13)}$ ．また，斜視を伴うことが多いために眼科を初診している場合がある．頭囲の発育は乳児期早期から遅れ，著しい小頭症を呈する（図1）．頭部 MRI 検査では，前頭側頭葉の発育不良，髄鞘化遅延と脳梁の低形成をみる $^{14)}$ ．この先天型の病因遺伝子として同定された FOXG1 遺伝子は，常染色体 14q12 に存在しているために，女児に限らず男児も罹患する．
 
-## REFERENCES
+表 2 Rett 症候群の病因遺伝子変異に関連した臨床像
 
-1. Neul JL, Kaufmann WE, Glaze DG, Christodoulou J, Clarke AJ, Bahi-Buisson N, et al. Rett syndrome: revised diagnostic criteria and nomenclature. Ann Neurol. (2010) 68:944–50. doi: 10.1002/ana.22124 
-2. Yaron Y, Ben Zeev B, Shomrat R, Bercovich D, Naiman T, Orr-Urtreger A. MECP2 mutations in Israel: implications for molecular analysis, genetic counseling, and prenatal diagnosis in Rett syndrome. Hum Mutat. (2002) 20:323–4. doi: 10.1002/humu.9069 
-3. Erlandson A, Samuelsson L, Hagberg B, Kyllerman M, Vujic M, Wahlstrom J. Multiplex ligation-dependent probe amplification (MLPA) detects large deletions in the MECP2 gene of Swedish Rett syndrome patients. Genet Test. (2003) 7:329–32. doi: 10.1089/109065703322783707 
-4. Laccone F, Junemann I, Whatley S, Morgan R, Butler R, Huppke P, et al. Large deletions of the MECP2 gene detected by gene dosage analysis in patients with Rett syndrome. Hum Mutat. (2004) 23:234–44. doi: 10.1002/humu.20004 
-5. Ravn K, Nielsen JB, Skjeldal OH, Kerr A, Hulten M, Schwartz M. Large genomic rearrangements in MECP2. Hum Mutat. (2005) 25:324. doi: 10.1002/humu.9320 
-6. Archer HL, Whatley SD, Evans JC, Ravine D, Huppke P, Kerr A, et al. Gross rearrangements of the MECP2 gene are found in both classical and atypical Rett syndrome patients. J Med Genet. (2006) 43:451–6. doi: 10.1136/jmg.2005.033464
+<table><tr><td>病因遺伝子</td><td colspan="2">MECP2</td><td>CDKL5</td><td>FOXG1</td></tr><tr><td>遺伝子座</td><td colspan="2">Xq28</td><td>Xp22</td><td>14q12</td></tr><tr><td>遺伝子の機能</td><td colspan="2">エピジェネティクスによる遺伝子発現調節</td><td>神経細胞のリン酸化酵素</td><td>終脳発生に必須の転写因子</td></tr><tr><td>患者性別</td><td>女児</td><td>男児</td><td>女児/男児</td><td>女児/男児</td></tr><tr><td>機能喪失による臨床像</td><td>・典型的 Rett 症候群・非典型的 Rett 症候群(言語能力維持型)・自閉症・精神遅滞</td><td>・致死的重症脳症・精神遅滞</td><td>・非典型的 Rett 症候群(早期発症てんかん型)・早期乳児てんかん性脳症</td><td>・非典型的 Rett 症候群(先天型)・FOXG1 関連脳症</td></tr></table>
 
-## ETHICS STATEMENT
+## Ⅲ Rett 症候群の臨床遺伝学的特徴
 
-The studies involving human participants were reviewed and approved by the Ethics Committee of Women’s Hospital affiliated to the Zhejiang University School of Medicine. Written informed consent to participate in this study was provided by the participants’ legal guardian/next of kin. Written informed consent was obtained from the individual(s), and minor(s)’ legal guardian/next of kin, for the publication of any potentially identifiable images or data included in this article.
+Rett 症候群の病因遺伝子として同定されている 3 つの遺伝子（MECP2, CDKL5, FOXG1）について，その臨床遺伝学的特徴を概説する（表 2）.
 
-## AUTHOR CONTRIBUTIONS
+## 1. MECP2 遺伝子
 
-HZ, YS, YZ, JH, and MZ conducted experiments. YZ prepared the figures. YS and JH performed MLPA and PCR. MZ recruited samples. HZ and YZ wrote the manuscript. All authors read and approved the final manuscript.
+MECP2 とは X 染色体上にある遺伝子で, 典型的 Rett 症候群の 90% 以上の患者において病的変異が同定されている. MECP2 蛋白は, 遺伝子 DNA のメチル化したシトシンに結合して遺伝子の転写を制御する. MECP2 蛋白の制御を受ける標的遺伝子は多数あり, MECP2 の異常により発現量が増加する遺伝子もあるし, 低下する遺伝子もある. このように Rett 症候群の病態は, 遺伝子 DNA の塩基配列変化を伴わずにその発現量を調節する “エピジェネティクス” と呼ばれる遺伝子発現制御機構の異常と考えられている. Rett 症候群のモデル動物に正常量の MECP2 を発現させると, その動物の神経症状は回復することから $^{15)}$ , 本症は神経変性疾患とは区別され, 治療法開発のための研究が精力的に進められている.
 
-## FUNDING
+遺伝子型と臨床型の関連 同じ遺伝子変異を有する患者間でも，臨床症状の重症度には差があり，遺伝子変異型から臨床症状を予測することは難しい．その要因の一つとして，X染色体の不活化という現象が考えられている．女性では，2本あるX染色体からの過剰な遺伝子発現を避けるために片方のX染色体は不活化されている．どちらのX染色体が不活化されるかは，個々の細胞で無作為に決まっている．例えば，変異MECP2のあるX染色体の不活化が偏って多くなると，もう一方のX染色体からは正常MECP2が発現するので，そのMECP2変異を有する女性は軽症か無症状になる．このように，変異 MECP2 を有する女性では，X 染色体の不活化パターンによって臨床症状の重症度は異なる．実際に，MECP2 変異を有していても，Rett 症候群の診断基準を満たさない軽症例が存在する．このため，MECP2 異常があっても必ずしも Rett 症候群とは診断されない．Rett 症候群の診断は臨床症状に基づいて行われるものであり，遺伝子検査で決定されるのではないでしょうか．一方，男性では X 染色体は 1 本しかないので，遺伝子型と臨床型との関連が研究されている．変異 MECP2 を有する男性では，致死的な重症新生児脳症を発症することが多いが，MECP2 の C 末端側での変異の場合には長期生存が可能で，知的障害を呈する $^{16}$ ．知的障害を有する男性患者集団 2,597 人中 46 人（1.7%）で，MECP2 変異が同定されたと報告されている $^{17}$ ．同集団で同定された脆弱 X 症候群の頻度が 2.5% であったことを考えると，MECP2 変異は男性の知的障害の原因として稀なものではない $^{17}$ ．
 
-This study was supported by the National Natural Science Foundation of China (Grant No. 81801441) and the Technology Project of Zhejiang Provincial Health Commission (Grant No. 2021KY772).
+遺伝カウンセリング MECP2 変異による Rett 症候群は, X 連鎖性優性の遺伝形式をとる. しかし, 患者の 99% 以上は散発例で, 発端者のみに変異がみられる突然変異に起因するため, 家族内での同胞発症はない. しかし, 稀に精子や卵子の前駆細胞である生殖細胞の病的変異モザイクを持つ親から遺伝する場合がある. さらに極めて稀であるが, 変異 MECP2 のある X 染色体が選択的に不活化されている母親保因者から遺伝することがあり, この場合には変異が子どもに遺伝する確率は 50% となる.
 
-## SUPPLEMENTARY MATERIAL
+## 2. CDKL5 遺伝子
 
-The Supplementary Material for this article can be found online at: https://www.frontiersin.org/articles/10.3389/fped. 2021.748641/full#supplementary-material
+CDKL5 とは 遺伝子座は X 染色体上にあり, リン酸化酵素 CDKL5 をコードしている. 乳児期よりけいれんが頻発する非典型的 Rett 症候群 (早期発症てんかん型) の原因遺伝子として同定された $^{4)}$ . しかし, CDKL5 異常がみつかった患者の中には, 退行期がみられず非典型的 Rett 症候群の診断基準 $^{2)}$ を満たさない症例も少なくない. CDKL5 は, 神経細胞の核や樹状突起に存在しており, その機能喪失はシナプス形成や細胞内シグナル伝達機構の異常を引き起こす. CDKL5 ノックアウトマウスは, 自閉症様症状を呈することが報告されている $^{18)}$ .
 
-7. Hardwick SA, Reuter K, Williamson SL, Vasudevan V, Donald J, Slater K, et al. Delineation of large deletions of the MECP2 gene in Rett syndrome patients, including a familial case with a male proband. Eur J Hum Genet. (2007) 15:1218–29. doi: 10.1038/sj.ejhg.5201911 
-8. Topcu M, Akyerli C, Sayi A, Toruner GA, Kocoglu SR, Cimbis M, et al. Somatic mosaicism for a MECP2 mutation associated with classic Rett syndrome in a boy. Eur J Hum Genet. (2002) 10:77–81. doi: 10.1038/sj.ejhg.5200745 
-9. Pieras JI, Munoz-Cabello B, Borrego S, Marcos I, Sanchez J, Madruga M, et al. Somatic mosaicism for Y120X mutation in the MECP2 gene causes atypical Rett syndrome in a male. Brain Dev. (2011) 33:608–11. doi: 10.1016/j.braindev.2010.09.012 
-10. Bianciardi L, Fichera M, Failla P, Di Marco C, Grozeva D, Mencarelli MA, et al. MECP2 missense mutations outside the canonical MBD and TRD domains in males with intellectual disability. J Hum Genet. (2016) 61:95–101. doi: 10.1038/jhg.2015.118 
-11. Alexandrou A, Papaevripidou I, Alexandrou IM, Theodosiou A, Evangelidou P, Kousoulidou L, et al. De novo mosaic MECP2 mutation in a female with Rett syndrome. Clin Case Rep. (2019) 7:366–70. doi: 10.1002/ccr 3.1985 
-12. Amir RE, Van den Veyver IB, Wan M, Tran CQ, Francke U, Zoghbi HY. Rett syndrome is caused by mutations in X-linked MECP2, encoding methyl-CpGbinding protein 2. Nat Genet. (1999) 23:185–8. doi: 10.1038/13810 
-13. Villard L, Levy N, Xiang F, Kpebe A, Labelle V, Chevillard C, et al. Segregation of a totally skewed pattern of X chromosome inactivation in four familial cases of Rett syndrome without MECP2 mutation: implications for the disease. J Med Genet. (2001) 38:435–42. doi: 10.1136/jmg.38.7.435 
-14. Zhang Q, Yang X, Wang J, Li J, Wu Q, Wen Y, et al. Genomic mosaicism in the pathogenesis and inheritance of a Rett syndrome cohort. Genet Med. (2019) 21:1330–8. doi: 10.1038/s41436-018-0348-2 
-15. MacLean HE, Favaloro JM, Warne GL, Zajac JD. Double-strand DNA break repair with replication slippage on two strands: a novel mechanism of deletion formation. Hum Mutat. (2006) 27:483–9. doi: 10.1002/humu. 20327 
-16. Glavac D, Dean M. Applications of heteroduplex analysis for mutation detection in disease genes. Hum Mutat. (1995) 6:281–7. doi: 10.1002/humu.1380060402 
-17. Mari F, Caselli R, Russo S, Cogliati F, Ariani F, Longo I, et al. Germline mosaicism in Rett syndrome identified by prenatal diagnosis. Clin Genet. (2005) 67:258–60. doi: 10.1111/j.1399-0004.2005.00397.x
+遺伝子型と臨床型の関連 CDKL5 異常による臨床像は多様で，てんかんがコントールされ歩行可能な軽症例から難治性てんかんを伴い重度の精神運動発達遅滞を呈する患者までおり，重症度の幅は広い $^{19)}$ ．遺伝子型と臨床像との関連を明らかにするには多数例での検討が必要で，今後の研究課題である．しかし，CDKL5の酵素触媒ドメインの変異では重症化しやすい傾向があることが知られている．
 
-Conflict of Interest: The authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest.
+遺伝カウンセリング これまでの報告では，患者さんのみに変異がみられる突然変異に起因したものである。しかし，3人の同胞発症のあった一家系の報告があり，このような場合は生殖細胞の病的変異モザイクを持つ親から遺伝した可能性が考えられている $^{20)}$ 。
 
-Publisher’s Note: All claims expressed in this article are solely those of the authors and do not necessarily represent those of their affiliated organizations, or those of the publisher, the editors and the reviewers. Any product that may be evaluated in this article, or claim that may be made by its manufacturer, is not guaranteed or endorsed by the publisher.
+## 3. FOXG1 遺伝子
 
-Copyright © 2021 Zhang, Sun, Zhu, Hong and Zheng. This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution or reproduction in other forums is permitted, provided the original author(s) and the copyright owner(s) are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
+FOXG1 とは 14 番染色体長腕に位置し, 脳の発生, 特に終脳の発生に重要な転写因子 FOXG1 をコードしている. 生後早期から重度の発達遅滞がみられる “先天型” と呼ばれる非典型的 Rett 症候群の患者において, FOXG1 の機能喪失性変異が同定されている $^{5)}$ . しかし, FOXG1 の機能喪失は, 著しい小頭症をきたし, 重度の発達遅滞を呈するために, 非典型的 Rett 症候群と診断する上で必須とされる「退行」がみられない症例が多い.
+
+遺伝子型と臨床型の関連 FOXG1 変異に関連した臨床症候は比較的均一である．有意語の表出や歩行が可能になった症例の報告はないが，支えると立位をとれる軽症例の報告があり，遺伝子型から臨床症状を予測することは困難である $^{13)}$ .
+
+遺伝カウンセリング FOXG1 変異に関連した脳症は，常染色体優性遺伝形式をとる．現在までに家族内での同胞発症の報告はなく，患者のみに変異がみられる突然変異に起因したものばかりである．
+
+## おわりに
+
+Rett 症候群は，主に女児に発症する神経発達障害であり，神経変性疾患とは区別される．病因遺伝子が同定されて10年以上を経過し，分子病態については多くの知見が集積されてきた．今後の10年では，有効な治療法の開発が期待されている．研究成果の信頼度を上げるためには，研究対象が均一な患者集団である必要がある．そこで，患者の臨床症状を正しく把握して，同一の診断基準に基づいて評価する小児神経科医の果たす役割は大きい．これは，個々の患者の予後を予測し，適切な予防対策を立てる上でも必要なことである．
+
+著者の利益相反：本論文発表内容に関連して開示すべき事項なし。
+
+## 文 献
+
+1) Amir RE, Van den Veyver IB, Wan M, Tran CQ, Francke U, Zoghbi HY. Rett syndrome is caused by mutations in X-linked MECP2, encoding methyl-CpG-binding protein 2. Nat Genet 1999;23:185-8.
+
+2) Neul JL, Kaufmann WE, Glaze DG, et al. Rett syndrome: revised diagnostic criteria and nomenclature. Ann Neurol 2010;68:944-50. 
+3) Neul JL, Fang P, Barrish J, et al. Specific mutations in methyl-CpG-binding protein 2 confer different severity in Rett syndrome. Neurology 2008;70:1313-21. 
+4) Tao J, Van Esch H, Hagedorn-Greiwe M, et al. Mutations in the X-linked cyclin-dependent kinase-like 5 (CDKL5/STK9) gene are associated with severe neurodevelopmental retardation. Am J Hum Genet 2004;75:1149-54. 
+5) Ariani F, Hayek G, Rondinella D, et al. FOXG1 is responsible for the congenital variant of Rett syndrome. Am J Hum Genet 2008;83:89-93. 
+6) Burford B. Perturbations in the development of infants with Rett disorder and the implications for early diagnosis. Brain Dev 2005;27:S3-7. 
+7) Einspieler C, Kerr AM, Prechtl HF. Is the early development of girls with Rett disorder really normal? Pediatr Res 2005;57:696-700. 
+8) Steffenburg U, Hagberg G, Hagberg B. Epilepsy in a representative series of Rett syndrome. Acta Paediatr 2001;90:34-9. 
+9) Guerrini R, Parrini E. Epilepsy in Rett syndrome, and CDKL5- and FOXG1-gene-related encephalopathies. Epilepsia 2012;53:2067-78. 
+10) Oexle K, Thamm-Mücke B, Mayer T, Tinschert S. Macrocephalic mental retardation associated with a novel C-terminal MECP2 frameshift deletion. Eur J Pediatr 2005;164:154-7. 
+11) Bahi-Buisson N, Kaminska A, Boddaert N, et al. The three stages of epilepsy in patients with CDKL5 mutations. Epilepsia 2008;49:1027-37. 
+12) Liang JS, Shimojima K, Takayama R, et al. CDKL5 alterations lead to early epileptic encephalopathy in both genders. Epilepsia 2011;52:1835-42. 
+13) Florian C, Bahi-Buisson N, Bienvenu T. FOXG1-Related Disorders: From Clinical Description to Molecular Genetics. Mol Syndromol 2011;2:153-63. 
+14) Takahashi S, Matsumoto N, Okayama A, et al. FOXG1 mutations in Japanese patients with the congenital variant of Rett syndrome. Clin Genet 2012;82:569-73. 
+15) Guy J, Gan J, Selfridge J, Cobb S, Bird A. Reversal of neurological defects in a mouse model of Rett syndrome. Science 2007;315:1143-7. 
+16) Baker SA, Chen L, Wilkins AD, Yu P, Lichtarge O, Zoghbi HY. An AT-Hook domain in MeCP2 determines the clinical course of Rett Syndrome and related disorders. Cell 2013;152:984-96. 
+17) Villard L. MECP2 mutations in males. J Med Genet 2007;44:417-23. 
+18) Wang IT, Allen M, Goffin D, et al. Loss of CDKL5 disrupts kinome profile and event-related potentials leading to autistic-like phenotypes in mice. Proc Natl Acad Sci USA 2012;109:21516-21. 
+19) Bahi-Buisson N, Villeneuve N, Caietta E, et al. Recurrent mutations in the CDKL5 gene:genotype-phenotype relationships. Am J Med Genet A 2012;158 A:1612-9. 
+20) Weaving LS, Christodoulou J, Williamson SL, et al. Mutations of CDKL5 cause a severe neurodevelopmental disorder with infantile spasms and mental retardation. Am J Hum Genet 2004;75:1079-93.

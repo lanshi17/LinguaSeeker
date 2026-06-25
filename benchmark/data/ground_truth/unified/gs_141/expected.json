@@ -1,13 +1,13 @@
 {
   "unified_id": "gs_141",
-  "original_entry_id": "rett_077",
+  "original_entry_id": "rett_078",
   "source_dataset": "rett",
   "gold_source": "article",
   "annotation_provenance": "ai_auto_review",
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Typical Rett syndrome",
+  "disease_label": "Atypical Rett syndrome",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "classification": "Rett real-data",
@@ -19,19 +19,17 @@
   "source_pmc": "",
   "source_pdf_url": "",
   "source_pdf_path": "benchmark/data/ground_truth/unified/gs_141/source.pdf",
-  "source_title": "Typical Rett Syndrome in a young boy with hemizygous c.316C>T mutation in MECP2 gene",
-  "source_journal": "",
-  "source_year": "",
-  "source_language": "en",
+  "source_title": "Atipik Rett Sendromu ve Otizm Birlikteliği (Association of Atypical Rett Syndrome and Autism)",
+  "source_journal": "Sakarya Medical Journal",
+  "source_year": "2015",
+  "source_language": "tr",
   "variants": [
     {
       "source": "rett",
-      "hgvs_c": "c.316C>T",
-      "hgvs_p": "p.R106W",
+      "hgvs_p": "p.Pro302Leu",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic (disease-causing)",
-      "exon": "3",
-      "domain": "MBD (methyl-CpG-binding domain)"
+      "exon": "4",
+      "domain": "TRD"
     }
   ],
   "expected_evidence": [
@@ -44,7 +42,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "Typical Rett syndrome",
+      "value": "Atypical Rett syndrome",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -64,15 +62,8 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "A.variant_hgvs_c",
-      "value": "c.316C>T",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.R106W",
+      "value": "p.Pro302Leu",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
@@ -86,42 +77,42 @@
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD (methyl-CpG-binding domain)",
+      "value": "TRD",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0002072; HP:0001344; HP:0001251; HP:0002650; HP:0000252; HP:0000253; HP:0003763; HP:0012759; HP:0000756; HP:0001263",
+      "value": "HP:0000252; HP:0000253; HP:0002072; HP:0001250; HP:0002376; HP:0001257; HP:0002360; HP:0003763; HP:0001344",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "developmental regression; loss of purposeful hand use; stereotypic hand movements (hand wringing, washing, clapping, hand-to-mouth); loss of acquired spoken language / absent meaningful words; truncal ataxia and gait apraxia; scoliosis; mild microcephaly; postnatal deceleration of head growth; severe bruxism; breath-holding spells; autistic behavior / deficits in social development; developmental delay; deterioration of motor and social skills",
+      "value": "microcephaly with negative head circumference deviation from 10 months; progressive slowing of head growth; stereotypic hand movements (finger licking and biting); generalized afebrile tonic-clonic seizures; psychomotor regression / developmental regression; increased generalized muscle tone (spasticity); increased deep tendon reflexes; bilateral positive Babinski; gait apraxia / difficulty walking; loss of communication skills; loss of eye contact; sleep disturbance; bruxism (teeth grinding); uncontrollable laughing attacks; eye gaze episodes; reduced pain sensitivity; self-injurious behavior",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.sex",
-      "value": "male",
+      "value": "female",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "around 12 months (stereotypies and limited social responsiveness from 12 months, with regression progressing thereafter)",
+      "value": "10 months",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo (mutation absent in mother; de novo in patient or gonadal mosaicism in mother)",
+      "value": "unknown",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -137,12 +128,12 @@
       "hgnc_id": "HGNC:6992"
     },
     "disease": {
-      "text": "Typical Rett syndrome",
+      "text": "Atypical Rett syndrome",
       "mondo_id": "MONDO:0010726"
     },
     "variants": [
       {
-        "text": "c.316C>T"
+        "text": "p.Pro302Leu"
       }
     ]
   },

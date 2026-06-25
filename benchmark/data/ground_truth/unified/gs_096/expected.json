@@ -23,52 +23,530 @@
   "source_journal": "Acta neuropathologica communications",
   "source_year": "2020",
   "source_language": "en",
-  "variants": [],
+  "variants": [
+    {
+      "source": "rett",
+      "hgvs_p": "p.Arg493*",
+      "variant_type": "nonsense",
+      "clinical_significance": "Pathogenic",
+      "domain": "NLS"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.2020G>A",
+      "hgvs_p": "p.Glu674Lys",
+      "variant_type": "missense",
+      "clinical_significance": "Uncertain significance",
+      "domain": "NLS"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.10G>A",
+      "hgvs_p": "p.Gly4Arg",
+      "variant_type": "missense",
+      "clinical_significance": "Uncertain significance"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.2339T>C",
+      "hgvs_p": "p.Ile780Thr",
+      "variant_type": "missense",
+      "clinical_significance": "Uncertain significance",
+      "domain": "NLS"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.827C>T",
+      "hgvs_p": "p.Ala276Val",
+      "variant_type": "missense",
+      "clinical_significance": "Uncertain significance",
+      "domain": "TRD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.256G>A",
+      "hgvs_p": "p.Gly86Ser",
+      "variant_type": "missense",
+      "clinical_significance": "Uncertain significance",
+      "domain": "MBD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.1732C>T",
+      "hgvs_p": "p.Arg578Cys",
+      "variant_type": "missense",
+      "clinical_significance": "Uncertain significance",
+      "domain": "NLS"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.1733G>A",
+      "hgvs_p": "p.Arg578His",
+      "variant_type": "missense",
+      "clinical_significance": "Uncertain significance",
+      "domain": "NLS"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.1820G>A",
+      "hgvs_p": "p.Arg607His",
+      "variant_type": "missense",
+      "clinical_significance": "Uncertain significance",
+      "domain": "NLS"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.1210A>G",
+      "hgvs_p": "p.Met404Val",
+      "variant_type": "missense",
+      "clinical_significance": "Uncertain significance",
+      "domain": "NLS"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.1150C>T",
+      "hgvs_p": "p.Arg384Trp",
+      "variant_type": "missense",
+      "clinical_significance": "Uncertain significance",
+      "domain": "NCoR/SMRT"
+    }
+  ],
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
-      "value": "PRKN",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.disease_diagnosis",
-      "value": "Parkinson disease",
+      "value": "GRN; APP; CHCHD2; DCTN1; MAPT; NOTCH3; SQSTM1; TBK1; TIA1; GBA; APOE; PLCG2; SNCA; PRNP; SNCB",
       "candidates": [
-        "Parkinson disease",
-        "Parkinson's disease"
+        "GRN",
+        "APP",
+        "CHCHD2",
+        "DCTN1",
+        "MAPT",
+        "NOTCH3",
+        "SQSTM1",
+        "TBK1",
+        "TIA1",
+        "GBA",
+        "APOE",
+        "PLCG2",
+        "SNCA",
+        "PRNP",
+        "SNCB"
       ],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.gene_disease_relationship",
-      "value": "associated",
+      "value": "GRP p.Arg493* is a known pathogenic FTD-causing mutation; identified here in a DLB patient, potentially adding to the diversity of phenotypes associated with this mutation",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.transcript_id",
+      "value": "ENST00000053867 (GRN); ENST00000346798 (APP); ENST00000395422 (CHCHD2); ENST00000361874 (DCTN1); ENST00000344290 (MAPT); ENST00000263388 (NOTCH3); ENST00000389805 (SQSTM1); ENST00000331710 (TBK1)",
+      "candidates": [
+        "ENST00000053867 (GRN)",
+        "ENST00000346798 (APP)",
+        "ENST00000395422 (CHCHD2)",
+        "ENST00000361874 (DCTN1)",
+        "ENST00000344290 (MAPT)",
+        "ENST00000263388 (NOTCH3)",
+        "ENST00000389805 (SQSTM1)",
+        "ENST00000331710 (TBK1)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.reference_sequence",
+      "value": "GRCh37/hg19",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.2020G>A (APP); c.10G>A (CHCHD2); c.2339T>C (DCTN1); c.827C>T (GRN); c.256G>A (MAPT); c.1732C>T (NOTCH3); c.1733G>A (NOTCH3); c.1820G>A (NOTCH3); c.1210A>G (SQSTM1); c.1150C>T (TBK1)",
+      "candidates": [
+        "c.2020G>A (APP)",
+        "c.10G>A (CHCHD2)",
+        "c.2339T>C (DCTN1)",
+        "c.827C>T (GRN)",
+        "c.256G>A (MAPT)",
+        "c.1732C>T (NOTCH3)",
+        "c.1733G>A (NOTCH3)",
+        "c.1820G>A (NOTCH3)",
+        "c.1210A>G (SQSTM1)",
+        "c.1150C>T (TBK1)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "为Dementia with Lewy bodies (DLB)相关研究，无PD方面的信息",
+      "value": "p.Arg493* (GRN); p.Glu674Lys (APP); p.Gly4Arg (CHCHD2); p.Ile780Thr (DCTN1); p.Ala276Val (GRN); p.Gly86Ser (MAPT); p.Arg578Cys (NOTCH3); p.Arg578His (NOTCH3); p.Arg607His (NOTCH3); p.Met404Val (SQSTM1); p.Arg384Trp (TBK1)",
+      "candidates": [
+        "p.Arg493* (GRN)",
+        "p.Glu674Lys (APP)",
+        "p.Gly4Arg (CHCHD2)",
+        "p.Ile780Thr (DCTN1)",
+        "p.Ala276Val (GRN)",
+        "p.Gly86Ser (MAPT)",
+        "p.Arg578Cys (NOTCH3)",
+        "p.Arg578His (NOTCH3)",
+        "p.Arg607His (NOTCH3)",
+        "p.Met404Val (SQSTM1)",
+        "p.Arg384Trp (TBK1)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "nonsense (GRN p.Arg493*); missense (all others)",
+      "candidates": [
+        "nonsense (GRN p.Arg493*)",
+        "missense (all others)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.null_variant_detail",
+      "value": "GRN p.Arg493* is a nonsense (truncating) mutation; previously reported as pathogenic loss-of-function in FTD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "GRN p.Arg493* protein truncation; remaining variants are amino acid substitutions of uncertain significance",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.same_residue_other_missense",
+      "value": "NOTCH3 p.Arg578His at same residue as CADASIL p.Arg578Cys; NOTCH3 p.Arg607His at same residue as CADASIL p.Arg607Cys; TBK1 p.Arg384Trp at same residue as ALS p.Arg384Thr; APP p.Glu674Lys adjacent to AD-associated p.A673T/p.A673V",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_length_change",
+      "value": "GRN p.Arg493* causes premature truncation",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.splice_or_synonymous_effect",
+      "value": "Analysis focused on amino acid changing variants and those in splice donor/acceptor sites, splice regions, or 5'/3' UTRs",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_consequence_class",
+      "value": "GRN p.Arg493* predicted null (nonsense/LoF) variant",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "1004 DLB patients analyzed after QC (from initial 1118)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "A.variant_type",
-      "value": "missense, nonsense, duplication",
+      "field_id": "B.disease_diagnosis",
+      "value": "Dementia with Lewy bodies (DLB)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.phenotype_specificity",
+      "value": "Neuropathologically diagnosed DLB per 2005 McKeith guidelines, meeting 'intermediate' or 'high' likelihood criteria",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001257",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "parkinsonism; tremor; rigidity; cognitive decline; dementia",
+      "value": "GRN p.Arg493* patient: episodes of confusion, memory loss, disorientation, altered gait, stooped posture, right-sided rigidity, visual hallucinations, impaired smooth pursuit, left hemiparesis, left spasticity, parkinsonian tremor of left hand, severely demented (MMSE 3/30); stroke and prior subdural haematoma in history",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_current_or_last_followup",
+      "value": "GRN patient assessed at 83 years, approximately 2 years before death; cohort mean age at death 78.8 (±8.4) years",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "Family history of AD with onset in the seventh decade (parent and sibling)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "Cohort male to female ratio 1.5",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.ancestry_or_population",
+      "value": "Caucasian / European (clustered with 1000 Genomes European population)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "No pathogenic homozygous variants identified in autosomal recessive neurodegenerative disease genes; compound heterozygous variants could not be fully assessed (data not phased)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Whole exome sequencing (Illumina Nextera Rapid Expanded Exome 62 Mb or Agilent SureSelect Exome Capture Kit v4) on Illumina HiSeq2500; candidate variants confirmed by Sanger sequencing",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sequencing_method_quality",
+      "value": "On-target average coverage of at least 30x; GATK v3 best practices, joint variant calling, VQSR threshold 99.9; genotypes with phred quality <20 or coverage <8 set to missing; variants required genotyping in >=90% of samples in both capture kits",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.healthy_adult_status",
+      "value": "432 control individuals from the Healthy Exomes (HEX) dataset who died aged 60 or over without any disease-associated neuropathology",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.phase_status",
+      "value": "Data not phased; compound heterozygous variants could not be completely assessed",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "D.population_database_name",
+      "value": "gnomAD v2.1 (125,748 exomes and 15,708 genomes); Healthy Exomes (HEX) dataset (432 controls)",
+      "candidates": [
+        "gnomAD v2.1 (125,748 exomes and 15,708 genomes)",
+        "Healthy Exomes (HEX) dataset (432 controls)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.allele_frequency",
+      "value": "APP p.Glu674Lys: 0 (not present); CHCHD2 p.Gly4Arg: 0.00002840; DCTN1 p.Ile780Thr: 0.00003889; GRN p.Ala276Val: 0.000007075; MAPT p.Gly86Ser: 0.00002901; NOTCH3 p.Arg578Cys: 0.00003989; NOTCH3 p.Arg578His: 0.000007980; NOTCH3 p.Arg607His: 0.000004000; SQSTM1 p.Met404Val: 0.00001591; TBK1 p.Arg384Trp: 0.00002128",
+      "candidates": [
+        "APP p.Glu674Lys: 0 (not present)",
+        "CHCHD2 p.Gly4Arg: 0.00002840",
+        "DCTN1 p.Ile780Thr: 0.00003889",
+        "GRN p.Ala276Val: 0.000007075",
+        "MAPT p.Gly86Ser: 0.00002901",
+        "NOTCH3 p.Arg578Cys: 0.00003989",
+        "NOTCH3 p.Arg578His: 0.000007980",
+        "NOTCH3 p.Arg607His: 0.000004000",
+        "SQSTM1 p.Met404Val: 0.00001591",
+        "TBK1 p.Arg384Trp: 0.00002128"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.allele_count",
+      "value": "APP: not present; CHCHD2: 4; DCTN1: 5; GRN p.Ala276Val: 1; MAPT: 4; NOTCH3 p.Arg578Cys: 2; NOTCH3 p.Arg578His: 0; NOTCH3 p.Arg607His: 1; SQSTM1: 3; TBK1: 4",
+      "candidates": [
+        "APP: not present",
+        "CHCHD2: 4",
+        "DCTN1: 5",
+        "GRN p.Ala276Val: 1",
+        "MAPT: 4",
+        "NOTCH3 p.Arg578Cys: 2",
+        "NOTCH3 p.Arg578His: 0",
+        "NOTCH3 p.Arg607His: 1",
+        "SQSTM1: 3",
+        "TBK1: 4"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.allele_number",
+      "value": "CHCHD2: 128432; DCTN1: 129150; GRN p.Ala276Val: 129048; MAPT: 126300; NOTCH3 p.Arg578Cys: 113234; NOTCH3 p.Arg578His: 113200; NOTCH3 p.Arg607His: 112826; SQSTM1: 113732; TBK1: 128892",
+      "candidates": [
+        "CHCHD2: 128432",
+        "DCTN1: 129150",
+        "GRN p.Ala276Val: 129048",
+        "MAPT: 126300",
+        "NOTCH3 p.Arg578Cys: 113234",
+        "NOTCH3 p.Arg578His: 113200",
+        "NOTCH3 p.Arg607His: 112826",
+        "SQSTM1: 113732",
+        "TBK1: 128892"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.population_subgroup",
+      "value": "European (non-Finnish) / NFE in gnomAD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.absent_or_rare_statement",
+      "value": "Variants of uncertain significance included if present five times or less in the European (non-Finnish) population in gnomAD; previously reported pathogenic mutations were rare in this cohort, suggesting limited genetic overlap of other neurodegenerative diseases with DLB",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.healthy_carrier_observation",
+      "value": "DCTN1 p.Ile780Thr also found in a control; NOTCH3 p.Arg578Cys also seen in 1 control",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "E.prediction_tools_list",
+      "value": "Annotation performed with snpEff v4.2 and dbNSFP v2.9",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.study_design",
+      "value": "Case cohort exome sequencing study with comparison to population frequency databases (gnomAD) and a neuropathologically normal control dataset (HEX)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_count",
+      "value": "1004 DLB cases analyzed (1118 initially)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.control_count",
+      "value": "432 HEX controls; gnomAD v2.1 comprising 125,748 exomes and 15,708 genomes",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_definition",
+      "value": "Patients neuropathologically diagnosed as 'intermediate' or 'high' likelihood DLB per 2005 McKeith guidelines, self-reported Caucasian",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.control_matching",
+      "value": "HEX controls died aged 60 or over without disease-associated neuropathology; gnomAD used as general population reference",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.statistical_method",
+      "value": "Maximum tolerated allele count estimated using alleleFrequencyApp (cardiodb.org) based on Alzheimer's disease as a conservative approximation; sample QC via PLINK 1.9, PCA for population structure, identity-by-descent threshold >=0.1875 for relatedness",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_control_negative_result",
+      "value": "Rarity of previously reported pathogenic mutations suggests genetic overlap of other neurodegenerative diseases with DLB is not substantial",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.misdiagnosis_or_reclassification",
+      "value": "GRN p.Ala276Val was previously reported in a patient whose initial diagnosis of FTD was changed to depression",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.non_segregation",
+      "value": "MAPT p.Gly86Ser segregation not proven; PRNP and SNCB variants previously questioned due to lack of segregation",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.healthy_carrier_contradiction",
+      "value": "DCTN1 p.Ile780Thr found in a control; NOTCH3 p.Arg578Cys seen in 1 control; PRNP/SNCB variant pathogenicity questioned due to presence in healthy controls",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.contradiction_type",
+      "value": "MAF/population presence and non-segregation noted for several VUS",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "ClinVar used as one of the sources to identify previously reported pathogenic mutations",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.authority_classification",
+      "value": "Literature search used HGMD, OMIM, AD & FTD and PD mutation databases, and ClinVar to identify previously reported pathogenic mutations",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.known_pathogenic_variant_reference",
+      "value": "GRN p.Arg493* previously reported pathogenic (FTD); NOTCH3 p.Arg578Cys and p.Arg607Cys known CADASIL pathogenic; SQSTM1 causes Paget's disease of bone; APP p.A673V causes EOAD when homozygous",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.ps1_pm5_relationship",
+      "value": "NOTCH3 p.Arg578His and p.Arg607His are different amino acid changes at the same residues as known pathogenic cysteine-changing CADASIL variants (p.Arg578Cys, p.Arg607Cys); TBK1 p.Arg384Trp differs from ALS-reported p.Arg384Thr at the same residue",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
     }
   ],
   "expected_standardization": {
@@ -83,20 +561,96 @@
     "gene": {
       "text": "PRKN",
       "hgnc_id": "HGNC:8607"
-    }
+    },
+    "variants": [
+      {
+        "text": "p.Arg493*"
+      },
+      {
+        "text": "c.2020G>A"
+      },
+      {
+        "text": "c.10G>A"
+      },
+      {
+        "text": "c.2339T>C"
+      },
+      {
+        "text": "c.827C>T"
+      },
+      {
+        "text": "c.256G>A"
+      },
+      {
+        "text": "c.1732C>T"
+      },
+      {
+        "text": "c.1733G>A"
+      },
+      {
+        "text": "c.1820G>A"
+      },
+      {
+        "text": "c.1210A>G"
+      },
+      {
+        "text": "c.1150C>T"
+      }
+    ]
   },
   "evaluation_config": {
     "gene_disease_fields": [
       "A.gene_symbol",
+      "A.gene_disease_relationship",
       "B.disease_diagnosis",
-      "A.gene_disease_relationship"
+      "B.mode_of_inheritance_reported"
     ],
     "variant_fields": [
+      "A.transcript_id",
+      "A.reference_sequence",
+      "A.variant_hgvs_c",
       "A.variant_hgvs_p",
-      "A.variant_type"
+      "A.variant_type",
+      "A.null_variant_detail",
+      "A.protein_effect",
+      "A.same_residue_other_missense",
+      "A.protein_length_change",
+      "A.splice_or_synonymous_effect",
+      "A.variant_consequence_class",
+      "J.clinvar_assertion"
     ],
     "clinical_fields": [
-      "B.clinical_phenotypes"
+      "B.case_count",
+      "B.phenotype_specificity",
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.age_current_or_last_followup",
+      "B.age_of_onset",
+      "B.sex",
+      "B.ancestry_or_population",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "B.healthy_adult_status",
+      "C.phase_status",
+      "D.population_database_name",
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.population_subgroup",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation",
+      "E.prediction_tools_list",
+      "G.study_design",
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.statistical_method",
+      "G.case_control_negative_result",
+      "H.misdiagnosis_or_reclassification",
+      "H.non_segregation",
+      "H.healthy_carrier_contradiction",
+      "H.contradiction_type"
     ],
     "standardization_fields": [
       "gene",

@@ -1,13 +1,13 @@
 {
   "unified_id": "gs_137",
-  "original_entry_id": "rett_069",
+  "original_entry_id": "rett_070",
   "source_dataset": "rett",
   "gold_source": "article",
   "annotation_provenance": "ai_auto_review",
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome",
+  "disease_label": "Заболевание спектра синдрома Ретта (Rett syndrome spectrum disorder / Rett-like syndrome)",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "classification": "Rett real-data",
@@ -15,21 +15,23 @@
   "classification_date": "",
   "clingen_report_url": "",
   "source_pmid": "",
-  "source_doi": "10.15690/pf.v22i2.2872",
+  "source_doi": "10.33978/2307-3586-2024-20-40-56-63",
   "source_pmc": "",
   "source_pdf_url": "",
   "source_pdf_path": "benchmark/data/ground_truth/unified/gs_137/source.pdf",
-  "source_title": "Сlinical Case of Rett Syndrome: the Experience of Observing Older Preschooler",
-  "source_journal": "Pediatricheskaya farmakologiya (Pediatric pharmacology)",
-  "source_year": "2025",
+  "source_title": "Клинический случай пациента школьного возраста с заболеванием спектра синдрома Ретта и делецией в гене MECP2",
+  "source_journal": "Эффективная фармакотерапия",
+  "source_year": "2024",
   "source_language": "ru",
   "variants": [
     {
       "source": "rett",
-      "hgvs_c": "c.468C>G",
-      "hgvs_p": "p.D156E",
-      "variant_type": "missense",
-      "domain": "MBD"
+      "hgvs_c": "c.1217_1445del",
+      "hgvs_p": "p.Gln406Profs*30",
+      "variant_type": "frameshift deletion (228 nt deletion)",
+      "clinical_significance": "pathogenic",
+      "exon": "4",
+      "domain": "C-terminal region (beyond TRD; codon 406)"
     }
   ],
   "expected_evidence": [
@@ -42,7 +44,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome",
+      "value": "Заболевание спектра синдрома Ретта (Rett syndrome spectrum disorder / Rett-like syndrome)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -63,42 +65,42 @@
     },
     {
       "field_id": "A.variant_hgvs_c",
-      "value": "c.468C>G",
+      "value": "c.1217_1445del",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.D156E",
+      "value": "p.Gln406Profs*30",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_type",
-      "value": "missense",
+      "value": "frameshift deletion (228 nt deletion)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD",
+      "value": "C-terminal region (beyond TRD; codon 406)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001250; HP:0001263; HP:0002072; HP:0002376; HP:0001344; HP:0003763; HP:0002019",
+      "value": "HP:0001250; HP:0001263; HP:0001249; HP:0002072; HP:0002376; HP:0001252; HP:0001290; HP:0001251; HP:0001344; HP:0002194; HP:0011968",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "loss of speech / absent speech; hand stereotypies; developmental regression (at 1.5 years); severe psychomotor/psychoverbal developmental delay; focal epileptic seizures during sleep / epileptiform activity on EEG; bruxism; equinus gait; constipation; muscle spasms / excitability; irritability and aggression; preserved nonverbal communication (eye contact, emotional reactions)",
+      "value": "эпилептические приступы (фармакорезистентная эпилепсия); задержка моторного развития; мозжечковая атаксия / шаткость походки; диффузная мышечная гипотония; регресс в психическом, речевом и двигательном развитии; умеренная умственная отсталость (IQ 44); задержка психоречевого развития; двигательные стереотипии рук (перебирание пальцами, размахивание, тряска кистями); утрата речи (отсутствие собственной речи); нарушение питания (снижение аппетита, отсутствие жевания, питание через зонд/гастростому); нарушение мелкой моторики, интенция и дисметрия в руках; уменьшение объема мозжечка / гипоплазия червя и гемисфер мозжечка (по МРТ); высокие сухожильные рефлексы, патологический рефлекс Бабинского",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -112,14 +114,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "1.5 years (regression onset); symptoms manifest by age 2",
+      "value": "Задержка моторного развития с младенчества; дебют эпилептических приступов в возрасте 7 лет",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "unknown",
+      "value": "unknown (родители здоровы, статус de novo в тексте не указан)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -135,12 +137,12 @@
       "hgnc_id": "HGNC:6992"
     },
     "disease": {
-      "text": "Rett syndrome",
+      "text": "Заболевание спектра синдрома Ретта (Rett syndrome spectrum disorder / Rett-like syndrome)",
       "mondo_id": "MONDO:0010726"
     },
     "variants": [
       {
-        "text": "c.468C>G"
+        "text": "c.1217_1445del"
       }
     ]
   },

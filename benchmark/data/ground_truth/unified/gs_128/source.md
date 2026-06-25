@@ -1,302 +1,528 @@
-## RESEARCH ARTICLE
-
-## Open Access
-
-# Methyl-CpG-binding protein 2 (MECP2) mutation type is associated with bone disease severity in Rett syndrome
-
-![](images/8bfbcf828824ff0f219a1fb30326e0af7a0ac472dc417af74ed2859b1ff05cd7.jpg)
+# Unraveling MECP2 structural variants in previously elusive Rett syndrome cases through IGV interpretation
 
 Check for updates
 
-Carla Caffarelli1\* , Stefano Gonnelli1 , Maria Dea Tomai Pitinca1 , Silvia Camarri1 , Antonella Al Refaie1 , Joussef Hayek2 and Ranuccio Nuti1
+Tomer Poleg 1 , Noam Hadar 1 , Gali Heimer2,3, Vadim Dolgin 1 , Ilana Aminov1 , Amit Safran1 , Nadav Agam1 , Matan M. Jean 1 , Ofek Freund1 , Simran Kaur4,5, John Christodoulou 4,5, Bruria Ben-Zeev2,3 & Ohad S. Birk 1,6,7
 
-## Abstract
+Rett syndrome (RTT) is a severe neurodevelopmental disorder, with MECP2 mutations accounting for 90–95% of classic and 50–70% of atypical cases. However, many clinically diagnosed RTT patients remain without molecular diagnoses. While point mutations and large rearrangements in MECP2 are well studied, the role of small-intermediate structural variants (SVs) remains mostly elusive. Using standard short-read whole genome sequencing, we identified novel de novo SVs in three out of three previously unresolved RTT cases: a complex SV with two deletions ( \~ 5Kbp and \~60Kbp) and a \~105Kbp inversion; a \~200Kbp translocation; and a \~3Kbp deletion. These findings suggest that such elusive SVs might be a common cause for “MECP2-negative” RTT. Incorporating SV detection into routine genetic testing through bioinformatic analysis of short-read sequencing or manual review using IGV could improve diagnostic rates and expand our understanding of RTT and similar disorders.
 
-Background: More than 95% of individuals with RTT have mutations in methyl-CpG-binding protein 2 (MECP2), whose protein product modulates gene transcription. The disorder is caused by mutations in a single gene and the disease severity in affected individuals can be quite variable. Specific MECP2 mutations may lead phenotypic variability and different degrees of disease severity. It is known that low bone mass is a frequent and early complication of subjects with Rett syndrome. As a consequence of the low bone mass Rett girls are at an increased risk of fragility fractures. This study aimed to investigate if specific MECP2 mutations may affects the degree of involvement of the bone status in Rett subjects.
+Rett syndrome (RTT) is a rare severe neurodevelopmental disorder, that stands as the second most common cause of genetic neurodevelopmental disorder in females1,2 . It is characterized by normal development followed by motor and cognitive skills regression3 . Individuals with RTT exhibit neurodevelopmental and motor delay, loss of hand usage, hand stereotypes, seizures, and autonomic symptoms including breathing abnormalities and social withdrawal3,4 .
 
-Methods: In 232 women with Rett syndrome (mean age 13.8 ± 8.3 yrs) we measured bone mineral density at whole body and at femur (BMD-FN and BMD-TH) by using a DXA machine (Hologic QDR 4500). QUS parameters were assessed at phalanxes by Bone Profiler-IGEA (amplitude dependent speed of sound: AD-SoS and bone transmission time: BTT). Moreover, ambulation capacity (independent or assisted), fracture history and presence of scoliosis were assessed. We divided the subjects with the most common point mutations in two group based on genotypephenotype severity; in particular, there has been consensus in recognising that the mutations R106T, R168X, R255X, R270X are considered more severe.
+RTT exemplifies the role of epigenetic mechanisms in disease pathology. Its etiology is primarily linked to mutations in MECP2, which encodes methyl-CpG binding protein 2 - a key epigenetic modulator in the brain that controls gene expression and modulates chromatin architecture through binding to methylated DNA5 . The association between MECP2 and RTT is evident, as pathogenic variants in that gene have been identified in 90–95% of classic RTT cases and 50–70% of atypical RTT cases6,7 . However, a significant number of clinically diagnosed Rett patients lack a genetic diagnosis8–10. Rett-like syndrome, exhibiting a phenotypic resemblance to classical RTT, also represents a considerable proportion of undiagnosed genetic cases11–14. The mutations underlying these genetically unsolved cases remain elusive in routine screening of RTT or RTT-like patients. It is often presumed that a second gene or locus may be involved13, or that mutations are situated within regulatory non-coding regions of MECP2, which are not routinely screened15. Another possibility is the occurrence of SVs that may go undetected by routine PCR-based screening approaches and sequencing, particularly if a breakpoint extends beyond the genomic positions targeted by commonly used PCR primers16,17.
 
-Results: As aspect, BMD-WB, BMD-FN and BMD-TH were lower in subjects with Rett syndrome that present the most severe mutations with respect to subjects with Rett syndrome with less severe mutations, but the difference was statistically significant only for BMD-FN and BMD-TH (p < 0.05). Also both AD-SoS and BTT values were lower in subjects that present the most severe mutations with respect to less severe mutations but the difference was not statistically significant. Moreover, subjects with Rett syndrome with more severe mutations present a higher prevalence of scoliosis (p < 0.05) and of inability to walk (p < 0.05).
-
-Conclusion: This study confirms that MECP2 mutation type is a strong predictor of disease severity in subjects with Rett syndrome. In particular, the subjects with more severe mutation present a greater deterioration of bone status, and a higher prevalence of scoliosis and inability to walk.
-
-Keywords: Rett syndrome, Methyl-CpG-binding protein 2 (MECP2), Mutation severity, Osteoporosis, Fractures, Scoliosis
-
-## Background
-
-Rett syndrome (RTT), first reported by the Austrian physician Andreas Rett, is a severe neurological disorder that affects brain development and function in females in approximately 1 in 10,000 live births. In 90–95% of patients diagnosed with classic RTT, the disease is caused by loss-of-function mutations in the X- linked MECP2 gene, which encodes methyl-CpG binding protein 2 (MECP2) [1, 2]. Despite the hundreds of RTTcausing MECP2 mutations that have been identified, eight ‘hotspot’ mutations (encoding the amino acid substitutions R106W, R133C, T158 M, R168X, R255X, R270X, R294X and R306C) constitute more than 60% of documented cases [3]. RTT causing mutations in MECP2 in female patients lead to developmental regression, including a loss of speech and hand skills, after apparently normal development [4].
-
-It’s has been amply reported that females with Rett’s syndrome frequently have marked decreases in bone mineral density (BMD) [5–17]. Several studies, have reported that bone mineral density and ultrasonographic parameters (QUS) were significantly lower in Rett subjects than in controls, and that these were influenced by the anthropometric parameters, adequate nutritional intake and mobility capacity [13–15, 17]. As a consequence of the low bone mass, girls with Rett syndrome are at an increased risk of fragility fractures and it has been reported that 25–40% of Rett girls have fracture at some time during their lives [12]. Particularly, individuals with Rett syndrome are prone to have fracture at the lower limbs, especially the femur. Moreover, scoliosis is prominent in Rett syndrome; the overall incidence of scoliosis in subjects with Rett syndrome is estimated at around 64% [18, 19].
-
-The onset of scoliosis in women with Rett syndrome was seen as early as age 1 year and increased dramatically over the first decade. By the age of 13 years, approximately 80% of this population with Rett syndrome had measurable scoliosis, but only 70% of those had undergone surgical correction [18].
-
-Several papers have shown that the degree of clinical severity is influenced by the type of MECP2 mutation. Recent evidence have reported genotype-phenotype correlations in girls with Rett syndrome, and there has been consensus in recognizing that R133C, R294X, R306C, T158 M and 30 truncations are less severe and R106T, R168X, R255X, R270X and large deletions are more severe [3, 4, 20]. In particular, there is a higher risk of fracture in those with R168X or R270X mutation, in the presence of epilepsy, and if certain anti-epileptic medications are used. Moreover, fracture is closely linked with mobility levels and capacity to bear weight-those with less mobility and limited weight bearing capacity are more likely to fracture [16].
-
-This study aimed to investigate whether specific MECP2 mutations may affect the degree of skeletal involvement and the bone status in subjects with Rett syndrome.
-
-## Materials and methods
-
-## Study population
-
-This study was a retrospective survey of 232 patients (age range 4–33 years; mean age 13.8 ± 8.3 yrs) affected by Rett’s syndrome, referred to the Department of Paediatric Neuropsychiatry of Siena. This Department has a long history of research on Rett syndrome and many patients from different parts of Italy undergo a routine annual follow-up examination in Siena. The clinical and genetic diagnosis of Rett syndrome was made according to the internationally accepted diagnostic criteria [2, 4]. Patients were included if they had a mutation in the MECP2 gene, regardless of clinical phenotype (classical or Rett variant). Patients with CDKL5 and FOXG1 mutations (genes known to cause Rett variants), male Rett patients, and patients with MECP2 duplications were excluded. Using their MECP2 mutation status, we separated the participants with the eight most common point mutations in two groups: less severe mutations (R133C, R294X, R306C and T158 M) and more severe mutations (R106T, R168X, R255X and R270X) [3, 4, 20–22].
-
-The study was approved by the Ethics Committee for human investigation of our Institution and informed consent was obtained according to the rules of the Ethics Committee. Questionnaires completed by parents provided information on clinical data, level of mobility, use of anticonvulsants or calcium/Vitamin D supplements, history of fracture and dietary calcium intake of the patients with Rett syndrome.
-
-At the time of the evaluation 159 (68.5%) patients were non ambulatory whereas the other 73 subjects were ambulatory (31.5%). Moreover, scoliosis was found in 120 (51.6%) out of the subjects with Rett syndrome and 48 females with Rett syndrome (20.9%) had experienced a fracture episode.
-
-## Densitometric and ultrasonographic measurements
-
-In all subjects we performed areal bone mineral density (BMD) at femoral sub regions (femoral neck: BMD-FN and total hip: BMD-T), by dual energy X-ray absorptiometry (DXA), (Hologic QDR 4500, Bedford-MA, US). Also whole body scans were carried out in all subjects by dual-energy X-ray absorptiometry using standardized scan protocols. Whole body mineral content (BMC-WB), whole bone mineral density (BMD-WB), fat mass (FM), fat percentage and lean mass (LM) were determined by using the same DXA device. All scans were performed by the same operator while the subjects were wearing light indoor clothing and non removable metal objects. The subjects with Rett syndrome with severe involuntary muscle contractions or uncontrollable movements were lightly sedated with midazolam (0.2 mg/kg/ dose) before the scan to prevent repetitive involuntary movements which could invalidate the analysis.
-
-Quality control was performed weekly with a whole body phantom. In our Institution, the precision error for bone mineral density and bone mineral content (BMC) measurements is less than 2.5% for the whole body phantom. Moreover, in all subjects QUS parameters were evaluated at phalanxes by using a QUS device (Bone Profiler, IGEA, Italy). The device used is based on the transmission of ultrasound through the distal end of the first phalangeal diaphysis in the proximity of the condyles of the last four fingers of the hand. Bone Profiler measures the amplitudedependent speed of sound (AD-SoS, m/s) and some parameters derived from the analysis of the graphic trace of the QUS signal [23]. The AD-SoS and BTT values of patients with Rett syndrome and controls were converted to Zscores using the normative data obtained from a reference paediatric Italian population [24]. In our Institution the precision of AD-SoS and BTT evaluated in children was 0.7 and 0.8% respectively. In addition, the standardized coefficient of variation (sCV) was calculated for each QUS parameter according to the formula: sCV = CV%/range/mean, where range was the difference between the 5th and the 95th percentile of the population. The sCV were 3.7% for AD-SoS, and 2.6% for BTT.
-
-## Biochemical parameters
-
-In subjects with Rett syndrome and controls, blood samples were also collected under fasting conditions to evaluate serum calcium levels (Ca), phosphate (P) and
-
-25-Hydroxyvitamin D (25OHD). Serum 25OHD was determined by a radioimmunometric method (25- Hydroxyvitamin D, DiaSorin, MN, USA). In our Institution the intra- and inter-assay coefficients of variation for 25OHD were 6.8 and 9.2%, respectively.
-
-## Statistical analysis
-
-The variables normally distributed were expressed as mean ± standard deviation (SD) and the significance between the means was tested using Student’s t-test.
-
-The association between different clinical characteristics and the outcomes were presented in the contingency table and statistically assessed using Chi square test.
-
-Separate multiple linear regression models (method: Stepwise) were used to assess independent predictors of BMD-FN, BMD-TF, AD-SoS and BTT, while age, weight, height, scoliosis, movement capacity, history of fractures and mutations severity included as independent variables in the models. For each model the regression coefficients (b-coefficients) and their 95% confidence intervals were described. The absence of multicollinearity of predictor variables was determined assessing the trend of partial correlations and it was confirmed by the statistics Tolerance and VIF (variance inflation factor).
-
-All tests were two-sided, and $p < 0 . 0 5$ was considered statistically significant. All statistical tests were performed using SPSS 10.1 statistical software (SPSS 10.1).
+We now successfully identify and clearly define three novel SVs within MECP2 in three distinct RTT patients who lacked a genetic diagnosis for many years. We emphasize the need to routinely search for SVs in RTT patients and other genetically unsolved diseases.
 
 ## Results
 
-The most common eight MECP2 mutations grouped on genotype-phenotype severity are reported in Table 1. Clinical characteristics, biochemical, densitometric and ultrasonographic parameters of females with Rett syndrome grouped on the basis of the genotype-phenotype severity are reported in Table 2. As expected BMD-WB, BMD-FN and BMD-TH were lower in subjects with Rett syndrome that present the most severe mutations with respect to subjects with less severe mutations, but the difference was statistically significant only for BMD-FN and BMD-TH (p < 0.05). Also the values of BMC-WB and BMC-WB/height were significantly lower in subjects with Rett syndrome who presented the most severe mutations with respect to less severe mutations. Fat mass and lean mass were lower in subjects with more severe mutations, but the difference reached a statistical significance only for lean mass (p < 0.05). However, the percentage of fat was higher in subjects with more severe mutations with respect to less severe mutations, even though the difference did not reach any statistical significance.
+## Clinical findings
 
-Table 1 Most common MECP2 mutations in 232 Rett females
+We studied three cases of typical Rett syndrome whose underlying mutations remained elusive despite extensive clinical genetic testing.
 
-<table><tr><td></td><td>Nucleotide change</td><td>Amino Acid Change</td><td>Cases (N)</td><td>Cases (%)</td></tr><tr><td rowspan="4">Less Severe Mutations</td><td>c.397C&gt;T</td><td>p.R133C</td><td>14</td><td>6.03</td></tr><tr><td>c.880C&gt;T</td><td>p.R294X</td><td>10</td><td>4.27</td></tr><tr><td>c.906C&gt;T</td><td>p.R306C</td><td>13</td><td>5.60</td></tr><tr><td>c.473C&gt;T</td><td>p.T158M</td><td>26</td><td>11.20</td></tr><tr><td rowspan="4">More Severe Mutations</td><td>c.306C&gt;G</td><td>p.R106T</td><td>7</td><td>3.01</td></tr><tr><td>c.502C&gt;T</td><td>p.R168X</td><td>17</td><td>7.32</td></tr><tr><td>c.763C&gt;T</td><td>p.R255X</td><td>16</td><td>6.89</td></tr><tr><td>c.808C&gt;T</td><td>p.R270X</td><td>22</td><td>9.48</td></tr></table>
+Case 1: A 7.5-year-old girl born following a normal pregnancy, delivered via cesarean section due to placenta previa. The initial year of her life was marked by tranquility, alongside episodes of gastroesophageal reflux. However, at age one year, behavioral changes were noticed, with restlessness, frequent crying spells, and disrupted sleep patterns. These manifestations were coupled with a temporary decline in eye contact, which was regained at the age of three to the level of intense eye-pointing. She experienced delays in developmental milestones: walking at 20 months with
 
-Also, both AD-SoS and BTT values were lower in subjects which presented the most severe mutations with respect to less severe mutations but the difference was statistically significant only for BTT (p < 0.05) (Table 2).
+1 Faculty of Health Sciences, Ben-Gurion University of the Negev, Be’er Sheva, Israel. 2 Edmond and Lily Safra Children’s Hospital, Sheba Medical Center, Ramat Gan, Israel. 3 Tel Aviv University School of Medicine, Tel-Aviv, Israel. 4 Brain and Mitochondrial Research Group, Murdoch Children’s Research Institute, Melbourne, Australia. 5 Department of Paediatrics, University of Melbourne, Melbourne, Australia. 6 Genetics Institute, Soroka University Medical Center, Be’er Sheva, Israel. 7 The Danek Gertner Institute of Human Genetics, Sheba Medical Center, Ramat Gan, Israel. e-mail: obirk@bgu.ac.il
 
-Figure 1 shows the values of BMD at different skeletal sites and QUS at phalanges, expressed as Z-score in subjects with Rett syndrome grouped on the basis of genotype-phenotype severity; here too, Z-score values were lower in subjects that presented the most severe mutations with respect to those with less severe mutations, but the difference was statistically significant only for Z-score values at total femur (p < 0.05). Moreover, WB-BMD Z-score and AD-SoS Z-score values were plotted for specific mutations; the lowest values were observed in patients with more severe mutations respect to less severe mutations (Fig. 2).
+a wide-based apraxic and ataxic gait, and limited verbal communication skills, using only a few words, which she primarily used during moments of stress. A formal diagnosis of autism spectrum disorder was made at the age of 18 months. By the age of 4.5 years, a decline in hand usage became evident, with minimal manipulation of objects observed, except for holding a bottle. Concurrently, she developed rapid, non-simultaneous hand tapping (left > right), predominantly on her abdomen and other surfaces, impairing her hand function. She developed daytime bruxism, and her sleep quality deteriorated, characterized by prolonged periods of sleep disruption, marked by crying or laughing episodes. Moreover, she displayed anxiety in diverse situations, resulting in episodes of freezing, especially when facing changes in her environment, such as navigating stairs or encountering different ground surfaces. She displayed a preference for human faces over objects and demonstrated heightened sensitivity to emotional fluctuations in her surroundings.
 
-The presence of scoliosis was significantly more frequent in females with more severe mutations respect to less severe mutations subjects (60.0% vs 36.7%, respectively) (Fig. 3a; similarly, the number of girls with Rett syndrome with fractures prevailed in the group with more severe mutations respect to the group with less severe mutations subjects (17.1% vs 12.5%, respectively), but the difference was not statistically significant (Fig. 3b.
+At the age of 6.5 years, she developed episodes of hyperventilation and short breath-holding. Although she used a few words, her intense tapping persisted, synchronizing with bilateral central spikes observed on video EEG recordings, which ceased when the tapping hand was restrained. Nocturnal spike activity persisted, intensifying during sleep to a degree that raised suspicion of electrical status epilepticus during sleep (ESES). This prompted a trial of Sulthiame combined with Clobazam, resulting in a decrease in the frequency of sleep spikes and potentially improving her sleep patterns. Physical examination at that point revealed a head circumference of 51 cm (50th percentile) with no dysmorphic features, intense eye contact, continuous one-hand tapping on her abdomen, apraxic atactic gait while wandering aimlessly in the room, mild hypotonia, and no evidence of cold extremities. MRI yielded normal results.
 
-Table 2 Clinical characteristics in Rett subjects with more or less MCP2 mutations severity
+The diagnostic evaluation, which included chromosomal microarray analysis (CMA) and trio exome sequencing, returned negative results. Subsequent investigation, which involved testing for Rett syndromeassociated genes through an Invitae panel and Multiplex ligation-dependent probe amplification (MLPA) to detect copy number variations (CNVs) within MECP2, also yielded negative findings. Despite these outcomes, the clinical features strongly suggested Rett syndrome (atypical preserved speech variant). Thus, driven by this compelling clinical suspicion, we decided to pursue Whole Genome Sequencing (WGS) to explore noncoding regions and identify potential hidden structural variants.
 
-<table><tr><td></td><td>More Severe Mutations (N = 62)</td><td>Less Severe Mutations (N=63)</td><td>p</td></tr><tr><td>Age (yrs)</td><td>13.7 ± 8.3</td><td>13.9 ± 8.4</td><td>n.s.</td></tr><tr><td>Birth Weight (Kg)</td><td>3015.9 ± 415.9</td><td>3074.3 ± 628.9</td><td>n.s.</td></tr><tr><td>Weight (Kg)</td><td>33.3 ± 14.9</td><td>32.8 ± 12.7</td><td>n.s.</td></tr><tr><td>Height (cm)</td><td>129.8 ± 18.5</td><td>131.6 ± 20.4</td><td>n.s.</td></tr><tr><td>Age Menarche (yrs)</td><td>11.6 ± 2.1</td><td>11.9 ± 1.9</td><td>0.05</td></tr><tr><td>Calcium (mg/dl)</td><td>9.5 ± 0.5</td><td>9.4 ± 0.6</td><td>n.s.</td></tr><tr><td>Phosphorous (mg/dl)</td><td>5.1 ± 0.8</td><td>5.3 ± 0.7</td><td>n.s.</td></tr><tr><td>25OHD (ng/ml)</td><td>21.2 ± 13.2</td><td>24.3 ± 14.7</td><td>n.s.</td></tr><tr><td>BMD-FN (g/cm2)</td><td>0.506 ± 0.168</td><td>0.601 ± 0.150</td><td>0.05</td></tr><tr><td>BMD-TH (g/cm2)</td><td>0.488 ± 0.129</td><td>0.600 ± 0.125</td><td>0.05</td></tr><tr><td>BMD-WB (g/cm2)</td><td>0.733 ± 0.179</td><td>0.799 ± 0.177</td><td>n.s.</td></tr><tr><td>BMC-WB (g)</td><td>949.5 ± 432.4</td><td>984.77 ± 354.4</td><td>n.s.</td></tr><tr><td>BMC-WB/height (g/cm)</td><td>7.36 ± 2.51</td><td>7.05 ± 1.98</td><td>n.s.</td></tr><tr><td>Fat Mass (g)</td><td>12630.3 ± 8073.8</td><td>17462.7 ± 9847.7</td><td>n.s.</td></tr><tr><td>Lean Mass (g)</td><td>19.23.7 ± 7877.4</td><td>23807.1 ± 7241.2</td><td>0.05</td></tr><tr><td>Fat Percentage (%)</td><td>37.7 ± 7.9</td><td>34.4 ± 6.9</td><td>n.s.</td></tr><tr><td>AD-SoS (m/s)</td><td>1874.9 ± 100.5</td><td>1882.0 ± 90.6</td><td>n.s.</td></tr><tr><td>BTT (μs)</td><td>0.64 ± 0.34</td><td>0.72 ± 0.32</td><td>0.05</td></tr></table>
+Case 2: A 5-year-old girl who was initially evaluated at age 2 years. She was born following a normal pregnancy and delivery. During her first year, she exhibited hypotonia, feeding difficulties, and poor weight gain, all of which were accompanied by developmental delays. At the age of 2, her head circumference measured 45 cm. Despite being a visually appealing child who could sit independently and stand with support, she did not achieve independent walking. Instead, she demonstrated progress through “bunny jumping”. Hand usage, initially reasonable, declined in the second year, and was limited primarily to holding a bottle. Intense hand stereotypes emerged, including hand washing, hand tapping on the mouth, and clapping. Additionally, she experienced pronounced daytime bruxism. While eye contact was lost toward the end of her first year, it was regained a few months later, albeit intermittently accompanied by bilateral squint. Other issues included poor chewing and swallowing, mild constipation, and disrupted sleep patterns, though her sleep improved using melatonin. By the age of 3, she began experiencing hyperventilation and breath-holding episodes, alongside the onset of epileptic seizures consistent with focal with partial unawareness seizures. Repeated EEGs revealed mildly slow background activity and increased frequency of central asynchronous spikes during sleep, typical for RTT patients. These seizures were effectively managed with Valproic acid. MRI imaging was normal. Despite negative results from chromosomal microarray analysis (CMA), trio whole-exome sequencing (WES), and an RTT-like genes panel by Invitae, her clinical presentation strongly suggested RTT.
 
-![](images/bd05917a8f700581ddf2344b435d2926d0530bc4311eb551e480089f21fe8939.jpg)
+Case 3: A 19-year-old female, the fifth child in a family of ten, was born after a normal pregnancy with early contractures. Her birth weight was 3750 grams, and her perinatal course was uneventful. She exhibited motor and generalized developmental delays: she sat at 1 year, crawled at 13 months, and stood and walked around furniture at 30 months. She lost the ability to walk at 4 years old but regained the ability to walk with a walker a few years later. At 13 months, she had a vocabulary of few words, which she lost by 21 months, but demonstrated a high level of communication using eye-gaze equipment. She could reach for toys and transfer objects between hands until around 24 months when she developed hand stereotypes. Awake bruxism, mild tremors, and eye-rolling events, non-epileptic and typical for RTT patients, also appeared. Her head growth decelerated from the 50th percentile at birth to below the 3rd percentile by 18 months. MRI was normal, and EEG showed a slow background without epileptiform activity. She had mild breathing abnormalities (hyperventilation alternating with apneas), a good appetite, and severe constipation. At her last clinic visit (age 18 years), she was wheelchair-bound, had consistent hand stereotypes requiring bracing, mild to moderate lower limb spasticity, and scoliosis. She is treated with Valproic acid for infrequent generalized tonic-clonic seizures that began at age 10 years. Her phenotype was consistent with typical RTT syndrome; however, MECP2 sequencing, CMA, MECP2 MLPA, and trio exome sequencing were negative.
+
+## Molecular genetic analysis
+
+Case 1: We conducted trio WGS to identify relevant variants within MECP2. Using MANTA software (https://github.com/Illumina/manta), we detected two points flagged as potentially bordering an SV within MECP2 (hg38: chrX:154,032,101, chrX:154,032,109). Visualization of this region using IGV revealed that approximately 50% of the reads surrounding a specific point (hg38: chrX:154,032,104) were aligned towards this center point. Upon utilizing the ‘view as pair’ option in IGV, we observed that the reads positioned to the left of this point had their pairs located on chromosome 6 (hg38: chr6:162,662,479), while those on the right also had their pairs on chromosome 6, albeit approximately 200Kbp distant (hg38: chr6:162,862,870). These two points on chromosome 6 were located within genes, PRKN and PACRG, respectively (Fig. 1A). The reads on chromosome X were directed towards their paired counterparts on chromosome 6, suggesting a plausible scenario where they are indeed situated adjacently on the mutated allele. Upon visualizing the direction and location of the reads, we inferred that the most plausible explanation was a translocation of 200,391 bp from chromosome 6 to chromosome X, disrupting the MECP2 gene between exons 3 and 4 (Fig. 1A, B). PCR amplification using primers surrounding both SV borders, yielded amplification only in the affected individual’s DNA and not in either parent’s or two other siblings’ DNA. Sanger sequencing of the amplicon accurately identified the precise entry site and borders of the SV (Fig. 1B).
+
+Case 2: WGS was performed for the affected individual to identify mutations within MECP2. Using MANTA software, a specific possible breakpoint was identified between exons 2 and 3 of MECP2 (hg38: ChrX:154,040,681). Upon visualization in IGV, it became apparent that approximately 50% of the reads in this region had dis-concordant paired reads located approximately 170Kbp away (hg38: ChrX:153,873,102) within the L1CAM gene, also situated on chromosome X. Notably, the reads at both points were directed towards the downstream region of chromosome X. Further investigation involved checking for additional points identified on chromosome X by MANTA. Another point was detected within TMEM187 (hg38: ChrX:153,980,877), approximately 60Kbp away from the suspected MECP2 breakpoint. IGV visualization of this TMEM187 point similarly revealed approximately 50% aberrant reads. Upon examining the pairs, it was observed that all suspected reads had pairs located on the L1CAM gene (hg38: ChrX:153,867,860), with the reads pointing in the same direction, towards the upstream of chromosome X (Fig. 2A). By visualizing all the abnormal split reads and interpreting the unusual distances and orientations between the paired-end reads, we inferred the presence of a complex structural variant (cSV). The logical deduction was that two distinct deletion sites, along with an inversion site between them, might account for our observations in MANTA and IGV (Fig. 2A). To validate this hypothesis, we examined on IGV the proposed deleted regions, and indeed noted the presence of only homozygous SNPs, accompanied by a decreased read depth, thereby reinforcing our hypothesis of deleted areas. For molecular validation, we conducted PCR amplification on both border sides of the complex structural cSV, operating under the assumption of both a deletion and an inversion. We successfully obtained an amplicon only from the affected family member, and not from the parents or the two healthy siblings. Subsequently, we confirmed and precisely defined the borders through Sanger sequencing (Fig. 2B).
+
+![](images/a1dce108772648b310f65478e5afaa99cf97b65e2f5ce5a5404882bb75b23810.jpg)
 
 <details>
-<summary>bar chart</summary>
+<summary>flowchart</summary>
 
-| Mutation Type | More severe mutations | Less severe mutations |
-| ------------- | --------------------- | --------------------- |
-| FN | -3.0 | -1.5 |
-| TH | -3.5 | -2.0 |
-| WB | -2.5 | -2.0 |
-| AD-SoS | -2.5 | -2.5 |
-| BTT | -2.5 | -2.5 |
+```mermaid
+graph TD
+ A["Chr6"] --> B["12 PRKN"]
+ B --> C["11"]
+ C --> D["10"]
+ D --> E["9"]
+ E --> F["8"]
+ F --> G["7"]
+ G --> H["6"]
+ H --> I["5"]
+ I --> J["4"]
+ J --> K["3"]
+ K --> L["2"]
+ L --> M["1"]
+ M --> N["1"]
+ N --> O["2"]
+ O --> P["162,662,479"]
+ O --> Q["162,862,870"]
+ O --> R["163,000,000"]
+ R --> S["3-4 PACRG"]
+ S --> T["5"]
+ 
+ subgraph Translocation_A
+ U["ChrX"] --> V["3' UTR"]
+ V --> W["4 MECP2"]
+ W --> X["3"]
+ X --> Y["2"]
+ Y --> Z["1"]
+ Z --> AA["1"]
+ AA --> AB["2"]
+ AB --> AC["154,032,104"]
+ AC --> AD["154,060,000"]
+ AD --> AE["154,080,000"]
+ AE --> AF["154,080,000"]
+ AF --> AG["154,080,000"]
+ AG --> AH["154,080,000"]
+ AH --> AI["154,080,000"]
+ AI --> AJ["154,080,000"]
+ AJ --> AK["154,080,000"]
+ AK --> AL["154,080,000"]
+ AL --> AM["154,080,000"]
+ AM --> AN["154,080,000"]
+ AN --> AO["154,080,000"]
+ AO --> AP["154,080,000"]
+ AP --> AQ["154,080,000"]
+ AQ --> AR["154,080,000"]
+ AR --> AS["154,080,000"]
+ AS --> AT["154,080,000"]
+ AT --> AU["154,080,000"]
+ AU --> AV["154,080,000"]
+ AV --> AW["154,080,000"]
+ AW --> AX["154,080,000"]
+ AX --> AY["154,080,000"]
+ AY --> AZ["154,080,000"]
+ AZ --> BA["154,080,000"]
+ BA --> BB["154,080,000"]
+ BB --> BC["154,080,000"]
+ BC --> BD["154,080,000"]
+ BD --> BE["154,080,000"]
+ BE --> BF["154,080,000"]
+ BF --> BG["154,080,000"]
+ BG --> BH["154,080,000"]
+ BH --> BI["154,080,000"]
+ BI --> BJ["154,080,000"]
+ BJ --> BK["154,080,000"]
+ BK --> BL["154,080,000"]
+ BL --> BM["154,080,000"]
+ BM --> BN["154,080,000"]
+ BN --> BO["154,080,000"]
+ BO --> BP["154, 154, 154, 154"]
+ BP --> BQ["154, 154, 154, 154"]
+ BQ --> BR["154, 154, 154, 154"]
+ BR --> BS["154, 154, 154, 154"]
+ BS --> BT["154, 154, 154, 154"]
+ BT --> BU["154, 154, 154, 154"]
+ BU --> BV["154, 154, 154, 154"]
+ BV --> BW["154, 154, 154, 154"]
+ BW --> BX["154, 154, 154, 154"]
+ BX --> BY["154, 154, 154, 154"]
+ BY --> BZ["154, 154, 154, 154"]
+ BZ --> CA["154, 154, 154, 154"]
+ CA --> CB["154, 154, 154, 154"]
+ CB --> CC["154, 154, 154, 154"]
+ CC --> CD["154, 154, 154, 154"]
+ CD --> CE["154, 154, 154, 154"]
+ CE --> CF["154, 154, 154, 154"]
+ CF --> CG["154, 154, 154, 154"]
+ CG --> CH["154, 154, 154, 154"]
+ CH --> CI["154, 154, 154, 154"]
+ CI --> CJ["154, 154, 154, 154"]
+ CJ --> CK["154, 154, 154, 154"]
+ CK --> CL["154, 154, 154, 154"]
+ CL --> CM["154, 154, 154, 154"]
+ CM --> CN["154, 154, 154, 154"]
+ CN --> CO["154, 154, 154, 154"]
+ CO --> CP["154, 154, 154, 154"]
+ CP --> CQ["154, 154, 154, 154"]
+ CQ --> CR["154, 154, 154, 154"]
+ CR --> CS["154, 154, 154, 154"]
+ CS --> CT["154, 154, 154, 154"]
+ CT --> CU["154, 154, 154, 154"]
+ CU --> CV["154, 154, 154, 154"]
+ CV --> CW["154, 154, 154, 154"]
+ CW --> CX["154, 154, 154, 154"]
+ CX --> CY["154, 154, 154, 154"]
+ CY --> CZ["154, 154, 154, 154"]
+ CZ --> DA["3' UTR MECP2"]
+ end
+ 
+ %% Translocation_B
+ subgraph Translocation_A
+ B
+ subgraph Translocation_A
+ C
+ subgraph Translocation_A
+ D
+ subgraph Translocation_A
+ E
+ subgraph Translocation_A
+ F
+ subgraph Translocation_A
+ G
+ subgraph Translocation_A
+ H
+ subgraph Translocation_A
+ I
+ subgraph Translocation_A
+ J
+ subgraph Translocation_A
+ K
+ subgraph Translocation_A
+ L
+ subgraph Translocation_A
+ M
+ subgraph Translocation_A
+ N
+ subgraph Translocation_A
+ O
+ subgraph Translocation_A
+ P
+ subgraph Translocation_A
+ Q
+ subgraph Translocation_A
+ R
+ subgraph Translocation_A
+ S
+ subgraph Translocation_A
+ T
+ subgraph Translocation_A
+ U
+ subgraph Translocation_A
+ V
+ subgraph Translocation_A
+ W
+ subgraph Translocation_A
+ X
+ subgraph Translocation_A
+ Y
+ subgraph Translocation_A
+ Z
+ subgraph Translocation_A
+ AA
+ subgraph Translocation_A
+ AB
+ subgraph Translocation_A
+ AC
+ subgraph Translocation_A
+ AD
+ subgraph Translocation_A
+ AE
+ subgraph Translocation_A
+ AF
+ subgraph Translocation_A
+ AG
+ subgraph Translocation_A
+ AH
+ subgraph Translocation_A
+ AI
+ subgraph Translocation_A
+ AJ
+ subgraph Translocation_A
+ AK
+ subgraph Translocation_A
+ AL
+ subgraph Translocation_A
+ AM
+ subgraph Translocation_A
+ AN
+ subgraph Translocation_A
+ AO
+ subgraph Translocation_A
+ AP
+ subgraph Translocation_A
+ AQ
+ subgraph Translocation_A
+ AR
+ subgraph Translocation_A
+ AS
+ subgraph Translocation_A
+ AT
+ subgraph Translocation_A
+ AU
+ subgraph Translocation_A
+ AV
+ subgraph Translocation_A
+ AW
+ subgraph Translocation_A
+ AX
+ subgraph Translocation_A
+ AY
+ subgraph Translocation_A
+ AZ
+ subgraph Translocation_A
+ BA
+ subgraph Translocation_A
+ BB
+ subgraph Translocation_A
+ BC
+ subgraph Translocation_A
+ BD
+ subgraph Translocation_A
+ BE
+ subgraph Translocation_A
+ BF
+ subgraph Translocation_A
+ BG
+ subgraph Translocation_A
+ BH
+ subgraph Translocation_A
+ BI
+ subgraph Translocation_A
+ BJ
+ subgraph Translocation_A
+ BK
+ subgraph Translocation_A
+ BL
+ subgraph Translocation_A
+ BM
+ subgraph Translocation_A
+ BN
+ subgraph Translocation_A
+ BO
+ subgraph Translocation_A
+ BP
+ subgraph Translocation_A
+ BQ
+ subgraph Translocation_A
+ CA
+ subgraph Translocation_A
+ CB
+ subgraph Translocation_A
+ CC
+ subgraph Translocation_A
+ DC
+ subgraph Translocation_A
+ DEA
+```
 </details>
 
-Fig. 1 Values of densitometric parameters at femoral neck (FN) and at total hip (TH), whole body (WB) and ultrasonographic parameters at phalanges (AD-SoS and BTT). All values are expressed as Z-score
+Fig. 1 | Case 1: A \~ 200 kbp translocation from chromosome 6 into MECP2. A Schematic representation of the translocation breakpoints in the reference wildtype genome. Red square marks the translocated region from chromosome 6. Each color represents a distinct gene: green for PACRG, blue for PRKN, and pink for MECP2. The red arrow highlights the translocation from chromosome 6 to chromosome X. IGV visualization shows: Brown reads span the translocation entry site on chromosome X, Yellow reads flank the translocated borders on chromosome 6. 
+B Schematic representation of the predicted mutated patient genome. The red square identifies the translocated region from chromosome 6, which encompasses two genes: green for PACRG and blue for PRKN. Paired-read visualization illustrates the directions of the aligned reads: brown reads (aligned to ChrX) are adjacent to and directed toward yellow reads (aligned to Chr6). Sanger sequencing confirms the SV breakpoints. Figure created using biorender.com.
 
-Figure 4 shows that the prevalence of ambulatory patients on the basis of genotype-phenotype severity. The group with more severe mutations showed a significant reduction in females with ambulatory capacity with respect to the group with less severe mutations (22.9% vs 51.7%, respectively).
-
-Multiple linear regression analyses were used to assess independent predictors of bone mineral density and QUS parameters in subjects with Rett syndrome. The analyses was performed by including in the model age, weight, height, movement capacity, scoliosis, history of fracture and mutation severity as independent variables. In Rett subjects BMD-TH was predicted by mutation severity and weight, whereas WB-BMD was predicted by height and history of fracture. Moreover, BTT was predicted by height and age, while AD-SoS was predicted only by age (Table 3).
+Case 3: We conducted WGS of the affected family member to identify variants within MECP2. In this instance, we independently scanned MECP2 using IGV software, without utilizing MANTA. Two suspicious points (hg38: ChrX:154,027,486 and ChrX:154,030,665) were identified, each with 50% colored dis-concordant reads in the respective regions. Reads from both sides were found to be paired with each other in the right direction towards each other, and the distance between the two points was approximately 3200 bp. Additionally, we observed a drop in depth in WGS reads of around 50% in the region between these two sites, suggesting a potential heterozygous deletion. The deleted region includes a significant coding portion of exon 4 and a large segment of the 3’ end of the MECP2 gene (Fig. 3A). Afterward, we conducted PCR amplification using primers targeting both sides of the suspected deleted region, which generated an amplicon only in the affected individual, who carries the deletion SV, and not in any other family member. Subsequent Sanger sequencing accurately pinpointed the exact deletion site (Fig. 3B).
 
 ## Discussion
 
-To our knowledge, this study is the first to assess the contribution of specific MECP2 mutations to bone mineral density, presence of fractures, presence of scoliosis and ambulatory capacity in subjects with Rett syndrome.
+Causative mutations in MECP2 have been identified in 90–95% of classic RTT cases and 50–70% of atypical RTT cases6,7 . However, many clinically evident RTT or RTT-like cases remain with no molecular diagnosis. Identifying the genetic basis of RTT cases is crucial, as it provides families with a definitive diagnosis of their child’s condition, alleviates uncertainty and anxiety regarding future pregnancies, and allows for appropriate medical management tailored to the underlying genetic cause – including opening opportunities to participate in clinical trials targeting MECP2-specific pathways. Many other clinical conditions can imitate cases of Rett syndrome18,19, and misdiagnosis may lead to ineffective or potentially harmful treatments. Thus, uncovering the genetic underpinnings of these cases is essential for optimizing patient care and advancing prevention and treatment strategies.
 
-Several recent reports have identified key associations between MECP2 mutation type and phenotype [3, 4, 20–22, 24–29]. In particular, the majority of these reports have been in agreement in correlating disease severity with particular mutations. For example, R133C, R294X, R306C and large deletions and 30 truncations [3, 20, 21, 26] have all been identified as less severe mutations with lower clinical severities as measured by a variety of clinical severity scales. Moreover, the mutations R106T, R168X, R255X, R270X, splice sites, large deletions, insertions and deletions as being mutations associated with a more severe disease course in subjects with Rett syndrome have been implicated as more severe mutations [3, 20, 21]. The data of the present study are in agreement with all of these findings.
+At the Israeli Rett clinic at Sheba Medical Center, 225 patients with a clinical diagnosis consistent with Rett syndrome are being followed20,21. Among these, 10 patients have remained without a molecular diagnosis for years. We set out to solve the genetic riddle of 3 of these cases: two with typical RTT and one with the atypical preserved speech variant (PSV). These patients were meticulously clinically diagnosed by a highly experienced pediatric neurologist specializing in Rett syndrome, but had no genetic diagnosis despite extensive testing over many years. We solved all three cases using WGS, revealing that each was caused by a distinct SV within MECP2.
 
-（A) 
-![](images/40f27d8acd4f2555f21b33d53a32701ac92f3da442630266b16cd6bd96c94272.jpg)
-
-<details>
-<summary>box plot</summary>
-
-| Mutation | WB Z-score |
-| -------- | ---------- |
-| p.R133C | -500 |
-| p.R294X | -1500 |
-| p.R306C | -500 |
-| p.T158M | -2500 |
-| p.R106T | -2000 |
-| p.R168X | -1000 |
-| p.R255X | -2500 |
-| p.R270X | -2500 |
-</details>
-
-(B) 
-![](images/79df194a6e5b5a14f8d57083907333084f3f4448d07b66b950fca06006e56486.jpg)
+![](images/41a4195a58fc1219598d9db68a3c05126804b436bb3c8d7f4f7a5b14fe55c84a.jpg)
 
 <details>
-<summary>box plot</summary>
+<summary>text_image</summary>
 
-| Mutation | AD-SoS Z-score |
-| -------- | -------------- |
-| p.R133C | -2,000 |
-| p.R294X | -1,000 |
-| p.R306C | -2,000 |
-| p.T158M | -2,000 |
-| p.R106T | -2,500 |
-| p.R168X | -2,500 |
-| p.R255X | -3,000 |
-| p.R270X | -2,000 |
+A
+Deletion site
+153,867,860 153,873,102
+Inversion site
+153,900,000 153,950,000
+153,980,877
+154,000,000
+154,040,681
+Deletion site
+154,050,000
+L1CAM
+TMEM187
+3' UTR - 4 - 3
+MECP2
+2 - 1
 </details>
 
-Fig. 2 WB Z-score (a) and AD-Sos Z-score (b) are shown for individual MeCP2 mutations
-
-![](images/939cc27ff209838bc0b4ceed461a268778d9c26084631091f5a9309a07ae64d5.jpg)
-
-![](images/7a3afcaeda7b0705f5abebe8196db4515a94d17a4829e0d54811067d86d5be88.jpg)
+![](images/3c04f12434f640df0ec61123428864018279c3846d28c1031bb8b6145c4e32df.jpg)
 
 <details>
-<summary>stacked bar chart</summary>
+<summary>flowchart</summary>
 
-(B)
-| Category | Fracture (%) | No Fracture (%) | p = n.s. |
-|---|---|---|---|
-| More Severe Mutations | 17.1 | 82.9 | N=51 |
-| Less Severe Mutations | 12.5 | 87.5 | N=55 |
-N=11 (n) vs N=8 (n)
+```mermaid
+graph TD
+ A["cSV left border"] --> B["Partially deleted & inverted TMEM187"]
+ C["cSV right border"] --> D["Partially deleted & inverted L1CAM"]
+ B --> E["T G G C T C T G C G C C A C A A T C T T G G C"]
+ D --> F["CC C T G A G C A C C A C A A T C A C T A A C T C T C A A"]
+ style B fill:#99ccff,stroke:#333
+ style D fill:#99ccff,stroke:#333
+ style E fill:#f0f0f0,stroke:#333
+ style F fill:#f0f0f0,stroke:#333
+```
 </details>
 
-Fig. 3 Prevalence of scoliosis (a) and fractures (b) by mutations severity in the study population
+Fig. 2 | Case 2: A complex structural variant (cSV) disrupting MECP2. A Schematic representation of the cSV breakpoints in wild-type genome. Each color represents a distinct gene: Yellow for L1CAM, Green for TMEM187 and Pink for MECP2. Each colored square represent distinct variant type: Blue square for inversion region, Red square for two deletion sites and Green square for the unaffected regions. IGV visualization shows the analyzed reads directions by Cyan, and 
+Blue arrows. B Schematic representation of the predicted mutated patient genome. Visualization of the paired-read directions aligned to the mutated allele: cyan represents the left border of the cSV, and blue represents the right border. Sanger sequencing confirms the cSV breakpoints. Purple squares indicate unrelated insertions within the cSV breakpoints. Figure created using biorender.com.
 
-Osteopenia and fracture occur commonly in subjects with Rett syndrome [5–17]. At first, the bone involvement in subjects with Rett syndrome has been explained by more common skeletal risk factors including nutritional deficits, reduced mobility, increased levels of inflammatory cytokines and exposure to osteotoxic drugs such as anti-epileptic treatments [9, 11, 13].
+We demonstrated that all three RTT cases were caused by disrupting both of the main isoforms of MECP2: MECP2\_e1 (NM\_004992.4) and MECP2\_e2 (NM\_001110792.3)22. In Case 1, we identified a \~ 200 Kbp translocation from chromosome 6 to the X chromosome; t(6;X)(q26;q28). The translocation breakpoint within MECP2 (hg38: chrX:154,032,104) is located between exons 3 and 4 (Fig. 1). This \~200 kbp insertion encompasses the complete exons 1 and 2 of PACRG and the entire exon 1 of PRKN (Fig. 1). We hypothesize that this translocation may disrupt normal splicing, potentially triggering nonsense-mediated decay (NMD) or leading to the production of an aberrant MECP2 protein. We consider it highly unlikely that this insertion within the core region of MECP2 would result in the synthesis of a normal WT protein. In Case 2, we found a cSV involving a large deletion that removes the entire downstream portion of both MECP2 isoforms, including exons 3 and 4, as well as the entire 3’ UTR (Fig. 2). This likely results in the transcript undergoing NMD, preventing protein production. In Case 3, we identified an approximately 3,200 bp deletion in the downstream region of MECP2 (NC\_000023.11:g.154027486\_154030665del). This deletion removes the terminal portion of exon 4, resulting in a stop-loss mutation and it also includes a 2,889 bp of the 3’ UTR (Fig. 3). The deletion affects amino acids 397 to 498 and causes a frameshift, generating a novel amino acid sequence of 149 residues before encountering a premature stop codon.
 
-![](images/247c91daf11818bb7957e15fe548e04364921206f4ac8fa271a909e4d7610421.jpg)
+SVs are genetic structural alterations, typically defined as genomic variants larger than 50 bps. These variations can include deletions, duplications, insertions, inversions, and translocations, which may impact gene function and regulation. SVs can significantly impact health by disrupting gene function, leading to a wide range of diseases, including developmental disorders, intellectual disabilities, and various congenital conditions23–25. Small-intermediate SVs typically range from 50 bp to 50kbp in size, whereas large SVs encompass alterations exceeding 50kbp26,27.
+
+Small-intermediate SVs pose a unique challenge in detection compared to single nucleotide variants (SNVs), indels, and large SVs, as they fall within a range where conventional sequencing methods may fail to accurately identify and characterize due to limitations in read length and resolution methods23,28, 29. Short read sequencing (SRS), in particular, encounters significant difficulties in detecting small-intermediate SVs29,30. This is because it often fails to span the exact SV breakpoints and map them accurately, hindering the detection of such variants, especially those located in noncoding regions or characterized by combinations of structural changes, known as cSVs30. Additionally, relying solely on SV detection software is complex, as it typically identifies thousands of SVs per genome, many of which are false positives or inaccurately predicted variants31,32.
+
+Since the discovery of Rett syndrome by Andreas Rett in 1966, numerous cases caused by MECP2 mutations have been solved using conventional methods. SNVs, indels, and copy number variants (CNVs) were mostly detected via routine genetic panels, whole exome sequencing (WES), and directed targeted sequencing of MECP233–39. Large SVs were primarily detected using chromosomal microarray (CMA) or fluorescence in situ hybridization (FISH)40–46. Multiplex ligation-dependent probe amplification (MLPA) identifies large deletions35,47, that might be missed by routine PCR-based screening strategies. For example, one group succeeded in detecting deletions ranging from 1235 bp to 85 kb within MECP2 using
+
+![](images/ac7f5c21662e61188dc6247aa4a40aded8d7b9f73687dc9556757e7a93ee9c12.jpg)
 
 <details>
-<summary>stacked bar chart</summary>
+<summary>other</summary>
 
-| Category | Ambulatory (%) | Non Ambulatory (%) | N |
-|---|---|---|---|
-| More Severe Mutations | 22.9 | 77.1 | 14 |
-| Less Severe Mutations | 51.7 | 48.3 | 33 |
-p = 0.05
+| Position | Value |
+| -------- | ----------- |
+| 3' UTR | 154,027,486 |
+| 4 | 154,030,665 |
+| 1 | 154,027,486 |
 </details>
 
-Fig. 4 Prevalence of ambulation capacity by mutations severity in the study population
+Fig. 3 | Case 3: A \~3Kbp heterozygous deletion within MECP2. A Red square illustrates the c-terminal deletion site within MECP2. IGV visualization shows the deletion borders. Brown reads represents the paired-reads encompassing the deleted 
+area. B Sanger sequencing validated the deleted region borders. Figure created using biorender.com.
 
-More recent studies have been conducted in order to explore whether MECP2 protein deficiency results in altered structural and functional properties of bone and to test the potential reversibility of any defects. In particular, a series of histological, imaging and biomechanical tests of bone have been carried out in a functional knockout mouse model of RTT [30, 31]. These studies have identified a range of anatomical, biomaterial and biomechanical abnormalities in bone of MECP2-deficient mice and have shown that many of these features are potentially reversible by reactivating the MECP2 gene, even in fully adult mice [30, 31]. These results suggest that bone phenotypes may be important yet tractable features of Rett syndrome [30]. Another recent study carried out in a murine model has reported that osteoblast morphology was altered in the presence of MECP2 deficiency [32].
+MLPA48; but, to characterize the rearrangements and locate the exact nucleotide positions of the breakpoints, they had to use real-time quantitative PCR (qPCR) and long-range PCR. Therefore, it is understandable that general screening of the Human Gene Mutation Database (HGMD)49 has shown these small to intermediate SVs to be much less recognized over the years compared to other types of mutations.
 
-Our data show that Rett subjects with more severe MECP2 mutation present a greater deterioration of bone status. These findings are in agreement with the previous study by Shapiro et al. which assessed the correlations of bone mass with respect to clinical parameters and mutations involving the MECP2 gene. This report showed that the lowest BMD values were observed in Rett patients with either the T158 M or R270X mutations [9]. Moreover, a relationship of BMD to the T158 M mutation may lie in the observation that individuals with T158 M mutations are more neurodevelopmentally affected than those with other mutations [22]. Also in a case report Hofstaetter JG et al. [32] investigated for the first time bone matrix mineralization in a patient with RTT with a severe typical MECP2 mutation (c.502 CNT, p.R168X) and found that this patient show very low values of BMD and presence of severe scoliosis. According to our data also the study by Jefferson AL et al. found that individuals with the p.R168 and p.R270 mutations presented the greatest clinical severity, including lower mobility and a high prevalence of epilepsy but most of all, presented the most severe bone mineral phenotype [10].
+We present an effective approach that allowed us to uncover novel disease-causing SVs in MECP2 using conventional short-read WGS. In two of the three cases (Cases 1,2), MANTA software facilitated the identification of potential SV breakpoints within MECP2. MANTA software can detect discordant read pairs, split reads, and abnormal read depth, which are indicative of various SVs such as deletions, duplications, inversions, and translocations. By integrating these different types of evidence, MANTA can suggest genomic loci suspected to be SVs breakpoint borders. However, due to MANTA’s tendency to produce false positives and its limitations in predicting exact SV subtypes, especially cSVs, we found it necessary to directly analyze and visualize the BAM file alignment in the regions that MANTA recognized. We utilized the IGV to visualize read mapping, which enabled us to interpret and hypothesize what were the distinct SV types in each case, and accurately determine their respective boundaries. The utility of IGV was highlighted when Case 3 was resolved solely through visualizing MECP2 on IGV, bypassing the need for MANTA. Eventually, the borders of identified SVs that we hypothesized to exist were verified by PCR and Sanger sequencing. That approach enabled us to detect pathogenic novel, elusive small to intermediate SVs within MECP2, that evaded detection using any other diagnostic tool (such as CMA, Trio exome, RTT-like genes panel, MLPA, etc.).
 
-Table 3 Multiple linear regression analysis of predictors of bone mineral density and QUS parameters in subjects with Rett syndrome
+It is worth noting that cSVs pose great challenges in SRS mapping interpretation, beyond those in simple SVs. The presence of multiple SVs within the same genomic region can obscure and impede their identification. For instance, in case 2, the deletion sites were not apparent in the BAM visualization due to the presence of the inversion between them. We could infer the presence of deletions only by speculating on what would be logical and how the paired-reads might align, assuming there might be an inversion. Our findings highlight the importance of direct searching for SVs when conventional methods prove insufficient in detecting any mutations in MECP2 in RTT cases48,49.
 
-<table><tr><td>Variable</td><td>Undestandardized coefficient, b</td><td>95%CI</td><td>p</td></tr><tr><td colspan="4">BMD-TH (g/cm2)</td></tr><tr><td>Weight</td><td>0,005</td><td>0,002 to 0,008</td><td>&lt;0,001</td></tr><tr><td>Severity mutation</td><td>-0,114</td><td>-0,190 to -0,038</td><td>0,037</td></tr><tr><td colspan="4">BMD-WB (g/cm2)</td></tr><tr><td>Height</td><td>0,009</td><td>0,007 to 0,012</td><td>&lt;0,0001</td></tr><tr><td>History of fracture</td><td>-0,122</td><td>-0,236 to -0.009</td><td>0,036</td></tr><tr><td colspan="4">BTT (μs)</td></tr><tr><td>Age</td><td>0,019</td><td>0,010 to 0,028</td><td>&lt;0,0001</td></tr><tr><td>Height</td><td>0,006</td><td>0,002 to 0,010</td><td>0,003</td></tr><tr><td colspan="4">AD-SoS (m/s)</td></tr><tr><td>Age</td><td>8,569</td><td>6,285 to 10,853</td><td>&lt;0,0001</td></tr></table>
+Long-read sequencing (LRS) is effective in identifying diseaseassociated SVs and cSVs50. However, its high cost makes it impractical for routine genetic testing. As we demonstrate, such cases can be effectively resolved through advanced cost-effective bioinformatics analysis tools designed to detect SVs in SRS data. Our findings are consistent with a previous report that identified a 2.6 kb intronic insertion variant within MECP2 using MANTA software51. Additionally, our results demonstrate that even manually scanning IGV with a targeted focus on a specific gene can lead to the identification of SVs. We have shown that simply visualizing and carefully examining the MECP2 gene in the patient’s BAM file using IGV software can reveal inappropriately mapped reads that may indicate the presence of a disease-causing SV. Despite the obvious need for such software, there are currently no user-friendly and reliable bioinformatics tools available for routine use in identifying SVs in MECP2, nor is there a standard practice for directly examining the MECP2 gene in BAM files from Rett patients. This gap highlights the need for developing cost-effective and accessible techniques to improve the diagnostic process for SV detection.
 
-Whole set of variables included into the models:age, weight, height,scoliosis,movement capacity history offracture and severity mutation
+The clinical phenotypes associated with MECP2 mutations exhibit significant variability, and prior studies have explored whether this variability is influenced by the type and location of the mutation52–54 Bebbington et al. developed a phenotypic profile of C-terminal deletions in Rett syndrome, finding that such cases often present with milder disease phenotypes55. These individuals are more likely to have normal head circumference and weight, a later onset of stereotypies, and earlier acquisition of walking skills. Additionally, deletions occurring downstream within the MECP2 gene were associated with lower average severity scores compared to those occurring upstream55. However, the phenotypes observed in our cases diverge from this typical profile; in Case 3, we identified a deletion at the C-terminus of MECP2 (Fig. 3), resulting in a frameshift that alters the protein sequence starting at amino acid 397 and introduces a stop codon at position 545. Despite this C-terminal mutation, the patient’s phenotype aligns with classic Rett syndrome, except for the absence of seizures. She presented with microcephaly and has not achieved independent walking, which contrasts with the typically milder phenotype associated with C-terminal mutations. Similarly, in Case 2, the mutation involved a cSV, with a larger deletion encompassing exons 3 and 4 and the entire 3’ UTR (Fig. 2), and the patient also exhibited features consistent with classic Rett syndrome. Interestingly, in Case 1, the patient was diagnosed as PSV, a milder phenotype previously described in the literature56. Given the large translocation identified in this case, a classic Rett syndrome phenotype might have been expected. While there are occasional genotype-phenotype correlations linked to the position of the mutation, other factors—such as the X-inactivation ratio, modifier genes, and additional, less well-known epigenetic influences—also contribute to phenotypic differences and severity57–59.
 
-Our data show that the number of subjects with fractures prevailed in females with Rett syndrome with more severe mutations with respect to less severe mutations. In a previous study Downs et al. found that the fracture rate in this population with Rett syndrome was four times that of the general population and that those with the p.R168 and p.R270 mutations were at particularly increased fracture risk at lower limbs and especially at femur [8].
+Clinical RTT without a discernable MECP2 mutation→Investigate for SVs 
+![](images/5e3b0ea8f693920ec2b2f73cb865c4717439d9903eca2eb329fca228ff66c050.jpg)
 
-A study by Sarajlija et al. which explore the correlation between demographic and clinical characteristics of patients with Rett syndrome and vitamin D levels showed that females with Rett syndrome with a R255X mutation had an 8.67 times higher probability of experiencing a bone fracture than patients with other mutations [33]. On the contrary the study by Roende G et al. found no association between the mutation types and fracture distribution [12].
+<details>
+<summary>flowchart</summary>
 
-Our data show that the presence of scoliosis was significantly more frequent in females with more severe mutations respect to subject with less severe mutations. These findings are in accordance with the study by Killian JT et al. which assessed the onset and progression of severe scoliosis in 913 Rett subjects. In this study, severe scoliosis was found in 251 participants and severe MECP2 mutations (R106W, R168X, R255X, R270X, and large deletions) prevailed in Rett subjects with scoliosis [18]. In addition, Ager et al. in a previous study showed that subjects with R294X and R306C in the MECP2 gene are related to mild developmental problems and to a decreased risk of scoliosis development [34].
+```mermaid
+graph TD
+ A["# Consider LRS"] --> B["Short Read - Whole genome sequencing (WGS)"]
+ B --> C["Search for SV breakpoints in the MECP2 gene (IGV / SV detection tools)"]
+ C --> D["Interpret reads and hypothesize the patient's genome in silico"]
+ D --> E["Validate findings through PCR and Sanger sequencing"]
+```
+</details>
 
-Determining associations between MECP2 mutation type and clinical severity is important for several reasons: firstly, genotype-phenotype associations may reveal important molecular insight into MECP2 protein function; secondly, understanding the relationships between mutation types and bone disease severity may enable healthcare providers to better counsel individuals regarding bone disease prognosis; finally, determining the average severity and variance among mutations will allow researchers conducting clinical trials to adjust their inclusion criteria and outcomes based on relative severity.
+Fig. 4 | Approach for uncovering elusive novel disease-causing structural variants (SVs) in genetically unsolved Rett syndrome (RTT) cases. LRS; Long-read sequencing. SVs; Structural variants. IGV; Integrative Genomics Viewer.
 
-## Conclusions
+Case 1 also raises the question of whether the two disrupted genes on chromosome 6 contribute to the patient’s phenotype. As described, the balanced translocation breakpoints in this case are located within two genes on chromosome 6: PRKN and PACRG. PRKN is primarily associated with Parkinson’s disease in the biallelic state; in this case, however, it is disrupted in a heterozygous state, which is not typically linked to the disease. Similarly, according to OMIM60, PACRG has not been associated with any disease in the heterozygous state. The translocation site within MECP2, however, lies in a critical region that likely impacts the MECP2 transcript relevant to Rett syndrome (NM\_004992.4, MECP2\_e1), suggesting it is a primary contributor to the patient’s phenotype.
 
-In conclusion this study confirms that MECP2 mutation type is associated with clinical severity and influences many aspects of the phenotype including a greater deterioration of bone status, namely BMD at femur, and a higher prevalence of scoliosis and inability to walk. The different functionality of MECP2 suggests there are many downstream pathways that are interesting for understanding the pathophysiology of Rett syndrome, and allowing a search for improve clinical management.
+To date, dozens of variants in several genes have been suggested to be causative of Rett and Rett-like syndrome in cases where no MECP2 mutation was found13,14,61,62. It is plausible that some of those proposed variants are not disease-causing, as causative small or intermediate SVs within MECP2 have possibly eluded detection, or because there may be a double diagnosis involving both MECP2 SVs changes and a pathogenic mutation in another gene, leading to a more complex phenotype.
 
-## Abbreviations
+We propose the following approach to address elusive SVs and cSVs cases (Fig. 4): in clinically diagnosed RTT cases without a detectable MECP2 mutation, it is crucial to investigate the presence of SVs. LRS or WGS should be considered as diagnostic tools. If feasible, LRS is preferred. When using WGS, SV breakpoints should be sought within the MECP2 gene. The patient’s BAM file can either be manually scanned or analyzed with SV detection tools such as MANTA, Delly, and others. Visualizing read mapping by IGV may uncover subtle clues within the SRS data that aid in accurately identifying SV boundaries. Finally, these identified SV breakpoints can be validated through PCR and Sanger sequencing.
 
-25OHD: 25-Hydroxyvitamin D; AD-SoS: Amplitude dependent speed of sound; BMC: Bone mineral content; BMD: Bone mineral density; BMD-FN: Bone mineral density at femoral neck; BMD-TH: Bone mineral density at total hip; BMD-WB: Bone mineral density at whole body; BTT: Bone transmission time; Ca: Calcium levels; CDKL5: Cyclin-dependent kinase-like 5; DXA: Dual X-ray Absorptiometry; FM: Fat mass; FOXG1: Forkhead box protein G1; LM: Lean mass; MECP2: Methyl-CpG-binding protein 2; P: Phosphate; QUS: Ultrasonographic parameters; RTT: Rett syndrome; sCV: Standardized coefficient of variation; SD: Standard deviation
+This methodology enabled us to successfully resolve all three investigated RTT cases. We believe that this approach could be valuable for resolving SV cases in other diseases, as these types of variants are not exclusive to Rett syndrome. We suggest that this approach should be considered for any genetic case exhibiting a distinctive phenotype with a limited number of related genes, or where there is a confined linkage area. In such instances, it would be feasible to avoid thousands of false positive variants and to investigate small to intermediate SVs within these specific loci or genes.
 
-## Acknowledgements
+As we investigated 3 cases with a clear RTT phenotype, unraveling causative SVs in all 3 cases, it is plausible that SVs possibly constitute a common cause of RTT in yet unresolved cases. We have succeeded in elucidating the pathogenic SVs through tedious work using existing software and IGV visualization and interpretation. However, this process can be greatly facilitated through the generation of user-friendly clinical analysis software that would enable clinicians of various disciplines, not necessarily geneticists, to easily filter VCF files in search of SVs. We propose that it may be feasible to develop such software by integrating different programs capable of identifying suspected SV regions and combining them with the ability to filter by various loci, genes, or related phenotypes using databases such as OMIM or HPO. Such software could be routinely used and facilitate the resolution of many elusive SV and cSV cases, not only in Rett syndrome but also in other monogenic diseases.
 
-Not applicable.
+## Methods
 
-## Authors’ contributions
+## Clinical phenotyping
 
-CC was responsible for designed the study, performing the statistical analysis and manuscript preparation. MDTP, SC and AA were responsible for collection of data. SG and JH were responsible for checking the data and the manuscript preparation. RN revised the manuscript. All authors were responsible for drafting the manuscript, read and approved the final version.
+The study was approved by the Soroka Medical Center Institutional Review Board (IRB; approval #5071 G) and the Israel Ministry of Health National Helsinki Committee (approval #920100319). Written informed consent was obtained from all individuals studied or their legal guardians. The phenotyping was conducted by senior neurologist and geneticist.
 
-## Funding
+## Molecular genetic analysis
 
-Not applicable.
+DNA was extracted from peripheral blood leukocytes using the E.Z.N.A Blood DNA kit (Omega Bio-tek, Nor-cross, GA, USA) as was previously described63. Whole-genome sequencing was performed by Macrogen® using Illumina’s NovaSeq X with TruSeq PCR-free kit generating 150 bp pair-end reads. Raw data reads were aligned to GRCh38 reference genome using BWA-MEM. Variant calling was done using GATK 4.3.0.0, and Manta 1.6.064. Data were analyzed using VARista (https://VARista.link) 65 and Genoox analysis software, Franklin (https://franklin.genoox.com/ clinical-db/home). The Integrative Genomics Viewer (IGV) was employed to visualize and interpret the mapped reads and to investigate the variants within MECP2. Segregation analysis of the structural variants within the studied kindreds was done through PCR amplification and gel electrophoresis using primers flanking the junction points of the SVs regions: Case 1: Left side of the SV border- Forward 5′-CCTTTGC TCACCCTTCTCATGG-3′, Reverse 5′-CCAACCCAAGCCTTTG-GAACAG-3′. (733 bp amplicon; annealing temperature 60 °C; extension time 44 s). Right side: Forward 5’- GAGATGCCTGAAAAGGCAACGG-3’. Reverse 5’ CCGCTCTGCTGGGAAGTATGAT-3’ (575 bp amplicon; annealing temperature 60 °C; extension time 35 s). Case 2: Left side of the cSV border: Forward 5’ TGAGGGTGGTAGAGGTCTGG-3’, Reverse 5’- AGGAAGAAGCCACGTGGAAG-3’. (880 bp amplicon; annealing temperature 60 °C; extension time 53 s). Right side: Forward 5’-GGAG CTTACTATGTCCCCTGC-3’, Reverse 5’-GTACACTGAGGTCTGTT GGCAT-3’. (635 bp amplicon; annealing temperature 60 °C; extension time 38 s). Case 3: Forward 5’-CAGGAGACCGTACTCCCCAT-3’, Reverse 5’-AAGGCGACTGACTCGTGATG-3’ (498 bp amplicon; annealing temperature 60 °C; extension time 30 s). Sanger sequencing of all the amplicons confirmed the precise junction points and the borders of the SVs.
 
-## Availability of data and materials
+## Data availability
 
-The datasets used and/or analyzed during the current study are available from the corresponding author on reasonable request.
+Data beyond those given in the manuscript are available from the corresponding author upon reasonable request. The data are not publicly available because they contain information that could compromise research participant privacy/consent.
 
-## Ethics approval and consent to participate
+Received: 18 August 2024; Accepted: 14 February 2025;
 
-The protocol was approved by the Ethics Committee of the University of Siena. For the patients written informed consent for participation in this study was obtained from the patients’ parents or guardians.
-
-## Consent for publication
-
-Not applicable.
-
-## Competing interests
-
-The authors declare that they have no competing interests.
-
-## Author details
-
-1 Department of Medicine, Surgery and Neuroscience, University of Siena, Policlinico Le Scotte, Viale Bracci 2, 53100 Siena, Italy. 2 Paediatrics Neuropsychiatry Unit, Azienda Ospedaliera Universitaria Senese, Siena, Italy.
-
-## Received: 16 June 2019 Accepted: 23 January 2020
-
-Published online: 31 January 2020
+Published online:13March 2025
 
 ## References
 
-1. Chahrour M, Zoghbi HY. The story of Rett syndrome: from clinic to neurobiology. Neuron. 2007;56:422–37. https://doi.org/10.1016/j.neuron. 2007.10.001. 
-2. Hagberg B. Clinical manifestations and stages of Rett syndrome. Ment Retard Dev Disabil Res Rev. 2002;8:61–5. https://doi.org/10.1002/mrdd.10020. 
-3. Neul JL, Fang P, Barrish J, et al. Specific mutations in methyl- CpGbinding protein 2 confer different severity in Rett syndrome. Neurology. 2008;70: 1313–21. https://doi.org/10.1212/01.wnl.0000291011.54508.aa. 
-4. Neul JL, Kaufmann WE, Glaze DG, RettSearch Consortium, et al. Rett syndrome: revised diagnostic criteria and nomenclature. Ann Neurol. 2010; 68:944–50. https://doi.org/10.1002/ana.22124. 
-5. Cepollaro C, Gonnelli S, Bruni D, et al. Dual x-ray absorptiometry and bone ultrasonography in patients with Rett syndrome. Calcif Tissue Int. 2001;69: 259–62. 
-6. Motil KJ, Ellis KJ, Barrish JO, Caeg E, Glaze DG. Bone mineral content and bone mineral density are lower in older than in younger females with Rett syndrome. Pediatr Res. 2008;64:435–9. https://doi.org/10.1203/PDR. 0b013e318180ebcd. 
-7. Gonnelli S, Caffarelli C, Hayek J, et al. Bone ultrasonography at phalanxes in patients with Rett syndrome: a 3-year longitudinal study. Bone. 2008;42:737–42. https://doi.org/10.1016/j.bone.2007.12.003. 
-Downs J, Bebbington A, Woodhead H, et al. H. Early determinants of fractures in Rett syndrome. Pediatrics. 2008;121:540–6. https://doi.org/10. 1542/peds.2007-1641. 
-Shapiro JR, Bibat G, Hiremath G, et al. Bone mass in Rett syndrome: association with clinical parameters and MECP2 mutations. Pediatr Res. 2010;68:446–51. https://doi.org/10.1203/PDR.0b013e3181f2edd2. 
-10. Jefferson AL, Woodhead HJ, Fyfe S, et al. Bone mineral content and density in Rett syndrome and their contributing factors. Pediatr Res. 2011;69:293–8. https://doi.org/10.1203/PDR.0b013e31820b937d. 
-11. Roende G, Ravn K, Fuglsang K, et al. DXA-measurements in Rett syndrome reveal small bones with low bone mass. J Bone Miner Res. 2011;26:2280–6. https://doi.org/10.1002/jbmr.423. 
-12. Roende G, Ravn K, Fuglsang K, et al. Patients with Rett syndrome sustain low-energy fractures. Pediatr Res. 2011;69:359–64. https://doi.org/10.1203/ PDR.0b013e31820bc6d3. 
-13. Caffarelli C, Gonnelli S, Tanzilli L, et al. The relationship between serum ghrelin and body composition with bone mineral density and QUS parameters in subjects with Rett syndrome. Bone. 2012;50:830–5. https://doi. org/10.1016/j.bone.2012.01.017. 
-14. Caffarelli C, Hayek J, Tomai Pitinca MD, Nuti R, Gonnelli S. A comparative study of dual-X-ray absorptiometry and quantitative ultrasonography for the evaluating bone status in subjects with Rett syndrome. Calcif Tissue Int. 2014;95:248–56. https://doi.org/10.1007/s00223-014-9888-x. 
-15. Jefferson A, Fyfe S, Downs J, Woodhead H, Jacoby P, Leonard H. Longitudinal bone mineral content and density in Rett syndrome and their contributing factors. Bone. 2015;74:191–8. https://doi.org/10.1016/j.bone. 2015.01.023. 
-16. Jefferson A, Leonard H, Siafarikas A, et al. Clinical guidelines for management of bone health in Rett syndrome based on expert consensus and available evidence. PLoS One. 2016;11:e0146824. https://doi.org/10. 1371/journal.pone.0146824. 
-17. Caffarelli C, Francolini V, Hayek J, et al. Bone status in relation to ambulatory performance in girls with Rett syndrome: a 10-year longitudinal study. Pediatr Res. 2019;85:639–43. https://doi.org/10.1038/s41390-018-0111-z. 
-18. Killian JT, Lane JB, Lee HS, et al. Scoliosis in Rett syndrome: progression, comorbidities, and predictors. Pediatr Neurol. 2017;70:20–5. https://doi.org/ 10.1016/j.pediatrneurol.2017.01.032. 
-19. Harrison DJ, Webb PJ. Scoliosis in the Rett syndrome: natural history and treatment. Brain and Development. 1990;12:154–6. 
-20. Cuddapah VA, Pillai RB, Shekar KV, et al. Methyl-CpG-binding protein 2 (MECP2) mutation type is associated with disease severity in Rett syndrome. J Med Genet. 2014;51:152–8. https://doi.org/10.1136/jmedgenet-2013-102113. 
-21. Bebbington A, Anderson A, Ravine D, et al. Investigating genotype-phenotype relationships in Rett syndrome using an international data set. Neurology. 2008;70:868–75. https://doi.org/10.1212/01.wnl.0000304752.50773.ec. 
-22. Halbach NS, Smeets EE, van den Braak N, et al. Genotype-phenotype relationships as prognosticators in Rett syndrome should be handled with care in clinical practice. Am J Med Genet A. 2012;158A:340–50. https://doi. org/10.1002/ajmg.a.34418. 
-23. Wuster C, Albanese C, De Aloysio D, The Phalangeal Osteosonogrammetry Study Group, et al. Phalangeal osteosonogrammetry study: age-related changes, diagnostic sensitivity, and discrimination power. J Bone Miner Res. 2000;15:1603–14. https://doi.org/10.1359/jbmr.2000.15.8.1603. 
-24. Baroncelli GI, Federico G, Vignolo M, Phalangeal Quantitative Ultrasound Group, et al. Cross-sectional reference data for phalangeal quantitative ultrasound from early childhood to young-adulthood according to gender, age, skeletal growth, and pubertal development. Bone. 2006;39:159–73. https://doi.org/10.1016/j.bone.2005.12.010. 
-25. Leonard H, Colvin L, Christodoulou J, et al. Patients with the R133C mutation: is their phenotype different from patients with Rett syndrome with other mutations? J Med Genet. 2003;40:e52. https://doi.org/10.1136/jmg.40.5.e52. 
-26. Charman T, Neilson TC, Mash V, et al. Dimensional phenotypic analysis and functional categorisation of mutations reveal novel genotypephenotype associations in Rett syndrome. Eur J Hum Genet. 2005;13: 1121–30. https://doi.org/10.1038/sj.ejhg.5201471. 
-27. Colvin L, Leonard H, de Klerk N, Davis M, Weaving L, Williamson S, et al. Refining the phenotype of common mutations in Rett syndrome. J Med Genet. 2004;41:25–30. https://doi.org/10.1136/jmg.2003.011130. 
-28. Schanen C, Houwink EJ, Dorrani N, et al. Phenotypic manifestations of MECP2 mutations in classical and atypical Rett syndrome. Am J Med Genet A. 2004;126A:129–40. https://doi.org/10.1002/ajmg.a.20571. 
-29. Amir RE, Zoghbi HY. Rett syndrome: methyl-CpG-binding protein 2 mutations and phenotype-genotype correlations. Am J Med Genet. 2000;97:147 –52. 
-30. O'Connor RD, Zayzafoon M, Farach-Carson MC, Schanen NC. Mecp2 deficiency decreases bone formation and reduces bone volume in a rodent model of Rett syndrome. Bone. 2009;45:346 –56. https://doi.org/10.1016/j. bone.2009.04.251. 
-31. Kamal B, Russell D, Payne A, et al. Biomechanical properties of bone in a mouse model of Rett syndrome. Bone. 2015;71:106–14. https://doi.org/10. 1016/j.bone.2014.10.008. 
-32. Hofstaetter JG, Roetzer KM, Krepler P, et al. Altered bone matrix mineralization in a patient with Rett syndrome. Bone. 2010;47:701–7055. https://doi.org/10.1016/j.bone.2010.06.005. 
-33. Sarajlija A, Djuric M, Tepavcevic DK, Grkovic S, Djordjevic M. Vitamin D deficiency in Serbian patients with Rett syndrome. J Clin Endocrinol Metab. 2013;98:E1972 –8. https://doi.org/10.1210/jc.2013-2627 . 
-34. Ager S, Fyfe S, Christodoulou J, Jacoby P, Schmitt L, Leonard H. Predictors of scoliosis in Rett syndrome. J Child Neurol. 2006;21:809 –13. https://doi.org/ 10.1177/08830738060210091501.
+1. Smeets, E. E. J., Pelc, K. & Dan, B. Rett syndrome. Mol. Syndromol. 2, 113–127 (2011). 
+2. Ellaway, C. & Christodoulou, J. Rett syndrome: clinical characteristics and recent genetic advances. Disabil. Rehabil. 23, 98–106 (2001). 
+3. Diagnostic criteria for rett syndrome. Ann. Neurol. 23, 425–428 (1988). 
+4. Chahrour, M. & Zoghbi, H. Y. The story of Rett syndrome: from clinic to neurobiology. Neuron 56, 422–437 (2007). 
+5. Shahbazian, M. D. & Zoghbi, H. Y. REVIEW ARTICLE Rett Syndrome and MeCP2: Linking Epigenetics and Neuronal Function. Am. J. Hum. Genet. 71 (2002). 
+6. Weaving, L. S. et al. Mutations of CDKL5 Cause a Severe Neurodevelopmental Disorder with Infantile Spasms and Mental Retardation. Am. J. Hum. Genet. 75 (2004). 
+7. Byun, C. K. et al. FOXG1 Mutation is a Low-Incidence Genetic Cause in Atypical Rett Syndrome. Child Neurol. Open 2, 2329048X1456815 (2015). 
+8. Ip, J. P. K., Mellios, N. & Sur, M. Rett syndrome: Insights into genetic, molecular and circuit mechanisms. Nat. Rev. Neurosci. 19, 368–382 (2018). 
+9. Liyanage, V. R. B. & Rastegar, M. Rett syndrome and MeCP2. Neuromol. Med 16, 231–264 (2014). 
+10. Neul, J. L. et al. Rett syndrome: Revised diagnostic criteria and nomenclature. Ann. Neurol. 68, 944–950 (2010). 
+11. Cogliati, F. et al. Pathogenic variants in STXBP1 and in genes for GABAa receptor subunities cause atypical rett/rett-like phenotypes. Int J. Mol. Sci. 20, 3621 (2019). 
+12. Schönewolf-Greulich, B. et al. Clinician's guide to genes associated with Rett-like phenotypes-Investigation of a Danish cohort and review of the literature. Clin. Genet. 95, 221–230 (2019). 
+13. Lopes, F. et al. Identification of novel genetic causes of Rett syndrome-like phenotypes. J. Med Genet 53, 190–199 (2016). 
+14. Ehrhart, F., Sangani, N. B. & Curfs, L. M. G. Current developments in the genetics of Rett and Rett-like syndrome. Curr. Opin. Psychiat. 31, 103–108 (2018). 
+15. Liu, J. J. & Francke, U. Identification of cis-regulatory elements for MECP2 expression. Hum. Mol. Genet 15, 1769–1782 (2006). 
+16. Schollen, E., Smeets, E., Deflem, E., Fryns, J. P. & Matthijs, G. Gross rearrangements in the MECP2 gene in three patients with Rett syndrome: Implications for routine diagnosis of Rett syndrome. Hum. Mutat. 22, 116–120 (2003). 
+17. Archer, H. L. et al. Gross rearrangements of the MECP2 gene are found in both classical and atypical Rett syndrome patients. J. Med Genet 43, 451–456 (2006). 
+18. Srivastava, S. et al. Monogenic disorders that mimic the phenotype of Rett syndrome. Neurogenetics 19, 41–47 (2018). 
+19. Neul, J. L. The relationship of Rett syndrome and MECP2 disorders to autism. Dialog. Clin. Neurosci. 14, 253–262 (2012). 
+20. Frullanti, E. et al. Analysis of the Phenotypes in the Rett Networked Database. Int J. Genom. 2019, 6956934 (2019). 
+21. Grillo, E. et al. Rett networked database: An integrated clinical and genetic network of rett syndrome databases. Hum. Mutat. 33, 1031–1036 (2012). 
+22. Good, K. V., Vincent, J. B. & Ausió, J. MeCP2: The Genetic Driver of Rett Syndrome Epigenetics. Front. Genet. 12, 620859 (2021). 
+23. Feuk, L., Marshall, C. R., Wintle, R. F. & Scherer, S. W. Structural variants: changing the landscape of chromosomes and design of disease studies. Human Mol. Genet. 15, R57–R66 (2006). 
+24. Carvalho, C. M. B. & Lupski, J. R. Mechanisms underlying structural variant formation in genomic disorders. Nat. Rev. Genet. 17, 224–238 (2016). 
+25. Weischenfeldt, J., Symmons, O., Spitz, F. & Korbel, J. O. Phenotypic impact of genomic structural variation: Insights from and for human disease. Nat. Rev. Genet. 14, 125–138 (2013). 
+26. Feuk, L., Carson, A. R. & Scherer, S. W. Structural variation in the human genome. Nat. Rev. Genet. 7, 85–97 (2006). 
+27. Tuzun, E. et al. Fine-scale structural variation of the human genome. Nat. Genet. 37, 727–732 (2005). 
+28. Tattini, L., D'Aurizio, R. & Magi, A. Detection of genomic structural variants from next-generation sequencing data. Front. Bioengineer. Biotechnol. 3, 92 (2015). 
+29. Balachandran, P. & Beck, C. R. Structural variant identification and characterization. Chrom. Res. 28, 31–47 (2020). 
+30. Mahmoud, M. et al. Structural variant calling: The long and the short of it. Gen. Biol. 20, 246 (2019). 
+31. Gong, T., Hayes, V. M. & Chan, E. K. F. Detection of somatic structural variants from short-read next-generation sequencing data. Brief. Bioinform 22, bbaa056 (2021). 
+32. Cameron, D. L., Di Stefano, L. & Papenfuss, A. T. Comprehensive evaluation and characterisation of short read general-purpose structural variant calling software. Nat. Commun. 10, 3240 (2019). 
+33. Kharrat, M. et al. A Novel Mutation p.A59P in N-Terminal Domain of Methyl-CpG-Binding Protein 2 Confers Phenotypic Variability in 3 Cases of Tunisian Rett Patients. J. Child Neurol. 30, 1715–1721 (2015). 
+34. Gu, Y. et al. Three intellectual disability-associated de novo mutations in MECP2 identified by trio-WES analysis. BMC Med Genet 21, 99 (2020). 
+35. Scala, E. et al. MECP2 deletions and genotype-phenotype correlation in Rett syndrome. Am. J. Med Genet A 143, 2775–2784 (2007). 
+36. Fukuda, T. et al. Methyl-CpG binding protein 2 gene (MECP2) variations in Japanese patients with Rett syndrome: Pathological mutations and polymorphisms. Brain Dev. 27, 211–217 (Elsevier, 2005). 
+37. Nasiri, J. et al. Genetic Analysis of MECP2 Gene in Iranian Patients with Rett Syndrome Iran. J. Child Neurol. Summer. 13, http://sift.jcvi. org/ (2019). 
+38. Erlandson, A. et al. Multiplex Ligation-Dependent Probe Amplification (MLPA) Detects Large Deletions in the MECP2 Gene of Swedish Rett Syndrome Patients. GENETIC TESTING 7, www.liebertpub.com (2003). 
+39. Matijevic, T. et al. The MECP2 gene mutation screening in Rett syndrome patients from Croatia. Ann. N.Y. Acad. Sci. 1091, 225–232 (2006). 
+40. Auber, B. et al. An unbalanced translocation resulting in a duplication of Xq28 causes a Rett syndrome-like phenotype in a female patient. Clin. Genet. 77, 593–597 (2010). 
+41. Aradhya, S. et al. Exon-level array CGH in a large clinical cohort demonstrates increased sensitivity of diagnostic testing for Mendelian disorders. Genet. Med. 14, 594–603 (2012). 
+42. Bijlsma, E. K. et al. Xq28 duplications including MECP2 in five females: Expanding the phenotype to severe mental retardation. Eur. J. Med. Genet. 55, 404–413 (2012). 
+43. Shimada, S. et al. Clinical manifestations of Xq28 functional disomy involving MECP2 in one female and two male patients. Am. J. Med Genet A 161, 1779–1785 (2013). 
+44. Lin, D. S. et al. De novo MECP2 duplication derived from paternal germ line result in dysmorphism and developmental delay. Gene 533, 78–85 (2014). 
+45. Vieira, J. P. et al. Variant Rett syndrome in a girl with a pericentric X-chromosome inversion leading to epigenetic changes and overexpression of the MECP2 gene. Int. J. Dev. Neurosci. 46, 82–87 (2015). 
+46. El Chehadeh, S. et al. Large national series of patients with Xq28 duplication involving MECP2: Delineation of brain MRI abnormalities in 30 affected patients. Am. J. Med Genet A 170, 116–129 (2016). 
+47. Artuso, R. et al. Investigation of modifier genes within copy number variations in Rett syndrome. J. Hum. Genet. 56, 508–515 (2011). 
+48. Vidal, S. et al. Characterization of large deletions of the MECP2 gene in Rett syndrome patients by gene dosage analysis. Mol. Genet Genom. Med 7, e793 (2019). 
+49. Stenson, P. D. et al. The Human Gene Mutation Database (HGMDr): optimizing its use in a clinical diagnostic or research setting. Hum. Genet. 139, 1197–1207 (2020). 
+50. Merker, J. D. et al. Long-read genome sequencing identifies causal structural variation in a Mendelian disease. Genet. Med. 20, 159–163 (2018). 
+51. Lunke, S. et al. Integrated multi-omics for rapid rare disease diagnosis on a national scale. Nat. Med. 29, 1681–1691 (2023). 
+52. Weaving, L. S. et al. Effects of MECP2 mutation type, location and Xinactivation in modulating Rett syndrome phenotype. Am. J. Med Genet A 118A, 103–114 (2003). 
+53. Rauchman, M. et al. Preserved speech variants of the Rett syndrome: Molecular and clinical analysis. Am. J. Med Genet 104, 14–22 (2001). 
+54. Zappella, M. et al. Study of MECP2 gene in Rett syndrome variants and autistic girls. Am. J. Med. Genet. Part B: Neuropsychiatr. Genet. 119B, 102–107 (2003). 
+55. Bebbington, A. et al. Updating the profile of C-terminal MECP2 deletions in Rett syndrome. J. Med Genet 47, 242–248 (2010). 
+56. De Bona, C. et al. Preserved Speech Variant Is Allelic of Classic Rett Syndrome. Eur. J. Human Genet. 8, www.nature.com/ejhg (2000). 
+57. Amir, R. E. et al. Influence of Mutation Type and X Chromosome Inactivation on Rett Syndrome Phenotypes. Ann Neurol vol. 47 (2000). 
+58. Zeev, B. Ben et al. The Common BDNF Polymorphism May Be a Modifier of Disease Severity in Rett Syndrome (2009). 
+59. Renieri, A. et al. Rett syndrome: The complex nature of a monogenic disease. J. Mol. Med. 81, 346–354 (2003). 
+60. Amberger, J. S., Bocchini, C. A., Scott, A. F. & Hamosh, A. OMIM.org: Leveraging knowledge across phenotype-gene relationships. Nucleic Acids Res 47, D1038–D1043 (2019). 
+61. Vidal, S. et al. Genetic landscape of rett syndrome spectrum: Improvements and challenges. Int. J. Mol. Sci. 20, 3925 (2019). 
+62. Wang, J. et al. Rett and Rett-like syndrome: Expanding the genetic spectrum to KIF1A and GRIN1 gene. Mol. Genet Genom. Med 7, e968 (2019). 
+63. Poleg, T. et al. Novel BRAT1 Deep Intronic Variant Affects Splicing Regulatory Elements Causing Cerebellar Hypoplasia Syndrome: Genotypic and Phenotypic Expansion. Clin. Genet https://doi.org/10. 1111/cge.14653 (2024). 
+64. Chen, X. et al. Manta: Rapid detection of structural variants and indels for germline and cancer sequencing applications. Bioinformatics 32, 1220–1222 (2016).
 
-## Publisher’s Note
+65. Hadar, N. et al. VARista: a free web platform for streamlined wholegenome variant analysis across T2T, hg38, and hg19. Hum. Genet https://doi.org/10.1007/s00439-024-02671-4 (2024).
 
-Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations.
+## Acknowledgements
 
-## Ready to submit your research? Choose BMC and benefit from:
+We thank the patients and their families for their efforts and collaboration in the study. BioRender was used to construct the figures after obtaining a paid license for publication authorization. The study was funded by: Israel Science Foundation (grant no. 2463/23; OSB); The Morris Kahn Family Foundation (OSB); The Israel Ministry of Science, Technology and Space, through the National Knowledge Center for Rare/Orphan Diseases, Ben-Gurion University of the Negev, Beer-Sheva, Israel (OSB)
 
-· fast,convenient online submission 
-·thorough peer review by experienced researchers in your field 
-·rapid publication on acceptance 
-· support for research data, including large and complex data types 
-·gold Open Access which fosters wider collaboration and increased citations 
-·maximum visibility for your research:over 1ooM website views per year
+## Author contributions
 
-At BMC, research is always in progress.
+Conceptualization: T.P., B.B.Z., O.S.B. Investigation: T.P., N.H., G.H., V.D., I.A., A.S., N.A., M.M.J., O.F., S.K., J.C., B.B.Z., O.S.B. Funding acquisition and supervision: O.S.B. Writing the manuscript: T.P., B.B.Z., O.S.B., with comments and consent of all authors. All authors reviewed the manuscript.
 
-Learn more biomedcentral.com/submissions
+## Competing interests
 
-![](images/64a0b18cd99a501aeb7a95aadad58bfbf964a55b2634007bd2521859225399c2.jpg)
+The authors declare no competing interests.
 
-BMC
+## Additional information
+
+Correspondence and requests for materials should be addressed to Ohad S. Birk.
+
+Reprints and permissions information is available at http://www.nature.com/reprints
+
+Publisher’s note Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations.
+
+Open Access This article is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License, which permits any non-commercial use, sharing, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons licence, and indicate if you modified the licensed material. You do not have permission under this licence to share adapted material derived from this article or parts of it. The images or other third party material in this article are included in the article’s Creative Commons licence, unless indicated otherwise in a credit line to the material. If material is not included in the article’s Creative Commons licence and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this licence, visit http://creativecommons.org/licenses/bync-nd/4.0/.
+
+© The Author(s) 2025

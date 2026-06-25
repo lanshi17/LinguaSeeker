@@ -1,6 +1,6 @@
 {
   "unified_id": "gs_127",
-  "original_entry_id": "rett_043",
+  "original_entry_id": "rett_045",
   "source_dataset": "rett",
   "gold_source": "article",
   "annotation_provenance": "ai_auto_review",
@@ -19,37 +19,49 @@
   "source_pmc": "",
   "source_pdf_url": "",
   "source_pdf_path": "benchmark/data/ground_truth/unified/gs_127/source.pdf",
-  "source_title": "RSRT MECP2 iPSC and Fibroblast Collections at Coriell Institute and Infinity BiologiX",
+  "source_title": "Methyl-CpG-binding protein 2 (MECP2) mutation type is associated with bone disease severity in Rett syndrome",
   "source_journal": "",
-  "source_year": "",
+  "source_year": "2020",
   "source_language": "en",
   "variants": [
-    {
-      "source": "rett",
-      "hgvs_c": "c.215C>T",
-      "hgvs_p": "p.P72L",
-      "variant_type": "missense",
-      "domain": "N-terminal (pre-MBD)"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.316C>T",
-      "hgvs_p": "p.R106W",
-      "variant_type": "missense",
-      "domain": "MBD"
-    },
     {
       "source": "rett",
       "hgvs_c": "c.397C>T",
       "hgvs_p": "p.R133C",
       "variant_type": "missense",
+      "clinical_significance": "pathogenic (less severe)",
       "domain": "MBD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.880C>T",
+      "hgvs_p": "p.R294X",
+      "variant_type": "nonsense",
+      "clinical_significance": "pathogenic (less severe)",
+      "domain": "TRD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.906C>T",
+      "hgvs_p": "p.R306C",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic (less severe)",
+      "domain": "TRD"
     },
     {
       "source": "rett",
       "hgvs_c": "c.473C>T",
       "hgvs_p": "p.T158M",
       "variant_type": "missense",
+      "clinical_significance": "pathogenic (less severe)",
+      "domain": "MBD"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.306C>G",
+      "hgvs_p": "p.R106T",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic (more severe)",
       "domain": "MBD"
     },
     {
@@ -57,13 +69,15 @@
       "hgvs_c": "c.502C>T",
       "hgvs_p": "p.R168X",
       "variant_type": "nonsense",
-      "domain": "inter-domain (MBD-TRD)"
+      "clinical_significance": "pathogenic (more severe)",
+      "domain": "inter-domain (between MBD and TRD)"
     },
     {
       "source": "rett",
       "hgvs_c": "c.763C>T",
       "hgvs_p": "p.R255X",
       "variant_type": "nonsense",
+      "clinical_significance": "pathogenic (more severe)",
       "domain": "TRD"
     },
     {
@@ -71,77 +85,8 @@
       "hgvs_c": "c.808C>T",
       "hgvs_p": "p.R270X",
       "variant_type": "nonsense",
+      "clinical_significance": "pathogenic (more severe)",
       "domain": "TRD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.880C>T",
-      "hgvs_p": "p.R294X",
-      "variant_type": "nonsense",
-      "domain": "TRD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.916C>T",
-      "hgvs_p": "p.R306C",
-      "variant_type": "missense",
-      "domain": "TRD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.215del",
-      "hgvs_p": "p.P72Rfs*53",
-      "variant_type": "frameshift deletion",
-      "domain": "N-terminal (pre-MBD)"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.753delC",
-      "hgvs_p": "p.G252Afs",
-      "variant_type": "frameshift deletion",
-      "domain": "TRD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.806delG",
-      "hgvs_p": "p.G269Afs*20",
-      "variant_type": "frameshift deletion",
-      "domain": "TRD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.44_57dup14",
-      "hgvs_p": "p.R20EfsX29",
-      "variant_type": "duplication/frameshift",
-      "domain": "N-terminal (pre-MBD)"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.62+1delGT",
-      "variant_type": "splicing",
-      "exon": "intron 1"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.62+2T>G",
-      "variant_type": "splicing",
-      "exon": "intron 1"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "IVS3-2A>G",
-      "variant_type": "splicing",
-      "exon": "intron 3"
-    },
-    {
-      "source": "rett",
-      "variant_type": "large deletion",
-      "exon": "exon 4 partial deletion: codon 377 into 3' UTR"
-    },
-    {
-      "source": "rett",
-      "variant_type": "large deletion",
-      "exon": "97kb interstitial deletion of Xq28"
     }
   ],
   "expected_evidence": [
@@ -175,45 +120,32 @@
     },
     {
       "field_id": "A.variant_hgvs_c",
-      "value": "c.215C>T",
+      "value": "c.397C>T",
       "candidates": [
-        "c.215C>T",
-        "c.316C>T",
         "c.397C>T",
+        "c.880C>T",
+        "c.906C>T",
         "c.473C>T",
+        "c.306C>G",
         "c.502C>T",
         "c.763C>T",
-        "c.808C>T",
-        "c.880C>T",
-        "c.916C>T",
-        "c.215del",
-        "c.753delC",
-        "c.806delG",
-        "c.44_57dup14",
-        "c.62+1delGT",
-        "c.62+2T>G",
-        "IVS3-2A>G"
+        "c.808C>T"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.P72L",
+      "value": "p.R133C",
       "candidates": [
-        "p.P72L",
-        "p.R106W",
         "p.R133C",
-        "p.T158M",
-        "p.R168X",
-        "p.R255X",
-        "p.R270X",
         "p.R294X",
         "p.R306C",
-        "p.P72Rfs*53",
-        "p.G252Afs",
-        "p.G269Afs*20",
-        "p.R20EfsX29"
+        "p.T158M",
+        "p.R106T",
+        "p.R168X",
+        "p.R255X",
+        "p.R270X"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
@@ -223,51 +155,50 @@
       "value": "missense",
       "candidates": [
         "missense",
+        "nonsense",
         "missense",
         "missense",
         "missense",
         "nonsense",
         "nonsense",
-        "nonsense",
-        "nonsense",
-        "missense",
-        "frameshift deletion",
-        "frameshift deletion",
-        "frameshift deletion",
-        "duplication/frameshift",
-        "splicing",
-        "splicing",
-        "splicing",
-        "large deletion",
-        "large deletion"
+        "nonsense"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "N-terminal (pre-MBD)",
+      "value": "MBD",
       "candidates": [
-        "N-terminal (pre-MBD)",
+        "MBD",
+        "TRD",
+        "TRD",
         "MBD",
         "MBD",
-        "MBD",
-        "inter-domain (MBD-TRD)",
+        "inter-domain (between MBD and TRD)",
         "TRD",
-        "TRD",
-        "TRD",
-        "TRD",
-        "N-terminal (pre-MBD)",
-        "TRD",
-        "TRD",
-        "N-terminal (pre-MBD)"
+        "TRD"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0002650; HP:0002376; HP:0001344; HP:0001250",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "scoliosis; developmental regression; loss of speech; loss of hand skills; epilepsy/seizures; low bone mineral density / osteoporosis; fragility fractures (especially femur); reduced mobility / inability to walk",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
       "field_id": "B.sex",
-      "value": "predominantly female (F); some male (M) and M/F lines",
+      "value": "female",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -295,16 +226,19 @@
     },
     "variants": [
       {
-        "text": "c.215C>T"
-      },
-      {
-        "text": "c.316C>T"
-      },
-      {
         "text": "c.397C>T"
       },
       {
+        "text": "c.880C>T"
+      },
+      {
+        "text": "c.906C>T"
+      },
+      {
         "text": "c.473C>T"
+      },
+      {
+        "text": "c.306C>G"
       },
       {
         "text": "c.502C>T"
@@ -314,33 +248,6 @@
       },
       {
         "text": "c.808C>T"
-      },
-      {
-        "text": "c.880C>T"
-      },
-      {
-        "text": "c.916C>T"
-      },
-      {
-        "text": "c.215del"
-      },
-      {
-        "text": "c.753delC"
-      },
-      {
-        "text": "c.806delG"
-      },
-      {
-        "text": "c.44_57dup14"
-      },
-      {
-        "text": "c.62+1delGT"
-      },
-      {
-        "text": "c.62+2T>G"
-      },
-      {
-        "text": "IVS3-2A>G"
       }
     ]
   },

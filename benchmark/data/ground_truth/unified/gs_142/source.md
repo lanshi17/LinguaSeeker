@@ -1,51 +1,36 @@
-# Atipik Rett Sendromu ve Otizm Birlikteliği
+# Rett综合征1例
 
-Association of Atypical Rett Syndrome and Autism
+杨振林 ，金正勇
 
-Hilal Aydın1 , Nimet Kabakuş1 , Mustafa Erkoçoğlu2
+（延边大学附属医院 儿科 ，吉林 延吉 ）Rett
 
-1 Abant İzzet Baysal Üniversitesi Tıp Fakültesi, Çocuk Nöroloji Bilim Dalı, Bolu 
-2 Abant İzzet Baysal Üniversitesi Tıp Fakültesi, Çocuk Sağlığı Ve Hastalıkları Ana Bilim Dalı, Bolu
+［关键词］ 综合征 ；遗传性 ；婴幼儿DOI10．16068j．10001824．2018．01．01
 
-## Özet
+： ／ R748
 
-Rett sendromu (RS) nörogelişimsel bozukluklar arasında yer alan ve değişik nöropsikiyatrik bulgular gösterebilen nörodejeneratif bir hastalıktır. Bu sendroma sahip bebekler 6-18 aya kadar normalken, sonrasında nöromotor retardasyon ve sterotipik el hareketleri görülmektedir. Bu yazımızda çeşitli merkezlerde uzun süreli takiplerinde otizm, serebral palsi, nörometabolik hastalık ön tanıları ile izlenen ve kliniğimizde atipik Rett sendromu tanısını alan olgumuz sunuldu. ( Sakarya Med J 2015, 5(4):228-231 )
+［中图分类号］ ［文献标志码］
 
-Anahtar Kelimeler: MECP2 heterozigot gen mutasyonu; Otizm; Atipik Rett sendromu
+综合征又称为大脑萎缩性高血氨综合征 ，是一种严重 影 响 婴 幼 儿 智 力 运 动 发 育 的 遗 传 性 疾X CpG病，它的突变基因是 染色体上的编码甲基化 2 MECP2 AndreasRett 1966结合蛋白 （ ） ， 由 于 年 首．1999 Amir Rett先报道［ ］ 年， 等［ ］ 确定 的致病基因Xq28 MeCP2位于染 色 体 的 基 因， 主 要 累 及 女 性 ，110000 115000．发病率为 ／ ～ ／ 延边大学附属医院近1 Rett ．期收治 例 综合征病例，现报告如下
 
-## Abstract
+## 1 临床资料
 
-Rett Syndrome is a neurodegenerative disorder amongst the neurodevelopmental diseases that could show neurophysciatric symptoms. Babies having this syndrome develops normally until 6-18 months but afterwards neuromotor reterdation and sterotypic hand movements are observed. Herein we report a case diagnosed as Rett Syndrome in our clinics that was previously monitored in several centers and pre-diagnosed for autism, cerebral palsy and neurometabolic disorder. ( Sakarya Med J 2015, 5(4):228-231 )
+患儿，女， 岁 个月，以发育迟缓 年 个月、1 6 2016 1 12伴间断抽搐 年 个月为主诉于 年 月 日． G1P138＋3收入延边大学附属医院小儿科 患儿系 ，3．5kg 13周顺产儿，出生时体质量为 ，混合喂养， 月龄前感知觉、大运动及精细运动发育与同龄儿无差15异，可说爸爸、妈妈等词语，有时可说 个字左右的．14简单短语，喜 欢 玩 变 戏 法 及 躲 猫 猫 等 游 戏 月 龄时家属发现呼叫名字不应答 ，无法自行吃饭 ，动作刻．2板，词汇量明 显 减 少， 智 力 逐 渐 减 退 岁 时 头 部 出现不自主的前后摆动 ，后逐渐出现双手不自主拍打、搓手，发音似哼小调 ， 不停地咬牙眨眼， 症状进行性．3加重，生长发 育 迟 缓 岁时出现无明显诱因抽搐 ，表现为意识丧失 ，双眼直视，牙关紧闭，口吐沫子，四15 30s肢强直、抖动，持续时间约为 ～ ，可自行缓解30 ．抽搐次数有时可达 次／日 现患儿语言及技能完［ 文 章 编 号 ］ （ ）
 
-Keywords: MECP2 heterozygous gene mutation; Autism; Atypical Rett syndrome
+全丧失，不认识父母，双手前后上下摆动 ，揉搓 翻拧拍击 手 脚失用 反射性躯干共济失调显著 大小便．失禁，食物需要喂入口中才可勉强吞咽 入院身体检37℃ 110 min 18 min查见，体温 ，脉搏 次／ ，呼吸 次／ ，25kg体质量 ；神志可 意识模糊 不辨视听触觉； 头围小，不自主前后摆动， 口吐沫子，咬牙， 眨眼， 咽略充血，双肺呼吸音清； 心音有力， 未闻及杂音； 腹软，肠鸣音存在，未触及异常肿大的肝 脾； 双手前后上下摆动 揉搓 翻拧拍击 手 脚失用 反射性躯干共． WBC济失调显著 辅助检查中血常规检查结果见 ，9．11×10 L RBC 5．11×10 L Hb 143为 ／ ， 为 ／ ， 为gLPLT 500×10 L N 0．50 L 0．39 M／ ， 为 ／ ， 为 ， 为 ，0．07 0．54为 ；末梢血象检查结果见 分叶细胞 单核0．08 0．33细胞 ，淋巴细胞 ；肺炎支原体抗体呈阴性；乙型肝炎表面抗体呈阳性 ；肝功能、心肌酶检查结果CK 42 UL CKMB18 UL AST 317见， ／ ， ／ ，nmol s L ALT 267nmol s L．TBIL 4．5· ／ ， · ／molLDBIL1．5 molL．μ ／ ， μ ／ 尿常规检查 结 果 见 ， 隐 血3614．8 L呈弱阳性， 细菌计数 ／μ ， 细菌 （高倍视野）650．66 L． ． 1／ 胸片检查结果示 双肺纹理增强 患儿3岁 个月时因发育迟缓 ，曾就诊于北京儿童医院，脑电图检查结果示 右侧额 中央导联偶可见单个高波幅尖波 左侧中央 顶导联散发单个低波幅小尖波MECP2给行遗传基因检测 ， 结果见 基因编码区找1 c．622C Tp．Q208X到 个突变位点 ， ＞ ， （无义突变）Rett ．临床诊断为 综合征 给予地西泮及托吡酯片 进．行对症治疗
 
-## GİRİŞ
+## 2 讨论
 
-Rett sendromu (RS) kızlarda görülen, ilerleyici nörogelişimsel bozukluklar arasında yer alan ve X’e bağlı dominant geçiş gösteren bir hastalıktır.1 Bir çok nörodejeneratif/nörometabolik ve nörogenetik hastalıkla ortak semptom ve bulgulara sahiptir.2 Bundan dolayı zaman zaman tanı zorlukları yaşanabilir. Bu yazımızda çeşitli merkezlerde uzun süreli takiplerinde otizm, serebral palsi, nörometabolik hastalık ön tanıları ile izlenen ve kliniğimizde Rett sendromu tanısını alan olgumuz sunularak, bu durumun olası zorluklarından bahsedilmiştir.
+综合征的患儿正常生长和发育的年龄为18～ 个月 之后出现失用性的手部运动 脑生长减慢及头 步态异常 癫痫发作 精神发育迟滞 常表现出自闭症的早期症状 ， 亦可出现睡眠问题 宽基步态、磨牙、咀嚼困难、生长延缓、惊厥、认知障碍及清醒时的呼吸问题如过度换气 呼吸暂停及吞咽空气等，发病原因尚不清楚 ，尸体解剖及垂死患儿活体检查结果显示 脑皮质层神经元显著脱失 神经元的脂褐质数量与星样细胞胶样变性增加 ，弥漫性脑萎缩 ，．Rett 2001头小 畸形 综合征最新的诊断标准是 年由欧洲小儿神经年会分会制定的 该标准保留了1988年旧版诊断标准的基本内容 对临床症状进行8 8了更加准确的描述 ，包括 条必需标准、 条支持标5 ．准和 条排除标准［ ］ 本例患儿符合如下诊断标准1 2 13）出生前及围生期正常； ）出生后 个月龄前精神3 2运动发育基本正常 ； ）出生时头围正常， 岁时头围414较同龄儿小； ） 月龄时家属呼叫名字不应答 ， 无法自行吃饭 ，动作刻板， 词汇量明显减少 ， 智力逐渐2减退； 岁时头部出现不自主的前后摆动 ，逐渐出现双手不自主拍打 ， 搓手， 发音似哼小调， 不停地咬牙3眨眼 症状进行性加重 生长发育迟缓； 岁时出现． Rett无明显诱因抽搐 目前 综合征尚无有效的治疗方案 主要以对症及缓解并发症为主 常用的治疗措．1施如下 ）对症治疗 ：托吡酯等抗癫痫药可减少惊厥L发作的频率 毒碱可减少日间睡眠状态 提高交际．2能力 ）物理 作业治疗 训练运动功能 加强四肢及．3手的技能训练 维持必要的生活技能 ） 语言训练 ：．4通过语言交流， 提升语言交际能力［ ］ ） 基因疗 法 ：Rett X MeCP2综合征是 染色体上的 基因突变引起5 X的 氮胞苷可使失活的 染色体再次被激活 进而MECP2促进 等位基因表达 但这种激活并不是选择性的 促进目的基因表达时 也可增加其他致病基MECP2 MECP2因的表达 且目前尚缺乏针对 或有．5突变的细胞的特异性 靶向性制剂［ － ］ ）药物疗法 ：
 
-## OLGU
+药物的治疗只能针对 基因突变后所产生的下游产物的机体的危害 ， 安帕金类或新的酪氨酸激B酶受体 配 体 类 药 物 可 提 高 脑 源 性 神 经 生 长 因 子l水平，减轻神经系统的损害；胰岛素样生长因子 具MECP2有神经调节 和 保 护 脑 细 胞 功 能 ， 可 改 善 突变引起的突触减少 ， 对患儿运动及呼吸循环系统亦有影响；氨基糖苷类药物可引起终止密码子过早表MECP2 ．达， 突变转变为无义突变［ ］ 基因疗法尚处于动物实验阶段 ，药物疗法亦未能广泛应用于临床 ，Rett ．因此目前治疗 综合征仍无特异的方案 本例患儿主要给予了对症治疗 ，缓解并发症的进展 ，选用地西泮进行镇静 ，口服给予托吡酯片控制癫痫发作 ，并．进行进一步随诊
 
-Otuz bir aylık kız hasta son zamanlarda artan kendine zarar verme yakınması ile başvurdu. Hastanın prenatal ve natal öyküsünde bir özellik olmadığı ve ilk on ayında normal gelişim süreci gösterdiği belirlendi. İlk olarak on aylık iken baş çevresinde negatif sapmanın ortaya çıktığı ve bu aydan itibaren yeni bir nörokognitif kazanımın olmadığı; 16 aylıkken göz temasının kaybolduğu, 18 aylıkken yürüme zorluğu ve 27 aylık iken de jeneralize afebril tonik klonik nöbetlerin başladığı belirlendi. Hastanın bu bulgularla infantil otizm, spastik dipleji ve nörometabolik hastalık ön tanıları ile takip edildiği tespit edildi. Hastanın fizik ve nörolojik muayenesinde mikrosefali, kaslarda genel tonus artışı, derin tendon reflekslerinde artma, bilateral babinski pozitifliği, yürüme apraksisi ve stereotipik el hareketleri (parmaklarını yalama ve ısırma…) ile pulsatif gülme ve ağlama atakları belirlendi. Hastanın dış merkezde çekilen kranial magnetik rezonans görüntülemesinde (MRG) her iki hemisfer posterior periventrikuler alanda myelinize olmamış alanlar belirlendi. Metabolik taramaları normal olarak değerlendirildi. Nöromotor gelişiminde psikomotor regresyon tanımlanan hastanın klinik ve laboratuar sonuçlarına bakılarak RS tansı kondu ve genetik analiz sonucunda MECP2 geni 4. ekzonunda p.Pro302Leu mutasyonu heterozigot olarak saptandı. Çekilen elektroensefalografide (EEG) jeneralize ve bisenkron çoklu diken dalga, diken dalga kompleksleri izlenirken zaman zaman bu deşarjların randomize ve çok odaklı olarak ortaya çıktığı izlendi (Resim 1). Hastaya valproik asit (20 mg/kg/gün) başlanıldı, 3 ay sonraki kontrolünde valproik asit (VPA) tedavisinden yarar gördüğü, kendine zarar verme davranışının düzeldiği ve göz temasının zayıf da olsa başladığı belirlendi. Eş zamanlı çekilen EEG’de belirgin düzelme saptandı.
+## ［参 考 文 献］．Rett
 
-## TARTIŞMA
-
-RS, çoğunlukla X’e bağlı dominant geçen ve kızlarda görülen mental retardasyonun en sık nedenlerinden biridir.1 RS prevalansı, 10-15 bin kızda 1’dir.3,4 Bu sendroma sahip olan bebekler 6-18 aya kadar normal mental motor gelişim gösterirler. Hastaların doğumda baş çevresi normalken daha sonraki takiplerinde mikrosefali görülmesi tipiktir. Atipik Rett Sendromu altı temel kriterden en az üçünün olması ve on bir destekleyici kriterden en az 5’inin olması ile tanı konulur. Temel kriterler içerisinde el becerilerinin kaybı, anormal hareketler, konuşmanın kaybı ya da azalması, el stereotipisi, iletişim becerilerinin kaybı ya da azalması, erken çocukluk döneminden itibaren baş büyümesinde yavaşlama yer almaktadır. Destekleyici kriterler arasında solunum düzensizlikleri, hava yutma veya karında şiş- kinlik, diş gıcırdatma, anormal hareketler, skolyoz veya kifoz, alt ekstremite amyotrofisi, genellikle hipotropik soğuk ve soluk ayaklar, uyku düzensizlikleri ve gece çığlık nöbetleri, durdurulamaz kahkaha ve bağırma nöbetleri, ağrı duyarlılığında azalma, yoğun göz teması ve/veya göz dalmaları vardır.5 Kaslarda sertleşme ve distoni karakteristiktir.3 Bizim hastamızda da on aya kadar normal mental motor gelişim gösterirken, on aydan sonra baş çevresinde negatif sapmanın başladığı ve nörokognitif kazanımın olmadığı belirlendi. Temel kriterler içerisinde el stereotipisi, erken çocukluk döneminde baş çevresinde duraklama, anormal hareketler, iletişim becerilerin kaybı mevcuttu. Destekleyici kriterler arasında ise uyku düzensizlikleri, diş gıcırdatma, durdurulamaz kahkaha atakları, göz dalmaları ve ağrı duyarlılığında azalma saptandı.
-
-Bu sendromun geniş nöropsikiyatrik bulgularının olması, birçok hastalıkla tanı karmaşasına neden olmaktadır.6 Özellikle atipik RS olgularında tanı zorluğu ve geç tanı olasılığı bulunabilir. Böyle durumlarda, özellikle kız çocuklarda RS olasılığı düşünülüp ayırıcı tanı için genetik çalışmalardan faydalanılabilir. Rett sendromunda mutasyon Xq28’de, uzun kolundadır ve MECP2, methyl-CpG-binding protein 2’yi kodlayan gendir.1 Nitekim bizim hastamızda da RS için tipik sayılabilecek stereotipik el hareketlerinin kaybı geç olduğundan dolayı bu durum diğer merkezlerce ayırıcı tanıda düşünülememiş ve bu da tanı karmaşına neden olmuştur. Bizim hastamızda klinik kriterlere ek olarak istenen genetik analizde MECP2 geni 4. ekzonunda p.Pro302Leu mutasyonu heterozigot olarak saptandı.
-
-RS’a epilepsi %50-90 oranında eşlik etmektedir.8 Genel populasyon ile kıyaslandığında febril konvulziyonların daha sık olduğu belirtilmiştir.9 Nöbetler genelde parsiyel, jeneralize tonik klonik, tonik ve myoklonik nöbetler daha sık iken, absans ve klonik nöbetler daha az sıklıkla gözlenir.10 Nitekim tüm RS’li hastalarda nöbet sorunu olmasa da, EEG çekimi önerilmektedir. Antiepileptik tedavi olarak da valproik asit ve lamotrijin önerilmektedir.11 Bizim hastamızda da epileptiform karakterde EEG bulguları olması üzerine başlanılan antiepileptik tedaviye (valproik asit) yanıtı hem klinik ve hem de EEG bazında tatminkar oldu. Bu hastalarda diğer nörometabolik ve nörodejeneratif hastalıklar dışlanmalı ve gerekirse ek araştırmalar yapılmalı- dır. Literaturde bu iki hastalığın birlikteliği de tanımlanmıştır.12
-
-Rett sendromunun klinik özellikleri otizm ile benzediğinden dolayı tanı karmaşasına yol açabilir ve ayırıcı tanıda bu hususa dikkat etmek gerekir, fakat bu iki hastalığın birlikte olabileceği de unutulmamalıdır.
-
-1. Balmer D, Arredondo J, Samaco RC. MECP2 mutations in Rett syndrome adversely affect lymphocyte growth, but do not affect imprinted gene expression in blood or brain. Hum Genet 2002;110:545-552. 
-2. Hagberg B, Aicardi J, Dias K, Ramos O. A progressive syndrome of autism, dementia, ataxia, and loss of purposeful hand use in girls: Rett’s syndrome: Report of 35 cases. Ann Neurol 1983;14:471e9. 
-3. Leonard H, Silberstein J, Falk R, Houwink-Manville I, Ellaway C, Raffaele LS, et al. Occurrence of Rett syndrome in boys. J Child Neurol 2001;16:333-338. 
-4. Dunn HG. Importance of Rett syndrome in child neurology, review article. Brain Dev 2001;23:38-43. 
-5. Hagberg B, Hanefeld F, Percy A, Skjeldal O. An update on clinically applicable diagnostic criteria in Rett syndrome. In: Comments to Rett Syndrome clinical criteria consensus panel satellite to European Paediatric Neurology Society Meeting, 11 September 2001. Eur J Paediatr Neurol 2002;6:293-297. 
-6. Skuse DH, Kuntsi J. Moleculer genetic and choromosomal anomalies: cognitive and behavioural consequences. Child and Adolescent Psychiatry, M Rutter, E Taylor (Ed.), Oxford: Blackwell Publishing; 2002. p.205-240. 
-7. Huppke P, Laccone F, Kramer N, Engel W, Hanefeld F. Rett syndrome:analysis of MECP2 and clinical characterization of 31 patients. Hum Mol Genet 2000;9(9):1369–1375. 
-8. Steffenburg U, Hagberg G, Hagberg B. Epilepsy in a representative series of Rett syndrome. Acta Paediatr 2001;90:34e9. 
-9. Huppke P, Kohler K, Brockmann K, Stettner GM, Gartner J. Treatment of epilepsy in Rett syndrome. Eur J Paediatr Neurol 2007;11:10e6. 
-10. Nieto-Barrera M, Nieto-Jimenez M, Diaz F, Campaña C, Sánchez ML, Ruiz del Portal L, et al. Clinical course of epileptic seizures in Rett’s syndrome. Rev Neurol 1999;28:449e53. 
-11. Leonard H, Downs J, Jian L, et al. Valproate and risk of fracture in Rett syndrome. Arch Dis Child 2010;95:444e8. 
-12. Tsai, L. Y. Is Rett syndrome a subtype of pervasive developmental disorders? Journal of Autism and Developmental Disorders 1992;22:551–561.
+［ ］ 赵 培 伟 ， 何 学 莲 ， 林 俊 ， 等 综合征的临床特点及MECP2 J ． 201416基因突变分析［ ］ 中国当代儿科杂志 ， ，4 393396．（ ） ：AmirRE V 
+［ ］ ， ， ，syndromeiscausedbymutationsinXlinkedMECP2，encodingmethylCpGbingdingproteinJ ．［ ］ ，199923185188．HagbergB Handf 
+［ ］ ， ， ，cinicallyapplicablediagnosticcriteriain RETTsyndromeJ ． 20026 5 293［ ］ （ ）297．297. 
+［ ］ 吴鹏 ，蒋莉 综合征的诊断与治疗［ ］ 实 用 儿 科 临20072224 19021904．床杂志 （ ） ：GadallaKK BaileyME CobbSR 
+［ ］ ， ，dromereversibilityandpotentialavenuesfortherapy：J ． 20114391 114．［ ］ ， ， （ ） ：GraySJ．Genetherapyandneurod 
+［ ］ dersJ ． 201368136142．［ ］ ， ， ：．Rett 
+［ ］ 何雯洁 ， 代英 ， 钟敏 综合征的诊断和治疗研究进J ． 2013286 462464．展［ ］ 中国实用儿科杂志 （ ）．Rett 
+［ ］ 商婷婷 ，李廷玉 综合征发病机制研究及治疗进展J ． 2015213 4549．［ ］ 儿科药学杂志 ， ， （ ） ： ?

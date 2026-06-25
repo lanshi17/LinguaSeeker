@@ -27,15 +27,24 @@
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
-      "value": "GJA1"
+      "value": "GJA1",
+      "evaluation_type": "precision_recall",
+      "candidates": [],
+      "source": "article"
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "congenital heart disease"
+      "value": "congenital heart disease",
+      "evaluation_type": "precision_recall",
+      "candidates": [],
+      "source": "article"
     },
     {
       "field_id": "A.gene_disease_relationship",
-      "value": "uncertain"
+      "value": "uncertain",
+      "evaluation_type": "precision_recall",
+      "candidates": [],
+      "source": "article"
     }
   ],
   "expected_standardization": {

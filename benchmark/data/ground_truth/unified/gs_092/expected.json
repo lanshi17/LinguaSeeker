@@ -23,7 +23,24 @@
   "source_journal": "BioMed research international",
   "source_year": "2014",
   "source_language": "en",
-  "variants": [],
+  "variants": [
+    {
+      "source": "rett",
+      "hgvs_c": "c.7153G>A",
+      "hgvs_p": "p.Gly2385Arg",
+      "variant_type": "missense",
+      "clinical_significance": "risk factor (associated with ~2.2-fold increased risk of PD)",
+      "domain": "WD40 domain"
+    },
+    {
+      "source": "rett",
+      "hgvs_c": "c.4883G>C",
+      "hgvs_p": "p.Arg1628Pro",
+      "variant_type": "missense",
+      "clinical_significance": "risk factor (OR 1.23, trend toward significance in this study)",
+      "domain": "COR domain"
+    }
+  ],
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
@@ -33,49 +50,355 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "B.disease_diagnosis",
-      "value": "Parkinson disease",
-      "candidates": [
-        "Parkinson disease",
-        "Parkinson's disease"
-      ],
+      "field_id": "A.gene_aliases",
+      "value": "leucine-rich repeat kinase 2",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.gene_disease_relationship",
-      "value": "associated",
+      "value": "associated with both familial and sporadic forms of Parkinson's disease",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.7153G>A; c.4883G>C",
+      "candidates": [
+        "c.7153G>A",
+        "c.4883G>C"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "case:control=2.6%:0.1%,使用等位基因频率作为对比",
+      "value": "p.Gly2385Arg; p.Arg1628Pro",
+      "candidates": [
+        "p.Gly2385Arg",
+        "p.Arg1628Pro"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_legacy_name",
+      "value": "G2385R; R1628P",
+      "candidates": [
+        "G2385R",
+        "R1628P"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.protein_effect",
+      "value": "G2385R: cells carrying the variant are more susceptible to oxidative stress and apoptosis; R1628P: substitution of a highly basic polar arginine with a neutral nonpolar proline likely causes a conformational change in protein secondary structure, altering protein function",
+      "candidates": [
+        "G2385R: cells carrying the variant are more susceptible to oxidative stress and apoptosis",
+        "R1628P: substitution of a highly basic polar arginine with a neutral nonpolar proline likely causes a conformational change in protein secondary structure, altering protein function"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "G2385R located within the WD40 domain of LRRK2; R1628P located within the COR domain of LRRK2",
+      "candidates": [
+        "G2385R located within the WD40 domain of LRRK2",
+        "R1628P located within the COR domain of LRRK2"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.identity_by_descent_variant",
+      "value": "R1628P reported as an ancestral risk factor for PD in Asia (Farrer et al.) and as a founder variant in Thai patients (Pulkes et al.)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.case_count",
+      "value": "695 PD patients",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "A.variant_hgvs_p",
-      "value": "case:control=3.1%:1.8%使用等位基因频率作为对比",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "B.mode_of_inheritance_reported",
-      "value": "AD",
+      "field_id": "B.disease_diagnosis",
+      "value": "Parkinson's disease",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "parkinsonism",
+      "value": "Parkinson's disease; early-onset PD (onset < 40 years) in 55 patients (7.9%)",
+      "candidates": [
+        "Parkinson's disease",
+        "early-onset PD (onset < 40 years) in 55 patients (7.9%)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "mean age at PD diagnosis 57.4 ± 11.8 years; early-onset PD defined as onset < 40 years",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "60% of PD patients male; 51% of controls male",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.ancestry_or_population",
+      "value": "Malaysian",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "familial and sporadic forms",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.alternative_diagnosis_excluded",
+      "value": "507 controls who did not suffer from any neurological or movement disorders",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.additional_pathogenic_variant",
+      "value": "four patients were compound heterozygous for G2385R and R1628P; two had a family history of PD and developed PD before age 50, two had no family history and a later age of onset (>55)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.testing_method",
+      "value": "Taqman allelic discrimination assay on a 7500 Fast Real-Time PCR machine; a subset of 20 individuals was sequenced to determine error rate; DNA extracted from lymphocytes by phenol-chloroform method",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sequencing_method_quality",
+      "value": "error rate of the assay was 0% in the subset of 20 individuals sequenced",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.inheritance_source",
+      "value": "family history of PD reported in a subset (two of four compound heterozygous patients had a family history of PD)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "D.allele_frequency",
+      "value": "G2385R: PD MAF 0.026, controls MAF 0.001; R1628P: PD MAF 0.031, controls MAF 0.018; R1628P MAF 0.01 reported by Mata et al. 2005",
+      "candidates": [
+        "G2385R: PD MAF 0.026, controls MAF 0.001",
+        "R1628P: PD MAF 0.031, controls MAF 0.018",
+        "R1628P MAF 0.01 reported by Mata et al. 2005"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.allele_count",
+      "value": "G2385R variant allele: 36 in PD, 12 in controls; R1628P variant allele: 43 in PD, 18 in controls",
+      "candidates": [
+        "G2385R variant allele: 36 in PD, 12 in controls",
+        "R1628P variant allele: 43 in PD, 18 in controls"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.allele_number",
+      "value": "G2385R: PD 1390 alleles (1354 wild type + 36 variant), controls 1014 alleles (1002 wild type + 12 variant); R1628P: PD 1390 alleles (1347 wild type + 43 variant), controls 1014 alleles (996 wild type + 18 variant)",
+      "candidates": [
+        "G2385R: PD 1390 alleles (1354 wild type + 36 variant), controls 1014 alleles (1002 wild type + 12 variant)",
+        "R1628P: PD 1390 alleles (1347 wild type + 43 variant), controls 1014 alleles (996 wild type + 18 variant)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.absent_or_rare_statement",
+      "value": "G2019S is monomorphic in Asians; G2385R is not found in Caucasian or Jewish PD patients; R1628P was found to be monomorphic in Japanese and Indian cohorts",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "D.healthy_carrier_observation",
+      "value": "G2385R variant was present in control subjects (MAF = 0.001), less frequently than in the PD cohort (MAF = 0.026)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "E.conservation_score",
+      "value": "R1628P alters a highly conserved amino residue within the COR domain of the LRRK2 protein",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.functional_result",
+      "value": "cells carrying the G2385R variant are more susceptible to oxidative stress and apoptosis (cited from Tan et al. 2007)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "F.non_patient_cell_evidence",
+      "value": "cells carrying the G2385R variant are more susceptible to oxidative stress and apoptosis (reported in cited reference)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.study_design",
+      "value": "case-control association study",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_count",
+      "value": "695 PD cases",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.control_count",
+      "value": "507 controls",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.case_definition",
+      "value": "PD patients diagnosed by neurologists based on the United Kingdom PD Brain Bank Criteria",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.control_matching",
+      "value": "507 controls who did not suffer from any neurological or movement disorders; mean age of controls 59.3 ± 9.4 years; 51% male",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.variant_count_cases",
+      "value": "G2385R: 36 variant alleles in PD; R1628P: 43 variant alleles in PD",
+      "candidates": [
+        "G2385R: 36 variant alleles in PD",
+        "R1628P: 43 variant alleles in PD"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.variant_count_controls",
+      "value": "G2385R: 12 variant alleles in controls; R1628P: 18 variant alleles in controls",
+      "candidates": [
+        "G2385R: 12 variant alleles in controls",
+        "R1628P: 18 variant alleles in controls"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.odds_ratio",
+      "value": "G2385R: OR 2.22; R1628P: OR 1.23",
+      "candidates": [
+        "G2385R: OR 2.22",
+        "R1628P: OR 1.23"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.confidence_interval",
+      "value": "G2385R: 95% CI 1.15–4.29; R1628P: 95% CI 1.039–1.448",
+      "candidates": [
+        "G2385R: 95% CI 1.15–4.29",
+        "R1628P: 95% CI 1.039–1.448"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.p_value",
+      "value": "G2385R: P = 0.019; R1628P: P = 0.054",
+      "candidates": [
+        "G2385R: P = 0.019",
+        "R1628P: P = 0.054"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "G.statistical_method",
+      "value": "Fisher's exact test using OpenEpi software; allele and genotype frequencies in PD cases and controls compared",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "H.contradiction_type",
+      "value": "non-replicated association for R1628P: a multicentre study by Ross et al. (2011) involving 1386 Asian PD cases and 982 controls did not find an association with R1628P (OR 0.62, 95% CI 0.36–1.07, P = 0.087); the Taiwanese cohort showed a trend in the opposite (protective) direction (OR 0.56, 95% CI 0.32–1.01, P = 0.054)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.gene_function_biochemical",
+      "value": "the WD40 domain of LRRK2 is responsible for a variety of functions including signal transduction, pre-mRNA processing, and cytoskeleton assembly",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "I.functional_alteration_non_patient_cells",
+      "value": "cells carrying the G2385R variant are more susceptible to oxidative stress and apoptosis (cited reference)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "J.known_pathogenic_variant_reference",
+      "value": "well-established LRRK2 PD risk variants cited: R1441C, G2019S, I2020T",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
     }
   ],
   "expected_standardization": {
@@ -90,20 +413,66 @@
     "gene": {
       "text": "LRRK2",
       "hgnc_id": "HGNC:18618"
-    }
+    },
+    "variants": [
+      {
+        "text": "c.7153G>A"
+      },
+      {
+        "text": "c.4883G>C"
+      }
+    ]
   },
   "evaluation_config": {
     "gene_disease_fields": [
       "A.gene_symbol",
-      "B.disease_diagnosis",
+      "A.gene_aliases",
       "A.gene_disease_relationship",
+      "B.disease_diagnosis",
       "B.mode_of_inheritance_reported"
     ],
     "variant_fields": [
-      "A.variant_hgvs_p"
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_legacy_name",
+      "A.variant_type",
+      "A.protein_effect",
+      "A.functional_domain_or_hotspot",
+      "A.identity_by_descent_variant"
     ],
     "clinical_fields": [
-      "B.clinical_phenotypes"
+      "B.case_count",
+      "B.clinical_phenotypes",
+      "B.age_of_onset",
+      "B.sex",
+      "B.ancestry_or_population",
+      "B.alternative_diagnosis_excluded",
+      "B.additional_pathogenic_variant",
+      "B.testing_method",
+      "B.sequencing_method_quality",
+      "C.inheritance_source",
+      "D.allele_frequency",
+      "D.allele_count",
+      "D.allele_number",
+      "D.absent_or_rare_statement",
+      "D.healthy_carrier_observation",
+      "E.conservation_score",
+      "F.functional_result",
+      "F.non_patient_cell_evidence",
+      "G.study_design",
+      "G.case_count",
+      "G.control_count",
+      "G.case_definition",
+      "G.control_matching",
+      "G.variant_count_cases",
+      "G.variant_count_controls",
+      "G.odds_ratio",
+      "G.confidence_interval",
+      "G.p_value",
+      "G.statistical_method",
+      "H.contradiction_type",
+      "I.gene_function_biochemical",
+      "I.functional_alteration_non_patient_cells"
     ],
     "standardization_fields": [
       "gene",

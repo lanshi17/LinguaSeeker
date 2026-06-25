@@ -27,15 +27,24 @@
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
-      "value": "TLR5"
+      "value": "TLR5",
+      "evaluation_type": "precision_recall",
+      "candidates": [],
+      "source": "article"
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "systemic lupus erythematosus, susceptibility to, 1"
+      "value": "systemic lupus erythematosus, susceptibility to, 1",
+      "evaluation_type": "precision_recall",
+      "candidates": [],
+      "source": "article"
     },
     {
       "field_id": "A.gene_disease_relationship",
-      "value": "uncertain"
+      "value": "uncertain",
+      "evaluation_type": "precision_recall",
+      "candidates": [],
+      "source": "article"
     }
   ],
   "expected_standardization": {

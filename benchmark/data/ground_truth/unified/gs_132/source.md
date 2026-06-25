@@ -1,480 +1,324 @@
-## レット症候群の臨床遺伝学的研究
+# Abnormal Expression of Cerebrospinal Fluid Cation Chloride Cotransporters in Patients with Rett Syndrome
 
-## 分担研究者 高橋 悟 旭川医科大学小児科
+Sofia Temudo Duarte1,4,5\*, Judith Armstrong1,3, Ana Roche1 , Carlos Ortez1,3, Ana Pe´ rez1 , Maria del Mar O’Callaghan1 , Antonina Pereira4 , Francesc Sanmartı´ 1 , Aida Ormaza´ bal2,3, Rafael Artuch2,3, Mercedes Pineda1,3, Angels Garcı´a-Cazorla1,3
 
-## 研究要旨
+1 Department of Neurology, Hospital Sant Joan de De´u (HSJD), Barcelona, Spain, 2 Department of Biochemistry, Hospital Sant Joan de De´u (HSJD), Barcelona, Spain, 3 CIBER-ER (Biomedical Network Research Centre on Rare Diseases, Instituto de Salud Carlos III), Madrid, Spain, 4 Instituto de Medicina Molecular, Faculdade de Medicina da Universidade de Lisboa, Lisboa, Portugal, 5 Instituto Gulbenkian de Cieˆncia, Oeiras, Portugal
 
-「先天型」レット症候群の病因遺伝子として同定された FOXG1 に遺伝子異常を有した 3 例について、その臨床症状と遺伝子異常との関連について検討した。3 例中 2 例は、FOXG1 の遺伝子内変異に起因し、残りの 1 例は 14q12 に微細欠失を有する患者であった。この欠失患者には 14q12 欠失症候群で報告されている特異顔貌の特徴がみられ、同定された欠失範囲には 2 つの遺伝子 FOXG1 と C14orf23 が含まれていた。一方、FOXG1 遺伝子内変異の患者の顔貌には特徴はなかった。以上の所見より、14q12 欠失症候群でみられる症候のうち、特異顔貌は C14orf23 のハプロ不全の影響であると考えられた。
+## Abstract
 
-## A. 研究目的
+Rett Syndrome is a progressive neurodevelopmental disorder caused mainly by mutations in the gene encoding methyl-CpG-binding protein 2. The relevance of MeCP2 for GABAergic function was previously documented in animal models. In these models, animals show deficits in brain-derived neurotrophic factor, which is thought to contribute to the pathogenesis of this disease. Neuronal Cation Chloride Cotransporters (CCCs) play a key role in GABAergic neuronal maturation, and brain-derived neurotrophic factor is implicated in the regulation of CCCs expression during development. Our aim was to analyse the expression of two relevant CCCs, NKCC1 and KCC2, in the cerebrospinal fluid of Rett syndrome patients and compare it with a normal control group.
 
-レット症候群典型例のおよそ 90%の症例では、MECP2に異常が同定される。一方、レット症候群に類似するが異なった臨床経過を示す非典型例では MECP2 異常の検出率は低く、「早期発症てんかん型」では CDKL5 が、「先天型」では FOXG1 が病因遺伝子として同定されている。「先天型」では、FOXG1 を含む 14q12 に欠失を有する症例と FOXG1 の遺伝子内変異に起因する症例が知られている（1,2）。本研究では、「先天型」レット症候群の病態理解を深めることを目的とし、その臨床症状と遺伝子異常との関連を検討した。
+The presence of bumetanide sensitive NKCC1 and KCC2 was analysed in cerebrospinal fluid samples from a control pediatric population (1 day to 14 years of life) and from Rett syndrome patients (2 to 19 years of life), by immunoblot analysis.
 
-## B. 研究方法
+Both proteins were detected in the cerebrospinal fluid and their levels are higher in the early postnatal period. However, Rett syndrome patients showed significantly reduced levels of KCC2 and KCC2/NKCC1 ratio when compared to the control group.
 
-「先天型」レット症候群を疑われた患者のうち、MECP2とCDKL5に遺伝子変異のなかった23例を対象とした。遺伝子解析は、末梢血白血球より抽出したDNAを用いて、FOXG1遺伝子について直接塩基配列決定法にて解析した。変異が同定されなかった場合には、multiplex ligation-dependent probe amplification (MLPA)法あるいは定量的PCR法にて解析した。遺伝子欠失範囲の決定は、array-comparative genomic hybridization (CGH)法にてhigh-resolution 400 K array (Agilent Technologies Inc.)を用いて行った。遺伝子解析は、旭川医科大学の倫理委員会の承認を得て、患者あるいは保護者への十分な説明と同意が得られた場合に行われた。
+Reduced KCC2/NKCC1 ratio in the cerebrospinal fluid of Rett Syndrome patients suggests a disturbed process of GABAergic neuronal maturation and open up a new therapeutic perspective.
 
-## C. 研究結果
+Citation: Duarte ST, Armstrong J, Roche A, Ortez C, Pe´rez A, et al. (2013) Abnormal Expression of Cerebrospinal Fluid Cation Chloride Cotransporters in Patients with Rett Syndrome. PLoS ONE 8(7): e68851. doi:10.1371/journal.pone.0068851
 
-FOXG1 遺伝子異常は 3 例の患者で同定され、そのうち 2 例は FOXG1 の遺伝子内変異（c. 256dupC, p. Gln86ProfsX35; c. 689G>A, p. Arg230His）(3) であった。残りの 1 例は、14q12 に 0.54-Mb の欠失を有し、その欠失範囲には FOXG1 と C14orf23 が含まれていた (4)。この欠失症例では、特異顔貌（円形顔貌、上向きの鼻孔、テント状の上口唇）がみられ、これまでに 14q12 欠失症候群で報告されている特徴に一致するものであった（1,2）。しかし、FOXG1 の遺伝子内変異の症例ではこのような顔貌の特徴は見られなかった。
+Editor: Maurizio D’Esposito, Institute of Genetics and Biophysics, Italy
 
-## D. 考察
+Received December 12, 2012; Accepted June 5, 2013; Published July 19, 2013
 
-「先天型」レット症候群を疑われた患者23例のうち、FOXG1異常が同定されたのは3例のみであり、「先天型」レット症候群に類似の症候を示す病態は多様であることが示唆された。FOXG1異常を有する症例の臨床的特徴は、乳児期早期から明らかとなる精神運動発達遅滞と小頭症である。我々が経験した14q12欠失症候群の欠失範囲は、これまでの報告の中では最も狭く、その中には2つの遺伝子FOXG1とC14orf23が含まれていた。この患者でみられた特異顔貌は、14q12欠失症候群で報告されている特徴に一致するものであった(1,2)。FOXG1の遺伝子内変異の症例では、このような顔貌の特徴は見られなかったことより、14q12欠失症候群でみられる顔貌の特徴はC14orf23の欠失による影響と考えることができた。
+Copyright: - 2013 Duarte et al. This is an open-access article distributed under the terms of the Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.
 
-## E. 結論
+Funding: This study was funded by ‘‘Real Patronato’’ (Spanish Ministry of Health and Social Policy), Tecnifar Epilepsy Research grant and FIS PS09/01132. Dr. Sofia T. Duarte has received a research grant from Portuguese League Against Epilepsy and from Tecnifar S.A. (Epilepsy research grant). Currently, Dr. Sofia Duarte integrates the Portuguese Programme for Advanced Medical Education, sponsored by Calouste Gulbenkian Foundation and Portuguese Foundation for Science and Technology. Dr. Carlos Ortez was supported by a grant from Caja Navarra. Dr. Mercedes Pineda is funded by a grant from ‘‘Real Patronato’’, Spanish Ministry of Social Politics. Dr. Angels Garcia-Cazorla is funded by the grant FIS PS09/01132. The funders had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.
 
-14q12 欠失症候群でみられる症候のうち、特異顔貌は C14orf23 のハプロ不全の影響と考えられた。
+Competing Interests: Dr. Sofia T. Duarte received a research grant from Portuguese League Against Epilepsy and from Tecnifar S.A. (Epilepsy research grant). There are no patents, products in development or marketed products to declare. This does not alter the authors’ adherence to all the PLOS ONE policies on sharing data and materials.
 
-## G. 研究発表
+\* E-mail: sofia.duarte22@hotmail.com
 
-## 1. 論文発表
+## Introduction
 
-1. Kumakura A, Takahashi S, Okajima K, Hata D: A haploinsufficiency of FOXG1 identified in a boy with congenital variant of Rett syndrome. Brain Dev 2013 (in press) 
-2. Hara M, Nishi Y, Yamashita Y, Hirata R, Takahashi S, Nagamitsu S, Hosoda H, Kangawa K, Kojima M, Matsuishi, T: Relation between circulating levels of GH, IGF-1, ghrelin and somatic growth in Rett Syndrome. Brain Dev 2014
+Rett syndrome (RTT) is an X-linked neurodevelopmental disorder with an incidence of 1:10000 live female births and is one of the leading causes of mental retardation and autistic behavior in females [1]. Loss-of-function mutations in the gene encoding methyl-CpG binding protein 2 (MeCP2) cause most cases of RTT. Individuals affected with RTT experience normal development up to the age of 6–18 months, at which time they fail to acquire new skills and enter a period of motor regression [2]. Autistic features are a hallmark of this disorder and epilepsy is frequent [3]. RTT patient brain does not show obvious signs of neurodegeneration, atrophy, gliosis, demyelination, or neuronal migration defects [4,5], suggesting that neurological symptoms may primarily stem from subtle defects of subcellular compartments such as dendrites, axons, or synaptic structures [6]. MeCP2 is a transcriptional regulatory protein, and in its absence, a large number of genes exhibit abnormal expression with implications in the balance between synaptic excitation and inhibition [7,8]. MeCP2 might be particularly important to GABAergic function and there is evidence that the expression of MeCP2 is approximatelly 50% higher in GABAergic neurons when compared to non GABAergic neurons. Mice with conditional deletion of Mecp2 in GABAergic neurons initially show normal behavior but in the course of development start displaying forepaw stereotyped movements, compulsive grooming, impaired motor coordination, learning/memory deficits, abnormal EEG hyperexcitability, severe respiratory dysrhythmias and premature lethality [8].
 
-(in press)
+c-aminobutyric acid (GABA) is the main inhibitory neurotransmitter in the adult brain. During early development, activation of the chloride- permeable, postsynaptic, GABAA receptors (GA-BAA-R) can induce depolarization and the basal intracellular chloride concentration is determinant for the action of GABA in the developing neurons [9]. Two major contributors to intracellular chloride concentration are NKCC1 (Na+ , K+ , 2Cl2 cotransporter, that accumulates chloride in the cell), and KCC2 (K+ , Cl2 cotransporter, that extrudes chloride). Several lines of research correlate epileptogenesis with altered function of NKCC1 and KCC2 [10,11]. In vitro, experiments suggest that bumetanide, a potent NKCC1 inhibitor, can increase GABAergic inhibition, in combination with phenobarbital [12]. Bumetanide has also been reported useful in a neonatal patient with seizures [13] and in autistic children [14].
 
-Rett 症候群の一男児例．第 116 回日本小児科学会総会 H25.4.19（広島市）
+Moreover, the brain of MeCP2 deficient animal models shows deficits in brain-derived neurotrophic factor [15] (BDNF), which is thought to contribute to the pathogenesis of RTT. BDNF can also promote the functional maturation of GABAA-R mediated responses by inducing upregulation of KCC2 [16,17,18].
 
-## 2. 学会発表
+Human age related changes in GABAA-R physiology remain controversial, although neuropathological studies have already identified postnatal developmental changes of NKCC1 and KCC2 cortical expression [18]. The detection of synaptic proteins in the cerebrospinal fluid (CSF) gives us the possibility to indirectly access synaptic composition and alterations, using the CSF of patients with disorders related to neurotransmission, with the advantage of performing these studies in vivo [19].
 
-1. 高橋 悟．レット症候群の病態理解：病因遺伝子（MECP2, CDKL5, FOXG1）変異に関連した臨床的特徴、シンポジウム「ゲノムの構造・機能から見た発達障害疾患の病態理解」. 第55回日本小児神経学会総会 H25.6.1（大分市）
+We hypothesize that changes in BDNF expression levels or the direct effect of the underlying genetic mutation can interfere with the normal expression of NKCC1 and KCC2 leading to a reduction in the KCC2/NKCC1 ratio, characteristic of the immature GABAergic system. A comparison of NKCC1 and KCC2 protein levels in the CSF of patients affected with RTT and a control population was made in order to address this question.
 
-2. 中田昌利、熊倉啓、柴田洋史、内尾寛子、高橋悟、秦大資．FOXG1 遺伝子異常を認めた congenital
+## Patients and Methods
 
-H. 知的財産権の出願・登録状況
+## Patients and Controls
 
-1. 特許取得なし。
+Sixteen patients with RTT were recruited to this study, aged between 2 to 19 years at the moment of CSF collection. Patients’ clinical characteristics are summarized in table 1. Patients without a documented mutation fulfilled clinical criteria for RTT according to the last updated revision [20]. The control study was performed in 67 subjects (age range: 1 day - 14 years; mean: 740 days; female: 27; male: 40) whose CSF samples were submitted to Hospital San Joan de Deu (HSJD) laboratory under suspicion of viral or bacterial meningitis or encephalitis. Exclusion criteria were: diagnosis of viral or bacterial meningitis, neurologic disease, and hematic or xantocromic CSF (blood contamination).
 
-2. 実用新案登録なし。
+## CSF Samples
 
-3. その他なし。
+CSF samples were collected by lumbar puncture as previously described [21]. They were obtained after parent’s written informed consent and in accordance with the Helsinki Declaration of 1964, as revised in 2000. The ethical committee of HSJD approved the study. After lumbar puncture, the first ten drops were used for routine cytochemical/microbiological studies and then CSF was immediately stored in 4 aliquots at 280uC until the moment of analysis. Biogenic amines metabolites and synaptic proteins were studied using the following 20 drops.
 
-レット症候群モデルマウスにおける IGFBP3 発現量の影響
+NKCC1 and KCC2 expression levels were analyzed by western blot. Twenty mL of CSF were loaded on gel and proteins were separated on a 10% sodium dodecyl sulphate-polyacrylamide gel and transferred to polyvinylidene difluoride membrane (AmershamTM HybondTM –ECL, GE Healthcare). Membranes were blocked in TBST buffer (0.02 M Tris-base, pH7.6, 0.8% NaCl, 0.1% Tween 20) with 5% dry skimmed milk for 60 min at room temperature. Anti-NKCC1 (1:500; Santa Cruz BiotechnologyH) and anti-KCC2 (1:500; MilliporeH) antibodies were added and incubated at 4 uC overnight. Membranes were washed three times with TBST buffer followed by incubation with appropriate antirabbit (1:3000, PromegaH) IgG secondary antibody at room temperature for 1 h. The blot was then washed six times with TBST and signal was revealed with ECL (PierceH ECL Western Blotting Substract, Thermo Scientific). Relative levels of each protein were quantified by measuring optical densities (OD) of the corresponding bands with Quantity OneH V 4.3.1.software.
 
-研究分担者 青天目 信 大阪大学大学院医学系研究科小児科学 特任助教
+## Statistical Analysis
 
-研究代表者 伊藤 雅之 国立精神・神経医療研究センター 室長
+Statistical analysis was performed using IBM Statistical Package for the Social Sciences (IBM SPSS Statistics Version 19.0, SPSS Inc: Chicago, IL). A significance level of.05 was used in all analyses. Outlier analysis was done taking into account the primary variable in the study – healthy/RTT. Outliers (defined as values 1.5 times lower than the 1st quartile or 1.5 times higher than the 3rd quartile) [22] were found in 8 cases (1 Rett patient, 7 healthy controls) for KCC2/NKCC1 ratio, 4 cases for NKCC1 (1 Rett patient, 3 healthy controls) and in 1 case (healthy control) for KCC2. Outliers were excluded from the respective analyses.
 
-## 研究要旨
+Non-parametric tests were applied when possible for age, NKCC1 and KCC2, since the assumption of normal distribution was not fulfilled for these variables.
 
-本研究では、レット症候群(RTT)のモデルマウスにおいて、RTTの原因遺伝子のMECP2の下流遺伝子であるIGFBP-3の発現量を変化させて生じる表現型を、主に神経病理学的方法を用いて解析する。近年、開発されたIGF-1治療は、モデルマウスと患者の双方で、症状を改善するが、MECP2がIGF-1を直接修飾することは証明されていない。IGFBP3はIGF-1の機能発現に重要なタンパクであり、RTTにおけるIGFBP3の役割を解明することにより、IGF-1療法のメカニズムが解明し、より有効な治療法の開発につながると期待される。
+## Results
 
-## A. 研究目的
+Total CSF protein concentration values (M = 33.27, SD = 19.04, range: 7–73 g/l) were within normal limits according to different age ranges [23]. Clinical and genetic features of RTT patients are described in table 1. NKCC1 and KCC2 western blot analysis were performed on the CSF of controls and RTT patients. CCCs were detected in the CSF of this population, at the expected molecular weight (Figure 1A). Considering the reported sexually dimorphic expression of KCC2 and GABA function in the substantia nigra [24] it was decided to control for gender in all reported analysis.
 
-レット症候群(RTT)の原因遺伝子であるMECP2は、さまざまな遺伝子のプロモーターに結合してその発現を調節する働きを担っている。我々は、そうしたMECP2の下流遺伝子として、DLX5/6とIGFBP3を発見した(Nat Genet 2005;37:31, J Neuropathol Exp Neurol 2007;66:117)。
+Furthermore, the homogenous distribution of the demographical variable age was verified with Mann-Whitney Test (U). Controls (M = 746.00 days, SD = 1075.89) were significantly (U = 932.00, p,.001) younger than RTT patients (M = 3444.69 days, SD = 2173.59) therefore we have controlled for this variable in all reported analysis (table S1).
 
-IGFBP3 は、成長ホルモン(GH)の下流に存在するIGF-1と結合するタンパクの中で、最も多いものである。GHは下垂体で分泌された後、肝臓でIGF-1の産生を促し、このIGF-1が体内の各臓器で作用を発揮する。筋や長管骨、軟骨に働いて、身体の成長を促し、神経では神経発生、髄鞘化、シナプス形成、樹状突起形成を促す。IGF-1には、特異的な結合タンパクが存在し、血液中ではIGF-1と結合して、標的臓器まで運ぶ機能とIGF-1の機能を制御する役割を担っている。そうした結合タンパクの中で、最も多いのがIGFBP-3である。我々は、先述の研究で、IGFBP-3遺伝子の上流のプロモーター領域に、MECP2が結合すること、モデルマウスとヒトのRTT患者の双方でIGFBP3の発現が増加していることを示した。
+## KCC2 Expression is Decreased in the CSF of Rett Syndrome Patients
 
-この研究では、RTT のモデルマウスで、Ifgbp3 の発現量を変化させた時の症状・表現型を、主に神経病理学的方法を用いて解析し、RTT 症状発現における IGFBP3 の関与を同定する。
+As patients grew older their OD signal of KCC2 in the CSF decreased. Partial correlation analysis was performed to clarify the relationship between age and the OD signal of the different synaptic proteins (NKCC1, KCC2) in each group (RTT, Controls), controlling for the effect of gender. A negative correlation between age and the OD signal of KCC2 (r (74) = 2.292, n = 80, p,.05) has been clearly identified in our data, i.e. as the participants grew older their OD signal of KCC2 decreased, even when controlling for the effect of gender. Meaning that, KCC2 levels decrease in CSF throughout aging. However, concerning the OD signal of NKCC1 this correlation did not reach statistical significance $( r ~ ( 7 4 ) = - . 2 0 7 , \phi > . 0 5 )$ . Interestingly, if the effect of gender was not taken into consideration, a strong, negative correlation between age and the OD signal of KCC2 (rs $( 8 0 ) = - . 5 0 9 , \ : p { < } . 0 0 0 1 )$ and NKCC1 $( r _ { s } ~ ( 7 8 ) = ~ - . 4 7 2 , \ : p { < } . 0 0 0 1 )$ ) would have been identified in our data, i.e. as the participants grew older their OD signals of KCC2 and NKCC1 decrease.
 
-## B. 研究方法
+Table 1. Clinical and laboratory features of Rett Syndrome patients included in the study.
 
-すでに RTT のモデル動物として確立された Mecp2 ノックアウト (Mecp2-KO) マウス (Nat Genet 2001;27:322) と既報告のヒトの IGFBP3 を組み込んだ hIGFBP3 トランスジェニック (hIGFBP3-TG) マウス (Endocrinology 2001;142:1958) を掛け合わせて、Mecp2-KO と hIGFBP3 のダブルミュータントマウスを作成した。Mecp2-KO のオスのマウス (-/y の hemizygous mouse) と Mecp2-KO-hIGFBP3-TG ダブルミュータントマウスについて、生後 42 日時点での体重と脳重量、体性感覚野における皮質厚、Golgi 染色で、体性感覚野第 V 層に存在する尖端樹状突起の基部から 100μm における分岐数、樹状突起上のシナプスポタンを形態別に糸状の filopodia-type spine、キノコ状の mushroom-type spine の数を比較した。
+<table><tr><td></td><td>Age (Years at CSF collection)</td><td>Genetic screening</td><td>Epilepsy</td><td>Medication (when LP was performed)</td><td>Respiratory anomalies</td><td>KCC2/NKCC1 (optical densities)</td></tr><tr><td>1</td><td>2</td><td>MECP2 screened, no alteration found</td><td>No</td><td>NO AED</td><td>No</td><td>36795/310023</td></tr><tr><td>2</td><td>2</td><td>P.Y141X</td><td>Refractory Epilepsy Generalized seizures</td><td>NO AED</td><td>No</td><td>0/242968</td></tr><tr><td>3</td><td>2</td><td>P.R270X</td><td>Refractory epilepsy</td><td>No AED</td><td>Severe syperventilation bursts and apneas</td><td>0/323889</td></tr><tr><td>4</td><td>4</td><td>P302H, 905C&gt;T</td><td>Generalized seizures from 2 years of life</td><td>No AED</td><td>Hyperventilation bursts</td><td>167071/228307</td></tr><tr><td>5</td><td>5</td><td>P.R306C</td><td>Epileptic status Generalized seizures from 4 years of life</td><td>VPA</td><td>Hyperventilation bursts and apneas</td><td>0/169395</td></tr><tr><td>6</td><td>6</td><td>MECP2, CDKL5 screened, no alteration found</td><td>Generalized seizures since 8 years of life</td><td>CBZ</td><td>Hyperventilation bursts</td><td>177102/257110</td></tr><tr><td>7</td><td>7</td><td>MECP2, CDKL5 screened, no alteration found</td><td>Reflex seizures Abcences Atonic seizures</td><td>No AED</td><td>No</td><td>28646/296735</td></tr><tr><td>8</td><td>8</td><td>P.R255X</td><td>Generalized seizures from 2 years of life</td><td>VPA</td><td>Hyperventilation bursts and apneas</td><td>15584/342592</td></tr><tr><td>9</td><td>9</td><td>MECP2, CDKL5 screened, no alteration found</td><td>Refractory epilepsy</td><td>VPA TPM</td><td>Severe Hyperventilation and apneas</td><td>0/54010</td></tr><tr><td>10</td><td>10</td><td>P.R306C</td><td>Absences and partial seizures from 8 years</td><td>CBZ</td><td>Hyperventilation bursts</td><td>155391/621440</td></tr><tr><td>11</td><td>11</td><td>DEL EX.1-2</td><td>Generalized seizures from 8 years</td><td>No AED</td><td>Hyperventilation</td><td>91959/527745</td></tr><tr><td>12</td><td>16</td><td>MECP2, CDKL5 screened, no alteration found</td><td>Generalized seizures from 11 years of life</td><td>No AED (VPA was withdrawn 2 years before LP)</td><td>Hyperventilation</td><td>156883/445649</td></tr><tr><td>13</td><td>16</td><td>MECP2, CDKL5screened, no alteration found. Polymorphism in NTNG1</td><td>Generalized and absence seizures from 14 years of life</td><td>VPA CBZ</td><td>Hyperventilation bursts</td><td>164531/259927</td></tr><tr><td>14</td><td>16</td><td>P.R294X</td><td>Generalized Seizures from 6 years of life</td><td>CBZ LEV</td><td>Hyperventilation bursts</td><td>219795/281395</td></tr><tr><td>15</td><td>18</td><td>MECP2, CDKL5 screened, no alteration found</td><td>Partial seizures</td><td>CBZ</td><td>Hyperventilation</td><td>7000/535292</td></tr><tr><td>16</td><td>19</td><td>P.R294X</td><td>Partial, secondarily generalized and absences</td><td>CBZ</td><td>Hyperventilation bursts and apneas</td><td>604155/28867</td></tr></table>
 
-## C. 研究結果
+DEL: Deletion. LP: Lumbar Puncture. AED: Anti epileptic drugs. VPA: Valproic Acid. CBZ: Carbamazepine. LEV: Levetiracetam. TPM: Topiramate. doi:10.1371/journal.pone.0068851.t001
 
-Mecp2-KO マウスと Mecp2-KO-hIGFBP3-TG ダブルミュータントマウスの体重は、13.83 ± 3.31g, 11.95 ± 15.39 g (p>0.05)、脳重量は、0.37 ± 0.00 g, 0.28 ± 0.00 g (p<0.05)、皮質厚は 974.85 ± 3225.55 μm, 940.83 ± 1782.73 μm (p>0.05)、分岐数は 5.49 ± 0.31 本, 6.05 ± 0.66 本 (p>0.05)、filopodia type spine は、59.64 ± 27.32 本, 79.4 ± 301.72 本 (p>0.05)、mushroom-type は、6.02 ± 3.38 本, 3.13 ± 0.59 本 (p<0.05) であった。
+## Rett Patients Present a Significantly Lower OD Signal of KCC2 than Healthy Controls (Figure 1B)
 
-## D. 考察
+To determine whether there were statistically significant differences in the OD signal of the different synaptic proteins (NKCC1, KCC2) between healthy controls and RTT patients, a between-subjects MANCOVA was performed, controlling for the effects of age and gender. This analysis revealed a statistically significant difference between healthy controls and RTT patients,
 
-Mecp2 の KO マウスで、IGFBP-3 を過剰発現させたダブルミュータントのマウスでは、Mecp2 単独の KO マウスと比較して、体重は有意差はないが、脳重量は有意に軽かった。また、Golgi 染色では、尖端樹状突起の分岐数や filopodia-type spine の数には有意差がなかったが、mushroom-type の数は有意に減少していた。神経樹状突起上に存在する dendritic spine は、形態から filopodia type spine、stubby type spine、mushroom-type spine に分類されるが、filopodia type spine は分～日単位で出現・消失することが知られているが、mushroom-type spine は週～月単位にわたって、安定して存続する成熟する spine と考えられている。神経と神経の間の興奮性信号伝達が行われるのは、こうした spine 上に存在するシナプスであり、mushroom-type spine がダブルミュータントマウスで有意に減少していたことは、IGFBP3 の過剰発現により、神経伝達が安定して行われないことを示唆している可能性がある。
+$F \left( 1 , 7 3 \right) = 6 . 9 9 , { p < . 0 1 } , { \eta _ { \scriptscriptstyle { \phi } } } ^ { \mathrm { 2 } } = . 0 8 7$ even when controlling for the possible confounding effects of age and gender. The subsequent follow-up Univariate ANCOVAs run to specify the characteristics of this finding revealed that RTT patients presented a significantly lower OD signal of KCC2 $( M { \bar { = } } { \bar { 8 } } 1 3 8 3 . { \bar { 8 0 } } , \ S D { = } 8 2 3 7 { \bar { 0 } } . 9 9 ; \ F \ ( 1$ , $7 6 ) = 1 2 . 2 8 , ~ \ p < . 0 0 1 , ~ \eta _ { \rho } ^ { \ 2 } = . 1 3 9 )$ than healthy controls $( M = 6 9 2 6 6 3 . 5 2 , \ S D = 4 2 5 7 5 3 . 9 1 )$ . Notwithstanding, NKCC1 expression does not differ significantly between patients $( M = 3 0 7 8 3 4 . 2 5 , ~ S D = 1 6 2 5 9 2 . 5 9 )$ and healthy controls, $( M = 6 0 8 7 0 3 . 2 7 , S D = 4 1 6 1 5 7 . 3 3 ; F \left( 1 , 7 4 \right) = 1 . 8 7 , \beta > . 0 5 )$ .
 
-IGF-1 は、IGFBP3 が結合して、標的臓器に運搬されたり、左葉を修飾されたりする重要な生理活性を持つホルモンだが、近年、IGF-1 を RTT のモデルマウスに投与すると、生存期間、運動機能、呼吸数、心拍数が改善することが示された（Proc Nat Acad Soc 2009;106:2029）。また、米国とイタリアで行われている治験で IGF-1 により患者の症状が改善していることも示されている（私信）。しかし、IGF-1 が、どのようなメカニズムにより RTT のモデルマウスや患者の症状を改善しているのかは、不明である。IGFBP-3 は IGF-1 の機能発現・制御に重要な役割を果たしているホルモンであり、IGFBP-3 の動態や働きを探ることにより、IGF-1 治療のメカニズムの解明や、より効率的な治療法について理解を深められる可能性があると考えられた。
+## KCC2/NKCC1 Ratio is Decreased in the CSF of Rett Syndrome Patients
 
-現在、Igfbp3 のノックアウトマウスと Mecp2-K0 マウスを交配し、その解析を行っている。
+To determine whether there were significant differences in the ratio of the two synaptic proteins (KCC2/NKCC1) on the CSF of the healthy population and RTT patients a between-subjects
 
-## E．結論
-
-本研究では、hIGFBP-3 を過剰発現させた Mecp2-K0 マウスでは、脳重量が減り、成熟した dendritic spine が減少していることが示された。この減少は、RTT の患者の神経機能障害と関連している可能性と IGF-1 療法のメカニズムを解明する糸口となる可能性が示された。
-
-## G. 研究発表
-
-1. 論文発表なし。
-
-2. 学会発表なし。
-
-## H. 知的財産権の出願・登録状況
-
-1. 特許取得なし。
-
-2. 実用新案登録なし。
-
-3. その他なし。
-
-メチル化CpG結合タンパク 5 (MBD5) の機能解析
-
-研究分担者 堀家 慎一 金沢大学学際科学実験センター・准教授
-
-研究協力者 堀家 牧子 金沢大学学際科学実験センター・博士研究員
-
-## 研究要旨
-
-近年の全ゲノム解析により，MDB5（メチル化CpG結合ドメインタンパク質5）が欠失している症例が数多く報告された。同じメチル化CpG結合ドメインをもつMeCP2は自閉症を主徴とするレット症候群の原因遺伝子であり，MBD5とMeCP2が共通の機能により脳の発達過程において何らかの重要な役割を担っていると示唆される。そこで，本研究では神経細胞におけるMBD5のターゲット遺伝子の同定並びに，その制御メカニズムを明らかにすることにより，メチル化CpG結合ドメインタンパク質を介したエピジェネティクスと発達障害との関連を解き明かす。
-
-## A. 研究目的
-
-近年の発達障害患者の全ゲノム解析により，MDB5（メチル化CpG結合ドメインタンパク質5）が欠失あるいは重複している症例が数多く報告された。MBD5もMeCP2同様，メチル化CpG結合ドメイン（MBD）を有するタンパク質であるが，メチル化CpGへの結合能が明確に示されないため，メチル化CpGに直接結合する以外の機能を有していると推測されるが，発達障害の発症機序における役割は全く分かっていない。そこで，本研究では神経細胞におけるMBD5のターゲット遺伝子の同定並びに，その制御メカニズムを明らかにすることにより，MBD5の脳での機能を明確にすると共に，メチル化CpG結合ドメインタンパク質を介したエピジェネティクスと発達障害との関連を解き明かす。
-
-## B. 研究方法
-
-神経細胞分化における MBD5 の役割を明らかにするため，ゲノム編集技術の一つであるジンクフィンガーヌクレアーゼ (ZFN) を用い，神経細胞様に分化誘導出来るヒト神経芽細胞腫 SH-SY5Y 細胞株で MBD5 のヘテロ欠損細胞株を樹立する。樹立した細胞株を発達障害患者のモデル細胞として，mRNA マイクロアレイ解析により MBD5 $^{+/-}$ で発現変化を呈する遺伝子の同定を試みる。同定した MBD5 のターゲット遺伝子の機能より，MBD5 の機能を類推し，生化学的実験により，MBD5 の機能を明らかにする。
-
-(倫理面への配慮)
-
-本研究では、確立された培養細胞を用いた実験であり、遺伝子組み換えにおいては金沢大学遺伝子組換えDNA安全委員会の承認を得ている。
-
-## C. 研究結果
-
-神経分化におけるMBD5の役割を明らかにするため，ZFNを用いヒト神経芽細胞腫SH-SY5Y細胞株でMBD5のノックアウトを行った。ZFNによるDNA切断，ミスマッチ修復による5塩基の挿入の結果，核移行シグナル(NLS)からC末側を欠損した断片化MBD5をヘテロに持つ細胞株を樹立した。発達障害患者においてMBD5の欠失はヘテロであることから、本樹立細胞を発達障害患者のモデル細胞として、マイクロアレイ解析によりMBD5 $^{+/-}$ で発現変化を呈する遺伝子のスクリーニングを行った。本研究はMBD5の脳での機能を明らかにすることを主目的とするため、正常SH-SY5Y細胞とMBD5 $^{+/-}$ のSH-SY5Y細胞をPMA（Phorbol 12-Myristate 13-acetate）処理により神経細胞に分化した時に発現変化のある遺伝子（神経分化に関与する遺伝子）同士を比較し，MBD5 $^{+/-}$ で分化誘導に際し発現に異常が生じた遺伝子をスクリーニングした。その結果、とても興味深いことに、microRNAやsnRNAなどのnon-coding RNAの占める割合が極めて高く，MBD5がそれらnon-coding RNAの発現制御に関わっている可能性が示唆された。
-
-## D. 考察
-
-最近，Rett症候群の原因遺伝子であり，MBD5と同様にメチル化CpG結合ドメインを有するMeCP2がmicroRNAの発現制御に関わっていること，また，選択的スプライシングの機構に関与していることなどが報告されており，メチル化CpG結合ドメインタンパク質の新たな機能として注目されている。一方，今回MBD5 $^{+/-}$ でおよそ2倍の発現上昇を認めたmicroRNA, MIR548A1は6p22.3に位置するが，この領域は自閉症患者で欠失が多数報告されており，自閉症発症機序を考える上でも大変興味深い。また，発現量がおよそ半分にまで減少しているMOG遺伝子はナルコレプシーとカタレプシー家系の解析で変異が同定されている。発達障害の患者において，しばしば睡眠障害が認められることから，MBD5を介したMOG遺伝子の発現制御機構が発達障害の発症機序に関与していることが示唆される。
-
-## E．結論
-
-MBD5 はメチル化 CpG 結合ドメインを有するにも関わらず, DNA 結合能が明確ではないため, 「メチル化 CpG に結合し, 遺伝子を不活性化する」のとは異なる機能を有していることが推測されている。最近, Rett 症候群の原因遺伝子であるメチル化 CpG 結合ドメインタンパク質 MeCP2 が microRNA の発現制御や選択的スプライシングの機構に関与していることが報告され, メチル化 CpG 結合ドメインタンパク質の新たな機能として注目されている。MeCP2 も片アレルの変異により Rett 症候群を発症するが, 何故自閉症などの神経系にその症状が発症するのかは明らかになっていない。同じメチル化 CpG 結合ドメインタンパク質である MBD5 が MeCP2 と同様, microRNA の発現制御や選択的スプライシングの機構に関与しているのか, だとすると MeCP2 との棲み分けはどのようにして行われているのか, など, 脳における MBD5 の機能を明確にすることにより, 単に MBD5 の欠失で生じる発達障害の発症メカニズムの解明だけでなく, 他のメチル化 CpG 結合ドメインタンパク質の異常に伴い生じる病態の解明にもつながると考えている。
-
-## G. 研究発表
-
-1. 論文発表なし。
-
-## 2. 学会発表
-
-1. 堀家慎一，Yasui DH，押村光雄，LaSalle JM，目黒一堀家牧子「父性発現遺伝子 MAGEL2 の遺伝子発現制御における染色体ダイナミクスの役割」第7回日本エピジェネティクス研究会年会，奈良県新公会堂，奈良，2013年5月30～31日
-
-2. 堀家慎一「MeCP2 is required for chromatin higher-order structure and dynamics at the imprinted 15q11-q13 locus.」酵母からのエピジェネティクス研究へのメッセージ, グランディア芳泉, あわら, 2013年9月2～4日
-
-3. 堀家慎一【招待講演】「神経疾患のジェネティクスとエピジェネティクス」日本心理学会 第77回大会，札幌コンベンションセンター，札幌，2013年9月19～21日 
-3. Horike S. (Oral) 「MeCP2 is required for chromatin higher-order structure and dynamics at the imprinted 15q11-q13 locus.」Epigenomics of Common Diseases, Wellcome Trust Conference Centre, Wellcome Trust Genome Campus, Hinxton, Cambridge, UK 2013年11月7～10日 
-4. 堀家慎一，岡田源作，棟居俊夫，東田陽博，横山茂，目黒一堀家牧子「自閉症発症機序におけるエピゲノムの重要性～オキシトシンレセプタープロモーター領域のDNAメチル化解析～」日本人類遺伝学会 第58回大会，江陽グランドホテル，仙台，2013年11月20～23日 
-5. 堀家慎一，Yasui DH，押村光雄，LaSalle JM，目黒一堀家牧子「15 q 11-q 13 領域の遺伝子発現制御における染色体ダイナミクスの役割」第 31 回染色体ワークショップ・第12回核ダイナミクス研究会，ホテルおかだ，箱根，2013年11月25～27日 
-6. 堀家慎一，Yasui DH, LaSalle JM, 目黒一堀家牧子「Long non-coding RNA, UBE3A-ATS is essential for long-range gene regulation and chromosome territory in 15q11-q13 imprinted locus.」第36回日本分子生物学会年会，神戸ポートアイランド，神戸，2013年12月3～6日
-
-## H. 知的財産権の出願・登録状況
-
-1. 特許取得なし。 
-2. 実用新案登録なし。 
-3. その他なし。
-
-## 研究要旨
-
-非典型レット症候群の原因遺伝子 CDKL5 の遺伝子変異による病態機序の解明を目的として、我々が独自に作製した Cdk15 ノックアウト (KO) マウスの神経科学的表現型解析を行った。その結果 Cdk15 KO マウスにおいて、海馬神経細胞樹状突起スパインの形態・密度異常、易痙攣性、更にシナプス機能・蛋白質の異常を同定し、ヒトの CDKL5 変異に伴う病態が興奮性シナプス機能異常である事が示唆された。
-
-## A. 研究目的
-
-Cyclin-dependent kinase-like 5 (CDKL5) 遺伝子は早期発症てんかんを伴う非典型レット症候群の原因遺伝子である。しかしその遺伝子変異による病態機序及び根本的治療法は未解明である。私はこれらの問題解決を目指し、Cdk15ノックアウト(K0)マウスを作製した。本研究の目的は、Cdk15 K0 マウスのてんかん、記憶障害、情動異常等の発達障害のメカニズムの解明である。
-
-## B. 研究方法
-
-\- Cdk15 K0 マウスの表現型解析
-
-(1) 神経細胞樹状突起及びスパインの解析 
-(2) 薬物投与による易けいれん性解析 
-(3) 海馬スライスの電気生理学的解析 
-(4) 海馬・大脳皮質の興奮性シナプスの機能、微細構造、蛋白質解析
-
-## C. 研究結果
-
-\- Cdk15 KO マウス異常表現型解析
-
-Cdk15 KO マウスにおいて、海馬 CA1 錥体ニューロンの樹状突起スパインの形態、サブクラス、及び密度に異常が認められた。KO マウスに対する興奮性アミノ酸投与によって、過剰な強いけいれんが誘発された。海馬スライスの電気生理学的解析により、KO マウスにおける長期増強（LTP）の異常、脱分極の異常等を同定した。生化学的手法及び免疫電子顕微鏡を用いた KO マウスの興奮性シナプス解析により、グルタミン酸受容体サブユニットの構成異常を同定した。
-
-## D. 考察
-
-Cdk15 K0マウスでは神経細胞樹状突起において未熟なスパインが有意に増加していることが明らかとなった。更に、興奮性アミノ酸に対する過剰興奮、興奮性ニューロンのグルタミン酸受容体蛋白質の異常、電気生理学的異常などから、本K0マウスにおけるグルタミン酸シグナリング障害が明らかとなった。本研究結果から、CDKL5遺伝子変異による発達障害の病態が興奮性シナプス機能異常であることが示唆された。
-
-## E. 結論
-
-Cdk15 K0 マウスの神経科学的解析によって、記憶・学習・情動に極めて重要な働きを担う海馬の神経細胞樹状突起スパインの形態・密度とシナプス受容体蛋白質の異常、シナプス機能異常が同定された。
-
-## G. 研究発表
-
-## 1. 論文発表
-
-1. 田中輝幸，奥田耕助．(2013). 小児の難治性てんかんと CDKL5. Clinical Neuroscience 31, 699-702.
-
-## 2. 学会発表
-
-1. 難治性てんかん・発達障害原因遺伝子 CDKL5 の生体内分子機能・病態機序解析．第 54 回日本神経病理学会総会学術研究会（東京）(2013．4．25) 
-2. West 症候群・非典型 Rett 症候群の原因遺伝子 CDKL5 のノックアウトマウス作製・解析による病態機序の解明．第 55 回日本小児神経学会（大分）(2013.5.30) 
-3. Functional studies of the CDKL5, a causative gene for neurodevelopmental disorders, by interactome screening and loss-of-function analyses. 第36回日本神経科学大会（京都）(2013.6.22) 
-4. 小児の難治性てんかんとCDKL5. 第70回東海てんかん集談会（浜松）(2014.2.1)
-
-## H. 知的財産権の出願・登録状況
-
-1. 特許取得なし。 
-2. 実用新案登録なし。
-
-3. その他なし。
-
-## III. 研究成果の刊行に関する一覧表
-
-## 研究成果の刊行に関する一覧表
-
-書籍
-
-<table><tr><td>著者氏名</td><td>論文タイトル名</td><td>書籍全体の編集者名</td><td>書籍名</td><td>出版社名</td><td>出版地</td><td>出版年</td><td>ページ</td></tr><tr><td>松石豊次郎</td><td>27. Rett 症候群</td><td></td><td>稀少難治てんかん診療マニュアル 疾患の特徴と診断のポイント</td><td></td><td></td><td>2013</td><td>84-87</td></tr><tr><td>松石豊次郎</td><td>レット症候群研究の現況と展望</td><td></td><td>日本臨床</td><td></td><td></td><td>2013</td><td>2043-53</td></tr></table>
-
-雜誌
-
-<table><tr><td>発表者氏名</td><td>論文タイトル名</td><td>発表誌名</td><td>巻号</td><td>ページ</td><td>出版年</td></tr><tr><td>伊藤雅之.</td><td>レット症候群:自閉性障害をもつ特異な発達障害.</td><td>SRL宝函</td><td>34(2)</td><td>28-39</td><td>2013</td></tr><tr><td>Waga C, Asano H, Tsuchiya A, Itoh M, Goto Y, Kohsaka S, Uchino S.</td><td>Identification of novel SHANK3 t transcript in the developing mouse neocortex.</td><td>J Neurochem</td><td>128(2)</td><td>280-293.</td><td>2014</td></tr><tr><td>Miyazaki C, Saitoh M, Itoh M, Yamashita S, Miyagishi M, Takashima S, Moser AB, Iwamori M, Mizuguchi M.</td><td>Altered phospholipid molecular species and glycolipid composition in brain, liver and fibroblasts of Zellweger syndrome.</td><td>Neurosci Lett</td><td>552</td><td>71-5</td><td>2013</td></tr><tr><td>Munakata M, Watanabe M, Otsuki T, Itoh M, Uematsu M, Saito Y, Honda R, Kure S.</td><td>Increased Ki-67 immunoreactivity in the white matter in hemimegalencephaly.</td><td>Neurosci Lett</td><td>548</td><td>244-8</td><td>2013</td></tr><tr><td>Miyake K, Yang C, Minakuchi Y, Ohori K, Soutome M, Endoh K, Hirasawa T, Kazuki Y, Adachi N, Suzuki S, Itoh M, Goto Y, A</td><td>Comparison of genomic and epigenomic expression in monozygotic twins discordant for Rett syndrome.</td><td>PLoS ONE</td><td>Jun 21; 8(6)</td><td>e66729</td><td>2013</td></tr><tr><td>Ohya T, ...Matsuishi T</td><td>Impaired exploratory eye movements in children with Asperger's syndrome.</td><td>Brain Dev</td><td></td><td></td><td>2013 (in press)</td></tr><tr><td>Miyake N, , ---Matsuishi T---, Niikawa N.</td><td>MLL2 and KDM6A mutations inpatients with Kabuki syndrome.</td><td>Brain Dev</td><td>11; 71</td><td>161(9):2234-43.</td><td>2013</td></tr><tr><td>Kumakura A, Takahashi S, Okajima K, Hata D</td><td>A haploinsufficiency of FOXG1 identified in a boy with congenital variant of Rett syndrome.</td><td>Brain Dev</td><td></td><td></td><td>2013 (in press)</td></tr><tr><td>Hara M, Nishi Y, Yamashita Y, Hirata R, Takahashi S, Nagamitsu S, Hosoda H, Kangawa K, Kojima M, Matsuishi, T</td><td>Relation between circulating levels of GH, IGF-1, ghrelin and somatic growth in Rett Syndrome.</td><td>Brain Dev</td><td></td><td></td><td>2013 (in press)</td></tr><tr><td>田中輝幸、奥田耕助</td><td>小児の難治性てんかんと CDKL5</td><td>Clinical Neuroscience</td><td>31</td><td>699-702</td><td>2013</td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr></table>
-
-## IV. 研究成果の刊行物・別刷
-
-# 2. レット症候群：自閉性障害をもつ 特異な発達障害
-
-伊藤 雅之
-
-(独)国立精神・神経医療研究センター 神経研究所 疾病研究第二部 室長
-
-## Summary
-
-レット症候群(Rett syndrome)は主に女児にみられる、乳児期から始まる姿勢や協調運動の障害、対人関係の障害、常同運動など多彩な症状を年齢依存性に呈する疾患である。1966年に最初に報告されてから50年近くが過ぎた。その間、症例の蓄積によりいくつかの非典型例があることがわかり、原因遺伝子が解明され、診断基準が改正された。現在では、自閉性症状を有する発達障害の代表的な疾患で、多くの研究がなされている。しかし、未だに有効な治療法がなく、多科にわたる診療と多方面の医療関係者のみならず患者家族や周囲の人たちを含んだ全人的な取り組みが必要である。
-
-Key words
-
-レット症候群、メチル化 CpG 結合蛋白 2(MECP2)、自閉症、てんかん、小児難病
-
-## 1. はじめに
-
-レット症候群(Rett syndrome)は主に女児にみられる、乳児期から始まる姿勢や協調運動の障害、対人関係の障害、常同運動など多彩な症状を年齢依存性に呈する疾患である。1966年、ウィーンの小児神経科医Andreas Rettが初めて報告し、1983年、スウェーデンのBengt Hagbergが35例の症例を詳細に報告し、疾患単位として確立された。その後、1999年、米国ベイラー医科大学のHuda Zoghbiらによって責任遺伝子がみつかった。以来、遺伝子改変マウスなどの生物学的研究や分子遺伝学的研究
-
-PROFILE
-
-いとう まさゆき
-伊藤 雅之
-
-![](images/63dd4853008862f68f23e18e99ea90a0d1442a17dd880bdba6045fc2da59f31c.jpg)
+A. 
+![](images/f81f25145ea1aa4e18960bc9dda00e1bd6a7887ea079ab4e4396474f4788fe83.jpg)
 
 <details>
-<summary>natural_image</summary>
+<summary>text_image</summary>
 
-Portrait of a man wearing glasses and a collared shirt (no visible text or symbols)
+NKCC1
+9 14 4 16 6 13 3 5 2 15
+7 8 1 12 10 11
+Patients
+Controls
+KCC2
+9 14 4 16 6 13 3 5 2 15
+7 8 1 12 10 11
+Patients
+Controls
 </details>
 
-1988 年 鳥取大学医学部卒業 
-鳥取大学医学部附属病院脳神経
-小児科 
-1993 年 鳥取大学医学部脳神経病理学教室助手 
-1997 年 国立精神・神経センター神経研究所疾病研究第二部研究員 
-1998 年 カナダ・トロント小児病院リサーチフェロー 
-2001 年 国立精神・神経センター神経研究所疾病研究第二部室長 
-2011 年 (独)国立精神・神経医療研究センター神経研究所疾病研究第二部室長
-
-が進められ、最も基礎研究が進んでいる自閉性障害をもつ発達障害の1つである。
-
-2010年の全国調査から、レット症候群の国内の有病率は、20歳以下女性の0.009%で、全国に1000人程度の患者が推定された、比較的稀な疾患である $^{1)}$ 。この有病率は、これまで報告されている欧米豪諸国のそれとほぼ同じである。
-
-一方、自閉症の有病率は、最近の米国の報告では、全人口の約1.1%であり、この15年間で16倍以上になり、今後さらに増加していくと考えられている $^{2)}$ 。
-
-自閉症とは、「社会的な相互交渉の質的な障害」「コミュニケーション機能の質的な障害」「活動と興味の範囲の著しい限局性」の3つを特徴とする症候群である。自閉症という言葉は、1943年、米国ジョンズ・ホプキンス大学児童精神科医Leo Kannerが「外部との接触が困難な」11例の小児例を報告した際に名付けたことに始まり、その後、この定義に当てはまる様々な疾患が自閉症とされた。しかし、既に「自閉」という言葉は、1911年、スイスの精神科医Eugen Bleulerが統合失調症の一症状に、自己の他からの遮断という意味で用いていて、1世紀の歴史をもつ。米国精神医学会の『Diagnostic and Statistical Manual of Mental Disorders (DSM)』は世界的な診断基準として多くの国で採用されているが、1980年の第3版(DSM-Ⅲ)で初めて自閉症が取り上げられ、DSM-Ⅲ-R では広汎性発達障害の中に自閉症性障害がみられる。1994 年の DSM-IV では、広汎性発達障害は臨床疾患コードに変更され、その中に自閉性障害 (autistic disorder)、レット障害 (Rett disorder)、アスペルガー障害 (Asperger disorder) などが含まれた。2013 年に改訂された DSM-5 では、「社会的な交互交渉の欠如」と「行動の限局性と反復性」の 2 徵を「自閉症スペクトラム障害 (autism spectrum disorders)」とし、従来の定義より広範な疾患を含んでいる (図 1)。本稿では、このうち特異な遺伝性発達障害の代表的疾患であるレット症候群を概説する。
-
-## 2. レット症候群の臨床
-
-典型的レット症候群のほとんど全ては女児であるが、クラインフェルター(Klinefelter)症候群(47, XXY の核型を有する男児)や体細胞モザイク変異の男児例があることが知られている。
-
-レット症候群の診断基準は、1983年に初めて策定されたが、その後、何回かの改訂が繰り返され、2010年に責任遺伝子と非典型例の詳細な分析を含めて改訂された(表1) $^{3)}$ 。典型的レット症候群の臨床経過は、既に1986年にHagbergらが病期を分けて記載している(表2) $^{4,5)}$ 。ここで、特徴的なのは年齢依存性に様々な症状を呈すること、したがって当初みられていた症状が経過とともにみられなくなり、新たな症状が加わることである。つまり、診療する年齢によっては問診でしか症状の確認ができなくなることがある。また、後述する責任遺伝子の特殊性のために症状の軽重の幅が大きいのもレット症候群の特徴である。
-
-自閉症スペクトラム障害の代表的疾患とその主な責任遺伝子の分子機能
-
-<table><tr><td></td><td colspan="2">高機能脳障害</td><td colspan="2">低機能脳障害</td></tr><tr><td>主な自閉症スペクトラム障害頻度</td><td>アスペルガー症候群1/70</td><td>自閉症(自閉性障害)1/1000(男:女=6:1)</td><td>結節性硬化症1/10000アンジェルマン症候群1/12000</td><td>レット症候群1/15000(女児)脆弱X症候群1/4000(男児)</td></tr><tr><td>責任遺伝子</td><td>NLG 3/4</td><td>CACNA1CGABAR</td><td>TSC1/TSC2UBE3A</td><td>MECP2FMRP</td></tr><tr><td>細胞内機能</td><td colspan="2">シナプス形成、受容体の障害</td><td>細胞内伝達機構の障害</td><td>エピゲノム機構の障害</td></tr></table>
-
-<table><tr><td>分子の名称</td><td>遺伝子座</td><td>分子機能</td></tr><tr><td>methyl CpG binding protein 2 (MECP2)</td><td>Xq28</td><td>プロモーター領域のメチル化したシトシン(C)に結合し、ゲノム構造を変え転写を抑制する。</td></tr><tr><td>fragile X mental retardation protein (FMRP)</td><td>Xq27-28</td><td>mRNAと結合し翻訳を抑制する。FMRPはFMR1の遺伝子産物で、FMR2と機能的相同性がある。</td></tr><tr><td>tuberous sclerosis complex 1 (TSC1)</td><td>9q34</td><td rowspan="2">TSC1-TSC2複合体は、Rheb(Ras homolog enriched in brain)のGTPase acrivating protein (GAP)として作用し、Rheb-GTPを不活性化し、mammalian target of rapamycin (mTOR)を抑制して、その下流のS6K1や4E-BP1に作用する。結果的に細胞の増殖や細胞の大きさの制御が行われる。一方、TSC1-TSC2複合体はPI3K/Akt signaling pathwayおよびPKC/MAPK signaling pathwayによって不活化される。</td></tr><tr><td>tuberous sclerosis complex 2 (TSC2)</td><td>16p13.3</td></tr><tr><td>neuroligin 3 (NLG3)</td><td>Xp22.3</td><td rowspan="2">膜通過ドメインとPDZ結合ドメインのシステインを含み、グルタミン酸受容体とGABA受容体の安定化に働く。</td></tr><tr><td>neuroligin 4 (NLG4)</td><td>Xq13</td></tr><tr><td>GABA receptor, β-3 (GABAR)</td><td>15q</td><td>GABA受容体</td></tr><tr><td>ubiquitin-protein ligase E3A (UBE3A)</td><td>15q11-q13</td><td>ユビキチンリガーゼ</td></tr><tr><td>Ca $^{2+}$ channel voltage-dependent, L-type, α-1C (CACNA1C)</td><td>12p13.3</td><td>カルシウムイオンチャネル</td></tr></table>
-
-図 1 自閉症スペクトラム障害の関連図
-
-我々は、2009年に3～57歳までの264名のレット症候群女性患者の全国的な実態調査を行った。その結果、多彩な症状が高頻度にみられることがわかった $^{6)}$ 。主要な症状は、概ね3歳頃までにみられるが、脊柱の異常など年齢を経てから出現する症状もある $^{6)}$ 。
-
-表 1 最近のレット症候群診断基準
-
-<table><tr><td>出生時の頭囲が正常だが、生後頭囲の成長速度が遅れてきた時にも診断を考慮する。</td></tr></table>
-
-典型的レット症候群の診断要件
-
-<table><tr><td>1. 回復期や安定期が後続する退行期があること</td></tr><tr><td>2. 全ての主要診断基準と全ての除外診断基準を満たすこと</td></tr><tr><td>3. 支持的診断基準は必須ではないが、典型的レット症候群では認められることは多い</td></tr></table>
-
-非典型的レット症候群の診断要件
-
-<table><tr><td>1. 回復期や安定期が後続する退行期があること</td></tr><tr><td>2. 主要診断基準4項目のうち2つ以上を満たすこと</td></tr><tr><td>3. 支持的診断基準11項目のうち5つ以上を満たすこと</td></tr></table>
-
-(1) 主要診断基準
-
-<table><tr><td>1. 目的のある手の運動機能を習得した後に、その機能の部分的、あるいは完全な喪失</td></tr><tr><td>2. 音声言語を習得後に、その機能の部分的、あるいは完全な喪失</td></tr><tr><td>3. 歩行異常:歩行障害、歩行失行</td></tr><tr><td>4. 手の常同運動:手をねじる・絞る、手を叩く・鳴らす、口に入れる、手を洗ったり擦ったりするような自動運動</td></tr><tr><td>(2)非典型的レット症候群診断のための支持的診断基準</td></tr></table>
-
-1. 覚醒時の呼吸異常 
-2. 覚醒時の歯ぎしり 
-3. 睡眠リズム障害 
-4. 筋緊張異常 
-5. 末梢血管運動反射異常 
-6. 側彎·前彎 
-7. 成長障害 
-8. 小さく冷たい手足 
-9. 不適切な笑い・叫び
-
-10.痛覚への反応の鈍麻
-
-<table><tr><td>11.目によるコミュニケーション、じっと見つめるしぐさ</td></tr></table>
-
-典型的レット症候群診断のためには、以下を除外する。
-
-<table><tr><td>1. 明らかな原因のある脳障害(周産期・周生期・後天性の脳障害、神経代謝疾患、重度感染症などによる脳損傷)</td></tr><tr><td>2. 生後6か月までに出現した精神運動発達の明らかな異常</td></tr></table>
-
-文献3の和訳および著者らとの意見交換から改変。診断基準の詳細は、NPOレット症候群支援機構(http://www.npo-rett.jp)、久留米大学医学部小児科(http://www.ped-kurume.com)を参照。
-
-## 1) 乳児期の症状
-
-患児は通常、正常に出生し、新生児期を過ごす。生後6か月から18か月頃までは一見、正常に発達するが、乳児期早期から「手がかからない」「哺乳が弱い」「泣き声が小さい」といった小さな気づきにくいサインを示すことが少なくない。また、筋緊張低下、這い這いや歩行など移動動作での協調運動の悪さに気づかれることがある。我々の調査では、概ね座位獲得まで得られるものの、その後の発達に遅れが目立つようになることがわかった。しかし、座位獲得まで得られない症例もある。
-
-出生時の頭囲は正常であるが、生後3か月頃からその成長が乏しくなり小頭を呈する。しかし、全てのレット症候群患者に小頭がみられるわけではないが、乳児期に頭囲の成長がなくなれば本疾患を疑うべきである。
-
-## 2) 乳児期以降の症状
-
-乳児期の発達停止状態から生後18か月以降には、言語機能や運動機能の急激な退行を呈する。
-
-特徴的なのは、合目的的手操作がなくなり、反復する手の常同運動が現れることである。手の常同運動は、手もみ動作がよくみられるが、それだけでなく手ばたきや口に入れるなどがみられる。また、この常同運動は上肢に限らず、頻度は低いものの、足にみられることがある。
-
-さらに、生後18～24か月頃になると、発作的な奇声や啼泣、自閉的行動、パニック様発作、歯ぎしり、繰り返す無呼吸や多呼吸、てんかん、失調性歩行、振戦など、多彩な症状が現れる。このような退行と特徴的な症状を含む新たな症状が出現した後、症状安定期に入る。この時期には、症状の進行が止まっている、あるいは改善しているようにみえる。しかし、ゆっくりと進行し、運動量の低下、側彎などの骨格の変形、筋強直などを呈し、患児は年齢を経るとともにジストニア症状や手足の変形を呈するようになる。
-
-これらの症状はよくみられるが、全例で全てが現れるわけではない。また、出現した症状の重症度が症例ごとに異なることもよくある。
-
-## 3) レット症候群のてんかん
-
-てんかんはレット症候群の約50～90％に出現し、その多くは全般性強直間代発作と複雑部分発作であるが、非定型欠神発作や無呼吸発作、間代性部分発作などもみられる。てんかん発作は症状安定期に入ると増加し、その後、機能低下期になると減少する。これらの発作では、脳波上でんかん発作波が認められないことがあるが、脳波異常を伴うてんかん発作を呈しても両親が気づかない場合もある。
-
-レット症候群に特有の脳波異常はないが、早期に睡眠時の棘徐波複合を含む後頭優位の徐波リズムと背景脳波の徐波化がみられることがある(表2)。その後、後頭優位の徐波リズムがなくなり、背景脳波の徐波化は進み、多焦点性棘徐波複合の発作波を伴うことがある。また、全般性発作波は欠神発作や全般性間代発作でしばしば観察されるが、無呼吸発作や過換気発作、突然の笑いや奇声、凝視などの発作性状態変化と関連していることがある。焦点性発作波は、局在性間代発作、頭を回旋させる発作、眼球を偏倚させる発作、無呼吸発作などに関連していることがある。
-
-## 4) レット症候群のその他の症状
-
-①自律神経障害は広範で多彩な症状としてみられる。
-
-・呼吸運動の異常は、多呼吸や無呼吸、息止めなどで現れ、酸素飽和度が80％以下になることがある。この原因として、脳幹の呼吸中枢の機能低下が考えられている。 
-・心機能障害として、QT延長、異常T波、心拍数の低下などがみられることがある。 
-・血管運動障害として、冷たい手足がしばしばみられ
-
-る。これは四肢末端に強く、下肢に強い傾向にある。
-
-・成長障害や体重増加不良がほとんどの患者でみられる。これは嚥下運動に必要な口腔咽頭や食道、胃の協調運動の機能不全が原因で、そのため食事摂取が低下することが一因であると考えられている。 
-- 消化器機能不全、便秘、機能的巨大結腸が比較的よくみられる。このため、便嵌入、腸捻転、腸重積が起こることがある。 
-・胆のう機能低下として、胆石がみられることがある。
-
-②内斜視が観察されることがあるが、この内斜視は回復と再発を繰り返し、変動する。 
-③骨格の異常は、幼児期に「小さい手足」として気づかれる。これは、小頭と合わせてレット症候群に特徴的な身体的症状の1つである。小児期を超えると骨密度の減少がみられ、骨折の危険が増大する。また、年齢を経ると側彎が高頻度にみられる。 
-④歯ぎしり、歯並びや咬合の異常など歯科的問題を抱えることがある。
-
-## 5)予後
-
-レット症候群の患児の多くは成人に達する。しかし、突然死の頻度は同年代の女性より有意に高い。この原因は、レット症候群に高頻度にみられる QT 延長、異常 T 波、心拍数の低下など、心機能障害によるものと考えられている。
-
-表 2 典型的レット症候群の臨床病期
-
-<table><tr><td rowspan="2"></td><td rowspan="2">発症からの時期</td><td rowspan="2">期間</td><td rowspan="2">臨床的特徴</td><td colspan="2">脳波異常</td></tr><tr><td>覚醒時</td><td>睡眠時</td></tr><tr><td>第1期(早期停滞期)</td><td>6~18か月</td><td>数か月</td><td>発達停滞、頭囲成長の減速、遊びに興味をもたない、筋緊張低下など。</td><td>正常ないし背景活動の徐波化。</td><td>正常</td></tr><tr><td>第2期(進行期)</td><td>1~3年</td><td>数か月</td><td>急速な退行、易興奮性、不眠、合目的的に手を使用しなくなる、てんかん、自閉症状、呼吸運動の異常(過呼吸、息止め、空気嚥下、無呼吸)など。</td><td>背景活動の後頭部優位の徐波化が顕著になる。稀に、棘波や鋭波が現れる。</td><td>睡眠時の特徴的な波形の形成不良。棘波や鋭波が現れる。</td></tr><tr><td>第3期(症状安定期)</td><td>3~10年</td><td>数年</td><td>知的障害、自閉症状が目立たなくなる、てんかん、失調や失行、典型的な手の常同連動(手の握りしめ、手叩き、手を口に入れる)など。</td><td>背景活動の徐波化は広範になる。多焦点性の棘波や鋭波が広範にみられるようになる。</td><td>焦点性の棘波や鋭波と広範な徐波化がみられるようになる。</td></tr><tr><td>第4期(機能低下期)</td><td>10年以上</td><td>数十年</td><td>動きが少なくなり車いすを要する、筋萎縮と強剛、痙性、進行性側弩、痙攣頻度の減少、栄養障害、るいそうなど。</td><td>背景活動の徐波化が進み、多焦点性棘波や鋭波、広範な棘徐波がみられるようになる。</td><td>ほとんど断続的に広範な棘徐波がみられる。</td></tr></table>
-
-(文献 4、5 などから改変)
-
-## 6) 生化学
-
-1980 年代より、髄液のアミン代謝産物やβエンドルフィン、サブスタンス P などの異常が報告されているが、一定した見解はない。最近の研究で、血清グレリン値の低下が報告され、消化管障害などとの関連が考えられている $^{7)}$ 。また、グレリンは中枢神経系にも存在し、レット症候群の症状との関係が調べられている。
-
-## 7) 生理学
-
-レット症候群の中枢神経系症状は、電気生理学的に視覚や聴覚機能に異常はみられず、体性感覚刺激反応で高振幅化することや脳波の易興奮性があることから、高次脳機能障害によるものと考えられている。脳波異常や自律神経障害は前述の通りである。
-
-睡眠の異常はレット症候群によくみられ、発達生理学的に睡眠リズムの未熟性が指摘されている。これは脳生理学的な発達の停止状態を反映しているものと考えられている。
-
-また、画像生理学的研究から、レット症候群患者のドパミン取込み能が尾状核や被殻で著しく減少していることが報告されている $^{8)}$ 。このことは基底核ドパミン神経系の機能低下を意味し、レット症候群患者にみられる筋強剛や拘縮などのパーキンソン様症状を反映しているものと考えられている。
-
-## 8) 神経病理
-
-レット症候群の脳は全体的に小さく、年齢対照に比較して30%以上の減少をみることがある。また、小脳虫部の低形成が報告されている。組織学的には、神経細胞は小さく、密度が高い。神経細胞の樹状突起は短く、未熟シナプスが多い。中脳黒質や橋青斑核の神経細胞のメラニン顆粒の減少があり、基底核、脳幹のチロシン水酸化酵素、トリプトファン水酸化酵素、サブスタンスPの減少が報告されている。組織細胞学的には、GABA作動性抑制性神経細胞の機能障害の存在が考えられている。モデルマウスの研究でも同様の変化がみられ、てんかんや行動障害との関連が想定されている $^{9)}$ 。
-
-## 9)非典型的レット症候群
-
-1993 年、Hagberg のレット症候群の分類提唱以来、非典型例があることが知られている。診断基準には、非典型的レット症候群の詳細な記載はないが、現在では以下の 3 つの亜型が使われている (表 3)。興味深いことに、最近の臨床遺伝的研究から、遺伝子変異と、これらの非典型例の臨床像との関係が明らかになってきた。
-
-## ■ 早期発症てんかん型 (Hanefeld variant)
-
-典型的レット症候群類似の臨床経過をとるが、生後6か月以前よりてんかんがみられる。このてんかんは薬物治療に抵抗性で、日に数回繰り返し起こる難治性である。他に、重度な発達障害、頭囲発達の停止、コミュニケーション機能の消失、手の常同運動などがみられる。この早期発症てんかん型では、cyclin-dependent kinase-like 5(CDKL5)の遺伝子変異がみつかっている $^{10)}$ 。
-
-## ■ 先天型 (congenital variant)
-
-乳児期早期から発達遅延などがみられるため、明らかな退行はなく、臨床経過は典型的レット症候群と類似しているが、重度な発達障害と成長障害、小頭、有意言語の獲得がないなど、より重篤である。頭部 MRI などで、脳梁低形成や前頭葉の形成障害がみられる。この先天型では、forkhead box G1(FOXG1)の遺伝子変異がみつかっている $^{11)}$ 。
-
-表 3 典型的レット症候群と非典型的レット症候群の臨床遺伝
-
-<table><tr><td>臨床型</td><td>臨床的特徴</td><td>責任遺伝子</td><td>責任遺伝子の主な機能</td></tr><tr><td>典型的レット症候群</td><td>(本文参照)</td><td>MECP2(Xq28.1)</td><td>RNA 転写の抑制</td></tr><tr><td>非典型的レット症候群早期発症てんかん型(Hanefeld variant)</td><td>生後6か月以前より難治性てんかんを呈する。</td><td>CDKL5(Xp22.3)</td><td>細胞周期依存性キナーゼ脳神経細胞に発現</td></tr><tr><td>先天型(congenital variant)</td><td>乳児期早期から発達遅延がみられる。このため、明らかな退行はない。小頭、前頭葉の形成障害をみる。</td><td>FOXG1(14q12)</td><td>前頭葉形成に重要な転写因子</td></tr><tr><td>言語能力維持型(Zappella variant)</td><td>典型的レット症候群より進行が緩徐で軽症である。</td><td>MECP2;R133Cが比較的多い。</td><td>MECP2 のゲノム DNA に結合する領域で、他の変異に比べて転写抑制機能が保たれている。</td></tr></table>
-
-## ■ 言語能力維持型
-
-## [Zappella variant (preserved speech variant)]
-
-典型的レット症候群より進行が緩徐で軽症である。このため、発症初期にはレット症候群と診断するのが困難なことがある。臨床的特徴は、一旦獲得した機能の退行が遅く、手の常同運動は軽症あるいは非定型的であり、手の合目的的動作は保たれている場合もあり、簡単な会話はできることがある。言語能力維持型では、MECP2遺伝子のR133C変異が高頻度にみられる $^{12)}$ 。
-
-## 10) 鑑別診断
-
-## 自閉症
-
-レット症候群で小頭や痙攣が明らかでない場合、自閉症と診断されていることがある。しかし、自閉症の中にMECP2遺伝子変異がみつかることがあるが、このような場合には厳密に鑑別することが困難である。遺伝子検査ができない場合は、脳波検査や画像診断を加味しながら、症状の変移を追っていく必要がある。詳細な病状の経過観察は、獲得した能力の退行の有無の判断に役立つ。レット症候群では退行を示すという特徴を有する。
-
-## ■ アンジェルマン症候群 (Angelman syndrome)
-
-アンジェルマン症候群は精神遅滞、てんかん、失調、手の同一運動、小頭などを呈し、レット症候群と症状の一部が重複する。アンジェルマン症候群の責任遺伝子は15番染色体q11.2-13領域にあるUBE3Aであり、患者の90%以上に15番染色体q11.2-13領域の遺伝子異常がみつかるが、そうでないアンジェルマン症候群の約2%の患者にMECP2遺伝子変異がみつかっている $^{13)}$ 。アンジェルマン症候群ではコントロール困難なてんかんが前面的にみられ、特有の顔貌を呈する。加えて、発達の退行はないためレット症候群との鑑別は困難ではないが、アンジェルマン症候群でも重症の場合には退行があるようにみえることがある。
-
-## 脑性麻痹
-
-高齢で重度な痙性麻痺、成長障害、知的障害を呈する脳性麻痺患者では、レット症候群が疑われることがある。
-
-周産期や乳幼児期の詳しい発達歴と遺伝子検査によって診断が可能である。
-
-## MECP2 遺伝子変異を伴う新生児脳症
-
-男児の小頭を伴う新生児脳症は重度の筋緊張低下、不随意運動、難治性てんかん、中枢性低換気や呼吸不全などの呼吸運動異常を呈し、2歳までに死亡する。稀に、女児にみられることがある。これらの重度な新生児脳症に、MECP2遺伝子変異がみつかる。
-
-## X 連鎖性精神遲滯
-
-X 連鎖性精神遅滞では、MECP2 遺伝子変異を考慮しなければならない。この精神遅滞は女児では軽度で非進行性であるが、男児では重度で、躁うつ(psychosis)、錐体路症状(pyramidal signs)、パーキンソン症状(parkinsonian features)、巨睾丸(macroorchidism)を呈する(PPM-X症候群) $^{14)}$ 。その他の症状として、重度な知的障害、安静時振戦、動作緩慢、運動失調などがみられるが、てんかんや小頭はなく、頭部MRIや脳波などの検査は正常であり、鑑別は詳細な経過観察で可能である。
-
-## 3. レット症候群の臨床遺伝学
-
-1999年に、レット症候群の責任遺伝子として、メチル化CpG結合蛋白2(MECP2)が同定された $^{15)}$ 。その後、典型的レット症候群の約80%にMECP2遺伝子変異がみつかったものの、MECP2遺伝子異常がない症例が存在することがわかった。このうち、2005年に早期から難治性てんかんを呈するレット症候群患者にCDKL5が、2008年に乳児期早期から症状を呈するレット症候群の中からFOXG1が責任遺伝子として報告された。最近では、これら非典型的レット症候群は典型的レット症候群と一部の症状で重なりがみられるものの、同一の疾患範疇に入るか疑問視され、CDKL5関連症候群やFOXG1症候群などとして報告されることがある。ここでは、MECP2遺伝子を中心に概説する。
-
-## 1) MECP2 遺伝子変異
-
-MECP2 は、1992 年に、Adrian Bird らによって、ゲノム DNA のメチル化による遺伝子発現抑制機構に働く分子としてみつかった。その後、1999 年にレット症候群の責任遺伝子であることが報告され、2001 年に Mecp2欠損によるレット症候群のモデルマウスが作られると研究は飛躍的に進んだ $^{16,17}$ 。
-
-レット症候群の約80%にMECP2遺伝子変異がみつかっている。MECP2は4つのエクソンからなり、それがコードするMECP2蛋白はメチル化DNA結合領域(MBD)と転写抑制領域(TRD)の機能領域をもつ。MBDはゲノムDNA上のメチル化されたシトシンとグアニン(CpG)部分に特異的に結合し、TRDはSin3AとHDACと複合体を形成してヒストン蛋白の凝集を起こし、その標的遺伝子の転写を抑制する。この遺伝子変異による機能障害は、標的遺伝子の発現を制御することができなくなる。これが病態形成の最初の段階であり、MECP2が標的とする遺伝子の発現異常がレット症候群の症状を決めると考えられている。
-
-これまでの研究から、遺伝子変異と臨床表現型の関連性は一定の見解を得ていない。しかし、MBDではミスセンス変異(MECP2蛋白の1つのアミノ酸が置換される変異)が多く、TRDではナンセンス変異[MECP2蛋白が途中までしか作られない変異(このような未熟な蛋白は生体内では分解されることが多い)]が多い(図2)。また、ミスセンス変異はナンセンス変異より軽症であることが多い傾向にある。ナンセンス変異では、3'末端側の変異は5'末端側の変異より軽症である傾向にある。さらに、比較的軽症な言語能力維持型の多くにR133C遺伝子変異がみつかる。この変異では、分子生物学的にこの遺伝子変異ではDNAへの結合能が保たれていることが報告されている $^{18)}$ 。同様に、A140V 遺伝子変異も軽症で、女児の軽度知的障害や男児の精神遅滞、男性の PPM-X 症候群にみられる。この変異も MECP2 の転写抑制活性が比較的維持されていることが報告されている $^{19)}$ 。
-
-一方、同じ遺伝子変異でも症状に軽重がみられる。それは、X染色体不活化(X-chromosome inactivation)という分子機構が要因と考えられている。X染色体不活化とは、通常女性がもつ2本のX染色体(性染色体核型：XX)が、細胞の中で一方のみが活性化し、別の1本は不活化して働いていない状態をいい、それが全ての細胞に起こっている。レット症候群の女性患者は、MECP2遺伝子に変異があるX染色体と、変異がないX染色体をもつ。このうち、どちらの染色体が活性化されるかは胚発生初期に決定される。その結果、通常約半数の細胞では正常MECP2蛋白を発現し、残りの細胞では変異MECP2蛋白を発現するか欠損した状態となる。この変異MECP2蛋白あるいは欠損による機能障害を有する細胞の割合や分布に応じて、重篤度や症状も変化すると考えられている。1本のX染色体にMECP2遺伝子変異をもつ女性が神経学的症状を全くみせない例がある。これは、変異をもつX染色体の極端に偏った不活化による。
-
-MECP2 遺伝子変異はミスセンス変異やナンセンス変異だけでなく、欠失や重複といったゲノムの数的異常も起こる。遺伝子配列解析で変異がみつからなかったレット症候群患者の約30%に欠失が報告されている。MECP2遺伝子の重複は、MECP2 重複症候群として最近報告されてきている。MECP2 重複症候群は、乳児低筋緊張、重度精神遅滞、言語能力の無獲得、進行性痙性運動障害、繰り返す呼吸器感染症、てんかんといった症状を呈し、MECP2 遺伝子を含む 0.3 から 2.3Mb のゲノム領域の重複を有する。患者は男児で母親が保因者になっていることがある。
-
-![](images/bdbb99aa804b3044b275966267249ab91b7450c987f948162ede2ba8db22f15d.jpg) 
-図2 MECP2 遺伝子変異の部位と頻度 
-MBD：メチル化 DNA 結合領域、TRD：転写抑制領域、NLS：核移行シグナル 
-[RettBASE : IRSF MECP2 Variation Database (http://mecp2.chw.edu.au/) より改変]
-
-## 2) MECP2 からみた分子病態
-
-前述したように、MECP2の機能は転写抑制であるため、レット症候群の責任遺伝子として報告されて以来、MECP2が直接関与してレット症候群の病態形成につながる標的遺伝子が少なからずみつかっている(表4) $^{20}$ 。これらの中には、脳由来神経栄養因子(brain-derived neurotrophic factor: BDNF)やインスリン様成長因子結合蛋白3(IGFBP-3)などの神経細胞の成長・成熟に関与する分子や神経系の発生やGABA作動性抑制性神経細胞の発生・分化に重要な分子が含まれている。まだみつかっていない分子も含めて、レット症候群では複雑な細胞内および細胞間の機能障害がもたらされていることが垣間みられる。
-
-## 3) CDKL5 遺伝子変異
-
-CDKL5 遺伝子は X 染色体上にあり、その変異がレット症候群様の症状の患者にみつかっている。CDKL5 遺伝子変異を有するほとんどの症例が非典型的レット症候群[早期発症てんかん型(Hanefeld variant)]である。また、CDKL5 遺伝子変異は重度な知的障害と早期発症の難治性てんかんを呈する男性患者にもみられる。
-
-MECP2 は、calmodulin-dependent protein kinase II (CaMK II) によるリン酸化を受けることで神経細胞の樹状突起の再構築やシナプス形成をすることが報告されている。一方、細胞生物学的に、CDKL5 のリン酸化シグナル系が MECP2 と密接に関係している $^{21)}$ 。CDKL5 による MECP2 のリン酸化の機能は、まだ十分にわかっていないが、分子生物学的に神経細胞の機能発現に影響を及ぼしていることは明らかである。このことが、CDKL5 遺伝子変異の表現型が MECP2 遺伝子変異の臨床像に一部似たことが起こっている分子病態であると考えられている。
-
-## 4) FOXG1 遺伝子変異
-
-FOXG1 遺伝子は、14 番染色体上にありレット症候群の先天型(congenital variant)で遺伝子変異がみつかる。ヘテロ接合体の遺伝子異常で発症するため、乳児期早期から重度な発達を呈する男児にもみつかることがある。軽度の顔面奇形と脳形成障害を伴うのが特徴である $^{22)}$ 。
-
-FOXG1 は発生初期に神経細胞の移動に働き、大脳皮質の層構造を作る重要な分子である。一方、生後には、FOXG1 は WNT シグナルを抑制することが知られ、シナプス接続やシナプスの成熟、可塑性に関与していると考えられている。また、FOXG1 が成熟した神経細胞の神経保護作用を有することが示唆されている。MECP2 との相互作用は明確でないが、こうした生後の FOXG1 の
-
-表 4 これまでにみつかっている主な MECP2 の標的遺伝子
-
-<table><tr><td>MECP2 標的遺伝子</td><td>遺伝子産物の機能</td><td>生体での機能</td></tr><tr><td>Bdnf</td><td>神経栄養因子</td><td>神経細胞の成熟など</td></tr><tr><td>xHairy2a</td><td>転写抑制因子</td><td>中枢神経の発生</td></tr><tr><td>DLX5/Dlx5</td><td>転写因子</td><td>GABA 作動性抑制性神経細胞の発生</td></tr><tr><td>Sgk1</td><td>キナーゼ</td><td>外胚葉のアポトーシス制御</td></tr><tr><td>Fkbp5</td><td>グルココルチコイド受容体の調節因子</td><td>栄養因子伝達系</td></tr><tr><td>Uqcrc1</td><td>ミトコンドリア呼吸鎖酵素</td><td>ミトコンドリア機能発現</td></tr><tr><td>FXYD1/Fxyd1</td><td>イオンチャネル制御因子</td><td>細胞膜のイオン輸送調節</td></tr><tr><td>IGFBP3/Igfbp3</td><td>栄養因子伝達系</td><td>IGF-I の調節</td></tr><tr><td>Crh</td><td>神経ペプチド</td><td>神経系の情報伝達</td></tr><tr><td>UBE3A</td><td>ユビキチンリガーゼ</td><td>(アンジェルマン症候群責任遺伝子)</td></tr><tr><td>GABAR3</td><td>GABA 受容体</td><td>神経系の情報伝達</td></tr></table>
-
-(文献 20 より改変)
+B.
+
+![](images/e9b738e206603acf55334df8878f4104b1725cdecca58310dc54139053782f8b.jpg)
+
+<details>
+<summary>bar chart</summary>
+
+| Cotransporter Proteins | Controls (Mean Optic Densities) | RTT Patients (Mean Optic Densities) |
+| :--- | :--- | :--- |
+| NKCC1 OD | 610,000 | 330,000 |
+| KCC2 OD | 740,000 | 85,000 |
+Error Bars: 95% CI
+</details>
+
+Figure 1. NKCC1 and KCC2 Cotransporters in the CSF of Rett Syndrome (RTT) Patients and Controls. (A) Immunoblot results in RTT patients and controls. Numbers refer to the patient ID numbers of Table 1. Comparison of patients and age matched controls. (B) Mean Optic Densities of NKCC1 and KCC2 Cotransporter Proteins for Rett Patients and Controls suggesting discrepant cotransporter levels between Patients and Controls supported by the respective MANCOVA $( F \left( 1 , 7 3 \right) = 6 . 9 9 , p { < . 0 1 } , { \eta _ { p } } ^ { 2 } = . 0 8 7 )$ . Error bars represent 95% Confidence Interval. \*p,.01. doi:10.1371/journal.pone.0068851.g001
+
+ANCOVA was performed, controlling for the effect of age and gender. This analysis revealed a statistically significant difference between Healthy controls and RTT patients, $F \left( 1 , 7 0 \right) = 2 6 . 5 6 ,$ , $\rho { < } . 0 0 1 , ~ { \eta _ { \mathnormal } } ^ { 2 } { = } . \dot { 2 } 8$ even when controlling for the possible confounding effect of age and gender (figure 2B and 2C). RTT patients presented a significantly lower KCC2/NKCC1 ratio $( M = . 2 6 , \ S D = . 3 0 )$ than Healthy controls $( M = 1 . 0 8 , \ S D = . 5 6 )$ . Even if the effects of age and gender would not have been controlled for in the analysis the decrease in KCC2/NKCC1 ratio was still significant $( F ( 1 , 7 0 ) = 3 0 . 0 8 , \phi = . 0 0 1 , { \eta _ { \phi } } ^ { 2 } = . 2 9 )$ .
+
+## Discussion
+
+In this study, we demonstrate reduced KCC2 levels and KCC2/NKCC1 ratio in the CSF of RTT patients. These findings suggest that altered inhibitory GABA function can underlie the pathophysiology of RTT and also play a role in the epileptogenesis of this neurodevelopmental disorder, in which epilepsy is present in around 70% of patients [3]. Detection of transmembrane synaptic proteins in the CSF is a useful tool in the study of neurotransmission disorders, as recently reported by our group [19]. Despite their low abundance compared to the global CSF
+
+![](images/d89c620b0a4a7d8f18950b224bc9998eb9dce2af747fecc6e88aecde2ca42221.jpg)
+
+<details>
+<summary>text_image</summary>
+
+A
+11d 16d 90d 106d 1y 6y
+NKCC1 170KDa
+KCC2 140KDa
+Ponceau
+</details>
+
+![](images/6bb99f20d1796e85ec75200d93eee8153d7880e72f537ec00296835826c24f53.jpg)
+
+<details>
+<summary>scatterplot</summary>
+
+| AGE (in days) | KCC2 / NKCC1 | Group |
+| --- | --- | --- |
+| 0 | 2.6 | Control |
+| 0 | 1.7 | Control |
+| 0 | 1.5 | Control |
+| 0 | 1.3 | Control |
+| 0 | 1.1 | Control |
+| 0 | 0.9 | Control |
+| 0 | 0.7 | Control |
+| 0 | 0.5 | Control |
+| 0 | 0.3 | Control |
+| 0 | 0.1 | Control |
+| 0 | 0.0 | Control |
+| 500 | 1.8 | Control |
+| 500 | 1.6 | Control |
+| 500 | 1.4 | Control |
+| 500 | 1.2 | Control |
+| 500 | 1.0 | Control |
+| 500 | 0.8 | Control |
+| 500 | 0.6 | Control |
+| 500 | 0.4 | Control |
+| 500 | 0.2 | Control |
+| 500 | 0.1 | Control |
+| 1000 | 1.7 | Control |
+| 1000 | 1.5 | Control |
+| 1000 | 1.3 | Control |
+| 1000 | 1.1 | Control |
+| 1000 | 0.9 | Control |
+| 1000 | 0.7 | Control |
+| 1000 | 0.5 | Control |
+| 1000 | 0.3 | Control |
+| 1000 | 0.1 | Control |
+| 1500 | 1.5 | Control |
+| 1500 | 1.3 | Control |
+| 1500 | 1.1 | Control |
+| 1500 | 0.9 | Control |
+| 1500 | 0.7 | Control |
+| 1500 | 0.5 | Control |
+| 1500 | 0.3 | Control |
+| 1500 | 0.1 | Control |
+| 2000 | 2.0 | Control |
+| 2000 | 1.8 | Control |
+| 2000 | 1.6 | Control |
+| 2000 | 1.4 | Control |
+| 2000 | 1.2 | Control |
+| 2000 | 1.0 | Control |
+| 2000 | 0.8 | Control |
+| 2000 | 0.6 | Control |
+| 2500 | 1.7 | Control |
+| 2500 | 1.5 | Control |
+| 2500 | 1.3 | Control |
+| 2500 | 1.1 | Control |
+| 2500 | 0.9 | Control |
+| 2500 | 0.7 | Control |
+| 2500 | 0.5 | Control |
+| 2500 | 0.3 | Control |
+| 3000 | 1.6 | Control |
+| 3000 | 1.4 | Control |
+| 3000 | 1.2 | Control |
+| 3000 | 1.0 | Control |
+| 3500 | 1.5 | Control |
+| 3500 | 1.3 | Control |
+| 3500 | 1.1 | Control |
+| 3500 | 0.9 | Control |
+| 4525 | 1.45 | Control |
+| 4525 | 1.35 | Control |
+| 4525 | 1.25 | Control |
+| 4525 | 1.15 | Control |
+| 4525 | 1.05 | Control |
+| 4525 | 1.95 | Control |
+| 4525 | 1.85 | Control |
+| 4525 | 1.75 | Control |
+| 4525 | 1.65 | Control |
+| 4525 | 1.55 | Control |
+| 4525 | 1.45 | Control |
+| 4525 | 1.35 | Control |
+| 4525 | 1.25 | Control |
+| 4525 | 1.15 | Control |
+| 4525 | 1.95 | RTT Patient |
+| 4525 | 1.85 | RTT Patient |
+| 4525 | 1.75 | RTT Patient |
+| 4525 | 1.65 | RTT Patient |
+| 4525 | 1.55 | RTT Patient |
+| 4525 | 1.45 | RTT Patient |
+| 4525 | 1.35 | RTT Patient |
+| 4525 | 1.25 | RTT Patient |
+| 4525 | 1.15 | RTT Patient |
+| 4525 | 1.95 | RTT Patient |
+| 4525 | 1.85 | RTT Patient |
+| 4525 | 1.75 | RTT Patient |
+| 4525 | 1.65 | RTT Patient |
+| 4525 | 1.55 | RTT Patient *RTT* |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+| ... | ... | ... |
+</details>
+
+![](images/c714f255e6716f30f932b2f556e8a2abc919895f682a7f7583caceecfdde4faf.jpg)
+
+Figure 2. Cation Chloride Cotransporters ratio. (A) Immunoblot analysis of NKCC1 and KCC2. (B) Scatterplot of the relationship between Cotrasporters ratio (KCC2/NKCC1) and age for Rett Patients and Controls. Lines show a LOWESS smooth (locally-weighted polynomial regression - nonparametric smooth) suggesting a discrepant cotransporter ratio between Patients and Controls supported by the respective ANCOVA (F (1, 70) = 30.08, p = .001, gp 2 = .29). (C) Boxplot of Cotransporters ratio (KCC2/NKCC1) for Rett Patients and Controls (males and females). \*p = 0.001. doi:10.1371/journal.pone.0068851.g002
+
+proteome [25], the proteins here studied (NKCC1 and KCC2) were readily detected and at the expected molecular weight. Harrington and co-workers [26] identified the presence of CSF membranous nanostructures that can provide an appropriate environment for transmembrane proteins, which are hydrophobic in nature. Their morphology is similar to that of synaptic vesicles and exosomes; their structure resembles that of nanotubules, cellto-cell interacting structures that facilitate the selective transfer of membrane vesicles and organelles but which seem to impede the flow of small molecules [27]. The intensity and resolution of the different bands obtained with the immunoblot procedure (Figures 1A and 2A) strongly supports the applicability of this analysis in neurochemical research. To our knowledge, this is the first report of detection of cation chloride cotransporters in CSF.
+
+CSF turnover ratio and the extent of central nervous system cell death and synaptic pruning can influence circulating protein levels but these factors are likely to affect both proteins, NKCC1 and KCC2, equally. During the first months of postnatal life there is a period of intense synaptogenesis that subsequentially decreases. This is probably the cause for the reduction of protein levels in CSF observed during the first year of life. In fact, regarding transmembrane proteins like NKCC1 and KCC2, we have observed the same tendency that also was detected with other synaptic proteins [19]. The same phenomena could explain the fact that, in the CSF, both cation chloride cotransporters exhibit a reduction and KCC2 does not increase in the CSF, as was expected from previous studies in brain tissue [28,29]. Experimental limitations in humans have been an obstacle in obtaining direct evidence of age-related changes in GABAA-R physiology [28].
+
+In mice, loss of MeCP2 leads to reduced expression of BDNF after birth [15] and in humans evidence of BDNF reduction in RTT has also been detected [29]. The effects of BDNF on neurotransmission in developing and mature neurons have been partly associated with the regulation of GABAergic transmission. Apart from its effects on GABAergic innervation [30], BDNF can also promote the functional maturation of GABAA-R mediated responses by inducing upregulation of KCC2 [16,17]. The imbalance between excitatory and inhibitory functions in RTT has been associated with reduced BDNF [31] and GABA levels, decreased expression of GABA receptor subunits [32], reduced expression of the enzymes glutamic acid decarboxylase 67 and glutamic acid decarboxylase 65 [8], reduced number of glutamatergic synapses [33] and reduced strength of basal inhibitory rhythms [34]. Moreover, exogenous BDNF has been shown to rescue synaptic dysfunction in Mecp-2 null mice. However, the mechanism by which reduced levels of BDNF contribute to disease and also to the phenotypical rescue is not completely understood [31].
+
+## References
+
+1. Hagberg B, Aicardi J, Dias K, Ramos O (1983) A progressive syndrome of autism, dementia, ataxia, and loss of purposeful hand use in girls: Rett’ssyndrome: Report of 35 cases. Ann Neurol 14: 471–479. 
+2. Monteggia LM, Kavalali ET (2009) Rett syndrome and the impact of MeCP2 associated transcriptional mechanisms on neurotransmission. Biol Psychiatry 65: 204–210. 
+3. Nissenkorn A, Gak E, Vecsler M, Reznik H, Menascu S et al. (2010) Epilepsy in Rett syndrome-the experience of a National Rett Center. Epilepsia 51: 1252– 1258.
+
+Our results suggest an immature pattern of GABAergic neurotransmission in RTT patients, by revealing a dysregulation on the KCC2/NKCC1 ratio (the two major contributors to intracellular chloride concentration) and this evidence in humans is in accordance with the relevance of MeCP2 for GABAergic function described in animal models [8]. An imbalance between excitatory and inhibitory synaptic events, in the brain of children with neurodevelopmental disorders that have epilepsy and autism as key features, is a postulated general mechanism. Moreover, KCC2/NKCC1 ratio dysregulation is a particularly interesting specific molecular change, already described for diseases like tuberous sclerosis [35].
+
+## Conclusions
+
+We describe a significant decrease of KCC2 in the cerebrospinal fluid of Rett patients. A major advantage of doing these in vivo studies in children with severe neurologic disorders like RTT, is that it allows to search for disturbances in the normal developmental pattern. Therefore, our findings might have implications for the understanding of RTT pathophysiology, considering that KCC2 is a neuronal specific protein with a key role for neuronal electrical function and structure, properties that are known to be altered in Mecp2 mutated neurons. Moreover, these results could bring light to new therapeutic approaches, particularly through the pharmacological manipulation of the cation chloride cotransporters. Further studies in the MECP2 knockout model and other models to study the disease process are needed to explore these possibilities.
+
+## Supporting Information
+
+Table S1 Socio-demographic variable: mean values (and standard deviations) of age. Significant differences among the groups were assessed with Mann-Whitney Test (U). (DOCX)
+
+## Acknowledgments
+
+We thank Dr. Claudia Gaspar and Dr. Maria Jose´ Diogenes for their helpful review of the manuscript.
+
+## Author Contributions
+
+Conceived and designed the experiments: SD AR CO MP JA RA FS AG. Performed the experiments: SD AR CO AP AG. Analyzed the data: SD MO AP AO RA MP AG. Contributed reagents/materials/analysis tools: SD AR MO AO RA MP FS JA AG. Wrote the paper: SD AR CO RA MP AG.
+
+4. Jellinger K, Armstrong D, Zoghbi HY, Percy AK (1988) Neuropathology of Rett syndrome. Acta Neuropathol 76: 142–158. 
+5. Reiss AL, Faruque F, Naidu S, Abrams M, Beaty T (1993) Neuroanatomy of Rett syndrome: a volumetric imaging study. Ann Neurol 34: 227–243. 
+6. Boggio EM, Lonetti G, Pizzorusso T, Giustetto M (2010) Synaptic determinants of rett syndrome. Front Synaptic Neurosci 2: 28. 
+7. Kron M, Howell CJ, Adams IT, Ransbottom M, Christian D et al. (2012) Brain activity mapping in Mecp2 mutant mice reveals functional deficits in forebrain 
+circuits, including key nodes in the default mode network, that are reversed with ketamine treatment. J Neurosci. 32: 13860–13872. 
+8. Chao HT, Chen H, Samaco RC, Xue M, Chahrour M, et al. (2010) Dysfunction in GABA signalling mediates autism-like stereotypies and Rett syndrome phenotypes. Nature 468: 263–269. 
+9. Blaesse P, Airaksinen MS, Rivera C, Kaila K (2009) Cation-chloride cotransporters and neuronal function. Neuron 61: 820–838. 
+10. Mun˜oz A, Me´ndez P, DeFelipe J, Alvarez-Leefmans FJ (2007) Cation-chloride cotransporters and GABA-ergic innervation in the human epileptic hippocampus. Epilepsia 48: 663–673. 
+11. Woo NS, Lu JM, England R, McClellan R, Dufour S, et al. (2002) Hyperexcitability and epilepsy associated with disruption of the mouse neuronal-specific K-Cl cotransporter gene. Hippocampus 12: 258–268. 
+12. Dzhala VI, Talos DM, Sdrulla DA, Brumback AC, Mathews GC, et al. (2005) NKCC1 transporter facilitates seizures in the developing brain. Nat Med 11: 1205–1213. 
+13. Kahle KT, Barnett SM, Sassower KC, Staley KJ (2009) Decreased seizure activity in a human neonate treated with bumetanide, an inhibitor of the Na(+)- K(+)-2Cl(-) cotransporter NKCC1. J Child Neurol 24: 572–576. 
+14. Lemonnier E, Degrez C, Phelep M, Tyzio R, Josse F, et al. (2012) A randomised controlled trial of bumetanide in the treatment of autism in children. Transl Psychiatry. 2: e202. 
+15. Wang H, Chan SA, Ogier M, Hellard D, Wang Q, et al. (2006) Dysregulation of brain-derived neurotrophic factor expression and neurosecretory function in Mecp2 null mice. J Neurosci 26: 10911–10915. 
+16. Aguado F, Carmona MA, Pozas E, Aguilo´ A, Martı´nez-Guijarro FJ et al. (2003) BDNF regulates spontaneous correlated activity at early developmental stages by increasing synaptogenesis and expression of the K+/Cl- co-transporter KCC2. Development 130: 1267–1280. 
+17. Carmona MA, Pozas E, Martı´nez A, Espinosa-Parrilla JF, Soriano E, et al. (2006) Age-dependent spontaneous hyperexcitability and impairment of GABAergic function in the hippocampus of mice lacking trkB. Cereb Cortex 16: 47–63. 
+18. Plotkin MD, Snyder EY, Hebert SC, Delpire E (1997) Expression of the Na-K-2Cl cotransporter is developmentally regulated in postnatal rat brains: a possible mechanism underlying GABA’s excitatory role in immature brain. J Neurobiol 33: 781–795. 
+19. Duarte ST, Ortez C, Pe´rez A, Artuch R, Garcı´a-Cazorla A (2011) Analysis of synaptic proteins in the cerebrospinal fluid as a new tool in the study of inborn errors of neurotransmission. J Inherit Met Dis 34: 523–528. 
+20. Neul JL, Kaufmann WE, Glaze DG, Christodoulou J, Clarke AJ et al. (2010) Rett syndrome: revised diagnostic criteria and nomenclature. Ann Neurol. 68: 944–950. 
+21. Ormaza´bal A, Garcı´a-Cazorla A, Ferna´ndez A, Ferna´ndez-Alvarez E, Campistol J et al. (2005) HPLC with electrochemical and fluorescence detection procedures for the diagnosis of inborn errors of biogenic amines and pterins. J Neurosc Methods 142: 153–158. 
+22. Maroco J (2007) Ana´lise Estatı´stica com utilizac¸a˜ o do SPSS [Statistical analysis using SPSS] (3rd Ed). Lisbon, Portugal: Silabo. 
+23. Biou D, Benoist JF, Nguyen-Thi Xuan, Huong C, Huong X, et al (2000) Cerebrospinal fluid protein concentrations in children: age-related values in patients without disorders of the central nervous system. Clin Chem 46: 399. 
+24. Galanopoulou AS (2008) Sexually dimorphic expression of KCC2 and GABA function. Epilepsy Res 80: 99–113. 
+25. Thouvenot E, Urbach S, Dantec C, Poncet J, Se´veno M (2008) Enhanced detection of CNS cell secretome in plasma protein-depleted cerebrospinal fluid. J Proteome Res. 7: 4409–4421. 
+26. Harrington MG, Fonteh AN, Oborina E, Liao P, Cowan RP et al. (2009) The morphology and biochemistry of nanostructures provide evidence for synthesis and signaling functions in human cerebrospinal fluid. Cerebrospinal Fluid Res 6: 10. 
+27. Rustom A, Saffrich R, Markovic I, Walther P, Gerdes HH (2004) Nanotubular highways for intercellular organelle transport. Science 303: 1007–1010. 
+28. Galanopoulou AS (2008) GABA(A) receptors in normal development and seizures: friends or foes? Curr Neuropharmacol 6: 1–20. 
+29. Deng V, Matagne V, Banine F, Frerking M, Ohliger P et al. (2006) FXYD1 is an MeCP2 target gene overexpressed in the brains of Rett syndrome patients and Mecp2-null mice. Hum Mol Genet 16: 640–650. 
+30. Danglot L, Triller A, Marty S (2006) The development of hippocampal interneurons in rodents. Hippocampus 16: 1032–1060. 
+31. Kline DD, Ogier M, Kunze DL, Katz DM (2010) Exogenous brain-derived neurotrophic factor rescues synaptic dysfunction in Mecp2-null mice. J Neurosci 30: 5303–5310. 
+32. Medrihan L, Tantalaki E, Aramuni G, Sargsyan V, Dudanova I et al. (2008) Early defects of GABAergic synapses in the brain stem of a MeCP2 mouse model of Rett syndrome. J Neurophysiol 299: 112–121. 
+33. Chao HT, Zoghbi HY, Rosenmund C (2007) MeCP2 controls excitatory synaptic strength by regulating glutamatergic synapse number. Neuron 56: 58– 65. 
+34. Zhang L, He J, Jugloff DG, Eubanks JH (2008) The MeCP2-null mouse hippocampus displays altered basal inhibitory rhythms and is prone to hyperexcitability. Hippocampus 18: 294–309. 
+35. Talos DM, Sun H, Kosaras B, Joseph A, Folkerth RD et al. (2012) Altered inhibition in tuberous sclerosis and type IIb cortical dysplasia. Ann Neurol 71: 539–51.

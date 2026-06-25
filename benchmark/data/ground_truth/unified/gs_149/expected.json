@@ -1,6 +1,6 @@
 {
   "unified_id": "gs_149",
-  "original_entry_id": "rett_085",
+  "original_entry_id": "rett_087",
   "source_dataset": "rett",
   "gold_source": "article",
   "annotation_provenance": "ai_auto_review",
@@ -15,28 +15,22 @@
   "classification_date": "",
   "clingen_report_url": "",
   "source_pmid": "",
-  "source_doi": "10.3969/j.issn.1004-583X.2017.11.020",
+  "source_doi": "10.20047/j.issn1673-7210.2024.05.45",
   "source_pmc": "",
   "source_pdf_url": "",
   "source_pdf_path": "benchmark/data/ground_truth/unified/gs_149/source.pdf",
-  "source_title": "Rett综合征一例及其MECP2基因新突变",
-  "source_journal": "临床荟萃 (Clinical Focus)",
-  "source_year": "2017",
+  "source_title": "MECP2 基因变异所致 Rett 综合征患儿 1 例的临床表型与遗传学分析",
+  "source_journal": "中国医药导报 (ISSN 1673-7210)",
+  "source_year": "2024",
   "source_language": "zh",
   "variants": [
     {
       "source": "rett",
-      "hgvs_c": "c.468C>G",
-      "hgvs_p": "p.Asp156Glu",
+      "hgvs_c": "c.710C>G",
+      "hgvs_p": "p.Pro237Arg",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
-      "domain": "MBD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.426",
-      "variant_type": "synonymous",
-      "clinical_significance": "benign"
+      "clinical_significance": "likely pathogenic (ACMG: PS2+PM2+PP3)",
+      "domain": "TRD"
     }
   ],
   "expected_evidence": [
@@ -70,17 +64,14 @@
     },
     {
       "field_id": "A.variant_hgvs_c",
-      "value": "c.468C>G",
-      "candidates": [
-        "c.468C>G",
-        "c.426"
-      ],
+      "value": "c.710C>G",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.Asp156Glu",
+      "value": "p.Pro237Arg",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
@@ -88,30 +79,27 @@
     {
       "field_id": "A.variant_type",
       "value": "missense",
-      "candidates": [
-        "missense",
-        "synonymous"
-      ],
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD",
+      "value": "TRD",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0001263; HP:0001344; HP:0002072; HP:0003763; HP:0001251; HP:0001249",
+      "value": "HP:0001263; HP:0002072; HP:0001250; HP:0002376; HP:0001344; HP:0001249; HP:0001251; HP:0000252; HP:0001252",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "智能及动作发育倒退 (developmental regression); 运动及智力发育迟缓 (motor and intellectual developmental delay); 语言功能丧失/不说话 (loss of acquired speech); 双手不自主、刻板的扭绞动作 (hand-wringing stereotypies); 手部精细动作丧失 (loss of acquired hand skills); 磨牙 (bruxism); 步态不稳 (unstable gait); 轻度脑萎缩、脑发育不全 (mild cerebral atrophy)",
+      "value": "发育迟缓/发育落后 (developmental delay); 手部刻板动作/双手交握 (hand stereotypies); 癫痫发作 (seizures); 技能丧失及发育倒退 (loss of skills / developmental regression); 语言丧失 (loss of language); 智力低下 (intellectual disability); 步态异常/步态不稳 (abnormal/unsteady gait); 头围小 (small head circumference / microcephaly); 四肢肌张力低下 (hypotonia of limbs); 出生时足月小样儿 (small for gestational age); 上肢不自主震颤 (involuntary tremor of upper limbs); 异常脑电图 (abnormal EEG)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -125,14 +113,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "出生后约2岁起出现智能及动作发育倒退（具体月龄文中数字缺失，不完全明确）",
+      "value": "婴幼儿期 (infancy); developmental stagnation noted in infancy, seizure onset at 3 years 7 months",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo",
+      "value": "de novo (新生变异; parents wild-type, confirmed by Sanger sequencing)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -153,10 +141,7 @@
     },
     "variants": [
       {
-        "text": "c.468C>G"
-      },
-      {
-        "text": "c.426"
+        "text": "c.710C>G"
       }
     ]
   },

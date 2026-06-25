@@ -1,13 +1,13 @@
 {
   "unified_id": "gs_140",
-  "original_entry_id": "rett_076",
+  "original_entry_id": "rett_077",
   "source_dataset": "rett",
   "gold_source": "article",
   "annotation_provenance": "ai_auto_review",
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome (classic/typical and atypical/variant subtypes discussed)",
+  "disease_label": "Typical Rett syndrome",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "classification": "Rett real-data",
@@ -19,81 +19,19 @@
   "source_pmc": "",
   "source_pdf_url": "",
   "source_pdf_path": "benchmark/data/ground_truth/unified/gs_140/source.pdf",
-  "source_title": "Rett Sendromlu Hastaların Klinik ve Moleküler Değerlendirmesi ve Genotip-Fenotip Korelasyonunun Araştırılması",
-  "source_journal": "Hacettepe Üniversitesi Tıp Fakültesi, Çocuk Sağlığı ve Hastalıkları Anabilim Dalı (Uzmanlık Tezi / specialty thesis)",
-  "source_year": "2015",
-  "source_language": "tr",
+  "source_title": "Typical Rett Syndrome in a young boy with hemizygous c.316C>T mutation in MECP2 gene",
+  "source_journal": "",
+  "source_year": "",
+  "source_language": "en",
   "variants": [
     {
       "source": "rett",
-      "hgvs_p": "p.Arg106Trp",
+      "hgvs_c": "c.316C>T",
+      "hgvs_p": "p.R106W",
       "variant_type": "missense",
-      "domain": "MBD (aa 78-162)"
-    },
-    {
-      "source": "rett",
-      "hgvs_p": "p.Arg133Cys",
-      "variant_type": "missense",
-      "domain": "MBD (aa 78-162)"
-    },
-    {
-      "source": "rett",
-      "hgvs_p": "p.Arg152Arg",
-      "variant_type": "synonymous (reported in article under MBD missense list)",
-      "domain": "MBD (aa 78-162)"
-    },
-    {
-      "source": "rett",
-      "hgvs_p": "p.Thr158Met",
-      "variant_type": "missense",
-      "domain": "MBD (aa 78-162)"
-    },
-    {
-      "source": "rett",
-      "hgvs_p": "p.Arg168Ter",
-      "variant_type": "nonsense",
-      "domain": "interdomain"
-    },
-    {
-      "source": "rett",
-      "hgvs_p": "p.Arg255Ter",
-      "variant_type": "nonsense",
-      "domain": "TRD (aa 201-310)"
-    },
-    {
-      "source": "rett",
-      "hgvs_p": "p.Arg270Ter",
-      "variant_type": "nonsense",
-      "domain": "TRD (aa 201-310)"
-    },
-    {
-      "source": "rett",
-      "hgvs_p": "p.Arg306Cys",
-      "variant_type": "missense",
-      "domain": "TRD (aa 201-310)"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.808delG",
-      "variant_type": "frameshift deletion",
-      "domain": "TRD (aa 201-310)"
-    },
-    {
-      "source": "rett",
-      "hgvs_p": "p.Ter487Arg",
-      "variant_type": "non-stop (stop-loss)",
-      "domain": "C-terminal"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.1164delA",
-      "variant_type": "frameshift deletion",
-      "domain": "C-terminal"
-    },
-    {
-      "source": "rett",
-      "variant_type": "large deletion (exon 3-4 deletion)",
-      "exon": "exon 3-4"
+      "clinical_significance": "pathogenic (disease-causing)",
+      "exon": "3",
+      "domain": "MBD (methyl-CpG-binding domain)"
     }
   ],
   "expected_evidence": [
@@ -106,7 +44,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome (classic/typical and atypical/variant subtypes discussed)",
+      "value": "Typical Rett syndrome",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -127,101 +65,63 @@
     },
     {
       "field_id": "A.variant_hgvs_c",
-      "value": "c.808delG",
-      "candidates": [
-        "c.808delG",
-        "c.1164delA"
-      ],
+      "value": "c.316C>T",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.Arg106Trp",
-      "candidates": [
-        "p.Arg106Trp",
-        "p.Arg133Cys",
-        "p.Arg152Arg",
-        "p.Thr158Met",
-        "p.Arg168Ter",
-        "p.Arg255Ter",
-        "p.Arg270Ter",
-        "p.Arg306Cys",
-        "p.Ter487Arg"
-      ],
+      "value": "p.R106W",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_type",
       "value": "missense",
-      "candidates": [
-        "missense",
-        "missense",
-        "synonymous (reported in article under MBD missense list)",
-        "missense",
-        "nonsense",
-        "nonsense",
-        "nonsense",
-        "missense",
-        "frameshift deletion",
-        "non-stop (stop-loss)",
-        "frameshift deletion",
-        "large deletion (exon 3-4 deletion)"
-      ],
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD (aa 78-162)",
-      "candidates": [
-        "MBD (aa 78-162)",
-        "MBD (aa 78-162)",
-        "MBD (aa 78-162)",
-        "MBD (aa 78-162)",
-        "interdomain",
-        "TRD (aa 201-310)",
-        "TRD (aa 201-310)",
-        "TRD (aa 201-310)",
-        "TRD (aa 201-310)",
-        "C-terminal",
-        "C-terminal"
-      ],
+      "value": "MBD (methyl-CpG-binding domain)",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0002072; HP:0001344; HP:0001250; HP:0000252; HP:0000253; HP:0012759; HP:0000756; HP:0002650; HP:0003763; HP:0002360; HP:0011968; HP:0002019; HP:0012171; HP:0004322; HP:0001251",
+      "value": "HP:0002376; HP:0002072; HP:0001344; HP:0001251; HP:0002650; HP:0000252; HP:0000253; HP:0003763; HP:0012759; HP:0000756; HP:0001263",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "early neurological regression following normal early development; loss of acquired purposeful hand use; stereotypic hand movements (hand-wringing, squeezing, clapping, mouthing, rubbing); loss of speech/communication skills; seizures / epilepsy; postnatal microcephaly / deceleration of head growth; breathing abnormalities (hyperventilation, breath-holding, apnea); autistic behavior / social withdrawal; scoliosis/kyphosis; bruxism (teeth grinding); sleep disturbance; feeding/gastrointestinal problems; constipation, gastroesophageal reflux; peripheral vasomotor disturbance / cold cyanotic hands and feet; growth failure / weight and height deceleration; ataxia, apraxia, broad-based gait; dystonia, rigidity, extrapyramidal movement and posture abnormalities; autonomic dysfunction, cardiac abnormalities (prolonged QT)",
+      "value": "developmental regression; loss of purposeful hand use; stereotypic hand movements (hand wringing, washing, clapping, hand-to-mouth); loss of acquired spoken language / absent meaningful words; truncal ataxia and gait apraxia; scoliosis; mild microcephaly; postnatal deceleration of head growth; severe bruxism; breath-holding spells; autistic behavior / deficits in social development; developmental delay; deterioration of motor and social skills",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.sex",
-      "value": "female",
+      "value": "male",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "median 1.5 years (regression onset)",
+      "value": "around 12 months (stereotypies and limited social responsiveness from 12 months, with regression progressing thereafter)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "unknown",
+      "value": "de novo (mutation absent in mother; de novo in patient or gonadal mosaicism in mother)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -237,42 +137,12 @@
       "hgnc_id": "HGNC:6992"
     },
     "disease": {
-      "text": "Rett syndrome (classic/typical and atypical/variant subtypes discussed)",
+      "text": "Typical Rett syndrome",
       "mondo_id": "MONDO:0010726"
     },
     "variants": [
       {
-        "text": "p.Arg106Trp"
-      },
-      {
-        "text": "p.Arg133Cys"
-      },
-      {
-        "text": "p.Arg152Arg"
-      },
-      {
-        "text": "p.Thr158Met"
-      },
-      {
-        "text": "p.Arg168Ter"
-      },
-      {
-        "text": "p.Arg255Ter"
-      },
-      {
-        "text": "p.Arg270Ter"
-      },
-      {
-        "text": "p.Arg306Cys"
-      },
-      {
-        "text": "c.808delG"
-      },
-      {
-        "text": "p.Ter487Arg"
-      },
-      {
-        "text": "c.1164delA"
+        "text": "c.316C>T"
       }
     ]
   },

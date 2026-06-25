@@ -1,13 +1,13 @@
 {
   "unified_id": "gs_138",
-  "original_entry_id": "rett_070",
+  "original_entry_id": "rett_071",
   "source_dataset": "rett",
   "gold_source": "article",
   "annotation_provenance": "ai_auto_review",
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Заболевание спектра синдрома Ретта (Rett syndrome spectrum disorder / Rett-like syndrome)",
+  "disease_label": "Rett syndrome",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "classification": "Rett real-data",
@@ -15,23 +15,22 @@
   "classification_date": "",
   "clingen_report_url": "",
   "source_pmid": "",
-  "source_doi": "10.33978/2307-3586-2024-20-40-56-63",
+  "source_doi": "10.25207/1608-6228-2021-28-1-116-124",
   "source_pmc": "",
   "source_pdf_url": "",
   "source_pdf_path": "benchmark/data/ground_truth/unified/gs_138/source.pdf",
-  "source_title": "Клинический случай пациента школьного возраста с заболеванием спектра синдрома Ретта и делецией в гене MECP2",
-  "source_journal": "Эффективная фармакотерапия",
-  "source_year": "2024",
+  "source_title": "Синдром Ретта: клинический случай (Rett syndrome: a clinical case)",
+  "source_journal": "Кубанский научный медицинский вестник (Kubanskii Nauchnyi Meditsinskii Vestnik)",
+  "source_year": "2021",
   "source_language": "ru",
   "variants": [
     {
       "source": "rett",
-      "hgvs_c": "c.1217_1445del",
-      "hgvs_p": "p.Gln406Profs*30",
-      "variant_type": "frameshift deletion (228 nt deletion)",
-      "clinical_significance": "pathogenic",
-      "exon": "4",
-      "domain": "C-terminal region (beyond TRD; codon 406)"
+      "hgvs_c": "c.468C>G",
+      "hgvs_p": "p.D156E",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic (reported as disease-causing/diagnostic)",
+      "domain": "MBD"
     }
   ],
   "expected_evidence": [
@@ -44,7 +43,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "Заболевание спектра синдрома Ретта (Rett syndrome spectrum disorder / Rett-like syndrome)",
+      "value": "Rett syndrome",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -65,42 +64,42 @@
     },
     {
       "field_id": "A.variant_hgvs_c",
-      "value": "c.1217_1445del",
+      "value": "c.468C>G",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.Gln406Profs*30",
+      "value": "p.D156E",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_type",
-      "value": "frameshift deletion (228 nt deletion)",
+      "value": "missense",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "C-terminal region (beyond TRD; codon 406)",
+      "value": "MBD",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001250; HP:0001263; HP:0001249; HP:0002072; HP:0002376; HP:0001252; HP:0001290; HP:0001251; HP:0001344; HP:0002194; HP:0011968",
+      "value": "HP:0002376; HP:0001263; HP:0001344; HP:0001251; HP:0002072; HP:0001290; HP:0000568; HP:0001249; HP:0001250; HP:0000756; HP:0012759",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "эпилептические приступы (фармакорезистентная эпилепсия); задержка моторного развития; мозжечковая атаксия / шаткость походки; диффузная мышечная гипотония; регресс в психическом, речевом и двигательном развитии; умеренная умственная отсталость (IQ 44); задержка психоречевого развития; двигательные стереотипии рук (перебирание пальцами, размахивание, тряска кистями); утрата речи (отсутствие собственной речи); нарушение питания (снижение аппетита, отсутствие жевания, питание через зонд/гастростому); нарушение мелкой моторики, интенция и дисметрия в руках; уменьшение объема мозжечка / гипоплазия червя и гемисфер мозжечка (по МРТ); высокие сухожильные рефлексы, патологический рефлекс Бабинского",
+      "value": "регресс/утрата ранее приобретенных моторных навыков (developmental regression); задержка психомоторного развития (delayed psychomotor / global developmental delay); задержка речевого развития, речь на уровне звуковых комплексов (absent/impaired speech); нарушение походки, туловищная атаксия, интенция, дизметрия (gait ataxia); стереотипные движения руками моющего характера (hand stereotypies / hand-washing); диффузная мышечная гипотония (generalized hypotonia); альтернирующее косоглазие (strabismus); резко сниженный интеллект, тяжелая умственная отсталость (intellectual disability); эпилептиформная активность на ЭЭГ (seizures/epileptiform activity); аутоподобное поведение (autistic behavior); приступы апноэ (apnea / breathing abnormalities)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -114,14 +113,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "Задержка моторного развития с младенчества; дебют эпилептических приступов в возрасте 7 лет",
+      "value": "1 year 3 months (first symptoms)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "unknown (родители здоровы, статус de novo в тексте не указан)",
+      "value": "unknown",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -137,12 +136,12 @@
       "hgnc_id": "HGNC:6992"
     },
     "disease": {
-      "text": "Заболевание спектра синдрома Ретта (Rett syndrome spectrum disorder / Rett-like syndrome)",
+      "text": "Rett syndrome",
       "mondo_id": "MONDO:0010726"
     },
     "variants": [
       {
-        "text": "c.1217_1445del"
+        "text": "c.468C>G"
       }
     ]
   },

@@ -5534,3 +5534,32 @@ Cache clearing was needed: PostgreSQL `lingua.document_processing_cache` held st
 1. **数据集自包含原则**: 合并成标准数据集时,所有输入文件(expected.json+source全文+PDF,含多语言)必须物化进统一目录,不得回溯分散的原始位置,否则下游评估依赖外部路径、不可移植。
 2. **多语言文件命名统一**: source.md/source_{lang}.md 与 source.pdf/source_{lang}.pdf 一一对应,主语言(对DB数据集=英文原文)落source.*,其他落source_{lang}.*。
 3. **物化阶段与unify分离**: unify_entry保持纯函数(算字段),文件复制(PDF/markdown)在materialization循环,复制后再回写expected.json的source_pdf_path为本地路径——避免纯函数产生副作用。
+
+
+---
+
+## 2026-06-25 · 标注缺陷修复: evaluation_type 规则补全 + opus-4-8 重标注
+
+### 问题描述
+统一数据集质量审计发现两类真实标注缺陷:
+1. **clingen 8条×3字段=24个 `evaluation_type` 全缺失**: 评估代码按 precision_recall/precision_only 分流,缺失导致8条clingen无法正确评估。根因:原始clingen数据集生成时未加evaluation_type字段。
+2. **parkinson 5条 variant_hgvs_p 垃圾值**: gs_085存`"0.008,此处为等位基因频率的数据"`/`"(本文变异为GIGYF2突变）"`等; gs_092存`"case:control=2.6%:0.1%,使用等位基因频率作为对比"`; gs_093存`"LRRK2 G2019S"`混入基因名; gs_095/gs_096存中文注释/无关描述。根因:parkinson由XLSX自动转换,AI标注未过滤非HGVS值。
+
+### 排查过程
+- 系统化审计:对151条统一数据集expected_evidence,用正则检测evaluation_type缺失、variant_hgvs_p含频率/注释/基因名等垃圾模式。
+- 初审发现gs_085/gs_093;复审扩到gs_092/gs_095/gs_096(共5条)。
+- clingen评估依赖evaluation_type(evaluate_fused.py按该字段分流precision_recall/precision_only),缺则整条无法评估。
+
+### 解决方案
+**evaluation_type 补全**:新增 fix_annotation_defects.py,用字段目录规则(field catalog VARIANT_FIELD_IDS + D./J. → precision_only,其余 precision_recall)对clingen源expected.json补全。修复全部30条clingen(含未通过筛选的22条),90字段全部补全。不改原数据的新增字段,加candidates/source最小字段对齐unified schema。
+
+**parkinson 重标注**:扩展rett工具链(reannotate_unified.py),用 importlib 以唯一包名`rett_annotation_toolchain`加载rett/src(避免与backend/src冲突),从unified expected.json读源元数据,用opus-4-8重读source.md提取evidence+variants,merge回**源数据集**的expected.json(非unified,保证build重建时保留)。处理文章长度问题(48KB单chunk → 截断18K+chunk_size=6000),超时(300s→280s asyncio.wait_for)。
+
+结果: 5条parkinson全部修正为标准HGVS变异(gs_085: p.Asn56Ser等9个; gs_092: p.Gly2385Arg等2个; gs_093: N370S/L444P等正确归入variant_legacy_name; gs_095: p.G411S/p.Q456X; gs_096: p.Arg493*等11个)。全量审计缺陷清零。
+
+### 预防措施
+1. **evaluation_type 是评估硬依赖**: 新建数据集时expected_evidence的每条必须带evaluation_type(precision_recall/precision_only),否则评估引擎无法分流。新entry生成脚本应强制校验。
+2. **variant_hgvs_p 需语义验证**: 自动转换/AI标注的variant字段可能混入非HGVS值(频率、注释、基因名)。入库前应加正则验证:`^p\.`前缀或已知传统名(N370S等),拒绝频率/中文描述。建议在build_unified_dataset加variant卫生检查。
+3. **重标注必须写回源数据**: unified/是物化产物,重建会被覆盖。标注修复必须写回源数据集(expected.json),由build统一传播。
+4. **rett工具链跨包复用**: rett/src用相对导入,须以包形式注册(sys.modules),用唯一alias(rett_annotation_toolchain)避免与backend/src冲突。
+5. **opus-4-8大文章截断**: 48KB无标题分割文章送opus提143字段会超时(>280s)。截断18K(摘要+方法+结果)是实用权衡——变异信息通常在前半篇,完整提取需分段策略。

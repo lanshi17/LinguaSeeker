@@ -1,6 +1,6 @@
 {
   "unified_id": "gs_133",
-  "original_entry_id": "rett_064",
+  "original_entry_id": "rett_066",
   "source_dataset": "rett",
   "gold_source": "article",
   "annotation_provenance": "ai_auto_review",
@@ -15,56 +15,23 @@
   "classification_date": "",
   "clingen_report_url": "",
   "source_pmid": "",
-  "source_doi": "10.1371/journal.pone.0068851",
+  "source_doi": "",
   "source_pmc": "",
   "source_pdf_url": "",
   "source_pdf_path": "benchmark/data/ground_truth/unified/gs_133/source.pdf",
-  "source_title": "Abnormal Expression of Cerebrospinal Fluid Cation Chloride Cotransporters in Patients with Rett Syndrome",
-  "source_journal": "PLoS ONE",
-  "source_year": "2013",
-  "source_language": "en",
+  "source_title": "A Case of Rett Syndrome with MECP2 Gene Mutation",
+  "source_journal": "Journal of the Korean Pediatric Society (J Korean Pediatr Soc)",
+  "source_year": "2002",
+  "source_language": "ko",
   "variants": [
     {
       "source": "rett",
-      "hgvs_p": "p.Y141X",
-      "variant_type": "nonsense",
-      "domain": "MBD"
-    },
-    {
-      "source": "rett",
-      "hgvs_p": "p.R270X",
-      "variant_type": "nonsense",
-      "domain": "TRD"
-    },
-    {
-      "source": "rett",
-      "hgvs_c": "c.905C>T",
-      "hgvs_p": "p.P302H",
+      "hgvs_c": "c.455C>G",
+      "hgvs_p": "p.Pro152Arg",
       "variant_type": "missense",
-      "domain": "TRD"
-    },
-    {
-      "source": "rett",
-      "hgvs_p": "p.R306C",
-      "variant_type": "missense",
-      "domain": "TRD"
-    },
-    {
-      "source": "rett",
-      "hgvs_p": "p.R255X",
-      "variant_type": "nonsense",
-      "domain": "TRD"
-    },
-    {
-      "source": "rett",
-      "hgvs_p": "p.R294X",
-      "variant_type": "nonsense",
-      "domain": "TRD"
-    },
-    {
-      "source": "rett",
-      "variant_type": "deletion",
-      "exon": "exons 1-2"
+      "clinical_significance": "pathogenic",
+      "exon": "4",
+      "domain": "MBD (methyl binding domain)"
     }
   ],
   "expected_evidence": [
@@ -98,64 +65,42 @@
     },
     {
       "field_id": "A.variant_hgvs_c",
-      "value": "c.905C>T",
+      "value": "c.455C>G",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "p.Y141X",
-      "candidates": [
-        "p.Y141X",
-        "p.R270X",
-        "p.P302H",
-        "p.R306C",
-        "p.R255X",
-        "p.R294X"
-      ],
+      "value": "p.Pro152Arg",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_type",
-      "value": "nonsense",
-      "candidates": [
-        "nonsense",
-        "nonsense",
-        "missense",
-        "missense",
-        "nonsense",
-        "nonsense",
-        "deletion"
-      ],
+      "value": "missense",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD",
-      "candidates": [
-        "MBD",
-        "TRD",
-        "TRD",
-        "TRD",
-        "TRD",
-        "TRD"
-      ],
+      "value": "MBD (methyl binding domain)",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001250; HP:0012759; HP:0000756; HP:0001249; HP:0002376",
+      "value": "HP:0001263; HP:0002194; HP:0002072; HP:0002376; HP:0001344; HP:0001250; HP:0000756; HP:0001251; HP:0012759",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "epilepsy/seizures (generalized, partial, absence, atonic, refractory, status epilepticus); respiratory anomalies (hyperventilation bursts and apneas); autistic behavior; mental retardation; motor regression / failure to acquire new skills",
+      "value": "언어 및 운동 발달 지연 (language and motor developmental delay, severe); 운동 발달 지연 (delayed motor development; could not stand or walk at 22 months); 수부 운동 상동증 (hand stereotypies; repetitive hand-to-mouth movements, body rocking); 발달 퇴화 (developmental regression; gradual loss of purposeful hand use/grasping); 언어 소실 / 의미 있는 단어 표현 못함 (absent meaningful speech, only 'mama'/'dada'); 수면 뇌파상 다발성 극파 (multifocal spikes on sleep EEG; no clinical seizures observed in patient); 자폐증 (autistic behavior, described as Rett feature); 보행 운동 실조증 (gait ataxia, described as Rett feature); 간헐적 과호흡 (intermittent hyperventilation, described as Rett feature; not observed in this patient)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -169,14 +114,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "6-18 months",
+      "value": "infancy (delayed head control noted at 3-4 months; presented at 18-22 months)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "unknown",
+      "value": "de novo",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -197,22 +142,7 @@
     },
     "variants": [
       {
-        "text": "p.Y141X"
-      },
-      {
-        "text": "p.R270X"
-      },
-      {
-        "text": "c.905C>T"
-      },
-      {
-        "text": "p.R306C"
-      },
-      {
-        "text": "p.R255X"
-      },
-      {
-        "text": "p.R294X"
+        "text": "c.455C>G"
       }
     ]
   },

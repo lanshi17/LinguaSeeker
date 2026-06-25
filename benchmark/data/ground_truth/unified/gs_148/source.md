@@ -1,81 +1,112 @@
-# MECP2 基因新发突变致男童 Rett 综合征 1 例报告
+· 病例报告 ·
 
-葛俊文1　兰小平2　李红梅1　张儒舫1　沈　立1
+# 综合征 例及其 基因新突变
 
-上海交通大学附属儿童医院　上海市儿童医院1 .心胸外科，2 .分子实验室（上海　20060）
+胡 婷 ，李冰肖 ，张占会 ，柳国胜
 
-摘要： 目的　探讨Rett综合征的临床特点及致病基因。方法　回顾分析1例Rett综合征患儿的临床资料及二代测序结果，并进行相关文献复习。结果男性患儿,5个月，因间断咳嗽半月余人院，后自主呼吸障碍显著，语言能力丧失，手部技能丧失并出现刻板动作，生长发育迟滞。二代基因检测发现MECP2基因存在c.194delC(P.S65X)半合突变，此突变尚未见文献报道，其父母该位点均无变异。结论　发现国内首例MECP2基因致病突变导致男性Rett综合征。
+（暨南大学附属第一医院 儿科 ； 临床医学研究院 广东 广州 ）
 
-关键词： Rett综合征； MECP2基因；　突变
+关键词 ： 综合征 ；基因 ；突变
 
-Report of a boy with Rett syndrome caused by a novel MECP2 mutation and literature review GE Junwen1 , LAN Xiaoping2 , LI Hongmei1 , ZHANG Rufang1 , SHEN Li（1 1.Department of Cardiothoracic Surgery, 2.Department of Molecular Diagnostic Laboratory, Shanghai Children’s Hospital, Shanghai Jiao Tong University, Shanghai 200060, China）
+中图分类号 ：
 
-Abstract: Objective To explore clinical manifestations and genetic changes in Rett syndrome. Methods The clinical data and genetic changes identified by next generation sequencing of a boy with Rett syndrome were retrospectively analyzed, and relevant literatures were reviewed. Results A 5 months old boy presented with severe abnormal breathing, losing acquired purposeful hand skills and spoken language, hand stereotypies and gait abnormalities, and growth retardation. Genetic tests identified a novel c.194delC (P.S65X) hemizygous mutation in MECP2; which was not found in his parents. Conclusions Reports about male Rett syndrome patients are rare. This is the first case in China and it’s also the first review of published reports of Rett syndrome in Chinese male patients.
+文献标志码 ：
 
-Key words: Rett syndrome; MEPC2 gene; mutation
+文章编号 （ ） － －
 
-Rett综合征（Rett syndrome）是一种严重的神经发育障碍性疾病，受累患者多为女性，女性发病率约为1 : 10 000[1]。1999 年研究发现，X 染色体甲基化 CpG 结合蛋白2（MECP2）基因功能缺失性突变是Rett综合征最主要的原因[2]。MECP2突变曾有男性胚胎致死性的假说[3]，但20世纪80年代初，关于男性Rett综合征的个案已有报道，男性患者往往表型多样且较为严重。现报告1例MECP2基因突变（c.194delC）所致Rett综合征男性患儿，此突变为尚未见报道的新发突变。
+doi:10.3969/j.issn.1004—583X.2017.11.020
 
-## 1　临床资料
+年由德国医生 ［ ］ 首 次 报 道 综 合征（ ， ） ， 是一种严重影响神经系 统 发 育 的 疾 病 ， 发 病 率 为 ／ ～ ／［ － ］ ，多为散发， 主要累及女性， 是导致女性 严重智力障碍的主要病因之一， 仅 次 于 三 体 综 合征。 患儿 一 般 在 ～ 个 月 前 表 现 型 基 本 正 常 ， 之后逐渐出现严 重 的 精 神 运 动 发 育 迟 缓 及 倒 退、 手 的失用和刻板动 作、 语言发育障碍或倒退和孤独症样行为等。 主要是由位于染色体 上编码甲基 结合蛋白 （ － － ，）基因的突变引起的 ，但近年研究表明细胞周期 依 赖 性 激 酶 样 蛋 白 基 因 （ －－ ， ） 和 叉 头 框 蛋 白 基 因（ ， ）的突变［ ］也可导致本病的发生 我们通过临床表现及基因检测 ， 诊断例， 并发现 个 基因的致病突变 ， 此突变目前在国内未见正式的文献报道
 
-患儿男，5月龄，因间断咳嗽半月余入院。患儿住院期间自主呼吸障碍显著，予以呼吸机辅助呼吸、对症综合治疗后情况好转出院。半年后因发热，咳嗽气促2天再次入院。患儿系G1P1，36+ 3周顺产，出生体质量2 800 g。因胎膜早破至监护室住院11天，各项检查无异常出院。患儿生后喂养过程中频发吐奶，2个月时偶出现呼吸暂停、睡眠惊厥现象，未引起家长重视。4月龄可咿呀发音；8月龄发音逐渐减少，主动持物减少，同时出现手部刻板动作，表现为双手握拳、左手频繁触鼻；1岁仍不会抬头翻身，运动少，生长发育缓慢，四肢细小，末稍厥冷，肌张力增高。代谢性检查无明显异常。父母均体健，非近亲结婚。否认类似家族史和其他遗传病史。下丘脑及垂体磁共振（MRI）提示垂体信号欠佳，垂体后叶高信号未见，另见双侧额部脑外间隙增宽，双侧脑室饱满；T2W1矢状位口腔、鼻咽和口咽区见水样高信号。家属拒绝增强MRI检查。
+## 1 资料与方法
 
-征得患儿父母知情同意后，采集患儿及其父母EDTA抗凝外周血各2 mL，采用QIAamp DNA BloodMini Kit提取基因组NDA。基因检测采用全外显子测序结合Sanger测序验证策略进行。全外显子测序编码区的捕获采用 SeqCap EZ Human Exome Library v 3 . 0（Nimblegen）测序捕获系统，测序在 HiSeqTM 2000 上完成，结果比对参照人类基因组 GRCh37.p5（hg19）进行，变异注释过滤采用 Ingenuity Variant Analysis（QIGENE）进行。Sanger 测序在 3500 DX GeneticAnalyzer（ABI）上完成，结果分析采用 MutationSurveyor 4 . 0（SoftGenetics）软件完成。结果显示 ：患儿MECP2基因存在c.194delC致病性突变，此为无义突变（p.S65X），即核苷酸序列中194位碱基“C”缺失，导致氨基酸序列中65位丝氨酸变成了终止密码子，肽链合成提前终止，MECP2蛋白丢失主要的功能区域；患儿父母在该位点均无异常（图1）。结合患儿临床表现，最终确诊为先天型Rett综合征。明确诊断后主要采取对症支持治疗，但疗效不佳，患儿于18月龄在家中死亡，死因疑为“呼吸衰竭”。
+1．1 一般资料 患儿， 女， 岁， 年 月 日在广州华侨医院儿科诊断为典型 ，并经基因检测发现 错 意 突 变 ＞ ， 符 合 年 最新的 诊 断 标 准［ ］ 。 患者的父母及姐姐均身体健康 本研究进行 基因突变分析获得患儿家属的书面知 情 同 意， 该项目获得我院伦理委员会的批准 。 
+1．2 治疗经过 患儿因“智能及动作发育倒退 年”就诊于广州华侨医院 患儿系第 胎第 产，足月顺产，出生体重 ， 头围 ， 无缺氧窒息史。个月会抬头， 个月会坐， 个 月 会 发 单 音， 岁 开 始会说“爸 爸 、 妈 妈 、 上 街 、 拜 拜” 等 ， 喜 欢 听 讲 故 事 ， 会翻看图书、玩玩具。 岁时仍不会爬行， 扶物站立时
 
-![](images/495a07600791638333c605b140dc05d79a3d5ad00f52c9f4e7be05f7ddb360af.jpg)
+足尖着地，外院检查发现运动及智力发育迟缓 ，诊断为“脑性瘫痪” ， 给 予 脑 多 肽、 高 压 氧、 康 复 训 练 等 治疗。 岁 个月时会独自站立，行走。 岁开始出现智能及动作发育倒退 ， 表现为不说话，呼唤名字无反应，不懂人意；手部精细动作逐渐丧失，从翻书 打手势和玩玩具等，到完全不能持物，生活需人照料；双手出现不自主、刻板的扭绞动作。 近两年来出现磨牙，并发出声响，觉醒和睡眠时均可听到。 既往无病理性黄疸史，无神经系统感染史，无惊厥发作史，无头部外伤史。家族无类似病史 体格检查： 头围 ，神志清楚，营养良好，心、肺、腹无异常；四肢肌张力正常，肌力Ⅳ级，脑膜刺激征阴性，病理反射未引出；表情呆滞，对外界无反应，无人理睬时，长时间呆立或无目的的游走，步态不稳，无力爬楼；双手置于胸前，不自主、刻板地进行扭绞动作；时时磨牙，并发出声响。
+
+1．3 辅助检查 岁时头颅 提示轻度脑萎缩 ，脑发育不全。 岁 个月时头颅 示右侧小脑桥脑角囊肿 ， 脑白质发育不良。岁时头 颅 示右侧小脑桥脑角囊肿无明显变化。 岁时头颅 示右侧小脑桥脑角囊肿， 脑 萎 缩， 脑皮质轻度变薄。 脑 电图示 ：双侧半球广泛的 波，基本节律变慢。 眼底检查 ：视乳头稍苍白， 边界清。 染色体核型分析正常。血尿代谢筛查未见异常。 
+1．4 基因筛查 ①基因组 的提取 ： 抽取家系成员每人外周血 （四元羧酸乙二胺四乙酸抗凝） ，采用 公司提供的全血基因组纯化试剂盒提取基因组 ， 保存； ② 扩增引物 ： 基因 外 显 子 及 其 侧 翼 区 扩 增 所 用引 物 序 列 （ ’ － ’ ） 如 下 。 外 显 子 ：AATTCCGCCCACTAAACCAGTCC ,MECP2 外显子1R: CCATCCGCCAGCCGTGTCGTC。MECP2外显子 2F:AATACTTGCCAGAAATCGCCACTC ,MECP2外 显 子 ： 。MECP2 外 显 子 ：AGCCCAGAGTCCCTTGAAGTGC，MECP2 外显子3R:CACCCTGGGCACATACATTTTC 。 MECP2 外显子 4F: CACCCTGGGCACATACATTTTC ,MECP2
+
+外 显 子 ： 。③ 扩增 ： 反应体系 ：反应总体积为 μ ，含模板 μ （ 浓 度 为 ／ ） ， 上 下 游 引 物 各μ （ 浓 度 ／ ） ， μ （ 天 根 ） 。热循环条件 ： 预变性 分钟， 变性秒→ 退火 秒→ 延伸 秒，循环 次，最后 延长 分 钟， 琼脂糖凝胶电泳鉴定目的 产物。 ④基因测序 ：将 产物送至华大基因进行 测序。 应 用 在 线 致 病 性 分 析 软件 － 和 分析结果。
+
+## 2 结 果
+
+患儿家系的 基因 个外显子分析结果示 ：患者（女，双 染色体）携带一个同义突变＞ （ ） ， 同 时 携 带 一 个 错 义 突 变 ＞（ ） ， 见 图 。
+
+![](images/146f07e88ab70a36b9f88312ad369a7b5f33fbb62fdef049f9e0bd6b9ea637ce.jpg)
 
 <details>
-<summary>text_image</summary>
+<summary>line chart</summary>
 
-c.194delC
-AAAG CAG AGACAT-AGAAGGGTCA
-患儿
-母亲
-AAAG CAG AGACAT CAGAAGGGTCA
-父亲
-AAAG CAG AGACAT CAGAAGGGTCA
+| Group | c. 426 | c. 468 |
+|---------|--------|--------|
+| 患者 | G | T |
+| 患者 | T | A |
+| 患者 | C | T |
+| 患者 | T | G |
+| 患者 | G | A |
+| 患者 | A | A |
+| 患者 | G | A |
+| 父亲 | G | T |
+| 父亲 | T | A |
+| 父亲 | G | T |
+| 父亲 | A | G |
+| 父亲 | G | A |
+| 父亲 | A | A |
+| 母亲 | G | T |
+| 母亲 | T | A |
+| 母亲 | G | T |
+| 母亲 | A | G |
+| 母亲 | G | A |
+| 母亲 | A | A |
+| 姐姐 | G | T |
+| 姐姐 | T | A |
+| 姐姐 | G | T |
+| 姐姐 | A | G |
+| 姐姐 | G | A |
+| 姐姐 | A | A |
 </details>
 
-图1　患儿及其父母基因测序
+图1 患儿家系 MECP2基因外显子分析结果
 
-## 2　讨论
+同义突变 ＞ 遗传自患儿的父亲 ，且患儿的姐姐也同时携带， 但患儿的父亲及姐姐表现型均正常，说明此突变不是致病突变。 错义突变 ＞只在患儿中发现， 说明此突变为自发突变 患儿的 基 因 在 位 点 核 苷 酸 的 胞 嘧 啶（ ， ） 被 置 换 为 鸟 嘌 呤 （ ， ） ， 表 示 为＞ ； 相 应 在 氨 基 酸 位点的天冬氨酸（ ， ） 被 置 换 为 谷 氨 酸 （ ，） 表示为 使用在线 致病性分析软件 － 和 分 析 结 果 均 显 示错义突变 ＞ 为高可靠性致病突变
 
-Rett综合征男性患者罕见。第1例男性Rett综合征的报道是在1989年，至2015年国际上仅有 60例左右[4]。引发女性典型Rett综合征的MECP2突变如发生于男性，可表现为早期死亡、典型或非典型Rett综合征、非特异性精神发育迟滞、新生儿脑病等多种表型，表型多样性导致诊断更为困难。Rett综合征诊断主要根据临床表现，并分为典型与非典型Rett综合征。2010年国际Rett综合征临床研究学会提出了修订版诊断标准[5]。主要标准：①部分或完全丧失已获得的目的性手部技能；②部分或完全丧失已获得的语言功能；③步态异常，运动功能障碍（肌张力障碍性）或完全丧失；④手部刻板运动，如绞手、挤手、拍手等。支持标准：①清醒期呼吸异常；②清醒期磨牙；③睡眠节律紊乱；④肌张力异常；⑤周围血管舒缩障碍；⑥脊柱侧凸或后凸；⑦生长发育迟缓；⑧手足厥冷细小；⑨不合时宜的发笑或者尖叫；⑩痛觉敏感性下降；⑾强烈的眼神对视。
+## 3 讨 论
 
-典型Rett综合征诊断标准：①在一段发育倒退后出现一定能力的恢复或稳定期；②满足所有的主要标准及排除标准；③支持标准在典型Rett综合征中常见，但不是必须。典型Rett综合征排除标准：①围生期或生后获得性脑损伤，神经代谢性疾病或严重感染导致的获得性神经病变；②出生后前6个月具有严重的精神运动发育异常。为减少漏诊，此标准强调如患儿有生后头围增长减速表现就应该疑诊Rett综合征。
+就我们所知，该突变可在 数据库中查询到（ ： ＿ ＞ ） ，但国内未见于正式文献报道 是一种 连锁的主要影响女性神经系统发育的遗传性疾病 目前尚无生物学指标作为确诊依据 ， 诊断主要依靠临床表现 最新的诊断标准是由国际 研究协会在 年诊断标准的基础上修订而来 年 诊断标准［ ， ］ 如下所述 ： 当生后出现头围增长减速应怀疑可能 典型 诊断标准包括 ： ①在一段发育倒退期后出现一定能力的恢复或稳定期 ； ②符合所有的主要标准及排除标准 ； ③在典型的 中支持标准可有可无 非典型 诊断标准包括 ： ①在一段发育倒退期后出现一定能力的恢复或稳定期 ；② 条主要标准中至少满足 条； ③ 条支持标准中的任意 条 主要标准包括 ： ①部分或完全丧失已获得的手的技能； ②部分或完全丧失已获得的语言功能； ③步态异常 ： 运动功能障碍或完全丧失； ④手的刻板样动作 ： 如绞手 拍手 咬手 洗手 搓手等典型 的排除标准包括 ： ①围生期或生后获得性脑损伤，神经代谢性疾病或者严重感染导致的获得性神经病变； ②出生后前 个月有严重的精神运动发育异常 不典型 的支持标准包括 ： ①清醒期呼吸异 常 ； ②清 醒 期 磨 牙 ； ③睡 眠 节 律 紊 乱 ； ④肌 张力异常； ⑤周围血管舒缩障碍 ； ⑥脊柱侧凸或脊柱后凸； ⑦生长发育迟缓； ⑧手足厥冷 细小； ⑨不合时宜的发笑或尖叫发作 ； ⑩痛觉敏感性降低； 瑏瑡 眼神交流强 烈 。
 
-非典型Rett综合征诊断标准：①在一段发育倒退后出现一定能力的恢复或稳定期；②至少满足4条主要标准中的2条；③满足11条支持标准中的5条。非典型Rett综合征可根据临床特点，分为语言保留型、先天型和早发惊厥型。语言保留型：通常1\~3岁才出现发育倒退，手技能倒退较轻，语言功能到退后还可再恢复，平均恢复年龄在5岁，可能发生轻度智力障碍，孤独症样行为常见，癫痫和自主神经功能紊乱少见；先天型：出生后即显著发育异常，严重精神运动发育迟滞，不能走，典型Rett综合征样自主功能紊乱，手足厥冷细小等；早发惊厥型：早期出现惊厥发作，5月龄前出现婴儿痉挛、顽固性肌阵挛癫痫，惊厥在发育倒退之前出现[5]。
+研究表明不是所有 患儿都有生后头围增长减速， 因此 年最新诊断标准特别指出 ， 凡是生后出现头围增长减速的均应考虑 可 能［ ］ 。临床上将 分为典型和不典型两大类 典型的包括 个阶段 ： 第一阶段， 生后 个月， 生长发育迟滞期， 可出现头围增长减速； 第二阶段， 多发生在生后 ～ 岁， 智能及动作发育倒退期 ， 可出现手的刻板 样 动 作、孤 独 症 等 表 现； 第 三 阶 段， 多 发 生 在生后 ～ 岁 部分技能的恢复期或稳定期 可伴有癫痫（ ～ ） 呼吸异常 胃食管反流（ ）等症状； 第 四 阶 段， 运动能力的进行性退变期 ， 主 要 表现为共济失调，严重者可出现脊柱的侧凸或后凸， 四肢失用导致的肌肉萎缩或畸形等［ － ］ 不典型主要有 种 类 型， 分别为语言保留型、早 发 惊 厥 型、先天型［ － ］
 
-本例患儿生后早期即出现呼吸障碍、发育倒退和严重的精神运动发育迟滞等表现，结合基因检测结果，临床诊断为非典型Rett综合征先天型。
+近年研究表明 基因、 和叉头框蛋白 基因 （ ， ） 的突变［ ］均 可 导 致 其 中 ［ ］ 的 是 由 于基因的突变导致 ，包括 ～ 典型病例和 ～ 不典型病例［ ］ ， 在部分先天型 和 早 发惊 厥 型 不 典 型 中 可 发 现 基 因 及基 因 突 变 ［ ］ 。
 
-在典型Rett综合征患者中，MECP2突变率超过95%，非典型患者中MECP2突变率达到75%[6]。常见的点突变类型有8种，分别是R106W、R133C，T 158 M、R 168 X、R 255 X、R 270 X、R 294 X 和R306C[7]。除了MECP2以外，与Rett综合征相关的基因还包括CDKL5和FOXG1。研究发现，CDKL5基因突变可引起非典型早发惊厥型Rett综合征，但部分学者认为CKDL5突变是一种与早发性脑病相关的独立临床事件[8]。另外值得注意的是，先天性型Rett综合征虽属于非典型Rett综合征中的一种，但以往的报道中先天性型Rett综合征多与FOXG1突变有关而不是通常所认为的MECP2突变，其机制尚不明确[9]。本例患儿丧失了主要的MECP2功能结构域，临床表型严重，于18月龄死亡。此符合文献报道的MECP2早期截断突变患者通常表型严重的特点[ 10 ]。
+编码甲基 $\mathrm { C p G }$ 结合蛋白 的基因位于人类染色体 上， 包 含 个 外 显 子， 主 要 突 变 位 置 为外显子 和 ， 其中 外显子 的突变可导致典型的 但突变检出率低； 外显子 的突变目前尚未见文献报道［ ］ 。 据 张 晓 英等［ ］ 的临床研究表明 例 患儿中 （例）患儿的基因突变发生在第 或第 外 显 子， 仅例涉及第 外显子，未检出第 外显子，此结论与上述描述基本相符 基因的突变类型具有多样性，包括点突变 插入 剪切位点突变 小缺失及大片段缺失等， 其中点突变最常见， 常见的点突变有种 ， 分 别 为 ， ， ， ，， ， 及 ［8，10］ 。 甲 基$\mathrm { C p G }$ 结合蛋白 是一种高度丰富的染色质结合蛋白，该蛋白共有 个氨基酸，包括 个主要的功能域：即甲基化 $\mathrm { C p G }$ 结合区 （ ） 和转录抑制区 （ ） ［ － ］ 。具有维持蛋白结构稳定的作用， 的突变可降低 稳定性 导致 的功能障碍是 作为转录抑制物的主要连接域 介导转录水平的负性调节功能， 功能丧失，可能导致其他基因的过度表达， 导致中枢神经系统成熟障碍［ ］ 蛋白分布广泛 在中枢神经系统尤其丰富 刘卫鹏等［ － ］认为 蛋白可通过调控脑源性神经营养因子的表达而影响突触发育和神经元可塑性 进而引起脑发育障碍和认知运动功能落后 近年来研 究 人 员 通 过 构 建 敲 除 小 鼠［ ］ 来 研 究基因的突变导致 的机制，但对于其具体的作用机制及 的靶基因尚无明确的结论
 
-文献检索结果显示共有5篇文献，报道13例中国男性 Rett 综合征 [ 11 - 15 ]。本例 MECP2 突变致男性先天性型Rett综合征为国内首次报道，其所携带的c.194delC(P.S65X)突变在国内外文献中均未见报道。由于诊断标准的更新及基因检测等因素，美国男性Rett综合征的中位诊断年龄由1985年的6.17岁降低到了 2014 年的 2 . 54 岁 [ 16 ]。国内的中位诊断年龄约为2.67岁，本例患儿为国内最小确诊患儿。在临床信息完整的6例患儿中，2例曾分别诊断为“孤独症”和“婴儿痉挛症”。3例行脑电图检查者均异常。有研究者认为，虽然常规的脑电图检查阳性率较低，但如果从病史及体格检查中提示Rett综合征，或许可从其中挖掘出异常脑电图与Rett综合征之间的关联[ 17 , 18 ]，因此对于伴有惊厥和行为问题的精神发育迟滞患儿，推荐脑电图检查，但是否将异常脑电图表现作为Rett综合征早期观察指标目前尚未达成共识。
+迄今为止， 尚无有效的临床治疗手段 ，主要通过个体化治疗来改善相应的临床症状 ， 有物理疗法、言语疗法、音乐疗法、药物疗法、手术疗法等。 物理疗法即通过有目的的运动来预防或减轻肌肉萎缩 骨骼畸形等 言语疗法和音乐疗法均可有助于促进 患 儿 与 外 界 的 交 流。 在 药 物 治 疗 方 面，等［ ］认为胃饥饿素可改善 肌 张 力 障 碍 ， 减 少 震 颤 发作；丙戊酸虽能控制癫痫发作，但也 倍的增加了骨折的风险，相比之下拉莫三嗪则是更好的选择［ ］ ；重组人胰岛素样生长因子 ，在改善呼吸暂停和焦虑情绪方面的疗效是肯定的［ ， ］ 。 关于手术疗法 ，刘卫鹏等［ ］通过人神经前体细胞移植术证实患儿治疗前后的临床症状无 进 行 性 加 重 ， 提示人神经前体细胞可
 
-总之，Rett综合征缺乏有效的治疗手段，现阶段的治疗主要是改善临床症状。男性患者因表型多样性导致诊断更为困难，基因检查有助于男性Rett综合征的早期诊断和鉴别诊断。进一步的遗传学因素与表型研究可为疾病的具体机制和潜在的治疗方案提供线索。
+## 以延缓病情的进展
 
-## 参考文献：
+主要是由 基因突变导致的遗传性疾病，从原理上来讲，基因治疗是行之有效的治疗手段，可从根源上治疗此疾病。 因此，未来我们研究的重点方向是继续深入 研 究 基 因 突 变 导 致的发病机制， 并 由 此 为 出 发 点， 找 到 治 疗的有效方法。
 
-[1] Laurvick CL, de Klerk N, Bower C, et al. Rett syndrome in Australia: a review of the epidemiology [J]. J Pediatr, 2006,148(3): 347-352. 
-[2] Amir RE, Van den Veyver IB, Wan M, et al. Rett syndrome is caused by mutations in X-linked MECP2, encoding methyl-CpG-binding protein 2 [J]. Nat Genet, 1999, 23(2): 185-188. 
-[3] Hagberg B, Aicardi J, Dias K, et al. A progressive syndrome of autism, dementia, ataxia, and loss of purposeful hand use in girls: Rett's syndrome: report of 35 cases [J]. Ann Neurol, 1983,14(4): 471-479. 
-[4] Reichow B, George-Puskar A, Lutz T, et al. Brief report: systematic review of Rett syndrome in males [J]. J Autism Dev Disord, 2015,45(10): 3377-3383. 
-[5] Neul JL, Kaufmann WE, Glaze DG, et al. Rett syndrome: revised diagnostic criteria and nomenclature [J]. Ann Neurol, 2010, 68(6): 944-950. 
-[6] Neul JL, Lane JB, Lee HS, et al. Developmental delay in Rett syndrome: data from the natural history study [J]. J Neurodev Disord, 2014, 6(1): 20. 
-[7] Krishnaraj R, Ho G, Christodoulou J. RettBASE: Rett 
-syndrome database update [J]. Hum Mutat, 2017, 38(8): 922- 931. 
-[8] Fehr S, Wilson M, Downs J, et al. The CDKL5 disorder is an independent clinical entity associated with early-onset encephalopathy [J]. Eur J Hum Genet, 2013, 21(3): 266-273. 
-[9] Mencarelli MA, Spanhol-Rosseto A, Artuso R, et al. Novel FOXG1 mutations associated with the congenital variant of Rett syndrome [J]. J Med Genet, 2010, 47(1): 49-53. 
-[10] Charman T, Neilson TC, Mash V, et al. Dimensional phenotypic analysis and functional categorisation of mutations reveal novel genotype-phenotype associations in Rett syndrome [J]. Eur J Hum Genet, 2005, 13(10): 1121- 1130. 
-[11] 屈素清 , 詹东明 . Rett 综合征男童 1 例 [J]. 实用儿科临床杂志 , 2004, 19(6): 461． 
-[12] 陈思源 , 肖农 . Rett 综合征合并 Chiari 畸形男童 1 例并文献复习 [J]. 中国实用儿科杂志 , 2008, 23(12): 957-958 
-[13] 李文辉 , 王新华 , 宋义清 , 等 . 儿童 Rett 综合征 22 例临床特征分析 [J]. 中国实用儿科杂志 , 2012, 27(1): 66-68 
-[14] Tang J1, Qi Y, Bao XH, et al. Mutational analysis of mitochondrial dna of children with Rett syndrome [J]. Pediatr Neurol, 1997, 17: 327-330. 
-[15] Zhang Q, Wang J, Li J, et al. Novel FOXG1 mutations in Chinese patients with Rett syndrome or Rett-like mental retardation [J]. Bmc Med Genet, 2017, 18(1): 96. 
-[16] Tarquinio DC, Hou W, Neul JL, et al. Age of diagnosis in Rett syndrome: patterns of recognition among diagnosticians and risk factors for late diagnosis [J]. Pediatr Neurol, 2015, 52(6): 585-591. 
-[17] Shevell M, Ashwal S, Donley D, et al. Practice parameter: evaluation of the child with global developmental delay: report of the Quality Standards Subcommittee of the American Academy of Neurology and The Practice Committee of the Child Neurology Society [J]. Neurology, 2003, 60(3): 367-380 . 
-[18] Lv Y, Liu C, Shi M, et al. Clapping-surpressed focal spikes in EEG may be unique for the patients with rett syndrome: a case report [J]. Bmc Neurol, 2016, 16: 91.
+## 参考文献 ：
 
-（收稿日期：2018-03-16）
+[1]Rett A. On a unusual brain atrophy syndromein hyperammonemia in childhood[J].Wien Med Wochenschr, （ ） － 
+［ ］ ， ， ， ：Revised diagnostic criteria and nomenclature[J].Ann Neurol,， （ ） ： － 
+［ ］ ， ， ， ：syndrome database update[J].Hum Mutat,2017,38(8):922-931. 
+[4]Guerrini R,Parrini E.Epilepsy in Rett syndrome,and CDKL5-and FOXGl-gene-related encephalopathies[J].Epilepsia,2012,（ ） ： － 
+［ ］ 商婷婷 李廷玉 综合征发病机制研究及治疗进展［ ］ 儿科药学杂志 （ ） ： － 
+[6]Dziwota E,Falkowska U,Adamczyk K,et al.Silent angels thegenetic and clinical aspects of Rett syndrome[J].Curr Probl， ， （ ） ： － 
+[7]Naguy A,Yahya B.Rett syndrome-current status and future Directions[J].Pediatr Neurol,2017,70(5):e5-e6. 
+［ ］ 张晓英 ，赵滢 ，包新华 ，等 中国人群 综合征的遗传特点与机制研究［ ］ 中华医学遗传学杂志 （ ） － 
+［ ］ 程芹 吕康模 康涵 等 综合征临床分析及甲基化 结合蛋白－ 基因调查 ［ ］ 现代医药卫生 （ ） －1616. 
+［ ］ 白欣立 ，王秀霞 ， 张 会 丰 ， 等 儿 童 散 发 综合征临床特征、基因突变与遗传咨询 ［ ］ 中华实用儿科临床杂志（ ） － 
+［ ］ 赵培伟 何学莲 林俊 等 综合征的临床特点及基因突变分析［ ］ 中国当代儿科杂志 （ ） ： － 
+［ ］ 杨文旭 潘虹 在 综合征中的调控机制［ ］ 遗传（ ） － 
+［ ］ 刘卫鹏 ，王君 ，屈素清 ，等 人神经前体细胞移植治疗儿童广泛性发育障碍初探［ ］ 中国当代儿科杂志 ， ， （ ） ： －865. 
+［ ］ 陆斌 ，杨灿 ，熊志奇 雷特综合征与多巴胺系统功能障碍［ ］ 生命的化学 （ ） － 
+［ ］ 翟伟 ，胡宏秀 ， 乐 亮 ， 等 综合征相关基因 敲 除 大鼠模型的构建及分析［ ］ 遗传 （ ） － 
+[16]Yuge K,Hara M,Okabe R.Ghrel in improves dystonia and Tremor in patients with Rett syndrome：a pilot study[J].J Neurol Sci,2017,377(6):219-223. 
+［ ］ － ， ， ：Clinical trials[J].Neurotherapeutics,2015,12(3):631-640, 
+[18]Kaufmann WE， Stallworth JL，Everman DB， et al. Neurobiologically-basedtreatmentsinRettsyndrome: opportunities and challenges[J].Expert Opin Orphan Drugs, 2016，4(10)：1043-1055.
 
-（本文编辑：梁　华）
+收稿日期 ： － － 编辑 ：武峪峰

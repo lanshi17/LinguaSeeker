@@ -1,324 +1,138 @@
-# Abnormal Expression of Cerebrospinal Fluid Cation Chloride Cotransporters in Patients with Rett Syndrome
+# MECP2 유전자 돌연변이가 확인된 Rett 증후군 1례
 
-Sofia Temudo Duarte1,4,5\*, Judith Armstrong1,3, Ana Roche1 , Carlos Ortez1,3, Ana Pe´ rez1 , Maria del Mar O’Callaghan1 , Antonina Pereira4 , Francesc Sanmartı´ 1 , Aida Ormaza´ bal2,3, Rafael Artuch2,3, Mercedes Pineda1,3, Angels Garcı´a-Cazorla1,3
+대구가톨릭대학교 의과대학 소아과학교실 어린이발달클리닉,성균관대학교 의과대학 임상병리학교실\*
 
-1 Department of Neurology, Hospital Sant Joan de De´u (HSJD), Barcelona, Spain, 2 Department of Biochemistry, Hospital Sant Joan de De´u (HSJD), Barcelona, Spain, 3 CIBER-ER (Biomedical Network Research Centre on Rare Diseases, Instituto de Salud Carlos III), Madrid, Spain, 4 Instituto de Medicina Molecular, Faculdade de Medicina da Universidade de Lisboa, Lisboa, Portugal, 5 Instituto Gulbenkian de Cieˆncia, Oeiras, Portugal
+김진경·기창석\*·김종원\*
 
-## Abstract
+# A Case of Rett Syndrome with MECP2 Gene Mutation
 
-Rett Syndrome is a progressive neurodevelopmental disorder caused mainly by mutations in the gene encoding methyl-CpG-binding protein 2. The relevance of MeCP2 for GABAergic function was previously documented in animal models. In these models, animals show deficits in brain-derived neurotrophic factor, which is thought to contribute to the pathogenesis of this disease. Neuronal Cation Chloride Cotransporters (CCCs) play a key role in GABAergic neuronal maturation, and brain-derived neurotrophic factor is implicated in the regulation of CCCs expression during development. Our aim was to analyse the expression of two relevant CCCs, NKCC1 and KCC2, in the cerebrospinal fluid of Rett syndrome patients and compare it with a normal control group.
+Jin Kyung Kim, M.D., Chang Seok Ki, M.D.\* and Jong Won Kim, M.D.\*
 
-The presence of bumetanide sensitive NKCC1 and KCC2 was analysed in cerebrospinal fluid samples from a control pediatric population (1 day to 14 years of life) and from Rett syndrome patients (2 to 19 years of life), by immunoblot analysis.
+Department of Pediatrics, Child Development Clinic, The Catholic University of Korea, School of Medicine, Daegu, Department of Clinical Pathology\* , Sungkyunkwan University School of Medicine, Seoul, Korea
 
-Both proteins were detected in the cerebrospinal fluid and their levels are higher in the early postnatal period. However, Rett syndrome patients showed significantly reduced levels of KCC2 and KCC2/NKCC1 ratio when compared to the control group.
+Rett syndrome is an X-linked dominant, progressive neurodevelopmental disorder, with a prevalence estimated to be one in 10,000-15,000 girls, which is thought to be the second most common genetic causes of mental retardation in females after Down syndrome. Patients with classic Rett syndrome show an apparently normal neonatal period, followed by developmental regression and deceleration of head growth, accompanied by gradual loss of speech and purposeful hand use, and development of microcephaly, seizures, autism, ataxia, intermittent hyperventilation and stereotypic hand movements. After regression between infancy and the fifth year of life, the clinical course stabilizes and patients usually survive into adulthood. It was recently discovered that Rett syndrome is caused by mutations in the methyl-CpG binding protein 2(MECP2) gene. Diagnosis of Rett syndrome is clinically difficult before three years of age, especially in atypical cases, but molecular analysis of the MECP2 gene could assist correct diagnosis in some patients. Recently, we diagnosed a case of Rett syndrome in a two year-old girl by mutational analysis of the MECP2 gene and want to report this case with brief review of literature. (J Korean Pediatr Soc 2002;45:540-544)
 
-Reduced KCC2/NKCC1 ratio in the cerebrospinal fluid of Rett Syndrome patients suggests a disturbed process of GABAergic neuronal maturation and open up a new therapeutic perspective.
+Key Words : Rett syndrome, Methyl-CpG-binding protein 2 gene(MECP2), Mutation
 
-Citation: Duarte ST, Armstrong J, Roche A, Ortez C, Pe´rez A, et al. (2013) Abnormal Expression of Cerebrospinal Fluid Cation Chloride Cotransporters in Patients with Rett Syndrome. PLoS ONE 8(7): e68851. doi:10.1371/journal.pone.0068851
+## 서 昱
 
-Editor: Maurizio D’Esposito, Institute of Genetics and Biophysics, Italy
+Rett 증후군은 일반적으로 정상적인 신생아 시기를보이다가 성장하면서 두뇌 성장의 저하와 함께 의사소통 능력 소실, 수부 운동 상동증, 보행 운동 실조증,자폐증 등을 보이는 진행성 신경 발달 장애(neurode-velopmental disorder)이다. 여성에서 심한 정신 지체를 일으키는 유전 질환 중 다운 증후군 다음으로 많은
 
-Received December 12, 2012; Accepted June 5, 2013; Published July 19, 2013
+접수 : 2001년 10월 31일, 승인 : 2001년 11월 16일책임저자: 김진경, 대구가톨릭의대 소아과 어린이발달클리닉Tel : 053)650-4597 Fax : 053)623-7507E-mail : kimjk@cataegu.ac.kr
 
-Copyright: - 2013 Duarte et al. This is an open-access article distributed under the terms of the Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.
+데, 유병율은 12세 이하 여아 10,000-15,000명당 1명으로 추정된다. 우리나라에서도 1991년에 Choi 등1)이 5세 환아를 처음으로 보고하였다. 지금까지 진단에 특이적인 임상소견이나 검사결과가 없어, 2-5세 사이에추정 진단을 내리고 확진은 임상 증상을 지속적으로추적 관찰한 후에야 가능하였다. 1999년 Amir 등2)은X 염색체(Xq28)에 존재하는 MECP2(methyl-CpG-binding protein 2) 유전자의 돌연변이가 Rett 증후군과 관련되어 있음을 처음으로 보고하여 진단에 새로운장을 열었다. 저자들은 임상적으로 의심된 2세 여아에서 분자유전학적 검사로 Rett 증후군으로 진단하였기에 문헌 고찰과 함께 보고하는 바이다.
 
-Funding: This study was funded by ‘‘Real Patronato’’ (Spanish Ministry of Health and Social Policy), Tecnifar Epilepsy Research grant and FIS PS09/01132. Dr. Sofia T. Duarte has received a research grant from Portuguese League Against Epilepsy and from Tecnifar S.A. (Epilepsy research grant). Currently, Dr. Sofia Duarte integrates the Portuguese Programme for Advanced Medical Education, sponsored by Calouste Gulbenkian Foundation and Portuguese Foundation for Science and Technology. Dr. Carlos Ortez was supported by a grant from Caja Navarra. Dr. Mercedes Pineda is funded by a grant from ‘‘Real Patronato’’, Spanish Ministry of Social Politics. Dr. Angels Garcia-Cazorla is funded by the grant FIS PS09/01132. The funders had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.
+## 증 례
 
-Competing Interests: Dr. Sofia T. Duarte received a research grant from Portuguese League Against Epilepsy and from Tecnifar S.A. (Epilepsy research grant). There are no patents, products in development or marketed products to declare. This does not alter the authors’ adherence to all the PLOS ONE policies on sharing data and materials.
+환 아:김○정(여아, 18개월)
 
-\* E-mail: sofia.duarte22@hotmail.com
+주 소:언어 및 운동 발달 지연
 
-## Introduction
+현병력: 발달 지연에 대한 검사를 위해 본원에 내원 하였다. 환아는 소리나는 쪽을 향하여 고개를 돌릴수는 있었고, 텔레비전을 보거나, 노래를 틀어주면 듣는 것 같다고 하였으며, 얼러주면 웃으며, 눈맞춤은가능하나, ‘마마’, ‘다다’ 소리 외에는 의미 있는 단어를 표현하지는 못하였다. 다리를 뻗친 채로 앉아 양손으로 바닥을 반동적으로 치며 몸통을 앞뒤로 흔들거나, 양손을 입으로 반복적으로 가져갔다. 이전에는 한번씩 손으로 과자를 쥐고 입으로 가져가 먹은 적이있었다고 하나, 점차 스스로 물건을 쥐려하지 않으며,손에 장난감을 쥐어 주어도 쉽게 떨어졌다. 22개월이되어도 혼자 서거나 걷지 못하며 세워서 두 손을 잡고 억지로 걸리면 다리를 뻣뻣이 한 채로 불안정하게한 두 발자국 떼다가 곧 넘어졌다.
 
-Rett syndrome (RTT) is an X-linked neurodevelopmental disorder with an incidence of 1:10000 live female births and is one of the leading causes of mental retardation and autistic behavior in females [1]. Loss-of-function mutations in the gene encoding methyl-CpG binding protein 2 (MeCP2) cause most cases of RTT. Individuals affected with RTT experience normal development up to the age of 6–18 months, at which time they fail to acquire new skills and enter a period of motor regression [2]. Autistic features are a hallmark of this disorder and epilepsy is frequent [3]. RTT patient brain does not show obvious signs of neurodegeneration, atrophy, gliosis, demyelination, or neuronal migration defects [4,5], suggesting that neurological symptoms may primarily stem from subtle defects of subcellular compartments such as dendrites, axons, or synaptic structures [6]. MeCP2 is a transcriptional regulatory protein, and in its absence, a large number of genes exhibit abnormal expression with implications in the balance between synaptic excitation and inhibition [7,8]. MeCP2 might be particularly important to GABAergic function and there is evidence that the expression of MeCP2 is approximatelly 50% higher in GABAergic neurons when compared to non GABAergic neurons. Mice with conditional deletion of Mecp2 in GABAergic neurons initially show normal behavior but in the course of development start displaying forepaw stereotyped movements, compulsive grooming, impaired motor coordination, learning/memory deficits, abnormal EEG hyperexcitability, severe respiratory dysrhythmias and premature lethality [8].
+분만력 및 가족력 : 환아의 모는 26세의 초산부로임신 중 약물 복용 및 질병에 이환 된 산모력은 없었고, 환아는 재태기간 40주, 출생체중 3.1 kg으로 분만된 정상 신생아로 가족력과 출생력상에 특이 소견은없었다.
 
-c-aminobutyric acid (GABA) is the main inhibitory neurotransmitter in the adult brain. During early development, activation of the chloride- permeable, postsynaptic, GABAA receptors (GA-BAA-R) can induce depolarization and the basal intracellular chloride concentration is determinant for the action of GABA in the developing neurons [9]. Two major contributors to intracellular chloride concentration are NKCC1 (Na+ , K+ , 2Cl2 cotransporter, that accumulates chloride in the cell), and KCC2 (K+ , Cl2 cotransporter, that extrudes chloride). Several lines of research correlate epileptogenesis with altered function of NKCC1 and KCC2 [10,11]. In vitro, experiments suggest that bumetanide, a potent NKCC1 inhibitor, can increase GABAergic inhibition, in combination with phenobarbital [12]. Bumetanide has also been reported useful in a neonatal patient with seizures [13] and in autistic children [14].
+과거력: 생후 3-4개월경에 목가누기가 다른 아이들에 비해 조금 늦었다고 하며, 이후 배밀이를 제때에시작하지 않아 발달이 늦다고 부모들이 생각하기 시작하였으며, 점차 운동 및 언어 발달 지연을 보였다.
 
-Moreover, the brain of MeCP2 deficient animal models shows deficits in brain-derived neurotrophic factor [15] (BDNF), which is thought to contribute to the pathogenesis of RTT. BDNF can also promote the functional maturation of GABAA-R mediated responses by inducing upregulation of KCC2 [16,17,18].
+이학적 소견 : 신장 80 cm(10-25 백분위수), 체중10 kg(10 백분위수), 두위 47 cm(50 백분위수)로 소두증은 없었다. 맥박 및 호흡수는 정상 범위였고, 과호흡이나 무호흡은 관찰되지 않았다. 청진상 호흡음이나 심음은 정상이었으며, 복부에 특이한 소견은 없었다. 신경학적 검사상 뇌신경의 국소적 이상 소견은 없었고, 상지의 근력은 정상 범위였으나, 하지의 근력은경도로 저하되었다. 심부건 반사는 정상 범위였고 병적 반사는 보이지 않았다. 환아의 의식은 명료하며 눈맞춤은 가능하나, 언어적 의사 소통은 되지 않았고,낯선 환경에 관심을 보이지 않았다. 반복적으로 양손을 입으로 가져가거나, 앉혀 놓으면 몸을 앞뒤로 흔들며, 세우면 다리에 힘을 주지 못하여 혼자 서있지 못하였고, 다리를 뻗친 채로 있어서 걷지 못하였다.
 
-Human age related changes in GABAA-R physiology remain controversial, although neuropathological studies have already identified postnatal developmental changes of NKCC1 and KCC2 cortical expression [18]. The detection of synaptic proteins in the cerebrospinal fluid (CSF) gives us the possibility to indirectly access synaptic composition and alterations, using the CSF of patients with disorders related to neurotransmission, with the advantage of performing these studies in vivo [19].
+검사 소견: 일반 혈액 검사, 소변 검사, 일반 생화학 검사 상 정상 소견을 보였다. 뇌 자기 공명 영상은특이 소견이 없었으며, 갑상선 기능 검사, 염색체 검사, 혈액 아미노산 분석, 그리고 요 유기산 분석 모두정상 소견을 보였다. 환아는 경련을 한 적은 없었지만수면 뇌파 검사에서 양측 중심 측두부에서 다발성 극파(multifocal spike)가 자주 나타났다. Bayley 영유아 발달 검사에서 정신 및 운동발달 지수가 모두 50이하로 심한 발달 지연을 보였다.
 
-We hypothesize that changes in BDNF expression levels or the direct effect of the underlying genetic mutation can interfere with the normal expression of NKCC1 and KCC2 leading to a reduction in the KCC2/NKCC1 ratio, characteristic of the immature GABAergic system. A comparison of NKCC1 and KCC2 protein levels in the CSF of patients affected with RTT and a control population was made in order to address this question.
+유전자 분석: MECP2 유전자의 돌연변이 분석은직접염기서열 분석법을 이용하였다. 먼저 MECP2 유전자의 2번, 3번 및 4번 exon에 대해 자체 제작한 시발체를 이용하여 중합효소 연쇄반응을 시행하였고,exonuclease I과 shrimp alkaline phosphatase를 이용하여 비특이적 증폭 산물과 dNTP 등을 제거한 후,BigDye Terminator Cycle Sequencing kit(AppliedBiosystems, Foster City, CA, USA)와 자동염기서열 분석기 ABI 3100(Applied Biosystems, FosterCity, CA, USA)를 이용하여 직접염기서열 분석을시행하였다. 그 결과, MECP2 유전자의 4번째 ex-on 부위에서 455번째 염기(cDNA ATG 해독 시작서열 기준)인 cytosine이 guanine으로 치환된 c.455C>G 돌연변이가 확인되었다(Fig. 1). 이 돌연변이는MECP2 단백질의 methyl binding domain에 해당되는 152번째 아미노산을 proline에서 arginine으로 치환(P152R)시키게 되는 missense 돌연변이이며, 환자부모에 대한 유전자 분석 결과 정상 소견을 보여 denovo 돌연변이임이 확인되었다.
 
-## Patients and Methods
+![](images/1c38fb331d29cd9aa9c0d96f30acbd93259383e6462713641bc23e7359dcaa67.jpg)
 
-## Patients and Controls
+<details>
+<summary>line chart</summary>
 
-Sixteen patients with RTT were recruited to this study, aged between 2 to 19 years at the moment of CSF collection. Patients’ clinical characteristics are summarized in table 1. Patients without a documented mutation fulfilled clinical criteria for RTT according to the last updated revision [20]. The control study was performed in 67 subjects (age range: 1 day - 14 years; mean: 740 days; female: 27; male: 40) whose CSF samples were submitted to Hospital San Joan de Deu (HSJD) laboratory under suspicion of viral or bacterial meningitis or encephalitis. Exclusion criteria were: diagnosis of viral or bacterial meningitis, neurologic disease, and hematic or xantocromic CSF (blood contamination).
+| Group | C | T | G | G | A | C | C/G | T | Asn | G | A | T |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Leu | | | | | | | | | | | | |
+| Asp | | | | | | | | | | | | |
+| Pro/Arg | | | | | | | | | | | | |
+| Asn | | | | | | | | | | | | |
+| Asp | | | | | | | | | | | | |
+| Patient | | | | | | | | | | | | |
+| | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+| | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
+| | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 |
+| | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 5 |
+| | 6 | 6 | 6 | 6 | 6 | 6 | 6 | 6 | 6 | 6 | 6 | 6 |
+| | 7 | 7 | 7 | 7 | 7 | 7 | 7 | 7 | 7 | 7 | 7 | 7 |
+| | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 |
+| | 9 | 9 | 9 | 9 | 9 | 9 | 9 | 9 | 9 | 9 | 9 | 9 |
+| | 10 | 10 | 10 | 10 | 10 | 10 | 10 | 10 | 10 | 10 | 10 | 10 |
+| | | | | | | | | | | | | |
+</details>
 
-## CSF Samples
+Fig. 1. MECP2 sequencing analysis of the patient and her parents : a C to G substitution(arrow) in exon 4 region(c.455C>G; P152R) was observed only in the patient.
 
-CSF samples were collected by lumbar puncture as previously described [21]. They were obtained after parent’s written informed consent and in accordance with the Helsinki Declaration of 1964, as revised in 2000. The ethical committee of HSJD approved the study. After lumbar puncture, the first ten drops were used for routine cytochemical/microbiological studies and then CSF was immediately stored in 4 aliquots at 280uC until the moment of analysis. Biogenic amines metabolites and synaptic proteins were studied using the following 20 drops.
-
-NKCC1 and KCC2 expression levels were analyzed by western blot. Twenty mL of CSF were loaded on gel and proteins were separated on a 10% sodium dodecyl sulphate-polyacrylamide gel and transferred to polyvinylidene difluoride membrane (AmershamTM HybondTM –ECL, GE Healthcare). Membranes were blocked in TBST buffer (0.02 M Tris-base, pH7.6, 0.8% NaCl, 0.1% Tween 20) with 5% dry skimmed milk for 60 min at room temperature. Anti-NKCC1 (1:500; Santa Cruz BiotechnologyH) and anti-KCC2 (1:500; MilliporeH) antibodies were added and incubated at 4 uC overnight. Membranes were washed three times with TBST buffer followed by incubation with appropriate antirabbit (1:3000, PromegaH) IgG secondary antibody at room temperature for 1 h. The blot was then washed six times with TBST and signal was revealed with ECL (PierceH ECL Western Blotting Substract, Thermo Scientific). Relative levels of each protein were quantified by measuring optical densities (OD) of the corresponding bands with Quantity OneH V 4.3.1.software.
-
-## Statistical Analysis
-
-Statistical analysis was performed using IBM Statistical Package for the Social Sciences (IBM SPSS Statistics Version 19.0, SPSS Inc: Chicago, IL). A significance level of.05 was used in all analyses. Outlier analysis was done taking into account the primary variable in the study – healthy/RTT. Outliers (defined as values 1.5 times lower than the 1st quartile or 1.5 times higher than the 3rd quartile) [22] were found in 8 cases (1 Rett patient, 7 healthy controls) for KCC2/NKCC1 ratio, 4 cases for NKCC1 (1 Rett patient, 3 healthy controls) and in 1 case (healthy control) for KCC2. Outliers were excluded from the respective analyses.
-
-Non-parametric tests were applied when possible for age, NKCC1 and KCC2, since the assumption of normal distribution was not fulfilled for these variables.
-
-## Results
-
-Total CSF protein concentration values (M = 33.27, SD = 19.04, range: 7–73 g/l) were within normal limits according to different age ranges [23]. Clinical and genetic features of RTT patients are described in table 1. NKCC1 and KCC2 western blot analysis were performed on the CSF of controls and RTT patients. CCCs were detected in the CSF of this population, at the expected molecular weight (Figure 1A). Considering the reported sexually dimorphic expression of KCC2 and GABA function in the substantia nigra [24] it was decided to control for gender in all reported analysis.
-
-Furthermore, the homogenous distribution of the demographical variable age was verified with Mann-Whitney Test (U). Controls (M = 746.00 days, SD = 1075.89) were significantly (U = 932.00, p,.001) younger than RTT patients (M = 3444.69 days, SD = 2173.59) therefore we have controlled for this variable in all reported analysis (table S1).
-
-## KCC2 Expression is Decreased in the CSF of Rett Syndrome Patients
-
-As patients grew older their OD signal of KCC2 in the CSF decreased. Partial correlation analysis was performed to clarify the relationship between age and the OD signal of the different synaptic proteins (NKCC1, KCC2) in each group (RTT, Controls), controlling for the effect of gender. A negative correlation between age and the OD signal of KCC2 (r (74) = 2.292, n = 80, p,.05) has been clearly identified in our data, i.e. as the participants grew older their OD signal of KCC2 decreased, even when controlling for the effect of gender. Meaning that, KCC2 levels decrease in CSF throughout aging. However, concerning the OD signal of NKCC1 this correlation did not reach statistical significance $( r ~ ( 7 4 ) = - . 2 0 7 , \phi > . 0 5 )$ . Interestingly, if the effect of gender was not taken into consideration, a strong, negative correlation between age and the OD signal of KCC2 (rs $( 8 0 ) = - . 5 0 9 , \ : p { < } . 0 0 0 1 )$ and NKCC1 $( r _ { s } ~ ( 7 8 ) = ~ - . 4 7 2 , \ : p { < } . 0 0 0 1 )$ ) would have been identified in our data, i.e. as the participants grew older their OD signals of KCC2 and NKCC1 decrease.
-
-Table 1. Clinical and laboratory features of Rett Syndrome patients included in the study.
-
-<table><tr><td></td><td>Age (Years at CSF collection)</td><td>Genetic screening</td><td>Epilepsy</td><td>Medication (when LP was performed)</td><td>Respiratory anomalies</td><td>KCC2/NKCC1 (optical densities)</td></tr><tr><td>1</td><td>2</td><td>MECP2 screened, no alteration found</td><td>No</td><td>NO AED</td><td>No</td><td>36795/310023</td></tr><tr><td>2</td><td>2</td><td>P.Y141X</td><td>Refractory Epilepsy Generalized seizures</td><td>NO AED</td><td>No</td><td>0/242968</td></tr><tr><td>3</td><td>2</td><td>P.R270X</td><td>Refractory epilepsy</td><td>No AED</td><td>Severe syperventilation bursts and apneas</td><td>0/323889</td></tr><tr><td>4</td><td>4</td><td>P302H, 905C&gt;T</td><td>Generalized seizures from 2 years of life</td><td>No AED</td><td>Hyperventilation bursts</td><td>167071/228307</td></tr><tr><td>5</td><td>5</td><td>P.R306C</td><td>Epileptic status Generalized seizures from 4 years of life</td><td>VPA</td><td>Hyperventilation bursts and apneas</td><td>0/169395</td></tr><tr><td>6</td><td>6</td><td>MECP2, CDKL5 screened, no alteration found</td><td>Generalized seizures since 8 years of life</td><td>CBZ</td><td>Hyperventilation bursts</td><td>177102/257110</td></tr><tr><td>7</td><td>7</td><td>MECP2, CDKL5 screened, no alteration found</td><td>Reflex seizures Abcences Atonic seizures</td><td>No AED</td><td>No</td><td>28646/296735</td></tr><tr><td>8</td><td>8</td><td>P.R255X</td><td>Generalized seizures from 2 years of life</td><td>VPA</td><td>Hyperventilation bursts and apneas</td><td>15584/342592</td></tr><tr><td>9</td><td>9</td><td>MECP2, CDKL5 screened, no alteration found</td><td>Refractory epilepsy</td><td>VPA TPM</td><td>Severe Hyperventilation and apneas</td><td>0/54010</td></tr><tr><td>10</td><td>10</td><td>P.R306C</td><td>Absences and partial seizures from 8 years</td><td>CBZ</td><td>Hyperventilation bursts</td><td>155391/621440</td></tr><tr><td>11</td><td>11</td><td>DEL EX.1-2</td><td>Generalized seizures from 8 years</td><td>No AED</td><td>Hyperventilation</td><td>91959/527745</td></tr><tr><td>12</td><td>16</td><td>MECP2, CDKL5 screened, no alteration found</td><td>Generalized seizures from 11 years of life</td><td>No AED (VPA was withdrawn 2 years before LP)</td><td>Hyperventilation</td><td>156883/445649</td></tr><tr><td>13</td><td>16</td><td>MECP2, CDKL5screened, no alteration found. Polymorphism in NTNG1</td><td>Generalized and absence seizures from 14 years of life</td><td>VPA CBZ</td><td>Hyperventilation bursts</td><td>164531/259927</td></tr><tr><td>14</td><td>16</td><td>P.R294X</td><td>Generalized Seizures from 6 years of life</td><td>CBZ LEV</td><td>Hyperventilation bursts</td><td>219795/281395</td></tr><tr><td>15</td><td>18</td><td>MECP2, CDKL5 screened, no alteration found</td><td>Partial seizures</td><td>CBZ</td><td>Hyperventilation</td><td>7000/535292</td></tr><tr><td>16</td><td>19</td><td>P.R294X</td><td>Partial, secondarily generalized and absences</td><td>CBZ</td><td>Hyperventilation bursts and apneas</td><td>604155/28867</td></tr></table>
-
-DEL: Deletion. LP: Lumbar Puncture. AED: Anti epileptic drugs. VPA: Valproic Acid. CBZ: Carbamazepine. LEV: Levetiracetam. TPM: Topiramate. doi:10.1371/journal.pone.0068851.t001
-
-## Rett Patients Present a Significantly Lower OD Signal of KCC2 than Healthy Controls (Figure 1B)
-
-To determine whether there were statistically significant differences in the OD signal of the different synaptic proteins (NKCC1, KCC2) between healthy controls and RTT patients, a between-subjects MANCOVA was performed, controlling for the effects of age and gender. This analysis revealed a statistically significant difference between healthy controls and RTT patients,
-
-$F \left( 1 , 7 3 \right) = 6 . 9 9 , { p < . 0 1 } , { \eta _ { \scriptscriptstyle { \phi } } } ^ { \mathrm { 2 } } = . 0 8 7$ even when controlling for the possible confounding effects of age and gender. The subsequent follow-up Univariate ANCOVAs run to specify the characteristics of this finding revealed that RTT patients presented a significantly lower OD signal of KCC2 $( M { \bar { = } } { \bar { 8 } } 1 3 8 3 . { \bar { 8 0 } } , \ S D { = } 8 2 3 7 { \bar { 0 } } . 9 9 ; \ F \ ( 1$ , $7 6 ) = 1 2 . 2 8 , ~ \ p < . 0 0 1 , ~ \eta _ { \rho } ^ { \ 2 } = . 1 3 9 )$ than healthy controls $( M = 6 9 2 6 6 3 . 5 2 , \ S D = 4 2 5 7 5 3 . 9 1 )$ . Notwithstanding, NKCC1 expression does not differ significantly between patients $( M = 3 0 7 8 3 4 . 2 5 , ~ S D = 1 6 2 5 9 2 . 5 9 )$ and healthy controls, $( M = 6 0 8 7 0 3 . 2 7 , S D = 4 1 6 1 5 7 . 3 3 ; F \left( 1 , 7 4 \right) = 1 . 8 7 , \beta > . 0 5 )$ .
-
-## KCC2/NKCC1 Ratio is Decreased in the CSF of Rett Syndrome Patients
-
-To determine whether there were significant differences in the ratio of the two synaptic proteins (KCC2/NKCC1) on the CSF of the healthy population and RTT patients a between-subjects
-
-A. 
-![](images/f81f25145ea1aa4e18960bc9dda00e1bd6a7887ea079ab4e4396474f4788fe83.jpg)
+![](images/dd372d2427e8c60f1b38dd5010708ed6b9391782610c481b47956af9a343f271.jpg)
 
 <details>
 <summary>text_image</summary>
 
-NKCC1
-9 14 4 16 6 13 3 5 2 15
-7 8 1 12 10 11
-Patients
-Controls
-KCC2
-9 14 4 16 6 13 3 5 2 15
-7 8 1 12 10 11
-Patients
-Controls
+R106W
+MBD
+P152R
+T158M
+R306C
+MBD
+TRD
+R168X
+R270X
+R255X
+R294X
 </details>
 
-B.
+Fig. 2. P152R mutation and hotspots for mutations in the MECP2 gene with Rett syndrome.
 
-![](images/e9b738e206603acf55334df8878f4104b1725cdecca58310dc54139053782f8b.jpg)
+## 고 찰
 
-<details>
-<summary>bar chart</summary>
+Rett 증후군은 1966년 Andress Rett에 의해 처음으로 언급되었으며, 1983년 Hagberg 등3)이 유사 증상이 있는 35명을 보고하였다. 처음에는 드문 질환으로 알려졌으나, 계속되는 보고로 유병율은 12세 이하여아 10,000-15,000명당 1명 정도로 알려져 있다. 이는 여성의 심한 정신 지체를 야기하는 유전적 원인질환 중에서 다운 증후군 다음의 빈도이다.
 
-| Cotransporter Proteins | Controls (Mean Optic Densities) | RTT Patients (Mean Optic Densities) |
-| :--- | :--- | :--- |
-| NKCC1 OD | 610,000 | 330,000 |
-| KCC2 OD | 740,000 | 85,000 |
-Error Bars: 95% CI
-</details>
+진단에 있어서 특이한 임상 및 검사실 소견이 없어, 지금까지는 1988년에 세계 레트 증후군 협회(In-ternational Rett Syndrome Association and theCenters for Disease Control)에서 발표한 임상적 진단 기준에 크게 의존하고 있다4).
 
-Figure 1. NKCC1 and KCC2 Cotransporters in the CSF of Rett Syndrome (RTT) Patients and Controls. (A) Immunoblot results in RTT patients and controls. Numbers refer to the patient ID numbers of Table 1. Comparison of patients and age matched controls. (B) Mean Optic Densities of NKCC1 and KCC2 Cotransporter Proteins for Rett Patients and Controls suggesting discrepant cotransporter levels between Patients and Controls supported by the respective MANCOVA $( F \left( 1 , 7 3 \right) = 6 . 9 9 , p { < . 0 1 } , { \eta _ { p } } ^ { 2 } = . 0 8 7 )$ . Error bars represent 95% Confidence Interval. \*p,.01. doi:10.1371/journal.pone.0068851.g001
+Rett 증후군의 임상 증상은 수년에 걸쳐 단계적으로 진행되어 나타나는데, 진행 양상에 따라 Hagberg등은 4기로 나누었다5). 제1기는 조기 퇴화 발현 시기로 생후 6개월에서 1년 6개월 사이에 나타나 수개월간 지속된다. 근 긴장도의 저하가 있을 수 있으나 특이한 임상 증상 없이 정신 및 운동 발달이 지연된다.제 2기는 1세에서 4세 사이에 나타나는데, 급속한 발달의 퇴화 시기이다. 의사 소통의 장애와 의도적인 손기능이 상실되는데 손을 입으로 자주 가져가는 동작이 처음으로 나타난다. 이르면 2세 경부터 불규칙한호흡이나 과호흡을 보일 수 있는데 깨어 있는 동안에나타나며, 잠든 동안에는 소실된다. 제 3기는 가성 정체기로서 학동전기에서 학동기(2세에서 10세)까지 나타나는데 수년간 지속된다. 그 전 단계인 급속한 발달의 퇴화 이후에 오는 시기로 실행증, 운동 장애, 경련이 보다 두드러지나 자폐적 특징이 줄어 발달이 향상되는 것처럼 보여진다. 대부분의 환아는 3기에서 유지되는 편이다. 제 4기는 후기 운동 퇴화기로서 10세이후에 시작되며 수십년간 지속되며, 척추 만곡증의진행과 운동성의 감소를 보인다. 환아의 1/3 정도에서경련이 있으며, 경련이 없더라도 대부분의 환아에서 비정상 뇌파 검사 소견을 보인다. 즉 배경 뇌파에서는 규칙적인 서파가 증가되는 경우가 많고 극파나 예파가뇌의 중심 1/3에서 잘 나타나며, 수면 초기(NREMsleep stage 1, 2)에 극파 빈도가 증가함으로 수면 뇌파검사가 진단에 도움이 된다고 하였다6).
 
-ANCOVA was performed, controlling for the effect of age and gender. This analysis revealed a statistically significant difference between Healthy controls and RTT patients, $F \left( 1 , 7 0 \right) = 2 6 . 5 6 ,$ , $\rho { < } . 0 0 1 , ~ { \eta _ { \mathnormal } } ^ { 2 } { = } . \dot { 2 } 8$ even when controlling for the possible confounding effect of age and gender (figure 2B and 2C). RTT patients presented a significantly lower KCC2/NKCC1 ratio $( M = . 2 6 , \ S D = . 3 0 )$ than Healthy controls $( M = 1 . 0 8 , \ S D = . 5 6 )$ . Even if the effects of age and gender would not have been controlled for in the analysis the decrease in KCC2/NKCC1 ratio was still significant $( F ( 1 , 7 0 ) = 3 0 . 0 8 , \phi = . 0 0 1 , { \eta _ { \phi } } ^ { 2 } = . 2 9 )$ .
+심한 임상 소견에 비하여 뇌 CT나 MRI에서는 분명한 형태적 변화는 없으나 뇌피질 특히 전전두엽의위축을 주로 보이며, 때로 뇌간이 좁아져 있거나 뇌량형성부전이 있을 수 있다. 또한 전전두엽과 측두 두정골 연합 영역으로의 혈류가 영아기 뇌에서처럼 저하되어 있다고 하며, 병리적 소견에서 뇌 세포 이주 장애 소견이나 급성 퇴행성 소견, 염증 소견 등은 보이지 않고 단지 전반적인 뇌 위축 소견을 보인다. Bau-man 등7)에 의하면 뇌피질, 시상, 기저핵, 편도체, 해마, 내비피질(entorhinal cortex)에 있는 신경 세포의크기가 뇌의 다른 부위에 비해 더 작고 세포 밀도(cell packing density)는 더 증가되어 있다고 한다.Armstrong 등8)에 의하면 환자에서는 수상 돌기의 길이 및 수지화가 저하되어 있는데, 이는 다운 증후군등의 정신 지체를 야기하는 다른 질환에서도 볼 수있으나, 환자에서는 전두엽 및 운동 중추피질과 변연부에서 다운 증후군에서 보이는 소견보다 특히 더 저하되어 있다고 한다. 또한 microtubule associatedprotein(MAPs) 중 수상 돌기의 성장과 neuronal po-larity에 중요한 MAP2가 특히 저하되어 있어 신피질이 성숙(neocortical maturation)하는 초기에 발달이정지되었다는 것을 시사한다고 하며9), 그리고 신경전달 물질인 dopamine, serotonine, noradrenaline,acetylcholine glutamate나 biogenic amines, opioids등이 비정상적이라고 한다, Blue 등10)은 어린 환아의전두엽의 superior frontal gyrus에 glutamate 수용체 및 Gammaaminobutyric acid(GABA) 수용체가증가되어 있는데, 이는 나이가 들어감에 따라 감소된다고 하였으며, 8세 이상아에서는 basal ganglia의ionotropic glutamate 수용체가 매우 저하된다고 한다. Superior frontal gyrus에 있는 N-methyl-D-aspartate 수용체의 밀도가 나이에 따라 변화하는 것은 환자가 어린 시절(stage II-III)에 급속하게 발달이퇴화되고 경련이 나타나다가 나이가 들면서 경련 발작이 덜 해지는 시기로 이행되는 것과 관련이 있는것으로 보고하였다.
 
-## Discussion
+Rett 증후군은 비교적 흔한 질환임에도 불구하고진단이 용이하지 않은 것은 오랜 기간 환아의 성장발달의 관찰을 통해서 진단이 가능하고, 증상 또한 전형적인 Rett 증후군과 달리 증상이 중하거나 혹은 경한 비전형적인 예가 많기 때문이다. 영아 초기부터 정상적인 발달 기간이 없이 심한 발달 지연이 있거나,영아 연축이나 선천성 저긴장증을 보이기도 하지만,경련이나 심한 정신 지체를 보이지 않는 경한 증세를나타내기도 한다. 또한 neuronal ceroid lipofuscino-sis나 Angelman 증후군, 전반적 발달 장애(pervasivedevelopmental disorder)와의 감별 진단이 필요하며,청소년기에서는 많은 다른 장애에서 이차적으로 나타날 수 있는 흔하고 복잡한 증상을 나타내므로 진단에어려움이 있다11).
 
-In this study, we demonstrate reduced KCC2 levels and KCC2/NKCC1 ratio in the CSF of RTT patients. These findings suggest that altered inhibitory GABA function can underlie the pathophysiology of RTT and also play a role in the epileptogenesis of this neurodevelopmental disorder, in which epilepsy is present in around 70% of patients [3]. Detection of transmembrane synaptic proteins in the CSF is a useful tool in the study of neurotransmission disorders, as recently reported by our group [19]. Despite their low abundance compared to the global CSF
+Rett 증후군의 99.5%가 산발적(sporadic)으로 발생하고, 여성에서만 발현하며, 드물지만 가족에서 발생한 예가 있어 X 연관 우성 유전질환으로 분류되어 왔다. 모계에서 돌연변이가 있는 염색체가 불활성화 되면 보인자로 정상적인 생활을 하거나 경한 증상을 보일 수 있으며, 남아에서 이환된 경우는 선천성 저긴장증, 호흡부전, 경련, 또는 심한 장 기능 장애(intesti-nal dysfunction)로 유아기 때 사망하였다고 한다12).1992년 Ellison 등13)은 가족에서 발생한 예의 가계조사를 통해 Xq27.3-Xqter 부위의 관련성을 보고하였고, 1999년 Amir 등2)은 환자의 Xq28 부위의 염기서열을 분석하여 methyl-CpG-binding protein 2(MECP2) 유전자에 돌연 변이가 있음을 확인하였다.
 
-![](images/d89c620b0a4a7d8f18950b224bc9998eb9dce2af747fecc6e88aecde2ca42221.jpg)
+MECP2는 대부분의 조직에서 발현하는 methyl-CpG-binding protein 2의 유전자이다. 이 단백질은모두 486개의 아미노산으로 구성되어 있는데, 84개의아미노산으로 이루어진 methyl CpG 결합부위(meth-yl binding domain, MBD)와 104개의 아미노산으로이루어진 전사억제부위(transcription repression do-main, TRD)가 CpG dinucleotides와 선택적으로 결합하여 전사 억제 기능을 담당한다고 한다14). Rett 증후군의 80% 정도에서 MECP2에 돌연변이를 관찰할수 있다고 Amir 등12)이 보고하였다.
 
-<details>
-<summary>text_image</summary>
+저자들도 Rett 증후군이 의심된 본 환아에서 직접염기서열 분석법을 이용하여 MECP2 유전자의 MBD부위의 P152R 돌연변이를 관찰할 수 있었다(Fig. 2).이 돌연변이는 MECP2 단백질의 methyl bindingdomain에 해당되는 152번째 아미노산을 proline에서arginine으로 치환시키게 되는 과오돌연변이(mis-sense mutation)이며, 환자 부모에 대한 유전자 분석결과 정상 소견을 보여 de novo 돌연변이임이 확인되었다. Cheadle 등15)과 Laccone 등16)도 P152R 돌연변이를 보고하였다. 168례를 분석한 Webb 등17)의 조사에 의하면 돌연변이는 30부위에서 발생하였는데, 주요 호발 부위로는 R168X로 38례에서 관찰할 수 있었으며, R255X는 24례에서 관찰할 수 있었고, 본 증례에서 관찰된 P152R도 4례 보고하였다.
 
-A
-11d 16d 90d 106d 1y 6y
-NKCC1 170KDa
-KCC2 140KDa
-Ponceau
-</details>
+돌연변이의 양상과 다양한 임상양상과의 관련성을많은 연구자들이 조사하였는데, Amir 등18)은 호흡이상 그리고 뇌척수액에서의 낮은 바닐 만데릭산(va-nillymandellic acid) 농도와 무의미 돌연변이(non-sense mutation)와 관련성이 높다고 하였고, Cheadle등15)은 과오 돌연변이(missense mutation)가 있는 예가 무의미 돌연변이가 있는 예 보다 증세가 다소 경미하다고 하였다. 그러나 같은 돌연변이형에서도 다양한 증상이 나타나므로 MECP2 유전자의 이상 외에X 염색체 불활성화 등 복잡한 기전이 증상 발현에 관여하는 것으로 생각된다. MECP2는 뇌를 비롯한 모든 장기에 존재하는 유전자이다. 그러나 발현양상과MECP2 단백의 역할은 조직마다 서로 다른 것으로알려져 있다. 태아의 뇌에서 발견되는 MECP2 유전자의 전사물은 주로 10.1 Kb의 크기인데 반해 태아의간에서 발견되는 전사물은 1.8 Kb 그리고 5 Kb의 크기가 대부분인 것이 이를 뒷받침하여 주고 있다.MECP2 유전자의 이상이 어떤 기전에 의해서 Rett증후군을 일으키는가 하는 것을 규명하는 것은 앞으로 풀어야할 과제이다.
 
-![](images/6bb99f20d1796e85ec75200d93eee8153d7880e72f537ec00296835826c24f53.jpg)
+유전자검사가 다른 질환에서와 마찬가지로 Rett 증후군의 임상적 진단을 보완하거나 이를 대체해 나가고 있다. Inui 등19)은 Rett 증후군의 필수 진단기준 9가지를 다 만족하지 않고 5가지 이상만 있는 비전형적인 형에서도 MECP2의 돌연변이 검사가 필요하다고 하였으며, Kerr 등20)은 영유아에서 발달 지연, 저긴장증, 심한 수유곤란, 심한 운동성 저하, 진전, 두위성장률의 저하, 간질 등 중에서 몇 가지의 소견이라도있으면 선별 검사의 하나로 MECP2 유전자검사가필요하며, 영유아 시기 이후에는 발달 지연의 과거력,언어 능력의 퇴화, 의도적인 손 기능의 퇴화, 상동적인 동작이나 진전, 보행 실조, 자폐적 성향 등을 보이는 경우에 검사가 필요하다고 하였다.
 
-<details>
-<summary>scatterplot</summary>
+## 요 약
 
-| AGE (in days) | KCC2 / NKCC1 | Group |
-| --- | --- | --- |
-| 0 | 2.6 | Control |
-| 0 | 1.7 | Control |
-| 0 | 1.5 | Control |
-| 0 | 1.3 | Control |
-| 0 | 1.1 | Control |
-| 0 | 0.9 | Control |
-| 0 | 0.7 | Control |
-| 0 | 0.5 | Control |
-| 0 | 0.3 | Control |
-| 0 | 0.1 | Control |
-| 0 | 0.0 | Control |
-| 500 | 1.8 | Control |
-| 500 | 1.6 | Control |
-| 500 | 1.4 | Control |
-| 500 | 1.2 | Control |
-| 500 | 1.0 | Control |
-| 500 | 0.8 | Control |
-| 500 | 0.6 | Control |
-| 500 | 0.4 | Control |
-| 500 | 0.2 | Control |
-| 500 | 0.1 | Control |
-| 1000 | 1.7 | Control |
-| 1000 | 1.5 | Control |
-| 1000 | 1.3 | Control |
-| 1000 | 1.1 | Control |
-| 1000 | 0.9 | Control |
-| 1000 | 0.7 | Control |
-| 1000 | 0.5 | Control |
-| 1000 | 0.3 | Control |
-| 1000 | 0.1 | Control |
-| 1500 | 1.5 | Control |
-| 1500 | 1.3 | Control |
-| 1500 | 1.1 | Control |
-| 1500 | 0.9 | Control |
-| 1500 | 0.7 | Control |
-| 1500 | 0.5 | Control |
-| 1500 | 0.3 | Control |
-| 1500 | 0.1 | Control |
-| 2000 | 2.0 | Control |
-| 2000 | 1.8 | Control |
-| 2000 | 1.6 | Control |
-| 2000 | 1.4 | Control |
-| 2000 | 1.2 | Control |
-| 2000 | 1.0 | Control |
-| 2000 | 0.8 | Control |
-| 2000 | 0.6 | Control |
-| 2500 | 1.7 | Control |
-| 2500 | 1.5 | Control |
-| 2500 | 1.3 | Control |
-| 2500 | 1.1 | Control |
-| 2500 | 0.9 | Control |
-| 2500 | 0.7 | Control |
-| 2500 | 0.5 | Control |
-| 2500 | 0.3 | Control |
-| 3000 | 1.6 | Control |
-| 3000 | 1.4 | Control |
-| 3000 | 1.2 | Control |
-| 3000 | 1.0 | Control |
-| 3500 | 1.5 | Control |
-| 3500 | 1.3 | Control |
-| 3500 | 1.1 | Control |
-| 3500 | 0.9 | Control |
-| 4525 | 1.45 | Control |
-| 4525 | 1.35 | Control |
-| 4525 | 1.25 | Control |
-| 4525 | 1.15 | Control |
-| 4525 | 1.05 | Control |
-| 4525 | 1.95 | Control |
-| 4525 | 1.85 | Control |
-| 4525 | 1.75 | Control |
-| 4525 | 1.65 | Control |
-| 4525 | 1.55 | Control |
-| 4525 | 1.45 | Control |
-| 4525 | 1.35 | Control |
-| 4525 | 1.25 | Control |
-| 4525 | 1.15 | Control |
-| 4525 | 1.95 | RTT Patient |
-| 4525 | 1.85 | RTT Patient |
-| 4525 | 1.75 | RTT Patient |
-| 4525 | 1.65 | RTT Patient |
-| 4525 | 1.55 | RTT Patient |
-| 4525 | 1.45 | RTT Patient |
-| 4525 | 1.35 | RTT Patient |
-| 4525 | 1.25 | RTT Patient |
-| 4525 | 1.15 | RTT Patient |
-| 4525 | 1.95 | RTT Patient |
-| 4525 | 1.85 | RTT Patient |
-| 4525 | 1.75 | RTT Patient |
-| 4525 | 1.65 | RTT Patient |
-| 4525 | 1.55 | RTT Patient *RTT* |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-| ... | ... | ... |
-</details>
+저자들은 임상적으로 Rett 증후군이 의심된 2세 환아에서 MECP2 유전자의 직접 염기 서열 분석을 통해 P152R 돌연변이를 확인하였다. 이에 대한 문헌 고찰과 함께 보고하는 바이다.
 
-![](images/c714f255e6716f30f932b2f556e8a2abc919895f682a7f7583caceecfdde4faf.jpg)
+## 참 고 문 헌
 
-Figure 2. Cation Chloride Cotransporters ratio. (A) Immunoblot analysis of NKCC1 and KCC2. (B) Scatterplot of the relationship between Cotrasporters ratio (KCC2/NKCC1) and age for Rett Patients and Controls. Lines show a LOWESS smooth (locally-weighted polynomial regression - nonparametric smooth) suggesting a discrepant cotransporter ratio between Patients and Controls supported by the respective ANCOVA (F (1, 70) = 30.08, p = .001, gp 2 = .29). (C) Boxplot of Cotransporters ratio (KCC2/NKCC1) for Rett Patients and Controls (males and females). \*p = 0.001. doi:10.1371/journal.pone.0068851.g002
-
-proteome [25], the proteins here studied (NKCC1 and KCC2) were readily detected and at the expected molecular weight. Harrington and co-workers [26] identified the presence of CSF membranous nanostructures that can provide an appropriate environment for transmembrane proteins, which are hydrophobic in nature. Their morphology is similar to that of synaptic vesicles and exosomes; their structure resembles that of nanotubules, cellto-cell interacting structures that facilitate the selective transfer of membrane vesicles and organelles but which seem to impede the flow of small molecules [27]. The intensity and resolution of the different bands obtained with the immunoblot procedure (Figures 1A and 2A) strongly supports the applicability of this analysis in neurochemical research. To our knowledge, this is the first report of detection of cation chloride cotransporters in CSF.
-
-CSF turnover ratio and the extent of central nervous system cell death and synaptic pruning can influence circulating protein levels but these factors are likely to affect both proteins, NKCC1 and KCC2, equally. During the first months of postnatal life there is a period of intense synaptogenesis that subsequentially decreases. This is probably the cause for the reduction of protein levels in CSF observed during the first year of life. In fact, regarding transmembrane proteins like NKCC1 and KCC2, we have observed the same tendency that also was detected with other synaptic proteins [19]. The same phenomena could explain the fact that, in the CSF, both cation chloride cotransporters exhibit a reduction and KCC2 does not increase in the CSF, as was expected from previous studies in brain tissue [28,29]. Experimental limitations in humans have been an obstacle in obtaining direct evidence of age-related changes in GABAA-R physiology [28].
-
-In mice, loss of MeCP2 leads to reduced expression of BDNF after birth [15] and in humans evidence of BDNF reduction in RTT has also been detected [29]. The effects of BDNF on neurotransmission in developing and mature neurons have been partly associated with the regulation of GABAergic transmission. Apart from its effects on GABAergic innervation [30], BDNF can also promote the functional maturation of GABAA-R mediated responses by inducing upregulation of KCC2 [16,17]. The imbalance between excitatory and inhibitory functions in RTT has been associated with reduced BDNF [31] and GABA levels, decreased expression of GABA receptor subunits [32], reduced expression of the enzymes glutamic acid decarboxylase 67 and glutamic acid decarboxylase 65 [8], reduced number of glutamatergic synapses [33] and reduced strength of basal inhibitory rhythms [34]. Moreover, exogenous BDNF has been shown to rescue synaptic dysfunction in Mecp-2 null mice. However, the mechanism by which reduced levels of BDNF contribute to disease and also to the phenotypical rescue is not completely understood [31].
-
-## References
-
-1. Hagberg B, Aicardi J, Dias K, Ramos O (1983) A progressive syndrome of autism, dementia, ataxia, and loss of purposeful hand use in girls: Rett’ssyndrome: Report of 35 cases. Ann Neurol 14: 471–479. 
-2. Monteggia LM, Kavalali ET (2009) Rett syndrome and the impact of MeCP2 associated transcriptional mechanisms on neurotransmission. Biol Psychiatry 65: 204–210. 
-3. Nissenkorn A, Gak E, Vecsler M, Reznik H, Menascu S et al. (2010) Epilepsy in Rett syndrome-the experience of a National Rett Center. Epilepsia 51: 1252– 1258.
-
-Our results suggest an immature pattern of GABAergic neurotransmission in RTT patients, by revealing a dysregulation on the KCC2/NKCC1 ratio (the two major contributors to intracellular chloride concentration) and this evidence in humans is in accordance with the relevance of MeCP2 for GABAergic function described in animal models [8]. An imbalance between excitatory and inhibitory synaptic events, in the brain of children with neurodevelopmental disorders that have epilepsy and autism as key features, is a postulated general mechanism. Moreover, KCC2/NKCC1 ratio dysregulation is a particularly interesting specific molecular change, already described for diseases like tuberous sclerosis [35].
-
-## Conclusions
-
-We describe a significant decrease of KCC2 in the cerebrospinal fluid of Rett patients. A major advantage of doing these in vivo studies in children with severe neurologic disorders like RTT, is that it allows to search for disturbances in the normal developmental pattern. Therefore, our findings might have implications for the understanding of RTT pathophysiology, considering that KCC2 is a neuronal specific protein with a key role for neuronal electrical function and structure, properties that are known to be altered in Mecp2 mutated neurons. Moreover, these results could bring light to new therapeutic approaches, particularly through the pharmacological manipulation of the cation chloride cotransporters. Further studies in the MECP2 knockout model and other models to study the disease process are needed to explore these possibilities.
-
-## Supporting Information
-
-Table S1 Socio-demographic variable: mean values (and standard deviations) of age. Significant differences among the groups were assessed with Mann-Whitney Test (U). (DOCX)
-
-## Acknowledgments
-
-We thank Dr. Claudia Gaspar and Dr. Maria Jose´ Diogenes for their helpful review of the manuscript.
-
-## Author Contributions
-
-Conceived and designed the experiments: SD AR CO MP JA RA FS AG. Performed the experiments: SD AR CO AP AG. Analyzed the data: SD MO AP AO RA MP AG. Contributed reagents/materials/analysis tools: SD AR MO AO RA MP FS JA AG. Wrote the paper: SD AR CO RA MP AG.
-
-4. Jellinger K, Armstrong D, Zoghbi HY, Percy AK (1988) Neuropathology of Rett syndrome. Acta Neuropathol 76: 142–158. 
-5. Reiss AL, Faruque F, Naidu S, Abrams M, Beaty T (1993) Neuroanatomy of Rett syndrome: a volumetric imaging study. Ann Neurol 34: 227–243. 
-6. Boggio EM, Lonetti G, Pizzorusso T, Giustetto M (2010) Synaptic determinants of rett syndrome. Front Synaptic Neurosci 2: 28. 
-7. Kron M, Howell CJ, Adams IT, Ransbottom M, Christian D et al. (2012) Brain activity mapping in Mecp2 mutant mice reveals functional deficits in forebrain 
-circuits, including key nodes in the default mode network, that are reversed with ketamine treatment. J Neurosci. 32: 13860–13872. 
-8. Chao HT, Chen H, Samaco RC, Xue M, Chahrour M, et al. (2010) Dysfunction in GABA signalling mediates autism-like stereotypies and Rett syndrome phenotypes. Nature 468: 263–269. 
-9. Blaesse P, Airaksinen MS, Rivera C, Kaila K (2009) Cation-chloride cotransporters and neuronal function. Neuron 61: 820–838. 
-10. Mun˜oz A, Me´ndez P, DeFelipe J, Alvarez-Leefmans FJ (2007) Cation-chloride cotransporters and GABA-ergic innervation in the human epileptic hippocampus. Epilepsia 48: 663–673. 
-11. Woo NS, Lu JM, England R, McClellan R, Dufour S, et al. (2002) Hyperexcitability and epilepsy associated with disruption of the mouse neuronal-specific K-Cl cotransporter gene. Hippocampus 12: 258–268. 
-12. Dzhala VI, Talos DM, Sdrulla DA, Brumback AC, Mathews GC, et al. (2005) NKCC1 transporter facilitates seizures in the developing brain. Nat Med 11: 1205–1213. 
-13. Kahle KT, Barnett SM, Sassower KC, Staley KJ (2009) Decreased seizure activity in a human neonate treated with bumetanide, an inhibitor of the Na(+)- K(+)-2Cl(-) cotransporter NKCC1. J Child Neurol 24: 572–576. 
-14. Lemonnier E, Degrez C, Phelep M, Tyzio R, Josse F, et al. (2012) A randomised controlled trial of bumetanide in the treatment of autism in children. Transl Psychiatry. 2: e202. 
-15. Wang H, Chan SA, Ogier M, Hellard D, Wang Q, et al. (2006) Dysregulation of brain-derived neurotrophic factor expression and neurosecretory function in Mecp2 null mice. J Neurosci 26: 10911–10915. 
-16. Aguado F, Carmona MA, Pozas E, Aguilo´ A, Martı´nez-Guijarro FJ et al. (2003) BDNF regulates spontaneous correlated activity at early developmental stages by increasing synaptogenesis and expression of the K+/Cl- co-transporter KCC2. Development 130: 1267–1280. 
-17. Carmona MA, Pozas E, Martı´nez A, Espinosa-Parrilla JF, Soriano E, et al. (2006) Age-dependent spontaneous hyperexcitability and impairment of GABAergic function in the hippocampus of mice lacking trkB. Cereb Cortex 16: 47–63. 
-18. Plotkin MD, Snyder EY, Hebert SC, Delpire E (1997) Expression of the Na-K-2Cl cotransporter is developmentally regulated in postnatal rat brains: a possible mechanism underlying GABA’s excitatory role in immature brain. J Neurobiol 33: 781–795. 
-19. Duarte ST, Ortez C, Pe´rez A, Artuch R, Garcı´a-Cazorla A (2011) Analysis of synaptic proteins in the cerebrospinal fluid as a new tool in the study of inborn errors of neurotransmission. J Inherit Met Dis 34: 523–528. 
-20. Neul JL, Kaufmann WE, Glaze DG, Christodoulou J, Clarke AJ et al. (2010) Rett syndrome: revised diagnostic criteria and nomenclature. Ann Neurol. 68: 944–950. 
-21. Ormaza´bal A, Garcı´a-Cazorla A, Ferna´ndez A, Ferna´ndez-Alvarez E, Campistol J et al. (2005) HPLC with electrochemical and fluorescence detection procedures for the diagnosis of inborn errors of biogenic amines and pterins. J Neurosc Methods 142: 153–158. 
-22. Maroco J (2007) Ana´lise Estatı´stica com utilizac¸a˜ o do SPSS [Statistical analysis using SPSS] (3rd Ed). Lisbon, Portugal: Silabo. 
-23. Biou D, Benoist JF, Nguyen-Thi Xuan, Huong C, Huong X, et al (2000) Cerebrospinal fluid protein concentrations in children: age-related values in patients without disorders of the central nervous system. Clin Chem 46: 399. 
-24. Galanopoulou AS (2008) Sexually dimorphic expression of KCC2 and GABA function. Epilepsy Res 80: 99–113. 
-25. Thouvenot E, Urbach S, Dantec C, Poncet J, Se´veno M (2008) Enhanced detection of CNS cell secretome in plasma protein-depleted cerebrospinal fluid. J Proteome Res. 7: 4409–4421. 
-26. Harrington MG, Fonteh AN, Oborina E, Liao P, Cowan RP et al. (2009) The morphology and biochemistry of nanostructures provide evidence for synthesis and signaling functions in human cerebrospinal fluid. Cerebrospinal Fluid Res 6: 10. 
-27. Rustom A, Saffrich R, Markovic I, Walther P, Gerdes HH (2004) Nanotubular highways for intercellular organelle transport. Science 303: 1007–1010. 
-28. Galanopoulou AS (2008) GABA(A) receptors in normal development and seizures: friends or foes? Curr Neuropharmacol 6: 1–20. 
-29. Deng V, Matagne V, Banine F, Frerking M, Ohliger P et al. (2006) FXYD1 is an MeCP2 target gene overexpressed in the brains of Rett syndrome patients and Mecp2-null mice. Hum Mol Genet 16: 640–650. 
-30. Danglot L, Triller A, Marty S (2006) The development of hippocampal interneurons in rodents. Hippocampus 16: 1032–1060. 
-31. Kline DD, Ogier M, Kunze DL, Katz DM (2010) Exogenous brain-derived neurotrophic factor rescues synaptic dysfunction in Mecp2-null mice. J Neurosci 30: 5303–5310. 
-32. Medrihan L, Tantalaki E, Aramuni G, Sargsyan V, Dudanova I et al. (2008) Early defects of GABAergic synapses in the brain stem of a MeCP2 mouse model of Rett syndrome. J Neurophysiol 299: 112–121. 
-33. Chao HT, Zoghbi HY, Rosenmund C (2007) MeCP2 controls excitatory synaptic strength by regulating glutamatergic synapse number. Neuron 56: 58– 65. 
-34. Zhang L, He J, Jugloff DG, Eubanks JH (2008) The MeCP2-null mouse hippocampus displays altered basal inhibitory rhythms and is prone to hyperexcitability. Hippocampus 18: 294–309. 
-35. Talos DM, Sun H, Kosaras B, Joseph A, Folkerth RD et al. (2012) Altered inhibition in tuberous sclerosis and type IIb cortical dysplasia. Ann Neurol 71: 539–51.
+1) Choi YC, Lee BI, Huh K, Kim GW. Rett syndrome in Korea. Yonsei Medical Journal 1991;31: 172-8 
+2) Amir RE, Van den Veyver IB, Wan M, Tran CQ, Francke U, Zoghbi HY. Rett syndrome is caused by mutations in X-linked MECP2 encoding methyl-CpG-binding protein 2. Nature Genet 1999;23:185-8. 
+3) Hagberg B, Aicardi J, Dias K, Ramos O. A progressive syndrome of autism, dementia, ataxia and loss of purposeful hand use in girls. Rett's syndrome : report of 35 cases. Ann Neurol 1983; 14:471-9. 
+4) The Rett Syndrome Diagnostic Criteria Work Group. Diagnostic criteria for Rett syndrome. Ann Neurol 1988;23:425-8. 
+5) Hagberg B, Witt-Engerstrom I. Rett syndrome : A suggested staging system for describing impairment profile with increasing age towards adolescence. Am J Med Genet 1986;24:47-59. 
+6) Aldrich MS, Garofalo EA, Drury I. Epileptiform abnormalities during sleep in Rett syndrome. Electroencephalogr Clin Neurophysiol 1990;75: 365-70. 
+7) Bauman ML, Kemper TL, Arin DM. Pervasive neuroanatomic abnormalities of the brain in three cases of Rett syndrome. Neurology 1995;45:1581-6. 
+8) Armstrong DD, Dunn K, Antalffy B. Decreased dendritic branching in frontal, motor and limbic cortex in Rett syndrome compared with trisomy 21. J Neuropathol Exp Neurol 1998;57:1013-7. 
+9) Naidu S. Rett syndrome : A disorder affecting early brain growth. Ann Neurol 1997;42:3-10. 
+10) Blue ME, Naidu S, Johnston MV. Development of amino acid receptors in frontal cortex from girls with Rett syndrome. Ann Neurol 1999;45: 541-5. 
+11) Hagberg BA. Rett syndrome : Clinical peculiarities, diagnostic approach, and possible cause. Pediatr Neurol 1989;5:75-83. 
+12) Amir RE, Zoghbi HY. Rett syndrome : Methyl-CpG-binding protein 2 mutations and phenotypegenotype correlations. Am J Med Genet 2000;97: 147-52. 
+13) Ellison KA, Fill CP, Terwillinger J, DeGennaro LJ, Martin-Gallardo A, Anvret M, et al. Examination of X chromosome markers in Rett syndrome : exclusion mapping with a novel variation on multilocus linkage analysis. Am J Hum Genet 1992;50:271-87. 
+14) Jones PL, Veenstra GJ, Wade PA, Vermaak D, Kass SU, Landberger N, et al. Methylated DNA and MECP2 recruit histone deacetylase to repress transcription. Nature Genet 1998;19:187-91. 
+15) Cheadle JP, Gill H, Fleming N, Maynard J, Kerr A, Leonard H, et al. Long-read sequence analysis of the MECP2 gene in Rett syndrome patients : correlation of disease severity with mutation type and location. Hum Mol Genet 2000;9: 1119-29. 
+16) Laccone F, Huppke P, Hanefeld F, Meins M. Mutation spectrum in patients with Rett syndrome in the German population : evidence of hot spot regions. Hum Mutat 2001;17:183-90. 
+17) Webb T, Latif F. Rett syndrome and the MECP2 gene. J Med genet 2001;38:217-23. 
+18) Amir RE, Van den Veyver IB, Schultz R, Malicki DM, Tran CQ, Dahle EJ, et al. Influence of mutation type and X chromosome inactivation on Rett syndrome phenotypes. Ann Neurol 2000;47: 670-9. 
+19) Inui K, Akagi M, Ono J, Tsukamoto H, Shimono K, Mano T, et al. Mutational analysis of MECP2 in Japanese patients with atypical Rett syndrome. Brain Dev 2001;23:212-5. 
+20) Kerr AM, Nomura Y, Armstrong D, Anvret M, Belichenko PV. Budden S, et al. Guidelines for reporting clinical features in cases with MECP2 mutations. Brain Dev 2001;23:208-11.

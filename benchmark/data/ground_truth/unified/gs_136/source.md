@@ -1,121 +1,228 @@
-## CASE REPORT
+## Е.А. Коваленкова, С.А. Коваленкова, Д.С. Крутиков
 
-## Open Access
+Смоленский государственный медицинский университет, Смоленск, Российская Федерация
 
-# Hypoventilation and sleep hypercapnia in a case of congenital variant-like Rett syndrome
+# Клинический случай синдрома Ретта: опыт наблюдений за ребенком старшего дошкольного возраста
 
-![](images/c340854fd8cb3c253174f8bd892dea36bfbb753f48fe9d31798f5d158632d4c8.jpg)
+Автор, ответственный за переписку:
 
-Sergio Ghirardo1\* , Letizia Sabatini2 , Alessandro Onofri1 , Maria Beatrice Chiarini Testa1 , Maria Giovanna Paglietti1 , Daria Diodato3 , Lorena Travaglini3 , Fabrizia Stregapede3 , Marta Luisa Ciof degli Atti4 , Claudio Cherchi1 and Renato Cutrera1
+Коваленкова Софья Андреевна, студентка 5-го курса педиатрического факультета ФГБОУ ВО Смоленский государственный медицинский университет
 
-## Abstract
+Адрес: 214019, Смоленск, ул. Крупской, д. 28, тел.: +7 (915) 633-06-03, e-mail: kovalenkova.sofya@mail.ru
 
-Background: Breathing disturbances are often a primary clinical concern especially during wakefulness of the classic form of Rett syndrome, but data for atypical forms are lacking.
+Обоснование. Синдром Ретта — редкое нейропсихическое нарушение, которое связано со спорадическими мута- циями Х-сцепленного гена метил-CpG-связывающего белка 2 (MECP2). Учитывая высокую значимость ранней диа- гностики, необходимость в мультидисциплинарном подходе к лечению и поддержке таких детей, исследование кли- нических случаев синдрома Ретта имеет особое значение для повышения осведомленности и улучшения качества жизни пациентов и их семей. Описание клинического случая. В статье описана клиническая картина синдрома Ретта у девочки П., родившейся от вторых естественных родов на 40-й нед с массой тела при рождении 3200 г. До дебюта заболевания отклонений в формировании психомоторных навыков у ребенка не отмечалось. Однако к двум годам начали проявляться характерные симптомы: потеря речи, стереотипные движения, эквинусная поход- ка, бруксизм, общение взглядом. Диагноз синдрома Ретта был подтвержден при молекулярно-генетическом иссле- довании: выявлена мутация Х-сцепленного гена метил-CpG-связывающего белка 2 (MECP2). Заключение. Данный клинический случай демонстрирует необходимость информированности врачей для своевременного выявления заболевания и мультидисциплинарного подхода к его диагностике и коррекции. Использование ДНК-скрининга для раннего выявления заболеваний значительно повышает шансы на эффективное лечение и реабилитацию.
 
-Case presentation: We report the case of a 20-month-old female afected by Rett syndrome with congenital variantlike onset, characterized by severe hypotonia and neurodevelopment impairment. She presented hypoventilation, persistent periodic breathing, and sustained desaturation during sleep, without obstructive or mixed events. Pulse oximetry and capnography during wakefulness were strictly normal. To the best of our knowledge, this is the frst case of a patient afected by a congenital variant of Rett syndrome presenting sleep hypercapnia. Hypotonia may play a major role in the genesis of hypoventilation and hypoxemia in our patient. Non-invasive ventilation led to quality-oflife improvements.
+Ключевые слова: синдром Ретта, старший дошкольный возраст, нейропсихическое нарушение, мутация
 
-Conclusions: Thus, we suggest screening patients with congenital-like Rett syndrome through transcutaneous bedtime carbon dioxide and oxygen monitoring. Moreover, assisted control mode was a breakthrough to achieve adequate ventilation in our case.
+Для цитирования: Коваленкова Е.А., Коваленкова С.А., Крутиков Д.С. Клинический случай синдрома Ретта: опыт наблюдений за ребенком старшего дошкольного возраста. Педиатрическая фармакология. 2025;22(2):184–188. doi: https://doi.org/10.15690/pf.v22i2.2872
 
-Keywords: Rett syndrome, Congenital variant, Hypotonia, Hypoventilation, Hypercapnia, Non-invasive ventilation
+## ОБОСНОВАНИЕ
 
-## Background
+Синдром Ретта является орфанным прогрессирую- щим генетическим нейропсихическим заболеванием. Частота синдрома Ретта, по данным исследований, составляет примерно от 5 до 10 случаев на 100 тыс. девочек по всему миру [1]. Это заболевание, как прави- ло, проявляется в возрасте от 6 до 18 мес, когда у детей отмечаются регресс ранее приобретенных навыков и развитие множества специфических симптомов, таких как замедление роста окружности головы, нару- шения походки, потеря целенаправленных движений рук, которые часто заменяются стереотипными движениями, а также потеря речи и нарушения дыхания [2].
 
-Rett syndrome (RS) (OMIM #312750) is a severe X-linked dominant neurodevelopmental disorder, afecting one baby every 10.000 live-born, almost exclusively female. Te congenital variant of Rett syndrome (CRS) accounts for just 5–7% of all cases, and the clinical picture is characterized by severe hypotonia, often present at birth, and neurodevelopmental delay since the very frst few months. Classic RS leads to remarkably breathing instability, usually even more pronounced during wakefulness [1]. We report a 20-month-old female presenting a congenital variant-like Rett syndrome, who showed central apneas, periodic breathing, and persistent hypercapnia only during sleep-time without obstructive apnea. Such fndings were never reported before in a child afected by Rett syndrome. We present the ventilatory and clinical management of this unique case.
+Синдром Ретта классифицируется на типичную, ати- пичную и вариативную формы, что свидетельствует о сложном фенотипе заболевания, примерно в 90% заре- гистрированных случаев болезнь вызывается мутация- ми в гене метил-CpG-связывающего белка 2 (MECP2) [2].
 
-\*Correspondence: ghirardo.sergio@gmail.com
+## Ekaterina A. Kovalenkova, Sofya A. Kovalenkova, Dmitry S. Krutikov
 
-1 Pediatric Pulmonology & Respiratory Intermediate Care Unit, Academic Department of Pediatrics; Clinical, management and technology innovation research area, Medical Direction, Bambino Gesù Children’s Hospital IRCCS, Piazza S. Onofrio 4, 00165 Rome, Italy Full list of author information is available at the end of the article
+Smolensk State Medical University, Smolensk, Russian Federation
 
-## Case presentation
+# Сlinical Case of Rett Syndrome: the Experience of Observing Older Preschooler
 
-Te patient is a full-term (39 gestational weeks) third born Caucasian girl from Italy. Te delivery was eutocial with no perinatal issues. Pregnancy was unremarkable, with no recall of reduced foetal movements. Birth weight was 2,93 kg (30° centile (pc), length 47 cm, head circumference 33 cm. Apgar index was 8 at one and 5 min. At birth, she presented with hypotonia. Standard metabolic screening performed as part of the routine care to newborns in Italy was negative. Family history was unremarkable. She was admitted due to hyperbilirubinemia and a urinary tract infection on the ffth day of life. Central hypotonia was remarkable. Full oral feeding was possible, however she presented reduced weight gain and recurrent emesis. Fundus oculi, cranial and abdominal ultrasound were normal; cardiac ultrasound showed only the persistency of the foramen ovale. She tested negative for Angelman and Prader-Willi diseases. At the age of 2 months, brain magnetic resonance (MR) was reported unremarkable, and she was discharged shortly after.
+Background. Rett syndrome is a rare neuropsychiatric disorder associated with sporadic mutations in the X-linked methyl-CpG binding protein 2 (MECP2) gene. Considering the cruciality of early diagnosis, the necessity of multidisciplinary approach in the management and support of such children, the study of Rett syndrome clinical cases is essential to raise awareness and improve the patients and their families’ quality of life. Clinical case description. This article describes the clinical picture of Rett syndrome in girl P., born from second natural delivery at the 40th week of gestation, weight at birth – 3200 g. There were no deviations in psychomotor skills development before disease onset. However, classic manifestations have appeared by the age of two: alalia, motor stereotypy, equinus gait, bruxism, communication via sight. The Rett syndrome was confirmed via molecular genetic study: mutation in the X-linked methyl-CpG binding protein 2 (MECP2) gene was revealed. Conclusion. This clinical case demonstrates the importance to inform doctors about timely disease detection and multidisciplinary approach to its diagnosis and management. The use of DNA screening for early disease detection greatly improves the chances of effective treatment and rehabilitation.
 
-At the age of 10 months, she came to our attention, the psychomotor delay had become evident, and she scored < 70 on the Developmental Profle-3 test. She did not properly control the head; she reached but did not grasp objects and fxed her gaze just for up to 3 min. Te weight was 8.5 (47°pc), length 67 cm (6°pc) and head circumference was 44 cm (9°pc). CGH-array and extensive metabolic screening (blood lactate, ammonium, acetyl carnitine panel, urinary organic amino acids, plasma amino acids levels, tandem mass spectrometry on blood and Barry test, including lumbar puncture (liquor physical-chemical analysis, lactate, neurotransmitters within normal range), tested negative; evoked potentials (visual evoked potentials VEP, electroretinogram ERG, auditory evoked potentials AEP and brainstem auditory evoked potentials BAEPs) were within normal ranges. Intensive physiotherapy allowed her to eat semi-liquid foods safely, reach and grab objects with her hands and maintain ocular contact for several minutes. Despite eforts, axial hypotonia progressively worsened in the following months, and the hand’s grip remained poor. At the age of 16 months, she underwent brain MR showing a mild bilateral ventricle and subarachnoid spaces widening; brain MR spectroscopy was normal. Clinical exome analysis with Next Generation Sequencing (NGS) approach provided a diagnosis of Rett syndrome 3-months after identifying a de novo heterozygous truncating variant caused by an insertion c.396\_397insA (p.Arg133fsTer2) in MECP2 gene (MIM \*300005). Tis variant was never reported in any publicly available human variation resources (i.e. dbSNP, 1000 Genomes, ExAC, gnomAD). After that, we performed polysomnography, showing a poorly-organized electrical activity and difuse irritating signals at the electroencephalogram (EEG). Due to hypotonia, we performed an x-ray of the column, revealing extremely precocious scoliosis (T4-L1 Cobb angle 26°). PSG was performed using Somtè PSG (Compumedics,
+Keywords: Rett syndrome, older preschool age, psychoneurological disorders, mutation
 
-Australia). Cardiorespiratory data included airfow (nasal pressure transducer and oronasal thermistor if available), body position, body movements, thoracic and abdominal movements assessed by respiratory inductance belts, SpO2, and video recording. Te electroencephalographic record was based on the international 10–20 system with electrodes in positions F1-A2, F2-A1, C3-A2, C4-A1, O1-A2, O2-A1, recording eye movements. Transcutaneous carbon dioxide pressure (PtcCO2) recording was performed simultaneously (SenTec Digital Monitor, SenTec Inc., Terwil, Switzerland). Scoring of respiratory events was performed by an experienced reader, according to the American Academy of sleep medicine (AASM) criteria: obstructive apnea was defned as the absence of nasal airfow with continued chest movements for at least two breaths. Central apnea was defned as the absence of nasal airfow with the interruption of respiratory efort lasting more than 20 seconds or associated with arousal and/or a 3% oxygen desaturation. Periodic breathing was defned as three or more episodes of central apnea lasting > 3 seconds each and separated by < 20 seconds of normal breathing. She spent 55% of her total sleep-time (TST) with peripheral oxygen saturation $\mathrm { ( S p O _ { 2 } ) } < 9 0 \%$ . Her oxygen desaturations index (ODI) was 13.9, defned as the number of desaturations > 3% per hour of TST. Periodic breathing (PB) accounted for 25% of TST matching criteria for persistent periodic breathing (PPB) [2]. Te mean percutaneous carbon dioxide partial pressure $\left( \mathrm { P t c C O } _ { 2 } \right)$ during bedtime was 50 mmHg, and she spent 57% of the TST above this limit. Terefore, she fulflled even the stricter paediatric criteria for hypoventilation based on persistent overnight hypercapnia. Obstructive events were virtually absent with a 0.2 of mixed-obstructive hypopnea apnoea index (MOHAI), defned as the number of such episodes per hour of TST. Following the clinical evidence of a huge diference in breathing patterns between daytime and bedtime, we performed measurements of SpO2 and PtcCO2 during wakefulness, which were strictly normal (mean PtcCO2 35 mmHg, range 34–36 mmHg). Terefore, the increase of PtcCO2 between wakefulness and sleep was greater than 10 mmHg and provided further confrmation of a purely sleep time hypercapnia.
+For citation: Kovalenkova Ekaterina A., Kovalenkova Sofya A., Krutikov Dmitry S. Сlinical Case of Rett Syndrome: the Experience of Observing Older Preschooler. Pediatricheskaya farmakologiya — Pediatric pharmacology. 2025;22(2):184–188. (In Russ). doi: https://doi.org/10.15690/pf.v22i2.2872
 
-Non-invasive positive pressure ventilation (NIV) in room air was started during bedtime. We set spontaneous timed ventilation with shrink spam to enhance adaptation inspiratory positive airway pressure (IPAP) ${ 8 \ \mathrm { c m H } _ { 2 } \mathrm { O } } ,$ expiratory positive airway pressure (EPAP) 4 cm $\mathrm { { f _ { 2 } O } , }$ , with a respiratory frequency of 23 breaths per minute (very close to the patient one). Such setting normalized $\mathrm { S p O } _ { 2 }$ values with minimum $\mathrm { S p O } _ { 2 }$ 92% and an improvement of ODI to 7.2 events/hour. Carbon dioxide even worsened with a mean $\mathrm { P t c C O } _ { 2 }$ of 51.7 mmHg, and
+Мутации приводят к нарушению развития нейронов и образованию аксодендритных связей, что объясняет широкий спектр неврологических и неневрологических проявлений, включая аномалии дыхательной, сердеч- но-сосудистой, пищеварительной, скелетной и других систем [3].
 
-100% of TST spent above 50 mmHg. Te frst attempt was to increase IPAP to $^ { 1 4 , }$ reaching a partial improvement of $\mathrm { P t c C O } _ { 2 } ,$ lowering the percentage spent above 50 mmHg to 29% of TST. At the same time, ODI was reduced to 0.5 events/hour. Shifting ventilation mode to adaptive pressure controlled (APC) mode and slightly increasing IPAP to 16 cmH O, we fnally obtained $\mathrm { P t c C O } _ { 2 }$ normalization (peak 49 mmHg). In the few following days, a slight improvement of the hypotonia and social interaction with the caregiver was noticed. We will perform brief hospitalization to perform sleep studies (capnography and polysomnography) together with neurological, neuromuscular, neurodevelopmental evaluations and physiotherapy assessment after 4 months and every 6 months after.
+Первое описание мозга при синдроме Ретта было сде- лано К. Джеллингером (K. Jellinger) и Ф. Зайтельбергером (F. Seitelberger) в 1986 г. Они отметили, что мозг был маленьким и что в компактной части черной субстанции было меньше меланина, чем в мозге здоровых людей [4, 5].
 
-## Discussion and conclusions
+Хотя традиционно считалось, что это заболевание поражает только девочек, в настоящее время заре- гистрированы случаи проявления синдрома Ретта и у мальчиков, у которых обнаруживают те же мутации, что и у девочек, однако они совместимы с жизнью при условии мозаицизма хромосомного набора при син- дроме Клайнфельтера (кариотип 47,XXY/46,XY) или сома- тического мозаицизма по МЕСР2-мутации [6, 7].
 
-Congenital variant of Rett syndrome, also known as Rolando variant, presents with congenital hypotonia, poor responsiveness and eye contact. Developmental delay becomes evident already during the frst few months of life with social impairment and autistic behaviours, and no language development. Head circumference is normal at birth but head growth is reduced with progressive microcephaly. Gross and fne motricity is impaired early, epilepsy develops after the frst year of life but EEG is usually poorly organized since early stages [3–6]. Te association of such variant of Rett syndrome and the mutation of FOXG1 is becoming recognised as a specifc entity called FOXG1 syndrome and we endorse this to avoid terminological overlaps [3]. As our patient presents all the clinical presentation of Rolando variant, we consider she has a congenital variant-like Rett syndrome. Moreover, it is becoming clear that various mutations of FOXG1 gene lead to a wide range of clinical manifestations that can completely difer from the congenital variant of Rett syndrome [7]. At the other side, some patients with congenital Rett syndrome-like features do not present FOXG1 mutations as in our case [8]. our patient, in particular, shows a mutation encoding for a stop codon with a likely deep impairment in the protein function. Such type of mutation fts with the particularly severe clinical picture of the patient and the neonatal onset in contrast with what was previously reported [9]. Rett syndrome-related breathing features, like hyperpnoea followed by breath-holding, Valsalva eforts, and periodic breathing, are easily identifable during wakefulness. Such symptoms usually reduce or even abruptly disappear at sleep onset [1, 10]. Among the patients with Rett syndrome with pathological polygraph, nearly all manifest obstructive events during sleep, with a minority of central events associated with severe obstructive ones [11]. Literature reports several cases of patients with RS presenting hypoventilation, often alternated to hyperventilation during wakefulness [12, 13]. On the contrary, few data are reported about hypercapnia during sleep time in RS mentioning congenital variant or congenital variant-like [13, 14]. Our patient presents congenital variant-like Rett syndrome caused by a novel de novo mutation in MECP2. MECP2 gene plays an important role in autonomic system regulation and its mutations are causative of Rett syndrome [15]. Animal models showed the importance of MECP2 for a correct sensitivity to CO2 of breathing centres, and its mutations may lead to the typical respiratory instability of RS [16], and possibly to hypoventilation as proved by animal models [17]. To the best of our knowledge, this is the frst case reporting hypoxemia and persistent hypercapnia during sleep-time in a patient afected by a congenital form of RS. Patients with CRS are a peculiar cohort; they never walk autonomously and may acquire the ability to articulate a few simple words at best, usually showing severe mental retardation since the very frst months of life. Only a few cases present epilepsy (the landmark of the classic form) at the diagnosis, but electrical activity alterations are nearly always identifed at the EEG [8, 9, 18].
+При синдроме Ретта возникает необходимость в меж- дисциплинарном подходе к лечению, так как болезнь затрагивает функции не только нервной системы, но и других органов, что требует внимания со стороны специалистов разных профилей. Важны раннее выявле- ние и комплексная реабилитация, чтобы максимально улучшить качество жизни пациентов и их семей.
 
-As previously stressed, the congenital variant is mainly characterized by hypotonia, that is severe enough to cause scoliosis within the very first years of life [5]. Therefore, in CRS, hypotonia may cause, per se, desaturation and hypercapbnia, as occur in other neuromuscular diseases of childhood, suggesting a different pathogenesis than classic RS [19]. The normal PtcCO2 values during waketime (when muscle strength is relatively increased) supports this suggestion [20, 21]. Of particular interest is the persistent periodic breathing of this patient. Breathing centres homeostasis is very fragile in RS due to MECP2 mutation [16], with a consequent high gain loop causing periodic breathing. Such events may be boosted by repeated desaturations caused by CRS-related hypotonia [12, 13]. Therefore, although an ST mode of ventilation is usually preferred to maximize patient comfort, an assisted pressure-controlled mode could be necessary to overcome the lack of appropriate respiratory centres control. Providing adequate ventilation in such patients could contribute to the daytime quality of life and hypotonia improvement, as already reported for other diseases with hypotonia [22].
+Уникальность представляемого в статье клиниче- ского случая заключается в своевременной диагности- ке заболевания у пациента со значительной регрессией навыков. Цель описания — проанализировать течение синдрома Ретта и оценить эффективность реабилитаци- онных мероприятий.
 
-Te diagnosis of neonatal hypotonia requires an integrated clinical and instrumental approach initially focused at excluding etiologically treatable conditions such as spinal motoneuron atrophy (SMA). NGS technique can have a key in the diagnosis of unsolved hypotonic conditions in early infancy.
+## КЛИНИЧЕСКИЙ ПРИМЕР
 
-Tis single case suggests the need for a very early polygraph or at least pulse oximetry plus capnography in each patient afected by the congenital variant of Rett syndrome. Broadly speaking, we suggest considering NGS techniques to reach tricky diagnosis such as Rett syndrome with congenital features in hypotonic patients.
+## О пациенте
 
-## Abbreviations
+Пациентка П., 5 лет. Дата рождения: 29.03.2018. Из анамнеза известно, что ребенок родился от вторых своевременных родов, оценка по шкале APGAR — 9/9. Масса тела при рождении составила 3200 г, длина — 50 см. Грудное вскармливание продолжалось до года. В течение первых 12 мес жизни девочка развивалась по возрасту: сидела с 6 мес, ходила с 1 года 1 мес, произ- носила первые простые осознанные слова (мама, папа, баба) и активно слушала чтение.
 
-RS: Rett syndrome; CRS: Congenital Rett syndrome; MR: Magnetic resonance; VEP: Visual evoked potentials; ERG: Electroretinogram; AEP: Auditory evoked potentials; BAEPs: Brainstem auditory evoked potentials; NGS: Next generation sequencing; EEG: Electroencephalogram; TST: Total sleep time; SpO2: Peripheral oxygen saturation; ODI: Oxygen desaturation index; PB: Periodic breathing; PPB: Protracted periodic breathing; PtcCO2: Carbon dioxide partial pressure; MOHAI: Mixed obstructive hypopnea apnoea index; NIV: Noninvasive ventilation; EPAP: Expiratory positive airway pressure; IPAP: Inspiratory positive airway pressure; APC: Adaptive pressure controlled.
+Однако к 1,5 годам у пациентки начался регресс в развитии: она перестала произносить слова, слу- шать чтение, выбирать игрушки и собирать пирамидку. Увлечение ограничилось только просмотром мультфиль- мов. В возрасте 2 лет девочка была направлена к невро- логу в связи с задержкой нервно-психического развития. Первоначально было заподозрено расстройство аутисти- ческого спектра, однако после консультации с генетиком и сдачи анализов был подтвержден синдром Ретта.
 
-## Acknowledgements
+## Физикальная диагностика
 
-Not applicable.
+При обследовании у девочки наблюдались следующие симптомы: потеря речи и навыков общения, стереотип- ные движения рук, эквинусная походка, бруксизм; пси- хомоторное развитие значительно отставало от нормы. По остальным органам и системам — без особенностей.
 
-## Authors’ contributions
+## Предварительный диагноз
 
-SG, LS, CC cared the baby, wrote the frst abstract of the article, DD, AO, LT, FS revised the article’s draft, MGP, MBCT, MLCA cared the baby and revised an advanced draft of the article, RC revised the fnal draft of the article. All authors read and approved the fnal manuscript.
+Синдром Ретта.
 
-## Funding
+## Диагностические процедуры
 
-The authors declare that they did not receive any found for this article.
+В возрасте 2 лет педиатр обратил внимание на задержку нервно-психического развития и направил девочку к неврологу. Невролог заподозрил расстрой- ство аутистического спектра, направил на консультацию к генетику. Генетик предположил синдром Ретта и напра- вил на генетический анализ. При молекулярно-генети- ческом исследовании выявлена мутация Х-сцепленного гена MECP2 — мутация с.468C>G (p.D156E) в гетеро- зиготном состоянии, что позволило установить диагноз синдрома Ретта.
 
-## Availability of data and materials
+20.10.2022 (в возрасте 4 лет) была проведена электроэнцефалография (ЭЭГ) в состоянии ночного сна. Выявлено нарастание эпилептиформной актив- ности на начальной стадии сна. Наблюдаются парок- сизмы, сопровождающиеся повторяющимися двига- тельными стереотипиями и плачем, которые трактуются как фокальные эпилептические приступы.
 
-Not applicable (case report).
+При обследовании на дефицит витамина D был сдан анализ на уровень 25-(OH)D, значения в пределах нормы.
 
-## Declarations
+## Клинический диагноз
 
-## Ethics approval and consent to participate
+Синдром Ретта, связанный со спорадическими мута- циями Х-сцепленного гена метил-CpG-связывающего белка 2 (MECP2).
 
-Not applicable.
+## Дифференциальная диагностика
 
-## Consent for publication
+В диагностическом аспекте важно проводить тща- тельную дифференциальную диагностику синдрома Ретта и других расстройств, таких как синдром Ангельмана, аутизм, детский церебральный паралич, врожденные нарушения обмена веществ, тяжелый интеллектуальный дефицит и эпилепсия, особенно при наличии эпилеп- тических приступов и стереотипных движений [8, 9]. Также следует учитывать возможность наличия вариан- тов в гене VAMP2 у пациентов с похожими клиническими проявлениями, что может быть значимым для уточнения диагноза [10].
 
-Written informed consent was obtained from the parents of the patient for publication of this case report.
+## Медицинские вмешательства
 
-## Competing interests
+Пациентка получает следующую терапию, назначен- ную неврологом: рисперидон 1% — краткосрочное сим- птоматическое лечение непрекращающейся агрессии по 0,5 мл 2 раза в день для стабилизации психического состояния; толперизон 50 мг 1/2 таблетки при возбуди- мости и мышечных спазмах; макрогол по необходимо- сти — при возникновении запора.
 
-The authors declare that they have no competing interests.
+Проведены занятия с логопедом, физиотерапевтом, назначены курсы массажа. Реабилитационные меропри- ятия проводились 3 раза в неделю в течение 6 мес.
 
-## Author details
+## Динамика и исходы
 
-1 Pediatric Pulmonology & Respiratory Intermediate Care Unit, Academic Department of Pediatrics; Clinical, management and technology innovation research area, Medical Direction, Bambino Gesù Children’s Hospital IRCCS, Piazza S. Onofrio 4, 00165 Rome, Italy. 2 University Department of Pediatrics, Bambino Gesù Children’s Hospital IRCCS, University of Rome Tor Vergata, Rome, Italy. 3 Department of Neurosciences, Unit of Muscular and Neurodegenerative Disorders, Laboratory of Molecular Medicine, Bambino Gesù Children’s Hospital, IRCCS, Rome, Italy. 4 Clinical, management and technology innovation research area, Medical Direction, Bambino Gesù Children’s Hospital IRCCS, Rome, Italy.
+На момент обследования у пациентки отмечается грубая задержка психоречевого развития. После регрес- са навыков, произошедшего в 1,5 года, наблюдается полная утрата речи с сохранением невербальных форм коммуникации (эмоциональные реакции, зрительный контакт). Когнитивные функции характеризуются частич- ным пониманием простых бытовых инструкций, способ- ностью узнавать близких и проявлять к ним привязан- ность, однако целенаправленная игровая деятельность полностью отсутствует.
 
-Received: 2 December 2021 Accepted: 30 August 2022
+На фоне комплексной терапии достигнуты положи- тельные изменения. В неврологическом статусе отме- чаются улучшение координации движений, проявляю- щееся в более уверенном захвате предметов, а также снижение частоты стереотипных движений в периоды бодрствования. По данным ЭЭГ, удалось добиться кон- троля эпилептической активности, которая в настоящее время регистрируется только в начальной стадии сна.
 
-Published online: 07 September 2022
+В эмоционально-поведенческой сфере наблюдается уменьшение эпизодов раздражительности и агрессии, что связано с эффектом рисперидона.
 
-## References
+Однако сохраняются неврологические симптомы: сте- реотипные движения рук, эквинусная походка, бруксизм. Продолжают отмечаться фокальные эпилептические приступы во сне. Когнитивные функции остаются зна- чительно сниженными, хотя сохраняются элементарные формы коммуникации.
 
-1. Amaddeo A, De Sanctis L, Arroyo JO, Khirani S, Bahi-Buisson N, Fauroux B. Polysomnographic fndings in Rett syndrome. Eur J Paediatr Neurol. 2019;23(1):214–21. https://doi.org/10.1016/j.ejpn.2018.09.003.
+Динамика на фоне проводимой терапии демонстри- рует положительную тенденцию. Симптоматическое лечение в сочетании с реабилитационными мероприя- тиями позволило добиться улучшения моторики и ста- билизации эмоционального состояния. В ходе 6-месяч- ной реабилитационной программы отмечена следующая динамика: в первые 2 мес наблюдались усиление стерео- типий и эмоциональная лабильность как проявление адаптационного периода, однако к 3-му мес улучшилась координация и снизилась частота стереотипных движе- ний.
 
-Ghirardo S, Amaddeo A, Grifon L, Khirani S, Fauroux B. Central apnea and periodic breathing in children with underlying conditions. J Sleep Res. 2021;30:6. https://doi.org/10.1111/JSR.13388. 
-3. Mitter D, et al. FOXG1 syndrome: genotype–phenotype association in 83 patients with FOXG1 variants. Genet Med. 2018;20(1):98–108. https://doi.org/10.1038/gim.2017.75. 
-4. Mencarelli MA, et al. Novel FOXG1 mutations associated with the congenital variant of Rett syndrome. J Med Genet. 2010;47(1):49–53. https://doi.org/10.1136/JMG.2009.067884. 
-5. Ariani F, et al. FOXG1 is responsible for the congenital variant of Rett syndrome. Am J Hum Genet. 2008;83(1):89–93. https://doi.org/10.1016/j.ajhg.2008.05.015. 
-Keogh C, et al. Clinical and genetic Rett syndrome variants are defned by stable electrophysiological profles 11 medical and health sciences 1109 neurosciences. BMC Pediatr. 2018;18(1):1–15. https://doi.org/10.1186/s12887-018-1304-7. 
-7. Vegas N, et al. Delineating FOXG1 syndrome: from congenital microcephaly to hyperkinetic encephalopathy. Neurol Genet. 2018;4(6):281. https://doi.org/10.1212/NXG.0000000000000281/VIDEO-9. 
-Ellaway CJ, et al. 14q12 microdeletions excluding FOXG1 give rise to a congenital variant Rett syndrome-like phenotype. Eur J Hum Genet. 2013;21(5):522–7. https://doi.org/10.1038/EJHG.2012.208. 
-9. Rajaei S, et al. Early infantile onset ‘congenital’ rett syndrome variants: Swedish experience through four decades and mutation analysis. J Child Neurol. 2011;26(1):65–71. https://doi.org/10.1177/0883073810374125. 
-10. Gallego J. Genetic diseases: congenital central hypoventilation, rett, and prader-willi syndromes. Compr Physiol. 2012;2(3):2255–79. https://doi. org/10.1002/cphy.c100037. 
-11. Sarber KM, Howard JJM, Dye TJ, Pascoe JE, Simakajornboon N. Sleepdisordered breathing in pediatric patients with Rett syndrome. J Clin Sleep Med. 2019;15(10):1451–7. https://doi.org/10.5664/jcsm.7974. 
-12. Cacciatori E, et al. Sleep disordered breathing and daytime hypoventilation in a male with MECP2 mutation. Am J Med Genet Part A. 2020;182(12):2982–7. https://doi.org/10.1002/ajmg.a.61874. 
-13. Rohdin M, Fernell E, Eriksson M, Albåge M, Lagercrantz H, Katz-Salamon M. Disturbances in cardiorespiratory function during day and night in Rett syndrome. Pediatr Neurol. 2007;37(5):338–44. https://doi.org/10. 1016/j.pediatrneurol.2007.06.009. 
-14. Falsaperla R, Pavone L, Fichera M, Striano P, Pavone P. Apneic crises: a clue for MECP2 testing in severe neonatal hypotonia-respiratory failure. Eur J Paediatr Neurol. 2012;16(6):744–8. https://doi.org/10.1016/J.EJPN.2012.03.001. 
-15. Pini G, et al. Rett syndrome: a wide clinical and autonomic picture. Orphanet J Rare Dis. 2016;11(1):1–16. https://doi.org/10.1186/s13023-016-0499-7. 
-16. Chun Jiang YW, Cui N, Zhong W, Johnson CM. Breathing abnormalities in animal models of Rett syndrome a female neurogenetic disorder. Respir Physiol Neurobiol. 2017;176(5):139–48. https://doi.org/10.1016/j.resp. 2016.11.011.Breathing. 
-17. Zhang X, Su J, Cui N, Gai H, Wu Z, Jiang C. The disruption of central CO 2 chemosensitivity in a mouse model of Rett syndrome. Am J Physiol - Cell Physiol. 2011;301(3):C729. https://doi.org/10.1152/ajpcell.00334.2010. 
-18. Saby JN, Peters SU, Roberts TPL, Nelson CA, Marsh ED. Evoked potentials and EEG analysis in Rett syndrome and related developmental Encephalopathies: towards a biomarker for translational research. Front Integr Neurosci. 2020;14:1–12. https://doi.org/10.3389/fnint.2020.00030. 
-19. Ramirez JM, et al. The pathophysiology of rett syndrome with a focus on breathing dysfunctions. Physiology. 2020;35(6):375–90. https://doi.org/10. 1152/physiol.00008.2020. 
-20. Dempsey JA, et al. The ventilatory responsiveness to CO 2 below eupnoea as a determinant of ventilatory stability in sleep sleep efects on ventilatory control stability. J Physiol. 2004;560:1–11. https://doi.org/10. 1113/jphysiol.2004.072371. 
-21. Dempsey JA, Veasey SC, Morgan BJ, O’Donnell CP. Pathophysiology of sleep apnea. Physiol Rev. 2010;90(1):47–112. https://doi.org/10.1152/ physrev.00043.2008. 
-22. Fauroux B, Khirani S, Grifon L, Teng T, Lanzeray A, Amaddeo A. Noninvasive ventilation in children with neuromuscular disease. Front Pediatr. 2020;8:1–9. https://doi.org/10.3389/fped.2020.00482.
+Перспективы дальнейшего наблюдения включают в себя продолжение медикаментозной терапии с регу- лярным ЭЭГ-мониторингом и комплекса реабилитаци- онных мероприятий в соответствии с индивидуальными потребностями пациентки.
 
-## Publisher’s Note
+## Прогноз
 
-Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional afliations.
+Прогноз для пациентки с синдромом Ретта зависит от нескольких факторов. В аспекте здоровья важными являются факторы риска, такие как возраст начала реабилитации и степень регрессии. Раннее вмеша- тельство может улучшить исходы, в то время как более выраженные нарушения могут затруднить восстанов- ление. Факторы благоприятного прогноза включают в себя активное участие в реабилитационных програм- мах и поддержку семьи, что может способствовать улуч- шению моторных и речевых навыков. В аспекте соци- альной адаптации также имеются свои особенности. Факторы риска включают в себя социальную изоляцию и возможные психоэмоциональные расстройства, кото- рые могут негативно сказаться на социальных навы- ках. В то же время факторы благоприятного прогноза, такие как участие в инклюзивных образовательных программах и групповая терапия, могут способствовать развитию социальных навыков и улучшению общения. Прогноз в аспекте жизни пациентки варьирует — также в зависимости от различных факторов. В данном случае к факторам риска относятся сопутствующие медицин- ские проблемы и уровень поддержки, так как недо- статочная поддержка со стороны семьи и медицинских работников может снизить качество жизни. Факторы благоприятного прогноза включают в себя доступ к специализированной помощи и позитивную динамику в реабилитации, что может улучшить качество жизни и уверенность в будущем.
+
+Таким образом, прогноз для пациентки с синдро- мом Ретта остается неопределенным. Важно учитывать как рисковые, так и благоприятные предикторы, что- бы максимально эффективно планировать дальней- шие шаги в реабилитации и социальной адаптации. Регулярный мониторинг состояния и адаптация про- грамм лечения помогут улучшить качество жизни паци- ентки и ее интеграцию в общество.
+
+## Временная шкала
+
+Хронология течения болезни пациентки П. и ее клю- чевые события представлены на рисунке.
+
+## ОБСУЖДЕНИЕ
+
+Клинический случай с пациенткой, страдающей син- дромом Ретта, имеет несколько ключевых особенно- стей. Положительные результаты ведения пациента включают в себя вмешательство, которое способство- вало улучшению моторных и речевых навыков, а также интенсивную реабилитацию, благодаря которой достиг- нута положительная динамика в развитии пациентки, в том числе частичное восстановление речевых навы- ков. Важным аспектом является поддержка семьи, которая помогла пациентке адаптироваться к условиям реабилитации.
+
+Однако имеются и недостатки оказанной медицин- ской помощи. Во-первых, программа реабилитации не всегда была индивидуализирована, что могло замед- лить прогресс. Во-вторых, ограниченные ресурсы в реа- билитационном центре снижали доступ к необходимым методам лечения. В-третьих, наблюдались трудности в управлении эмоциональными реакциями пациентки, что требовало дополнительной поддержки.
+
+Обсуждая результаты, можно отметить, что поло- жительные изменения объясняются механизмами ней- ропластичности и адаптации мозга, активируемыми при раннем вмешательстве. Исследования показывают, что интенсивная реабилитация может способствовать улучшению моторных и когнитивных функций у детей с синдромом Ретта [11]. Однако недостатки в оказанной помощи подчеркивают необходимость индивидуаль- ного подхода, что подтверждается данными наблюда- тельных исследований, где успешные результаты были связаны с адаптацией программ под конкретные нужды пациентов.
+
+![](images/7c40f8e8f14b10013ed7d08223cf12545a308c7eb80a109e476bc6c612356456.jpg)
+
+<details>
+<summary>flowchart</summary>
+
+```mermaid
+graph TD
+ A["15–18 мес"] --> B["Регресс в развитии. Задержка НПР"]
+ C["2 года"] --> D["Невролог заподозрил РАС"]
+ E["2 года"] --> F["Генетиком установлен диагноз: «Синдром Ретта»"]
+ G["4 года"] --> H["Проведена ночная ЭЭГ"]
+ I["5 лет"] --> J["Начало комплексной реабилитации"]
+ K["5,5 лет"] --> L["Положительная динамика"]
+```
+</details>
+
+Рисунок. Пациентка П.: хронология течения болезни, ключевые события 
+Примечание. НПР — нервно-психическое развитие; РАС — расстройство аутистического спектра; ЭЭГ — электроэнцефалография. 
+Figure. Patient P.: disease course and key events 
+Note. NPD (НПР) — neuropsychic development; ASD (РАС) — autism spectrum disorder; EEG (ЭЭГ) — electroencephalography.
+
+## ЗАКЛЮЧЕНИЕ
+
+Синдром Ретта требует мультидисциплинарного подхода к лечению, включающего работу неврологов, психиатров, логопедов и физиотерапевтов, что позво- ляет более эффективно контролировать симптомы и улучшать качество жизни пациентов. Что касается рекомендаций, можно выделить необходимость инди- видуализации реабилитационных программ с учетом уникальных потребностей каждого пациента, увели- чения ресурсов для обеспечения доступа к специали- зированным методам лечения, внедрения программ психоэмоциональной поддержки для пациентов и их семей, а также повышения информированности меди- цинского персонала в области диагностики и лечения синдрома Ретта.
+
+Кроме того, по причине отсутствия специфическо- го лечения рекомендованы симптоматическая тера- пия, а также комплексная реабилитация: дефектолог, бассейн, лечебная физкультура, массаж, иппотера- пия.
+
+Важно отметить, что выводы, которые можно сделать, опираясь на данный клинический случай, не следует экстраполировать на всех пациентов — без учета инди- видуальных особенностей и контекста. Каждое клини- ческое наблюдение должно быть рассмотрено в рамках более широких исследований для получения достовер- ных и обоснованных рекомендаций.
+
+## ИНФОРМИРОВАННОЕ СОГЛАСИЕ
+
+От родителей получено письменное информирован- ное добровольное согласие на публикацию описания клинического случая (дата подписания: 12.01.2025).
+
+## INFORMED CONSENT
+
+Patient’s parents have signed informed voluntary consent on the publication of clinical case description (signed on 12.01.2025).
+
+## ВЫРАЖЕНИЕ ПРИЗНАТЕЛЬНОСТИ
+
+Авторы выражают признательность научному руково- дителю проекта и родителям ребенка.
+
+## ACKNOWLEDGEMENTS
+
+The authors express gratitude to the project supervisor and child’s parents.
+
+## СПИСОК ЛИТЕРАТУРЫ / REFERENCES
+
+1. Petriti U, Dudman DC, Scosyrev E, Lopez-Leon S. Global prevalence of Rett syndrome: systematic review and meta-analysis. Syst Rev. 2023;12(1):5. doi: https://doi.org/10.1186/s13643- 023-02169-6 
+2. Chahil G, Bollu PC. Rett Syndrome. 2023 Aug 8. In: StatPearls [Internet]. Treasure Island (FL): StatPearls Publishing; 2025. 
+3. Borloz E, Villard L, Roux JC. Rett syndrome: think outside the (skull) box. Fac Rev. 2021;10:59. doi: https://doi.org/10.12703/r/10-59 
+4. Armstrong DD. Rett syndrome neuropathology review 2000. Brain Dev. 2001;23 Suppl 1:S72–S76. doi: https://doi.org/10.1016/ s0387-7604(01)00332-1 
+5. Jellinger K, Seitelberger F. Neuropathology of Rett syndrome. Am J Med Genet Suppl. 1986;1:259–288. doi: https://doi. org/10.1002/ajmg.1320250528 
+6. Leonard H, Silberstein J, Falk R, et al. Occurrence of Rett syndrome in boys. J Child Neurol. 2001;16(5):333–338. doi: https:// doi.org/10.1177/088307380101600505
+
+## ВКЛАД АВТОРОВ
+
+Е.А. Коваленкова — сбор анамнеза у родителей, анализ медицинской документации, осмотр пациента в динамике, систематизация и анализ данных, изучение отечественной и зарубежной литературы, поисково-ана- литическая работа для написания статьи, написание тек- ста статьи, редактирование текста статьи, графическое представление результатов.
+
+С.А. Коваленкова — сбор анамнеза у родителей, анализ медицинской документации, осмотр пациента в динамике, систематизация и анализ данных, изучение отечественной и зарубежной литературы, поисково-ана- литическая работа для написания статьи, написание текста статьи, редактирование текста статьи, ведение переписки с редакторами.
+
+Д.С. Крутиков — поисково-аналитическая работа для написания статьи, обоснование стратегии фармако- терапии, участие в написании и редактировании статьи, систематизация и анализ данных.
+
+## AUTHORS’ CONTRIBUTION
+
+Ekaterina A. Kovalenkova — history taking from parents, medical documentation analysis, patient’s follow-up, data systematization and analysis, study of Russian and foreign literature, search and analytical work for manuscript writing, manuscript writing, manuscript editing, graphical presentation of results.
+
+Sofya A. Kovalenkova — history taking from parents, medical documentation analysis, patient’s follow-up, data systematization and analysis, study of Russian and foreign literature, search and analytical work for manuscript writing, manuscript writing, manuscript editing, correspondence with editors.
+
+Dmitry S. Krutikov — search and analytical work for manuscript writing, drug therapy validation, manuscript writing and editing, data systematization and analysis.
+
+## ИСТОЧНИК ФИНАНСИРОВАНИЯ
+
+Отсутствует.
+
+## FINANCING SOURCE
+
+Not specified.
+
+## РАСКРЫТИЕ ИНТЕРЕСОВ
+
+Авторы статьи подтвердили отсутствие конфликта интересов, о котором необходимо сообщить.
+
+## DISCLOSURE OF INTERESTS
+
+Not declared.
+
+## ORCID
+
+## С.А. Коваленкова
+
+https://orcid.org/0009-0004-4154-1521
+
+7. Воинова В.Ю., Юров И.Ю., Ворсанова С.Г., Юров Ю.Б. Умственная отсталость и хромосома Х: монография. — М.: Издательский дом Академии Естествознания; 2016. — 219 с. [Voinova VYu, Yurov IYu, Vorsanova SG, Yurov YuB. Umstvennaya otstalost’ i khromosoma X: monograph. Moscow: Publishing House of the Academy of Natural Sciences; 2016. 219 p. (In Russ).] 
+8. Малинина Е.В., Забозлаева И.В. Синдром Ретта: трудности диагностики (клинико-психопатологические аспекты) // Русский журнал детской неврологии. — 2016. — Т. 11. — № 3. — 
+С. 49–56. — doi: https://doi.org/10.17650/2073-8803-2016- 11-3-49-56 [Malinina EV, Zabozlaeva IV. Rett syndrome: difficulties of diagnostics (clinical and psychopathological aspects). Russian Journal of Child Neurology. 2016;11(3):49–56. (In Russ). doi: https://doi.org/10.17650/2073-8803-2016-11-3-49-56] 
+9. Бобылова М.Ю., Иванова И.В., Некрасова И.В. и др. Особенности течения и развития эпилепсии у детей с типичным вариантом синдрома Ретта, вызванного мутацией // Журнал
+
+неврологии и психиатрии им. С.С. Корсакова. Спецвыпуски. — 2017. — Т. 117. — № 11-2. — С. 54–61. — doi: https:// doi.org/10.17116/jnevro201711711254-61 [Bobylova MIu, Ivanova IV, Nekrasova IV, et al. The course and the development of epilepsy in patients with typical variant of Rett syndrome and mutations. S.S. Korsakov Journal of Neurology and Psychiatry. 2017;117(11-2):54–61. (In Russ.) doi: https://doi.org/10.17116/ jnevro201711711254-61]
+
+10. Bogue D, Ryan G, Wassmer E, et al. VAMP2 Gene-Related Neurodevelopmental Disorder: A Differential Diagnosis for Rett/Angelman-Type Spectrum of Disorders. Mol Syndromol. 2023;14(5):449–456. doi: https://doi.org/10.1159/000530150 11. Lim J, Greenspoon D, Hunt A, McAdam L. Rehabilitation interventions in Rett syndrome: a scoping review. Dev Med Child Neurol. 2020;62(8):906–916. doi: https://doi.org/10.1111/ dmcn.14565
+
+Статья поступила: 07.02.2025, принята к печати: 16.04.2025
+
+The article was submitted 07.02.2025, accepted for publication 16.04.2025
+
+## ИНФОРМАЦИЯ ОБ АВТОРАХ / ABOUT THE AUTHORS
+
+Коваленкова Софья Андреевна, студентка [Sofya A. Kovalenkova, student]; адрес: 214019, г. Смоленск, ул. Крупской, д. 28 [address: 28, Krupskoy Str., Smolensk, 214019, Russian Federation]; телефон: +7 (915) 633-06-03; e-mail: kovalenkova.sofya@mail.ru
+
+Коваленкова Екатерина Андреевна, студентка [Ekaterina A. Kovalenkova, student]; e-mail: katerina\_kovalenkova@mail.ru
+
+Крутиков Дмитрий Сергеевич, студент [Dmitry S. Krutikov, student]; e-mail: krutikovdima1@mail.ru
