@@ -89,6 +89,8 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
+| 2026-06-25 | [Backend Container Production Branch Plan](archive/plans/2026-06-25-backend-container-prod-branch-plan.md) | completed |
+| 2026-06-25 | [Backend Container Production Branch Design](archive/plans/2026-06-25-backend-container-prod-branch-design.md) | completed |
 | 2026-06-25 | [Pipeline Job Queue Design](archive/plans/2026-06-25-pipeline-job-queue.md) | completed |
 | 2026-06-24 | [Three-Channel Evidence Extraction Design](archive/plans/2026-06-24-three-channel-evidence-extraction-design.md) | completed |
 | 2026-06-23 | [Log Mining Remediation Plan](archive/plans/2026-06-23-log-mining-remediation-plan.md) | completed |
@@ -116,7 +118,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-06-15 | [BIBM Benchmark A/B Readiness Plan](archive/plans/2026-06-15-bibm-benchmark-a-b-readiness-plan.md) | completed |
 | 2026-06-15 | [BIBM Benchmark Expansion Phase C Implementation Plan](archive/plans/2026-06-15-bibm-benchmark-expansion-phase-c-plan.md) | completed |
 
-The `archive/plans/` directory contains 103 completed/superseded plans. The `archive/codereview/` directory contains 24 resolved code reviews. See individual directories for full listings.
+The `archive/plans/` directory contains 105 completed/superseded plans. The `archive/codereview/` directory contains 24 resolved code reviews. See individual directories for full listings.
 
 ## Module README Index
 

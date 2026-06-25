@@ -5581,3 +5581,15 @@ Cache clearing was needed: PostgreSQL `lingua.document_processing_cache` held st
 - 修改默认常量前, 用 `grep` 全量扫描所有直接引用该常量的文件
 - 集成测试应显式指定数据集, 而非依赖全局默认值
 - 新数据集应提供统一的 entry 加载函数, 避免各模块重复实现 JSON 解析
+
+## 2026-06-25: zsh 中误用 path 作为循环变量
+
+**问题描述**: 创建孤立发布 worktree 后, 清空继承文件树时使用 `for path in *(D)`。在 zsh 中 `path` 是绑定 `PATH` 的特殊数组变量, 赋值后导致同一条命令后续 `git` 查找失败, 报 `command not found: git`。
+
+**排查过程**: 删除操作发生在 `.worktrees/backend-container-prod` 隔离目录中。随后使用 `/usr/bin/git status` 和 `/usr/bin/find` 绝对路径命令确认 worktree 仍正常, 且目录仅剩 `.git` worktree 元数据。
+
+**根因分析**: zsh 的 `path` 不是普通变量名。循环变量覆盖了 shell 的命令搜索路径, 影响同一 shell 进程中的后续命令。
+
+**解决方案**: 后续 shell 循环避免使用 `path`、`fpath` 等 zsh 特殊变量名; 必要时用绝对路径命令恢复检查。
+
+**预防措施**: 在 zsh 脚本片段中使用 `entry`、`item`、`target` 等普通变量名。清理 worktree 这类高影响操作后立即用绝对路径工具验证当前目录和 Git 状态。

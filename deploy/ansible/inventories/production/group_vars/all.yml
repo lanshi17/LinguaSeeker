@@ -17,7 +17,7 @@
 # ── Application ───────────────────────────────────────────────────────────
 acmg_environment: production
 acmg_debug: false
-acmg_cors_origins: "https://lingua-seeker.your-domain.com"
+acmg_cors_origins: "https://genemed.tech"
 # API key for X-API-Key auth — actual value lives in vault.yml (ansible-vault encrypted).
 # Injected by nginx as the X-API-Key header on /api/ requests; the browser never sees it.
 # The backend binds to 127.0.0.1, so it is only reachable via nginx.
@@ -25,8 +25,8 @@ api_key: "{{ vault_api_key }}"
 session_signing_key: "{{ vault_session_signing_key }}"
 
 # ── Domain / TLS ──────────────────────────────────────────────────────────
-domain_name: "lingua-seeker.your-domain.com"
-tls_email: "admin@your-domain.com"
+domain_name: "genemed.tech"
+tls_email: "admin@genemed.tech"
 
 # ── Fast LLM ──────────────────────────────────────────────────────────────
 fast_llm_base_url: "https://api.siliconflow.cn/v1"
@@ -84,7 +84,7 @@ web_search_max_results: 10
 # ── Literature Acquisition ───────────────────────────────────────────────
 # Unpaywall requires a contact email (not secret — structural config).
 # API keys for pubmed/base/core go in vault.yml.
-unpaywall_email: "admin@your-domain.com"
+unpaywall_email: "admin@genemed.tech"
 
 # ── Network / Proxy ───────────────────────────────────────────────────────
 network_proxy: ""
@@ -98,7 +98,7 @@ backend_log_level: "info"
 # ── Frontend Service ──────────────────────────────────────────────────────
 # SPA mount path (no trailing slash). "" = root; "/linguaseeker" = subpath.
 # Must match the build-time VITE_BASE_PATH baked into the frontend bundle.
-frontend_base_path: ""
+frontend_base_path: "/linguaseeker"
 frontend_port: 3000
 frontend_node_env: "production"
 

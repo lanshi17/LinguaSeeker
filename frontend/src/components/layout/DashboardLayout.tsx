@@ -15,7 +15,7 @@ export function DashboardLayout() {
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
   return (
-      <div style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "#f9fafb" }}>
+      <div className="dl-root" style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "#f9fafb" }}>
         {/* Desktop sidebar */}
         <div className="dl-desktop-sidebar">
           <Sidebar />
@@ -57,7 +57,7 @@ export function DashboardLayout() {
           </div>
         )}
 
-        <div style={{ display: "flex", flex: 1, flexDirection: "column", overflow: "hidden" }}>
+        <div className="dl-body" style={{ display: "flex", flex: 1, flexDirection: "column", overflow: "hidden" }}>
           {/* Top bar */}
           <header
             className="dl-header"

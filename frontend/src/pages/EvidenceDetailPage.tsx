@@ -34,7 +34,7 @@ export function EvidenceDetailPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Page header with icon */}
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+      <div className="no-print" style={{ display: "flex", alignItems: "center", gap: 16 }}>
         <div style={iconStyle}>
           {isCompareView ? (
             <Columns2 size={24} color="#fff" />
