@@ -1,8 +1,8 @@
 # Cross-Lingual Process & Extract Evidence
 
-> Phase 2 of the LinguaSeeker pipeline: format, translate, and persist non-English biomedical documents into structured bilingual JSON via a 3-stage LLM pipeline with block-level alignment and character drift tracking.
+> Phase 2 of the LinguaSeeker pipeline: (1) format, translate, and persist non-English biomedical documents into structured bilingual JSON via a 3-stage LLM pipeline with block-level alignment; then (2) extract grouped GDV/ACMG evidence items from each track via a 15-node LangGraph workflow with block-aware source grounding, and reconcile dual-track results.
 
-## Quick Start
+## Quick Start — Cross-Lingual Translation
 
 ```python
 from src.core.config import get_config
@@ -29,10 +29,47 @@ print(output.original_json_path)   # ./output/doc_001/original.json
 print(output.translated_json_path) # ./output/doc_001/translated.json
 ```
 
+## Quick Start — Evidence Extraction
+
+```python
+from src.core.config import get_config
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
+    EvidenceExtractionService,
+)
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    PageSpan, Track, TrackDocument,
+)
+
+cfg = get_config()
+service = EvidenceExtractionService(cfg=cfg)
+
+# Single-track extraction
+document = TrackDocument(
+    document_id="doc-1",
+    track=Track.TRANSLATED,
+    formatted_text="The patient carried a novel BRCA1 variant.",
+    page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=50)],
+)
+result = await service.run(document)
+# result.evidence_items  -> list of extracted EvidenceItem
+# result.quality_report  -> QualityReport with passed/scorable/issues
+
+# Dual-track extraction from persisted translation output
+documents = EvidenceExtractionService.build_dual_documents_from_output_dir(
+    "backend/data/pipeline/run-1/phase_2/doc-001"
+)
+dual_result = await service.run_dual(documents)
+# dual_result.original_result / dual_result.translated_result — independent runs
+# dual_result.reconciled_result — merged reconciled output
+```
+
 ## Architecture
+
+Phase 2 is split into two sub-modules executed sequentially by the pipeline orchestrator:
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
+│                 cross_lingual/  (Translation)                     │
 │                     TranslationService                            │
 │  (workflow.py — LangGraph orchestrator, public API)               │
 │                                                                  │
@@ -54,9 +91,42 @@ print(output.translated_json_path) # ./output/doc_001/translated.json
 │  │ original.json / translated.json / metadata.json              │
 │  └──────────────────────────────┘                               │
 └──────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────────┐
+│              extract_evidence/  (Evidence Extraction)             │
+│               EvidenceExtractionService (public facade)           │
+│                                                                  │
+│  EvidenceExtractionWorkflow — 15-node LangGraph StateGraph       │
+│  (workflow.py)                                                   │
+│                                                                  │
+│  relevance_scan ──▶ catalog_extraction ──▶ special_evidence      │
+│       │                    │                      │              │
+│       ▼                    ▼                      ▼              │
+│  clinical_context ──▶ language_metadata ──▶ group_assignment     │
+│                              │                      │            │
+│                              ▼                      ▼            │
+│  role_routing ──▶ value_normalization ──▶ target_guard           │
+│                              │                      │            │
+│                              ▼                      ▼            │
+│  target_span_recovery ──▶ source_grounding ──▶ chain_assembly    │
+│                              │                      │            │
+│                              ▼                      ▼            │
+│  quality_gate ──▶ catalog_backfill ──▶ END                      │
+│                                                                  │
+│  Stages: RelevanceScanStage, CatalogExtractionStage,             │
+│  SpecialEvidenceStage, ClinicalContextStage, GroupAssignmentStage,│
+│  EvidenceRoleRouter, AcmgEvidenceValueNormalizer,                │
+│  TargetEntityGuard, TargetSpanFieldRecovery, SourceGroundingStage,│
+│  EvidenceChainBuilder, QualityGateStage, EvidenceItemNormalizer  │
+│                                                                  │
+│  ┌──────────────────────────────┐                               │
+│  │ reconcile/  (Dual-Track)     │  alignment + contextual merge │
+│  └──────────────────────────────┘                               │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-**Data flow:**
+**Translation data flow:**
 
 1. **Input**: `List[Dict]` pages (MinerU `ParseResult.pages`) + optional `List[Dict]` content_blocks (MinerU `content_list.json`).
 2. **Format**: `MarkdownFormatter` joins per-page markdown, normalizes whitespace/headings, builds `SentenceRegion` objects with page + character offsets, and converts `content_blocks` into typed `ContentBlock` objects. Output: `FormattedDocument`.
@@ -65,55 +135,59 @@ print(output.translated_json_path) # ./output/doc_001/translated.json
 5. **Skip**: For English documents, a synthetic `TranslationResult` is produced with `translated_english == formatted_original`.
 6. **Persist**: `DocumentPersistenceService.save()` writes `original.json`, `translated.json`, `metadata.json`, and copies images.
 
+**Evidence extraction data flow:**
+
+1. **Input**: `TrackDocument` (one per track: original or translated) built from persisted `original.json` / `translated.json`.
+2. **Relevance scan** (FAST tier): classify document relevance and channel type.
+3. **Catalog extraction** (STRONG tier): extract sparse `EvidenceItem[]` from channel-eligible fields.
+4. **Special evidence** (STRONG tier): second pass for functional/case-control/authority/contradiction evidence.
+5. **Clinical context**: supplementary phenotype and clinical items.
+6. **Language metadata**: stamp `article_language`, `is_english`, target gene/disease/variant.
+7. **Group assignment**: assign variant-centered `group_id` values.
+8. **Role routing**: separate primary/phenotype/comparator/context items.
+9. **Value normalization**: reject coordinate-only HGVS, block milestone ages, merge duplicates.
+10. **Target guard**: filter items against the `ExtractionTarget` gene-disease pair.
+11. **Target span recovery**: recover missing high-signal fields from already selected source snippets.
+12. **Source grounding**: `raw_source` → block/text grounding → `OCR_GAP`/`SOURCE_INVALID`.
+13. **Chain assembly**: build full/partial/singleton variant-centered chains.
+14. **Quality gate**: chain-aware scoring and review gates.
+15. **Catalog backfill**: expand sparse items to full 166-row catalog per group.
+16. **Dual-track reconciliation**: run original + translated concurrently, then align and merge.
 ## Directory Map
+
+### Top-level files
 
 | Path | Purpose |
 |------|---------|
-| `contracts.py` | All data types: `SentenceRegion`, `ContentBlock`, `FormattedDocument`, `TranslationSegment`, `TranslationResult`, `PipelineState`, `CrossLingualOutput`, drift reports |
+| `contracts.py` | Translation data types: `SentenceRegion`, `ContentBlock`, `FormattedDocument`, `TranslationSegment`, `TranslationResult`, `PipelineState`, `CrossLingualOutput`, drift reports |
 | `config_context.py` | `TranslationConfigContext` — extracts `cfg.translation` subset, injected into translator |
-| (via `src.utils.observability`) | `traced_node` decorator — LangSmith tracing + loguru logging per graph node |
 | `router.py` | `LanguageRouter` — single-responsibility routing decision |
 | `workflow.py` | `TranslationService` — LangGraph graph wiring, `run()` / `run_sync()` / `save()` public API |
 | `persistence.py` | `DocumentPersistenceService` — local filesystem persistence (original/translated JSON + metadata + images) |
-| `cross_lingual/format/` | Document formatting: `MarkdownFormatter`, sentence segmentation, page offset tracking |
-| `cross_lingual/translate/` | 3-stage LLM translation pipeline (see below) |
 
-### `cross_lingual/translate/` submodules
+### Sub-module reference
 
-| File | Purpose |
-|------|---------|
-| `translator.py` | `MultiStageTranslator` — main translation engine: terminology, block translation, self-review, validation |
-| `providers.py` | LLM client factory (`create_llm`, `create_json_llm`) and retry logic (`invoke_with_retry`, `invoke_json_with_retry`) |
-| `blocks.py` | Block-level operations: `join_blocks_with_markers`, `split_by_markers`, `merge_short_keywords`, `split_merged_keywords` |
-| `postprocess.py` | Post-translation: `build_translated_blocks`, `deduplicate_bilingual_blocks`, `check_block_language`, `flag_quality_issues`, `compute_translation_drift` |
-| `exceptions.py` | `TranslationError` — critical translation failures |
-| `base.py` | `BaseTranslator` — abstract base class |
-| `language_detector.py` | `detect_language()`, `_CJK_RE`, `should_skip_translation()` |
-| `prompts/` | Stage-specific LLM prompt templates (see below) |
-| `validator/` | Validation and normalization (see below) |
+- **[cross_lingual/](./cross_lingual/README.md)** — Document formatting and 3-stage LLM translation pipeline
+- **[extract_evidence/](./extract_evidence/README.md)** — Track-agnostic GDV/ACMG evidence extraction with 15-node LangGraph workflow, dual-track reconciliation, 166-field catalog, and block-aware source grounding
 
-### `cross_lingual/translate/prompts/` submodules
-
-| File | Purpose |
-|------|---------|
-| `terminology.py` | `get_terminology_prompt()`, `get_system_prompt_generation_prompt()` |
-| `translate.py` | `get_translate_prompt()`, `get_full_document_translate_prompt()`, `get_self_review_prompt()` |
-| `format.py` | `get_format_prompt()`, `get_prescan_prompt()` |
-
-### `cross_lingual/translate/validator/` submodules
-
-| File | Purpose |
-|------|---------|
-| `core.py` | `validate_translation_output()`, `validate_segment()`, `validate_image_references_preserved()`, `summarize_validation_error()` |
-| `normalize.py` | `normalize_cjk_punctuation()`, `normalize_placeholders()`, `fix_email_placeholder()`, `fix_ocr_truncations()`, `fix_word_boundary_redacted()`, `normalize_keywords_capitalization()` |
-| `artifacts.py` | `strip_prompt_echo()`, `strip_inline_artifacts()`, `strip_prompt_artifacts()`, `strip_source_contamination()` |
-| `redacted.py` | `mark_redacted_values()` — inserts `[REDACTED]` for missing OCR values |
 
 ## Public API
 
-### `TranslationService`
+### `EvidenceExtractionService` (extract_evidence/)
 
-The sole public entry point. Constructed once per application lifetime.
+See **[extract_evidence/README.md](./extract_evidence/README.md)** for the full API reference. Key methods:
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `__init__` | `(cfg: Any)` | Creates `LangChainEvidenceProvider` (tier-based LLM pool) and `EvidenceExtractionWorkflow` (15-node LangGraph) |
+| `run` | `async (document: TrackDocument) -> EvidenceExtractionResult` | Run the full 15-stage extraction pipeline asynchronously |
+| `run_dual` | `async (documents: DualTrackDocuments) -> DualEvidenceExtractionResult` | Run original + translated tracks concurrently, then reconcile |
+| `run_sync` | `(document: TrackDocument) -> EvidenceExtractionResult` | Synchronous wrapper |
+| `build_dual_documents_from_output_dir` | `(output_dir, extraction_target?) -> DualTrackDocuments` | Build `TrackDocument` inputs from persisted `original.json` / `translated.json` |
+
+### `TranslationService` (cross_lingual/)
+
+Translation sub-module public entry point. Constructed once per application lifetime.
 
 ```python
 class TranslationService:
