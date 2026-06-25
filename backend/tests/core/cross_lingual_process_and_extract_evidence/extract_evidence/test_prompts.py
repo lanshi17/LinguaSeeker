@@ -84,6 +84,29 @@ def test_catalog_prompt_declares_pre_scoped_eligible_fields() -> None:
     assert "set status=\"not_found\" for listed eligible fields" in lower
 
 
+def test_catalog_prompt_absorbs_expanded_field_guidance_without_baseline_limits() -> None:
+    """Pipeline prompt should absorb B7 field coverage guidance, not its baseline constraints."""
+    prompt = get_catalog_extraction_prompt(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        text="MECP2 de novo variant in Rett syndrome",
+        catalog=EVIDENCE_FIELD_SPECS,
+        evidence_map_summary="MECP2; Rett syndrome; de novo",
+    )
+
+    assert "EXPANDED FIELD COVERAGE GUIDANCE" in prompt
+    assert "A.variant_hgvs_c" in prompt
+    assert "A.variant_hgvs_p" in prompt
+    assert "A.variant_consequence_class" in prompt
+    assert "B.age_of_onset" in prompt
+    assert "B.mode_of_inheritance_reported" in prompt
+    assert "C.inheritance_source" in prompt
+    assert "C.de_novo_status" in prompt
+    lower = prompt.lower()
+    assert "do not use tools" not in lower
+    assert "do not use" not in lower or "multi-stage pipeline" not in lower
+
+
 def test_catalog_prompt_defines_ocr_gap_and_external_completion_boundaries():
     prompt = get_catalog_extraction_prompt(
         document_id="doc-1",
