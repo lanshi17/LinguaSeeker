@@ -308,7 +308,7 @@
 |---|---|
 | 后端应用配置 | `backend/config/defaults/main.yaml` + `environments/<env>.yaml` + `vault/<env>.yaml` |
 | 前端环境变量 | `frontend/.env`（基础）+ `.env.<mode>`（环境覆盖）+ `.env.<mode>.local`（密钥，git-ignored） |
-| 模型服务配置 | 共享 `backend/config/`，通过 `acmg_config_loader` 加载；`services/model-server/app/config.py` 定义 Settings |
+| 模型服务配置 | 模型推理服务为外部独立 Docker 容器（Embedding/Rerank/Doc-Parse），通过 `backend/config/` 配置 URL 和认证 |
 | 部署编排 | Docker Compose（dev/staging）：`deploy/compose/`；Ansible（production）：`deploy/ansible/` |
 | 数据库凭证 | `backend/config/vault/<env>.yaml`（单一凭证来源） |
 
@@ -318,7 +318,7 @@
   - Embedding：`Qwen/Qwen3-Embedding-0.6B`
   - Rerank：`BAAI/bge-reranker-v2-m3`
   - Doc Parse：`opendatalab/MinerU2.5-Pro-2604-1.2B`
-- 添加或更改模型时，必须同时更新 `backend/config/defaults/main.yaml`、`services/model-server/app/config.py`、`deploy/ansible/inventories/*/group_vars/all.yml`。
+- 添加或更改模型时，必须同时更新 `backend/config/defaults/main.yaml` 和 `deploy/ansible/inventories/*/group_vars/all.yml`。模型容器本身由独立项目管理。
 
 #### 28.4 环境配置文件完整性
 
@@ -347,12 +347,12 @@
   - `backend/src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/gateway.py`
 - 新增外部 HTTP 请求代码时，**必须**复用上述函数或等效的 SSRF 校验逻辑。
 
-#### 29.3 模型服务器安全边界
+#### 29.3 推理服务安全边界
 
-- 模型服务器（`services/model-server/`）是**内部公共服务**，不设置应用层认证，可被内部网络中的任意服务访问。
+- 模型推理服务（Embedding/Rerank/Doc-Parse）为**外部独立 Docker 容器**，由独立项目构建和发布，不属于本仓库生命周期管理。
 - 安全边界依赖**网络隔离**：绑定到内网 IP 或通过防火墙/安全组限制访问来源。
-- **禁止**将模型服务器端口暴露到公网（`0.0.0.0` 绑定或无防火墙规则）。
-- Docker Compose 部署时，模型服务器端口应绑定到 `127.0.0.1` 或内网 IP。
+- **禁止**将推理服务端口暴露到公网（`0.0.0.0` 绑定或无防火墙规则）。
+- Docker Compose 部署时，推理服务端口应绑定到 `127.0.0.1` 或内网 IP。
 
 ---
 
@@ -409,9 +409,14 @@ Three PyO3 crates, all using `cdylib` + `rlib` crate types, async via `pyo3-asyn
 
 All three expose async Python functions via `pyo3_async_runtimes::tokio::future_into_py`. The Python gateway (`src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/gateway.py`) calls `net_io.fetch_one()` for HTTP I/O and handles PDF downloads in Python.
 
-#### Model Server (`services/model-server/`)
+#### External Inference Services (not in this repo)
 
-Standalone FastAPI microservice (port 8001) for local model inference: Embedding, Rerank, LLM chat. OpenAI-compatible API. Models lazy-loaded on first request. Shares the `backend/config/` layered configuration source with the backend.
+Three independent Docker containers provide model inference, built and published by a separate project:
+- **Embedding** (:8002): Sentence-Transformers + FastAPI, `/v1/embeddings` (OpenAI-compatible)
+- **Rerank** (:8003): Sentence-Transformers/CrossEncoder + FastAPI, `/v1/rerank`
+- **Doc Parse** (:8004): MinerU + FastAPI, `/file_parse`
+
+The backend consumes these via HTTP clients (`EmbeddingHttpProvider`, `RerankHttpProvider`, `MinerULocalParser`). URL and auth configured via `backend/config/` (`inference_api_key`, `embedding.base_url`, `rerank.base_url`, `mineru.local_parse_url`).
 
 #### Frontend (`frontend/`)
 
@@ -491,12 +496,13 @@ cargo bench                 # rust-io only
 
 To rebuild the PyO3 extension after Rust changes: `maturin develop --release` (from the crate directory).
 
-#### Model Server
+#### External Inference Services
+
+Model inference is provided by external Docker containers (not built by this repo). See the separate inference-services project for building and running:
 
 ```bash
-cd services/model-server
-uv run python main.py       # Starts on :8001
-uv run python main.py --port 8002
+# Configure URLs in backend/config/ (embedding.base_url, rerank.base_url, mineru.local_parse_url)
+# Default ports: embedding :8002, rerank :8003, doc-parse :8004
 ```
 
 #### Full Stack

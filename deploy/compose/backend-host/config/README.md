@@ -20,7 +20,7 @@ cp ../../../backend/config/vault/production.yaml.example config/vault/production
 chmod 600 config/vault/production.yaml
 ```
 
-Edit `config/production.yaml` to set environment-specific values (CORS origins, model server URLs, etc.). Edit `config/vault/production.yaml` with real secrets (database passwords, LLM API keys).
+Edit `config/production.yaml` to set environment-specific values (CORS origins, inference service URLs, etc.). Edit `config/vault/production.yaml` with real secrets (database passwords, LLM API keys).
 
 ## Git Ignore
 

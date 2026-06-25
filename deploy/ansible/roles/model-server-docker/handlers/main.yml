@@ -1,5 +1,0 @@
----
-- name: Restart model-server-docker
-  command:
-    cmd: docker compose -f docker-compose.model-server.yml restart
-    chdir: "{{ project_root }}/services/model-server"

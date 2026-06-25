@@ -686,6 +686,55 @@ class PipelineRunState(Base):
 
 
 
+class PipelineJob(Base):
+    """Persistent job queue for pipeline execution.
+
+    Guarantees single-running-task invariant via SELECT FOR UPDATE SKIP LOCKED
+    claim pattern. Jobs transition through: queued → running → completed/failed.
+    Failed jobs can be retried by resetting status back to 'queued'.
+    """
+
+    __tablename__ = "pipeline_jobs"
+    __table_args__ = (
+        Index("ix_pipeline_jobs_status_priority", "status", "priority", "created_at"),
+        Index("ix_pipeline_jobs_processing_run_id", "processing_run_id"),
+        CheckConstraint(
+            "status IN ('queued', 'running', 'completed', 'failed')",
+            name="ck_pipeline_jobs_status",
+        ),
+    )
+
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    processing_run_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), nullable=False
+    )
+    source_document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), nullable=False
+    )
+    status: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="queued", server_default=text("'queued'")
+    )
+    priority: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default=text("0")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    request_data: Mapped[dict[str, object]] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )
+    worker_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+
+
 class DocumentProcessingCache(Base):
     """L2 PostgreSQL cache for document processing results.
 

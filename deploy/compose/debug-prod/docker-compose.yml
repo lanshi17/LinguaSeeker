@@ -1,5 +1,5 @@
 # ============================================================================
-# Debug-Prod — production-config backend in Docker, no GPU model servers.
+# Debug-Prod — production-config backend in Docker, no local inference services.
 #
 # Reuses the pre-built lingua-seeker-backend:local image (no build step).
 # Mounts backend/config/ read-only so YAML edits take effect on restart
@@ -50,12 +50,10 @@ services:
       # ── LLM endpoints (API keys come from vault/production.yaml) ──
       FAST_LLM_BASE_URL: ${FAST_LLM_BASE_URL:-https://linxi.chat/v1}
       REASONING_LLM_BASE_URL: ${REASONING_LLM_BASE_URL:-https://linxi.chat/v1}
-      # Embedding/Rerank base_url + remote_base_url come from the mounted
-      # production.yaml. Local (localhost:8001) fails fast in the container,
-      # FallbackEmbeddingProvider transparently falls back to remote (SiliconFlow).
-      # To use the host's model-server instead, edit production.yaml:
-      #   embedding.base_url: "http://host.docker.internal:8001/v1"
-      # (requires model-server bound to 0.0.0.0, not 127.0.0.1)
+      # Embedding/Rerank base_url come from the mounted production.yaml.
+      # Remote fallback (SiliconFlow) is used when local inference services are unavailable.
+      # To use host inference services, edit production.yaml:
+      #   embedding.base_url: "http://host.docker.internal:8002/v1"
     volumes:
       # Live config — edit backend/config/*.yaml, restart container, no rebuild.
       - ../../../backend/config:/app/config:ro
@@ -63,8 +61,8 @@ services:
       - debug_backend_data:/app/data
       - debug_backend_downloads:/app/downloads
       - debug_backend_output:/app/output
-    # Lets the container reach a model-server running on the host via
-    # http://host.docker.internal:8001/v1
+    # Lets the container reach inference services running on the host via
+    # http://host.docker.internal:<port>
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:

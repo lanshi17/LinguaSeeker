@@ -57,12 +57,12 @@ DualEvidenceExtractionResult
            -> expand_hgvs_aliases() (HGVS normalization for variant matching)
         -> SimilarityTerminologyMatcher (semantic fallback)
            -> FallbackEmbeddingProvider
-              -> local:  ModelServerEmbeddingProvider -> model-server /v1/embeddings
-              -> remote: ModelServerEmbeddingProvider -> remote API (fallback)
+              -> local:  EmbeddingHttpProvider -> inference service /v1/embeddings
+              -> remote: EmbeddingHttpProvider -> remote API (fallback)
            -> PgvectorTerminologyRepository -> pgvector cosine distance
            -> FallbackRerankProvider
-              -> local:  ModelServerRerankProvider -> model-server /v1/rerank
-              -> remote: ModelServerRerankProvider -> remote API (fallback)
+              -> local:  RerankHttpProvider -> inference service /v1/rerank
+              -> remote: RerankHttpProvider -> remote API (fallback)
      -> AcmgReadyProjector (ACMG rules-engine facts)
      -> StandardizationRepository
         -> terminology_entries / terminology_aliases / terminology_relationships
@@ -80,7 +80,7 @@ The slice follows the repo's vertical-slice layout:
 - `importers.py`: local terminology file parsers (HGNC, OMIM, HPO, ClinGen, ClinVar)
 - `matchers.py`: matcher facade with `HybridTerminologyMatcher`
 - `precise_match/`: deterministic source-priority matching
-- `similarity_match/`: semantic matching via pgvector and model-server (providers, repositories, indexer, contracts)
+- `similarity_match/`: semantic matching via pgvector and inference service (providers, repositories, indexer, contracts)
 - `repositories.py`: write boundary to SQLAlchemy ORM models
 - `normalizers.py`: shared text normalization, scope hashing, and cross-lingual disease mapping
 - `cross_lingual_disease.py`: deterministic cross-lingual disease name resolution via token-based ILIKE + Jaccard similarity
@@ -218,9 +218,9 @@ This enables resolution of non-English disease names without LLM calls or embedd
 
 When precise matching returns `unmapped` (and cross-lingual resolution does not apply or fails), the system:
 
-1. Embeds the candidate text via model-server `/v1/embeddings`
+1. Embeds the candidate text via inference service `/v1/embeddings`
 2. Retrieves nearest neighbors from `terminology_embeddings` using pgvector cosine distance
-3. Reranks candidates via model-server `/v1/rerank`
+3. Reranks candidates via inference service `/v1/rerank`
 4. Accepts the top candidate if rerank score exceeds threshold (default 0.7)
 5. Returns `ambiguous` if top two candidates are too close (margin < 0.05)
 
@@ -228,7 +228,7 @@ Semantic matches are persisted with `match_method="similarity"` and include `sim
 
 ### Graceful Degradation
 
-Embedding and rerank providers use a local-first, remote-fallback strategy (mirroring the MinerU document parsing pattern). `FallbackEmbeddingProvider` and `FallbackRerankProvider` try the local model-server first; if it's unavailable (connection error, timeout, HTTP error), they fall back to a configured remote provider (e.g. SiliconFlow). If no remote is configured, the original error propagates. This prevents transient model-server outages from blocking the standardization pipeline.
+Embedding and rerank providers use a local-first, remote-fallback strategy (mirroring the MinerU document parsing pattern). `FallbackEmbeddingProvider` and `FallbackRerankProvider` try the local inference service first; if it's unavailable (connection error, timeout, HTTP error), they fall back to a configured remote provider (e.g. SiliconFlow). If no remote is configured, the original error propagates. This prevents transient inference service outages from blocking the standardization pipeline.
 
 If both local and remote providers fail (or no remote is configured and local fails), `HybridTerminologyMatcher` logs a warning and returns `unmapped` with `match_method="similarity"` and a rationale describing the failure.
 
@@ -375,11 +375,11 @@ HybridTerminologyMatcher
     └── unmapped?
         └── SimilarityTerminologyMatcher
             ├── FallbackEmbeddingProvider
-            │   ├── local  -> model-server /v1/embeddings
+            │   ├── local  -> inference service /v1/embeddings
             │   └── remote -> remote API (fallback)
             ├── PgvectorTerminologyRepository -> pgvector cosine retrieval
             └── FallbackRerankProvider
-                ├── local  -> model-server /v1/rerank
+                ├── local  -> inference service /v1/rerank
                 └── remote -> remote API (fallback)
 ```
 
@@ -387,7 +387,7 @@ HybridTerminologyMatcher
 
 1. Ensure `pgvector_enabled: true` in PostgreSQL config
 2. Run the pgvector migration: `uv run alembic upgrade head`
-3. Start model-server on port 8001 with embedding model loaded
+3. Start inference services with embedding model loaded
 4. Generate embeddings: `uv run python scripts/build_terminology_embeddings.py`
 
 ### Tables
@@ -420,7 +420,7 @@ These are intentionally out of scope in the current implementation:
 | `asyncpg` | PostgreSQL async driver used by `dao.connection` |
 | `alembic` | migration management for terminology reference tables |
 | `pgvector` | PostgreSQL vector similarity search for semantic matching |
-| `httpx` | Async HTTP client for model-server embedding and rerank calls |
+| `httpx` | Async HTTP client for inference service embedding and rerank calls |
 | `pytest` / `pytest-asyncio` | unit and integration-style verification |
 | `ruff` | lint enforcement |
 

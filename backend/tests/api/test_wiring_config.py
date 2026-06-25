@@ -45,7 +45,7 @@ def test_remote_parser_receives_all_config():
     pd = ParseDocumentConfig(
         mineru_remote_poll_interval=3.0,
         mineru_remote_max_poll_attempts=200,
-        mineru_local_model_server_url="http://localhost:8002",
+        mineru_local_parse_url="http://localhost:8002",
         mineru_local_model_id="test-model",
         mineru_local_timeout=60.0,
         mineru_local_dpi=300,
@@ -72,14 +72,14 @@ def test_remote_parser_receives_all_config():
 
 
 def test_local_parser_receives_all_config():
-    """MinerULocalParser should receive model_server_url, model_id, timeout, dpi."""
+    """MinerULocalParser should receive parse_url, model_id, timeout, dpi."""
     from src.core.config import get_config
     get_config.cache_clear()
 
     pd = ParseDocumentConfig(
         mineru_remote_poll_interval=2.0,
         mineru_remote_max_poll_attempts=150,
-        mineru_local_model_server_url="http://localhost:8002",
+        mineru_local_parse_url="http://localhost:8002",
         mineru_local_model_id="test-model-id",
         mineru_local_timeout=60.0,
         mineru_local_dpi=300,
@@ -100,7 +100,7 @@ def test_local_parser_receives_all_config():
         wire_dependencies()
 
         _, kwargs = mock_local.call_args
-        assert kwargs.get("model_server_url") == "http://localhost:8002"
+        assert kwargs.get("parse_url") == "http://localhost:8002"
         assert kwargs.get("model_id") == "test-model-id"
         assert kwargs.get("timeout") == 60.0
         assert kwargs.get("dpi") == 300

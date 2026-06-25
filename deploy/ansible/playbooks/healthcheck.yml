@@ -27,7 +27,6 @@
             - docker
           app:
             - acmg-backend
-            - acmg-model-server
           web:
             - nginx
             - acmg-frontend
@@ -61,15 +60,19 @@
       register: backend_health
       until: backend_health.status == 200
 
-    - name: Model server /health returns 200
+- name: Verify inference service health
+  hosts: app
+  gather_facts: no
+  tasks:
+    - name: Embedding service /health returns 200
       uri:
-        url: "http://127.0.0.1:{{ model_server_port }}/health"
+        url: "http://127.0.0.1:{{ embedding_port | default(8002) }}/health"
         method: GET
         status_code: 200
       retries: 5
       delay: 10
-      register: model_health
-      until: model_health.status == 200
+      register: embedding_health
+      until: embedding_health.status == 200
       failed_when: false
 
 - name: Verify frontend and TLS

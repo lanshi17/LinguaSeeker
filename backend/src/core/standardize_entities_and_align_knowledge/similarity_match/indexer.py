@@ -31,7 +31,7 @@ def make_embedding_text_hash(text: str) -> str:
 
 
 class TerminologyEmbeddingIndexer:
-    """Build and persist terminology embeddings through model-server."""
+    """Build and persist terminology embeddings through inference service."""
 
     def __init__(self, session, embedding_provider) -> None:
         self._session = session

@@ -7,7 +7,6 @@
 #
 # Usage:
 #   ./update.sh backend          # update backend only
-#   ./update.sh model-server     # update all 4 model-server containers
 #   ./update.sh all              # update everything
 # ============================================================================
 set -euo pipefail
@@ -38,28 +37,6 @@ update_backend() {
     echo "  ✓ backend updated"
 }
 
-update_model_server() {
-    echo "=== Updating model-server ==="
-
-    # 1. Sync changed source code
-    rsync -avz --delete \
-      --exclude='.venv' --exclude='__pycache__' --exclude='.git' \
-      "$REPO_DIR/services/model-server/" "$DEPLOY_DIR/services/model-server/"
-
-    # 2. Build thin overlays for each service
-    cd "$DEPLOY_DIR"
-    for svc in embedding rerank doc-parse; do
-        echo "  Patching ${svc}-server..."
-        docker build -t "${svc}-server:local" \
-          --build-arg "BASE_IMAGE=${svc}-server:local" \
-          -f deploy/compose/single-server/patch-model-server.Dockerfile . 2>&1 | tail -3
-    done
-
-    # 3. Restart
-    docker-compose up -d model-embedding model-rerank model-doc-parse
-    echo "  ✓ model-server updated"
-}
-
 # ── Main ───────────────────────────────────────────────────────────────────
 cd "$DEPLOY_DIR"
 
@@ -67,27 +44,19 @@ case "${1:-all}" in
     backend)
         update_backend
         ;;
-    model-server|model)
-        update_model_server
-        ;;
     all)
         update_backend
-        update_model_server
         ;;
     *)
-        echo "Usage: $0 {backend|model-server|all}"
+        echo "Usage: $0 {backend|all}"
         exit 1
         ;;
 esac
 
 echo ""
 echo "=== Health check ==="
-for svc in backend:8000 model-embedding:8002 model-rerank:8003 model-doc-parse:8004; do
-    name="${svc%%:*}"
-    port="${svc#*:}"
-    if curl -fsS "http://localhost:${port}/health" &>/dev/null; then
-        echo "  ✓ $name"
-    else
-        echo "  ✗ $name (still starting? check: docker logs ${name#model-}-server)"
-    fi
-done
+if curl -fsS "http://localhost:8000/health" &>/dev/null; then
+    echo "  ✓ backend"
+else
+    echo "  ✗ backend (check logs: docker logs lingua-backend)"
+fi

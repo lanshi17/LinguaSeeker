@@ -1,6 +1,6 @@
 # Parse Document — Local
 
-> Local PDF parser using the model-server doc-parse `/file_parse` endpoint. Uploads raw PDF bytes as multipart form data and receives full markdown plus per-block `content_list`, which is grouped by `page_idx` to reconstruct per-page `PageContent` objects.
+> Local PDF parser using the MinerU service doc-parse `/file_parse` endpoint. Uploads raw PDF bytes as multipart form data and receives full markdown plus per-block `content_list`, which is grouped by `page_idx` to reconstruct per-page `PageContent` objects.
 
 ## Quick Start
 
@@ -8,7 +8,7 @@
 from src.core.ingest_and_digitize_data.parse_document.local.parser import MinerULocalParser
 
 parser = MinerULocalParser(
-    model_server_url="http://localhost:8004",
+    parse_url="http://localhost:8004",
     model_id="opendatalab/MinerU2.5-Pro-2604-1.2B",
     timeout=120.0,
     dpi=200,
@@ -51,7 +51,7 @@ MinerULocalParser.parse(pdf_path)
 
 ```python
 MinerULocalParser(
-    model_server_url: str = "http://localhost:8004",
+    parse_url: str = "http://localhost:8004",
     model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B",
     timeout: float = 120.0,
     dpi: int = 200,
@@ -61,9 +61,9 @@ MinerULocalParser(
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `__init__` | `(model_server_url, model_id, timeout, dpi, api_key)` | Configure model-server connection. `model_id` and `dpi` are retained for backward-compatibility but not used at runtime — the doc-parse service selects its own model. |
+| `__init__` | `(parse_url, model_id, timeout, dpi, api_key)` | Configure MinerU service connection. `model_id` and `dpi` are retained for backward-compatibility but not used at runtime — the doc-parse service selects its own model. |
 | `name` | `-> str` | Returns `"mineru-local"` |
-| `parse` | `async (pdf_path: str) -> ParseResult` | Parse PDF by uploading to model-server `/file_parse` endpoint |
+| `parse` | `async (pdf_path: str) -> ParseResult` | Parse PDF by uploading to MinerU service `/file_parse` endpoint |
 
 ### Internal Methods
 
@@ -78,7 +78,7 @@ MinerULocalParser(
 
 ### `/file_parse` Endpoint
 
-The model-server exposes a `/file_parse` endpoint that accepts raw PDF bytes as multipart form data. The request includes form fields:
+The MinerU service exposes a `/file_parse` endpoint that accepts raw PDF bytes as multipart form data. The request includes form fields:
 
 | Field | Value | Purpose |
 |-------|-------|---------|
@@ -116,13 +116,13 @@ The response JSON has the shape:
 
 ### Authentication
 
-When `api_key` is non-empty, requests include an `Authorization: Bearer <api_key>` header. This authenticates with the model-server's internal API key.
+When `api_key` is non-empty, requests include an `Authorization: Bearer <api_key>` header. This authenticates with the MinerU service's internal API key.
 
 ## Configuration
 
 | Env Var | Default | Description |
 |---------|---------|-------------|
-| `MINERU_LOCAL_MODEL_SERVER_URL` | `http://localhost:8004` | Model-server doc-parse endpoint |
+| `MINERU_LOCAL_PARSE_URL` | `http://localhost:8004` | MinerU service doc-parse endpoint |
 | `MINERU_LOCAL_MODEL_ID` | `opendatalab/MinerU2.5-Pro-2604-1.2B` | VLM model ID (retained for backward-compatibility) |
 | `MINERU_LOCAL_TIMEOUT` | `120.0` | Request timeout in seconds |
 | `MINERU_LOCAL_DPI` | `200` | PDF rendering DPI (retained for backward-compatibility) |
@@ -131,7 +131,7 @@ When `api_key` is non-empty, requests include an `Authorization: Bearer <api_key
 
 | Dependency | Purpose |
 |------------|---------|
-| `httpx` | Async HTTP multipart upload to model-server |
+| `httpx` | Async HTTP multipart upload to MinerU service |
 | `loguru` | Structured logging |
 | `src.utils.markdown_helpers` | Abstract extraction from markdown |
 

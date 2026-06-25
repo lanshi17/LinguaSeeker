@@ -62,8 +62,7 @@ YAML fields map to environment variables:
 
 ## Shared Loader API
 
-`src.core.config_loader` is the shared file-loading boundary used by the backend and
-`services/model-server`.
+`src.core.config_loader` is the shared file-loading boundary used by the backend.
 
 | Function | Signature | Description |
 |---|---|---|
@@ -95,7 +94,7 @@ the highest priority.
 
 ```bash
 cd backend
-uv run pytest tests/core/test_config_loader.py tests/core/test_config.py services/model-server/tests/test_model_server_config.py -q
+uv run pytest tests/core/test_config_loader.py tests/core/test_config.py -q
 uv run ruff check src/core/config.py src/core/config_loader.py tests/core/test_config_loader.py
 ```
 
@@ -126,7 +125,7 @@ Each slice follows the vertical-slice contract: `api.py` (orchestrator-facing), 
 
 MinerU document parsing configuration has been simplified. The `MinerUConfig` model now contains only `max_file_size_mb` (default 100). The API token is no longer stored in the config model -- it is injected via environment variables at the provider level.
 
-Document parsing settings (`ParseDocumentConfig`) control remote polling intervals, local model server URL, timeout, and DPI.
+Document parsing settings (`ParseDocumentConfig`) control remote polling intervals, local MinerU service URL, timeout, and DPI.
 
 ## pgvector Validation
 

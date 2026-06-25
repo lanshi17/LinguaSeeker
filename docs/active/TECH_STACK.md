@@ -463,7 +463,7 @@ services:
   redis:       # Redis 8.0 Alpine, port 6379
 ```
 
-Environment variables are passed directly via docker-compose `environment` block for `DATABASE_URL`, `REDIS_URL`, `POSTGRES_*`, and `REDIS_*`. Neo4j, MinIO, and model-server are optional/future integrations unless explicitly enabled.
+Environment variables are passed directly via docker-compose `environment` block for `DATABASE_URL`, `REDIS_URL`, `POSTGRES_*`, and `REDIS_*`. Neo4j, MinIO, and inference services are optional/future integrations unless explicitly enabled.
 
 ### 6.2 Configuration Domains
 

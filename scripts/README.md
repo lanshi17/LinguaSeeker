@@ -24,7 +24,6 @@ scripts/
 ├── dev/                                Development server scripts
 │   ├── start_backend_dev.sh                Start FastAPI backend with hot-reload and optional infra
 │   ├── start_frontend_dev.sh               Start Vite frontend dev server
-│   └── start_model_server.sh               Start model server (local or docker mode)
 └── README.md                           This file
 ```
 
@@ -96,7 +95,6 @@ cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --levels ERR
 |--------|----------|---------|
 | `start_backend_dev.sh` | Shell | Start uvicorn with hot-reload; supports `--with-infra` to start Postgres + Redis containers, or `--infra` for infra management only |
 | `start_frontend_dev.sh` | Shell | Start Vite frontend dev server |
-| `start_model_server.sh` | Shell | Start model server in local mode (uv, single-process) or docker mode (3 independent containers: embedding, rerank, doc-parse) |
 
 ## Usage
 
@@ -180,30 +178,21 @@ Reads from `benchmark/layer3/ground_truth/` and outputs to `benchmark/pipeline/i
 # Frontend
 ./scripts/dev/start_frontend_dev.sh
 
-# Model Server (local mode, default port 8001)
-./scripts/dev/start_model_server.sh
-./scripts/dev/start_model_server.sh --port 8002  # custom port
 
-# Model Server (docker mode, 3 containers)
-./scripts/dev/start_model_server.sh --mode docker up -d
-./scripts/dev/start_model_server.sh --mode docker down
-./scripts/dev/start_model_server.sh --mode docker status
-./scripts/dev/start_model_server.sh --mode docker up embedding rerank  # selective
-```
 
 ## Prerequisites
 
 - **uv** -- Python dependency management (see [CLAUDE.md](../CLAUDE.md))
 - **bun** -- Frontend dependency management
 - **PostgreSQL** -- Must be running and migrated for data scripts
-- **Model server** -- Must be running for embedding generation (see `services/model-server/`)
+- **Inference services** -- Must be running for embedding generation
 - **LLM API** -- Must be configured for `generate_ground_truth_pdfs.py`
 - **weasyprint** -- Required for PDF generation (installed via backend dependencies)
 
 ## Notes
 
 - All Python scripts use the backend's virtual environment via `uv run`. No separate dependencies needed.
-- Shell scripts auto-`cd` to the correct directory (`backend/` or `services/model-server/`) relative to their own location.
+- Shell scripts auto-`cd` to the correct directory (`backend/` or `services/`) relative to their own location.
 - `start_backend_dev.sh` watches `src/` and `app/` for changes, excluding logs, pycache, and migrations to avoid spurious reloads during pipeline execution.
 - `import_terminology.py` and `delete_unmapped_entities.py` use `loguru` for structured logging to stderr.
 - `import_benchmark_ground_truth.py` supports idempotent imports with cascade cleanup on re-import.

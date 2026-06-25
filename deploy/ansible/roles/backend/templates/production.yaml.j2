@@ -21,7 +21,7 @@ reasoning_llm:
   timeout: {{ reasoning_llm_timeout }}
   max_tokens: {{ reasoning_llm_max_tokens }}
 
-# ── Model Server ─────────────────────────────────────────────────────────
+# ── Inference Services ────────────────────────────────────────────────────
 embedding:
   base_url: "{{ embedding_base_url }}"
   model: "{{ embedding_model }}"
@@ -39,7 +39,7 @@ mineru:
   max_file_size_mb: {{ mineru_max_file_size_mb }}
   remote_poll_interval: {{ mineru_remote_poll_interval }}
   remote_max_poll_attempts: {{ mineru_remote_max_poll_attempts }}
-  local_model_server_url: "{{ mineru_local_model_server_url }}"
+  local_parse_url: "{{ mineru_local_parse_url }}"
   local_model_id: "{{ mineru_local_model_id }}"
   local_timeout: {{ mineru_local_timeout }}
   local_dpi: {{ mineru_local_dpi }}
@@ -70,7 +70,7 @@ network:
   proxy: "{{ network_proxy }}"
   no_proxy: "{{ network_no_proxy }}"
 
-# ── Model Server GPU ─────────────────────────────────────────────────────
+# ── Inference Service GPU ─────────────────────────────────────────────────
 embedding_gpu_memory_utilization: {{ embedding_gpu_memory_utilization }}
 embedding_max_model_len: {{ embedding_max_model_len }}
 rerank_gpu_memory_utilization: {{ rerank_gpu_memory_utilization }}

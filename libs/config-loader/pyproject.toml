@@ -1,7 +1,7 @@
 [project]
 name = "acmg-config-loader"
 version = "0.1.0"
-description = "Layered YAML config loader shared by backend services and model-server"
+description = "Layered YAML config loader shared by backend services and inference services"
 requires-python = ">=3.12"
 dependencies = [
     "pyyaml>=6.0.0",

@@ -1,6 +1,6 @@
 # Similarity Match Module
 
-> Phase 3 submodule -- semantic terminology matching via pgvector embedding retrieval + cross-encoder reranking, with model-server integration and embedding index management.
+> Phase 3 submodule -- semantic terminology matching via pgvector embedding retrieval + cross-encoder reranking, with inference service integration and embedding index management.
 
 ## Quick Start
 
@@ -12,8 +12,8 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.core imp
 from src.core.standardize_entities_and_align_knowledge.similarity_match.providers import (
     FallbackEmbeddingProvider,
     FallbackRerankProvider,
-    ModelServerEmbeddingProvider,
-    ModelServerRerankProvider,
+    EmbeddingHttpProvider,
+    RerankHttpProvider,
 )
 from src.core.standardize_entities_and_align_knowledge.similarity_match.repositories import (
     PgvectorTerminologyRepository,
@@ -26,10 +26,10 @@ config = SimilarityMatchConfig(
 )
 
 # Local-first with remote fallback
-local_emb = ModelServerEmbeddingProvider(base_url="http://localhost:8001", model="Qwen/Qwen3-Embedding-0.6B")
-remote_emb = ModelServerEmbeddingProvider(base_url="https://api.siliconflow.cn", model="Qwen/Qwen3-Embedding-0.6B")
-local_rerank = ModelServerRerankProvider(base_url="http://localhost:8001", model="BAAI/bge-reranker-v2-m3")
-remote_rerank = ModelServerRerankProvider(base_url="https://api.siliconflow.cn", model="BAAI/bge-reranker-v2-m3")
+local_emb = EmbeddingHttpProvider(base_url="http://localhost:8002", model="Qwen/Qwen3-Embedding-0.6B")
+remote_emb = EmbeddingHttpProvider(base_url="https://api.siliconflow.cn", model="Qwen/Qwen3-Embedding-0.6B")
+local_rerank = RerankHttpProvider(base_url="http://localhost:8003", model="BAAI/bge-reranker-v2-m3")
+remote_rerank = RerankHttpProvider(base_url="https://api.siliconflow.cn", model="BAAI/bge-reranker-v2-m3")
 
 matcher = SimilarityTerminologyMatcher(
     embedding_provider=FallbackEmbeddingProvider(local_emb, remote_emb),
@@ -45,9 +45,9 @@ result = await matcher.match(candidate)
 ```text
 SimilarityTerminologyMatcher [core.py]
 |
-+-- embed_texts()          -> model-server  POST /v1/embeddings
++-- embed_texts()          -> inference service  POST /v1/embeddings
 +-- find_nearest()         -> pgvector      cosine similarity search
-+-- rerank()               -> model-server  POST /v1/rerank
++-- rerank()               -> inference service  POST /v1/rerank
 +-- _merge_rerank_scores() -> sort by relevance_score desc
 |
 +-- Decision logic:
@@ -60,7 +60,7 @@ SimilarityTerminologyMatcher [core.py]
 
 | Module | Purpose |
 |--------|---------|
-| `providers.py` | HTTP clients for model-server embedding + rerank APIs, plus local-first remote-fallback wrappers |
+| `providers.py` | HTTP clients for embedding + rerank inference service APIs, plus local-first remote-fallback wrappers |
 | `repositories.py` | pgvector cosine similarity queries via `PgvectorTerminologyRepository` |
 | `indexer.py` | Batch embedding generation and upsert for terminology entries via `TerminologyEmbeddingIndexer` |
 | `contracts.py` | Frozen dataclasses for provider responses (`EmbeddingBatchResult`, `RerankItem`, `RerankBatchResult`) |
@@ -86,20 +86,20 @@ class SimilarityMatchConfig:
     min_rerank_margin: float = 0.05  # gap between top and second for unambiguous
 ```
 
-### `ModelServerEmbeddingProvider`
+### `EmbeddingHttpProvider`
 
 ```python
-class ModelServerEmbeddingProvider:
+class EmbeddingHttpProvider:
     def __init__(self, *, base_url: str, model: str, client=None, timeout=60.0, api_key=None)
     async def embed_texts(self, texts: str | Sequence[str]) -> EmbeddingBatchResult
 ```
 
 Routes through `{base_url}/v1/embeddings` (OpenAI-compatible). Auto-appends `/v1` if not present.
 
-### `ModelServerRerankProvider`
+### `RerankHttpProvider`
 
 ```python
-class ModelServerRerankProvider:
+class RerankHttpProvider:
     def __init__(self, *, base_url: str, model: str, client=None, timeout=60.0, api_key=None)
     async def rerank(self, query: str, documents: str | Sequence[str], *, top_k: int | None) -> RerankBatchResult
 ```
@@ -110,7 +110,7 @@ Routes through `{base_url}/v1/rerank`. Returns scored, sorted results.
 
 ```python
 class FallbackEmbeddingProvider:
-    def __init__(self, local: ModelServerEmbeddingProvider, remote: ModelServerEmbeddingProvider | None = None)
+    def __init__(self, local: EmbeddingHttpProvider, remote: EmbeddingHttpProvider | None = None)
     async def embed_texts(self, texts: str | Sequence[str]) -> EmbeddingBatchResult
 ```
 
@@ -120,7 +120,7 @@ Local-first, remote-fallback wrapper. Tries the local provider; on any failure (
 
 ```python
 class FallbackRerankProvider:
-    def __init__(self, local: ModelServerRerankProvider, remote: ModelServerRerankProvider | None = None)
+    def __init__(self, local: RerankHttpProvider, remote: RerankHttpProvider | None = None)
     async def rerank(self, query: str, documents: str | Sequence[str], *, top_k: int | None) -> RerankBatchResult
 ```
 
@@ -165,7 +165,7 @@ Builds deterministic embedding text from `display_name + aliases + external_id +
 ### Two-stage retrieval + rerank
 
 1. **Retrieval**: pgvector cosine similarity returns top-K candidates
-2. **Rerank**: cross-encoder (model-server) re-scores candidates against the query
+2. **Rerank**: cross-encoder (inference service) re-scores candidates against the query
 3. **Decision**: score threshold + margin check for confidence
 
 ### Error handling
@@ -173,7 +173,7 @@ Builds deterministic embedding text from `display_name + aliases + external_id +
 | Exception | Scenario | Handling |
 |-----------|----------|----------|
 | `NoSemanticMatchFound` | No nearest neighbors found | Returns `UNMAPPED` (normal) |
-| `SemanticMatchServiceError` | Network/model-server/DB failure | Raised; hybrid matcher downgrades to precise-only |
+| `SemanticMatchServiceError` | Network/inference service/DB failure | Raised; hybrid matcher downgrades to precise-only |
 | Generic `Exception` | Embedding/rerank infrastructure | Wrapped in `SemanticMatchServiceError` |
 
 `FallbackEmbeddingProvider` and `FallbackRerankProvider` catch all exceptions from the local provider and transparently retry against the remote provider. Only if both fail (or no remote is configured) does the exception propagate to the hybrid matcher's degradation handler.
@@ -183,7 +183,7 @@ Builds deterministic embedding text from `display_name + aliases + external_id +
 `TerminologyEmbeddingIndexer.build()`:
 1. Queries `TerminologyEntry` filtered by `entity_types` and `source_dbs`
 2. Deletes stale embeddings for those entries (batched 5000 at a time)
-3. Generates embeddings via model-server in batches
+3. Generates embeddings via inference service in batches
 4. Upserts into `TerminologyEmbedding` table using PostgreSQL `INSERT ... ON CONFLICT`
 5. Commits after each batch (resumable on failure)
 
@@ -226,11 +226,11 @@ print(f"Generated {count} embeddings")
 ```python
 import httpx
 async with httpx.AsyncClient(timeout=30.0) as client:
-    emb = ModelServerEmbeddingProvider(
-        base_url="http://localhost:8001", model="Qwen/Qwen3-Embedding-0.6B", client=client,
+    emb = EmbeddingHttpProvider(
+        base_url="http://localhost:8002", model="Qwen/Qwen3-Embedding-0.6B", client=client,
     )
-    rerank = ModelServerRerankProvider(
-        base_url="http://localhost:8001", model="BAAI/bge-reranker-v2-m3", client=client,
+    rerank = RerankHttpProvider(
+        base_url="http://localhost:8003", model="BAAI/bge-reranker-v2-m3", client=client,
     )
     # Both providers share the same connection pool
 ```
@@ -240,13 +240,12 @@ async with httpx.AsyncClient(timeout=30.0) as client:
 ```python
 from src.core.standardize_entities_and_align_knowledge.similarity_match.providers import (
     FallbackEmbeddingProvider,
-    FallbackRerankProvider,
-    ModelServerEmbeddingProvider,
-    ModelServerRerankProvider,
+    EmbeddingHttpProvider,
+    RerankHttpProvider,
 )
 
-local_emb = ModelServerEmbeddingProvider(base_url="http://localhost:8001", model="Qwen/Qwen3-Embedding-0.6B")
-remote_emb = ModelServerEmbeddingProvider(base_url="https://api.siliconflow.cn", model="Qwen/Qwen3-Embedding-0.6B", api_key="sk-...")
+local_emb = EmbeddingHttpProvider(base_url="http://localhost:8002", model="Qwen/Qwen3-Embedding-0.6B")
+remote_emb = EmbeddingHttpProvider(base_url="https://api.siliconflow.cn", model="Qwen/Qwen3-Embedding-0.6B", api_key="sk-...")
 embedding = FallbackEmbeddingProvider(local_emb, remote_emb)
 
 # If remote is not configured, pass None -- local failures propagate directly
@@ -300,7 +299,7 @@ class MyVectorRepository:
 
 | Dependency | Purpose |
 |------------|---------|
-| `httpx` | Async HTTP client for model-server |
+| `httpx` | Async HTTP client for inference service |
 | `sqlalchemy` | pgvector queries, embedding upsert |
 | `hashlib` | Embedding text hash for idempotent upsert |
 | Parent contracts (`...contracts`) | EntityMatch, SimilarityCandidate, StandardizationCandidate |

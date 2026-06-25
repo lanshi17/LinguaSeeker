@@ -1,15 +1,17 @@
-"""Tests for model server config in Settings."""
+"""Tests for inference service config in Settings."""
+
 
 from src.core.config import Settings
 
 
-def test_model_server_url_default():
+def test_inference_api_key_field_exists():
+    """inference_api_key field exists on Settings with a string default."""
     settings = Settings()
-    assert settings.model_server_url == "http://localhost:8001"
+    assert isinstance(settings.inference_api_key, str)
 
 
-def test_standardization_similarity_model_defaults_match_model_server() -> None:
-    """Backend semantic matching defaults align with model-server defaults."""
+def test_standardization_similarity_model_defaults_match_inference_service() -> None:
+    """Backend semantic matching defaults align with inference service defaults."""
     from src.core.config import EmbeddingConfig, RerankConfig
 
     # Test pure defaults by instantiating the config models directly

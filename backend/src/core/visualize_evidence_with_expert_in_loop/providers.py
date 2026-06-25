@@ -35,10 +35,9 @@ _ENVELOPE_INSTRUCTION = (
 class ReasoningLLMProvider:
     """Wrapper for REASONING_LLM_MODEL (high-accuracy reasoning).
 
-    Uses the reasoning API directly. model-server does not currently expose
-    a generic text chat endpoint — only VLM (image) chat is available there.
-    Routing through model-server should be revisited when a proper text chat
-    route is implemented.
+    Uses the reasoning API directly. The inference services (embedding/rerank/doc-parse)
+    do not expose a generic text chat endpoint. Routing through an LLM service
+    should be revisited when a proper text chat route is implemented.
     """
 
     def __init__(self) -> None:

@@ -318,9 +318,8 @@ async def test_build_terminology_embeddings_passes_scope_filters(monkeypatch) ->
     )
 
     class FakeCfg:
-        model_server_url = "http://localhost:8001"
         api_key = ""
-        embedding = type("EmbeddingCfg", (), {"base_url": "", "api_key": "", "model": "embed-model", "batch_size": 16})()
+        embedding = type("EmbeddingCfg", (), {"base_url": "http://localhost:8002/v1", "api_key": "", "model": "embed-model", "batch_size": 16, "remote_base_url": "", "remote_api_key": "", "remote_model": ""})()
 
     count = await api_module.build_terminology_embeddings(
         cfg=FakeCfg(),

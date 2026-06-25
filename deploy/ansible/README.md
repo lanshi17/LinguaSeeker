@@ -30,8 +30,6 @@ deploy/ansible/
     ├── postgres/                            PostgreSQL 16 via Docker + daily backup
     ├── redis/                               Redis 8.0 via Docker
     ├── backend/                             FastAPI backend (uv + systemd)
-    ├── model-server/                        Monolith model server (systemd, single GPU)
-    ├── model-server-docker/                 Multi-container model server (Docker, 3 GPUs)
     ├── frontend/                            Vite + React SPA (bun build + systemd)
     └── nginx/                               Nginx reverse proxy + Let's Encrypt TLS
 ```
@@ -44,7 +42,7 @@ Each role follows standard Ansible structure: `tasks/`, `handlers/`, `defaults/`
 - Target hosts: Ubuntu 22.04+ / Debian 12+ with SSH access
 - `deploy` user with sudo privileges on all hosts
 - `community.docker` collection (`ansible-galaxy collection install community.docker`)
-- GPU host for model server: NVIDIA driver + CUDA
+- GPU host for inference services: NVIDIA driver + CUDA
 
 ## Quick Start
 
@@ -86,10 +84,10 @@ ansible-galaxy collection install community.docker
 ansible-playbook playbooks/site.yml
 
 # Deploy specific components
-ansible-playbook playbooks/site.yml --tags infra         # DB + Redis + Model Server
+ansible-playbook playbooks/site.yml --tags infra         # DB + Redis
 ansible-playbook playbooks/site.yml --tags backend        # Backend only
 ansible-playbook playbooks/site.yml --tags frontend       # Frontend + Nginx
-ansible-playbook playbooks/site.yml --tags model-server   # Model server only
+ansible-playbook playbooks/site.yml --tags model-server   # Inference services only
 
 # Dry run
 ansible-playbook playbooks/site.yml --check --diff
@@ -103,7 +101,7 @@ ansible-playbook playbooks/healthcheck.yml
 | Group | Host | Services | Port |
 |-------|------|----------|------|
 | `web` | web-01 | Nginx (:80/:443), Frontend (:3000) | 80, 443, 3000 |
-| `app` | app-01 | Backend (FastAPI :8000), Model Server (:8001 or :8002-8004) | 8000, 8001+ |
+| `app` | app-01 | Backend (FastAPI :8000), Inference Services (:8002-8004) | 8000, 8002-8004 |
 | `db` | db-01 | PostgreSQL 16 (:5432), Redis 8.0 (:6379) | 5432, 6379 |
 
 ## Roles
@@ -120,14 +118,11 @@ Runs Redis 8.0 via Docker (`redis:8.0-alpine`) with AOF persistence, 512MB memor
 ### backend
 Installs `uv`, syncs backend source code via rsync, deploys `production.yaml` and `vault/production.yaml` templates, installs Python dependencies with `uv sync --no-dev`, runs Alembic migrations, and manages a systemd service (`acmg-backend`). The backend binds to `127.0.0.1` and is only reachable through Nginx.
 
-### model-server (systemd monolith)
-Runs the model server as a single systemd process (`acmg-model-server`) on port 8001. Serves embedding, reranking, document parsing, and chat endpoints from one GPU.
-
-### model-server-docker (multi-container)
-Deploys the model server as 3 independent Docker containers, each with its own GPU:
-- `model-embedding` on port 8002 (Qwen3-Embedding-0.6B)
-- `model-rerank` on port 8003 (bge-reranker-v2-m3)
-- `model-doc-parse` on port 8004 (MinerU2.5-Pro)
+### inference services (Docker)
+Deploys inference services as independent Docker containers, each with its own GPU:
+- `embedding` on port 8002 (Qwen3-Embedding-0.6B)
+- `rerank` on port 8003 (bge-reranker-v2-m3)
+- `doc-parse` on port 8004 (MinerU2.5-Pro)
 
 Requires NVIDIA Container Toolkit. Model weights must be pre-downloaded to `/opt/lingua-seeker-data/models/`.
 
@@ -154,10 +149,10 @@ Client (HTTPS)
 +--------+  +--+----+--+
                |    |
                v    v
-         +------+ +--------------+
-         |Redis | | Model Server |
-         |:6379 | | :8001 (GPU)  |
-         +------+ +--------------+
+         +------+ +------------------+
+         |Redis | | Inference Svc    |
+         |:6379 | | :8002-8004 (GPU) |
+         +------+ +------------------+
                |
                v
          +------------+
@@ -171,11 +166,10 @@ Client (HTTPS)
 - **TLS / Let's Encrypt** -- First deploy starts HTTP-only; certbot obtains the certificate, Nginx redeploys with TLS. Auto-renewal via `certbot.timer`.
 - **Automated backup** -- PostgreSQL daily backup at 03:00 via cron. Stored at `/opt/lingua-seeker-data/postgres-backups/`, retained 30 days.
 - **Security** -- `vault.yml` encrypted with `ansible-vault`, git-ignored. All systemd services run with `NoNewPrivileges` and `ProtectSystem=strict`. Database ports bound to `127.0.0.1`. API key injected by Nginx, never exposed to the browser.
-- **Two model-server modes** -- Choose between monolith (systemd, single GPU) or multi-container (Docker, 3 GPUs) via `model_server_deployment` variable.
+- **External inference services** -- Embedding, reranking, and document parsing run as independent Docker containers on ports 8002-8004.
 - **Two Nginx topologies** -- Single-host (all services on one server) or split-host (separate frontend and backend domains with cross-origin API proxy).
 
 ## Maintenance
-
 ```bash
 # Check service status
 ansible app -m systemd -a "name=acmg-backend" --become

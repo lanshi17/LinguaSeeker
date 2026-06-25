@@ -23,14 +23,14 @@ chat_llm:
 translation_llm:
   base_url: "https://api.siliconflow.cn"
 
-# ── Model Server (Production) ────────────────────────────────────────────
+# ── Inference Services (Production) ──────────────────────────────────────
 embedding:
-  base_url: "http://localhost:8001/v1"
+  base_url: "http://localhost:8002/v1"
   remote_base_url: "https://api.siliconflow.cn"
   remote_model: "Qwen/Qwen3-Embedding-0.6B"
 
 rerank:
-  base_url: "http://localhost:8001/v1"
+  base_url: "http://localhost:8003/v1"
   remote_base_url: "https://api.siliconflow.cn"
   remote_model: "BAAI/bge-reranker-v2-m3"
 
@@ -54,6 +54,5 @@ network:
   proxy: ""
   no_proxy: "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
 
-# ── Model Server GPU Settings (Development) ─────────────────────────────
-# Kept at top level for model-server compatibility
+# ── Inference Service Settings ────────────────────────────────────────────
 doc_parse_model_id: "opendatalab/MinerU2.5-Pro-2604-1.2B"

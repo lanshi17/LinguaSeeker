@@ -1,4 +1,4 @@
-"""Tests for model-server semantic matching providers."""
+"""Tests for inference service semantic matching providers."""
 from __future__ import annotations
 
 import httpx
@@ -15,14 +15,14 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.core imp
     SemanticMatchServiceError,
 )
 from src.core.standardize_entities_and_align_knowledge.similarity_match.providers import (
-    ModelServerEmbeddingProvider,
-    ModelServerRerankProvider,
+    EmbeddingHttpProvider,
+    RerankHttpProvider,
 )
 
 
 @pytest.mark.asyncio
-async def test_embedding_provider_calls_model_server_embeddings() -> None:
-    """Embedding provider maps OpenAI-style model-server responses into vectors."""
+async def test_embedding_provider_calls_inference_service_embeddings() -> None:
+    """Embedding provider maps OpenAI-style inference service responses into vectors."""
     requests: list[httpx.Request] = []
 
     async def handler(request: httpx.Request) -> httpx.Response:
@@ -41,8 +41,8 @@ async def test_embedding_provider_calls_model_server_embeddings() -> None:
         )
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        provider = ModelServerEmbeddingProvider(
-            base_url="http://model-server",
+        provider = EmbeddingHttpProvider(
+            base_url="http://inference-service",
             model="Qwen/Qwen3-Embedding-0.6B",
             client=client,
         )
@@ -74,8 +74,8 @@ async def test_embedding_provider_wraps_single_string() -> None:
         )
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        provider = ModelServerEmbeddingProvider(
-            base_url="http://model-server",
+        provider = EmbeddingHttpProvider(
+            base_url="http://inference-service",
             model="Qwen/Qwen3-Embedding-0.6B",
             client=client,
         )
@@ -103,8 +103,8 @@ async def test_embedding_provider_does_not_duplicate_v1_prefix() -> None:
         )
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        provider = ModelServerEmbeddingProvider(
-            base_url="http://model-server/v1",
+        provider = EmbeddingHttpProvider(
+            base_url="http://inference-service/v1",
             model="Qwen/Qwen3-Embedding-0.6B",
             client=client,
         )
@@ -115,7 +115,7 @@ async def test_embedding_provider_does_not_duplicate_v1_prefix() -> None:
 
 @pytest.mark.asyncio
 async def test_rerank_provider_returns_ranked_scores() -> None:
-    """Rerank provider maps model-server rerank results into typed scores."""
+    """Rerank provider maps inference service rerank results into typed scores."""
     async def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
@@ -130,8 +130,8 @@ async def test_rerank_provider_returns_ranked_scores() -> None:
         )
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        provider = ModelServerRerankProvider(
-            base_url="http://model-server",
+        provider = RerankHttpProvider(
+            base_url="http://inference-service",
             model="BAAI/bge-reranker-v2-m3",
             client=client,
         )
@@ -144,7 +144,7 @@ async def test_rerank_provider_returns_ranked_scores() -> None:
 
 @pytest.mark.asyncio
 async def test_hybrid_matcher_downgrades_similarity_service_errors_to_unmapped() -> None:
-    """Model-server outages should not crash Phase 3 matching."""
+    """Inference service outages should not crash Phase 3 matching."""
 
     class FakePreciseMatcher:
         async def match(self, candidate):
@@ -164,7 +164,7 @@ async def test_hybrid_matcher_downgrades_similarity_service_errors_to_unmapped()
 
     class FailingSimilarityMatcher:
         async def match(self, candidate):
-            raise SemanticMatchServiceError("model server unavailable")
+            raise SemanticMatchServiceError("inference service unavailable")
 
     matcher = HybridTerminologyMatcher(FakePreciseMatcher(), FailingSimilarityMatcher())
     candidate = StandardizationCandidate(

@@ -290,7 +290,7 @@ class FailingSimilarityMatcher:
 
     async def match(self, candidate):
         self.calls += 1
-        raise SemanticMatchServiceError("model-server unreachable")
+        raise SemanticMatchServiceError("inference service unreachable")
 
 
 @pytest.mark.asyncio

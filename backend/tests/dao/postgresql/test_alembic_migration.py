@@ -204,8 +204,8 @@ def test_head_revision_points_to_variant_internal_id_index() -> None:
     head = script.get_revision("head")
 
     assert head is not None
-    assert head.revision == "doc_ann_20260623"
-    assert head.down_revision == "content_blocks_20260623"
+    assert head.revision == "pipeline_jobs_20260625"
+    assert head.down_revision == "doc_ann_20260623"
 
 
 def test_pipeline_run_leases_migration_chain() -> None:
