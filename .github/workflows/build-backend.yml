@@ -75,6 +75,52 @@ jobs:
                        /opt/hostedtoolcache/CodeQL || true
           df -h
 
+       # ── Pre-build Python + Rust artefacts ──────────────────────────
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: true
+
+      - name: Install system build deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends \
+            libssl-dev pkg-config
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5"
+          enable-cache: true
+
+      - name: Build Python + Rust artefacts
+        working-directory: backend
+        env:
+          # Override local devpi proxy — CI talks directly to PyPI.
+          UV_INDEX_URL: https://pypi.org/simple/
+        run: |
+          set -eux
+
+          # Build Rust crates + install all Python deps (editable).
+          # maturin builds the crate wheels and installs them into .venv.
+          uv sync --no-dev --frozen
+
+          # Package site-packages (exclude __pycache__).
+          mkdir -p ../docker-artifacts
+          tar czf ../docker-artifacts/site-packages.tar.gz \
+            --exclude='__pycache__' --exclude='*.pyc' --dereference \
+            -C .venv/lib/python3.12/site-packages .
+
+          # Package console scripts with shebangs rewritten to /opt/venv.
+          tmp=$(mktemp -d)
+          cp -P .venv/bin/* "$tmp"/ 2>/dev/null || true
+          rm -f "$tmp"/python* 2>/dev/null || true
+          sed -i "s|$(pwd)/.venv/bin/python3|/opt/venv/bin/python3|g" "$tmp"/* 2>/dev/null || true
+          tar czf ../docker-artifacts/venv-bin.tar.gz -C "$tmp" . 2>/dev/null || true
+          rm -rf "$tmp"
+
+          df -h
+
+      # ── Docker build & push ────────────────────────────────────────
       - name: Build & push
         uses: docker/build-push-action@v6
         with:

@@ -1,20 +1,13 @@
 FROM python:3.12-slim-trixie
 # ────────────────────────────────────────────────────────────────────
-# Backend image — single-stage, COPY pre-resolved venv from host.
+# Backend image — single-stage, COPY pre-resolved venv from CI.
 #
-# Pre-build artefacts on the host BEFORE `docker build`:
-#   cd backend
-#   uv sync --no-dev --frozen                 # populate .venv
+# Artifacts are built by the CI workflow before docker build runs:
+#   1. uv sync --no-dev --frozen  (builds Rust crates + installs deps)
+#   2. tar czf docker-artifacts/site-packages.tar.gz ...
+#   3. tar czf docker-artifacts/venv-bin.tar.gz ...
 #
-#   mkdir -p ../docker-artifacts
-#   tar czf ../docker-artifacts/site-packages.tar.gz \
-#       --exclude='__pycache__' --exclude='*.pyc' --dereference \
-#       -C .venv/lib/python3.12/site-packages .
-#
-#   # console scripts (uvicorn/alembic/…) with shebangs rewritten to /opt/venv
-#   tmp=$(mktemp -d) && cp -P .venv/bin/* "$tmp"/ && rm -f "$tmp"/python*
-#   sed -i "s|$(pwd)/.venv/bin/python3|/opt/venv/bin/python3|g" "$tmp"/* || true
-#   tar czf ../docker-artifacts/venv-bin.tar.gz -C "$tmp" . && rm -rf "$tmp"
+# For local builds, run the same steps manually (see CI workflow).
 #
 # Trixie ships glibc 2.41, accepting any wheel built on the host
 # (Ubuntu 24.04 glibc 2.39) without manylinux acrobatics.
@@ -50,11 +43,12 @@ RUN python3 -m venv /opt/venv \
 # Drop pre-built site-packages (includes rust_io + every Python dep)
 # and the console-script shims with already-rewritten shebangs.
 COPY docker-artifacts/site-packages.tar.gz /tmp/sp.tar.gz
-COPY docker-artifacts/venv-bin.tar.gz /tmp/bin.tar.gz
 RUN tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
- && tar xzf /tmp/bin.tar.gz -C /opt/venv/bin \
- && chmod +x /opt/venv/bin/* \
- && rm /tmp/sp.tar.gz /tmp/bin.tar.gz
+ && rm /tmp/sp.tar.gz
+# venv-bin is optional — may be empty when no console scripts exist.
+COPY docker-artifacts/venv-bin.tar.gz /tmp/bin.tar.gz
+RUN (tar xzf /tmp/bin.tar.gz -C /opt/venv/bin 2>/dev/null && chmod +x /opt/venv/bin/* 2>/dev/null) || true \
+ && rm -f /tmp/bin.tar.gz
 
 # Editable installs from the host point at non-existent paths inside the
 # container — drop the .pth stubs and install the in-tree deps from source.
@@ -62,10 +56,10 @@ COPY libs/config-loader /opt/extras/config-loader
 RUN rm -f /opt/venv/lib/python3.12/site-packages/_editable_impl_*.pth \
  && /opt/venv/bin/pip install --no-cache-dir --no-deps /opt/extras/config-loader >/dev/null 2>&1
 
-# Repoint any lingering RECORD/console-script references from the host
-# venv to /opt/venv.
-RUN grep -rlIZ --binary-files=without-match '/data/yangzs/Projects/01_ACMG_Lingua/backend/.venv' /opt/venv 2>/dev/null \
-    | xargs -0 -r sed -i 's|/data/yangzs/Projects/01_ACMG_Lingua/backend/.venv|/opt/venv|g' || true
+# Repoint any lingering RECORD references from the build host venv to
+# /opt/venv. The host path varies by machine — we replace everything up
+# to and including "/.venv" with "/opt/venv".
+RUN find /opt/venv -type f -name 'RECORD' -exec sed -i 's|.*/\.venv|/opt/venv|g' {} + 2>/dev/null || true
 
 WORKDIR /app
 COPY backend/ /app/
