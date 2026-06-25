@@ -50,11 +50,11 @@ mineru_local_model_id: "opendatalab/MinerU2.5-Pro-2604-1.2B"
 mineru_local_timeout: 120.0
 mineru_local_dpi: 200
 
-# -- PostgreSQL (staging uses 'lingua' schema, same as dev) ------------------
+# -- PostgreSQL --------------------------------------------------------------
 postgres_host: "{{ hostvars[groups['db'][0]]['ansible_host'] }}"
 postgres_port: 5432
 postgres_db: "staging_lingua_seeker"
-postgres_schema: "lingua"
+postgres_schema: "lingua_seeker"
 postgres_user: "lingua_seeker"
 postgres_pool_size: 10
 postgres_max_overflow: 15

@@ -5563,3 +5563,21 @@ Cache clearing was needed: PostgreSQL `lingua.document_processing_cache` held st
 3. **重标注必须写回源数据**: unified/是物化产物,重建会被覆盖。标注修复必须写回源数据集(expected.json),由build统一传播。
 4. **rett工具链跨包复用**: rett/src用相对导入,须以包形式注册(sys.modules),用唯一alias(rett_annotation_toolchain)避免与backend/src冲突。
 5. **opus-4-8大文章截断**: 48KB无标题分割文章送opus提143字段会超时(>280s)。截断18K(摘要+方法+结果)是实用权衡——变异信息通常在前半篇,完整提取需分段策略。
+
+## 2026-06-25: 修改默认路径常量的级联影响
+
+**问题**: 将 `GROUND_TRUTH_ROOT` 从 `clingen/` 切换到 `unified/` 后, 6个下游模块因直接拼接 `GROUND_TRUTH_DIR / "selection.json"` 而崩溃 (unified 没有 selection.json, 只有 manifest.json)。
+
+**排查**: `grep -rn 'selection.json' benchmark/ --include="*.py"` 发现 50+ 处引用, 但多数是数据集特定模块(使用各自的根目录)。真正受影响的是那些使用 `GROUND_TRUTH_DIR`(默认根) 作为 fallback 的分析模块。
+
+**根因**: 旧代码假设默认根目录一定有 `selection.json`, 没有考虑 manifest.json 的情况。
+
+**解决方案**:
+1. `pipeline_client.py` 新增 `_load_entries()` 同时支持 selection.json 和 manifest.json
+2. ClinGen-specific 分析工具改用 `GROUND_TRUTH_CLINGEN_ROOT` 显式指定旧数据集
+3. 测试中依赖旧数据集 preprocessed artifacts 的集成测试也需要显式传入 clingen root
+
+**预防措施**:
+- 修改默认常量前, 用 `grep` 全量扫描所有直接引用该常量的文件
+- 集成测试应显式指定数据集, 而非依赖全局默认值
+- 新数据集应提供统一的 entry 加载函数, 避免各模块重复实现 JSON 解析

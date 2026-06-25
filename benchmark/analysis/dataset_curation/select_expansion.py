@@ -10,7 +10,7 @@ from pathlib import Path
 import time
 from typing import Mapping, TypedDict, cast
 
-from benchmark.core import GROUND_TRUTH_DIR
+from benchmark.core.paths import GROUND_TRUTH_CLINGEN_ROOT
 
 CLINGEN_CSV = Path(__file__).resolve().parents[3] / "database" / "terminology_database" / "clingen" / "Clingen-Gene-Disease-Summary.csv"
 
@@ -60,9 +60,9 @@ class ExpansionSelectionPayload(TypedDict):
 class ExpansionSelectionConfig:
     """Configuration for Benchmark C expansion selection."""
 
-    core_selection_path: Path = GROUND_TRUTH_DIR / "selection.json"
+    core_selection_path: Path = GROUND_TRUTH_CLINGEN_ROOT / "selection.json"
     source_csv_path: Path = CLINGEN_CSV
-    output_path: Path = GROUND_TRUTH_DIR / "expansion_selection_20260615.json"
+    output_path: Path = GROUND_TRUTH_CLINGEN_ROOT / "expansion_selection_20260615.json"
     target_size: int = 30
 
 
@@ -237,9 +237,9 @@ def format_expansion_selection(report: ExpansionSelectionReport) -> str:
 def main(argv: list[str] | None = None) -> None:
     """CLI entrypoint for freezing a Benchmark C expansion selection."""
     parser = argparse.ArgumentParser(description="Freeze a deterministic Benchmark C expansion selection.")
-    parser.add_argument("--core-selection-path", type=Path, default=GROUND_TRUTH_DIR / "selection.json")
+    parser.add_argument("--core-selection-path", type=Path, default=GROUND_TRUTH_CLINGEN_ROOT / "selection.json")
     parser.add_argument("--source-csv-path", type=Path, default=CLINGEN_CSV)
-    parser.add_argument("--output-path", type=Path, default=GROUND_TRUTH_DIR / "expansion_selection_20260615.json")
+    parser.add_argument("--output-path", type=Path, default=GROUND_TRUTH_CLINGEN_ROOT / "expansion_selection_20260615.json")
     parser.add_argument("--n", type=int, default=30)
     parser.add_argument("--write", action="store_true")
     args = parser.parse_args(argv)

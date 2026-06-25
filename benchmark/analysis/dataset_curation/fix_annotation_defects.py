@@ -30,7 +30,7 @@ import sys
 
 from loguru import logger
 
-from benchmark.core.paths import GROUND_TRUTH_ROOT
+from benchmark.core.paths import GROUND_TRUTH_CLINGEN_ROOT as GROUND_TRUTH_ROOT
 
 __all__ = [
     "VARIANT_FIELD_IDS",

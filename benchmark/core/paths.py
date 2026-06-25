@@ -15,6 +15,8 @@ __all__ = [
     "BENCHMARK_ROOT",
     "DATA_ROOT",
     "GROUND_TRUTH_ROOT",
+    "GROUND_TRUTH_UNIFIED_ROOT",
+    "GROUND_TRUTH_CLINGEN_ROOT",
     "GROUND_TRUTH_CLINVAR_FUSED_ROOT",
     "GROUND_TRUTH_RETT_ROOT",
     "REPORTS_ROOT",
@@ -29,11 +31,28 @@ BENCHMARK_ROOT: Path = Path(__file__).resolve().parent.parent
 DATA_ROOT: Path = BENCHMARK_ROOT / "data"
 """Top-level data root that holds ``ground_truth/``, ``inputs/``, ``reports/``."""
 
-GROUND_TRUTH_ROOT: Path = DATA_ROOT / "ground_truth" / "clingen"
-"""ClinGen ground-truth root.
+GROUND_TRUTH_UNIFIED_ROOT: Path = DATA_ROOT / "ground_truth" / "unified"
+"""Unified gold-standard ground-truth root (150 entries).
 
-Subtree contains ``selection.json`` plus one ``clingen_NNN/`` directory
-per evaluated entry (``source.md``, ``expected.json``, etc.).
+Default benchmark dataset since 2026-06-25. Subtree contains
+``manifest.json`` plus one ``gs_NNN/`` directory per evaluated entry
+(``source.md``, ``expected.json``, etc.).  Each entry carries
+``source_dataset`` and ``original_entry_id`` for provenance.
+"""
+
+GROUND_TRUTH_ROOT: Path = GROUND_TRUTH_UNIFIED_ROOT
+"""Default ground-truth root — points to the unified dataset.
+
+Legacy datasets (clingen, clinvar_fused, rett) are still accessible via
+their dedicated ``GROUND_TRUTH_*_ROOT`` constants but are no longer the
+default.
+"""
+
+GROUND_TRUTH_CLINGEN_ROOT: Path = DATA_ROOT / "ground_truth" / "clingen"
+"""ClinGen ground-truth root (legacy, 34 entries).
+
+.. deprecated::
+    Use :data:`GROUND_TRUTH_ROOT` (unified) for new evaluations.
 """
 
 GROUND_TRUTH_CLINVAR_FUSED_ROOT: Path = DATA_ROOT / "ground_truth" / "clinvar_fused"

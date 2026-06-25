@@ -166,12 +166,12 @@ class TestGateA:
 class TestLOOIntegration:
     def test_loo_runs_on_real_data(self) -> None:
         from benchmark.analysis.arbitrator.policy_eval import run_loo_evaluation
-        from benchmark.core import GROUND_TRUTH_DIR
+        from benchmark.core.paths import GROUND_TRUTH_CLINGEN_ROOT
 
-        if not GROUND_TRUTH_DIR.exists():
-            pytest.skip("ground_truth directory not available")
+        if not GROUND_TRUTH_CLINGEN_ROOT.exists():
+            pytest.skip("clingen ground_truth directory not available")
 
-        report = run_loo_evaluation(GROUND_TRUTH_DIR)
+        report = run_loo_evaluation(GROUND_TRUTH_CLINGEN_ROOT)
         assert len(report.folds) > 0
         assert report.contextual_overall_f1 > 0
         assert isinstance(report.learned_overall_f1, float)

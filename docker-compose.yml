@@ -24,7 +24,7 @@ services:
       - POSTGRES_DB=dev_lingua_seeker
       - POSTGRES_USER=lingua_seeker
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_SCHEMA=lingua
+      - POSTGRES_SCHEMA=lingua_seeker
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}

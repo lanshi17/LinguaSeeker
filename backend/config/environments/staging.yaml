@@ -38,7 +38,7 @@ rerank:
 postgres:
   host: "postgres"
   db: "staging_lingua_seeker"
-  schema: "lingua"
+  schema: "lingua_seeker"
 
 redis:
   host: "redis"

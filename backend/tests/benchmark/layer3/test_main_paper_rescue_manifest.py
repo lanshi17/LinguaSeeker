@@ -11,6 +11,7 @@ from benchmark.analysis.paper_artifacts.main_paper_rescue_manifest import (
     manifest_to_payload,
     write_manifest,
 )
+from benchmark.core.paths import GROUND_TRUTH_CLINGEN_ROOT
 
 
 def _write_json(path: Path, payload: object) -> Path:
@@ -161,6 +162,7 @@ def test_manifest_payload_records_baseline_and_no_go_gate(tmp_path: Path) -> Non
             _baseline_report(tmp_path / "baseline_b1.json", label="B1"),
         ),
         git_commit="abc123",
+        ground_truth_root=GROUND_TRUTH_CLINGEN_ROOT,
         alignment_report_path=alignment_report,
         evidence_augmentation_report_path=evidence_augmentation_report,
         benchmark_b_runtime_report_path=benchmark_b_runtime_report,
@@ -222,6 +224,7 @@ def test_write_manifest_persists_traceable_json(tmp_path: Path) -> None:
         g2_report_path=_g2_report(tmp_path / "g2.json", source_report_path=ablation_report),
         baseline_report_paths=(),
         git_commit="abc123",
+        ground_truth_root=GROUND_TRUTH_CLINGEN_ROOT,
     )
 
     report_path = write_manifest(manifest, reports_dir=tmp_path)
@@ -241,6 +244,7 @@ def test_manifest_payload_records_readiness_reports(tmp_path: Path) -> None:
         ablation_report_path=ablation_report,
         g2_report_path=_g2_report(tmp_path / "g2.json", source_report_path=ablation_report),
         baseline_report_paths=(),
+        ground_truth_root=GROUND_TRUTH_CLINGEN_ROOT,
         benchmark_a_readiness_report_path=readiness_report,
         benchmark_b_pilot_selection_report_path=pilot_report,
     )

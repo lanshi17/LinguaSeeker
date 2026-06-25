@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "cross-evidence-frontend",
+      "name": "lingua-seeker-frontend",
       "dependencies": {
         "@ant-design/x": "^2.7.0",
         "@ant-design/x-sdk": "^2.7.0",
