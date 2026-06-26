@@ -32,8 +32,7 @@ export function AuditEventDetailDrawer({
       title="Audit Event Detail"
       open={open}
       onClose={onClose}
-      width={480}
-      styles={{ body: { padding: "16px 24px" } }}
+      styles={{ body: { padding: "16px 24px" }, wrapper: { width: 480 } }}
     >
       <Descriptions column={1} size="small" labelStyle={{ fontWeight: 500, color: "#6b7280", fontSize: 12 }}>
         <Descriptions.Item label="Event ID">

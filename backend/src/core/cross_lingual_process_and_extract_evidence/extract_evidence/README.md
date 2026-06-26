@@ -63,14 +63,11 @@ EvidenceExtractionService (public facade)
       ├─ [entry] relevance_scan ────> RelevanceScanStage (FAST tier)
       │    ├─ relevant? -> not_relevant -> END
       │    ├─ channel classification -> DocumentChannelClassification
-      │    └─ relevant? -> catalog_extraction
+      │    └─ relevant? -> primary_broad_extraction
       │
-      ├─ catalog_extraction ────────> CatalogExtractionStage (STRONG tier)
-      │    └─ extracts sparse EvidenceItem[] from channel-eligible fields
-      │    └─ injects channel-specific extraction strategy guidance
-      │
-      ├─ special_evidence ──────────> SpecialEvidenceStage (STRONG tier)
-      │    └─ second pass for functional/case-control/authority/contradiction
+      ├─ primary_broad_extraction ─> PrimaryBroadExtractionStage (STRONG tier)
+      │    └─ B8 high-recall candidate pass over the focused field set
+      │    └─ requires source_quote and stores it as raw_source for grounding
       │
       ├─ language_metadata ─────────> _node_language_metadata (deterministic)
       │    └─ stamps article_language, is_english, target_gene/disease/variant
@@ -105,11 +102,11 @@ EvidenceExtractionService (public facade)
 
 ### Data flow
 TrackDocument -> [relevance_scan] -> DocumentEvidenceMap + DocumentChannelClassification
-                                -> [catalog_extraction] -> sparse EvidenceItem[] (channel-filtered)
-                                -> [special_evidence] -> sparse SpecialEvidenceRecord[]
+                                -> [primary_broad_extraction] -> sparse EvidenceItem[] with raw source quotes
                                 -> [language_metadata] -> language-stamped items
                                 -> [group_assignment] -> grouped items + grouped special records
                                 -> [role_routing] -> primary items, phenotype items, discarded
+                                -> [review_validation] -> approved/rejected/corrected primary items
                                 -> [value_normalization] -> normalized items + normalization issues
                                 -> [target_guard] -> target-filtered items
                                 -> [target_span_recovery] -> gap-filled target-span items
@@ -234,7 +231,7 @@ Uses `LLMPoolAdapter` internally. Each tier maps to a separate model, base URL, 
 class EvidenceModelTier(str, Enum):
     FAST = "fast"        # relevance_scan — uses cfg.llm (FAST_LLM)
     STANDARD = "standard"  # standard-tier tasks — uses cfg.reasoning (REASONING_LLM)
-    STRONG = "strong"    # catalog_extraction, special_evidence — uses cfg.reasoning (REASONING_LLM)
+    STRONG = "strong"    # primary_broad_extraction — uses cfg.reasoning (REASONING_LLM)
 ```
 
 ### `SourceGrounder` (`core.py`)
@@ -368,7 +365,8 @@ class IntraTrackConflictChecker:
 | Function | Signature | Tier |
 |----------|-----------|------|
 | `get_evidence_map_prompt` | `(document_id, track, text) -> str` | FAST (`relevance_scan`) |
-| `get_catalog_extraction_prompt` | `(document_id, track, text, catalog, evidence_map_summary, extraction_target) -> str` | STRONG |
+| `PrimaryBroadExtractionStage` | `run(document), run_async(document)` | STRONG (`primary_broad_extraction`) |
+| `get_catalog_extraction_prompt` | `(document_id, track, text, catalog, evidence_map_summary, extraction_target) -> str` | historical/experimental |
 | `get_special_evidence_prompt` | `(document_id, track, text, current_items_summary) -> str` | STRONG |
 | `get_source_ambiguity_review_prompt` | `(document_text, snippet, candidate_locations) -> str` | not yet wired |
 
@@ -381,11 +379,13 @@ Thin wrappers that each own one pipeline step. Deterministic stages are provider
 | Stage | Class | Input | Output | Provider? |
 |-------|-------|-------|--------|-----------|
 | relevance_scan | `RelevanceScanStage` | `TrackDocument` | `DocumentEvidenceMap` | FAST |
-| catalog_extraction | `CatalogExtractionStage` | `TrackDocument, DocumentEvidenceMap` | sparse `list[EvidenceItem]` | STRONG |
-| special_evidence | `SpecialEvidenceStage` | `TrackDocument, list[EvidenceItem]` | sparse `list[SpecialEvidenceRecord]` | STRONG |
+| primary_broad_extraction | `PrimaryBroadExtractionStage` | `TrackDocument` | sparse `list[EvidenceItem]` | STRONG |
+| catalog_extraction | `CatalogExtractionStage` | `TrackDocument, DocumentEvidenceMap` | sparse `list[EvidenceItem]` | historical |
+| special_evidence | `SpecialEvidenceStage` | `TrackDocument, list[EvidenceItem]` | sparse `list[SpecialEvidenceRecord]` | historical |
 | language_metadata | `_node_language_metadata` | `EvidenceExtractionState` | language-stamped items | none |
 | group_assignment | `GroupAssignmentStage` | `TrackDocument, list[EvidenceItem], list[SpecialEvidenceRecord]` | grouped items + grouped special records | none |
 | role_routing | `EvidenceRoleRouter` | `list[EvidenceItem], ExtractionTarget` | primary, phenotype, discarded | none |
+| review_validation | `ReviewValidationStage` | `TrackDocument, list[EvidenceItem]` | reviewed primary `list[EvidenceItem]` | STANDARD |
 | value_normalization | `AcmgEvidenceValueNormalizer` | `list[EvidenceItem]` | normalized items + normalization issues | none |
 | target_guard | `TargetEntityGuard` | `list[EvidenceItem], ExtractionTarget` | filtered items | none |
 | target_span_recovery | `TargetSpanFieldRecovery` | `TrackDocument, list[EvidenceItem]` | items plus recovered target-span fields | none |
@@ -624,13 +624,13 @@ Modify `LangChainEvidenceProvider._TRANSIENT_EXCEPTIONS` in `providers.py` to ad
 - **LLMPoolAdapter clients are cached per tier** — only 1-3 pool adapters are created regardless of how many `invoke_structured()` calls are made.
 - **Source grounding searches full document text** — O(n x m) where n is document length and m is snippet length. Bounded at 50 matches per snippet. For large documents (>100KB), consider chunking before grounding.
 - **Both LangGraph graphs compile once** — `_build_graph()` and `_build_async_graph()` are called in `__init__()` and the compiled graphs are reused for all `run()` / `run_async()` calls.
-- **Async concurrency** — `CatalogExtractionStage.run_async()` runs chunk x group tasks concurrently with `asyncio.Semaphore(5)`, significantly reducing wall-clock time for multi-chunk documents.
+- **Async parity** — `PrimaryBroadExtractionStage.run_async()` and `ReviewValidationStage.run_async()` keep the async LangGraph on async provider calls.
 - **Target span recovery is O(selected snippets)** — it scans only source snippets already selected by upstream extraction, so it improves recall without increasing LLM calls or document-wide grounding cost.
 
 ### Known bottlenecks
 
-- **LLM calls dominate latency** — each pipeline incurs up to 3 LLM round-trips (`relevance_scan` + `catalog_extraction` + `special_evidence`). Expected latency: 5-30 seconds per document depending on model and document length.
-- **Catalog extraction sends catalog groups in the prompt** — the compact format adds ~2-4KB of prompt tokens per group. For very long documents, the combined prompt may approach token limits.
+- **LLM calls dominate latency** — each relevant document incurs 3 LLM round-trips (`relevance_scan` + `primary_broad_extraction` + `review_validation`). Expected latency depends on model and document length.
+- **Primary broad extraction uses a fixed B8 field set** — it is intentionally high-recall and relies on review validation plus deterministic grounding/guards for precision.
 - **Snippet search for common substrings** — very common text like "the" or "1" in single-character snippets will find up to 50 matches, creating 50 `SourceLocation` objects. This is bounded but still allocates.
 
 ## Dependencies
@@ -654,7 +654,7 @@ The evidence extraction module reads from the global FAST_LLM and REASONING_LLM 
 |------|--------------|------------|
 | FAST (relevance_scan) | `cfg.llm` (FAST_LLM) | `api_key`, `all_api_keys`, `base_url`, `model` |
 | STANDARD | `cfg.reasoning` (REASONING_LLM) | `api_key`, `all_api_keys`, `base_url`, `model` |
-| STRONG (catalog_extraction, special_evidence) | `cfg.reasoning` (REASONING_LLM) | `api_key`, `all_api_keys`, `base_url`, `model`, `reasoning_effort` |
+| STRONG (primary_broad_extraction) | `cfg.reasoning` (REASONING_LLM) | `api_key`, `all_api_keys`, `base_url`, `model`, `reasoning_effort` |
 
 Additional tuning via `EvidenceExtractionConfigContext` fields: `max_tokens` (default 8192), `temperature` (default 0.0), `timeout` (default 180s), `max_retries` (default 1).
 

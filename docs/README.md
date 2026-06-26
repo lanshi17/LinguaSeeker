@@ -89,6 +89,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
+| 2026-06-25 | [Main Review Track Baseline Guide](archive/plans/2026-06-25-main-review-track-baseline-guide.md) | completed |
 | 2026-06-25 | [Backend Container Production Branch Plan](archive/plans/2026-06-25-backend-container-prod-branch-plan.md) | completed |
 | 2026-06-25 | [Backend Container Production Branch Design](archive/plans/2026-06-25-backend-container-prod-branch-design.md) | completed |
 | 2026-06-25 | [Pipeline Job Queue Design](archive/plans/2026-06-25-pipeline-job-queue.md) | completed |
