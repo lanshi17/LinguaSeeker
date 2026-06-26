@@ -8,6 +8,7 @@ import pytest
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     DocumentEvidenceMap,
     EvidenceExtractionStatus,
+    PrimaryBroadExtractionResponse,
     Track,
     TrackDocument,
 )
@@ -50,6 +51,8 @@ async def test_workflow_run_async_completed() -> None:
     mock_provider = MagicMock()
 
     async def _relevant(**kwargs):  # noqa: ANN003
+        if kwargs["stage"] == "primary_broad_extraction":
+            return PrimaryBroadExtractionResponse()
         return DocumentEvidenceMap(relevant=True, disease_terms=["cancer"])
 
     mock_provider.ainvoke_structured = AsyncMock(side_effect=_relevant)
@@ -73,6 +76,8 @@ async def test_workflow_run_async_is_faster_than_sequential() -> None:
 
     async def _slow(**kwargs):  # noqa: ANN003
         await asyncio.sleep(0.05)
+        if kwargs["stage"] == "primary_broad_extraction":
+            return PrimaryBroadExtractionResponse()
         return DocumentEvidenceMap(relevant=True, disease_terms=["d"])
 
     mock_provider.ainvoke_structured = AsyncMock(side_effect=_slow)

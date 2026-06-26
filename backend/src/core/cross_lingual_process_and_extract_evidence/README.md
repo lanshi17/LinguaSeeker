@@ -97,26 +97,26 @@ Phase 2 is split into two sub-modules executed sequentially by the pipeline orch
 │              extract_evidence/  (Evidence Extraction)             │
 │               EvidenceExtractionService (public facade)           │
 │                                                                  │
-│  EvidenceExtractionWorkflow — 15-node LangGraph StateGraph       │
+│  EvidenceExtractionWorkflow — B8 main+review LangGraph           │
 │  (workflow.py)                                                   │
 │                                                                  │
-│  relevance_scan ──▶ catalog_extraction ──▶ special_evidence      │
-│       │                    │                      │              │
-│       ▼                    ▼                      ▼              │
-│  clinical_context ──▶ language_metadata ──▶ group_assignment     │
+│  relevance_scan ──▶ primary_broad_extraction ──▶ language_metadata│
 │                              │                      │            │
 │                              ▼                      ▼            │
-│  role_routing ──▶ value_normalization ──▶ target_guard           │
+│  group_assignment ──▶ role_routing ──▶ review_validation         │
 │                              │                      │            │
 │                              ▼                      ▼            │
-│  target_span_recovery ──▶ source_grounding ──▶ chain_assembly    │
+│  value_normalization ──▶ target_guard ──▶ target_span_recovery   │
 │                              │                      │            │
 │                              ▼                      ▼            │
-│  quality_gate ──▶ catalog_backfill ──▶ END                      │
+│  source_grounding ──▶ chain_assembly ──▶ quality_gate            │
+│                              │                      │            │
+│                              ▼                      ▼            │
+│  catalog_backfill ──▶ END                                        │
 │                                                                  │
-│  Stages: RelevanceScanStage, CatalogExtractionStage,             │
-│  SpecialEvidenceStage, ClinicalContextStage, GroupAssignmentStage,│
-│  EvidenceRoleRouter, AcmgEvidenceValueNormalizer,                │
+│  Stages: RelevanceScanStage, PrimaryBroadExtractionStage,        │
+│  GroupAssignmentStage, EvidenceRoleRouter, ReviewValidationStage,│
+│  AcmgEvidenceValueNormalizer,                                    │
 │  TargetEntityGuard, TargetSpanFieldRecovery, SourceGroundingStage,│
 │  EvidenceChainBuilder, QualityGateStage, EvidenceItemNormalizer  │
 │                                                                  │

@@ -165,8 +165,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
       title="Review Evidence"
       open={open}
       onClose={handleClose}
-      width={560}
-      styles={{ body: { padding: 0 } }}
+      styles={{ body: { padding: 0 }, wrapper: { width: 560 } }}
     >
       {/* Search panel — always visible when no item is selected */}
       {!selectedGroupId && (

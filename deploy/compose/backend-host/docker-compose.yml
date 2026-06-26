@@ -47,13 +47,11 @@ services:
       FAST_LLM_BASE_URL: ${FAST_LLM_BASE_URL}
       REASONING_LLM_BASE_URL: ${REASONING_LLM_BASE_URL}
     volumes:
-      # Logs and persisted artefacts live on the host so a container
-      # rebuild never destroys them.
-      - backend_logs:/app/logs
-      - backend_data:/app/data
-      - backend_downloads:/app/downloads
-      - backend_output:/app/output
-      # Vault config + custom production.yaml mounted read-only.
+      - ./logs:/logs
+      - ./data:/app/data
+      - ./downloads:/app/downloads
+      - ./output:/app/output
+      # Vault 配置文件保持只读
       - ./config/production.yaml:/app/config/environments/production.yaml:ro
       - ./config/vault/production.yaml:/app/config/vault/production.yaml:ro
     healthcheck:

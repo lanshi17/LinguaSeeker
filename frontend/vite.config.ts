@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
+import { readFileSync } from "node:fs";
 
 export default defineConfig(({ mode }) => {
   // Load all env vars (empty prefix → includes non-VITE_ secrets like API_KEY).
@@ -16,9 +17,14 @@ export default defineConfig(({ mode }) => {
   const rawBasePath = env.VITE_BASE_PATH || "/";
   const base = rawBasePath.endsWith("/") ? rawBasePath : `${rawBasePath}/`;
 
+  const pkg = JSON.parse(readFileSync(path.resolve(__dirname, "package.json"), "utf-8"));
+
   return {
     base,
     plugins: [react()],
+    define: {
+      __APP_VERSION__: JSON.stringify(pkg.version),
+    },
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "src"),

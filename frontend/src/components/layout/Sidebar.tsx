@@ -94,7 +94,7 @@ export function Sidebar({ mobile, onNavigate }: SidebarProps) {
       <div style={{ borderTop: "1px solid #e5e7eb", padding: 16 }}>
         {!effectiveCollapsed && (
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            Lingua Seeker v0.1.0
+            Lingua Seeker v{__APP_VERSION__}
           </Typography.Text>
         )}
       </div>

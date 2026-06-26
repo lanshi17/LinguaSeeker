@@ -281,6 +281,45 @@ class SpecialEvidenceResponse(BaseModel):
     records: list[SpecialEvidenceRecord] = Field(default_factory=list)
 
 
+class PrimaryBroadEvidenceCandidate(BaseModel):
+    """High-recall primary-track candidate before review validation."""
+
+    field_id: str
+    status: EvidenceStatus
+    value: str | int | float | bool | list[str] | None = None
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    source_quote: str = ""
+    notes: str = ""
+
+
+class PrimaryBroadExtractionResponse(BaseModel):
+    """Structured response for the B8 primary broad extraction pass."""
+
+    evidence_items: list[PrimaryBroadEvidenceCandidate] = Field(default_factory=list)
+
+
+class EvidenceReviewDecision(BaseModel):
+    """Review-track decision for one primary extraction candidate."""
+
+    candidate_index: int | None = None
+    field_id: str
+    action: Literal["approve", "reject", "correct"]
+    value: str | int | float | bool | list[str] | None = None
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    source_quote: str = ""
+    reason: str = ""
+
+
+class EvidenceReviewResponse(BaseModel):
+    """Structured review-track output.
+
+    The review track may only decide over primary extraction candidates that
+    already exist. It must not add new field IDs or new candidates.
+    """
+
+    decisions: list[EvidenceReviewDecision] = Field(default_factory=list)
+
+
 class QualityIssue(BaseModel):
     issue_type: Literal[
         "missing_source",

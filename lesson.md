@@ -5593,3 +5593,63 @@ Cache clearing was needed: PostgreSQL `lingua.document_processing_cache` held st
 **解决方案**: 后续 shell 循环避免使用 `path`、`fpath` 等 zsh 特殊变量名; 必要时用绝对路径命令恢复检查。
 
 **预防措施**: 在 zsh 脚本片段中使用 `entry`、`item`、`target` 等普通变量名。清理 worktree 这类高影响操作后立即用绝对路径工具验证当前目录和 Git 状态。
+
+## 2026-06-25: layer3 unified smoke shard 鉴权与服务状态验证
+
+**问题描述**: 直接运行 unified shard0 smoke 命令时, 5 条全部在 `POST /api/v1/pipeline/run` 返回 401; 带 API key 后又出现 502/connection refused, 容易误判为新队列或 unified 路径失败。
+
+**排查过程**: 先检查 benchmark 报告, 确认 `by_source_dataset` 已生成但 `timeout_and_errors` 全是 401。追踪 `benchmark.core.pipeline_client.run_evaluation()` 发现只有传入 `api_key` 才会设置 `X-API-Key` header; 后端 `require_api_key()` 在本地 vault 配置了 `api_key` 时强制鉴权。随后检查端口和日志, 发现 backend 在 17:12:49 正常停止, 502/connection refused 来自服务已停止而不是 pipeline 代码。
+
+**根因分析**: smoke 命令缺少当前开发环境所需的 `--api-key`; 第二次失败则是后端服务生命周期问题。两者都不是 unified 数据集加载、队列入队或分层报告聚合逻辑的根因。
+
+**解决方案**: 用 `./scripts/dev/start_backend_dev.sh` 重启后端并确认 `/health`、dispatcher 启动; 从 `backend/config/vault/development.yaml` 读取本地 API key, 追加 `--api-key` 重新运行同一 shard。最终 5/5 completed, `timeout_and_errors=0`, 报告包含 `aggregates.by_source_dataset.clingen`。
+
+**预防措施**: 运行 layer3 smoke 时先确认后端监听和 `/health`; auth-enabled 环境必须传 `--api-key` 或通过同等安全方式设置 header。遇到 502/connection refused 时先验证服务进程和日志时间线, 不要直接归因到 benchmark/pipeline 代码。
+
+## 2026-06-25: layer3 unified 报告 JSON 顶层字段口径
+
+**问题描述**: 随机5条 unified 评估完成后, 临时汇总脚本按旧口径读取 `overall`、`timeout_and_errors`、`by_source_dataset`、`entries` 顶层字段, 结果打印为 `null`/空列表, 容易误判为报告缺失指标。
+
+**排查过程**: 直接读取报告键名, 确认当前 layer3 unified 报告顶层为 `evaluation_id`、`timestamp`、`config`、`total_entries`、`total_duration_s`、`aggregates`、`per_entry`。
+
+**根因分析**: 新版统一数据集评估把聚合指标收敛到 `aggregates.*`, 明细收敛到 `per_entry`; ad hoc 读取脚本沿用了旧/临时聚合结构。
+
+**解决方案**: 随机样本报告应读取 `aggregates.overall`、`aggregates.timeout_and_errors`、`aggregates.by_source_dataset` 和 `per_entry`。本次确认报告 `benchmark/data/reports/eval_unified_20260625_225233.json` 中 `timeout_and_errors=[]`, `by_source_dataset` 包含 `clinvar_fused` 和 `parkinson`。
+
+**预防措施**: 后续实验对比脚本不要硬编码临时报告结构; 优先复用 benchmark 聚合函数或先打印顶层 keys 再解析。论文实验表格应以 `aggregates.*` 为权威来源。
+
+## 2026-06-25: B8 主轨+审查轨实验 harness 的 URL 与超时问题
+
+**问题描述**: 新增 B8 `main_review_track` 实验后, 首次随机5条运行 5/5 error; 修复 URL 后仍有 3/5 error 且错误信息为空。
+
+**排查过程**: 首次报告显示请求 URL 为 `https://linxi.chat/v1/v1/chat/completions`, 确认 `RawOpenAICompatibleClient` 会追加 `/v1/chat/completions`, 而运行配置的 `base_url` 已含 `/v1`。修复后复跑仍失败, 单独复现 `gs_058` 并打印 traceback, 发现 primary LLM 调用触发 `httpx.ReadTimeout`。
+
+**根因分析**: B8 primary prompt 比 prompt-only 更宽, 请求字段更多且要求 `source_quote`, 对长文默认超时不够。实验脚本的异常记录只保存 `str(exc)`, 对 `ReadTimeout('')` 这类异常会丢失类型。
+
+**解决方案**: 在 B8 模块内新增 `_raw_client_base_url()` 剥离已有 `/v1` 后缀, 不改共享 raw client; 将 `MainReviewTrackExtractor` 的默认超时下限提高到 180s, 并允许 `timeout_override`。复跑同样本后 5/5 completed, P/R/F1=72.22%/44.83%/55.32%。
+
+**预防措施**: 新增 raw OpenAI-compatible 调用时先检查配置 URL 是否已含 `/v1`; 实验报告记录异常时使用 `f\"{type(exc).__name__}: {exc!s}\"`; broad extraction prompt 应默认使用更长 timeout 或更短 source window。
+
+## 2026-06-26: 主轨+审查轨业务接入的测试边界
+
+**问题描述**: 将 B8 思路接入业务 `EvidenceExtractionWorkflow` 后, 运行整个 `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence` 目录出现 4 个失败, 表面上像是本次 pipeline 改动导致回归。
+
+**排查过程**: 失败集中在 `test_catalog_extraction.py`、`test_stages.py`、`test_stages_async.py`, 断言 catalog extraction prompt 不应包含某些字段名; 实际失败来自 prompt 文本中已有的 expanded field guidance/字段指导文字。检查本次 diff, 未修改 `prompts.py`、`catalog_extraction.py` 或 field eligibility 逻辑。新增 review stage 的相关测试、workflow 集成、role routing、quality gate、reconcile 共 37 项通过。
+
+**根因分析**: 完整目录测试触发了既有 catalog prompt 断言与当前 prompt 文案之间的不一致; 这不是 review-validation 接入引入的行为变化。当前测试按字符串扫描 prompt 区段, 容易把指导文字中的字段名误判为实际 catalog 字段。
+
+**解决方案**: 本次不顺手修 catalog prompt 测试, 避免把主轨+审查轨接入和 prompt 断言重构混在同一改动里。记录验证边界: review-validation 相关 37 项通过, Ruff 通过; 完整 extract_evidence 目录仍有 4 个既有 catalog prompt 断言失败需要单独处理。
+
+**预防措施**: 后续修 catalog prompt 测试时, 应解析真正的 `EVIDENCE CATALOG` 字段行, 不要对整段 prompt guidance 做简单字符串包含判断。业务 pipeline 新增节点时, 相关验证应覆盖节点语义、workflow 顺序、fail-open 策略和相邻 stage 回归。
+
+## 2026-06-26: LangGraph sync/async 节点不能混接
+
+**问题描述**: 为 `ReviewValidationStage` 增加 `run_async()` 后, 初次接线误把 sync graph 的 `review_validation` node 指向 async 函数, 把 async graph 指向 sync 函数。相关 workflow 测试报 `No synchronous function provided to "review_validation"`。
+
+**排查过程**: 查看 `EvidenceExtractionWorkflow._build_graph()` 与 `_build_async_graph()` 的节点注册, 发现两处 `graph.add_node("review_validation", ...)` 写反。失败只出现在 `workflow.run()` 的 sync graph invoke, 说明 LangGraph 不会在同步执行中自动 await async node。
+
+**根因分析**: 同名节点在 sync/async 两张 graph 中都要注册, 手工 patch 容易交换错。LLM 节点尤其要同时考虑同步测试路径和业务异步路径。
+
+**解决方案**: sync graph 使用 `_node_review_validation`, async graph 使用 `_async_node_review_validation`; `ReviewValidationStage` 同时提供 `run()` 和 `run_async()`。新增 async stage 测试并运行 `test_workflow_async.py` 验证。
+
+**预防措施**: 新增 LangGraph 节点时同步检查 `_build_graph()` 和 `_build_async_graph()` 两处接线; 若节点包含 LLM/IO 调用, 必须同时提供 sync/async 方法并分别测试。
