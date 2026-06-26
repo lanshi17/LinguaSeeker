@@ -103,8 +103,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
       }
       open={open}
       onClose={onClose}
-      width={480}
-      styles={{ body: { padding: "16px 24px" } }}
+      styles={{ body: { padding: "16px 24px" }, wrapper: { width: 480 } }}
       extra={
         <Button
           type="primary"

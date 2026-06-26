@@ -143,9 +143,23 @@ BaselineExtractor = Callable[[BaselineEntry, str], Awaitable[list[BaselineEviden
 
 
 def load_ground_truth_entries(config: BaselineConfig) -> list[BaselineEntry]:
-    """Load ClinGen layer-3 entries from selection.json and expected.json files."""
+    """Load ground truth entries from selection.json or manifest.json + expected.json."""
     selection_path = config.ground_truth_dir / "selection.json"
-    selection_items = json.loads(selection_path.read_text(encoding="utf-8"))
+    manifest_path = config.ground_truth_dir / "manifest.json"
+
+    if selection_path.exists():
+        selection_items = json.loads(selection_path.read_text(encoding="utf-8"))
+    elif manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        selection_items = [
+            {"entry_id": item["unified_id"], **{k: v for k, v in item.items() if k != "unified_id"}}
+            for item in manifest.get("entries", [])
+        ]
+    else:
+        raise FileNotFoundError(
+            f"Neither selection.json nor manifest.json found in {config.ground_truth_dir}"
+        )
+
     entries: list[BaselineEntry] = []
     requested_ids = set(config.entry_ids)
 
