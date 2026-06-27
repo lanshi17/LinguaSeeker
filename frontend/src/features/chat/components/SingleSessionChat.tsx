@@ -162,6 +162,7 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
     [message, onRequest, sessionId],
   );
 
+
   return (
     <XProvider>
       <div style={{ display: "flex", height: "100%", flexDirection: "column", overflow: "hidden", backgroundColor: "#fff" }}>
