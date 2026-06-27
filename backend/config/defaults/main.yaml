@@ -50,7 +50,9 @@ translation_llm:
   temperature: 0.0
 
 # ── Embedding Model ───────────────────────────────────────────────────────
-# base_url: per-service container URL. Docker setup: set to "http://localhost:8002/v1"
+# base_url: per-service container URL.
+#   OpenAI-compatible: set to "http://localhost:8002/v1" with api_style: "openai".
+#   Simple local:      set to "http://localhost:8099"   with api_style: "simple".
 # remote_*: optional remote fallback (e.g. SiliconFlow, OpenAI-compatible).
 # When the local embedding container is unavailable, requests fall back to remote.
 embedding:
@@ -58,11 +60,14 @@ embedding:
   model: "BAAI/bge-m3"
   dimension: 1024
   batch_size: 10
+  api_style: "openai"
   remote_base_url: ""
   remote_model: ""
 
 # ── Rerank Model ──────────────────────────────────────────────────────────
-# base_url: per-service container URL. Docker setup: set to "http://localhost:8003/v1"
+# base_url: per-service container URL.
+#   OpenAI-compatible: set to "http://localhost:8003/v1" with api_style: "openai".
+#   Simple local:      set to "http://localhost:8098"   with api_style: "simple".
 # remote_*: optional remote fallback (e.g. SiliconFlow, OpenAI-compatible).
 # When the local rerank container is unavailable, requests fall back to remote.
 rerank:
@@ -70,6 +75,7 @@ rerank:
   model: "BAAI/bge-reranker-v2-m3"
   top_k: 10
   score_threshold: 0.7
+  api_style: "openai"
   remote_base_url: ""
   remote_model: ""
 
