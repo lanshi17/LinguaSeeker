@@ -127,6 +127,7 @@ class EntityStandardizationService:
             base_url=semantic_base_url,
             model=self._cfg.embedding.model,
             api_key=self._cfg.embedding.api_key,
+            api_style=self._cfg.embedding.api_style,
         )
         remote_embedding = (
             EmbeddingHttpProvider(
@@ -141,6 +142,7 @@ class EntityStandardizationService:
             base_url=self._cfg.rerank.base_url,
             model=self._cfg.rerank.model,
             api_key=self._cfg.rerank.api_key,
+            api_style=self._cfg.rerank.api_style,
         )
         remote_rerank = (
             RerankHttpProvider(
@@ -268,6 +270,7 @@ async def build_terminology_embeddings(
                 base_url=cfg.embedding.base_url,
                 model=cfg.embedding.model,
                 api_key=cfg.embedding.api_key,
+                api_style=cfg.embedding.api_style,
             )
             remote = (
                 EmbeddingHttpProvider(

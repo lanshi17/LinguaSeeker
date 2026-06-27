@@ -128,8 +128,10 @@ class FakeEmbeddingConfig:
         self.api_key = ""
         self.model = "test-model"
         self.batch_size = 10
-
-
+        self.api_style = "openai"
+        self.remote_base_url = ""
+        self.remote_api_key = ""
+        self.remote_model = ""
 class FakeRerankConfig:
     """Minimal rerank config for integration tests."""
 
@@ -139,7 +141,10 @@ class FakeRerankConfig:
         self.model = "test-rerank-model"
         self.top_k = 10
         self.score_threshold = 0.7
-
+        self.api_style = "openai"
+        self.remote_base_url = ""
+        self.remote_api_key = ""
+        self.remote_model = ""
 
 class FakeConfig:
     """Minimal config for integration tests."""
