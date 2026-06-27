@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import json
+import tempfile
+from pathlib import Path
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
+from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
@@ -14,6 +17,7 @@ from starlette.requests import Request
 from src.api.auth import require_api_key
 from src.api.deps import get_db_session, get_phase4_factory
 from src.api.rate_limit import limiter
+from src.core.config import get_config
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     ChatMessageResponse,
     ChatSessionResponse,
@@ -147,3 +151,90 @@ async def stream_reply(
         event_generator(),
         media_type="text/event-stream",
     )
+
+
+class ChatFileParseResponse(BaseModel):
+    """Response for PDF file parsing in chat context."""
+
+    ok: bool
+    filename: str
+    content: str = ""
+    page_count: int = 0
+    error: str = ""
+
+
+_PDF_MAGIC = b"%PDF"
+_MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
+
+
+@router.post("/files/parse", response_model=ChatFileParseResponse)
+@limiter.limit("10/minute")
+async def parse_chat_file(
+    request: Request,
+    file: UploadFile = File(...),
+    _api_key: str | None = Depends(require_api_key),
+) -> ChatFileParseResponse:
+    """Parse an uploaded PDF for chat context.
+
+    Accepts a PDF file, validates it, and parses it using the MinerU local
+    parser. Returns the parsed markdown content ready for insertion into a
+    chat message.
+    """
+    # ── Validate file type ──
+    if not file.filename or not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Only PDF files are accepted")
+
+    # ── Read and validate magic bytes ──
+    content = await file.read()
+    if len(content) > _MAX_UPLOAD_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File exceeds maximum size of {_MAX_UPLOAD_SIZE // (1024 * 1024)} MB",
+        )
+
+    if not content.startswith(_PDF_MAGIC):
+        raise HTTPException(status_code=400, detail="File is not a valid PDF")
+
+    # ── Save to temp file for MinerU parsing ──
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+        tmp.write(content)
+        tmp_path = Path(tmp.name)
+
+    try:
+        # ── Parse via MinerU local parser ──
+        cfg = get_config()
+        from src.core.ingest_and_digitize_data.parse_document.local.parser import (
+            MinerULocalParser,
+        )
+
+        parser = MinerULocalParser(
+            parse_url=cfg.parse_document.mineru_local_parse_url,
+            model_id=cfg.parse_document.mineru_local_model_id,
+            timeout=cfg.parse_document.mineru_local_timeout,
+            dpi=cfg.parse_document.mineru_local_dpi,
+            api_key=cfg.inference_api_key,
+        )
+
+        result = await parser.parse(str(tmp_path))
+
+        return ChatFileParseResponse(
+            ok=True,
+            filename=file.filename,
+            content=result.full_markdown,
+            page_count=result.total_pages,
+        )
+
+    except Exception as exc:
+        logger.warning("Chat file parse failed for {}: {}", file.filename, exc)
+        return ChatFileParseResponse(
+            ok=False,
+            filename=file.filename,
+            error=f"Failed to parse PDF: {exc}",
+        )
+
+    finally:
+        # ── Always clean up the temp file ──
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except OSError:
+            pass

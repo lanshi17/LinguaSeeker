@@ -234,6 +234,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     [handleSendMessage],
   );
 
+
   return (
     <XProvider>
       <div style={{ display: "flex", height: "100%", overflow: "hidden", backgroundColor: "#fff" }}>
@@ -316,7 +317,6 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
                 role={roles}
                 autoScroll
               />
-
               <Sender
                 ref={senderRef}
                 style={{ borderTop: "1px solid #f3f4f6", padding: 16 }}
