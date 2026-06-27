@@ -169,6 +169,7 @@ class Phase2Adapter:
             dual_result = await self._extraction.run_dual(
                 dual_documents,
                 extraction_profile=state.extraction_profile,
+                extraction_mode=state.extraction_mode,
             )
 
             # Check if document is relevant

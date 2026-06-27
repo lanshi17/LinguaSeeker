@@ -181,6 +181,7 @@ async def submit_and_poll(
     pre_parsed_markdown: str | None = None,
     extraction_target: dict | None = None,
     extraction_profile: str = "none",
+    extraction_mode: str = "b8",
 ) -> dict:
     """Submit document and poll until completion.
 
@@ -198,6 +199,7 @@ async def submit_and_poll(
         "mode": "full",
         "filename": filename,
         "extraction_profile": extraction_profile,
+        "extraction_mode": extraction_mode,
     }
     if pre_parsed_markdown:
         payload["pre_parsed_markdown"] = pre_parsed_markdown
@@ -320,6 +322,7 @@ async def evaluate_one(
     mondo: Any | None = None,
     force_reextract: bool = False,
     extraction_profile: str = "none",
+    extraction_mode: str = "b8",
 ) -> EntryMetrics:
     """Evaluate one ground truth entry.
 
@@ -441,6 +444,7 @@ async def evaluate_one(
                 pre_parsed_markdown=md_text,
                 extraction_target=extraction_target,
                 extraction_profile=extraction_profile,
+                extraction_mode=extraction_mode,
             )
             metrics.duration_s = round(time.time() - t0, 2)
             metrics.pipeline_status = status_data.get("pipeline_status", "unknown")
@@ -638,6 +642,7 @@ async def run_evaluation(
     force_reextract: bool = False,
     api_key: str | None = None,
     extraction_profile: str = "none",
+    extraction_mode: str = "b8",
     shard_index: int | None = None,
     shard_size: int | None = None,
 ):
@@ -708,6 +713,7 @@ async def run_evaluation(
                 mondo=mondo,
                 force_reextract=force_reextract,
                 extraction_profile=extraction_profile,
+                extraction_mode=extraction_mode,
             )
             all_metrics.append(m)
             status_icon = "\u2713" if m.pipeline_status == "completed" else "\u2717"
@@ -736,6 +742,8 @@ async def run_evaluation(
             "limit": limit,
             "ground_truth_root": str(ground_truth_root),
             "dataset": ds_label,
+            "extraction_profile": extraction_profile,
+            "extraction_mode": extraction_mode,
             "shard_index": shard_index,
             "shard_size": shard_size,
         },

@@ -18,7 +18,7 @@ Freeze the current `dev` branch state, publish the first stable `v1.0.0` release
   - Staging: `staging_lingua_seeker`, schema `lingua_seeker`
   - Production: `lingua_seeker`, schema `lingua_seeker`
 - External inference services remain out of repository lifecycle:
-  - Embedding: `Qwen/Qwen3-Embedding-0.6B`
+  - Embedding: `BAAI/bge-m3`
   - Rerank: `BAAI/bge-reranker-v2-m3`
   - Doc Parse: `opendatalab/MinerU2.5-Pro-2604-1.2B`
 

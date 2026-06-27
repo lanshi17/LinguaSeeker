@@ -140,7 +140,7 @@ async def test_fabry_output_fixture_runs_original_and_translated_tracks_independ
     documents = EvidenceExtractionService.build_dual_documents_from_output_dir(_FABRY_OUTPUT_DIR)
     provider = FabryFixtureProvider()
     service = EvidenceExtractionService(cfg=mock_config)
-    service._workflow = EvidenceExtractionWorkflow(provider=provider)
+    service._workflow = EvidenceExtractionWorkflow(provider=provider, extraction_mode="legacy")
 
     result = await service.run_dual(documents)
 

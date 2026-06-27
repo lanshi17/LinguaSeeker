@@ -46,7 +46,34 @@ dual_result = await service.run_dual(documents)
 # dual_result.alignment_records are cross-track alignment summaries.
 ```
 
-## Architecture
+## Research Boundary — Single-Document Extraction Scope
+
+The extraction pipeline targets fields that **a single document can directly support from its own text**. It does not claim to fill all 166 catalog fields from one paper. The 166-field catalog is the *full GDV data model*; many fields require cross-paper curation, external database lookup, or expert consensus.
+
+### Extractable fields by literature type
+
+| Literature type | Primary categories | Notes |
+|---|---|---|
+| **Case report / case series** | A.* (variant info), B.* (case/phenotype), C.* (family/segregation), D.* (population frequencies *only when explicitly reported in text*), partial J.* (authority/time-validity) | Most common source type. Extraction is bounded by what the case narrative reports. |
+| **Functional study** | F.* (functional experiments), I.* (gene function/models/rescue), H.negative_functional_result, plus experiment-related A.* and B.* | Functional evidence fields require explicit experimental design descriptions. |
+| **Cohort / case-control study** | B.* (case counts, cohort phenotype), D.* (population/frequency), E.* (computational prediction), G.* (case-control statistics), partial H.* (contradiction/exclusion) | Statistical fields require reported numbers, not inferred values. |
+
+### Explicitly excluded from single-document extraction
+
+- **K.* (Gene-Disease Validity Curation)** — 23 fields for cross-paper GDV SOP v12 curation. These belong to a downstream cross-paper curation pipeline, not per-document extraction. The `CatalogExtractionStage` filters out the `curation` group at runtime.
+- **External database fields** — any field that requires ClinVar, gnomAD, HGMD, or similar external lookup to fill. The extraction pipeline may mark such fields with `requires_external_completion=True`; a later annotation provider fills them with explicit source provenance.
+- **Expert consensus fields** — fields requiring multi-paper synthesis or expert judgment (e.g., overall pathogenicity classification based on multiple evidence lines).
+
+### Evaluation framing
+
+Quality metrics and benchmark scores should be computed against **eligible/source-supported fields**, not the full 166-field catalog. The `catalog_backfill` stage expands the output matrix to 166 rows for downstream completeness, but `NOT_APPLICABLE` (channel-excluded) and `NOT_ATTEMPTED` (target-excluded) statuses indicate fields that were never extraction targets. Only `FOUND`, `SOURCE_INVALID`, `OCR_GAP`, `TABLE_UNGROUNDED`, `CONTEXT_CONTAMINATION`, and `NOT_FOUND` among eligible fields reflect extraction performance.
+
+### Extraction workflow modes
+
+Business Phase 2 now defaults to the **B8 main-track plus review-track** workflow (`extraction_mode="b8"`, the canonical default). B8 uses `PrimaryBroadExtractionStage` + `ReviewValidationStage` instead of the legacy `catalog_extraction -> special_evidence -> clinical_context` chain.
+
+The legacy/current unified workflow remains available as an explicit rollback / historical baseline via `extraction_mode="legacy"`.
+
 
 ```
 EvidenceExtractionService (public facade)
@@ -63,11 +90,10 @@ EvidenceExtractionService (public facade)
       ├─ [entry] relevance_scan ────> RelevanceScanStage (FAST tier)
       │    ├─ relevant? -> not_relevant -> END
       │    ├─ channel classification -> DocumentChannelClassification
-      │    └─ relevant? -> primary_broad_extraction
+      │    └─ relevant? -> primary_broad_extraction by default
       │
       ├─ primary_broad_extraction ─> PrimaryBroadExtractionStage (STRONG tier)
-      │    └─ B8 high-recall candidate pass over the focused field set
-      │    └─ requires source_quote and stores it as raw_source for grounding
+      │    └─ business default: broad high-recall extraction with forced source_quote
       │
       ├─ language_metadata ─────────> _node_language_metadata (deterministic)
       │    └─ stamps article_language, is_english, target_gene/disease/variant
@@ -78,8 +104,21 @@ EvidenceExtractionService (public facade)
       ├─ role_routing ──────────────> EvidenceRoleRouter (deterministic)
       │    └─ separates primary/phenotype/comparator/context items
       │
+      ├─ review_validation ─────────> ReviewValidationStage (STANDARD tier)
+      │    └─ approve/reject/correct primary candidates (fail-open on provider error)
+      │
       ├─ value_normalization ───────> AcmgEvidenceValueNormalizer (deterministic)
       │    └─ rejects coordinate-only HGVS, blocks milestone ages, merges duplicates
+      │
+      ├─ catalog_extraction ──────> CatalogExtractionStage (STRONG tier)
+      │    └─ legacy rollback only: unified pass over eligible high_signal + supporting
+      │
+      ├─ special_evidence ────────> SpecialEvidenceStage (STRONG tier)
+      │    └─ legacy rollback only: second pass for functional/case-control/authority
+      │
+      ├─ clinical_context ────────> ClinicalContextStage (STRONG tier)
+      │    └─ legacy rollback only: supplementary phenotype and clinical context items
+      │
       │
       ├─ target_guard ──────────────> TargetEntityGuard (deterministic)
       │    └─ filters items against the ExtractionTarget gene-disease pair
@@ -98,15 +137,19 @@ EvidenceExtractionService (public facade)
       │
       └─ catalog_backfill ──────────> EvidenceItemNormalizer.normalize_grouped (deterministic)
            └─ expands sparse items to full 166-row catalog per group
+              (K.* always NOT_APPLICABLE; evaluation should count eligible fields only)
 ```
 
 ### Data flow
 TrackDocument -> [relevance_scan] -> DocumentEvidenceMap + DocumentChannelClassification
-                                -> [primary_broad_extraction] -> sparse EvidenceItem[] with raw source quotes
+  B8 default: -> [primary_broad_extraction] -> sparse EvidenceItem[]
+  legacy:     -> [catalog_extraction]        -> sparse EvidenceItem[]
+               -> [special_evidence]          -> sparse SpecialEvidenceRecord[]
+               -> [clinical_context]          -> supplementary EvidenceItem[]
+  B8 default: -> [review_validation]          -> reviewed EvidenceItem[]
                                 -> [language_metadata] -> language-stamped items
                                 -> [group_assignment] -> grouped items + grouped special records
                                 -> [role_routing] -> primary items, phenotype items, discarded
-                                -> [review_validation] -> approved/rejected/corrected primary items
                                 -> [value_normalization] -> normalized items + normalization issues
                                 -> [target_guard] -> target-filtered items
                                 -> [target_span_recovery] -> gap-filled target-span items
@@ -114,7 +157,8 @@ TrackDocument -> [relevance_scan] -> DocumentEvidenceMap + DocumentChannelClassi
                                 -> [chain_assembly] -> EvidenceChain[]
                                 -> [quality_gate] -> QualityReport
                                 -> [catalog_backfill] -> full 166-row catalog per group
-                                   (NOT_APPLICABLE for channel-excluded, NOT_ATTEMPTED for target-excluded)
+                                   (NOT_APPLICABLE for channel-excluded, NOT_ATTEMPTED for target-excluded;
+                                    K.* curation fields always NOT_APPLICABLE in single-document mode)
                                -> EvidenceExtractionResult (with channel_classification + field_eligibility_summary)
 
 DualTrackDocuments -> run(original)  -> original EvidenceExtractionResult
@@ -212,9 +256,9 @@ The catalog is split into three groups at import time:
 |-------|-----------|--------|---------|
 | `high_signal` | A, B, D, E, J | 62 | Variant, case, population, prediction, authority |
 | `supporting` | C, F, G, H, I | 81 | Segregation, functional, case-control, contradiction, gene function |
-| `curation` | K | 23 | Cross-paper GDV SOP v12 (NOT sent to per-document LLM extraction) |
+| `curation` | K | 23 | Cross-paper GDV SOP v12 (NOT sent to per-document LLM extraction; always NOT_APPLICABLE in single-document mode) |
 
-`CatalogExtractionStage` filters out the `curation` group; it is consumed downstream by the cross-paper gene-disease validity pipeline.
+`CatalogExtractionStage` filters out the `curation` group; it is consumed downstream by the cross-paper gene-disease validity pipeline. Single-document extraction targets only `high_signal` and `supporting` fields that the source text can directly support.
 
 ### `LangChainEvidenceProvider` (`providers.py`)
 
@@ -365,9 +409,9 @@ class IntraTrackConflictChecker:
 | Function | Signature | Tier |
 |----------|-----------|------|
 | `get_evidence_map_prompt` | `(document_id, track, text) -> str` | FAST (`relevance_scan`) |
-| `PrimaryBroadExtractionStage` | `run(document), run_async(document)` | STRONG (`primary_broad_extraction`) |
-| `get_catalog_extraction_prompt` | `(document_id, track, text, catalog, evidence_map_summary, extraction_target) -> str` | historical/experimental |
+| `get_catalog_extraction_prompt` | `(document_id, track, text, catalog, evidence_map_summary, extraction_target) -> str` | STRONG (`catalog_extraction`) |
 | `get_special_evidence_prompt` | `(document_id, track, text, current_items_summary) -> str` | STRONG |
+| `PrimaryBroadExtractionStage` | `run(document), run_async(document)` | STRONG (`primary_broad_extraction`, business default) |
 | `get_source_ambiguity_review_prompt` | `(document_text, snippet, candidate_locations) -> str` | not yet wired |
 
 Catalog extraction prompts include target-scoped rules: strict gene-disease pair filtering, evidence role assignment (primary/phenotype/comparator/context), relationship decision guidance (7 categories), disease boundary guidance, age-of-onset rules, computational-vs-functional evidence separation, and verbatim source snippet requirements.
@@ -379,13 +423,14 @@ Thin wrappers that each own one pipeline step. Deterministic stages are provider
 | Stage | Class | Input | Output | Provider? |
 |-------|-------|-------|--------|-----------|
 | relevance_scan | `RelevanceScanStage` | `TrackDocument` | `DocumentEvidenceMap` | FAST |
-| primary_broad_extraction | `PrimaryBroadExtractionStage` | `TrackDocument` | sparse `list[EvidenceItem]` | STRONG |
-| catalog_extraction | `CatalogExtractionStage` | `TrackDocument, DocumentEvidenceMap` | sparse `list[EvidenceItem]` | historical |
-| special_evidence | `SpecialEvidenceStage` | `TrackDocument, list[EvidenceItem]` | sparse `list[SpecialEvidenceRecord]` | historical |
+| catalog_extraction | `CatalogExtractionStage` | `TrackDocument, DocumentEvidenceMap` | sparse `list[EvidenceItem]` | STRONG, legacy rollback |
+| special_evidence | `SpecialEvidenceStage` | `TrackDocument, list[EvidenceItem]` | sparse `list[SpecialEvidenceRecord]` | STRONG, legacy rollback |
+| clinical_context | `ClinicalContextStage` | `TrackDocument, list[EvidenceItem], DocumentEvidenceMap` | supplementary `list[EvidenceItem]` | STRONG, legacy rollback |
+| primary_broad_extraction | `PrimaryBroadExtractionStage` | `TrackDocument` | sparse `list[EvidenceItem]` | STRONG, business default |
 | language_metadata | `_node_language_metadata` | `EvidenceExtractionState` | language-stamped items | none |
 | group_assignment | `GroupAssignmentStage` | `TrackDocument, list[EvidenceItem], list[SpecialEvidenceRecord]` | grouped items + grouped special records | none |
 | role_routing | `EvidenceRoleRouter` | `list[EvidenceItem], ExtractionTarget` | primary, phenotype, discarded | none |
-| review_validation | `ReviewValidationStage` | `TrackDocument, list[EvidenceItem]` | reviewed primary `list[EvidenceItem]` | STANDARD |
+| review_validation | `ReviewValidationStage` | `TrackDocument, list[EvidenceItem]` | reviewed primary `list[EvidenceItem]` | STANDARD, business default |
 | value_normalization | `AcmgEvidenceValueNormalizer` | `list[EvidenceItem]` | normalized items + normalization issues | none |
 | target_guard | `TargetEntityGuard` | `list[EvidenceItem], ExtractionTarget` | filtered items | none |
 | target_span_recovery | `TargetSpanFieldRecovery` | `TrackDocument, list[EvidenceItem]` | items plus recovered target-span fields | none |
@@ -624,13 +669,13 @@ Modify `LangChainEvidenceProvider._TRANSIENT_EXCEPTIONS` in `providers.py` to ad
 - **LLMPoolAdapter clients are cached per tier** — only 1-3 pool adapters are created regardless of how many `invoke_structured()` calls are made.
 - **Source grounding searches full document text** — O(n x m) where n is document length and m is snippet length. Bounded at 50 matches per snippet. For large documents (>100KB), consider chunking before grounding.
 - **Both LangGraph graphs compile once** — `_build_graph()` and `_build_async_graph()` are called in `__init__()` and the compiled graphs are reused for all `run()` / `run_async()` calls.
-- **Async parity** — `PrimaryBroadExtractionStage.run_async()` and `ReviewValidationStage.run_async()` keep the async LangGraph on async provider calls.
+- **Async parity** — `PrimaryBroadExtractionStage.run_async()`, `ReviewValidationStage.run_async()`, and the legacy `CatalogExtractionStage.run_async()` / `SpecialEvidenceStage.run_async()` / `ClinicalContextStage.run_async()` all support the async LangGraph path.
 - **Target span recovery is O(selected snippets)** — it scans only source snippets already selected by upstream extraction, so it improves recall without increasing LLM calls or document-wide grounding cost.
 
 ### Known bottlenecks
 
-- **LLM calls dominate latency** — each relevant document incurs 3 LLM round-trips (`relevance_scan` + `primary_broad_extraction` + `review_validation`). Expected latency depends on model and document length.
-- **Primary broad extraction uses a fixed B8 field set** — it is intentionally high-recall and relies on review validation plus deterministic grounding/guards for precision.
+- **LLM calls dominate latency** — each relevant document running the B8 default path incurs `relevance_scan` + `primary_broad_extraction` + `review_validation` LLM round-trips. The legacy rollback path (`extraction_mode="legacy"`) uses `relevance_scan` + `catalog_extraction` groups + `special_evidence` + `clinical_context`.
+- **B8 is the business default** — the B8 main-track plus review-track workflow replaced the legacy catalog path as the production default after a three-round evaluation campaign. Round 3 exceeded the benchmark harness (P=87.5%, R=43.8%, F1=58.3% on the random sample). The legacy/current unified workflow remains available as an explicit rollback via `extraction_mode="legacy"`.
 - **Snippet search for common substrings** — very common text like "the" or "1" in single-character snippets will find up to 50 matches, creating 50 `SourceLocation` objects. This is bounded but still allocates.
 
 ## Dependencies
@@ -654,7 +699,7 @@ The evidence extraction module reads from the global FAST_LLM and REASONING_LLM 
 |------|--------------|------------|
 | FAST (relevance_scan) | `cfg.llm` (FAST_LLM) | `api_key`, `all_api_keys`, `base_url`, `model` |
 | STANDARD | `cfg.reasoning` (REASONING_LLM) | `api_key`, `all_api_keys`, `base_url`, `model` |
-| STRONG (primary_broad_extraction) | `cfg.reasoning` (REASONING_LLM) | `api_key`, `all_api_keys`, `base_url`, `model`, `reasoning_effort` |
+| STRONG (catalog/special/clinical extraction, B8 primary) | `cfg.reasoning` (REASONING_LLM) | `api_key`, `all_api_keys`, `base_url`, `model`, `reasoning_effort` |
 
 Additional tuning via `EvidenceExtractionConfigContext` fields: `max_tokens` (default 8192), `temperature` (default 0.0), `timeout` (default 180s), `max_retries` (default 1).
 

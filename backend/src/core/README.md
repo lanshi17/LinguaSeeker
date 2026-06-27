@@ -27,7 +27,7 @@ cfg = get_config()
 # Nested models (preferred)
 cfg.llm.model                    # "mimo-v2.5"
 cfg.reasoning.model              # "mimo-v2.5-pro"
-cfg.embedding.model              # "Qwen/Qwen3-Embedding-0.6B"
+cfg.embedding.model              # "BAAI/bge-m3"
 cfg.mineru.max_file_size_mb      # max upload file size (MB)
 cfg.postgresql.host              # "127.0.0.1"
 

@@ -31,8 +31,8 @@ class StubEvidenceExtractionService(EvidenceExtractionService):
         self._results = results
         self._reconcile_service = CrossTrackReconcileService()
 
-    async def run(self, document: TrackDocument, extraction_profile=None) -> EvidenceExtractionResult:
-        del extraction_profile  # stub ignores profile
+    async def run(self, document: TrackDocument, extraction_profile=None, extraction_mode=None) -> EvidenceExtractionResult:
+        del extraction_profile, extraction_mode  # stub ignores profile/mode
         result = self._results[document.track]
         if result.extraction_target is None and document.extraction_target is not None:
             return result.model_copy(update={"extraction_target": document.extraction_target})

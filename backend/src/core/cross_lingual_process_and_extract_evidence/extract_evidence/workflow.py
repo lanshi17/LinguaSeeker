@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any
+from typing import Literal
 
 from langgraph.graph import END, StateGraph
 from loguru import logger
@@ -23,6 +24,8 @@ from .chunking import DEFAULT_INPUT_BUDGET_TOKENS
 from .core import EvidenceChainBuilder, EvidenceItemNormalizer, TargetEntityGuard
 from .normalization import AcmgEvidenceValueNormalizer
 from .providers import LangChainEvidenceProvider
+from .stages.catalog_extraction import CatalogExtractionStage
+from .stages.clinical_context import ClinicalContextStage
 from .stages.evidence_map import RelevanceScanStage
 from .stages.group_assignment import GroupAssignmentStage
 from .stages.primary_broad_extraction import PrimaryBroadExtractionStage
@@ -30,7 +33,18 @@ from .stages.quality_validation import QualityGateStage
 from .stages.role_routing import EvidenceRoleRouter
 from .stages.review_validation import ReviewValidationStage
 from .stages.source_grounding import SourceGroundingStage
+from .stages.special_evidence import SpecialEvidenceStage
 from .target_span_recovery import TargetSpanFieldRecovery
+
+
+ExtractionWorkflowMode = Literal["legacy", "b8"]
+
+# Canonical business default for the extraction workflow mode.
+# ``"b8"`` is the production main-track + review-track path.  ``"legacy"``
+# remains available as an explicit rollback / historical baseline via
+# ``extraction_mode="legacy"``.
+DEFAULT_EXTRACTION_WORKFLOW_MODE: ExtractionWorkflowMode = "b8"
+
 
 class EvidenceExtractionWorkflow:
     """LangGraph workflow for block-aware evidence extraction."""
@@ -40,9 +54,17 @@ class EvidenceExtractionWorkflow:
         provider: LangChainEvidenceProvider,
         input_budget_tokens: int = DEFAULT_INPUT_BUDGET_TOKENS,
         field_profile: frozenset[str] | None = None,
+        extraction_mode: ExtractionWorkflowMode = DEFAULT_EXTRACTION_WORKFLOW_MODE,
     ):
-        del field_profile
+        if extraction_mode not in ("legacy", "b8"):
+            raise ValueError(f"Unknown extraction_mode {extraction_mode!r}")
+        self._extraction_mode = extraction_mode
         self._relevance_scan = RelevanceScanStage(provider, input_budget_tokens=input_budget_tokens)
+        self._catalog_extraction = CatalogExtractionStage(
+            provider, input_budget_tokens=input_budget_tokens, field_profile=field_profile,
+        )
+        self._special_evidence = SpecialEvidenceStage(provider, input_budget_tokens=input_budget_tokens)
+        self._clinical_context = ClinicalContextStage(provider, input_budget_tokens=input_budget_tokens)
         self._primary_broad_extraction = PrimaryBroadExtractionStage(provider)
         self._group_assignment = GroupAssignmentStage()
         self._value_normalizer = AcmgEvidenceValueNormalizer()
@@ -68,6 +90,22 @@ class EvidenceExtractionWorkflow:
     def _node_primary_broad_extraction(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         items = self._primary_broad_extraction.run(state.document)
         state.evidence_items = items
+        return state
+
+    def _node_catalog_extraction(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        items = self._catalog_extraction.run(
+            state.document, state.evidence_map, state.channel_classification,
+        )
+        state.evidence_items = items
+        decision = self._catalog_extraction._last_eligibility_decision
+        if decision is not None:
+            state.channel_excluded_field_ids = decision.channel_rejected_field_ids
+            state.target_excluded_field_ids = decision.excluded_field_ids - decision.channel_rejected_field_ids
+        return state
+
+    def _node_special_evidence(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        records = self._special_evidence.run(state.document, state.evidence_items)
+        state.special_evidence = records
         return state
 
 
@@ -103,6 +141,44 @@ class EvidenceExtractionWorkflow:
     async def _async_node_primary_broad_extraction(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         items = await self._primary_broad_extraction.run_async(state.document)
         state.evidence_items = items
+        return state
+
+    async def _async_node_catalog_extraction(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        items = await self._catalog_extraction.run_async(
+            state.document, state.evidence_map, state.channel_classification,
+        )
+        state.evidence_items = items
+        decision = self._catalog_extraction._last_eligibility_decision
+        if decision is not None:
+            state.channel_excluded_field_ids = decision.channel_rejected_field_ids
+            state.target_excluded_field_ids = decision.excluded_field_ids - decision.channel_rejected_field_ids
+        return state
+
+    async def _async_node_special_evidence(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        records = await self._special_evidence.run_async(state.document, state.evidence_items)
+        state.special_evidence = records
+        return state
+
+    def _node_clinical_context(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        new_items = self._clinical_context.run(
+            state.document,
+            state.evidence_items,
+            state.evidence_map,
+        )
+        if new_items:
+            logger.info("clinical_context: adding {} supplementary items", len(new_items))
+            state.evidence_items.extend(new_items)
+        return state
+
+    async def _async_node_clinical_context(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        new_items = await self._clinical_context.run_async(
+            state.document,
+            state.evidence_items,
+            state.evidence_map,
+        )
+        if new_items:
+            logger.info("clinical_context: adding {} supplementary items", len(new_items))
+            state.evidence_items.extend(new_items)
         return state
 
     async def _async_node_language_metadata(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
@@ -194,6 +270,14 @@ class EvidenceExtractionWorkflow:
         Fields excluded by channel eligibility get status NOT_APPLICABLE.
         Fields excluded by target/source eligibility get status NOT_ATTEMPTED.
         Eligible fields absent from extraction get status NOT_FOUND.
+
+        Research scope note: the backfill expands to all 166 catalog rows for
+        downstream matrix completeness, but *extraction* only targets fields
+        that the source document can directly support (see README research
+        boundary).  K.* fields are cross-paper GDV curation and are always
+        NOT_APPLICABLE in single-document extraction.  Evaluation metrics
+        should count against eligible/source-supported fields, not the full
+        166-field catalog.
         """
         state.evidence_items = self._item_normalizer.normalize_grouped(
             state.evidence_items,
@@ -210,6 +294,9 @@ class EvidenceExtractionWorkflow:
         graph = StateGraph(EvidenceExtractionState)
 
         graph.add_node("relevance_scan", self._node_relevance_scan)
+        graph.add_node("catalog_extraction", self._node_catalog_extraction)
+        graph.add_node("special_evidence", self._node_special_evidence)
+        graph.add_node("clinical_context", self._node_clinical_context)
         graph.add_node("primary_broad_extraction", self._node_primary_broad_extraction)
         graph.add_node("language_metadata", self._node_language_metadata)
         graph.add_node("group_assignment", self._node_group_assignment)
@@ -225,16 +312,25 @@ class EvidenceExtractionWorkflow:
         graph.add_node("not_relevant", self._node_not_relevant)
 
         graph.set_entry_point("relevance_scan")
+        next_extraction_node = self._first_extraction_node()
         graph.add_conditional_edges(
             "relevance_scan",
-            lambda s: "not_relevant" if s.status == EvidenceExtractionStatus.NOT_RELEVANT else "primary_broad_extraction",
-            {"not_relevant": "not_relevant", "primary_broad_extraction": "primary_broad_extraction"},
+            lambda s: "not_relevant" if s.status == EvidenceExtractionStatus.NOT_RELEVANT else next_extraction_node,
+            {"not_relevant": "not_relevant", next_extraction_node: next_extraction_node},
         )
-        graph.add_edge("primary_broad_extraction", "language_metadata")
+        if self._extraction_mode == "b8":
+            graph.add_edge("primary_broad_extraction", "language_metadata")
+        else:
+            graph.add_edge("catalog_extraction", "special_evidence")
+            graph.add_edge("special_evidence", "clinical_context")
+            graph.add_edge("clinical_context", "language_metadata")
         graph.add_edge("language_metadata", "group_assignment")
         graph.add_edge("group_assignment", "role_routing")
-        graph.add_edge("role_routing", "review_validation")
-        graph.add_edge("review_validation", "value_normalization")
+        if self._extraction_mode == "b8":
+            graph.add_edge("role_routing", "review_validation")
+            graph.add_edge("review_validation", "value_normalization")
+        else:
+            graph.add_edge("role_routing", "value_normalization")
         graph.add_edge("value_normalization", "target_guard")
         graph.add_edge("target_guard", "target_span_recovery")
         graph.add_edge("target_span_recovery", "source_grounding")
@@ -251,6 +347,9 @@ class EvidenceExtractionWorkflow:
         graph = StateGraph(EvidenceExtractionState)
 
         graph.add_node("relevance_scan", self._async_node_relevance_scan)
+        graph.add_node("catalog_extraction", self._async_node_catalog_extraction)
+        graph.add_node("special_evidence", self._async_node_special_evidence)
+        graph.add_node("clinical_context", self._async_node_clinical_context)
         graph.add_node("primary_broad_extraction", self._async_node_primary_broad_extraction)
         graph.add_node("language_metadata", self._async_node_language_metadata)
         graph.add_node("group_assignment", self._node_group_assignment)
@@ -266,16 +365,25 @@ class EvidenceExtractionWorkflow:
         graph.add_node("not_relevant", self._node_not_relevant)
 
         graph.set_entry_point("relevance_scan")
+        next_extraction_node = self._first_extraction_node()
         graph.add_conditional_edges(
             "relevance_scan",
-            lambda s: "not_relevant" if s.status == EvidenceExtractionStatus.NOT_RELEVANT else "primary_broad_extraction",
-            {"not_relevant": "not_relevant", "primary_broad_extraction": "primary_broad_extraction"},
+            lambda s: "not_relevant" if s.status == EvidenceExtractionStatus.NOT_RELEVANT else next_extraction_node,
+            {"not_relevant": "not_relevant", next_extraction_node: next_extraction_node},
         )
-        graph.add_edge("primary_broad_extraction", "language_metadata")
+        if self._extraction_mode == "b8":
+            graph.add_edge("primary_broad_extraction", "language_metadata")
+        else:
+            graph.add_edge("catalog_extraction", "special_evidence")
+            graph.add_edge("special_evidence", "clinical_context")
+            graph.add_edge("clinical_context", "language_metadata")
         graph.add_edge("language_metadata", "group_assignment")
         graph.add_edge("group_assignment", "role_routing")
-        graph.add_edge("role_routing", "review_validation")
-        graph.add_edge("review_validation", "value_normalization")
+        if self._extraction_mode == "b8":
+            graph.add_edge("role_routing", "review_validation")
+            graph.add_edge("review_validation", "value_normalization")
+        else:
+            graph.add_edge("role_routing", "value_normalization")
         graph.add_edge("value_normalization", "target_guard")
         graph.add_edge("target_guard", "target_span_recovery")
         graph.add_edge("target_span_recovery", "source_grounding")
@@ -286,6 +394,11 @@ class EvidenceExtractionWorkflow:
         graph.add_edge("not_relevant", END)
 
         return graph.compile()
+
+    def _first_extraction_node(self) -> str:
+        if self._extraction_mode == "b8":
+            return "primary_broad_extraction"
+        return "catalog_extraction"
 
 
     async def run(self, document: TrackDocument) -> EvidenceExtractionState:
