@@ -20,14 +20,14 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.reposito
 )
 
 config = SimilarityMatchConfig(
-    embedding_model="Qwen/Qwen3-Embedding-0.6B",
+    embedding_model="BAAI/bge-m3",
     rerank_top_k=10,
     rerank_score_threshold=0.5,
 )
 
 # Local-first with remote fallback
-local_emb = EmbeddingHttpProvider(base_url="http://localhost:8002", model="Qwen/Qwen3-Embedding-0.6B")
-remote_emb = EmbeddingHttpProvider(base_url="https://api.siliconflow.cn", model="Qwen/Qwen3-Embedding-0.6B")
+local_emb = EmbeddingHttpProvider(base_url="http://localhost:8002", model="BAAI/bge-m3")
+remote_emb = EmbeddingHttpProvider(base_url="https://api.siliconflow.cn", model="BAAI/bge-m3")
 local_rerank = RerankHttpProvider(base_url="http://localhost:8003", model="BAAI/bge-reranker-v2-m3")
 remote_rerank = RerankHttpProvider(base_url="https://api.siliconflow.cn", model="BAAI/bge-reranker-v2-m3")
 
@@ -80,7 +80,7 @@ class SimilarityTerminologyMatcher:
 ```python
 @dataclass(frozen=True)
 class SimilarityMatchConfig:
-    embedding_model: str          # model name for embeddings (e.g. "Qwen/Qwen3-Embedding-0.6B")
+    embedding_model: str          # model name for embeddings (e.g. "BAAI/bge-m3")
     rerank_top_k: int             # max candidates to retrieve + rerank
     rerank_score_threshold: float # minimum score for STANDARDIZED
     min_rerank_margin: float = 0.05  # gap between top and second for unambiguous
@@ -193,7 +193,7 @@ Builds deterministic embedding text from `display_name + aliases + external_id +
 
 ```python
 config = SimilarityMatchConfig(
-    embedding_model="Qwen/Qwen3-Embedding-0.6B",
+    embedding_model="BAAI/bge-m3",
     rerank_top_k=20,           # wider retrieval for higher recall
     rerank_score_threshold=0.6, # stricter threshold
     min_rerank_margin=0.1,      # wider margin for unambiguous
@@ -227,7 +227,7 @@ print(f"Generated {count} embeddings")
 import httpx
 async with httpx.AsyncClient(timeout=30.0) as client:
     emb = EmbeddingHttpProvider(
-        base_url="http://localhost:8002", model="Qwen/Qwen3-Embedding-0.6B", client=client,
+        base_url="http://localhost:8002", model="BAAI/bge-m3", client=client,
     )
     rerank = RerankHttpProvider(
         base_url="http://localhost:8003", model="BAAI/bge-reranker-v2-m3", client=client,
@@ -244,8 +244,8 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.provider
     RerankHttpProvider,
 )
 
-local_emb = EmbeddingHttpProvider(base_url="http://localhost:8002", model="Qwen/Qwen3-Embedding-0.6B")
-remote_emb = EmbeddingHttpProvider(base_url="https://api.siliconflow.cn", model="Qwen/Qwen3-Embedding-0.6B", api_key="sk-...")
+local_emb = EmbeddingHttpProvider(base_url="http://localhost:8002", model="BAAI/bge-m3")
+remote_emb = EmbeddingHttpProvider(base_url="https://api.siliconflow.cn", model="BAAI/bge-m3", api_key="sk-...")
 embedding = FallbackEmbeddingProvider(local_emb, remote_emb)
 
 # If remote is not configured, pass None -- local failures propagate directly

@@ -72,7 +72,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-lingua_seeker}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lingua_seeker} -d ${POSTGRES_DB:-lingua_seeker}"]
       interval: 5s

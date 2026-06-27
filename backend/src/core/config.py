@@ -148,7 +148,7 @@ class EmbeddingConfig(BaseModel):
 
     base_url: str = ""
     api_key: str = ""
-    model: str = "Qwen/Qwen3-Embedding-0.6B"
+    model: str = "BAAI/bge-m3"
     dimension: int = 1024
     batch_size: int = 10
     remote_base_url: str = ""
@@ -333,7 +333,7 @@ class Settings(BaseSettings):
     # ── Embedding flat fields (EMBEDDING_*) ──────────────────────────────
 
     embedding_base_url: str = ""
-    embedding_model: str = "Qwen/Qwen3-Embedding-0.6B"
+    embedding_model: str = "BAAI/bge-m3"
     embedding_dimension: int = 1024
     embedding_batch_size: int = 10
     embedding_remote_base_url: str = ""

@@ -34,7 +34,7 @@
 | Secondary Extraction LLM | OpenAI-compatible custom API | — | Translated-text evidence extraction |
 | Cross-Track Reconciliation *(planned)* | — | — | Automated comparison of native/translated tracks; not yet implemented. Currently both tracks stored side-by-side for expert review. |
 | VLM | OpenAI-compatible vision model | — | Figure, table, and pedigree description |
-| Embedding | Qwen3-Embedding-0.6B | — | Entity matching and feedback retrieval |
+| Embedding | BAAI/bge-m3 | — | Entity matching and feedback retrieval |
 | Rerank | bge-reranker-v2-m3 | — | Literature/search reranking |
 | Logging | loguru | 0.7+ | Structured logs under `logs/` |
 | Backend Tests | pytest + pytest-asyncio | 9.0+ / 1.3+ | Unit and async tests |
@@ -305,7 +305,7 @@ Standalone FastAPI model service exposes OpenAI-compatible endpoints:
 | Fast LLM | `FAST_LLM_*` | deepseek-v4-flash | Source-language extraction, general tasks |
 | Reasoning LLM | `REASONING_LLM_*` | deepseek-v4-flash | Evidence review, validation, multi-source reasoning |
 | Multimodal LLM | `MULTIMODAL_LLM_*` | qwen3-vl-flash | Figure, table, pedigree description |
-| Embedding | `EMBEDDING_*` | Qwen3-Embedding-0.6B | Entity matching and feedback retrieval |
+| Embedding | `EMBEDDING_*` | BAAI/bge-m3 | Entity matching and feedback retrieval |
 | Rerank | `RERANK_*` | bge-reranker-v2-m3 | Search reranking |
 
 ## 4. Frontend Architecture

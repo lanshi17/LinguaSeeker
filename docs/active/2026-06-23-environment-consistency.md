@@ -99,7 +99,7 @@ load_backend_config_into_env(_BACKEND_ROOT)  # 加载 backend/config/ 到 os.env
 
 | 服务 | 模型 ID | 维度 | max_model_len |
 |---|---|---|---|
-| Embedding | `Qwen/Qwen3-Embedding-0.6B` | 1024 | 8192 |
+| Embedding | `BAAI/bge-m3` | 1024 | 8192 |
 | Rerank | `BAAI/bge-reranker-v2-m3` | — | 8192 |
 | Doc Parse (VLM) | `opendatalab/MinerU2.5-Pro-2604-1.2B` | — | — |
 

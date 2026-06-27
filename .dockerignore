@@ -82,3 +82,4 @@ backend/libs/*/target
 
 # Pre-built backend venv artefacts — only needed by backend/Dockerfile
 docker-artifacts
+!docker-artifacts/*

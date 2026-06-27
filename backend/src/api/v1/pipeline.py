@@ -72,6 +72,10 @@ class PipelineRunRequest(BaseModel):
     # merged_73 BIBM evaluation.  Must be explicitly set by benchmark runners.
     extraction_profile: str = "none"
 
+    # Extraction workflow mode: "b8" (default business main+review track) or
+    # "legacy" (rollback / historical baseline catalog track).
+    extraction_mode: str = "b8"
+
     @model_validator(mode="after")
     def validate_request(self) -> "PipelineRunRequest":
         """Validate phase mode and source-specific requirements (N1 fix)."""
@@ -461,6 +465,7 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         created_at=datetime.now().isoformat(),
         extraction_target=body.extraction_target,
         extraction_profile=body.extraction_profile,
+        extraction_mode=body.extraction_mode,
     )
     content_hash = await runner.compute_initial_content_hash(temp_state)
     if content_hash:
@@ -507,6 +512,7 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         "literature_types": body.literature_types,
         "created_at": datetime.now().isoformat(),
         "extraction_profile": body.extraction_profile,
+        "extraction_mode": body.extraction_mode,
     }
     if body.extraction_target is not None:
         request_data["extraction_target"] = body.extraction_target.model_dump()

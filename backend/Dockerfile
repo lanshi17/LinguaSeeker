@@ -42,31 +42,50 @@ RUN python3 -m venv /opt/venv \
 
 # Drop pre-built site-packages (includes rust_io + every Python dep)
 # and the console-script shims with already-rewritten shebangs.
+# --owner/--group avoids a costly chown -R later.
 COPY docker-artifacts/site-packages.tar.gz /tmp/sp.tar.gz
-RUN tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+RUN tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages --owner=deploy --group=deploy \
  && rm /tmp/sp.tar.gz
 # venv-bin is optional — may be empty when no console scripts exist.
 COPY docker-artifacts/venv-bin.tar.gz /tmp/bin.tar.gz
-RUN (tar xzf /tmp/bin.tar.gz -C /opt/venv/bin 2>/dev/null && chmod +x /opt/venv/bin/* 2>/dev/null) || true \
+RUN (tar xzf /tmp/bin.tar.gz -C /opt/venv/bin --owner=deploy --group=deploy 2>/dev/null && chmod +x /opt/venv/bin/* 2>/dev/null) || true \
  && rm -f /tmp/bin.tar.gz
+# Restore python symlinks — venv-bin tarball may overwrite them with
+# host-specific paths that don't exist inside the container.
+RUN ln -sf /usr/local/bin/python3 /opt/venv/bin/python3 \
+ && ln -sf python3 /opt/venv/bin/python \
+ && ln -sf /usr/local/bin/python3 /opt/venv/bin/python3.12
 
 # Editable installs from the host point at non-existent paths inside the
 # container — drop the .pth stubs and install the in-tree deps from source.
-COPY libs/config-loader /opt/extras/config-loader
+COPY --chown=deploy:deploy libs/config-loader /opt/extras/config-loader
 RUN rm -f /opt/venv/lib/python3.12/site-packages/_editable_impl_*.pth \
- && /opt/venv/bin/pip install --no-cache-dir --no-deps /opt/extras/config-loader >/dev/null 2>&1
+ && /opt/venv/bin/python -m pip install --no-cache-dir --no-deps /opt/extras/config-loader
 
 # Repoint any lingering RECORD references from the build host venv to
 # /opt/venv. The host path varies by machine — we replace everything up
 # to and including "/.venv" with "/opt/venv".
-RUN find /opt/venv -type f -name 'RECORD' -exec sed -i 's|.*/\.venv|/opt/venv|g' {} + 2>/dev/null || true
+RUN printf '%s\n' \
+    "import glob, re, pathlib" \
+    "count = 0" \
+    "for f in glob.glob('/opt/venv/**/RECORD', recursive=True):" \
+    "    p = pathlib.Path(f)" \
+    "    txt = p.read_text()" \
+    "    if '.venv' in txt:" \
+    "        p.write_text(re.sub(r'.*/\\.venv', '/opt/venv', txt))" \
+    "        count += 1" \
+    "print(f'Patched {count} RECORD files')" \
+    > /tmp/fix_record.py \
+ && python3 /tmp/fix_record.py \
+ && rm /tmp/fix_record.py
 
 WORKDIR /app
-COPY backend/ /app/
+COPY --chown=deploy:deploy backend/ /app/
 # Strip the host venv so the image only ships /opt/venv.
+# Only chown the top-level dirs — tar extraction already set file ownership.
 RUN rm -rf /app/.venv \
  && mkdir -p /app/logs /app/data /app/downloads /app/output \
- && chown -R deploy:deploy /app /opt/venv
+ && chown deploy:deploy /opt/venv /opt/venv/bin /opt/venv/lib
 
 USER deploy
 

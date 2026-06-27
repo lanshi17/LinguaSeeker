@@ -93,6 +93,13 @@ def do_run_migrations(connection):
     with context.begin_transaction():
         context.execute(text(f"CREATE SCHEMA IF NOT EXISTS {schema}"))
         context.execute(text(f"SET search_path TO {schema},public"))
+        # Pre-create alembic_version with a wide column so Alembic's internal
+        # UPDATE won't hit "value too long for character varying(32)".
+        connection.execute(text(
+            f"CREATE TABLE IF NOT EXISTS {schema}.alembic_version ("
+            "    version_num VARCHAR(128) NOT NULL"
+            ")"
+        ))
         context.run_migrations()
 
 
