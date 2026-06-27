@@ -113,7 +113,7 @@ load_backend_config_into_env(_BACKEND_ROOT)  # 加载 backend/config/ 到 os.env
 | 模式 | Embedding | Rerank | VLM | Doc Parse |
 |---|---|---|---|---|
 | Monolith（dev） | `:8001` | `:8001` | `:8001` | `:8001` |
-| Multi-container（staging/prod） | `:8002` | `:8003` | `:8004` | `:8005` |
+| Multi-container（staging/prod） | `:8002` | `:8003` | `:44321` | `:8005` |
 
 后端配置通过 `embedding.base_url` 和 `rerank.base_url` 指向正确端口。
 

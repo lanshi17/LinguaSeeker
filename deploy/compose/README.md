@@ -60,7 +60,7 @@ Browser
 +---------------------------------------+
 |  Inference Services (external project)|
 |  embedding :8002 / rerank :8003      |
-|  doc-parse :8004                      |
+|  doc-parse :44321                      |
 +---------------------------------------+
 ```
 
@@ -79,7 +79,7 @@ Designed for CentOS 7.9+ servers. Runs backend, Postgres, and Redis locally. Inf
 
 - Docker CE 20.10+
 - Backend image loaded: `lingua-seeker-backend:local`
-- External inference services running (embedding :8002, rerank :8003, doc-parse :8004)
+- External inference services running (embedding :8002, rerank :8003, doc-parse :44321)
 
 ### Initial Deploy
 

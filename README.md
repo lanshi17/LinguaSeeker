@@ -17,7 +17,7 @@ Release execution is tracked in [docs/active/2026-06-25-v1-release-checklist.md]
 | Frontend | Vite, React 18, TypeScript (strict), Ant Design, Zustand, React Query, Axios, React Router |
 | Backend | Python 3.12, FastAPI, SQLAlchemy 2.0 (async), Alembic, LangGraph |
 | Native I/O | Rust (PyO3/maturin extensions: rust-io, files-io, net-io) |
-| Inference | External Docker containers: Embedding (:8002), Rerank (:8003), Doc-Parse (:8004) — built by separate project |
+| Inference | External Docker containers: Embedding (:8002), Rerank (:8003), Doc-Parse (:44321) — built by separate project |
 | Database | PostgreSQL 16 (pgvector), Redis 8.0 |
 | Infra | Docker Compose, Ansible |
 
@@ -136,7 +136,7 @@ embedding:
 rerank:
   base_url: "http://localhost:8003/v1"
 mineru:
-  local_parse_url: "http://localhost:8004"
+  local_parse_url: "http://localhost:44321"
 ```
 
 ## Development Commands

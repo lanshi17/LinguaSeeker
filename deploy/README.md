@@ -49,7 +49,7 @@ Internet
              +---> External Inference Services (separate project)
                      +-- Embedding (:8002)
                      +-- Rerank (:8003)
-                     +-- Doc Parse (:8004)
+                     +-- Doc Parse (:44321)
 
 ## Requirements
 

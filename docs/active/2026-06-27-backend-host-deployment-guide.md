@@ -10,7 +10,7 @@ Standard deployment procedure for `deploy/compose/backend-host/` — runs FastAP
 | Docker | 24+ with BuildKit |
 | Docker Compose | v2 |
 | Disk | 15 GB free (image ~6 GB, DB + logs) |
-| GPU host | Separate machine running inference services (Embedding :8002, Rerank :8003, Doc-Parse :8004) |
+| GPU host | Separate machine running inference services (Embedding :8002, Rerank :8003, Doc-Parse :44321) |
 
 ## Directory Layout
 

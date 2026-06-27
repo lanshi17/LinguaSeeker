@@ -414,7 +414,7 @@ All three expose async Python functions via `pyo3_async_runtimes::tokio::future_
 Three independent Docker containers provide model inference, built and published by a separate project:
 - **Embedding** (:8002): Sentence-Transformers + FastAPI, `/v1/embeddings` (OpenAI-compatible)
 - **Rerank** (:8003): Sentence-Transformers/CrossEncoder + FastAPI, `/v1/rerank`
-- **Doc Parse** (:8004): MinerU + FastAPI, `/file_parse`
+- **Doc Parse** (:44321): MinerU + FastAPI, `/file_parse`
 
 The backend consumes these via HTTP clients (`EmbeddingHttpProvider`, `RerankHttpProvider`, `MinerULocalParser`). URL and auth configured via `backend/config/` (`inference_api_key`, `embedding.base_url`, `rerank.base_url`, `mineru.local_parse_url`).
 
@@ -502,7 +502,7 @@ Model inference is provided by external Docker containers (not built by this rep
 
 ```bash
 # Configure URLs in backend/config/ (embedding.base_url, rerank.base_url, mineru.local_parse_url)
-# Default ports: embedding :8002, rerank :8003, doc-parse :8004
+# Default ports: embedding :8002, rerank :8003, doc-parse :44321
 ```
 
 #### Full Stack

@@ -8,7 +8,7 @@
 from src.core.ingest_and_digitize_data.parse_document.local.parser import MinerULocalParser
 
 parser = MinerULocalParser(
-    parse_url="http://localhost:8004",
+    parse_url="http://localhost:44321",
     model_id="opendatalab/MinerU2.5-Pro-2604-1.2B",
     timeout=120.0,
     dpi=200,
@@ -51,7 +51,7 @@ MinerULocalParser.parse(pdf_path)
 
 ```python
 MinerULocalParser(
-    parse_url: str = "http://localhost:8004",
+    parse_url: str = "http://localhost:44321",
     model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B",
     timeout: float = 120.0,
     dpi: int = 200,
@@ -122,7 +122,7 @@ When `api_key` is non-empty, requests include an `Authorization: Bearer <api_key
 
 | Env Var | Default | Description |
 |---------|---------|-------------|
-| `MINERU_LOCAL_PARSE_URL` | `http://localhost:8004` | MinerU service doc-parse endpoint |
+| `MINERU_LOCAL_PARSE_URL` | `http://localhost:44321` | MinerU service doc-parse endpoint |
 | `MINERU_LOCAL_MODEL_ID` | `opendatalab/MinerU2.5-Pro-2604-1.2B` | VLM model ID (retained for backward-compatibility) |
 | `MINERU_LOCAL_TIMEOUT` | `120.0` | Request timeout in seconds |
 | `MINERU_LOCAL_DPI` | `200` | PDF rendering DPI (retained for backward-compatibility) |

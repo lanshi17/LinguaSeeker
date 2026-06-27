@@ -16,7 +16,7 @@
 # Architecture:
 #   nginx (host) → backend:8000 → postgres:5432 + redis:6379
 #                                   ↓
-#   embedding:8002, rerank:8003, doc-parse:8004 (GPU)
+#   embedding:8002, rerank:8003, doc-parse:44321 (GPU)
 # ============================================================================
 services:
   # ── Backend ──────────────────────────────────────────────────────────────
@@ -51,7 +51,7 @@ services:
       EMBEDDING_BASE_URL: http://model-embedding:8002/v1
       RERANK_BASE_URL: http://model-rerank:8003/v1
       # Doc-parse: MinerU native PDF parsing via /file_parse
-      MINERU_LOCAL_PARSE_URL: http://model-doc-parse:8004
+      MINERU_LOCAL_PARSE_URL: http://model-doc-parse:44321
       # ── LLM endpoints ──
       FAST_LLM_BASE_URL: ${FAST_LLM_BASE_URL}
       FAST_LLM_API_KEY: ${FAST_LLM_API_KEY}

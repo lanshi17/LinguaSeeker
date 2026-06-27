@@ -2,11 +2,11 @@
 
 Tests both parsing modes against real PDFs in backend/downloads/:
 
-- **Local mode**: MinerULocalParser → external MinerU FastAPI service (port 8004)
+- **Local mode**: MinerULocalParser → external MinerU FastAPI service (port 44321)
 - **API mode**: upload local PDF via MinerU cloud API → poll batch result → parse
 
 Requires:
-- MinerU service running on localhost:8004 (for local mode)
+- MinerU service running on localhost:44321 (for local mode)
 - MINERU_API_TOKEN env var set (for API mode)
 - rust_io.net PyO3 extension built
 
