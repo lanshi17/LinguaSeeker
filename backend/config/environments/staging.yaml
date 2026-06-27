@@ -27,7 +27,7 @@ translation_llm:
 embedding:
   base_url: "http://embedding-server:8002/v1"
   remote_base_url: "https://api.siliconflow.cn"
-  remote_model: "Qwen/Qwen3-Embedding-0.6B"
+  remote_model: "BAAI/bge-m3"
 
 rerank:
   base_url: "http://rerank-server:8003/v1"

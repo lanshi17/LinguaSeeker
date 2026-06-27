@@ -1,0 +1,196 @@
+{
+  "evaluation_id": "eval_unified_6ba50ff5",
+  "timestamp": "2026-06-27T12:09:16",
+  "config": {
+    "base_url": "http://localhost:8000",
+    "concurrency": 1,
+    "limit": 1,
+    "ground_truth_root": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/data/ground_truth/unified",
+    "dataset": "unified",
+    "extraction_profile": "none",
+    "extraction_mode": "b8",
+    "shard_index": null,
+    "shard_size": null
+  },
+  "total_entries": 1,
+  "total_duration_s": 211.2,
+  "aggregates": {
+    "overall": {
+      "true_positives": 1,
+      "false_positives": 0,
+      "false_negatives": 2,
+      "precision": 1.0,
+      "recall": 0.3333,
+      "f1": 0.5,
+      "over_extractions": 0,
+      "entity_standardization_accuracy": 0.0,
+      "cross_lingual_consistency": 0.0
+    },
+    "by_field": {
+      "A.gene_symbol": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "over_extractions": 0
+      },
+      "B.disease_diagnosis": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      },
+      "A.gene_disease_relationship": {
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0,
+        "over_extractions": 0
+      }
+    },
+    "by_classification": {
+      "Definitive": {
+        "count": 1,
+        "precision": 1.0,
+        "recall": 0.3333,
+        "f1": 0.5,
+        "over_extractions": 0
+      }
+    },
+    "by_moi": {
+      "AD": {
+        "count": 1,
+        "precision": 1.0,
+        "recall": 0.3333,
+        "f1": 0.5,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      }
+    },
+    "by_entity_type": {
+      "gene": 0.0,
+      "disease": 0.0
+    },
+    "by_source_dataset": {
+      "clingen": {
+        "true_positives": 1,
+        "false_positives": 0,
+        "false_negatives": 2,
+        "precision": 1.0,
+        "recall": 0.3333,
+        "f1": 0.5,
+        "over_extractions": 0,
+        "entity_standardization_accuracy": 0.0,
+        "cross_lingual_consistency": 0.0,
+        "count": 1
+      }
+    },
+    "timeout_and_errors": []
+  },
+  "per_entry": [
+    {
+      "entry_id": "gs_000",
+      "gene_symbol": "AARS1",
+      "classification": "Definitive",
+      "moi": "AD",
+      "source_dataset": "clingen",
+      "original_entry_id": "clingen_000",
+      "run_id": "029f7ebe-e0ac-4bea-bf07-42cd890ace72",
+      "status_url": "/api/v1/pipeline/runs/029f7ebe-e0ac-4bea-bf07-42cd890ace72/status",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "last_pipeline_status": null,
+      "last_current_phase": null,
+      "duration_s": 209.51,
+      "evidence_count": 10,
+      "found_rate": 0.5,
+      "grounding_rate": 0.0,
+      "standardization_accuracy": 0.0,
+      "track_consistency": 0.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "AARS1",
+          "matched": true,
+          "extracted": "{'value': 'AARS1'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "original-p1",
+            "block_type": "text",
+            "end_offset": 10659,
+            "block_index": -1,
+            "context_ref": "primary_broad_extraction",
+            "context_type": "text",
+            "start_offset": 10622,
+            "text_snippet": "Alanyl‐tRNA synthetase 1 (AARS1) gene",
+            "source_precision": "ambiguous"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Charcot-Marie-Tooth disease axonal type 2N",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        }
+      ],
+      "entity_matches": {
+        "gene": {
+          "matched": false,
+          "expected_id": "HGNC:20",
+          "actual_id": null,
+          "status": "not_found"
+        },
+        "disease": {
+          "matched": false,
+          "expected_id": "MONDO:0013212",
+          "actual_id": null,
+          "status": "not_found"
+        }
+      }
+    }
+  ]
+}

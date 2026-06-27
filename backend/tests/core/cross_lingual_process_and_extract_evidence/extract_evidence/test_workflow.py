@@ -283,3 +283,28 @@ async def test_workflow_backfills_after_quality_gate(mock_config):
     )
     # not_relevant path exits before catalog_backfill — items stay empty.
     assert state.evidence_items == []
+
+
+def test_service_default_uses_b8_workflow(mock_config):
+    """EvidenceExtractionService(cfg) defaults to the b8 business workflow."""
+    service = EvidenceExtractionService(cfg=mock_config)
+    assert service._extraction_mode == "b8"
+    assert service._workflow._extraction_mode == "b8"
+
+
+def test_service_explicit_legacy_uses_legacy_workflow(mock_config):
+    """EvidenceExtractionService(cfg, extraction_mode='legacy') builds a legacy workflow."""
+    service = EvidenceExtractionService(cfg=mock_config, extraction_mode="legacy")
+    assert service._extraction_mode == "legacy"
+    assert service._workflow._extraction_mode == "legacy"
+
+
+def test_service_run_legacy_override_uses_legacy_workflow(mock_config):
+    """service.run(..., extraction_mode='legacy') overrides the default b8 for that call."""
+    service = EvidenceExtractionService(cfg=mock_config)
+    assert service._extraction_mode == "b8"
+    # No profile override + explicit legacy mode -> fresh legacy workflow.
+    wf = service._workflow_for(None, extraction_mode="legacy")
+    assert wf._extraction_mode == "legacy"
+    # No override -> cached default (b8) workflow.
+    assert service._workflow_for(None, extraction_mode=None)._extraction_mode == "b8"

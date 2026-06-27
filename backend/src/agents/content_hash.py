@@ -17,6 +17,9 @@ from pathlib import Path
 import aiofiles
 
 from src.agents.contracts import PipelineGraphState
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import (
+    DEFAULT_EXTRACTION_WORKFLOW_MODE,
+)
 
 
 def normalize_identifier(identifier: str) -> str:
@@ -106,13 +109,18 @@ def _get_scope_key(state: PipelineGraphState) -> str | None:
     """Extract the extraction target scope key from state, if present.
 
     The scope key includes the extraction profile so that the same document
-    processed with different profiles does not collide in the cache.
+    processed with different profiles does not collide in the cache.  The
+    extraction mode is only appended when it differs from the business
+    default (``b8``); an explicit ``"legacy"`` rollback therefore gets a
+    distinct cache scope, while the default mode produces the normal key.
     """
     parts: list[str] = []
     if state.extraction_target is not None:
         parts.append(state.extraction_target.scope_key)
     if state.extraction_profile and state.extraction_profile != "none":
         parts.append(f"profile={state.extraction_profile}")
+    if state.extraction_mode and state.extraction_mode != DEFAULT_EXTRACTION_WORKFLOW_MODE:
+        parts.append(f"mode={state.extraction_mode}")
     return "|".join(parts) if parts else None
 
 

@@ -97,25 +97,30 @@ Phase 2 is split into two sub-modules executed sequentially by the pipeline orch
 │              extract_evidence/  (Evidence Extraction)             │
 │               EvidenceExtractionService (public facade)           │
 │                                                                  │
-│  EvidenceExtractionWorkflow — B8 main+review LangGraph           │
+│  EvidenceExtractionWorkflow — B8 main+review default              │
 │  (workflow.py)                                                   │
 │                                                                  │
-│  relevance_scan ──▶ primary_broad_extraction ──▶ language_metadata│
+│  relevance_scan ──▶ primary_broad_extraction (B8 default)         │
+│                              │                                    │
+│                              ▼                                    │
+│  language_metadata ──▶ group_assignment ──▶ role_routing          │
 │                              │                      │            │
 │                              ▼                      ▼            │
-│  group_assignment ──▶ role_routing ──▶ review_validation         │
+│  review_validation ──▶ value_normalization ──▶ target_guard       │
 │                              │                      │            │
 │                              ▼                      ▼            │
-│  value_normalization ──▶ target_guard ──▶ target_span_recovery   │
+│  target_span_recovery ──▶ source_grounding ──▶ chain_assembly    │
 │                              │                      │            │
 │                              ▼                      ▼            │
-│  source_grounding ──▶ chain_assembly ──▶ quality_gate            │
-│                              │                      │            │
-│                              ▼                      ▼            │
-│  catalog_backfill ──▶ END                                        │
+│  quality_gate ──▶ catalog_backfill ──▶ END                       │
 │                                                                  │
-│  Stages: RelevanceScanStage, PrimaryBroadExtractionStage,        │
-│  GroupAssignmentStage, EvidenceRoleRouter, ReviewValidationStage,│
+│  Legacy rollback (extraction_mode="legacy") uses:                 │
+│  catalog_extraction ──▶ special_evidence ──▶ clinical_context     │
+│  (before language_metadata, without review_validation)            │
+│                                                                  │
+│  Stages: RelevanceScanStage, CatalogExtractionStage,             │
+│  SpecialEvidenceStage, ClinicalContextStage, GroupAssignmentStage│
+│  EvidenceRoleRouter, ReviewValidationStage,                      │
 │  AcmgEvidenceValueNormalizer,                                    │
 │  TargetEntityGuard, TargetSpanFieldRecovery, SourceGroundingStage,│
 │  EvidenceChainBuilder, QualityGateStage, EvidenceItemNormalizer  │
@@ -139,20 +144,38 @@ Phase 2 is split into two sub-modules executed sequentially by the pipeline orch
 
 1. **Input**: `TrackDocument` (one per track: original or translated) built from persisted `original.json` / `translated.json`.
 2. **Relevance scan** (FAST tier): classify document relevance and channel type.
-3. **Catalog extraction** (STRONG tier): extract sparse `EvidenceItem[]` from channel-eligible fields.
-4. **Special evidence** (STRONG tier): second pass for functional/case-control/authority/contradiction evidence.
-5. **Clinical context**: supplementary phenotype and clinical items.
-6. **Language metadata**: stamp `article_language`, `is_english`, target gene/disease/variant.
-7. **Group assignment**: assign variant-centered `group_id` values.
-8. **Role routing**: separate primary/phenotype/comparator/context items.
-9. **Value normalization**: reject coordinate-only HGVS, block milestone ages, merge duplicates.
-10. **Target guard**: filter items against the `ExtractionTarget` gene-disease pair.
-11. **Target span recovery**: recover missing high-signal fields from already selected source snippets.
-12. **Source grounding**: `raw_source` → block/text grounding → `OCR_GAP`/`SOURCE_INVALID`.
-13. **Chain assembly**: build full/partial/singleton variant-centered chains.
-14. **Quality gate**: chain-aware scoring and review gates.
-15. **Catalog backfill**: expand sparse items to full 166-row catalog per group.
-16. **Dual-track reconciliation**: run original + translated concurrently, then align and merge.
+   - B8 default: → primary broad extraction (step 3a)
+   - Legacy rollback: → catalog extraction (step 3b)
+3a. **Primary broad extraction** (STRONG tier, B8 default): broad high-recall extraction with forced source_quote.
+3b. **Catalog extraction** (STRONG tier, legacy): extract sparse `EvidenceItem[]` from channel-eligible fields.
+4. **Special evidence** (STRONG tier, legacy): second pass for functional/case-control/authority/contradiction evidence.
+5. **Clinical context** (legacy): supplementary phenotype and clinical items.
+6. **Review validation** (STANDARD tier, B8 default): approve/reject/correct primary candidates (fail-open).
+7. **Language metadata**: stamp `article_language`, `is_english`, target gene/disease/variant.
+8. **Group assignment**: assign variant-centered `group_id` values.
+9. **Role routing**: separate primary/phenotype/comparator/context items.
+10. **Value normalization**: reject coordinate-only HGVS, block milestone ages, merge duplicates.
+11. **Target guard**: filter items against the `ExtractionTarget` gene-disease pair.
+12. **Target span recovery**: recover missing high-signal fields from already selected source snippets.
+13. **Source grounding**: `raw_source` → block/text grounding → `OCR_GAP`/`SOURCE_INVALID`.
+14. **Chain assembly**: build full/partial/singleton variant-centered chains.
+15. **Quality gate**: chain-aware scoring and review gates.
+16. **Catalog backfill**: expand sparse items to full 166-row catalog per group.
+17. **Dual-track reconciliation**: run original + translated concurrently, then align and merge.
+
+Business Phase 2 now defaults to the **B8 main-track plus review-track** workflow. The legacy/current unified workflow remains available as an explicit rollback mode via `extraction_mode="legacy"` for historical baselines and rollback scenarios.
+
+### Single-document extraction scope
+
+The extraction pipeline targets fields that a single document can directly support from its own text. It does not claim to fill all 166 catalog fields from one paper:
+
+- **Case reports**: A.*, B.*, C.*, partial D.* (explicitly reported frequencies), partial J.*
+- **Functional studies**: F.*, I.*, H.negative_functional_result, experiment-related A.*/B.*
+- **Cohort/case-control**: partial B.*, D.*, E.*, G.*, partial H.*
+- **K.* excluded**: cross-paper GDV curation, not single-document extraction
+- **External database fields excluded**: require ClinVar/gnomAD/HGMD lookup, not document text
+
+Evaluation metrics should count against eligible/source-supported fields, not the full 166-field catalog. See [extract_evidence/README.md](./extract_evidence/README.md) for the complete boundary specification.
 ## Directory Map
 
 ### Top-level files

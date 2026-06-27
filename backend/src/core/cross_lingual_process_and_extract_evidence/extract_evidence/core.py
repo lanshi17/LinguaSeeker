@@ -1019,6 +1019,24 @@ class SourceGrounder:
                     block_type=source.block_type,
                     source_precision=SourcePrecision.EXACT,
                 ))
+            else:
+                # Fallback: snippet is in the text but no page span covers it.
+                # Create a grounded SourceLocation with best-effort metadata so
+                # B8 items (block_index=-1, sparse page_spans) are not silently
+                # dropped as SOURCE_INVALID.
+                results.append(SourceLocation(
+                    span_id=f"grounded-{pos}",
+                    page=1,
+                    start_offset=pos,
+                    end_offset=end_pos,
+                    context_type=source.context_type,
+                    context_ref=source.context_ref,
+                    text_snippet=snippet,
+                    block_index=-1,
+                    bbox=[],
+                    block_type="text",
+                    source_precision=SourcePrecision.CORRECTED,
+                ))
             idx = pos + 1
 
         return results
@@ -1057,6 +1075,21 @@ class SourceGrounder:
                     bbox=source.bbox,
                     block_type=source.block_type,
                     source_precision=SourcePrecision.EXACT,
+                ))
+            else:
+                # Fallback: normalized snippet found but no page span covers it.
+                results.append(SourceLocation(
+                    span_id=f"grounded-{actual_start}",
+                    page=1,
+                    start_offset=actual_start,
+                    end_offset=actual_end,
+                    context_type=source.context_type,
+                    context_ref=source.context_ref,
+                    text_snippet=text[actual_start:actual_end],
+                    block_index=-1,
+                    bbox=[],
+                    block_type="text",
+                    source_precision=SourcePrecision.CORRECTED,
                 ))
             idx = pos + 1
         return results

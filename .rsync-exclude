@@ -1,0 +1,80 @@
+# Frontend
+frontend/
+
+# VCS / IDE
+.git/
+.github/
+.claude/
+.qoder/
+.playwright-mcp/
+.codegraph/
+.worktrees/
+.vscode/
+.idea/
+
+# Python caches
+.venv
+__pycache__/
+*.pyc
+*.pyo
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Node
+node_modules/
+
+# Logs
+logs/
+*.log
+nohup.out
+command.log
+
+# Runtime data
+data/
+backend/output/
+backend/data/
+backend/downloads/
+backend/logs/
+backend/benchmark/
+backend/build-artifacts/
+backend/.venv/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/.mypy_cache/
+
+# Database runtime
+database/backups/
+database/seeds/
+database/terminology_database/
+
+# Rust build
+**/target/
+
+# Docs (non-essential)
+docs/archive/
+docs/active/
+docs/planned/
+docs/plans/
+docs/codereview/
+docs/diagrams/
+docs/templates/
+knowledges/
+
+# Benchmark
+benchmark/
+
+# Copier templates
+.copier-answers.yml
+copier_defaults.yaml
+
+# AI tool configs
+.mcp.json
+opencode.jsonc
+reasonix.toml
+
+# Dev artifacts
+progress.txt
+lesson.md
+**/*.pdf

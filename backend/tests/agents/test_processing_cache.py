@@ -259,6 +259,39 @@ class TestContentHash:
 
         assert h_with_prefix == h_without_prefix
 
+    @pytest.mark.asyncio
+    async def test_default_b8_mode_omits_mode_suffix(self):
+        """Default b8 mode produces the normal cache key (no mode= suffix)."""
+        base = PipelineGraphState(
+            processing_run_id="run-1",
+            source_document_id="doc-1",
+            mode=PipelineMode.FULL,
+            source_type=SourceType.LOCAL,
+            pre_parsed_markdown="content",
+        )
+        # Default extraction_mode is now "b8".
+        assert base.extraction_mode == "b8"
+        h_default = await compute_content_hash(base)
+        # A state with no extraction_mode set at all would hash identically.
+        h_plain = compute_hash_from_text("content")
+        assert h_default == h_plain
+
+    @pytest.mark.asyncio
+    async def test_explicit_legacy_mode_adds_mode_suffix(self):
+        """Explicit legacy rollback gets a distinct cache scope (mode=legacy)."""
+        base = PipelineGraphState(
+            processing_run_id="run-1",
+            source_document_id="doc-1",
+            mode=PipelineMode.FULL,
+            source_type=SourceType.LOCAL,
+            pre_parsed_markdown="content",
+        )
+        legacy = base.model_copy(update={"extraction_mode": "legacy"})
+        h_default = await compute_content_hash(base)
+        h_legacy = await compute_content_hash(legacy)
+        assert h_default != h_legacy
+        assert h_legacy == compute_hash_from_text("content", scope_key="mode=legacy")
+
 
 # ── Cache service tests ──────────────────────────────────────────────────
 

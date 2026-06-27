@@ -86,6 +86,16 @@ class TerminologyEmbeddingIndexer:
                     embedding_model=embedding_model,
                     embedding=list(vector),
                 )
+                stmt = stmt.on_conflict_do_update(
+                    constraint="uq_terminology_embeddings_entry_text_model",
+                    set_={
+                        "embedding_text": stmt.excluded.embedding_text,
+                        "embedding": stmt.excluded.embedding,
+                        "entity_type": stmt.excluded.entity_type,
+                        "source_db": stmt.excluded.source_db,
+                        "external_id": stmt.excluded.external_id,
+                    },
+                )
                 await self._session.execute(stmt)
                 written += 1
             await self._session.flush()

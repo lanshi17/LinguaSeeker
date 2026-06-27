@@ -29,7 +29,7 @@ from .contracts import (
 from .providers import LangChainEvidenceProvider
 from .reconcile.api import CrossTrackReconcileService
 from .field_profile import ExtractionProfile, resolve_profile_fields
-from .workflow import EvidenceExtractionWorkflow
+from .workflow import DEFAULT_EXTRACTION_WORKFLOW_MODE, EvidenceExtractionWorkflow
 
 
 class EvidenceExtractionService:
@@ -56,12 +56,15 @@ class EvidenceExtractionService:
         self,
         cfg: Any,
         extraction_profile: ExtractionProfile | str | None = ExtractionProfile.NONE,
+        extraction_mode: str = DEFAULT_EXTRACTION_WORKFLOW_MODE,
     ):
         self._ctx = EvidenceExtractionConfigContext.from_config(cfg)
         self._provider = LangChainEvidenceProvider(self._ctx)
+        self._extraction_mode = extraction_mode
         profile_fields = resolve_profile_fields(extraction_profile)
         self._workflow = EvidenceExtractionWorkflow(
             provider=self._provider, field_profile=profile_fields,
+            extraction_mode=extraction_mode,
         )
         self._reconcile_service = CrossTrackReconcileService()
 
@@ -69,8 +72,9 @@ class EvidenceExtractionService:
         self,
         document: TrackDocument,
         extraction_profile: ExtractionProfile | str | None = None,
+        extraction_mode: str | None = None,
     ) -> EvidenceExtractionResult:
-        workflow = self._workflow_for(extraction_profile)
+        workflow = self._workflow_for(extraction_profile, extraction_mode=extraction_mode)
         state = await workflow.run_async(document)
 
         # Compute field eligibility summary from state
@@ -109,10 +113,11 @@ class EvidenceExtractionService:
         self,
         documents: DualTrackDocuments,
         extraction_profile: ExtractionProfile | str | None = None,
+        extraction_mode: str | None = None,
     ) -> DualEvidenceExtractionResult:
         original_result, translated_result = await asyncio.gather(
-            self.run(documents.original, extraction_profile=extraction_profile),
-            self.run(documents.translated, extraction_profile=extraction_profile),
+            self.run(documents.original, extraction_profile=extraction_profile, extraction_mode=extraction_mode),
+            self.run(documents.translated, extraction_profile=extraction_profile, extraction_mode=extraction_mode),
         )
         context_pack = _build_runtime_context_pack(documents, original_result, translated_result)
         reconcile_output = self._reconcile_service.run_with_output(
@@ -151,6 +156,7 @@ class EvidenceExtractionService:
     def _workflow_for(
         self,
         extraction_profile: ExtractionProfile | str | None,
+        extraction_mode: str | None = None,
     ) -> EvidenceExtractionWorkflow:
         """Return the workflow for the given profile override.
 
@@ -159,11 +165,13 @@ class EvidenceExtractionService:
         otherwise.  The default workflow is cached; per-profile workflows are
         created on demand.
         """
-        if extraction_profile is None:
+        mode = extraction_mode or self._extraction_mode
+        if extraction_profile is None and mode == self._extraction_mode:
             return self._workflow
         profile_fields = resolve_profile_fields(extraction_profile)
         return EvidenceExtractionWorkflow(
             provider=self._provider, field_profile=profile_fields,
+            extraction_mode=mode,
         )
 
     @staticmethod

@@ -43,7 +43,7 @@ reasoning_llm_max_tokens: 32768
 
 # ── Embedding ─────────────────────────────────────────────────────────────
 embedding_base_url: "http://{{ hostvars[groups['app'][0]]['ansible_host'] }}:8002/v1"
-embedding_model: "Qwen/Qwen3-Embedding-0.6B"
+embedding_model: "BAAI/bge-m3"
 embedding_dimension: 1024
 embedding_batch_size: 10
 

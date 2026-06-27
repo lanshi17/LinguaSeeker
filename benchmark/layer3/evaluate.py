@@ -98,6 +98,11 @@ if __name__ == "__main__":  # pragma: no cover - CLI parity with the old entry p
         default="none",
         help="Extraction field profile (none, dataset_d_publication)",
     )
+    parser.add_argument(
+        "--extraction-mode",
+        default="b8",
+        help="Extraction workflow mode (b8 business default, legacy rollback)",
+    )
     args = parser.parse_args()
     asyncio.run(
         run_evaluation(
@@ -109,6 +114,7 @@ if __name__ == "__main__":  # pragma: no cover - CLI parity with the old entry p
             force_reextract=args.no_preprocessed,
             api_key=args.api_key,
             extraction_profile=args.extraction_profile,
+            extraction_mode=args.extraction_mode,
             shard_index=args.shard_index,
             shard_size=args.shard_size,
         )

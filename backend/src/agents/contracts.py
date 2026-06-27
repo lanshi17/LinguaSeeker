@@ -413,3 +413,8 @@ class PipelineGraphState(BaseModel):
     # ``"none"`` = all non-curation fields (production default).
     # ``"dataset_d_publication"`` = 20-field BIBM evaluation profile.
     extraction_profile: str = "none"
+
+    # Extraction workflow mode (passed through to EvidenceExtractionWorkflow).
+    # ``"b8"`` = business default (primary_broad_extraction -> review_validation two-pass).
+    # ``"legacy"`` = rollback / historical baseline (catalog_extraction -> special_evidence -> ...).
+    extraction_mode: str = "b8"

@@ -136,3 +136,30 @@ async def test_embedding_indexer_commits_each_embedding_batch_when_session_suppo
 
     assert count == 3
     assert session.commit_calls == 2
+
+@pytest.mark.asyncio
+async def test_embedding_indexer_insert_uses_on_conflict_do_update_for_idempotency() -> None:
+    """Re-running the indexer on the same entry should not raise UniqueViolationError.
+
+    The pg_insert statement must use on_conflict_do_update so that repeated
+    builds overwrite existing embeddings instead of failing on the unique
+    constraint (entry_id, embedding_text_hash, embedding_model).
+    """
+    entry = FakeEntry("e1", "gene", "HGNC", "BRCA1", "HGNC:1100")
+    session = FakeSession([entry])
+    indexer = TerminologyEmbeddingIndexer(session, FakeEmbeddingProvider())
+
+    await indexer.build(embedding_model="test-model", batch_size=10)
+
+    # Find the pg_insert statement (skip SELECT and DELETE statements).
+    from sqlalchemy.sql.dml import Insert
+
+    insert_stmts = [s for s in session.statements if isinstance(s, Insert)]
+    assert len(insert_stmts) == 1, f"Expected 1 pg_insert, got {len(insert_stmts)}"
+
+    stmt = insert_stmts[0]
+    # on_conflict_do_update sets _post_values_clause on the Insert object.
+    assert stmt._post_values_clause is not None, (
+        "pg_insert must use on_conflict_do_update to ensure idempotent rebuilds"
+    )
+

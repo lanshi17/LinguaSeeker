@@ -5,9 +5,12 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     DocumentEvidenceMap,
     EvidenceStatus,
     EvidenceReviewResponse,
+    EvidenceItem,
     PageSpan,
     PrimaryBroadEvidenceCandidate,
     PrimaryBroadExtractionResponse,
+    SourceLocation,
+    SpecialEvidenceResponse,
     Track,
     TrackDocument,
 )
@@ -50,18 +53,47 @@ class FakeProvider:
                 ]
             )
         if stage.startswith("catalog_extraction"):
-            raise AssertionError("full B8 workflow must not call catalog_extraction")
+            return [
+                EvidenceItem(
+                    field_id="A.gene_symbol",
+                    category="A",
+                    field_name="Gene symbol",
+                    status=EvidenceStatus.FOUND,
+                    value="BRCA1",
+                    confidence=0.9,
+                    raw_source=SourceLocation(block_index=0, context_type="text", context_ref="", text_snippet="BRCA1"),
+                ),
+                EvidenceItem(
+                    field_id="A.variant_hgvs_c",
+                    category="A",
+                    field_name="HGVS coding variant",
+                    status=EvidenceStatus.FOUND,
+                    value="c.5266dupC",
+                    confidence=0.9,
+                    raw_source=SourceLocation(block_index=0, context_type="text", context_ref="", text_snippet="c.5266dupC"),
+                ),
+                EvidenceItem(
+                    field_id="B.disease_diagnosis",
+                    category="B",
+                    field_name="Disease diagnosis",
+                    status=EvidenceStatus.FOUND,
+                    value="Breast cancer",
+                    confidence=0.9,
+                    raw_source=SourceLocation(block_index=0, context_type="text", context_ref="", text_snippet="Breast cancer"),
+                ),
+            ]
         if stage == "special_evidence":
-            raise AssertionError("full B8 workflow must not call special_evidence")
+            return SpecialEvidenceResponse(records=[])
         if stage == "clinical_context":
-            raise AssertionError("full B8 workflow must not call clinical_context")
+            return []
         if stage == "review_validation":
             return EvidenceReviewResponse()
         raise AssertionError(stage)
 
 
 @pytest.mark.asyncio
-async def test_workflow_runs_block_group_ground_chain_quality_order():
+async def test_workflow_legacy_rollback_uses_catalog_special_clinical_order():
+    """Explicit extraction_mode="legacy" keeps the catalog -> special -> clinical path."""
     provider = FakeProvider()
     text = "BRCA1\nc.5266dupC\nBreast cancer"
     document = TrackDocument(
@@ -72,13 +104,15 @@ async def test_workflow_runs_block_group_ground_chain_quality_order():
         blocks=[ContentBlock(type="text", page_idx=0, text=text, bbox=[1, 2, 3, 4])],
     )
 
-    state = await EvidenceExtractionWorkflow(provider=provider).run(document)
+    state = await EvidenceExtractionWorkflow(provider=provider, extraction_mode="legacy").run(document)
 
     assert provider.stages[0] == "relevance_scan"
-    assert provider.stages[:3] == ["relevance_scan", "primary_broad_extraction", "review_validation"]
-    assert not any(stage.startswith("catalog_extraction") for stage in provider.stages)
-    assert "special_evidence" not in provider.stages
-    assert "clinical_context" not in provider.stages
+    assert provider.stages[-2:] == ["special_evidence", "clinical_context"]
+    catalog_stages = provider.stages[1:-2]
+    assert catalog_stages == ["catalog_extraction/high_signal", "catalog_extraction/supporting"]
+    assert all(stage.startswith("catalog_extraction/") for stage in catalog_stages)
+    assert "primary_broad_extraction" not in provider.stages
+    assert "review_validation" not in provider.stages
     assert "catalog_backfill" not in provider.stages
     assert state.evidence_items
     assert [item.group_id for item in state.evidence_items]
@@ -110,11 +144,23 @@ class ChunkingProvider:
                 ]
             )
         if stage.startswith("catalog_extraction"):
-            raise AssertionError("full B8 workflow must not call catalog_extraction")
+            return [
+                EvidenceItem(
+                    field_id="A.gene_symbol",
+                    category="A",
+                    field_name="Gene symbol",
+                    status=EvidenceStatus.FOUND,
+                    value="GLA",
+                    confidence=0.9,
+                    raw_source=SourceLocation(
+                        block_index=0, context_type="text", context_ref="", text_snippet="GLA",
+                    ),
+                )
+            ]
         if stage.startswith("special_evidence"):
-            raise AssertionError("full B8 workflow must not call special_evidence")
+            return SpecialEvidenceResponse(records=[])
         if stage.startswith("clinical_context"):
-            raise AssertionError("full B8 workflow must not call clinical_context")
+            return []
         if stage.startswith("review_validation"):
             return EvidenceReviewResponse()
         raise AssertionError(stage)
@@ -135,15 +181,39 @@ async def test_workflow_accepts_chunking_budget_override_for_regression():
         ],
     )
 
-    workflow = EvidenceExtractionWorkflow(provider=provider, input_budget_tokens=90)
+    workflow = EvidenceExtractionWorkflow(
+        provider=provider, input_budget_tokens=90, extraction_mode="legacy",
+    )
     state = await workflow.run(document)
 
     assert state.evidence_map is not None
     assert state.evidence_map.relevant is True
     assert any(stage.startswith("relevance_scan/") for stage in provider.stages)
-    assert "primary_broad_extraction" in provider.stages
+    assert any(stage.startswith("catalog_extraction/") for stage in provider.stages)
+    assert any(stage.startswith("special_evidence/") for stage in provider.stages)
+    assert "primary_broad_extraction" not in provider.stages
+
+
+@pytest.mark.asyncio
+async def test_workflow_default_uses_primary_broad_review_track() -> None:
+    """Default workflow (business default b8) uses primary_broad + review, not catalog."""
+    provider = FakeProvider()
+    text = "BRCA1\nc.5266dupC\nBreast cancer"
+    document = TrackDocument(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[],
+        blocks=[ContentBlock(type="text", page_idx=0, text=text, bbox=[1, 2, 3, 4])],
+    )
+
+    state = await EvidenceExtractionWorkflow(provider=provider).run(document)
+
+    assert provider.stages[:3] == ["relevance_scan", "primary_broad_extraction", "review_validation"]
     assert not any(stage.startswith("catalog_extraction") for stage in provider.stages)
-    assert not any(stage.startswith("special_evidence") for stage in provider.stages)
+    assert "special_evidence" not in provider.stages
+    assert "clinical_context" not in provider.stages
+    assert state.evidence_items
 
 
 class ReviewFailOpenProvider(FakeProvider):
@@ -166,7 +236,7 @@ async def test_workflow_review_validation_fails_open() -> None:
         blocks=[ContentBlock(type="text", page_idx=0, text=text, bbox=[1, 2, 3, 4])],
     )
 
-    state = await EvidenceExtractionWorkflow(provider=provider).run(document)
+    state = await EvidenceExtractionWorkflow(provider=provider, extraction_mode="b8").run(document)
 
     assert "review_validation" in provider.stages
     assert any(

@@ -120,7 +120,7 @@ Installs `uv`, syncs backend source code via rsync, deploys `production.yaml` an
 
 ### inference services (Docker)
 Deploys inference services as independent Docker containers, each with its own GPU:
-- `embedding` on port 8002 (Qwen3-Embedding-0.6B)
+- `embedding` on port 8002 (bge-m3)
 - `rerank` on port 8003 (bge-reranker-v2-m3)
 - `doc-parse` on port 8004 (MinerU2.5-Pro)
 
