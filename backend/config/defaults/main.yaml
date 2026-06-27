@@ -87,7 +87,7 @@ mineru:
   max_file_size_mb: 100
   remote_poll_interval: 2.0
   remote_max_poll_attempts: 150
-  local_parse_url: "http://localhost:8004"
+  local_parse_url: "http://localhost:44321"
   local_model_id: "opendatalab/MinerU2.5-Pro-2604-1.2B"
   local_timeout: 120.0
   local_dpi: 200

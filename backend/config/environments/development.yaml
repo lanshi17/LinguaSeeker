@@ -27,13 +27,13 @@ translation_llm:
 # Embedding: simple-local API at :8099/embed
 # Rerank:    simple-local API at :8098/rerank
 embedding:
-  base_url: "http://localhost:8099"
+  base_url: "http://localhost:32949"
   api_style: "simple"
   remote_base_url: "https://api.siliconflow.cn"
   remote_model: "BAAI/bge-m3"
 
 rerank:
-  base_url: "http://localhost:8098"
+  base_url: "http://localhost:35001"
   api_style: "simple"
   remote_base_url: "https://api.siliconflow.cn"
   remote_model: "BAAI/bge-reranker-v2-m3"
