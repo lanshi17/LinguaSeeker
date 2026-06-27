@@ -82,7 +82,7 @@ rerank:
 # ── MinerU Document Parsing ──────────────────────────────────────────────
 # All fields flatten to MINERU_* env vars
 # local_parse_url: VLM container endpoint.
-# Docker setup: set to "http://localhost:8004"
+# Docker setup: set to "http://localhost:44321"
 mineru:
   max_file_size_mb: 100
   remote_poll_interval: 2.0

@@ -9,7 +9,7 @@ def test_parse_document_config_defaults():
     config = ParseDocumentConfig()
     assert config.mineru_remote_poll_interval == 2.0
     assert config.mineru_remote_max_poll_attempts == 150
-    assert config.mineru_local_parse_url == "http://localhost:8004"
+    assert config.mineru_local_parse_url == "http://localhost:44321"
     assert config.mineru_local_model_id == "opendatalab/MinerU2.5-Pro-2604-1.2B"
     assert config.mineru_local_timeout == 120.0
     assert config.mineru_local_dpi == 200

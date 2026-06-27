@@ -102,7 +102,7 @@ service = create_parse_service()
 
 # Custom config overrides
 config = ParseDocumentConfig(
-    mineru_local_parse_url="http://localhost:8004",
+    mineru_local_parse_url="http://localhost:44321",
 )
 service = create_parse_service(config=config)
 ```
@@ -189,7 +189,7 @@ Batch constraints: 1–50 files, all local paths must exist, optional `data_ids`
 
 ```python
 MinerULocalParser(
-    parse_url: str = "http://localhost:8004",
+    parse_url: str = "http://localhost:44321",
     model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B",
     timeout: float = 120.0,
     dpi: int = 200,
@@ -415,7 +415,7 @@ Batch parsing is a remote MinerU capability exposed through `MinerURemoteParser`
 from src.core.ingest_and_digitize_data.parse_document import MinerULocalParser
 
 parser = MinerULocalParser(
-    parse_url="http://localhost:8004",
+    parse_url="http://localhost:44321",
     timeout=120.0,
 )
 result = await parser.parse("https://example.com/paper.pdf")
@@ -523,7 +523,7 @@ Environment variables loaded via `src.core.config`:
 | `MINERU_API_TOKEN` | `mineru_api_token` (top-level) | `""` |
 | `MINERU_REMOTE_POLL_INTERVAL` | `parse_document.mineru_remote_poll_interval` | `2.0` |
 | `MINERU_REMOTE_MAX_POLL_ATTEMPTS` | `parse_document.mineru_remote_max_poll_attempts` | `150` |
-| `MINERU_LOCAL_PARSE_URL` | `parse_document.mineru_local_parse_url` | `"http://localhost:8004"` |
+| `MINERU_LOCAL_PARSE_URL` | `parse_document.mineru_local_parse_url` | `"http://localhost:44321"` |
 | `MINERU_LOCAL_MODEL_ID` | `parse_document.mineru_local_model_id` | `"opendatalab/MinerU2.5-Pro-2604-1.2B"` |
 | `MINERU_LOCAL_TIMEOUT` | `parse_document.mineru_local_timeout` | `120.0` |
 | `MINERU_LOCAL_DPI` | `parse_document.mineru_local_dpi` | `200` |
@@ -537,7 +537,7 @@ cd backend
 uv run pytest tests/core/ingest_and_digitize_data/parse_document/ -v \
     --ignore=tests/core/ingest_and_digitize_data/parse_document/test_integration.py
 
-# Integration tests (requires MinerU service on port 8004)
+# Integration tests (requires MinerU service on port 44321)
 uv run pytest tests/core/ingest_and_digitize_data/parse_document/test_integration.py -v
 
 # E2E content-list parsing tests
