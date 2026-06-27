@@ -144,26 +144,36 @@ class TranslationLLMConfig(BaseModel):
 
 
 class EmbeddingConfig(BaseModel):
-    """Embedding model with optional remote fallback."""
+    """Embedding model with optional remote fallback.
+
+    api_style: "openai" (OpenAI-compatible /v1/embeddings) or
+               "simple" (POST /embed with {"texts": […]}, no auth).
+    """
 
     base_url: str = ""
     api_key: str = ""
     model: str = "BAAI/bge-m3"
     dimension: int = 1024
     batch_size: int = 10
+    api_style: str = "openai"
     remote_base_url: str = ""
     remote_api_key: str = ""
     remote_model: str = ""
 
 
 class RerankConfig(BaseModel):
-    """Rerank model with optional remote fallback."""
+    """Rerank model with optional remote fallback.
+
+    api_style: "openai" (OpenAI-compatible /v1/rerank) or
+               "simple" (POST /rerank, no model param, no auth).
+    """
 
     base_url: str = ""
     api_key: str = ""
     model: str = "BAAI/bge-reranker-v2-m3"
     top_k: int = 10
     score_threshold: float = 0.7
+    api_style: str = "openai"
     remote_base_url: str = ""
     remote_api_key: str = ""
     remote_model: str = ""
@@ -336,6 +346,7 @@ class Settings(BaseSettings):
     embedding_model: str = "BAAI/bge-m3"
     embedding_dimension: int = 1024
     embedding_batch_size: int = 10
+    embedding_api_style: str = "openai"
     embedding_remote_base_url: str = ""
     embedding_remote_api_key: str = ""
     embedding_remote_model: str = ""
@@ -346,6 +357,7 @@ class Settings(BaseSettings):
     rerank_model: str = "BAAI/bge-reranker-v2-m3"
     rerank_top_k: int = 10
     rerank_score_threshold: float = 0.7
+    rerank_api_style: str = "openai"
     rerank_remote_base_url: str = ""
     rerank_remote_api_key: str = ""
     rerank_remote_model: str = ""
@@ -477,6 +489,7 @@ class Settings(BaseSettings):
             model=self.embedding_model,
             dimension=self.embedding_dimension,
             batch_size=self.embedding_batch_size,
+            api_style=self.embedding_api_style,
             remote_base_url=self.embedding_remote_base_url,
             remote_api_key=self.embedding_remote_api_key,
             remote_model=self.embedding_remote_model,
@@ -487,6 +500,7 @@ class Settings(BaseSettings):
             model=self.rerank_model,
             top_k=self.rerank_top_k,
             score_threshold=self.rerank_score_threshold,
+            api_style=self.rerank_api_style,
             remote_base_url=self.rerank_remote_base_url,
             remote_api_key=self.rerank_remote_api_key,
             remote_model=self.rerank_remote_model,

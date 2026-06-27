@@ -14,7 +14,15 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.contract
 
 
 class EmbeddingHttpProvider:
-    """HTTP client for OpenAI-compatible embedding services."""
+    """HTTP client for embedding services.
+
+    Supports two API styles:
+      - "openai": OpenAI-compatible, POST /v1/embeddings, auth header.
+      - "simple":  POST /embed with {"texts": […]}, no auth.
+    """
+
+    _SIMPLE = "simple"
+
     def __init__(
         self,
         *,
@@ -23,18 +31,23 @@ class EmbeddingHttpProvider:
         client: httpx.AsyncClient | None = None,
         timeout: float = 60.0,
         api_key: str | None = None,
+        api_style: str = "openai",
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._model = model
         self._client = client
         self._timeout = timeout
+        self._api_style = api_style
         self._headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
 
     async def embed_texts(self, texts: str | Sequence[str]) -> EmbeddingBatchResult:
-        """Embed texts through service `/v1/embeddings`."""
+        """Embed texts through the service."""
         if isinstance(texts, str):
             texts = (texts,)
-        payload = {"input": list(texts), "model": self._model}
+        if self._api_style == self._SIMPLE:
+            payload: dict[str, object] = {"texts": list(texts)}
+        else:
+            payload = {"input": list(texts), "model": self._model}
         if self._client is not None:
             return await self._post_embeddings(self._client, payload)
         async with httpx.AsyncClient(timeout=self._timeout) as client:
@@ -45,20 +58,36 @@ class EmbeddingHttpProvider:
         client: httpx.AsyncClient,
         payload: dict[str, object],
     ) -> EmbeddingBatchResult:
-        response = await client.post(f"{self._api_root()}/embeddings", json=payload, headers=self._headers)
+        endpoint = "embed" if self._api_style == self._SIMPLE else "embeddings"
+        response = await client.post(f"{self._api_root()}/{endpoint}", json=payload, headers=self._headers)
         response.raise_for_status()
         body = response.json()
-        data = sorted(body.get("data", []), key=lambda item: item.get("index", 0))
-        vectors = tuple(tuple(float(value) for value in item["embedding"]) for item in data)
+        if self._api_style == self._SIMPLE:
+            vectors = tuple(
+                tuple(float(value) for value in item["embedding"])
+                for item in body.get("results", [])
+            )
+        else:
+            data = sorted(body.get("data", []), key=lambda item: item.get("index", 0))
+            vectors = tuple(tuple(float(value) for value in item["embedding"]) for item in data)
         return EmbeddingBatchResult(model=str(body.get("model") or self._model), vectors=vectors)
 
     def _api_root(self) -> str:
-        """Normalize provider base URLs so callers may pass either host root or `/v1` root."""
+        """Normalize provider base URLs.  In "simple" mode the base URL IS the API root."""
+        if self._api_style == self._SIMPLE:
+            return self._base_url
         return self._base_url if self._base_url.endswith("/v1") else f"{self._base_url}/v1"
 
 
 class RerankHttpProvider:
-    """HTTP client for rerank scoring services."""
+    """HTTP client for rerank scoring services.
+
+    Supports two API styles:
+      - "openai": OpenAI-compatible, POST /v1/rerank with model param, auth header.
+      - "simple":  POST /rerank, no model param, no auth.
+    """
+
+    _SIMPLE = "simple"
 
     def __init__(
         self,
@@ -68,11 +97,13 @@ class RerankHttpProvider:
         client: httpx.AsyncClient | None = None,
         timeout: float = 60.0,
         api_key: str | None = None,
+        api_style: str = "openai",
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._model = model
         self._client = client
         self._timeout = timeout
+        self._api_style = api_style
         self._headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
 
     async def rerank(
@@ -82,11 +113,14 @@ class RerankHttpProvider:
         *,
         top_k: int | None,
     ) -> RerankBatchResult:
-        """Rerank documents through service `/v1/rerank`."""
+        """Rerank documents through the service."""
         if isinstance(documents, str):
             documents = (documents,)
         doc_list = list(documents)
-        payload = {"query": query, "documents": doc_list, "model": self._model, "top_k": top_k}
+        if self._api_style == self._SIMPLE:
+            payload: dict[str, object] = {"query": query, "documents": doc_list, "top_k": top_k}
+        else:
+            payload = {"query": query, "documents": doc_list, "model": self._model, "top_k": top_k}
         if self._client is not None:
             return await self._post_rerank(self._client, payload, doc_list)
         async with httpx.AsyncClient(timeout=self._timeout) as client:
@@ -98,7 +132,9 @@ class RerankHttpProvider:
         payload: dict[str, object],
         doc_list: list[str],
     ) -> RerankBatchResult:
-        response = await client.post(f"{self._api_root()}/rerank", json=payload, headers=self._headers)
+        endpoint = "rerank"
+        url = f"{self._api_root()}/{endpoint}"
+        response = await client.post(url, json=payload, headers=self._headers)
         response.raise_for_status()
         body = response.json()
         results = tuple(
@@ -112,7 +148,9 @@ class RerankHttpProvider:
         return RerankBatchResult(model=str(body.get("model") or self._model), results=results)
 
     def _api_root(self) -> str:
-        """Normalize provider base URLs so callers may pass either host root or `/v1` root."""
+        """Normalize provider base URLs.  In "simple" mode the base URL IS the API root."""
+        if self._api_style == self._SIMPLE:
+            return self._base_url
         return self._base_url if self._base_url.endswith("/v1") else f"{self._base_url}/v1"
 
 

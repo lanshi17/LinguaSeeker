@@ -24,13 +24,17 @@ translation_llm:
   base_url: "https://api.siliconflow.cn"
 
 # ── Inference Services (Local) ────────────────────────────────────────────
+# Embedding: simple-local API at :8099/embed
+# Rerank:    simple-local API at :8098/rerank
 embedding:
-  base_url: "http://localhost:8002/v1"
+  base_url: "http://localhost:8099"
+  api_style: "simple"
   remote_base_url: "https://api.siliconflow.cn"
   remote_model: "BAAI/bge-m3"
 
 rerank:
-  base_url: "http://localhost:8003/v1"
+  base_url: "http://localhost:8098"
+  api_style: "simple"
   remote_base_url: "https://api.siliconflow.cn"
   remote_model: "BAAI/bge-reranker-v2-m3"
 
