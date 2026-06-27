@@ -101,7 +101,7 @@ ansible-playbook playbooks/healthcheck.yml
 | Group | Host | Services | Port |
 |-------|------|----------|------|
 | `web` | web-01 | Nginx (:80/:443), Frontend (:3000) | 80, 443, 3000 |
-| `app` | app-01 | Backend (FastAPI :8000), Inference Services (:8002-8004) | 8000, 8002-8004 |
+| `app` | app-01 | Backend (FastAPI :8000), Inference Services (:8002-8003,:44321) | 8000, 8002-8003, 44321 |
 | `db` | db-01 | PostgreSQL 16 (:5432), Redis 8.0 (:6379) | 5432, 6379 |
 
 ## Roles
@@ -122,7 +122,7 @@ Installs `uv`, syncs backend source code via rsync, deploys `production.yaml` an
 Deploys inference services as independent Docker containers, each with its own GPU:
 - `embedding` on port 8002 (bge-m3)
 - `rerank` on port 8003 (bge-reranker-v2-m3)
-- `doc-parse` on port 8004 (MinerU2.5-Pro)
+- `doc-parse` on port 44321 (MinerU2.5-Pro)
 
 Requires NVIDIA Container Toolkit. Model weights must be pre-downloaded to `/opt/lingua-seeker-data/models/`.
 
@@ -151,7 +151,7 @@ Client (HTTPS)
                v    v
          +------+ +------------------+
          |Redis | | Inference Svc    |
-         |:6379 | | :8002-8004 (GPU) |
+         |:6379 | | :8002-8003,:44321 (GPU) |
          +------+ +------------------+
                |
                v
@@ -166,7 +166,7 @@ Client (HTTPS)
 - **TLS / Let's Encrypt** -- First deploy starts HTTP-only; certbot obtains the certificate, Nginx redeploys with TLS. Auto-renewal via `certbot.timer`.
 - **Automated backup** -- PostgreSQL daily backup at 03:00 via cron. Stored at `/opt/lingua-seeker-data/postgres-backups/`, retained 30 days.
 - **Security** -- `vault.yml` encrypted with `ansible-vault`, git-ignored. All systemd services run with `NoNewPrivileges` and `ProtectSystem=strict`. Database ports bound to `127.0.0.1`. API key injected by Nginx, never exposed to the browser.
-- **External inference services** -- Embedding, reranking, and document parsing run as independent Docker containers on ports 8002-8004.
+- **External inference services** -- Embedding, reranking, and document parsing run as independent Docker containers on ports 8002-8003 and 44321.
 - **Two Nginx topologies** -- Single-host (all services on one server) or split-host (separate frontend and backend domains with cross-origin API proxy).
 
 ## Maintenance

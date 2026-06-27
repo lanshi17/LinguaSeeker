@@ -24,7 +24,7 @@ class MinerULocalParser(ParserStrategy):
 
     def __init__(
         self,
-        parse_url: str = "http://localhost:8004",
+        parse_url: str = "http://localhost:44321",
         model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B",
         timeout: float = 120.0,
         dpi: int = 200,
