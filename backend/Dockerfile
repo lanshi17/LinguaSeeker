@@ -56,6 +56,12 @@ RUN ln -sf /usr/local/bin/python3 /opt/venv/bin/python3 \
  && ln -sf python3 /opt/venv/bin/python \
  && ln -sf /usr/local/bin/python3 /opt/venv/bin/python3.12
 
+# Fix shebangs in entry-point scripts (uvicorn, fastapi, alembic, etc.)
+# The tarball may contain host-specific paths like /home/user/.venv/bin/python3
+# that don't exist inside the container.
+RUN find /opt/venv/bin -maxdepth 1 -type f -exec \
+    sed -i '1s|^#!.*\.venv/bin/python[0-9.]*|#!/opt/venv/bin/python3|' {} +
+
 # Editable installs from the host point at non-existent paths inside the
 # container — drop the .pth stubs and install the in-tree deps from source.
 COPY --chown=deploy:deploy libs/config-loader /opt/extras/config-loader

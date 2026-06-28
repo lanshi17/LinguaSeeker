@@ -42,9 +42,10 @@
 
 **根因**: `pg_insert` 缺少 `ON CONFLICT` 子句。批量提交模式下，DELETE 和 INSERT 不在同一个原子操作中，导致部分行在 DELETE 提交后、INSERT 完成前被另一个事务（或同一事务的回滚段）残留。
 
-**解决方案（待实施）**: 将 `indexer.py:79` 的 `pg_insert(...).values(...)` 改为 `pg_insert(...).values(...).on_conflict_do_update(index_elements=["entry_id", "embedding_text_hash", "embedding_model"], set_={"embedding": stmt.excluded.embedding, "updated_at": sa.func.now()})`。这使重建操作幂等，即使中途崩溃也能安全重跑。
+**解决方案（已实施）**: 在 `indexer.py` 的 `pg_insert(...).values(...)` 后添加 `.on_conflict_do_update(constraint="uq_terminology_embeddings_entry_text_model", set_={embedding_text, embedding, entity_type, source_db, external_id})`。添加了幂等性测试 `test_embedding_indexer_insert_uses_on_conflict_do_update_for_idempotency`。修复后重跑完成 94,311/94,311 (100%) 重建。
 
-**预防措施**: 所有批量 upsert 操作必须使用 `ON CONFLICT`，特别是在分布式或可中断环境中。
+**预防措施**: 所有批量 upsert 操作必须使用 `ON CONFLICT`，幂等导入/重建必须有重复运行测试。
+
 
 ## 2026-06-27: B8 round 2 — prompt guidance is the highest-ROI lever for recall improvement
 
@@ -5835,3 +5836,74 @@ Cache clearing was needed: PostgreSQL `lingua.document_processing_cache` held st
 **回退机制**: `extraction_mode="legacy"` 在所有层级 (workflow/service/API state/dispatcher/benchmark) 保持可用, 无需改代码即可回退到旧版 catalog 链。
 
 **预防措施**: 新增 `DEFAULT_EXTRACTION_WORKFLOW_MODE` 常量统一默认值, 避免各处重复硬编码; content hash scope key 现在只对 non-default (legacy) 模式追加 `mode=legacy` 后缀, 默认 B8 不产生特殊缓存 scope。
+
+## 2026-06-28: Unified B8 benchmark — shard-based execution for reliability
+
+**Problem**: Running the full 150-entry benchmark in a single process kept dying silently after ~30 entries. The process disappeared without error messages, likely due to resource limits or signal handling in the long-running async pipeline polling loop.
+
+**Investigation**: The benchmark submits each entry to the pipeline API, polls for completion (up to 360 polls × 60s), then evaluates field matches against ground truth. Each entry takes 2-15 minutes depending on document complexity. Full run = ~8-12 hours. Single-process runs consistently died at ~30 entries (2-3 hours into execution).
+
+**Fix**: Split the benchmark into 6 shards of 25 entries each using `--shard-index N --shard-size 25`. Each shard generates its own report JSON. After all shards complete, merge the per-entry arrays and recompute aggregates using `compute_aggregate_metrics()`. Used `setsid` to detach from the controlling terminal and prevent SIGHUP.
+
+**Key gotchas discovered**:
+1. **Stale POSTGRES_PASSWORD env var**: The shell had `POSTGRES_PASSWORD` set to an old value that didn't match the vault config. The benchmark's `build_async_engine()` reads from `get_config()` which loads YAML first, but the env var overrides the vault password. Must `unset POSTGRES_PASSWORD` before running.
+2. **pg_dump + benchmark contention**: Running `pg_dump` concurrently with the benchmark caused the benchmark to stall/fail — likely DB lock contention on the large terminology tables (4.2M entries, 15.2M aliases). Run backup BEFORE or AFTER the benchmark, not during.
+3. **DB injection happens as a side effect**: The benchmark submits to the real pipeline API, which writes to the DB. So a single benchmark run produces BOTH the evaluation report AND the DB entries. For a clean injection, truncate business tables first, then run the benchmark.
+
+**Result**: 6 shards × 25 entries = 150 entries. All completed successfully. Merged report: P=65.8%, R=32.5%, F1=43.5%. 146 completed, 3 failed (pipeline connection refused, missing file), 1 timeout. Clean DB injection: 150 source_documents, 1089 canonical_evidence_items, 10684 run_evidence_items.
+
+**Prevention**: For long-running benchmark/evaluation jobs (>1 hour), always use shard-based execution with intermediate report saves. Single-process runs are unreliable for multi-hour async workloads.
+
+---
+
+## 2026-06-28: Benchmark report merge — by_source_dataset not in compute_aggregate_metrics
+
+**Problem**: The `compute_aggregate_metrics()` function from `benchmark.core.aggregate` does not compute `by_source_dataset` aggregation — it only produces `overall`, `by_field`, `by_classification`, `by_moi`, `by_entity_type`.
+
+**Fix**: After merging shard reports, manually computed `by_source_dataset` from per-entry field_matches: for each entry's source_dataset, counted TP (matched=True), FP (extracted but not matched), FN (not extracted). Also populated `timeout_and_errors` from per-entry pipeline_status != "completed".
+
+**Lesson**: Always verify which aggregate keys the benchmark library actually computes before assuming the report is complete. The `by_source_dataset` key must be manually added after merging shards.
+
+---
+
+## 2026-06-28: Docker 容器 exec ... no such file or directory — venv entry-point shebang 指向宿主机路径
+
+**Problem**: 生产环境 Docker 容器启动报 `exec /opt/venv/bin/uvicorn: no such file or directory`，后端无法启动。Postgres 和 Redis 正常。`--no-cache` 重建镜像后问题依旧。
+
+**Investigation**: 逐步排查：
+1. `docker inspect` 确认 `/opt/venv/bin/uvicorn` 文件存在（257 bytes）
+2. `ls -la /opt/venv/bin/python*` 确认 python3 symlink 正确指向 `/usr/local/bin/python3`，`python3 --version` 正常输出 `Python 3.12.13`
+3. `head -1 /opt/venv/bin/uvicorn` 暴露根因：shebang 为 `#!/data/yangzs/Projects/01_ACMG_Lingua/backend/.venv/bin/python3`——这是**宿主机的 venv 绝对路径**，在容器内不存在
+
+**根因**: 本地 `uv` 创建的 venv 中，所有 entry-point 脚本（uvicorn、fastapi、alembic 等）的 shebang 硬编码了宿主机绝对路径。打包成 `venv-bin.tar.gz` 后解压到容器 `/opt/venv/bin/`，shebang 内容不变，内核找不到指定的 interpreter。
+
+Dockerfile 第 9 步 `ln -sf /usr/local/bin/python3 /opt/venv/bin/python3` 只修了 symlink，没有修脚本文件内容里的 shebang。
+
+**加重因素**: 之前用 `tar czhf`（`-h` dereference）重新打包 tarballs，把原本的符号链接替换为实际文件，使问题从 "broken symlink" 变成 "shebang 硬编码宿主机路径"。但即使原始 tarball 保留符号链接，只要 uvicorn 是实际文件（非 symlink），shebang 问题就存在。
+
+**Fix**: 在 Dockerfile 中解压 venv-bin tarball 后，批量修正所有 entry-point 脚本的 shebang：
+
+```dockerfile
+# Fix shebangs in entry-point scripts (uvicorn, fastapi, alembic, etc.)
+# The tarball may contain host-specific paths like /home/user/.venv/bin/python3
+# that don't exist inside the container.
+RUN find /opt/venv/bin -maxdepth 1 -type f -exec \
+    sed -i '1s|^#!.*\.venv/bin/python[0-9.]*|#!/opt/venv/bin/python3|' {} +
+```
+
+该命令：
+- 只处理第一行（`1s`），不影响脚本其他内容
+- 匹配所有以 `.venv/bin/python` 开头的 shebang（覆盖任意宿主机路径）
+- 替换为容器内的正确路径 `#!/opt/venv/bin/python3`（symlink → `/usr/local/bin/python3`）
+
+**Prevention**:
+1. **Dockerfile 必须包含 shebang 修正步骤**——无论 tarball 如何打包，entry-point 脚本的 shebang 都可能指向宿主机路径
+2. **打包 tarballs 时不要用 `tar czhf`**（`-h` 会把符号链接替换为实际文件）——用 `tar czf` 保留符号链接
+3. **验证镜像的标准检查清单**：
+   ```bash
+   docker run --rm --entrypoint sh <image> -c "head -1 /opt/venv/bin/uvicorn"
+   # 应输出 #!/opt/venv/bin/python3 或 #!/usr/local/bin/python3
+   ```
+
+---
+
