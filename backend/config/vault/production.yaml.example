@@ -31,10 +31,16 @@ mineru:
 
 # -- Embedding / Rerank Remote API Keys --------------------------------------
 embedding:
-  remote_api_key: "your-production-embedding-remote-api-key"
+  remote_api_keys:
+    - "your-production-embedding-remote-api-key-1"
+    - "your-production-embedding-remote-api-key-2"
+
 
 rerank:
-  remote_api_key: "your-production-rerank-remote-api-key"
+  remote_api_keys:
+    - "your-production-rerank-remote-api-key-1"
+    - "your-production-rerank-remote-api-key-2"
+
 
 # -- Database Credentials -----------------------------------------------------
 postgres:

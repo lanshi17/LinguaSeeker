@@ -152,13 +152,40 @@ class EmbeddingConfig(BaseModel):
 
     base_url: str = ""
     api_key: str = ""
+    api_keys: list[str] = Field(default_factory=list)
     model: str = "BAAI/bge-m3"
     dimension: int = 1024
     batch_size: int = 10
     api_style: str = "openai"
     remote_base_url: str = ""
     remote_api_key: str = ""
+    remote_api_keys: list[str] = Field(default_factory=list)
     remote_model: str = ""
+
+    @property
+    def all_api_keys(self) -> list[str]:
+        """Return all available API keys (deduplicated, preserving order)."""
+        seen: set[str] = set()
+        keys: list[str] = []
+        for k in [*self.api_keys, self.api_key]:
+            k = k.strip()
+            if k and k not in seen:
+                seen.add(k)
+                keys.append(k)
+        return keys
+
+    @property
+    def remote_all_api_keys(self) -> list[str]:
+        """Return all available remote API keys (deduplicated, preserving order)."""
+        seen: set[str] = set()
+        keys: list[str] = []
+        for k in [*self.remote_api_keys, self.remote_api_key]:
+            k = k.strip()
+            if k and k not in seen:
+                seen.add(k)
+                keys.append(k)
+        return keys
+
 
 
 class RerankConfig(BaseModel):
@@ -170,13 +197,40 @@ class RerankConfig(BaseModel):
 
     base_url: str = ""
     api_key: str = ""
+    api_keys: list[str] = Field(default_factory=list)
     model: str = "BAAI/bge-reranker-v2-m3"
     top_k: int = 10
     score_threshold: float = 0.7
     api_style: str = "openai"
     remote_base_url: str = ""
     remote_api_key: str = ""
+    remote_api_keys: list[str] = Field(default_factory=list)
     remote_model: str = ""
+
+    @property
+    def all_api_keys(self) -> list[str]:
+        """Return all available API keys (deduplicated, preserving order)."""
+        seen: set[str] = set()
+        keys: list[str] = []
+        for k in [*self.api_keys, self.api_key]:
+            k = k.strip()
+            if k and k not in seen:
+                seen.add(k)
+                keys.append(k)
+        return keys
+
+    @property
+    def remote_all_api_keys(self) -> list[str]:
+        """Return all available remote API keys (deduplicated, preserving order)."""
+        seen: set[str] = set()
+        keys: list[str] = []
+        for k in [*self.remote_api_keys, self.remote_api_key]:
+            k = k.strip()
+            if k and k not in seen:
+                seen.add(k)
+                keys.append(k)
+        return keys
+
 
 
 class MinerUConfig(BaseModel):
@@ -334,9 +388,9 @@ class Settings(BaseSettings):
     translation_llm_api_keys: list[str] = Field(default_factory=list)
     translation_llm_model: str = "tencent/Hunyuan-MT-7B"
     translation_llm_base_url: str = ""
-    translation_llm_temperature: float | None = None
     translation_llm_max_tokens: int = 8192
     translation_llm_timeout: int = 60
+    translation_llm_temperature: float | None = None
     translation_llm_max_retries: int = 0
 
 
@@ -349,7 +403,9 @@ class Settings(BaseSettings):
     embedding_api_style: str = "openai"
     embedding_remote_base_url: str = ""
     embedding_remote_api_key: str = ""
+    embedding_remote_api_keys: list[str] = Field(default_factory=list)
     embedding_remote_model: str = ""
+
 
     # ── Rerank flat fields (RERANK_*) ────────────────────────────────────
 
@@ -360,6 +416,7 @@ class Settings(BaseSettings):
     rerank_api_style: str = "openai"
     rerank_remote_base_url: str = ""
     rerank_remote_api_key: str = ""
+    rerank_remote_api_keys: list[str] = Field(default_factory=list)
     rerank_remote_model: str = ""
 
     # ── MinerU flat fields (MINERU_*) ────────────────────────────────────
@@ -492,8 +549,10 @@ class Settings(BaseSettings):
             api_style=self.embedding_api_style,
             remote_base_url=self.embedding_remote_base_url,
             remote_api_key=self.embedding_remote_api_key,
+            remote_api_keys=self.embedding_remote_api_keys,
             remote_model=self.embedding_remote_model,
         )
+
         self.rerank = RerankConfig(
             base_url=self.rerank_base_url,
             api_key=self.inference_api_key,
@@ -503,8 +562,10 @@ class Settings(BaseSettings):
             api_style=self.rerank_api_style,
             remote_base_url=self.rerank_remote_base_url,
             remote_api_key=self.rerank_remote_api_key,
+            remote_api_keys=self.rerank_remote_api_keys,
             remote_model=self.rerank_remote_model,
         )
+
         self.mineru = MinerUConfig(
             max_file_size_mb=self.mineru_max_file_size_mb,
         )
