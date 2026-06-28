@@ -19,8 +19,8 @@ vault_translation_llm_api_key: "***REDACTED_API_KEY***"
 vault_mineru_api_token: "xxxxxxxxxxxxxxxxxxxxxxxx"
 
 # -- Embedding / Rerank Remote API Keys --------------------------------------
-vault_embedding_remote_api_key: ""
-vault_rerank_remote_api_key: ""
+vault_embedding_remote_api_keys: []
+vault_rerank_remote_api_keys: []
 
 # -- Web Search --------------------------------------------------------------
 vault_web_search_api_key: ""

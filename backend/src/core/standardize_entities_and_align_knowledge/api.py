@@ -133,11 +133,12 @@ class EntityStandardizationService:
             EmbeddingHttpProvider(
                 base_url=self._cfg.embedding.remote_base_url,
                 model=self._cfg.embedding.remote_model or self._cfg.embedding.model,
-                api_key=self._cfg.embedding.remote_api_key,
+                api_keys=self._cfg.embedding.remote_all_api_keys,
             )
             if self._cfg.embedding.remote_base_url
             else None
         )
+
         local_rerank = RerankHttpProvider(
             base_url=self._cfg.rerank.base_url,
             model=self._cfg.rerank.model,
@@ -148,11 +149,12 @@ class EntityStandardizationService:
             RerankHttpProvider(
                 base_url=self._cfg.rerank.remote_base_url,
                 model=self._cfg.rerank.remote_model or self._cfg.rerank.model,
-                api_key=self._cfg.rerank.remote_api_key,
+                api_keys=self._cfg.rerank.remote_all_api_keys,
             )
             if self._cfg.rerank.remote_base_url
             else None
         )
+
         similarity_matcher = SimilarityTerminologyMatcher(
             embedding_provider=FallbackEmbeddingProvider(local_embedding, remote_embedding),
             rerank_provider=FallbackRerankProvider(local_rerank, remote_rerank),
@@ -276,11 +278,12 @@ async def build_terminology_embeddings(
                 EmbeddingHttpProvider(
                     base_url=cfg.embedding.remote_base_url,
                     model=cfg.embedding.remote_model or cfg.embedding.model,
-                    api_key=cfg.embedding.remote_api_key,
+                    api_keys=cfg.embedding.remote_all_api_keys,
                 )
                 if cfg.embedding.remote_base_url
                 else None
             )
+
             provider = FallbackEmbeddingProvider(local, remote)
             count = await TerminologyEmbeddingIndexer(session, provider).build(
                 embedding_model=cfg.embedding.model,

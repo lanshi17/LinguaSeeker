@@ -19,6 +19,8 @@ class EmbeddingHttpProvider:
     Supports two API styles:
       - "openai": OpenAI-compatible, POST /v1/embeddings, auth header.
       - "simple":  POST /embed with {"texts": […]}, no auth.
+
+    Multiple API keys are rotated round-robin across calls.
     """
 
     _SIMPLE = "simple"
@@ -31,6 +33,7 @@ class EmbeddingHttpProvider:
         client: httpx.AsyncClient | None = None,
         timeout: float = 60.0,
         api_key: str | None = None,
+        api_keys: list[str] | None = None,
         api_style: str = "openai",
     ) -> None:
         self._base_url = base_url.rstrip("/")
@@ -38,7 +41,28 @@ class EmbeddingHttpProvider:
         self._client = client
         self._timeout = timeout
         self._api_style = api_style
-        self._headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+        # Merge api_keys + api_key (deduplicated, preserving order).
+        seen: set[str] = set()
+        merged: list[str] = []
+        for k in [*(api_keys or []), api_key or ""]:
+            k = k.strip()
+            if k and k not in seen:
+                seen.add(k)
+                merged.append(k)
+        self._api_keys = merged
+        self._key_idx = 0
+
+    def _current_headers(self) -> dict[str, str]:
+        """Return auth headers using the current round-robin key."""
+        if not self._api_keys:
+            return {}
+        key = self._api_keys[self._key_idx % len(self._api_keys)]
+        return {"Authorization": f"Bearer {key}"}
+
+    def _rotate_key(self) -> None:
+        """Advance to the next API key."""
+        if len(self._api_keys) > 1:
+            self._key_idx = (self._key_idx + 1) % len(self._api_keys)
 
     async def embed_texts(self, texts: str | Sequence[str]) -> EmbeddingBatchResult:
         """Embed texts through the service."""
@@ -49,9 +73,12 @@ class EmbeddingHttpProvider:
         else:
             payload = {"input": list(texts), "model": self._model}
         if self._client is not None:
-            return await self._post_embeddings(self._client, payload)
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
-            return await self._post_embeddings(client, payload)
+            result = await self._post_embeddings(self._client, payload)
+        else:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                result = await self._post_embeddings(client, payload)
+        self._rotate_key()
+        return result
 
     async def _post_embeddings(
         self,
@@ -59,7 +86,7 @@ class EmbeddingHttpProvider:
         payload: dict[str, object],
     ) -> EmbeddingBatchResult:
         endpoint = "embed" if self._api_style == self._SIMPLE else "embeddings"
-        response = await client.post(f"{self._api_root()}/{endpoint}", json=payload, headers=self._headers)
+        response = await client.post(f"{self._api_root()}/{endpoint}", json=payload, headers=self._current_headers())
         response.raise_for_status()
         body = response.json()
         if self._api_style == self._SIMPLE:
@@ -79,12 +106,15 @@ class EmbeddingHttpProvider:
         return self._base_url if self._base_url.endswith("/v1") else f"{self._base_url}/v1"
 
 
+
 class RerankHttpProvider:
     """HTTP client for rerank scoring services.
 
     Supports two API styles:
       - "openai": OpenAI-compatible, POST /v1/rerank with model param, auth header.
       - "simple":  POST /rerank, no model param, no auth.
+
+    Multiple API keys are rotated round-robin across calls.
     """
 
     _SIMPLE = "simple"
@@ -97,6 +127,7 @@ class RerankHttpProvider:
         client: httpx.AsyncClient | None = None,
         timeout: float = 60.0,
         api_key: str | None = None,
+        api_keys: list[str] | None = None,
         api_style: str = "openai",
     ) -> None:
         self._base_url = base_url.rstrip("/")
@@ -104,7 +135,28 @@ class RerankHttpProvider:
         self._client = client
         self._timeout = timeout
         self._api_style = api_style
-        self._headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+        # Merge api_keys + api_key (deduplicated, preserving order).
+        seen: set[str] = set()
+        merged: list[str] = []
+        for k in [*(api_keys or []), api_key or ""]:
+            k = k.strip()
+            if k and k not in seen:
+                seen.add(k)
+                merged.append(k)
+        self._api_keys = merged
+        self._key_idx = 0
+
+    def _current_headers(self) -> dict[str, str]:
+        """Return auth headers using the current round-robin key."""
+        if not self._api_keys:
+            return {}
+        key = self._api_keys[self._key_idx % len(self._api_keys)]
+        return {"Authorization": f"Bearer {key}"}
+
+    def _rotate_key(self) -> None:
+        """Advance to the next API key."""
+        if len(self._api_keys) > 1:
+            self._key_idx = (self._key_idx + 1) % len(self._api_keys)
 
     async def rerank(
         self,
@@ -122,9 +174,12 @@ class RerankHttpProvider:
         else:
             payload = {"query": query, "documents": doc_list, "model": self._model, "top_k": top_k}
         if self._client is not None:
-            return await self._post_rerank(self._client, payload, doc_list)
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
-            return await self._post_rerank(client, payload, doc_list)
+            result = await self._post_rerank(self._client, payload, doc_list)
+        else:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                result = await self._post_rerank(client, payload, doc_list)
+        self._rotate_key()
+        return result
 
     async def _post_rerank(
         self,
@@ -134,7 +189,7 @@ class RerankHttpProvider:
     ) -> RerankBatchResult:
         endpoint = "rerank"
         url = f"{self._api_root()}/{endpoint}"
-        response = await client.post(url, json=payload, headers=self._headers)
+        response = await client.post(url, json=payload, headers=self._current_headers())
         response.raise_for_status()
         body = response.json()
         results = tuple(
@@ -152,6 +207,7 @@ class RerankHttpProvider:
         if self._api_style == self._SIMPLE:
             return self._base_url
         return self._base_url if self._base_url.endswith("/v1") else f"{self._base_url}/v1"
+
 
 
 class FallbackEmbeddingProvider:
