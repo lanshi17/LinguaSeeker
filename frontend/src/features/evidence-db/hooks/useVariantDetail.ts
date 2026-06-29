@@ -5,9 +5,11 @@ import { fetchAllEvidence, fetchEvidenceGroupDetail } from "../services/variantD
 import {
   aggregateVariants,
   buildVariantGroupDocumentPairs,
+  chooseVariantSearchRows,
   parseVariantSlug,
 } from "../utils/variantAggregation";
-import type { VariantDetailData, LiteratureReference } from "../types/variantDb";
+import { computeLiteratureQuality, computeVariantQuality } from "../utils/fieldModel";
+import type { VariantDetailData, LiteratureReference, VariantIndexEntry } from "../types/variantDb";
 import type { EvidenceGroupDetailResponse, EvidenceGroupItem } from "@/features/evidence-search/types/evidenceSearch";
 
 /** Extract category letter from field_id */
@@ -50,6 +52,7 @@ function buildLiteratureReferences(
 
   return deduped.map((g) => {
     const categories = new Set<string>();
+    const quality = computeLiteratureQuality(g);
     for (const item of g.items) {
       const cat = item.category ?? categoryFromFieldId(item.field_id);
       if (cat) categories.add(cat);
@@ -66,31 +69,58 @@ function buildLiteratureReferences(
       reviewStatus: "provisional",
       categories: [...categories].sort(),
       bilingualItems: buildBilingualMap(g.items),
+      ...quality,
     };
   });
 }
 
-export function useVariantDetail(variantSlug: string) {
+export function useVariantDetail(variantSlug: string, seededEntry?: VariantIndexEntry) {
   const variantFilters = useMemo(() => parseVariantSlug(variantSlug), [variantSlug]);
+  const hasSeededEntry = seededEntry?.variantSlug === variantSlug;
 
   // First, get search rows scoped to this variant so detail pages do not
   // load the full evidence index.
   const indexQuery = useQuery({
     queryKey: ["evidence-db", "variant-search", variantSlug, variantFilters],
     queryFn: () => fetchAllEvidence({ ...variantFilters, page: 1, page_size: 1000 }),
+    enabled: !hasSeededEntry,
     staleTime: 60_000,
   });
 
+  const fullIndexQuery = useQuery({
+    queryKey: ["evidence-db", "all-evidence"],
+    queryFn: () => fetchAllEvidence({ page: 1, page_size: 1000 }),
+    enabled:
+      !hasSeededEntry &&
+      Boolean(indexQuery.data) &&
+      buildVariantGroupDocumentPairs(indexQuery.data?.items ?? [], variantSlug).length === 0,
+    staleTime: 60_000,
+  });
+
+  const searchRows = useMemo(
+    () =>
+      chooseVariantSearchRows(
+        indexQuery.data?.items ?? [],
+        fullIndexQuery.data?.items ?? [],
+        variantSlug,
+      ),
+    [fullIndexQuery.data, indexQuery.data, variantSlug],
+  );
+
   const entry = useMemo(() => {
+    if (hasSeededEntry) return seededEntry;
     if (!indexQuery.data?.items) return null;
-    const entries = aggregateVariants(indexQuery.data.items);
+    const entries = aggregateVariants(searchRows);
     return entries.find((e) => e.variantSlug === variantSlug) ?? null;
-  }, [indexQuery.data, variantSlug]);
+  }, [hasSeededEntry, indexQuery.data, searchRows, seededEntry, variantSlug]);
 
   const groupDocPairs = useMemo(() => {
+    if (hasSeededEntry && seededEntry.groupDocumentPairs.length > 0) {
+      return seededEntry.groupDocumentPairs;
+    }
     if (!indexQuery.data?.items || !entry) return [];
-    return buildVariantGroupDocumentPairs(indexQuery.data.items, variantSlug);
-  }, [entry, indexQuery.data, variantSlug]);
+    return buildVariantGroupDocumentPairs(searchRows, variantSlug);
+  }, [entry, hasSeededEntry, indexQuery.data, searchRows, seededEntry, variantSlug]);
 
   const groupQueries = useQuery({
     queryKey: ["evidence-db", "variant-groups", variantSlug, groupDocPairs],
@@ -130,13 +160,21 @@ export function useVariantDetail(variantSlug: string) {
       evidenceGroups.flatMap((g) => g.items),
     );
 
-    return { entry, evidenceGroups, literature, allItems, reconciledItems, bilingualItems };
+    return {
+      entry,
+      evidenceGroups,
+      literature,
+      allItems,
+      reconciledItems,
+      bilingualItems,
+      quality: computeVariantQuality(evidenceGroups),
+    };
   }, [entry, groupQueries.data]);
 
   return {
     detail,
-    isLoading: indexQuery.isLoading || groupQueries.isLoading,
-    isFetching: indexQuery.isFetching || groupQueries.isFetching,
-    error: indexQuery.error ?? groupQueries.error,
+    isLoading: indexQuery.isLoading || fullIndexQuery.isLoading || groupQueries.isLoading,
+    isFetching: indexQuery.isFetching || fullIndexQuery.isFetching || groupQueries.isFetching,
+    error: indexQuery.error ?? fullIndexQuery.error ?? groupQueries.error,
   };
 }

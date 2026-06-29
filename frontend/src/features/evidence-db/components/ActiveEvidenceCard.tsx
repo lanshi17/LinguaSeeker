@@ -4,7 +4,13 @@ import { categoryLabel } from "@/features/evidence-search/utils/categoryStyles";
 
 /* ── Active Evidence Card ───────────────────────────────── */
 
-export function ActiveEvidenceCard({ item }: { item: EvidenceGroupItem }) {
+export function ActiveEvidenceCard({
+  item,
+  sourceSpanAvailable = false,
+}: {
+  item: EvidenceGroupItem;
+  sourceSpanAvailable?: boolean;
+}) {
   const cat =
     item.category ??
     (item.field_id.includes(".") ? item.field_id.split(".")[0] : null);
@@ -67,6 +73,10 @@ export function ActiveEvidenceCard({ item }: { item: EvidenceGroupItem }) {
             {Math.round(confidence * 100)}% confidence
           </span>
           <span>&middot;</span>
+          <span style={{ textTransform: "capitalize" }}>
+            {item.review_status ?? "provisional"}
+          </span>
+          <span>&middot;</span>
           <span style={{ textTransform: "capitalize" }}>{item.track ?? "original"}</span>
           {item.page && (
             <>
@@ -74,6 +84,8 @@ export function ActiveEvidenceCard({ item }: { item: EvidenceGroupItem }) {
               <span>Page {item.page}</span>
             </>
           )}
+          <span>&middot;</span>
+          <span>{sourceSpanAvailable ? "Source span" : "No source span"}</span>
         </div>
       </div>
     </div>

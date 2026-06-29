@@ -1,31 +1,63 @@
 # Results
 
-## Overall Performance
+## Pilot Method Selection
 
-We evaluated the Lingua Seeker B8 evidence extraction pipeline on the unified benchmark dataset comprising 150 entries across four source corpora: ClinGen (8 entries), ClinVar-Fused (73 entries), Parkinson (18 entries), and Rett syndrome (51 entries). Each entry was processed through the full four-phase pipeline—literature acquisition, cross-lingual evidence extraction, entity standardization, and knowledge alignment—with forced re-extraction (no cached results). All 150 entries completed successfully, including 4 entries that initially failed due to transient infrastructure errors and were re-executed in a follow-up run.
+Table: Fixed 5-entry pilot comparison (used for workflow selection only, not as a statistical superiority test).
 
-The pipeline achieved an overall precision of 65.5\%, recall of 33.6\%, and F1 score of 44.4\% across 1,563 field-level comparisons (446 true positives, 235 false positives, 882 false negatives). The precision--recall asymmetry indicates that the pipeline is conservative: when it extracts a field value, it is correct roughly two-thirds of the time, but it misses a substantial fraction of expected values.
+| Method | Precision | Recall | F1 |
+|--------|----------:|-------:|---:|
+| Staged extraction pipeline | 72.7% | 25.8% | 38.1% |
+| Citation-required prompt-only extraction | 100.0% | 32.4% | 48.9% |
+| Primary extraction + review validation | 87.5% | 43.8% | 58.3% |
 
-## Per-Dataset Breakdown
+The primary extraction plus review-validation workflow improved recall and F1 over both the staged extraction pipeline and citation-required prompt-only extraction while keeping precision acceptable. This pilot motivated the selection of B8 as the default workflow for the full 150-entry evaluation.
 
-Table~\ref{tab:by_dataset} presents the field-level evaluation metrics stratified by source dataset.
+## Unified 150-Entry Evaluation
+
+All 150 entries completed successfully across four source corpora: ClinGen (8), ClinVar-Fused (73), Parkinson (18), Rett syndrome (51). Every entry was submitted through the production pipeline with forced re-extraction. Evaluation is field-level over source-supported fields eligible for single-document extraction.
 
 | Dataset | Entries | TP | FP | FN | Precision | Recall | F1 |
-|---------|------:|---:|---:|---:|----------:|-------:|---:|
-| ClinGen | 8 | 15 | 1 | 8 | 93.8\% | 65.2\% | 76.9\% |
-| ClinVar-Fused | 73 | 200 | 64 | 288 | 75.8\% | 41.0\% | 53.2\% |
-| Parkinson | 18 | 44 | 31 | 279 | 58.7\% | 13.6\% | 22.1\% |
-| Rett | 51 | 187 | 139 | 307 | 57.4\% | 37.9\% | 45.6\% |
-| **Overall** | **150** | **446** | **235** | **882** | **65.5\%** | **33.6\%** | **44.4\%** |
+|---------|--------:|---:|---:|---:|----------:|-------:|---:|
+| ClinGen | 8 | 15 | 1 | 8 | 93.8% | 65.2% | 76.9% |
+| ClinVar-Fused | 73 | 200 | 64 | 288 | 75.8% | 41.0% | 53.2% |
+| Parkinson | 18 | 44 | 31 | 279 | 58.7% | 13.6% | 22.1% |
+| Rett | 51 | 187 | 139 | 307 | 57.4% | 37.9% | 45.6% |
+| **Overall** | **150** | **446** | **235** | **882** | **65.5%** | **33.6%** | **44.4%** |
 
-ClinGen yielded the highest F1 (76.9\%), reflecting its curated, well-structured source literature with explicit gene--disease relationship statements. ClinVar-Fused, the largest subset, achieved moderate performance (F1 = 53.2\%) with precision of 75.8\% but recall of only 41.0\%, suggesting that many expected fields are either absent from the source documents or not captured by the extraction prompts. The Parkinson corpus proved most challenging (F1 = 22.1\%), primarily due to very low recall (13.6\%); this corpus contains complex multi-gene association studies where individual field values are often implicit or distributed across lengthy discussions. The Rett corpus achieved F1 = 45.6\%, with a similar precision--recall gap.
+Performance varied substantially by source corpus. ClinGen achieved the highest F1 (76.9%), consistent with explicit gene-disease evidence and curated source selection. ClinVar-Fused achieved F1 53.2% with higher precision than recall. Parkinson was most difficult (F1 22.1%), reflecting multi-gene association studies where expected values are often implicit or not expressed as article-local evidence.
 
-## Error Analysis
+## Error Analysis by Field Family
 
-All 150 entries completed the full pipeline successfully. Four entries (gs\_033, gs\_044, gs\_045, gs\_143) initially failed in the first evaluation pass due to transient infrastructure issues (connection refused, missing preprocessed artifacts, polling timeout) and were re-executed in a follow-up run; their results are included in the final metrics.
+| Family | Label | TP | FP | FN | F1 |
+|--------|-------|---:|---:|---:|---:|
+| A | Gene / Variant | 257 | 57 | 432 | 0.512 |
+| B | Disease / Phenotype | 171 | 155 | 217 | 0.479 |
+| J | Public assertions | 12 | 4 | 64 | 0.261 |
+| C | De novo / Mechanism | 6 | 19 | 39 | 0.171 |
+| Other (D-I) | --- | 0 | 0 | 130 | --- |
 
-The dominant source of false negatives (882 total) was fields that were expected but not extracted, distributed across all four datasets. False positives (235 total) arose from incorrect field values extracted by the pipeline. No over-extraction spurious values were detected (over-extractions = 0), indicating that the pipeline does not hallucinate additional field values beyond what the LLM produces.
+Key observations:
+- **A (Gene/Variant)**: Largest FN source (432 FN). Top fields: variant_hgvs_p (109 FN), gene_disease_relationship (109 FN), variant_type (92 FN). Often require external DB normalization.
+- **B (Disease/Phenotype)**: Highest FP count (155 FP). Top sources: mode_of_inheritance_reported (49 FP), clinical_phenotypes (34 FP). Driven by synonym/normalization mismatches.
+- **J (Public assertions)**: 64 FN with only 12 TP. ClinVar assertions typically absent from article text.
+- **C-I**: Dominated by FN with zero or near-zero TP. These fields depend on external curation, cross-paper synthesis, or expert consensus.
 
-## Efficiency
+## Database Seed Output
 
-The average per-entry processing time was 316 seconds (5.3 minutes), with a minimum of 91 seconds and a maximum of 1,842 seconds (30.7 minutes) for the most complex entries. Total wall-clock evaluation time was approximately 793 minutes (13.2 hours) at concurrency level 1, plus an additional 25 minutes for the 4-entry retry run. Evidence was successfully extracted for all 150 entries, with an average field found rate of 43.9\%.
+The final run produced a data-only PostgreSQL seed package:
+- 150 source documents, 150 completed processing runs
+- 41,167 run-level evidence rows
+- 1,177 canonical evidence items
+- 150 literature profiles
+- 1,177 frontend search-index rows
+- 985 normalized entities
+- 94,311 BAAI/bge-m3 embedding records
+
+## Limitations
+
+1. The full 150-entry evaluation is a production benchmark, not a controlled superiority test against all baselines.
+2. The 5-entry pilot motivated workflow selection; larger matched baseline evaluations are future work.
+3. Recall is bounded by the single-document source-support boundary; fields requiring external databases or cross-paper synthesis are outside the scoring scope.
+4. The evaluation covers source-supported eligible fields, not the full 166-field evidence catalog.
+5. The system does not perform final ACMG/ClinGen classification.
+6. Source corpora differ in annotation density and field visibility; Parkinson in particular shows poor match to single-document extraction.

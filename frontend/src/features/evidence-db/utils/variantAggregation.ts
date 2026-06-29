@@ -1,6 +1,7 @@
 import type { EvidenceSearchResult } from "@/features/evidence-search/types/evidenceSearch";
 import type { EvidenceSearchQuery } from "@/features/evidence-search/types/evidenceSearch";
 import type { VariantIndexEntry, VariantIndexData, VariantIndexFilters, ClassificationLevel, SortOrder } from "../types/variantDb";
+import { computeReviewProgress } from "./fieldModel";
 import { classifyLevel, severityRank } from "./pathogenicity";
 
 function makeVariantSlug(gene: string, variant: string, disease: string): string {
@@ -69,6 +70,7 @@ export function aggregateVariants(results: EvidenceSearchResult[]): VariantIndex
 
     const groupIds = [...new Set(items.map((r) => r.group_id))];
     const sourceDocumentIds = [...new Set(items.map((r) => r.source_document_id))];
+    const groupDocumentPairs = buildVariantGroupDocumentPairs(items, slug);
 
     // Weighted average confidence
     const totalFields = items.reduce((sum, r) => sum + r.field_count, 0);
@@ -119,9 +121,11 @@ export function aggregateVariants(results: EvidenceSearchResult[]): VariantIndex
       fieldCount: totalFields,
       categoryDistribution,
       reviewStatus: computeReviewStatus(reviewStatuses),
+      reviewProgress: computeReviewProgress(items),
       createdAt,
       groupIds,
       sourceDocumentIds,
+      groupDocumentPairs,
       representative: first,
     });
   }
@@ -168,6 +172,20 @@ export function buildVariantGroupDocumentPairs(
     }
   }
   return pairs;
+}
+
+export function chooseVariantSearchRows(
+  scopedRows: EvidenceSearchResult[],
+  fullRows: EvidenceSearchResult[],
+  variantSlug: string,
+): EvidenceSearchResult[] {
+  if (buildVariantGroupDocumentPairs(scopedRows, variantSlug).length > 0) {
+    return scopedRows;
+  }
+  if (buildVariantGroupDocumentPairs(fullRows, variantSlug).length > 0) {
+    return fullRows;
+  }
+  return scopedRows;
 }
 
 /**

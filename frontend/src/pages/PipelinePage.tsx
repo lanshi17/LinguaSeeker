@@ -239,7 +239,7 @@ export function PipelinePage() {
           </Button>,
         ]}
         width={500}
-        destroyOnClose
+        destroyOnHidden
       >
         <Tabs
           items={tabItems}

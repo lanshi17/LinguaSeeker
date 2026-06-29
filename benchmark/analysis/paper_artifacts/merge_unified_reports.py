@@ -161,7 +161,7 @@ def build_merged_report(
             "ground_truth_root": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/data/ground_truth/unified",
             "dataset": "unified",
             "extraction_profile": "none",
-            "extraction_mode": "b8",
+            "extraction_mode": "broad",
             "shard_index": None,
             "shard_size": None,
             "merged_from_shards": [str(p.name) for p in shard_paths],

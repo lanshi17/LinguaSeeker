@@ -1,14 +1,52 @@
 import { Button } from "antd";
 import { BookOpen, Download, ExternalLink } from "lucide-react";
 import type { EvidenceGroupDetailResponse } from "@/features/evidence-search/types/evidenceSearch";
+import type { ReviewProgress } from "../utils/fieldModel";
+import {
+  EVIDENCE_DB_LABELS,
+  formatConfidencePercent,
+  formatReviewedCount,
+} from "../utils/fieldLabels";
 
 /* ── Literature Header ──────────────────────────────────── */
 
+export interface LiteratureHeaderQuality {
+  hasFullText: boolean;
+  hasTranslation: boolean;
+  reviewProgress: ReviewProgress;
+}
+
+function qualityBadgeStyle(tone: "source" | "translation") {
+  const styles = {
+    source: {
+      border: "1px solid #bfdbfe",
+      backgroundColor: "#eff6ff",
+      color: "#1d4ed8",
+    },
+    translation: {
+      border: "1px solid #ddd6fe",
+      backgroundColor: "#f5f3ff",
+      color: "#6d28d9",
+    },
+  };
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    borderRadius: 999,
+    padding: "2px 8px",
+    fontSize: 12,
+    fontWeight: 500,
+    ...styles[tone],
+  };
+}
+
 export function LiteratureHeader({
   groupDetail,
+  quality,
   onExportReport,
 }: {
   groupDetail: EvidenceGroupDetailResponse;
+  quality?: LiteratureHeaderQuality;
   onExportReport?: () => void;
 }) {
   return (
@@ -94,8 +132,17 @@ export function LiteratureHeader({
             <span>{groupDetail.item_count} evidence fields</span>
             {groupDetail.avg_confidence != null && (
               <span>
-                {Math.round(groupDetail.avg_confidence * 100)}% confidence
+                {formatConfidencePercent(groupDetail.avg_confidence)} confidence
               </span>
+            )}
+            {quality?.hasFullText && (
+              <span style={qualityBadgeStyle("source")}>Full text</span>
+            )}
+            {quality?.hasTranslation && (
+              <span style={qualityBadgeStyle("translation")}>Translated</span>
+            )}
+            {quality && (
+              <span>{formatReviewedCount(quality.reviewProgress)}</span>
             )}
           </div>
         </div>
@@ -106,7 +153,7 @@ export function LiteratureHeader({
             onClick={onExportReport}
             style={{ flexShrink: 0 }}
           >
-            Export report
+            {EVIDENCE_DB_LABELS.exportReport}
           </Button>
         )}
       </div>

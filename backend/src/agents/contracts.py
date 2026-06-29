@@ -415,6 +415,6 @@ class PipelineGraphState(BaseModel):
     extraction_profile: str = "none"
 
     # Extraction workflow mode (passed through to EvidenceExtractionWorkflow).
-    # ``"b8"`` = business default (primary_broad_extraction -> review_validation two-pass).
-    # ``"legacy"`` = rollback / historical baseline (catalog_extraction -> special_evidence -> ...).
-    extraction_mode: str = "b8"
+    # ``"broad"`` = business default (primary_broad_extraction -> review_validation two-pass).
+    # ``"catalog"`` = rollback / historical baseline (catalog_extraction -> special_evidence -> ...).
+    extraction_mode: str = "broad"

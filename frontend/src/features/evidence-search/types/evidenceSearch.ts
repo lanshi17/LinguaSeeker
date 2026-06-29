@@ -27,6 +27,8 @@ export interface EvidenceSearchResult {
   review_status: string;
   canonical_evidence_id?: string | null;
   created_at?: string | null;
+  has_full_text?: boolean;
+  has_translation?: boolean;
 }
 
 /** GET /api/v1/evidence/search response. */

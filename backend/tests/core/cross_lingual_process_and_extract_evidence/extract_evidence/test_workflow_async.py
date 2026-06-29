@@ -84,7 +84,7 @@ async def test_workflow_run_async_legacy_completed() -> None:
 
     mock_provider.ainvoke_structured = AsyncMock(side_effect=_relevant)
 
-    workflow = EvidenceExtractionWorkflow(provider=mock_provider, extraction_mode="legacy")
+    workflow = EvidenceExtractionWorkflow(provider=mock_provider, extraction_mode="catalog")
 
     state = await workflow.run_async(_make_document())
 
@@ -141,7 +141,7 @@ async def test_workflow_run_async_is_faster_than_sequential() -> None:
 
     mock_provider.ainvoke_structured = AsyncMock(side_effect=_slow)
 
-    workflow = EvidenceExtractionWorkflow(provider=mock_provider, extraction_mode="legacy")
+    workflow = EvidenceExtractionWorkflow(provider=mock_provider, extraction_mode="catalog")
     doc = _make_document()
 
     # Patch build_text_prompt_chunks to return 3 chunks

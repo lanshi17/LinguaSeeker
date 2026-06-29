@@ -42,6 +42,8 @@ _HANGUL_RE = re.compile(r"[가-힯]")
 _UNTRANSLATED_BLOCK_RATIO = 0.40
 _BLOCK_SOURCE_LANG_THRESHOLD = 0.15
 _DEDUP_SIMILARITY_THRESHOLD = 0.75
+_MIN_TRANSLATED_BLOCK_COVERAGE = 0.60
+_MIN_TRANSLATED_CHAR_COVERAGE = 0.35
 
 
 def trim_repetitive_content(text: str) -> str:
@@ -292,6 +294,49 @@ def build_translated_blocks(
         filtered_non_body + empty_count, filtered_non_body, empty_count,
     )
     return translated_blocks
+
+
+def _translatable_text_blocks(blocks: list[ContentBlock]) -> list[ContentBlock]:
+    """Return text-like body blocks expected to have translated counterparts."""
+    return [
+        block for block in blocks
+        if block.type in ("text", "title") and block.text.strip()
+    ]
+
+
+def check_block_coverage(
+    original_blocks: list[ContentBlock],
+    translated_blocks: list[ContentBlock],
+) -> None:
+    """Reject English-but-incomplete translations that only cover a summary.
+
+    Language checks catch untranslated source-language residue. They do not
+    catch a model returning fluent English for only the title/abstract. This
+    guard compares translated block/character coverage against the original
+    text-like blocks before extraction consumes the document.
+    """
+    original_text_blocks = _translatable_text_blocks(original_blocks)
+    if len(original_text_blocks) < 3:
+        return
+
+    translated_text_blocks = _translatable_text_blocks(translated_blocks)
+    original_chars = sum(len(block.text.strip()) for block in original_text_blocks)
+    translated_chars = sum(len(block.text.strip()) for block in translated_text_blocks)
+    if original_chars == 0:
+        return
+
+    block_coverage = len(translated_text_blocks) / len(original_text_blocks)
+    char_coverage = translated_chars / original_chars
+    if (
+        block_coverage < _MIN_TRANSLATED_BLOCK_COVERAGE
+        or char_coverage < _MIN_TRANSLATED_CHAR_COVERAGE
+    ):
+        raise TranslationError(
+            "translation_validation_failed: block_coverage — "
+            f"{len(translated_text_blocks)}/{len(original_text_blocks)} text blocks "
+            f"({block_coverage:.0%}) and {translated_chars}/{original_chars} chars "
+            f"({char_coverage:.0%}) translated below coverage thresholds"
+        )
 
 
 def check_block_language(

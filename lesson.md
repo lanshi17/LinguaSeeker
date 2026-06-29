@@ -1,5 +1,65 @@
 # Lesson Log
 
+## 2026-06-29: Fluent English can still be an incomplete translation
+
+**Problem**: A bilingual Chinese/English paper showed a full Chinese source document but only a short English translated document. The English side looked like a title/abstract summary, not a full block-by-block translation.
+
+**Investigation**: The source DOI `10.7499/j.issn.1008-8830.2014.04.017` is itself bilingual: Chinese full text plus an official English abstract. The existing translation validator checked whether translated blocks still contained too much source-language text. It did not check whether enough original blocks had translated counterparts, so fluent English summaries could pass.
+
+**Root cause**: Translation quality validation conflated "English output" with "complete translated document." Existing checks caught untranslated residue, not coverage loss.
+
+**Solution**: Added `check_block_coverage(original_blocks, translated_blocks)` to compare translated text/title block coverage and character coverage against the original. The check triggers the same strict retry path as source-language residue detection and rejects abstract-only translations when coverage remains too low.
+
+**Prevention**: For document translation, validate both language and coverage. Bilingual source documents with built-in English abstracts must not be treated as fully translated documents unless translated blocks cover the full body.
+
+## 2026-06-29: Evidence extraction prompts must skip non-evidence back matter
+
+**Problem**: References, acknowledgments, author/affiliation metadata, conflict statements, and similar non-body text could enter the 134-field ACMG/ClinGen extraction prompt and be mistaken for paper evidence.
+
+**Investigation**: `EvidenceExtractionService.build_dual_documents_from_output_dir()` parsed all blocks and formatted all block text into `TrackDocument.formatted_text`. It did not distinguish evidence-bearing body sections from back matter.
+
+**Root cause**: Section filtering existed in translation post-processing for non-body block types, but extraction consumed persisted blocks again without an evidence-section boundary.
+
+**Solution**: Added evidence-section filtering before `TrackDocument` construction. The filter keeps Abstract, Introduction/Background, Methods, Results, Discussion, Case Report/Patients, Tables, Figure Captions, and Conclusion, while skipping References, Acknowledgments, Author/Affiliations, Conflict of Interest, Funding, Supplementary back matter, headers, footers, and page numbers.
+
+**Prevention**: Extraction inputs should be treated as a curated evidence document, not a raw publication dump. New section types must be classified at the ingestion/extraction boundary before LLM prompts are built.
+
+## 2026-06-29: Non-English evidence highlights need Unicode-aware matching
+
+**Problem**: Non-English evidence text had a lower highlight hit rate even after adding trace sentence fallback. Examples include accented names, different dash characters, full-width Latin/HGVS characters, CJK punctuation, and OCR whitespace differences.
+
+**Investigation**: The previous matcher normalized only case and whitespace for trace sentence fallback. Value search used raw lowercase substring matching for non-HGVS terms. That missed common equivalent Unicode forms such as `Dubé` vs `Dube`, `Birt–Hogg` vs `Birt-Hogg`, and `Ｃ．１２３Ａ＞Ｇ` vs `c.123A>G`.
+
+**Root cause**: The matcher compared display strings instead of a canonical matching form. Non-English/OCR text frequently changes Unicode width, diacritics, punctuation, and whitespace while preserving the same semantic span.
+
+**Solution**: Added Unicode-aware normalization with original-offset mapping: NFKC normalization, diacritic removal, dash unification, CJK full-stop normalization, case folding, and whitespace collapse. Both value matching and trace sentence fallback now use this normalized form while returning offsets into the original document text.
+
+**Prevention**: Any future evidence matching logic must return original offsets but compare normalized text. Do not add language-specific aliases for problems that are actually Unicode normalization issues.
+
+## 2026-06-29: Full-text bilingual reader missed sentence-level trace highlights
+
+**Problem**: In the bilingual literature comparison reader, some matched evidence sentences were not highlighted in the document even though trace data existed.
+
+**Investigation**: `buildEvidenceDocument()` had two different modes. Without full document text, it rendered trace snippets and used `trace.original/translated.highlight_start` and `highlight_end`. With full document text, it ignored trace snippet offsets and searched only `item.value`, `trace.original_value`, `trace.translated_value`, aliases, and sub-entities. A regression test with a trace sentence present in the full text but a structured value absent from the full text reproduced the empty highlight list.
+
+**Root cause**: Full-text mode treated structured values as the only source of highlight locations. Sentence-level trace spans were available but not used as a fallback, so paraphrased or normalized values could not be highlighted.
+
+**Solution**: Added a fallback that runs only when value-based matching finds no range for an evidence item. It locates the trace sentence in the full document text and maps `highlight_start/highlight_end` from trace-local offsets into full-document offsets.
+
+**Prevention**: For evidence readers, keep URL/text display labels separate from stable source spans. Value search is useful for entity highlighting, but source-span traces must remain the fallback contract for sentence-level evidence.
+
+## 2026-06-29: Evidence DB list row visible but detail route cannot find variant
+
+**Problem**: A variant could be visible in the Evidence DB list while opening its detail route showed `Variant not found or failed to load`. The browser console stack pointed at `useVariantDetail -> fetchAllEvidence`, and the direct group detail request for the reported FLCN URL returned 404 in the current local API data.
+
+**Investigation**: Checked the active `/api/v1/evidence/search?page=1&page_size=1000` response through the Vite proxy. The local API returned 212 rows but no FLCN/Birt-Hogg-Dube/b6434f62 hit, while the list navigation path only encoded `entry.variantSlug` into the URL and discarded the already-known group/document relationships from the visible row.
+
+**Root cause**: L1 had stronger information than L2 used. `aggregateVariants()` knew the concrete rows that produced the visible list item, but `VariantRow` navigated with only a string slug. L2 then had to rediscover the same row through scoped/full search, which can miss because of environment drift, backend filter strictness, stale UI state, or normalization differences.
+
+**Solution**: Preserve exact `groupDocumentPairs` on `VariantIndexEntry`, pass the clicked entry through React Router state, and let `useVariantDetail()` prefer seeded pairs before falling back to scoped/full search for direct URL loads.
+
+**Prevention**: When navigating from an aggregated list to a detail view, pass stable source identifiers (`group_id`, `source_document_id`) in addition to human-readable slugs. Slugs are good URLs, not reliable data contracts.
+
 ## 2026-06-27: Backend-host compose deployment — 6 issues in one session
 
 **Problem**: First deployment to a fresh server hit a cascade of 6 distinct failures: `.dockerignore` excluding build artifacts, missing Python binary in venv, `sed` not in slim image, config files missing/wrong permissions, database tables not existing, and Alembic `VARCHAR(32)` truncation on long revision IDs.
@@ -5906,4 +5966,3 @@ RUN find /opt/venv/bin -maxdepth 1 -type f -exec \
    ```
 
 ---
-

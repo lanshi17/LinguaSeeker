@@ -130,3 +130,64 @@ def test_build_dual_documents_target_optional(tmp_path) -> None:
 
     assert docs.original.extraction_target is None
     assert docs.translated.extraction_target is None
+
+
+def test_build_dual_documents_skips_non_evidence_sections(tmp_path) -> None:
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
+        EvidenceExtractionService,
+    )
+
+    payload = {
+        "metadata": {"doc_id": "doc-sections", "source_language": "en"},
+        "blocks": [
+            {"type": "title", "text": "Clinical features and MECP2 mutations"},
+            {"type": "text", "text": "Abstract MECP2 c.913insT was detected."},
+            {"type": "text", "text": "Results Five children had MECP2 variants."},
+            {"type": "text", "text": "References"},
+            {"type": "text", "text": "[1] Amir RE. MECP2 unrelated citation."},
+            {"type": "text", "text": "Acknowledgments"},
+            {"type": "text", "text": "We thank the sequencing facility."},
+            {"type": "text", "text": "Conflict of Interest"},
+            {"type": "text", "text": "The authors declare no conflict of interest."},
+        ],
+    }
+    (tmp_path / "original.json").write_text(json.dumps(payload), encoding="utf-8")
+    (tmp_path / "translated.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    docs = EvidenceExtractionService.build_dual_documents_from_output_dir(tmp_path)
+
+    assert "MECP2 c.913insT was detected" in docs.original.formatted_text
+    assert "Five children had MECP2 variants" in docs.original.formatted_text
+    assert "References" not in docs.original.formatted_text
+    assert "Amir RE" not in docs.original.formatted_text
+    assert "Acknowledgments" not in docs.original.formatted_text
+    assert "Conflict of Interest" not in docs.original.formatted_text
+
+
+def test_build_dual_documents_skips_non_evidence_sections_in_formatted_text(tmp_path) -> None:
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
+        EvidenceExtractionService,
+    )
+
+    payload = {
+        "metadata": {"doc_id": "doc-formatted-sections", "source_language": "en"},
+        "formatted_text": "\n".join([
+            "Abstract MECP2 c.913insT was detected.",
+            "Results Five children had MECP2 variants.",
+            "References",
+            "[1] Amir RE. MECP2 unrelated citation.",
+            "Acknowledgments",
+            "We thank the sequencing facility.",
+        ]),
+        "blocks": [],
+    }
+    (tmp_path / "original.json").write_text(json.dumps(payload), encoding="utf-8")
+    (tmp_path / "translated.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    docs = EvidenceExtractionService.build_dual_documents_from_output_dir(tmp_path)
+
+    assert "MECP2 c.913insT was detected" in docs.original.formatted_text
+    assert "Five children had MECP2 variants" in docs.original.formatted_text
+    assert "References" not in docs.original.formatted_text
+    assert "Amir RE" not in docs.original.formatted_text
+    assert "Acknowledgments" not in docs.original.formatted_text

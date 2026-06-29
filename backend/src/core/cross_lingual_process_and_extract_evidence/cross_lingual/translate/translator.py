@@ -21,6 +21,7 @@ from .blocks import (
 from .postprocess import (
     _DOI_RE,
     build_translated_blocks,
+    check_block_coverage,
     check_block_language,
     deduplicate_bilingual_blocks,
     flag_quality_issues,
@@ -879,16 +880,17 @@ class MultiStageTranslator(BaseTranslator):
         # reproduces the source alongside the translation), retry once
         # with a strict English-only prompt before raising.
         try:
+            check_block_coverage(blocks, translated_blocks)
             check_block_language(
                 translated_blocks, formatted.source_language or "unknown",
             )
         except TranslationError as exc:
             if (
-                "per_block_check" in str(exc)
+                ("per_block_check" in str(exc) or "block_coverage" in str(exc))
                 and self._MAX_PER_BLOCK_RETRIES > 0
             ):
                 logger.warning(
-                    "Per-block language check failed ({}). "
+                    "Translation block quality check failed ({}). "
                     "Retrying translation with strict English-only prompt.",
                     exc,
                 )
@@ -919,6 +921,7 @@ class MultiStageTranslator(BaseTranslator):
                     aux_translations=aux_translations,
                 )
                 translated_blocks = deduplicate_bilingual_blocks(translated_blocks)
+                check_block_coverage(blocks, translated_blocks)
                 check_block_language(
                     translated_blocks, formatted.source_language or "unknown",
                 )

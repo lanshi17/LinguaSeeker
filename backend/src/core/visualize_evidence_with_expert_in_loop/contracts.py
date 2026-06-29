@@ -280,6 +280,8 @@ class EvidenceSearchResult(BaseModel):
     review_status: str = "provisional"
     canonical_evidence_id: UUID | None = None
     created_at: datetime | None = None
+    has_full_text: bool = False
+    has_translation: bool = False
 
 
 class EvidenceSearchResponse(BaseModel):

@@ -1,25 +1,30 @@
 \begin{tikzpicture}[
   font=\small,
-  node distance=6mm and 10mm,
-  block/.style={draw=black, thick, rectangle, minimum height=10mm, minimum width=30mm, align=center, fill=gray!5},
-  input/.style={draw=black, thick, rectangle, minimum height=10mm, minimum width=28mm, align=center, fill=blue!4},
-  output/.style={draw=black, thick, rectangle, minimum height=10mm, minimum width=28mm, align=center, fill=green!6},
+  node distance=7mm and 8mm,
+  block/.style={draw=black, thick, rectangle, minimum height=9mm, minimum width=25mm, align=center, fill=gray!5},
+  input/.style={draw=black, thick, rectangle, minimum height=9mm, minimum width=25mm, align=center, fill=blue!4},
+  review/.style={draw=black, thick, rectangle, minimum height=9mm, minimum width=25mm, align=center, fill=yellow!10},
+  output/.style={draw=black, thick, rectangle, minimum height=9mm, minimum width=25mm, align=center, fill=green!6},
   edge/.style={-Latex, thick}
 ]
-  \node[input] (orig) {Original track\\candidate extraction};
-  \node[input, right=of orig] (trans) {Translated track\\candidate extraction};
-  \node[block, below=of $(orig)!0.5!(trans)$] (graph) {Typed evidence graph\\+ source-span validation};
-  \node[block, right=of graph] (verifier) {Verifier-aware\\reconciliation score};
-  \node[output, right=of verifier] (accept) {Accepted evidence\\with recoverable citation};
+  \node[input] (source) {Source\\document};
+  \node[input, below=of source] (translation) {Machine\\translation};
+  \node[block, right=12mm of $(source)!0.5!(translation)$] (primary) {Primary track\\broad extraction};
+  \node[review, right=of primary] (reviewer) {Review track\\approve / reject / correct};
+  \node[block, right=of reviewer] (ground) {Normalize\\+ source grounding};
+  \node[block, right=of ground] (entities) {Entity\\standardization};
+  \node[output, right=of entities] (readmodel) {Evidence DB\\+ read models};
 
-  \node[block, below=of graph, xshift=20mm] (context) {Target-safe context\\gene / disease aliases};
-  \node[block, below=of verifier, xshift=20mm] (audit) {Audit trail\\traceability metrics};
+  \node[block, below=of primary] (target) {Target guard\\gene / disease context};
+  \node[block, below=of ground] (embedding) {BAAI/bge-m3\\embedding index};
 
-  \draw[edge] (orig) -- (graph);
-  \draw[edge] (trans) -- (graph);
-  \draw[edge] (graph) -- (verifier);
-  \draw[edge] (verifier) -- (accept);
-  \draw[edge] (context) -- (graph);
-  \draw[edge] (verifier) -- (audit);
-  \draw[edge] (accept.south) |- (audit.east);
+  \draw[edge] (source) -- (primary);
+  \draw[edge] (translation) -- (primary);
+  \draw[edge] (primary) -- (reviewer);
+  \draw[edge] (reviewer) -- (ground);
+  \draw[edge] (ground) -- (entities);
+  \draw[edge] (entities) -- (readmodel);
+  \draw[edge] (target) -- (primary);
+  \draw[edge] (target) -- (reviewer);
+  \draw[edge] (embedding) -- (entities);
 \end{tikzpicture}

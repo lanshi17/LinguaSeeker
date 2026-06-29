@@ -287,6 +287,7 @@ def create_app() -> FastAPI:
 
     # ── Health (outside v1 router for liveness probes) ──────────────────
     @_app.get("/health", response_model=HealthResponse)
+    @_app.get("/api/v1/health", response_model=HealthResponse, include_in_schema=False)
     async def health() -> HealthResponse:
         """Health check endpoint."""
         return HealthResponse(status="ok")

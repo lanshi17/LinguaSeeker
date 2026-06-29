@@ -1,0 +1,716 @@
+{
+  "overall": {
+    "TP": 446,
+    "FP": 235,
+    "FN": 882,
+    "precision": 0.6549,
+    "recall": 0.3358,
+    "F1": 0.444
+  },
+  "by_family": [
+    {
+      "TP": 257,
+      "FP": 57,
+      "FN": 432,
+      "precision": 0.8185,
+      "recall": 0.373,
+      "F1": 0.5125,
+      "family": "A",
+      "label": "Gene / Variant"
+    },
+    {
+      "TP": 171,
+      "FP": 155,
+      "FN": 217,
+      "precision": 0.5245,
+      "recall": 0.4407,
+      "F1": 0.479,
+      "family": "B",
+      "label": "Disease / Phenotype"
+    },
+    {
+      "TP": 12,
+      "FP": 4,
+      "FN": 64,
+      "precision": 0.75,
+      "recall": 0.1579,
+      "F1": 0.2609,
+      "family": "J",
+      "label": "Public assertions (ClinVar)"
+    },
+    {
+      "TP": 6,
+      "FP": 19,
+      "FN": 39,
+      "precision": 0.24,
+      "recall": 0.1333,
+      "F1": 0.1714,
+      "family": "C",
+      "label": "De novo / Genetic mechanism"
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 49,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "family": "G",
+      "label": "Experimental methods"
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 28,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "family": "F",
+      "label": "Population / Allele frequency"
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 20,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "family": "D",
+      "label": "Carrier observation"
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 17,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "family": "I",
+      "label": "Animal model"
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 10,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "family": "H",
+      "label": "Segregation"
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 6,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "family": "E",
+      "label": "Functional evidence"
+    }
+  ],
+  "by_field_top_fn": [
+    {
+      "TP": 33,
+      "FP": 8,
+      "FN": 109,
+      "precision": 0.8049,
+      "recall": 0.2324,
+      "F1": 0.3607,
+      "field_id": "A.gene_disease_relationship",
+      "family": "A",
+      "fn_by_source": {
+        "clinvar_fused": 52,
+        "rett": 35,
+        "parkinson": 15,
+        "clingen": 7
+      }
+    },
+    {
+      "TP": 3,
+      "FP": 18,
+      "FN": 109,
+      "precision": 0.1429,
+      "recall": 0.0268,
+      "F1": 0.0451,
+      "field_id": "A.variant_hgvs_p",
+      "family": "A",
+      "fn_by_source": {
+        "clinvar_fused": 56,
+        "rett": 43,
+        "parkinson": 10
+      }
+    },
+    {
+      "TP": 31,
+      "FP": 18,
+      "FN": 92,
+      "precision": 0.6327,
+      "recall": 0.252,
+      "F1": 0.3605,
+      "field_id": "A.variant_type",
+      "family": "A",
+      "fn_by_source": {
+        "clinvar_fused": 45,
+        "rett": 33,
+        "parkinson": 14
+      }
+    },
+    {
+      "TP": 12,
+      "FP": 4,
+      "FN": 58,
+      "precision": 0.75,
+      "recall": 0.1714,
+      "F1": 0.2791,
+      "field_id": "J.clinvar_assertion",
+      "family": "J",
+      "fn_by_source": {
+        "clinvar_fused": 57,
+        "parkinson": 1
+      }
+    },
+    {
+      "TP": 35,
+      "FP": 49,
+      "FN": 53,
+      "precision": 0.4167,
+      "recall": 0.3977,
+      "F1": 0.407,
+      "field_id": "B.mode_of_inheritance_reported",
+      "family": "B",
+      "fn_by_source": {
+        "clinvar_fused": 33,
+        "rett": 14,
+        "parkinson": 6
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 50,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "B.hpo_terms",
+      "family": "B",
+      "fn_by_source": {
+        "rett": 49,
+        "parkinson": 1
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 47,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "A.functional_domain_or_hotspot",
+      "family": "A",
+      "fn_by_source": {
+        "rett": 45,
+        "parkinson": 2
+      }
+    },
+    {
+      "TP": 46,
+      "FP": 13,
+      "FN": 44,
+      "precision": 0.7797,
+      "recall": 0.5111,
+      "F1": 0.6174,
+      "field_id": "A.variant_hgvs_c",
+      "family": "A",
+      "fn_by_source": {
+        "clinvar_fused": 25,
+        "rett": 17,
+        "parkinson": 2
+      }
+    },
+    {
+      "TP": 4,
+      "FP": 34,
+      "FN": 29,
+      "precision": 0.1053,
+      "recall": 0.1212,
+      "F1": 0.1127,
+      "field_id": "B.clinical_phenotypes",
+      "family": "B",
+      "fn_by_source": {
+        "rett": 15,
+        "parkinson": 14
+      }
+    },
+    {
+      "TP": 6,
+      "FP": 18,
+      "FN": 27,
+      "precision": 0.25,
+      "recall": 0.1818,
+      "F1": 0.2105,
+      "field_id": "C.de_novo_status",
+      "family": "C",
+      "fn_by_source": {
+        "rett": 27
+      }
+    },
+    {
+      "TP": 103,
+      "FP": 27,
+      "FN": 20,
+      "precision": 0.7923,
+      "recall": 0.8374,
+      "F1": 0.8142,
+      "field_id": "B.disease_diagnosis",
+      "family": "B",
+      "fn_by_source": {
+        "clinvar_fused": 18,
+        "rett": 2
+      }
+    },
+    {
+      "TP": 25,
+      "FP": 14,
+      "FN": 15,
+      "precision": 0.641,
+      "recall": 0.625,
+      "F1": 0.6329,
+      "field_id": "B.sex",
+      "family": "B",
+      "fn_by_source": {
+        "rett": 14,
+        "parkinson": 1
+      }
+    },
+    {
+      "TP": 4,
+      "FP": 31,
+      "FN": 13,
+      "precision": 0.1143,
+      "recall": 0.2353,
+      "F1": 0.1538,
+      "field_id": "B.age_of_onset",
+      "family": "B",
+      "fn_by_source": {
+        "rett": 12,
+        "parkinson": 1
+      }
+    },
+    {
+      "TP": 144,
+      "FP": 0,
+      "FN": 6,
+      "precision": 1.0,
+      "recall": 0.96,
+      "F1": 0.9796,
+      "field_id": "A.gene_symbol",
+      "family": "A",
+      "fn_by_source": {
+        "clinvar_fused": 2,
+        "parkinson": 2,
+        "clingen": 1,
+        "rett": 1
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "A.protein_effect",
+      "family": "A",
+      "fn_by_source": {
+        "parkinson": 5
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "B.case_count",
+      "family": "B",
+      "fn_by_source": {
+        "parkinson": 5
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "B.ancestry_or_population",
+      "family": "B",
+      "fn_by_source": {
+        "parkinson": 5
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "B.testing_method",
+      "family": "B",
+      "fn_by_source": {
+        "parkinson": 5
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "B.sequencing_method_quality",
+      "family": "B",
+      "fn_by_source": {
+        "parkinson": 5
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "D.healthy_carrier_observation",
+      "family": "D",
+      "fn_by_source": {
+        "parkinson": 5
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "G.study_design",
+      "family": "G",
+      "fn_by_source": {
+        "parkinson": 5
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "G.case_count",
+      "family": "G",
+      "fn_by_source": {
+        "parkinson": 5
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "G.control_count",
+      "family": "G",
+      "fn_by_source": {
+        "parkinson": 5
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "G.case_definition",
+      "family": "G",
+      "fn_by_source": {
+        "parkinson": 5
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "G.control_matching",
+      "family": "G",
+      "fn_by_source": {
+        "parkinson": 5
+      }
+    }
+  ],
+  "by_field_top_fp": [
+    {
+      "TP": 35,
+      "FP": 49,
+      "FN": 53,
+      "precision": 0.4167,
+      "recall": 0.3977,
+      "F1": 0.407,
+      "field_id": "B.mode_of_inheritance_reported",
+      "family": "B",
+      "fn_by_source": {
+        "clinvar_fused": 33,
+        "rett": 14,
+        "parkinson": 6
+      }
+    },
+    {
+      "TP": 4,
+      "FP": 34,
+      "FN": 29,
+      "precision": 0.1053,
+      "recall": 0.1212,
+      "F1": 0.1127,
+      "field_id": "B.clinical_phenotypes",
+      "family": "B",
+      "fn_by_source": {
+        "rett": 15,
+        "parkinson": 14
+      }
+    },
+    {
+      "TP": 4,
+      "FP": 31,
+      "FN": 13,
+      "precision": 0.1143,
+      "recall": 0.2353,
+      "F1": 0.1538,
+      "field_id": "B.age_of_onset",
+      "family": "B",
+      "fn_by_source": {
+        "rett": 12,
+        "parkinson": 1
+      }
+    },
+    {
+      "TP": 103,
+      "FP": 27,
+      "FN": 20,
+      "precision": 0.7923,
+      "recall": 0.8374,
+      "F1": 0.8142,
+      "field_id": "B.disease_diagnosis",
+      "family": "B",
+      "fn_by_source": {
+        "clinvar_fused": 18,
+        "rett": 2
+      }
+    },
+    {
+      "TP": 3,
+      "FP": 18,
+      "FN": 109,
+      "precision": 0.1429,
+      "recall": 0.0268,
+      "F1": 0.0451,
+      "field_id": "A.variant_hgvs_p",
+      "family": "A",
+      "fn_by_source": {
+        "clinvar_fused": 56,
+        "rett": 43,
+        "parkinson": 10
+      }
+    },
+    {
+      "TP": 31,
+      "FP": 18,
+      "FN": 92,
+      "precision": 0.6327,
+      "recall": 0.252,
+      "F1": 0.3605,
+      "field_id": "A.variant_type",
+      "family": "A",
+      "fn_by_source": {
+        "clinvar_fused": 45,
+        "rett": 33,
+        "parkinson": 14
+      }
+    },
+    {
+      "TP": 6,
+      "FP": 18,
+      "FN": 27,
+      "precision": 0.25,
+      "recall": 0.1818,
+      "F1": 0.2105,
+      "field_id": "C.de_novo_status",
+      "family": "C",
+      "fn_by_source": {
+        "rett": 27
+      }
+    },
+    {
+      "TP": 25,
+      "FP": 14,
+      "FN": 15,
+      "precision": 0.641,
+      "recall": 0.625,
+      "F1": 0.6329,
+      "field_id": "B.sex",
+      "family": "B",
+      "fn_by_source": {
+        "rett": 14,
+        "parkinson": 1
+      }
+    },
+    {
+      "TP": 46,
+      "FP": 13,
+      "FN": 44,
+      "precision": 0.7797,
+      "recall": 0.5111,
+      "F1": 0.6174,
+      "field_id": "A.variant_hgvs_c",
+      "family": "A",
+      "fn_by_source": {
+        "clinvar_fused": 25,
+        "rett": 17,
+        "parkinson": 2
+      }
+    },
+    {
+      "TP": 33,
+      "FP": 8,
+      "FN": 109,
+      "precision": 0.8049,
+      "recall": 0.2324,
+      "F1": 0.3607,
+      "field_id": "A.gene_disease_relationship",
+      "family": "A",
+      "fn_by_source": {
+        "clinvar_fused": 52,
+        "rett": 35,
+        "parkinson": 15,
+        "clingen": 7
+      }
+    },
+    {
+      "TP": 12,
+      "FP": 4,
+      "FN": 58,
+      "precision": 0.75,
+      "recall": 0.1714,
+      "F1": 0.2791,
+      "field_id": "J.clinvar_assertion",
+      "family": "J",
+      "fn_by_source": {
+        "clinvar_fused": 57,
+        "parkinson": 1
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 1,
+      "FN": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "C.inheritance_source",
+      "family": "C",
+      "fn_by_source": {
+        "parkinson": 2
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 50,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "B.hpo_terms",
+      "family": "B",
+      "fn_by_source": {
+        "rett": 49,
+        "parkinson": 1
+      }
+    },
+    {
+      "TP": 0,
+      "FP": 0,
+      "FN": 47,
+      "precision": 0.0,
+      "recall": 0.0,
+      "F1": 0.0,
+      "field_id": "A.functional_domain_or_hotspot",
+      "family": "A",
+      "fn_by_source": {
+        "rett": 45,
+        "parkinson": 2
+      }
+    },
+    {
+      "TP": 144,
+      "FP": 0,
+      "FN": 6,
+      "precision": 1.0,
+      "recall": 0.96,
+      "F1": 0.9796,
+      "field_id": "A.gene_symbol",
+      "family": "A",
+      "fn_by_source": {
+        "clinvar_fused": 2,
+        "parkinson": 2,
+        "clingen": 1,
+        "rett": 1
+      }
+    }
+  ],
+  "by_source": [
+    {
+      "TP": 15,
+      "FP": 1,
+      "FN": 8,
+      "precision": 0.9375,
+      "recall": 0.6522,
+      "F1": 0.7692,
+      "source_dataset": "clingen"
+    },
+    {
+      "TP": 200,
+      "FP": 64,
+      "FN": 288,
+      "precision": 0.7576,
+      "recall": 0.4098,
+      "F1": 0.5319,
+      "source_dataset": "clinvar_fused"
+    },
+    {
+      "TP": 44,
+      "FP": 31,
+      "FN": 279,
+      "precision": 0.5867,
+      "recall": 0.1362,
+      "F1": 0.2211,
+      "source_dataset": "parkinson"
+    },
+    {
+      "TP": 187,
+      "FP": 139,
+      "FN": 307,
+      "precision": 0.5736,
+      "recall": 0.3785,
+      "F1": 0.4561,
+      "source_dataset": "rett"
+    }
+  ]
+}

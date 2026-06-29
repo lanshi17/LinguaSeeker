@@ -1,285 +1,175 @@
-# LinguaSeeker: Citation-Valid Cross-Lingual Biomedical Evidence Reconciliation
+# LinguaSeeker: Source-Grounded Cross-Lingual Evidence Extraction for Clinical Genetics Literature
 
 **Status:** in-progress
 **Created:** 2026-06-15
-**Completed:** —
-**PR:** —
+**Completed:** --
+**PR:** --
 
 ## Abstract
 
-Cross-lingual biomedical evidence extraction for clinical genetics requires both accurate structured fields and citations that can be audited against source literature. Direct LLM extraction can produce plausible values, but it does not guarantee that accepted evidence is grounded in recoverable source spans. We present LinguaSeeker, a citation-valid-by-construction evidence reconciliation framework for ACMG/ClinGen-style gene-disease evidence extraction. The method converts original-track and translated-track extraction candidates into a typed evidence graph, validates source spans, adds target-safe gene/disease context, and reconciles conflicts using verifier support, target specificity, cross-track agreement, and contradiction-aware scoring. We evaluate on a frozen N=30 ClinGen/ACMG-style benchmark against matched direct LLM, translate-then-extract, original-only, RAG-LLM, single-agent CoT, same-release-window citation-required frontier prompt-only, and grounded hard-rule baselines. Context-verifier reconciliation achieves P=0.9205, R=0.9759, and F1=0.9474, significantly improving over the grounded hard-rule baseline (F1=0.8820; delta=+0.0654; 95% CI=[0.0302, 0.1060]; p=0.0039). It also exceeds the strongest same-window citation-required prompt-only frontier baseline, GPT-5, on raw F1 (0.9474 vs. 0.9222) and TraceableF1 (0.9474 vs. 0.9109). Accepted citations are recoverable from canonical source spans in the benchmark (CVR=1.0, HCR=0.0). Error analysis shows that the hardest remaining cases are relationship labels whose ClinGen validity semantics are not fully visible in article-local evidence.
+Clinical genetics evidence curation requires structured facts that can be traced back to the source literature. Large language models can extract plausible values from biomedical articles, but prompt-only extraction does not by itself provide a reliable boundary between source-supported evidence, inferred values, and unsupported claims. We present LinguaSeeker, a cross-lingual literature evidence pipeline for expert-review prefill in clinical genetics. The default broad workflow uses a high-recall primary extraction track followed by a review track that validates, rejects, or corrects candidate evidence before normalization, source grounding, entity standardization, and read-model generation. We evaluate the production workflow on a unified 150-entry dataset spanning ClinGen, ClinVar-Fused, Rett syndrome, and Parkinson literature. All 150 entries completed successfully. Over source-supported fields eligible for single-document extraction, LinguaSeeker achieved precision 65.5%, recall 33.6%, and F1 44.4% across 1,563 field-level comparisons. We evaluate only source-supported fields eligible for single-document extraction; fields requiring cross-paper synthesis, external databases, or expert consensus are excluded from the claimed extraction scope. Performance varied by source corpus, with the strongest result on ClinGen entries (F1 76.9%) and the weakest result on Parkinson literature (F1 22.1%). The results show that source-grounded LLM pipelines can provide useful structured prefill for expert curation, while recall remains limited when expected fields are implicit, absent from the article, or dependent on external curation.
 
 ## 1. Introduction
 
-Clinical genetics evidence curation depends on structured, auditable facts rather than free-form summaries. A curator needs to know not only that an article mentions a gene and disease, but also which relationship is supported, where the evidence appears, and whether the cited passage can be inspected later. This requirement becomes more difficult in cross-lingual settings because evidence can be distorted by translation, lost during document conversion, or over-generalized by a language model that has no hard obligation to cite recoverable source spans.
+Clinical genetics evidence curation depends on auditable structured facts rather than free-form summaries. A curator needs to know not only that an article mentions a gene, variant, disease, inheritance mode, or functional assay, but also whether the extracted value is supported by the article and where the supporting evidence appears. This requirement is harder in cross-lingual settings because document conversion, translation, and model generation can each introduce drift.
 
-Large language models provide a convenient interface for biomedical information extraction, but prompt-only systems often treat citations as generated text. This makes it difficult to distinguish a correct value supported by the source, a plausible value unsupported by the article, and a correct-looking citation that cannot be mapped back to the canonical document. For ACMG/ClinGen-style gene-disease evidence extraction, this is a methodological problem rather than only a product problem: the extraction method must make source validity and conflict resolution explicit enough to be measured.
+Large language models provide a convenient interface for biomedical information extraction, but prompt-only extraction often treats citations and evidence snippets as generated text. This creates a practical problem for clinical genetics workflows: a generated field value may be correct, plausible but unsupported, or supported only by external knowledge not present in the article. A useful production pipeline must therefore make the extraction boundary explicit and should be evaluated only on fields that are supportable from the single source document.
 
-We propose LinguaSeeker, a citation-valid-by-construction cross-lingual biomedical evidence reconciliation framework. The method extracts original-track and translated-track candidates, converts them into a typed evidence graph, verifies source spans, applies target-safe gene/disease context, and reconciles field conflicts with verifier support, target specificity, agreement, and contradiction penalties. The contribution is not the surrounding multi-agent software; it is the evidence-graph decision layer that turns citation validity into an acceptance invariant.
+We present LinguaSeeker, a production-oriented cross-lingual evidence extraction pipeline for clinical genetics literature. The default broad workflow uses a primary extraction track to maximize candidate recall and a review track to validate the candidates before downstream normalization and grounding. The system is designed for structured prefill and evidence triage, not autonomous clinical classification.
 
-This paper makes five contributions:
+This paper makes three contributions:
 
-1. A target-safe dual-track evidence graph for ACMG/ClinGen-style gene-disease evidence extraction.
-2. A context-verifier reconciliation method that combines source grounding, target specificity, cross-track agreement, and contradiction-aware scoring.
-3. Traceability metrics that separate citation validity, hallucinated citation rate, span boundary quality, semantic support, and TraceableF1.
-4. A frozen N=30 evaluation against matched LLM baselines and grounded internal ablations, with paired statistics and explicit limitations.
-5. A citation-required prompt-only frontier model sweep using a same-release-window cohort and a single OpenAI-compatible provider gateway, isolating method value from prompt engineering alone.
-6. A separate Fused-75 source-visible stress test that measures source-supported field recovery on a larger adjudicated ClinVar-fused slice without replacing the N=30 paired comparison.
+1. A source-grounded primary extraction plus review-validation architecture for clinical genetics literature.
+2. A unified 150-entry benchmark spanning ClinGen, ClinVar-Fused, Rett syndrome, and Parkinson sources, evaluated under a single-document source-support boundary.
+3. An end-to-end production evaluation that includes extraction, entity standardization, read-model generation, and a database seed package for reproducible inspection.
 
 ## 2. Related Work
 
-### 2.1 Biomedical Information Extraction and Entity Normalization
+Biomedical information extraction systems have long addressed named entity recognition, relation extraction, and entity normalization for genes, diseases, variants, and clinical findings. Recent reviews show that clinical LLM evaluation still splits into knowledge-based benchmarks and practice-oriented tasks, and the resulting performance gap remains substantial.
 
-Biomedical NLP has produced mature pipelines for named entity recognition, relation extraction, and entity normalization. PubTator 3.0 [Wei et al., 2024] annotates genes, diseases, chemicals, and variants across 36M PubMed abstracts and 6M PMC full-text articles using transformer-based models. BERN2 [Sung et al., 2022] combines BioBERT-based NER with dictionary normalization for multi-type entity recognition. LitVar 2.0 [Allot et al., 2023] links variant mentions to dbSNP identifiers across naming conventions. tmVar 3.0 [Wei et al., 2022] provides the foundational variant NER component used by both PubTator and LitVar. These tools operate at the entity level: they identify and normalize mentions but do not extract structured evidence fields against a domain-specific catalog.
+Cross-lingual biomedical information extraction is commonly handled through translate-then-extract pipelines or multilingual prompting. These approaches can improve coverage, but they also introduce semantic drift and make it harder to determine whether a final structured value came from the original source, the translation, or an arbitration step.
 
-Relation extraction in the biomedical domain has advanced through both encoder-based and generative approaches. BioRED [Luo et al., 2022] established a multi-type benchmark covering gene-disease, chemical-disease, and chemical-gene relations. REBEL [Cabot and Navigli, 2021] reformulated RE as seq2seq generation. More recent work applies instruction-tuned LLMs: LEAP [Zhou et al., 2024] studies adaptive prompting for biomedical RE, and REaMA [Zhang et al., 2025] builds RE-specialized LLMs through instruction tuning. These systems extract binary relations from individual sentences or documents; they do not reconcile evidence across parallel extraction tracks or enforce citation validity as an acceptance condition.
+LLM and RAG systems can retrieve documents and produce fluent answers with citations, but the citation itself may still be generated rather than programmatically validated. This is especially important in clinical genetics, where gene-disease relationships, inheritance patterns, variant assertions, and functional evidence may require careful separation between article-local evidence and external curation labels.
 
-Entity normalization benefits from multilingual knowledge resources. UMLS [Bodenreider, 2004] integrates 200+ biomedical vocabularies with concept-level linking across 25+ languages. SapBERT [Liu et al., 2021] aligns entity representations using UMLS synonym pairs. CODER [Yuan et al., 2022] injects UMLS knowledge graph structure into cross-lingual term embeddings via contrastive learning. xMEN [Borchert et al., 2025] provides a modular toolkit for cross-lingual medical entity normalization with weakly supervised cross-encoders. These normalization systems bridge languages at the concept level but do not address field-level evidence extraction or multi-track reconciliation.
+Table 1 summarizes how LinguaSeeker differs from representative biomedical literature-mining and variant-curation systems. The table is a task-positioning comparison rather than a shared-metric benchmark: systems such as PubTator 3.0 and LitVar 2.0 emphasize entity annotation, semantic search, and variant-centric retrieval, while LinguaSeeker targets source-grounded structured field prefill for expert review.
 
-### 2.2 Cross-Lingual and Translation-Based Information Extraction
+**Table 1. Functional positioning relative to representative biomedical literature-mining systems.**
 
-Cross-lingual biomedical NLP is commonly approached through three paradigms: translate-then-extract, cross-lingual transfer via multilingual models, and bilingual joint training.
-
-Translate-then-extract pipelines translate source-language text to English and apply English NLP tools. TAXN [Neuraz et al., 2024] implements this as a four-stage pipeline (translate, align, extract, normalize) in the open-source medkit library, enriching phenotype dictionaries from French clinical notes. Seinen et al. [2024] validate MedCAT on Dutch clinical text created by translating annotated English corpora via Google Translate and GPT-4. These pipelines inherit translation errors and lose source-language grounding: the curator cannot determine whether an extracted value originated in the source text or was introduced by the translator.
-
-Cross-lingual transfer via multilingual transformers avoids explicit translation. XLM-RoBERTa [Conneau et al., 2020] supports 100 languages and serves as the dominant backbone for zero-shot cross-lingual biomedical NER. MEBION [Gupta et al., 2024], published in Nature Communications, provides the first large-scale multilingual benchmark for biomedical IE across six languages (Chinese, English, French, German, Japanese, Russian), demonstrating that transfer performance degrades significantly for typologically distant languages. XBERA [Du et al., 2024] addresses cross-lingual biomedical RE through multilingual knowledge alignment at NAACL 2024. The BioCrossing shared task at ACL 2024 evaluates cross-lingual biomedical NER and RE across English, Chinese, Spanish, German, French, and Japanese. These transfer approaches process text in a single language model pass; they do not maintain separate extraction tracks or reconcile predictions across languages.
-
-Bilingual joint training combines data from both languages. Taiyi [Luo et al., 2024] fine-tunes an LLM on 140 bilingual Chinese-English biomedical datasets covering NER, RE, QA, and classification. Lv et al. [2025] propose a unified BioNER framework with bilingual joint fine-tuning and contrastive entity selection. KBioXLM [Geng et al., 2023] anchors XLM-R with three-granularity biomedical knowledge alignment for cross-lingual zero-shot transfer. These models learn shared representations across languages but produce a single extraction output without explicit cross-language reconciliation.
-
-TransFusion [Chen et al., 2025], published at ACL 2025, is the closest architectural precedent to our dual-track design. TransFusion fine-tunes models to use English translations of low-resource language data and fuses annotations from both tracks, achieving +5 to +14 F1 improvement on low-resource NER across 50 languages. However, TransFusion operates on generic IE tasks (NER, RE, event extraction) with annotation-level fusion; it does not address domain-specific evidence catalogs, citation validity, or the multi-dimensional reconciliation required for clinical genetics evidence extraction.
-
-LinguaSeeker differs from these approaches in three ways. First, it maintains independent original and translated extraction tracks that produce candidate evidence items, not fused annotations. Second, reconciliation is performed by a deterministic scoring function over source grounding, target specificity, cross-track agreement, verifier support, and contradiction penalties, not by annotation merging or model ensembling. Third, accepted evidence requires recoverable source spans, making citation validity a deterministic acceptance condition rather than a post-hoc evaluation metric.
-
-### 2.3 LLM-Based Extraction and Citation Grounding
-
-LLMs have been applied to biomedical extraction with varying degrees of structural control. GPT-4 achieves moderate concordance (60-80%) with expert curators for ACMG criteria assignment [multiple groups, 2023-2024], but exhibits citation hallucination and nondeterminism that limit autonomous use [Aronson et al., 2023]. AutoPM3 [Li et al., 2025] automates ACMG/AMP PM3 evidence extraction using a dual-channel architecture: RAG for text comprehension and Text2SQL for structured table extraction, achieving 86.1% accuracy on a 1,027-pair benchmark. AutoPM3 demonstrates that domain-specific dual-channel extraction outperforms single-pipeline approaches, but it operates on a single ACMG criterion without cross-lingual capability or citation validity enforcement.
-
-Multi-agent LLM systems introduce collaborative extraction with reconciliation. KARMA [Lu et al., 2025] deploys nine collaborative agents for knowledge graph enrichment from PubMed articles with iterative verification. ChronoMedKG [Ahmed et al., 2026] uses multi-model consensus filtering to construct temporally grounded knowledge graphs from PubMed and PMC. AcmGENTIC [Saadat and Fellay, 2026] builds an end-to-end pipeline for variant-centric functional evidence mining using LitVar2 retrieval and multimodal PDF extraction. These systems demonstrate that multi-agent architectures improve extraction quality over single-model approaches, but their reconciliation mechanisms rely on LLM consensus or voting rather than deterministic scoring, and none enforce citation validity as an acceptance condition.
-
-RAG-based systems ground LLM outputs in retrieved documents. SyRACT [Zhao et al., 2025] combines RAG with chain-of-thought reasoning for zero-shot biomedical document-level RE. MedFactCheck uses LangGraph-orchestrated fan-out/fan-in with hybrid retrieval (BM25 + dense search + cross-encoder reranking) for biomedical claim verification. MIKA [2026] introduces dual-channel claim verification where a deterministic source channel independently validates LLM-generated claims, reducing delivered hallucination from 10.0% to 0.29%. These systems improve factual grounding but do not address cross-lingual extraction or domain-specific evidence catalogs.
-
-Systematic review automation provides dual-extraction patterns at the screening level. ASReview [van de Schoot et al., 2021] supports crowd screening with active learning. Rayyan [Ouzzani et al., 2016] implements dual independent screening with conflict resolution. Khan et al. [2025] demonstrate dual-LLM collaborative data extraction mimicking the Cochrane two-reviewer workflow. These tools operate at the screening or data-extraction level for systematic reviews; they do not perform structured field-level extraction against a domain-specific evidence catalog.
-
-LinguaSeeker differs from LLM-based extraction systems by making citation validity a deterministic acceptance condition. Every accepted evidence item must include a source span recoverable from canonical document text. The reconciliation function is deterministic: it does not depend on LLM voting, debate, or consensus. This produces CVR=1.0 and HCR=0.0 on the frozen benchmark, a property that prompt-only and multi-agent debate systems do not guarantee.
-
-### 2.4 Clinical Genetics and ACMG/ClinGen Evidence Curation
-
-Automated ACMG/AMP variant classification tools operate downstream of evidence extraction. InterVar [Li, 2017] automates 18 of 28 ACMG criteria using rule-based logic over structured database inputs. VarSome [Kopanos et al., 2018] aggregates evidence from 30+ databases for automated classification. BIAS-2015 [Eisenhart et al., 2025] achieves 73.99% pathogenic sensitivity at 1,327 variants/second. AutoPVS1 [Peng et al., 2019] automates the PVS1 criterion for loss-of-function variants. These tools consume structured evidence as input; they do not produce it from literature.
-
-ClinGen [Rehm et al., 2015] establishes the gold-standard curation framework through expert panels with dual independent review and arbitration. The ClinGen Gene Curation Interface supports gene-disease validity assessment with structured evidence frameworks. CIViC [Griffith et al., 2017] provides community-driven curation for somatic cancer variants with structured evidence levels. These platforms rely on manual literature review; automation is limited to evidence pre-population from databases.
-
-VETA [Li et al., 2026] is the first system to systematically extract ACMG evidence types from unstructured variant summaries at scale, constructing 44,522 keyword-description pairs from 18,678 ClinVar summaries using a two-stage BioBERT pipeline. VETA operates on ClinVar summaries (already semi-structured text), not on full-text literature. AMELIE [Birgmeier et al., 2020] ranks candidate genes by phenotype relevance using NLP over PubMed abstracts. Neither system provides cross-lingual extraction or citation-valid evidence.
-
-The Cochrane evidence synthesis community has established dual independent review as a methodological standard [Higgins et al., 2019]. Polyglot Search Translator [Scott et al., 2019] translates search strategies across languages for multilingual systematic reviews. Egger et al. [1997] demonstrated that language-restricted meta-analyses introduce bias, motivating multilingual evidence inclusion. These methodological principles inform our dual-track design, but existing automation tools implement dual review at the screening level, not at the structured evidence extraction level.
-
-LinguaSeeker addresses the gap between literature-level evidence extraction and structured ACMG/ClinGen field output. Unlike InterVar or VarSome, it extracts evidence from unstructured full-text literature. Unlike PubTator or LitVar, it produces structured fields against a 134-field ACMG/ClinGen evidence catalog rather than entity-level annotations. Unlike VETA, it operates on full-text articles rather than pre-structured summaries. Unlike translate-then-extract pipelines, it maintains source-language grounding through dual-track reconciliation. And unlike prompt-only LLM systems, it enforces citation validity as a deterministic acceptance condition with CVR=1.0 and HCR=0.0 on the frozen benchmark.
+| system | primary task | full text | cross-lingual | citation validation | normalization | output schema |
+| --- | --- | --- | --- | --- | --- | --- |
+| PubTator 3.0 | entity/relation annotation | PMC subset | no | no | gene/disease/variant | entity-level |
+| LitVar 2.0 | variant literature retrieval | abstracts/full text/supp. | no | no | dbSNP-oriented | variant-centric search |
+| VETA | ACMG evidence annotation | summaries/comments | no | no | limited | evidence labels |
+| AutoPM3 | PM3 evidence extraction | matched literature | no | partial retrieval support | variant-focused | PM3 criterion |
+| AcmGENTIC | functional evidence mining | full text | no | report-level support | variant-focused | evidence report |
+| MedSeeker | configurable biomedical NER | full text | no | no | ICD-10/HG38 | user-configured entities |
+| LinguaSeeker | structured evidence prefill | full text | yes | yes | HGNC/MONDO-oriented | ACMG/ClinGen fields |
 
 ## 3. Task And Dataset
 
-The task is to extract structured evidence fields from biomedical literature for a target gene-disease context. The current frozen benchmark emphasizes three fields: `A.gene_symbol`, `B.disease_diagnosis`, and `A.gene_disease_relationship`. Each accepted evidence item must include a source span that can be audited against canonical document text.
+The task is to extract structured evidence items from biomedical literature for clinical genetics curation. Each evidence item contains a field identifier, value, normalized value when applicable, document metadata, and source support. The evaluation is intentionally limited to source-supported fields eligible for single-document extraction. We do not evaluate fields that require cross-paper synthesis, external databases, expert consensus, or final ACMG/ClinGen classification.
 
-We evaluate on a frozen ClinGen/ACMG-style benchmark with 30 entries. The benchmark package has 30/30 Phase 2 artifacts covered and no remaining pipeline gaps. Runtime inputs are restricted to source article text and metadata, runtime extraction artifacts, target-safe ontology/context metadata, and programmatically verified source spans. The method does not use expected fields, ClinGen classification labels, evaluator matches, or gold relationship labels at runtime.
+The unified benchmark contains 150 entries assembled from four source corpora: ClinGen (n=8), ClinVar-Fused (n=73), Rett syndrome (n=51), and Parkinson literature (n=18). The dataset includes source documents, metadata, expected field values, provenance, and per-entry source-dataset labels. The final evaluation completed all 150 entries.
 
-Table 1 summarizes the frozen dataset and reproducibility anchor.
+**Table 2. Unified benchmark composition.**
 
-| total_entries | covered_count | needs_pipeline_count | frozen_entry_count | git_commit | ablation_report |
-| --- | --- | --- | --- | --- | --- |
-| 30 | 30 | 0 | 30 | 7d13b1a8206476cd8c0e750684f53d6dc80b5c55 | `benchmark/layer3/reports/reconcile_ablation_20260615_010725.json` |
-
-We additionally maintain a Fused-75 optimization stress set with source-visible adjudication on 20 entries split into 10 dev entries and 10 frozen test entries. This stress set is not used for the paired N=30 headline comparison. Its role is to test whether pipeline changes improve source-supported field recovery under stricter quote visibility constraints and a held-out checkpoint discipline.
+| source dataset | entries | share |
+| --- | ---: | ---: |
+| ClinGen | 8 | 5.3% |
+| ClinVar-Fused | 73 | 48.7% |
+| Parkinson | 18 | 12.0% |
+| Rett | 51 | 34.0% |
+| Overall | 150 | 100.0% |
 
 ## 4. Method
 
-### 4.1 Dual-Track Candidate Generation
+### 4.1 Primary Extraction Track
 
-LinguaSeeker first extracts candidate evidence from two tracks: the source/original track and a translated track. The two tracks are not treated as independent final answers. Instead, their outputs become candidates in a shared evidence graph. This design allows the method to compare semantically similar values, identify disagreements, and preserve the source span supporting each candidate.
+The primary track performs broad evidence extraction over the source document and translated content. It is tuned for recall: the model is asked to return candidate evidence across clinical genetics fields such as gene, disease, inheritance, case-level observations, variant descriptions, functional assays, contradiction evidence, and public assertion fields when they are visible in the article. Each candidate must include a field identifier, extracted value, and source quote or span evidence.
 
-### 4.2 Evidence Graph
+### 4.2 Review Track
 
-The evidence graph contains target gene nodes, target disease nodes, evidence field nodes, candidate value nodes, source span nodes, track nodes, and document block nodes. Edges connect candidates to fields, tracks, source spans, target-gene support, target-disease support, equivalent values, and contradictory values. This graph is the formal object used for reconciliation.
+The review track does not introduce new fields. Instead, it audits primary-track candidates and either approves, rejects, or corrects them. This separation keeps the first track permissive while making the second track responsible for precision control. In practice, this design performed better than a monolithic comprehensive prompt: targeted prompt additions improved recall, while overly verbose rewrites caused review over-rejection.
 
-Each candidate contains:
+### 4.3 Normalization and Grounding
 
-```text
-(entry_id, field_id, raw_value, normalized_value, track, block_id, span_id,
- source_score, model_confidence, target_gene_match, target_disease_match,
- verifier_support, contradiction_penalty, source_validity)
-```
+Approved candidates pass through value normalization, target guarding, source grounding, and chain assembly. Normalization maps field values into canonical forms when possible, such as inheritance labels or variant-type categories. Source grounding attempts to map quoted evidence back to canonical document text and page/block locations. When exact layout spans are unavailable but the quoted text is present, the pipeline records corrected or fallback source locations rather than silently dropping the item.
 
-### 4.3 Citation-Valid Acceptance
+### 4.4 Entity Standardization and Read Models
 
-A candidate can only be accepted when at least one supporting source span is recoverable from canonical source text. The method prefers span id, page, and offset validation where available, and falls back to normalized source text matching when necessary. LLM output is not allowed to invent a citation string; accepted citations are emitted from verified span metadata.
+After evidence extraction, the pipeline standardizes gene, disease, variant, phenotype, and related biomedical entities using the configured terminology and embedding stack. The final run used BAAI/bge-m3 embeddings for Phase 3. Canonical evidence items, literature profiles, entity bindings, and frontend search records are generated as read models for inspection and expert review.
 
-### 4.4 Target-Safe Context
-
-Target-safe context adds known gene and disease aliases, ontology metadata, and source-observed disease aliases when they are present in the article and compatible with the target. This improves disease boundary selection without using benchmark answer keys or ClinGen classification labels. The context layer is intentionally conservative: article-local symptom terms or broad unrelated ontology terms are not promoted to target aliases.
-
-### 4.5 Context-Verifier Reconciliation
-
-For each field and normalized candidate value, LinguaSeeker computes a reconciliation score:
-
-```text
-score = w_source * source_score
-      + w_agree * cross_track_agreement
-      + w_support * verifier_support
-      + w_target * target_specificity
-      + w_conf * extractor_confidence
-      + w_status * status_score
-      - w_contra * contradiction_penalty
-```
-
-The accepted field value is the best-scoring value that satisfies source validity, verifier support, target specificity, and contradiction checks. If source support is weak or the best value is not sufficiently separated from alternatives, the method can abstain or mark the conflict for review rather than accepting an unsupported value.
+**Figure 1. LinguaSeeker broad workflow.** Source document and machine-translation branches feed the primary broad extraction track. A review track validates or corrects candidates before normalization, source grounding, entity standardization with the BAAI/bge-m3 embedding index, and expert-facing evidence database/read-model generation. The TeX figure source is `docs/active/2026-06-15-bibm-main-paper-tex/figures/method_figure.tex`.
 
 ## 5. Evaluation Design
 
-We compare the proposed `context_verifier_reconcile` method with five matched extraction baselines and one grounded internal baseline:
+We report two experiments. First, a fixed random 5-entry pilot compares three workflow variants: a catalog workflow, citation-required prompt-only extraction, and the broad workflow with review validation. This experiment was used to select the production default. Second, we evaluate the default broad workflow on the full 150-entry unified dataset.
 
-- B0: Direct LLM extraction.
-- B1: Translate then extract.
-- B2: Original-only extraction.
-- B3: Keyword RAG + LLM.
-- B4: Single-agent CoT.
-- B5: Grounded hard-rule internal baseline.
-- B6-B10: Same-release-window citation-required prompt-only frontier sweep.
+The primary experiment evaluates the default broad workflow on the unified 150-entry benchmark. The evaluation unit is a source-supported field value eligible for single-document extraction. Fields requiring cross-paper synthesis, external databases, or expert consensus are outside the scoring boundary. This framing evaluates the pipeline as an expert-review prefill system rather than an autonomous ACMG/ClinGen classification system.
 
-All B0-B4 baseline reports are matched to the same 30 benchmark entries as the system. We report precision, recall, F1, field-level F1, paired bootstrap confidence intervals, and paired sign-test p-values. We also report traceability metrics:
-
-- Citation Validity Rate (CVR): accepted cited spans recoverable from canonical source text.
-- Hallucinated Citation Rate (HCR): accepted citations not mappable to canonical source text.
-- Span Boundary F1: token overlap between predicted and reference/support span text.
-- Evidence Support Rate (ESR): fraction of accepted evidence semantically supported by the source according to the verifier/evaluation audit.
-- TraceableF1: extraction F1 constrained by citation validity.
-- Cross-Lingual Consistency (CLC): agreement between original and translated tracks before final arbitration.
-
-B0-B4 provide matched extraction baselines but do not expose comparable citation surfaces in the current reports. B6-B10 use the same citation-required JSON prompt, the same input window, the same integrated OpenAI-compatible provider gateway, and model aliases from a comparable release window: GPT-5 (2025-08-07), DeepSeek V3.1 (2025-08-21), Qwen3-Max (2025-09-23), Claude Sonnet 4.5 (2025-09-29), and GLM-4.6 (2025-09-30). Therefore, B6-B10 can be compared on CVR/HCR/TraceableF1, while B0-B4 are retained for the established extraction-quality ladder.
+For the full evaluation, every entry is submitted through the production pipeline with forced re-extraction rather than cached results. The run executes literature ingestion, cross-lingual evidence extraction, entity standardization, and read-model generation. Evaluation is field-level: true positives are extracted values matching the unified gold field value, false positives are extracted wrong values, and false negatives are expected source-supported values not extracted. Results are stratified by source dataset and reported by field family.
 
 ## 6. Results
 
-### 6.1 Main Comparison
+### 6.1 Pilot Method Selection
 
-Table 2 shows the main matched comparison. The proposed method achieves F1=0.9474 on the frozen N=30 benchmark. It significantly improves over the grounded hard-rule internal baseline, and it remains competitive with the strongest matched LLM baseline.
+Table 3 shows the fixed random 5-entry pilot used during method selection. The broad workflow with review validation improved recall and F1 over both the catalog workflow and citation-required prompt-only extraction while keeping precision acceptable. This pilot was used only for workflow selection and is not reported as a statistical superiority test; the 150-entry evaluation below serves as the primary production benchmark.
 
-| method | role | total_entries | precision | recall | f1 | delta_f1_vs_grounded_hard_rule | sign_test_p | main_paper_ready |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| B0 | baseline | 30 | 0.9398 | 0.9176 | 0.9286 |  |  |  |
-| B1 | baseline | 30 | 0.9136 | 0.8916 | 0.9024 |  |  |  |
-| B2 | baseline | 30 | 0.9125 | 0.8795 | 0.8957 |  |  |  |
-| B3 | baseline | 30 | 0.9367 | 0.8706 | 0.9024 |  |  |  |
-| B4 | baseline | 30 | 0.9277 | 0.9167 | 0.9222 |  |  |  |
-| context_verifier_reconcile | ours | 30 | 0.9205 | 0.9759 | 0.9474 | 0.0654 | 0.0039 | True |
+**Table 3. Fixed 5-entry pilot comparison.**
 
-The paired statistics against `grounded_hard_rule` show delta F1=+0.0654, 95% CI=[0.0302, 0.1060], and sign-test p=0.0039. The candidate exceeds the strongest matched LLM baseline B0 by +0.0188 F1, but this does not meet the pre-declared +0.03 strong-superiority threshold. We therefore frame the result as traceability-centered competitive extraction with significant improvement over the grounded internal baseline, not as broad superiority over all LLM baselines.
+| method | precision | recall | F1 |
+| --- | ---: | ---: | ---: |
+| catalog workflow | 0.727 | 0.258 | 0.381 |
+| citation-required prompt-only extraction | 1.000 | 0.324 | 0.489 |
+| broad workflow with review validation | 0.875 | 0.438 | 0.583 |
 
-### 6.2 Ablation
+### 6.2 Unified 150-Entry Evaluation
 
-Table 3 shows that context-verifier reconciliation provides the strongest F1 among the internal variants.
+Table 4 reports the final unified evaluation. All 150 entries completed successfully. Across 1,563 field-level comparisons, the pipeline achieved precision 0.655, recall 0.336, and F1 0.444, with 446 true positives, 235 false positives, and 882 false negatives.
 
-| strategy | total_entries | precision | recall | f1 |
-| --- | --- | --- | --- | --- |
-| dual_union | 30 | 0.7935 | 0.9733 | 0.8743 |
-| grounded_hard_rule | 30 | 0.8068 | 0.9726 | 0.8820 |
-| source_grounded_reconcile | 30 | 0.8182 | 0.9730 | 0.8889 |
-| context_verifier_reconcile | 30 | 0.9205 | 0.9759 | 0.9474 |
+**Table 4. Unified 150-entry broad business-pipeline evaluation by source dataset. Metrics are computed over source-supported fields eligible for single-document extraction.**
 
-The field-level results show that gene symbol extraction is strongest (F1=0.9831), disease diagnosis is also strong (F1=0.9655), and gene-disease relationship remains the hardest field (F1=0.8889).
+| dataset | entries | TP | FP | FN | precision | recall | F1 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| ClinGen | 8 | 15 | 1 | 8 | 0.938 | 0.652 | 0.769 |
+| ClinVar-Fused | 73 | 200 | 64 | 288 | 0.758 | 0.410 | 0.532 |
+| Parkinson | 18 | 44 | 31 | 279 | 0.587 | 0.136 | 0.221 |
+| Rett | 51 | 187 | 139 | 307 | 0.574 | 0.379 | 0.456 |
+| Overall | 150 | 446 | 235 | 882 | 0.655 | 0.336 | 0.444 |
 
-### 6.3 Traceability
+Performance varied substantially by source corpus. ClinGen entries achieved the highest F1 (0.769), consistent with more explicit gene-disease evidence and curated source selection. ClinVar-Fused, the largest subset, achieved F1 0.532 with higher precision than recall. Rett achieved F1 0.456, also showing a recall bottleneck. Parkinson literature was most difficult (F1 0.221), reflecting multi-gene association studies where expected values are often implicit, distributed across long discussions, or not expressed as article-local evidence.
 
-Table 4 reports traceability metrics for the candidate.
+### 6.3 Error Analysis by Field Family
 
-| strategy_or_baseline_id | citation_validity_rate | hallucinated_citation_rate | span_boundary_f1 | evidence_support_rate | traceable_f1 | cross_lingual_consistency |
-| --- | --- | --- | --- | --- | --- | --- |
-| context_verifier_reconcile | 1.0 | 0.0 | 0.7467 | 0.9205 | 0.9474 | 0.194 |
+Table 5 breaks down errors by ACMG/ClinGen field family. The largest false-negative source is the gene/variant family (A, 432 FN), driven by fields such as `variant_hgvs_p` (109 FN), `gene_disease_relationship` (109 FN), and `variant_type` (92 FN). These fields often require external database normalization or implicit domain knowledge not visible in the article. The disease/phenotype family (B) has the highest false-positive count (155 FP), primarily from synonym and normalization mismatches in `mode_of_inheritance_reported` (49 FP) and `clinical_phenotypes` (34 FP). Public assertion fields (J, e.g. `clinvar_assertion`) show 64 FN with only 12 TP, confirming that ClinVar assertions are typically absent from article text. Families C-I are dominated by false negatives with zero or near-zero true positives, consistent with fields that depend on external curation databases, cross-paper synthesis, or expert consensus rather than single-document extraction.
 
-The candidate has CVR=1.0 and HCR=0.0 over 88 accepted citations in the frozen benchmark. This supports the citation-valid-by-construction claim for accepted evidence in this evaluation. It does not imply semantic perfection: ESR is 0.9205, and the remaining errors are analyzed separately.
+**Table 5. Error breakdown by field family. Families with zero TP and fewer than 5 expected fields are omitted.**
 
-Internal grounded traceability baselines are lower in TraceableF1: `grounded_hard_rule` reaches 0.8820 and `source_grounded_reconcile` reaches 0.8889. B0-B4 do not currently expose citation surfaces, so direct HCR comparisons against those baselines require future citation-generating baseline runs. The citation-required B6-B10 prompt-only sweep below provides the direct prompt-only traceability comparison.
+| family | label | TP | FP | FN | F1 |
+| --- | --- | ---: | ---: | ---: | ---: |
+| A | Gene / Variant | 257 | 57 | 432 | 0.512 |
+| B | Disease / Phenotype | 171 | 155 | 217 | 0.479 |
+| J | Public assertions | 12 | 4 | 64 | 0.261 |
+| C | De novo / Mechanism | 6 | 19 | 39 | 0.171 |
+| Other (D-I) | -- | 0 | 0 | 130 | -- |
 
-### 6.4 Same-Window Prompt-Only Frontier Sweep
+### 6.4 Scope Sensitivity
 
-To separate model strength from method design, we additionally evaluate citation-required prompt-only baselines across five mainstream model families released within a comparable 2025 frontier window. These baselines differ only by the provider model alias recorded in the manifest; they use the same prompt mode, temperature, input window, raw OpenAI-compatible call path, and evaluation logic.
+Table 6 reports a scope-sensitivity analysis derived from the same 150-entry run. The all-field row is identical to the primary benchmark. Removing field families D-I, which produced no true positives in this run and largely correspond to fields requiring external curation, cross-paper synthesis, or specialized experimental interpretation, raises F1 from 0.444 to 0.475. Restricting further to gene/variant, disease/phenotype, and public-assertion families yields F1 0.486, and the gene/phenotype-only subset reaches F1 0.498. These rows should not be read as alternative headline results; they diagnose how the broad field boundary depresses recall.
 
-| baseline_id | model | release_date | precision | recall | f1 | citation_validity_rate | hallucinated_citation_rate | traceable_f1 | error_rate | avg_latency_s |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| B6_GPT5_PROMPT_CITE | gpt-5-2025-08-07 | 2025-08-07 | 0.9390 | 0.9059 | 0.9222 | 0.9878 | 0.0122 | 0.9109 | 0.0333 | 24.7287 |
-| B7_DEEPSEEK_V31_PROMPT_CITE | deepseek-v3.1 | 2025-08-21 | 0.9200 | 0.5349 | 0.6765 | 0.7200 | 0.2800 | 0.4871 | 0.0667 | 5.5830 |
-| B8_QWEN3_MAX_PROMPT_CITE | qwen3-max | 2025-09-23 | 0.9178 | 0.7976 | 0.8535 | 0.8356 | 0.1644 | 0.7132 | 0.0000 | 7.2427 |
-| B9_CLAUDE_SONNET45_PROMPT_CITE | claude-sonnet-4-5-20250929 | 2025-09-29 | 0.8987 | 0.8659 | 0.8820 | 0.7342 | 0.2658 | 0.6476 | 0.0000 | 7.3370 |
-| B10_GLM46_PROMPT_CITE | glm-4.6 | 2025-09-30 | 0.8621 | 0.6098 | 0.7143 | 0.6724 | 0.3276 | 0.4803 | 0.0000 | 6.8700 |
+**Table 6. Scope sensitivity on the same 150-entry benchmark. Rows below the first are diagnostic subsets, not replacement headline metrics.**
 
-The strongest prompt-only frontier baseline is GPT-5, with F1=0.9222 and TraceableF1=0.9109. LinguaSeeker remains higher on both raw F1 and TraceableF1 in this frozen comparison. We do not claim paired statistical superiority over each frontier model unless such tests are added; the result is used to show that prompt engineering alone does not close the traceable-extraction gap in this benchmark.
+| scope | TP | FP | FN | P | R | F1 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| All eligible fields | 446 | 235 | 882 | 0.655 | 0.336 | 0.444 |
+| Covered families (A+B+C+J) | 446 | 235 | 752 | 0.655 | 0.372 | 0.475 |
+| Core article-local (A+B+J) | 440 | 216 | 713 | 0.671 | 0.382 | 0.486 |
+| Gene + phenotype (A+B) | 428 | 212 | 649 | 0.669 | 0.397 | 0.498 |
 
-### 6.5 Fused-75 Source-Visible Stress Test
+### 6.5 Database Seed Output
 
-Table 5 reports the current Fused-75 source-visible optimization leaderboard. The stress test uses source-visible adjudicated labels and a dev/test checkpoint protocol: variants are selected on the 10-entry dev split and evaluated once on the 10-entry frozen test split after passing the dev gate. The latest target-span field recovery variant improves frozen test source-visible F1 from 0.4466 to 0.5983, mainly by recovering high-signal fields from already selected target source snippets rather than by broadening document context.
-
-| variant | dev source-visible f1 | test source-visible f1 | test precision | test recall | decision |
-| --- | --- | --- | --- | --- | --- |
-| contextual-reconcile-baseline | 0.3660 | NA | NA | NA | checkpoint_only |
-| adjudicated-field-filter | 0.5138 | 0.4340 | 0.5897 | 0.3433 | checkpoint_only |
-| target-aware-source-visible | 0.5156 | 0.3770 | NA | NA | checkpoint_only |
-| candidate-recovery-source-validation | 0.6111 | 0.4466 | 0.6389 | 0.3433 | checkpoint_only |
-| target-span-field-recovery | 0.7438 | 0.5983 | 0.7000 | 0.5224 | checkpoint_only |
-
-The dev-only error taxonomy explains the gain. Before target-span recovery, the largest false-negative bucket was `span_selected_field_missing=15`, followed by `target_span_not_selected=10`. After the recovery pass, those buckets decreased to 7 and 5, respectively, while `source_quote_invalid` remained 0. This supports the next-paper claim that source-visible recall failures were often caused by missing field filling over already selected evidence spans, not by a need for wider context.
-
-### 6.6 Error Analysis
-
-Table 6 summarizes remaining errors.
-
-| root_cause | error_count | strategy | source_report |
-| --- | --- | --- | --- |
-| source_label_visibility_limit | 5 | context_verifier_reconcile | `benchmark/layer3/reports/reconcile_ablation_20260615_010725.json` |
-| disease_boundary_error | 2 | context_verifier_reconcile | `benchmark/layer3/reports/reconcile_ablation_20260615_010725.json` |
-| candidate_absent | 2 | context_verifier_reconcile | `benchmark/layer3/reports/reconcile_ablation_20260615_010725.json` |
-
-The dominant remaining issue is not a simple extraction failure. Five relationship mismatches are classified as source-label visibility limits: the article-local evidence expresses weak association, prediction, or partial support, while the benchmark label reflects external ClinGen validity semantics. We keep these cases separate to avoid leaking gold curation labels into runtime extraction.
+The final run also generated a clean business-data seed package for downstream inspection. The package contains 150 source documents, 150 completed processing runs, 41,167 run-level evidence rows, 1,177 canonical evidence items, 150 literature profiles, 1,177 frontend search-index rows, 985 normalized entities, and 94,311 BAAI/bge-m3 embedding records. The package is exported as a data-only PostgreSQL dump so that business evidence and literature metadata can be injected into a clean `lingua_seeker` database while preserving infrastructure schema definitions.
 
 ## 7. Discussion And Limitations
 
-The results support a conservative Main Paper claim. LinguaSeeker significantly improves over a grounded hard-rule internal baseline and remains competitive with matched LLM baselines while adding deterministic citation-valid acceptance. The method is strongest when the evidence needed for a field is visible in the article and can be linked to target-safe gene/disease context.
+The results support a practical but conservative claim. The broad workflow with review validation improves the extraction tradeoff relative to the catalog workflow in the fixed pilot and runs successfully on the full unified dataset. Its precision is suitable for structured prefill and evidence triage, but recall remains limited. The largest remaining gap is not only model error: many expected fields are absent from the single document, implicit in domain conventions, or dependent on external curation sources.
 
-**Relation to external systems.** The closest published systems operate under task definitions that differ from ours in input type, output granularity, or evaluation scope, preventing direct head-to-head comparison on a shared benchmark. Table 6 summarizes these differences.
+This study has four limitations. First, the unified benchmark contains 150 heterogeneous entries. It is suitable for controlled system analysis and reproducible inspection, but it is not a population-level generalization claim. Second, the overall F1 of 0.444 reflects a deliberately broad extraction boundary. The ClinGen subset reaches F1 0.769, and scope-sensitive subsets reach F1 0.475-0.498, but the headline score includes fields that are weakly visible or not visible in single articles. Third, we do not report direct P/R/F1 comparisons against systems such as PubTator 3.0, LitVar 2.0, or MedSeeker because their primary outputs are entity annotations, variant-centric retrieval, or configurable NER rather than the same 134-field structured evidence schema. Fourth, the cross-lingual evaluation uses translated evidence processing within the production workflow rather than a dedicated native multilingual gold standard. A native multilingual benchmark remains future work.
 
-| System | Input | Output | Cross-lingual | Citation validation | Benchmark |
-| --- | --- | --- | --- | --- | --- |
-| AutoPM3 [Li et al., 2025] | Variant-publication pairs | PM3 binary classification | No | No | PM3-Bench (1,027 pairs) |
-| VETA [Li et al., 2026] | ClinVar summaries | ACMG keyword-description pairs | No | No | 18,678 summaries |
-| AcmGENTIC [Saadat and Fellay, 2026] | Full-text articles | Variant-centric evidence reports | No | No | ClinGen-based (unpublished) |
-| TransFusion [Chen et al., 2025] | Multilingual text | NER/RE/EE annotations | Yes | No | 50 languages, 12 datasets |
-| PubTator 3.0 [Wei et al., 2024] | PubMed/PMC | Entity-level annotations | No | No | Full PubMed corpus |
-| LinguaSeeker | Full-text articles | 134-field structured evidence + source spans | Yes | Yes (CVR=1.0) | Frozen N=30 ClinGen |
+The evaluation boundary is therefore central to interpretation. We score only source-supported fields eligible for single-document extraction. We do not claim that the system extracts all fields in the broader evidence catalog, nor that it performs final ACMG/ClinGen classification. The system should be used as an expert-review assistant that surfaces candidate evidence, not as an autonomous clinical decision-support system.
 
-No publicly available benchmark currently covers the full-text-to-structured-field-with-citation-validation task that LinguaSeeker addresses. The frozen N=30 ClinGen/ACMG-style benchmark used in this evaluation is, to our knowledge, the first to pair full-text source articles with structured field-level ground truth and programmatic citation validity checking. We release it as a contribution in its own right, and we encourage future work to build larger benchmarks under this task definition so that direct head-to-head comparisons become possible.
-
-Our internal baselines are designed to cover the major architectural design dimensions present in the external literature, but they are not reproductions of any specific published system. B0 represents the upper bound of single-prompt LLM extraction under a complete schema — the dominant paradigm in recent LLM-based biomedical IE work. B1 covers the translate-then-extract dimension, which is the standard cross-lingual pipeline. B3 covers the retrieval-augmented dimension. The internal reconciliation gradient (dual_union through context_verifier_reconcile) isolates the contribution of source grounding, verifier support, target specificity, and contradiction awareness. Together, these baselines demonstrate that each architectural dimension we add produces measurable, statistically significant improvement, without claiming equivalence to any external system that implements additional design contributions of its own.
-
-**Limitations.** First, we acknowledge the absence of direct head-to-head comparison with published external systems. This reflects a genuine gap in the field: no existing system covers our full task definition, and adapting external systems to the 134-field schema with citation validation is substantial engineering work that we prioritize as future work. Second, the frozen benchmark contains 30 entries, suitable for controlled method analysis and paired statistics but not for broad claims of general biomedical IE superiority. Third, the margin over the strongest matched B0-B4 baseline is +0.0188 F1, below the pre-declared +0.03 strong-superiority threshold. Fourth, the Fused-75 stress test is a separate 20-entry source-visible optimization set, not an independent replacement for the N=30 paired evaluation. Fifth, the B6-B10 prompt-only frontier sweep is tied to exact provider aliases and a same-release-window cohort; hosted model behavior may change over time. Sixth, some gene-disease relationship labels reflect external ClinGen validity curation not fully visible in article-local evidence. Finally, LinguaSeeker extracts, grounds, and reconciles evidence fields for expert review; it is not an autonomous clinical decision-support or ACMG classification system.
-
-The current benchmark-readiness artifacts are conservative by design: Benchmark A is only reportable once valid `alignment_annotations.json` files exist for the frozen N=30 set, and Benchmark B is reported as a small multilingual runtime pilot (10 attempted zh/ja/ko samples, 3 completed with per-case metrics reused from the frozen baseline report, 4 failed, 3 timed out) rather than a measured autonomous-classification experiment. Those artifacts support planning and curation, not result claims about clinical classification accuracy.
-
-In this pilot, we report runtime completion/failure accounting for the dual-track multilingual extraction pipeline and reuse frozen baseline per-case metrics for completed queue_ids where available. We do not claim that the pilot improves evidence coverage or classification accuracy, and we deliberately do not promote the pilot into a claim of autonomous ACMG/ClinGen classification accuracy.
-
-Future work should expand the benchmark, add citation-generating direct LLM and RAG baselines for direct HCR comparison, and build a native multilingual biomedical genetics gold set. Curated ClinGen context could also be tested as a separate external-knowledge ablation, but it should not be mixed into source-only extraction without disclosure.
+Future work should add larger matched baseline studies, native multilingual annotation, and field-family-specific extraction modules for experimental, segregation, and functional evidence. It should also separate explicitly article-visible labels from externally curated labels before computing recall, so that extraction errors and dataset-scope mismatches can be measured independently.
 
 ## 8. Conclusion
 
-LinguaSeeker frames cross-lingual biomedical evidence extraction as traceability-constrained evidence reconciliation rather than prompt-only generation. On a frozen ACMG/ClinGen-style benchmark, context-verifier reconciliation significantly improves over a grounded internal baseline, remains competitive with matched LLM baselines, and enforces citation-valid-by-construction accepted evidence. The current evidence supports a conservative Main Paper submission centered on auditable, source-grounded cross-lingual biomedical IE.
+LinguaSeeker frames clinical genetics literature extraction as source-grounded evidence prefill rather than prompt-only generation or autonomous curation. The default broad workflow combines a high-recall primary track with a review track, then normalizes, grounds, standardizes, and materializes evidence for expert inspection. On the unified 150-entry evaluation, the workflow completes all entries and achieves precision 65.5%, recall 33.6%, and F1 44.4% over source-supported single-document fields. The evidence supports deploying LinguaSeeker as a practical expert-review pipeline while making clear that external curation and final clinical interpretation remain outside the automated extraction boundary.
 
-## Frozen Evidence References
+## Current Evidence References
 
-- Ablation: `benchmark/layer3/reports/reconcile_ablation_20260615_010725.json`
-- G2 statistics: `benchmark/layer3/reports/g2_statistics_20260615_010748.json`
-- Baseline comparison: `benchmark/layer3/reports/baseline_comparison_20260615_013313.json`
-- Candidate traceability: `benchmark/layer3/reports/traceability_context_verifier_reconcile_20260615_011414.json`
-- Internal baseline traceability: `benchmark/layer3/reports/traceability_grounded_hard_rule_20260615_013608.json`
-- Internal source-grounded traceability: `benchmark/layer3/reports/traceability_source_grounded_reconcile_20260615_013609.json`
-- Same-window prompt-only frontier sweep: `benchmark/layer3/baselines/prompt_model_sweep_20260615.json`, `benchmark/layer3/reports/prompt_model_baseline_tables_20260615_114312.md`
-- Error diagnosis: `benchmark/layer3/reports/contextual_reconcile_diagnosis_20260615_011335.json`
-- Benchmark A readiness: `benchmark/layer3/reports/benchmark_readiness_20260615_193750.json`
-- Benchmark B pilot selection: `benchmark/layer3/ground_truth/benchmark_b_pilot_selection.json`
-- Benchmark B runtime pilot: `benchmark/layer3/reports/benchmark_b_phase2_runtime_metrics_*.json` (manifest-declared)
-- Main paper tables: `benchmark/layer3/reports/main_paper_tables_20260615_194001.md`
-- Main paper manifest: `benchmark/layer3/reports/main_paper_rescue_manifest_20260615_193945.json`
-- Fused-75 source-visible stress test leaderboard: `benchmark/optimization/fused75/reports/leaderboard_current.md`
-- Fused-75 target-span field recovery checkpoint: `benchmark/optimization/fused75/reports/target_span_field_recovery_test_checkpoint.json`
+- Unified merged benchmark report: `benchmark/data/reports/eval_unified_merged_b8_20260627.json`
+- Paper summary: `benchmark/data/reports/unified_b8_paper_summary_20260627.md`
+- Results section artifact: `benchmark/data/reports/unified_b8_results_section.md`
+- Error breakdown: `benchmark/data/reports/unified_b8_error_breakdown_20260629.json`, `benchmark/data/reports/unified_b8_error_breakdown_20260629.md`
+- Scope sensitivity: `benchmark/data/reports/unified_b8_scope_sensitivity_20260629.json`, `benchmark/data/reports/unified_b8_scope_sensitivity_20260629.md`
+- Seed package: `artifacts/unified_b8_lingua_seeker_seed_20260627.tar.gz`
+- TeX manuscript: `docs/active/2026-06-15-bibm-main-paper-tex/main.tex`

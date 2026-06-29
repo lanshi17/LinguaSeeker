@@ -100,6 +100,7 @@ class BaseTranslator(ABC):
 | `blocks.py` | `is_predominantly_english(text)` | Check if <5% CJK characters |
 | `postprocess.py` | `build_translated_blocks(blocks, segments, text, indices, aux)` | Map translated text back to block structure |
 | `postprocess.py` | `deduplicate_bilingual_blocks(blocks)` | Remove adjacent near-duplicate blocks (75% token overlap) |
+| `postprocess.py` | `check_block_coverage(original_blocks, translated_blocks)` | Reject fluent but incomplete translations that only cover the title/abstract |
 | `postprocess.py` | `check_block_language(blocks, source_language)` | Detect partial translation failures (>40% untranslated threshold) |
 | `postprocess.py` | `flag_quality_issues(blocks)` | Mark blocks needing manual review (truncated refs, ambiguous pronouns) |
 | `postprocess.py` | `trim_repetitive_content(text)` | Remove repeated heading blocks from LLM repetition loops |
@@ -161,6 +162,10 @@ The guard in `run_pipeline()` catches infinite repetition: if translated output 
 ### Per-block language check and retry
 
 After building translated blocks, `check_block_language()` detects partial translation failures (e.g., a Russian doc where only the first page was translated). If >40% of text/title blocks still contain source-language characters (Cyrillic, CJK, or Hangul), the entire pipeline is re-run once with `strict=True`, which appends an English-only directive to the prompt. Capped at `_MAX_PER_BLOCK_RETRIES = 1` to bound LLM cost.
+
+### Block coverage check and retry
+
+`check_block_coverage()` catches a different failure mode: the model returns fluent English but only translates the title/abstract of a full paper. It compares text/title block count and character coverage between the original and translated block sets. If coverage falls below the configured thresholds, translation is retried once with the same strict English-only path used by the language check. This prevents bilingual source documents with an existing English abstract from being mistaken for fully translated papers.
 
 ### Auxiliary block translation
 
