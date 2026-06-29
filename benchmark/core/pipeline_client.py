@@ -182,6 +182,9 @@ async def submit_and_poll(
     extraction_target: dict | None = None,
     extraction_profile: str = "none",
     extraction_mode: str = "broad",
+    ablation_disable_review: bool = False,
+    ablation_disable_target_guard: bool = False,
+    ablation_original_only: bool = False,
 ) -> dict:
     """Submit document and poll until completion.
 
@@ -200,6 +203,9 @@ async def submit_and_poll(
         "filename": filename,
         "extraction_profile": extraction_profile,
         "extraction_mode": extraction_mode,
+        "ablation_disable_review": ablation_disable_review,
+        "ablation_disable_target_guard": ablation_disable_target_guard,
+        "ablation_original_only": ablation_original_only,
     }
     if pre_parsed_markdown:
         payload["pre_parsed_markdown"] = pre_parsed_markdown
@@ -323,6 +329,9 @@ async def evaluate_one(
     force_reextract: bool = False,
     extraction_profile: str = "none",
     extraction_mode: str = "broad",
+    ablation_disable_review: bool = False,
+    ablation_disable_target_guard: bool = False,
+    ablation_original_only: bool = False,
 ) -> EntryMetrics:
     """Evaluate one ground truth entry.
 
@@ -445,6 +454,9 @@ async def evaluate_one(
                 extraction_target=extraction_target,
                 extraction_profile=extraction_profile,
                 extraction_mode=extraction_mode,
+                ablation_disable_review=ablation_disable_review,
+                ablation_disable_target_guard=ablation_disable_target_guard,
+                ablation_original_only=ablation_original_only,
             )
             metrics.duration_s = round(time.time() - t0, 2)
             metrics.pipeline_status = status_data.get("pipeline_status", "unknown")
@@ -645,6 +657,9 @@ async def run_evaluation(
     extraction_mode: str = "broad",
     shard_index: int | None = None,
     shard_size: int | None = None,
+    ablation_disable_review: bool = False,
+    ablation_disable_target_guard: bool = False,
+    ablation_original_only: bool = False,
 ):
     """Main evaluation orchestrator.
 
@@ -700,7 +715,6 @@ async def run_evaluation(
     client_kwargs = dict(transport_kwargs)
     if api_key:
         client_kwargs["headers"] = {"X-API-Key": api_key}
-
     async with httpx.AsyncClient(**client_kwargs) as client:
         for entry in entries:
             m = await evaluate_one(
@@ -714,6 +728,9 @@ async def run_evaluation(
                 force_reextract=force_reextract,
                 extraction_profile=extraction_profile,
                 extraction_mode=extraction_mode,
+                ablation_disable_review=ablation_disable_review,
+                ablation_disable_target_guard=ablation_disable_target_guard,
+                ablation_original_only=ablation_original_only,
             )
             all_metrics.append(m)
             status_icon = "\u2713" if m.pipeline_status == "completed" else "\u2717"
@@ -744,6 +761,9 @@ async def run_evaluation(
             "dataset": ds_label,
             "extraction_profile": extraction_profile,
             "extraction_mode": extraction_mode,
+            "ablation_disable_review": ablation_disable_review,
+            "ablation_disable_target_guard": ablation_disable_target_guard,
+            "ablation_original_only": ablation_original_only,
             "shard_index": shard_index,
             "shard_size": shard_size,
         },

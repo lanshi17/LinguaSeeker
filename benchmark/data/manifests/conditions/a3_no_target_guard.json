@@ -1,0 +1,17 @@
+{
+  "condition_id": "a3_no_target_guard",
+  "label": "No Target Guard",
+  "description": "Ablation isolating gene/disease context protection. Disables the target gene/disease guard and alias-based target specificity checks via ablation_disable_target_guard=True while keeping primary extraction, review validation, and grounding. False positives are expected to increase for multi-gene or broad disease-context papers, especially Parkinson literature.",
+  "extraction_mode": "broad",
+  "ablation_disable_review": false,
+  "ablation_disable_target_guard": true,
+  "ablation_original_only": false,
+  "force_reextract": true,
+  "extraction_profile": "none",
+  "is_prompt_only": false,
+  "prompt_only_model": null,
+  "disabled_components": [
+    "target_gene_disease_guard",
+    "alias_based_target_specificity_checks"
+  ]
+}

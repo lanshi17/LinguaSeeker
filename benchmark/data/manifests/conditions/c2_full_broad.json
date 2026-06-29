@@ -1,0 +1,14 @@
+{
+  "condition_id": "c2_full_broad",
+  "label": "Full Broad Workflow",
+  "description": "Main agent condition. extraction_mode=broad (default) with primary extraction plus review validation, normalization, grounding, and Phase 3 standardization enabled, and reflection/retry behavior enabled exactly as in production. Reference condition for all ablation deltas.",
+  "extraction_mode": "broad",
+  "ablation_disable_review": false,
+  "ablation_disable_target_guard": false,
+  "ablation_original_only": false,
+  "force_reextract": true,
+  "extraction_profile": "none",
+  "is_prompt_only": false,
+  "prompt_only_model": null,
+  "disabled_components": []
+}

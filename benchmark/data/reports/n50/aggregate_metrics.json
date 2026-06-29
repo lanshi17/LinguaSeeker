@@ -1,0 +1,115 @@
+{
+  "timestamp": "2026-06-29T20:23:13",
+  "conditions": {
+    "c0_prompt_only": {
+      "condition_id": "c0_prompt_only",
+      "n": 50,
+      "completed": 50,
+      "completion_rate": 1.0,
+      "tp": 241,
+      "fp": 130,
+      "fn": 130,
+      "precision": 0.6496,
+      "recall": 0.6847,
+      "f1": 0.6667,
+      "avg_min_per_entry": 1.78,
+      "avg_tokens_per_entry": 0,
+      "by_source_dataset": {
+        "clingen": {
+          "n": 5,
+          "precision": 0.8,
+          "recall": 1.0,
+          "f1": 0.8889
+        },
+        "clinvar_fused": {
+          "n": 23,
+          "precision": 0.7664,
+          "recall": 0.543,
+          "f1": 0.6357
+        },
+        "parkinson": {
+          "n": 6,
+          "precision": 0.4167,
+          "recall": 0.7447,
+          "f1": 0.5344
+        },
+        "rett": {
+          "n": 16,
+          "precision": 0.6788,
+          "recall": 0.7887,
+          "f1": 0.7296
+        }
+      },
+      "report_file": "../benchmark/data/reports/n50/c0_prompt_only_20260629_190950.json"
+    },
+    "c2_full_broad_20260629_201739": {
+      "condition_id": "unknown",
+      "n": 50,
+      "completed": 50,
+      "completion_rate": 1.0,
+      "tp": 152,
+      "fp": 82,
+      "fn": 82,
+      "precision": 0.6496,
+      "recall": 0.3819,
+      "f1": 0.481,
+      "avg_min_per_entry": 3.44,
+      "avg_tokens_per_entry": 0,
+      "by_source_dataset": {
+        "clingen": {
+          "n": 5,
+          "precision": 0.9167,
+          "recall": 0.7857,
+          "f1": 0.8462
+        },
+        "clinvar_fused": {
+          "n": 23,
+          "precision": 0.7667,
+          "recall": 0.4452,
+          "f1": 0.5633
+        },
+        "parkinson": {
+          "n": 6,
+          "precision": 0.7778,
+          "recall": 0.1522,
+          "f1": 0.2545
+        },
+        "rett": {
+          "n": 16,
+          "precision": 0.5088,
+          "recall": 0.4234,
+          "f1": 0.4622
+        }
+      },
+      "report_file": "../benchmark/data/reports/n50/c2_full_broad_20260629_201739.json"
+    }
+  },
+  "comparison_table": [
+    {
+      "condition": "c0_prompt_only",
+      "N": 50,
+      "completed": 50,
+      "TP": 241,
+      "FP": 130,
+      "FN": 130,
+      "P": 0.6496,
+      "R": 0.6847,
+      "F1": 0.6667,
+      "avg_min": 1.78,
+      "avg_tokens": 0
+    },
+    {
+      "condition": "c2_full_broad_20260629_201739",
+      "N": 50,
+      "completed": 50,
+      "TP": 152,
+      "FP": 82,
+      "FN": 82,
+      "P": 0.6496,
+      "R": 0.3819,
+      "F1": 0.481,
+      "avg_min": 3.44,
+      "avg_tokens": 0
+    }
+  ]
+}

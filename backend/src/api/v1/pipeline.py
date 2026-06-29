@@ -75,6 +75,11 @@ class PipelineRunRequest(BaseModel):
     # Extraction workflow mode: "broad" (default business primary+review track) or
     # "catalog" (rollback / historical baseline catalog track).
     extraction_mode: str = "broad"
+    # Ablation switches for BIBM N=50 comparison experiment.
+    # See docs/active/2026-06-29-bibm-n50-comparison-ablation-design.md.
+    ablation_disable_review: bool = False
+    ablation_disable_target_guard: bool = False
+    ablation_original_only: bool = False
 
     @model_validator(mode="after")
     def validate_request(self) -> "PipelineRunRequest":
@@ -466,6 +471,9 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         extraction_target=body.extraction_target,
         extraction_profile=body.extraction_profile,
         extraction_mode=body.extraction_mode,
+        ablation_disable_review=body.ablation_disable_review,
+        ablation_disable_target_guard=body.ablation_disable_target_guard,
+        ablation_original_only=body.ablation_original_only,
     )
     content_hash = await runner.compute_initial_content_hash(temp_state)
     if content_hash:
@@ -511,8 +519,11 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         "relevance_gate": body.relevance_gate,
         "literature_types": body.literature_types,
         "created_at": datetime.now().isoformat(),
-        "extraction_profile": body.extraction_profile,
         "extraction_mode": body.extraction_mode,
+        "ablation_disable_review": body.ablation_disable_review,
+        "ablation_disable_target_guard": body.ablation_disable_target_guard,
+        "ablation_original_only": body.ablation_original_only,
+        "extraction_profile": body.extraction_profile,
     }
     if body.extraction_target is not None:
         request_data["extraction_target"] = body.extraction_target.model_dump()

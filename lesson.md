@@ -90,6 +90,20 @@
 
 ---
 
+## 2026-06-29: Translation postprocess test data must satisfy similarity thresholds
+
+**Problem**: While adding direct coverage for `deduplicate_bilingual_blocks`, the first near-duplicate test expected two adjacent English blocks to collapse, but the test failed because token overlap was below the implementation threshold.
+
+**Investigation**: The function computes Jaccard overlap over lowercase alphanumeric tokens and only removes adjacent text/title blocks when overlap is greater than `_DEDUP_SIMILARITY_THRESHOLD` (0.75). The initial sample added enough extra tokens to reduce overlap to about 0.67, so the expected behavior was to keep both blocks.
+
+**Root Cause**: The test fixture described a near-duplicate case semantically, but did not meet the exact token-overlap contract used by the implementation.
+
+**Fix**: Adjusted the duplicate fixture so the second block is longer while retaining token overlap above the threshold. Kept the distinct-block test to verify the opposite path.
+
+**Prevention**: For threshold-based postprocess functions, calculate or reason through the threshold inputs before asserting accept/reject behavior. Add paired positive and negative cases so fixture mistakes surface quickly.
+
+---
+
 ## 2026-06-27: TerminologyEmbeddingIndexer 缺少 ON CONFLICT 导致重建中途崩溃
 
 **问题**: `indexer.py` 的 `build()` 方法使用 `pg_insert(TerminologyEmbedding.__table__).values(...)` 执行纯 INSERT，没有 `ON CONFLICT DO UPDATE` 或 `ON CONFLICT DO NOTHING`。当进程在批量提交之间被中断（SIGKILL/超时），已提交的 bge-m3 行残留在数据库中。重启后 DELETE 步骤本应清理这些行，但由于 SQLAlchemy session 事务隔离和批量提交模式的组合效应，部分残留行未被删除，导致 `UniqueViolationError: duplicate key value violates unique constraint "uq_terminology_embeddings_entry_text_model"`。
@@ -5966,3 +5980,69 @@ RUN find /opt/venv/bin -maxdepth 1 -type f -exec \
    ```
 
 ---
+
+## [2026-06-29] N=50 Experiment Ablation Switch Implementation
+
+**Problem:** The BIBM N=50 comparison/ablation experiment design required workflow-level ablation switches (disable review validation, disable target guard, original-only track) that did not exist in the codebase.
+
+**Investigation:**
+- Examined `EvidenceExtractionWorkflow._build_graph()` — the LangGraph topology hard-coded edges for review_validation and target_guard.
+- Found `extraction_mode` was the only existing workflow toggle (broad vs catalog).
+- The reflection/retry loop (A1) described in the design doc does not exist as a separate loop — the system is single-pass. The `RetryablePhaseExecutor` handles only infrastructure retries (timeouts, rate limits), not extraction-quality reflection.
+
+**Root Cause:** No ablation infrastructure existed. The design doc assumed flags that needed to be implemented.
+
+**Solution:**
+- Added `enable_review_validation` and `enable_target_guard` constructor params to `EvidenceExtractionWorkflow` — graph edges conditionally skip the node.
+- Added `original_only` param to `EvidenceExtractionService.run_dual()` — skips translated track extraction.
+- Threaded flags through: `PipelineGraphState` → `Phase2Adapter` → `EvidenceExtractionService` → `EvidenceExtractionWorkflow`.
+- Added ablation fields to the API request model (`PipelineRunRequest`) and dispatcher.
+- Updated benchmark `submit_and_poll` and `run_evaluation` to pass ablation flags.
+
+**Prevention:**
+- When designing experiments that require ablation switches, verify the flags exist before writing the design doc. If they don't, include implementation as a prerequisite step.
+- LangGraph node registration is separate from edge routing — nodes remain registered even when edges skip them. Test edge routing, not node presence.
+- Environment variables (e.g., `POSTGRES_PASSWORD`) override vault config — always check `env | grep` when DB auth fails.
+
+**Key Insight:** The "reflection/retry loop" (A1) in the design doc is conceptual, not a literal code loop. The system is single-pass. A1 is effectively a no-op compared to C2 at the workflow level. The design doc should be updated to clarify this.
+
+## 2026-06-29 - WelcomeBlock quick action tests need DOM cleanup
+
+- Problem: The initial WelcomeBlock component tests rendered multiple cases without cleanup, so later role queries matched duplicate buttons from previous renders.
+- Investigation: The first RED assertion correctly showed the old string payload, while later failures were caused by accumulated DOM nodes.
+- Root cause: The new test file did not include Testing Library cleanup in afterEach.
+- Resolution: Added afterEach cleanup and vi.clearAllMocks before implementing typed quick actions.
+- Prevention: New component test files should mirror existing chat component tests and include cleanup when rendering multiple cases.
+
+## 2026-06-29 - New Chat active session reverted to the old conversation
+
+- Problem: Clicking New Chat could create a session but leave the visible chat on the previous conversation.
+- Investigation: A failing hook test showed handleCreateSession did not return the new id first, then activeConversationKey reverted from the new id to the old id.
+- Root cause: useSessionConversations added the new conversation optimistically, but the synchronization effect rebuilt the sidebar from the stale sessions list before local/query state had caught up, so the new active key was treated as missing and replaced with the first old session.
+- Resolution: Added optimistic conversation items merged with the sessions-derived list until the authoritative list includes the new session; handleCreateSession now returns the created id.
+- Prevention: Session creation flows should test both returned session id and active conversation key, not only backend/session creation success.
+
+## 2026-06-29 - New Chat still showed the previous session after optimistic list fix
+
+- Problem: After creating Session 131d33ea from Session e6112158, the UI could still display the old session.
+- Investigation: Re-read x-sdk useXConversations implementation. Its activeConversationKey comes from an external ConversationStore via useSyncExternalStore; setConversations does not set active key, and relying on the store snapshot made the UI vulnerable to stale active values.
+- Root cause: useSessionConversations returned x-sdk activeConversationKey as the source of truth. Even though creation called setActiveConversationKey, the visible ChatView and Conversations activeKey could still observe the old external-store snapshot.
+- Resolution: Added a React-controlled activeConversationKey in useSessionConversations. handleActiveConversationChange now updates local React state, x-sdk store, and localStorage together. The UI reads the controlled key, so New Chat immediately switches to the new session.
+- Prevention: For UI-critical selection state, keep a React-owned controlled state and sync external stores as side effects; do not make third-party external store snapshots the only source of truth.
+
+## 2026-06-29 - App version constant existed in Vite but not Vitest
+
+- Problem: Sidebar uses __APP_VERSION__ from Vite define, but a regression test rendering Sidebar failed with ReferenceError because Vitest did not define the same constant.
+- Investigation: vite.config.ts already reads frontend/package.json and defines __APP_VERSION__; vitest.config.ts only configured React, alias, and jsdom.
+- Root cause: Test/build config drift. Production page version was synced to package.json, but tests could not verify it because the test config omitted the define.
+- Resolution: Added the same package.json-derived __APP_VERSION__ define to vitest.config.ts and a Sidebar test asserting Lingua Seeker v${packageJson.version}.
+- Prevention: Any build-time global used by UI components should be mirrored in Vitest config or wrapped behind a testable module.
+
+## 2026-06-29 - Frontend app version source should be .env before package.json
+
+- Problem: Sidebar version display used __APP_VERSION__ derived from package.json; the requested source of truth is frontend/.env VITE_APP_VERSION with package.json only as fallback.
+- Investigation: vite.config.ts read package.json directly; vitest.config.ts mirrored that package-only define. frontend/.env contains VITE_APP_VERSION=1.1.0.
+- Root cause: App version injection did not follow the desired .env -> package.json fallback chain.
+- Resolution: Updated Vite and Vitest config to compute appVersion = env.VITE_APP_VERSION || pkg.version. Updated Sidebar regression test to parse frontend/.env and assert the displayed version.
+- Debug note: Initially imported loadEnv from vitest/config, which failed because loadEnv belongs to vite. Corrected the import and reran tests.
+- Prevention: Shared build-time config should use the same precedence chain in Vite and Vitest, and tests should assert against the actual source file where practical.

@@ -1,0 +1,20 @@
+{
+  "condition_id": "a1_no_reflection",
+  "label": "No Reflection / No Retry Loop",
+  "description": "Ablation isolating the value of reflection after review or validation failure. The LinguaSeeker agent workflow is single-pass by design and has no reflection/retry loop in production, so this condition is a no-op compared to C2 at the workflow level. The RetryablePhaseExecutor max_retries is set to 0 to disable infrastructure-level retries. Primary extraction, review validation, normalization, and source grounding are kept.",
+  "extraction_mode": "broad",
+  "ablation_disable_review": false,
+  "ablation_disable_target_guard": false,
+  "ablation_original_only": false,
+  "force_reextract": true,
+  "extraction_profile": "none",
+  "is_prompt_only": false,
+  "prompt_only_model": null,
+  "disable_infrastructure_retry": true,
+  "disabled_components": [
+    "reflection_loop",
+    "retry_on_review_failure",
+    "iterative_self_correction",
+    "infrastructure_retry"
+  ]
+}

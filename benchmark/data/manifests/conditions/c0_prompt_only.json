@@ -1,0 +1,19 @@
+{
+  "condition_id": "c0_prompt_only",
+  "label": "Prompt-Only Baseline",
+  "description": "Single citation-required extraction prompt with no agent workflow, no primary/review split, no reflection loop, no retry-on-review-failure, and no downstream Phase 3 standardization. Estimates what one prompt can do without the agent pipeline. Run via benchmark/runners/n50_prompt_only.py.",
+  "extraction_mode": "broad",
+  "ablation_disable_review": false,
+  "ablation_disable_target_guard": false,
+  "ablation_original_only": false,
+  "force_reextract": true,
+  "extraction_profile": "none",
+  "is_prompt_only": true,
+  "prompt_only_model": "reasoning",
+  "disabled_components": [
+    "primary_review_split",
+    "reflection_loop",
+    "retry_on_review_failure",
+    "phase3_standardization"
+  ]
+}

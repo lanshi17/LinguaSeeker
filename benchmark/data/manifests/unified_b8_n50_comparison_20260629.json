@@ -1,0 +1,628 @@
+{
+  "manifest_id": "unified_b8_n50_comparison_20260629",
+  "created": "2026-06-29T17:04:08",
+  "design_doc": "docs/active/2026-06-29-bibm-n50-comparison-ablation-design.md",
+  "seed": "lingua-seeker-bibm-n50-20260629",
+  "pool_report": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/data/reports/eval_unified_merged_b8_20260627.json",
+  "pool_total": 150,
+  "excluded_pilot_ids": [
+    "gs_054",
+    "gs_058",
+    "gs_061",
+    "gs_074",
+    "gs_098"
+  ],
+  "eligible_after_exclusion": 145,
+  "target_n": 50,
+  "actual_n": 50,
+  "strata": [
+    {
+      "source_dataset": "clingen",
+      "pool_size": 8,
+      "quota": 5,
+      "selected": 5,
+      "field_count_range": [
+        3,
+        3
+      ],
+      "found_rate_range": [
+        0.0617,
+        0.8
+      ]
+    },
+    {
+      "source_dataset": "clinvar_fused",
+      "pool_size": 69,
+      "quota": 23,
+      "selected": 23,
+      "field_count_range": [
+        6,
+        8
+      ],
+      "found_rate_range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source_dataset": "parkinson",
+      "pool_size": 17,
+      "quota": 6,
+      "selected": 6,
+      "field_count_range": [
+        5,
+        58
+      ],
+      "found_rate_range": [
+        0.0549,
+        1.0
+      ]
+    },
+    {
+      "source_dataset": "rett",
+      "pool_size": 51,
+      "quota": 16,
+      "selected": 16,
+      "field_count_range": [
+        8,
+        13
+      ],
+      "found_rate_range": [
+        0.044,
+        1.0
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "entry_id": "gs_002",
+      "source_dataset": "clingen",
+      "original_entry_id": "clingen_002",
+      "gene_symbol": "ABCA3",
+      "classification": "Definitive",
+      "moi": "AR",
+      "field_count": 3,
+      "found_rate": 0.75,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_003",
+      "source_dataset": "clingen",
+      "original_entry_id": "clingen_005",
+      "gene_symbol": "ABCC8",
+      "classification": "Definitive",
+      "moi": "SD",
+      "field_count": 3,
+      "found_rate": 0.0617,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_004",
+      "source_dataset": "clingen",
+      "original_entry_id": "clingen_008",
+      "gene_symbol": "ABCG8",
+      "classification": "Definitive",
+      "moi": "AR",
+      "field_count": 3,
+      "found_rate": 0.0788,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_005",
+      "source_dataset": "clingen",
+      "original_entry_id": "clingen_015",
+      "gene_symbol": "MT-TI",
+      "classification": "Moderate",
+      "moi": "MT",
+      "field_count": 3,
+      "found_rate": 0.4,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_007",
+      "source_dataset": "clingen",
+      "original_entry_id": "clingen_024",
+      "gene_symbol": "TLR5",
+      "classification": "Limited",
+      "moi": "UD",
+      "field_count": 3,
+      "found_rate": 0.2,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_010",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_002",
+      "gene_symbol": "ACADVL",
+      "classification": "Definitive",
+      "moi": "AR",
+      "field_count": 8,
+      "found_rate": 0.8889,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_012",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_004",
+      "gene_symbol": "ACTA1",
+      "classification": "Definitive",
+      "moi": "AD",
+      "field_count": 8,
+      "found_rate": 1.0,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_015",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_007",
+      "gene_symbol": "ATM",
+      "classification": "Definitive",
+      "moi": "AR",
+      "field_count": 8,
+      "found_rate": 0.0545,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_016",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_008",
+      "gene_symbol": "BMPR2",
+      "classification": "Definitive",
+      "moi": "AD",
+      "field_count": 8,
+      "found_rate": 0.4286,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_020",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_012",
+      "gene_symbol": "CDKL5",
+      "classification": "Definitive",
+      "moi": "XL",
+      "field_count": 8,
+      "found_rate": 0.6,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_021",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_013",
+      "gene_symbol": "CYP1B1",
+      "classification": "Definitive",
+      "moi": "AR",
+      "field_count": 8,
+      "found_rate": 0.0189,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_025",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_017",
+      "gene_symbol": "F8",
+      "classification": "Definitive",
+      "moi": "XL",
+      "field_count": 8,
+      "found_rate": 0.0,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_031",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_023",
+      "gene_symbol": "GAA",
+      "classification": "Definitive",
+      "moi": "AR",
+      "field_count": 8,
+      "found_rate": 1.0,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_033",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_025",
+      "gene_symbol": "GJB2",
+      "classification": "Definitive",
+      "moi": "AR",
+      "field_count": 8,
+      "found_rate": 0.0437,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_035",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_027",
+      "gene_symbol": "GP1BA",
+      "classification": "Definitive",
+      "moi": "AD",
+      "field_count": 8,
+      "found_rate": 0.3,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_043",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_035",
+      "gene_symbol": "HTT",
+      "classification": "Definitive",
+      "moi": "AD",
+      "field_count": 6,
+      "found_rate": 0.2,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_046",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_038",
+      "gene_symbol": "IL7R",
+      "classification": "Definitive",
+      "moi": "AR",
+      "field_count": 8,
+      "found_rate": 0.1,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_048",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_040",
+      "gene_symbol": "JAK3",
+      "classification": "Definitive",
+      "moi": "AR",
+      "field_count": 8,
+      "found_rate": 0.0606,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_049",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_041",
+      "gene_symbol": "KCNQ1",
+      "classification": "Definitive",
+      "moi": "AR",
+      "field_count": 8,
+      "found_rate": 0.0485,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_052",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_044",
+      "gene_symbol": "LDLR",
+      "classification": "Definitive",
+      "moi": "SD",
+      "field_count": 8,
+      "found_rate": 0.0793,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_055",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_047",
+      "gene_symbol": "MLH1",
+      "classification": "Definitive",
+      "moi": "AR",
+      "field_count": 8,
+      "found_rate": 0.0667,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_060",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_052",
+      "gene_symbol": "MT-ATP6",
+      "classification": "Definitive",
+      "moi": "MT",
+      "field_count": 6,
+      "found_rate": 0.0848,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_063",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_055",
+      "gene_symbol": "MT-CO3",
+      "classification": "Definitive",
+      "moi": "MT",
+      "field_count": 6,
+      "found_rate": 0.3,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_071",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_064",
+      "gene_symbol": "MT-TK",
+      "classification": "Definitive",
+      "moi": "MT",
+      "field_count": 6,
+      "found_rate": 0.6667,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_075",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_069",
+      "gene_symbol": "MTM1",
+      "classification": "Definitive",
+      "moi": "XL",
+      "field_count": 8,
+      "found_rate": 0.7778,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_076",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_070",
+      "gene_symbol": "MTOR",
+      "classification": "Definitive",
+      "moi": "AD",
+      "field_count": 8,
+      "found_rate": 0.5294,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_078",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_072",
+      "gene_symbol": "MYH7",
+      "classification": "Definitive",
+      "moi": "AD",
+      "field_count": 8,
+      "found_rate": 0.3333,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_079",
+      "source_dataset": "clinvar_fused",
+      "original_entry_id": "fused_073",
+      "gene_symbol": "MYO15A",
+      "classification": "Definitive",
+      "moi": "AR",
+      "field_count": 8,
+      "found_rate": 0.0727,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_081",
+      "source_dataset": "parkinson",
+      "original_entry_id": "parkinson_000",
+      "gene_symbol": "PRKN",
+      "classification": "Definitive",
+      "moi": "AR",
+      "field_count": 8,
+      "found_rate": 0.057,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_083",
+      "source_dataset": "parkinson",
+      "original_entry_id": "parkinson_002",
+      "gene_symbol": "PINK1",
+      "classification": "Definitive",
+      "moi": "AR",
+      "field_count": 6,
+      "found_rate": 0.7059,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_084",
+      "source_dataset": "parkinson",
+      "original_entry_id": "parkinson_003",
+      "gene_symbol": "LRRK2",
+      "classification": "Definitive",
+      "moi": "AD",
+      "field_count": 6,
+      "found_rate": 0.0549,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_089",
+      "source_dataset": "parkinson",
+      "original_entry_id": "parkinson_008",
+      "gene_symbol": "GBA",
+      "classification": "Definitive",
+      "moi": "AD",
+      "field_count": 7,
+      "found_rate": 0.8333,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_093",
+      "source_dataset": "parkinson",
+      "original_entry_id": "parkinson_012",
+      "gene_symbol": "GBA",
+      "classification": "Definitive",
+      "moi": "AD",
+      "field_count": 55,
+      "found_rate": 0.4,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_097",
+      "source_dataset": "parkinson",
+      "original_entry_id": "parkinson_016",
+      "gene_symbol": "GBA",
+      "classification": "Definitive",
+      "moi": "AD",
+      "field_count": 14,
+      "found_rate": 0.625,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_099",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_001",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 8,
+      "found_rate": 0.8,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_102",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_005",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 13,
+      "found_rate": 1.0,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_104",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_007",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 13,
+      "found_rate": 0.75,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_108",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_012",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 12,
+      "found_rate": 0.8,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_109",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_013",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 9,
+      "found_rate": 0.7,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_113",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_019",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 12,
+      "found_rate": 0.0909,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_115",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_021",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 12,
+      "found_rate": 1.0,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_117",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_024",
+      "gene_symbol": "FOXG1",
+      "classification": "Rett real-data",
+      "moi": "de novo heterozygous (FOXG1 is autosomal, 14q12; haploinsufficiency). Not X-linked",
+      "field_count": 13,
+      "found_rate": 1.0,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_129",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_051",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 12,
+      "found_rate": 0.0788,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_140",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_077",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 13,
+      "found_rate": 0.0788,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_141",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_078",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 12,
+      "found_rate": 0.8,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_143",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_080",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 12,
+      "found_rate": 0.0848,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_145",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_082",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 13,
+      "found_rate": 0.8,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_147",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_084",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 13,
+      "found_rate": 0.075,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_148",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_085",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 13,
+      "found_rate": 0.044,
+      "has_di_family": true
+    },
+    {
+      "entry_id": "gs_149",
+      "source_dataset": "rett",
+      "original_entry_id": "rett_087",
+      "gene_symbol": "MECP2",
+      "classification": "Rett real-data",
+      "moi": "XD",
+      "field_count": 13,
+      "found_rate": 0.0848,
+      "has_di_family": true
+    }
+  ]
+}

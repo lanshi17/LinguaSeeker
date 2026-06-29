@@ -1,0 +1,16 @@
+{
+  "condition_id": "a4_original_only",
+  "label": "Original-Only Track",
+  "description": "Ablation estimating the value of translated-content processing. Disables the translated text branch in extraction input via ablation_original_only=True while keeping the primary/review workflow, source grounding, and Phase 3. Reported as an input-branch ablation only, not a cross-lingual consistency benchmark.",
+  "extraction_mode": "broad",
+  "ablation_disable_review": false,
+  "ablation_disable_target_guard": false,
+  "ablation_original_only": true,
+  "force_reextract": true,
+  "extraction_profile": "none",
+  "is_prompt_only": false,
+  "prompt_only_model": null,
+  "disabled_components": [
+    "translated_text_branch_in_extraction_input"
+  ]
+}

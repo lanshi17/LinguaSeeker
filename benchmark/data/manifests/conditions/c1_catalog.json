@@ -1,0 +1,14 @@
+{
+  "condition_id": "c1_catalog",
+  "label": "Catalog Workflow Baseline",
+  "description": "Conservative catalog-style extraction workflow. extraction_mode=catalog with forced re-extraction, primary extraction plus review validation, normalization, grounding, and Phase 3 standardization all enabled. Baseline comparison against the full broad workflow.",
+  "extraction_mode": "catalog",
+  "ablation_disable_review": false,
+  "ablation_disable_target_guard": false,
+  "ablation_original_only": false,
+  "force_reextract": true,
+  "extraction_profile": "none",
+  "is_prompt_only": false,
+  "prompt_only_model": null,
+  "disabled_components": []
+}

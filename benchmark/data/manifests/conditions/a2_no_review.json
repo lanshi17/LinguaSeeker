@@ -1,0 +1,16 @@
+{
+  "condition_id": "a2_no_review",
+  "label": "No Review Validation",
+  "description": "Ablation isolating the precision contribution of the review track. Disables the review approval/rejection/correction pass via ablation_disable_review=True while keeping primary broad extraction, normalization, and grounding. Precision is expected to drop if review is useful; recall may increase or remain similar.",
+  "extraction_mode": "broad",
+  "ablation_disable_review": true,
+  "ablation_disable_target_guard": false,
+  "ablation_original_only": false,
+  "force_reextract": true,
+  "extraction_profile": "none",
+  "is_prompt_only": false,
+  "prompt_only_model": null,
+  "disabled_components": [
+    "review_approval_rejection_correction_pass"
+  ]
+}

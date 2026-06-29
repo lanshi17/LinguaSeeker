@@ -33,8 +33,14 @@ export function useSessionConversations(
   const [sessionLabels, setSessionLabels] = useState<Record<string, string>>(
     {},
   );
+  const [optimisticConversationItems, setOptimisticConversationItems] =
+    useState<Array<{ key: string; label: string }>>([]);
+  const [controlledActiveKey, setControlledActiveKey] = useState<string>(() => {
+    if (processingRunId) return sessions[0]?.session_id ?? "";
+    return loadActiveChatSession() ?? sessions[0]?.session_id ?? "";
+  });
 
-  const conversationItems = useMemo(
+  const baseConversationItems = useMemo(
     () =>
       sessions.map((s) => ({
         key: s.session_id,
@@ -43,17 +49,26 @@ export function useSessionConversations(
     [sessions, sessionLabels],
   );
 
+  const conversationItems = useMemo(() => {
+    const existingKeys = new Set(baseConversationItems.map((item) => item.key));
+    const pendingItems = optimisticConversationItems.filter(
+      (item) => !existingKeys.has(item.key),
+    );
+    return [...baseConversationItems, ...pendingItems];
+  }, [baseConversationItems, optimisticConversationItems]);
+
   const {
     conversations,
-    activeConversationKey,
-    setActiveConversationKey,
+    setActiveConversationKey: setSdkActiveConversationKey,
     addConversation,
     setConversations,
     removeConversation,
   } = useXConversations({
     defaultConversations: conversationItems,
-    defaultActiveConversationKey: sessions[0]?.session_id,
+    defaultActiveConversationKey: controlledActiveKey || sessions[0]?.session_id,
   });
+
+  const activeConversationKey = controlledActiveKey;
 
   const captureFirstMessageLabel = useCallback(
     (sessionKey: string, content: string) => {
@@ -69,12 +84,13 @@ export function useSessionConversations(
 
   const handleActiveConversationChange = useCallback(
     (key: string) => {
-      setActiveConversationKey(key);
+      setControlledActiveKey(key);
+      setSdkActiveConversationKey(key);
       if (!processingRunId) {
         rememberActiveChatSession(undefined, key);
       }
     },
-    [processingRunId, setActiveConversationKey],
+    [processingRunId, setSdkActiveConversationKey],
   );
 
   useEffect(() => {
@@ -116,6 +132,10 @@ export function useSessionConversations(
     };
 
     addConversation(item);
+    setOptimisticConversationItems((prev) => {
+      if (prev.some((existing) => existing.key === item.key)) return prev;
+      return [...prev, item];
+    });
     handleActiveConversationChange(session.session_id);
 
     if (!processingRunId) {
@@ -134,9 +154,10 @@ export function useSessionConversations(
   // ── Create session ──
   const handleCreateSession = useCallback(async () => {
     try {
-      await createAndActivateSession();
+      return await createAndActivateSession();
     } catch {
       message.error("Failed to create session");
+      return undefined;
     }
   }, [createAndActivateSession, message]);
 
@@ -152,6 +173,9 @@ export function useSessionConversations(
         cancelText: "Cancel",
         onOk: () => {
           clearCachedMessageStore(sessionId);
+          setOptimisticConversationItems((prev) =>
+            prev.filter((item) => item.key !== sessionId),
+          );
           removeSession(sessionId);
           removeConversation(sessionId);
           onSessionDeletedRef?.current(sessionId);
@@ -161,7 +185,8 @@ export function useSessionConversations(
             if (next) {
               handleActiveConversationChange(next);
             } else {
-              setActiveConversationKey("");
+              setControlledActiveKey("");
+              setSdkActiveConversationKey("");
             }
           }
         },
@@ -175,7 +200,7 @@ export function useSessionConversations(
       removeConversation,
       removeSession,
       sessions,
-      setActiveConversationKey,
+      setSdkActiveConversationKey,
     ],
   );
 
@@ -207,7 +232,7 @@ export function useSessionConversations(
     isCreating,
     conversations,
     activeConversationKey,
-    setActiveConversationKey,
+    setActiveConversationKey: handleActiveConversationChange,
     handleActiveConversationChange,
     createAndActivateSession,
     captureFirstMessageLabel,

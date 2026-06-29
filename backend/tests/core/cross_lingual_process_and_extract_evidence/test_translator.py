@@ -16,6 +16,10 @@ from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.postprocess import (
     build_translated_blocks,
     check_block_coverage,
+    check_block_language,
+    deduplicate_bilingual_blocks,
+    flag_quality_issues,
+    trim_repetitive_content,
 )
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.exceptions import TranslationError
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import MultiStageTranslator
@@ -88,6 +92,164 @@ def test_check_block_coverage_rejects_abstract_only_translation():
 
     with pytest.raises(TranslationError, match="block_coverage"):
         check_block_coverage(original_blocks, translated_blocks)
+
+
+def test_check_block_coverage_accepts_complete_translation():
+    original_blocks = [
+        ContentBlock(type="title", text="Rett 综合征 MECP2 突变分析"),
+        ContentBlock(type="text", text="摘要 目的 分析典型 Rett 综合征患者的临床特点。"),
+        ContentBlock(type="text", text="方法 对 9 例患儿进行 MECP2 基因检测。"),
+        ContentBlock(type="text", text="结果 5 例患儿检出 MECP2 基因突变。"),
+        ContentBlock(type="text", text="讨论 TRD 区域突变可能影响语言和发育。"),
+    ]
+    translated_blocks = [
+        ContentBlock(type="title", text="MECP2 mutation analysis in Rett syndrome"),
+        ContentBlock(type="text", text="Abstract This study analyzed clinical features in Rett syndrome."),
+        ContentBlock(type="text", text="Methods MECP2 sequencing was performed in nine children."),
+        ContentBlock(type="text", text="Results Five children carried MECP2 mutations."),
+    ]
+
+    check_block_coverage(original_blocks, translated_blocks)
+
+
+def test_check_block_coverage_skips_short_documents():
+    original_blocks = [
+        ContentBlock(type="title", text="短文标题"),
+        ContentBlock(type="text", text="只有一个正文块。"),
+    ]
+
+    check_block_coverage(original_blocks, [])
+
+
+def test_check_block_coverage_rejects_low_character_coverage():
+    original_blocks = [
+        ContentBlock(type="title", text="标题" * 20),
+        ContentBlock(type="text", text="摘要" * 60),
+        ContentBlock(type="text", text="方法" * 60),
+        ContentBlock(type="text", text="结果" * 60),
+        ContentBlock(type="text", text="讨论" * 60),
+    ]
+    translated_blocks = [
+        ContentBlock(type="title", text="Title"),
+        ContentBlock(type="text", text="Aim"),
+        ContentBlock(type="text", text="Method"),
+        ContentBlock(type="text", text="Result"),
+    ]
+
+    with pytest.raises(TranslationError, match="block_coverage"):
+        check_block_coverage(original_blocks, translated_blocks)
+
+
+def test_check_block_coverage_rejects_low_block_coverage_even_with_enough_characters():
+    original_blocks = [
+        ContentBlock(type="title", text="标题"),
+        ContentBlock(type="text", text="摘要"),
+        ContentBlock(type="text", text="方法"),
+        ContentBlock(type="text", text="结果"),
+        ContentBlock(type="text", text="讨论"),
+    ]
+    translated_blocks = [
+        ContentBlock(type="title", text="Title with enough translated characters"),
+        ContentBlock(type="text", text="Abstract with enough translated characters"),
+    ]
+
+    with pytest.raises(TranslationError, match="block_coverage"):
+        check_block_coverage(original_blocks, translated_blocks)
+
+
+def test_check_block_language_skips_english_and_unknown_sources():
+    blocks = [ContentBlock(type="text", text="仍然是中文内容")]
+
+    check_block_language(blocks, "en")
+    check_block_language(blocks, "unknown")
+
+
+def test_check_block_language_accepts_translated_chinese_source():
+    blocks = [
+        ContentBlock(type="title", text="Clinical features and MECP2 mutations"),
+        ContentBlock(type="text", text="Five children carried pathogenic variants."),
+        ContentBlock(type="text", text="The parents did not carry the variants."),
+    ]
+
+    check_block_language(blocks, "zh")
+
+
+def test_check_block_language_rejects_mostly_untranslated_chinese_blocks():
+    blocks = [
+        ContentBlock(type="title", text="Clinical features and MECP2 mutations"),
+        ContentBlock(type="text", text="摘要 目的 分析临床特点。"),
+        ContentBlock(type="text", text="结果 发现 MECP2 突变。"),
+        ContentBlock(type="text", text="The parents did not carry the variants."),
+    ]
+
+    with pytest.raises(TranslationError, match="per_block_check"):
+        check_block_language(blocks, "zh")
+
+
+def test_trim_repetitive_content_removes_repeated_heading_blocks():
+    text = "\n\n".join([
+        "# Abstract",
+        "The study analyzed MECP2 mutations.",
+        "# Results",
+        "Five children carried variants.",
+        "# Results",
+        "Five children carried variants again.",
+        "# Discussion",
+        "The variants may affect development.",
+    ])
+
+    result = trim_repetitive_content(text)
+
+    assert result.count("# Results") == 1
+    assert "Five children carried variants again" not in result
+    assert "# Discussion" in result
+
+
+def test_trim_repetitive_content_keeps_non_repetitive_text_unchanged():
+    text = "# Abstract\n\nThe study analyzed MECP2 mutations.\n\n# Results\n\nFive children carried variants."
+
+    assert trim_repetitive_content(text) == text
+
+
+def test_deduplicate_bilingual_blocks_removes_adjacent_near_duplicates():
+    blocks = [
+        ContentBlock(type="text", text="MECP2 mutations were detected in five children."),
+        ContentBlock(type="text", text="MECP2 mutations were detected in five children and patients."),
+        ContentBlock(type="text", text="The parents did not carry these variants."),
+    ]
+
+    result = deduplicate_bilingual_blocks(blocks)
+
+    assert len(result) == 2
+    assert result[0].text == "MECP2 mutations were detected in five children and patients."
+    assert result[1].text == "The parents did not carry these variants."
+
+
+def test_deduplicate_bilingual_blocks_preserves_distinct_adjacent_blocks():
+    blocks = [
+        ContentBlock(type="text", text="MECP2 mutations were detected in five children."),
+        ContentBlock(type="text", text="The parents did not carry these variants."),
+    ]
+
+    assert deduplicate_bilingual_blocks(blocks) == blocks
+
+
+def test_flag_quality_issues_marks_suspicious_translation_artifacts():
+    blocks = [
+        ContentBlock(type="text", text="et al. [12] reported a similar patient."),
+        ContentBlock(type="text", text="In 20, the assay was repeated, including that, in controls."),
+        ContentBlock(type="text", text="This block is clear."),
+    ]
+
+    flagged = flag_quality_issues(blocks)
+
+    assert flagged == 2
+    assert blocks[0].needs_manual_review is True
+    assert "truncated reference" in blocks[0].review_reason
+    assert blocks[1].needs_manual_review is True
+    assert "truncated year" in blocks[1].review_reason
+    assert "ambiguous pronoun" in blocks[1].review_reason
+    assert blocks[2].needs_manual_review is False
 
 
 # ── _parse_terminology tests ─────────────────────────────────────────
