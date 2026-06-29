@@ -1,6 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import { apiClient } from "@/lib/api/client";
 
 const healthEndpoint =
   import.meta.env.VITE_HEALTH_ENDPOINT || `${import.meta.env.BASE_URL}health`;
@@ -28,7 +28,7 @@ export function useBackendHealth(): BackendHealth {
     queryFn: async () => {
       const start = Date.now();
       try {
-        const response = await axios.get<{ status: string }>(
+        const response = await apiClient.get<{ status: string }>(
           healthEndpoint,
           { timeout: 5_000 },
         );

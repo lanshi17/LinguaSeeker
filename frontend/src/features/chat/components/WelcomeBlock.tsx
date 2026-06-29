@@ -21,7 +21,7 @@ const SUGGESTIONS: SuggestionChip[] = [
     icon: <FlaskConical style={{ width: 16, height: 16 }} />,
     title: "Run the pipeline",
     description: "Ingest a paper via PMID, DOI, or keyword",
-    message: "Run the four-phase pipeline on PMID 34521984",
+    message: "Run the four-phase pipeline on PMID 28499369",
     accentBg: "#ecfeff",
     accentColor: "var(--color-primary-600, #0891b2)",
   },
