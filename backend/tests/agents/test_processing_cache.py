@@ -269,8 +269,8 @@ class TestContentHash:
             source_type=SourceType.LOCAL,
             pre_parsed_markdown="content",
         )
-        # Default extraction_mode is now "b8".
-        assert base.extraction_mode == "b8"
+        # Default extraction_mode is now "broad".
+        assert base.extraction_mode == "broad"
         h_default = await compute_content_hash(base)
         # A state with no extraction_mode set at all would hash identically.
         h_plain = compute_hash_from_text("content")
@@ -286,11 +286,11 @@ class TestContentHash:
             source_type=SourceType.LOCAL,
             pre_parsed_markdown="content",
         )
-        legacy = base.model_copy(update={"extraction_mode": "legacy"})
+        legacy = base.model_copy(update={"extraction_mode": "catalog"})
         h_default = await compute_content_hash(base)
         h_legacy = await compute_content_hash(legacy)
         assert h_default != h_legacy
-        assert h_legacy == compute_hash_from_text("content", scope_key="mode=legacy")
+        assert h_legacy == compute_hash_from_text("content", scope_key="mode=catalog")
 
 
 # ── Cache service tests ──────────────────────────────────────────────────

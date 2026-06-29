@@ -6,6 +6,14 @@ from decimal import Decimal
 from types import SimpleNamespace
 from uuid import uuid4
 
+import pytest
+
+from src.core.visualize_evidence_with_expert_in_loop.search_service import (
+    SearchService,
+    _build_highlight,
+    _coerce_str,
+)
+
 _DEFAULT_TS = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
 
@@ -14,14 +22,6 @@ def _cei(**kwargs):
     kwargs.setdefault("created_at", _DEFAULT_TS)
     kwargs.setdefault("updated_at", _DEFAULT_TS)
     return SimpleNamespace(**kwargs)
-
-import pytest
-
-from src.core.visualize_evidence_with_expert_in_loop.search_service import (
-    SearchService,
-    _build_highlight,
-    _coerce_str,
-)
 
 
 class _FakeScalarResult:
@@ -147,6 +147,60 @@ async def test_search_evidence_includes_document_title():
     assert response.items[0].title == "BRCA1 evidence paper"
     assert response.items[0].pmid == "12345678"
     assert response.items[0].created_at is not None
+
+
+@pytest.mark.asyncio
+async def test_search_evidence_includes_source_availability_flags():
+    """Search rows expose whether opening the reader has source/translation text."""
+    source_document_id = uuid4()
+    evidence_id = uuid4()
+    group_id = "gene=['BRCA1']"
+    created_at = datetime(2026, 6, 1, tzinfo=timezone.utc)
+
+    detail_row = _cei(
+        canonical_evidence_id=evidence_id,
+        source_document_id=source_document_id,
+        field_id="A.gene_symbol",
+        review_status="provisional",
+        current_best_confidence=Decimal("0.9500"),
+        active_payload={
+            "group_id": group_id,
+            "value": "BRCA1",
+        },
+        created_at=created_at,
+    )
+    page_row = _cei(
+        group_id=group_id,
+        field_count=1,
+        avg_confidence=Decimal("0.9500"),
+        canonical_evidence_id=evidence_id,
+        source_document_id=source_document_id,
+        review_status="provisional",
+        created_at=created_at,
+    )
+    metadata = [
+        _cei(
+            source_document_id=source_document_id,
+            raw_metadata={"title": "BRCA1 evidence paper"},
+            original_text="Original full text",
+            translated_text="Translated full text",
+            original_blocks=None,
+            translated_blocks=None,
+        ),
+    ]
+
+    service = SearchService(_FakeSession([
+        _FakeResult(scalar=1),
+        _FakeResult(rows=[page_row]),
+        _FakeResult(rows=[detail_row]),
+        _FakeResult(scalars=[]),
+        _FakeResult(rows=metadata),
+    ]))
+
+    response = await service.search_evidence()
+
+    assert response.items[0].has_full_text is True
+    assert response.items[0].has_translation is True
 
 
 @pytest.mark.asyncio

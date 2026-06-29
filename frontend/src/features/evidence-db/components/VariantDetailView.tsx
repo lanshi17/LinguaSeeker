@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   BookOpen,
@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useVariantDetail } from "../hooks/useVariantDetail";
 import { VariantDetailSkeleton } from "./VariantDetailSkeleton";
-import type { LiteratureReference } from "../types/variantDb";
+import type { LiteratureReference, VariantIndexEntry } from "../types/variantDb";
 import type { EvidenceGroupItem } from "@/features/evidence-search/types/evidenceSearch";
 import {
   classificationColor,
@@ -19,6 +19,12 @@ import {
   categoryLabel,
 } from "@/features/evidence-search/utils/categoryStyles";
 import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
+import {
+  EVIDENCE_DB_LABELS,
+  formatConfidencePercent,
+  formatCoverageCount,
+  formatReviewedCount,
+} from "../utils/fieldLabels";
 
 /* ── Style helpers (replace Tailwind-based classificationBadgeClasses / categoryChipStyle) ── */
 
@@ -208,7 +214,7 @@ function EvidenceItemCard({ item }: { item: EvidenceGroupItem }) {
           <span style={{ fontFamily: "var(--font-mono)" }}>{item.field_id}</span>
           <span>&middot;</span>
           <span style={{ fontWeight: 500, color: confColor }}>
-            {Math.round(confidence * 100)}% confidence
+            {formatConfidencePercent(confidence)} confidence
           </span>
           {item.track && (
             <>
@@ -408,8 +414,32 @@ function LiteratureReferenceCard({
           <span style={{ fontWeight: 500, color: confColor }}>
             {confidence}%
           </span>
+          <span>
+            {formatReviewedCount(reference.reviewProgress)}
+          </span>
         </div>
         <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 4 }}>
+          {reference.hasFullText && (
+            <span style={chipInlineStyle("F")}>Full text</span>
+          )}
+          {reference.hasTranslation && (
+            <span style={chipInlineStyle("I")}>Translated</span>
+          )}
+          {reference.conflictCount > 0 && (
+            <span
+              style={{
+                borderRadius: 999,
+                border: "1px solid #fecaca",
+                backgroundColor: "#fef2f2",
+                padding: "2px 6px",
+                fontSize: 11,
+                fontWeight: 500,
+                color: "#b91c1c",
+              }}
+            >
+              {reference.conflictCount} conflict{reference.conflictCount !== 1 ? "s" : ""}
+            </span>
+          )}
           {reference.categories.map((cat) => (
             <span
               key={cat}
@@ -468,7 +498,13 @@ export function VariantDetailView({
 }: {
   variantSlug: string;
 }) {
-  const { detail, isLoading, error } = useVariantDetail(variantSlug);
+  const location = useLocation();
+  const routeState = location.state as { variantEntry?: VariantIndexEntry } | null;
+  const seededEntry =
+    routeState?.variantEntry?.variantSlug === variantSlug
+      ? routeState.variantEntry
+      : undefined;
+  const { detail, isLoading, error } = useVariantDetail(variantSlug, seededEntry);
 
   if (isLoading) {
     return <VariantDetailSkeleton />;
@@ -510,7 +546,7 @@ export function VariantDetailView({
     );
   }
 
-  const { entry, literature, reconciledItems } = detail;
+  const { entry, literature, reconciledItems, quality } = detail;
   const borderColor = classificationColor(entry.classificationLevel);
 
   const categoriesWithItems = [
@@ -597,6 +633,24 @@ export function VariantDetailView({
                   {entry.classification}
                 </p>
               )}
+              {quality.conflictCount > 0 && (
+                <span
+                  style={{
+                    marginTop: 10,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    borderRadius: 6,
+                    border: "1px solid #fecaca",
+                    backgroundColor: "#fef2f2",
+                    padding: "3px 8px",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "#b91c1c",
+                  }}
+                >
+                  {quality.conflictCount} conflict{quality.conflictCount !== 1 ? "s" : ""}
+                </span>
+              )}
             </div>
 
             {/* Stats */}
@@ -610,27 +664,27 @@ export function VariantDetailView({
               }}>
                 <div>
                   <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
-                    {entry.evidenceGroupCount}
-                  </p>
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>Evidence groups</p>
-                </div>
-                <div>
-                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
                     {entry.literatureCount}
                   </p>
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>Literature</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{EVIDENCE_DB_LABELS.literature}</p>
                 </div>
                 <div>
                   <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
                     {entry.fieldCount}
                   </p>
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>Total fields</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{EVIDENCE_DB_LABELS.evidenceFields}</p>
                 </div>
                 <div>
                   <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
-                    {categoriesWithItems.length}
+                    {formatCoverageCount(quality.coverage)}
                   </p>
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>Categories</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{EVIDENCE_DB_LABELS.coverage}</p>
+                </div>
+                <div>
+                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
+                    {quality.reviewProgress.reviewed}/{quality.reviewProgress.total}
+                  </p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{EVIDENCE_DB_LABELS.reviewed}</p>
                 </div>
               </div>
             </div>
@@ -650,7 +704,7 @@ export function VariantDetailView({
               color: "#111827",
               margin: 0,
             }}>
-              Evidence Fields
+              {EVIDENCE_DB_LABELS.evidenceFields}
             </h2>
             <span style={{ fontSize: 14, color: "#6b7280" }}>
               {reconciledItems.length} reconciled field{reconciledItems.length !== 1 ? "s" : ""} across{" "}

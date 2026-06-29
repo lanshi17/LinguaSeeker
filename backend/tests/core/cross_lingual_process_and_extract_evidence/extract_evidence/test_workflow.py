@@ -285,26 +285,45 @@ async def test_workflow_backfills_after_quality_gate(mock_config):
     assert state.evidence_items == []
 
 
-def test_service_default_uses_b8_workflow(mock_config):
-    """EvidenceExtractionService(cfg) defaults to the b8 business workflow."""
+def test_service_default_uses_broad_workflow(mock_config):
+    """EvidenceExtractionService(cfg) defaults to the broad business workflow."""
     service = EvidenceExtractionService(cfg=mock_config)
-    assert service._extraction_mode == "b8"
-    assert service._workflow._extraction_mode == "b8"
+    assert service._extraction_mode == "broad"
+    assert service._workflow._extraction_mode == "broad"
 
 
-def test_service_explicit_legacy_uses_legacy_workflow(mock_config):
-    """EvidenceExtractionService(cfg, extraction_mode='legacy') builds a legacy workflow."""
-    service = EvidenceExtractionService(cfg=mock_config, extraction_mode="legacy")
-    assert service._extraction_mode == "legacy"
-    assert service._workflow._extraction_mode == "legacy"
+def test_service_explicit_catalog_uses_catalog_workflow(mock_config):
+    """EvidenceExtractionService(cfg, extraction_mode='catalog') builds a catalog workflow."""
+    service = EvidenceExtractionService(cfg=mock_config, extraction_mode="catalog")
+    assert service._extraction_mode == "catalog"
+    assert service._workflow._extraction_mode == "catalog"
 
 
-def test_service_run_legacy_override_uses_legacy_workflow(mock_config):
-    """service.run(..., extraction_mode='legacy') overrides the default b8 for that call."""
+def test_service_run_catalog_override_uses_catalog_workflow(mock_config):
+    """service.run(..., extraction_mode='catalog') overrides the default broad for that call."""
     service = EvidenceExtractionService(cfg=mock_config)
-    assert service._extraction_mode == "b8"
+    assert service._extraction_mode == "broad"
     # No profile override + explicit legacy mode -> fresh legacy workflow.
-    wf = service._workflow_for(None, extraction_mode="legacy")
-    assert wf._extraction_mode == "legacy"
+    wf = service._workflow_for(None, extraction_mode="catalog")
+    assert wf._extraction_mode == "catalog"
     # No override -> cached default (b8) workflow.
-    assert service._workflow_for(None, extraction_mode=None)._extraction_mode == "b8"
+    assert service._workflow_for(None, extraction_mode=None)._extraction_mode == "broad"
+
+
+def test_backward_compat_alias_b8_to_broad(mock_config):
+    """extraction_mode='b8' (old name) resolves to 'broad'."""
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import resolve_extraction_mode
+    assert resolve_extraction_mode("b8") == "broad"
+
+
+def test_backward_compat_alias_legacy_to_catalog(mock_config):
+    """extraction_mode='legacy' (old name) resolves to 'catalog'."""
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import resolve_extraction_mode
+    assert resolve_extraction_mode("legacy") == "catalog"
+
+
+def test_resolve_extraction_mode_unknown_raises():
+    """Unknown mode string raises ValueError."""
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import resolve_extraction_mode
+    with pytest.raises(ValueError, match="Unknown extraction_mode"):
+        resolve_extraction_mode("unknown")

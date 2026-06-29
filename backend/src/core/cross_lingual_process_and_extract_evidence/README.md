@@ -113,8 +113,7 @@ Phase 2 is split into two sub-modules executed sequentially by the pipeline orch
 │                              │                      │            │
 │                              ▼                      ▼            │
 │  quality_gate ──▶ catalog_backfill ──▶ END                       │
-│                                                                  │
-│  Legacy rollback (extraction_mode="legacy") uses:                 │
+│  Catalog rollback (extraction_mode="catalog") uses:                │
 │  catalog_extraction ──▶ special_evidence ──▶ clinical_context     │
 │  (before language_metadata, without review_validation)            │
 │                                                                  │
@@ -147,8 +146,8 @@ Phase 2 is split into two sub-modules executed sequentially by the pipeline orch
    - B8 default: → primary broad extraction (step 3a)
    - Legacy rollback: → catalog extraction (step 3b)
 3a. **Primary broad extraction** (STRONG tier, B8 default): broad high-recall extraction with forced source_quote.
-3b. **Catalog extraction** (STRONG tier, legacy): extract sparse `EvidenceItem[]` from channel-eligible fields.
-4. **Special evidence** (STRONG tier, legacy): second pass for functional/case-control/authority/contradiction evidence.
+3b. **Catalog extraction** (STRONG tier, catalog rollback): extract sparse `EvidenceItem[]` from channel-eligible fields.
+4. **Special evidence** (STRONG tier, catalog rollback): second pass for functional/case-control/authority/contradiction evidence.
 5. **Clinical context** (legacy): supplementary phenotype and clinical items.
 6. **Review validation** (STANDARD tier, B8 default): approve/reject/correct primary candidates (fail-open).
 7. **Language metadata**: stamp `article_language`, `is_english`, target gene/disease/variant.
@@ -163,7 +162,7 @@ Phase 2 is split into two sub-modules executed sequentially by the pipeline orch
 16. **Catalog backfill**: expand sparse items to full 166-row catalog per group.
 17. **Dual-track reconciliation**: run original + translated concurrently, then align and merge.
 
-Business Phase 2 now defaults to the **B8 main-track plus review-track** workflow. The legacy/current unified workflow remains available as an explicit rollback mode via `extraction_mode="legacy"` for historical baselines and rollback scenarios.
+Business Phase 2 now defaults to the **broad primary-track plus review-track** workflow. The catalog rollback workflow remains available via `extraction_mode="catalog"` for historical baselines and rollback scenarios.
 
 ### Single-document extraction scope
 

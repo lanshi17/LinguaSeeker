@@ -72,9 +72,9 @@ class PipelineRunRequest(BaseModel):
     # merged_73 BIBM evaluation.  Must be explicitly set by benchmark runners.
     extraction_profile: str = "none"
 
-    # Extraction workflow mode: "b8" (default business main+review track) or
-    # "legacy" (rollback / historical baseline catalog track).
-    extraction_mode: str = "b8"
+    # Extraction workflow mode: "broad" (default business primary+review track) or
+    # "catalog" (rollback / historical baseline catalog track).
+    extraction_mode: str = "broad"
 
     @model_validator(mode="after")
     def validate_request(self) -> "PipelineRunRequest":

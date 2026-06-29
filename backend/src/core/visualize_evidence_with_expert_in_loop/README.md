@@ -22,7 +22,7 @@ The key structural concept is **field-level pivoting**: the database stores evid
 |  1. Query canonical_evidence_items (field-level rows)      |
 |  2. DB-level GROUP BY + pagination (pass 1)                |
 |  3. Pivot fields into summary columns (pass 2)             |
-|  4. Batch-load identifiers and titles                      |
+|  4. Batch-load identifiers, titles, and availability flags  |
 |  5. Build track traces with highlight building             |
 |  6. Load full document text from DB or pipeline output     |
 +-----------------------------------------------------------+
@@ -118,6 +118,7 @@ GET /api/v1/evidence/search
 The search uses a two-pass approach:
 1. DB-level `GROUP BY` + `OFFSET/LIMIT` to get current page `group_id`s
 2. Fetch field details only for those groups (bounded set)
+3. Batch-load document identifiers, title metadata, and stored text/block availability from `source_documents`
 
 Gene/variant/disease filters narrow to matching `group_id`s first, then the two-pass pagination runs on the filtered set.
 
@@ -140,7 +141,9 @@ Gene/variant/disease filters narrow to matching `group_id`s first, then the two-
       "avg_confidence": 0.92,
       "review_status": "provisional",
       "canonical_evidence_id": "uuid",
-      "created_at": "2026-01-01T00:00:00Z"
+      "created_at": "2026-01-01T00:00:00Z",
+      "has_full_text": true,
+      "has_translation": true
     }
   ],
   "total": 150,
@@ -148,6 +151,10 @@ Gene/variant/disease filters narrow to matching `group_id`s first, then the two-
   "page_size": 50
 }
 ```
+
+`has_full_text` is derived from `source_documents.original_text` or `source_documents.original_blocks`.
+`has_translation` is derived from `source_documents.translated_text` or `source_documents.translated_blocks`.
+The search response exposes only booleans so index pages can show availability without loading full document text.
 
 ### Literature Search
 

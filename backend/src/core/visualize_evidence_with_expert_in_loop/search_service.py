@@ -440,6 +440,12 @@ def _load_full_document_text(
 
     return None
 
+
+def _has_text_or_blocks(text: str | None, blocks: list[dict] | None) -> bool:
+    """Return whether a document has stored text or structured content blocks."""
+    return bool((text and text.strip()) or blocks)
+
+
 class SearchService:
     """Search evidence cards grouped by group_id, pivoting field-level extractions."""
 
@@ -470,41 +476,50 @@ class SearchService:
 
         group_id_expr = CanonicalEvidenceItem.active_payload["group_id"].astext
 
-        # Build filter conditions on field-level rows
-        conditions = []
+        # Build per-filter group_id sets, then intersect (AND across filters).
+        # Each filter targets a disjoint field_id domain (gene vs variant vs disease),
+        # so they must be queried independently — ANDing them in one WHERE clause
+        # would require field_id to match multiple domains simultaneously.
+        per_filter_clauses = []
         if gene:
-            conditions.append(
+            per_filter_clauses.append(
                 and_(
                     CanonicalEvidenceItem.field_id.in_(_GENE_FIELDS),
                     CanonicalEvidenceItem.active_payload["value"].astext.ilike(f"%{gene}%"),
                 )
             )
         if variant:
-            conditions.append(
+            per_filter_clauses.append(
                 and_(
                     CanonicalEvidenceItem.field_id.in_(_VARIANT_FIELDS),
                     CanonicalEvidenceItem.active_payload["value"].astext.ilike(f"%{variant}%"),
                 )
             )
         if disease:
-            conditions.append(
+            per_filter_clauses.append(
                 and_(
                     CanonicalEvidenceItem.field_id.in_(_DISEASE_FIELDS),
                     CanonicalEvidenceItem.active_payload["value"].astext.ilike(f"%{disease}%"),
                 )
             )
 
-        # If filters are present, narrow to matching group_ids
-        if conditions:
-            filter_stmt = (
-                select(group_id_expr)
-                .where(and_(*conditions))
-                .group_by(group_id_expr)
-            )
-            result = await self._session.execute(filter_stmt)
-            matching_group_ids = [row[0] for row in result.all() if row[0]]
+        if per_filter_clauses:
+            matching_group_ids: set[str] | None = None
+            for clause in per_filter_clauses:
+                filter_stmt = (
+                    select(group_id_expr)
+                    .where(clause)
+                    .group_by(group_id_expr)
+                )
+                result = await self._session.execute(filter_stmt)
+                ids = {row[0] for row in result.all() if row[0]}
+                if matching_group_ids is None:
+                    matching_group_ids = ids
+                else:
+                    matching_group_ids &= ids
             if not matching_group_ids:
                 return EvidenceSearchResponse(items=[], total=0, page=page, page_size=page_size)
+            matching_group_ids = list(matching_group_ids)
         else:
             matching_group_ids = None
 
@@ -654,6 +669,7 @@ class SearchService:
         doc_ids = {g["source_document_id"] for g in groups.values()}
         ident_map: dict[str, dict[str, str]] = {}
         title_map: dict[str, str] = {}
+        availability_map: dict[str, dict[str, bool]] = {}
         if doc_ids:
             ident_stmt = select(SourceDocumentIdentifier).where(
                 SourceDocumentIdentifier.source_document_id.in_(doc_ids)
@@ -666,6 +682,10 @@ class SearchService:
             metadata_stmt = select(
                 SourceDocument.source_document_id,
                 SourceDocument.raw_metadata,
+                SourceDocument.original_text,
+                SourceDocument.translated_text,
+                SourceDocument.original_blocks,
+                SourceDocument.translated_blocks,
             ).where(SourceDocument.source_document_id.in_(doc_ids))
             metadata_result = await self._session.execute(metadata_stmt)
             for row in metadata_result.all():
@@ -677,6 +697,16 @@ class SearchService:
                 )
                 if title:
                     title_map[str(row.source_document_id)] = title
+                availability_map[str(row.source_document_id)] = {
+                    "has_full_text": _has_text_or_blocks(
+                        getattr(row, "original_text", None),
+                        getattr(row, "original_blocks", None),
+                    ),
+                    "has_translation": _has_text_or_blocks(
+                        getattr(row, "translated_text", None),
+                        getattr(row, "translated_blocks", None),
+                    ),
+                }
 
         # Build results (apply PMID/DOI post-filters)
         items: list[EvidenceSearchResult] = []
@@ -694,6 +724,7 @@ class SearchService:
                 filtered_total -= 1
                 continue
 
+            availability = availability_map.get(str(g["source_document_id"]), {})
             items.append(
                 EvidenceSearchResult(
                     group_id=g["group_id"],
@@ -710,6 +741,8 @@ class SearchService:
                     review_status=g["review_status"],
                     canonical_evidence_id=g["canonical_evidence_id"],
                     created_at=g["created_at"],
+                    has_full_text=availability.get("has_full_text", False),
+                    has_translation=availability.get("has_translation", False),
                 )
             )
 

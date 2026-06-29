@@ -70,9 +70,9 @@ Quality metrics and benchmark scores should be computed against **eligible/sourc
 
 ### Extraction workflow modes
 
-Business Phase 2 now defaults to the **B8 main-track plus review-track** workflow (`extraction_mode="b8"`, the canonical default). B8 uses `PrimaryBroadExtractionStage` + `ReviewValidationStage` instead of the legacy `catalog_extraction -> special_evidence -> clinical_context` chain.
+Business Phase 2 now defaults to the **broad primary-track plus review-track** workflow (`extraction_mode="broad"`, the canonical default). Broad uses `PrimaryBroadExtractionStage` + `ReviewValidationStage` instead of the catalog `catalog_extraction -> special_evidence -> clinical_context` chain.
 
-The legacy/current unified workflow remains available as an explicit rollback / historical baseline via `extraction_mode="legacy"`.
+The catalog rollback workflow remains available via `extraction_mode="catalog"`.
 
 
 ```
@@ -110,15 +110,15 @@ EvidenceExtractionService (public facade)
       ├─ value_normalization ───────> AcmgEvidenceValueNormalizer (deterministic)
       │    └─ rejects coordinate-only HGVS, blocks milestone ages, merges duplicates
       │
-      ├─ catalog_extraction ──────> CatalogExtractionStage (STRONG tier)
-      │    └─ legacy rollback only: unified pass over eligible high_signal + supporting
-      │
-      ├─ special_evidence ────────> SpecialEvidenceStage (STRONG tier)
-      │    └─ legacy rollback only: second pass for functional/case-control/authority
-      │
-      ├─ clinical_context ────────> ClinicalContextStage (STRONG tier)
-      │    └─ legacy rollback only: supplementary phenotype and clinical context items
-      │
+     ├─ catalog_extraction ──────> CatalogExtractionStage (STRONG tier)
+     │    └─ catalog rollback only: unified pass over eligible high_signal + supporting
+     │
+     ├─ special_evidence ────────> SpecialEvidenceStage (STRONG tier)
+     │    └─ catalog rollback only: second pass for functional/case-control/authority
+     │
+     ├─ clinical_context ────────> ClinicalContextStage (STRONG tier)
+     │    └─ catalog rollback only: supplementary phenotype and clinical context items
+     │
       │
       ├─ target_guard ──────────────> TargetEntityGuard (deterministic)
       │    └─ filters items against the ExtractionTarget gene-disease pair
@@ -142,11 +142,11 @@ EvidenceExtractionService (public facade)
 
 ### Data flow
 TrackDocument -> [relevance_scan] -> DocumentEvidenceMap + DocumentChannelClassification
-  B8 default: -> [primary_broad_extraction] -> sparse EvidenceItem[]
-  legacy:     -> [catalog_extraction]        -> sparse EvidenceItem[]
+  broad default: -> [primary_broad_extraction] -> sparse EvidenceItem[]
+  catalog:       -> [catalog_extraction]        -> sparse EvidenceItem[]
                -> [special_evidence]          -> sparse SpecialEvidenceRecord[]
                -> [clinical_context]          -> supplementary EvidenceItem[]
-  B8 default: -> [review_validation]          -> reviewed EvidenceItem[]
+  broad default: -> [review_validation]          -> reviewed EvidenceItem[]
                                 -> [language_metadata] -> language-stamped items
                                 -> [group_assignment] -> grouped items + grouped special records
                                 -> [role_routing] -> primary items, phenotype items, discarded
@@ -298,6 +298,10 @@ Status rank: FOUND(3) > SOURCE_INVALID(2) > TABLE_UNGROUNDED(1) = OCR_GAP(1) = C
 
 Moves LLM-provided `source` into `raw_source` before grounding. This separation ensures the grounder can validate sources independently rather than trusting LLM-asserted locations.
 
+### Evidence Section Filtering (`api.py`)
+
+`EvidenceExtractionService.build_dual_documents_from_output_dir()` filters parsed document blocks before constructing `TrackDocument`. It keeps evidence-bearing body sections such as Abstract, Introduction/Background, Methods, Results, Discussion, Case Report/Patients, Tables, Figure Captions, and Conclusion. It skips metadata/back matter sections including References, Acknowledgments, Author/Affiliations, Conflict of Interest, Funding, and non-body header/footer/page-number blocks. This prevents citation lists and legal/metadata text from contaminating the 134-field ACMG/ClinGen extraction prompts while preserving tables and captions that may contain variant, phenotype, segregation, or functional evidence.
+
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `normalize_items` | `(items: list[EvidenceItem]) -> list[EvidenceItem]` | Moves `source` -> `raw_source`, sets `source=None`. Drops NOT_FOUND items. |
@@ -423,9 +427,9 @@ Thin wrappers that each own one pipeline step. Deterministic stages are provider
 | Stage | Class | Input | Output | Provider? |
 |-------|-------|-------|--------|-----------|
 | relevance_scan | `RelevanceScanStage` | `TrackDocument` | `DocumentEvidenceMap` | FAST |
-| catalog_extraction | `CatalogExtractionStage` | `TrackDocument, DocumentEvidenceMap` | sparse `list[EvidenceItem]` | STRONG, legacy rollback |
-| special_evidence | `SpecialEvidenceStage` | `TrackDocument, list[EvidenceItem]` | sparse `list[SpecialEvidenceRecord]` | STRONG, legacy rollback |
-| clinical_context | `ClinicalContextStage` | `TrackDocument, list[EvidenceItem], DocumentEvidenceMap` | supplementary `list[EvidenceItem]` | STRONG, legacy rollback |
+| catalog_extraction | `CatalogExtractionStage` | `TrackDocument, DocumentEvidenceMap` | sparse `list[EvidenceItem]` | STRONG, catalog rollback |
+| special_evidence | `SpecialEvidenceStage` | `TrackDocument, list[EvidenceItem]` | sparse `list[SpecialEvidenceRecord]` | STRONG, catalog rollback |
+| clinical_context | `ClinicalContextStage` | `TrackDocument, list[EvidenceItem], DocumentEvidenceMap` | supplementary `list[EvidenceItem]` | STRONG, catalog rollback |
 | primary_broad_extraction | `PrimaryBroadExtractionStage` | `TrackDocument` | sparse `list[EvidenceItem]` | STRONG, business default |
 | language_metadata | `_node_language_metadata` | `EvidenceExtractionState` | language-stamped items | none |
 | group_assignment | `GroupAssignmentStage` | `TrackDocument, list[EvidenceItem], list[SpecialEvidenceRecord]` | grouped items + grouped special records | none |
@@ -674,8 +678,8 @@ Modify `LangChainEvidenceProvider._TRANSIENT_EXCEPTIONS` in `providers.py` to ad
 
 ### Known bottlenecks
 
-- **LLM calls dominate latency** — each relevant document running the B8 default path incurs `relevance_scan` + `primary_broad_extraction` + `review_validation` LLM round-trips. The legacy rollback path (`extraction_mode="legacy"`) uses `relevance_scan` + `catalog_extraction` groups + `special_evidence` + `clinical_context`.
-- **B8 is the business default** — the B8 main-track plus review-track workflow replaced the legacy catalog path as the production default after a three-round evaluation campaign. Round 3 exceeded the benchmark harness (P=87.5%, R=43.8%, F1=58.3% on the random sample). The legacy/current unified workflow remains available as an explicit rollback via `extraction_mode="legacy"`.
+- **LLM calls dominate latency** — each relevant document running the broad default path incurs `relevance_scan` + `primary_broad_extraction` + `review_validation` LLM round-trips. The catalog rollback path (`extraction_mode="catalog"`) uses `relevance_scan` + `catalog_extraction` groups + `special_evidence` + `clinical_context`.
+- **Broad is the business default** — the broad main-track plus review-track workflow replaced the catalog rollback path as the production default after a three-round evaluation campaign. Round 3 exceeded the benchmark harness (P=87.5%, R=43.8%, F1=58.3% on the random sample). The catalog unified workflow remains available as an explicit rollback via `extraction_mode="catalog"`.
 - **Snippet search for common substrings** — very common text like "the" or "1" in single-character snippets will find up to 50 matches, creating 50 `SourceLocation` objects. This is bounded but still allocates.
 
 ## Dependencies

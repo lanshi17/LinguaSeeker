@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   aggregateVariants,
   buildVariantGroupDocumentPairs,
+  chooseVariantSearchRows,
   filterAndPaginateVariants,
   parseVariantSlug,
 } from "../../src/features/evidence-db/utils/variantAggregation";
@@ -75,6 +76,58 @@ describe("aggregateVariants — one row per variant site", () => {
     expect(c316!.evidenceGroupCount).toBe(2);
     expect(c316!.groupIds).toHaveLength(2);
     expect(c316!.sourceDocumentIds).toHaveLength(2);
+    expect(c316!.groupDocumentPairs).toEqual([
+      {
+        groupId: "gene=MECP2|variant=c.316C>T; c.502C>T",
+        sourceDocumentId: "doc-a",
+      },
+      {
+        groupId: "gene=MECP2|variant=c.316C>T; c.808C>T",
+        sourceDocumentId: "doc-b",
+      },
+    ]);
+  });
+
+  it("computes review progress from grouped search rows", () => {
+    const entries = aggregateVariants([
+      makeResult({
+        group_id: "group-a",
+        source_document_id: "doc-a",
+        review_status: "approved",
+      }),
+      makeResult({
+        group_id: "group-b",
+        source_document_id: "doc-b",
+        review_status: "corrected",
+      }),
+      makeResult({
+        group_id: "group-c",
+        source_document_id: "doc-c",
+        review_status: "rejected",
+      }),
+      makeResult({
+        group_id: "group-d",
+        source_document_id: "doc-d",
+        review_status: "provisional",
+      }),
+    ]);
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0].reviewProgress.reviewed).toBe(3);
+    expect(entries[0].reviewProgress.reviewedPercent).toBe(0.75);
+    expect(entries[0].reviewProgress.rejected).toBe(1);
+  });
+
+  it("preserves backend source availability fields on the representative row", () => {
+    const entries = aggregateVariants([
+      makeResult({
+        has_full_text: true,
+        has_translation: true,
+      }),
+    ]);
+
+    expect(entries[0].representative.has_full_text).toBe(true);
+    expect(entries[0].representative.has_translation).toBe(true);
   });
 });
 
@@ -141,5 +194,19 @@ describe("variant detail query helpers", () => {
       { groupId: "group-a", sourceDocumentId: "doc-1" },
       { groupId: "group-b", sourceDocumentId: "doc-2" },
     ]);
+  });
+
+  it("falls back to full index rows when scoped backend search misses a listed variant", () => {
+    const fullRows = [
+      makeResult({
+        group_id: "group-a",
+        source_document_id: "doc-1",
+        gene: "FLCN",
+        variant: "c.1177-5_-3delCTC",
+        disease: "Birt-Hogg-Dube syndrome",
+      }),
+    ];
+
+    expect(chooseVariantSearchRows([], fullRows, "FLCN:c.1177-5_-3delCTC:Birt-Hogg-Dube syndrome")).toEqual(fullRows);
   });
 });

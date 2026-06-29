@@ -1,5 +1,10 @@
 // Reuse existing types from evidence-search
 import type { EvidenceSearchResult, EvidenceGroupDetailResponse, EvidenceGroupItem } from "@/features/evidence-search/types/evidenceSearch";
+import type {
+  LiteratureQualitySummary,
+  ReviewProgress,
+  VariantQualitySummary,
+} from "../utils/fieldModel";
 
 /** Classification severity level for pathogenicity ordering */
 export type ClassificationLevel = "pathogenic" | "likely_pathogenic" | "uncertain" | "likely_benign" | "benign";
@@ -25,12 +30,16 @@ export interface VariantIndexEntry {
   categoryDistribution: Record<string, number>;
   /** Aggregate review status — worst-case wins */
   reviewStatus: string;
+  /** Aggregate review progress across grouped search rows. */
+  reviewProgress: ReviewProgress;
   /** Most recent created_at from grouped evidence */
   createdAt?: string | null;
   /** All group_ids that belong to this variant */
   groupIds: string[];
   /** All unique source_document_ids */
   sourceDocumentIds: string[];
+  /** Exact group/document pairs represented by this row. */
+  groupDocumentPairs: Array<{ groupId: string; sourceDocumentId: string }>;
   /** Representative search result (for navigation) */
   representative: EvidenceSearchResult;
 }
@@ -64,10 +73,12 @@ export interface VariantDetailData {
   reconciledItems: EvidenceGroupItem[];
   /** Original + translated items keyed by canonical_evidence_id for bilingual display */
   bilingualItems: Map<string, { original?: EvidenceGroupItem; translated?: EvidenceGroupItem }>;
+  /** Derived evidence-quality metrics for this variant. */
+  quality: VariantQualitySummary;
 }
 
 /** L2: A single literature reference in the variant's reference list */
-export interface LiteratureReference {
+export interface LiteratureReference extends LiteratureQualitySummary {
   sourceDocumentId: string;
   title: string;
   pmid?: string;

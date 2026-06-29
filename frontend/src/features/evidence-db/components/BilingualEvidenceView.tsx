@@ -22,6 +22,7 @@ import { LiteratureHeader } from "./LiteratureHeader";
 import { BilingualSidebar } from "./BilingualSidebar";
 import { bevEmbeddedCSS } from "./bevStyles";
 import { ExportReportDrawer } from "@/features/evidence-search/components/ExportReportDrawer";
+import { computeLiteratureQuality } from "../utils/fieldModel";
 import {
   createScrollSyncHandler,
   loadScrollSyncSetting,
@@ -40,6 +41,35 @@ import type {
   AnnotationUpdateRequest,
   UserAnnotation,
 } from "@/features/evidence-search/types/annotations";
+import type {
+  EvidenceChainHighlight,
+  EvidenceGroupItem,
+  EvidenceTrackTrace,
+  ReviewStatusValue,
+} from "@/features/evidence-search/types/evidenceSearch";
+
+const REVIEW_STATUSES: ReviewStatusValue[] = [
+  "provisional",
+  "approved",
+  "corrected",
+  "rejected",
+];
+
+function categoryFromItem(item: EvidenceGroupItem): string | null {
+  return item.category ?? (item.field_id.includes(".") ? item.field_id.split(".")[0] : null);
+}
+
+function hasSourceSpan(highlight?: EvidenceChainHighlight | null): boolean {
+  return Boolean(
+    highlight &&
+      Object.keys(highlight.source_span ?? {}).length > 0 &&
+      highlight.highlight_end > highlight.highlight_start,
+  );
+}
+
+function traceHasSourceSpan(trace?: EvidenceTrackTrace): boolean {
+  return Boolean(trace && (hasSourceSpan(trace.original) || hasSourceSpan(trace.translated)));
+}
 
 /* ── Main View ──────────────────────────────────────────── */
 
@@ -52,6 +82,9 @@ export function BilingualEvidenceView({
 }) {
   const [enabledCategories, setEnabledCategories] = useState<Set<string>>(
     () => new Set(EVIDENCE_CATEGORIES),
+  );
+  const [enabledStatuses, setEnabledStatuses] = useState<Set<string>>(
+    () => new Set(REVIEW_STATUSES),
   );
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<
     string | undefined
@@ -192,6 +225,36 @@ export function BilingualEvidenceView({
     [groupDetail],
   );
 
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const item of groupDetail?.items ?? []) {
+      counts[item.review_status] = (counts[item.review_status] ?? 0) + 1;
+    }
+    return counts;
+  }, [groupDetail]);
+
+  const navigatorItems = useMemo(() => {
+    if (!groupDetail) return [];
+    return groupDetail.items.filter((item) => {
+      const cat = categoryFromItem(item);
+      const categoryEnabled = cat ? enabledCategories.has(cat) : true;
+      return categoryEnabled && enabledStatuses.has(item.review_status);
+    });
+  }, [enabledCategories, enabledStatuses, groupDetail]);
+
+  const literatureQuality = useMemo(
+    () => (groupDetail ? computeLiteratureQuality(groupDetail) : null),
+    [groupDetail],
+  );
+
+  const selectedTrace = useMemo(
+    () =>
+      groupDetail?.traces.find(
+        (trace) => trace.canonical_evidence_id === selectedEvidenceId,
+      ),
+    [groupDetail, selectedEvidenceId],
+  );
+
   const toggleCategory = (cat: string) => {
     setEnabledCategories((prev) => {
       const next = new Set(prev);
@@ -206,6 +269,22 @@ export function BilingualEvidenceView({
 
   const toggleAllCategories = (on: boolean) => {
     setEnabledCategories(on ? new Set(EVIDENCE_CATEGORIES) : new Set());
+  };
+
+  const toggleStatus = (status: string) => {
+    setEnabledStatuses((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) {
+        next.delete(status);
+      } else {
+        next.add(status);
+      }
+      return next;
+    });
+  };
+
+  const toggleAllStatuses = (on: boolean) => {
+    setEnabledStatuses(on ? new Set(REVIEW_STATUSES) : new Set());
   };
 
   if (isLoading) {
@@ -284,6 +363,7 @@ export function BilingualEvidenceView({
       {/* Literature Header */}
       <LiteratureHeader
         groupDetail={groupDetail}
+        quality={literatureQuality ?? undefined}
         onExportReport={() => setExportOpen(true)}
       />
 
@@ -295,7 +375,11 @@ export function BilingualEvidenceView({
           enabledCategories={enabledCategories}
           toggleCategory={toggleCategory}
           toggleAllCategories={toggleAllCategories}
-          items={groupDetail.items}
+          statusCounts={statusCounts}
+          enabledStatuses={enabledStatuses}
+          toggleStatus={toggleStatus}
+          toggleAllStatuses={toggleAllStatuses}
+          items={navigatorItems}
           selectedEvidenceId={selectedEvidenceId}
           onSelectEvidence={setSelectedEvidenceId}
         />
@@ -310,6 +394,7 @@ export function BilingualEvidenceView({
                   (i) => i.canonical_evidence_id === selectedEvidenceId,
                 ) ?? groupDetail.items[0]
               }
+              sourceSpanAvailable={traceHasSourceSpan(selectedTrace)}
             />
           )}
           {/* Sync control + bilingual panels */}
