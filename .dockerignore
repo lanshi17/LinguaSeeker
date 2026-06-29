@@ -38,6 +38,7 @@ backend/logs
 backend/downloads
 backend/output
 backend/data
+backend/docker-artifacts
 backend/benchmark
 backend/.test-build
 backend/.cache_ggshield

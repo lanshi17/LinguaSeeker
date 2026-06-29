@@ -6046,3 +6046,11 @@ RUN find /opt/venv/bin -maxdepth 1 -type f -exec \
 - Resolution: Updated Vite and Vitest config to compute appVersion = env.VITE_APP_VERSION || pkg.version. Updated Sidebar regression test to parse frontend/.env and assert the displayed version.
 - Debug note: Initially imported loadEnv from vitest/config, which failed because loadEnv belongs to vite. Corrected the import and reran tests.
 - Prevention: Shared build-time config should use the same precedence chain in Vite and Vitest, and tests should assert against the actual source file where practical.
+
+## 2026-06-29 - Docker Hub backend image push failed on oversized layers
+
+- Problem: Pushing `lanshi47/lingua-seeker-backend:latest` to Docker Hub repeatedly failed with registry-side `502 Bad Gateway` and `invalid content range` errors during blob upload.
+- Investigation: The first image was 9.34GB and contained `/app/docker-artifacts` because root-context builds do not apply `backend/.dockerignore`. After excluding that directory, the image still had a single 5.65GB unpacked `site-packages` layer plus a 3GB tarball COPY layer.
+- Root cause: The Dockerfile copied `docker-artifacts/site-packages.tar.gz` into an image layer and unpacked all Python dependencies in one layer. Docker Hub and the current network path were unstable for those oversized blobs.
+- Resolution: Added `backend/docker-artifacts` to root `.dockerignore`. Changed `backend/Dockerfile` to use BuildKit bind mounts for `site-packages.tar.gz` so the tarball is not stored as a layer, and split dependency extraction into `nvidia*`, `torch*`, `triton*/cuda*`, and remaining packages. The final pushed digest is `sha256:5232e93912cf6ee5b7fbd8c90b304bc4c8270d48ac6c6d971af2baf165b81211`.
+- Prevention: For root-context Docker builds, exclude generated artifacts in root `.dockerignore`, not only subdirectory `.dockerignore`. Avoid single multi-GB Docker layers for registry uploads; use BuildKit mounts or split layers by dependency group.
