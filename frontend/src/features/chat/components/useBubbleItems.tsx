@@ -9,7 +9,7 @@ import { ThinkingIndicator } from "./ThinkingIndicator";
 import { PipelineSummaryCard, PipelineStatusCard } from "./forms";
 import type { PipelineSummarySlots } from "./forms";
 import type { PerSessionUIState } from "./chatConfig";
-import { WelcomeBlock } from "./WelcomeBlock";
+import { WelcomeBlock, type WelcomeAction } from "./WelcomeBlock";
 
 interface UseBubbleItemsParams {
   messages: MessageInfo<ChatBubbleMessage>[];
@@ -20,7 +20,7 @@ interface UseBubbleItemsParams {
   dispatchedActions: Set<string>;
   handleDispatchAction: (action: ChatAction, key?: string) => void;
   handlePipelineConfirm: (slots: PipelineSummarySlots) => void;
-  handleSendMessage: (content: string) => Promise<void>;
+  handleWelcomeAction: (action: WelcomeAction) => void;
   setActiveForm: (intent: PerSessionUIState["activeForm"]) => void;
   setActiveFormSlots: (slots: PerSessionUIState["activeFormSlots"]) => void;
 }
@@ -42,7 +42,7 @@ export function useBubbleItems(params: UseBubbleItemsParams): any[] {
     dispatchedActions,
     handleDispatchAction,
     handlePipelineConfirm,
-    handleSendMessage,
+    handleWelcomeAction,
     setActiveForm,
     setActiveFormSlots,
   } = params;
@@ -148,7 +148,7 @@ export function useBubbleItems(params: UseBubbleItemsParams): any[] {
         content: "",
         variant: "borderless" as const,
         contentRender: () => (
-          <WelcomeBlock onPick={(msg) => void handleSendMessage(msg)} />
+          <WelcomeBlock onPick={handleWelcomeAction} />
         ),
       });
     }
@@ -161,7 +161,7 @@ export function useBubbleItems(params: UseBubbleItemsParams): any[] {
     pipelineStatus,
     isRequesting,
     handlePipelineConfirm,
-    handleSendMessage,
+    handleWelcomeAction,
     dispatchedActions,
     handleDispatchAction,
     setActiveForm,

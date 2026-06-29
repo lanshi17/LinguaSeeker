@@ -170,6 +170,9 @@ class Phase2Adapter:
                 dual_documents,
                 extraction_profile=state.extraction_profile,
                 extraction_mode=state.extraction_mode,
+                original_only=state.ablation_original_only,
+                enable_review_validation=not state.ablation_disable_review,
+                enable_target_guard=not state.ablation_disable_target_guard,
             )
 
             # Check if document is relevant

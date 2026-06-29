@@ -18,12 +18,13 @@ export default defineConfig(({ mode }) => {
   const base = rawBasePath.endsWith("/") ? rawBasePath : `${rawBasePath}/`;
 
   const pkg = JSON.parse(readFileSync(path.resolve(__dirname, "package.json"), "utf-8"));
+  const appVersion = env.VITE_APP_VERSION || pkg.version;
 
   return {
     base,
     plugins: [react()],
     define: {
-      __APP_VERSION__: JSON.stringify(pkg.version),
+      __APP_VERSION__: JSON.stringify(appVersion),
     },
     resolve: {
       alias: {

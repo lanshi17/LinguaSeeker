@@ -418,3 +418,10 @@ class PipelineGraphState(BaseModel):
     # ``"broad"`` = business default (primary_broad_extraction -> review_validation two-pass).
     # ``"catalog"`` = rollback / historical baseline (catalog_extraction -> special_evidence -> ...).
     extraction_mode: str = "broad"
+
+    # Ablation switches for BIBM N=50 comparison experiment.
+    # When True, the corresponding workflow node is skipped.
+    # See docs/active/2026-06-29-bibm-n50-comparison-ablation-design.md.
+    ablation_disable_review: bool = False
+    ablation_disable_target_guard: bool = False
+    ablation_original_only: bool = False

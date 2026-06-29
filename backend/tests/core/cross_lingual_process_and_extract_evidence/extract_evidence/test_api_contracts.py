@@ -8,6 +8,10 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     Track,
     TrackDocument,
 )
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
+    _filter_evidence_blocks,
+    _is_section_heading,
+)
 
 import json
 
@@ -90,6 +94,65 @@ def test_result_model_dump_exposes_group_and_chain_fields():
     result = item.model_dump()
 
     assert result["group_id"] == "gene=BRCA1|variant=c.5266dupC"
+
+
+def test_is_section_heading_handles_boundaries_and_chinese_headings() -> None:
+    assert _is_section_heading("") is False
+    assert _is_section_heading("Results") is True
+    assert _is_section_heading("REFERENCES") is True
+    assert _is_section_heading("结果") is True
+    assert _is_section_heading("参考文献") is True
+    assert _is_section_heading("Results " + "x" * 121) is False
+
+
+def test_filter_evidence_blocks_skips_chinese_non_evidence_sections() -> None:
+    blocks = [
+        {"type": "title", "text": "Rett 综合征的临床特点"},
+        {"type": "text", "text": "摘要 MECP2 c.913insT 被检出。"},
+        {"type": "text", "text": "结果 5 例患儿存在 MECP2 突变。"},
+        {"type": "text", "text": "参考文献"},
+        {"type": "text", "text": "[1] 与本文证据无关的引用。"},
+        {"type": "text", "text": "致谢"},
+        {"type": "text", "text": "感谢测序平台支持。"},
+        {"type": "text", "text": "讨论 TRD 区域突变可能影响语言功能。"},
+    ]
+
+    filtered = _filter_evidence_blocks(blocks)
+    kept_text = "\n".join(str(block.get("text", "")) for block in filtered)
+
+    assert "摘要 MECP2 c.913insT 被检出" in kept_text
+    assert "结果 5 例患儿存在 MECP2 突变" in kept_text
+    assert "参考文献" not in kept_text
+    assert "无关的引用" not in kept_text
+    assert "致谢" not in kept_text
+    assert "测序平台" not in kept_text
+    assert "讨论 TRD 区域突变" in kept_text
+
+
+def test_filter_evidence_blocks_skips_consecutive_non_evidence_sections_until_evidence_resumes() -> None:
+    blocks = [
+        {"type": "text", "text": "Abstract MECP2 variants were detected."},
+        {"type": "text", "text": "References"},
+        {"type": "text", "text": "[1] Citation with unrelated MECP2 text."},
+        {"type": "text", "text": "Acknowledgments"},
+        {"type": "text", "text": "The authors thank the clinical staff."},
+        {"type": "text", "text": "Funding"},
+        {"type": "text", "text": "Supported by a local grant."},
+        {"type": "text", "text": "Results"},
+        {"type": "text", "text": "Five children had pathogenic MECP2 variants."},
+    ]
+
+    filtered = _filter_evidence_blocks(blocks)
+    kept_text = "\n".join(str(block.get("text", "")) for block in filtered)
+
+    assert "Abstract MECP2 variants were detected" in kept_text
+    assert "Citation with unrelated" not in kept_text
+    assert "clinical staff" not in kept_text
+    assert "local grant" not in kept_text
+    assert "Results" in kept_text
+    assert "Five children had pathogenic MECP2 variants" in kept_text
+
+
 def test_build_dual_documents_accepts_extraction_target(tmp_path) -> None:
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
         EvidenceExtractionService,

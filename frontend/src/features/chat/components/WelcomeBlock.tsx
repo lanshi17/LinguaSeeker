@@ -1,7 +1,7 @@
 import {
-  BookOpen,
+  ClipboardCheck,
+  Database,
   FlaskConical,
-  Search,
   Sparkles,
   Upload,
 } from "lucide-react";
@@ -10,54 +10,84 @@ interface SuggestionChip {
   icon: React.ReactNode;
   title: string;
   description: string;
-  /** Message content sent when the chip is clicked. */
-  message: string;
+  /** Action dispatched when the chip is clicked. */
+  action: WelcomeAction;
   accentBg: string;
   accentColor: string;
 }
 
+export type WelcomeAction =
+  | {
+      kind: "send-message";
+      message: string;
+    }
+  | {
+      kind: "navigate";
+      to: string;
+      fallbackMessage: string;
+    };
+
 const SUGGESTIONS: SuggestionChip[] = [
   {
     icon: <FlaskConical style={{ width: 16, height: 16 }} />,
-    title: "Run the pipeline",
-    description: "Ingest a paper via PMID, DOI, or keyword",
-    message: "Run the four-phase pipeline on PMID 28499369",
-    accentBg: "#ecfeff",
+    title: "Run evidence pipeline",
+    description: "Start from PMID, DOI, title, or keyword",
+    action: {
+      kind: "send-message",
+      message:
+        "Start an online evidence pipeline. Identifier: PMID 28499369. Use bilingual extraction and source-grounded evidence review.",
+    },
+    accentBg: "var(--color-primary-50, #ecfeff)",
     accentColor: "var(--color-primary-600, #0891b2)",
   },
   {
     icon: <Upload style={{ width: 16, height: 16 }} />,
-    title: "Upload a PDF",
-    description: "Parse, translate, and extract evidence",
-    message: "I want to upload a PDF",
+    title: "Upload source paper",
+    description: "Parse full text, tables, and source spans",
+    action: {
+      kind: "navigate",
+      to: "/pipeline",
+      fallbackMessage:
+        "Open the pipeline page so I can upload a PDF for bilingual evidence extraction.",
+    },
     accentBg: "#f5f3ff",
     accentColor: "#7c3aed",
   },
   {
-    icon: <Search style={{ width: 16, height: 16 }} />,
-    title: "Search evidence",
-    description: "Query extracted evidence by gene or variant",
-    message: "Search the evidence database",
+    icon: <Database style={{ width: 16, height: 16 }} />,
+    title: "Search evidence base",
+    description: "Find records by gene, variant, disease, PMID",
+    action: {
+      kind: "navigate",
+      to: "/evidence",
+      fallbackMessage:
+        "Open the evidence database so I can search by gene, variant, disease, PMID, or DOI.",
+    },
     accentBg: "#ecfdf5",
     accentColor: "#059669",
   },
   {
-    icon: <BookOpen style={{ width: 16, height: 16 }} />,
-    title: "Classify a variant",
-    description: "Walk through ACMG/AMP 2015 criteria",
-    message: "Help me classify a variant with ACMG criteria",
+    icon: <ClipboardCheck style={{ width: 16, height: 16 }} />,
+    title: "Review and export",
+    description: "Check bilingual evidence before reporting",
+    action: {
+      kind: "navigate",
+      to: "/evidence?review_status=pending",
+      fallbackMessage:
+        "Show evidence items that need expert review and help prepare an evidence summary report.",
+    },
     accentBg: "#fffbeb",
     accentColor: "#d97706",
   },
 ];
 
 export interface WelcomeBlockProps {
-  onPick?: (message: string) => void;
+  onPick?: (action: WelcomeAction) => void;
 }
 
 export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
   return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
           <div
             style={{
@@ -68,7 +98,7 @@ export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 12,
-              background: "linear-gradient(to bottom right, var(--color-primary-500, #06b6d4), #2563eb)",
+              background: "var(--color-primary-600, #0891b2)",
               color: "#fff",
               boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
             }}
@@ -76,13 +106,14 @@ export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
             <Sparkles style={{ width: 16, height: 16 }} aria-hidden="true" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.025em", color: "#111827" }}>
-              Welcome to <span style={{ color: "var(--color-primary-600, #0891b2)" }}>Lingua Seeker</span>
+            <h2 style={{ fontSize: 15, fontWeight: 600, letterSpacing: 0, color: "#111827" }}>
+              Start a traceable evidence workflow in{" "}
+              <span style={{ color: "var(--color-primary-600, #0891b2)" }}>Lingua Seeker</span>
             </h2>
             <p style={{ fontSize: 13.5, lineHeight: 1.625, color: "#4b5563" }}>
-              A literature-grounded assistant for variant and evidence
-              classification. I run a four-phase extraction pipeline and ground
-              every claim in source coordinates.
+              I can help acquire literature, extract bilingual evidence, compare
+              original and translated spans, queue expert review, and prepare
+              source-linked evidence reports.
             </p>
           </div>
         </div>
@@ -94,7 +125,7 @@ export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
               <button
                 key={chip.title}
                 type="button"
-                onClick={() => onPick?.(chip.message)}
+                onClick={() => onPick?.(chip.action)}
                 disabled={!isInteractive}
                 className="cv-suggestion-chip"
               >
@@ -152,8 +183,8 @@ export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
             color: "#9ca3af",
           }}
         >
-          The agent does not provide clinical diagnoses. Outputs are research-grade
-          evidence for review by qualified professionals.
+          Research support only. The assistant prepares traceable evidence for
+          qualified professional review and does not provide clinical diagnoses.
         </p>
       </div>
   );

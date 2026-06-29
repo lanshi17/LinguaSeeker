@@ -123,6 +123,9 @@ class SingleJobDispatcher:
                 ),
                 extraction_profile=rd.get("extraction_profile", "none"),
                 extraction_mode=rd.get("extraction_mode", "broad"),
+                ablation_disable_review=rd.get("ablation_disable_review", False),
+                ablation_disable_target_guard=rd.get("ablation_disable_target_guard", False),
+                ablation_original_only=rd.get("ablation_original_only", False),
             )
         except Exception as exc:
             logger.exception(

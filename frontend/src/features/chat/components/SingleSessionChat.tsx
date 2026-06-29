@@ -18,7 +18,7 @@ import {
 } from "../utils/messageHistory";
 import { ChatMarkdown } from "../utils/markdown";
 import { ThinkingIndicator } from "./ThinkingIndicator";
-import { WelcomeBlock } from "./WelcomeBlock";
+import { WelcomeBlock, type WelcomeAction } from "./WelcomeBlock";
 import { roles } from "./chatConfig";
 
 export function SingleSessionChat({ sessionId }: { sessionId: string }) {
@@ -75,7 +75,9 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
   }, [sessionId, setMessages, provider]);
 
   const handleQuickAction = useCallback(
-    (msg: string) => {
+    (action: WelcomeAction) => {
+      const msg =
+        action.kind === "send-message" ? action.message : action.fallbackMessage;
       const task = (async () => {
         try {
           await sendChatMessage(sessionId, msg);
