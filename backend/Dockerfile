@@ -40,12 +40,23 @@ RUN groupadd --system --gid 1000 deploy \
 RUN python3 -m venv /opt/venv \
  && /opt/venv/bin/python -m pip install --no-cache-dir --upgrade pip >/dev/null 2>&1 || true
 
-# Drop pre-built site-packages (includes rust_io + every Python dep)
-# and the console-script shims with already-rewritten shebangs.
-# --owner/--group avoids a costly chown -R later.
-COPY docker-artifacts/site-packages.tar.gz /tmp/sp.tar.gz
-RUN tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages --owner=deploy --group=deploy \
- && rm /tmp/sp.tar.gz
+# Drop pre-built site-packages (includes rust_io + every Python dep).
+# Use BuildKit bind mounts so the multi-GB tarball is not itself stored as
+# an image layer. Extract the heaviest dependency groups separately so Docker
+# Hub does not have to accept one oversized blob.
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards './nvidia*'
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards './torch*'
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards './triton*' './cuda*'
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy \
+        --exclude='./nvidia*' --exclude='./torch*' --exclude='./triton*' --exclude='./cuda*'
 # venv-bin is optional — may be empty when no console scripts exist.
 COPY docker-artifacts/venv-bin.tar.gz /tmp/bin.tar.gz
 RUN (tar xzf /tmp/bin.tar.gz -C /opt/venv/bin --owner=deploy --group=deploy 2>/dev/null && chmod +x /opt/venv/bin/* 2>/dev/null) || true \
