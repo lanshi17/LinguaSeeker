@@ -137,3 +137,4 @@ benchmark/config/vault/secrets.yml
 .old_version
 docker-artifacts/
 artifacts/
+*.tar

@@ -6,7 +6,8 @@
 #
 # Prerequisites:
 #   1. Docker CE 20.10+ installed
-#   2. NVIDIA Container Toolkit installed (nvidia-ctk runtime --verify)
+#   2. Docker Hub access to pull the private backend image
+#   3. NVIDIA Container Toolkit installed (nvidia-ctk runtime --verify)
 #
 # Usage:
 #   chmod +x deploy.sh && ./deploy.sh
@@ -37,13 +38,7 @@ if ! docker info 2>&1 | grep -q "Runtimes.*nvidia"; then
     [[ "$yn" =~ ^[Yy] ]] || exit 1
 fi
 
-for img in lingua-seeker-backend:local; do
-    if ! docker image inspect "$img" &>/dev/null; then
-        echo "ERROR: Image $img not found. Run: docker load -i lingua-all-images.tar"
-        exit 1
-    fi
-    echo "  ✓ $img"
-done
+echo "  Backend image: ${BACKEND_IMAGE:-docker.io/[redacted-user]47/lingua-seeker-backend}:${IMAGE_TAG:-latest}"
 
 # ── 2. Prepare directories ────────────────────────────────────────────────
 echo "[2/5] Preparing directories..."
@@ -132,6 +127,7 @@ sudo chmod 600 "$DEPLOY_DIR/config/vault/production.yaml" 2>/dev/null || true
 # ── 5. Start services ─────────────────────────────────────────────────────
 echo "[5/5] Starting services..."
 cd "$DEPLOY_DIR"
+docker-compose --env-file .env pull
 docker-compose --env-file .env up -d
 
 # ── Health check ──────────────────────────────────────────────────────────

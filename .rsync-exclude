@@ -1,3 +1,7 @@
+# Container image sources are not needed on backend servers.
+backend/
+libs/
+AGENTS.md
 # Frontend
 frontend/
 
@@ -32,10 +36,13 @@ command.log
 
 # Runtime data
 data/
+downloads/
+output/
 backend/output/
 backend/data/
 backend/downloads/
 backend/logs/
+backend/docker-artifacts/
 backend/benchmark/
 backend/build-artifacts/
 backend/.venv/
@@ -45,9 +52,10 @@ backend/.ruff_cache/
 backend/.mypy_cache/
 
 # Database runtime
-database/backups/
 database/seeds/
 database/terminology_database/
+
+# Keep backups syncable; do not exclude database/backups/.
 
 # Rust build
 **/target/
@@ -64,6 +72,28 @@ knowledges/
 
 # Benchmark
 benchmark/
+
+# Tests and local development helpers
+tests/
+backend/tests/
+frontend/tests/
+scripts/dev/
+scripts/data/
+
+# Python / Node / Rust project metadata only needed for local builds.
+pyproject.toml
+uv.lock
+package.json
+bun.lock
+Cargo.lock
+Cargo.toml
+
+# Local environment and secrets. Create/maintain server copies in place.
+.env
+.env.*
+deploy/compose/**/.env
+deploy/compose/**/config/vault/*.yaml
+backend/config/vault/*.yaml
 
 # Copier templates
 .copier-answers.yml
