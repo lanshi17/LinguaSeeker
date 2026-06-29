@@ -1,20 +1,19 @@
 # ============================================================================
 # Backend host — runs FastAPI + Postgres + Redis behind the host firewall.
-# Build context = repo root so the Dockerfile can pull both backend/ and
-# libs/config-loader/. From the repo root:
+# Uses a pre-built backend image from Docker Hub. From the repo root:
 #
 #   docker compose -f deploy/compose/backend-host/docker-compose.yml \
 #                  --env-file deploy/compose/backend-host/.env \
-#                  up -d --build
+#                  pull
+#   docker compose -f deploy/compose/backend-host/docker-compose.yml \
+#                  --env-file deploy/compose/backend-host/.env \
+#                  up -d
 #
 # Only the backend port is published; database + redis stay private.
 # ============================================================================
 services:
   backend:
-    build:
-      context: ../../../
-      dockerfile: backend/Dockerfile
-    image: ${BACKEND_IMAGE:-ghcr.io/[redacted-user]/lingua-seeker-backend}:${IMAGE_TAG:-latest}
+    image: ${BACKEND_IMAGE:-docker.io/[redacted-user]47/lingua-seeker-backend}:${IMAGE_TAG:-latest}
     restart: unless-stopped
     # Loopback by default — expose to the frontend host via BACKEND_BIND=0.0.0.0
     # when needed. X-API-Key auth is enforced inside FastAPI.
