@@ -2,11 +2,12 @@
 # Lingua Seeker — Single-Server Deployment (CentOS 7.9 + GPU)
 # ============================================================================
 # All services on one machine: backend + postgres + redis. Inference services (embedding/rerank/doc-parse) are external.
-# Uses pre-built local images — no build step needed.
+# Uses pre-built Docker Hub images — no source build step needed.
 #
 # Usage:
 #   cd /opt/lingua-seeker
 #   cp deploy/compose/single-server/.env.example .env   # fill in secrets
+#   docker compose --env-file .env pull
 #   docker compose --env-file .env up -d
 #
 # Prerequisites:
@@ -21,7 +22,7 @@
 services:
   # ── Backend ──────────────────────────────────────────────────────────────
   backend:
-    image: lingua-seeker-backend:local
+    image: ${BACKEND_IMAGE:-docker.io/lanshi47/lingua-seeker-backend}:${IMAGE_TAG:-latest}
     container_name: lingua-backend
     restart: unless-stopped
     ports:

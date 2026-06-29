@@ -1,9 +1,9 @@
 #!/bin/bash
 # ============================================================================
-# Incremental Update Script — code-only changes (no dependency rebuild)
+# Incremental Update Script — pull pre-built container image
 # ============================================================================
-# Run ON the target CentOS server. Syncs changed source from GPFS, builds
-# thin overlay images, restarts affected services.
+# Run ON the target CentOS server. Pulls the configured backend image and
+# restarts affected services. Source code is not required on the server.
 #
 # Usage:
 #   ./update.sh backend          # update backend only
@@ -12,27 +12,12 @@
 set -euo pipefail
 
 DEPLOY_DIR="/opt/lingua-seeker"
-GPFS_DIR="/gpfs/hpc/home/lijc/yangzs/Projects/lingua_seeker_backend"
-REPO_DIR="${GPFS_DIR}/repo"   # rsync your repo here, or adjust path
 
 update_backend() {
     echo "=== Updating backend ==="
 
-    # 1. Sync changed source code
-    rsync -avz --delete \
-      --exclude='.venv' --exclude='__pycache__' --exclude='.git' \
-      --exclude='docker-artifacts' --exclude='**/target' \
-      "$REPO_DIR/backend/" "$DEPLOY_DIR/backend/"
-
-    rsync -avz \
-      "$REPO_DIR/libs/config-loader/" "$DEPLOY_DIR/libs/config-loader/"
-
-    # 2. Build thin overlay (seconds, not minutes)
     cd "$DEPLOY_DIR"
-    docker build -t lingua-seeker-backend:local \
-      -f deploy/compose/single-server/patch-backend.Dockerfile . 2>&1 | tail -5
-
-    # 3. Restart
+    docker-compose --env-file .env pull backend
     docker-compose up -d backend
     echo "  ✓ backend updated"
 }

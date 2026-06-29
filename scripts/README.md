@@ -24,6 +24,8 @@ scripts/
 ├── dev/                                Development server scripts
 │   ├── start_backend_dev.sh                Start FastAPI backend with hot-reload and optional infra
 │   ├── start_frontend_dev.sh               Start Vite frontend dev server
+├── deploy/                             Deployment image scripts
+│   └── build_push_backend_image.sh        Build, smoke-test, and push backend Docker image
 └── README.md                           This file
 ```
 
@@ -95,6 +97,12 @@ cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --levels ERR
 |--------|----------|---------|
 | `start_backend_dev.sh` | Shell | Start uvicorn with hot-reload; supports `--with-infra` to start Postgres + Redis containers, or `--infra` for infra management only |
 | `start_frontend_dev.sh` | Shell | Start Vite frontend dev server |
+
+### Deployment Scripts
+
+| Script | Language | Purpose |
+|--------|----------|---------|
+| `deploy/build_push_backend_image.sh` | Shell | Build `backend/Dockerfile`, verify the runtime image, and push the backend image to Docker Hub |
 
 ## Usage
 
@@ -177,7 +185,22 @@ Reads from `benchmark/layer3/ground_truth/` and outputs to `benchmark/pipeline/i
 
 # Frontend
 ./scripts/dev/start_frontend_dev.sh
+```
 
+### Build and Push Backend Image
+
+```bash
+# Default: docker.io/lanshi47/lingua-seeker-backend:latest
+./scripts/deploy/build_push_backend_image.sh
+
+# Custom tag
+./scripts/deploy/build_push_backend_image.sh --tag 20260629
+
+# Build and smoke-test without pushing
+./scripts/deploy/build_push_backend_image.sh --no-push
+```
+
+The script requires `docker-artifacts/site-packages.tar.gz` and `docker-artifacts/venv-bin.tar.gz`, matching `backend/Dockerfile`.
 
 
 ## Prerequisites
