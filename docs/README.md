@@ -42,6 +42,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
+| 2026-06-29 | [Evidence DB Field Model Implementation Plan](active/2026-06-29-evidence-db-field-model-plan.md) | in-progress (Tasks 1-6 and 8-9 complete; Task 7 product-gated) |
 | 2026-06-25 | [Lingua Seeker v1.0.0 Release Checklist](active/2026-06-25-v1-release-checklist.md) | in-progress |
 | 2026-06-23 | [Environment Consistency Standard](active/2026-06-23-environment-consistency.md) | reference |
 | 2026-06-23 | [Log Data Mining Report (drain3)](active/2026-06-23-log-data-mining-report.md) | reference |

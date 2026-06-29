@@ -37,13 +37,27 @@ from .stages.special_evidence import SpecialEvidenceStage
 from .target_span_recovery import TargetSpanFieldRecovery
 
 
-ExtractionWorkflowMode = Literal["legacy", "b8"]
+ExtractionWorkflowMode = Literal["catalog", "broad"]
+
+# Backward-compatibility aliases for callers that still use old mode names.
+_MODE_ALIASES: dict[str, ExtractionWorkflowMode] = {
+    "legacy": "catalog",
+    "b8": "broad",
+}
 
 # Canonical business default for the extraction workflow mode.
-# ``"b8"`` is the production main-track + review-track path.  ``"legacy"``
-# remains available as an explicit rollback / historical baseline via
-# ``extraction_mode="legacy"``.
-DEFAULT_EXTRACTION_WORKFLOW_MODE: ExtractionWorkflowMode = "b8"
+# ``"broad"`` is the production primary-broad-extraction + review-validation
+# path.  ``"catalog"`` remains available as an explicit rollback / historical
+# baseline via ``extraction_mode="catalog"``.
+DEFAULT_EXTRACTION_WORKFLOW_MODE: ExtractionWorkflowMode = "broad"
+
+
+def resolve_extraction_mode(raw: str) -> ExtractionWorkflowMode:
+    """Resolve a raw mode string to a canonical mode, applying aliases."""
+    canonical = _MODE_ALIASES.get(raw, raw)
+    if canonical not in ("catalog", "broad"):
+        raise ValueError(f"Unknown extraction_mode {raw!r}")
+    return canonical  # type: ignore[return-value]
 
 
 class EvidenceExtractionWorkflow:
@@ -54,11 +68,9 @@ class EvidenceExtractionWorkflow:
         provider: LangChainEvidenceProvider,
         input_budget_tokens: int = DEFAULT_INPUT_BUDGET_TOKENS,
         field_profile: frozenset[str] | None = None,
-        extraction_mode: ExtractionWorkflowMode = DEFAULT_EXTRACTION_WORKFLOW_MODE,
+        extraction_mode: str = DEFAULT_EXTRACTION_WORKFLOW_MODE,
     ):
-        if extraction_mode not in ("legacy", "b8"):
-            raise ValueError(f"Unknown extraction_mode {extraction_mode!r}")
-        self._extraction_mode = extraction_mode
+        self._extraction_mode = resolve_extraction_mode(extraction_mode)
         self._relevance_scan = RelevanceScanStage(provider, input_budget_tokens=input_budget_tokens)
         self._catalog_extraction = CatalogExtractionStage(
             provider, input_budget_tokens=input_budget_tokens, field_profile=field_profile,
@@ -318,7 +330,7 @@ class EvidenceExtractionWorkflow:
             lambda s: "not_relevant" if s.status == EvidenceExtractionStatus.NOT_RELEVANT else next_extraction_node,
             {"not_relevant": "not_relevant", next_extraction_node: next_extraction_node},
         )
-        if self._extraction_mode == "b8":
+        if self._extraction_mode == "broad":
             graph.add_edge("primary_broad_extraction", "language_metadata")
         else:
             graph.add_edge("catalog_extraction", "special_evidence")
@@ -326,7 +338,7 @@ class EvidenceExtractionWorkflow:
             graph.add_edge("clinical_context", "language_metadata")
         graph.add_edge("language_metadata", "group_assignment")
         graph.add_edge("group_assignment", "role_routing")
-        if self._extraction_mode == "b8":
+        if self._extraction_mode == "broad":
             graph.add_edge("role_routing", "review_validation")
             graph.add_edge("review_validation", "value_normalization")
         else:
@@ -371,7 +383,7 @@ class EvidenceExtractionWorkflow:
             lambda s: "not_relevant" if s.status == EvidenceExtractionStatus.NOT_RELEVANT else next_extraction_node,
             {"not_relevant": "not_relevant", next_extraction_node: next_extraction_node},
         )
-        if self._extraction_mode == "b8":
+        if self._extraction_mode == "broad":
             graph.add_edge("primary_broad_extraction", "language_metadata")
         else:
             graph.add_edge("catalog_extraction", "special_evidence")
@@ -379,7 +391,7 @@ class EvidenceExtractionWorkflow:
             graph.add_edge("clinical_context", "language_metadata")
         graph.add_edge("language_metadata", "group_assignment")
         graph.add_edge("group_assignment", "role_routing")
-        if self._extraction_mode == "b8":
+        if self._extraction_mode == "broad":
             graph.add_edge("role_routing", "review_validation")
             graph.add_edge("review_validation", "value_normalization")
         else:
@@ -396,7 +408,7 @@ class EvidenceExtractionWorkflow:
         return graph.compile()
 
     def _first_extraction_node(self) -> str:
-        if self._extraction_mode == "b8":
+        if self._extraction_mode == "broad":
             return "primary_broad_extraction"
         return "catalog_extraction"
 

@@ -15,7 +15,9 @@ from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate
 )
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.postprocess import (
     build_translated_blocks,
+    check_block_coverage,
 )
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.exceptions import TranslationError
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import MultiStageTranslator
 
 
@@ -69,6 +71,23 @@ def test_to_text_string():
 def test_to_text_list():
     content = [{"type": "text", "text": "hello"}, {"type": "text", "text": "world"}]
     assert "hello" in _to_text(content)
+
+
+def test_check_block_coverage_rejects_abstract_only_translation():
+    original_blocks = [
+        ContentBlock(type="title", text="Rett综合征的临床特点及MECP2基因突变分析"),
+        ContentBlock(type="text", text="摘要 目的 分析典型 Rett 综合征患者的临床特点。"),
+        ContentBlock(type="text", text="资料与方法 选取 9 例 RTT 患儿为研究对象。"),
+        ContentBlock(type="text", text="结果 5 例存在 MECP2 基因突变。"),
+        ContentBlock(type="text", text="讨论 MECP2 突变可能影响神经系统发育。"),
+    ]
+    translated_blocks = [
+        ContentBlock(type="title", text="Clinical features and MECP2 mutations in children with Rett syndrome"),
+        ContentBlock(type="text", text="This study analyzed clinical features and MECP2 mutations in children."),
+    ]
+
+    with pytest.raises(TranslationError, match="block_coverage"):
+        check_block_coverage(original_blocks, translated_blocks)
 
 
 # ── _parse_terminology tests ─────────────────────────────────────────

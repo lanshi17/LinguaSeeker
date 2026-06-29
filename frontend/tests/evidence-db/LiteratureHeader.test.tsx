@@ -29,6 +29,31 @@ const baseDetail: EvidenceGroupDetailResponse = {
 };
 
 describe("LiteratureHeader", () => {
+  it("renders quality badges and review progress when quality is provided", () => {
+    render(
+      <LiteratureHeader
+        groupDetail={baseDetail}
+        quality={{
+          hasFullText: true,
+          hasTranslation: true,
+          reviewProgress: {
+            total: 8,
+            reviewed: 6,
+            approved: 4,
+            corrected: 1,
+            rejected: 1,
+            provisional: 2,
+            reviewedPercent: 0.75,
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Full text")).toBeInTheDocument();
+    expect(screen.getByText("Translated")).toBeInTheDocument();
+    expect(screen.getByText("Reviewed 6/8")).toBeInTheDocument();
+  });
+
   it("renders an export report button when an export handler is provided", () => {
     const onExportReport = vi.fn();
 

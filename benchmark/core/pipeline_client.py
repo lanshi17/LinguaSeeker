@@ -181,7 +181,7 @@ async def submit_and_poll(
     pre_parsed_markdown: str | None = None,
     extraction_target: dict | None = None,
     extraction_profile: str = "none",
-    extraction_mode: str = "b8",
+    extraction_mode: str = "broad",
 ) -> dict:
     """Submit document and poll until completion.
 
@@ -322,7 +322,7 @@ async def evaluate_one(
     mondo: Any | None = None,
     force_reextract: bool = False,
     extraction_profile: str = "none",
-    extraction_mode: str = "b8",
+    extraction_mode: str = "broad",
 ) -> EntryMetrics:
     """Evaluate one ground truth entry.
 
@@ -642,7 +642,7 @@ async def run_evaluation(
     force_reextract: bool = False,
     api_key: str | None = None,
     extraction_profile: str = "none",
-    extraction_mode: str = "b8",
+    extraction_mode: str = "broad",
     shard_index: int | None = None,
     shard_size: int | None = None,
 ):

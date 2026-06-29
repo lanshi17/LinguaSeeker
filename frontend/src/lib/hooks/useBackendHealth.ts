@@ -28,13 +28,12 @@ export function useBackendHealth(): BackendHealth {
     queryFn: async () => {
       const start = Date.now();
       try {
-        const response = await apiClient.get<{ status: string }>(
-          healthEndpoint,
-          { timeout: 5_000 },
-        );
+        const response = await apiClient.get<{ status: string }>(healthEndpoint, {
+          timeout: 5_000,
+        });
         const latencyMs = Date.now() - start;
         return {
-          ok: response.data?.status === "ok",
+          ok: response.data.status === "ok",
           latencyMs,
           checkedAt: new Date(),
         };

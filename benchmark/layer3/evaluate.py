@@ -100,7 +100,7 @@ if __name__ == "__main__":  # pragma: no cover - CLI parity with the old entry p
     )
     parser.add_argument(
         "--extraction-mode",
-        default="b8",
+        default="broad",
         help="Extraction workflow mode (b8 business default, legacy rollback)",
     )
     args = parser.parse_args()

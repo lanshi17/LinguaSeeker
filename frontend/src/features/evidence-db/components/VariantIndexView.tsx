@@ -14,9 +14,10 @@ import {
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
-import { AutoComplete, Input } from "antd";
+import { AutoComplete, Checkbox, Input } from "antd";
 import { Spinner } from "@/components/ui/Spinner";
 import { useVariantIndex } from "../hooks/useVariantIndex";
+import { useEvidenceDbViewPrefs } from "../hooks/useEvidenceDbViewPrefs";
 import { VariantIndexSkeleton } from "./VariantIndexSkeleton";
 import type {
   VariantIndexEntry,
@@ -24,10 +25,16 @@ import type {
   SortBy,
   SortOrder,
 } from "../types/variantDb";
+import type { EvidenceDbViewPrefs } from "../hooks/useEvidenceDbViewPrefs";
 import {
   classificationColor,
   classificationShortLabel,
 } from "../utils/pathogenicity";
+import {
+  EVIDENCE_DB_LABELS,
+  formatConfidencePercent,
+  formatReviewedCount,
+} from "../utils/fieldLabels";
 import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
 
 const CLASSIFICATION_OPTIONS: { value: ClassificationLevel; label: string }[] = [
@@ -69,6 +76,17 @@ function formatDate(isoString?: string | null): string {
   } catch {
     return "—";
   }
+}
+
+function hasQualityColumn(prefs: EvidenceDbViewPrefs): boolean {
+  return prefs.showCategories || prefs.showReviewProgress;
+}
+
+function variantGridTemplateColumns(prefs: EvidenceDbViewPrefs): string {
+  const columns = ["2fr", "1.5fr", "120px", "100px", "100px", "100px"];
+  if (hasQualityColumn(prefs)) columns.push("120px");
+  if (prefs.showUpdated) columns.push("90px");
+  return columns.join(" ");
 }
 
 /* ── Embedded responsive styles ──────────────────────────── */
@@ -335,11 +353,19 @@ function CategoryDistributionBar({
 
 /* ── Variant Row ────────────────────────────────────────── */
 
-function VariantRow({ entry }: { entry: VariantIndexEntry }) {
+function VariantRow({
+  entry,
+  viewPrefs,
+}: {
+  entry: VariantIndexEntry;
+  viewPrefs: EvidenceDbViewPrefs;
+}) {
   return (
     <Link
       to={`/evidence-db/${encodeURIComponent(entry.variantSlug)}`}
+      state={{ variantEntry: entry }}
       className="viv-row"
+      style={{ gridTemplateColumns: variantGridTemplateColumns(viewPrefs) }}
     >
       {/* Gene + Variant (primary column) */}
       <div style={{ minWidth: 0, display: "flex", alignItems: "baseline", flexWrap: "nowrap" }} title={`${entry.gene || "Unknown Gene"} · ${entry.variant || "Unknown Variant"}`}>
@@ -381,19 +407,29 @@ function VariantRow({ entry }: { entry: VariantIndexEntry }) {
       {/* Confidence */}
       <div className="viv-row-stat">
         <TrendingUp style={{ width: 14, height: 14, flexShrink: 0 }} />
-        <span className="viv-row-stat-val">{Math.round(entry.avgConfidence * 100)}%</span>
+        <span className="viv-row-stat-val">{formatConfidencePercent(entry.avgConfidence)}</span>
       </div>
 
-      {/* Category distribution */}
-      <div style={{ minWidth: 0 }}>
-        <CategoryDistributionBar distribution={entry.categoryDistribution} />
-      </div>
+      {hasQualityColumn(viewPrefs) && (
+        <div style={{ minWidth: 0 }}>
+          {viewPrefs.showCategories && (
+            <CategoryDistributionBar distribution={entry.categoryDistribution} />
+          )}
+          {viewPrefs.showReviewProgress && (
+            <span style={{ marginTop: viewPrefs.showCategories ? 4 : 0, display: "block", fontSize: 11, color: "#6b7280" }}>
+              {formatReviewedCount(entry.reviewProgress)}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Updated date */}
-      <div className="viv-row-stat" style={{ color: "#9ca3af", fontSize: 12 }} title={entry.createdAt || undefined}>
-        <Calendar style={{ width: 12, height: 12, flexShrink: 0 }} />
-        <span>{formatDate(entry.createdAt)}</span>
-      </div>
+      {viewPrefs.showUpdated && (
+        <div className="viv-row-stat" style={{ color: "#9ca3af", fontSize: 12 }} title={entry.createdAt || undefined}>
+          <Calendar style={{ width: 12, height: 12, flexShrink: 0 }} />
+          <span>{formatDate(entry.createdAt)}</span>
+        </div>
+      )}
 
       {/* Mobile compact stats */}
       <div className="viv-row-mobile-stats">
@@ -407,14 +443,21 @@ function VariantRow({ entry }: { entry: VariantIndexEntry }) {
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <TrendingUp style={{ width: 12, height: 12 }} />
-          <span className="viv-row-stat-val">{Math.round(entry.avgConfidence * 100)}%</span>
+          <span className="viv-row-stat-val">{formatConfidencePercent(entry.avgConfidence)}</span>
         </span>
         <span style={badgeInlineStyle(entry.classificationLevel)}>
           {classificationShortLabel(entry.classificationLevel)}
         </span>
-        <span style={{ color: "#9ca3af", fontSize: 11 }}>
-          {formatDate(entry.createdAt)}
-        </span>
+        {viewPrefs.showUpdated && (
+          <span style={{ color: "#9ca3af", fontSize: 11 }}>
+            {formatDate(entry.createdAt)}
+          </span>
+        )}
+        {viewPrefs.showReviewProgress && (
+          <span style={{ color: "#6b7280", fontSize: 11 }}>
+            {formatReviewedCount(entry.reviewProgress)}
+          </span>
+        )}
       </div>
     </Link>
   );
@@ -498,6 +541,7 @@ export function VariantIndexView() {
     setPage,
     clearFilters,
   } = useVariantIndex();
+  const { prefs: viewPrefs, setPreference } = useEvidenceDbViewPrefs();
 
   const totalPages = Math.ceil(total / pageSize);
 
@@ -596,25 +640,25 @@ export function VariantIndexView() {
           <StatCard
             icon={Dna}
             value={stats.totalVariants}
-            label="Unique Variants"
+            label={EVIDENCE_DB_LABELS.uniqueVariants}
             accent="#8B5CF6"
           />
           <StatCard
             icon={FileText}
             value={stats.totalEvidenceGroups}
-            label="Evidence Groups"
+            label={EVIDENCE_DB_LABELS.evidenceGroups}
             accent="#0891B2"
           />
           <StatCard
             icon={BookOpen}
             value={stats.totalLiterature}
-            label="Literature Sources"
+            label={EVIDENCE_DB_LABELS.literatureSources}
             accent="#F59E0B"
           />
           <StatCard
             icon={TrendingUp}
-            value={`${Math.round(stats.avgConfidence * 100)}%`}
-            label="Avg Confidence"
+            value={formatConfidencePercent(stats.avgConfidence)}
+            label={EVIDENCE_DB_LABELS.avgConfidence}
             accent="#0F766E"
           />
         </div>
@@ -753,7 +797,7 @@ export function VariantIndexView() {
       ) : (
         <div className="content-fade-in">
           {/* Result count */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
             <p style={{ fontSize: 14, color: "#4b5563", margin: 0 }}>
               <span style={{ fontWeight: 500, color: "#111827" }}>{total}</span>{" "}
               variant{total !== 1 ? "s" : ""} found
@@ -766,38 +810,78 @@ export function VariantIndexView() {
             <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>
               Page {page} of {totalPages || 1}
             </p>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                flexWrap: "wrap",
+                fontSize: 12,
+                color: "#4b5563",
+              }}
+              aria-label="Variant index display fields"
+            >
+              <span style={{ fontSize: 12, fontWeight: 500, color: "#6b7280" }}>Fields</span>
+              <Checkbox
+                checked={viewPrefs.showUpdated}
+                onChange={(e) => setPreference("showUpdated", e.target.checked)}
+              >
+                {EVIDENCE_DB_LABELS.updated}
+              </Checkbox>
+              <Checkbox
+                checked={viewPrefs.showCategories}
+                onChange={(e) => setPreference("showCategories", e.target.checked)}
+              >
+                {EVIDENCE_DB_LABELS.categories}
+              </Checkbox>
+              <Checkbox
+                checked={viewPrefs.showReviewProgress}
+                onChange={(e) => setPreference("showReviewProgress", e.target.checked)}
+              >
+                {EVIDENCE_DB_LABELS.reviewProgress}
+              </Checkbox>
+            </div>
           </div>
 
           {/* Variant List */}
           <div className="viv-variant-list" style={{ marginTop: 16 }}>
-            <div className="viv-list-header">
+            <div
+              className="viv-list-header"
+              style={{ gridTemplateColumns: variantGridTemplateColumns(viewPrefs) }}
+            >
               <span>Gene / Variant</span>
               <span>Disease</span>
               <span>Class.</span>
               <span>Evidence</span>
               <span>Refs</span>
               <span>Conf.</span>
-              <span>Categories</span>
-              <button
-                type="button"
-                className="viv-sort-header"
-                onClick={toggleSort}
-                title="Sort by updated date"
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  font: "inherit",
-                  color: filters.sortBy === "updated" ? "#111827" : "#6b7280",
-                }}
-              >
-                Updated
-                {filters.sortBy === "updated" && (
-                  filters.sortOrder === "asc"
-                    ? <ArrowUp style={{ width: 12, height: 12 }} />
-                    : <ArrowDown style={{ width: 12, height: 12 }} />
-                )}
-              </button>
+              {hasQualityColumn(viewPrefs) && (
+                <span>
+                  {viewPrefs.showCategories ? EVIDENCE_DB_LABELS.categories : EVIDENCE_DB_LABELS.reviewed}
+                </span>
+              )}
+              {viewPrefs.showUpdated && (
+                <button
+                  type="button"
+                  className="viv-sort-header"
+                  onClick={toggleSort}
+                  title="Sort by updated date"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    font: "inherit",
+                    color: filters.sortBy === "updated" ? "#111827" : "#6b7280",
+                  }}
+                >
+                  {EVIDENCE_DB_LABELS.updated}
+                  {filters.sortBy === "updated" && (
+                    filters.sortOrder === "asc"
+                      ? <ArrowUp style={{ width: 12, height: 12 }} />
+                      : <ArrowDown style={{ width: 12, height: 12 }} />
+                  )}
+                </button>
+              )}
             </div>
             {items.map((entry, i) => (
               <div
@@ -805,7 +889,7 @@ export function VariantIndexView() {
                 className="edb-stagger"
                 style={{ animationDelay: `${Math.min(i * 25, 250)}ms` }}
               >
-                <VariantRow entry={entry} />
+                <VariantRow entry={entry} viewPrefs={viewPrefs} />
               </div>
             ))}
           </div>

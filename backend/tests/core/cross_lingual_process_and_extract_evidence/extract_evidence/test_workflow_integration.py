@@ -92,8 +92,8 @@ class FakeProvider:
 
 
 @pytest.mark.asyncio
-async def test_workflow_legacy_rollback_uses_catalog_special_clinical_order():
-    """Explicit extraction_mode="legacy" keeps the catalog -> special -> clinical path."""
+async def test_workflow_catalog_rollback_uses_catalog_special_clinical_order():
+    """Explicit extraction_mode="catalog" keeps the catalog -> special -> clinical path."""
     provider = FakeProvider()
     text = "BRCA1\nc.5266dupC\nBreast cancer"
     document = TrackDocument(
@@ -104,7 +104,7 @@ async def test_workflow_legacy_rollback_uses_catalog_special_clinical_order():
         blocks=[ContentBlock(type="text", page_idx=0, text=text, bbox=[1, 2, 3, 4])],
     )
 
-    state = await EvidenceExtractionWorkflow(provider=provider, extraction_mode="legacy").run(document)
+    state = await EvidenceExtractionWorkflow(provider=provider, extraction_mode="catalog").run(document)
 
     assert provider.stages[0] == "relevance_scan"
     assert provider.stages[-2:] == ["special_evidence", "clinical_context"]
@@ -182,7 +182,7 @@ async def test_workflow_accepts_chunking_budget_override_for_regression():
     )
 
     workflow = EvidenceExtractionWorkflow(
-        provider=provider, input_budget_tokens=90, extraction_mode="legacy",
+        provider=provider, input_budget_tokens=90, extraction_mode="catalog",
     )
     state = await workflow.run(document)
 
@@ -196,7 +196,7 @@ async def test_workflow_accepts_chunking_budget_override_for_regression():
 
 @pytest.mark.asyncio
 async def test_workflow_default_uses_primary_broad_review_track() -> None:
-    """Default workflow (business default b8) uses primary_broad + review, not catalog."""
+    """Default workflow (business default broad) uses primary_broad + review, not catalog."""
     provider = FakeProvider()
     text = "BRCA1\nc.5266dupC\nBreast cancer"
     document = TrackDocument(
@@ -236,7 +236,7 @@ async def test_workflow_review_validation_fails_open() -> None:
         blocks=[ContentBlock(type="text", page_idx=0, text=text, bbox=[1, 2, 3, 4])],
     )
 
-    state = await EvidenceExtractionWorkflow(provider=provider, extraction_mode="b8").run(document)
+    state = await EvidenceExtractionWorkflow(provider=provider, extraction_mode="broad").run(document)
 
     assert "review_validation" in provider.stages
     assert any(

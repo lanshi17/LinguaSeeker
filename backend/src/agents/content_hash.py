@@ -111,7 +111,7 @@ def _get_scope_key(state: PipelineGraphState) -> str | None:
     The scope key includes the extraction profile so that the same document
     processed with different profiles does not collide in the cache.  The
     extraction mode is only appended when it differs from the business
-    default (``b8``); an explicit ``"legacy"`` rollback therefore gets a
+    default (``broad``); an explicit ``"catalog"`` rollback therefore gets a
     distinct cache scope, while the default mode produces the normal key.
     """
     parts: list[str] = []

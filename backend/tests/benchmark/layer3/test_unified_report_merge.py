@@ -141,7 +141,7 @@ class TestMergedReportIntegration:
         """Write a minimal shard report JSON."""
         path = tmpdir / name
         path.write_text(json.dumps({
-            "config": {"extraction_mode": "b8"},
+            "config": {"extraction_mode": "broad"},
             "total_entries": len(entries),
             "total_duration_s": 100,
             "per_entry": entries,

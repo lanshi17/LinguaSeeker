@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +30,7 @@ from .contracts import (
 from .providers import LangChainEvidenceProvider
 from .reconcile.api import CrossTrackReconcileService
 from .field_profile import ExtractionProfile, resolve_profile_fields
-from .workflow import DEFAULT_EXTRACTION_WORKFLOW_MODE, EvidenceExtractionWorkflow
+from .workflow import DEFAULT_EXTRACTION_WORKFLOW_MODE, EvidenceExtractionWorkflow, resolve_extraction_mode
 
 
 class EvidenceExtractionService:
@@ -60,7 +61,7 @@ class EvidenceExtractionService:
     ):
         self._ctx = EvidenceExtractionConfigContext.from_config(cfg)
         self._provider = LangChainEvidenceProvider(self._ctx)
-        self._extraction_mode = extraction_mode
+        self._extraction_mode = resolve_extraction_mode(extraction_mode)
         profile_fields = resolve_profile_fields(extraction_profile)
         self._workflow = EvidenceExtractionWorkflow(
             provider=self._provider, field_profile=profile_fields,
@@ -236,12 +237,13 @@ def _build_track_document_from_json(
     metadata = data.get("metadata", {})
     document_id = metadata.get("doc_id") or path.parent.name
     blocks = data.get("blocks", [])
-    parsed_blocks = _parse_content_blocks(blocks)
-    formatted_text, page_spans = _format_blocks_with_page_spans(blocks, track)
+    evidence_blocks = _filter_evidence_blocks(blocks)
+    parsed_blocks = _parse_content_blocks(evidence_blocks)
+    formatted_text, page_spans = _format_blocks_with_page_spans(evidence_blocks, track)
 
     # Fallback: when blocks are empty, use persisted formatted_text
     if not formatted_text and data.get("formatted_text"):
-        formatted_text = data["formatted_text"]
+        formatted_text = _filter_evidence_text(str(data["formatted_text"]))
         page_spans = [
             PageSpan(
                 span_id=f"{track.value}-p1",
@@ -263,6 +265,83 @@ def _build_track_document_from_json(
         },
         extraction_target=extraction_target,
     )
+
+
+_EVIDENCE_SECTION_RE = re.compile(
+    r"^\s*(?:"
+    r"abstract|summary|introduction|background|methods?|materials\s+and\s+methods|"
+    r"patients?|case\s+reports?|clinical\s+report|results?|findings?|discussion|"
+    r"conclusions?|正文|摘要|引言|前言|背景|资料与方法|材料与方法|方法|病例|"
+    r"临床资料|结果|讨论|结论"
+    r")\b",
+    re.IGNORECASE,
+)
+_NON_EVIDENCE_SECTION_RE = re.compile(
+    r"^\s*(?:"
+    r"references?|bibliography|acknowledg(?:e)?ments?|funding|conflicts?\s+of\s+interest|"
+    r"competing\s+interests?|author\s+(?:information|contributions?|affiliations?)|"
+    r"affiliations?|supplementary\s+(?:materials?|information)|"
+    r"参\s*考\s*文\s*献|参考文献|致谢|基金|利益冲突|作者信息|作者贡献|作者单位|"
+    r"补充材料|附录"
+    r")\b",
+    re.IGNORECASE,
+)
+
+
+def _is_section_heading(text: str) -> bool:
+    stripped = text.strip()
+    if not stripped:
+        return False
+    if len(stripped) > 120:
+        return False
+    return bool(_EVIDENCE_SECTION_RE.match(stripped) or _NON_EVIDENCE_SECTION_RE.match(stripped))
+
+
+def _filter_evidence_blocks(blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Remove document metadata and back matter from extraction input."""
+    filtered: list[dict[str, Any]] = []
+    skip_non_evidence = False
+
+    for block in blocks:
+        if not isinstance(block, dict):
+            continue
+        text = _block_text(block)
+        if _is_section_heading(text):
+            if _EVIDENCE_SECTION_RE.match(text.strip()):
+                skip_non_evidence = False
+            elif _NON_EVIDENCE_SECTION_RE.match(text.strip()):
+                skip_non_evidence = True
+
+        if skip_non_evidence:
+            continue
+
+        block_type = str(block.get("type", "text")).lower()
+        if block_type in {"header", "footer", "page_number"}:
+            continue
+        filtered.append(block)
+
+    return filtered
+
+
+def _filter_evidence_text(text: str) -> str:
+    """Apply the evidence-section filter to paragraph/line-only text."""
+    kept: list[str] = []
+    skip_non_evidence = False
+
+    for part in re.split(r"\n\s*\n|\n", text):
+        stripped = part.strip()
+        if not stripped:
+            continue
+        if _is_section_heading(stripped):
+            if _EVIDENCE_SECTION_RE.match(stripped):
+                skip_non_evidence = False
+            elif _NON_EVIDENCE_SECTION_RE.match(stripped):
+                skip_non_evidence = True
+        if skip_non_evidence:
+            continue
+        kept.append(stripped)
+
+    return "\n".join(kept)
 
 
 def _parse_content_blocks(blocks: list[dict[str, Any]]) -> list[ContentBlock]:

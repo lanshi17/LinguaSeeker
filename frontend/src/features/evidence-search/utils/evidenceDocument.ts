@@ -269,6 +269,7 @@ function isHgvsTerm(term: string): boolean {
  *  variants in the source text (e.g. "c.502 C>T" matching "c.502C>T"). */
 function findAllOccurrences(text: string, searchTerms: string[]): Array<{ start: number; end: number }> {
   const raw: Array<{ start: number; end: number; len: number }> = [];
+  const normalizedText = normalizeForLocation(text);
   for (const rawTerm of searchTerms) {
     const needle = rawTerm.trim();
     if (needle.length < 3) continue;
@@ -283,12 +284,22 @@ function findAllOccurrences(text: string, searchTerms: string[]): Array<{ start:
         if (m.index === re.lastIndex) re.lastIndex++;
       }
     } else {
-      const lower = text.toLowerCase();
-      const needleLower = needle.toLowerCase();
+      const normalizedNeedle = normalizeForLocation(needle).normalized;
+      if (normalizedNeedle.length < 3) continue;
       let idx = 0;
-      while ((idx = lower.indexOf(needleLower, idx)) >= 0) {
-        raw.push({ start: idx, end: idx + needle.length, len: needle.length });
-        idx += needle.length;
+      while ((idx = normalizedText.normalized.indexOf(normalizedNeedle, idx)) >= 0) {
+        const start = normalizedBoundaryToOriginalBoundary(
+          normalizedText.normalizedToOriginal,
+          idx,
+          text.length,
+        );
+        const end = normalizedBoundaryToOriginalBoundary(
+          normalizedText.normalizedToOriginal,
+          idx + normalizedNeedle.length,
+          text.length,
+        );
+        raw.push({ start, end, len: end - start });
+        idx += normalizedNeedle.length;
       }
     }
   }
@@ -302,6 +313,113 @@ function findAllOccurrences(text: string, searchTerms: string[]): Array<{ start:
   return positions;
 }
 
+function normalizeCharForLocation(char: string): string {
+  return char
+    .normalize("NFKC")
+    .replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, "-")
+    .replace(/[。｡]/g, ".")
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase();
+}
+
+function normalizeForLocation(text: string): {
+  normalized: string;
+  normalizedToOriginal: number[];
+} {
+  let normalized = "";
+  const normalizedToOriginal: number[] = [];
+  let previousWasSpace = false;
+
+  for (let index = 0; index < text.length;) {
+    const codePoint = text.codePointAt(index);
+    if (codePoint === undefined) break;
+
+    const originalIndex = index;
+    const rawChar = String.fromCodePoint(codePoint);
+    index += rawChar.length;
+
+    const normalizedChar = normalizeCharForLocation(rawChar);
+    for (const char of normalizedChar) {
+      if (/\s/.test(char)) {
+        if (!previousWasSpace) {
+          normalized += " ";
+          normalizedToOriginal.push(originalIndex);
+          previousWasSpace = true;
+        }
+        continue;
+      }
+      normalized += char;
+      normalizedToOriginal.push(originalIndex);
+      previousWasSpace = false;
+    }
+  }
+
+  while (normalized.startsWith(" ")) {
+    normalized = normalized.slice(1);
+    normalizedToOriginal.shift();
+  }
+  while (normalized.endsWith(" ")) {
+    normalized = normalized.slice(0, -1);
+    normalizedToOriginal.pop();
+  }
+
+  return { normalized, normalizedToOriginal };
+}
+
+function originalOffsetToNormalizedBoundary(
+  normalizedToOriginal: number[],
+  originalOffset: number,
+): number {
+  const index = normalizedToOriginal.findIndex((mappedOffset) => mappedOffset >= originalOffset);
+  return index >= 0 ? index : normalizedToOriginal.length;
+}
+
+function normalizedBoundaryToOriginalBoundary(
+  normalizedToOriginal: number[],
+  normalizedOffset: number,
+  originalLength: number,
+): number {
+  if (normalizedOffset >= normalizedToOriginal.length) return originalLength;
+  return normalizedToOriginal[Math.max(0, normalizedOffset)];
+}
+
+function locateTraceRangeInFullText(
+  fullText: string,
+  highlight?: EvidenceChainHighlight | null,
+): { start: number; end: number } | null {
+  if (!highlight?.text.trim()) return null;
+  const range = clampHighlight(highlight);
+  if (range.end <= range.start) return null;
+
+  const full = normalizeForLocation(fullText);
+  const sentence = normalizeForLocation(highlight.text.trim());
+  const sentenceStart = full.normalized.indexOf(sentence.normalized);
+  if (sentenceStart < 0) return null;
+
+  const normalizedRangeStart = originalOffsetToNormalizedBoundary(
+    sentence.normalizedToOriginal,
+    range.start,
+  );
+  const normalizedRangeEnd = originalOffsetToNormalizedBoundary(
+    sentence.normalizedToOriginal,
+    range.end,
+  );
+
+  return {
+    start: normalizedBoundaryToOriginalBoundary(
+      full.normalizedToOriginal,
+      sentenceStart + normalizedRangeStart,
+      fullText.length,
+    ),
+    end: normalizedBoundaryToOriginalBoundary(
+      full.normalizedToOriginal,
+      sentenceStart + normalizedRangeEnd,
+      fullText.length,
+    ),
+  };
+}
+
 
 function fullTextForTrack(
   detail: EvidenceGroupDetailResponse,
@@ -313,9 +431,10 @@ function fullTextForTrack(
 }
 
 function traceHighlightForTrack(
-  trace: EvidenceTrackTrace,
+  trace: EvidenceTrackTrace | undefined,
   track: "original" | "translated",
 ) {
+  if (!trace) return null;
   return track === "original" ? trace.original : trace.translated;
 }
 
@@ -380,9 +499,11 @@ export function buildEvidenceDocument(
         searchTerms.push(trackValue.trim());
       }
       const positions = findAllOccurrences(fullText, searchTerms);
+      let matched = false;
       for (const pos of positions) {
         if (occupied.some((o) => pos.start < o.end && pos.end > o.start)) continue;
         occupied.push(pos);
+        matched = true;
         locatedHighlights.push({
           evidenceId: item.canonical_evidence_id,
           fieldId: item.field_id,
@@ -393,6 +514,29 @@ export function buildEvidenceDocument(
           end: pos.end,
           selected: item.canonical_evidence_id === selectedEvidenceId,
         });
+      }
+
+      if (!matched) {
+        const traceRange = locateTraceRangeInFullText(
+          fullText,
+          traceHighlightForTrack(trace, track),
+        );
+        if (
+          traceRange &&
+          !occupied.some((o) => traceRange.start < o.end && traceRange.end > o.start)
+        ) {
+          occupied.push(traceRange);
+          locatedHighlights.push({
+            evidenceId: item.canonical_evidence_id,
+            fieldId: item.field_id,
+            label: item.field_name ?? item.field_id,
+            tone,
+            category: cat,
+            start: traceRange.start,
+            end: traceRange.end,
+            selected: item.canonical_evidence_id === selectedEvidenceId,
+          });
+        }
       }
 
     }

@@ -122,7 +122,7 @@ class SingleJobDispatcher:
                     else None
                 ),
                 extraction_profile=rd.get("extraction_profile", "none"),
-                extraction_mode=rd.get("extraction_mode", "b8"),
+                extraction_mode=rd.get("extraction_mode", "broad"),
             )
         except Exception as exc:
             logger.exception(
