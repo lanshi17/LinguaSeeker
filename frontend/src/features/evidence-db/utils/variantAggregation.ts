@@ -1,4 +1,5 @@
 import type { EvidenceSearchResult } from "@/features/evidence-search/types/evidenceSearch";
+import type { EvidenceSearchQuery } from "@/features/evidence-search/types/evidenceSearch";
 import type { VariantIndexEntry, VariantIndexData, VariantIndexFilters, ClassificationLevel, SortOrder } from "../types/variantDb";
 import { classifyLevel, severityRank } from "./pathogenicity";
 
@@ -133,6 +134,40 @@ export function aggregateVariants(results: EvidenceSearchResult[]): VariantIndex
   });
 
   return entries;
+}
+
+export function parseVariantSlug(variantSlug: string): EvidenceSearchQuery {
+  const [gene = "", variant = "", ...diseaseParts] = variantSlug.split(":");
+  const disease = diseaseParts.join(":");
+  return {
+    gene: gene || undefined,
+    variant: variant || undefined,
+    disease: disease || undefined,
+  };
+}
+
+export function buildVariantGroupDocumentPairs(
+  results: EvidenceSearchResult[],
+  variantSlug: string,
+): Array<{ groupId: string; sourceDocumentId: string }> {
+  const seen = new Set<string>();
+  const pairs: Array<{ groupId: string; sourceDocumentId: string }> = [];
+  for (const result of results) {
+    for (const row of expandVariantSites(result)) {
+      const slug = makeVariantSlug(row.gene ?? "", row.variant ?? "", row.disease ?? "");
+      if (slug !== variantSlug) continue;
+
+      const key = `${row.group_id}\0${row.source_document_id}`;
+      if (seen.has(key)) continue;
+
+      seen.add(key);
+      pairs.push({
+        groupId: row.group_id,
+        sourceDocumentId: row.source_document_id,
+      });
+    }
+  }
+  return pairs;
 }
 
 /**

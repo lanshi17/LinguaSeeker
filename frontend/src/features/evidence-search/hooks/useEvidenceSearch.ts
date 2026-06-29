@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useRef, useState, useCallback } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { searchEvidence } from "../services/evidenceSearch";
 import type { EvidenceSearchQuery } from "../types/evidenceSearch";
@@ -17,6 +17,8 @@ export function useEvidenceSearch() {
     queryFn: () => searchEvidence(filters),
     placeholderData: keepPreviousData,
   });
+  const refetchRef = useRef(query.refetch);
+  refetchRef.current = query.refetch;
 
   const updateFilter = useCallback(
     (key: keyof EvidenceSearchQuery, value: string) => {
@@ -34,8 +36,8 @@ export function useEvidenceSearch() {
   }, []);
 
   const applyFilters = useCallback(() => {
-    query.refetch();
-  }, [query]);
+    void refetchRef.current();
+  }, []);
 
   const clearFilters = useCallback(() => {
     setFilters({ page: 1, page_size: DEFAULT_PAGE_SIZE });

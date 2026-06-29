@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   aggregateVariants,
+  buildVariantGroupDocumentPairs,
   filterAndPaginateVariants,
+  parseVariantSlug,
 } from "../../src/features/evidence-db/utils/variantAggregation";
 import type { EvidenceSearchResult } from "../../src/features/evidence-search/types/evidenceSearch";
 
@@ -100,5 +102,44 @@ describe("filterAndPaginateVariants — stats not inflated by split rows", () =>
     expect(data.items).toHaveLength(1);
     expect(data.items[0].variant).toBe("c.502C>T");
     expect(data.total).toBe(1);
+  });
+});
+
+describe("variant detail query helpers", () => {
+  it("parses a variant slug into evidence search filters", () => {
+    expect(parseVariantSlug("FLCN:c.1177-5_-3delCTC:Birt-Hogg-Dube syndrome")).toEqual({
+      gene: "FLCN",
+      variant: "c.1177-5_-3delCTC",
+      disease: "Birt-Hogg-Dube syndrome",
+    });
+  });
+
+  it("builds concrete group/document pairs without a Cartesian product", () => {
+    const rows = [
+      makeResult({
+        group_id: "group-a",
+        source_document_id: "doc-1",
+        gene: "FLCN",
+        variant: "c.1177-5_-3delCTC",
+        disease: "Birt-Hogg-Dube syndrome",
+      }),
+      makeResult({
+        group_id: "group-b",
+        source_document_id: "doc-2",
+        gene: "FLCN",
+        variant: "c.1177-5_-3delCTC",
+        disease: "Birt-Hogg-Dube syndrome",
+      }),
+    ];
+
+    expect(
+      buildVariantGroupDocumentPairs(
+        rows,
+        "FLCN:c.1177-5_-3delCTC:Birt-Hogg-Dube syndrome",
+      ),
+    ).toEqual([
+      { groupId: "group-a", sourceDocumentId: "doc-1" },
+      { groupId: "group-b", sourceDocumentId: "doc-2" },
+    ]);
   });
 });

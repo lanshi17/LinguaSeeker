@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { XProvider, Bubble, Sender, Conversations } from "@ant-design/x";
 import type { SenderRef } from "@ant-design/x/es/sender/interface";
@@ -33,15 +33,7 @@ export function ChatView({ processingRunId, sessionId }: ChatViewProps) {
 
 function FullChatView({ processingRunId }: { processingRunId?: string }) {
   const { message } = App.useApp();
-  // The hook below reads localStorage in its initial state, which differs
-  // from the SSR render and would trip React's hydration check. We render
-  // a stable placeholder first, then flip `mounted` in an effect to show
-  // the real sidebar. Pattern: https://nextjs.org/docs/app/building-your-application/rendering/composition-patterns
-  const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
-  useEffect(() => {
-    setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect -- standard Next.js SSR/CSR hydration gate; the one-shot mount flag has no cascading-render risk because the dep array is empty.
-  }, []);
 
   const [taskQueueOpen, setTaskQueueOpen] = useState<boolean>(
     readInitialQueueOpen,
@@ -238,28 +230,17 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   return (
     <XProvider>
       <div style={{ display: "flex", height: "100%", overflow: "hidden", backgroundColor: "#fff" }}>
-        {/* Conversation sidebar — gated on `mounted` to keep SSR HTML
-            identical to the first client render (see hydration comment
-            above). The placeholder reserves the 240px column so the
-            main chat area doesn't shift when the real sidebar mounts. */}
-        {mounted ? (
-          <Conversations
-            style={{ width: 240, borderRight: "1px solid #f0f0f0" }}
-            items={conversations}
-            activeKey={activeConversationKey}
-            onActiveChange={handleActiveConversationChange}
-            menu={conversationsMenu}
-            creation={{
-              onClick: handleCreateSession,
-              disabled: isCreating,
-            }}
-          />
-        ) : (
-          <div
-            style={{ width: 240, borderRight: "1px solid #f0f0f0" }}
-            aria-hidden="true"
-          />
-        )}
+        <Conversations
+          style={{ width: 240, borderRight: "1px solid #f0f0f0" }}
+          items={conversations}
+          activeKey={activeConversationKey}
+          onActiveChange={handleActiveConversationChange}
+          menu={conversationsMenu}
+          creation={{
+            onClick: handleCreateSession,
+            disabled: isCreating,
+          }}
+        />
 
         {/* Main chat area */}
         <div style={{ display: "flex", minWidth: 0, flex: 1, flexDirection: "column" }}>
