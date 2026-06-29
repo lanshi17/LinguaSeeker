@@ -19,6 +19,7 @@ import { useSessionConversations } from "./useSessionConversations";
 import { useBubbleItems } from "./useBubbleItems";
 import { usePipelineActions } from "./usePipelineActions";
 import { useSessionUIState } from "./useSessionUIState";
+import type { WelcomeAction } from "./WelcomeBlock";
 
 // ─── Main ChatView ─────────────────────────────────────────────────────
 
@@ -190,6 +191,26 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     ],
   );
 
+  const handleWelcomeAction = useCallback(
+    (action: WelcomeAction) => {
+      if (action.kind === "navigate") {
+        navigate(action.to);
+        return;
+      }
+      void handleSendMessage(action.message);
+    },
+    [handleSendMessage, navigate],
+  );
+
+  const handleNewChat = useCallback(() => {
+    void (async () => {
+      const sessionKey = await handleCreateSession();
+      if (sessionKey) {
+        clearSessionUI(sessionKey);
+      }
+    })();
+  }, [clearSessionUI, handleCreateSession]);
+
   // ── Pipeline actions ──
   const { handlePipelineConfirm } = usePipelineActions({
     activeProvider,
@@ -208,7 +229,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     dispatchedActions,
     handleDispatchAction,
     handlePipelineConfirm,
-    handleSendMessage,
+    handleWelcomeAction,
     setActiveForm,
     setActiveFormSlots,
   });
@@ -237,7 +258,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
           onActiveChange={handleActiveConversationChange}
           menu={conversationsMenu}
           creation={{
-            onClick: handleCreateSession,
+            onClick: handleNewChat,
             disabled: isCreating,
           }}
         />

@@ -69,8 +69,12 @@ class EvidenceExtractionWorkflow:
         input_budget_tokens: int = DEFAULT_INPUT_BUDGET_TOKENS,
         field_profile: frozenset[str] | None = None,
         extraction_mode: str = DEFAULT_EXTRACTION_WORKFLOW_MODE,
+        enable_review_validation: bool = True,
+        enable_target_guard: bool = True,
     ):
         self._extraction_mode = resolve_extraction_mode(extraction_mode)
+        self._enable_review_validation = enable_review_validation
+        self._enable_target_guard = enable_target_guard
         self._relevance_scan = RelevanceScanStage(provider, input_budget_tokens=input_budget_tokens)
         self._catalog_extraction = CatalogExtractionStage(
             provider, input_budget_tokens=input_budget_tokens, field_profile=field_profile,
@@ -338,13 +342,16 @@ class EvidenceExtractionWorkflow:
             graph.add_edge("clinical_context", "language_metadata")
         graph.add_edge("language_metadata", "group_assignment")
         graph.add_edge("group_assignment", "role_routing")
-        if self._extraction_mode == "broad":
+        if self._extraction_mode == "broad" and self._enable_review_validation:
             graph.add_edge("role_routing", "review_validation")
             graph.add_edge("review_validation", "value_normalization")
         else:
             graph.add_edge("role_routing", "value_normalization")
-        graph.add_edge("value_normalization", "target_guard")
-        graph.add_edge("target_guard", "target_span_recovery")
+        if self._enable_target_guard:
+            graph.add_edge("value_normalization", "target_guard")
+            graph.add_edge("target_guard", "target_span_recovery")
+        else:
+            graph.add_edge("value_normalization", "target_span_recovery")
         graph.add_edge("target_span_recovery", "source_grounding")
         graph.add_edge("source_grounding", "chain_assembly")
         graph.add_edge("chain_assembly", "quality_gate")
@@ -391,13 +398,16 @@ class EvidenceExtractionWorkflow:
             graph.add_edge("clinical_context", "language_metadata")
         graph.add_edge("language_metadata", "group_assignment")
         graph.add_edge("group_assignment", "role_routing")
-        if self._extraction_mode == "broad":
+        if self._extraction_mode == "broad" and self._enable_review_validation:
             graph.add_edge("role_routing", "review_validation")
             graph.add_edge("review_validation", "value_normalization")
         else:
             graph.add_edge("role_routing", "value_normalization")
-        graph.add_edge("value_normalization", "target_guard")
-        graph.add_edge("target_guard", "target_span_recovery")
+        if self._enable_target_guard:
+            graph.add_edge("value_normalization", "target_guard")
+            graph.add_edge("target_guard", "target_span_recovery")
+        else:
+            graph.add_edge("value_normalization", "target_span_recovery")
         graph.add_edge("target_span_recovery", "source_grounding")
         graph.add_edge("source_grounding", "chain_assembly")
         graph.add_edge("chain_assembly", "quality_gate")

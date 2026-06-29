@@ -20,6 +20,7 @@ from .contracts import (
     DualEvidenceExtractionResult,
     DualTrackDocuments,
     EvidenceExtractionResult,
+    EvidenceExtractionStatus,
     EvidenceStatus,
     ExtractionTarget,
     FieldEligibilitySummary,
@@ -58,14 +59,20 @@ class EvidenceExtractionService:
         cfg: Any,
         extraction_profile: ExtractionProfile | str | None = ExtractionProfile.NONE,
         extraction_mode: str = DEFAULT_EXTRACTION_WORKFLOW_MODE,
+        enable_review_validation: bool = True,
+        enable_target_guard: bool = True,
     ):
         self._ctx = EvidenceExtractionConfigContext.from_config(cfg)
         self._provider = LangChainEvidenceProvider(self._ctx)
         self._extraction_mode = resolve_extraction_mode(extraction_mode)
+        self._enable_review_validation = enable_review_validation
+        self._enable_target_guard = enable_target_guard
         profile_fields = resolve_profile_fields(extraction_profile)
         self._workflow = EvidenceExtractionWorkflow(
             provider=self._provider, field_profile=profile_fields,
             extraction_mode=extraction_mode,
+            enable_review_validation=enable_review_validation,
+            enable_target_guard=enable_target_guard,
         )
         self._reconcile_service = CrossTrackReconcileService()
 
@@ -74,8 +81,15 @@ class EvidenceExtractionService:
         document: TrackDocument,
         extraction_profile: ExtractionProfile | str | None = None,
         extraction_mode: str | None = None,
+        enable_review_validation: bool | None = None,
+        enable_target_guard: bool | None = None,
     ) -> EvidenceExtractionResult:
-        workflow = self._workflow_for(extraction_profile, extraction_mode=extraction_mode)
+        workflow = self._workflow_for(
+            extraction_profile,
+            extraction_mode=extraction_mode,
+            enable_review_validation=enable_review_validation,
+            enable_target_guard=enable_target_guard,
+        )
         state = await workflow.run_async(document)
 
         # Compute field eligibility summary from state
@@ -115,11 +129,51 @@ class EvidenceExtractionService:
         documents: DualTrackDocuments,
         extraction_profile: ExtractionProfile | str | None = None,
         extraction_mode: str | None = None,
+        original_only: bool = False,
+        enable_review_validation: bool | None = None,
+        enable_target_guard: bool | None = None,
     ) -> DualEvidenceExtractionResult:
-        original_result, translated_result = await asyncio.gather(
-            self.run(documents.original, extraction_profile=extraction_profile, extraction_mode=extraction_mode),
-            self.run(documents.translated, extraction_profile=extraction_profile, extraction_mode=extraction_mode),
-        )
+        if original_only:
+            original_result = await self.run(
+                documents.original,
+                extraction_profile=extraction_profile,
+                extraction_mode=extraction_mode,
+                enable_review_validation=enable_review_validation,
+                enable_target_guard=enable_target_guard,
+            )
+            translated_result = EvidenceExtractionResult(
+                status=EvidenceExtractionStatus.NOT_RELEVANT,
+                document_id=documents.translated.document_id,
+                track=documents.translated.track,
+                evidence_map=None,
+                evidence_items=[],
+                evidence_chains=[],
+                special_evidence=[],
+                quality_report=None,
+                normalization_issues=[],
+                extraction_target=documents.translated.extraction_target,
+                phenotype_evidence=[],
+                discarded_evidence=[],
+                channel_classification=None,
+                field_eligibility_summary=None,
+            )
+        else:
+            original_result, translated_result = await asyncio.gather(
+                self.run(
+                    documents.original,
+                    extraction_profile=extraction_profile,
+                    extraction_mode=extraction_mode,
+                    enable_review_validation=enable_review_validation,
+                    enable_target_guard=enable_target_guard,
+                ),
+                self.run(
+                    documents.translated,
+                    extraction_profile=extraction_profile,
+                    extraction_mode=extraction_mode,
+                    enable_review_validation=enable_review_validation,
+                    enable_target_guard=enable_target_guard,
+                ),
+            )
         context_pack = _build_runtime_context_pack(documents, original_result, translated_result)
         reconcile_output = self._reconcile_service.run_with_output(
             original_result,
@@ -153,26 +207,34 @@ class EvidenceExtractionService:
             "run_dual_sync() cannot be called from within a running event loop. "
             "Use run_dual() instead."
         )
-
     def _workflow_for(
         self,
         extraction_profile: ExtractionProfile | str | None,
         extraction_mode: str | None = None,
+        enable_review_validation: bool | None = None,
+        enable_target_guard: bool | None = None,
     ) -> EvidenceExtractionWorkflow:
-        """Return the workflow for the given profile override.
+        """Return the workflow for the given profile/mode/ablation override.
 
-        Returns the default workflow when ``extraction_profile`` is ``None``
-        (no override).  Creates a fresh workflow with the requested profile
-        otherwise.  The default workflow is cached; per-profile workflows are
-        created on demand.
+        Returns the cached default workflow when no overrides are active.
+        Creates a fresh workflow otherwise.
         """
         mode = extraction_mode or self._extraction_mode
-        if extraction_profile is None and mode == self._extraction_mode:
+        erv = self._enable_review_validation if enable_review_validation is None else enable_review_validation
+        etg = self._enable_target_guard if enable_target_guard is None else enable_target_guard
+        if (
+            extraction_profile is None
+            and mode == self._extraction_mode
+            and erv == self._enable_review_validation
+            and etg == self._enable_target_guard
+        ):
             return self._workflow
         profile_fields = resolve_profile_fields(extraction_profile)
         return EvidenceExtractionWorkflow(
             provider=self._provider, field_profile=profile_fields,
             extraction_mode=mode,
+            enable_review_validation=erv,
+            enable_target_guard=etg,
         )
 
     @staticmethod
