@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { XProvider, Bubble, Sender } from "@ant-design/x";
+import type { BubbleItemType } from "@ant-design/x";
 import type { SenderRef } from "@ant-design/x/es/sender/interface";
 import { useXChat } from "@ant-design/x-sdk";
 import type { MessageInfo } from "@ant-design/x-sdk/es/x-chat";
@@ -34,7 +35,7 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
   });
 
   // Guard against undefined returns from useXChat
-  const messages = xChat?.messages ?? [];
+  const messages = useMemo(() => xChat?.messages ?? [], [xChat?.messages]);
   const onRequest = xChat?.onRequest;
   const isRequesting = xChat?.isRequesting ?? false;
   const abort = xChat?.abort;
@@ -93,8 +94,7 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
 
   const bubbleItems = useMemo(() => {
     const messageKeys = toUniqueChatMessageKeys(messages);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const items: any[] = messages.map(({ message, status }, index) => {
+    const items: BubbleItemType[] = messages.map(({ message, status }, index) => {
       const isLoadingEmpty =
         (status === "loading" || status === "updating") && !message.content;
       const isStreaming =

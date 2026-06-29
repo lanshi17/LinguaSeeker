@@ -1039,3 +1039,7 @@
 [2026-06-27] [pipeline] B8 extraction mode switched to business default — DEFAULT_EXTRACTION_WORKFLOW_MODE="b8" at workflow/service/API/state/dispatcher/benchmark layers; legacy available as explicit rollback via extraction_mode="legacy". Round 3 evidence: P=87.5%, R=43.8%, F1=58.3%. [completed]
 [2026-06-27] Added PDF file upload to chat input (frontend ChatFileUpload component + backend /chat/files/parse endpoint) [completed]
 [2026-06-28] [deploy] Docker venv entry-point shebang fix — 修复容器内 uvicorn/fastapi/alembic 等脚本 shebang 指向宿主机路径导致 exec no such file or directory. Dockerfile 新增 sed 批量修正步骤; mineru_local_parse_url 端口 8004→44321 全量替换(18文件). [completed]
+[2026-06-29] [frontend] Updated chat welcome pipeline suggestion PMID example from 34521984 to 28499369. [completed]
+[2026-06-29] [frontend] Added export report action to evidence-db literature reading header using the existing ExportReportDrawer. [completed]
+[2026-06-29] [frontend] Addressed frontend review P0/P2 items: scoped variant detail search, removed group/document Cartesian detail requests, stabilized evidence search applyFilters, removed obsolete ChatView hydration gate, and cleared reported lint errors. [completed]
+[2026-06-29] [frontend] Addressed frontend review P2/P3 follow-ups: replaced SingleSessionChat any[] bubble items with BubbleItemType[] and routed backend health checks through the shared apiClient. [completed]

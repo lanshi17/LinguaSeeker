@@ -21,6 +21,7 @@ import { ActiveEvidenceCard } from "./ActiveEvidenceCard";
 import { LiteratureHeader } from "./LiteratureHeader";
 import { BilingualSidebar } from "./BilingualSidebar";
 import { bevEmbeddedCSS } from "./bevStyles";
+import { ExportReportDrawer } from "@/features/evidence-search/components/ExportReportDrawer";
 import {
   createScrollSyncHandler,
   loadScrollSyncSetting,
@@ -55,6 +56,7 @@ export function BilingualEvidenceView({
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<
     string | undefined
   >(undefined);
+  const [exportOpen, setExportOpen] = useState(false);
 
   // ── Scroll sync state ──────────────────────────────────────────────
   const [isScrollSyncEnabled, setIsScrollSyncEnabled] = useState(loadScrollSyncSetting);
@@ -280,7 +282,10 @@ export function BilingualEvidenceView({
       </nav>
 
       {/* Literature Header */}
-      <LiteratureHeader groupDetail={groupDetail} />
+      <LiteratureHeader
+        groupDetail={groupDetail}
+        onExportReport={() => setExportOpen(true)}
+      />
 
       {/* Main: Bilingual comparison layout */}
       <div className="bev-main-grid">
@@ -361,6 +366,12 @@ export function BilingualEvidenceView({
           </div>
         </div>
       </div>
+
+      <ExportReportDrawer
+        detail={groupDetail}
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+      />
     </div>
   );
 }

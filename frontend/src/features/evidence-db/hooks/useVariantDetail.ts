@@ -2,7 +2,11 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAllEvidence, fetchEvidenceGroupDetail } from "../services/variantDb";
-import { aggregateVariants } from "../utils/variantAggregation";
+import {
+  aggregateVariants,
+  buildVariantGroupDocumentPairs,
+  parseVariantSlug,
+} from "../utils/variantAggregation";
 import type { VariantDetailData, LiteratureReference } from "../types/variantDb";
 import type { EvidenceGroupDetailResponse, EvidenceGroupItem } from "@/features/evidence-search/types/evidenceSearch";
 
@@ -67,10 +71,13 @@ function buildLiteratureReferences(
 }
 
 export function useVariantDetail(variantSlug: string) {
-  // First, get the variant index to find group IDs
+  const variantFilters = useMemo(() => parseVariantSlug(variantSlug), [variantSlug]);
+
+  // First, get search rows scoped to this variant so detail pages do not
+  // load the full evidence index.
   const indexQuery = useQuery({
-    queryKey: ["evidence-db", "all-evidence"],
-    queryFn: () => fetchAllEvidence({ page: 1, page_size: 1000 }),
+    queryKey: ["evidence-db", "variant-search", variantSlug, variantFilters],
+    queryFn: () => fetchAllEvidence({ ...variantFilters, page: 1, page_size: 1000 }),
     staleTime: 60_000,
   });
 
@@ -80,28 +87,10 @@ export function useVariantDetail(variantSlug: string) {
     return entries.find((e) => e.variantSlug === variantSlug) ?? null;
   }, [indexQuery.data, variantSlug]);
 
-  // Build deduplicated (group_id, source_document_id) pairs.
-  // The same group_id can appear across many source documents because it
-  // is derived from gene+variant only.  We must scope each detail fetch
-  // to a single source document to avoid mixing evidence from different
-  // papers.
   const groupDocPairs = useMemo(() => {
-    if (!entry) return [];
-    const seen = new Set<string>();
-    const pairs: Array<{ groupId: string; sourceDocumentId: string }> = [];
-    for (const docId of entry.sourceDocumentIds) {
-      for (const gid of entry.groupIds) {
-        // One pair per (group, document) — the variant index already
-        // collected unique group IDs; we cross them with unique doc IDs.
-        const key = `${gid}\0${docId}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          pairs.push({ groupId: gid, sourceDocumentId: docId });
-        }
-      }
-    }
-    return pairs;
-  }, [entry]);
+    if (!indexQuery.data?.items || !entry) return [];
+    return buildVariantGroupDocumentPairs(indexQuery.data.items, variantSlug);
+  }, [entry, indexQuery.data, variantSlug]);
 
   const groupQueries = useQuery({
     queryKey: ["evidence-db", "variant-groups", variantSlug, groupDocPairs],

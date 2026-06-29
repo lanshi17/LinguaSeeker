@@ -1,12 +1,15 @@
-import { BookOpen, ExternalLink } from "lucide-react";
+import { Button } from "antd";
+import { BookOpen, Download, ExternalLink } from "lucide-react";
 import type { EvidenceGroupDetailResponse } from "@/features/evidence-search/types/evidenceSearch";
 
 /* ── Literature Header ──────────────────────────────────── */
 
 export function LiteratureHeader({
   groupDetail,
+  onExportReport,
 }: {
   groupDetail: EvidenceGroupDetailResponse;
+  onExportReport?: () => void;
 }) {
   return (
     <section style={{
@@ -15,7 +18,7 @@ export function LiteratureHeader({
       backgroundColor: "#fff",
       padding: 20,
     }}>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+      <div className="bev-literature-header-content" style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
         <div style={{
           display: "flex",
           width: 40,
@@ -96,6 +99,16 @@ export function LiteratureHeader({
             )}
           </div>
         </div>
+        {onExportReport && (
+          <Button
+            type="primary"
+            icon={<Download style={{ width: 16, height: 16 }} />}
+            onClick={onExportReport}
+            style={{ flexShrink: 0 }}
+          >
+            Export report
+          </Button>
+        )}
       </div>
     </section>
   );

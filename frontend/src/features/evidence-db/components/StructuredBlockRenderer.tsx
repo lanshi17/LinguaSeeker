@@ -253,12 +253,10 @@ function ListBlock({
 
 function FigureBlock({
   block,
-  text,
   globalStart,
   highlights,
 }: {
   block: ContentBlock;
-  text: string;
   globalStart: number;
   highlights: BlockHighlight[];
 }) {

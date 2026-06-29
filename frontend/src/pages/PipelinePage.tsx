@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { FileUp, Search, Plus } from "lucide-react";
 import {
   App,

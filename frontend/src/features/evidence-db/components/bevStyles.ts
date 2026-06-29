@@ -14,6 +14,14 @@ export const bevEmbeddedCSS = `
   display: grid;
   gap: 16px;
 }
+.bev-literature-header-content {
+  flex-wrap: wrap;
+}
+@media (min-width: 640px) {
+  .bev-literature-header-content {
+    flex-wrap: nowrap;
+  }
+}
 @media (min-width: 1024px) {
   .bev-bilingual-grid.bev-bilingual-grid--dual {
     grid-template-columns: 1fr 1fr;
