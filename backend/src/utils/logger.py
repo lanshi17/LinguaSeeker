@@ -56,10 +56,12 @@ def setup_logging(*, environment: str = "development", debug: bool = False) -> N
         diagnose=debug,
     )
 
-    # File sink — INFO+, daily rotation, 14-day retention
-    # Naming follows AGENTS.md rule 7: YYYY-MM-DD_HHmmss.log
+    # File sink — INFO+, daily rotation into date subdirectories, 14-day retention
+    # Path uses loguru's {time:...} interpolation evaluated per rotation:
+    #   logs/2026-06-30/143000.log
+    #   logs/2026-07-01/093000.log
     _logger.add(
-        LOG_DIR / "{time:YYYY-MM-DD_HHmmss}.log",
+        str(LOG_DIR / "{time:YYYY-MM-DD}" / "{time:HHmmss}.log"),
         rotation="1 day",
         retention="14 days",
         compression="gz",
