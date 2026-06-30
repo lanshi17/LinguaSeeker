@@ -39,9 +39,9 @@ export function EvidenceDetailPage() {
       <div className="no-print" style={{ display: "flex", alignItems: "center", gap: 16 }}>
         <div style={iconStyle}>
           {isCompareView ? (
-            <Columns2 size={24} color="#fff" />
+            <Columns2 size={24} color="var(--color-surface)" />
           ) : (
-            <BookOpen size={24} color="#fff" />
+            <BookOpen size={24} color="var(--color-surface)" />
           )}
         </div>
         <div>

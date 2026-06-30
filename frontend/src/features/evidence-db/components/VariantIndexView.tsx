@@ -1,3 +1,4 @@
+import "../evidence-db.css";
 import { useMemo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -15,12 +16,13 @@ import {
   ArrowDown,
 } from "lucide-react";
 import { AutoComplete, Checkbox, Input } from "antd";
+import { StatCard } from "./StatCard";
+import { CategoryDistributionBar } from "./CategoryDistributionBar";
 import { Spinner } from "@/components/ui/Spinner";
 import { useVariantIndex } from "../hooks/useVariantIndex";
 import { useEvidenceDbViewPrefs } from "../hooks/useEvidenceDbViewPrefs";
 import { VariantIndexSkeleton } from "./VariantIndexSkeleton";
 import type {
-  VariantIndexEntry,
   ClassificationLevel,
   SortBy,
   SortOrder,
@@ -35,8 +37,8 @@ import {
   formatConfidencePercent,
   formatReviewedCount,
 } from "../utils/fieldLabels";
-import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
 import { useI18n } from "@/lib/i18n";
+import { usePagination } from "@/lib/hooks/usePagination";
 
 function getClassificationOptions(t: (key: string) => string) {
   return [
@@ -92,267 +94,6 @@ function variantGridTemplateColumns(prefs: EvidenceDbViewPrefs): string {
   return columns.join(" ");
 }
 
-/* ── Embedded responsive styles ──────────────────────────── */
-
-const embeddedCSS = `
-.viv-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-@media (min-width: 640px) {
-  .viv-stats-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-.viv-search-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-@media (min-width: 640px) {
-  .viv-search-bar {
-    flex-direction: row;
-    align-items: center;
-  }
-  .viv-disease-filter {
-    width: 192px;
-  }
-}
-.viv-variant-list {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #fff;
-}
-.viv-list-header {
-  display: none;
-}
-@media (min-width: 768px) {
-  .viv-list-header {
-    display: grid;
-    grid-template-columns: 2fr 1.5fr 120px 100px 100px 100px 120px 90px;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    background: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
-    font-size: 11px;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-}
-.viv-row {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #f3f4f6;
-  cursor: pointer;
-  text-decoration: none;
-  color: inherit;
-  transition: background-color 0.15s;
-}
-.viv-row:last-child {
-  border-bottom: none;
-}
-.viv-row:hover {
-  background-color: #f9fafb;
-}
-@media (min-width: 768px) {
-  .viv-row {
-    display: grid;
-    grid-template-columns: 2fr 1.5fr 120px 100px 100px 100px 120px 90px;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-  }
-}
-.viv-row-gene {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: color 0.15s;
-}
-.viv-row:hover .viv-row-gene {
-  color: var(--color-primary-600);
-}
-.viv-row-variant {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: #6b7280;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-  flex: 1;
-}
-.viv-row-disease {
-  font-size: 13px;
-  color: #374151;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.viv-row-stat {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  color: #6b7280;
-  white-space: nowrap;
-}
-.viv-row-stat-val {
-  font-weight: 500;
-  color: #374151;
-}
-.viv-row-mobile-stats {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 12px;
-  color: #6b7280;
-}
-@media (min-width: 768px) {
-  .viv-row-mobile-stats {
-    display: none;
-  }
-}
-.viv-filter-pill:hover {
-  border-color: #d1d5db;
-}
-.viv-clear-btn:hover {
-  background-color: #f9fafb;
-}
-.viv-page-btn:hover {
-  background-color: #f9fafb;
-}
-.viv-page-jump-input {
-  width: 48px;
-  height: 36px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  text-align: center;
-  font-size: 13px;
-  font-family: var(--font-mono);
-  color: #374151;
-  outline: none;
-  transition: border-color 0.15s;
-}
-.viv-page-jump-input:focus {
-  border-color: var(--color-primary-600);
-  box-shadow: 0 0 0 2px var(--color-primary-100, rgba(8,145,178,0.15));
-}
-.viv-page-jump-input::placeholder {
-  color: #9ca3af;
-}
-.viv-sort-header {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.15s;
-}
-.viv-sort-header:hover {
-  color: #374151;
-}
-`;
-
-/* ── Stat Card ──────────────────────────────────────────── */
-
-function StatCard({
-  icon: Icon,
-  value,
-  label,
-  accent,
-}: {
-  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
-  value: string | number;
-  label: string;
-  accent?: string;
-}) {
-  const accentColor = accent ?? "#0891B2";
-  return (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      borderRadius: 8,
-      border: "1px solid #f3f4f6",
-      backgroundColor: "rgba(249,250,251,0.6)",
-      padding: "12px 16px",
-    }}>
-      <div
-        style={{
-          display: "flex",
-          width: 36,
-          height: 36,
-          flexShrink: 0,
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: 8,
-          backgroundColor: `${accentColor}1a`,
-        }}
-      >
-        <Icon style={{ width: 16, height: 16, color: accentColor }} />
-      </div>
-      <div>
-        <p
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 18,
-            fontWeight: 600,
-            lineHeight: 1.25,
-            color: accentColor,
-            margin: 0,
-          }}
-        >
-          {typeof value === "number" ? value.toLocaleString() : value}
-        </p>
-        <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{label}</p>
-      </div>
-    </div>
-  );
-}
-
-/* ── Category Strip ─────────────────────────────────────── */
-
-function CategoryDistributionBar({
-  distribution,
-}: {
-  distribution: Record<string, number>;
-}) {
-  const entries = Object.entries(distribution)
-    .filter(([, count]) => count > 0)
-    .sort(([, a], [, b]) => b - a);
-
-  if (entries.length === 0) return null;
-
-  const total = entries.reduce((sum, [, c]) => sum + c, 0);
-
-  return (
-    <div className="edb-cat-strip" style={{ display: "flex", width: "100%" }}>
-      {entries.map(([cat, count]) => (
-        <span
-          key={cat}
-          style={{
-            backgroundColor: CATEGORY_COLORS[cat]?.hex ?? "#64748B",
-            flexGrow: count / total,
-          }}
-          title={`Category ${cat}: ${count} fields`}
-        />
-      ))}
-    </div>
-  );
-}
 
 /* ── Main View ──────────────────────────────────────────── */
 
@@ -379,15 +120,21 @@ export function VariantIndexView() {
 
   const totalPages = Math.ceil(total / pageSize);
 
+  const { pageNumbers, canPrev, canNext, goPrev, goNext, goTo } = usePagination({
+    page,
+    totalPages,
+    onPageChange: setPage,
+  });
+
   const [jumpValue, setJumpValue] = useState("");
 
   const handleJump = useCallback(() => {
     const num = parseInt(jumpValue, 10);
     if (!Number.isNaN(num) && num >= 1 && num <= totalPages) {
-      setPage(num);
+      goTo(num);
       setJumpValue("");
     }
-  }, [jumpValue, totalPages, setPage]);
+  }, [jumpValue, totalPages, goTo]);
 
   // Sort toggle for "Updated" column
   const toggleSort = useCallback(() => {
@@ -406,22 +153,6 @@ export function VariantIndexView() {
       }
     }
   }, [filters.sortBy, filters.sortOrder, updateFilter]);
-
-  // Generate page numbers with window around current page
-  const pageNumbers = useMemo(() => {
-    if (totalPages <= 7) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-    // Always show first, last, and a window around current
-    const pages: number[] = [1];
-    const windowStart = Math.max(2, page - 1);
-    const windowEnd = Math.min(totalPages - 1, page + 1);
-    if (windowStart > 2) pages.push(-1); // -1 = left ellipsis
-    for (let p = windowStart; p <= windowEnd; p++) pages.push(p);
-    if (windowEnd < totalPages - 1) pages.push(-2); // -2 = right ellipsis
-    pages.push(totalPages);
-    return pages;
-  }, [totalPages, page]);
 
   const searchText = filters.gene ?? filters.variant ?? "";
   const hasAnyFilter = !!(filters.gene || filters.variant || filters.disease || filters.classification);
@@ -466,10 +197,9 @@ export function VariantIndexView() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      <style>{embeddedCSS}</style>
 
       {/* Hero Stats Section */}
-      <section className="edb-hero" style={{ borderRadius: 16, border: "1px solid #e5e7eb", padding: 24 }}>
+      <section className="edb-hero" style={{ borderRadius: 16, border: "1px solid var(--color-border)", padding: 24 }}>
         <div className="viv-stats-grid">
           <StatCard
             icon={Dna}
@@ -499,7 +229,7 @@ export function VariantIndexView() {
       </section>
 
       {/* Search & Filter Bar */}
-      <section style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", padding: 16 }}>
+      <section style={{ borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", padding: 16 }}>
         <div className="viv-search-bar">
           {/* Text search — gene or variant autocomplete */}
           <div style={{ flex: 1 }}>
@@ -515,7 +245,7 @@ export function VariantIndexView() {
             >
               <Input
                 placeholder={t("evidenceDb.searchGenePh")}
-                prefix={<Search style={{ width: 16, height: 16, color: "#9ca3af" }} />}
+                prefix={<Search style={{ width: 16, height: 16, color: "var(--color-text-muted)" }} />}
                 suffix={
                   searchText ? (
                     <button
@@ -529,7 +259,7 @@ export function VariantIndexView() {
                         border: "none",
                         background: "none",
                         padding: 2,
-                        color: "#9ca3af",
+                        color: "var(--color-text-muted)",
                         display: "flex",
                         alignItems: "center",
                       }}
@@ -568,12 +298,12 @@ export function VariantIndexView() {
                 cursor: "pointer",
                 flexShrink: 0,
                 borderRadius: 8,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--color-border)",
                 padding: "4px 12px",
                 fontSize: 12,
                 fontWeight: 500,
-                color: "#4b5563",
-                backgroundColor: "#fff",
+                color: "var(--color-text-strong)",
+                backgroundColor: "var(--color-surface)",
                 transition: "background-color 0.15s",
               }}
             >
@@ -583,7 +313,7 @@ export function VariantIndexView() {
         </div>
 
         {/* Classification filter pills */}
-        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #f3f4f6" }}>
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--color-bg-muted)" }}>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
             <button
               type="button"
@@ -592,9 +322,9 @@ export function VariantIndexView() {
               style={{
                 cursor: "pointer",
                 borderRadius: 9999,
-                border: !filters.classification ? "1px solid #111827" : "1px solid #e5e7eb",
-                backgroundColor: !filters.classification ? "#111827" : "#fff",
-                color: !filters.classification ? "#fff" : "#4b5563",
+                border: !filters.classification ? "1px solid var(--color-text)" : "1px solid var(--color-border)",
+                backgroundColor: !filters.classification ? "var(--color-text)" : "var(--color-surface)",
+                color: !filters.classification ? "var(--color-surface)" : "var(--color-text-strong)",
                 padding: "4px 10px",
                 fontSize: 12,
                 fontWeight: 500,
@@ -617,9 +347,9 @@ export function VariantIndexView() {
                   style={{
                     cursor: "pointer",
                     borderRadius: 9999,
-                    border: isActive ? "1px solid transparent" : "1px solid #e5e7eb",
-                    backgroundColor: isActive ? hex : "#fff",
-                    color: isActive ? "#fff" : "#4b5563",
+                    border: isActive ? "1px solid transparent" : "1px solid var(--color-border)",
+                    backgroundColor: isActive ? hex : "var(--color-surface)",
+                    color: isActive ? "var(--color-surface)" : "var(--color-text-strong)",
                     padding: "4px 10px",
                     fontSize: 12,
                     fontWeight: 500,
@@ -641,11 +371,11 @@ export function VariantIndexView() {
           alignItems: "center",
           gap: 12,
           borderRadius: 12,
-          border: "1px solid #fecaca",
-          backgroundColor: "#fef2f2",
+          border: "1px solid var(--color-error-border)",
+          backgroundColor: "var(--color-error-bg)",
           padding: 16,
           fontSize: 14,
-          color: "#b91c1c",
+          color: "var(--color-error-text)",
         }}>
           <AlertCircle style={{ width: 20, height: 20, flexShrink: 0 }} />
           <span>{t("evidenceDb.loadError")}</span>
@@ -659,15 +389,15 @@ export function VariantIndexView() {
           alignItems: "center",
           justifyContent: "center",
           borderRadius: 12,
-          border: "1px dashed #d1d5db",
+          border: "1px dashed var(--color-text-muted)",
           padding: "80px 0",
           textAlign: "center",
         }}>
-          <Dna style={{ width: 40, height: 40, color: "#d1d5db", marginBottom: 12 }} />
-          <p style={{ fontSize: 14, fontWeight: 500, color: "#374151", margin: 0 }}>
+          <Dna style={{ width: 40, height: 40, color: "var(--color-text-muted)", marginBottom: 12 }} />
+          <p style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-strong)", margin: 0 }}>
             {t("evidenceDb.empty.noVariants")}
           </p>
-          <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4, margin: 0 }}>
+          <p style={{ fontSize: 12, color: "var(--color-text-secondary)", marginTop: 4, margin: 0 }}>
             {t("evidenceDb.empty.adjustFilters")}
           </p>
         </div>
@@ -675,8 +405,8 @@ export function VariantIndexView() {
         <div className="content-fade-in">
           {/* Result count */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-            <p style={{ fontSize: 14, color: "#4b5563", margin: 0 }}>
-              <span style={{ fontWeight: 500, color: "#111827" }}>{total}</span>{" "}
+            <p style={{ fontSize: 14, color: "var(--color-text-strong)", margin: 0 }}>
+              <span style={{ fontWeight: 500, color: "var(--color-text)" }}>{total}</span>{" "}
               {t("evidenceDb.variantsFound")}
               {isFetching && (
                 <span style={{ marginLeft: 8, display: "inline-block" }}>
@@ -684,7 +414,7 @@ export function VariantIndexView() {
                 </span>
               )}
             </p>
-            <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>
+            <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>
               {t("evidenceDb.pageInfo", { current: String(page), total: String(totalPages || 1) })}
             </p>
             <div
@@ -694,11 +424,11 @@ export function VariantIndexView() {
                 gap: 12,
                 flexWrap: "wrap",
                 fontSize: 12,
-                color: "#4b5563",
+                color: "var(--color-text-strong)",
               }}
-              aria-label="Variant index display fields"
+              aria-label={t("evidenceDb.label.evidenceFields")}
             >
-              <span style={{ fontSize: 12, fontWeight: 500, color: "#6b7280" }}>{t("evidenceDb.label.evidenceFields")}</span>
+              <span style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)" }}>{t("evidenceDb.label.evidenceFields")}</span>
               <Checkbox
                 checked={viewPrefs.showUpdated}
                 onChange={(e) => setPreference("showUpdated", e.target.checked)}
@@ -748,7 +478,7 @@ export function VariantIndexView() {
                     border: "none",
                     padding: 0,
                     font: "inherit",
-                    color: filters.sortBy === "updated" ? "#111827" : "#6b7280",
+                    color: filters.sortBy === "updated" ? "var(--color-text)" : "var(--color-text-secondary)",
                   }}
                 >
                   {labels.updated}
@@ -775,7 +505,7 @@ export function VariantIndexView() {
                   {/* Gene + Variant (primary column) */}
                   <div style={{ minWidth: 0, display: "flex", alignItems: "baseline", flexWrap: "nowrap" }} title={`${entry.gene || t("evidenceDb.unknownGene")} · ${entry.variant || t("evidenceDb.unknownVariant")}`}>
                     <span className="viv-row-gene">{entry.gene || t("evidenceDb.unknownGene")}</span>
-                    <span style={{ margin: "0 6px", color: "#d1d5db", flexShrink: 0 }}>·</span>
+                    <span style={{ margin: "0 6px", color: "var(--color-text-muted)", flexShrink: 0 }}>·</span>
                     <span className="viv-row-variant">{entry.variant || t("evidenceDb.unknownVariant")}</span>
                   </div>
                   {/* Classification shown inline on mobile */}
@@ -821,7 +551,7 @@ export function VariantIndexView() {
                         <CategoryDistributionBar distribution={entry.categoryDistribution} />
                       )}
                       {viewPrefs.showReviewProgress && (
-                        <span style={{ marginTop: viewPrefs.showCategories ? 4 : 0, display: "block", fontSize: 11, color: "#6b7280" }}>
+                        <span style={{ marginTop: viewPrefs.showCategories ? 4 : 0, display: "block", fontSize: 11, color: "var(--color-text-secondary)" }}>
                           {formatReviewedCount(entry.reviewProgress)}
                         </span>
                       )}
@@ -830,7 +560,7 @@ export function VariantIndexView() {
 
                   {/* Updated date */}
                   {viewPrefs.showUpdated && (
-                    <div className="viv-row-stat" style={{ color: "#9ca3af", fontSize: 12 }} title={entry.createdAt || undefined}>
+                    <div className="viv-row-stat" style={{ color: "var(--color-text-muted)", fontSize: 12 }} title={entry.createdAt || undefined}>
                       <Calendar style={{ width: 12, height: 12, flexShrink: 0 }} />
                       <span>{formatDate(entry.createdAt)}</span>
                     </div>
@@ -854,12 +584,12 @@ export function VariantIndexView() {
                       {classificationShortLabel(entry.classificationLevel)}
                     </span>
                     {viewPrefs.showUpdated && (
-                      <span style={{ color: "#9ca3af", fontSize: 11 }}>
+                      <span style={{ color: "var(--color-text-muted)", fontSize: 11 }}>
                         {formatDate(entry.createdAt)}
                       </span>
                     )}
                     {viewPrefs.showReviewProgress && (
-                      <span style={{ color: "#6b7280", fontSize: 11 }}>
+                      <span style={{ color: "var(--color-text-secondary)", fontSize: 11 }}>
                         {formatReviewedCount(entry.reviewProgress)}
                       </span>
                     )}
@@ -881,9 +611,9 @@ export function VariantIndexView() {
             }}>
               <button
                 type="button"
-                onClick={() => setPage(page - 1)}
-                disabled={page <= 1}
-                className={page > 1 ? "viv-page-btn" : undefined}
+                onClick={goPrev}
+                disabled={!canPrev}
+                className={canPrev ? "viv-page-btn" : undefined}
                 style={{
                   display: "flex",
                   width: 36,
@@ -891,11 +621,11 @@ export function VariantIndexView() {
                   alignItems: "center",
                   justifyContent: "center",
                   borderRadius: 8,
-                  border: page <= 1 ? "1px solid #f3f4f6" : "1px solid #e5e7eb",
+                  border: !canPrev ? "1px solid var(--color-bg-muted)" : "1px solid var(--color-border)",
                   fontSize: 14,
-                  color: page <= 1 ? "#d1d5db" : "#4b5563",
-                  cursor: page <= 1 ? "not-allowed" : "pointer",
-                  backgroundColor: "#fff",
+                  color: !canPrev ? "var(--color-text-muted)" : "var(--color-text-strong)",
+                  cursor: !canPrev ? "not-allowed" : "pointer",
+                  backgroundColor: "var(--color-surface)",
                   transition: "background-color 0.15s",
                 }}
               >
@@ -905,7 +635,7 @@ export function VariantIndexView() {
                 if (p < 0) {
                   // Ellipsis placeholder
                   return (
-                    <span key={`ellipsis-${idx}`} style={{ padding: "0 2px", color: "#9ca3af", fontSize: 14 }}>
+                    <span key={`ellipsis-${idx}`} style={{ padding: "0 2px", color: "var(--color-text-muted)", fontSize: 14 }}>
                       &hellip;
                     </span>
                   );
@@ -915,7 +645,7 @@ export function VariantIndexView() {
                   <button
                     key={p}
                     type="button"
-                    onClick={() => setPage(p)}
+                    onClick={() => goTo(p)}
                     className={!isActive ? "viv-page-btn" : undefined}
                     style={{
                       display: "flex",
@@ -924,11 +654,11 @@ export function VariantIndexView() {
                       alignItems: "center",
                       justifyContent: "center",
                       borderRadius: 8,
-                      border: isActive ? "1px solid var(--color-primary-600)" : "1px solid #e5e7eb",
+                      border: isActive ? "1px solid var(--color-primary-600)" : "1px solid var(--color-border)",
                       fontSize: 14,
                       fontWeight: isActive ? 600 : 500,
-                      backgroundColor: isActive ? "var(--color-primary-600)" : "#fff",
-                      color: isActive ? "#fff" : "#4b5563",
+                      backgroundColor: isActive ? "var(--color-primary-600)" : "var(--color-surface)",
+                      color: isActive ? "var(--color-surface)" : "var(--color-text-strong)",
                       cursor: "pointer",
                       transition: "background-color 0.15s",
                     }}
@@ -952,13 +682,13 @@ export function VariantIndexView() {
                 }}
                 onBlur={handleJump}
                 aria-label={t("evidenceDb.jumpToPage")}
-                title={`${t("evidenceDb.jumpToPage")} (1–${totalPages})`}
+                title={`${t("evidenceDb.jumpToPage")} (1\u2013${totalPages})`}
               />
               <button
                 type="button"
-                onClick={() => setPage(page + 1)}
-                disabled={page >= totalPages}
-                className={page < totalPages ? "viv-page-btn" : undefined}
+                onClick={goNext}
+                disabled={!canNext}
+                className={canNext ? "viv-page-btn" : undefined}
                 style={{
                   display: "flex",
                   width: 36,
@@ -966,11 +696,11 @@ export function VariantIndexView() {
                   alignItems: "center",
                   justifyContent: "center",
                   borderRadius: 8,
-                  border: page >= totalPages ? "1px solid #f3f4f6" : "1px solid #e5e7eb",
+                  border: !canNext ? "1px solid var(--color-bg-muted)" : "1px solid var(--color-border)",
                   fontSize: 14,
-                  color: page >= totalPages ? "#d1d5db" : "#4b5563",
-                  cursor: page >= totalPages ? "not-allowed" : "pointer",
-                  backgroundColor: "#fff",
+                  color: !canNext ? "var(--color-text-muted)" : "var(--color-text-strong)",
+                  cursor: !canNext ? "not-allowed" : "pointer",
+                  backgroundColor: "var(--color-surface)",
                   transition: "background-color 0.15s",
                 }}
               >

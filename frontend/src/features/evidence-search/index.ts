@@ -1,3 +1,4 @@
+import "./evidence-search.css";
 export { EvidenceSearchView } from "./components/EvidenceSearchView";
 export { EvidenceSearchForm } from "./components/EvidenceSearchForm";
 export { EvidenceResultsTable } from "./components/EvidenceResultsTable";

@@ -24,20 +24,20 @@ export function ActiveEvidenceCard({
     <div
       style={{
         borderRadius: 12,
-        border: "1px solid #e5e7eb",
+        border: "1px solid var(--color-border)",
         borderLeftColor: hex,
         borderLeftWidth: 3,
-        backgroundColor: "#fff",
+        backgroundColor: "var(--color-surface)",
         overflow: "hidden",
       }}
     >
       <div style={{ padding: 16 }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
           <div>
-            <p style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
               {item.field_name ?? item.field_id}
             </p>
-            <p style={{ fontSize: 11, color: "#6b7280", fontFamily: "var(--font-mono)", marginTop: 2, margin: 0 }}>
+            <p style={{ fontSize: 11, color: "var(--color-text-secondary)", fontFamily: "var(--font-mono)", marginTop: 2, margin: 0 }}>
               {item.field_id}
             </p>
           </div>
@@ -61,8 +61,8 @@ export function ActiveEvidenceCard({
         </div>
 
         {item.value && (
-          <div style={{ borderRadius: 8, backgroundColor: "#f9fafb", padding: 12, marginBottom: 8 }}>
-            <p style={{ fontSize: 14, color: "#374151", lineHeight: 1.625, margin: 0 }}>
+          <div style={{ borderRadius: 8, backgroundColor: "var(--color-bg)", padding: 12, marginBottom: 8 }}>
+            <p style={{ fontSize: 14, color: "var(--color-text-strong)", lineHeight: 1.625, margin: 0 }}>
               {typeof item.value === "string"
                 ? item.value
                 : JSON.stringify(item.value, null, 2)}
@@ -70,7 +70,7 @@ export function ActiveEvidenceCard({
           </div>
         )}
 
-        <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 11, color: "#6b7280" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 11, color: "var(--color-text-secondary)" }}>
           <span style={{ fontWeight: 500, color: confColor }}>
             {Math.round(confidence * 100)}% {t("evidenceDb.card.confidence")}
           </span>

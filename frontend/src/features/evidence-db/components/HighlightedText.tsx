@@ -1,13 +1,15 @@
 import { useMemo } from "react";
 import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
 import type { EvidenceDocumentParagraph } from "@/features/evidence-search/utils/evidenceDocument";
+import { FieldReviewPopover } from "@/features/evidence-search/components/FieldReviewPopover";
+import type { FieldReviewInfo } from "@/features/evidence-search/components/FieldReviewPopover";
 
 /* ── Style helpers (replace Tailwind-based categoryMarkStyle / categoryChipStyle) ── */
 
 export function markInlineStyle(category?: string | null, selected?: boolean): React.CSSProperties {
   const hex = category && CATEGORY_COLORS[category]
     ? CATEGORY_COLORS[category].hex
-    : "#9CA3AF";
+    : "var(--color-text-muted)";
   const base: React.CSSProperties = {
     backgroundColor: `${hex}50`,
     color: `${hex}f0`,
@@ -23,9 +25,18 @@ export function markInlineStyle(category?: string | null, selected?: boolean): R
   return base;
 }
 
-/* ── Highlighted Text Renderer ──────────────────────────── */
+/** Map from canonical_evidence_id → review info, used to enable hover-to-review. */
+export type ReviewContextMap = Map<string, FieldReviewInfo>;
 
-export function HighlightedText({ paragraph }: { paragraph: EvidenceDocumentParagraph }) {
+interface HighlightedTextProps {
+  paragraph: EvidenceDocumentParagraph;
+  /** If provided, <mark> elements get hover-to-review popovers. */
+  reviewContexts?: ReviewContextMap;
+  /** Called after a successful inline review to refresh data. */
+  onReviewed?: () => void;
+}
+
+export function HighlightedText({ paragraph, reviewContexts, onReviewed }: HighlightedTextProps) {
   const sorted = useMemo(
     () => [...paragraph.highlights].sort((a, b) => a.start - b.start),
     [paragraph.highlights],
@@ -35,7 +46,7 @@ export function HighlightedText({ paragraph }: { paragraph: EvidenceDocumentPara
       <p style={{
         fontSize: 14,
         lineHeight: 1.625,
-        color: "#374151",
+        color: "var(--color-text-strong)",
         whiteSpace: "pre-wrap",
         margin: 0,
       }}>
@@ -60,14 +71,26 @@ export function HighlightedText({ paragraph }: { paragraph: EvidenceDocumentPara
       );
     }
 
-    segments.push(
+    const reviewInfo = reviewContexts?.get(hl.evidenceId);
+    const markEl = (
       <mark
         key={`hl-${hl.evidenceId}-${start}`}
         style={markInlineStyle(hl.category, hl.selected)}
-        title={`${hl.label} (${hl.fieldId})`}
       >
         {paragraph.text.slice(start, end)}
-      </mark>,
+      </mark>
+    );
+
+    segments.push(
+      reviewInfo ? (
+        <FieldReviewPopover
+          key={`hl-${hl.evidenceId}-${start}`}
+          info={reviewInfo}
+          onReviewed={onReviewed}
+        >
+          {markEl}
+        </FieldReviewPopover>
+      ) : markEl,
     );
     cursor = end;
   }
@@ -82,7 +105,7 @@ export function HighlightedText({ paragraph }: { paragraph: EvidenceDocumentPara
     <p style={{
       fontSize: 14,
       lineHeight: 1.625,
-      color: "#374151",
+      color: "var(--color-text-strong)",
       whiteSpace: "pre-wrap",
       margin: 0,
     }}>

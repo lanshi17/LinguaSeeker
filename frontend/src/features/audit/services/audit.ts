@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api/client";
-import type { AuditEventQuery, ReviewAuditEventResponse } from "../types/audit";
+import type { AuditEventQuery } from "../types/audit";
+import type { ReviewAuditEventResponse } from "@/lib/types/evidence";
 
 /** List review audit events with optional filters. */
 export async function listAuditEvents(

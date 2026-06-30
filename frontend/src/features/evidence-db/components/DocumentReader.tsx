@@ -2,7 +2,7 @@ import { useRef, type MutableRefObject, type UIEvent } from "react";
 import { Languages, BookOpen } from "lucide-react";
 import type { EvidenceDocument } from "@/features/evidence-search/utils/evidenceDocument";
 import type { ContentBlock } from "@/features/evidence-search/types/evidenceSearch";
-import { HighlightedText } from "./HighlightedText";
+import { HighlightedText, type ReviewContextMap } from "./HighlightedText";
 import { StructuredBlockRenderer, type BlockHighlight } from "./StructuredBlockRenderer";
 import { MarkdownDocumentViewer } from "@/features/evidence-search/components/MarkdownDocumentViewer";
 import { AnnotationLayer } from "@/features/evidence-search/components/annotationLayer";
@@ -36,11 +36,15 @@ export function DocumentReader({
   blockHighlights,
   sourceDocumentId,
   annotations = [],
+  reviewContexts,
   scrollContainerRef,
   onContainerScroll,
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
+  onReviewed,
+  onAssignField,
+  fieldTypes,
 }: {
   title: string;
   track: AnnotationTrack;
@@ -50,8 +54,12 @@ export function DocumentReader({
   blockHighlights?: BlockHighlight[];
   sourceDocumentId?: string;
   annotations?: UserAnnotation[];
+  reviewContexts?: ReviewContextMap;
   scrollContainerRef?: MutableRefObject<HTMLDivElement | null>;
   onContainerScroll?: (e: UIEvent<HTMLDivElement>) => void;
+  onReviewed?: () => void;
+  onAssignField?: (selectedText: string, fieldType: string) => void;
+  fieldTypes?: string[];
 } & AnnotationHandlers) {
   const { t } = useI18n();
   const contentRef = useRef<HTMLDivElement | null>(null);
@@ -68,8 +76,8 @@ export function DocumentReader({
       display: "flex",
       flexDirection: "column",
       borderRadius: 12,
-      border: "1px solid #e5e7eb",
-      backgroundColor: "#fff",
+      border: "1px solid var(--color-border)",
+      backgroundColor: "var(--color-surface)",
       overflow: "hidden",
     }}>
       <div
@@ -78,17 +86,17 @@ export function DocumentReader({
           alignItems: "center",
           gap: 8,
           padding: "10px 16px",
-          borderBottom: "1px solid #f3f4f6",
+          borderBottom: "1px solid var(--color-bg-muted)",
           backgroundColor: `${accentColor}08`,
         }}
       >
         <Languages style={{ width: 16, height: 16, color: accentColor }} />
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: "#1f2937", margin: 0 }}>{title}</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-code-text)", margin: 0 }}>{title}</h3>
         <span style={{
           marginLeft: "auto",
           fontSize: 11,
           textTransform: "capitalize",
-          color: "#6b7280",
+          color: "var(--color-text-secondary)",
         }}>
           {track}{t("evidenceDb.doc.trackSuffix")}{hasBlocks ? t("evidenceDb.doc.structured") : ""}
         </span>
@@ -113,8 +121,8 @@ export function DocumentReader({
             padding: "48px 0",
             textAlign: "center",
           }}>
-            <BookOpen style={{ width: 32, height: 32, color: "#9ca3af", marginBottom: 8 }} />
-            <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>
+            <BookOpen style={{ width: 32, height: 32, color: "var(--color-text-muted)", marginBottom: 8 }} />
+            <p style={{ fontSize: 14, color: "var(--color-text-secondary)", margin: 0 }}>
               {t("evidenceDb.doc.noText", { track })}
             </p>
           </div>
@@ -137,13 +145,13 @@ export function DocumentReader({
                     left: -8,
                     top: 0,
                     fontSize: 10,
-                    color: "#9ca3af",
+                    color: "var(--color-text-muted)",
                     fontFamily: "var(--font-mono)",
                   }}>
                     {t("evidenceDb.doc.page", { page: String(para.page) })}
                   </span>
                 )}
-                <HighlightedText paragraph={para} />
+                <HighlightedText paragraph={para} reviewContexts={reviewContexts} onReviewed={onReviewed} />
               </div>
             ))}
           </div>
@@ -157,6 +165,8 @@ export function DocumentReader({
           onCreateAnnotation={onCreateAnnotation}
           onUpdateAnnotation={onUpdateAnnotation}
           onDeleteAnnotation={onDeleteAnnotation}
+          onAssignField={onAssignField}
+          fieldTypes={fieldTypes}
         />
       </div>
     </div>

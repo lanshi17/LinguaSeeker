@@ -1,29 +1,25 @@
-import { Table, Typography } from "antd";
+import { useState } from "react";
+import { Table, Typography, Button } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CheckCircle2, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { useI18n } from "@/lib/i18n";
 import { formatRelative, formatTimestamp } from "@/lib/utils/format";
-import type { ReviewAuditEventResponse, ReviewStatusValue } from "../types/audit";
+import type { ReviewAuditEventResponse, ReviewStatusValue } from "@/lib/types/evidence";
+import { STATUS_VARIANT } from "@/lib/constants/statusVariant";
 
 interface AuditEventTableProps {
   events: ReviewAuditEventResponse[];
   loading?: boolean;
   onRowClick?: (event: ReviewAuditEventResponse) => void;
+  onQuickReview?: (evidenceId: string, status: ReviewStatusValue) => Promise<void>;
 }
 
-const STATUS_VARIANT: Record<
-  ReviewStatusValue,
-  "default" | "success" | "warning" | "error"
-> = {
-  provisional: "default",
-  approved: "success",
-  corrected: "warning",
-  rejected: "error",
-};
-
-function getColumns(t: (key: string, params?: Record<string, unknown>) => string): ColumnsType<ReviewAuditEventResponse> {
-  return [
+function getColumns(
+  t: (key: string, params?: Record<string, unknown>) => string,
+  onQuickReview?: (evidenceId: string, status: ReviewStatusValue) => Promise<void>,
+): ColumnsType<ReviewAuditEventResponse> {
+  const cols: ColumnsType<ReviewAuditEventResponse> = [
     {
       title: t("audit.col.time"),
       dataIndex: "created_at",
@@ -81,13 +77,13 @@ function getColumns(t: (key: string, params?: Record<string, unknown>) => string
         return (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
             {record.old_status && (
-              <Badge variant={STATUS_VARIANT[record.old_status] ?? "default"}>
+              <Badge variant={STATUS_VARIANT[record.old_status as keyof typeof STATUS_VARIANT] ?? "default"}>
                 {record.old_status}
               </Badge>
             )}
             <ArrowRight style={{ width: 12, height: 12, color: "var(--color-text-muted)", flexShrink: 0 }} />
             {record.new_status && (
-              <Badge variant={STATUS_VARIANT[record.new_status] ?? "default"}>
+              <Badge variant={STATUS_VARIANT[record.new_status as keyof typeof STATUS_VARIANT] ?? "default"}>
                 {record.new_status}
               </Badge>
             )}
@@ -158,11 +154,78 @@ function getColumns(t: (key: string, params?: Record<string, unknown>) => string
       ),
     },
   ];
+
+  if (onQuickReview) {
+    cols.push({
+      title: t("audit.col.actions"),
+      key: "actions",
+      width: 160,
+      render: (_, record) => {
+        if (record.new_status !== "provisional") return null;
+        return <QuickReviewButtons evidenceId={record.canonical_evidence_id} onQuickReview={onQuickReview} />;
+      },
+    });
+  }
+
+  return cols;
 }
 
-export function AuditEventTable({ events, loading, onRowClick }: AuditEventTableProps) {
+function QuickReviewButtons({
+  evidenceId,
+  onQuickReview,
+}: {
+  evidenceId: string;
+  onQuickReview: (evidenceId: string, status: ReviewStatusValue) => Promise<void>;
+}) {
   const { t } = useI18n();
-  const columns = getColumns(t);
+  const [loading, setLoading] = useState<ReviewStatusValue | null>(null);
+
+  const handleClick = async (status: ReviewStatusValue) => {
+    setLoading(status);
+    try {
+      await onQuickReview(evidenceId, status);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  return (
+    <span style={{ display: "inline-flex", gap: 4 }}>
+      <Button
+        type="link"
+        size="small"
+        loading={loading === "approved"}
+        disabled={loading !== null}
+        icon={<CheckCircle2 style={{ width: 12, height: 12 }} />}
+        onClick={(e) => {
+          e.stopPropagation();
+          void handleClick("approved");
+        }}
+        style={{ fontSize: 11, color: "var(--color-success-text, var(--color-success-600))", padding: "0 4px" }}
+      >
+        {t("audit.action.approve")}
+      </Button>
+      <Button
+        type="link"
+        size="small"
+        loading={loading === "rejected"}
+        disabled={loading !== null}
+        icon={<XCircle style={{ width: 12, height: 12 }} />}
+        onClick={(e) => {
+          e.stopPropagation();
+          void handleClick("rejected");
+        }}
+        style={{ fontSize: 11, color: "var(--color-error-text, var(--color-error-500))", padding: "0 4px" }}
+      >
+        {t("audit.action.reject")}
+      </Button>
+    </span>
+  );
+}
+
+export function AuditEventTable({ events, loading, onRowClick, onQuickReview }: AuditEventTableProps) {
+  const { t } = useI18n();
+  const columns = getColumns(t, onQuickReview);
 
   return (
     <Table<ReviewAuditEventResponse>
@@ -176,7 +239,7 @@ export function AuditEventTable({ events, loading, onRowClick }: AuditEventTable
         onClick: () => onRowClick?.(record),
         style: { cursor: onRowClick ? "pointer" : undefined },
       })}
-      scroll={{ x: 880 }}
+      scroll={{ x: 1040 }}
       locale={{ emptyText: t("audit.noEvents") }}
     />
   );

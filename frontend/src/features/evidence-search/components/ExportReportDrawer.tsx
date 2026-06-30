@@ -99,7 +99,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
     <Drawer
       title={
         <span style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 16, fontWeight: 600 }}>
-          <Download style={{ width: 20, height: 20, color: "var(--color-primary-600, #0891b2)" }} />
+          <Download style={{ width: 20, height: 20, color: "var(--color-primary-600, var(--color-primary-600))" }} />
           {t("evidence.export.title")}
         </span>
       }
@@ -130,7 +130,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
               fontWeight: 600,
               textTransform: "uppercase",
               letterSpacing: "0.05em",
-              color: "#6b7280",
+              color: "var(--color-text-secondary)",
               margin: "0 0 12px",
             }}
           >
@@ -152,8 +152,8 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                     gap: 10,
                     padding: "12px 14px",
                     borderRadius: 8,
-                    border: `1.5px solid ${active ? "var(--color-primary-400, #22d3ee)" : "#e5e7eb"}`,
-                    backgroundColor: active ? "var(--color-primary-50, #ecfeff)" : "#fff",
+                    border: `1.5px solid ${active ? "var(--color-primary-400, var(--color-primary-400))" : "var(--color-border)"}`,
+                    backgroundColor: active ? "var(--color-primary-50, var(--color-primary-50))" : "var(--color-surface)",
                     cursor: "pointer",
                     textAlign: "left",
                     transition: "all 150ms",
@@ -166,8 +166,8 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                       flexShrink: 0,
                       marginTop: 1,
                       color: active
-                        ? "var(--color-primary-600, #0891b2)"
-                        : "#9ca3af",
+                        ? "var(--color-primary-600, var(--color-primary-600))"
+                        : "var(--color-text-muted)",
                     }}
                   />
                   <div style={{ minWidth: 0 }}>
@@ -175,12 +175,12 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                       style={{
                         fontSize: 14,
                         fontWeight: 600,
-                        color: active ? "var(--color-primary-800, #155e75)" : "#111827",
+                        color: active ? "var(--color-primary-800, var(--color-primary-800))" : "var(--color-text)",
                       }}
                     >
                       {f.label}
                     </div>
-                    <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginTop: 2 }}>
                       {f.description}
                     </div>
                   </div>
@@ -191,7 +191,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                         height: 16,
                         flexShrink: 0,
                         marginLeft: "auto",
-                        color: "var(--color-primary-600, #0891b2)",
+                        color: "var(--color-primary-600, var(--color-primary-600))",
                       }}
                     />
                   )}
@@ -212,7 +212,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
               fontWeight: 600,
               textTransform: "uppercase",
               letterSpacing: "0.05em",
-              color: "#6b7280",
+              color: "var(--color-text-secondary)",
               margin: "0 0 12px",
             }}
           >
@@ -223,8 +223,8 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
           <div
             style={{
               borderRadius: 8,
-              border: "1px solid #e5e7eb",
-              backgroundColor: "#fff",
+              border: "1px solid var(--color-border)",
+              backgroundColor: "var(--color-surface)",
             }}
           >
             {/* Include traces */}
@@ -234,10 +234,10 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "12px 16px",
-                borderBottom: "1px solid #f3f4f6",
+                borderBottom: "1px solid var(--color-bg-muted)",
                 cursor: "pointer",
                 fontSize: 14,
-                color: "#374151",
+                color: "var(--color-text-strong)",
               }}
             >
               <span>{t("evidence.export.includeTraces")}</span>
@@ -254,10 +254,10 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "12px 16px",
-                borderBottom: "1px solid #f3f4f6",
+                borderBottom: "1px solid var(--color-bg-muted)",
                 cursor: "pointer",
                 fontSize: 14,
-                color: "#374151",
+                color: "var(--color-text-strong)",
               }}
             >
               <span>{t("evidence.export.includeFullText")}</span>
@@ -271,7 +271,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
             <div
               style={{
                 padding: "12px 16px",
-                borderBottom: "1px solid #f3f4f6",
+                borderBottom: "1px solid var(--color-bg-muted)",
               }}
             >
               <div
@@ -281,7 +281,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                   justifyContent: "space-between",
                   marginBottom: 8,
                   fontSize: 14,
-                  color: "#374151",
+                  color: "var(--color-text-strong)",
                 }}
               >
                 <span>{t("evidence.export.minConfidence")}</span>
@@ -290,7 +290,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                     fontFamily: "var(--font-mono, monospace)",
                     fontSize: 13,
                     fontWeight: 600,
-                    color: "var(--color-primary-700, #0e7490)",
+                    color: "var(--color-primary-700, var(--color-primary-700))",
                   }}
                 >
                   {(options.confidenceThreshold * 100).toFixed(0)}%
@@ -310,11 +310,11 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
             </div>
 
             {/* Status filter */}
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
+            <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--color-bg-muted)" }}>
               <div
                 style={{
                   fontSize: 14,
-                  color: "#374151",
+                  color: "var(--color-text-strong)",
                   marginBottom: 8,
                 }}
               >
@@ -337,7 +337,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
               <div
                 style={{
                   fontSize: 14,
-                  color: "#374151",
+                  color: "var(--color-text-strong)",
                   marginBottom: 8,
                 }}
               >
@@ -357,7 +357,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                 maxTagCount="responsive"
                 optionRender={(opt) => {
                   const cat = opt.value as string;
-                  const hex = CATEGORY_COLORS[cat]?.hex ?? "#6b7280";
+                  const hex = CATEGORY_COLORS[cat]?.hex ?? "var(--color-text-secondary)";
                   return (
                     <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span
@@ -385,16 +385,16 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
             alignItems: "center",
             justifyContent: "space-between",
             borderRadius: 8,
-            border: "1px solid #e5e7eb",
-            backgroundColor: "#f9fafb",
+            border: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-bg)",
             padding: "10px 16px",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <FormatIcon
-              style={{ width: 16, height: 16, color: "var(--color-primary-600, #0891b2)" }}
+              style={{ width: 16, height: 16, color: "var(--color-primary-600, var(--color-primary-600))" }}
             />
-            <span style={{ fontSize: 13, color: "#374151" }}>
+            <span style={{ fontSize: 13, color: "var(--color-text-strong)" }}>
               {t("evidence.export.itemsSummary", { selected: filteredCount, total: detail.item_count })}
             </span>
           </div>
@@ -444,13 +444,13 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                   maxHeight: 320,
                   overflow: "auto",
                   borderRadius: 8,
-                  border: "1px solid #e5e7eb",
-                  backgroundColor: "#f9fafb",
+                  border: "1px solid var(--color-border)",
+                  backgroundColor: "var(--color-bg)",
                   padding: 16,
                   fontSize: 12,
                   lineHeight: "20px",
                   fontFamily: "var(--font-mono, monospace)",
-                  color: "#374151",
+                  color: "var(--color-text-strong)",
                   whiteSpace: "pre-wrap",
                   wordBreak: "break-word",
                 }}

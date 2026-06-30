@@ -1,3 +1,5 @@
+import "./chat.css";
+
 // ─── Components ───
 export { ChatView } from "./components/ChatView";
 

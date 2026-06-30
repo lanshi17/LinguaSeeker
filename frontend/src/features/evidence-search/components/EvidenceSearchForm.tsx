@@ -32,7 +32,7 @@ export function EvidenceSearchForm({
             position: "relative",
             overflow: "hidden",
             borderRadius: 8,
-            background: "linear-gradient(to right, var(--color-primary-50, #ecfeff), var(--color-primary-50, #ecfeff) 50%, transparent)",
+            background: "linear-gradient(to right, var(--color-primary-50, var(--color-primary-50)), var(--color-primary-50, var(--color-primary-50)) 50%, transparent)",
             padding: "16px 20px",
           }}
         >
@@ -43,7 +43,7 @@ export function EvidenceSearchForm({
               top: 0,
               height: "100%",
               width: 4,
-              background: "linear-gradient(to bottom, var(--color-primary-400, #22d3ee), var(--color-primary-600, #0891b2))",
+              background: "linear-gradient(to bottom, var(--color-primary-400, var(--color-primary-400)), var(--color-primary-600, #0891b2))",
             }}
           />
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
@@ -57,17 +57,17 @@ export function EvidenceSearchForm({
                   alignItems: "center",
                   justifyContent: "center",
                   borderRadius: 8,
-                  backgroundColor: "var(--color-primary-100, #cffafe)",
-                  color: "var(--color-primary-700, #0e7490)",
+                  backgroundColor: "var(--color-primary-100, var(--color-primary-100))",
+                  color: "var(--color-primary-700, var(--color-primary-700))",
                 }}
               >
                 <Search style={{ width: 20, height: 20 }} />
               </div>
               <div>
-                <h2 style={{ fontSize: 16, fontWeight: 600, color: "#030712", margin: 0 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
                   {t("evidence.search.heading")}
                 </h2>
-                <p style={{ marginTop: 2, fontSize: 14, color: "#4b5563" }}>
+                <p style={{ marginTop: 2, fontSize: 14, color: "var(--color-text-strong)" }}>
                   {t("evidence.search.description")}
                 </p>
               </div>
@@ -88,36 +88,36 @@ export function EvidenceSearchForm({
         {/* Input fields with icons */}
         <div className="edb-search-grid">
           <div>
-            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>{t("evidence.search.gene")}</label>
+            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>{t("evidence.search.gene")}</label>
             <Input
-              prefix={<Dna style={{ width: 16, height: 16, color: "#9ca3af" }} />}
+              prefix={<Dna style={{ width: 16, height: 16, color: "var(--color-text-muted)" }} />}
               placeholder={t("evidence.search.genePh")}
               value={filters.gene ?? ""}
               onChange={(e) => onUpdateFilter("gene", e.target.value)}
             />
           </div>
           <div>
-            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>{t("evidence.search.variant")}</label>
+            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>{t("evidence.search.variant")}</label>
             <Input
-              prefix={<FlaskConical style={{ width: 16, height: 16, color: "#9ca3af" }} />}
+              prefix={<FlaskConical style={{ width: 16, height: 16, color: "var(--color-text-muted)" }} />}
               placeholder={t("evidence.search.variantPh")}
               value={filters.variant ?? ""}
               onChange={(e) => onUpdateFilter("variant", e.target.value)}
             />
           </div>
           <div>
-            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>{t("evidence.search.disease")}</label>
+            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>{t("evidence.search.disease")}</label>
             <Input
-              prefix={<Stethoscope style={{ width: 16, height: 16, color: "#9ca3af" }} />}
+              prefix={<Stethoscope style={{ width: 16, height: 16, color: "var(--color-text-muted)" }} />}
               placeholder={t("evidence.search.diseasePh")}
               value={filters.disease ?? ""}
               onChange={(e) => onUpdateFilter("disease", e.target.value)}
             />
           </div>
           <div>
-            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>{t("evidence.search.pmid")}</label>
+            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>{t("evidence.search.pmid")}</label>
             <Input
-              prefix={<Hash style={{ width: 16, height: 16, color: "#9ca3af" }} />}
+              prefix={<Hash style={{ width: 16, height: 16, color: "var(--color-text-muted)" }} />}
               placeholder={t("evidence.search.pmidPh")}
               value={filters.pmid ?? ""}
               onChange={(e) => onUpdateFilter("pmid", e.target.value)}

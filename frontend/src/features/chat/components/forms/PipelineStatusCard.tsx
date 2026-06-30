@@ -1,3 +1,4 @@
+import { STATUS_VARIANT } from "@/lib/constants/statusVariant";
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import { Badge } from "@/components/ui/Badge";
@@ -17,13 +18,6 @@ interface PipelineStatusCardProps {
   phases?: Record<string, { status: string; duration_seconds?: number | null }>;
 }
 
-const STATUS_VARIANT: Record<string, "default" | "info" | "success" | "error" | "warning"> = {
-  pending: "default",
-  running: "info",
-  completed: "success",
-  failed: "error",
-  cancelled: "default",
-};
 
 function getStatusLabel(t: (key: string) => string): Record<string, string> {
   return {
@@ -50,8 +44,8 @@ const PHASES: PhaseMeta[] = [
 
 const PHASE_STATUS_STYLES: Record<string, CSSProperties> = {
   pending: { backgroundColor: "var(--color-bg)", color: "var(--color-text-secondary)", borderColor: "var(--color-border)" },
-  running: { backgroundColor: "#eff6ff", color: "#1d4ed8", borderColor: "#bfdbfe" },
-  completed: { backgroundColor: "var(--color-highlight-green)", color: "var(--color-success-text)", borderColor: "#a7f3d0" },
+  running: { backgroundColor: "var(--color-running-bg)", color: "var(--color-running-text)", borderColor: "var(--color-running-border)" },
+  completed: { backgroundColor: "var(--color-highlight-green)", color: "var(--color-success-text)", borderColor: "var(--color-success-200)" },
   failed: { backgroundColor: "var(--color-error-bg)", color: "var(--color-error-text)", borderColor: "var(--color-error-border)" },
   skipped: { backgroundColor: "var(--color-bg)", color: "var(--color-text-muted)", borderColor: "var(--color-border)" },
 };
@@ -140,9 +134,9 @@ export function PipelineStatusCard({
 
   const barColor =
     status === "failed"
-      ? "#ef4444"
+      ? "var(--color-error-text)"
       : status === "completed"
-        ? "#10b981"
+        ? "var(--color-success-500)"
         : undefined; // use gradient for running/pending
 
   const statusLabel = getStatusLabel(t);
@@ -184,7 +178,7 @@ export function PipelineStatusCard({
             <Clock style={{ width: 12, height: 12 }} aria-hidden="true" />
             {formatElapsed(elapsed)}
           </span>
-          <Badge variant={STATUS_VARIANT[status] ?? "default"}>
+          <Badge variant={STATUS_VARIANT[status as keyof typeof STATUS_VARIANT] ?? "default"}>
             {statusLabel[status] ?? status}
           </Badge>
         </div>

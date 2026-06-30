@@ -1,0 +1,406 @@
+/* ── Evidence Search: shared and component-scoped styles ── */
+/* Extracted from globals.css — owns all .edb-*, .eds-*, .ets-* rules. */
+
+/* ── Dark mode: evidence component overrides ── */
+[data-theme="dark"] .edb-hero {
+  background:
+    radial-gradient(ellipse 600px 300px at 15% -5%, rgba(8, 145, 178, 0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 500px 250px at 90% 10%, rgba(34, 197, 94, 0.05) 0%, transparent 50%),
+    #0c1a2e;
+}
+[data-theme="dark"] .edb-card {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+[data-theme="dark"] .edb-card:hover {
+  border-color: #3e3e50;
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.3);
+}
+[data-theme="dark"] .edb-card-clickable:hover {
+  border-color: var(--color-primary-600);
+  box-shadow: 0 4px 16px -4px rgba(8, 145, 178, 0.2);
+}
+[data-theme="dark"] .edb-ring {
+  --ring-bg: #2e2e3e;
+}
+[data-theme="dark"] .edb-scroll::-webkit-scrollbar-thumb {
+  background: #3e3e50;
+}
+[data-theme="dark"] .edb-scroll::-webkit-scrollbar-thumb:hover {
+  background: #4e4e60;
+}
+
+/* ── Evidence DB: Unified medical-teal light theme ── */
+.edb-hero {
+  background:
+    radial-gradient(ellipse 600px 300px at 15% -5%, rgba(8, 145, 178, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 500px 250px at 90% 10%, rgba(34, 197, 94, 0.03) 0%, transparent 50%),
+    #f0fdfa;
+}
+.edb-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+.edb-card:hover {
+  border-color: var(--color-text-muted);
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.08);
+}
+.edb-card-clickable {
+  cursor: pointer;
+}
+.edb-card-clickable:hover {
+  border-color: #0891b2;
+  box-shadow: 0 4px 16px -4px rgba(8, 145, 178, 0.12);
+  transform: translateY(-1px);
+}
+.edb-cat-strip {
+  display: flex;
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  gap: 2px;
+}
+.edb-cat-strip > span {
+  height: 100%;
+  border-radius: 1px;
+  transition: opacity 200ms ease;
+}
+.edb-ring {
+  --ring-value: 0;
+  background: conic-gradient(
+    currentColor calc(var(--ring-value) * 1%),
+    var(--color-border) calc(var(--ring-value) * 1%)
+  );
+}
+.edb-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.edb-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.edb-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border-radius: 3px;
+}
+.edb-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+.edb-stagger {
+  opacity: 0;
+  animation: staggerIn 320ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* ── EvidenceSearchForm ── */
+.edb-search-grid {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 768px) {
+  .edb-search-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ── MarkdownDocumentViewer ── */
+.edb-markdown-viewer {
+  max-width: none;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--color-code-text);
+}
+.edb-markdown-viewer h1,
+.edb-markdown-viewer h2,
+.edb-markdown-viewer h3,
+.edb-markdown-viewer h4,
+.edb-markdown-viewer h5,
+.edb-markdown-viewer h6 {
+  color: var(--color-text);
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+.edb-markdown-viewer h1 { font-size: 1.5em; }
+.edb-markdown-viewer h2 { font-size: 1.25em; }
+.edb-markdown-viewer h3 { font-size: 1.1em; }
+.edb-markdown-viewer p {
+  color: var(--color-code-text);
+  line-height: 1.75;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+}
+.edb-markdown-viewer a {
+  color: var(--color-primary-700, #0e7490);
+  text-decoration: underline;
+}
+.edb-markdown-viewer strong {
+  color: var(--color-text);
+  font-weight: 700;
+}
+.edb-markdown-viewer code {
+  color: #be185d;
+  background: var(--color-bg-muted);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.edb-markdown-viewer pre code {
+  display: block;
+  padding: 12px;
+  overflow-x: auto;
+}
+.edb-markdown-viewer li {
+  color: var(--color-code-text);
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+}
+.edb-markdown-viewer ul,
+.edb-markdown-viewer ol {
+  padding-left: 1.5em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+.edb-markdown-viewer table {
+  font-size: 14px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+.edb-markdown-viewer th,
+.edb-markdown-viewer td {
+  border: 1px solid var(--color-border);
+  padding: 6px 12px;
+  text-align: left;
+}
+.edb-markdown-viewer th {
+  background: var(--color-bg);
+  font-weight: 600;
+}
+.edb-markdown-viewer blockquote {
+  border-left: 3px solid var(--color-text-muted);
+  padding-left: 1em;
+  margin-left: 0;
+  color: var(--color-text-secondary);
+}
+
+/* ── BilingualCompareView ── */
+.edb-compare-stats-grid {
+  display: grid;
+  gap: 0;
+}
+@media (min-width: 640px) {
+  .edb-compare-stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.edb-compare-stat-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-bg-muted);
+}
+.edb-compare-stat-cell:last-child {
+  border-bottom: none;
+}
+@media (min-width: 640px) {
+  .edb-compare-stat-cell {
+    border-bottom: none;
+    border-right: 1px solid var(--color-bg-muted);
+  }
+  .edb-compare-stat-cell:last-child {
+    border-right: none;
+  }
+}
+.edb-compare-layout {
+  display: grid;
+  gap: 20px;
+}
+@media (min-width: 1024px) {
+  .edb-compare-layout {
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+}
+.edb-doc-readers-grid {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 1280px) {
+  .edb-doc-readers-grid.edb-doc-readers-two-col {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.edb-nav-item:hover {
+  border-color: var(--color-text-muted) !important;
+  background-color: var(--color-bg) !important;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05) !important;
+}
+.edb-nav-item:hover .edb-nav-item-title {
+  color: var(--color-primary-700, #0e7490);
+}
+.edb-toggle-label:hover {
+  background-color: var(--color-bg);
+}
+.edb-toggle-input:focus-visible ~ .edb-toggle-track {
+  box-shadow: 0 0 0 2px var(--color-primary-500, #06b6d4), 0 0 0 4px #fff;
+}
+
+/* ── EvidenceDetailView — error state ── */
+.edb-detail-error {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid #fecaca;
+  background: linear-gradient(to bottom right, #fef2f2, #fff);
+  padding: 56px 24px;
+  text-align: center;
+}
+
+/* ── EvidenceDetailView — overview ── */
+.edb-overview-meta-grid {
+  display: grid;
+  gap: 0;
+}
+@media (min-width: 768px) {
+  .edb-overview-meta-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.edb-overview-meta-cell {
+  border-bottom: 1px solid var(--color-bg-muted);
+  padding: 16px 20px;
+}
+@media (min-width: 768px) {
+  .edb-overview-meta-cell {
+    border-bottom: none;
+    border-right: 1px solid var(--color-bg-muted);
+  }
+  .edb-overview-meta-cell:last-child {
+    border-right: none;
+  }
+}
+.edb-overview-layout {
+  display: grid;
+  gap: 20px;
+}
+@media (min-width: 1024px) {
+  .edb-overview-layout {
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+}
+.edb-coverage-stat-cell {
+  padding: 16px;
+}
+.edb-coverage-stat-cell:nth-child(odd) {
+  border-right: 1px solid var(--color-bg-muted);
+}
+.edb-coverage-stat-cell:nth-child(-n+2) {
+  border-bottom: 1px solid var(--color-bg-muted);
+}
+.edb-evidence-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card-bg);
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+  transition: all 0.15s;
+}
+.edb-evidence-card:hover {
+  border-color: var(--color-primary-200, #a5f3fc);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+.edb-evidence-card:hover .edb-evidence-card-accent {
+  opacity: 1;
+}
+.edb-back-link:hover {
+  color: var(--color-primary-600, #0891b2) !important;
+}
+.edb-focusable-link:focus-visible {
+  outline: 2px solid var(--color-primary-500, #06b6d4);
+  outline-offset: 0;
+}
+.edb-focusable-btn:focus-visible {
+  outline: 2px solid var(--color-primary-500, #06b6d4);
+  outline-offset: 0;
+}
+
+/* ── EvidenceDetailSkeleton ── */
+.eds-meta-grid { display: grid; gap: 0; }
+.eds-meta-cell { border-bottom: 1px solid var(--color-bg-muted); padding: 16px 20px; }
+.eds-two-col { display: grid; gap: 20px; }
+@media (min-width: 768px) {
+  .eds-meta-grid { grid-template-columns: repeat(4, 1fr); }
+  .eds-meta-cell { border-bottom: none; border-right: 1px solid var(--color-bg-muted); }
+  .eds-meta-cell:last-child { border-right: none; }
+}
+@media (min-width: 1024px) {
+  .eds-two-col { grid-template-columns: 300px minmax(0, 1fr); }
+}
+
+/* ── EvidenceResultsTable ── */
+.edb-results-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .edb-results-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+.edb-mobile-cards { display: block; }
+.edb-desktop-table { display: none; }
+@media (min-width: 768px) {
+  .edb-mobile-cards { display: none; }
+  .edb-desktop-table { display: block; }
+}
+.edb-line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.edb-line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.edb-table-row {
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.edb-table-row:hover {
+  background: linear-gradient(to right, var(--color-highlight), transparent);
+}
+.edb-table-row:focus-visible {
+  outline: 2px solid var(--color-primary-500, #06b6d4);
+  outline-offset: -2px;
+}
+.edb-table-row:hover .edb-row-title {
+  color: var(--color-primary-700, #0e7490);
+}
+.edb-table-row:hover .edb-row-icon {
+  transform: scale(1.05);
+}
+
+/* ── EvidenceTableSkeleton ── */
+.ets-desktop { display: none; }
+.ets-mobile { display: block; }
+@media (min-width: 768px) {
+  .ets-desktop { display: block; }
+  .ets-mobile { display: none; }
+}
+
+/* ── Print styles for evidence components ── */
+@media print {
+  .edb-evidence-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

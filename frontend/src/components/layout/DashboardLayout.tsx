@@ -8,6 +8,7 @@ import { UserGuide, hasSeenGuide } from "@/components/ui/UserGuide";
 import { useI18n } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import "./layout.css";
 const { Content } = Layout;
 
 export function DashboardLayout() {

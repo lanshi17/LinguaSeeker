@@ -1,3 +1,4 @@
+import { STATUS_VARIANT } from "@/lib/constants/statusVariant";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -35,22 +36,16 @@ import {
   deleteAnnotation,
   listAnnotations,
   updateAnnotation,
-} from "@/api/annotations";
+} from "@/features/evidence-search/services/annotations";
 import type { AnnotationCreateRequest, AnnotationTrack, AnnotationUpdateRequest, UserAnnotation } from "../types/annotations";
 import { AnnotationLayer } from "./annotationLayer";
+import { FieldReviewPopover } from "./FieldReviewPopover";
+import type { FieldReviewInfo } from "./FieldReviewPopover";
+import type { ReviewContextMap } from "@/features/evidence-db/components/HighlightedText";
 import { useI18n } from "@/lib/i18n";
+import { patchEvidence } from "../services/evidenceCorrection";
 
 /* ---- Constants ---- */
-
-export const STATUS_VARIANT: Record<
-  string,
-  "default" | "success" | "warning" | "error" | "info"
-> = {
-  provisional: "default",
-  approved: "success",
-  corrected: "warning",
-  rejected: "error",
-};
 
 const HIGHLIGHT_TONES: EvidenceHighlightTone[] = [
   "gene",
@@ -64,14 +59,14 @@ const HIGHLIGHT_TONES: EvidenceHighlightTone[] = [
 /* ---- Inline style helpers ---- */
 
 function chipInlineStyle(hex?: string): React.CSSProperties {
-  if (!hex) return { borderColor: "#e5e7eb", backgroundColor: "#f9fafb", color: "#374151" };
+  if (!hex) return { borderColor: "var(--color-border)", backgroundColor: "var(--color-bg)", color: "var(--color-text-strong)" };
   return { borderColor: hex + "60", backgroundColor: hex + "15", color: hex };
 }
 
 function markInlineStyle(hex?: string, selected?: boolean): React.CSSProperties {
   const base: React.CSSProperties = hex
     ? { backgroundColor: hex + "40", color: hex, boxShadow: `0 0 0 1px ${hex}50` }
-    : { backgroundColor: "#e5e7eb", color: "#030712", boxShadow: "0 0 0 1px #d1d5db" };
+    : { backgroundColor: "var(--color-border)", color: "var(--color-text)", boxShadow: "0 0 0 1px var(--color-text-muted)" };
   if (selected) {
     base.outline = "2px solid var(--color-primary-700, #0e7490)";
     base.outlineOffset = "2px";
@@ -147,15 +142,15 @@ function MetadataToken({
         alignItems: "center",
         gap: 6,
         borderRadius: 6,
-        border: "1px solid rgba(165, 243, 252, 0.6)",
-        backgroundColor: "#fff",
+        border: "1px solid var(--color-primary-200)",
+        backgroundColor: "var(--color-surface)",
         padding: "4px 10px",
         fontSize: 12,
-        color: "var(--color-primary-900, #164e63)",
+        color: "var(--color-primary-900, var(--color-primary-900))",
         boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
       }}
     >
-      {Icon && <Icon style={{ width: 12, height: 12, flexShrink: 0, color: "var(--color-primary-500, #06b6d4)" }} />}
+      {Icon && <Icon style={{ width: 12, height: 12, flexShrink: 0, color: "var(--color-primary-500, var(--color-primary-500))" }} />}
       <span style={{ fontWeight: 600 }}>{label}</span>
       <span
         style={{
@@ -246,13 +241,21 @@ function HighlightedParagraph({
   paragraph,
   track,
   annotations = [],
+  reviewContexts,
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
+  onReviewed,
+  onAssignField,
+  fieldTypes,
 }: {
   paragraph: EvidenceDocumentParagraph;
   track: AnnotationTrack;
   annotations?: UserAnnotation[];
+  reviewContexts?: ReviewContextMap;
+  onAssignField?: (selectedText: string, fieldType: string) => void;
+  fieldTypes?: string[];
+  onReviewed?: () => void;
 } & AnnotationHandlers) {
   const contentRef = useRef<HTMLDivElement>(null);
   const highlights = normalizedHighlights(paragraph);
@@ -266,7 +269,7 @@ function HighlightedParagraph({
     const hex = highlight.category && CATEGORY_COLORS[highlight.category]
       ? CATEGORY_COLORS[highlight.category].hex
       : undefined;
-    nodes.push(
+    const markEl = (
       <mark
         key={`${highlight.evidenceId}-${highlight.start}-${index}`}
         style={{
@@ -275,10 +278,21 @@ function HighlightedParagraph({
           fontWeight: 600,
           ...markInlineStyle(hex, highlight.selected),
         }}
-        aria-label={`${categoryLabel(highlight.category)} evidence: ${highlight.label}`}
       >
         {paragraph.text.slice(highlight.start, highlight.end)}
-      </mark>,
+      </mark>
+    );
+    const reviewInfo = reviewContexts?.get(highlight.evidenceId);
+    nodes.push(
+      reviewInfo ? (
+        <FieldReviewPopover
+          key={`${highlight.evidenceId}-${highlight.start}-${index}`}
+          info={reviewInfo}
+          onReviewed={onReviewed}
+        >
+          {markEl}
+        </FieldReviewPopover>
+      ) : markEl,
     );
     cursor = highlight.end;
   });
@@ -288,15 +302,15 @@ function HighlightedParagraph({
   }
 
   return (
-    <div style={{ borderBottom: "1px solid #f3f4f6", padding: "16px 0" }}>
-      <div style={{ marginBottom: 8, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, fontSize: 12, color: "#6b7280" }}>
+    <div style={{ borderBottom: "1px solid var(--color-bg-muted)", padding: "16px 0" }}>
+      <div style={{ marginBottom: 8, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, fontSize: 12, color: "var(--color-text-secondary)" }}>
         <span
           style={{
             borderRadius: 6,
-            backgroundColor: "#f3f4f6",
+            backgroundColor: "var(--color-bg-muted)",
             padding: "4px 8px",
             fontWeight: 500,
-            color: "#374151",
+            color: "var(--color-text-strong)",
           }}
         >
           {paragraph.highlights[0]?.label ?? "Document text"}
@@ -304,7 +318,7 @@ function HighlightedParagraph({
         <span>Page {paragraph.page ?? "\u2014"}</span>
       </div>
       <div ref={contentRef} style={{ position: "relative" }}>
-        <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: "28px", color: "#1f2937" }}>
+        <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: "28px", color: "var(--color-code-text)" }}>
           {nodes.length > 0 ? nodes : paragraph.text}
         </p>
         <AnnotationLayer
@@ -316,6 +330,8 @@ function HighlightedParagraph({
           onCreateAnnotation={onCreateAnnotation}
           onUpdateAnnotation={onUpdateAnnotation}
           onDeleteAnnotation={onDeleteAnnotation}
+          onAssignField={onAssignField}
+          fieldTypes={fieldTypes}
         />
       </div>
     </div>
@@ -327,14 +343,22 @@ function EvidenceDocumentReader({
   paragraphs,
   track,
   annotations = [],
+  reviewContexts,
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
+  onReviewed,
+  onAssignField,
+  fieldTypes,
 }: {
   title: string;
   paragraphs: EvidenceDocumentParagraph[];
   track: AnnotationTrack;
   annotations?: UserAnnotation[];
+  reviewContexts?: ReviewContextMap;
+  onAssignField?: (selectedText: string, fieldType: string) => void;
+  fieldTypes?: string[];
+  onReviewed?: () => void;
 } & AnnotationHandlers) {
   const { t } = useI18n();
   const fullTextParagraph = paragraphs.find((p) => p.id.endsWith("-full-text"));
@@ -346,20 +370,20 @@ function EvidenceDocumentReader({
     annotations.filter((a) => a.paragraph_id === paraId);
 
   return (
-    <section style={{ overflow: "hidden", borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+    <section style={{ overflow: "hidden", borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
       <div
         style={{
           position: "sticky",
           top: 0,
           zIndex: 10,
-          borderBottom: "1px solid #f3f4f6",
-          background: "linear-gradient(to right, #f9fafb, #f9fafb, rgba(249,250,251,0.5))",
+          borderBottom: "1px solid var(--color-bg-muted)",
+          background: "linear-gradient(to right, var(--color-bg), var(--color-bg), var(--color-subtle-bg))",
           padding: "12px 20px",
           backdropFilter: "blur(4px)",
         }}
       >
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: "#030712", margin: 0 }}>{title}</h3>
-        <p style={{ marginTop: 2, fontSize: 12, color: "#6b7280" }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>{title}</h3>
+        <p style={{ marginTop: 2, fontSize: 12, color: "var(--color-text-secondary)" }}>
           {subtitle}
         </p>
       </div>
@@ -384,9 +408,13 @@ function EvidenceDocumentReader({
                 paragraph={paragraph}
                 track={track}
                 annotations={annotationsFor(paragraph.id)}
+                reviewContexts={reviewContexts}
                 onCreateAnnotation={onCreateAnnotation}
                 onUpdateAnnotation={onUpdateAnnotation}
                 onDeleteAnnotation={onDeleteAnnotation}
+                onReviewed={onReviewed}
+                onAssignField={onAssignField}
+                fieldTypes={fieldTypes}
               />
             ))}
             {!isFullText && paragraphs.map((paragraph) => (
@@ -395,9 +423,13 @@ function EvidenceDocumentReader({
                 paragraph={paragraph}
                 track={track}
                 annotations={annotationsFor(paragraph.id)}
+                reviewContexts={reviewContexts}
                 onCreateAnnotation={onCreateAnnotation}
                 onUpdateAnnotation={onUpdateAnnotation}
                 onDeleteAnnotation={onDeleteAnnotation}
+                onReviewed={onReviewed}
+                onAssignField={onAssignField}
+                fieldTypes={fieldTypes}
               />
             ))}
           </>
@@ -411,12 +443,12 @@ function EvidenceDocumentReader({
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: 12,
-                backgroundColor: "#f3f4f6",
+                backgroundColor: "var(--color-bg-muted)",
               }}
             >
-              <FileText style={{ width: 24, height: 24, color: "#9ca3af" }} />
+              <FileText style={{ width: 24, height: 24, color: "var(--color-text-muted)" }} />
             </div>
-            <p style={{ fontSize: 14, color: "#6b7280" }}>
+            <p style={{ fontSize: 14, color: "var(--color-text-secondary)" }}>
               {t("evidence.bilingual.noDocText")}
             </p>
           </div>
@@ -459,8 +491,8 @@ function CategoryLayerToggle({
     baseStyle.borderColor = "var(--color-primary-200, #a5f3fc)";
     baseStyle.backgroundColor = "var(--color-primary-50, #ecfeff)";
   } else {
-    baseStyle.borderColor = "#e5e7eb";
-    baseStyle.backgroundColor = "#fff";
+    baseStyle.borderColor = "var(--color-border)";
+    baseStyle.backgroundColor = "var(--color-surface)";
   }
 
   return (
@@ -494,12 +526,12 @@ function CategoryLayerToggle({
               whiteSpace: "nowrap",
               fontSize: 14,
               fontWeight: 500,
-              color: "#111827",
+              color: "var(--color-text)",
             }}
           >
             {cat?.label ?? category}
           </span>
-          <span style={{ fontSize: 12, color: "#6b7280" }}>
+          <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>
             {count} item{count !== 1 ? "s" : ""}
           </span>
         </span>
@@ -513,7 +545,7 @@ function CategoryLayerToggle({
           flexShrink: 0,
           borderRadius: 9999,
           transition: "background-color 0.15s",
-          backgroundColor: checked ? "var(--color-primary-700, #0e7490)" : "#d1d5db",
+          backgroundColor: checked ? "var(--color-primary-700, var(--color-primary-700))" : "var(--color-text-muted)",
         }}
         aria-hidden="true"
       >
@@ -525,7 +557,7 @@ function CategoryLayerToggle({
             height: 16,
             width: 16,
             borderRadius: "50%",
-            backgroundColor: "#fff",
+            backgroundColor: "var(--color-surface)",
             boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
             transition: "transform 0.15s",
             transform: checked ? "translateX(20px)" : "translateX(0)",
@@ -639,8 +671,50 @@ export function BilingualCompareView({
     void deleteMutation.mutate(id);
   };
 
+  const handleAssignField = async (selectedText: string, fieldType: string) => {
+    const targetItem = detail.items.find(
+      (item) => item.field_id === fieldType || item.category === fieldType,
+    ) ?? detail.items[0];
+    if (!targetItem) return;
+    try {
+      await patchEvidence(targetItem.canonical_evidence_id, {
+        fields: { [fieldType]: selectedText },
+        change_reason: `Text selection assignment to ${fieldType}`,
+      });
+      void queryClient.invalidateQueries({ queryKey: ["evidence-group-detail", groupId] });
+    } catch {
+      // error handled by caller
+    }
+  };
+
+  const fieldTypes = useMemo(
+    () => detail.items.map((item) => item.field_id),
+    [detail.items],
+  );
+
   const originalAnnotations = allAnnotations.filter((a) => a.track === "original");
   const translatedAnnotations = allAnnotations.filter((a) => a.track === "translated");
+
+  // Build review context map for hover-to-review on highlight marks
+  const reviewContexts = useMemo<ReviewContextMap>(() => {
+    const map = new Map<string, FieldReviewInfo>();
+    for (const item of detail.items) {
+      map.set(item.canonical_evidence_id, {
+        evidenceId: item.canonical_evidence_id,
+        fieldId: item.field_id,
+        label: item.field_name ?? item.field_id,
+        category: item.category,
+        currentStatus: item.review_status,
+        value: item.value,
+        groupId,
+      });
+    }
+    return map;
+  }, [detail.items, groupId]);
+
+  const handleReviewed = () => {
+    void queryClient.invalidateQueries({ queryKey: ["evidence-group-detail", groupId] });
+  };
 
 
   const toggleCategory = (cat: string) => {
@@ -666,7 +740,7 @@ export function BilingualCompareView({
             gap: 8,
             fontSize: 14,
             fontWeight: 500,
-            color: "#6b7280",
+            color: "var(--color-text-secondary)",
             textDecoration: "none",
             transition: "color 0.15s",
           }}
@@ -675,12 +749,12 @@ export function BilingualCompareView({
           {t("evidence.bilingual.backDetail")}
         </Link>
 
-        <section style={{ overflow: "hidden", borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+        <section style={{ overflow: "hidden", borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
           <div
             style={{
               position: "relative",
-              borderBottom: "1px solid #f3e8ff",
-              background: "linear-gradient(to right, #faf5ff, rgba(250,245,255,0.5), transparent)",
+              borderBottom: "1px solid var(--color-purple-50)",
+              background: "linear-gradient(to right, var(--color-purple-50), transparent)",
               padding: "20px 24px",
             }}
           >
@@ -691,7 +765,7 @@ export function BilingualCompareView({
                 top: 0,
                 height: "100%",
                 width: 4,
-                background: "linear-gradient(to bottom, #c084fc, #9333ea)",
+                background: "linear-gradient(to bottom, var(--color-purple-400), #9333ea)",
               }}
             />
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
@@ -705,14 +779,14 @@ export function BilingualCompareView({
                     fontWeight: 600,
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
-                    color: "#6b21a8",
+                    color: "var(--color-purple-700)",
                     margin: 0,
                   }}
                 >
                   <Columns2 style={{ width: 16, height: 16 }} />
                   {t("evidence.bilingual.header")}
                 </p>
-                <h2 style={{ marginTop: 8, maxWidth: 896, fontSize: 20, fontWeight: 600, lineHeight: "28px", color: "#030712" }}>
+                <h2 style={{ marginTop: 8, maxWidth: 896, fontSize: 20, fontWeight: 600, lineHeight: "28px", color: "var(--color-text)" }}>
                   {detailTitle(detail)}
                 </h2>
                 <div style={{ marginTop: 12, display: "flex", maxWidth: 896, flexWrap: "wrap", gap: 8 }}>
@@ -724,7 +798,7 @@ export function BilingualCompareView({
               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
                 {selectedItem && <EvidenceTonePill item={selectedItem} />}
                 {selectedItem && (
-                  <Badge variant={STATUS_VARIANT[selectedItem.review_status] ?? "default"}>
+                  <Badge variant={STATUS_VARIANT[selectedItem.review_status as keyof typeof STATUS_VARIANT] ?? "default"}>
                     {selectedItem.review_status}
                   </Badge>
                 )}
@@ -748,14 +822,14 @@ export function BilingualCompareView({
                     alignItems: "center",
                     justifyContent: "center",
                     borderRadius: 8,
-                    background: "linear-gradient(to bottom right, #f3e8ff, #faf5ff)",
+                    background: "linear-gradient(to bottom right, var(--color-purple-50), #faf5ff)",
                   }}
                 >
-                  <stat.icon style={{ width: 16, height: 16, color: "#7e22ce" }} />
+                  <stat.icon style={{ width: 16, height: 16, color: "var(--color-purple-700)" }} />
                 </div>
                 <div>
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{stat.label}</p>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
+                  <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>{stat.label}</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
                     {stat.value}
                   </p>
                 </div>
@@ -766,10 +840,10 @@ export function BilingualCompareView({
 
         <div className="edb-compare-layout">
           <aside style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <section style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
-              <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 16px" }}>
-                <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
-                  <SlidersHorizontal style={{ width: 16, height: 16, color: "var(--color-primary-700, #0e7490)" }} />
+            <section style={{ borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+              <div style={{ borderBottom: "1px solid var(--color-bg-muted)", padding: "12px 16px" }}>
+                <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
+                  <SlidersHorizontal style={{ width: 16, height: 16, color: "var(--color-primary-700, var(--color-primary-700))" }} />
                   {t("evidence.bilingual.categories")}
                 </h3>
               </div>
@@ -786,10 +860,10 @@ export function BilingualCompareView({
               </div>
             </section>
 
-            <section style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
-              <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 16px" }}>
-                <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
-                  <Search style={{ width: 16, height: 16, color: "var(--color-primary-700, #0e7490)" }} />
+            <section style={{ borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+              <div style={{ borderBottom: "1px solid var(--color-bg-muted)", padding: "12px 16px" }}>
+                <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
+                  <Search style={{ width: 16, height: 16, color: "var(--color-primary-700, var(--color-primary-700))" }} />
                   {t("evidence.bilingual.navigator")}
                 </h3>
               </div>
@@ -818,8 +892,8 @@ export function BilingualCompareView({
                     navItemStyle.backgroundColor = "var(--color-primary-50, #ecfeff)";
                     navItemStyle.boxShadow = "0 1px 2px 0 rgba(0,0,0,0.05)";
                   } else {
-                    navItemStyle.borderColor = "#e5e7eb";
-                    navItemStyle.backgroundColor = "#fff";
+                    navItemStyle.borderColor = "var(--color-border)";
+                    navItemStyle.backgroundColor = "var(--color-surface)";
                   }
                   return (
                     <button
@@ -831,14 +905,14 @@ export function BilingualCompareView({
                     >
                       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
                         <EvidenceTonePill item={item} />
-                        <span style={{ fontSize: 12, color: "#6b7280" }}>
+                        <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>
                           {formatPercent(item.confidence)}
                         </span>
                       </div>
-                      <p className="edb-nav-item-title edb-line-clamp-2" style={{ marginTop: 8, fontSize: 14, fontWeight: 500, color: "#111827", transition: "color 0.15s" }}>
+                      <p className="edb-nav-item-title edb-line-clamp-2" style={{ marginTop: 8, fontSize: 14, fontWeight: 500, color: "var(--color-text)", transition: "color 0.15s" }}>
                         {itemLabel(item)}
                       </p>
-                      <p className="edb-line-clamp-2" style={{ marginTop: 4, fontSize: 12, color: "#6b7280" }}>
+                      <p className="edb-line-clamp-2" style={{ marginTop: 4, fontSize: 12, color: "var(--color-text-secondary)" }}>
                         {item.value ?? "\u2014"}
                       </p>
                     </button>
@@ -849,12 +923,12 @@ export function BilingualCompareView({
           </aside>
 
           <section style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ overflow: "hidden", borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+            <div style={{ overflow: "hidden", borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
               <div
                 style={{
                   position: "relative",
-                  borderBottom: "1px solid #f3f4f6",
-                  background: "linear-gradient(to right, rgba(236,254,255,0.5), transparent)",
+                  borderBottom: "1px solid var(--color-bg-muted)",
+                  background: "linear-gradient(to right, var(--color-highlight), transparent)",
                   padding: "16px 20px",
                 }}
               >
@@ -865,7 +939,7 @@ export function BilingualCompareView({
                     top: 0,
                     height: "100%",
                     width: 4,
-                    background: "linear-gradient(to bottom, var(--color-primary-400, #22d3ee), var(--color-primary-600, #0891b2))",
+                    background: "linear-gradient(to bottom, var(--color-primary-400, var(--color-primary-400)), var(--color-primary-600, #0891b2))",
                   }}
                 />
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
@@ -879,29 +953,29 @@ export function BilingualCompareView({
                         fontWeight: 600,
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
-                        color: "var(--color-primary-800, #155e75)",
+                        color: "var(--color-primary-800, var(--color-primary-800))",
                         margin: 0,
                       }}
                     >
                       <Highlighter style={{ width: 16, height: 16 }} />
                       {t("evidence.bilingual.activeEvidence")}
                     </p>
-                    <h3 style={{ marginTop: 8, fontSize: 14, fontWeight: 600, color: "#030712" }}>
+                    <h3 style={{ marginTop: 8, fontSize: 14, fontWeight: 600, color: "var(--color-text)" }}>
                       {selectedItem ? itemLabel(selectedItem) : t("evidence.bilingual.noSelected")}
                     </h3>
-                    <p style={{ marginTop: 4, fontFamily: "monospace", fontSize: 12, color: "#6b7280" }}>
+                    <p style={{ marginTop: 4, fontFamily: "monospace", fontSize: 12, color: "var(--color-text-secondary)" }}>
                       {selectedItem?.field_id ?? "\u2014"}
                     </p>
                   </div>
                   {selectedItem && (
-                    <Badge variant={STATUS_VARIANT[selectedItem.review_status] ?? "default"}>
+                    <Badge variant={STATUS_VARIANT[selectedItem.review_status as keyof typeof STATUS_VARIANT] ?? "default"}>
                       {selectedItem.review_status}
                     </Badge>
                   )}
                 </div>
               </div>
               <div style={{ padding: "16px 20px" }}>
-                <p style={{ fontSize: 14, lineHeight: "24px", color: "#1f2937" }}>
+                <p style={{ fontSize: 14, lineHeight: "24px", color: "var(--color-code-text)" }}>
                   {selectedItem?.value ?? "\u2014"}
                 </p>
               </div>
@@ -915,9 +989,13 @@ export function BilingualCompareView({
                 paragraphs={originalDocument.paragraphs}
                 track="original"
                 annotations={originalAnnotations}
+                reviewContexts={reviewContexts}
                 onCreateAnnotation={handleCreateAnnotation}
                 onUpdateAnnotation={handleUpdateAnnotation}
                 onDeleteAnnotation={handleDeleteAnnotation}
+                onReviewed={handleReviewed}
+                onAssignField={handleAssignField}
+                fieldTypes={fieldTypes}
               />
               {showTranslatedDocument && (
                 <EvidenceDocumentReader
@@ -925,9 +1003,13 @@ export function BilingualCompareView({
                   paragraphs={translatedDocument.paragraphs}
                   track="translated"
                   annotations={translatedAnnotations}
+                  reviewContexts={reviewContexts}
                   onCreateAnnotation={handleCreateAnnotation}
                   onUpdateAnnotation={handleUpdateAnnotation}
                   onDeleteAnnotation={handleDeleteAnnotation}
+                  onReviewed={handleReviewed}
+                  onAssignField={handleAssignField}
+                  fieldTypes={fieldTypes}
                 />
               )}
             </div>

@@ -71,7 +71,7 @@ export function UserGuide({ open, onClose }: UserGuideProps) {
       onClose={handleComplete}
       steps={buildSteps(t)}
       indicatorsRender={(current, total) => (
-        <span style={{ color: "#0891b2", fontWeight: 600, fontSize: 13 }}>
+        <span style={{ color: "var(--color-primary-600)", fontWeight: 600, fontSize: 13 }}>
           {current + 1} / {total}
         </span>
       )}

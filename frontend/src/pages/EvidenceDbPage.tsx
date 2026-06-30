@@ -43,7 +43,7 @@ export function EvidenceDbPage() {
             boxShadow: "0 4px 6px -1px rgba(6, 182, 212, 0.2)",
           }}
         >
-          <Database size={24} color="#fff" />
+          <Database size={24} color="var(--color-surface)" />
         </div>
         <div>
           <Typography.Title

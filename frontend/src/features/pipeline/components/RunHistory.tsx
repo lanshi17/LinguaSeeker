@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Button, Input } from "antd";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useI18n } from "@/lib/i18n";
+import { usePagination } from "@/lib/hooks/usePagination";
 import { RunListItem } from "./RunListItem";
 import { usePipelineRuns } from "../hooks/usePipelineRuns";
 import type { ProcessingStatus } from "../types/pipeline";
@@ -14,17 +15,17 @@ const PAGE_SIZE = 20;
 
 const paginationCSS = `
 .rh-page-btn:hover {
-  background-color: #f9fafb;
+  background-color: var(--color-bg);
 }
 .rh-page-jump-input {
   width: 48px;
   height: 36px;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   text-align: center;
   font-size: 13px;
   font-family: var(--font-mono);
-  color: #374151;
+  color: var(--color-text-strong);
   outline: none;
   transition: border-color 0.15s;
 }
@@ -33,7 +34,7 @@ const paginationCSS = `
   box-shadow: 0 0 0 2px var(--color-primary-100, rgba(8,145,178,0.15));
 }
 .rh-page-jump-input::placeholder {
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 `;
 
@@ -59,13 +60,19 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  const { pageNumbers, canPrev, canNext, goPrev, goNext, goTo } = usePagination({
+    page,
+    totalPages,
+    onPageChange: setPage,
+  });
+
   const handleJump = useCallback(() => {
     const num = parseInt(jumpValue, 10);
     if (!Number.isNaN(num) && num >= 1 && num <= totalPages) {
-      setPage(num);
+      goTo(num);
       setJumpValue("");
     }
-  }, [jumpValue, totalPages]);
+  }, [jumpValue, totalPages, goTo]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
@@ -77,8 +84,8 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
       className={className}
       style={{
         borderRadius: 12,
-        border: "1px solid #e5e7eb",
-        backgroundColor: "#fff",
+        border: "1px solid var(--color-border)",
+        backgroundColor: "var(--color-surface)",
         boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
       }}
     >
@@ -87,23 +94,23 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        borderBottom: "1px solid #f3f4f6",
+        borderBottom: "1px solid var(--color-bg-muted)",
         padding: "14px 20px",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Activity style={{ width: 16, height: 16, color: "var(--color-primary-600)" }} aria-hidden />
-          <h2 style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em", color: "#111827", margin: 0 }}>
+          <h2 style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--color-text)", margin: 0 }}>
             {t("pipeline.history.title")}
           </h2>
           {!isLoading && (
             <span style={{
               borderRadius: 9999,
-              backgroundColor: "#f3f4f6",
+              backgroundColor: "var(--color-bg-muted)",
               padding: "2px 8px",
               fontFamily: "var(--font-mono)",
               fontSize: 10,
               fontVariantNumeric: "tabular-nums",
-              color: "#4b5563",
+              color: "var(--color-text-strong)",
             }}>
               {total}
             </span>
@@ -125,7 +132,7 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
       <div style={{ padding: "12px 20px 0" }}>
         <Input
           placeholder={t("pipeline.history.searchPlaceholder")}
-          prefix={<Search style={{ width: 14, height: 14, color: "#9ca3af" }} />}
+          prefix={<Search style={{ width: 14, height: 14, color: "var(--color-text-muted)" }} />}
           suffix={
             search ? (
               <button
@@ -136,7 +143,7 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
                   border: "none",
                   background: "none",
                   padding: 2,
-                  color: "#9ca3af",
+                  color: "var(--color-text-muted)",
                   display: "flex",
                   alignItems: "center",
                 }}
@@ -178,13 +185,13 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
                 gap: 8,
                 paddingTop: 16,
                 marginTop: 12,
-                borderTop: "1px solid #f3f4f6",
+                borderTop: "1px solid var(--color-bg-muted)",
               }}>
                 <button
                   type="button"
-                  onClick={() => setPage(page - 1)}
-                  disabled={page <= 1}
-                  className={page > 1 ? "rh-page-btn" : undefined}
+                  onClick={goPrev}
+                  disabled={!canPrev}
+                  className={canPrev ? "rh-page-btn" : undefined}
                   style={{
                     display: "flex",
                     width: 36,
@@ -192,24 +199,30 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
                     alignItems: "center",
                     justifyContent: "center",
                     borderRadius: 8,
-                    border: page <= 1 ? "1px solid #f3f4f6" : "1px solid #e5e7eb",
+                    border: !canPrev ? "1px solid var(--color-bg-muted)" : "1px solid var(--color-border)",
                     fontSize: 14,
-                    color: page <= 1 ? "#d1d5db" : "#4b5563",
-                    cursor: page <= 1 ? "not-allowed" : "pointer",
-                    backgroundColor: "#fff",
+                    color: !canPrev ? "var(--color-text-muted)" : "var(--color-text-strong)",
+                    cursor: !canPrev ? "not-allowed" : "pointer",
+                    backgroundColor: "var(--color-surface)",
                     transition: "background-color 0.15s",
                   }}
                 >
                   <ChevronLeft style={{ width: 16, height: 16 }} />
                 </button>
-                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                  const pageNum = i + 1;
-                  const isActive = pageNum === page;
+                {pageNumbers.map((p, idx) => {
+                  if (p < 0) {
+                    return (
+                      <span key={`ellipsis-${idx}`} style={{ padding: "0 4px", color: "var(--color-text-muted)", fontSize: 14 }}>
+                        &hellip;
+                      </span>
+                    );
+                  }
+                  const isActive = p === page;
                   return (
                     <button
-                      key={pageNum}
+                      key={p}
                       type="button"
-                      onClick={() => setPage(pageNum)}
+                      onClick={() => goTo(p)}
                       className={!isActive ? "rh-page-btn" : undefined}
                       style={{
                         display: "flex",
@@ -218,46 +231,41 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
                         alignItems: "center",
                         justifyContent: "center",
                         borderRadius: 8,
-                        border: isActive ? "1px solid var(--color-primary-600)" : "1px solid #e5e7eb",
+                        border: isActive ? "1px solid var(--color-primary-600)" : "1px solid var(--color-border)",
                         fontSize: 14,
                         fontWeight: 500,
-                        backgroundColor: isActive ? "var(--color-primary-600)" : "#fff",
-                        color: isActive ? "#fff" : "#4b5563",
+                        backgroundColor: isActive ? "var(--color-primary-600)" : "var(--color-surface)",
+                        color: isActive ? "var(--color-surface)" : "var(--color-text-strong)",
                         cursor: "pointer",
                         transition: "background-color 0.15s",
                       }}
                     >
-                      {pageNum}
+                      {p}
                     </button>
                   );
                 })}
-                {totalPages > 7 && (
-                  <>
-                    <span style={{ padding: "0 4px", color: "#9ca3af" }}>&hellip;</span>
-                    <input
-                      className="rh-page-jump-input"
-                      type="text"
-                      inputMode="numeric"
-                      placeholder={String(totalPages)}
-                      value={jumpValue}
-                      onChange={(e) => {
-                        const v = e.target.value.replace(/\D/g, "");
-                        setJumpValue(v);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleJump();
-                      }}
-                      onBlur={handleJump}
-                      aria-label={t("pipeline.history.jumpToPage")}
-                      title={t("pipeline.history.jumpToPageTitle", { total: String(totalPages) })}
-                    />
-                  </>
-                )}
+                <input
+                  className="rh-page-jump-input"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder={String(totalPages)}
+                  value={jumpValue}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "");
+                    setJumpValue(v);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleJump();
+                  }}
+                  onBlur={handleJump}
+                  aria-label={t("pipeline.history.jumpToPage")}
+                  title={t("pipeline.history.jumpToPageTitle", { total: String(totalPages) })}
+                />
                 <button
                   type="button"
-                  onClick={() => setPage(page + 1)}
-                  disabled={page >= totalPages}
-                  className={page < totalPages ? "rh-page-btn" : undefined}
+                  onClick={goNext}
+                  disabled={!canNext}
+                  className={canNext ? "rh-page-btn" : undefined}
                   style={{
                     display: "flex",
                     width: 36,
@@ -265,17 +273,17 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
                     alignItems: "center",
                     justifyContent: "center",
                     borderRadius: 8,
-                    border: page >= totalPages ? "1px solid #f3f4f6" : "1px solid #e5e7eb",
+                    border: !canNext ? "1px solid var(--color-bg-muted)" : "1px solid var(--color-border)",
                     fontSize: 14,
-                    color: page >= totalPages ? "#d1d5db" : "#4b5563",
-                    cursor: page >= totalPages ? "not-allowed" : "pointer",
-                    backgroundColor: "#fff",
+                    color: !canNext ? "var(--color-text-muted)" : "var(--color-text-strong)",
+                    cursor: !canNext ? "not-allowed" : "pointer",
+                    backgroundColor: "var(--color-surface)",
                     transition: "background-color 0.15s",
                   }}
                 >
                   <ChevronRight style={{ width: 16, height: 16 }} />
                 </button>
-                <span style={{ marginLeft: 8, fontSize: 12, color: "#6b7280" }}>
+                <span style={{ marginLeft: 8, fontSize: 12, color: "var(--color-text-secondary)" }}>
                   {t("pipeline.history.pageInfo", { current: String(page), total: String(totalPages) })}
                 </span>
               </div>
@@ -297,8 +305,8 @@ function RunHistorySkeleton({ t }: { t: TFn }) {
           key={i}
           style={{
             borderRadius: 8,
-            border: "1px solid #e5e7eb",
-            backgroundColor: "#fff",
+            border: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-surface)",
             padding: 16,
             animationDelay: `${i * 60}ms`,
           }}
@@ -342,17 +350,17 @@ function RunHistoryEmpty({ hasFilter, t }: { hasFilter: boolean; t: TFn }) {
       </div>
       {hasFilter ? (
         <>
-          <p style={{ marginTop: 12, fontSize: 14, fontWeight: 500, color: "#111827" }}>
+          <p style={{ marginTop: 12, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>
             {t("pipeline.history.noMatch")}
           </p>
-          <p style={{ marginTop: 4, maxWidth: 384, fontSize: 12, color: "#6b7280" }}>
+          <p style={{ marginTop: 4, maxWidth: 384, fontSize: 12, color: "var(--color-text-secondary)" }}>
             {t("pipeline.history.filterEmpty", { status: "" })}
           </p>
         </>
       ) : (
         <>
-          <p style={{ marginTop: 12, fontSize: 14, fontWeight: 500, color: "#111827" }}>{t("pipeline.history.noRuns")}</p>
-          <p style={{ marginTop: 4, maxWidth: 384, fontSize: 12, color: "#6b7280" }}>
+          <p style={{ marginTop: 12, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>{t("pipeline.history.noRuns")}</p>
+          <p style={{ marginTop: 4, maxWidth: 384, fontSize: 12, color: "var(--color-text-secondary)" }}>
             {t("pipeline.history.guidance")}{" "}
             <Link to="/chat" style={{ fontWeight: 500, color: "var(--color-primary-600)" }}>
               {t("pipeline.history.chatLink")}
@@ -372,8 +380,8 @@ function RunHistoryError({ onRetry, t }: { onRetry: () => void; t: TFn }) {
       padding: "40px 24px",
       textAlign: "center",
     }}>
-      <p style={{ fontSize: 14, color: "#b91c1c", margin: 0 }}>{t("pipeline.history.loadError")}</p>
-      <p style={{ marginTop: 4, maxWidth: 384, fontSize: 12, color: "#6b7280" }}>
+      <p style={{ fontSize: 14, color: "var(--color-error-text)", margin: 0 }}>{t("pipeline.history.loadError")}</p>
+      <p style={{ marginTop: 4, maxWidth: 384, fontSize: 12, color: "var(--color-text-secondary)" }}>
         {t("pipeline.history.loadErrorHint")}
       </p>
       <Button size="small" style={{ marginTop: 12 }} onClick={onRetry}>

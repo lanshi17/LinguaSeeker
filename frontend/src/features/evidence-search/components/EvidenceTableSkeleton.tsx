@@ -15,8 +15,8 @@ export function EvidenceTableSkeleton() {
           alignItems: "center",
           gap: 16,
           borderRadius: 12,
-          border: "1px solid #e5e7eb",
-          backgroundColor: "#fff",
+          border: "1px solid var(--color-border)",
+          backgroundColor: "var(--color-surface)",
           padding: "16px 20px",
           boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
         }}>
@@ -32,15 +32,15 @@ export function EvidenceTableSkeleton() {
         <div className="ets-desktop" style={{
           overflow: "hidden",
           borderRadius: 12,
-          border: "1px solid #e5e7eb",
-          backgroundColor: "#fff",
+          border: "1px solid var(--color-border)",
+          backgroundColor: "var(--color-surface)",
           boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
         }}>
           {/* Table header */}
           <div style={{
             display: "flex",
-            borderBottom: "1px solid #e5e7eb",
-            backgroundColor: "#f9fafb",
+            borderBottom: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-bg)",
             padding: "12px 16px",
           }}>
             {COL_WIDTHS.map((w, i) => (
@@ -58,7 +58,7 @@ export function EvidenceTableSkeleton() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                borderBottom: row < 4 ? "1px solid #f3f4f6" : "none",
+                borderBottom: row < 4 ? "1px solid var(--color-bg-muted)" : "none",
                 padding: "16px",
                 animationDelay: `${row * 60}ms`,
               }}
@@ -110,8 +110,8 @@ export function EvidenceTableSkeleton() {
               className="stagger-in"
               style={{
                 borderRadius: 12,
-                border: "1px solid #e5e7eb",
-                backgroundColor: "#fff",
+                border: "1px solid var(--color-border)",
+                backgroundColor: "var(--color-surface)",
                 padding: 16,
                 boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
                 animationDelay: `${i * 60}ms`,

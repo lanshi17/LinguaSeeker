@@ -32,22 +32,15 @@ export const darkTheme: ThemeConfig = {
   algorithm: antdTheme.darkAlgorithm,
   token: {
     ...sharedTokens,
-    colorBgContainer: "#1e1e2e",
-    colorBgLayout: "#141422",
+    colorBgContainer: "#16162a",
+    colorBgLayout: "#0f0f1a",
+    colorBgElevated: "#1e1e36",
+    colorBorder: "#2a2a42",
+    colorBorderSecondary: "#22223a",
+    colorText: "#e4e4ef",
+    colorTextSecondary: "#a0a0b8",
+    colorTextTertiary: "#6b6b85",
+    colorTextQuaternary: "#4a4a65",
   },
 };
 
-/** @deprecated Use lightTheme / darkTheme with useAppStore().mode instead. */
-export const theme = lightTheme;
-
-/**
- * Pathogenicity classification colors — consumed via CSS variables
- * since antd has no built-in token for domain-specific palettes.
- */
-export const pathoColors: Record<string, string> = {
-  pathogenic: "#B91C1C",
-  likely_pathogenic: "#DC2626",
-  uncertain: "#6B7280",
-  likely_benign: "#0D9488",
-  benign: "#0F766E",
-};

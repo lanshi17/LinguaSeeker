@@ -53,7 +53,7 @@ function getSuggestions(t: (key: string) => string): SuggestionChip[] {
           "Open the pipeline page so I can upload a PDF for bilingual evidence extraction.",
       },
       accentBg: "var(--color-highlight-purple)",
-      accentColor: "#7c3aed",
+      accentColor: "var(--color-purple-700)",
     },
     {
       icon: <Database style={{ width: 16, height: 16 }} />,
@@ -66,7 +66,7 @@ function getSuggestions(t: (key: string) => string): SuggestionChip[] {
           "Open the evidence database so I can search by gene, variant, disease, PMID, or DOI.",
       },
       accentBg: "var(--color-highlight-green)",
-      accentColor: "#059669",
+      accentColor: "var(--color-success-600)",
     },
     {
       icon: <ClipboardCheck style={{ width: 16, height: 16 }} />,
@@ -79,7 +79,7 @@ function getSuggestions(t: (key: string) => string): SuggestionChip[] {
           "Show evidence items that need expert review and help prepare an evidence summary report.",
       },
       accentBg: "var(--color-highlight-amber)",
-      accentColor: "#d97706",
+      accentColor: "var(--color-warning-text)",
     },
   ];
 }
@@ -104,8 +104,8 @@ export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 12,
-              background: "var(--color-primary-600, #0891b2)",
-              color: "#fff",
+              background: "var(--color-primary-600, var(--color-primary-600))",
+              color: "var(--color-surface)",
               boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
             }}
           >

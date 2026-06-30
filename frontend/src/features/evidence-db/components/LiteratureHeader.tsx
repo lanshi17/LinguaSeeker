@@ -21,13 +21,13 @@ function qualityBadgeStyle(tone: "source" | "translation") {
   const styles = {
     source: {
       border: "1px solid #bfdbfe",
-      backgroundColor: "#eff6ff",
-      color: "#1d4ed8",
+      backgroundColor: "var(--color-blue-50)",
+      color: "var(--color-blue-700)",
     },
     translation: {
       border: "1px solid #ddd6fe",
-      backgroundColor: "#f5f3ff",
-      color: "#6d28d9",
+      backgroundColor: "var(--color-highlight-purple)",
+      color: "var(--color-purple-700)",
     },
   };
   return {
@@ -56,8 +56,8 @@ export function LiteratureHeader({
   return (
     <section style={{
       borderRadius: 12,
-      border: "1px solid #e5e7eb",
-      backgroundColor: "#fff",
+      border: "1px solid var(--color-border)",
+      backgroundColor: "var(--color-surface)",
       padding: 20,
     }}>
       <div className="bev-literature-header-content" style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
@@ -69,8 +69,8 @@ export function LiteratureHeader({
           alignItems: "center",
           justifyContent: "center",
           borderRadius: 8,
-          backgroundColor: "#fffbeb",
-          color: "#d97706",
+          backgroundColor: "var(--color-highlight-amber)",
+          color: "var(--color-warning-text)",
         }}>
           <BookOpen style={{ width: 20, height: 20 }} />
         </div>
@@ -79,7 +79,7 @@ export function LiteratureHeader({
             fontFamily: "var(--font-display)",
             fontSize: 18,
             fontWeight: 500,
-            color: "#111827",
+            color: "var(--color-text)",
             lineHeight: 1.375,
             margin: 0,
           }}>
@@ -93,7 +93,7 @@ export function LiteratureHeader({
             columnGap: 12,
             rowGap: 4,
             fontSize: 12,
-            color: "#6b7280",
+            color: "var(--color-text-secondary)",
           }}>
             {groupDetail.pmid && (
               <a

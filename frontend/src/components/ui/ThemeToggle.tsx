@@ -18,7 +18,11 @@ export function ThemeToggle() {
         type="text"
         size="small"
         icon={isDark ? <Sun size={15} /> : <Moon size={15} />}
-        onClick={() => setMode(isDark ? "light" : "dark")}
+        onClick={() => {
+          document.documentElement.classList.add("theme-transitioning");
+          setMode(isDark ? "light" : "dark");
+          setTimeout(() => document.documentElement.classList.remove("theme-transitioning"), 350);
+        }}
         style={{
           display: "flex",
           alignItems: "center",

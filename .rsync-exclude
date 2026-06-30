@@ -106,5 +106,6 @@ reasonix.toml
 
 # Dev artifacts
 progress.txt
+CLAUDE.md
 lesson.md
 **/*.pdf

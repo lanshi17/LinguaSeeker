@@ -40,7 +40,7 @@ describe("BilingualComparison (trace props)", () => {
   it("renders an empty state when no trace is selected", () => {
     render(<BilingualComparison trace={null} />);
 
-    expect(screen.getByText("No evidence selected.")).toBeInTheDocument();
+    expect(screen.getByText("No evidence selected")).toBeInTheDocument();
   });
 });
 
@@ -104,7 +104,7 @@ describe("BilingualComparison (detail props)", () => {
     );
 
     expect(
-      screen.getByText("No bilingual traces for this evidence group."),
+      screen.getByText("No bilingual traces for this evidence group"),
     ).toBeInTheDocument();
   });
 });

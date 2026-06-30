@@ -20,8 +20,8 @@ export function BilingualEvidenceSkeleton() {
       <section
         style={{
           borderRadius: 12,
-          border: "1px solid #e5e7eb",
-          backgroundColor: "#fff",
+          border: "1px solid var(--color-border)",
+          backgroundColor: "var(--color-surface)",
           padding: 20,
         }}
       >
@@ -74,8 +74,8 @@ export function BilingualEvidenceSkeleton() {
           <div
             style={{
               borderRadius: 12,
-              border: "1px solid #e5e7eb",
-              backgroundColor: "#fff",
+              border: "1px solid var(--color-border)",
+              backgroundColor: "var(--color-surface)",
               padding: 16,
               display: "flex",
               flexDirection: "column",
@@ -95,8 +95,8 @@ export function BilingualEvidenceSkeleton() {
                 className="stagger-in"
                 style={{
                   borderRadius: 12,
-                  border: "1px solid #e5e7eb",
-                  backgroundColor: "#fff",
+                  border: "1px solid var(--color-border)",
+                  backgroundColor: "var(--color-surface)",
                   padding: 20,
                   animationDelay: `${i * 80}ms`,
                 }}
