@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-import ipaddress
 import re
-import socket
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 
 import httpx
 import time as _time
@@ -19,38 +17,9 @@ from .provider_health import get_health_tracker
 from src.core.config import get_config
 from src.utils.rust_io import net_io
 from src.utils.text import sanitize_filename
+from src.utils.ssrf import validate_url_safe
 
 from .contracts import OnlineAcquisitionGatewayRequest, OnlineAcquisitionGatewayResult, OnlineAcquisitionSourceTraceEntry
-
-
-def _is_private_ip(hostname: str) -> bool:
-    """Return True if *hostname* resolves to a private/reserved IP address."""
-    try:
-        addrinfos = socket.getaddrinfo(hostname, None, proto=socket.IPPROTO_TCP)
-    except socket.gaierror:
-        return True
-
-    for _family, _type, _proto, _canonname, sockaddr in addrinfos:
-        ip = ipaddress.ip_address(sockaddr[0])
-        if (
-            ip.is_private
-            or ip.is_loopback
-            or ip.is_link_local
-            or ip.is_reserved
-            or ip.is_multicast
-        ):
-            return True
-    return False
-
-
-def _validate_url_safe(url: str) -> None:
-    """Raise ValueError if *url* targets a private/reserved IP (SSRF guard)."""
-    parsed = urlparse(url)
-    if parsed.scheme not in ("http", "https"):
-        raise ValueError(f"Unsupported URL scheme: {parsed.scheme}")
-    hostname = parsed.hostname or ""
-    if not hostname or _is_private_ip(hostname):
-        raise ValueError(f"URL targets a private/reserved address: {url}")
 
 
 _PDF_LINK_PATTERNS = [
@@ -109,62 +78,6 @@ def _choose_item(
     return None
 
 
-async def _download_pdf_from_candidates(
-    candidates: List[str],
-    download_path: str,
-    filename_stem: str,
-    proxy: Optional[str] = None,
-) -> Tuple[Optional[str], Optional[str], List[str]]:
-    """Try downloading PDF from candidate URLs. Returns (file_path, pdf_url, warnings)."""
-    warnings: List[str] = []
-    queue = [str(url).strip() for url in candidates if str(url).strip()]
-    visited: set[str] = set()
-    target = Path(download_path) / f"{sanitize_filename(filename_stem)}.pdf"
-    target.parent.mkdir(parents=True, exist_ok=True)
-
-    async with httpx.AsyncClient(
-        timeout=60,
-        follow_redirects=True,
-        proxy=proxy,
-    ) as client:
-        while queue:
-            url = queue.pop(0)
-            if url in visited:
-                continue
-            visited.add(url)
-            try:
-                _validate_url_safe(url)
-                response = await client.get(url)
-                response.raise_for_status()
-                final_url = str(response.url)
-                if final_url != url:
-                    _validate_url_safe(final_url)
-            except ValueError as ssrf_exc:
-                warnings.append(f"ssrf_blocked:{url}:{ssrf_exc}")
-                continue
-            except Exception as exc:
-                warnings.append(f"download_failed:{url}:{exc}")
-                continue
-
-            content = response.content or b""
-            content_type = str(response.headers.get("content-type") or "").lower()
-
-            if content.startswith(b"%PDF"):
-                target.write_bytes(content)
-                return str(target), final_url, warnings
-
-            if "html" in content_type or b"<html" in content[:2048].lower():
-                extra = _extract_pdf_links_from_html(response.text or "", final_url or url)
-                for link in extra:
-                    if link not in visited:
-                        queue.append(link)
-                continue
-
-            warnings.append(f"non_pdf_content_type:{content_type or 'unknown'}")
-
-    return None, None, warnings
-
-
 async def download_file_from_url(
     url: str,
     download_path: str,
@@ -203,7 +116,7 @@ async def download_file_from_url(
         visited.add(current_url)
 
         try:
-            _validate_url_safe(current_url)
+            validate_url_safe(current_url)
         except ValueError as ssrf_exc:
             warnings.append(f"ssrf_blocked:{current_url}:{ssrf_exc}")
             continue
@@ -224,7 +137,7 @@ async def download_file_from_url(
 
                 if final_url != current_url:
                     try:
-                        _validate_url_safe(final_url)
+                        validate_url_safe(final_url)
                     except ValueError as ssrf_exc:
                         warnings.append(f"ssrf_blocked_redirect:{current_url}:{ssrf_exc}")
                         continue
@@ -265,7 +178,7 @@ async def download_file_from_url(
 
                 if final_url != current_url:
                     try:
-                        _validate_url_safe(final_url)
+                        validate_url_safe(final_url)
                     except ValueError as ssrf_exc:
                         warnings.append(f"ssrf_blocked_redirect:{current_url}:{ssrf_exc}")
                         continue

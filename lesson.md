@@ -6138,3 +6138,56 @@ N=5 `c2_english_pivot_tristate` smoke 首次无 API key 运行产生 401 无效�
 - English-pivot 证据链必须同时测试 translated-alignment 和 English-identity 两条路径。
 - Benchmark smoke 前必须显式传入 API key；401 报告只能算操作失败，不能进入模型质量分析。
 - N=5 smoke 用于架构方向验证，不要把未匹配同样本的历史指标作为公平对比。若需要对比，应使用同一 5 个 entry、同一 gold、同一 scoring script 重跑。
+
+## 2026-06-30 - Matched N=5 comparison exposed rerun and hard-review stability gaps
+
+### 问题描述
+为了比较 English-pivot 方向，使用同一随机种子 `20260630` 的 5 个样本做 matched comparison。过程中出现两个工程问题：
+1. 直接调用 API 的 `mode=phase,target_phase=2` rerun 会把旧 run 变成 failed，报错 “Phase 1 pending”。
+2. `c2_english_pivot_hard` 在 3/5 样本上失败，错误为缺失 `phase_2/extraction_result.json`。
+
+### 排查过程
+1. 读取 pasted 实验矩阵，确认需要区分 C2-hard、A2-no-review、C2-tristate-review、English-pivot-hard、English-pivot-tristate。
+2. 尝试对旧 English-pivot-tristate run 做 Phase 2 rerun，以刷新 identity traceback。job queue 路径未正确恢复已有 state，上游 phase 状态变成 pending。
+3. 改为 full rerun：清查 L2 cache 后确认无匹配缓存，重新跑同一 seed。
+4. `gs_083` 在第一次 English-pivot-tristate N=5 中因缺 `extraction_result.json` 失败，单条补跑成功，因此合并 4 条主报告 + 1 条补跑报告作为有效结果。
+5. 新增 `c2_english_pivot_hard` condition 用于隔离 single-track 效应；该条件 3/5 失败，作为不稳定条件保留在报告中。
+
+### 根因分析
+- Phase rerun 的 API enqueue 路径只把 phase rerun request_data 入队，worker 执行时没有等价地调用 HTTP fallback 分支里的 `_prepare_phase_rerun_state()` 恢复上游 phase outputs，导致 phase dependency guard 看到 Phase 1 pending。
+- English-pivot-hard 的失败发生在 Phase 2 已完成若干 LLM/grounding步骤后，后续 adapter 期望读取 `phase_2/extraction_result.json`，但该文件未产生。当前证据显示 hard-review + English-pivot 路径存在 artifact-write/empty-output 稳定性缺口。
+
+### 解决方案
+1. 不再使用 phase rerun 结果作为模型质量证据；失败旧 run 只作为操作教训记录。
+2. 对 English-pivot-tristate 使用 fresh full rerun，并用成功的 `gs_083` 单条补跑替换失败 entry。
+3. 生成 matched comparison 报告：`benchmark/data/reports/english_pivot_n5_matched_comparison_20260630.md` 和 `.json`。
+4. 明确方向判断：English-pivot-tristate 未提升 value-F1，但提供 original-grounded provenance；English-pivot-hard 当前不稳定。
+
+### 预防措施
+- 需要修复 phase rerun job queue 路径，确保 phase jobs 在 worker 侧恢复 existing state，而不是从空 phase state 启动。
+- Phase 2 adapter 应保证任何非崩溃的 extraction result 都写出 `extraction_result.json`，即使候选被 hard review 清空；否则 benchmark 会把 artifact 缺失误计为模型全缺失。
+- N=5 comparison 必须报告 failed entry 数，工程失败不能混同为模型抽取 FN。
+
+## 2026-06-30 - C0-only TP attribution requires retained run artifacts
+
+### 问题描述
+English-pivot-tristate 的 N=5 value-F1 低于 C0，需要确认 C0 命中而 English-pivot 漏掉的具体字段，避免在未定位死因前直接重构翻译、review 或 traceback。
+
+### 排查过程
+1. 读取 matched comparison 使用的真实 C0 report：`benchmark/data/reports/n50/c0_prompt_only_20260629_190950.json`，避免误用非匹配样本的 `c0_prompt_only_20260630_130327.json`。
+2. 使用 `eval_unified_20260630_155152.json` 加 `eval_unified_20260630_155503.json` 的 `gs_083` retry 结果，对同一 5 个样本逐字段比较。
+3. 发现 C0-only true positives 只集中在 `gs_005` 1 个字段和 `gs_075` 4 个字段；`gs_071`、`gs_076`、`gs_083` 没有 C0 命中但 English-pivot 漏掉的字段。
+4. 检查 `backend/data/pipeline`，当前 run artifacts 已不存在，无法从本地恢复 review/grounding 中间状态。
+
+### 根因分析
+- 已确认的直接失败形态是最终字段缺失：English-pivot-tristate 对这些字段均为 `match_type=missing`、`extracted=null`、`source_span=null`。
+- 本轮 N=5 的 gold 主源语言均为英文；clinvar_fused 虽有 `source_zh.md`，但 matched run 使用的主源是英文 `source.md`，因此不能把本轮失分直接归因于中文到英文翻译损耗。
+- 由于 run artifacts 缺失，不能进一步判定是 primary missing、review filtering、grounding filtering，还是 final adapter 丢弃。
+
+### 解决方案
+1. 本轮只报告可由 eval reports 和 source files 直接证明的字段级反例，不提出代码修复。
+2. 后续 rerun 若要做死因归因，必须保留 `phase_2/extraction_result.json` 及 review/grounding intermediate artifacts。
+
+### 预防措施
+- Matched comparison 报告应附带字段级 diff 或 run artifact manifest，避免事后只能看到 aggregate F1。
+- 对 English-pivot 方向做中文翻译质量归因时，必须选择 `source_language != en` 或显式使用中文源输入；不能用英文主源样本推断翻译损耗。

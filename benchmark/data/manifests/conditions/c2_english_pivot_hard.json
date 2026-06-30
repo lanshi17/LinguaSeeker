@@ -1,0 +1,16 @@
+{
+  "condition_id": "c2_english_pivot_hard",
+  "label": "English Pivot Single-Track Workflow with Hard Review",
+  "description": "Experimental condition that runs extraction only on the English translated track, then deterministically maps English source spans back to original-language source spans via translation chunk alignment. Review keeps the current hard-veto policy to isolate the effect of removing dual-track fusion.",
+  "extraction_mode": "broad",
+  "extraction_track_mode": "english_pivot",
+  "ablation_disable_review": false,
+  "ablation_disable_target_guard": false,
+  "ablation_original_only": false,
+  "force_reextract": true,
+  "extraction_profile": "none",
+  "is_prompt_only": false,
+  "prompt_only_model": null,
+  "disabled_components": ["original_track_extraction"],
+  "review_reject_policy": "hard_veto"
+}

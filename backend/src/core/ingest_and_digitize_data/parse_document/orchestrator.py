@@ -1,12 +1,9 @@
 """Document parse orchestrator with remote-first fallback."""
 from __future__ import annotations
 
-import ipaddress
-import socket
 import tempfile
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 import httpx
 from loguru import logger
@@ -14,40 +11,12 @@ from loguru import logger
 from .base import ParserStrategy
 from .contracts import MinerULocalBatchParseResult, ParseResult
 from .exceptions import MinerUAPIError, ParserExhaustedError
+from src.utils.ssrf import validate_url_safe
 
 _MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024  # 100 MB
 _ALLOWED_CONTENT_TYPES = {"application/pdf", "application/octet-stream"}
 _PDF_MAGIC = b"%PDF"
 
-
-def _is_private_ip(hostname: str) -> bool:
-    """Return True if *hostname* resolves to a private/reserved IP address."""
-    try:
-        addrinfos = socket.getaddrinfo(hostname, None, proto=socket.IPPROTO_TCP)
-    except socket.gaierror:
-        return True  # treat unresolvable hosts as unsafe
-
-    for _family, _type, _proto, _canonname, sockaddr in addrinfos:
-        ip = ipaddress.ip_address(sockaddr[0])
-        if (
-            ip.is_private
-            or ip.is_loopback
-            or ip.is_link_local
-            or ip.is_reserved
-            or ip.is_multicast
-        ):
-            return True
-    return False
-
-
-def _validate_url_safe(url: str) -> None:
-    """Raise MinerUAPIError if *url* targets a private/reserved IP."""
-    parsed = urlparse(url)
-    if parsed.scheme not in ("http", "https"):
-        raise MinerUAPIError(f"Unsupported URL scheme: {parsed.scheme}")
-    hostname = parsed.hostname or ""
-    if not hostname or _is_private_ip(hostname):
-        raise MinerUAPIError(f"URL targets a private/reserved address: {url}")
 
 
 class DocumentParseOrchestrator(ParserStrategy):
@@ -95,7 +64,7 @@ class DocumentParseOrchestrator(ParserStrategy):
             tmp_file = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
             local_path = tmp_file.name
             try:
-                _validate_url_safe(pdf_path)
+                validate_url_safe(pdf_path)
                 logger.info(f"Downloading PDF for local fallback: {pdf_path}")
                 async with httpx.AsyncClient(follow_redirects=True) as client:
                     async with client.stream("GET", pdf_path, timeout=120.0) as resp:
@@ -104,7 +73,7 @@ class DocumentParseOrchestrator(ParserStrategy):
                         # Validate redirect target
                         final_url = str(resp.url)
                         if final_url != pdf_path:
-                            _validate_url_safe(final_url)
+                            validate_url_safe(final_url)
 
                         content_type = resp.headers.get("content-type", "")
                         if content_type and not any(

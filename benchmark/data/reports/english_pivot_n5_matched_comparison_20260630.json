@@ -1,0 +1,880 @@
+{
+  "sample_ids": [
+    "gs_005",
+    "gs_071",
+    "gs_075",
+    "gs_076",
+    "gs_083"
+  ],
+  "sample_seed": 20260630,
+  "conditions": {
+    "c0_prompt_only": {
+      "report": "benchmark/data/reports/n50/c0_prompt_only_20260629_190950.json",
+      "comparable": true,
+      "metrics": {
+        "entries": 5,
+        "failed_entries": 0,
+        "true_positives": 19,
+        "false_positives": 2,
+        "false_negatives": 10,
+        "value_precision": 0.9048,
+        "value_recall": 0.6552,
+        "value_f1": 0.76,
+        "grounded_true_positives": 19,
+        "grounded_precision": 0.9048,
+        "grounded_recall": 0.6129,
+        "grounded_f1": 0.7308,
+        "original_grounded_true_positives": 0,
+        "original_grounded_precision": 0.0,
+        "original_grounded_recall": 0.0,
+        "original_grounded_f1": 0.0,
+        "db_ready_yield": 19,
+        "statuses": {
+          "gs_005": "completed",
+          "gs_071": "completed",
+          "gs_075": "completed",
+          "gs_076": "completed",
+          "gs_083": "completed"
+        },
+        "per_entry_hits": {
+          "gs_005": {
+            "matched": 3,
+            "total": 3,
+            "status": "completed",
+            "error_message": null,
+            "run_id": null
+          },
+          "gs_071": {
+            "matched": 3,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": null
+          },
+          "gs_075": {
+            "matched": 7,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": null
+          },
+          "gs_076": {
+            "matched": 1,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": null
+          },
+          "gs_083": {
+            "matched": 5,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": null
+          }
+        }
+      },
+      "delta_vs_c2_hard": {
+        "value_precision": -0.0327,
+        "value_recall": 0.1552,
+        "value_f1": 0.1078,
+        "grounded_f1": 0.0925,
+        "db_ready_yield": 4
+      },
+      "delta_vs_c0": {
+        "value_precision": 0.0,
+        "value_recall": 0.0,
+        "value_f1": 0.0,
+        "grounded_f1": 0.0,
+        "db_ready_yield": 0
+      }
+    },
+    "c1_catalog": {
+      "report": "benchmark/data/reports/n50/c1_catalog_20260630_013456.json",
+      "comparable": true,
+      "metrics": {
+        "entries": 5,
+        "failed_entries": 0,
+        "true_positives": 13,
+        "false_positives": 1,
+        "false_negatives": 17,
+        "value_precision": 0.9286,
+        "value_recall": 0.4333,
+        "value_f1": 0.5909,
+        "grounded_true_positives": 13,
+        "grounded_precision": 0.9286,
+        "grounded_recall": 0.4194,
+        "grounded_f1": 0.5778,
+        "original_grounded_true_positives": 0,
+        "original_grounded_precision": 0.0,
+        "original_grounded_recall": 0.0,
+        "original_grounded_f1": 0.0,
+        "db_ready_yield": 13,
+        "statuses": {
+          "gs_005": "completed",
+          "gs_071": "completed",
+          "gs_075": "completed",
+          "gs_076": "completed",
+          "gs_083": "completed"
+        },
+        "per_entry_hits": {
+          "gs_005": {
+            "matched": 2,
+            "total": 3,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "4628be3d-4e33-4369-a087-3f2d0b500c13"
+          },
+          "gs_071": {
+            "matched": 3,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "470e601e-ad84-4974-83be-6aec408c03dc"
+          },
+          "gs_075": {
+            "matched": 2,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "84001023-94da-498f-93d9-0806691d29d8"
+          },
+          "gs_076": {
+            "matched": 1,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "77e4c7eb-d587-4404-935a-a7c165c0aa6d"
+          },
+          "gs_083": {
+            "matched": 5,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "d4c75ac5-72c7-4d4f-a37b-d939dd0a0cc0"
+          }
+        }
+      },
+      "delta_vs_c2_hard": {
+        "value_precision": -0.0089,
+        "value_recall": -0.0667,
+        "value_f1": -0.0613,
+        "grounded_f1": -0.0605,
+        "db_ready_yield": -2
+      },
+      "delta_vs_c0": {
+        "value_precision": 0.0238,
+        "value_recall": -0.2219,
+        "value_f1": -0.1691,
+        "grounded_f1": -0.153,
+        "db_ready_yield": -6
+      }
+    },
+    "c2_hard_full_broad": {
+      "report": "benchmark/data/reports/n50/c2_full_broad_20260629_201739.json",
+      "comparable": true,
+      "metrics": {
+        "entries": 5,
+        "failed_entries": 0,
+        "true_positives": 15,
+        "false_positives": 1,
+        "false_negatives": 15,
+        "value_precision": 0.9375,
+        "value_recall": 0.5,
+        "value_f1": 0.6522,
+        "grounded_true_positives": 15,
+        "grounded_precision": 0.9375,
+        "grounded_recall": 0.4839,
+        "grounded_f1": 0.6383,
+        "original_grounded_true_positives": 0,
+        "original_grounded_precision": 0.0,
+        "original_grounded_recall": 0.0,
+        "original_grounded_f1": 0.0,
+        "db_ready_yield": 15,
+        "statuses": {
+          "gs_005": "completed",
+          "gs_071": "completed",
+          "gs_075": "completed",
+          "gs_076": "completed",
+          "gs_083": "completed"
+        },
+        "per_entry_hits": {
+          "gs_005": {
+            "matched": 2,
+            "total": 3,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "ae71394a-7b00-4da0-a457-83fa06e17f86"
+          },
+          "gs_071": {
+            "matched": 4,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "5ea8d1a3-86a3-475c-a4b3-912e74e21908"
+          },
+          "gs_075": {
+            "matched": 6,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "9a2dbdda-09f4-4362-bbea-294e2be087a7"
+          },
+          "gs_076": {
+            "matched": 1,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "69135e06-3836-4fb9-ae34-2210b229637c"
+          },
+          "gs_083": {
+            "matched": 2,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "d6db4104-ce20-4451-bc8a-21110d114fb8"
+          }
+        }
+      },
+      "delta_vs_c2_hard": {
+        "value_precision": 0.0,
+        "value_recall": 0.0,
+        "value_f1": 0.0,
+        "grounded_f1": 0.0,
+        "db_ready_yield": 0
+      },
+      "delta_vs_c0": {
+        "value_precision": 0.0327,
+        "value_recall": -0.1552,
+        "value_f1": -0.1078,
+        "grounded_f1": -0.0925,
+        "db_ready_yield": -4
+      }
+    },
+    "a1_no_reflection": {
+      "report": "benchmark/data/reports/n50/a1_no_reflection_20260630_114757.json",
+      "comparable": true,
+      "metrics": {
+        "entries": 5,
+        "failed_entries": 0,
+        "true_positives": 15,
+        "false_positives": 4,
+        "false_negatives": 12,
+        "value_precision": 0.7895,
+        "value_recall": 0.5556,
+        "value_f1": 0.6522,
+        "grounded_true_positives": 15,
+        "grounded_precision": 0.7895,
+        "grounded_recall": 0.4839,
+        "grounded_f1": 0.6,
+        "original_grounded_true_positives": 0,
+        "original_grounded_precision": 0.0,
+        "original_grounded_recall": 0.0,
+        "original_grounded_f1": 0.0,
+        "db_ready_yield": 15,
+        "statuses": {
+          "gs_005": "completed",
+          "gs_071": "completed",
+          "gs_075": "completed",
+          "gs_076": "completed",
+          "gs_083": "completed"
+        },
+        "per_entry_hits": {
+          "gs_005": {
+            "matched": 2,
+            "total": 3,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "ed3984d6-7522-43ad-b11b-34b8e4eb6f1f"
+          },
+          "gs_071": {
+            "matched": 3,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "c29f44d4-e5fb-4149-8d1a-5eb5963085e0"
+          },
+          "gs_075": {
+            "matched": 6,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "0934b11f-1b5d-4129-832b-a536e32e77ef"
+          },
+          "gs_076": {
+            "matched": 1,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "2ed961c4-6359-489d-8a74-bc3805733a7c"
+          },
+          "gs_083": {
+            "matched": 3,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "c06984ed-f2d3-40c3-bb3b-93c26d00506a"
+          }
+        }
+      },
+      "delta_vs_c2_hard": {
+        "value_precision": -0.148,
+        "value_recall": 0.0556,
+        "value_f1": 0.0,
+        "grounded_f1": -0.0383,
+        "db_ready_yield": 0
+      },
+      "delta_vs_c0": {
+        "value_precision": -0.1153,
+        "value_recall": -0.0996,
+        "value_f1": -0.1078,
+        "grounded_f1": -0.1308,
+        "db_ready_yield": -4
+      }
+    },
+    "a2_no_review": {
+      "report": "benchmark/data/reports/n50/a2_no_review_20260630_035240.json",
+      "comparable": true,
+      "metrics": {
+        "entries": 5,
+        "failed_entries": 0,
+        "true_positives": 18,
+        "false_positives": 4,
+        "false_negatives": 9,
+        "value_precision": 0.8182,
+        "value_recall": 0.6667,
+        "value_f1": 0.7347,
+        "grounded_true_positives": 18,
+        "grounded_precision": 0.8182,
+        "grounded_recall": 0.5806,
+        "grounded_f1": 0.6792,
+        "original_grounded_true_positives": 0,
+        "original_grounded_precision": 0.0,
+        "original_grounded_recall": 0.0,
+        "original_grounded_f1": 0.0,
+        "db_ready_yield": 18,
+        "statuses": {
+          "gs_005": "completed",
+          "gs_071": "completed",
+          "gs_075": "completed",
+          "gs_076": "completed",
+          "gs_083": "completed"
+        },
+        "per_entry_hits": {
+          "gs_005": {
+            "matched": 2,
+            "total": 3,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "2b937527-5185-4d9b-a7da-0b1b638925b3"
+          },
+          "gs_071": {
+            "matched": 3,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "a278dbb9-535f-4421-ba2a-f204b78a5220"
+          },
+          "gs_075": {
+            "matched": 6,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "5073290d-c774-4b84-aa42-61283897a300"
+          },
+          "gs_076": {
+            "matched": 3,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "72a7a061-1646-49c7-bdf0-54989b67477f"
+          },
+          "gs_083": {
+            "matched": 4,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "a502f56d-87d1-4177-a298-3376f596245f"
+          }
+        }
+      },
+      "delta_vs_c2_hard": {
+        "value_precision": -0.1193,
+        "value_recall": 0.1667,
+        "value_f1": 0.0825,
+        "grounded_f1": 0.0409,
+        "db_ready_yield": 3
+      },
+      "delta_vs_c0": {
+        "value_precision": -0.0866,
+        "value_recall": 0.0115,
+        "value_f1": -0.0253,
+        "grounded_f1": -0.0516,
+        "db_ready_yield": -1
+      }
+    },
+    "a3_no_target_guard": {
+      "report": "benchmark/data/reports/n50/a3_no_target_guard_20260630_064518.json",
+      "comparable": true,
+      "metrics": {
+        "entries": 5,
+        "failed_entries": 0,
+        "true_positives": 16,
+        "false_positives": 4,
+        "false_negatives": 11,
+        "value_precision": 0.8,
+        "value_recall": 0.5926,
+        "value_f1": 0.6809,
+        "grounded_true_positives": 16,
+        "grounded_precision": 0.8,
+        "grounded_recall": 0.5161,
+        "grounded_f1": 0.6275,
+        "original_grounded_true_positives": 0,
+        "original_grounded_precision": 0.0,
+        "original_grounded_recall": 0.0,
+        "original_grounded_f1": 0.0,
+        "db_ready_yield": 16,
+        "statuses": {
+          "gs_005": "completed",
+          "gs_071": "completed",
+          "gs_075": "completed",
+          "gs_076": "completed",
+          "gs_083": "completed"
+        },
+        "per_entry_hits": {
+          "gs_005": {
+            "matched": 2,
+            "total": 3,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "9a091775-51b2-4eeb-adfe-3a6c0df29847"
+          },
+          "gs_071": {
+            "matched": 4,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "7353def9-226d-462d-a357-8b6209775b12"
+          },
+          "gs_075": {
+            "matched": 6,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "7c1f8e62-dd27-4893-80b6-f12ff82c8deb"
+          },
+          "gs_076": {
+            "matched": 1,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "92c183b9-68fb-4106-b658-863f3bb284bc"
+          },
+          "gs_083": {
+            "matched": 3,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "e87f7e47-9251-4069-b36b-32e7e54b79b2"
+          }
+        }
+      },
+      "delta_vs_c2_hard": {
+        "value_precision": -0.1375,
+        "value_recall": 0.0926,
+        "value_f1": 0.0287,
+        "grounded_f1": -0.0108,
+        "db_ready_yield": 1
+      },
+      "delta_vs_c0": {
+        "value_precision": -0.1048,
+        "value_recall": -0.0626,
+        "value_f1": -0.0791,
+        "grounded_f1": -0.1033,
+        "db_ready_yield": -3
+      }
+    },
+    "a4_original_only": {
+      "report": "benchmark/data/reports/n50/a4_original_only_20260630_092335.json",
+      "comparable": true,
+      "metrics": {
+        "entries": 5,
+        "failed_entries": 0,
+        "true_positives": 15,
+        "false_positives": 4,
+        "false_negatives": 12,
+        "value_precision": 0.7895,
+        "value_recall": 0.5556,
+        "value_f1": 0.6522,
+        "grounded_true_positives": 15,
+        "grounded_precision": 0.7895,
+        "grounded_recall": 0.4839,
+        "grounded_f1": 0.6,
+        "original_grounded_true_positives": 0,
+        "original_grounded_precision": 0.0,
+        "original_grounded_recall": 0.0,
+        "original_grounded_f1": 0.0,
+        "db_ready_yield": 15,
+        "statuses": {
+          "gs_005": "completed",
+          "gs_071": "completed",
+          "gs_075": "completed",
+          "gs_076": "completed",
+          "gs_083": "completed"
+        },
+        "per_entry_hits": {
+          "gs_005": {
+            "matched": 2,
+            "total": 3,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "58217f8a-bd13-4b45-8850-284b5c50ae3b"
+          },
+          "gs_071": {
+            "matched": 5,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "c8a37387-585e-49a2-a32b-24acbc56e74a"
+          },
+          "gs_075": {
+            "matched": 3,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "3e872fea-c4ca-40c7-b3c6-754456660430"
+          },
+          "gs_076": {
+            "matched": 1,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "0dab90ef-ed4d-4e44-96bd-1105d583b073"
+          },
+          "gs_083": {
+            "matched": 4,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "bf3ef2d1-67eb-4245-8d16-1291831760d9"
+          }
+        }
+      },
+      "delta_vs_c2_hard": {
+        "value_precision": -0.148,
+        "value_recall": 0.0556,
+        "value_f1": 0.0,
+        "grounded_f1": -0.0383,
+        "db_ready_yield": 0
+      },
+      "delta_vs_c0": {
+        "value_precision": -0.1153,
+        "value_recall": -0.0996,
+        "value_f1": -0.1078,
+        "grounded_f1": -0.1308,
+        "db_ready_yield": -4
+      }
+    },
+    "c2_tristate_review": {
+      "report": "benchmark/data/reports/eval_unified_20260630_161334.json",
+      "comparable": true,
+      "metrics": {
+        "entries": 5,
+        "failed_entries": 0,
+        "true_positives": 15,
+        "false_positives": 1,
+        "false_negatives": 15,
+        "value_precision": 0.9375,
+        "value_recall": 0.5,
+        "value_f1": 0.6522,
+        "grounded_true_positives": 15,
+        "grounded_precision": 0.9375,
+        "grounded_recall": 0.4839,
+        "grounded_f1": 0.6383,
+        "original_grounded_true_positives": 0,
+        "original_grounded_precision": 0.0,
+        "original_grounded_recall": 0.0,
+        "original_grounded_f1": 0.0,
+        "db_ready_yield": 15,
+        "statuses": {
+          "gs_005": "completed",
+          "gs_071": "completed",
+          "gs_075": "completed",
+          "gs_076": "completed",
+          "gs_083": "completed"
+        },
+        "per_entry_hits": {
+          "gs_005": {
+            "matched": 2,
+            "total": 3,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "d7b1374f-dac5-491d-9d9c-de741283e577"
+          },
+          "gs_071": {
+            "matched": 3,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "5ad86f29-adfc-4e2e-994c-6ed73b3d7baa"
+          },
+          "gs_075": {
+            "matched": 6,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "6ef88c1b-613d-46e3-b57a-1675f3fb9fc5"
+          },
+          "gs_076": {
+            "matched": 1,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "283810db-6182-4291-9d22-54d39e445615"
+          },
+          "gs_083": {
+            "matched": 3,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "939c48db-fdc8-4706-ae86-7f12cd26cf22"
+          }
+        }
+      },
+      "delta_vs_c2_hard": {
+        "value_precision": 0.0,
+        "value_recall": 0.0,
+        "value_f1": 0.0,
+        "grounded_f1": 0.0,
+        "db_ready_yield": 0
+      },
+      "delta_vs_c0": {
+        "value_precision": 0.0327,
+        "value_recall": -0.1552,
+        "value_f1": -0.1078,
+        "grounded_f1": -0.0925,
+        "db_ready_yield": -4
+      }
+    },
+    "c2_english_pivot_hard": {
+      "report": "benchmark/data/reports/eval_unified_20260630_162916.json",
+      "comparable": true,
+      "metrics": {
+        "entries": 5,
+        "failed_entries": 3,
+        "true_positives": 4,
+        "false_positives": 1,
+        "false_negatives": 26,
+        "value_precision": 0.8,
+        "value_recall": 0.1333,
+        "value_f1": 0.2286,
+        "grounded_true_positives": 4,
+        "grounded_precision": 0.8,
+        "grounded_recall": 0.129,
+        "grounded_f1": 0.2222,
+        "original_grounded_true_positives": 0,
+        "original_grounded_precision": 0.0,
+        "original_grounded_recall": 0.0,
+        "original_grounded_f1": 0.0,
+        "db_ready_yield": 4,
+        "statuses": {
+          "gs_005": "completed",
+          "gs_071": "completed",
+          "gs_075": "failed",
+          "gs_076": "failed",
+          "gs_083": "failed"
+        },
+        "per_entry_hits": {
+          "gs_005": {
+            "matched": 2,
+            "total": 3,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "2bedb1eb-b0ad-4d64-ac2f-9efef9489770"
+          },
+          "gs_071": {
+            "matched": 2,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "18d6a2de-a39d-4829-bbcf-40b35c1d52b9"
+          },
+          "gs_075": {
+            "matched": 0,
+            "total": 8,
+            "status": "failed",
+            "error_message": "Phase 2 permanent file error: [Errno 2] No such file or directory: '/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline/6e0e548d-b149-4bd2-8dc9-297f353138cf/phase_2/extraction_result.json'",
+            "run_id": "6e0e548d-b149-4bd2-8dc9-297f353138cf"
+          },
+          "gs_076": {
+            "matched": 0,
+            "total": 8,
+            "status": "failed",
+            "error_message": "Phase 2 permanent file error: [Errno 2] No such file or directory: '/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline/66c7360d-f560-4ee4-aea5-6c286bf8b170/phase_2/extraction_result.json'",
+            "run_id": "66c7360d-f560-4ee4-aea5-6c286bf8b170"
+          },
+          "gs_083": {
+            "matched": 0,
+            "total": 6,
+            "status": "failed",
+            "error_message": "Phase 2 permanent file error: [Errno 2] No such file or directory: '/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline/7cfbc135-2259-4299-a096-c8f0023f478e/phase_2/extraction_result.json'",
+            "run_id": "7cfbc135-2259-4299-a096-c8f0023f478e"
+          }
+        }
+      },
+      "delta_vs_c2_hard": {
+        "value_precision": -0.1375,
+        "value_recall": -0.3667,
+        "value_f1": -0.4236,
+        "grounded_f1": -0.4161,
+        "db_ready_yield": -11
+      },
+      "delta_vs_c0": {
+        "value_precision": -0.1048,
+        "value_recall": -0.5219,
+        "value_f1": -0.5314,
+        "grounded_f1": -0.5086,
+        "db_ready_yield": -15
+      }
+    },
+    "c2_english_pivot_tristate": {
+      "report": "merged(eval_unified_20260630_155152.json + eval_unified_20260630_155503.json)",
+      "merge_sources": [
+        "gs_005:eval_unified_20260630_155152.json",
+        "gs_071:eval_unified_20260630_155152.json",
+        "gs_075:eval_unified_20260630_155152.json",
+        "gs_076:eval_unified_20260630_155152.json",
+        "gs_083:eval_unified_20260630_155503.json"
+      ],
+      "comparable": true,
+      "metrics": {
+        "entries": 5,
+        "failed_entries": 0,
+        "true_positives": 15,
+        "false_positives": 1,
+        "false_negatives": 15,
+        "value_precision": 0.9375,
+        "value_recall": 0.5,
+        "value_f1": 0.6522,
+        "grounded_true_positives": 15,
+        "grounded_precision": 0.9375,
+        "grounded_recall": 0.4839,
+        "grounded_f1": 0.6383,
+        "original_grounded_true_positives": 10,
+        "original_grounded_precision": 0.9091,
+        "original_grounded_recall": 0.3226,
+        "original_grounded_f1": 0.4762,
+        "db_ready_yield": 10,
+        "statuses": {
+          "gs_005": "completed",
+          "gs_071": "completed",
+          "gs_075": "completed",
+          "gs_076": "completed",
+          "gs_083": "completed"
+        },
+        "per_entry_hits": {
+          "gs_005": {
+            "matched": 2,
+            "total": 3,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "5db18241-af32-42f0-8a85-4756acaee999"
+          },
+          "gs_071": {
+            "matched": 4,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "8dd341e1-723b-4911-a294-959b85c4e109"
+          },
+          "gs_075": {
+            "matched": 3,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "a101ad19-51fb-404e-9423-658f6417e404"
+          },
+          "gs_076": {
+            "matched": 1,
+            "total": 8,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "e0df38bc-e4a6-49d0-bf0d-3348ff493060"
+          },
+          "gs_083": {
+            "matched": 5,
+            "total": 6,
+            "status": "completed",
+            "error_message": null,
+            "run_id": "d3898b62-c98a-4cdd-a34e-5993e97e7693"
+          }
+        }
+      },
+      "delta_vs_c2_hard": {
+        "value_precision": 0.0,
+        "value_recall": 0.0,
+        "value_f1": 0.0,
+        "grounded_f1": 0.0,
+        "db_ready_yield": -5
+      },
+      "delta_vs_c0": {
+        "value_precision": 0.0327,
+        "value_recall": -0.1552,
+        "value_f1": -0.1078,
+        "grounded_f1": -0.0925,
+        "db_ready_yield": -9
+      }
+    }
+  },
+  "excluded_nonmatched_reports": {
+    "c0_prompt_only_n5_20260630_130327": {
+      "report": "benchmark/data/reports/n50/c0_prompt_only_20260630_130327.json",
+      "sample_ids": [
+        "gs_003",
+        "gs_015",
+        "gs_048",
+        "gs_115",
+        "gs_147"
+      ],
+      "reason": "sample set differs from matched random N=5 or report predates identity traceback fix"
+    },
+    "c2_soft_veto_n5_20260630_131800": {
+      "report": "benchmark/data/reports/soft_veto_n5_smoke_20260630_131800.json",
+      "sample_ids": [
+        "gs_002",
+        "gs_003",
+        "gs_004",
+        "gs_005",
+        "gs_007"
+      ],
+      "reason": "sample set differs from matched random N=5 or report predates identity traceback fix"
+    },
+    "hard_veto_disable_review_guard_n5_20260630_132847": {
+      "report": "benchmark/data/reports/eval_unified_20260630_132847.json",
+      "sample_ids": [
+        "gs_003",
+        "gs_015",
+        "gs_048",
+        "gs_115",
+        "gs_147"
+      ],
+      "reason": "sample set differs from matched random N=5 or report predates identity traceback fix"
+    },
+    "english_pivot_tristate_prefix_20260630_150431": {
+      "report": "benchmark/data/reports/eval_unified_20260630_150431.json",
+      "sample_ids": [
+        "gs_005",
+        "gs_071",
+        "gs_075",
+        "gs_076",
+        "gs_083"
+      ],
+      "reason": "sample set differs from matched random N=5 or report predates identity traceback fix"
+    }
+  },
+  "notes": [
+    "Metrics are recomputed from per-entry field_matches using benchmark/core/aggregate.py semantics.",
+    "c2_english_pivot_tristate replaces the failed gs_083 entry from eval_unified_20260630_155152.json with successful retry eval_unified_20260630_155503.json.",
+    "c2_english_pivot_hard is comparable but unstable: 3/5 entries failed with missing phase_2/extraction_result.json."
+  ]
+}
