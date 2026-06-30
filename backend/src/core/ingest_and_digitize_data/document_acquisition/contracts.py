@@ -1,7 +1,6 @@
 """Data types for document acquisition module."""
 
 from __future__ import annotations
-
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional
@@ -15,7 +14,6 @@ class AcquisitionSource(str, Enum):
 
     LOCAL = "local"
     ONLINE = "online"
-
 
 @dataclass(frozen=True)
 class DocumentDownloadEntry:
@@ -55,7 +53,6 @@ class DocumentAcquisitionRequest:
     max_retries: int = 3
     timeout: int = 60
     proxy: Optional[str] = None
-    email: str = "[redacted-email]"
     # LLM relevance gate controls (forwarded to online_acquisition workflow)
     relevance_gate: bool = True
     literature_types: Optional[List[str]] = None

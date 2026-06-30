@@ -150,6 +150,20 @@ def _category_from_field_id(field_id: str) -> str | None:
     return field_id.split(".", 1)[0]
 
 
+def _extract_summary_field(
+    field_id: str, value: str | None, target: dict[str, str | None],
+) -> None:
+    """Extract gene/variant/disease/classification into target dict if not already set."""
+    if field_id in _GENE_FIELDS and not target.get("gene"):
+        target["gene"] = _coerce_str(value)
+    elif field_id in _VARIANT_FIELDS and not target.get("variant"):
+        target["variant"] = _coerce_str(value)
+    elif field_id in _DISEASE_FIELDS and not target.get("disease"):
+        target["disease"] = _coerce_str(value)
+    elif field_id in _CLASSIFICATION_FIELDS and not target.get("classification"):
+        target["classification"] = _coerce_str(value)
+
+
 def _parse_source_offset(raw: object, *, default: int, name: str) -> tuple[int, bool]:
     """Parse a stored source offset, with default + validity flag for fallback.
 
@@ -734,17 +748,10 @@ class SearchService:
                 }
 
             g = groups[gid]
+
             field_id = row.field_id
             value = payload.get("value")
-
-            if field_id in _GENE_FIELDS and not g["gene"]:
-                g["gene"] = _coerce_str(value)
-            elif field_id in _VARIANT_FIELDS and not g["variant"]:
-                g["variant"] = _coerce_str(value)
-            elif field_id in _DISEASE_FIELDS and not g["disease"]:
-                g["disease"] = _coerce_str(value)
-            elif field_id in _CLASSIFICATION_FIELDS and not g["classification"]:
-                g["classification"] = _coerce_str(value)
+            _extract_summary_field(field_id, value, g)
 
         # Fallback: parse gene/variant from group_id
         for g in groups.values():

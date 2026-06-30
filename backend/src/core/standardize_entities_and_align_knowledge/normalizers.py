@@ -31,11 +31,15 @@ _CROSS_LINGUAL_DISEASE_MAP: dict[str, str] = {
 }
 
 
+def collapse_spaces(value: str) -> str:
+    """Collapse consecutive whitespace to single space and strip."""
+    return _SPACE_RE.sub(" ", value.strip())
+
+
 def normalize_lookup_text(value: str) -> str:
     """Normalize lookup text with stable Unicode folding and spacing."""
     text = unicodedata.normalize("NFKC", value or "")
-    text = _SPACE_RE.sub(" ", text.strip())
-    return text.casefold()
+    return collapse_spaces(text).casefold()
 
 
 def normalize_gene_symbol(value: str) -> str:

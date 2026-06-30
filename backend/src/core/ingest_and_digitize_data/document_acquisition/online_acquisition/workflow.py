@@ -32,13 +32,12 @@ from .gateway import (
     search_provider,
 )
 from .literature_type_classifier import classify_item
-from .normalizers import normalize_items
+from .normalizers import DOI_PATTERN, normalize_items
 from .query_translator import TARGET_LANGUAGES, translate_query
 from .relevance_gate import run_relevance_gate
 from .search_service import build_provider_plan, dedupe_candidates, rank_candidates, search_parallel
 from .web_search import SearchLink
 
-DOI_PATTERN = re.compile(r"\b10\.\d{4,9}/[^\s\"<>]+", re.IGNORECASE)
 PMCID_PATTERN = re.compile(r"\bPMC\d+\b", re.IGNORECASE)
 PMID_PATTERN = re.compile(r"PMID[:\s]*([0-9]{5,9})", re.IGNORECASE)
 
@@ -401,6 +400,39 @@ async def _download_candidates(
     return downloads
 
 
+def _apply_type_filter(
+    normalized_items: List[OnlineAcquisitionItem],
+    candidates: List[Dict[str, Any]],
+    literature_types: Optional[List[str]],
+) -> tuple[List[OnlineAcquisitionItem], List[Dict[str, Any]]]:
+    """Filter items and candidates by literature type. Returns (items, candidates)."""
+    if not literature_types:
+        return normalized_items, candidates
+    typed_items = []
+    for ni in normalized_items:
+        lt = classify_item(ni)
+        ni.literature_type = lt.value if lt else None
+        if lt and lt.value in literature_types:
+            typed_items.append(ni)
+    allowed_dois = {
+        (ni.doi or "").strip().lower()
+        for ni in typed_items if ni.doi
+    }
+    allowed_titles = {
+        (ni.title or "").strip().lower()[:80]
+        for ni in typed_items if ni.title
+    }
+    if allowed_dois or allowed_titles:
+        filtered = []
+        for c in candidates:
+            c_doi = (c.get("doi") or "").strip().lower()
+            c_title = (c.get("title") or "").strip().lower()[:80]
+            if (c_doi and c_doi in allowed_dois) or (c_title and c_title in allowed_titles):
+                filtered.append(c)
+        if filtered:
+            candidates = filtered
+    return typed_items, candidates
+
 # ── Main Entry Point ────────────────────────────────────────────────────
 
 
@@ -589,35 +621,9 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
             except Exception:
                 pass
 
-    # Apply literature type filter
-    if request.literature_types:
-        typed_items = []
-        for ni in normalized_items:
-            lt = classify_item(ni)
-            ni.literature_type = lt.value if lt else None
-            if lt and lt.value in request.literature_types:
-                typed_items.append(ni)
-        normalized_items = typed_items
-
-        # Also filter download candidates to match the type filter,
-        # so we don't download PDFs that wouldn't pass the type check.
-        allowed_dois = {
-            (ni.doi or "").strip().lower()
-            for ni in normalized_items if ni.doi
-        }
-        allowed_titles = {
-            (ni.title or "").strip().lower()[:80]
-            for ni in normalized_items if ni.title
-        }
-        if allowed_dois or allowed_titles:
-            filtered_candidates = []
-            for c in candidates:
-                c_doi = (c.get("doi") or "").strip().lower()
-                c_title = (c.get("title") or "").strip().lower()[:80]
-                if (c_doi and c_doi in allowed_dois) or (c_title and c_title in allowed_titles):
-                    filtered_candidates.append(c)
-            if filtered_candidates:
-                candidates = filtered_candidates
+    normalized_items, candidates = _apply_type_filter(
+        normalized_items, candidates, list(request.literature_types) if request.literature_types else None,
+    )
 
     clean_candidates = [{k: v for k, v in c.items() if not k.startswith("_")} for c in candidates]
 
@@ -877,34 +883,9 @@ async def multilingual_acquisition_workflow(
             except Exception:
                 pass
 
-    # Apply literature type filter
-    if request.literature_types:
-        typed_items = []
-        for ni in normalized_items:
-            lt = classify_item(ni)
-            ni.literature_type = lt.value if lt else None
-            if lt and lt.value in request.literature_types:
-                typed_items.append(ni)
-        normalized_items = typed_items
-
-        # Also filter download candidates to match the type filter
-        allowed_dois = {
-            (ni.doi or "").strip().lower()
-            for ni in normalized_items if ni.doi
-        }
-        allowed_titles = {
-            (ni.title or "").strip().lower()[:80]
-            for ni in normalized_items if ni.title
-        }
-        if allowed_dois or allowed_titles:
-            filtered_candidates = []
-            for c in all_candidates:
-                c_doi = (c.get("doi") or "").strip().lower()
-                c_title = (c.get("title") or "").strip().lower()[:80]
-                if (c_doi and c_doi in allowed_dois) or (c_title and c_title in allowed_titles):
-                    filtered_candidates.append(c)
-            if filtered_candidates:
-                all_candidates = filtered_candidates
+    normalized_items, all_candidates = _apply_type_filter(
+        normalized_items, all_candidates, list(request.literature_types) if request.literature_types else None,
+    )
 
     clean_candidates = [{k: v for k, v in c.items() if not k.startswith("_")} for c in all_candidates]
 

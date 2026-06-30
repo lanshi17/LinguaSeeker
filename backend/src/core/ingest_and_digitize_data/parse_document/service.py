@@ -4,11 +4,11 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from src.utils.rust_io import files_io
 from loguru import logger
 
-from .base import ParserStrategy
 from .contracts import (
     DedupResult,
     MinerULocalBatchParseResult,
@@ -18,18 +18,21 @@ from .contracts import (
     SavedFiles,
 )
 
+if TYPE_CHECKING:
+    from .orchestrator import DocumentParseOrchestrator
+
 
 class ParseDocumentService:
     """High-level facade for document parsing operations."""
 
-    def __init__(self, orchestrator: ParserStrategy):
+    def __init__(self, orchestrator: DocumentParseOrchestrator):
         self._orchestrator = orchestrator
 
     async def parse(self, pdf_path: str) -> ParseResult:
         """Parse a PDF file and return structured results.
 
         Args:
-            pdf_path: URL to the PDF file (S3/MinIO or public URL).
+            pdf_path: Path to the PDF file (local path or URL).
 
         Returns:
             ParseResult with metadata, pages, and full markdown.
@@ -50,105 +53,92 @@ class ParseDocumentService:
         **kwargs: object,
     ) -> MinerULocalBatchSaveResult:
         """Parse local files as a MinerU batch and save each completed result."""
-        parse_result = await self.parse_local_files(file_paths, **kwargs)
-        root = Path(output_dir)
-        saved: dict[str, SavedFiles] = {}
-        for file_name, result in parse_result.results.items():
-            file_output_dir = root / Path(file_name).stem
-            saved[file_name] = await self.save(result, str(file_output_dir))
+        batch = await self.parse_local_files(file_paths, **kwargs)
+        saved = {}
+        for name, result in batch.results.items():
+            saved[name] = await self.save(result, output_dir)
         return MinerULocalBatchSaveResult(
-            batch_id=parse_result.batch_id,
-            parse_result=parse_result,
+            batch_id=batch.batch_id,
             saved_files=saved,
         )
 
     async def save(self, result: ParseResult, output_dir: str) -> SavedFiles:
         """Save parsed result to files.
 
+        Writes markdown, metadata JSON, and decodes images to the output directory.
+
         Args:
-            result: ParseResult to save.
-            output_dir: Directory to save output files.
+            result: ParseResult from a previous parse() call.
+            output_dir: Directory to write output files.
 
         Returns:
-            SavedFiles with paths to saved files.
+            SavedFiles with paths to written files.
         """
-        output_path = Path(output_dir)
-        output_path.mkdir(parents=True, exist_ok=True)
+        out = Path(output_dir)
+        out.mkdir(parents=True, exist_ok=True)
 
-        md_path = output_path / "output.md"
-        if files_io is not None:
-            try:
-                files_io.File(str(md_path)).write(result.full_markdown)
-            except OSError:
-                raise
-            except (RuntimeError, SystemError) as e:
-                # Normalize PyO3 native exceptions to OSError for consistency
-                raise OSError(f"Failed to write {md_path}: {e}") from e
-        else:
-            logger.warning("files_io not available, using stdlib fallback for markdown write")
-            md_path.write_text(result.full_markdown, encoding="utf-8")
-        logger.info(f"Saved markdown to {md_path}")
+        md_path = out / "content.md"
+        md_path.write_text(result.full_markdown, encoding="utf-8")
 
-        meta_path = output_path / "metadata.json"
-        combined_meta = result.metadata.model_dump()
-        combined_meta["pages"] = [p.model_dump() for p in result.pages]
-        combined_meta["content_blocks"] = result.content_blocks
-        meta_json = json.dumps(combined_meta, indent=2)
-        if files_io is not None:
-            try:
-                files_io.File(str(meta_path)).write(meta_json)
-            except OSError:
-                raise
-            except (RuntimeError, SystemError) as e:
-                # Normalize PyO3 native exceptions to OSError for consistency
-                raise OSError(f"Failed to write {meta_path}: {e}") from e
-        else:
-            logger.warning("files_io not available, using stdlib fallback for metadata write")
-            meta_path.write_text(meta_json, encoding="utf-8")
-        logger.info(f"Saved metadata to {meta_path}")
+        meta = {
+            "parser_used": result.parser_used,
+            "page_count": len(result.pages),
+            "metadata": {
+                "title": result.metadata.title,
+                "authors": result.metadata.authors,
+                "doi": result.metadata.doi,
+                "abstract_text": result.metadata.abstract_text,
+            },
+            "saved_at": datetime.now(timezone.utc).isoformat(),
+        }
+        meta_path = out / "metadata.json"
+        meta_path.write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
 
         images_dir: Path | None = None
         if result.images:
-            images_dir = output_path / "images"
+            images_dir = out / "images"
             images_dir.mkdir(parents=True, exist_ok=True)
-            for rel_path, img_bytes in result.images.items():
-                img_file = images_dir / Path(rel_path).name
-                img_file.write_bytes(img_bytes)
-            logger.info(f"Saved {len(result.images)} images to {images_dir}")
+            for name, data in result.images.items():
+                try:
+                    if isinstance(data, str):
+                        import base64
+                        data = base64.b64decode(data.split(",", 1)[-1])
+                    img_path = images_dir / name
+                    img_path.write_bytes(data)
+                except Exception as exc:
+                    logger.warning(f"Failed to decode image {name}: {exc}")
 
         return SavedFiles(
-            md_path=md_path,
-            metadata_path=meta_path,
-            output_dir=output_path,
-            created_at=datetime.now(timezone.utc),
+            markdown_path=str(md_path),
+            metadata_path=str(meta_path),
             images_dir=images_dir,
         )
 
     async def dedup(
         self,
         file_paths: list[str],
-        known_hashes: list[str],
     ) -> list[DedupResult]:
         """Check if files are duplicates based on content hash.
 
         Args:
             file_paths: List of file paths to check.
-            known_hashes: List of known content hashes.
 
         Returns:
-            List of DedupResult for each file.
+            List of DedupResult with hash and duplicate status.
         """
-        if files_io is None:
-            raise RuntimeError("files_io extension is required for deduplication but is not installed")
-
-        results = []
-        for file_path in file_paths:
-            raw = files_io.check_duplicate(file_path, known_hashes)
-            results.append(DedupResult(
-                file_path=file_path,
-                hash=raw.get("hash", ""),
-                is_duplicate=raw.get("is_duplicate", False),
-            ))
+        seen_hashes: dict[str, int] = {}
+        results: list[DedupResult] = []
+        for fp in file_paths:
+            try:
+                sha = files_io.sha256_file(fp)
+                is_dup = sha in seen_hashes
+                if not is_dup:
+                    seen_hashes[sha] = 0
+                seen_hashes[sha] += 1
+                results.append(DedupResult(file_path=fp, sha256=sha, is_duplicate=is_dup))
+            except Exception as exc:
+                logger.warning(f"Dedup hash failed for {fp}: {exc}")
+                results.append(DedupResult(file_path=fp, sha256="", is_duplicate=False))
         return results
 
     async def parse_and_save(

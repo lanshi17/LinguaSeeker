@@ -42,17 +42,11 @@ load_backend_config_into_env(BACKEND_ROOT)
 # ── Nested domain models ────────────────────────────────────────────────
 
 
-class LLMConfig(BaseModel):
-    """Generic LLM (OpenAI-compatible)."""
+class _BaseProviderConfig(BaseModel):
+    """Shared fields and key-resolution for all provider configs."""
 
     api_key: str = ""
     api_keys: list[str] = Field(default_factory=list)
-    base_url: str = ""
-    model: str = ""
-    max_tokens: int = 8192
-    timeout: int = 60
-    temperature: float | None = None
-    max_retries: int = 0
 
     @property
     def all_api_keys(self) -> list[str]:
@@ -67,11 +61,20 @@ class LLMConfig(BaseModel):
         return keys
 
 
-class ReasoningConfig(BaseModel):
+class LLMConfig(_BaseProviderConfig):
+    """Generic LLM (OpenAI-compatible)."""
+
+    base_url: str = ""
+    model: str = ""
+    max_tokens: int = 8192
+    timeout: int = 60
+    temperature: float | None = None
+    max_retries: int = 0
+
+
+class ReasoningConfig(_BaseProviderConfig):
     """Expert reasoning agent (stronger reasoning model)."""
 
-    api_key: str = ""
-    api_keys: list[str] = Field(default_factory=list)
     model: str = ""
     reasoning_effort: str = "high"
     base_url: str = ""
@@ -80,24 +83,10 @@ class ReasoningConfig(BaseModel):
     temperature: float | None = None
     max_retries: int = 0
 
-    @property
-    def all_api_keys(self) -> list[str]:
-        """Return all available API keys (deduplicated, preserving order)."""
-        seen: set[str] = set()
-        keys: list[str] = []
-        for k in [*self.api_keys, self.api_key]:
-            k = k.strip()
-            if k and k not in seen:
-                seen.add(k)
-                keys.append(k)
-        return keys
 
-
-class ChatLLMConfig(BaseModel):
+class ChatLLMConfig(_BaseProviderConfig):
     """Dedicated chat interaction LLM (lightweight, conversational)."""
 
-    api_key: str = ""
-    api_keys: list[str] = Field(default_factory=list)
     base_url: str = ""
     model: str = ""
     max_tokens: int = 4096
@@ -105,24 +94,10 @@ class ChatLLMConfig(BaseModel):
     temperature: float | None = 0.7
     max_retries: int = 0
 
-    @property
-    def all_api_keys(self) -> list[str]:
-        """Return all available API keys (deduplicated, preserving order)."""
-        seen: set[str] = set()
-        keys: list[str] = []
-        for k in [*self.api_keys, self.api_key]:
-            k = k.strip()
-            if k and k not in seen:
-                seen.add(k)
-                keys.append(k)
-        return keys
 
-
-class TranslationLLMConfig(BaseModel):
+class TranslationLLMConfig(_BaseProviderConfig):
     """Dedicated translation model (cross-lingual translation)."""
 
-    api_key: str = ""
-    api_keys: list[str] = Field(default_factory=list)
     base_url: str = ""
     model: str = "tencent/Hunyuan-MT-7B"
     max_tokens: int = 8192
@@ -130,20 +105,8 @@ class TranslationLLMConfig(BaseModel):
     temperature: float | None = 0.0
     max_retries: int = 0
 
-    @property
-    def all_api_keys(self) -> list[str]:
-        """Return all available API keys (deduplicated, preserving order)."""
-        seen: set[str] = set()
-        keys: list[str] = []
-        for k in [*self.api_keys, self.api_key]:
-            k = k.strip()
-            if k and k not in seen:
-                seen.add(k)
-                keys.append(k)
-        return keys
 
-
-class EmbeddingConfig(BaseModel):
+class EmbeddingConfig(_BaseProviderConfig):
     """Embedding model with optional remote fallback.
 
     api_style: "openai" (OpenAI-compatible /v1/embeddings) or
@@ -151,8 +114,6 @@ class EmbeddingConfig(BaseModel):
     """
 
     base_url: str = ""
-    api_key: str = ""
-    api_keys: list[str] = Field(default_factory=list)
     model: str = "BAAI/bge-m3"
     dimension: int = 1024
     batch_size: int = 10
@@ -161,18 +122,6 @@ class EmbeddingConfig(BaseModel):
     remote_api_key: str = ""
     remote_api_keys: list[str] = Field(default_factory=list)
     remote_model: str = ""
-
-    @property
-    def all_api_keys(self) -> list[str]:
-        """Return all available API keys (deduplicated, preserving order)."""
-        seen: set[str] = set()
-        keys: list[str] = []
-        for k in [*self.api_keys, self.api_key]:
-            k = k.strip()
-            if k and k not in seen:
-                seen.add(k)
-                keys.append(k)
-        return keys
 
     @property
     def remote_all_api_keys(self) -> list[str]:
@@ -188,7 +137,7 @@ class EmbeddingConfig(BaseModel):
 
 
 
-class RerankConfig(BaseModel):
+class RerankConfig(_BaseProviderConfig):
     """Rerank model with optional remote fallback.
 
     api_style: "openai" (OpenAI-compatible /v1/rerank) or
@@ -196,8 +145,6 @@ class RerankConfig(BaseModel):
     """
 
     base_url: str = ""
-    api_key: str = ""
-    api_keys: list[str] = Field(default_factory=list)
     model: str = "BAAI/bge-reranker-v2-m3"
     top_k: int = 10
     score_threshold: float = 0.7
@@ -206,18 +153,6 @@ class RerankConfig(BaseModel):
     remote_api_key: str = ""
     remote_api_keys: list[str] = Field(default_factory=list)
     remote_model: str = ""
-
-    @property
-    def all_api_keys(self) -> list[str]:
-        """Return all available API keys (deduplicated, preserving order)."""
-        seen: set[str] = set()
-        keys: list[str] = []
-        for k in [*self.api_keys, self.api_key]:
-            k = k.strip()
-            if k and k not in seen:
-                seen.add(k)
-                keys.append(k)
-        return keys
 
     @property
     def remote_all_api_keys(self) -> list[str]:
@@ -460,10 +395,10 @@ class Settings(BaseSettings):
 
     # ── Web Search flat fields (WEB_SEARCH_*) ───────────────────────────
 
-    WEB_SEARCH_API_KEY: str = ""
-    WEB_SEARCH_BASE_URL: str = "https://api.firecrawl.dev"
-    WEB_SEARCH_TIMEOUT: int = 30
-    WEB_SEARCH_MAX_RESULTS: int = 10
+    web_search_api_key: str = ""
+    web_search_base_url: str = "https://api.firecrawl.dev"
+    web_search_timeout: int = 30
+    web_search_max_results: int = 10
 
 
     # ── Network / proxy flat fields (NETWORK_*) ─────────────────────────
@@ -595,10 +530,10 @@ class Settings(BaseSettings):
             max_overflow=self.postgres_max_overflow,
         )
         self.web_search = WebSearchConfig(
-            api_key=self.WEB_SEARCH_API_KEY,
-            base_url=self.WEB_SEARCH_BASE_URL,
-            timeout=self.WEB_SEARCH_TIMEOUT,
-            max_results=self.WEB_SEARCH_MAX_RESULTS,
+            api_key=self.web_search_api_key,
+            base_url=self.web_search_base_url,
+            timeout=self.web_search_timeout,
+            max_results=self.web_search_max_results,
         )
         self.network = NetworkConfig(
             proxy=self.network_proxy,
