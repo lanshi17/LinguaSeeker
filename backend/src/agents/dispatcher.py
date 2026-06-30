@@ -16,12 +16,7 @@ from loguru import logger
 
 from src.agents.contracts import (
     PipelineGraphState,
-    PipelineMode,
     PipelineStatus,
-    SourceType,
-)
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
-    ExtractionTarget,
 )
 from src.dao.postgresql.job_queue import JobQueueRepository
 
@@ -100,35 +95,10 @@ class SingleJobDispatcher:
             job.processing_run_id,
         )
         rd = job.request_data
+        rd["processing_run_id"] = job.processing_run_id
+        rd["source_document_id"] = job.source_document_id
         try:
-            initial_state = PipelineGraphState(
-                processing_run_id=job.processing_run_id,
-                source_document_id=job.source_document_id,
-                mode=PipelineMode(rd.get("mode", "full")),
-                source_type=SourceType(rd.get("source_type", "local")),
-                target_phase=rd.get("target_phase"),
-                source_key=rd.get("source_key"),
-                upload_file_path=rd.get("upload_file_path"),
-                pre_parsed_markdown=rd.get("pre_parsed_markdown"),
-                query=rd.get("query"),
-                identifiers=rd.get("identifiers"),
-                action=rd.get("action"),
-                relevance_gate=rd.get("relevance_gate", True),
-                literature_types=rd.get("literature_types"),
-                created_at=rd.get("created_at", ""),
-                extraction_target=(
-                    ExtractionTarget(**rd["extraction_target"])
-                    if rd.get("extraction_target")
-                    else None
-                ),
-                extraction_profile=rd.get("extraction_profile", "none"),
-                extraction_mode=rd.get("extraction_mode", "broad"),
-                ablation_disable_review=rd.get("ablation_disable_review", False),
-                ablation_disable_target_guard=rd.get("ablation_disable_target_guard", False),
-                ablation_original_only=rd.get("ablation_original_only", False),
-                review_reject_policy=rd.get("review_reject_policy", "hard_veto"),
-                extraction_track_mode=rd.get("extraction_track_mode", "dual"),
-            )
+            initial_state = PipelineGraphState.from_request_data(rd)
         except Exception as exc:
             logger.exception(
                 "Failed to build initial state for job_id={}", job.job_id

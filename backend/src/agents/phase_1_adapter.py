@@ -18,8 +18,8 @@ from src.agents.contracts import (
     PhaseStatusDetail,
     PipelineGraphState,
     PermanentPhaseError,
-    RetryablePhaseError,
     build_retryable_errors,
+    classify_phase_error,
 )
 from src.core.ingest_and_digitize_data.document_acquisition.contracts import (
     AcquisitionSource,
@@ -35,17 +35,6 @@ if TYPE_CHECKING:
     )
 
 _RETRYABLE_ERRORS = build_retryable_errors()
-# FileNotFoundError/PermissionError are OSError subclasses but are permanent,
-# not transient — must not be retried.
-_PERMANENT_OS_ERRORS = (FileNotFoundError, PermissionError, IsADirectoryError)
-
-# Permanent errors that should NOT be retried
-try:
-    from src.core.ingest_and_digitize_data.parse_document.exceptions import (
-        ParserExhaustedError,
-    )
-except ImportError:
-    ParserExhaustedError = None  # type: ignore[assignment,misc]
 
 
 class Phase1Adapter:
@@ -176,46 +165,15 @@ class Phase1Adapter:
                 images_dir=str(first_file.images_dir) if first_file.images_dir else None,
             )
 
-            state.phase_1_status = PhaseStatusDetail(
-                status=PhaseStatus.COMPLETED,
+            state.phase_1_status = PhaseStatusDetail.complete(
                 started_at=state.phase_1_status.started_at,
-                completed_at=datetime.now().isoformat(),
-                duration_seconds=(
-                    datetime.now() - datetime.fromisoformat(state.phase_1_status.started_at)
-                ).total_seconds()
-                if state.phase_1_status.started_at
-                else None,
             )
 
             logger.info("Phase 1 completed: run={}", state.processing_run_id)
             return state
 
-        except _PERMANENT_OS_ERRORS as e:
-            raise PermanentPhaseError(
-                f"Phase 1 permanent file error: {e}",
-                phase=1,
-            ) from e
-
-        except _RETRYABLE_ERRORS as e:
-            raise RetryablePhaseError(
-                f"Phase 1 transient error: {e}",
-                phase=1,
-            ) from e
-
-        except (PermanentPhaseError, RetryablePhaseError):
-            raise  # Already classified, pass through
-
         except Exception as e:
-            # Default to permanent for unknown errors
-            if ParserExhaustedError and isinstance(e, ParserExhaustedError):
-                raise PermanentPhaseError(
-                    f"All parsers failed: {e}",
-                    phase=1,
-                ) from e
-            raise PermanentPhaseError(
-                f"Phase 1 unexpected error: {e}",
-                phase=1,
-            ) from e
+            classify_phase_error(1, e, _RETRYABLE_ERRORS)
 
     async def _build_from_pre_parsed(
         self, state: PipelineGraphState,
@@ -270,15 +228,8 @@ class Phase1Adapter:
             images_dir=None,
         )
 
-        state.phase_1_status = PhaseStatusDetail(
-            status=PhaseStatus.COMPLETED,
+        state.phase_1_status = PhaseStatusDetail.complete(
             started_at=state.phase_1_status.started_at,
-            completed_at=datetime.now().isoformat(),
-            duration_seconds=(
-                datetime.now() - datetime.fromisoformat(state.phase_1_status.started_at)
-            ).total_seconds()
-            if state.phase_1_status.started_at
-            else None,
             summary={"source": "pre_parsed_markdown"},
         )
 

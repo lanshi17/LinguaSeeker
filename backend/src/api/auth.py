@@ -77,6 +77,28 @@ def _validate_session(token: str, secret: str) -> bool:
     return exp > int(time.time())
 
 
+def sign_session_token(secret: str, duration_sec: int = SESSION_DURATION_SEC) -> str:
+    """Create an HMAC-SHA256 signed session token.
+
+    Args:
+        secret: The signing key.
+        duration_sec: Token lifetime in seconds.
+
+    Returns:
+        A token string in ``payload.signature`` format.
+    """
+    expires_at = int(time.time()) + duration_sec
+    payload = _b64url_encode(json.dumps({"exp": expires_at}).encode("utf-8"))
+    signature = _b64url_encode(
+        hmac.new(
+            secret.encode("utf-8"),
+            payload.encode("utf-8"),
+            hashlib.sha256,
+        ).digest()
+    )
+    return f"{payload}.{signature}"
+
+
 async def require_api_key(
     request: Request,
     api_key: str | None = Security(_api_key_header),

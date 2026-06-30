@@ -53,6 +53,29 @@ class PipelineRunner:
         while len(self._last_states) > self._MAX_CACHED_STATES:
             self._last_states.popitem(last=False)
 
+    def _start_heartbeat(self, run_id: str) -> asyncio.Task | None:
+        """Start the heartbeat background task for a pipeline run."""
+        try:
+            async def _heartbeat_loop():
+                consecutive_failures = 0
+                while True:
+                    await asyncio.sleep(self._heartbeat_interval)
+                    try:
+                        await self._persistence.heartbeat(run_id, self._worker_id)
+                        consecutive_failures = 0
+                    except Exception:
+                        consecutive_failures += 1
+                        logger.warning(
+                            "Heartbeat failed for run={} (consecutive failures: {})",
+                            run_id,
+                            consecutive_failures,
+                        )
+            return asyncio.create_task(_heartbeat_loop())
+        except Exception:
+            logger.warning("Heartbeat task creation failed for run={}", run_id)
+            return None
+
+
     async def start(self, initial_state: PipelineGraphState) -> asyncio.Task:
         """Start a pipeline run as a background task.
 
@@ -84,27 +107,7 @@ class PipelineRunner:
             self.remember_state(run_id, initial_state)
 
         async def _run_pipeline():
-            # Heartbeat loop: refresh ownership while pipeline is active
-            heartbeat_task: asyncio.Task | None = None
-            try:
-                async def _heartbeat_loop():
-                    consecutive_failures = 0
-                    while True:
-                        await asyncio.sleep(self._heartbeat_interval)
-                        try:
-                            await self._persistence.heartbeat(run_id, self._worker_id)
-                            consecutive_failures = 0
-                        except Exception:
-                            consecutive_failures += 1
-                            logger.warning(
-                                "Heartbeat failed for run={} (consecutive failures: {})",
-                                run_id,
-                                consecutive_failures,
-                            )
-
-                heartbeat_task = asyncio.create_task(_heartbeat_loop())
-            except Exception:
-                logger.warning("Heartbeat task creation failed for run={}", run_id)
+            heartbeat_task = self._start_heartbeat(run_id)
 
             logger.info("Pipeline execution started: run={}", run_id)
             try:

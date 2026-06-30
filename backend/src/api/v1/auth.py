@@ -1,16 +1,11 @@
 """Session-cookie auth endpoints for the Vite SPA frontend.
 
-Ports the Next.js auth API routes (``/api/auth/login``, ``/api/auth/logout``)
-and middleware ``isValidSession`` guard into FastAPI so the Vite SPA can
-authenticate via an HMAC-signed HttpOnly cookie instead of handling the
-API key in the browser.
+Provides /login (set signed cookie), /logout (clear cookie), and
+/me (check current session) for SPA authentication flow.
 """
 from __future__ import annotations
 
-import hashlib
 import hmac
-import json
-import time
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel
@@ -18,9 +13,9 @@ from pydantic import BaseModel
 from src.api.auth import (
     SESSION_COOKIE,
     SESSION_DURATION_SEC,
-    _b64url_encode,
     _get_signing_key,
     _validate_session,
+    sign_session_token,
 )
 from src.core.config import get_config
 
@@ -72,24 +67,13 @@ async def login(body: LoginRequest, response: Response) -> LoginResponse:
 
     if not secret:
         raise HTTPException(status_code=500, detail="Authentication not configured")
-
     if not body.password:
         raise HTTPException(status_code=400, detail="Password is required")
-
     if not hmac.compare_digest(body.password, secret):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     signing_key = _get_signing_key()
-    expires_at = int(time.time()) + SESSION_DURATION_SEC
-    payload = _b64url_encode(json.dumps({"exp": expires_at}).encode("utf-8"))
-    signature = _b64url_encode(
-        hmac.new(
-            signing_key.encode("utf-8"),
-            payload.encode("utf-8"),
-            hashlib.sha256,
-        ).digest()
-    )
-    token = f"{payload}.{signature}"
+    token = sign_session_token(signing_key)
 
     response.set_cookie(
         key=SESSION_COOKIE,

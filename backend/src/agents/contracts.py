@@ -1,6 +1,9 @@
 """Contracts for pipeline orchestrator state, types, and error hierarchy."""
 from __future__ import annotations
 
+import functools
+from datetime import datetime
+
 from enum import Enum
 from typing import Any
 
@@ -242,6 +245,7 @@ def validate_all_phase_transitions(
             )
 
 
+@functools.lru_cache(maxsize=1)
 def build_retryable_errors() -> tuple[type, ...]:
     """Build the shared tuple of retryable error types.
 
@@ -275,6 +279,38 @@ def build_retryable_errors() -> tuple[type, ...]:
 
     return errors
 
+
+# Shared across all phase adapters: permanent OS errors that must NOT be retried.
+PERMANENT_OS_ERRORS: tuple[type, ...] = (FileNotFoundError, PermissionError, IsADirectoryError)
+
+
+def classify_phase_error(
+    phase_num: int, error: Exception, retryable_errors: tuple[type, ...],
+) -> None:
+    """Classify and re-raise an error as RetryablePhaseError or PermanentPhaseError.
+
+    Call this in a phase adapter's ``except Exception`` block to convert
+    unclassified errors into the correct PhaseError subclass.  Already-
+    classified PhaseErrors pass through unchanged.
+
+    Raises:
+        RetryablePhaseError: If *error* matches a retryable type.
+        PermanentPhaseError: If *error* is a permanent OS error or unknown.
+        PhaseError: If *error* is already a RetryablePhaseError or PermanentPhaseError.
+    """
+    if isinstance(error, (PermanentPhaseError, RetryablePhaseError)):
+        raise error
+    if isinstance(error, PERMANENT_OS_ERRORS):
+        raise PermanentPhaseError(
+            f"Phase {phase_num} permanent file error: {error}", phase=phase_num,
+        ) from error
+    if isinstance(error, retryable_errors):
+        raise RetryablePhaseError(
+            f"Phase {phase_num} transient error: {error}", phase=phase_num,
+        ) from error
+    raise PermanentPhaseError(
+        f"Phase {phase_num} unexpected error: {error}", phase=phase_num,
+    ) from error
 
 # ── Phase output models (typed, not bare dict) ─────────────────────────────
 
@@ -333,6 +369,25 @@ class PhaseStatusDetail(BaseModel):
     duration_seconds: float | None = None
     error: PhaseErrorDetail | None = None
     summary: dict[str, Any] | None = None
+
+    @classmethod
+    def complete(
+        cls, started_at: str | None, summary: dict[str, Any] | None = None,
+    ) -> PhaseStatusDetail:
+        """Build a COMPLETED status detail, computing duration from started_at."""
+        now = datetime.now().isoformat()
+        duration = (
+            (datetime.now() - datetime.fromisoformat(started_at)).total_seconds()
+            if started_at
+            else None
+        )
+        return cls(
+            status=PhaseStatus.COMPLETED,
+            started_at=started_at,
+            completed_at=now,
+            duration_seconds=duration,
+            summary=summary,
+        )
 
 
 # ── Pipeline graph state (orchestration metadata only) ───────────────────────
@@ -427,3 +482,38 @@ class PipelineGraphState(BaseModel):
     ablation_original_only: bool = False
     review_reject_policy: str = "hard_veto"
     extraction_track_mode: str = "dual"
+
+    @classmethod
+    def from_request_data(cls, rd: dict[str, Any]) -> PipelineGraphState:
+        """Build initial state from a dispatcher job's request_data dict.
+
+        Centralizes the field mapping so callers don't repeat 20+ lines.
+        """
+        return cls(
+            processing_run_id=rd["processing_run_id"],
+            source_document_id=rd["source_document_id"],
+            mode=PipelineMode(rd.get("mode", "full")),
+            source_type=SourceType(rd.get("source_type", "local")),
+            target_phase=rd.get("target_phase"),
+            source_key=rd.get("source_key"),
+            upload_file_path=rd.get("upload_file_path"),
+            pre_parsed_markdown=rd.get("pre_parsed_markdown"),
+            query=rd.get("query"),
+            identifiers=rd.get("identifiers"),
+            action=rd.get("action"),
+            relevance_gate=rd.get("relevance_gate", True),
+            literature_types=rd.get("literature_types"),
+            created_at=rd.get("created_at", ""),
+            extraction_target=(
+                ExtractionTarget(**rd["extraction_target"])
+                if rd.get("extraction_target")
+                else None
+            ),
+            extraction_profile=rd.get("extraction_profile", "none"),
+            extraction_mode=rd.get("extraction_mode", "broad"),
+            ablation_disable_review=rd.get("ablation_disable_review", False),
+            ablation_disable_target_guard=rd.get("ablation_disable_target_guard", False),
+            ablation_original_only=rd.get("ablation_original_only", False),
+            review_reject_policy=rd.get("review_reject_policy", "hard_veto"),
+            extraction_track_mode=rd.get("extraction_track_mode", "dual"),
+        )

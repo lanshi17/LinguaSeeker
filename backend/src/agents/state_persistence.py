@@ -6,6 +6,7 @@ Two implementations:
 """
 from __future__ import annotations
 
+import asyncio
 import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -64,14 +65,16 @@ def _derive_error_phase(state: PipelineGraphState) -> int:
     return 0
 
 
-def _build_raw_metadata(state: PipelineGraphState) -> dict[str, object]:
+async def _build_raw_metadata(state: PipelineGraphState) -> dict[str, object]:
     """Extract title/authors from Phase 1 metadata.json for SourceDocument.raw_metadata."""
     meta: dict[str, object] = {}
     if not state.phase_1_output or not state.phase_1_output.metadata_path:
         return meta
     try:
-        with open(state.phase_1_output.metadata_path, encoding="utf-8") as f:
-            phase1_meta = json.load(f)
+        def _read() -> dict:
+            with open(state.phase_1_output.metadata_path, encoding="utf-8") as f:
+                return json.load(f)
+        phase1_meta = await asyncio.to_thread(_read)
         if isinstance(phase1_meta, dict):
             title = phase1_meta.get("title")
             if title and isinstance(title, str):
@@ -85,13 +88,13 @@ def _build_raw_metadata(state: PipelineGraphState) -> dict[str, object]:
     except (OSError, json.JSONDecodeError):
         pass
     return meta
-
-
-def _read_doc_json(path: str) -> str | None:
+async def _read_doc_json(path: str) -> str | None:
     """Read a Phase 2 JSON file and return concatenated document text."""
     try:
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
+        def _read() -> dict:
+            with open(path, encoding="utf-8") as f:
+                return json.load(f)
+        data = await asyncio.to_thread(_read)
     except (OSError, json.JSONDecodeError):
         return None
     if not isinstance(data, dict):
@@ -99,7 +102,7 @@ def _read_doc_json(path: str) -> str | None:
     return concat_document_text(data)
 
 
-def load_phase2_text_from_paths(
+async def load_phase2_text_from_paths(
     original_json_path: str,
     translated_json_path: str,
 ) -> tuple[str | None, str | None]:
@@ -108,10 +111,10 @@ def load_phase2_text_from_paths(
     Use this variant when you have the paths directly (e.g. in Phase 2 adapter
     right after files are written and guaranteed to exist).
     """
-    return _read_doc_json(original_json_path), _read_doc_json(translated_json_path)
+    return await _read_doc_json(original_json_path), await _read_doc_json(translated_json_path)
 
 
-def _load_phase2_document_text(state: PipelineGraphState) -> tuple[str | None, str | None]:
+async def _load_phase2_document_text(state: PipelineGraphState) -> tuple[str | None, str | None]:
     """Read Phase 2 JSON files from state and return (original_text, translated_text).
 
     Returns (None, None) when Phase 2 output is missing or files are unreadable.
@@ -119,7 +122,7 @@ def _load_phase2_document_text(state: PipelineGraphState) -> tuple[str | None, s
     p2 = state.phase_2_output
     if p2 is None:
         return None, None
-    return load_phase2_text_from_paths(p2.original_json_path, p2.translated_json_path)
+    return await load_phase2_text_from_paths(p2.original_json_path, p2.translated_json_path)
 
 
 def _is_phase2_rerun(state: PipelineGraphState) -> bool:
@@ -129,6 +132,42 @@ def _is_phase2_rerun(state: PipelineGraphState) -> bool:
         and state.target_phase is not None
         and state.target_phase <= 2
     )
+
+
+async def _persist_phase2_document_text(
+    session: AsyncSession,
+    state: PipelineGraphState,
+    sd_id: UUID,
+) -> None:
+    """Write Phase 2 document text and structured blocks to SourceDocument.
+
+    Shared by both DirectStatePersistence and SessionBoundStatePersistence.
+    Only writes when Phase 2 is COMPLETED and the DB doesn't already have text.
+    """
+    if not (state.phase_2_output and state.phase_2_status.status == PhaseStatus.COMPLETED):
+        return
+    sd = await session.get(SourceDocument, sd_id)
+    if sd is None:
+        return
+    replace_existing = _is_phase2_rerun(state)
+    needs_original = replace_existing or not sd.original_text
+    needs_translated = replace_existing or not sd.translated_text
+    if needs_original or needs_translated:
+        p2 = state.phase_2_output
+        original_text = p2.original_text
+        translated_text = p2.translated_text
+        if original_text is None and translated_text is None:
+            original_text, translated_text = await _load_phase2_document_text(state)
+        if needs_original and original_text:
+            sd.original_text = original_text
+        if needs_translated and translated_text:
+            sd.translated_text = translated_text
+    # Persist structured blocks for document rendering
+    p2 = state.phase_2_output
+    if p2.original_blocks and (replace_existing or not sd.original_blocks):
+        sd.original_blocks = p2.original_blocks
+    if p2.translated_blocks and (replace_existing or not sd.translated_blocks):
+        sd.translated_blocks = p2.translated_blocks
 
 
 def _state_json_without_inline_phase2_data(state: PipelineGraphState) -> dict[str, object]:  # noqa: dict-return
@@ -269,43 +308,16 @@ class DirectStatePersistence:
         sd_id = UUID(state.source_document_id)
         existing_sd = await self._session.get(SourceDocument, sd_id)
         if not existing_sd:
-            raw_meta = _build_raw_metadata(state)
+            raw_meta = await _build_raw_metadata(state)
             self._session.add(SourceDocument(source_document_id=sd_id, raw_metadata=raw_meta))
             await self._session.flush()
         elif state.phase_1_output:
             # Update metadata if Phase 1 just completed
-            new_meta = _build_raw_metadata(state)
+            new_meta = await _build_raw_metadata(state)
             if new_meta.get("title"):
                 existing_sd.raw_metadata = {**existing_sd.raw_metadata, **new_meta}
 
-        # Write Phase 2 document text (original + translated) to DB.
-        # Prefer pre-loaded text from Phase2Output (set by adapter while files
-        # exist). Fall back to reading from disk for backward compat with old
-        # state objects that don't carry the text inline.
-        # Only load if the DB doesn't already have the text.
-        if state.phase_2_output and state.phase_2_status.status == PhaseStatus.COMPLETED:
-            sd = await self._session.get(SourceDocument, sd_id)
-            if sd is not None:
-                replace_existing = _is_phase2_rerun(state)
-                needs_original = replace_existing or not sd.original_text
-                needs_translated = replace_existing or not sd.translated_text
-                if needs_original or needs_translated:
-                    p2 = state.phase_2_output
-                    original_text = p2.original_text
-                    translated_text = p2.translated_text
-                    if original_text is None and translated_text is None:
-                        original_text, translated_text = _load_phase2_document_text(state)
-                    if needs_original and original_text:
-                        sd.original_text = original_text
-                    if needs_translated and translated_text:
-                        sd.translated_text = translated_text
-
-                # Persist structured blocks for document rendering
-                p2 = state.phase_2_output
-                if p2.original_blocks and (replace_existing or not sd.original_blocks):
-                    sd.original_blocks = p2.original_blocks
-                if p2.translated_blocks and (replace_existing or not sd.translated_blocks):
-                    sd.translated_blocks = p2.translated_blocks
+        await _persist_phase2_document_text(self._session, state, sd_id)
 
         existing = await self._session.get(
             PipelineRunState, UUID(state.processing_run_id)
@@ -416,49 +428,24 @@ class SessionBoundStatePersistence:
         heartbeat_at: datetime | None = None,
     ) -> None:
         async with self._session_factory() as session:
-            # Ensure source_document exists (FK requirement for pipeline_run_states)
+            # Ensure source_document exists (FK requirement for pipeline_run_states).
+            # Use ON CONFLICT DO_UPDATE to merge metadata in a single round-trip
+            # instead of upsert-nothing + conditional get + update (#7 fix).
             sd_id = UUID(state.source_document_id)
-            raw_meta = _build_raw_metadata(state)
+            raw_meta = await _build_raw_metadata(state)
             sd_upsert = (
                 pg_insert(SourceDocument)
                 .values(source_document_id=sd_id, raw_metadata=raw_meta)
-                .on_conflict_do_nothing(index_elements=["source_document_id"])
+                .on_conflict_do_update(
+                    index_elements=["source_document_id"],
+                    set_={
+                        "raw_metadata": SourceDocument.raw_metadata.op("||")(raw_meta),
+                    },
+                )
             )
             await session.execute(sd_upsert)
-            # Update metadata if Phase 1 just completed. The upsert above only
-            # sets raw_metadata on first insert; existing rows need an update.
-            if state.phase_1_output and raw_meta.get("title"):
-                existing_sd = await session.get(SourceDocument, sd_id)
-                if existing_sd is not None and existing_sd.raw_metadata.get("title") != raw_meta["title"]:
-                    existing_sd.raw_metadata = {**existing_sd.raw_metadata, **raw_meta}
 
-            # Write Phase 2 document text (original + translated) to DB.
-            # Prefer pre-loaded text from Phase2Output (set by adapter while
-            # files exist). Fall back to reading from disk for backward compat.
-            # Only load if the DB doesn't already have the text.
-            if state.phase_2_output and state.phase_2_status.status == PhaseStatus.COMPLETED:
-                sd = await session.get(SourceDocument, sd_id)
-                if sd is not None:
-                    replace_existing = _is_phase2_rerun(state)
-                    needs_original = replace_existing or not sd.original_text
-                    needs_translated = replace_existing or not sd.translated_text
-                    if needs_original or needs_translated:
-                        p2 = state.phase_2_output
-                        original_text = p2.original_text
-                        translated_text = p2.translated_text
-                        if original_text is None and translated_text is None:
-                            original_text, translated_text = _load_phase2_document_text(state)
-                        if needs_original and original_text:
-                            sd.original_text = original_text
-                        if needs_translated and translated_text:
-                            sd.translated_text = translated_text
-
-                    # Persist structured blocks for document rendering
-                    p2 = state.phase_2_output
-                    if p2.original_blocks and (replace_existing or not sd.original_blocks):
-                        sd.original_blocks = p2.original_blocks
-                    if p2.translated_blocks and (replace_existing or not sd.translated_blocks):
-                        sd.translated_blocks = p2.translated_blocks
+            await _persist_phase2_document_text(session, state, sd_id)
 
             # ── State transition guard ──
             # Load existing state (if any) to validate the transition is legal.

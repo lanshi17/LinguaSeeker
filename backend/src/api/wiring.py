@@ -1,35 +1,41 @@
 """Application dependency wiring — single source of truth for engine & session factory."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from redis.asyncio import Redis as AsyncRedis
 
 from src.core.config import get_config
-from src.dao.postgresql.connection import async_session_factory, build_async_engine
 from src.dao.postgresql.job_queue import JobQueueRepository
 from src.dao.redis.connection import build_redis_client
+
+if TYPE_CHECKING:
+    from src.agents.dispatcher import SingleJobDispatcher
+    from src.core.ingest_and_digitize_data.parse_document.local.parser import (
+        MinerULocalParser,
+    )
 
 _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
 _redis_client: AsyncRedis | None = None
-_dispatcher = None
+_local_parser: MinerULocalParser | None = None
+_dispatcher: SingleJobDispatcher | None = None
 
 
 def get_session_factory() -> async_sessionmaker[AsyncSession]:
-    """Lazy-init and return the singleton session factory."""
-    global _engine, _session_factory
+    """Return the singleton session factory (set by wire_dependencies)."""
     if _session_factory is None:
-        _engine = build_async_engine(get_config())
-        _session_factory = async_session_factory(_engine)
+        raise RuntimeError("Session factory not initialized — call wire_dependencies() first")
     return _session_factory
 
 
 def get_engine() -> AsyncEngine | None:
     """Return the singleton engine (or None if not yet initialized).
 
-    Used by health checks to verify DB connectivity without creating
-    a second engine.
+    Prefer ``get_session_factory()`` for normal DB access; this accessor
+    exists for health-check and shutdown paths that need the raw engine.
     """
     return _engine
 
@@ -52,11 +58,16 @@ async def dispose_redis() -> None:
     """Teardown the Redis client (called from lifespan shutdown)."""
     global _redis_client
     if _redis_client is not None:
-        await _redis_client.aclose()
+        await _redis_client.close()
         _redis_client = None
 
 
-def get_dispatcher():
+def get_local_parser() -> MinerULocalParser | None:
+    """Return the singleton MinerU local parser (or None if not yet initialized)."""
+    return _local_parser
+
+
+def get_dispatcher() -> SingleJobDispatcher | None:
     """Return the singleton job dispatcher (or None if not yet initialized)."""
     return _dispatcher
 
@@ -77,7 +88,6 @@ def wire_dependencies() -> None:
     from src.agents.state_persistence import SessionBoundStatePersistence
     from src.api.deps import set_phase4_factory
     from src.api.v1.pipeline import set_pipeline_runner
-    from src.core.config import get_config
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
         EvidenceExtractionService,
     )
@@ -131,14 +141,15 @@ def wire_dependencies() -> None:
         poll_interval=pd_cfg.mineru_remote_poll_interval,
         max_poll_attempts=pd_cfg.mineru_remote_max_poll_attempts,
     )
-    local_parser = MinerULocalParser(
+    global _local_parser
+    _local_parser = MinerULocalParser(
         parse_url=pd_cfg.mineru_local_parse_url,
         model_id=pd_cfg.mineru_local_model_id,
         timeout=pd_cfg.mineru_local_timeout,
         dpi=pd_cfg.mineru_local_dpi,
         api_key=cfg.inference_api_key,
     )
-    parse_orchestrator = DocumentParseOrchestrator(remote=remote_parser, local=local_parser)
+    parse_orchestrator = DocumentParseOrchestrator(remote=remote_parser, local=_local_parser)
     parse_service = ParseDocumentService(parse_orchestrator)
     translation_service = TranslationService(cfg=cfg)
     extraction_service = EvidenceExtractionService(
@@ -187,7 +198,7 @@ def wire_dependencies() -> None:
     from src.api.v1.pipeline import set_job_queue
 
     job_queue = JobQueueRepository(session_factory)
-    dispatcher = SingleJobDispatcher(
+    _dispatcher = SingleJobDispatcher(
         runner=runner,
         job_queue=job_queue,
         poll_interval=2.0,
@@ -198,7 +209,3 @@ def wire_dependencies() -> None:
     set_pipeline_runner(runner)
     set_phase4_factory(phase4_factory)
     set_job_queue(job_queue)
-
-    # Store dispatcher reference for lifespan start/stop
-    global _dispatcher
-    _dispatcher = dispatcher
