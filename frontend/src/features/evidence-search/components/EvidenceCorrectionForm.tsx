@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Save, X } from "lucide-react";
 import { App, Button, Select } from "antd";
 import { patchEvidence } from "../services/evidenceCorrection";
-import type { ReviewStatusValue } from "../types/evidenceSearch";
+import type { ReviewStatusValue } from "@/lib/types/evidence";
 import { useI18n } from "@/lib/i18n";
 
 interface EvidenceCorrectionFormProps {
@@ -122,12 +122,12 @@ export function EvidenceCorrectionForm({
       onSubmit={handleSubmit}
       style={{
         borderTop: "1px solid var(--color-primary-100)",
-        backgroundColor: "rgba(236, 254, 255, 0.3)",
+        backgroundColor: "var(--color-highlight)",
         padding: "16px 20px",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <h4 style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
+        <h4 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
           {t("evidence.correct.heading")}
         </h4>
         <button
@@ -136,18 +136,18 @@ export function EvidenceCorrectionForm({
           style={{
             borderRadius: 4,
             padding: 4,
-            color: "#9ca3af",
+            color: "var(--color-text-muted)",
             border: "none",
             background: "none",
             cursor: "pointer",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#f3f4f6";
-            e.currentTarget.style.color = "#4b5563";
+            e.currentTarget.style.backgroundColor = "var(--color-bg-muted)";
+            e.currentTarget.style.color = "var(--color-text-strong)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = "transparent";
-            e.currentTarget.style.color = "#9ca3af";
+            e.currentTarget.style.color = "var(--color-text-muted)";
           }}
         >
           <X style={{ width: 16, height: 16 }} />
@@ -156,7 +156,7 @@ export function EvidenceCorrectionForm({
 
       {cardField && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4b5563" }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--color-text-strong)" }}>
             {t("evidence.correct.value")} ({cardField})
           </label>
           <textarea
@@ -166,11 +166,11 @@ export function EvidenceCorrectionForm({
             style={{
               width: "100%",
               borderRadius: 8,
-              border: `1px solid ${valueChanged ? "#fcd34d" : "#e5e7eb"}`,
-              backgroundColor: valueChanged ? "#fffbeb" : "#fff",
+              border: `1px solid ${valueChanged ? "var(--color-highlight-amber-border)" : "var(--color-border)"}`,
+              backgroundColor: valueChanged ? "var(--color-highlight-amber)" : "var(--color-surface)",
               padding: "8px 12px",
               fontSize: 14,
-              color: "#111827",
+              color: "var(--color-text)",
               transition: "border-color 150ms, box-shadow 150ms",
               outline: "none",
               boxSizing: "border-box",
@@ -180,20 +180,20 @@ export function EvidenceCorrectionForm({
               e.currentTarget.style.boxShadow = "0 0 0 2px var(--color-primary-200)";
             }}
             onBlur={(e) => {
-              e.currentTarget.style.borderColor = valueChanged ? "#fcd34d" : "#e5e7eb";
+              e.currentTarget.style.borderColor = valueChanged ? "var(--color-highlight-amber-border)" : "var(--color-border)";
               e.currentTarget.style.boxShadow = "none";
             }}
             placeholder={t("evidence.correct.valuePh")}
           />
           {valueChanged && (
-            <p style={{ fontSize: 11, color: "#d97706", margin: 0 }}>{t("evidence.correct.valueChanged")}</p>
+            <p style={{ fontSize: 11, color: "var(--color-warning-text)", margin: 0 }}>{t("evidence.correct.valueChanged")}</p>
           )}
         </div>
       )}
 
       <div style={{ marginTop: 12, display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ display: "block", fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>
+          <label style={{ display: "block", fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>
             {t("evidence.correct.reviewStatus")}
           </label>
           <Select
@@ -206,7 +206,7 @@ export function EvidenceCorrectionForm({
           />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4b5563" }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--color-text-strong)" }}>
             {t("evidence.correct.reason")}
           </label>
           <input
@@ -217,11 +217,11 @@ export function EvidenceCorrectionForm({
             style={{
               width: "100%",
               borderRadius: 8,
-              border: "1px solid #e5e7eb",
-              backgroundColor: "#fff",
+              border: "1px solid var(--color-border)",
+              backgroundColor: "var(--color-surface)",
               padding: "8px 12px",
               fontSize: 14,
-              color: "#111827",
+              color: "var(--color-text)",
               transition: "border-color 150ms, box-shadow 150ms",
               outline: "none",
               boxSizing: "border-box",
@@ -231,7 +231,7 @@ export function EvidenceCorrectionForm({
               e.currentTarget.style.boxShadow = "0 0 0 2px var(--color-primary-200)";
             }}
             onBlur={(e) => {
-              e.currentTarget.style.borderColor = "#e5e7eb";
+              e.currentTarget.style.borderColor = "var(--color-border)";
               e.currentTarget.style.boxShadow = "none";
             }}
           />
@@ -249,8 +249,8 @@ export function EvidenceCorrectionForm({
           {t("evidence.correct.save")}
         </Button>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 6, borderLeft: "1px solid #e5e7eb", paddingLeft: 8 }}>
-          <span style={{ fontSize: 11, color: "#6b7280" }}>{t("evidence.correct.quick")}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, borderLeft: "1px solid var(--color-border)", paddingLeft: 8 }}>
+          <span style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>{t("evidence.correct.quick")}</span>
           {currentStatus !== "approved" && (
             <button
               type="button"
@@ -261,21 +261,21 @@ export function EvidenceCorrectionForm({
                 alignItems: "center",
                 gap: 4,
                 borderRadius: 6,
-                backgroundColor: "#ecfdf5",
+                backgroundColor: "var(--color-highlight-green)",
                 padding: "4px 10px",
                 fontSize: 11,
                 fontWeight: 500,
-                color: "#047857",
+                color: "var(--color-success-text)",
                 border: "none",
                 cursor: isSubmitting ? "not-allowed" : "pointer",
                 opacity: isSubmitting ? 0.5 : 1,
                 transition: "background-color 150ms",
               }}
               onMouseEnter={(e) => {
-                if (!isSubmitting) e.currentTarget.style.backgroundColor = "#d1fae5";
+                if (!isSubmitting) e.currentTarget.style.backgroundColor = "var(--color-success-100)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#ecfdf5";
+                e.currentTarget.style.backgroundColor = "var(--color-highlight-green)";
               }}
             >
               <CheckCircle2 style={{ width: 12, height: 12 }} />
@@ -292,21 +292,21 @@ export function EvidenceCorrectionForm({
                 alignItems: "center",
                 gap: 4,
                 borderRadius: 6,
-                backgroundColor: "#fef2f2",
+                backgroundColor: "var(--color-error-bg)",
                 padding: "4px 10px",
                 fontSize: 11,
                 fontWeight: 500,
-                color: "#b91c1c",
+                color: "var(--color-error-text)",
                 border: "none",
                 cursor: isSubmitting ? "not-allowed" : "pointer",
                 opacity: isSubmitting ? 0.5 : 1,
                 transition: "background-color 150ms",
               }}
               onMouseEnter={(e) => {
-                if (!isSubmitting) e.currentTarget.style.backgroundColor = "#fee2e2";
+                if (!isSubmitting) e.currentTarget.style.backgroundColor = "var(--color-error-bg)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#fef2f2";
+                e.currentTarget.style.backgroundColor = "var(--color-error-bg)";
               }}
             >
               <X style={{ width: 12, height: 12 }} />
@@ -316,7 +316,7 @@ export function EvidenceCorrectionForm({
         </div>
       </div>
 
-      <p style={{ marginTop: 8, fontSize: 10, color: "#9ca3af" }}>
+      <p style={{ marginTop: 8, fontSize: 10, color: "var(--color-text-muted)" }}>
         {t("evidence.correct.footer", { field: fieldId, status: currentStatus })}
       </p>
     </form>

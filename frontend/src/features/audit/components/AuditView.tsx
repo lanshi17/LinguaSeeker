@@ -1,15 +1,17 @@
-import { useMemo, useState } from "react";
-import { Button, Input, Segmented, Flex, Typography } from "antd";
+import { useMemo, useState, useCallback } from "react";
+import { Button, Input, Segmented, Flex, Typography, App } from "antd";
 import { Search, ClipboardCheck } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { MetricTile } from "@/components/ui/MetricTile";
 import { useI18n } from "@/lib/i18n";
 import { useAuditEvents } from "../hooks/useAuditEvents";
 import { AuditEventTable } from "./AuditEventTable";
 import { AuditEventDetailDrawer } from "./AuditEventDetailDrawer";
 import { EvidenceReviewDrawer } from "./EvidenceReviewDrawer";
-import type { ReviewAuditEventResponse } from "../types/audit";
+import { patchEvidence } from "@/features/evidence-search/services/evidenceCorrection";
+import type { ReviewAuditEventResponse, ReviewStatusValue } from "@/lib/types/evidence";
 
-type StatusFilter = "all" | "approved" | "corrected" | "rejected";
+type StatusFilter = "all" | "provisional" | "approved" | "corrected" | "rejected";
 
 export function AuditView() {
   const { t } = useI18n();
@@ -18,9 +20,22 @@ export function AuditView() {
   const [search, setSearch] = useState("");
   const [selectedEvent, setSelectedEvent] = useState<ReviewAuditEventResponse | null>(null);
   const [reviewDrawerOpen, setReviewDrawerOpen] = useState(false);
+  const { message } = App.useApp();
+  const queryClient = useQueryClient();
+
+  const handleQuickReview = useCallback(async (evidenceId: string, status: ReviewStatusValue) => {
+    try {
+      await patchEvidence(evidenceId, { fields: {}, new_status: status });
+      message.success(t("audit.quickReview.success", { status }));
+      void queryClient.invalidateQueries({ queryKey: ["audit"] });
+    } catch {
+      message.error(t("audit.quickReview.error"));
+    }
+  }, [message, queryClient, t]);
 
   const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
     { value: "all", label: t("audit.filter.all") },
+    { value: "provisional", label: t("audit.filter.provisional") },
     { value: "approved", label: t("audit.filter.approved") },
     { value: "corrected", label: t("audit.filter.corrected") },
     { value: "rejected", label: t("audit.filter.rejected") },
@@ -110,6 +125,7 @@ export function AuditView() {
         events={filtered}
         loading={isLoading}
         onRowClick={setSelectedEvent}
+        onQuickReview={handleQuickReview}
       />
 
       {/* Detail drawer */}

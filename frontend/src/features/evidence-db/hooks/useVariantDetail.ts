@@ -8,71 +8,10 @@ import {
   chooseVariantSearchRows,
   parseVariantSlug,
 } from "../utils/variantAggregation";
-import { computeLiteratureQuality, computeVariantQuality } from "../utils/fieldModel";
-import type { VariantDetailData, LiteratureReference, VariantIndexEntry } from "../types/variantDb";
-import type { EvidenceGroupDetailResponse, EvidenceGroupItem } from "@/features/evidence-search/types/evidenceSearch";
-
-/** Extract category letter from field_id */
-function categoryFromFieldId(fieldId: string): string | null {
-  if (!fieldId) return null;
-  const letter = fieldId.split(".")[0];
-  return "ABCDEFGHIJ".includes(letter) ? letter : null;
-}
-
-function buildBilingualMap(
-  items: EvidenceGroupItem[],
-): Map<string, { original?: EvidenceGroupItem; translated?: EvidenceGroupItem }> {
-  const map = new Map<string, { original?: EvidenceGroupItem; translated?: EvidenceGroupItem }>();
-  for (const item of items) {
-    if (item.track !== "original" && item.track !== "translated") continue;
-    let entry = map.get(item.canonical_evidence_id);
-    if (!entry) {
-      entry = {};
-      map.set(item.canonical_evidence_id, entry);
-    }
-    if (item.track === "original") entry.original = item;
-    else entry.translated = item;
-  }
-  return map;
-}
-
-function buildLiteratureReferences(
-  groups: EvidenceGroupDetailResponse[],
-): LiteratureReference[] {
-  // Deduplicate by source_document_id — the same paper should appear only
-  // once even when multiple (group_id, source_document_id) pairs exist.
-  const seenDocs = new Set<string>();
-  const deduped: EvidenceGroupDetailResponse[] = [];
-  for (const g of groups) {
-    if (!seenDocs.has(g.source_document_id)) {
-      seenDocs.add(g.source_document_id);
-      deduped.push(g);
-    }
-  }
-
-  return deduped.map((g) => {
-    const categories = new Set<string>();
-    const quality = computeLiteratureQuality(g);
-    for (const item of g.items) {
-      const cat = item.category ?? categoryFromFieldId(item.field_id);
-      if (cat) categories.add(cat);
-    }
-
-    return {
-      sourceDocumentId: g.source_document_id,
-      title: g.title ?? "Untitled",
-      pmid: g.pmid ?? undefined,
-      doi: g.doi ?? undefined,
-      groupId: g.group_id,
-      fieldCount: g.item_count,
-      avgConfidence: g.avg_confidence ?? 0,
-      reviewStatus: "provisional",
-      categories: [...categories].sort(),
-      bilingualItems: buildBilingualMap(g.items),
-      ...quality,
-    };
-  });
-}
+import { computeVariantQuality } from "../utils/fieldModel";
+import { buildLiteratureReferences, buildBilingualMap } from "../utils/variantDetailHelpers";
+import type { VariantDetailData, VariantIndexEntry } from "../types/variantDb";
+import type { EvidenceGroupDetailResponse } from "@/features/evidence-search/types/evidenceSearch";
 
 export function useVariantDetail(variantSlug: string, seededEntry?: VariantIndexEntry) {
   const variantFilters = useMemo(() => parseVariantSlug(variantSlug), [variantSlug]);

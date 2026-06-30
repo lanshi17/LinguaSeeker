@@ -11,7 +11,7 @@ export function VariantDetailSkeleton() {
         <Skeleton variant="line" style={{ width: 160, height: 16 }} />
 
         {/* Variant Hero */}
-        <section className="edb-hero" style={{ borderRadius: 16, border: "1px solid #e5e7eb", padding: 24 }}>
+        <section className="edb-hero" style={{ borderRadius: 16, border: "1px solid var(--color-border)", padding: 24 }}>
           <div className="vds-hero-inner">
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -50,8 +50,8 @@ export function VariantDetailSkeleton() {
                   className="stagger-in"
                   style={{
                     borderRadius: 12,
-                    border: "1px solid #e5e7eb",
-                    backgroundColor: "#fff",
+                    border: "1px solid var(--color-border)",
+                    backgroundColor: "var(--color-surface)",
                     padding: 16,
                     animationDelay: `${i * 60}ms`,
                   }}
@@ -79,8 +79,8 @@ export function VariantDetailSkeleton() {
                   className="stagger-in"
                   style={{
                     borderRadius: 8,
-                    border: "1px solid #e5e7eb",
-                    backgroundColor: "#fff",
+                    border: "1px solid var(--color-border)",
+                    backgroundColor: "var(--color-surface)",
                     padding: 12,
                     animationDelay: `${(i + 3) * 60}ms`,
                   }}

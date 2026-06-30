@@ -25,13 +25,13 @@ export const roles = {
   assistant: {
     placement: "start" as const,
     avatar: (
-      <Avatar icon={<Bot style={{ fontSize: 18 }} />} style={{ backgroundColor: "var(--color-primary-600, #0891b2)" }} />
+      <Avatar icon={<Bot style={{ fontSize: 18 }} />} style={{ backgroundColor: "var(--color-primary-600, var(--color-primary-600))" }} />
     ),
   },
   user: {
     placement: "end" as const,
     avatar: (
-      <Avatar icon={<User style={{ fontSize: 18 }} />} style={{ backgroundColor: "var(--color-success-500, #22c55e)" }} />
+      <Avatar icon={<User style={{ fontSize: 18 }} />} style={{ backgroundColor: "var(--color-success-500, var(--color-success-500))" }} />
     ),
   },
 };

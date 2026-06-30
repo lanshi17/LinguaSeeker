@@ -1,0 +1,41 @@
+/* ── DashboardLayout ── */
+
+.dl-desktop-sidebar { display: none; }
+.dl-mobile-btn { display: flex; }
+.dl-desktop-btn { display: none; }
+.dl-header { padding: 0 16px; }
+.dl-main { padding: 16px; transition: padding 200ms; }
+@media (min-width: 768px) {
+  .dl-desktop-sidebar { display: block; }
+  .dl-mobile-btn { display: none; }
+  .dl-desktop-btn { display: flex; }
+  .dl-header { padding: 0 24px; }
+  .dl-main { padding: 24px; }
+}
+
+/* ── DashboardLayout: Print overrides ── */
+@media print {
+  /* Hide interactive/navigation chrome */
+  .dl-desktop-sidebar,
+  .dl-header,
+  .dl-mobile-sidebar-overlay {
+    display: none !important;
+  }
+
+  /* Reset layout containers that clip print content.
+     Inline height:100vh / overflow:hidden on DashboardLayout root and
+     inner wrapper would clip paginated content — override with !important. */
+  .dl-root,
+  .dl-body {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  /* Reset main content scroll/padding for natural page flow */
+  .dl-main {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+}

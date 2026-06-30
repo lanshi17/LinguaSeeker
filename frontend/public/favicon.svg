@@ -1,45 +1,6 @@
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 width="100%" viewBox="0 0 1254 1254" enable-background="new 0 0 1254 1254" xml:space="preserve">
-<style>
-  /* Dark mode overrides — CSS rules beat SVG presentation attributes */
-  @media (prefers-color-scheme: dark) {
-    /* Background fills */
-    [fill="#FEFEFE"], [fill="#FCFDFD"], [fill="#F6F9FA"],
-    [fill="#E8ECE4"], [fill="#F3F7F4"] {
-      fill: #161B22;
-    }
-    /* Dark teal → lighter teal */
-    [fill="#187075"] { fill: #3AA5AD; }
-    [fill="#0F7075"] { fill: #2D9095; }
-    [fill="#0C6D72"] { fill: #2A8A90; }
-    [fill="#0B686E"] { fill: #288489; }
-    [fill="#0A6A71"] { fill: #278086; }
-    [fill="#07686F"] { fill: #247D83; }
-    [fill="#06676E"] { fill: #227A80; }
-    [fill="#066369"] { fill: #20757B; }
-    [fill="#057979"] { fill: #1F9090; }
-    [fill="#057375"] { fill: #1D8889; }
-    [fill="#056D73"] { fill: #1B8085; }
-    [fill="#047074"] { fill: #1A8589; }
-    [fill="#046B70"] { fill: #187E83; }
-    [fill="#17756D"] { fill: #3A9D93; }
-    [fill="#307863"] { fill: #5A9E83; }
-    [fill="#6F8355"] { fill: #9AB57E; }
-    [fill="#407B5E"] { fill: #6AA588; }
-    /* Gold → lighter gold */
-    [fill="#D6A334"] { fill: #F0C04A; }
-    [fill="#D49B2B"] { fill: #EEBB42; }
-    [fill="#D4A83A"] { fill: #F0C550; }
-    [fill="#D39B29"] { fill: #EDBA40; }
-    [fill="#D39A28"] { fill: #ECB93F; }
-    [fill="#D29E30"] { fill: #EABC45; }
-    [fill="#E3AF3A"] { fill: #F5C552; }
-    [fill="#F3BD42"] { fill: #FFD55A; }
-    [fill="#F0BA3E"] { fill: #FFD256; }
-    [fill="#B2993C"] { fill: #D4B858; }
-    [fill="#BE9D3A"] { fill: #DEBB55; }
-  }
-</style>
+
 <path fill="#FEFEFE" opacity="1.000000" stroke="none" 
 	d="
 M665.000000,1255.000000 

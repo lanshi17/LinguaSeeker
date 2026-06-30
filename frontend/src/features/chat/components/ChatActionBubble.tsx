@@ -109,7 +109,7 @@ export function ChatActionBubble({
         {isLoading && !dispatched && (
           <Loader2
             className="spin"
-            style={{ marginLeft: "auto", width: 12, height: 12, color: "var(--color-primary-600, #0891b2)" }}
+            style={{ marginLeft: "auto", width: 12, height: 12, color: "var(--color-primary-600, var(--color-primary-600))" }}
             aria-hidden="true"
           />
         )}

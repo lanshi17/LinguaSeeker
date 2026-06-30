@@ -1,7 +1,8 @@
 import { useCallback } from "react";
 import { App } from "antd";
-import { apiClient } from "@/lib/api/client";
 import { extractErrorMessage } from "@/lib/api/error";
+import { getPipelineStatus, startPipelineRun } from "@/features/pipeline/services/pipeline";
+import type { PipelineRunRequest } from "@/features/pipeline/types/pipeline";
 import type { createAcmgChatProvider } from "../providers/acmgChatProvider";
 import type { PipelineSummarySlots } from "./forms";
 import type { PerSessionUIState } from "./chatConfig";
@@ -44,13 +45,7 @@ export function usePipelineActions({
 
       const poll = async () => {
         try {
-          const { data } = await apiClient.get<{
-            pipeline_status: string;
-            phases: Record<
-              string,
-              { status: string; duration_seconds?: number | null }
-            >;
-          }>(`/pipeline/runs/${runId}/status`);
+          const data = await getPipelineStatus(runId);
           consecutiveErrors = 0;
           setPipelineStatus({
             runId,
@@ -79,36 +74,26 @@ export function usePipelineActions({
     async (slots: PipelineSummarySlots) => {
       setActiveForm(null);
       try {
-        const body: Record<string, unknown> = {
-          source_type: slots.source_type ?? "online",
+        const body: PipelineRunRequest = {
+          source_type: (slots.source_type ?? "online") as "online" | "local",
           mode: "full",
+          ...(slots.source_type !== "local" && slots.query ? { query: slots.query } : {}),
+          ...(slots.source_type !== "local" && slots.identifiers
+            ? { identifiers: slots.identifiers.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean) }
+            : {}),
+          ...(slots.gene_symbol || slots.disease_name || slots.variant_hgvs_p
+            ? {
+                target: {
+                  gene_symbol: slots.gene_symbol || undefined,
+                  disease_name: slots.disease_name || undefined,
+                  variant_hgvs_p: slots.variant_hgvs_p || undefined,
+                },
+              }
+            : {}),
         };
-        if (slots.source_type !== "local") {
-          if (slots.query) body.query = slots.query;
-          if (slots.identifiers) {
-            body.identifiers = slots.identifiers
-              .split(/[,\s]+/)
-              .map((s) => s.trim())
-              .filter(Boolean);
-          }
-        }
-        if (
-          slots.gene_symbol ||
-          slots.disease_name ||
-          slots.variant_hgvs_p
-        ) {
-          body.target = {
-            gene_symbol: slots.gene_symbol || undefined,
-            disease_name: slots.disease_name || undefined,
-            variant_hgvs_p: slots.variant_hgvs_p || undefined,
-          };
-        }
-        const response = await apiClient.post<{
-          processing_run_id: string;
-          status: string;
-        }>("/pipeline/run", body);
-        const runId = response.data.processing_run_id;
-        setPipelineStatus({ runId, status: response.data.status });
+        const response = await startPipelineRun(body);
+        const runId = response.processing_run_id;
+        setPipelineStatus({ runId, status: response.status });
         if (activeProvider) {
           onRequest?.({
             messages: [
@@ -121,7 +106,6 @@ export function usePipelineActions({
         }
         pollPipelineStatus(runId);
       } catch (err: unknown) {
-        console.error("[Pipeline] start failed:", err);
         message.error(
           `Failed to start pipeline: ${extractErrorMessage(err)}`,
         );

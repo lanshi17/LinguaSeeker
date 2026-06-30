@@ -48,7 +48,7 @@ describe("ChatActionBubble", () => {
     render(
       <ChatActionBubble action={sampleAction} loading onDispatch={() => {}} />,
     );
-    expect(screen.getByText("Processing...")).toBeInTheDocument();
+    expect(screen.getByText("Processing\u2026")).toBeInTheDocument();
     const bubble = screen.getByTestId("chat-action-bubble");
     expect(bubble).toHaveAttribute("aria-disabled", "true");
     expect(bubble).toHaveAttribute("aria-busy", "true");

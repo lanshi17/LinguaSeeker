@@ -11,7 +11,7 @@
  * are absolutely positioned divs, so they never conflict with `<mark>` splits.
  */
 import { useEffect, useLayoutEffect, useState } from "react";
-import { Input, Button, Popover, Tooltip, message } from "antd";
+import { Input, Button, Popover, Tooltip, Dropdown, Tag, message } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import {
   ANNOTATION_COLORS,
@@ -101,6 +101,7 @@ interface SelectionInfo {
   start_offset: number;
   end_offset: number;
   rect: DOMRect;
+  selectedText: string;
 }
 
 function findPointForNode(
@@ -137,11 +138,11 @@ function selectionInContainer(container: HTMLElement): SelectionInfo | null {
   const startPt = findPointForNode(offsets, range.startContainer, range.startOffset);
   const endPt = findPointForNode(offsets, range.endContainer, range.endOffset);
   if (startPt == null || endPt == null || endPt <= startPt) return null;
-
   return {
     start_offset: startPt,
     end_offset: endPt,
     rect: range.getBoundingClientRect(),
+    selectedText: range.toString(),
   };
 }
 
@@ -166,6 +167,14 @@ export interface AnnotationLayerProps {
     payload: { color?: string | null; note?: string | null },
   ) => void;
   onDeleteAnnotation?: (id: string) => void;
+  /**
+   * When provided, the text-selection popup shows a "Assign to field" button
+   * alongside annotation colors. The callback receives the selected text and
+   * the target field type chosen by the user.
+   */
+  onAssignField?: (selectedText: string, fieldType: string) => void;
+  /** Available field types for the "Assign to field" dropdown. */
+  fieldTypes?: string[];
 }
 
 export function AnnotationLayer({
@@ -177,6 +186,8 @@ export function AnnotationLayer({
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
+  onAssignField,
+  fieldTypes = [],
 }: AnnotationLayerProps) {
   const [overlays, setOverlays] = useState<OverlayRect[]>([]);
   const [selection, setSelection] = useState<SelectionInfo | null>(null);
@@ -203,7 +214,7 @@ export function AnnotationLayer({
   }, [annotations, ...recomputeDeps]);
 
   useEffect(() => {
-    if (!onCreateAnnotation) return;
+    if (!onCreateAnnotation && !onAssignField) return;
     const el = containerRef.current;
     if (!el) return;
 
@@ -215,7 +226,7 @@ export function AnnotationLayer({
 
     document.addEventListener("mouseup", handleMouseUp);
     return () => document.removeEventListener("mouseup", handleMouseUp);
-  }, [containerRef, onCreateAnnotation]);
+  }, [containerRef, onCreateAnnotation, onAssignField]);
 
   const activeAnnotation = activeAnnotationId
     ? annotations.find((a) => a.id === activeAnnotationId) ?? null
@@ -264,23 +275,23 @@ export function AnnotationLayer({
         );
       })}
 
-      {selection && onCreateAnnotation && (
+      {selection && (onCreateAnnotation || onAssignField) && (
         <div
           style={{
             position: "fixed",
             top: Math.max(8, selection.rect.top - 48),
-            left: selection.rect.left + selection.rect.width / 2 - 90,
+            left: Math.max(8, selection.rect.left + selection.rect.width / 2 - (onCreateAnnotation && onAssignField ? 140 : 90)),
             zIndex: 1050,
             display: "flex",
             gap: 6,
             alignItems: "center",
             padding: "6px 8px",
-            background: "#fff",
+            background: "var(--color-surface)",
             borderRadius: 8,
             boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
           }}
         >
-          {ANNOTATION_COLORS.map((c) => (
+          {onCreateAnnotation && ANNOTATION_COLORS.map((c) => (
             <Tooltip key={c} title="创建标注">
               <button
                 type="button"
@@ -289,8 +300,8 @@ export function AnnotationLayer({
                   width: 22,
                   height: 22,
                   borderRadius: "50%",
-                  border: "2px solid #fff",
-                  boxShadow: "0 0 0 1px #d1d5db",
+                  border: "2px solid var(--color-surface)",
+                  boxShadow: "0 0 0 1px var(--color-text-muted)",
                   backgroundColor: c,
                   cursor: "pointer",
                   padding: 0,
@@ -299,6 +310,26 @@ export function AnnotationLayer({
               />
             </Tooltip>
           ))}
+          {onCreateAnnotation && onAssignField && (
+            <div style={{ width: 1, height: 20, background: "var(--color-border)", margin: "0 2px" }} />
+          )}
+          {onAssignField && fieldTypes.length > 0 && (
+            <Dropdown
+              menu={{
+                items: fieldTypes.map((ft) => ({ key: ft, label: ft })),
+                onClick: ({ key }) => {
+                  onAssignField(selection.selectedText, key);
+                  window.getSelection()?.removeAllRanges();
+                  setSelection(null);
+                },
+              }}
+              trigger={["click"]}
+            >
+              <Button size="small" style={{ fontSize: 11, height: 22, padding: "0 8px" }}>
+                + 字段
+              </Button>
+            </Dropdown>
+          )}
         </div>
       )}
 
@@ -365,8 +396,8 @@ function AnnotationEditor({
               width: 22,
               height: 22,
               borderRadius: "50%",
-              border: color === c ? "2px solid #111827" : "2px solid #fff",
-              boxShadow: "0 0 0 1px #d1d5db",
+              border: color === c ? "2px solid var(--color-text)" : "2px solid var(--color-surface)",
+              boxShadow: "0 0 0 1px var(--color-text-muted)",
               backgroundColor: c,
               cursor: "pointer",
               padding: 0,

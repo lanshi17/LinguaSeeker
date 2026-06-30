@@ -53,7 +53,16 @@ export function classificationColor(level: ClassificationLevel): string {
   }
 }
 
-export function classificationLabel(level: ClassificationLevel): string {
+export function classificationLabel(level: ClassificationLevel, t?: (key: string) => string): string {
+  if (t) {
+    switch (level) {
+      case "pathogenic": return t("evidenceDb.class.pathogenic");
+      case "likely_pathogenic": return t("evidenceDb.class.likelyPathogenic");
+      case "uncertain": return t("evidenceDb.class.vus");
+      case "likely_benign": return t("evidenceDb.class.likelyBenign");
+      case "benign": return t("evidenceDb.class.benign");
+    }
+  }
   switch (level) {
     case "pathogenic": return "Pathogenic";
     case "likely_pathogenic": return "Likely Pathogenic";

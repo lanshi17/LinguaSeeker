@@ -20,7 +20,7 @@ export function AuditPage() {
             boxShadow: "0 2px 8px rgba(8, 145, 178, 0.25)",
           }}
         >
-          <ShieldCheck style={{ width: 22, height: 22, color: "#fff" }} />
+          <ShieldCheck style={{ width: 22, height: 22, color: "var(--color-surface)" }} />
         </div>
         <div>
           <Typography.Title level={3} style={{ margin: 0 }}>

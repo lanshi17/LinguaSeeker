@@ -37,21 +37,21 @@ const statusBadgeStyles = (
     border: "1px solid",
   };
   if (isLive) {
-    return { ...base, backgroundColor: "#ecfeff", color: "var(--color-primary-700, #0e7490)", borderColor: "#a5f3fc" };
+    return { ...base, backgroundColor: "var(--color-highlight)", color: "var(--color-primary-700, #0e7490)", borderColor: "var(--color-running-border)" };
   }
   if (status === "completed") {
-    return { ...base, backgroundColor: "#f0fdf4", color: "#15803d", borderColor: "#bbf7d0" };
+    return { ...base, backgroundColor: "var(--color-highlight-green)", color: "var(--color-success-700)", borderColor: "var(--color-success-200)" };
   }
   if (status === "failed") {
-    return { ...base, backgroundColor: "#fef2f2", color: "#b91c1c", borderColor: "#fecaca" };
+    return { ...base, backgroundColor: "var(--color-error-bg)", color: "var(--color-error-text)", borderColor: "var(--color-error-border)" };
   }
-  return { ...base, backgroundColor: "#f3f4f6", color: "#4b5563", borderColor: "#e5e7eb" };
+  return { ...base, backgroundColor: "var(--color-bg-muted)", color: "var(--color-text-strong)", borderColor: "var(--color-border)" };
 };
 
 export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
   const { t } = useI18n();
   const { data, isLoading, error, isFetching } = usePipelineStatus(runId);
-  const timelineSteps = usePhaseTimeline(data);
+  const timelineSteps = usePhaseTimeline(data, t);
   const isLive = data ? !NON_LIVE.includes(data.pipeline_status) : false;
   // For terminal runs, compute duration from start to completion; for live, use real-time timer
   const terminalDuration =
@@ -67,7 +67,7 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
         <PageHeader
           title={t("pipeline.status.title")}
           description={
-            <span style={{ fontFamily: "var(--font-mono, monospace)", color: "#6b7280" }}>{runId}</span>
+            <span style={{ fontFamily: "var(--font-mono, monospace)", color: "var(--color-text-secondary)" }}>{runId}</span>
           }
           actions={
             <span
@@ -76,12 +76,12 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
                 alignItems: "center",
                 gap: 8,
                 borderRadius: 9999,
-                backgroundColor: "#ecfeff",
+                backgroundColor: "var(--color-highlight)",
                 padding: "4px 12px",
                 fontSize: 12,
                 fontWeight: 500,
-                color: "var(--color-primary-700, #0e7490)",
-                border: "1px solid #a5f3fc",
+                color: "var(--color-primary-700, var(--color-primary-700))",
+                border: "1px solid var(--color-running-border)",
               }}
             >
               <LivePulse tone="primary" />
@@ -92,12 +92,12 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
         <div
           style={{
             borderRadius: 12,
-            border: "1px dashed #e5e7eb",
-            backgroundColor: "rgba(255,255,255,0.6)",
+            border: "1px dashed var(--color-border)",
+            backgroundColor: "var(--color-card-bg)",
             padding: 24,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#6b7280" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--color-text-secondary)" }}>
             <Spinner size="sm" />
             {t("pipeline.status.connecting")}
           </div>
@@ -117,22 +117,22 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
         <PageHeader
           title={t("pipeline.status.title")}
           description={
-            <span style={{ fontFamily: "var(--font-mono, monospace)", color: "#6b7280" }}>{runId}</span>
+            <span style={{ fontFamily: "var(--font-mono, monospace)", color: "var(--color-text-secondary)" }}>{runId}</span>
           }
         />
         <div
           style={{
             borderRadius: 8,
-            border: "1px solid #fecaca",
-            backgroundColor: "#fef2f2",
+            border: "1px solid var(--color-error-border)",
+            backgroundColor: "var(--color-error-bg)",
             padding: 24,
             textAlign: "center",
           }}
         >
-          <p style={{ fontSize: 14, fontWeight: 500, color: "#991b1b" }}>
+          <p style={{ fontSize: 14, fontWeight: 500, color: "var(--color-error-text)" }}>
             {t("pipeline.status.errorPrefix")}
           </p>
-          <p style={{ marginTop: 4, fontSize: 12, color: "#b91c1c" }}>
+          <p style={{ marginTop: 4, fontSize: 12, color: "var(--color-error-text)" }}>
             {t("pipeline.status.connecting")}
           </p>
         </div>
@@ -149,21 +149,21 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
         title={t("pipeline.status.title")}
         description={
           <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ color: "#6b7280" }}>{t("pipeline.status.runLabel")}</span>
+            <span style={{ color: "var(--color-text-secondary)" }}>{t("pipeline.status.runLabel")}</span>
             <code
               style={{
                 borderRadius: 4,
-                backgroundColor: "#f3f4f6",
+                backgroundColor: "var(--color-bg-muted)",
                 padding: "2px 6px",
                 fontFamily: "var(--font-mono, monospace)",
                 fontSize: 12,
-                color: "#1f2937",
+                color: "var(--color-code-text)",
               }}
             >
               {runId}
             </code>
             {isFetching && isLive && (
-              <span style={{ fontSize: 11, color: "#9ca3af" }}>{t("pipeline.status.syncing")}</span>
+              <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{t("pipeline.status.syncing")}</span>
             )}
           </span>
         }
@@ -177,7 +177,7 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
                   marginLeft: 4,
                   fontFamily: "var(--font-mono, monospace)",
                   fontVariantNumeric: "tabular-nums",
-                  color: "rgba(14,116,144,0.8)",
+                  color: "var(--color-primary-700)",
                 }}
               >
                 {formatDuration(elapsed)}
@@ -206,8 +206,8 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
           display: "flex",
           justifyContent: "center",
           borderRadius: 12,
-          border: "1px solid #f3f4f6",
-          backgroundColor: "#fff",
+          border: "1px solid var(--color-bg-muted)",
+          backgroundColor: "var(--color-surface)",
           padding: "16px 0",
         }}
       >
@@ -233,11 +233,11 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
         <div
           style={{
             borderRadius: 8,
-            border: "1px solid #fecaca",
-            backgroundColor: "#fef2f2",
+            border: "1px solid var(--color-error-border)",
+            backgroundColor: "var(--color-error-bg)",
             padding: 16,
             fontSize: 14,
-            color: "#991b1b",
+            color: "var(--color-error-text)",
           }}
         >
           <span style={{ fontWeight: 600 }}>
@@ -267,8 +267,8 @@ function MetaTile({
     <div
       style={{
         borderRadius: 6,
-        border: "1px solid #f3f4f6",
-        backgroundColor: "rgba(249,250,251,0.6)",
+        border: "1px solid var(--color-bg-muted)",
+        backgroundColor: "var(--color-subtle-bg)",
         padding: "8px 12px",
       }}
     >
@@ -278,7 +278,7 @@ function MetaTile({
           fontWeight: 600,
           textTransform: "uppercase",
           letterSpacing: "0.08em",
-          color: "#6b7280",
+          color: "var(--color-text-secondary)",
         }}
       >
         {label}
@@ -290,7 +290,7 @@ function MetaTile({
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
           fontSize: 14,
-          color: "#111827",
+          color: "var(--color-text)",
           ...(mono
             ? { fontFamily: "var(--font-mono, monospace)", fontVariantNumeric: "tabular-nums" }
             : {}),

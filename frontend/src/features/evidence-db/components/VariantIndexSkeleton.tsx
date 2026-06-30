@@ -10,7 +10,7 @@ export function VariantIndexSkeleton() {
       {/* Hero Stats Section */}
       <section
         className="edb-hero"
-        style={{ borderRadius: 16, border: "1px solid #e5e7eb", padding: 24 }}
+        style={{ borderRadius: 16, border: "1px solid var(--color-border)", padding: 24 }}
       >
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
           {Array.from({ length: 4 }).map((_, i) => (
@@ -22,7 +22,7 @@ export function VariantIndexSkeleton() {
                 alignItems: "center",
                 gap: 12,
                 borderRadius: 8,
-                border: "1px solid #f3f4f6",
+                border: "1px solid var(--color-bg-muted)",
                 backgroundColor: "rgba(249, 250, 251, 0.6)",
                 padding: "12px 16px",
                 animationDelay: `${i * 50}ms`,
@@ -45,8 +45,8 @@ export function VariantIndexSkeleton() {
       <section
         style={{
           borderRadius: 12,
-          border: "1px solid #e5e7eb",
-          backgroundColor: "#fff",
+          border: "1px solid var(--color-border)",
+          backgroundColor: "var(--color-surface)",
           padding: 16,
         }}
       >
@@ -58,7 +58,7 @@ export function VariantIndexSkeleton() {
           style={{
             display: "flex",
             gap: 6,
-            borderTop: "1px solid #f3f4f6",
+            borderTop: "1px solid var(--color-bg-muted)",
             paddingTop: 12,
             marginTop: 12,
           }}
@@ -72,10 +72,10 @@ export function VariantIndexSkeleton() {
       {/* Variant List */}
       <div
         style={{
-          border: "1px solid #e5e7eb",
+          border: "1px solid var(--color-border)",
           borderRadius: 12,
           overflow: "hidden",
-          background: "#fff",
+          background: "var(--color-surface)",
         }}
       >
         {/* List header skeleton */}
@@ -86,8 +86,8 @@ export function VariantIndexSkeleton() {
             alignItems: "center",
             gap: 8,
             padding: "10px 16px",
-            backgroundColor: "#f9fafb",
-            borderBottom: "1px solid #e5e7eb",
+            backgroundColor: "var(--color-bg)",
+            borderBottom: "1px solid var(--color-border)",
           }}
           className="skeleton-list-header"
         >
@@ -106,7 +106,7 @@ export function VariantIndexSkeleton() {
               alignItems: "center",
               gap: 8,
               padding: "14px 16px",
-              borderBottom: i < 7 ? "1px solid #f3f4f6" : "none",
+              borderBottom: i < 7 ? "1px solid var(--color-bg-muted)" : "none",
               animationDelay: `${(i + 4) * 50}ms`,
             }}
           >

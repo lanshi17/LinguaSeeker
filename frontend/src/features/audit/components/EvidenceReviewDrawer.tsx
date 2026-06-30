@@ -14,7 +14,7 @@ import {
 import { Search, ArrowLeft, CheckCircle2, X } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { useI18n } from "@/lib/i18n";
-import { searchEvidence, getEvidenceGroupDetail } from "@/api/evidence";
+import { searchEvidence, getEvidenceGroupDetail } from "@/features/evidence-search/services/evidenceSearch";
 import { patchEvidence } from "@/features/evidence-search/services/evidenceCorrection";
 import type {
   EvidenceSearchResult,
@@ -136,7 +136,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
       setSearchTriggered(false);
       onClose();
     } catch (err) {
-      message.error(err instanceof Error ? err.message : "Failed to submit review");
+      message.error(err instanceof Error ? err.message : t("common.error"));
     } finally {
       setIsSubmitting(false);
     }
@@ -431,7 +431,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
                     {t("audit.review.newStatus")}
                   </Typography.Text>
                   <Select
-                    aria-label="Review status"
+                    aria-label={t("audit.review.newStatus")}
                     value={newStatus}
                     onChange={(val) => setNewStatus(val as ReviewStatusValue)}
                     options={STATUS_OPTIONS}

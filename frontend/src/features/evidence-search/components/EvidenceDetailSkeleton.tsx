@@ -11,8 +11,8 @@ export function EvidenceDetailSkeleton() {
         <Skeleton variant="line" style={{ width: 128, height: 16 }} />
 
         {/* Literature hero card */}
-        <section style={{ overflow: "hidden", borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
-          <div style={{ borderBottom: "1px solid #f3f4f6", backgroundColor: "rgba(249,250,251,0.5)", padding: "20px 24px" }}>
+        <section style={{ overflow: "hidden", borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+          <div style={{ borderBottom: "1px solid var(--color-bg-muted)", backgroundColor: "rgba(249,250,251,0.5)", padding: "20px 24px" }}>
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
                 <Skeleton variant="line" style={{ width: 112 }} />
@@ -41,7 +41,7 @@ export function EvidenceDetailSkeleton() {
         <div className="eds-two-col">
           {/* Sidebar */}
           <aside style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", padding: 20, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", padding: 20, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", display: "flex", flexDirection: "column", gap: 16 }}>
               <Skeleton variant="text" style={{ width: 128, height: 20 }} />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -52,7 +52,7 @@ export function EvidenceDetailSkeleton() {
                 ))}
               </div>
             </div>
-            <div style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", padding: 20, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", padding: 20, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", display: "flex", flexDirection: "column", gap: 12 }}>
               <Skeleton variant="text" style={{ width: 112, height: 20 }} />
               <div className="edb-cat-strip">
                 <Skeleton variant="block" style={{ height: 4, flex: 1, borderRadius: 2 }} />
@@ -78,8 +78,8 @@ export function EvidenceDetailSkeleton() {
                 className="stagger-in"
                 style={{
                   borderRadius: 12,
-                  border: "1px solid #e5e7eb",
-                  backgroundColor: "#fff",
+                  border: "1px solid var(--color-border)",
+                  backgroundColor: "var(--color-surface)",
                   padding: 20,
                   boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
                   animationDelay: `${i * 60}ms`,

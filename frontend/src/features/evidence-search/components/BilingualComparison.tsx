@@ -57,7 +57,7 @@ export function BilingualComparison(props: BilingualComparisonProps) {
 
   if (detail.traces.length === 0) {
     return (
-      <p style={{ padding: "32px 0", textAlign: "center", fontSize: 14, color: "#9ca3af" }}>
+      <p style={{ padding: "32px 0", textAlign: "center", fontSize: 14, color: "var(--color-text-muted)" }}>
         {t("evidence.compare.noTraces")}
       </p>
     );
@@ -80,7 +80,7 @@ export function TraceComparisonPanel({ trace }: { trace: EvidenceTrackTrace | nu
   const { t } = useI18n();
   if (!trace) {
     return (
-      <p style={{ padding: "32px 0", textAlign: "center", fontSize: 14, color: "#9ca3af" }}>
+      <p style={{ padding: "32px 0", textAlign: "center", fontSize: 14, color: "var(--color-text-muted)" }}>
         {t("evidence.compare.noSelected")}
       </p>
     );
@@ -93,23 +93,23 @@ export function TraceComparisonPanel({ trace }: { trace: EvidenceTrackTrace | nu
         style={{
           marginBottom: 16,
           borderRadius: 6,
-          backgroundColor: "#f8fafc",
+          backgroundColor: "var(--color-bg)",
           padding: 12,
         }}
       >
         <div>
-          <p style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
+          <p style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-muted)", margin: 0 }}>
             {t("evidence.compare.original")}
           </p>
-          <p style={{ marginTop: 4, wordBreak: "break-word", fontFamily: "var(--font-mono)", fontSize: 14, color: "#0f172a", margin: "4px 0 0" }}>
+          <p style={{ marginTop: 4, wordBreak: "break-word", fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--color-text-strong)", margin: "4px 0 0" }}>
             {trace.original_value ?? "—"}
           </p>
         </div>
         <div>
-          <p style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
+          <p style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-muted)", margin: 0 }}>
             {t("evidence.compare.translated")}
           </p>
-          <p style={{ marginTop: 4, wordBreak: "break-word", fontFamily: "var(--font-mono)", fontSize: 14, color: "#0f172a", margin: "4px 0 0" }}>
+          <p style={{ marginTop: 4, wordBreak: "break-word", fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--color-text-strong)", margin: "4px 0 0" }}>
             {trace.translated_value ?? "—"}
           </p>
         </div>
@@ -117,7 +117,7 @@ export function TraceComparisonPanel({ trace }: { trace: EvidenceTrackTrace | nu
 
       <div className="bc-compare-grid">
         <section>
-          <h4 style={{ marginBottom: 8, fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "#9ca3af", margin: "0 0 8px" }}>
+          <h4 style={{ marginBottom: 8, fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "var(--color-text-muted)", margin: "0 0 8px" }}>
             {t("evidence.compare.originalLabel")}
           </h4>
           <EvidenceHighlightText
@@ -127,7 +127,7 @@ export function TraceComparisonPanel({ trace }: { trace: EvidenceTrackTrace | nu
           />
         </section>
         <section>
-          <h4 style={{ marginBottom: 8, fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "#9ca3af", margin: "0 0 8px" }}>
+          <h4 style={{ marginBottom: 8, fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "var(--color-text-muted)", margin: "0 0 8px" }}>
             {t("evidence.compare.translatedLabel")}
           </h4>
           <EvidenceHighlightText
@@ -155,8 +155,8 @@ function EvidenceSelector({
   const { t } = useI18n();
   const activeId = selectedEvidenceId ?? detail.items[0]?.canonical_evidence_id ?? null;
   return (
-    <div style={{ borderRadius: 6, border: "1px solid #e5e7eb", backgroundColor: "#fff", padding: 12 }}>
-      <p style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
+    <div style={{ borderRadius: 6, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", padding: 12 }}>
+      <p style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-muted)", margin: 0 }}>
         {t("evidence.compare.itemLabel")}
       </p>
       <select
@@ -165,18 +165,18 @@ function EvidenceSelector({
           marginTop: 8,
           width: "100%",
           borderRadius: 6,
-          border: "1px solid #e5e7eb",
-          backgroundColor: "#fff",
+          border: "1px solid var(--color-border)",
+          backgroundColor: "var(--color-surface)",
           padding: 8,
           fontSize: 14,
-          color: "#111827",
+          color: "var(--color-text)",
           outline: "none",
         }}
         onFocus={(e) => {
           e.currentTarget.style.borderColor = "var(--color-primary-500)";
         }}
         onBlur={(e) => {
-          e.currentTarget.style.borderColor = "#e5e7eb";
+          e.currentTarget.style.borderColor = "var(--color-border)";
         }}
         value={activeId ?? ""}
         onChange={(event) => {

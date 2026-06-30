@@ -16,6 +16,8 @@ import {
 } from "@/features/evidence-search/utils/evidenceDocument";
 import { BilingualEvidenceSkeleton } from "./BilingualEvidenceSkeleton";
 import { DocumentReader } from "./DocumentReader";
+import type { ReviewContextMap } from "./HighlightedText";
+import type { FieldReviewInfo } from "@/features/evidence-search/components/FieldReviewPopover";
 import type { BlockHighlight } from "./StructuredBlockRenderer";
 import { ActiveEvidenceCard } from "./ActiveEvidenceCard";
 import { LiteratureHeader } from "./LiteratureHeader";
@@ -34,7 +36,7 @@ import {
   deleteAnnotation,
   listAnnotations,
   updateAnnotation,
-} from "@/api/annotations";
+} from "@/features/evidence-search/services/annotations";
 import type {
   AnnotationCreateRequest,
   AnnotationTrack,
@@ -47,6 +49,8 @@ import type {
   EvidenceTrackTrace,
   ReviewStatusValue,
 } from "@/features/evidence-search/types/evidenceSearch";
+import { patchEvidence } from "@/features/evidence-search/services/evidenceCorrection";
+import { App } from "antd";
 import { useI18n } from "@/lib/i18n";
 
 const REVIEW_STATUSES: ReviewStatusValue[] = [
@@ -168,6 +172,31 @@ export function BilingualEvidenceView({
     payload: { color?: string | null; note?: string | null },
   ) => void updateMutation.mutate({ id, payload });
   const handleDeleteAnnotation = (id: string) => void deleteMutation.mutate(id);
+  const { message } = App.useApp();
+
+  const handleAssignField = useCallback(async (selectedText: string, fieldType: string) => {
+    if (!groupDetail) return;
+    // Find an existing item for this field type, or use the first item
+    const targetItem = groupDetail.items.find(
+      (item) => item.field_id === fieldType || item.category === fieldType,
+    ) ?? groupDetail.items[0];
+    if (!targetItem) return;
+    try {
+      await patchEvidence(targetItem.canonical_evidence_id, {
+        fields: { [fieldType]: selectedText },
+        change_reason: `Text selection assignment to ${fieldType}`,
+      });
+      message.success(t("evidence.fieldAssign.success", { field: fieldType }));
+      void queryClient.invalidateQueries({ queryKey: ["evidence-group-detail", undefined, sourceDocumentId] });
+    } catch {
+      message.error(t("evidence.fieldAssign.error"));
+    }
+  }, [groupDetail, message, queryClient, sourceDocumentId, t]);
+
+  const fieldTypes = useMemo(
+    () => groupDetail?.items.map((item) => item.field_id) ?? [],
+    [groupDetail],
+  );
 
   const originalAnnotations = allAnnotations.filter((a) => a.track === "original");
   const translatedAnnotations = allAnnotations.filter((a) => a.track === "translated");
@@ -257,6 +286,28 @@ export function BilingualEvidenceView({
     [groupDetail, selectedEvidenceId],
   );
 
+  // Build review context map for hover-to-review on highlight marks
+  const reviewContexts = useMemo<ReviewContextMap>(() => {
+    if (!groupDetail) return new Map();
+    const map = new Map<string, FieldReviewInfo>();
+    for (const item of groupDetail.items) {
+      map.set(item.canonical_evidence_id, {
+        evidenceId: item.canonical_evidence_id,
+        fieldId: item.field_id,
+        label: item.field_name ?? item.field_id,
+        category: item.category,
+        currentStatus: item.review_status,
+        value: item.value,
+        groupId: groupDetail.group_id,
+      });
+    }
+    return map;
+  }, [groupDetail]);
+
+  const handleReviewed = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ["evidence-group-detail", undefined, sourceDocumentId] });
+  }, [queryClient, sourceDocumentId]);
+
   const toggleCategory = (cat: string) => {
     setEnabledCategories((prev) => {
       const next = new Set(prev);
@@ -304,7 +355,7 @@ export function BilingualEvidenceView({
             alignItems: "center",
             gap: 6,
             fontSize: 14,
-            color: "#9ca3af",
+            color: "var(--color-text-muted)",
             textDecoration: "none",
           }}
         >
@@ -316,11 +367,11 @@ export function BilingualEvidenceView({
           alignItems: "center",
           gap: 12,
           borderRadius: 12,
-          border: "1px solid #fecaca",
-          backgroundColor: "#fef2f2",
+          border: "1px solid var(--color-error-border)",
+          backgroundColor: "var(--color-error-bg)",
           padding: 16,
           fontSize: 14,
-          color: "#b91c1c",
+          color: "var(--color-error-text)",
         }}>
           <AlertCircle style={{ width: 20, height: 20, flexShrink: 0 }} />
           <span>{t("evidenceDb.bilingual.loadError")}</span>
@@ -334,7 +385,7 @@ export function BilingualEvidenceView({
       <style>{bevEmbeddedCSS}</style>
 
       {/* Breadcrumb */}
-      <nav style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "#9ca3af" }}>
+      <nav style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "var(--color-text-muted)" }}>
         <Link
           to="/evidence-db"
           className="bev-link"
@@ -352,7 +403,7 @@ export function BilingualEvidenceView({
         </Link>
         <ChevronRight style={{ width: 14, height: 14 }} />
         <span style={{
-          color: "#9ca3af",
+          color: "var(--color-text-muted)",
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
@@ -403,7 +454,7 @@ export function BilingualEvidenceView({
           {hasTranslation && (
             <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8 }}>
               <Tooltip title={t("evidenceDb.bilingual.syncScroll")}>
-                <span style={{ fontSize: 13, color: "#6b7280", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 13, color: "var(--color-text-secondary)", display: "inline-flex", alignItems: "center", gap: 6 }}>
                   {t("evidenceDb.bilingual.syncScroll")}
                   <Switch
                     size="small"
@@ -425,11 +476,15 @@ export function BilingualEvidenceView({
               blockHighlights={buildBlockHighlights.original}
               sourceDocumentId={sourceDocumentId}
               annotations={originalAnnotations}
+              reviewContexts={reviewContexts}
               scrollContainerRef={originalScrollRef}
               onContainerScroll={handleOriginalScroll}
               onCreateAnnotation={handleCreateAnnotation}
               onUpdateAnnotation={handleUpdateAnnotation}
               onDeleteAnnotation={handleDeleteAnnotation}
+              onReviewed={handleReviewed}
+              onAssignField={handleAssignField}
+              fieldTypes={fieldTypes}
             />
             {hasTranslation && (
               <DocumentReader
@@ -443,11 +498,15 @@ export function BilingualEvidenceView({
                 blockHighlights={buildBlockHighlights.translated}
                 sourceDocumentId={sourceDocumentId}
                 annotations={translatedAnnotations}
+                reviewContexts={reviewContexts}
                 scrollContainerRef={translatedScrollRef}
                 onContainerScroll={handleTranslatedScroll}
                 onCreateAnnotation={handleCreateAnnotation}
                 onUpdateAnnotation={handleUpdateAnnotation}
                 onDeleteAnnotation={handleDeleteAnnotation}
+                onReviewed={handleReviewed}
+                onAssignField={handleAssignField}
+                fieldTypes={fieldTypes}
               />
             )}
           </div>

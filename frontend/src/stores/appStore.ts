@@ -6,6 +6,7 @@
  */
 
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 
 const LANG_COOKIE = "ls_lang";
 const THEME_COOKIE = "ls_theme";
@@ -44,26 +45,31 @@ interface AppState {
   setMode: (mode: "light" | "dark") => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
-  sidebarCollapsed: false,
+export const useAppStore = create<AppState>()(
+  devtools(
+    (set) => ({
+      sidebarCollapsed: false,
 
-  toggleSidebar: () =>
-    set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+      toggleSidebar: () =>
+        set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
 
-  setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+      setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
 
-  locale: detectLocale(),
+      locale: detectLocale(),
 
-  setLocale: (lang) => {
-    document.cookie = `${LANG_COOKIE}=${lang}; Max-Age=${COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
-    set({ locale: lang });
-  },
+      setLocale: (lang) => {
+        document.cookie = `${LANG_COOKIE}=${lang}; Max-Age=${COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
+        set({ locale: lang });
+      },
 
-  mode: detectMode(),
+      mode: detectMode(),
 
-  setMode: (mode) => {
-    document.cookie = `${THEME_COOKIE}=${mode}; Max-Age=${COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
-    document.documentElement.setAttribute("data-theme", mode);
-    set({ mode });
-  },
-}));
+      setMode: (mode) => {
+        document.cookie = `${THEME_COOKIE}=${mode}; Max-Age=${COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
+        document.documentElement.setAttribute("data-theme", mode);
+        set({ mode });
+      },
+    }),
+    { name: "app-store" },
+  ),
+);

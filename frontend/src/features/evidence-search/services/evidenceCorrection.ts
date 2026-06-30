@@ -1,9 +1,6 @@
 import { apiClient } from "@/lib/api/client";
-import type {
-  EvidencePatchRequest,
-  PatchResultResponse,
-  ReviewAuditEventResponse,
-} from "../types/evidenceSearch";
+import type { EvidencePatchRequest, PatchResultResponse } from "../types/evidenceSearch";
+import type { ReviewAuditEventResponse } from "@/lib/types/evidence";
 
 export async function patchEvidence(
   canonicalEvidenceId: string,

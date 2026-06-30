@@ -52,9 +52,9 @@ function applyMarkStyle(mark: HTMLElement, category?: string | null, selected?: 
   mark.style.borderRadius = "4px";
   mark.style.padding = "2px 4px";
   mark.style.fontWeight = "600";
-  mark.style.backgroundColor = hex ? hex + "40" : "#e5e7eb";
-  mark.style.color = hex ? hex : "#030712";
-  mark.style.boxShadow = hex ? `0 0 0 1px ${hex}50` : "0 0 0 1px #d1d5db";
+  mark.style.backgroundColor = hex ? hex + "40" : "var(--color-border)";
+  mark.style.color = hex ? hex : "var(--color-text)";
+  mark.style.boxShadow = hex ? `0 0 0 1px ${hex}50` : "0 0 0 1px var(--color-text-muted)";
   if (selected) {
     mark.style.outline = "2px solid var(--color-primary-700, #0e7490)";
     mark.style.outlineOffset = "2px";
@@ -195,9 +195,9 @@ export function MarkdownDocumentViewer({
     >
       <style>{`
         .edb-markdown-viewer table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
-        .edb-markdown-viewer th, .edb-markdown-viewer td { border: 1px solid #d1d5db; padding: 6px 10px; text-align: left; vertical-align: top; }
-        .edb-markdown-viewer th { background-color: #f3f4f6; font-weight: 600; }
-        .edb-markdown-viewer tr:nth-child(even) td { background-color: #f9fafb; }
+        .edb-markdown-viewer th, .edb-markdown-viewer td { border: 1px solid var(--color-text-muted); padding: 6px 10px; text-align: left; vertical-align: top; }
+        .edb-markdown-viewer th { background-color: var(--color-bg-muted); font-weight: 600; }
+        .edb-markdown-viewer tr:nth-child(even) td { background-color: var(--color-bg); }
       `}</style>
       <Markdown
         remarkPlugins={[remarkGfm, remarkMath]}

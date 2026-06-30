@@ -22,7 +22,7 @@ export function EvidencePage() {
             boxShadow: "0 4px 6px -1px rgba(6, 182, 212, 0.25)",
           }}
         >
-          <BookOpen size={24} color="#fff" />
+          <BookOpen size={24} color="var(--color-surface)" />
         </div>
         <div>
           <Typography.Title level={3} style={{ margin: 0 }}>

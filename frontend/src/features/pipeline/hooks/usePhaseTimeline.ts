@@ -2,11 +2,13 @@
 import { useMemo } from "react";
 import type { PipelineStatusResponse, PhaseTimelineStep } from "../types/pipeline";
 
-const PHASE_LABELS: Record<string, string> = {
-  phase_1: "Document Acquisition",
-  phase_2: "Evidence Extraction",
-  phase_3: "Entity Standardization",
-};
+function getPhaseLabels(t: (key: string) => string): Record<string, string> {
+  return {
+    phase_1: t("pipeline.phase.acquisition"),
+    phase_2: t("pipeline.phase.extraction"),
+    phase_3: t("pipeline.phase.standardization"),
+  };
+}
 
 /**
  * Project a PipelineStatusResponse into PhaseTimelineStep[]
@@ -17,7 +19,9 @@ const PHASE_LABELS: Record<string, string> = {
  */
 export function usePhaseTimeline(
   status: PipelineStatusResponse | undefined,
+  t: (key: string) => string,
 ): PhaseTimelineStep[] {
+  const PHASE_LABELS = useMemo(() => getPhaseLabels(t), [t]);
   return useMemo(() => {
     if (!status?.phases) return [];
 
@@ -38,5 +42,5 @@ export function usePhaseTimeline(
           duration: phase.duration_seconds,
         };
       });
-  }, [status]);
+  }, [status, PHASE_LABELS]);
 }

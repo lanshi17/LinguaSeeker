@@ -88,10 +88,10 @@ const embeddedCSS = `
   }
 }
 .vdv-back-link:hover {
-  color: #374151;
+  color: var(--color-text-strong);
 }
 .vdv-evidence-item:hover {
-  border-color: #e5e7eb;
+  border-color: var(--color-border);
 }
 .vdv-lit-card:hover {
   border-color: var(--color-primary-200);
@@ -132,12 +132,12 @@ function ConfidenceRing({ value, size = 56 }: { value: number; size?: number }) 
           alignItems: "center",
           justifyContent: "center",
           borderRadius: "50%",
-          backgroundColor: "#fff",
+          backgroundColor: "var(--color-surface)",
           width: size - 8,
           height: size - 8,
         }}
       >
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 600, color: "#1f2937" }}>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 600, color: "var(--color-code-text)" }}>
           {pct}%
         </span>
       </div>
@@ -159,8 +159,8 @@ function EvidenceItemCard({ item, t }: { item: EvidenceGroupItem; t: (key: strin
       alignItems: "flex-start",
       gap: 12,
       borderRadius: 8,
-      border: "1px solid #f3f4f6",
-      backgroundColor: "#fff",
+      border: "1px solid var(--color-bg-muted)",
+      backgroundColor: "var(--color-surface)",
       padding: 12,
       transition: "border-color 0.15s",
     }}>
@@ -178,14 +178,14 @@ function EvidenceItemCard({ item, t }: { item: EvidenceGroupItem; t: (key: strin
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
           <div>
-            <p style={{ fontSize: 14, fontWeight: 500, color: "#111827", lineHeight: 1.375, margin: 0 }}>
+            <p style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text)", lineHeight: 1.375, margin: 0 }}>
               {item.field_name ?? item.field_id}
             </p>
             {item.value && (
               <p style={{
                 marginTop: 2,
                 fontSize: 14,
-                color: "#4b5563",
+                color: "var(--color-text-strong)",
                 lineHeight: 1.625,
                 display: "-webkit-box",
                 WebkitLineClamp: 2,
@@ -211,7 +211,7 @@ function EvidenceItemCard({ item, t }: { item: EvidenceGroupItem; t: (key: strin
             </span>
           )}
         </div>
-        <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 12, fontSize: 11, color: "#6b7280" }}>
+        <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 12, fontSize: 11, color: "var(--color-text-secondary)" }}>
           <span style={{ fontFamily: "var(--font-mono)" }}>{item.field_id}</span>
           <span>&middot;</span>
           <span style={{ fontWeight: 500, color: confColor }}>
@@ -258,7 +258,7 @@ function EvidenceCategoryPanel({
           alignItems: "center",
           gap: 10,
           padding: "10px 16px",
-          borderBottom: "1px solid #e5e7eb",
+          borderBottom: "1px solid var(--color-border)",
           backgroundColor: `${hex}10`,
         }}
       >
@@ -270,10 +270,10 @@ function EvidenceCategoryPanel({
             backgroundColor: hex,
           }}
         />
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
           <span style={{ fontFamily: "var(--font-mono)" }}>{category}</span>: {label}
         </h3>
-        <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: 12, color: "#6b7280" }}>
+        <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--color-text-secondary)" }}>
           {t("evidenceDb.detail.fieldCount", { count: String(catItems.length) })}
         </span>
       </div>
@@ -305,13 +305,13 @@ function BilingualItemRow({
 }) {
   return (
     <div style={{ fontSize: 12, lineHeight: 1.5 }}>
-      <span style={{ fontWeight: 500, color: "#374151" }}>{fieldName}</span>
+      <span style={{ fontWeight: 500, color: "var(--color-text-strong)" }}>{fieldName}</span>
       <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
         {original && (
           <span style={{
             flex: 1,
-            color: "#1e40af",
-            background: "#eff6ff",
+            color: "var(--color-blue-700)",
+            background: "var(--color-blue-50)",
             borderRadius: 4,
             padding: "2px 6px",
             display: "-webkit-box",
@@ -325,8 +325,8 @@ function BilingualItemRow({
         {translated && (
           <span style={{
             flex: 1,
-            color: "#7c3aed",
-            background: "#f5f3ff",
+            color: "var(--color-purple-700)",
+            background: "var(--color-highlight-purple)",
             borderRadius: 4,
             padding: "2px 6px",
             display: "-webkit-box",
@@ -364,8 +364,8 @@ function LiteratureReferenceCard({
         alignItems: "flex-start",
         gap: 12,
         borderRadius: 8,
-        border: "1px solid #f3f4f6",
-        backgroundColor: "#fff",
+        border: "1px solid var(--color-bg-muted)",
+        backgroundColor: "var(--color-surface)",
         padding: 12,
         transition: "all 0.15s",
         textDecoration: "none",
@@ -380,8 +380,8 @@ function LiteratureReferenceCard({
         alignItems: "center",
         justifyContent: "center",
         borderRadius: 8,
-        backgroundColor: "#fffbeb",
-        color: "#d97706",
+        backgroundColor: "var(--color-highlight-amber)",
+        color: "var(--color-warning-text)",
       }}>
         <BookOpen style={{ width: 16, height: 16 }} />
       </div>
@@ -389,7 +389,7 @@ function LiteratureReferenceCard({
         <p className="vdv-lit-title" style={{
           fontSize: 14,
           fontWeight: 500,
-          color: "#111827",
+          color: "var(--color-text)",
           lineHeight: 1.375,
           display: "-webkit-box",
           WebkitLineClamp: 2,
@@ -408,7 +408,7 @@ function LiteratureReferenceCard({
           columnGap: 8,
           rowGap: 2,
           fontSize: 11,
-          color: "#6b7280",
+          color: "var(--color-text-secondary)",
         }}>
           {reference.pmid && (
             <span style={{ fontFamily: "var(--font-mono)" }}>PMID:{reference.pmid}</span>
@@ -435,12 +435,12 @@ function LiteratureReferenceCard({
             <span
               style={{
                 borderRadius: 999,
-                border: "1px solid #fecaca",
-                backgroundColor: "#fef2f2",
+                border: "1px solid var(--color-error-border)",
+                backgroundColor: "var(--color-error-bg)",
                 padding: "2px 6px",
                 fontSize: 11,
                 fontWeight: 500,
-                color: "#b91c1c",
+                color: "var(--color-error-text)",
               }}
             >
               {t("evidenceDb.bilingual.conflictCount", { count: String(reference.conflictCount) })}
@@ -460,14 +460,14 @@ function LiteratureReferenceCard({
           <div style={{
             marginTop: 8,
             paddingTop: 8,
-            borderTop: "1px solid #f3f4f6",
+            borderTop: "1px solid var(--color-bg-muted)",
             display: "flex",
             flexDirection: "column",
             gap: 6,
           }}>
-            <div style={{ display: "flex", gap: 8, fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" }}>
-              <span style={{ flex: 1, color: "#1e40af" }}>{t("evidenceDb.detail.original")}</span>
-              <span style={{ flex: 1, color: "#7c3aed" }}>{t("evidenceDb.detail.translatedLabel")}</span>
+            <div style={{ display: "flex", gap: 8, fontSize: 10, fontWeight: 600, color: "var(--color-text-muted)", textTransform: "uppercase" }}>
+              <span style={{ flex: 1, color: "var(--color-blue-700)" }}>{t("evidenceDb.detail.original")}</span>
+              <span style={{ flex: 1, color: "var(--color-purple-700)" }}>{t("evidenceDb.detail.translatedLabel")}</span>
             </div>
             {bilingualEntries.map(([id, pair]) => (
               <BilingualItemRow
@@ -478,7 +478,7 @@ function LiteratureReferenceCard({
               />
             ))}
             {reference.bilingualItems.size > 3 && (
-              <span style={{ fontSize: 11, color: "#9ca3af" }}>
+              <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
                 +{reference.bilingualItems.size - 3} more&hellip;
               </span>
             )}
@@ -489,7 +489,7 @@ function LiteratureReferenceCard({
         width: 16,
         height: 16,
         flexShrink: 0,
-        color: "#9ca3af",
+        color: "var(--color-text-muted)",
         transition: "color 0.15s",
         marginTop: 4,
       }} />
@@ -529,7 +529,7 @@ export function VariantDetailView({
             alignItems: "center",
             gap: 6,
             fontSize: 14,
-            color: "#6b7280",
+            color: "var(--color-text-secondary)",
             textDecoration: "none",
           }}
         >
@@ -541,11 +541,11 @@ export function VariantDetailView({
           alignItems: "center",
           gap: 12,
           borderRadius: 12,
-          border: "1px solid #fecaca",
-          backgroundColor: "#fef2f2",
+          border: "1px solid var(--color-error-border)",
+          backgroundColor: "var(--color-error-bg)",
           padding: 16,
           fontSize: 14,
-          color: "#b91c1c",
+          color: "var(--color-error-text)",
         }}>
           <AlertCircle style={{ width: 20, height: 20, flexShrink: 0 }} />
           <span>{t("evidenceDb.detail.notFound")}</span>
@@ -582,7 +582,7 @@ export function VariantDetailView({
           alignItems: "center",
           gap: 6,
           fontSize: 14,
-          color: "#6b7280",
+          color: "var(--color-text-secondary)",
           textDecoration: "none",
           transition: "color 0.15s",
         }}
@@ -596,7 +596,7 @@ export function VariantDetailView({
         className="edb-hero"
         style={{
           borderRadius: 16,
-          border: "1px solid #e5e7eb",
+          border: "1px solid var(--color-border)",
           borderLeftColor: borderColor,
           borderLeftWidth: 4,
           overflow: "hidden",
@@ -611,7 +611,7 @@ export function VariantDetailView({
                   fontFamily: "var(--font-mono)",
                   fontSize: 20,
                   fontWeight: 700,
-                  color: "#111827",
+                  color: "var(--color-text)",
                   margin: 0,
                 }}>
                   {entry.gene}
@@ -623,7 +623,7 @@ export function VariantDetailView({
               <p style={{
                 fontFamily: "var(--font-mono)",
                 fontSize: 18,
-                color: "#374151",
+                color: "var(--color-text-strong)",
                 marginBottom: 4,
                 margin: 0,
                 paddingBottom: 4,
@@ -631,13 +631,13 @@ export function VariantDetailView({
                 {entry.variant}
               </p>
               {entry.disease && (
-                <p style={{ fontSize: 14, color: "#4b5563", margin: 0 }}>
-                  <Stethoscope style={{ display: "inline", width: 16, height: 16, marginRight: 4, verticalAlign: "-2px", color: "#9ca3af" }} />
+                <p style={{ fontSize: 14, color: "var(--color-text-strong)", margin: 0 }}>
+                  <Stethoscope style={{ display: "inline", width: 16, height: 16, marginRight: 4, verticalAlign: "-2px", color: "var(--color-text-muted)" }} />
                   {entry.disease}
                 </p>
               )}
               {entry.classification && (
-                <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4, margin: 0 }}>
+                <p style={{ fontSize: 12, color: "var(--color-text-secondary)", marginTop: 4, margin: 0 }}>
                   {entry.classification}
                 </p>
               )}
@@ -648,12 +648,12 @@ export function VariantDetailView({
                     display: "inline-flex",
                     alignItems: "center",
                     borderRadius: 6,
-                    border: "1px solid #fecaca",
-                    backgroundColor: "#fef2f2",
+                    border: "1px solid var(--color-error-border)",
+                    backgroundColor: "var(--color-error-bg)",
                     padding: "3px 8px",
                     fontSize: 12,
                     fontWeight: 500,
-                    color: "#b91c1c",
+                    color: "var(--color-error-text)",
                   }}
                 >
                   {t("evidenceDb.detail.conflicts")}
@@ -671,28 +671,28 @@ export function VariantDetailView({
                 rowGap: 4,
               }}>
                 <div>
-                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
+                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
                     {entry.literatureCount}
                   </p>
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{labels.literature}</p>
+                  <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>{labels.literature}</p>
                 </div>
                 <div>
-                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
+                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
                     {entry.fieldCount}
                   </p>
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{labels.evidenceFields}</p>
+                  <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>{labels.evidenceFields}</p>
                 </div>
                 <div>
-                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
+                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
                     {formatCoverageCount(quality.coverage)}
                   </p>
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{labels.coverage}</p>
+                  <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>{labels.coverage}</p>
                 </div>
                 <div>
-                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
+                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
                     {quality.reviewProgress.reviewed}/{quality.reviewProgress.total}
                   </p>
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{labels.reviewed}</p>
+                  <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>{labels.reviewed}</p>
                 </div>
               </div>
             </div>
@@ -709,12 +709,12 @@ export function VariantDetailView({
               fontFamily: "var(--font-display)",
               fontSize: 18,
               fontWeight: 500,
-              color: "#111827",
+              color: "var(--color-text)",
               margin: 0,
             }}>
               {t("evidenceDb.detail.evidenceFields")}
             </h2>
-            <span style={{ fontSize: 14, color: "#6b7280" }}>
+            <span style={{ fontSize: 14, color: "var(--color-text-secondary)" }}>
               {t("evidenceDb.detail.reconciled", { fields: String(reconciledItems.length), categories: String(categoriesWithItems.length) })}
             </span>
           </div>
@@ -722,12 +722,12 @@ export function VariantDetailView({
           {categoriesWithItems.length === 0 ? (
             <div style={{
               borderRadius: 12,
-              border: "1px dashed #d1d5db",
+              border: "1px dashed var(--color-text-muted)",
               padding: "48px 0",
               textAlign: "center",
             }}>
-              <Layers3 style={{ width: 32, height: 32, color: "#d1d5db", margin: "0 auto 8px" }} />
-              <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>
+              <Layers3 style={{ width: 32, height: 32, color: "var(--color-text-muted)", margin: "0 auto 8px" }} />
+              <p style={{ fontSize: 14, color: "var(--color-text-secondary)", margin: 0 }}>
                 {t("evidenceDb.detail.noFields")}
               </p>
             </div>
@@ -752,12 +752,12 @@ export function VariantDetailView({
               fontFamily: "var(--font-display)",
               fontSize: 18,
               fontWeight: 500,
-              color: "#111827",
+              color: "var(--color-text)",
               margin: 0,
             }}>
               {t("evidenceDb.detail.references")}
             </h2>
-            <span style={{ fontSize: 14, color: "#6b7280" }}>
+            <span style={{ fontSize: 14, color: "var(--color-text-secondary)" }}>
               {t("evidenceDb.detail.sources", { count: String(literature.length) })}
             </span>
           </div>
@@ -765,12 +765,12 @@ export function VariantDetailView({
           {literature.length === 0 ? (
             <div style={{
               borderRadius: 12,
-              border: "1px dashed #d1d5db",
+              border: "1px dashed var(--color-text-muted)",
               padding: "48px 0",
               textAlign: "center",
             }}>
-              <BookOpen style={{ width: 32, height: 32, color: "#d1d5db", margin: "0 auto 8px" }} />
-              <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>{t("evidenceDb.detail.noRefs")}</p>
+              <BookOpen style={{ width: 32, height: 32, color: "var(--color-text-muted)", margin: "0 auto 8px" }} />
+              <p style={{ fontSize: 14, color: "var(--color-text-secondary)", margin: 0 }}>{t("evidenceDb.detail.noRefs")}</p>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

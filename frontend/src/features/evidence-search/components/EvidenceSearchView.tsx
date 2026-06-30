@@ -42,16 +42,16 @@ export function EvidenceSearchView() {
         {error ? (
           <div style={{
             borderRadius: 12,
-            border: "1px solid #fecaca",
-            backgroundColor: "#fef2f2",
+            border: "1px solid var(--color-error-border)",
+            backgroundColor: "var(--color-error-bg)",
             padding: "40px 24px",
             textAlign: "center",
           }}>
-            <Typography.Text strong style={{ color: "#b91c1c", fontSize: 14 }}>
+            <Typography.Text strong style={{ color: "var(--color-error-text)", fontSize: 14 }}>
               {t("evidence.detail.loadError")}
             </Typography.Text>
             <br />
-            <Typography.Text type="secondary" style={{ color: "#dc2626", fontSize: 12 }}>
+            <Typography.Text type="secondary" style={{ color: "var(--color-error-text)", fontSize: 12 }}>
               {error.message}
             </Typography.Text>
           </div>

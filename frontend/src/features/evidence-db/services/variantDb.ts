@@ -6,7 +6,7 @@ import type {
 import {
   searchEvidence as _searchEvidence,
   getEvidenceGroupDetail,
-} from "@/api/evidence";
+} from "@/features/evidence-search/services/evidenceSearch";
 
 /**
  * Fetch all evidence search results for aggregation.
