@@ -89,6 +89,30 @@
 :root {
   color-scheme: light;
 
+  /* Surface colors */
+  --color-bg: #f9fafb;
+  --color-bg-muted: #f3f4f6;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f9fafb;
+  --color-border: #e5e7eb;
+  --color-text: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+  --color-text-strong: #374151;
+  --color-header-bg: #ffffff;
+  --color-code-bg: #f3f4f6;
+  --color-code-text: #1f2937;
+  --color-highlight: #ecfeff;
+  --color-highlight-green: #ecfdf5;
+  --color-highlight-purple: #f5f3ff;
+  --color-highlight-amber: #fffbeb;
+  --color-highlight-amber-border: #fcd34d;
+  --color-success-text: #047857;
+  --color-warning-text: #b45309;
+  --color-error-bg: #fef2f2;
+  --color-error-border: #fecaca;
+  --color-error-text: #991b1b;
+
   /* Primary teal palette */
   --color-primary-50: #ecfeff;
   --color-primary-100: #cffafe;
@@ -127,16 +151,51 @@
   --font-mono: "JetBrains Mono", Menlo, monospace;
 }
 
+/* ── Dark mode overrides ── */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg: #141422;
+  --color-bg-muted: #1a1a2e;
+  --color-surface: #1e1e2e;
+  --color-surface-hover: #252540;
+  --color-border: #2e2e3e;
+  --color-text: #e5e7eb;
+  --color-text-secondary: #9ca3af;
+  --color-text-muted: #6b7280;
+  --color-text-strong: #d1d5db;
+  --color-header-bg: #1e1e2e;
+  --color-code-bg: #1a1a2e;
+  --color-code-text: #e5e7eb;
+  --color-highlight: #0c3545;
+  --color-highlight-green: #052e16;
+  --color-highlight-purple: #1e1040;
+  --color-highlight-amber: #422006;
+  --color-highlight-amber-border: #92400e;
+  --color-success-text: #34d399;
+  --color-warning-text: #fbbf24;
+  --color-error-bg: #2a1215;
+  --color-error-border: #5c2025;
+  --color-error-text: #fca5a5;
+
+  --color-primary-50: #083344;
+  --color-primary-100: #155e75;
+  --color-primary-200: #0e7490;
+  --color-primary-700: #67e8f9;
+  --color-primary-800: #a5f3fc;
+  --color-primary-900: #cffafe;
+
+  --color-patho-uncertain: #9ca3af;
+}
+
 /* ── Base styles ── */
 body {
   margin: 0;
-  background-color: #ffffff;
-  color: #111827;
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-size: 16px;
-  line-height: 1.6;
 }
 
 /* Accessible focus ring */

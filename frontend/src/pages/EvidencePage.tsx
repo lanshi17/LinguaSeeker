@@ -1,8 +1,10 @@
 import { Typography } from "antd";
 import { EvidenceSearchView } from "@/features/evidence-search";
 import { BookOpen } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export function EvidencePage() {
+  const { t } = useI18n();
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Page header */}
@@ -24,10 +26,10 @@ export function EvidencePage() {
         </div>
         <div>
           <Typography.Title level={3} style={{ margin: 0 }}>
-            Literature Evidence
+            {t("evidence.title")}
           </Typography.Title>
           <Typography.Text type="secondary" style={{ fontSize: 14 }}>
-            Search and explore literature-level evidence by gene, variant, disease, or PMID.
+            {t("evidence.description")}
           </Typography.Text>
         </div>
       </div>

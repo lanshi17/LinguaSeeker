@@ -20,7 +20,6 @@
 
 | Hook | Signature | Description |
 |------|-----------|-------------|
-| `useBackendHealth` | `() => { status, latencyMs, lastChecked }` | Polls `GET /health` via React Query. Returns `"connected"`, `"disconnected"`, or `"checking"`. Configurable endpoint and interval via env vars. |
 | `useElapsedSeconds` | `(start: string \| null) => number` | Returns seconds elapsed since an ISO timestamp. Updates every 250ms for visible ticking. Returns 0 when start is null. |
 
 ### `lib/types/` -- Shared Types

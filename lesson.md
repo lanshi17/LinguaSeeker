@@ -6242,3 +6242,32 @@ English-pivot-tristate 的 N=5 value-F1 低于 C0，需要确认 C0 命中而 En
 ### 预防措施
 - 字段级 loss attribution 必须同时保留 primary dump、post-review artifact、grounding spans、DB final admission rows；只看 eval report 的 `missing` 会误判死因。
 - 对 `variant_type` 与 `variant_consequence_class` 的 schema/gold 边界要单独校准，否则 C0 与 C2 可能在不同字段名下表达同一事实。
+
+## 2026-06-30 - English-pivot gs_075 cascade loss was review/admission/scorer, not translation
+
+### 问题描述
+English-pivot-tristate 在 `gs_075` 上丢失 `A.gene_disease_relationship`、`A.variant_hgvs_c`、`A.variant_hgvs_p`、`A.variant_type`，需要在不重构大底盘的前提下验证三个最小修复点是否能恢复字段级表现。
+
+### 排查过程
+1. 重跑 `gs_005` 与 `gs_075` 并保留 `data/pipeline/<run_id>/phase_2/extraction_result.json`。
+2. 对照 primary、review notes、grounding span、PostgreSQL `RunEvidenceItem` 与 benchmark report，逐字段定位断点。
+3. 先写失败测试，分别覆盖动物模型 variant review 软保留、`A.gene_disease_relationship` identity-only 入库、`variant_consequence_class=missense` 投影到 `A.variant_type`、结构化 `gene=MTM1|variant=p.R69C` group_id 入库，以及 DB value payload 的 HGVS scorer 解包。
+4. 重启后端后只重跑 `gs_005` 与 `gs_075`；再用同一批 DB rows 离线重算新版 scorer，避免重复模型调用。
+
+### 根因分析
+- `gs_075` 不是翻译损耗，也不是 grounding 对齐失败。`c.205C>T`、`p.R69C`、`causative` 和 `missense` 均已在 primary/reconciled artifact 中出现，且英文到原文 traceback 可用。
+- Review 对 “mouse model/no human participants” 的处理过硬，把已定锚的 variant 字段从 found 改成 not_found，造成变异父节点级联丢失。
+- Phase 3 admission 只把显式 `A.gene_symbol`/`B.disease_diagnosis` 视为 identity anchor，忽略了 deterministic group_id 中的 `gene=MTM1`，导致 `A.variant_hgvs_p` 这种结构化组被当作 variant-only noise。
+- Benchmark scorer 直接 `str()` DB JSON value payload，导致 `{"value": "p.R69C"}` 无法走 HGVS field normalizer 匹配 gold `p.Arg69Cys`。
+- `gs_005.A.gene_disease_relationship` 的剩余失败是 primary 语义值 `uncertain` vs gold `causative`；`gs_075.J.clinvar_assertion` 是 primary/contextual verifier 未产出 found 候选，不属于本轮三处工程级联修复。
+
+### 解决方案
+1. `tristate_review` 下将动物/细胞模型上下文对 variant/HGVS 字段从 hard reject 降级为 found + low-confidence uncertain keep。
+2. 在 primary broad normalization 中将 `A.variant_consequence_class=missense` 投影到 `A.variant_type`，并在 prompt 中明确 `variant_type` 使用 benchmark/ClinVar consequence-class 边界。
+3. Phase 3 identity gate 识别 `gene=...|variant=...` 中非 `__missing__` 的 gene token，仅允许 identity fields 通过，不放开 variant-dependent evidence。
+4. Benchmark matching 增加 DB value payload 解包，使 HGVS protein one-letter/three-letter normalization 对 `RunEvidenceItem.value={"value": ...}` 生效。
+
+### 预防措施
+- Field-level benchmark report 应区分 missing、wrong_value、scorer_payload_mismatch，避免把 scorer 解包问题误诊为抽取失败。
+- Admission gate 的测试样本必须覆盖 deterministic group_id，而不是只覆盖人工 `g1` 组。
+- Review prompt 中的 domain exclusion 规则需要明确 hard reject 与 soft penalty 的边界；动物模型可以影响 DB-ready 置信度，但不应删除已定锚 variant identity。

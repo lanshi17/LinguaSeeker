@@ -5,6 +5,7 @@ import type { SenderRef } from "@ant-design/x/es/sender/interface";
 import { useXChat } from "@ant-design/x-sdk";
 import type { MessageInfo } from "@ant-design/x-sdk/es/x-chat";
 import { App } from "antd";
+import { useI18n } from "@/lib/i18n";
 import { extractErrorMessage } from "@/lib/api/error";
 import {
   createAcmgChatProvider,
@@ -22,6 +23,7 @@ import { WelcomeBlock, type WelcomeAction } from "./WelcomeBlock";
 import { roles } from "./chatConfig";
 
 export function SingleSessionChat({ sessionId }: { sessionId: string }) {
+  const { t } = useI18n();
   const { message } = App.useApp();
   const provider = useMemo(
     () => createAcmgChatProvider(sessionId),
@@ -167,7 +169,7 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
 
   return (
     <XProvider>
-      <div style={{ display: "flex", height: "100%", flexDirection: "column", overflow: "hidden", backgroundColor: "#fff" }}>
+      <div style={{ display: "flex", height: "100%", flexDirection: "column", overflow: "hidden", backgroundColor: "var(--color-surface)" }}>
         <Bubble.List
           style={{ flex: 1, overflow: "auto", padding: 16 }}
           items={bubbleItems}
@@ -177,7 +179,7 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
 
         <Sender
           ref={senderRef}
-          style={{ borderTop: "1px solid #f3f4f6", padding: 16 }}
+          style={{ borderTop: "1px solid var(--color-bg-muted)", padding: 16 }}
           loading={isRequesting}
           onCancel={() => {
             // Cancel via the provider's own AbortController for
@@ -195,7 +197,7 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
             }
           }}
           onSubmit={handleSingleSessionSubmit}
-          placeholder="Ask the Lingua Seeker Agent..."
+          placeholder={t("chat.agentPlaceholder")}
         />
       </div>
     </XProvider>

@@ -1,4 +1,4 @@
-
+import { useI18n } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 
 interface ThinkingIndicatorProps {
@@ -11,12 +11,14 @@ interface ThinkingIndicatorProps {
   className?: string;
 }
 
-const DEFAULT_HINTS = [
-  "Reading your message",
-  "Retrieving relevant literature",
-  "Reasoning over the evidence",
-  "Drafting a grounded reply",
-];
+function getDefaultHints(t: (key: string) => string): string[] {
+  return [
+    t("chat.thinking.reading"),
+    t("chat.thinking.retrieving"),
+    t("chat.thinking.reasoning"),
+    t("chat.thinking.drafting"),
+  ];
+}
 
 const dotBase: React.CSSProperties = {
   width: 6,
@@ -34,11 +36,14 @@ const dotBase: React.CSSProperties = {
  * - Respects `prefers-reduced-motion` — dots collapse to a static dot row.
  */
 export function ThinkingIndicator({
-  hints = DEFAULT_HINTS,
+  hints: hintsProp,
   rotateMs = 2800,
-  label = "Thinking",
+  label: labelProp,
   className,
 }: ThinkingIndicatorProps) {
+  const { t } = useI18n();
+  const hints = hintsProp ?? getDefaultHints(t);
+  const label = labelProp ?? t("chat.thinking.label");
   const [hintIndex, setHintIndex] = useState(0);
 
   useEffect(() => {
@@ -60,8 +65,8 @@ export function ThinkingIndicator({
         alignItems: "center",
         gap: 12,
         borderRadius: 16,
-        border: "1px solid #f3f4f6",
-        background: "linear-gradient(to bottom right, #ffffff, #f9fafb)",
+        border: "1px solid var(--color-bg-muted)",
+        background: "linear-gradient(to bottom right, var(--color-surface), var(--color-bg))",
         padding: "12px 16px",
         boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
       }}
@@ -78,7 +83,7 @@ export function ThinkingIndicator({
             fontWeight: 500,
             textTransform: "uppercase",
             letterSpacing: "0.12em",
-            color: "#9ca3af",
+            color: "var(--color-text-muted)",
           }}
         >
           {label}
@@ -91,7 +96,7 @@ export function ThinkingIndicator({
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
             fontSize: 14,
-            color: "#4b5563",
+            color: "var(--color-text-strong)",
           }}
         >
           {hints[hintIndex]}

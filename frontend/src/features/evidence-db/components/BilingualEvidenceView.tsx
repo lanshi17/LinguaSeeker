@@ -47,6 +47,7 @@ import type {
   EvidenceTrackTrace,
   ReviewStatusValue,
 } from "@/features/evidence-search/types/evidenceSearch";
+import { useI18n } from "@/lib/i18n";
 
 const REVIEW_STATUSES: ReviewStatusValue[] = [
   "provisional",
@@ -80,6 +81,7 @@ export function BilingualEvidenceView({
   variantSlug: string;
   sourceDocumentId: string;
 }) {
+  const { t } = useI18n();
   const [enabledCategories, setEnabledCategories] = useState<Set<string>>(
     () => new Set(EVIDENCE_CATEGORIES),
   );
@@ -307,7 +309,7 @@ export function BilingualEvidenceView({
           }}
         >
           <ArrowLeft style={{ width: 16, height: 16 }} />
-          Back to variant detail
+          {t("evidenceDb.bilingual.back")}
         </Link>
         <div style={{
           display: "flex",
@@ -321,7 +323,7 @@ export function BilingualEvidenceView({
           color: "#b91c1c",
         }}>
           <AlertCircle style={{ width: 20, height: 20, flexShrink: 0 }} />
-          <span>Failed to load evidence data for this literature.</span>
+          <span>{t("evidenceDb.bilingual.loadError")}</span>
         </div>
       </div>
     );
@@ -338,7 +340,7 @@ export function BilingualEvidenceView({
           className="bev-link"
           style={{ color: "inherit", textDecoration: "none" }}
         >
-          Evidence DB
+          {t("evidenceDb.bilingual.breadcrumb")}
         </Link>
         <ChevronRight style={{ width: 14, height: 14 }} />
         <Link
@@ -356,7 +358,7 @@ export function BilingualEvidenceView({
           whiteSpace: "nowrap",
           maxWidth: 300,
         }}>
-          {groupDetail.title ?? "Literature"}
+          {groupDetail.title ?? t("evidenceDb.bilingual.litFallback")}
         </span>
       </nav>
 
@@ -400,9 +402,9 @@ export function BilingualEvidenceView({
           {/* Sync control + bilingual panels */}
           {hasTranslation && (
             <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8 }}>
-              <Tooltip title="Synchronize scroll position between original and translated panels by scroll ratio">
+              <Tooltip title={t("evidenceDb.bilingual.syncScroll")}>
                 <span style={{ fontSize: 13, color: "#6b7280", display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  Sync scrolling
+                  {t("evidenceDb.bilingual.syncScroll")}
                   <Switch
                     size="small"
                     checked={isScrollSyncEnabled}
@@ -415,7 +417,7 @@ export function BilingualEvidenceView({
 
           <div className={`bev-bilingual-grid${hasTranslation ? " bev-bilingual-grid--dual" : ""}`}>
             <DocumentReader
-              title="Original Text"
+              title={t("evidenceDb.bilingual.originalText")}
               track="original"
               document={originalDoc ?? { track: "original", paragraphs: [] }}
               accentColor="#3B82F6"
@@ -431,7 +433,7 @@ export function BilingualEvidenceView({
             />
             {hasTranslation && (
               <DocumentReader
-                title="Translated Text (English)"
+                title={t("evidenceDb.bilingual.translatedText")}
                 track="translated"
                 document={
                   translatedDoc ?? { track: "translated", paragraphs: [] }

@@ -5,13 +5,7 @@ import type {
   ReviewStatusValue,
 } from "@/features/evidence-search/types/evidenceSearch";
 import { CategoryToggle, EvidenceNavigator } from "./SidebarControls";
-
-const REVIEW_STATUS_OPTIONS: Array<{ value: ReviewStatusValue; label: string }> = [
-  { value: "provisional", label: "Provisional" },
-  { value: "approved", label: "Approved" },
-  { value: "corrected", label: "Corrected" },
-  { value: "rejected", label: "Rejected" },
-];
+import { useI18n } from "@/lib/i18n";
 
 const STATUS_TONES: Record<ReviewStatusValue, { bg: string; color: string; border: string }> = {
   provisional: { bg: "#f9fafb", color: "#4b5563", border: "#e5e7eb" },
@@ -47,6 +41,15 @@ export function BilingualSidebar({
   selectedEvidenceId?: string;
   onSelectEvidence: (id: string) => void;
 }) {
+  const { t } = useI18n();
+
+  const reviewStatusOptions: Array<{ value: ReviewStatusValue; label: string }> = [
+    { value: "provisional", label: t("evidenceDb.sidebar.statusProvisional") },
+    { value: "approved", label: t("evidenceDb.sidebar.statusApproved") },
+    { value: "corrected", label: t("evidenceDb.sidebar.statusCorrected") },
+    { value: "rejected", label: t("evidenceDb.sidebar.statusRejected") },
+  ];
+
   return (
     <aside style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Category toggles */}
@@ -60,7 +63,7 @@ export function BilingualSidebar({
             letterSpacing: 0,
             margin: 0,
           }}>
-            Evidence Layers
+            {t("evidenceDb.sidebar.layers")}
           </h3>
           <div style={{ display: "flex", gap: 4 }}>
             <button
@@ -78,8 +81,8 @@ export function BilingualSidebar({
                 display: "flex",
                 alignItems: "center",
               }}
-              title="Show all"
-              aria-label="Show all categories"
+              title={t("evidenceDb.sidebar.showAll")}
+              aria-label={t("evidenceDb.sidebar.showAll")}
             >
               <Eye style={{ width: 14, height: 14 }} />
             </button>
@@ -98,8 +101,8 @@ export function BilingualSidebar({
                 display: "flex",
                 alignItems: "center",
               }}
-              title="Hide all"
-              aria-label="Hide all categories"
+              title={t("evidenceDb.sidebar.hideAll")}
+              aria-label={t("evidenceDb.sidebar.hideAll")}
             >
               <EyeOff style={{ width: 14, height: 14 }} />
             </button>
@@ -129,7 +132,7 @@ export function BilingualSidebar({
             letterSpacing: "0.05em",
             margin: 0,
           }}>
-            Review Status
+            {t("evidenceDb.sidebar.reviewStatus")}
           </h3>
           <div style={{ display: "flex", gap: 4 }}>
             <button
@@ -147,8 +150,8 @@ export function BilingualSidebar({
                 display: "flex",
                 alignItems: "center",
               }}
-              title="Show all review statuses"
-              aria-label="Show all review statuses"
+              title={t("evidenceDb.sidebar.showAll")}
+              aria-label={t("evidenceDb.sidebar.showAll")}
             >
               <Eye style={{ width: 14, height: 14 }} />
             </button>
@@ -167,15 +170,15 @@ export function BilingualSidebar({
                 display: "flex",
                 alignItems: "center",
               }}
-              title="Hide all review statuses"
-              aria-label="Hide all review statuses"
+              title={t("evidenceDb.sidebar.hideAll")}
+              aria-label={t("evidenceDb.sidebar.hideAll")}
             >
               <EyeOff style={{ width: 14, height: 14 }} />
             </button>
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {REVIEW_STATUS_OPTIONS.map(({ value, label }) => {
+          {reviewStatusOptions.map(({ value, label }) => {
             const checked = enabledStatuses.has(value);
             const tone = STATUS_TONES[value];
             return (
@@ -241,7 +244,7 @@ export function BilingualSidebar({
           margin: 0,
           paddingBottom: 0,
         }}>
-          Evidence Fields
+          {t("evidenceDb.sidebar.evidenceFields")}
         </h3>
         <div className="edb-scroll" style={{ maxHeight: 400, overflowY: "auto" }}>
           <EvidenceNavigator

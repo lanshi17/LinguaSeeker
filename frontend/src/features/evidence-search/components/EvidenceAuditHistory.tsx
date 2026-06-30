@@ -3,6 +3,7 @@ import { History, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatRelative } from "@/lib/utils/format";
+import { useI18n } from "@/lib/i18n";
 import { listAuditEvents } from "../services/evidenceCorrection";
 import type { ReviewStatusValue } from "../types/evidenceSearch";
 
@@ -30,6 +31,8 @@ export function EvidenceAuditHistory({
     select: (all) => all.slice(0, 20),
   });
 
+  const { t } = useI18n();
+
   const relevantEvents = events?.filter(
     (e) => e.field_deltas.length > 0 || e.old_status !== e.new_status,
   );
@@ -39,7 +42,7 @@ export function EvidenceAuditHistory({
       <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 20px" }}>
         <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
           <History style={{ width: 16, height: 16, color: "var(--color-primary-700)" }} />
-          Correction history
+          {t("evidence.audit.heading")}
         </h3>
       </div>
       <div style={{ padding: 16 }}>
@@ -53,7 +56,7 @@ export function EvidenceAuditHistory({
             ))}
           </div>
         ) : !relevantEvents || relevantEvents.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>No corrections yet.</p>
+          <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>{t("evidence.audit.empty")}</p>
         ) : (
           <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 12 }}>
             {relevantEvents.map((event) => (

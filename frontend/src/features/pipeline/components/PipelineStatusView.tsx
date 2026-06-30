@@ -1,4 +1,5 @@
 
+import { useI18n } from "@/lib/i18n";
 import { usePipelineStatus } from "../hooks/usePipelineStatus";
 import { usePhaseTimeline } from "../hooks/usePhaseTimeline";
 import { PhaseTimeline } from "./PhaseTimeline";
@@ -28,13 +29,12 @@ const statusBadgeStyles = (
   const base: React.CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
     borderRadius: 9999,
     padding: "4px 12px",
     fontSize: 12,
     fontWeight: 500,
-    borderWidth: 1,
-    borderStyle: "solid",
+    border: "1px solid",
   };
   if (isLive) {
     return { ...base, backgroundColor: "#ecfeff", color: "var(--color-primary-700, #0e7490)", borderColor: "#a5f3fc" };
@@ -49,6 +49,7 @@ const statusBadgeStyles = (
 };
 
 export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
+  const { t } = useI18n();
   const { data, isLoading, error, isFetching } = usePipelineStatus(runId);
   const timelineSteps = usePhaseTimeline(data);
   const isLive = data ? !NON_LIVE.includes(data.pipeline_status) : false;
@@ -64,7 +65,7 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <PageHeader
-          title="Pipeline Status"
+          title={t("pipeline.status.title")}
           description={
             <span style={{ fontFamily: "var(--font-mono, monospace)", color: "#6b7280" }}>{runId}</span>
           }
@@ -84,7 +85,7 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
               }}
             >
               <LivePulse tone="primary" />
-              Loading
+              {t("pipeline.status.loading")}
             </span>
           }
         />
@@ -98,7 +99,7 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#6b7280" }}>
             <Spinner size="sm" />
-            Connecting to pipeline service…
+            {t("pipeline.status.connecting")}
           </div>
         </div>
         <div className="psv-grid" style={{ display: "grid", gap: 16 }}>
@@ -114,7 +115,7 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <PageHeader
-          title="Pipeline Status"
+          title={t("pipeline.status.title")}
           description={
             <span style={{ fontFamily: "var(--font-mono, monospace)", color: "#6b7280" }}>{runId}</span>
           }
@@ -129,11 +130,10 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
           }}
         >
           <p style={{ fontSize: 14, fontWeight: 500, color: "#991b1b" }}>
-            Failed to load pipeline status.
+            {t("pipeline.status.errorPrefix")}
           </p>
           <p style={{ marginTop: 4, fontSize: 12, color: "#b91c1c" }}>
-            The run may have expired or the backend is unavailable. Check the
-            connection indicator and retry.
+            {t("pipeline.status.connecting")}
           </p>
         </div>
         <RunHistory />
@@ -146,10 +146,10 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
   return (
     <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <PageHeader
-        title="Pipeline Status"
+        title={t("pipeline.status.title")}
         description={
           <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ color: "#6b7280" }}>Run</span>
+            <span style={{ color: "#6b7280" }}>{t("pipeline.status.runLabel")}</span>
             <code
               style={{
                 borderRadius: 4,
@@ -163,7 +163,7 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
               {runId}
             </code>
             {isFetching && isLive && (
-              <span style={{ fontSize: 11, color: "#9ca3af" }}>· syncing…</span>
+              <span style={{ fontSize: 11, color: "#9ca3af" }}>{t("pipeline.status.syncing")}</span>
             )}
           </span>
         }
@@ -189,13 +189,13 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
 
       <div className="psv-grid" style={{ display: "grid", gap: 12 }}>
         <MetaTile
-          label="Source document"
+          label={t("pipeline.status.sourceDoc")}
           value={data.source_document_id}
           mono
         />
-        <MetaTile label="Started" value={formatTimestamp(data.started_at)} mono />
+        <MetaTile label={t("pipeline.status.started")} value={formatTimestamp(data.started_at)} mono />
         <MetaTile
-          label={isLive ? "Elapsed" : "Total time"}
+          label={isLive ? t("pipeline.status.elapsed") : t("pipeline.status.totalTime")}
           value={formatDuration(data.elapsed_seconds ?? elapsed)}
           mono
         />
@@ -242,8 +242,8 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
         >
           <span style={{ fontWeight: 600 }}>
             {data.error_phase
-              ? `Phase ${data.error_phase} failed:`
-              : "Pipeline failed:"}
+              ? t("pipeline.status.phaseFailed", { phase: String(data.error_phase) })
+              : t("pipeline.status.errorPrefix")}
           </span>{" "}
           {data.error_message}
         </div>

@@ -69,11 +69,11 @@ function renderInline(tokens: InlineToken[]): ReactNode[] {
             key={index}
             style={{
               borderRadius: 4,
-              backgroundColor: "#f3f4f6",
+              backgroundColor: "var(--color-bg-muted)",
               padding: "2px 4px",
               fontFamily: "var(--font-mono, monospace)",
               fontSize: "0.9em",
-              color: "#1f2937",
+              color: "var(--color-code-text)",
             }}
           >
             {token.value}
@@ -156,7 +156,7 @@ export function ChatMarkdown({ source }: ChatMarkdownProps) {
   if (!source) {
     return (
       <span
-        style={{ fontStyle: "italic", color: "#9ca3af" }}
+        style={{ fontStyle: "italic", color: "var(--color-text-muted)" }}
         data-testid="chat-empty-reply"
       >
         (no response)
@@ -179,10 +179,10 @@ export function ChatMarkdown({ source }: ChatMarkdownProps) {
               style={{
                 overflowX: "auto",
                 borderRadius: 6,
-                backgroundColor: "#111827",
+                backgroundColor: "var(--color-text)",
                 padding: "8px 12px",
                 fontSize: 14,
-                color: "#f3f4f6",
+                color: "var(--color-bg-muted)",
               }}
             >
               <code

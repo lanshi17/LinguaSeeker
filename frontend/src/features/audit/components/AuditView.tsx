@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Button, Input, Segmented, Flex, Typography } from "antd";
 import { Search, ClipboardCheck } from "lucide-react";
 import { MetricTile } from "@/components/ui/MetricTile";
+import { useI18n } from "@/lib/i18n";
 import { useAuditEvents } from "../hooks/useAuditEvents";
 import { AuditEventTable } from "./AuditEventTable";
 import { AuditEventDetailDrawer } from "./AuditEventDetailDrawer";
@@ -10,19 +11,20 @@ import type { ReviewAuditEventResponse } from "../types/audit";
 
 type StatusFilter = "all" | "approved" | "corrected" | "rejected";
 
-const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "approved", label: "Approved" },
-  { value: "corrected", label: "Corrected" },
-  { value: "rejected", label: "Rejected" },
-];
-
 export function AuditView() {
+  const { t } = useI18n();
   const { data: events, isLoading } = useAuditEvents({ limit: 500 });
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
   const [selectedEvent, setSelectedEvent] = useState<ReviewAuditEventResponse | null>(null);
   const [reviewDrawerOpen, setReviewDrawerOpen] = useState(false);
+
+  const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
+    { value: "all", label: t("audit.filter.all") },
+    { value: "approved", label: t("audit.filter.approved") },
+    { value: "corrected", label: t("audit.filter.corrected") },
+    { value: "rejected", label: t("audit.filter.rejected") },
+  ];
 
   const filtered = useMemo(() => {
     if (!events) return [];
@@ -66,10 +68,10 @@ export function AuditView() {
           gap: 12,
         }}
       >
-        <MetricTile label="Total events" value={stats.total} tone="primary" />
-        <MetricTile label="Approved" value={stats.approved} tone="success" />
-        <MetricTile label="Corrected" value={stats.corrected} tone="warning" />
-        <MetricTile label="Rejected" value={stats.rejected} tone="error" />
+        <MetricTile label={t("audit.metric.total")} value={stats.total} tone="primary" />
+        <MetricTile label={t("audit.metric.approved")} value={stats.approved} tone="success" />
+        <MetricTile label={t("audit.metric.corrected")} value={stats.corrected} tone="warning" />
+        <MetricTile label={t("audit.metric.rejected")} value={stats.rejected} tone="error" />
       </div>
 
       {/* Filters */}
@@ -81,8 +83,8 @@ export function AuditView() {
             options={STATUS_FILTERS}
           />
           <Input
-            placeholder="Search evidence ID, field, reason…"
-            prefix={<Search style={{ width: 14, height: 14, color: "#9ca3af" }} />}
+            placeholder={t("audit.searchPh")}
+            prefix={<Search style={{ width: 14, height: 14, color: "var(--color-text-muted)" }} />}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ maxWidth: 320 }}
@@ -90,7 +92,7 @@ export function AuditView() {
           />
           {filtered.length < (events?.length ?? 0) && (
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              Showing {filtered.length} of {events?.length ?? 0}
+              {t("audit.showing", { count: filtered.length, total: events?.length ?? 0 })}
             </Typography.Text>
           )}
         </Flex>
@@ -99,7 +101,7 @@ export function AuditView() {
           icon={<ClipboardCheck style={{ width: 14, height: 14 }} />}
           onClick={() => setReviewDrawerOpen(true)}
         >
-          Review Evidence
+          {t("audit.reviewEvidence")}
         </Button>
       </Flex>
 

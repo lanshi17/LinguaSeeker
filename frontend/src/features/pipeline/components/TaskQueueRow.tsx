@@ -7,6 +7,7 @@ import {
   Clock,
 } from "lucide-react";
 import { LivePulse } from "@/components/ui/LivePulse";
+import { useI18n } from "@/lib/i18n";
 import { useElapsedSeconds } from "@/lib/hooks/useElapsedSeconds";
 import { formatDuration, formatRelative } from "@/lib/utils/format";
 import type { PipelineRunSummary, ProcessingStatus } from "../types/pipeline";
@@ -14,14 +15,6 @@ import type { PipelineRunSummary, ProcessingStatus } from "../types/pipeline";
 interface TaskQueueRowProps {
   run: PipelineRunSummary;
 }
-
-const STATUS_LABEL: Record<ProcessingStatus, string> = {
-  pending: "Queued",
-  running: "Running",
-  completed: "Done",
-  failed: "Failed",
-  skipped: "Skipped",
-};
 
 const PULSE_TONE: Record<
   ProcessingStatus,
@@ -35,61 +28,56 @@ const PULSE_TONE: Record<
 };
 
 const DOT_COLORS: Record<ProcessingStatus, string> = {
-  pending: "#d1d5db",
-  running: "var(--color-primary-500)",
-  completed: "var(--color-success-500)",
-  failed: "#ef4444",
+  pending: "#9ca3af",
+  running: "#0891b2",
+  completed: "#16a34a",
+  failed: "#dc2626",
   skipped: "#9ca3af",
 };
 
 const BADGE_STYLES: Record<ProcessingStatus, CSSProperties> = {
-  completed: { backgroundColor: "var(--color-success-50)", color: "var(--color-success-700)" },
-  running: { backgroundColor: "var(--color-primary-50)", color: "var(--color-primary-700)" },
-  failed: { backgroundColor: "#fef2f2", color: "#b91c1c" },
   pending: { backgroundColor: "#f3f4f6", color: "#4b5563" },
+  running: { backgroundColor: "#ecfeff", color: "#0e7490" },
+  completed: { backgroundColor: "#f0fdf4", color: "#15803d" },
+  failed: { backgroundColor: "#fef2f2", color: "#b91c1c" },
   skipped: { backgroundColor: "#f3f4f6", color: "#6b7280" },
 };
 
 const PHASE_BOX_DONE: CSSProperties = {
-  display: "flex",
+  display: "inline-flex",
   width: 14,
   height: 14,
   alignItems: "center",
   justifyContent: "center",
-  borderRadius: 4,
-  border: "1px solid var(--color-success-300)",
-  backgroundColor: "var(--color-success-50)",
-  color: "var(--color-success-700)",
-  fontSize: 8,
+  borderRadius: 3,
+  backgroundColor: "#dcfce7",
+  color: "#16a34a",
 };
 
 const PHASE_BOX_ACTIVE: CSSProperties = {
-  display: "flex",
+  display: "inline-flex",
   width: 14,
   height: 14,
   alignItems: "center",
   justifyContent: "center",
-  borderRadius: 4,
-  border: "1px solid var(--color-primary-300)",
-  backgroundColor: "var(--color-primary-50)",
-  color: "var(--color-primary-700)",
-  fontSize: 8,
+  borderRadius: 3,
+  backgroundColor: "#ecfeff",
+  color: "#0891b2",
 };
 
 const PHASE_BOX_IDLE: CSSProperties = {
-  display: "flex",
+  display: "inline-flex",
   width: 14,
   height: 14,
   alignItems: "center",
   justifyContent: "center",
-  borderRadius: 4,
-  border: "1px solid #e5e7eb",
-  backgroundColor: "#fff",
+  borderRadius: 3,
+  backgroundColor: "#f3f4f6",
   color: "#9ca3af",
-  fontSize: 8,
 };
 
 export function TaskQueueRow({ run }: TaskQueueRowProps) {
+  const { t } = useI18n();
   const isLive = run.pipeline_status === "running" || run.pipeline_status === "pending";
   const liveElapsed = useElapsedSeconds(isLive ? run.started_at : undefined);
 
@@ -105,6 +93,14 @@ export function TaskQueueRow({ run }: TaskQueueRowProps) {
         : null);
 
   const subtitle = run.title ?? run.current_phase ?? null;
+
+  const STATUS_LABEL: Record<ProcessingStatus, string> = {
+    pending: t("pipeline.status.queued"),
+    running: t("pipeline.status.running"),
+    completed: t("pipeline.status.done"),
+    failed: t("pipeline.status.failed"),
+    skipped: t("pipeline.status.skipped"),
+  };
 
   return (
       <Link

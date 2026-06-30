@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { LivePulse } from "@/components/ui/LivePulse";
+import { useI18n } from "@/lib/i18n";
 import {
   Check,
   Circle,
@@ -24,57 +25,44 @@ const STATUS_VARIANT: Record<string, "default" | "info" | "success" | "error" | 
   cancelled: "default",
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "Queued",
-  running: "Running",
-  completed: "Completed",
-  failed: "Failed",
-  cancelled: "Cancelled",
-};
+function getStatusLabel(t: (key: string) => string): Record<string, string> {
+  return {
+    pending: t("chat.status.queued"),
+    running: t("chat.status.running"),
+    completed: t("chat.status.completed"),
+    failed: t("chat.status.failed"),
+    cancelled: t("chat.status.cancelled"),
+  };
+}
 
 interface PhaseMeta {
   id: string;
-  label: string;
-  description: string;
+  labelKey: string;
+  descKey: string;
 }
 
 const PHASES: PhaseMeta[] = [
-  {
-    id: "phase_1",
-    label: "Acquisition",
-    description: "Fetching and digitising the literature source",
-  },
-  {
-    id: "phase_2",
-    label: "Extraction",
-    description: "Cross-lingual dual extraction and fusion",
-  },
-  {
-    id: "phase_3",
-    label: "Standardisation",
-    description: "Entity normalisation and knowledge alignment",
-  },
-  {
-    id: "phase_4",
-    label: "Review",
-    description: "Expert-in-the-loop visualisation and feedback",
-  },
+  { id: "phase_1", labelKey: "chat.phase.acquisition", descKey: "chat.phase.acquisitionDesc" },
+  { id: "phase_2", labelKey: "chat.phase.extraction", descKey: "chat.phase.extractionDesc" },
+  { id: "phase_3", labelKey: "chat.phase.standardization", descKey: "chat.phase.standardizationDesc" },
+  { id: "phase_4", labelKey: "chat.phase.review", descKey: "chat.phase.reviewDesc" },
 ];
 
 const PHASE_STATUS_STYLES: Record<string, CSSProperties> = {
-  pending: { backgroundColor: "#f9fafb", color: "#6b7280", borderColor: "#e5e7eb" },
+  pending: { backgroundColor: "var(--color-bg)", color: "var(--color-text-secondary)", borderColor: "var(--color-border)" },
   running: { backgroundColor: "#eff6ff", color: "#1d4ed8", borderColor: "#bfdbfe" },
-  completed: { backgroundColor: "#ecfdf5", color: "#047857", borderColor: "#a7f3d0" },
-  failed: { backgroundColor: "#fef2f2", color: "#b91c1c", borderColor: "#fecaca" },
-  skipped: { backgroundColor: "#f9fafb", color: "#9ca3af", borderColor: "#e5e7eb" },
+  completed: { backgroundColor: "var(--color-highlight-green)", color: "var(--color-success-text)", borderColor: "#a7f3d0" },
+  failed: { backgroundColor: "var(--color-error-bg)", color: "var(--color-error-text)", borderColor: "var(--color-error-border)" },
+  skipped: { backgroundColor: "var(--color-bg)", color: "var(--color-text-muted)", borderColor: "var(--color-border)" },
 };
 
 function PhaseIcon({ status }: { status: string }) {
+  const { t } = useI18n();
   switch (status) {
     case "completed":
       return <Check style={{ width: 14, height: 14 }} />;
     case "running":
-      return <LivePulse tone="primary" label="Phase running" />;
+      return <LivePulse tone="primary" label={t("chat.status.phaseRunning")} />;
     case "failed":
       return <CircleX style={{ width: 14, height: 14 }} />;
     case "skipped":
@@ -105,6 +93,7 @@ export function PipelineStatusCard({
   status,
   phases,
 }: PipelineStatusCardProps) {
+  const { t } = useI18n();
   const isRunning = status === "running" || status === "pending";
 
   // Seed offset: total duration of completed phases reported by the backend.
@@ -134,12 +123,12 @@ export function PipelineStatusCard({
   const runningPhase = PHASES.find((p) => phases?.[p.id]?.status === "running");
   const hint =
     status === "completed"
-      ? "All phases finished. Evidence cards are ready for review."
+      ? t("chat.status.allFinished")
       : status === "failed"
-        ? "A phase failed. Check logs for details."
+        ? t("chat.status.phaseFailedHint")
         : runningPhase
-          ? `Now: ${runningPhase.description}`
-          : "Preparing the pipeline…";
+          ? t("chat.status.nowPhase", { desc: t(runningPhase.descKey) })
+          : t("chat.status.preparing");
 
   const completedCount = PHASES.filter(
     (p) => phases?.[p.id]?.status === "completed",
@@ -156,14 +145,16 @@ export function PipelineStatusCard({
         ? "#10b981"
         : undefined; // use gradient for running/pending
 
+  const statusLabel = getStatusLabel(t);
+
   return (
     <div style={{
       width: "100%",
       maxWidth: 448,
       overflow: "hidden",
       borderRadius: 12,
-      border: "1px solid #e5e7eb",
-      backgroundColor: "#fff",
+      border: "1px solid var(--color-border)",
+      backgroundColor: "var(--color-surface)",
       boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
     }}>
       {/* Header: run id + status */}
@@ -172,7 +163,7 @@ export function PipelineStatusCard({
         alignItems: "center",
         justifyContent: "space-between",
         gap: 12,
-        borderBottom: "1px solid #f3f4f6",
+        borderBottom: "1px solid var(--color-bg-muted)",
         padding: "10px 16px",
       }}>
         <div style={{ display: "flex", minWidth: 0, alignItems: "center", gap: 8 }}>
@@ -182,19 +173,19 @@ export function PipelineStatusCard({
             whiteSpace: "nowrap",
             fontFamily: "var(--font-mono)",
             fontSize: 11,
-            color: "#9ca3af",
+            color: "var(--color-text-muted)",
           }}>
             {runId.slice(0, 8)}…
           </span>
           {isRunning && <LivePulse tone="primary" />}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6b7280" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--color-text-secondary)" }}>
             <Clock style={{ width: 12, height: 12 }} aria-hidden="true" />
             {formatElapsed(elapsed)}
           </span>
           <Badge variant={STATUS_VARIANT[status] ?? "default"}>
-            {STATUS_LABEL[status] ?? status}
+            {statusLabel[status] ?? status}
           </Badge>
         </div>
       </div>
@@ -222,10 +213,10 @@ export function PipelineStatusCard({
                     transition: "color 150ms, background-color 150ms",
                     ...(PHASE_STATUS_STYLES[phaseStatus] ?? PHASE_STATUS_STYLES.pending),
                   }}
-                  title={phase.description}
+                  title={t(phase.descKey)}
                 >
                   <PhaseIcon status={phaseStatus} />
-                  <span>{phase.label}</span>
+                  <span>{t(phase.labelKey)}</span>
                   {typeof duration === "number" && (
                     <span style={{ opacity: 0.6 }}>
                       {duration.toFixed(0)}s
@@ -233,7 +224,7 @@ export function PipelineStatusCard({
                   )}
                 </div>
                 {i < PHASES.length - 1 && (
-                  <div style={{ width: 8, height: 1, backgroundColor: "#e5e7eb" }} aria-hidden="true" />
+                  <div style={{ width: 8, height: 1, backgroundColor: "var(--color-border)" }} aria-hidden="true" />
                 )}
               </div>
             );
@@ -248,7 +239,7 @@ export function PipelineStatusCard({
             width: "100%",
             overflow: "hidden",
             borderRadius: 9999,
-            backgroundColor: "#f3f4f6",
+            backgroundColor: "var(--color-bg-muted)",
           }}
           role="progressbar"
           aria-valuenow={progressPct}
@@ -277,7 +268,7 @@ export function PipelineStatusCard({
           paddingBottom: 12,
           fontSize: 11.5,
           lineHeight: 1.625,
-          color: "#6b7280",
+          color: "var(--color-text-secondary)",
         }}>
           {hint}
         </p>

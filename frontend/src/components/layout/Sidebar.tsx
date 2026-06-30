@@ -1,33 +1,44 @@
+import { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MessageSquare, Database, ClipboardList, ShieldCheck, type LucideIcon } from "lucide-react";
+import { MessageSquare, Database, ClipboardList, ShieldCheck, HelpCircle, type LucideIcon } from "lucide-react";
 import { Menu, Typography } from "antd";
 import { useAppStore } from "@/stores/appStore";
+import { useI18n } from "@/lib/i18n";
 
-interface NavItem {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { label: "AI Chat", href: "/chat", icon: MessageSquare },
-  { label: "Tasks", href: "/pipeline", icon: ClipboardList },
-  { label: "Evidence DB", href: "/evidence-db", icon: Database },
-  { label: "Audit", href: "/audit", icon: ShieldCheck },
-];
 
 interface SidebarProps {
   /** When true, renders as a mobile overlay instead of inline. */
   mobile?: boolean;
   /** Callback when a nav link is clicked (used to close mobile overlay). */
   onNavigate?: () => void;
+  /** Callback to open the user guide. */
+  onGuideOpen?: () => void;
 }
 
-export function Sidebar({ mobile, onNavigate }: SidebarProps) {
+export function Sidebar({ mobile, onNavigate, onGuideOpen }: SidebarProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const collapsed = useAppStore((s) => s.sidebarCollapsed);
+  const mode = useAppStore((s) => s.mode);
   const effectiveCollapsed = mobile ? false : collapsed;
+  const { t } = useI18n();
+
+  // The SVG uses @media(prefers-color-scheme:dark) internally. When the app
+  // theme diverges from the OS colour-scheme we need to compensate with a
+  // CSS filter so the logo always matches the surrounding UI.
+  const logoFilter = useMemo(() => {
+    const osDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (mode === "dark" && !osDark) return "invert(1) hue-rotate(180deg)";
+    if (mode === "light" && osDark) return "invert(1) hue-rotate(180deg)";
+    return undefined;
+  }, [mode]);
+
+  const NAV_ITEMS = [
+    { label: t("nav.chat"), href: "/chat", icon: MessageSquare },
+    { label: t("nav.tasks"), href: "/pipeline", icon: ClipboardList },
+    { label: t("nav.evidenceDb"), href: "/evidence-db", icon: Database },
+    { label: t("nav.audit"), href: "/audit", icon: ShieldCheck },
+  ] as const;
 
   const selectedKey =
     NAV_ITEMS.find(
@@ -38,34 +49,43 @@ export function Sidebar({ mobile, onNavigate }: SidebarProps) {
 
   return (
     <aside
-      aria-label="Main navigation"
+      aria-label={t("aria.mainNav")}
       style={{
         display: "flex",
         flexDirection: "column",
         height: "100%",
         width: sidebarWidth,
-        borderRight: "1px solid #e5e7eb",
-        backgroundColor: "#fff",
+        borderRight: "1px solid var(--color-border)",
+        backgroundColor: "var(--color-surface)",
         transition: "width 200ms",
       }}
     >
       {/* Brand */}
       <div
+        data-tour="brand"
         style={{
           display: "flex",
           alignItems: "center",
           height: 56,
-          borderBottom: "1px solid #e5e7eb",
+          borderBottom: "1px solid var(--color-border)",
           padding: "0 16px",
         }}
       >
-        <Typography.Text
-          strong
-          style={{ fontSize: 18, color: "var(--color-primary-700)" }}
-          aria-hidden={effectiveCollapsed}
-        >
-          {effectiveCollapsed ? "A" : "Lingua Seeker"}
-        </Typography.Text>
+        <img
+          src="/favicon.svg"
+          alt="Lingua Seeker logo"
+          width={28}
+          height={28}
+          style={{ borderRadius: 4, flexShrink: 0, filter: logoFilter }}
+        />
+        {!effectiveCollapsed && (
+          <Typography.Text
+            strong
+            style={{ fontSize: 18, color: "var(--color-primary-700)", marginLeft: 10 }}
+          >
+            Lingua Seeker
+          </Typography.Text>
+        )}
       </div>
 
       {/* Navigation */}
@@ -80,10 +100,11 @@ export function Sidebar({ mobile, onNavigate }: SidebarProps) {
           }}
           items={NAV_ITEMS.map((item) => {
             const Icon = item.icon;
+            const tourKey = item.href.replace("/", "nav-");
             return {
               key: item.href,
               icon: <Icon size={20} />,
-              label: item.label,
+              label: <span data-tour={tourKey}>{item.label}</span>,
             };
           })}
           style={{ border: "none" }}
@@ -91,11 +112,37 @@ export function Sidebar({ mobile, onNavigate }: SidebarProps) {
       </div>
 
       {/* Footer */}
-      <div style={{ borderTop: "1px solid #e5e7eb", padding: 16 }}>
+      <div style={{ borderTop: "1px solid var(--color-border)", padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
         {!effectiveCollapsed && (
-          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            Lingua Seeker v{__APP_VERSION__}
-          </Typography.Text>
+          <>
+            <button
+              data-tour="help-btn"
+              onClick={onGuideOpen}
+              aria-label={t("nav.help")}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                width: "100%",
+                padding: "6px 0",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--color-text-secondary)",
+                fontSize: 13,
+                fontFamily: "inherit",
+                transition: "color 150ms",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#0891b2")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
+            >
+              <HelpCircle size={16} />
+              <span>{t("nav.help")}</span>
+            </button>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              Lingua Seeker v{__APP_VERSION__}
+            </Typography.Text>
+          </>
         )}
       </div>
     </aside>
