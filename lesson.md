@@ -6216,3 +6216,29 @@ English-pivot-tristate 的 N=5 value-F1 低于 C0，需要确认 C0 命中而 En
 - wiring/startup 测试必须覆盖“空模块级状态下调用 `wire_dependencies()`”这一真实启动路径。
 - 对直接导入的函数，应 patch 使用方模块的引用路径，而不是 patch 定义方路径。
 - 重启服务时优先前台运行一次捕获 startup stack trace，再决定是否后台化。
+
+## 2026-06-30 - English-pivot C0-only losses require DB-admission attribution
+
+### 问题描述
+针对 matched N=5 中 C0 命中但 `c2_english_pivot_tristate` 漏掉的 `gs_005` 与 `gs_075` 字段，需要确认死因是 primary missing、review 截断、grounding 失败，还是 final admission/scoring 丢失。
+
+### 排查过程
+1. 带本地 API key 重跑 `gs_005` 和 `gs_075`，参数固定为 `force_reextract=True`、`extraction_mode=broad`、`extraction_track_mode=english_pivot`、`review_reject_policy=tristate_review`。
+2. 保留并检查新 run artifacts：
+   - `gs_005`: `backend/data/pipeline/57dc6855-e2dc-418e-a9c4-d568a17b9248/phase_2/extraction_result.json`
+   - `gs_075`: `backend/data/pipeline/034d3a3d-c44d-4b6a-86c9-86a664a80bb8/phase_2/extraction_result.json`
+3. 从 backend debug log 的 review prompt 中解析 `Primary candidates JSON`，确认 primary 是否抓到目标字段。
+4. 对照 artifact 的 `review_track:` notes、`source/raw_source` spans，以及 PostgreSQL `RunEvidenceItem` 最终入库行，定位字段在哪一层丢失。
+
+### 根因分析
+- `gs_005.A.gene_disease_relationship` 不是翻译或 grounding 问题。Primary 抽到了该字段，但值为 `uncertain`，review 批准并成功 identity traceback；最终 DB 中没有该字段，评分表现为 missing。
+- `gs_075.A.variant_hgvs_c` 与 `A.variant_hgvs_p` primary 均抽到，但 review 因 “mouse model/no human participants” 将其置为 `not_found`，导致 source grounding 不再对这些候选运行；DB 中只保留 `not_found` 行。
+- `gs_075.A.variant_type` primary 抽为 `SNV/substitution`，而 gold 期待 `missense`，同时 primary 另有 `A.variant_consequence_class=missense`。这暴露了字段边界不一致；该字段也被 review 置为 `not_found`，且未进入最终 DB 目标行。
+- `gs_075.A.gene_disease_relationship` 在 artifact 中是 `found + approved + grounded`，但最终 DB 查询没有该字段，评分仍为 missing。这是 final admission/persistence/scoring 层丢失，不应归因于 primary、review 或 grounding。
+
+### 解决方案
+本轮不做代码修复，只完成证据归因。后续修复应拆成两个独立问题：review 对动物模型/functional evidence 的 reject rubric 是否过严，以及 artifact 中 found evidence 未进入 `RunEvidenceItem` 的 admission/persistence 规则。
+
+### 预防措施
+- 字段级 loss attribution 必须同时保留 primary dump、post-review artifact、grounding spans、DB final admission rows；只看 eval report 的 `missing` 会误判死因。
+- 对 `variant_type` 与 `variant_consequence_class` 的 schema/gold 边界要单独校准，否则 C0 与 C2 可能在不同字段名下表达同一事实。
