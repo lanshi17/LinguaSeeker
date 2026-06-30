@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { LivePulse } from "@/components/ui/LivePulse";
 import { MetricTile } from "@/components/ui/MetricTile";
+import { useI18n } from "@/lib/i18n";
 import { useElapsedSeconds } from "@/lib/hooks/useElapsedSeconds";
 import { formatDuration, formatTimestamp } from "@/lib/utils/format";
 import type { PhaseNode, PhaseStatus, ProcessingStatus } from "../types/pipeline";
@@ -14,21 +15,6 @@ interface PhaseDetailCardProps {
   phase: PhaseStatus;
   index?: number;
 }
-
-const PHASE_LABELS: Record<string, { title: string; subtitle: string }> = {
-  phase_1: {
-    title: "Document Acquisition",
-    subtitle: "Literature search, download, OCR & parse",
-  },
-  phase_2: {
-    title: "Evidence Extraction",
-    subtitle: "Cross-lingual extraction & fusion",
-  },
-  phase_3: {
-    title: "Entity Standardization",
-    subtitle: "Terminology alignment & knowledge graph",
-  },
-};
 
 const PHASE_ICON_COLOR: Record<string, React.CSSProperties> = {
   phase_1: { color: "#0369a1", backgroundColor: "#f0f9ff", borderBottom: "1px solid #bae6fd" },
@@ -61,8 +47,24 @@ const progressBarBg = (status: ProcessingStatus): string => {
   return "#d1d5db";
 };
 
+const PHASE_TITLE_KEYS: Record<string, string> = {
+  phase_1: "pipeline.phase.acquisition",
+  phase_2: "pipeline.phase.extraction",
+  phase_3: "pipeline.phase.standardization",
+};
+
+const PHASE_DESC_KEYS: Record<string, string> = {
+  phase_1: "pipeline.phase.acquisitionDesc",
+  phase_2: "pipeline.phase.extractionDesc",
+  phase_3: "pipeline.phase.standardizationDesc",
+};
+
 export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardProps) {
-  const meta = PHASE_LABELS[phaseId] ?? { title: phaseId, subtitle: "" };
+  const { t } = useI18n();
+  const titleKey = PHASE_TITLE_KEYS[phaseId];
+  const descKey = PHASE_DESC_KEYS[phaseId];
+  const title = titleKey ? t(titleKey) : phaseId;
+  const subtitle = descKey ? t(descKey) : "";
   const isLive = phase.status === "running";
   const elapsed = useElapsedSeconds(isLive ? phase.started_at : phase.completed_at);
   const duration = phase.duration_seconds ?? (isLive ? elapsed : elapsed);
@@ -102,10 +104,10 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
                 color: "#111827",
               }}
             >
-              {meta.title}
+              {title}
             </h3>
           </div>
-          {meta.subtitle && (
+          {subtitle && (
             <p
               style={{
                 marginTop: 2,
@@ -116,27 +118,27 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
                 color: "#4b5563",
               }}
             >
-              {meta.subtitle}
+              {subtitle}
             </p>
           )}
         </div>
-        <PhaseStatusBadge status={phase.status} />
+        <PhaseStatusBadge status={phase.status} t={t} />
       </header>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, padding: "12px 16px" }}>
         <MetricTile
-          label="Duration"
+          label={t("pipeline.phase.duration")}
           value={formatDuration(duration)}
           icon={<FileText style={{ width: 12, height: 12 }} aria-hidden />}
         />
         <MetricTile
-          label="Nodes"
+          label={t("pipeline.phase.nodes")}
           value={totalNodes > 0 ? `${doneNodes}/${totalNodes}` : "—"}
           tone={totalNodes > 0 && doneNodes === totalNodes ? "success" : "default"}
           icon={<Hash style={{ width: 12, height: 12 }} aria-hidden />}
         />
         <MetricTile
-          label="Items"
+          label={t("pipeline.phase.items")}
           value={totalCount > 0 ? totalCount.toLocaleString() : "—"}
           tone="primary"
           icon={<Layers style={{ width: 12, height: 12 }} aria-hidden />}
@@ -145,14 +147,14 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
 
       <div style={{ borderTop: "1px solid #f3f4f6", padding: "12px 16px" }}>
         {totalNodes > 0 ? (
-          <NodeList nodes={nodes} />
+          <NodeList nodes={nodes} t={t} />
         ) : phase.summary ? (
           <SummaryBlock summary={phase.summary} />
         ) : isLive ? (
-          <EmptyLiveHint phaseId={phaseId} />
+          <EmptyLiveHint phaseId={phaseId} t={t} />
         ) : (
           <p style={{ fontSize: 11, fontStyle: "italic", color: "#9ca3af" }}>
-            No sub-node detail available.
+            {t("pipeline.phase.noDetail")}
           </p>
         )}
       </div>
@@ -171,8 +173,8 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
           color: "#6b7280",
         }}
       >
-        <span>Started {formatTimestamp(phase.started_at)}</span>
-        {phase.completed_at && <span>Done {formatTimestamp(phase.completed_at)}</span>}
+        <span>{t("pipeline.phase.started")} {formatTimestamp(phase.started_at)}</span>
+        {phase.completed_at && <span>{t("pipeline.phase.done")} {formatTimestamp(phase.completed_at)}</span>}
       </footer>
 
       {phase.error && (
@@ -186,14 +188,16 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
           }}
         >
           <AlertCircle style={{ marginRight: 4, display: "inline", width: 12, height: 12 }} aria-hidden />
-          {stringifyError(phase.error)}
+          {stringifyError(phase.error, t("pipeline.phase.unknownError"))}
         </div>
       )}
     </Card>
   );
 }
 
-function PhaseStatusBadge({ status }: { status: ProcessingStatus }) {
+type TFn = (key: string, params?: Record<string, string>) => string;
+
+function PhaseStatusBadge({ status, t }: { status: ProcessingStatus; t: TFn }) {
   if (status === "running") {
     return (
       <span
@@ -211,25 +215,25 @@ function PhaseStatusBadge({ status }: { status: ProcessingStatus }) {
         }}
       >
         <LivePulse tone="primary" />
-        Running
+        {t("pipeline.phase.running")}
       </span>
     );
   }
   if (status === "completed") {
-    return <Badge variant="success">Completed</Badge>;
+    return <Badge variant="success">{t("pipeline.phase.completed")}</Badge>;
   }
   if (status === "failed") {
-    return <Badge variant="error">Failed</Badge>;
+    return <Badge variant="error">{t("pipeline.phase.failed")}</Badge>;
   }
   if (status === "skipped") {
-    return <Badge variant="default">Skipped</Badge>;
+    return <Badge variant="default">{t("pipeline.phase.skipped")}</Badge>;
   }
-  return <Badge variant="default">Pending</Badge>;
+  return <Badge variant="default">{t("pipeline.phase.pending")}</Badge>;
 }
 
-function NodeList({ nodes }: { nodes: PhaseNode[] }) {
+function NodeList({ nodes, t }: { nodes: PhaseNode[]; t: TFn }) {
   return (
-    <ul style={{ display: "flex", flexDirection: "column", gap: 6 }} aria-label="Sub-nodes">
+    <ul style={{ display: "flex", flexDirection: "column", gap: 6 }} aria-label={t("pipeline.phase.subnodes")}>
       {nodes.map((node) => (
         <NodeRow key={node.node_id} node={node} />
       ))}
@@ -371,19 +375,19 @@ function SummaryBlock({ summary }: { summary: Record<string, unknown> }) {
   );
 }
 
-function EmptyLiveHint({ phaseId }: { phaseId: string }) {
+function EmptyLiveHint({ phaseId, t }: { phaseId: string; t: TFn }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: "#6b7280" }}>
       <Skeleton variant="line" width={128} height={8} />
       <Skeleton variant="line" width={80} height={8} />
       <span style={{ marginLeft: "auto", fontStyle: "italic", color: "#9ca3af" }}>
-        preparing {phaseId.replace("_", " ")}…
+        {t("pipeline.phase.preparing", { phase: phaseId.replace("_", " ") })}
       </span>
     </div>
   );
 }
 
-function stringifyError(err: unknown): string {
+function stringifyError(err: unknown, fallback: string): string {
   if (typeof err === "string") return err;
   if (err && typeof err === "object") {
     const m = (err as { message?: unknown }).message;
@@ -391,10 +395,10 @@ function stringifyError(err: unknown): string {
     try {
       return JSON.stringify(err);
     } catch {
-      return "Unknown error";
+      return fallback;
     }
   }
-  return "Unknown error";
+  return fallback;
 }
 
 export function PhaseDetailCardSkeleton({ index = 0 }: { index?: number }) {

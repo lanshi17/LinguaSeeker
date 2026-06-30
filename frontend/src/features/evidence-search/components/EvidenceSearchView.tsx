@@ -4,6 +4,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { EvidenceSearchForm } from "./EvidenceSearchForm";
 import { EvidenceResultsTable } from "./EvidenceResultsTable";
 import { useEvidenceSearch } from "../hooks/useEvidenceSearch";
+import { useI18n } from "@/lib/i18n";
 
 export function EvidenceSearchView() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export function EvidenceSearchView() {
     clearFilters,
     setPage,
   } = useEvidenceSearch();
+  const { t } = useI18n();
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -46,7 +48,7 @@ export function EvidenceSearchView() {
             textAlign: "center",
           }}>
             <Typography.Text strong style={{ color: "#b91c1c", fontSize: 14 }}>
-              Failed to load evidence
+              {t("evidence.detail.loadError")}
             </Typography.Text>
             <br />
             <Typography.Text type="secondary" style={{ color: "#dc2626", fontSize: 12 }}>

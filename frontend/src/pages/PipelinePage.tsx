@@ -13,31 +13,31 @@ import {
 } from "antd";
 import type { TabsProps } from "antd";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { useI18n } from "@/lib/i18n";
 import { RunHistory } from "@/features/pipeline";
 import { startPipelineRun } from "@/features/pipeline/services/pipeline";
 import type { ProcessingStatus } from "@/lib/types/common";
 
 type FilterValue = "all" | ProcessingStatus;
-
 interface FilterTab {
   value: FilterValue;
   label: string;
 }
-
-const FILTER_TABS: FilterTab[] = [
-  { value: "all", label: "All" },
-  { value: "running", label: "Running" },
-  { value: "pending", label: "Pending" },
-  { value: "completed", label: "Completed" },
-  { value: "failed", label: "Failed" },
-];
 
 export function PipelinePage() {
   const [filter, setFilter] = useState<FilterValue>("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { message } = App.useApp();
+  const { t } = useI18n();
 
+  const FILTER_TABS: FilterTab[] = [
+    { value: "all", label: t("pipeline.filter.all") },
+    { value: "running", label: t("pipeline.filter.running") },
+    { value: "pending", label: t("pipeline.filter.pending") },
+    { value: "completed", label: t("pipeline.filter.completed") },
+    { value: "failed", label: t("pipeline.filter.failed") },
+  ];
   // ── Upload PDF mode ──
   const [pdfFile, setPdfFile] = useState<File | null>(null);
 
@@ -63,7 +63,7 @@ export function PipelinePage() {
             const comma = result.indexOf(",");
             resolve(comma >= 0 ? result.slice(comma + 1) : result);
           };
-          reader.onerror = () => reject(new Error("Failed to read file"));
+          reader.onerror = () => reject(new Error(t("pipeline.error.readFailed")));
           reader.readAsDataURL(pdfFile);
         });
 
@@ -74,13 +74,13 @@ export function PipelinePage() {
           content_base64: base64,
         });
 
-        void message.success(`"${pdfFile.name}" — pipeline started`);
+        void message.success(t("pipeline.success.pdfStarted", { name: pdfFile.name }));
       } else {
         // ── Online search ──
         const trimmedQuery = searchQuery.trim();
         const trimmedIds = searchIdentifiers.trim();
         if (!trimmedQuery && !trimmedIds) {
-          void message.warning("Enter a search query or identifiers (DOI/PMID/PMCID)");
+          void message.warning(t("pipeline.warning.enterQueryOrIds"));
           setSubmitting(false);
           return;
         }
@@ -98,15 +98,15 @@ export function PipelinePage() {
 
         void message.success(
           trimmedQuery
-            ? `"${trimmedQuery}" — pipeline started`
-            : `Search by identifiers — pipeline started`,
+            ? t("pipeline.success.queryStarted", { query: trimmedQuery })
+            : t("pipeline.success.idsStarted"),
         );
       }
 
       setModalOpen(false);
       resetForm();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to start pipeline";
+      const msg = err instanceof Error ? err.message : t("pipeline.error.startFailed");
       void message.error(msg);
     } finally {
       setSubmitting(false);
@@ -121,7 +121,7 @@ export function PipelinePage() {
       label: (
         <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <FileUp size={14} />
-          Upload PDF
+          {t("pipeline.upload.title")}
         </span>
       ),
       children: (
@@ -131,7 +131,7 @@ export function PipelinePage() {
             maxCount={1}
             beforeUpload={(file) => {
               if (!file.name.toLowerCase().endsWith(".pdf")) {
-                void message.error("Only PDF files are supported");
+                void message.error(t("pipeline.error.pdfOnly"));
                 return Upload.LIST_IGNORE;
               }
               setPdfFile(file);
@@ -141,10 +141,10 @@ export function PipelinePage() {
             fileList={pdfFile ? [{ uid: "-1", name: pdfFile.name, status: "done" as const }] : []}
           >
             <p className="ant-upload-drag-icon">
-              <FileUp size={28} style={{ color: "#9ca3af" }} />
+              <FileUp size={28} style={{ color: "var(--color-text-muted)" }} />
             </p>
-            <p className="ant-upload-text" style={{ fontSize: 13, color: "#6b7280" }}>
-              Click or drag a PDF file here
+            <p className="ant-upload-text" style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>
+              {t("pipeline.upload.dragText")}
             </p>
           </Upload.Dragger>
         </div>
@@ -155,17 +155,17 @@ export function PipelinePage() {
       label: (
         <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <Search size={14} />
-          Online Search
+          {t("pipeline.search.title")}
         </span>
       ),
       children: (
         <Space direction="vertical" style={{ width: "100%", padding: "8px 0" }} size="middle">
           <div>
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              Search query
+              {t("pipeline.search.queryPlaceholder")}
             </Typography.Text>
             <Input
-              placeholder="e.g. BRCA1 breast cancer literature"
+              placeholder={t("pipeline.search.queryPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ marginTop: 4 }}
@@ -173,10 +173,10 @@ export function PipelinePage() {
           </div>
           <div>
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              Identifiers (DOI, PMID, PMCID — comma-separated)
+              {t("pipeline.search.identifiersPlaceholder")}
             </Typography.Text>
             <Input
-              placeholder="e.g. 10.1038/s41586-020-2222-3, 34521984"
+              placeholder={t("pipeline.search.identifiersPlaceholder")}
               value={searchIdentifiers}
               onChange={(e) => setSearchIdentifiers(e.target.value)}
               style={{ marginTop: 4 }}
@@ -190,15 +190,15 @@ export function PipelinePage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <PageHeader
-        title="Task Management"
-        description="Monitor and manage all pipeline runs. Click New Task to upload a PDF or search online."
+        title={t("pipeline.title")}
+        description={t("pipeline.description")}
         actions={
           <Button
             type="primary"
             icon={<Plus size={16} />}
             onClick={() => setModalOpen(true)}
           >
-            New Task
+            {t("pipeline.newTask")}
           </Button>
         }
       />
@@ -212,7 +212,7 @@ export function PipelinePage() {
       <RunHistory statusFilter={filter === "all" ? undefined : filter} />
 
       <Modal
-        title="New Task"
+        title={t("pipeline.newTask")}
         open={modalOpen}
         onCancel={() => {
           setModalOpen(false);
@@ -226,7 +226,7 @@ export function PipelinePage() {
               resetForm();
             }}
           >
-            Cancel
+            {t("pipeline.cancel")}
           </Button>,
           <Button
             key="submit"
@@ -235,7 +235,7 @@ export function PipelinePage() {
             disabled={!canSubmit}
             onClick={() => void handleSubmit()}
           >
-            Start Pipeline
+            {t("pipeline.submit")}
           </Button>,
         ]}
         width={500}

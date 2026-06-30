@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import type { LiteratureEvidenceRow } from "../utils/literatureRows";
+import { useI18n } from "@/lib/i18n";
 
 export const STATUS_VARIANT: Record<
   string,
@@ -46,8 +47,8 @@ export function joinedLabel(values: string[]) {
   return values.length > 0 ? values.join(", ") : "\u2014";
 }
 
-export function literatureTitle(row: LiteratureEvidenceRow) {
-  return row.title?.trim() || "Untitled literature record";
+export function literatureTitle(row: LiteratureEvidenceRow, t: (key: string) => string) {
+  return row.title?.trim() || t("evidence.col.untitled");
 }
 
 const TONE_STYLES: Record<string, React.CSSProperties> = {
@@ -163,6 +164,7 @@ export function StatBadge({
 
 /** Renders the Literature column cell (desktop table + mobile card icon/title block). */
 export function LiteratureCell({ row }: { row: LiteratureEvidenceRow }) {
+  const { t } = useI18n();
   return (
     <div style={{ display: "flex", minWidth: 0, alignItems: "flex-start", gap: 12 }}>
       <span
@@ -188,7 +190,7 @@ export function LiteratureCell({ row }: { row: LiteratureEvidenceRow }) {
           className="edb-row-title edb-line-clamp-2"
           style={{ fontSize: 14, fontWeight: 600, lineHeight: "20px", color: "#030712", transition: "color 0.15s" }}
         >
-          {literatureTitle(row)}
+          {literatureTitle(row, t)}
         </p>
         <p
           style={{
@@ -205,7 +207,7 @@ export function LiteratureCell({ row }: { row: LiteratureEvidenceRow }) {
         </p>
         <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#6b7280" }}>
           <span style={{ borderRadius: 4, backgroundColor: "#f3f4f6", padding: "2px 6px", fontWeight: 500 }}>
-            PMID {row.pmid ?? "\u2014"}
+            {t("evidence.col.pmid")} {row.pmid ?? "\u2014"}
           </span>
         </div>
       </div>

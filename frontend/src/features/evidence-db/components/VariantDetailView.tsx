@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useVariantDetail } from "../hooks/useVariantDetail";
 import { VariantDetailSkeleton } from "./VariantDetailSkeleton";
-import type { LiteratureReference, VariantIndexEntry } from "../types/variantDb";
+import type { LiteratureReference, VariantIndexEntry, ClassificationLevel } from "../types/variantDb";
 import type { EvidenceGroupItem } from "@/features/evidence-search/types/evidenceSearch";
 import {
   classificationColor,
@@ -20,15 +20,16 @@ import {
 } from "@/features/evidence-search/utils/categoryStyles";
 import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
 import {
-  EVIDENCE_DB_LABELS,
+  getEvidenceDbLabels,
   formatConfidencePercent,
   formatCoverageCount,
   formatReviewedCount,
 } from "../utils/fieldLabels";
+import { useI18n } from "@/lib/i18n";
 
 /* ── Style helpers (replace Tailwind-based classificationBadgeClasses / categoryChipStyle) ── */
 
-function badgeInlineStyle(level: import("../types/variantDb").ClassificationLevel): React.CSSProperties {
+function badgeInlineStyle(level: ClassificationLevel): React.CSSProperties {
   const color = classificationColor(level);
   return {
     display: "inline-flex",
@@ -146,7 +147,7 @@ function ConfidenceRing({ value, size = 56 }: { value: number; size?: number }) 
 
 /* ── Evidence Item Card ─────────────────────────────────── */
 
-function EvidenceItemCard({ item }: { item: EvidenceGroupItem }) {
+function EvidenceItemCard({ item, t }: { item: EvidenceGroupItem; t: (key: string, params?: Record<string, unknown>) => string }) {
   const cat = item.category ?? (item.field_id.includes(".") ? item.field_id.split(".")[0] : null);
   const catHex = cat ? CATEGORY_COLORS[cat]?.hex ?? "#64748B" : "#64748B";
   const confidence = item.confidence ?? 0;
@@ -214,7 +215,7 @@ function EvidenceItemCard({ item }: { item: EvidenceGroupItem }) {
           <span style={{ fontFamily: "var(--font-mono)" }}>{item.field_id}</span>
           <span>&middot;</span>
           <span style={{ fontWeight: 500, color: confColor }}>
-            {formatConfidencePercent(confidence)} confidence
+            {formatConfidencePercent(confidence)} {t("evidenceDb.card.confidence")}
           </span>
           {item.track && (
             <>
@@ -233,9 +234,11 @@ function EvidenceItemCard({ item }: { item: EvidenceGroupItem }) {
 function EvidenceCategoryPanel({
   items,
   category,
+  t,
 }: {
   items: EvidenceGroupItem[];
   category: string;
+  t: (key: string, params?: Record<string, unknown>) => string;
 }) {
   const hex = CATEGORY_COLORS[category]?.hex ?? "#64748B";
   const label = categoryLabel(category);
@@ -271,7 +274,7 @@ function EvidenceCategoryPanel({
           <span style={{ fontFamily: "var(--font-mono)" }}>{category}</span>: {label}
         </h3>
         <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: 12, color: "#6b7280" }}>
-          {catItems.length} field{catItems.length !== 1 ? "s" : ""}
+          {t("evidenceDb.detail.fieldCount", { count: String(catItems.length) })}
         </span>
       </div>
 
@@ -281,6 +284,7 @@ function EvidenceCategoryPanel({
           <EvidenceItemCard
             key={item.canonical_evidence_id}
             item={item}
+            t={t}
           />
         ))}
       </div>
@@ -341,9 +345,11 @@ function BilingualItemRow({
 function LiteratureReferenceCard({
   reference,
   variantSlug,
+  t,
 }: {
   reference: LiteratureReference;
   variantSlug: string;
+  t: (key: string, params?: Record<string, unknown>) => string;
 }) {
   const confidence = Math.round(reference.avgConfidence * 100);
   const confColor = confidence >= 70 ? "#16A34A" : confidence >= 40 ? "#D97706" : "#DC2626";
@@ -410,20 +416,20 @@ function LiteratureReferenceCard({
           {reference.doi && (
             <span style={{ fontFamily: "var(--font-mono)" }}>DOI:{reference.doi.slice(0, 20)}&hellip;</span>
           )}
-          <span>{reference.fieldCount} fields</span>
+          <span>{t("evidenceDb.detail.fieldCount", { count: String(reference.fieldCount) })}</span>
           <span style={{ fontWeight: 500, color: confColor }}>
             {confidence}%
           </span>
           <span>
-            {formatReviewedCount(reference.reviewProgress)}
+            {formatReviewedCount(reference.reviewProgress, t)}
           </span>
         </div>
         <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 4 }}>
           {reference.hasFullText && (
-            <span style={chipInlineStyle("F")}>Full text</span>
+            <span style={chipInlineStyle("F")}>{t("evidenceDb.detail.fullText")}</span>
           )}
           {reference.hasTranslation && (
-            <span style={chipInlineStyle("I")}>Translated</span>
+            <span style={chipInlineStyle("I")}>{t("evidenceDb.detail.translated")}</span>
           )}
           {reference.conflictCount > 0 && (
             <span
@@ -437,7 +443,7 @@ function LiteratureReferenceCard({
                 color: "#b91c1c",
               }}
             >
-              {reference.conflictCount} conflict{reference.conflictCount !== 1 ? "s" : ""}
+              {t("evidenceDb.bilingual.conflictCount", { count: String(reference.conflictCount) })}
             </span>
           )}
           {reference.categories.map((cat) => (
@@ -460,8 +466,8 @@ function LiteratureReferenceCard({
             gap: 6,
           }}>
             <div style={{ display: "flex", gap: 8, fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" }}>
-              <span style={{ flex: 1, color: "#1e40af" }}>Original</span>
-              <span style={{ flex: 1, color: "#7c3aed" }}>Translated</span>
+              <span style={{ flex: 1, color: "#1e40af" }}>{t("evidenceDb.detail.original")}</span>
+              <span style={{ flex: 1, color: "#7c3aed" }}>{t("evidenceDb.detail.translatedLabel")}</span>
             </div>
             {bilingualEntries.map(([id, pair]) => (
               <BilingualItemRow
@@ -498,6 +504,8 @@ export function VariantDetailView({
 }: {
   variantSlug: string;
 }) {
+  const { t } = useI18n();
+  const labels = getEvidenceDbLabels(t);
   const location = useLocation();
   const routeState = location.state as { variantEntry?: VariantIndexEntry } | null;
   const seededEntry =
@@ -526,7 +534,7 @@ export function VariantDetailView({
           }}
         >
           <ArrowLeft style={{ width: 16, height: 16 }} />
-          Back to Evidence Database
+          {t("evidenceDb.detail.back")}
         </Link>
         <div style={{
           display: "flex",
@@ -540,7 +548,7 @@ export function VariantDetailView({
           color: "#b91c1c",
         }}>
           <AlertCircle style={{ width: 20, height: 20, flexShrink: 0 }} />
-          <span>Variant not found or failed to load.</span>
+          <span>{t("evidenceDb.detail.notFound")}</span>
         </div>
       </div>
     );
@@ -580,7 +588,7 @@ export function VariantDetailView({
         }}
       >
         <ArrowLeft style={{ width: 16, height: 16 }} />
-        Back to Evidence Database
+        {t("evidenceDb.detail.back")}
       </Link>
 
       {/* Variant Hero */}
@@ -648,7 +656,7 @@ export function VariantDetailView({
                     color: "#b91c1c",
                   }}
                 >
-                  {quality.conflictCount} conflict{quality.conflictCount !== 1 ? "s" : ""}
+                  {t("evidenceDb.detail.conflicts")}
                 </span>
               )}
             </div>
@@ -666,25 +674,25 @@ export function VariantDetailView({
                   <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
                     {entry.literatureCount}
                   </p>
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{EVIDENCE_DB_LABELS.literature}</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{labels.literature}</p>
                 </div>
                 <div>
                   <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
                     {entry.fieldCount}
                   </p>
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{EVIDENCE_DB_LABELS.evidenceFields}</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{labels.evidenceFields}</p>
                 </div>
                 <div>
                   <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
                     {formatCoverageCount(quality.coverage)}
                   </p>
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{EVIDENCE_DB_LABELS.coverage}</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{labels.coverage}</p>
                 </div>
                 <div>
                   <p style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
                     {quality.reviewProgress.reviewed}/{quality.reviewProgress.total}
                   </p>
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{EVIDENCE_DB_LABELS.reviewed}</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{labels.reviewed}</p>
                 </div>
               </div>
             </div>
@@ -704,12 +712,10 @@ export function VariantDetailView({
               color: "#111827",
               margin: 0,
             }}>
-              {EVIDENCE_DB_LABELS.evidenceFields}
+              {t("evidenceDb.detail.evidenceFields")}
             </h2>
             <span style={{ fontSize: 14, color: "#6b7280" }}>
-              {reconciledItems.length} reconciled field{reconciledItems.length !== 1 ? "s" : ""} across{" "}
-              {categoriesWithItems.length} categor
-              {categoriesWithItems.length !== 1 ? "ies" : "y"}
+              {t("evidenceDb.detail.reconciled", { fields: String(reconciledItems.length), categories: String(categoriesWithItems.length) })}
             </span>
           </div>
 
@@ -722,7 +728,7 @@ export function VariantDetailView({
             }}>
               <Layers3 style={{ width: 32, height: 32, color: "#d1d5db", margin: "0 auto 8px" }} />
               <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>
-                No evidence fields found
+                {t("evidenceDb.detail.noFields")}
               </p>
             </div>
           ) : (
@@ -732,6 +738,7 @@ export function VariantDetailView({
                   key={cat}
                   items={reconciledItems}
                   category={cat}
+                  t={t}
                 />
               ))}
             </div>
@@ -748,10 +755,10 @@ export function VariantDetailView({
               color: "#111827",
               margin: 0,
             }}>
-              References
+              {t("evidenceDb.detail.references")}
             </h2>
             <span style={{ fontSize: 14, color: "#6b7280" }}>
-              {literature.length} source{literature.length !== 1 ? "s" : ""}
+              {t("evidenceDb.detail.sources", { count: String(literature.length) })}
             </span>
           </div>
 
@@ -763,7 +770,7 @@ export function VariantDetailView({
               textAlign: "center",
             }}>
               <BookOpen style={{ width: 32, height: 32, color: "#d1d5db", margin: "0 auto 8px" }} />
-              <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>No references found</p>
+              <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>{t("evidenceDb.detail.noRefs")}</p>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -772,6 +779,7 @@ export function VariantDetailView({
                   key={ref.sourceDocumentId}
                   reference={ref}
                   variantSlug={variantSlug}
+                  t={t}
                 />
               ))}
             </div>

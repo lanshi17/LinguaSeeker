@@ -4,6 +4,7 @@ import { CheckCircle2, Save, X } from "lucide-react";
 import { App, Button, Select } from "antd";
 import { patchEvidence } from "../services/evidenceCorrection";
 import type { ReviewStatusValue } from "../types/evidenceSearch";
+import { useI18n } from "@/lib/i18n";
 
 interface EvidenceCorrectionFormProps {
   canonicalEvidenceId: string;
@@ -16,11 +17,6 @@ interface EvidenceCorrectionFormProps {
   onClose: () => void;
 }
 
-const STATUS_OPTIONS: { label: string; value: ReviewStatusValue }[] = [
-  { label: "Approved", value: "approved" },
-  { label: "Corrected", value: "corrected" },
-  { label: "Rejected", value: "rejected" },
-];
 
 export function EvidenceCorrectionForm({
   canonicalEvidenceId,
@@ -33,6 +29,12 @@ export function EvidenceCorrectionForm({
 }: EvidenceCorrectionFormProps) {
   const queryClient = useQueryClient();
   const { message } = App.useApp();
+  const { t } = useI18n();
+  const STATUS_OPTIONS: { label: string; value: ReviewStatusValue }[] = [
+    { label: t("evidence.correct.status.approved"), value: "approved" },
+    { label: t("evidence.correct.status.corrected"), value: "corrected" },
+    { label: t("evidence.correct.status.rejected"), value: "rejected" },
+  ];
 
   const [editValue, setEditValue] = useState(currentValue ?? "");
   const [newStatus, setNewStatus] = useState<ReviewStatusValue>("corrected");
@@ -126,7 +128,7 @@ export function EvidenceCorrectionForm({
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <h4 style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
-          Correct evidence
+          {t("evidence.correct.heading")}
         </h4>
         <button
           type="button"
@@ -155,7 +157,7 @@ export function EvidenceCorrectionForm({
       {cardField && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4b5563" }}>
-            Value ({cardField})
+            {t("evidence.correct.value")} ({cardField})
           </label>
           <textarea
             value={editValue}
@@ -181,10 +183,10 @@ export function EvidenceCorrectionForm({
               e.currentTarget.style.borderColor = valueChanged ? "#fcd34d" : "#e5e7eb";
               e.currentTarget.style.boxShadow = "none";
             }}
-            placeholder="Enter corrected value..."
+            placeholder={t("evidence.correct.valuePh")}
           />
           {valueChanged && (
-            <p style={{ fontSize: 11, color: "#d97706", margin: 0 }}>Value changed</p>
+            <p style={{ fontSize: 11, color: "#d97706", margin: 0 }}>{t("evidence.correct.valueChanged")}</p>
           )}
         </div>
       )}
@@ -192,7 +194,7 @@ export function EvidenceCorrectionForm({
       <div style={{ marginTop: 12, display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label style={{ display: "block", fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>
-            Review status
+            {t("evidence.correct.reviewStatus")}
           </label>
           <Select
             value={newStatus}
@@ -205,13 +207,13 @@ export function EvidenceCorrectionForm({
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4b5563" }}>
-            Reason (optional)
+            {t("evidence.correct.reason")}
           </label>
           <input
             type="text"
             value={changeReason}
             onChange={(e) => setChangeReason(e.target.value)}
-            placeholder="Why this change?"
+            placeholder={t("evidence.correct.reasonPh")}
             style={{
               width: "100%",
               borderRadius: 8,
@@ -244,11 +246,11 @@ export function EvidenceCorrectionForm({
           loading={isSubmitting}
         >
           <Save style={{ width: 14, height: 14, marginRight: 6 }} />
-          Save correction
+          {t("evidence.correct.save")}
         </Button>
 
         <div style={{ display: "flex", alignItems: "center", gap: 6, borderLeft: "1px solid #e5e7eb", paddingLeft: 8 }}>
-          <span style={{ fontSize: 11, color: "#6b7280" }}>Quick:</span>
+          <span style={{ fontSize: 11, color: "#6b7280" }}>{t("evidence.correct.quick")}</span>
           {currentStatus !== "approved" && (
             <button
               type="button"
@@ -277,7 +279,7 @@ export function EvidenceCorrectionForm({
               }}
             >
               <CheckCircle2 style={{ width: 12, height: 12 }} />
-              Approve
+              {t("evidence.correct.approve")}
             </button>
           )}
           {currentStatus !== "rejected" && (
@@ -308,15 +310,14 @@ export function EvidenceCorrectionForm({
               }}
             >
               <X style={{ width: 12, height: 12 }} />
-              Reject
+              {t("evidence.correct.reject")}
             </button>
           )}
         </div>
       </div>
 
       <p style={{ marginTop: 8, fontSize: 10, color: "#9ca3af" }}>
-        Field: <code style={{ borderRadius: 4, backgroundColor: "#f3f4f6", padding: "0 4px" }}>{fieldId}</code> ·
-        Current status: <span style={{ fontWeight: 500 }}>{currentStatus}</span>
+        {t("evidence.correct.footer", { field: fieldId, status: currentStatus })}
       </p>
     </form>
   );

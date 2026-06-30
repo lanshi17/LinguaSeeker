@@ -1,6 +1,7 @@
 import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
 import type { EvidenceGroupItem } from "@/features/evidence-search/types/evidenceSearch";
 import { categoryLabel } from "@/features/evidence-search/utils/categoryStyles";
+import { useI18n } from "@/lib/i18n";
 
 /* ── Active Evidence Card ───────────────────────────────── */
 
@@ -11,6 +12,7 @@ export function ActiveEvidenceCard({
   item: EvidenceGroupItem;
   sourceSpanAvailable?: boolean;
 }) {
+  const { t } = useI18n();
   const cat =
     item.category ??
     (item.field_id.includes(".") ? item.field_id.split(".")[0] : null);
@@ -70,22 +72,22 @@ export function ActiveEvidenceCard({
 
         <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 11, color: "#6b7280" }}>
           <span style={{ fontWeight: 500, color: confColor }}>
-            {Math.round(confidence * 100)}% confidence
+            {Math.round(confidence * 100)}% {t("evidenceDb.card.confidence")}
           </span>
           <span>&middot;</span>
           <span style={{ textTransform: "capitalize" }}>
-            {item.review_status ?? "provisional"}
+            {item.review_status ?? t("evidenceDb.card.provisional")}
           </span>
           <span>&middot;</span>
-          <span style={{ textTransform: "capitalize" }}>{item.track ?? "original"}</span>
+          <span style={{ textTransform: "capitalize" }}>{item.track ?? t("evidenceDb.card.original")}</span>
           {item.page && (
             <>
               <span>&middot;</span>
-              <span>Page {item.page}</span>
+              <span>{t("evidenceDb.card.page", { num: String(item.page) })}</span>
             </>
           )}
           <span>&middot;</span>
-          <span>{sourceSpanAvailable ? "Source span" : "No source span"}</span>
+          <span>{sourceSpanAvailable ? t("evidenceDb.card.sourceSpan") : t("evidenceDb.card.noSourceSpan")}</span>
         </div>
       </div>
     </div>

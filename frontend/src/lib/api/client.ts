@@ -1,8 +1,8 @@
 /**
  * Shared Axios instance used by every feature service layer.
  *
- * Auth is handled by the backend via session cookie or X-API-Key header;
- * no client-side token management is required.
+ * Auth: sends `X-API-Key` header when VITE_API_KEY is set in the frontend
+ * environment (.env / .env.local). No login page or token management needed.
  *
  * The API base URL follows the SPA mount point (import.meta.env.BASE_URL,
  * set from the Vite `base` config): mounted at /linguaseeker it resolves to
@@ -23,6 +23,7 @@ export const apiClient = axios.create({
   timeout,
   headers: {
     "Content-Type": "application/json",
+    ...(import.meta.env.VITE_API_KEY ? { "X-API-Key": import.meta.env.VITE_API_KEY } : {}),
   },
 });
 

@@ -2,6 +2,7 @@ import type {
   EvidenceGroupDetailResponse,
   EvidenceTrackTrace,
 } from "../types/evidenceSearch";
+import { useI18n } from "@/lib/i18n";
 import { EvidenceHighlightText } from "./EvidenceHighlightText";
 
 interface BilingualComparisonTraceProps {
@@ -46,6 +47,7 @@ function selectTrace(
 }
 
 export function BilingualComparison(props: BilingualComparisonProps) {
+  const { t } = useI18n();
   if (!isDetailProps(props)) {
     return <TraceComparisonPanel trace={props.trace} />;
   }
@@ -56,7 +58,7 @@ export function BilingualComparison(props: BilingualComparisonProps) {
   if (detail.traces.length === 0) {
     return (
       <p style={{ padding: "32px 0", textAlign: "center", fontSize: 14, color: "#9ca3af" }}>
-        No bilingual traces for this evidence group.
+        {t("evidence.compare.noTraces")}
       </p>
     );
   }
@@ -75,10 +77,11 @@ export function BilingualComparison(props: BilingualComparisonProps) {
 }
 
 export function TraceComparisonPanel({ trace }: { trace: EvidenceTrackTrace | null }) {
+  const { t } = useI18n();
   if (!trace) {
     return (
       <p style={{ padding: "32px 0", textAlign: "center", fontSize: 14, color: "#9ca3af" }}>
-        No evidence selected.
+        {t("evidence.compare.noSelected")}
       </p>
     );
   }
@@ -96,7 +99,7 @@ export function TraceComparisonPanel({ trace }: { trace: EvidenceTrackTrace | nu
       >
         <div>
           <p style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
-            Original value
+            {t("evidence.compare.original")}
           </p>
           <p style={{ marginTop: 4, wordBreak: "break-word", fontFamily: "var(--font-mono)", fontSize: 14, color: "#0f172a", margin: "4px 0 0" }}>
             {trace.original_value ?? "—"}
@@ -104,7 +107,7 @@ export function TraceComparisonPanel({ trace }: { trace: EvidenceTrackTrace | nu
         </div>
         <div>
           <p style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
-            Translated value
+            {t("evidence.compare.translated")}
           </p>
           <p style={{ marginTop: 4, wordBreak: "break-word", fontFamily: "var(--font-mono)", fontSize: 14, color: "#0f172a", margin: "4px 0 0" }}>
             {trace.translated_value ?? "—"}
@@ -115,7 +118,7 @@ export function TraceComparisonPanel({ trace }: { trace: EvidenceTrackTrace | nu
       <div className="bc-compare-grid">
         <section>
           <h4 style={{ marginBottom: 8, fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "#9ca3af", margin: "0 0 8px" }}>
-            Original
+            {t("evidence.compare.originalLabel")}
           </h4>
           <EvidenceHighlightText
             active
@@ -125,7 +128,7 @@ export function TraceComparisonPanel({ trace }: { trace: EvidenceTrackTrace | nu
         </section>
         <section>
           <h4 style={{ marginBottom: 8, fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "#9ca3af", margin: "0 0 8px" }}>
-            Translated
+            {t("evidence.compare.translatedLabel")}
           </h4>
           <EvidenceHighlightText
             active
@@ -149,14 +152,15 @@ function EvidenceSelector({
   selectedEvidenceId: string | null;
   setSelectedEvidenceId: (next: string | null) => void;
 }) {
+  const { t } = useI18n();
   const activeId = selectedEvidenceId ?? detail.items[0]?.canonical_evidence_id ?? null;
   return (
     <div style={{ borderRadius: 6, border: "1px solid #e5e7eb", backgroundColor: "#fff", padding: 12 }}>
       <p style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
-        Evidence item
+        {t("evidence.compare.itemLabel")}
       </p>
       <select
-        aria-label="Select evidence item"
+        aria-label={t("evidence.bilingual.selectItem")}
         style={{
           marginTop: 8,
           width: "100%",
@@ -191,7 +195,7 @@ function EvidenceSelector({
             key={item.canonical_evidence_id}
             value={item.canonical_evidence_id}
           >
-            {item.field_name ?? item.field_id} — {item.value ?? "(no value)"}
+            {item.field_name ?? item.field_id} — {item.value ?? t("evidence.compare.noValue")}
           </option>
         ))}
       </select>

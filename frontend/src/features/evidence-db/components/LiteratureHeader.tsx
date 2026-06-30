@@ -3,10 +3,11 @@ import { BookOpen, Download, ExternalLink } from "lucide-react";
 import type { EvidenceGroupDetailResponse } from "@/features/evidence-search/types/evidenceSearch";
 import type { ReviewProgress } from "../utils/fieldModel";
 import {
-  EVIDENCE_DB_LABELS,
+  getEvidenceDbLabels,
   formatConfidencePercent,
   formatReviewedCount,
 } from "../utils/fieldLabels";
+import { useI18n } from "@/lib/i18n";
 
 /* ── Literature Header ──────────────────────────────────── */
 
@@ -49,6 +50,9 @@ export function LiteratureHeader({
   quality?: LiteratureHeaderQuality;
   onExportReport?: () => void;
 }) {
+  const { t } = useI18n();
+  const labels = getEvidenceDbLabels(t);
+
   return (
     <section style={{
       borderRadius: 12,
@@ -79,7 +83,7 @@ export function LiteratureHeader({
             lineHeight: 1.375,
             margin: 0,
           }}>
-            {groupDetail.title ?? "Untitled Document"}
+            {groupDetail.title ?? t("evidenceDb.header.untitled")}
           </h1>
           <div style={{
             marginTop: 6,
@@ -106,7 +110,7 @@ export function LiteratureHeader({
                   textDecoration: "none",
                 }}
               >
-                PMID:{groupDetail.pmid}
+                {t("evidenceDb.header.pmid")}{groupDetail.pmid}
                 <ExternalLink style={{ width: 12, height: 12 }} />
               </a>
             )}
@@ -125,24 +129,24 @@ export function LiteratureHeader({
                   textDecoration: "none",
                 }}
               >
-                DOI:{groupDetail.doi.slice(0, 30)}
+                {t("evidenceDb.header.doi")}{groupDetail.doi.slice(0, 30)}
                 <ExternalLink style={{ width: 12, height: 12 }} />
               </a>
             )}
-            <span>{groupDetail.item_count} evidence fields</span>
+            <span>{groupDetail.item_count} {t("evidenceDb.header.evidenceFields")}</span>
             {groupDetail.avg_confidence != null && (
               <span>
-                {formatConfidencePercent(groupDetail.avg_confidence)} confidence
+                {formatConfidencePercent(groupDetail.avg_confidence)} {t("evidenceDb.header.confidence")}
               </span>
             )}
             {quality?.hasFullText && (
-              <span style={qualityBadgeStyle("source")}>Full text</span>
+              <span style={qualityBadgeStyle("source")}>{t("evidenceDb.header.fullText")}</span>
             )}
             {quality?.hasTranslation && (
-              <span style={qualityBadgeStyle("translation")}>Translated</span>
+              <span style={qualityBadgeStyle("translation")}>{t("evidenceDb.header.translated")}</span>
             )}
             {quality && (
-              <span>{formatReviewedCount(quality.reviewProgress)}</span>
+              <span>{formatReviewedCount(quality.reviewProgress, t)}</span>
             )}
           </div>
         </div>
@@ -153,7 +157,7 @@ export function LiteratureHeader({
             onClick={onExportReport}
             style={{ flexShrink: 0 }}
           >
-            {EVIDENCE_DB_LABELS.exportReport}
+            {labels.exportReport}
           </Button>
         )}
       </div>

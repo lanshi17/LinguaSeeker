@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "antd";
 import {
   ArrowLeft,
@@ -213,6 +214,7 @@ function EvidenceItemSummary({
 }) {
   const [editing, setEditing] = useState(false);
   const cardField = cardFieldForFieldId(item.field_id);
+  const { t } = useI18n();
 
   return (
     <article className="edb-evidence-card">
@@ -276,7 +278,7 @@ function EvidenceItemSummary({
               }}
             >
               <Pencil style={{ width: 14, height: 14 }} />
-              {editing ? "Close" : "Edit"}
+              {editing ? t("evidence.lit.close") : t("evidence.lit.edit")}
             </button>
             <Link
               to={buildBilingualCompareHref(groupId, item.canonical_evidence_id)}
@@ -299,7 +301,7 @@ function EvidenceItemSummary({
               }}
             >
               <Columns2 style={{ width: 16, height: 16 }} />
-              Compare
+              {t("evidence.lit.compare")}
             </Link>
           </div>
         </div>
@@ -340,13 +342,14 @@ export function LiteratureOverview({
   groupId: string;
 }) {
   const [exportOpen, setExportOpen] = useState(false);
+  const { t } = useI18n();
 
   return (
     <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Print-only report header — hidden on screen, visible in print */}
       <div className="print-only">
         <h1 style={{ fontSize: 22, fontWeight: 700, color: "#030712", margin: 0 }}>
-          Evidence Report
+          {t("evidence.lit.reportHeader")}
         </h1>
         <p style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: "8px 0 4px" }}>
           {detailTitle(detail)}
@@ -357,7 +360,7 @@ export function LiteratureOverview({
           {detail.doi && `DOI: ${detail.doi}`}
         </p>
         <p style={{ fontSize: 12, color: "#6b7280", margin: "4px 0 0" }}>
-          Generated: {new Date().toLocaleString()}
+          {t("evidence.lit.generated")} {new Date().toLocaleString()}
         </p>
         <hr style={{ margin: "16px 0", border: "none", borderTop: "1px solid #e5e7eb" }} />
       </div>
@@ -376,7 +379,7 @@ export function LiteratureOverview({
         }}
       >
         <ArrowLeft style={{ width: 16, height: 16 }} />
-        Back to literature
+        {t("evidence.lit.back")}
       </Link>
 
       <section style={{ overflow: "hidden", borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
@@ -414,26 +417,26 @@ export function LiteratureOverview({
                 }}
               >
                 <BookOpen style={{ width: 16, height: 16 }} />
-                Literature record
+                {t("evidence.lit.recordLabel")}
               </p>
               <h2 style={{ marginTop: 8, maxWidth: 896, fontSize: 20, fontWeight: 600, lineHeight: "28px", color: "#030712" }}>
                 {detailTitle(detail)}
               </h2>
               <div style={{ marginTop: 12, display: "flex", maxWidth: 896, flexWrap: "wrap", gap: 8 }}>
-                <MetadataToken label="UUID" value={detail.source_document_id} icon={Hash} />
-                <MetadataToken label="PMID" value={detail.pmid} icon={FileText} />
-                <MetadataToken label="DOI" value={detail.doi} icon={Link2} />
+                <MetadataToken label={t("evidence.lit.uuid")} value={detail.source_document_id} icon={Hash} />
+                <MetadataToken label={t("evidence.lit.pmid")} value={detail.pmid} icon={FileText} />
+                <MetadataToken label={t("evidence.lit.doi")} value={detail.doi} icon={Link2} />
               </div>
             </div>
             <div className="edb-overview-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <Badge variant={STATUS_VARIANT.approved}>Traceable</Badge>
+              <Badge variant={STATUS_VARIANT.approved}>{t("evidence.lit.traceable")}</Badge>
               <Button
                 type="primary"
                 className="no-print"
                 icon={<Download style={{ width: 16, height: 16 }} />}
                 onClick={() => setExportOpen(true)}
               >
-                Export
+                {t("evidence.lit.export")}
               </Button>
             </div>
           </div>
@@ -442,10 +445,10 @@ export function LiteratureOverview({
         <div className="edb-overview-meta-grid">
           {(
             [
-              { label: "Gene", value: detail.gene, Icon: Dna },
-              { label: "Variant", value: detail.variant, Icon: FlaskConical },
-              { label: "Disease", value: detail.disease, Icon: Stethoscope },
-              { label: "Classification", value: detail.classification, Icon: ShieldCheck },
+              { label: t("evidence.lit.gene"), value: detail.gene, Icon: Dna },
+              { label: t("evidence.lit.variant"), value: detail.variant, Icon: FlaskConical },
+              { label: t("evidence.lit.disease"), value: detail.disease, Icon: Stethoscope },
+              { label: t("evidence.lit.classification"), value: detail.classification, Icon: ShieldCheck },
             ] as const
           ).map(({ label, value, Icon }) => (
             <div key={label} className="edb-overview-meta-cell">
@@ -479,15 +482,15 @@ export function LiteratureOverview({
             <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 20px" }}>
               <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
                 <ListChecks style={{ width: 16, height: 16, color: "var(--color-primary-700, #0e7490)" }} />
-                Evidence coverage
+                {t("evidence.lit.coverage")}
               </h3>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
               {[
-                { label: "Items", value: detail.item_count, icon: Database },
-                { label: "Confidence", value: formatPercent(detail.avg_confidence), icon: TrendingUp },
-                { label: "Traces", value: detail.traces.length, icon: Search },
-                { label: "Fields", value: Object.keys(detail.distribution.by_field).length, icon: FileText },
+                { label: t("evidence.lit.items"), value: detail.item_count, icon: Database },
+                { label: t("evidence.lit.confidence"), value: formatPercent(detail.avg_confidence), icon: TrendingUp },
+                { label: t("evidence.lit.traces"), value: detail.traces.length, icon: Search },
+                { label: t("evidence.lit.fields"), value: Object.keys(detail.distribution.by_field).length, icon: FileText },
               ].map((stat) => (
                 <div key={stat.label} className="edb-coverage-stat-cell">
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -505,7 +508,7 @@ export function LiteratureOverview({
           <section style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
             <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 20px" }}>
               <h3 style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
-                Evidence categories
+                {t("evidence.lit.categories")}
               </h3>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: 16 }}>
@@ -532,7 +535,7 @@ export function LiteratureOverview({
           <section style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
             <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 20px" }}>
               <h3 style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
-                Review status
+                {t("evidence.lit.reviewStatus")}
               </h3>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: 16 }}>
@@ -578,10 +581,10 @@ export function LiteratureOverview({
               </div>
               <div>
                 <h2 style={{ fontSize: 16, fontWeight: 600, color: "#030712", margin: 0 }}>
-                  Extracted evidence fields
+                  {t("evidence.lit.extractedFields")}
                 </h2>
                 <p style={{ marginTop: 2, fontSize: 14, color: "#6b7280" }}>
-                  {detail.items.length} field-level evidence items
+                  {t("evidence.lit.fieldCount", { count: detail.items.length })}
                 </p>
               </div>
             </div>
@@ -606,7 +609,7 @@ export function LiteratureOverview({
                 }}
               >
                 <Languages style={{ width: 16, height: 16 }} />
-                Full-text comparison
+                {t("evidence.lit.compare")}
               </Link>
             )}
           </div>

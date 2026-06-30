@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { Button } from "antd";
 import { Badge } from "@/components/ui/Badge";
+import { useI18n } from "@/lib/i18n";
 import {
   CheckCircle2,
   FileText,
@@ -48,7 +49,7 @@ function FieldRow({ icon, label, value, mono }: FieldRowProps) {
         flexShrink: 0,
         alignItems: "center",
         justifyContent: "center",
-        color: "#9ca3af",
+        color: "var(--color-text-muted)",
       }}>
         {icon}
       </span>
@@ -59,7 +60,7 @@ function FieldRow({ icon, label, value, mono }: FieldRowProps) {
           fontWeight: 600,
           textTransform: "uppercase",
           letterSpacing: "0.05em",
-          color: "#9ca3af",
+          color: "var(--color-text-muted)",
         }}>
           {label}
         </span>
@@ -67,7 +68,7 @@ function FieldRow({ icon, label, value, mono }: FieldRowProps) {
           style={{
             display: "block",
             fontSize: 13,
-            color: "#111827",
+            color: "var(--color-text)",
             fontFamily: mono ? "var(--font-mono)" : undefined,
           }}
         >
@@ -92,6 +93,7 @@ export function PipelineSummaryCard({
   onModify,
   isSubmitting,
 }: PipelineSummaryCardProps) {
+  const { t } = useI18n();
   const [submitted, setSubmitted] = useState(false);
 
   const handleConfirm = useCallback(() => {
@@ -100,7 +102,7 @@ export function PipelineSummaryCard({
   }, [onConfirm, slots]);
 
   const isOnline = slots.source_type !== "local";
-  const sourceLabel = isOnline ? "Online Search" : "PDF Upload";
+  const sourceLabel = isOnline ? t("chat.summary.onlineSearch") : t("chat.summary.pdfUpload");
   const sourceIcon = isOnline ? (
     <Globe style={{ width: 14, height: 14 }} />
   ) : (
@@ -120,21 +122,21 @@ export function PipelineSummaryCard({
       maxWidth: 448,
       overflow: "hidden",
       borderRadius: 12,
-      border: "1px solid #e5e7eb",
-      backgroundColor: "#fff",
+      border: "1px solid var(--color-border)",
+      backgroundColor: "var(--color-surface)",
       boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
     }}>
       <div style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        borderBottom: "1px solid #f3f4f6",
+        borderBottom: "1px solid var(--color-bg-muted)",
         padding: "10px 16px",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <FileText style={{ width: 16, height: 16, color: "var(--color-primary-600)" }} aria-hidden />
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>
-            Ready to start pipeline
+          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text)" }}>
+            {t("chat.summary.heading")}
           </span>
         </div>
         <Badge variant="info">
@@ -150,7 +152,7 @@ export function PipelineSummaryCard({
           <div style={{ borderBottom: "1px solid #fafafa" }}>
             <FieldRow
               icon={<Tag style={{ width: 14, height: 14 }} />}
-              label="Identifiers"
+              label={t("chat.summary.identifiers")}
               value={slots.identifiers}
               mono
             />
@@ -160,7 +162,7 @@ export function PipelineSummaryCard({
           <div style={{ borderBottom: "1px solid #fafafa" }}>
             <FieldRow
               icon={<Search style={{ width: 14, height: 14 }} />}
-              label="Search Query"
+              label={t("chat.summary.searchQuery")}
               value={slots.query}
             />
           </div>
@@ -169,7 +171,7 @@ export function PipelineSummaryCard({
           <div style={{ borderBottom: "1px solid #fafafa" }}>
             <FieldRow
               icon={<FileText style={{ width: 14, height: 14 }} />}
-              label="Document"
+              label={t("chat.summary.document")}
               value={slots.filename}
             />
           </div>
@@ -178,8 +180,8 @@ export function PipelineSummaryCard({
           <div style={{ borderBottom: "1px solid #fafafa" }}>
             <FieldRow
               icon={<Upload style={{ width: 14, height: 14 }} />}
-              label="Document"
-              value="Upload via /pipeline after confirmation"
+              label={t("chat.summary.document")}
+              value={t("chat.summary.uploadHint")}
             />
           </div>
         )}
@@ -194,7 +196,7 @@ export function PipelineSummaryCard({
               letterSpacing: "0.05em",
               color: "#9ca3af",
             }}>
-              Extraction Target
+              {t("chat.summary.extractionTarget")}
             </span>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {slots.gene_symbol && (
@@ -207,7 +209,7 @@ export function PipelineSummaryCard({
                   fontWeight: 500,
                   color: "var(--color-primary-700)",
                 }}>
-                  Gene: {slots.gene_symbol}
+                  {t("chat.summary.gene")}: {slots.gene_symbol}
                 </span>
               )}
               {slots.disease_name && (
@@ -219,7 +221,7 @@ export function PipelineSummaryCard({
                   fontWeight: 500,
                   color: "#047857",
                 }}>
-                  Disease: {slots.disease_name}
+                  {t("chat.summary.disease")}: {slots.disease_name}
                 </span>
               )}
               {slots.variant_hgvs_p && (
@@ -255,7 +257,7 @@ export function PipelineSummaryCard({
           style={{ flex: 1 }}
         >
           <CheckCircle2 style={{ width: 14, height: 14, marginRight: 6 }} />
-          Confirm & Start
+          {t("chat.summary.confirm")}
         </Button>
         {onModify && (
           <button
@@ -286,7 +288,7 @@ export function PipelineSummaryCard({
             }}
           >
             <MessageSquare style={{ width: 12, height: 12 }} />
-            Modify via chat
+            {t("chat.summary.modify")}
           </button>
         )}
       </div>

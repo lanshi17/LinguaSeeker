@@ -1,6 +1,7 @@
 import { Search, X, Dna, FlaskConical, Stethoscope, Hash } from "lucide-react";
 import { Button, Input } from "antd";
 import type { EvidenceSearchQuery } from "../types/evidenceSearch";
+import { useI18n } from "@/lib/i18n";
 
 interface EvidenceSearchFormProps {
   filters: EvidenceSearchQuery;
@@ -21,6 +22,7 @@ export function EvidenceSearchForm({
     e.preventDefault();
     onSearch();
   }
+  const { t } = useI18n();
 
   return (
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -63,21 +65,21 @@ export function EvidenceSearchForm({
               </div>
               <div>
                 <h2 style={{ fontSize: 16, fontWeight: 600, color: "#030712", margin: 0 }}>
-                  Literature Evidence Search
+                  {t("evidence.search.heading")}
                 </h2>
                 <p style={{ marginTop: 2, fontSize: 14, color: "#4b5563" }}>
-                  Search by gene, variant, disease, or publication identifier
+                  {t("evidence.search.description")}
                 </p>
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <Button htmlType="submit" loading={isSearching} style={{ boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
                 <Search style={{ width: 16, height: 16, marginRight: 8 }} />
-                Search
+                {t("evidence.search.btn")}
               </Button>
               <Button type="text" onClick={onClear}>
                 <X style={{ width: 16, height: 16, marginRight: 8 }} />
-                Clear
+                {t("evidence.search.clear")}
               </Button>
             </div>
           </div>
@@ -86,37 +88,37 @@ export function EvidenceSearchForm({
         {/* Input fields with icons */}
         <div className="edb-search-grid">
           <div>
-            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>Gene</label>
+            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>{t("evidence.search.gene")}</label>
             <Input
               prefix={<Dna style={{ width: 16, height: 16, color: "#9ca3af" }} />}
-              placeholder="e.g., BRCA1"
+              placeholder={t("evidence.search.genePh")}
               value={filters.gene ?? ""}
               onChange={(e) => onUpdateFilter("gene", e.target.value)}
             />
           </div>
           <div>
-            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>Variant</label>
+            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>{t("evidence.search.variant")}</label>
             <Input
               prefix={<FlaskConical style={{ width: 16, height: 16, color: "#9ca3af" }} />}
-              placeholder="e.g., c.5266dupC"
+              placeholder={t("evidence.search.variantPh")}
               value={filters.variant ?? ""}
               onChange={(e) => onUpdateFilter("variant", e.target.value)}
             />
           </div>
           <div>
-            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>Disease</label>
+            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>{t("evidence.search.disease")}</label>
             <Input
               prefix={<Stethoscope style={{ width: 16, height: 16, color: "#9ca3af" }} />}
-              placeholder="e.g., Breast cancer"
+              placeholder={t("evidence.search.diseasePh")}
               value={filters.disease ?? ""}
               onChange={(e) => onUpdateFilter("disease", e.target.value)}
             />
           </div>
           <div>
-            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>PMID</label>
+            <label style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.88)" }}>{t("evidence.search.pmid")}</label>
             <Input
               prefix={<Hash style={{ width: 16, height: 16, color: "#9ca3af" }} />}
-              placeholder="e.g., 12345678"
+              placeholder={t("evidence.search.pmidPh")}
               value={filters.pmid ?? ""}
               onChange={(e) => onUpdateFilter("pmid", e.target.value)}
             />

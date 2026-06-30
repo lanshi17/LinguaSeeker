@@ -42,16 +42,16 @@ export class ErrorBoundary extends Component<
       return (
         <div style={{
           borderRadius: 8,
-          border: "1px solid #fecaca",
-          backgroundColor: "#fef2f2",
+          border: "1px solid var(--color-error-border)",
+          backgroundColor: "var(--color-error-bg)",
           padding: 24,
           textAlign: "center",
         }}>
-          <p style={{ fontSize: 14, fontWeight: 500, color: "#991b1b" }}>
+          <p style={{ fontSize: 14, fontWeight: 500, color: "var(--color-error-text)" }}>
             Something went wrong.
           </p>
           {this.state.error && (
-            <p style={{ marginTop: 4, fontSize: 12, color: "#dc2626" }}>
+            <p style={{ marginTop: 4, fontSize: 12, color: "var(--color-error-text)" }}>
               {this.state.error.message}
             </p>
           )}
@@ -62,7 +62,7 @@ export class ErrorBoundary extends Component<
               cursor: "pointer",
               fontSize: 14,
               fontWeight: 500,
-              color: "#b91c1c",
+              color: "var(--color-error-text)",
               textDecoration: "underline",
               background: "none",
               border: "none",

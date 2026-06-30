@@ -1,11 +1,12 @@
 import { ShieldCheck } from "lucide-react";
 import { Typography } from "antd";
 import { AuditView } from "@/features/audit";
+import { useI18n } from "@/lib/i18n";
 
 export function AuditPage() {
+  const { t } = useI18n();
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Custom header with gradient icon box — matches EvidencePage pattern */}
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <div
           style={{
@@ -23,10 +24,10 @@ export function AuditPage() {
         </div>
         <div>
           <Typography.Title level={3} style={{ margin: 0 }}>
-            Audit Trail
+            {t("audit.title")}
           </Typography.Title>
           <Typography.Text type="secondary" style={{ fontSize: 14 }}>
-            Review all evidence corrections, status changes, and field-level edits.
+            {t("audit.description")}
           </Typography.Text>
         </div>
       </div>

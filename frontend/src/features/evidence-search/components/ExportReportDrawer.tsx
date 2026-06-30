@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { useI18n } from "@/lib/i18n";
 import { Drawer, Button, Slider, Checkbox, Select, Tag, message, Tooltip } from "antd";
 import {
   Download,
@@ -56,6 +57,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
   const [options, setOptions] = useState<ExportOptions>({ ...DEFAULT_EXPORT_OPTIONS });
   const [showPreview, setShowPreview] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const { t } = useI18n();
 
   // Available categories derived from the actual items.
   const availableCategories = useMemo(() => {
@@ -83,9 +85,9 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
     setExporting(true);
     try {
       exportEvidenceReport(detail, selectedFormat, options);
-      void message.success(`Exported as ${selectedFormat.toUpperCase()} successfully`);
+      void message.success(t("evidence.export.success"));
     } catch {
-      void message.error("Export failed. Please try again.");
+      void message.error(t("evidence.export.error"));
     } finally {
       setExporting(false);
     }
@@ -98,7 +100,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
       title={
         <span style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 16, fontWeight: 600 }}>
           <Download style={{ width: 20, height: 20, color: "var(--color-primary-600, #0891b2)" }} />
-          Export Evidence Report
+          {t("evidence.export.title")}
         </span>
       }
       open={open}
@@ -112,7 +114,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
           onClick={handleExport}
           disabled={filteredCount === 0}
         >
-          Export {selectedFormat.toUpperCase()}
+          {t("evidence.export.btn", { count: filteredCount })}
         </Button>
       }
     >
@@ -133,7 +135,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
             }}
           >
             <File style={{ width: 14, height: 14 }} />
-            Format
+            {t("evidence.export.format")}
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
             {REPORT_FORMATS.map((f) => {
@@ -215,7 +217,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
             }}
           >
             <Settings2 style={{ width: 14, height: 14 }} />
-            Options
+            {t("evidence.export.options")}
           </h3>
 
           <div
@@ -238,7 +240,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                 color: "#374151",
               }}
             >
-              <span>Include bilingual traces</span>
+              <span>{t("evidence.export.includeTraces")}</span>
               <Checkbox
                 checked={options.includeTraces}
                 onChange={(e) => updateOpts({ includeTraces: e.target.checked })}
@@ -258,7 +260,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                 color: "#374151",
               }}
             >
-              <span>Include full bilingual text</span>
+              <span>{t("evidence.export.includeFullText")}</span>
               <Checkbox
                 checked={options.includeBilingualText}
                 onChange={(e) => updateOpts({ includeBilingualText: e.target.checked })}
@@ -282,7 +284,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                   color: "#374151",
                 }}
               >
-                <span>Minimum confidence</span>
+                <span>{t("evidence.export.minConfidence")}</span>
                 <span
                   style={{
                     fontFamily: "var(--font-mono, monospace)",
@@ -316,15 +318,15 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                   marginBottom: 8,
                 }}
               >
-                Review status filter
+                {t("evidence.export.statusFilter")}
               </div>
               <Select
                 mode="multiple"
                 allowClear
-                placeholder="All statuses"
+                placeholder={t("evidence.export.allStatuses")}
                 value={options.statusFilter.length > 0 ? options.statusFilter : undefined}
                 onChange={(v) => updateOpts({ statusFilter: v ?? [] })}
-                options={STATUS_OPTIONS.map((s) => ({ label: s, value: s }))}
+                options={STATUS_OPTIONS.map((s) => ({ label: t(`evidence.export.status.${s}`), value: s }))}
                 style={{ width: "100%" }}
                 maxTagCount="responsive"
               />
@@ -339,12 +341,12 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                   marginBottom: 8,
                 }}
               >
-                Category filter
+                {t("evidence.export.categoryFilter")}
               </div>
               <Select
                 mode="multiple"
                 allowClear
-                placeholder="All categories (A–J)"
+                placeholder={t("evidence.export.allCategories")}
                 value={options.categoryFilter.length > 0 ? options.categoryFilter : undefined}
                 onChange={(v) => updateOpts({ categoryFilter: v ?? [] })}
                 options={availableCategories.map((c) => ({
@@ -393,8 +395,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
               style={{ width: 16, height: 16, color: "var(--color-primary-600, #0891b2)" }}
             />
             <span style={{ fontSize: 13, color: "#374151" }}>
-              <strong style={{ color: "#111827" }}>{filteredCount}</strong> of{" "}
-              {detail.item_count} items
+              {t("evidence.export.itemsSummary", { selected: filteredCount, total: detail.item_count })}
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -403,7 +404,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
                 color="orange"
                 style={{ margin: 0, fontSize: 11 }}
               >
-                Filtered
+                {t("evidence.export.filtered")}
               </Tag>
             )}
             <Tag
@@ -432,7 +433,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
               fontWeight: 500,
             }}
           >
-            {showPreview ? "Hide preview" : "Show preview"}
+            {showPreview ? t("evidence.export.hidePreview") : t("evidence.export.showPreview")}
           </Button>
 
           {showPreview && (

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Check, Copy, FileText, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { LivePulse } from "@/components/ui/LivePulse";
+import { useI18n } from "@/lib/i18n";
 import { useElapsedSeconds } from "@/lib/hooks/useElapsedSeconds";
 import { formatDuration, formatRelative, formatTimestamp } from "@/lib/utils/format";
 import type { PipelineRunSummary, ProcessingStatus } from "../types/pipeline";
@@ -11,14 +12,6 @@ interface RunListItemProps {
   run: PipelineRunSummary;
   index: number;
 }
-
-const STATUS_LABEL: Record<ProcessingStatus, string> = {
-  pending: "Pending",
-  running: "Running",
-  completed: "Completed",
-  failed: "Failed",
-  skipped: "Skipped",
-};
 
 const STATUS_TONE: Record<
   ProcessingStatus,
@@ -45,13 +38,11 @@ const PULSE_TONE: Record<
 const statusDotColor = (status: ProcessingStatus): string => {
   switch (status) {
     case "completed":
-      return "var(--color-success-500, #22c55e)";
+      return "#16a34a";
     case "failed":
-      return "#ef4444";
-    case "skipped":
-      return "#9ca3af";
-    case "pending":
-      return "#d1d5db";
+      return "#dc2626";
+    case "running":
+      return "#0891b2";
     default:
       return "#9ca3af";
   }
@@ -61,13 +52,14 @@ const progressBarBg = (
   isLive: boolean,
   status: ProcessingStatus,
 ): string => {
-  if (isLive) return "linear-gradient(to right, #38bdf8, var(--color-primary-600, #0891b2))";
+  if (isLive) return "linear-gradient(to right, #7dd3fc, var(--color-primary-600, #0891b2))";
   if (status === "completed") return "var(--color-success-500, #22c55e)";
-  if (status === "failed") return "#f87171";
+  if (status === "failed") return "#fca5a5";
   return "#d1d5db";
 };
 
 export function RunListItem({ run, index }: RunListItemProps) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const isLive = run.pipeline_status === "running" || run.pipeline_status === "pending";
   const liveElapsed = useElapsedSeconds(isLive ? run.started_at : undefined);
@@ -81,6 +73,14 @@ export function RunListItem({ run, index }: RunListItemProps) {
   const progress = Math.min(100, Math.max(0, (completedPhases / totalPhases) * 100));
 
   const durationSeconds = run.elapsed_seconds ?? (isLive ? liveElapsed : terminalDuration);
+
+  const STATUS_LABEL: Record<ProcessingStatus, string> = {
+    pending: t("pipeline.status.pending"),
+    running: t("pipeline.status.running"),
+    completed: t("pipeline.status.completed"),
+    failed: t("pipeline.status.failed"),
+    skipped: t("pipeline.status.skipped"),
+  };
 
   async function handleCopy(e: React.MouseEvent) {
     e.preventDefault();
@@ -139,7 +139,7 @@ export function RunListItem({ run, index }: RunListItemProps) {
                 <button
                   type="button"
                   onClick={handleCopy}
-                  aria-label="Copy run ID"
+                  aria-label={t("pipeline.copyRunId")}
                   className="rli-copy-btn"
                 >
                   {copied ? (
@@ -202,7 +202,7 @@ export function RunListItem({ run, index }: RunListItemProps) {
                   color: "#9ca3af",
                 }}
               >
-                {completedPhases}/{totalPhases} phases
+                {completedPhases}/{totalPhases} {t("pipeline.phases")}
               </span>
             </div>
 
@@ -228,8 +228,8 @@ export function RunListItem({ run, index }: RunListItemProps) {
             </div>
 
             <div className="rli-reveal" style={{ marginTop: 4 }}>
-              Started {formatTimestamp(run.started_at)}
-              {run.completed_at && ` · Done ${formatTimestamp(run.completed_at)}`}
+              {t("pipeline.started")} {formatTimestamp(run.started_at)}
+              {run.completed_at && ` · ${t("pipeline.completedAt")} ${formatTimestamp(run.completed_at)}`}
             </div>
           </div>
         </div>

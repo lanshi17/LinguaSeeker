@@ -23,18 +23,6 @@ Collapsible navigation with route-aware active states. Accepts `mobile` prop (al
 | Evidence DB | `/evidence-db` | `Database` |
 | Audit | `/audit` | `ShieldCheck` |
 
-Active detection: exact match or prefix match (e.g., `/chat/abc` activates AI Chat). Footer shows "Lingua Seeker v0.1.0" when expanded.
-
-### ConnectionStatus
-
-Backend health indicator. Polls `GET /health` every 30s via `useBackendHealth`. Renders a small colored dot with a tooltip showing connection state and latency.
-
-| Status | Dot | Tooltip |
-|--------|-----|---------|
-| connected | `success` | "Backend connected" + latency + "Xs/Xm ago" |
-| disconnected | `error` | "Backend disconnected" + latency + "Xs/Xm ago" |
-| checking | `default` | "Checking connection..." |
-
 ### PageHeader
 
 Page title (`Typography.Title` level 3), optional description, and right-aligned `actions` slot. Accepts `className` for external overrides.
