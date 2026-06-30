@@ -209,12 +209,14 @@ class PostgreSQLConfig(BaseModel):
 
 
 class WebSearchConfig(BaseModel):
-    """Web search provider configuration (adapter-based, currently Firecrawl)."""
+    """Web search provider configuration (adapter-based: Firecrawl or Tavily)."""
 
-    api_key: str = ""
+    api_key: str = ""  # Firecrawl API key
     base_url: str = "https://api.firecrawl.dev"
     timeout: int = 30
     max_results: int = 10
+    tavily_api_key: str = ""  # Tavily API key (tvly-...)
+    tavily_search_depth: str = "basic"  # "basic" or "advanced"
 
 
 # Domains that bypass the proxy and connect directly.
@@ -399,6 +401,8 @@ class Settings(BaseSettings):
     web_search_base_url: str = "https://api.firecrawl.dev"
     web_search_timeout: int = 30
     web_search_max_results: int = 10
+    web_search_tavily_api_key: str = ""
+    web_search_tavily_search_depth: str = "basic"
 
 
     # ── Network / proxy flat fields (NETWORK_*) ─────────────────────────
@@ -534,6 +538,8 @@ class Settings(BaseSettings):
             base_url=self.web_search_base_url,
             timeout=self.web_search_timeout,
             max_results=self.web_search_max_results,
+            tavily_api_key=self.web_search_tavily_api_key,
+            tavily_search_depth=self.web_search_tavily_search_depth,
         )
         self.network = NetworkConfig(
             proxy=self.network_proxy,
