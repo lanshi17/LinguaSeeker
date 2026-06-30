@@ -46,8 +46,7 @@ impl JstageProvider {
             return Ok(Self::downloads_from_link(detail_link, None));
         }
 
-        let query = params.query.as_deref().unwrap_or_default();
-        let search_result = Self::search(client, query, params.limit).await?;
+        let search_result = Self::search(client, params).await?;
         if search_result.items.is_empty() {
             return Ok(FetchResult::failure(
                 "jstage",

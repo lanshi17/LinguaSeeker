@@ -47,8 +47,7 @@ impl DoajProvider {
         client: &HttpClient,
         params: &FetchParams,
     ) -> Result<FetchResult, GatewayError> {
-        let query = params.query.as_deref().unwrap_or_default();
-        let search_result = Self::search(client, query, params.limit).await?;
+        let search_result = Self::search(client, params).await?;
         if search_result.items.is_empty() {
             return Ok(FetchResult::failure("doaj", vec!["doaj_no_results".into()]));
         }
