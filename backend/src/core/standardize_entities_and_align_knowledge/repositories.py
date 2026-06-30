@@ -1272,6 +1272,7 @@ class StandardizationRepository:
     # These represent core facts extractable independently of variant evidence.
     _GATE_IDENTITY_FIELDS: frozenset[str] = frozenset({
         "A.gene_symbol",
+        "A.gene_disease_relationship",
         "A.variant_hgvs_c",
         "A.variant_hgvs_p",
         "B.disease_diagnosis",
@@ -1324,14 +1325,27 @@ class StandardizationRepository:
     })
 
     @staticmethod
+    def _group_id_has_gene_anchor(group_id: str) -> bool:
+        """Return whether a deterministic group_id carries a non-missing gene token."""
+        parts: dict[str, str] = {}
+        for token in group_id.split("|"):
+            if "=" not in token:
+                continue
+            key, value = token.split("=", maxsplit=1)
+            parts[key] = value.strip()
+        gene = parts.get("gene", "")
+        return bool(gene and gene.lower() != "__missing__")
+
+    @staticmethod
     def _find_identity_passable_groups(track_payloads: dict[str, Any]) -> set[str]:
         """Return group_ids with at least one anchor identity field in FOUND status.
 
         A group is "identity passable" when it has ``A.gene_symbol`` or
-        ``B.disease_diagnosis`` in FOUND status.  This allows identity fields
-        (gene, disease, variant, clinical context) to persist even without
-        variant co-location, while still blocking groups that have neither
-        gene nor disease (e.g. variant-only noise).
+        ``B.disease_diagnosis`` in FOUND status, or when its deterministic
+        group_id carries a non-missing gene token.  This allows identity
+        fields (gene, disease, variant, clinical context) to persist even
+        without variant co-location, while still blocking groups that have
+        neither gene nor disease (e.g. variant-only noise).
         """
         anchor_fields = StandardizationRepository._GATE_ANCHOR_FIELDS
         passable: set[str] = set()
@@ -1347,7 +1361,7 @@ class StandardizationRepository:
                 if not group_id:
                     continue
                 field_id = str(item.get("field_id", ""))
-                if field_id in anchor_fields:
+                if field_id in anchor_fields or StandardizationRepository._group_id_has_gene_anchor(group_id):
                     passable.add(group_id)
         return passable
 

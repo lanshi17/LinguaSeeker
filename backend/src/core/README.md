@@ -48,7 +48,7 @@ cfg.environment                  # "development"
 | `parse_document` | Document parsing settings | `cfg.parse_document.mineru_remote_poll_interval` |
 | `redis` | Redis connection | `cfg.redis.host` |
 | `postgresql` | PostgreSQL connection | `cfg.postgresql.host` |
-| `web_search` | Web search API | `cfg.web_search.api_key` |
+| `web_search` | Web search API | `cfg.web_search.firecrawl_api_key` |
 | `network` | Network/proxy settings | `cfg.network.proxy` |
 | `chat` | Chat interaction LLM (lightweight, conversational) | `cfg.chat.model` |
 

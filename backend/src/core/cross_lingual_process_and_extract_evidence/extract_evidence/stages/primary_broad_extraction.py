@@ -44,13 +44,12 @@ _PRIMARY_FIELD_LIST = (
     "  in a patient with the disease and no contradicting evidence, default to 'causative'.\n"
     "- A.variant_hgvs_c: the HGVS coding-level variant notation (e.g. c.473C>T)\n"
     "- A.variant_hgvs_p: the HGVS protein-level variant notation (e.g. p.T158M)\n"
-    "- A.variant_type: the variant type. Infer from notation and context:\n"
-    "  SNV/substitution (single nucleotide change like c.473C>T, m.3243A>G),\n"
-    "  deletion (del notation or 'deletion'), insertion (ins or 'insertion'),\n"
-    "  duplication (dup notation or 'duplication'), frameshift (fs notation or 'frameshift'),\n"
-    "  CNV (copy number variant, 'exon deletion', 'gene rearrangement').\n"
-    "  If the notation is m.XXXX>Y it is a SNV. If the text says 'mutation' without specifics, still extract.\n"
-    "- A.variant_consequence_class: the consequence class (e.g. missense, nonsense, frameshift, splice-site, tRNA)\n"
+    "- A.variant_type: use the benchmark/ClinVar consequence-class label when available.\n"
+    "  Allowed examples: missense, nonsense, frameshift, splice-site, deletion, insertion, duplication, tRNA, CNV.\n"
+    "  Do NOT use SNV/substitution as A.variant_type. For a point mutation, infer missense/nonsense/splice-site\n"
+    "  from protein notation or explicit text when possible; if the consequence is unknown, leave not_found.\n"
+    "- A.variant_consequence_class: optional duplicate consequence class (e.g. missense, nonsense, frameshift,\n"
+    "  splice-site, tRNA). If you extract this, also put the same consequence value in A.variant_type.\n"
     "Contextual fields:\n"
     "- B.sex: patient sex (male, female, mixed, unknown)\n"
     "- B.age_of_onset: age of onset as reported (e.g. '2 years', 'infancy', 'adult-onset')\n"
@@ -203,7 +202,96 @@ def _normalize_candidates(
                 notes=candidate.notes,
             )
         )
+    items = _project_consequence_class_to_variant_type(items)
     return FieldValueNormalizer.normalize_items(merge_sparse_evidence_items(items))
+
+
+_CONSEQUENCE_VARIANT_TYPES = frozenset({
+    "missense",
+    "nonsense",
+    "frameshift",
+    "splice-site",
+    "splice site",
+    "splicing",
+    "deletion",
+    "insertion",
+    "duplication",
+    "tRNA",
+    "trna",
+    "CNV",
+    "cnv",
+})
+
+_STRUCTURAL_VARIANT_TYPE_VALUES = frozenset({
+    "snv",
+    "snv/substitution",
+    "single nucleotide variant",
+    "single nucleotide substitution",
+    "substitution",
+    "point mutation",
+})
+
+
+def _project_consequence_class_to_variant_type(items: list[EvidenceItem]) -> list[EvidenceItem]:
+    """Project consequence-class values into A.variant_type for benchmark scoring."""
+    consequence_item = next(
+        (
+            item
+            for item in items
+            if item.field_id == "A.variant_consequence_class"
+            and item.status == EvidenceStatus.FOUND
+            and _normalized_variant_type_value(item.value) in _CONSEQUENCE_VARIANT_TYPES
+        ),
+        None,
+    )
+    if consequence_item is None:
+        return items
+
+    existing_variant_type = next(
+        (
+            item
+            for item in items
+            if item.field_id == "A.variant_type"
+            and item.status == EvidenceStatus.FOUND
+            and _normalized_variant_type_value(item.value) in _CONSEQUENCE_VARIANT_TYPES
+        ),
+        None,
+    )
+    if existing_variant_type is not None:
+        return items
+
+    spec = get_field_spec("A.variant_type")
+    projected = consequence_item.model_copy(update={
+        "field_id": spec.field_id,
+        "category": spec.category_id,
+        "field_name": spec.field_name,
+        "notes": _append_note(
+            consequence_item.notes,
+            "projected from A.variant_consequence_class for benchmark-compatible variant_type",
+        ),
+    })
+    kept = [
+        item
+        for item in items
+        if not (
+            item.field_id == "A.variant_type"
+            and _normalized_variant_type_value(item.value) in _STRUCTURAL_VARIANT_TYPE_VALUES
+        )
+    ]
+    kept.append(projected)
+    return kept
+
+
+def _normalized_variant_type_value(value: object) -> str:
+    return str(value or "").strip().casefold()
+
+
+def _append_note(existing: str, addition: str) -> str:
+    if not existing:
+        return addition
+    if addition in existing:
+        return existing
+    return f"{existing}; {addition}"
 
 
 def _truncate_text(text: str, max_chars: int) -> str:

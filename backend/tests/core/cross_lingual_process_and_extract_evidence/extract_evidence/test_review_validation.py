@@ -246,6 +246,34 @@ def test_review_validation_tristate_reject_remains_hard_reject() -> None:
     assert "review_track: rejected" in reviewed[0].notes
 
 
+def test_review_validation_tristate_soft_penalizes_non_human_model_variant_reject() -> None:
+    """Animal-model variant context should lower confidence, not erase the candidate."""
+    provider = StaticReviewProvider(
+        EvidenceTriStateReviewResponse(
+            decisions=[
+                EvidenceTriStateReviewDecision(
+                    candidate_index=0,
+                    field_id="A.variant_hgvs_p",
+                    action="reject",
+                    reason="The protein change p.R69C pertains to a mouse MTM1 model; no human participants.",
+                )
+            ]
+        )
+    )
+
+    reviewed = ReviewValidationStage(provider, review_reject_policy="tristate_review").run(
+        _document(),
+        [_item("A.variant_hgvs_p", "p.R69C")],
+    )
+
+    assert reviewed[0].status == EvidenceStatus.FOUND
+    assert reviewed[0].value == "p.R69C"
+    assert reviewed[0].confidence == 0.35
+    assert reviewed[0].raw_source is not None
+    assert "review_track: non_human_model_soft_rejected" in reviewed[0].notes
+    assert "review_non_human_model_soft_reject" in reviewed[0].inference_basis
+
+
 def test_review_validation_fails_open_to_primary_candidates() -> None:
     item = _item("A.gene_symbol", "MECP2")
 

@@ -61,7 +61,11 @@ inference_api_key: "your-inference-service-api-key"
 
 # -- Web Search ---------------------------------------------------------------
 web_search:
-  api_key: "your-web-search-api-key"
+  firecrawl_api_key: "your-firecrawl-api-key"
+  tavily_api_key: "your-tavily-api-key"
+  tavily_search_depth: "basic"
+  serpapi_api_key: "your-serpapi-api-key"
+  serpapi_engine: "google"
 
 # -- Literature Acquisition API Keys ------------------------------------------
 # Optional but recommended: raises provider rate limits and unlocks full-text.
