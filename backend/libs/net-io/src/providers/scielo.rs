@@ -66,4 +66,5 @@ impl SciEloProvider {
         }
 
         Ok(FetchResult::of_items("scielo", items, Some(json)))
+    }
 }

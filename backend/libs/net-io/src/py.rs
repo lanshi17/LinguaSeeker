@@ -305,6 +305,7 @@ async fn execute_provider(
             message: format!("unknown provider: {provider}"),
         }),
     }
+}
 
 // ── MinerU API functions ──────────────────────────────────────────────
 

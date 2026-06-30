@@ -81,4 +81,5 @@ impl BaseProvider {
         }
 
         Ok(FetchResult::of_items("base", items, Some(json)))
+    }
 }

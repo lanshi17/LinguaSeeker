@@ -76,4 +76,5 @@ impl OpenAireProvider {
         }
 
         Ok(FetchResult::of_items("openaire", items, Some(json)))
+    }
 }

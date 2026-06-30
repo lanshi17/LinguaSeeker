@@ -82,4 +82,5 @@ impl CoreProvider {
         }
 
         Ok(FetchResult::of_items("core", items, Some(json)))
+    }
 }
