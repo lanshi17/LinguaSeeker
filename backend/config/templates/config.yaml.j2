@@ -89,10 +89,14 @@ postgres:
 
 # ── Web Search ──────────────────────────────────────────────────────────
 web_search:
-  api_key: {{ web_search.api_key | default('') }}
+  firecrawl_api_key: {{ web_search.firecrawl_api_key | default('') }}
   base_url: {{ web_search.base_url }}
   timeout: {{ web_search.timeout }}
   max_results: {{ web_search.max_results }}
+  tavily_api_key: {{ web_search.tavily_api_key | default('') }}
+  tavily_search_depth: {{ web_search.tavily_search_depth | default('basic') }}
+  serpapi_api_key: {{ web_search.serpapi_api_key | default('') }}
+  serpapi_engine: {{ web_search.serpapi_engine | default('google') }}
 
 # ── Literature Acquisition Providers ────────────────────────────────────
 unpaywall:

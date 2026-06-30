@@ -211,12 +211,14 @@ class PostgreSQLConfig(BaseModel):
 class WebSearchConfig(BaseModel):
     """Web search provider configuration (adapter-based: Firecrawl or Tavily)."""
 
-    api_key: str = ""  # Firecrawl API key
+    firecrawl_api_key: str = ""  # Firecrawl API key
     base_url: str = "https://api.firecrawl.dev"
     timeout: int = 30
     max_results: int = 10
     tavily_api_key: str = ""  # Tavily API key (tvly-...)
     tavily_search_depth: str = "basic"  # "basic" or "advanced"
+    serpapi_api_key: str = ""  # SerpApi API key
+    serpapi_engine: str = "google"  # "google", "google_scholar", "bing", etc.
 
 
 # Domains that bypass the proxy and connect directly.
@@ -397,12 +399,16 @@ class Settings(BaseSettings):
 
     # ── Web Search flat fields (WEB_SEARCH_*) ───────────────────────────
 
-    web_search_api_key: str = ""
+    web_search_firecrawl_api_key: str = ""
     web_search_base_url: str = "https://api.firecrawl.dev"
     web_search_timeout: int = 30
     web_search_max_results: int = 10
     web_search_tavily_api_key: str = ""
     web_search_tavily_search_depth: str = "basic"
+    web_search_serpapi_api_key: str = ""
+    web_search_serpapi_engine: str = "google"
+    serpapi_api_key: str = ""  # SerpApi API key
+    serpapi_engine: str = "google"  # "google", "google_scholar", "bing", etc.
 
 
     # ── Network / proxy flat fields (NETWORK_*) ─────────────────────────
@@ -534,12 +540,14 @@ class Settings(BaseSettings):
             max_overflow=self.postgres_max_overflow,
         )
         self.web_search = WebSearchConfig(
-            api_key=self.web_search_api_key,
+            firecrawl_api_key=self.web_search_firecrawl_api_key,
             base_url=self.web_search_base_url,
             timeout=self.web_search_timeout,
             max_results=self.web_search_max_results,
             tavily_api_key=self.web_search_tavily_api_key,
             tavily_search_depth=self.web_search_tavily_search_depth,
+            serpapi_api_key=self.web_search_serpapi_api_key,
+            serpapi_engine=self.web_search_serpapi_engine,
         )
         self.network = NetworkConfig(
             proxy=self.network_proxy,

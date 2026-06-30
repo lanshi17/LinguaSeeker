@@ -151,3 +151,7 @@ web_search:
   base_url: "https://api.firecrawl.dev"
   timeout: 30
   max_results: 10
+  tavily_api_key: ""
+  tavily_search_depth: "basic"
+  serpapi_api_key: ""
+  serpapi_engine: "google_scholar"

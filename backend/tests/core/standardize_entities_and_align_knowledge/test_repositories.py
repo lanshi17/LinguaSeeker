@@ -1231,6 +1231,42 @@ class TestBuildRunItemSpecsGeneVariantGate:
         assert len(specs) == 2
         assert {spec.field_id for spec in specs} == {"A.gene_symbol", "B.disease_diagnosis"}
 
+    def test_gene_disease_relationship_survives_identity_only_group(self) -> None:
+        """Approved relationship evidence should persist even if variant anchors are absent."""
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({
+            "reconciled": {
+                "track": "reconciled",
+                "evidence_items": [
+                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found", "value": "MTM1", "confidence": 0.95},
+                    {
+                        "field_id": "A.gene_disease_relationship",
+                        "group_id": "g1",
+                        "status": "found",
+                        "value": "causative",
+                        "confidence": 0.95,
+                    },
+                    {
+                        "field_id": "B.disease_diagnosis",
+                        "group_id": "g1",
+                        "status": "found",
+                        "value": "X-linked myotubular myopathy",
+                        "confidence": 0.95,
+                    },
+                    {"field_id": "A.variant_hgvs_c", "group_id": "g1", "status": "not_found", "value": None, "confidence": 0.0},
+                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "not_found", "value": None, "confidence": 0.0},
+                ],
+            },
+        })
+
+        specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+        assert {spec.field_id for spec in specs if spec.status == "found"} == {
+            "A.gene_symbol",
+            "A.gene_disease_relationship",
+            "B.disease_diagnosis",
+        }
+
     def test_translation_traceback_raw_source_is_embedded_in_source_span(self) -> None:
         repo = StandardizationRepository(FakeSession())
         input_data = self._make_input({
@@ -1367,6 +1403,30 @@ class TestBuildRunItemSpecsGeneVariantGate:
 
         # No gene or disease anchor → group not passable → all blocked
         assert len(specs) == 0
+
+    def test_hgvs_identity_survives_structured_gene_group_id(self) -> None:
+        """A grouped HGVS item with an encoded gene anchor is not variant-only noise."""
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({
+            "reconciled": {
+                "track": "reconciled",
+                "evidence_items": [
+                    {
+                        "field_id": "A.variant_hgvs_p",
+                        "group_id": "gene=MTM1|variant=p.R69C",
+                        "status": "found",
+                        "value": "p.R69C",
+                        "confidence": 0.45,
+                    },
+                ],
+            },
+        })
+
+        specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+        assert len(specs) == 1
+        assert specs[0].field_id == "A.variant_hgvs_p"
+        assert specs[0].status == "found"
 
     def test_variant_dependent_fields_blocked_in_identity_only_group(self) -> None:
         """Non-identity fields are blocked when group has no variant co-location."""

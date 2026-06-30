@@ -130,6 +130,8 @@ def _build_review_prompt(
             "including long-tail medical entities, indirect entailment, or incomplete local evidence.\n"
             "- reject: use only when the candidate is clearly unsupported, contradicted, or belongs to another "
             "gene/disease/context. Do not reject solely because the entity is rare, compound, or domain-specific.\n"
+            "  For variant/HGVS fields, animal or cell model context is a confidence penalty, not a deletion reason; "
+            "use uncertain_keep_for_review unless the quote is absent or the gene/disease target is clearly wrong.\n"
             "- correct: the candidate field is relevant but its value or source quote should be fixed.\n\n"
         )
         action_instruction = (
@@ -213,6 +215,17 @@ def _reject_item(
             "notes": _merged_note(item.notes, "review_track: soft_rejected", decision.reason),
             "inference_basis": [*item.inference_basis, "review_soft_reject"],
         })
+    if review_reject_policy == "tristate_review" and _is_non_human_model_variant_reject(item, decision.reason):
+        return item.model_copy(update={
+            "status": EvidenceStatus.FOUND,
+            "confidence": min(item.confidence, 0.35),
+            "notes": _merged_note(
+                item.notes,
+                "review_track: non_human_model_soft_rejected",
+                decision.reason,
+            ),
+            "inference_basis": [*item.inference_basis, "review_non_human_model_soft_reject"],
+        })
     return item.model_copy(update={
         "status": EvidenceStatus.NOT_FOUND,
         "value": None,
@@ -223,6 +236,33 @@ def _reject_item(
         "assigned_clingen_modules": [],
         "notes": _merged_note(item.notes, "review_track: rejected", decision.reason),
     })
+
+
+_VARIANT_REVIEW_FIELDS = frozenset({
+    "A.variant_hgvs_c",
+    "A.variant_hgvs_p",
+    "A.variant_type",
+    "A.variant_consequence_class",
+})
+
+_NON_HUMAN_MODEL_REJECT_HINTS = (
+    "mouse",
+    "mice",
+    "murine",
+    "animal model",
+    "non-human",
+    "nonhuman",
+    "no human participant",
+    "no human subjects",
+)
+
+
+def _is_non_human_model_variant_reject(item: EvidenceItem, reason: str) -> bool:
+    """Return whether a variant rejection is only animal/model-context caution."""
+    if item.field_id not in _VARIANT_REVIEW_FIELDS:
+        return False
+    normalized_reason = reason.casefold()
+    return any(hint in normalized_reason for hint in _NON_HUMAN_MODEL_REJECT_HINTS)
 
 
 def _correct_item(item: EvidenceItem, decision: EvidenceReviewDecision) -> EvidenceItem:
