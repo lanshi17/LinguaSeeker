@@ -117,7 +117,7 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
             justifyContent: "center",
             borderRadius: 6,
             background:
-              "linear-gradient(to bottom right, var(--color-primary-500, var(--color-primary-500)), #2563eb)",
+              "linear-gradient(to bottom right, var(--color-primary-500, var(--color-primary-500)), var(--color-blue-600))",
             color: "var(--color-surface)",
             boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
           }}

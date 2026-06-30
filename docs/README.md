@@ -43,7 +43,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | Date | Title | Status |
 |------|-------|--------|
 | 2026-06-29 | [Evidence DB Field Model Implementation Plan](active/2026-06-29-evidence-db-field-model-plan.md) | in-progress (Tasks 1-6 and 8-9 complete; Task 7 product-gated) |
-| 2026-06-29 | [BIBM N=50 Comparison and Ablation Experiment Design](active/2026-06-29-bibm-n50-comparison-ablation-design.md) | planned |
+| 2026-06-27 | [Backend Host Deployment Guide](active/2026-06-27-backend-host-deployment-guide.md) | reference |
 | 2026-06-25 | [Lingua Seeker v1.0.0 Release Checklist](active/2026-06-25-v1-release-checklist.md) | in-progress |
 | 2026-06-23 | [Environment Consistency Standard](active/2026-06-23-environment-consistency.md) | reference |
 | 2026-06-23 | [Log Data Mining Report (drain3)](active/2026-06-23-log-data-mining-report.md) | reference |
@@ -75,6 +75,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
+| 2026-06-29 | [BIBM N=50 Comparison and Ablation Experiment Design](planned/2026-06-29-bibm-n50-comparison-ablation-design.md) | planned |
 | 2026-06-24 | [BIBM Dataset D Pipeline Optimization Design](planned/2026-06-24-bibm-dataset-d-pipeline-optimization-design.md) | proposed |
 | 2026-06-20 | [Variant ID Guarantee -- Fix Unknown Variant IDs](planned/2026-06-20-variant-id-guarantee-plan.md) | planned |
 

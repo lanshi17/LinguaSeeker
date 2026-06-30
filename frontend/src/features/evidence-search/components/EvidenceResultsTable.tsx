@@ -99,7 +99,7 @@ export function EvidenceResultsTable({
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 16,
-              background: "linear-gradient(to bottom right, var(--color-primary-100, var(--color-primary-100)), var(--color-primary-50, #ecfeff))",
+              background: "linear-gradient(to bottom right, var(--color-primary-100), var(--color-primary-50))",
               boxShadow: "inset 0 2px 4px 0 rgba(0,0,0,0.05)",
             }}
           >
@@ -225,7 +225,7 @@ export function EvidenceResultsTable({
                     alignItems: "center",
                     justifyContent: "center",
                     borderRadius: 8,
-                    background: "linear-gradient(to bottom right, var(--color-primary-100, var(--color-primary-100)), var(--color-primary-50, #ecfeff))",
+                    background: "linear-gradient(to bottom right, var(--color-primary-100), var(--color-primary-50))",
                     color: "var(--color-primary-700, var(--color-primary-700))",
                     boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
                     transition: "transform 0.15s",
