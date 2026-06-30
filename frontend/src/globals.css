@@ -125,8 +125,10 @@
   --color-running-text: #1d4ed8;
   --color-running-border: #bfdbfe;
   --color-blue-700: #1d4ed8;
+  --color-blue-600: #2563eb;
   --color-blue-50: #eff6ff;
   --color-purple-700: #7c3aed;
+  --color-purple-600: #9333ea;
   --color-purple-50: #f5f3ff;
   --color-purple-400: #c084fc;
   --color-slate-600: #475569;
@@ -229,8 +231,10 @@
   --color-running-text: #67e8f9;
   --color-running-border: #155e75;
   --color-blue-700: #93c5fd;
+  --color-blue-600: #60a5fa;
   --color-blue-50: #0c3545;
   --color-purple-700: #c4b5fd;
+  --color-purple-600: #a78bfa;
   --color-purple-50: #1e1040;
   --color-purple-400: #c4b5fd;
   --color-slate-600: #a0a0b8;

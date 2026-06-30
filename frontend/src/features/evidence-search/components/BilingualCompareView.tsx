@@ -765,7 +765,7 @@ export function BilingualCompareView({
                 top: 0,
                 height: "100%",
                 width: 4,
-                background: "linear-gradient(to bottom, var(--color-purple-400), #9333ea)",
+                background: "linear-gradient(to bottom, var(--color-purple-400), var(--color-purple-600))",
               }}
             />
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
@@ -822,7 +822,7 @@ export function BilingualCompareView({
                     alignItems: "center",
                     justifyContent: "center",
                     borderRadius: 8,
-                    background: "linear-gradient(to bottom right, var(--color-purple-50), #faf5ff)",
+                    background: "linear-gradient(to bottom right, var(--color-purple-50), var(--color-purple-50))",
                   }}
                 >
                   <stat.icon style={{ width: 16, height: 16, color: "var(--color-purple-700)" }} />
@@ -939,7 +939,7 @@ export function BilingualCompareView({
                     top: 0,
                     height: "100%",
                     width: 4,
-                    background: "linear-gradient(to bottom, var(--color-primary-400, var(--color-primary-400)), var(--color-primary-600, #0891b2))",
+                    background: "linear-gradient(to bottom, var(--color-primary-400, var(--color-primary-400)), var(--color-primary-600))",
                   }}
                 />
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
