@@ -54,6 +54,6 @@ async def test_file_not_found_is_not_retried_by_executor():
 
 def test_phase2_adapter_classifies_file_not_found_as_permanent():
     """Phase2Adapter should classify FileNotFoundError as PermanentPhaseError."""
-    from src.agents.phase_2_adapter import _PERMANENT_OS_ERRORS
+    from src.agents.contracts import PERMANENT_OS_ERRORS
 
-    assert issubclass(FileNotFoundError, _PERMANENT_OS_ERRORS)
+    assert issubclass(FileNotFoundError, PERMANENT_OS_ERRORS)

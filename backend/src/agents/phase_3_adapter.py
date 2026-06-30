@@ -19,9 +19,9 @@ from src.agents.contracts import (
     PhaseStatusDetail,
     PipelineGraphState,
     PermanentPhaseError,
-    RetryablePhaseError,
     SkipPhase3Reason,
     build_retryable_errors,
+    classify_phase_error,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     DualEvidenceExtractionResult,
@@ -33,9 +33,6 @@ if TYPE_CHECKING:
     )
 
 _RETRYABLE_ERRORS = build_retryable_errors()
-# FileNotFoundError/PermissionError are OSError subclasses but are permanent,
-# not transient — must not be retried.
-_PERMANENT_OS_ERRORS = (FileNotFoundError, PermissionError, IsADirectoryError)
 
 
 class Phase3Adapter:
@@ -131,15 +128,8 @@ class Phase3Adapter:
             )
             if candidate_count == 0:
                 state.skip_phase_3_reason = SkipPhase3Reason.NO_CANDIDATES
-                state.phase_3_status = PhaseStatusDetail(
-                    status=PhaseStatus.COMPLETED,
+                state.phase_3_status = PhaseStatusDetail.complete(
                     started_at=state.phase_3_status.started_at,
-                    completed_at=datetime.now().isoformat(),
-                    duration_seconds=(
-                        datetime.now() - datetime.fromisoformat(state.phase_3_status.started_at)
-                    ).total_seconds()
-                    if state.phase_3_status.started_at
-                    else None,
                     summary={
                         "match_count": standardization_result.match_count,
                         "standardized_count": standardization_result.standardized_count,
@@ -154,15 +144,8 @@ class Phase3Adapter:
                 )
                 return state
 
-            state.phase_3_status = PhaseStatusDetail(
-                status=PhaseStatus.COMPLETED,
+            state.phase_3_status = PhaseStatusDetail.complete(
                 started_at=state.phase_3_status.started_at,
-                completed_at=datetime.now().isoformat(),
-                duration_seconds=(
-                    datetime.now() - datetime.fromisoformat(state.phase_3_status.started_at)
-                ).total_seconds()
-                if state.phase_3_status.started_at
-                else None,
                 summary={
                     "match_count": standardization_result.match_count,
                     "standardized_count": standardization_result.standardized_count,
@@ -178,23 +161,5 @@ class Phase3Adapter:
             )
             return state
 
-        except _PERMANENT_OS_ERRORS as e:
-            raise PermanentPhaseError(
-                f"Phase 3 permanent file error: {e}",
-                phase=3,
-            ) from e
-
-        except _RETRYABLE_ERRORS as e:
-            raise RetryablePhaseError(
-                f"Phase 3 transient error: {e}",
-                phase=3,
-            ) from e
-
-        except (PermanentPhaseError, RetryablePhaseError):
-            raise  # Already classified, pass through
-
         except Exception as e:
-            raise PermanentPhaseError(
-                f"Phase 3 unexpected error: {e}",
-                phase=3,
-            ) from e
+            classify_phase_error(3, e, _RETRYABLE_ERRORS)

@@ -21,10 +21,11 @@ from src.agents.contracts import (
     PhaseStatusDetail,
     PipelineGraphState,
     PermanentPhaseError,
-    RetryablePhaseError,
     SkipPhase3Reason,
     build_retryable_errors,
+    classify_phase_error,
 )
+from src.agents.state_persistence import load_phase2_text_from_paths
 from src.core.cross_lingual_process_and_extract_evidence.contracts import CrossLingualOutput
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
     EvidenceExtractionService,
@@ -42,9 +43,6 @@ if TYPE_CHECKING:
     )
 
 _RETRYABLE_ERRORS = build_retryable_errors() + (CatalogExtractionError,)
-# FileNotFoundError/PermissionError are OSError subclasses but are permanent,
-# not transient — must not be retried.
-_PERMANENT_OS_ERRORS = (FileNotFoundError, PermissionError, IsADirectoryError)
 
 
 def _load_blocks_from_json(json_path: str) -> list[dict] | None:
@@ -197,8 +195,7 @@ class Phase2Adapter:
             # Persist document text and structured blocks while files are
             # guaranteed to exist on disk. Blocks enable structured rendering
             # (headings, tables, lists) in the evidence detail viewer.
-            from src.agents.state_persistence import load_phase2_text_from_paths
-            original_text, translated_doc_text = load_phase2_text_from_paths(
+            original_text, translated_doc_text = await load_phase2_text_from_paths(
                 cross_lingual_output.original_json_path,
                 cross_lingual_output.translated_json_path,
             )
@@ -228,15 +225,8 @@ class Phase2Adapter:
                 translated_blocks=translated_blocks_dicts,
             )
 
-            state.phase_2_status = PhaseStatusDetail(
-                status=PhaseStatus.COMPLETED,
+            state.phase_2_status = PhaseStatusDetail.complete(
                 started_at=state.phase_2_status.started_at,
-                completed_at=datetime.now().isoformat(),
-                duration_seconds=(
-                    datetime.now() - datetime.fromisoformat(state.phase_2_status.started_at)
-                ).total_seconds()
-                if state.phase_2_status.started_at
-                else None,
                 summary={
                     "relevant": not both_not_relevant,
                     "source_language": cross_lingual_output.source_language,
@@ -250,23 +240,5 @@ class Phase2Adapter:
             )
             return state
 
-        except _PERMANENT_OS_ERRORS as e:
-            raise PermanentPhaseError(
-                f"Phase 2 permanent file error: {e}",
-                phase=2,
-            ) from e
-
-        except _RETRYABLE_ERRORS as e:
-            raise RetryablePhaseError(
-                f"Phase 2 transient error: {e}",
-                phase=2,
-            ) from e
-
-        except (PermanentPhaseError, RetryablePhaseError):
-            raise  # Already classified, pass through
-
         except Exception as e:
-            raise PermanentPhaseError(
-                f"Phase 2 unexpected error: {e}",
-                phase=2,
-            ) from e
+            classify_phase_error(2, e, _RETRYABLE_ERRORS)

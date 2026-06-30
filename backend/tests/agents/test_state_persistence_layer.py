@@ -270,13 +270,14 @@ async def test_build_raw_metadata_extracts_title(tmp_path):
         output_dir=str(tmp_path),
     )
 
-    raw_meta = _build_raw_metadata(state)
+    raw_meta = await _build_raw_metadata(state)
     assert raw_meta["title"] == "Rett Syndrome Study"
     assert raw_meta["authors"] == ["Doe J"]
     assert raw_meta["journal"] == "Nature"
 
 
-def test_build_raw_metadata_handles_missing_file(tmp_path):
+@pytest.mark.asyncio
+async def test_build_raw_metadata_handles_missing_file(tmp_path):
     """Missing metadata file is handled gracefully — returns empty dict."""
     from src.agents.contracts import Phase1Output
     from src.agents.state_persistence import _build_raw_metadata
@@ -294,10 +295,11 @@ def test_build_raw_metadata_handles_missing_file(tmp_path):
         output_dir=str(tmp_path),
     )
 
-    assert _build_raw_metadata(state) == {}
+    assert await _build_raw_metadata(state) == {}
 
 
-def test_build_raw_metadata_no_phase_1_output():
+@pytest.mark.asyncio
+async def test_build_raw_metadata_no_phase_1_output():
     """When Phase 1 has not run, raw_metadata is empty (no crash)."""
     from src.agents.state_persistence import _build_raw_metadata
 
@@ -307,7 +309,7 @@ def test_build_raw_metadata_no_phase_1_output():
         mode=PipelineMode.FULL,
         source_type=SourceType.LOCAL,
     )
-    assert _build_raw_metadata(state) == {}
+    assert await _build_raw_metadata(state) == {}
 
 
 @pytest.mark.asyncio
