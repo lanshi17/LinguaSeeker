@@ -173,6 +173,8 @@ class Phase2Adapter:
                 original_only=state.ablation_original_only,
                 enable_review_validation=not state.ablation_disable_review,
                 enable_target_guard=not state.ablation_disable_target_guard,
+                review_reject_policy=state.review_reject_policy,
+                extraction_track_mode=state.extraction_track_mode,
             )
 
             # Check if document is relevant

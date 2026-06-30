@@ -13,6 +13,7 @@ from src.utils.rust_io import files_io
 from .contracts import (
     CrossLingualOutput,
     SavedDocuments,
+    TranslationAlignmentChunk,
     TranslationResult,
 )
 
@@ -35,6 +36,62 @@ def _write_json(path: Path, data: str) -> None:
             raise OSError(f"Failed to write {path}: {e}") from e
     else:
         path.write_text(data, encoding="utf-8")
+
+
+def _find_text_after(text: str, needle: str, cursor: int) -> int:
+    """Find text at or after cursor, falling back to a global search."""
+    if not needle:
+        return -1
+    start = text.find(needle, max(cursor, 0))
+    if start >= 0:
+        return start
+    return text.find(needle)
+
+
+def _build_translation_alignment(result: TranslationResult) -> list[TranslationAlignmentChunk]:
+    """Build deterministic source-English alignment from translation segments."""
+    alignment: list[TranslationAlignmentChunk] = []
+    source_cursor = 0
+    english_cursor = 0
+    for idx, segment in enumerate(result.segments, start=1):
+        chunk_id = segment.chunk_id or f"c_{idx:04d}"
+
+        if segment.source_start_offset >= 0 and segment.source_end_offset >= segment.source_start_offset:
+            original_start = segment.source_start_offset
+            original_end = segment.source_end_offset
+        elif segment.source_bbox is not None:
+            original_start = segment.source_bbox.start_offset
+            original_end = segment.source_bbox.end_offset
+        else:
+            original_start = _find_text_after(result.formatted_original, segment.source_text, source_cursor)
+            original_end = original_start + len(segment.source_text) if original_start >= 0 else -1
+
+        if segment.translated_start_offset >= 0 and segment.translated_end_offset >= segment.translated_start_offset:
+            english_start = segment.translated_start_offset
+            english_end = segment.translated_end_offset
+        else:
+            english_start = _find_text_after(result.translated_english, segment.translated_text, english_cursor)
+            english_end = english_start + len(segment.translated_text) if english_start >= 0 else -1
+
+        if original_end >= 0:
+            source_cursor = original_end
+        if english_end >= 0:
+            english_cursor = english_end
+
+        alignment.append(
+            TranslationAlignmentChunk(
+                chunk_id=chunk_id,
+                original_text=segment.source_text,
+                english_text=segment.translated_text,
+                original_start_offset=original_start,
+                original_end_offset=original_end,
+                english_start_offset=english_start,
+                english_end_offset=english_end,
+                page=segment.source_bbox.page if segment.source_bbox is not None else 1,
+                block_index=segment.index,
+            )
+        )
+    return alignment
 
 
 class DocumentPersistenceService:
@@ -92,6 +149,10 @@ class DocumentPersistenceService:
         # Save translated.json — always include formatted_text (the
         # authoritative translated text used during extraction).
         translated_path = base / "translated.json"
+        translation_alignment = _build_translation_alignment(result)
+        translation_alignment_payload = [
+            chunk.model_dump(mode="json") for chunk in translation_alignment
+        ]
         translated_data: dict = {
             "metadata": {
                 "doc_id": doc_id,
@@ -99,6 +160,7 @@ class DocumentPersistenceService:
                 "block_count": len(result.translated_blocks),
                 "terminology_map": result.terminology_map,
                 "translation_warnings": result.translation_warnings,
+                "translation_alignment": translation_alignment_payload,
             },
             "blocks": [b.to_dict() for b in result.translated_blocks],
             "formatted_text": result.translated_english,
@@ -124,6 +186,7 @@ class DocumentPersistenceService:
             "segment_count": len(result.segments),
             "original_block_count": len(result.original_blocks),
             "translated_block_count": len(result.translated_blocks),
+            "translation_alignment": translation_alignment_payload,
             "translation_drifts": [
                 {
                     "segment_index": d.segment_index,

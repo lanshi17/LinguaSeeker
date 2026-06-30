@@ -256,6 +256,23 @@ async def test_submit_and_poll_sends_review_reject_policy(monkeypatch) -> None:
     assert client.post_payloads[0]["review_reject_policy"] == "tristate_review"
 
 
+@pytest.mark.asyncio
+async def test_submit_and_poll_sends_extraction_track_mode(monkeypatch) -> None:
+    monkeypatch.setattr("benchmark.core.pipeline_client.POLL_INTERVAL_S", 0)
+    client = FakePipelineClient()
+
+    await submit_and_poll(
+        client,
+        "http://test",
+        pdf_bytes=None,
+        filename="gs_002.md",
+        pre_parsed_markdown="ABCA3 text",
+        extraction_track_mode="english_pivot",
+    )
+
+    assert client.post_payloads[0]["extraction_track_mode"] == "english_pivot"
+
+
 def test_compute_aggregate_metrics_reports_grounded_and_db_ready_metrics() -> None:
     metrics = EntryMetrics(
         entry_id="gs_002",
@@ -296,6 +313,41 @@ def test_compute_aggregate_metrics_reports_grounded_and_db_ready_metrics() -> No
     assert overall["grounded_true_positives"] == 1
     assert overall["grounded_false_negatives"] == 2
     assert overall["grounded_f1"] == 0.5
+    assert overall["db_ready_yield"] == 1
+
+
+def test_compute_aggregate_metrics_reports_original_grounded_metrics() -> None:
+    metrics = EntryMetrics(
+        entry_id="gs_002",
+        gene_symbol="ABCA3",
+        classification="definitive",
+        language="zh",
+        field_matches=[
+            FieldMatch(
+                field_id="B.disease_diagnosis",
+                expected_value="interstitial lung disease due to ABCA3 deficiency",
+                matched=True,
+                extracted_value="interstitial lung disease due to ABCA3 deficiency",
+                source_span={
+                    "text_snippet": "interstitial lung disease due to ABCA3 deficiency",
+                    "original_source_span": {"text_snippet": "ABCA3缺陷引起的间质性肺病"},
+                },
+            ),
+            FieldMatch(
+                field_id="A.gene_symbol",
+                expected_value="ABCA3",
+                matched=True,
+                extracted_value="ABCA3",
+                source_span={"text_snippet": "ABCA3"},
+            ),
+        ],
+    )
+
+    overall = compute_aggregate_metrics([metrics])["overall"]
+
+    assert overall["grounded_true_positives"] == 2
+    assert overall["original_grounded_true_positives"] == 1
+    assert overall["original_grounded_recall"] == 0.5
     assert overall["db_ready_yield"] == 1
 
 

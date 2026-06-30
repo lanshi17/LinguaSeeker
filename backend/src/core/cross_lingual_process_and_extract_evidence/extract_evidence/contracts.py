@@ -6,6 +6,8 @@ from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
+
+from ..contracts import TranslationAlignmentChunk
 from .channel_contracts import DocumentChannelClassification
 
 
@@ -101,6 +103,7 @@ class TrackDocument(BaseModel):
     blocks: list[ContentBlock] = Field(default_factory=list)
     external_ids: ExternalIds = Field(default_factory=ExternalIds)
     metadata: dict[str, str] = Field(default_factory=dict)
+    translation_alignment: list[TranslationAlignmentChunk] = Field(default_factory=list)
     extraction_target: ExtractionTarget | None = None
 
 

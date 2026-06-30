@@ -1231,6 +1231,39 @@ class TestBuildRunItemSpecsGeneVariantGate:
         assert len(specs) == 2
         assert {spec.field_id for spec in specs} == {"A.gene_symbol", "B.disease_diagnosis"}
 
+    def test_translation_traceback_raw_source_is_embedded_in_source_span(self) -> None:
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({
+            "reconciled": {
+                "track": "reconciled",
+                "evidence_items": [
+                    {
+                        "field_id": "B.disease_diagnosis",
+                        "group_id": "g1",
+                        "status": "found",
+                        "value": "interstitial lung disease due to ABCA3 deficiency",
+                        "confidence": 0.82,
+                        "source": {
+                            "text_snippet": "interstitial lung disease due to ABCA3 deficiency",
+                            "start_offset": 10,
+                            "end_offset": 61,
+                        },
+                        "raw_source": {
+                            "text_snippet": "ABCA3缺陷引起的间质性肺病",
+                            "start_offset": 5,
+                            "end_offset": 21,
+                            "context_ref": "Results | translation_traceback:c_0001",
+                        },
+                    }
+                ],
+            },
+        })
+
+        specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+        assert specs[0].source_span["text_snippet"] == "interstitial lung disease due to ABCA3 deficiency"
+        assert specs[0].source_span["original_source_span"]["text_snippet"] == "ABCA3缺陷引起的间质性肺病"
+
     def test_filters_out_variant_only_group(self) -> None:
         repo = StandardizationRepository(FakeSession())
         input_data = self._make_input({

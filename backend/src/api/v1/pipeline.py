@@ -80,6 +80,8 @@ class PipelineRunRequest(BaseModel):
     ablation_disable_review: bool = False
     ablation_disable_target_guard: bool = False
     ablation_original_only: bool = False
+    review_reject_policy: Literal["hard_veto", "soft_veto", "tristate_review"] = "hard_veto"
+    extraction_track_mode: Literal["dual", "original_only", "english_pivot"] = "dual"
 
     @model_validator(mode="after")
     def validate_request(self) -> "PipelineRunRequest":
@@ -474,6 +476,8 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         ablation_disable_review=body.ablation_disable_review,
         ablation_disable_target_guard=body.ablation_disable_target_guard,
         ablation_original_only=body.ablation_original_only,
+        review_reject_policy=body.review_reject_policy,
+        extraction_track_mode=body.extraction_track_mode,
     )
     content_hash = await runner.compute_initial_content_hash(temp_state)
     if content_hash:
@@ -523,6 +527,8 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         "ablation_disable_review": body.ablation_disable_review,
         "ablation_disable_target_guard": body.ablation_disable_target_guard,
         "ablation_original_only": body.ablation_original_only,
+        "review_reject_policy": body.review_reject_policy,
+        "extraction_track_mode": body.extraction_track_mode,
         "extraction_profile": body.extraction_profile,
     }
     if body.extraction_target is not None:

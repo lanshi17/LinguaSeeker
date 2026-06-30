@@ -846,6 +846,7 @@ class MultiStageTranslator(BaseTranslator):
         tr_segments: list[TranslationSegment] = []
         # Compute translated segment offsets by tracking cumulative position
         translated_offset = 0
+        source_offset = 0
         for idx, src_seg in enumerate(source_segments):
             src_bbox = None
             for sent in formatted.sentences:
@@ -853,12 +854,23 @@ class MultiStageTranslator(BaseTranslator):
                     src_bbox = sent
                     break
             tr_text = translated_parts[idx] if idx < len(translated_parts) else ""
+            source_start = formatted.formatted_markdown.find(src_seg, source_offset)
+            source_end = source_start + len(src_seg) if source_start >= 0 else -1
+            translated_start = translated.find(tr_text, translated_offset) if tr_text else -1
+            translated_end = translated_start + len(tr_text) if translated_start >= 0 else -1
             tr_segments.append(TranslationSegment(
                 index=idx, source_text=src_seg,
                 translated_text=tr_text,
                 source_bbox=src_bbox,
+                source_start_offset=source_start,
+                source_end_offset=source_end,
+                translated_start_offset=translated_start,
+                translated_end_offset=translated_end,
             ))
-            translated_offset += len(tr_text) + 2  # +2 for "\n\n" joiner
+            if source_end >= 0:
+                source_offset = source_end
+            if translated_end >= 0:
+                translated_offset = translated_end
 
         # Translate auxiliary fields (captions, footnotes) for non-text blocks
         aux_translations = await self._translate_auxiliary_blocks(blocks)
@@ -902,6 +914,7 @@ class MultiStageTranslator(BaseTranslator):
                 )
                 tr_segments = []
                 translated_offset = 0
+                source_offset = 0
                 for idx, src_seg in enumerate(source_segments):
                     src_bbox = None
                     for sent in formatted.sentences:
@@ -909,12 +922,23 @@ class MultiStageTranslator(BaseTranslator):
                             src_bbox = sent
                             break
                     tr_text = translated_parts[idx] if idx < len(translated_parts) else ""
+                    source_start = formatted.formatted_markdown.find(src_seg, source_offset)
+                    source_end = source_start + len(src_seg) if source_start >= 0 else -1
+                    translated_start = translated.find(tr_text, translated_offset) if tr_text else -1
+                    translated_end = translated_start + len(tr_text) if translated_start >= 0 else -1
                     tr_segments.append(TranslationSegment(
                         index=idx, source_text=src_seg,
                         translated_text=tr_text,
                         source_bbox=src_bbox,
+                        source_start_offset=source_start,
+                        source_end_offset=source_end,
+                        translated_start_offset=translated_start,
+                        translated_end_offset=translated_end,
                     ))
-                    translated_offset += len(tr_text) + 2
+                    if source_end >= 0:
+                        source_offset = source_end
+                    if translated_end >= 0:
+                        translated_offset = translated_end
                 translated_blocks = build_translated_blocks(
                     blocks, tr_segments, translated,
                     text_block_indices=getattr(self, '_text_block_indices', None),

@@ -1,0 +1,16 @@
+{
+  "condition_id": "c2_english_pivot_tristate",
+  "label": "English Pivot Single-Track Workflow with Tri-State Review",
+  "description": "Experimental condition that runs extraction only on the English translated track, then deterministically maps English source spans back to original-language source spans via translation chunk alignment. Review uses approve / uncertain_keep_for_review / reject semantics.",
+  "extraction_mode": "broad",
+  "extraction_track_mode": "english_pivot",
+  "ablation_disable_review": false,
+  "ablation_disable_target_guard": false,
+  "ablation_original_only": false,
+  "force_reextract": true,
+  "extraction_profile": "none",
+  "is_prompt_only": false,
+  "prompt_only_model": null,
+  "disabled_components": ["original_track_extraction"],
+  "review_reject_policy": "tristate_review"
+}

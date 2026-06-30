@@ -6,7 +6,9 @@ from pathlib import Path
 
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     ContentBlock,
+    SentenceRegion,
     TranslationResult,
+    TranslationSegment,
 )
 from src.core.cross_lingual_process_and_extract_evidence.persistence import (
     DocumentPersistenceService,
@@ -93,6 +95,58 @@ class TestDocumentPersistenceService:
         assert meta["doc_id"] == "doc001"
         assert meta["source_language"] == "zh"
         assert meta["terminology_map"] == {"基因": "gene"}
+
+    def test_save_persists_translation_alignment_chunks(self, tmp_path: Path):
+        service = DocumentPersistenceService()
+        result = TranslationResult(
+            formatted_original="患者表现出严重的呼吸衰竭。\n基因检测提示ABCA3缺陷引起的间质性肺病。",
+            translated_english=(
+                "The patient presented with severe respiratory failure.\n"
+                "Genetic testing suggested interstitial lung disease due to ABCA3 deficiency."
+            ),
+            source_language="zh",
+            terminology_map={"ABCA3缺陷": "ABCA3 deficiency"},
+            translation_warnings=[],
+            sentences=[],
+            segments=[
+                TranslationSegment(
+                    index=0,
+                    source_text="患者表现出严重的呼吸衰竭。",
+                    translated_text="The patient presented with severe respiratory failure.",
+                    source_bbox=SentenceRegion(
+                        page=1,
+                        start_offset=0,
+                        end_offset=14,
+                        text="患者表现出严重的呼吸衰竭。",
+                    ),
+                ),
+                TranslationSegment(
+                    index=1,
+                    source_text="基因检测提示ABCA3缺陷引起的间质性肺病。",
+                    translated_text=(
+                        "Genetic testing suggested interstitial lung disease due to ABCA3 deficiency."
+                    ),
+                    source_bbox=SentenceRegion(
+                        page=1,
+                        start_offset=15,
+                        end_offset=39,
+                        text="基因检测提示ABCA3缺陷引起的间质性肺病。",
+                    ),
+                ),
+            ],
+        )
+
+        saved = service.save(result, output_dir=str(tmp_path), doc_id="doc-align")
+
+        translated = json.loads(saved.translated_json_path.read_text(encoding="utf-8"))
+        meta = json.loads(saved.metadata_path.read_text(encoding="utf-8"))
+        alignment = translated["metadata"]["translation_alignment"]
+        assert alignment == meta["translation_alignment"]
+        assert [chunk["chunk_id"] for chunk in alignment] == ["c_0001", "c_0002"]
+        assert alignment[1]["original_text"] == "基因检测提示ABCA3缺陷引起的间质性肺病。"
+        assert alignment[1]["english_text"].endswith("ABCA3 deficiency.")
+        assert alignment[1]["original_start_offset"] == 15
+        assert alignment[1]["english_start_offset"] > alignment[0]["english_end_offset"]
 
     def test_save_copies_images(self, tmp_path: Path):
         # Create fake source images

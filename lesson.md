@@ -6090,3 +6090,51 @@ RUN find /opt/venv/bin -maxdepth 1 -type f -exec \
 - Root cause: `api.py` referenced `ExtractionProfile` and `resolve_profile_fields` without importing them. The DB-ready proxy mixed two metric sources with different grounding definitions. A final regression test also caught that the benchmark client accepted `review_reject_policy` but omitted it from the submitted API payload.
 - Resolution: Restored the missing `field_profile` imports. Redefined `db_ready_yield` as grounded true positives (`matched` and `source_span` present), making it consistent with grounded-F1 for report-level comparison. Restored `review_reject_policy` and `ablation_original_only` in the benchmark submission payload.
 - Prevention: Backend smoke runs should include an explicit service import/startup check after refactors. Composite metrics should be derived from the same evidence surface as their paired P/R/F1 metrics unless the report clearly labels a cross-source proxy. Benchmark condition parameters need payload-level tests, not only report-config tests.
+
+## 2026-06-30 术语库测试修复
+
+### 问题描述
+术语库及向量术语库相关的2个测试失败：
+1. `test_find_nearest_builds_pgvector_similarity_query` — `FakeSession`缺少`begin_nested()`方法
+2. `test_build_context_pack_harvests_source_observed_mondo_disease_aliases` — MONDO缓存文件`mondo_hierarchy_cache.json`不存在导致`_load_mondo_alias_index()`返回`None`
+
+### 排查过程
+1. 运行`pytest tests/core/standardize_entities_and_align_knowledge/`发现2个失败
+2. 定位到`PgvectorTerminologyRepository.find_nearest()`调用`session.begin_nested()`但测试fake未实现
+3. 定位到`_source_observed_mondo_aliases()`依赖`_MONDO_CACHE_PATH`文件，但`database/terminology_database/mondo/`目录不存在
+
+### 根因分析
+1. `PgvectorTerminologyRepository`增加了SAVEPOINT保护但测试`FakeSession`未同步更新
+2. MONDO测试假设缓存文件已存在，但测试环境无该文件且未mock
+
+### 解决方案
+1. 在`test_similarity_repositories.py`中添加`_FakeSavepoint`类和`FakeSession.begin_nested()`方法
+2. 在MONDO测试中添加`monkeypatch`参数，mock `_load_mondo_alias_index`返回包含测试所需标签的`_MondoAliasIndex`
+
+### 预防措施
+- 修改repository层接口时，同步更新所有测试fake/stub
+- 依赖外部数据文件的测试应使用mock/monkeypatch而非假设文件存在
+
+## 2026-06-30 - English-pivot smoke needs identity traceback for English originals
+
+### 问题描述
+N=5 `c2_english_pivot_tristate` smoke 首次无 API key 运行产生 401 无效报告；带 API key 重跑后完成 5 个样本，但报告中的 `original_grounded_*` 全为 0，和“英文定锚后必须可追溯到原文”的实验目标不一致。
+
+### 排查过程
+1. 确认无效报告来自 401，删除该报告，仅保留有效报告 `benchmark/data/reports/eval_unified_20260630_150431.json`。
+2. 检查有效报告，发现 14 个字段带 `source_span`，但没有任何 `original_source_span` 或 `translation_traceback` 标记。
+3. 追踪 `run_dual(..., extraction_track_mode="english_pivot") -> apply_translation_traceback() -> StandardizationRepository._build_run_item_specs()`，发现空 `translation_alignment` 时回链函数直接返回。
+4. 对照后端日志和报告样本，部分文档原文已是英文，翻译阶段会跳过并产生空 alignment，因此需要 identity traceback。
+
+### 根因分析
+原实现只覆盖“非英文原文 -> 英文翻译 -> alignment 回链”路径。英文原文跳过翻译时，英文 source span 本身就是原文证据，但没有被复制为 `raw_source`，持久化层也就无法嵌入 `source_span.original_source_span`，导致 original-grounded 指标为 0。
+
+### 解决方案
+1. 为英文 pivot 增加回归测试：当 translated track 没有 alignment 且文本等同原文时，`raw_source` 必须 identity 映射到 original span，并带 `translation_traceback:identity`。
+2. 修改 `translation_traceback.py`：空 alignment 时确定性查找 source snippet 或合法 offset，生成原文 `SourceLocation`，不增加模型调用。
+3. 保持已有 alignment 回链路径不变，确认中文原文映射测试仍通过。
+
+### 预防措施
+- English-pivot 证据链必须同时测试 translated-alignment 和 English-identity 两条路径。
+- Benchmark smoke 前必须显式传入 API key；401 报告只能算操作失败，不能进入模型质量分析。
+- N=5 smoke 用于架构方向验证，不要把未匹配同样本的历史指标作为公平对比。若需要对比，应使用同一 5 个 entry、同一 gold、同一 scoring script 重跑。
