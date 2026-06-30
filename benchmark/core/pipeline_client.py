@@ -185,6 +185,8 @@ async def submit_and_poll(
     ablation_disable_review: bool = False,
     ablation_disable_target_guard: bool = False,
     ablation_original_only: bool = False,
+    review_reject_policy: str = "hard_veto",
+    extraction_track_mode: str = "dual",
 ) -> dict:
     """Submit document and poll until completion.
 
@@ -206,6 +208,8 @@ async def submit_and_poll(
         "ablation_disable_review": ablation_disable_review,
         "ablation_disable_target_guard": ablation_disable_target_guard,
         "ablation_original_only": ablation_original_only,
+        "review_reject_policy": review_reject_policy,
+        "extraction_track_mode": extraction_track_mode,
     }
     if pre_parsed_markdown:
         payload["pre_parsed_markdown"] = pre_parsed_markdown
@@ -332,6 +336,8 @@ async def evaluate_one(
     ablation_disable_review: bool = False,
     ablation_disable_target_guard: bool = False,
     ablation_original_only: bool = False,
+    review_reject_policy: str = "hard_veto",
+    extraction_track_mode: str = "dual",
 ) -> EntryMetrics:
     """Evaluate one ground truth entry.
 
@@ -457,6 +463,8 @@ async def evaluate_one(
                 ablation_disable_review=ablation_disable_review,
                 ablation_disable_target_guard=ablation_disable_target_guard,
                 ablation_original_only=ablation_original_only,
+                review_reject_policy=review_reject_policy,
+                extraction_track_mode=extraction_track_mode,
             )
             metrics.duration_s = round(time.time() - t0, 2)
             metrics.pipeline_status = status_data.get("pipeline_status", "unknown")
@@ -660,6 +668,8 @@ async def run_evaluation(
     ablation_disable_review: bool = False,
     ablation_disable_target_guard: bool = False,
     ablation_original_only: bool = False,
+    review_reject_policy: str = "hard_veto",
+    extraction_track_mode: str = "dual",
 ):
     """Main evaluation orchestrator.
 
@@ -731,6 +741,8 @@ async def run_evaluation(
                 ablation_disable_review=ablation_disable_review,
                 ablation_disable_target_guard=ablation_disable_target_guard,
                 ablation_original_only=ablation_original_only,
+                review_reject_policy=review_reject_policy,
+                extraction_track_mode=extraction_track_mode,
             )
             all_metrics.append(m)
             status_icon = "\u2713" if m.pipeline_status == "completed" else "\u2717"
@@ -764,6 +776,8 @@ async def run_evaluation(
             "ablation_disable_review": ablation_disable_review,
             "ablation_disable_target_guard": ablation_disable_target_guard,
             "ablation_original_only": ablation_original_only,
+            "review_reject_policy": review_reject_policy,
+            "extraction_track_mode": extraction_track_mode,
             "shard_index": shard_index,
             "shard_size": shard_size,
         },

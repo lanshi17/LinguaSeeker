@@ -425,3 +425,5 @@ class PipelineGraphState(BaseModel):
     ablation_disable_review: bool = False
     ablation_disable_target_guard: bool = False
     ablation_original_only: bool = False
+    review_reject_policy: str = "hard_veto"
+    extraction_track_mode: str = "dual"

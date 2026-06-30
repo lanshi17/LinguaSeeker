@@ -5,7 +5,9 @@ import asyncio
 import json
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+from loguru import logger
 
 from src.core.standardize_entities_and_align_knowledge.context_pack.contracts import (
     TargetContextPack,
@@ -28,10 +30,16 @@ from .contracts import (
     Track,
     TrackDocument,
 )
+from ..contracts import TranslationAlignmentChunk
 from .providers import LangChainEvidenceProvider
 from .reconcile.api import CrossTrackReconcileService
 from .field_profile import ExtractionProfile, resolve_profile_fields
+from .stages.review_validation import DEFAULT_REVIEW_REJECT_POLICY, resolve_review_reject_policy
+from .translation_traceback import apply_translation_traceback
 from .workflow import DEFAULT_EXTRACTION_WORKFLOW_MODE, EvidenceExtractionWorkflow, resolve_extraction_mode
+
+
+ExtractionTrackMode = Literal["dual", "original_only", "english_pivot"]
 
 
 class EvidenceExtractionService:
@@ -61,18 +69,21 @@ class EvidenceExtractionService:
         extraction_mode: str = DEFAULT_EXTRACTION_WORKFLOW_MODE,
         enable_review_validation: bool = True,
         enable_target_guard: bool = True,
+        review_reject_policy: str = DEFAULT_REVIEW_REJECT_POLICY,
     ):
         self._ctx = EvidenceExtractionConfigContext.from_config(cfg)
         self._provider = LangChainEvidenceProvider(self._ctx)
         self._extraction_mode = resolve_extraction_mode(extraction_mode)
         self._enable_review_validation = enable_review_validation
         self._enable_target_guard = enable_target_guard
+        self._review_reject_policy = resolve_review_reject_policy(review_reject_policy)
         profile_fields = resolve_profile_fields(extraction_profile)
         self._workflow = EvidenceExtractionWorkflow(
             provider=self._provider, field_profile=profile_fields,
             extraction_mode=extraction_mode,
             enable_review_validation=enable_review_validation,
             enable_target_guard=enable_target_guard,
+            review_reject_policy=self._review_reject_policy,
         )
         self._reconcile_service = CrossTrackReconcileService()
 
@@ -83,12 +94,14 @@ class EvidenceExtractionService:
         extraction_mode: str | None = None,
         enable_review_validation: bool | None = None,
         enable_target_guard: bool | None = None,
+        review_reject_policy: str | None = None,
     ) -> EvidenceExtractionResult:
         workflow = self._workflow_for(
             extraction_profile,
             extraction_mode=extraction_mode,
             enable_review_validation=enable_review_validation,
             enable_target_guard=enable_target_guard,
+            review_reject_policy=review_reject_policy,
         )
         state = await workflow.run_async(document)
 
@@ -132,14 +145,20 @@ class EvidenceExtractionService:
         original_only: bool = False,
         enable_review_validation: bool | None = None,
         enable_target_guard: bool | None = None,
+        review_reject_policy: str | None = None,
+        extraction_track_mode: str = "dual",
     ) -> DualEvidenceExtractionResult:
+        track_mode = _resolve_extraction_track_mode(extraction_track_mode)
         if original_only:
+            track_mode = "original_only"
+        if track_mode == "original_only":
             original_result = await self.run(
                 documents.original,
                 extraction_profile=extraction_profile,
                 extraction_mode=extraction_mode,
                 enable_review_validation=enable_review_validation,
                 enable_target_guard=enable_target_guard,
+                review_reject_policy=review_reject_policy,
             )
             translated_result = EvidenceExtractionResult(
                 status=EvidenceExtractionStatus.NOT_RELEVANT,
@@ -157,6 +176,36 @@ class EvidenceExtractionService:
                 channel_classification=None,
                 field_eligibility_summary=None,
             )
+        elif track_mode == "english_pivot":
+            original_result = EvidenceExtractionResult(
+                status=EvidenceExtractionStatus.NOT_RELEVANT,
+                document_id=documents.original.document_id,
+                track=documents.original.track,
+                evidence_map=None,
+                evidence_items=[],
+                evidence_chains=[],
+                special_evidence=[],
+                quality_report=None,
+                normalization_issues=[],
+                extraction_target=documents.original.extraction_target,
+                phenotype_evidence=[],
+                discarded_evidence=[],
+                channel_classification=None,
+                field_eligibility_summary=None,
+            )
+            translated_result = await self.run(
+                documents.translated,
+                extraction_profile=extraction_profile,
+                extraction_mode=extraction_mode,
+                enable_review_validation=enable_review_validation,
+                enable_target_guard=enable_target_guard,
+                review_reject_policy=review_reject_policy,
+            )
+            translated_result = apply_translation_traceback(
+                documents.original,
+                documents.translated,
+                translated_result,
+            )
         else:
             original_result, translated_result = await asyncio.gather(
                 self.run(
@@ -165,6 +214,7 @@ class EvidenceExtractionService:
                     extraction_mode=extraction_mode,
                     enable_review_validation=enable_review_validation,
                     enable_target_guard=enable_target_guard,
+                    review_reject_policy=review_reject_policy,
                 ),
                 self.run(
                     documents.translated,
@@ -172,6 +222,7 @@ class EvidenceExtractionService:
                     extraction_mode=extraction_mode,
                     enable_review_validation=enable_review_validation,
                     enable_target_guard=enable_target_guard,
+                    review_reject_policy=review_reject_policy,
                 ),
             )
         context_pack = _build_runtime_context_pack(documents, original_result, translated_result)
@@ -213,6 +264,7 @@ class EvidenceExtractionService:
         extraction_mode: str | None = None,
         enable_review_validation: bool | None = None,
         enable_target_guard: bool | None = None,
+        review_reject_policy: str | None = None,
     ) -> EvidenceExtractionWorkflow:
         """Return the workflow for the given profile/mode/ablation override.
 
@@ -222,11 +274,13 @@ class EvidenceExtractionService:
         mode = extraction_mode or self._extraction_mode
         erv = self._enable_review_validation if enable_review_validation is None else enable_review_validation
         etg = self._enable_target_guard if enable_target_guard is None else enable_target_guard
+        rrp = self._review_reject_policy if review_reject_policy is None else resolve_review_reject_policy(review_reject_policy)
         if (
             extraction_profile is None
             and mode == self._extraction_mode
             and erv == self._enable_review_validation
             and etg == self._enable_target_guard
+            and rrp == self._review_reject_policy
         ):
             return self._workflow
         profile_fields = resolve_profile_fields(extraction_profile)
@@ -235,6 +289,7 @@ class EvidenceExtractionService:
             extraction_mode=mode,
             enable_review_validation=erv,
             enable_target_guard=etg,
+            review_reject_policy=rrp,
         )
 
     @staticmethod
@@ -252,6 +307,12 @@ class EvidenceExtractionService:
             original=original,
             translated=translated,
         )
+
+
+def _resolve_extraction_track_mode(raw: str) -> ExtractionTrackMode:
+    if raw not in ("dual", "original_only", "english_pivot"):
+        raise ValueError(f"Unknown extraction_track_mode {raw!r}")
+    return raw  # type: ignore[return-value]
 
 
 def _build_runtime_context_pack(
@@ -325,8 +386,24 @@ def _build_track_document_from_json(
             "source_path": str(path),
             "source_language": str(metadata.get("source_language", "")),
         },
+        translation_alignment=_parse_translation_alignment(metadata.get("translation_alignment")),
         extraction_target=extraction_target,
     )
+
+
+def _parse_translation_alignment(raw: Any) -> list[TranslationAlignmentChunk]:
+    """Parse persisted translation alignment metadata."""
+    if not isinstance(raw, list):
+        return []
+    chunks: list[TranslationAlignmentChunk] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        try:
+            chunks.append(TranslationAlignmentChunk.model_validate(item))
+        except ValueError:
+            logger.warning("Skipping invalid translation alignment chunk: {}", item)
+    return chunks
 
 
 _EVIDENCE_SECTION_RE = re.compile(
