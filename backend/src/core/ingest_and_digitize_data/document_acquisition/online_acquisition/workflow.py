@@ -152,40 +152,64 @@ async def _acquire_links_api(
     return all_items
 
 
-async def _acquire_links_firecrawl(
+async def _acquire_links_web_search(
     *,
     query: str,
     language: Optional[str] = None,
 ) -> List[SearchLink]:
-    """Phase 1b: Search via Firecrawl adapter."""
-    from .web_search.firecrawl_adapter import FirecrawlAdapter
-
+    """Phase 1b: Search via web search adapter (Tavily preferred, Firecrawl fallback)."""
     from src.core.config import get_config
     cfg = get_config()
-    if not cfg.web_search.api_key:
-        logger.info("web search skipped: no WEB_SEARCH_API_KEY configured")
-        return []
+    ws = cfg.web_search
 
-    adapter = FirecrawlAdapter(
-        api_key=cfg.web_search.api_key,
-        base_url=cfg.web_search.base_url,
-        timeout=cfg.web_search.timeout,
-        max_results=cfg.web_search.max_results,
-    )
+    # Tavily takes priority if configured
+    if ws.tavily_api_key:
+        from .web_search.tavily_adapter import TavilyAdapter
 
-    result = await adapter.search(query, language=language)
-    if result.warnings:
-        for w in result.warnings:
-            logger.warning("firecrawl: {}", w)
+        adapter = TavilyAdapter(
+            api_key=ws.tavily_api_key,
+            search_depth=ws.tavily_search_depth,
+            max_results=ws.max_results,
+        )
+        result = await adapter.search(query, language=language)
+        if result.warnings:
+            for w in result.warnings:
+                logger.warning("tavily: {}", w)
 
-    all_links = list(result.links)
-    scrape_tasks = [adapter.scrape_links(link.url) for link in result.links[:5]]
-    scrape_results = await asyncio.gather(*scrape_tasks, return_exceptions=True)
-    for sr in scrape_results:
-        if isinstance(sr, list):
-            all_links.extend(sr)
+        all_links = list(result.links)
+        # Tavily results already include content — light scrape on top 5
+        scrape_tasks = [adapter.scrape_links(link.url) for link in result.links[:5]]
+        scrape_results = await asyncio.gather(*scrape_tasks, return_exceptions=True)
+        for sr in scrape_results:
+            if isinstance(sr, list):
+                all_links.extend(sr)
+        return all_links
 
-    return all_links
+    # Fallback to Firecrawl
+    if ws.api_key:
+        from .web_search.firecrawl_adapter import FirecrawlAdapter
+
+        adapter = FirecrawlAdapter(
+            api_key=ws.api_key,
+            base_url=ws.base_url,
+            timeout=ws.timeout,
+            max_results=ws.max_results,
+        )
+        result = await adapter.search(query, language=language)
+        if result.warnings:
+            for w in result.warnings:
+                logger.warning("firecrawl: {}", w)
+
+        all_links = list(result.links)
+        scrape_tasks = [adapter.scrape_links(link.url) for link in result.links[:5]]
+        scrape_results = await asyncio.gather(*scrape_tasks, return_exceptions=True)
+        for sr in scrape_results:
+            if isinstance(sr, list):
+                all_links.extend(sr)
+        return all_links
+
+    logger.info("web search skipped: no TAVILY_API_KEY or WEB_SEARCH_API_KEY configured")
+    return []
 
 
 def _source_trace_entry(
@@ -481,7 +505,7 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
 
     if request.prefer == "web":
         try:
-            firecrawl_links = await _acquire_links_firecrawl(query=query, language=language)
+            firecrawl_links = await _acquire_links_web_search(query=query, language=language)
             source_trace.append(_source_trace_entry(
                 provider="firecrawl",
                 success=bool(firecrawl_links),
@@ -554,7 +578,7 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
             )
         else:
             api_task = _acquire_links_api(query=query, identifiers=id_params, limit=request.limit)
-            firecrawl_task = _acquire_links_firecrawl(query=query, language=language)
+            firecrawl_task = _acquire_links_web_search(query=query, language=language)
 
             api_result, firecrawl_result = await asyncio.gather(api_task, firecrawl_task, return_exceptions=True)
 
