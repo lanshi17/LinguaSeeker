@@ -2,8 +2,10 @@ import { useSearchParams, Navigate } from "react-router-dom";
 import { Typography } from "antd";
 import { EvidenceDetailView } from "@/features/evidence-search";
 import { BookOpen, Columns2 } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export function EvidenceDetailPage() {
+  const { t } = useI18n();
   const [searchParams] = useSearchParams();
   const evidenceId = searchParams.get("evidenceId") ?? undefined;
   const groupId = searchParams.get("groupId");
@@ -44,12 +46,10 @@ export function EvidenceDetailPage() {
         </div>
         <div>
           <Typography.Title level={3} style={{ margin: 0 }}>
-            {isCompareView ? "Bilingual Evidence" : "Literature Detail"}
+            {isCompareView ? t("evidenceDetail.compareTitle") : t("evidenceDetail.title")}
           </Typography.Title>
           <Typography.Text type="secondary" style={{ fontSize: 14 }}>
-            {isCompareView
-              ? "Read original and English full-text evidence side by side with category highlight controls."
-              : "Review literature metadata, evidence distribution, and extracted fields."}
+            {isCompareView ? t("evidenceDetail.compareDescription") : t("evidenceDetail.description")}
           </Typography.Text>
         </div>
       </div>

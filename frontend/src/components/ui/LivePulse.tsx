@@ -13,7 +13,7 @@ const toneColors: Record<PulseTone, string> = {
   success: "var(--color-success-500, #22c55e)",
   warning: "#f59e0b",
   error: "#ef4444",
-  neutral: "#9ca3af",
+  neutral: "var(--color-text-muted)",
 };
 
 const dotStyle = (color: string): CSSProperties => ({

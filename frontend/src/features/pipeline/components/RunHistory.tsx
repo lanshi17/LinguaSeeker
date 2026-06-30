@@ -3,6 +3,7 @@ import { Activity, RefreshCcw, Search, X, ChevronLeft, ChevronRight } from "luci
 import { Link } from "react-router-dom";
 import { Button, Input } from "antd";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { useI18n } from "@/lib/i18n";
 import { RunListItem } from "./RunListItem";
 import { usePipelineRuns } from "../hooks/usePipelineRuns";
 import type { ProcessingStatus } from "../types/pipeline";
@@ -42,6 +43,7 @@ interface RunHistoryProps {
 }
 
 export function RunHistory({ className, statusFilter }: RunHistoryProps) {
+  const { t } = useI18n();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [jumpValue, setJumpValue] = useState("");
@@ -91,7 +93,7 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Activity style={{ width: 16, height: 16, color: "var(--color-primary-600)" }} aria-hidden />
           <h2 style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em", color: "#111827", margin: 0 }}>
-            Pipeline Runs
+            {t("pipeline.history.title")}
           </h2>
           {!isLoading && (
             <span style={{
@@ -112,17 +114,17 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
           size="small"
           onClick={() => refetch()}
           loading={isFetching && !isLoading}
-          aria-label="Refresh runs"
+          aria-label={t("pipeline.history.refreshAria")}
         >
           <RefreshCcw style={{ width: 14, height: 14 }} />
-          Refresh
+          {t("pipeline.history.refresh")}
         </Button>
       </header>
 
       {/* Search bar */}
       <div style={{ padding: "12px 20px 0" }}>
         <Input
-          placeholder="Search by title, identifier, or source key..."
+          placeholder={t("pipeline.history.searchPlaceholder")}
           prefix={<Search style={{ width: 14, height: 14, color: "#9ca3af" }} />}
           suffix={
             search ? (
@@ -152,11 +154,11 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
 
       <div style={{ padding: 12 }}>
         {isLoading ? (
-          <RunHistorySkeleton />
+          <RunHistorySkeleton t={t} />
         ) : error ? (
-          <RunHistoryError onRetry={() => refetch()} />
+          <RunHistoryError onRetry={() => refetch()} t={t} />
         ) : items.length === 0 ? (
-          <RunHistoryEmpty hasFilter={Boolean(statusFilter && statusFilter !== "all") || !!search} />
+          <RunHistoryEmpty hasFilter={Boolean(statusFilter && statusFilter !== "all") || !!search} t={t} />
         ) : (
           <>
             <ol className="content-fade-in" style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -246,8 +248,8 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
                         if (e.key === "Enter") handleJump();
                       }}
                       onBlur={handleJump}
-                      aria-label="Jump to page"
-                      title={`Jump to page (1–${totalPages})`}
+                      aria-label={t("pipeline.history.jumpToPage")}
+                      title={t("pipeline.history.jumpToPageTitle", { total: String(totalPages) })}
                     />
                   </>
                 )}
@@ -274,7 +276,7 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
                   <ChevronRight style={{ width: 16, height: 16 }} />
                 </button>
                 <span style={{ marginLeft: 8, fontSize: 12, color: "#6b7280" }}>
-                  Page {page} of {totalPages}
+                  {t("pipeline.history.pageInfo", { current: String(page), total: String(totalPages) })}
                 </span>
               </div>
             )}
@@ -285,9 +287,11 @@ export function RunHistory({ className, statusFilter }: RunHistoryProps) {
   );
 }
 
-function RunHistorySkeleton() {
+type TFn = (key: string, params?: Record<string, string>) => string;
+
+function RunHistorySkeleton({ t }: { t: TFn }) {
   return (
-    <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }} aria-label="Loading runs">
+    <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }} aria-label={t("pipeline.history.loadingAria")}>
       {Array.from({ length: 4 }).map((_, i) => (
         <li
           key={i}
@@ -316,7 +320,7 @@ function RunHistorySkeleton() {
   );
 }
 
-function RunHistoryEmpty({ hasFilter }: { hasFilter: boolean }) {
+function RunHistoryEmpty({ hasFilter, t }: { hasFilter: boolean; t: TFn }) {
   return (
     <div style={{
       display: "grid",
@@ -339,23 +343,20 @@ function RunHistoryEmpty({ hasFilter }: { hasFilter: boolean }) {
       {hasFilter ? (
         <>
           <p style={{ marginTop: 12, fontSize: 14, fontWeight: 500, color: "#111827" }}>
-            No matching runs
+            {t("pipeline.history.noMatch")}
           </p>
           <p style={{ marginTop: 4, maxWidth: 384, fontSize: 12, color: "#6b7280" }}>
-            No pipeline runs match the selected filter. Try a different status
-            or clear the filter.
+            {t("pipeline.history.filterEmpty", { status: "" })}
           </p>
         </>
       ) : (
         <>
-          <p style={{ marginTop: 12, fontSize: 14, fontWeight: 500, color: "#111827" }}>No runs yet</p>
+          <p style={{ marginTop: 12, fontSize: 14, fontWeight: 500, color: "#111827" }}>{t("pipeline.history.noRuns")}</p>
           <p style={{ marginTop: 4, maxWidth: 384, fontSize: 12, color: "#6b7280" }}>
-            Start a conversation in{" "}
+            {t("pipeline.history.guidance")}{" "}
             <Link to="/chat" style={{ fontWeight: 500, color: "var(--color-primary-600)" }}>
-              AI Chat
-            </Link>{" "}
-            to submit your first pipeline run. Every run will appear here with
-            live status.
+              {t("pipeline.history.chatLink")}
+            </Link>
           </p>
         </>
       )}
@@ -363,7 +364,7 @@ function RunHistoryEmpty({ hasFilter }: { hasFilter: boolean }) {
   );
 }
 
-function RunHistoryError({ onRetry }: { onRetry: () => void }) {
+function RunHistoryError({ onRetry, t }: { onRetry: () => void; t: TFn }) {
   return (
     <div style={{
       display: "grid",
@@ -371,14 +372,13 @@ function RunHistoryError({ onRetry }: { onRetry: () => void }) {
       padding: "40px 24px",
       textAlign: "center",
     }}>
-      <p style={{ fontSize: 14, color: "#b91c1c", margin: 0 }}>Failed to load runs.</p>
+      <p style={{ fontSize: 14, color: "#b91c1c", margin: 0 }}>{t("pipeline.history.loadError")}</p>
       <p style={{ marginTop: 4, maxWidth: 384, fontSize: 12, color: "#6b7280" }}>
-        We could not reach the pipeline service. Check the connection indicator
-        at the top right and try again.
+        {t("pipeline.history.loadErrorHint")}
       </p>
       <Button size="small" style={{ marginTop: 12 }} onClick={onRetry}>
         <RefreshCcw style={{ width: 14, height: 14 }} />
-        Retry
+        {t("pipeline.history.retry")}
       </Button>
     </div>
   );

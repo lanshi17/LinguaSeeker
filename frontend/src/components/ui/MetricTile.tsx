@@ -12,16 +12,16 @@ interface MetricTileProps {
 }
 
 const toneColors: Record<NonNullable<MetricTileProps["tone"]>, string> = {
-  default: "#111827",
+  default: "var(--color-text)",
   primary: "var(--color-primary-700)",
   success: "var(--color-success-700)",
   warning: "#b45309",
-  error: "#b91c1c",
+  error: "var(--color-error-text)",
 };
 
 const containerStyle: CSSProperties = {
   borderRadius: 6,
-  border: "1px solid #f3f4f6",
+  border: "1px solid var(--color-border)",
   backgroundColor: "rgba(249, 250, 251, 0.6)",
   padding: "8px 12px",
 };
@@ -34,7 +34,7 @@ const labelRowStyle: CSSProperties = {
   fontWeight: 600,
   textTransform: "uppercase",
   letterSpacing: "0.08em",
-  color: "#6b7280",
+  color: "var(--color-text-secondary)",
 };
 
 const valueRowStyle: CSSProperties = {
@@ -46,7 +46,7 @@ const valueRowStyle: CSSProperties = {
 
 const unitStyle: CSSProperties = {
   fontSize: 12,
-  color: "#6b7280",
+  color: "var(--color-text-secondary)",
 };
 
 /**

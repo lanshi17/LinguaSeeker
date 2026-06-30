@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { Typography } from "antd";
 import { Database } from "lucide-react";
 import { VariantIndexView, VariantDetailView, BilingualEvidenceView } from "@/features/evidence-db";
+import { useI18n } from "@/lib/i18n";
 
 /**
  * Evidence Database page — routes between three levels via URL params:
@@ -12,6 +13,7 @@ import { VariantIndexView, VariantDetailView, BilingualEvidenceView } from "@/fe
  */
 export function EvidenceDbPage() {
   const { variantSlug, sourceDocumentId } = useParams();
+  const { t } = useI18n();
 
   // L3: bilingual evidence comparison
   if (variantSlug && sourceDocumentId) {
@@ -53,10 +55,10 @@ export function EvidenceDbPage() {
               letterSpacing: "-0.025em",
             }}
           >
-            Evidence Database
+            {t("evidenceDb.title")}
           </Typography.Title>
           <Typography.Text type="secondary" style={{ fontSize: 14 }}>
-            Browse variant evidence organized by mutation identifier
+            {t("evidenceDb.description")}
           </Typography.Text>
         </div>
       </div>

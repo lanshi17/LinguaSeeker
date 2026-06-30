@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { useI18n } from "@/lib/i18n";
 import { usePipelineRuns } from "../hooks/usePipelineRuns";
 import { TaskQueueRow } from "./TaskQueueRow";
 import type { PipelineRunSummary } from "../types/pipeline";
@@ -33,6 +34,7 @@ function isFailed(run: PipelineRunSummary): boolean {
 }
 
 export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
+  const { t } = useI18n();
   const { data, isLoading, isError, dataUpdatedAt } = usePipelineRuns();
   const [tab, setTab] = useState<TabKey>("active");
   const runs = useMemo(() => data?.items ?? [], [data?.items]);
@@ -68,10 +70,10 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
   const visible = tab === "active" ? activeRuns : tab === "failed" ? failedRuns : recentRuns;
   const emptyMessage =
     tab === "active"
-      ? "No active pipelines"
+      ? t("pipeline.queue.emptyActive")
       : tab === "failed"
-        ? "No failed pipelines"
-        : "No recent pipelines";
+        ? t("pipeline.queue.emptyFailed")
+        : t("pipeline.queue.emptyRecent");
 
   const updatedAt = dataUpdatedAt
     ? new Date(dataUpdatedAt).toLocaleTimeString(undefined, {
@@ -94,7 +96,7 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
         backgroundColor: "#fafbfc",
         backdropFilter: "blur(4px)",
       }}
-      aria-label="Task queue"
+      aria-label={t("pipeline.queue.ariaLabel")}
     >
       {/* Header */}
       <header
@@ -131,7 +133,7 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
               color: "#111827",
             }}
           >
-            Task Queue
+            {t("pipeline.queue.title")}
           </h2>
           <p
             style={{
@@ -152,10 +154,10 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
                 >
                   {activeRuns.length}
                 </span>{" "}
-                active · {total} total
+                {t("pipeline.queue.active")} · {total} {t("pipeline.queue.total")}
               </>
             ) : (
-              <>{total} total pipelines</>
+              <>{total} {t("pipeline.queue.total")}</>
             )}
           </p>
         </div>
@@ -163,7 +165,7 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close task queue"
+            aria-label={t("pipeline.queue.close")}
             className="tqp-close-btn"
           >
             <X style={{ width: 16, height: 16 }} />
@@ -185,7 +187,7 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
           active={tab === "active"}
           onClick={() => setTab("active")}
           icon={<Radio style={{ width: 12, height: 12 }} />}
-          label="Active"
+          label={t("pipeline.queue.tabActive")}
           count={activeRuns.length}
           pulse={activeRuns.length > 0}
         />
@@ -193,23 +195,23 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
           active={tab === "recent"}
           onClick={() => setTab("recent")}
           icon={<Inbox style={{ width: 12, height: 12 }} />}
-          label="Recent"
+          label={t("pipeline.queue.tabRecent")}
           count={recentRuns.length}
         />
         <TabButton
           active={tab === "failed"}
           onClick={() => setTab("failed")}
           icon={<AlertTriangle style={{ width: 12, height: 12 }} />}
-          label="Failed"
+          label={t("pipeline.queue.tabFailed")}
           count={failedRuns.length}
           pulse={failedRuns.length > 0 && tab !== "failed"}
         />
         <Link
           to="/pipeline"
           className="tqp-view-all"
-          title="Open pipeline page"
+          title={t("pipeline.queue.openPipeline")}
         >
-          <span>View all</span>
+          <span>{t("pipeline.queue.viewAll")}</span>
           <ChevronRight style={{ width: 12, height: 12 }} />
         </Link>
       </div>
@@ -226,9 +228,9 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
         {isLoading && runs.length === 0 ? (
           <LoadingSkeleton />
         ) : isError ? (
-          <ErrorState />
+          <ErrorState t={t} />
         ) : visible.length === 0 ? (
-          <EmptyState message={emptyMessage} />
+          <EmptyState message={emptyMessage} t={t} />
         ) : (
           <ul style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {visible.map((run) => (
@@ -259,7 +261,7 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
             fontVariantNumeric: "tabular-nums",
           }}
         >
-          {updatedAt ? `Synced ${updatedAt}` : "Syncing…"}
+          {updatedAt ? `${t("pipeline.queue.synced")} ${updatedAt}` : t("pipeline.queue.syncing")}
         </span>
         <span
           style={{
@@ -270,7 +272,7 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
           }}
         >
           <Layers3 style={{ width: 12, height: 12 }} aria-hidden />
-          <span>Live</span>
+          <span>{t("pipeline.queue.live")}</span>
         </span>
       </footer>
     </aside>
@@ -413,7 +415,9 @@ function LoadingSkeleton() {
   );
 }
 
-function ErrorState() {
+type TFn = (key: string) => string;
+
+function ErrorState({ t }: { t: TFn }) {
   return (
     <div
       style={{
@@ -426,7 +430,7 @@ function ErrorState() {
       }}
     >
       <p style={{ fontSize: 11.5, fontWeight: 500, color: "#b91c1c" }}>
-        Unable to load pipelines
+        {t("pipeline.queue.loadError")}
       </p>
       <p
         style={{
@@ -436,13 +440,13 @@ function ErrorState() {
           color: "rgba(220,38,38,0.8)",
         }}
       >
-        Check the backend connection and try again.
+        {t("pipeline.queue.loadErrorHint")}
       </p>
     </div>
   );
 }
 
-function EmptyState({ message: msg }: { message: string }) {
+function EmptyState({ message: msg, t }: { message: string; t: TFn }) {
   return (
     <div
       style={{
@@ -481,7 +485,7 @@ function EmptyState({ message: msg }: { message: string }) {
           color: "#6b7280",
         }}
       >
-        Drop a PDF above to start a new pipeline.
+        {t("pipeline.queue.dropHint")}
       </p>
     </div>
   );

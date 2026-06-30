@@ -93,6 +93,18 @@ def fuzzy_match_value(expected: str, extracted: str) -> bool:
     return False
 
 
+def _item_value_text(item: dict[str, Any]) -> str:
+    """Return the comparable text value from an extracted item."""
+    value = item.get("value", "")
+    if isinstance(value, dict):
+        for key in ("value", "text", "display_name"):
+            nested = value.get(key)
+            if nested not in (None, ""):
+                return str(nested)
+        return ""
+    return str(value)
+
+
 def prepare_extracted_items(items: list[dict]) -> list[dict]:
     """Clean extracted items before matching.
 
@@ -117,7 +129,7 @@ def prepare_extracted_items(items: list[dict]) -> list[dict]:
     deduped: list[dict] = []
     for item in result:
         fid = item.get("field_id", "")
-        value = normalize_comparison_text(str(item.get("value", ""))).lower()
+        value = normalize_comparison_text(_item_value_text(item)).lower()
         key = (fid, value)
         if key not in seen:
             seen.add(key)
@@ -170,7 +182,7 @@ def compare_evidence(
         # Field-specific normalization (HGVS, MOI, variant_type, gene_disease_relationship)
         expected_field_norm = normalize_field_for_matching(field_id, expected_value).lower()
         for cand in candidates:
-            extracted_value = str(cand.get("value", ""))
+            extracted_value = _item_value_text(cand)
             confidence = cand.get("confidence", 0.0)
             source_span = cand.get("source_span") if isinstance(cand.get("source_span"), dict) else None
 
@@ -222,7 +234,7 @@ def compare_evidence(
             extra_values: list[str] = []
             seen_extra_values: set[str] = set()
             for cand in candidates:
-                value = str(cand.get("value", ""))
+                value = _item_value_text(cand)
                 normalized_value = normalize_comparison_text(value).lower()
                 if normalized_value in seen_extra_values:
                     continue
@@ -236,7 +248,7 @@ def compare_evidence(
                 field_id=field_id,
                 expected_value=expected_value,
                 matched=False,
-                extracted_value=str(candidates[0].get("value", "")),
+                extracted_value=_item_value_text(candidates[0]),
                 extracted_confidence=candidates[0].get("confidence", 0.0),
                 source_span=candidates[0].get("source_span") if isinstance(candidates[0].get("source_span"), dict) else None,
                 match_type="wrong_value",

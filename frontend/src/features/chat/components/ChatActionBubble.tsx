@@ -1,22 +1,12 @@
-
 import { useCallback, useRef, useState } from "react";
 import { Card, Tag, Typography } from "antd";
 import { Loader2 } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 import type { ChatAction, ChatActionIntent } from "../types/actions";
 
 const { Text } = Typography;
 
-const INTENT_LABELS: Record<ChatActionIntent, string> = {
-  "confirm-pipeline": "Start pipeline",
-  "start-pipeline": "Start pipeline",
-  "upload-pdf": "Upload PDF",
-  "search-evidence": "Search evidence",
-  "classify-variant": "Classify variant",
-  "interpret-evidence": "Interpret evidence",
-  "review-changes": "Review queue",
-  "check-pipeline-status": "Task manager",
-};
 
 export interface ChatActionBubbleProps {
   action: ChatAction;
@@ -40,6 +30,17 @@ export function ChatActionBubble({
   loading = false,
   disabled = false,
 }: ChatActionBubbleProps) {
+  const { t } = useI18n();
+  const INTENT_LABELS: Record<ChatActionIntent, string> = {
+    "confirm-pipeline": t("chat.action.startPipeline"),
+    "start-pipeline": t("chat.action.startPipeline"),
+    "upload-pdf": t("chat.action.uploadPdf"),
+    "search-evidence": t("chat.action.searchEvidence"),
+    "classify-variant": t("chat.action.classifyVariant"),
+    "interpret-evidence": t("chat.action.interpretEvidence"),
+    "review-changes": t("chat.action.reviewQueue"),
+    "check-pipeline-status": t("chat.action.taskManager"),
+  };
   // Internal loading state flips on the first click so the UI immediately
   // shows a spinner and blocks further clicks, even before the parent's
   // `loading` / `dispatched` prop propagates.  Actions are one-way — once
@@ -76,10 +77,10 @@ export function ChatActionBubble({
   );
 
   const statusLabel = dispatched
-    ? "Dispatched"
+    ? t("chat.action.dispatched")
     : isLoading
-      ? "Processing..."
-      : "Click to open";
+      ? t("chat.action.processing")
+      : t("chat.action.clickToOpen");
 
   return (
     <Card

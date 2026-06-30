@@ -7,6 +7,7 @@ import { StructuredBlockRenderer, type BlockHighlight } from "./StructuredBlockR
 import { MarkdownDocumentViewer } from "@/features/evidence-search/components/MarkdownDocumentViewer";
 import { AnnotationLayer } from "@/features/evidence-search/components/annotationLayer";
 import type { AnnotationTrack, UserAnnotation } from "@/features/evidence-search/types/annotations";
+import { useI18n } from "@/lib/i18n";
 
 /** Shared CRUD handler shape for user annotations. */
 interface AnnotationHandlers {
@@ -45,30 +46,22 @@ export function DocumentReader({
   track: AnnotationTrack;
   document: EvidenceDocument;
   accentColor: string;
-  /** Structured blocks for formatted rendering (preferred over flat paragraphs). */
   blocks?: ContentBlock[] | null;
-  /** Highlights mapped to global character offsets for block rendering. */
   blockHighlights?: BlockHighlight[];
-  /** Source document id — used to resolve relative image paths. */
   sourceDocumentId?: string;
-  /** User-authored annotations for this track's document. */
   annotations?: UserAnnotation[];
-  /** External ref attached to the scrollable content container (for scroll sync). */
   scrollContainerRef?: MutableRefObject<HTMLDivElement | null>;
-  /** Scroll event handler for the scrollable content container (for scroll sync). */
   onContainerScroll?: (e: UIEvent<HTMLDivElement>) => void;
 } & AnnotationHandlers) {
+  const { t } = useI18n();
   const contentRef = useRef<HTMLDivElement | null>(null);
   const hasBlocks = blocks && blocks.length > 0;
-  // The whole document (structured blocks or flat paragraphs) is one
-  // annotation unit anchored to the rendered visible text of this panel.
   const paragraphId = `${track}-document`;
   const docAnnotations = annotations.filter((a) => a.paragraph_id === paragraphId);
   const fullTextPara = document.paragraphs.find((p) => p.id.endsWith("-full-text"));
   const snippetParas = fullTextPara
     ? document.paragraphs.filter((p) => p !== fullTextPara)
     : document.paragraphs;
-
 
   return (
     <div style={{
@@ -97,7 +90,7 @@ export function DocumentReader({
           textTransform: "capitalize",
           color: "#6b7280",
         }}>
-          {track} track{hasBlocks ? " · structured" : ""}
+          {track}{t("evidenceDb.doc.trackSuffix")}{hasBlocks ? t("evidenceDb.doc.structured") : ""}
         </span>
       </div>
       <div
@@ -122,7 +115,7 @@ export function DocumentReader({
           }}>
             <BookOpen style={{ width: 32, height: 32, color: "#9ca3af", marginBottom: 8 }} />
             <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>
-              No {track} text available
+              {t("evidenceDb.doc.noText", { track })}
             </p>
           </div>
         ) : (
@@ -147,7 +140,7 @@ export function DocumentReader({
                     color: "#9ca3af",
                     fontFamily: "var(--font-mono)",
                   }}>
-                    p.{para.page}
+                    {t("evidenceDb.doc.page", { page: String(para.page) })}
                   </span>
                 )}
                 <HighlightedText paragraph={para} />

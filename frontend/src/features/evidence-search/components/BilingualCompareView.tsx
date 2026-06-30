@@ -38,6 +38,7 @@ import {
 } from "@/api/annotations";
 import type { AnnotationCreateRequest, AnnotationTrack, AnnotationUpdateRequest, UserAnnotation } from "../types/annotations";
 import { AnnotationLayer } from "./annotationLayer";
+import { useI18n } from "@/lib/i18n";
 
 /* ---- Constants ---- */
 
@@ -335,14 +336,11 @@ function EvidenceDocumentReader({
   track: AnnotationTrack;
   annotations?: UserAnnotation[];
 } & AnnotationHandlers) {
+  const { t } = useI18n();
   const fullTextParagraph = paragraphs.find((p) => p.id.endsWith("-full-text"));
   const snippetParagraphs = paragraphs.filter((p) => p !== fullTextParagraph);
   const isFullText = Boolean(fullTextParagraph);
-  const subtitle = isFullText
-    ? snippetParagraphs.length > 0
-      ? `Full document with evidence highlights · ${snippetParagraphs.length} additional snippet${snippetParagraphs.length !== 1 ? "s" : ""}`
-      : "Full document with evidence highlights"
-    : `${paragraphs.length} aligned paragraph${paragraphs.length !== 1 ? "s" : ""}`;
+  const subtitle = t("evidence.bilingual.fullDoc", { count: paragraphs.length });
 
   const annotationsFor = (paraId: string) =>
     annotations.filter((a) => a.paragraph_id === paraId);
@@ -419,7 +417,7 @@ function EvidenceDocumentReader({
               <FileText style={{ width: 24, height: 24, color: "#9ca3af" }} />
             </div>
             <p style={{ fontSize: 14, color: "#6b7280" }}>
-              No document text is available for this track.
+              {t("evidence.bilingual.noDocText")}
             </p>
           </div>
         )}
@@ -564,6 +562,7 @@ export function BilingualCompareView({
     detail.items[0] ??
     null;
   const selectedTrace = selectedTraceFor(detail, selectedEvidenceId);
+  const { t } = useI18n();
   const categoryCounts = useMemo(
     () => countEvidenceCategories(detail.items),
     [detail.items],
@@ -673,7 +672,7 @@ export function BilingualCompareView({
           }}
         >
           <ArrowLeft style={{ width: 16, height: 16 }} />
-          Back to literature detail
+          {t("evidence.bilingual.backDetail")}
         </Link>
 
         <section style={{ overflow: "hidden", borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
@@ -711,15 +710,15 @@ export function BilingualCompareView({
                   }}
                 >
                   <Columns2 style={{ width: 16, height: 16 }} />
-                  Bilingual full-text document
+                  {t("evidence.bilingual.header")}
                 </p>
                 <h2 style={{ marginTop: 8, maxWidth: 896, fontSize: 20, fontWeight: 600, lineHeight: "28px", color: "#030712" }}>
                   {detailTitle(detail)}
                 </h2>
                 <div style={{ marginTop: 12, display: "flex", maxWidth: 896, flexWrap: "wrap", gap: 8 }}>
-                  <MetadataToken label="UUID" value={detail.source_document_id} icon={Hash} />
-                  <MetadataToken label="PMID" value={detail.pmid} icon={FileText} />
-                  <MetadataToken label="DOI" value={detail.doi} icon={Link2} />
+                  <MetadataToken label={t("evidence.bilingual.uuid")} value={detail.source_document_id} icon={Hash} />
+                  <MetadataToken label={t("evidence.bilingual.pmid")} value={detail.pmid} icon={FileText} />
+                  <MetadataToken label={t("evidence.bilingual.doi")} value={detail.doi} icon={Link2} />
                 </div>
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
@@ -735,9 +734,9 @@ export function BilingualCompareView({
 
           <div className="edb-compare-stats-grid">
             {[
-              { label: "Item confidence", value: formatPercent(selectedItem?.confidence), icon: TrendingUp },
-              { label: "Alignment confidence", value: formatPercent(selectedTrace?.alignment_confidence), icon: ShieldCheck },
-              { label: "Source page", value: selectedTrace?.original?.page ?? selectedTrace?.translated?.page ?? selectedItem?.page ?? "\u2014", icon: FileText },
+              { label: t("evidence.bilingual.itemConf"), value: formatPercent(selectedItem?.confidence), icon: TrendingUp },
+              { label: t("evidence.bilingual.alignConf"), value: formatPercent(selectedTrace?.alignment_confidence), icon: ShieldCheck },
+              { label: t("evidence.bilingual.sourcePage"), value: selectedTrace?.original?.page ?? selectedTrace?.translated?.page ?? selectedItem?.page ?? "\u2014", icon: FileText },
             ].map((stat) => (
               <div key={stat.label} className="edb-compare-stat-cell">
                 <div
@@ -771,7 +770,7 @@ export function BilingualCompareView({
               <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 16px" }}>
                 <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
                   <SlidersHorizontal style={{ width: 16, height: 16, color: "var(--color-primary-700, #0e7490)" }} />
-                  Evidence categories
+                  {t("evidence.bilingual.categories")}
                 </h3>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 16 }}>
@@ -791,7 +790,7 @@ export function BilingualCompareView({
               <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 16px" }}>
                 <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
                   <Search style={{ width: 16, height: 16, color: "var(--color-primary-700, #0e7490)" }} />
-                  Evidence navigator
+                  {t("evidence.bilingual.navigator")}
                 </h3>
               </div>
               <div style={{ maxHeight: 460, overflowY: "auto", padding: "16px 12px 16px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
@@ -885,10 +884,10 @@ export function BilingualCompareView({
                       }}
                     >
                       <Highlighter style={{ width: 16, height: 16 }} />
-                      Active evidence
+                      {t("evidence.bilingual.activeEvidence")}
                     </p>
                     <h3 style={{ marginTop: 8, fontSize: 14, fontWeight: 600, color: "#030712" }}>
-                      {selectedItem ? itemLabel(selectedItem) : "No evidence selected"}
+                      {selectedItem ? itemLabel(selectedItem) : t("evidence.bilingual.noSelected")}
                     </h3>
                     <p style={{ marginTop: 4, fontFamily: "monospace", fontSize: 12, color: "#6b7280" }}>
                       {selectedItem?.field_id ?? "\u2014"}

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEvidenceGroupDetail } from "../hooks/useEvidenceGroupDetail";
+import { useI18n } from "@/lib/i18n";
 import { EvidenceDetailSkeleton } from "./EvidenceDetailSkeleton";
 import { findInitialEvidenceId } from "../utils/literatureRows";
 import { BilingualCompareView } from "./BilingualCompareView";
@@ -21,6 +22,7 @@ export function EvidenceDetailView({
   initialView = "overview",
 }: EvidenceDetailViewProps) {
   const { detail, isLoading, error } = useEvidenceGroupDetail(groupId);
+  const { t } = useI18n();
   const [selectedOverrideId, setSelectedOverrideId] = useState<string | null>(
     null,
   );
@@ -63,10 +65,10 @@ export function EvidenceDetailView({
               <AlertCircle style={{ width: 28, height: 28, color: "#ef4444" }} />
             </div>
             <p style={{ marginTop: 16, fontSize: 14, fontWeight: 600, color: "#991b1b" }}>
-              Failed to load evidence detail
+              {t("evidence.detail.loadError")}
             </p>
             <p style={{ marginTop: 4, fontSize: 14, color: "#dc2626" }}>
-              {error?.message ?? "The requested evidence group could not be found."}
+              {error?.message ?? t("evidence.detail.notFound")}
             </p>
             <Link
               to="/evidence"
@@ -86,7 +88,7 @@ export function EvidenceDetailView({
               }}
             >
               <ArrowLeft style={{ width: 16, height: 16 }} />
-              Back to literature
+              {t("evidence.detail.back")}
             </Link>
           </div>
         </div>

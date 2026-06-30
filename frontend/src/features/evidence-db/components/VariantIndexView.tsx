@@ -31,19 +31,22 @@ import {
   classificationShortLabel,
 } from "../utils/pathogenicity";
 import {
-  EVIDENCE_DB_LABELS,
+  getEvidenceDbLabels,
   formatConfidencePercent,
   formatReviewedCount,
 } from "../utils/fieldLabels";
 import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
+import { useI18n } from "@/lib/i18n";
 
-const CLASSIFICATION_OPTIONS: { value: ClassificationLevel; label: string }[] = [
-  { value: "pathogenic", label: "Pathogenic" },
-  { value: "likely_pathogenic", label: "Likely Pathogenic" },
-  { value: "uncertain", label: "VUS" },
-  { value: "likely_benign", label: "Likely Benign" },
-  { value: "benign", label: "Benign" },
-];
+function getClassificationOptions(t: (key: string) => string) {
+  return [
+    { value: "pathogenic" as ClassificationLevel, label: t("evidenceDb.class.pathogenic") },
+    { value: "likely_pathogenic" as ClassificationLevel, label: t("evidenceDb.class.likelyPathogenic") },
+    { value: "uncertain" as ClassificationLevel, label: t("evidenceDb.class.vus") },
+    { value: "likely_benign" as ClassificationLevel, label: t("evidenceDb.class.likelyBenign") },
+    { value: "benign" as ClassificationLevel, label: t("evidenceDb.class.benign") },
+  ];
+}
 
 /* ── Badge style helper (replaces classificationBadgeClasses Tailwind output) ── */
 
@@ -351,181 +354,12 @@ function CategoryDistributionBar({
   );
 }
 
-/* ── Variant Row ────────────────────────────────────────── */
-
-function VariantRow({
-  entry,
-  viewPrefs,
-}: {
-  entry: VariantIndexEntry;
-  viewPrefs: EvidenceDbViewPrefs;
-}) {
-  return (
-    <Link
-      to={`/evidence-db/${encodeURIComponent(entry.variantSlug)}`}
-      state={{ variantEntry: entry }}
-      className="viv-row"
-      style={{ gridTemplateColumns: variantGridTemplateColumns(viewPrefs) }}
-    >
-      {/* Gene + Variant (primary column) */}
-      <div style={{ minWidth: 0, display: "flex", alignItems: "baseline", flexWrap: "nowrap" }} title={`${entry.gene || "Unknown Gene"} · ${entry.variant || "Unknown Variant"}`}>
-        <span className="viv-row-gene">{entry.gene || "Unknown Gene"}</span>
-        <span style={{ margin: "0 6px", color: "#d1d5db", flexShrink: 0 }}>·</span>
-        <span className="viv-row-variant">{entry.variant || "Unknown Variant"}</span>
-      </div>
-      {/* Classification shown inline on mobile */}
-      <div className="viv-row-mobile-stats" style={{ marginTop: 4 }}>
-        <span title={entry.classification || undefined}>{entry.classification || "No classification"}</span>
-      </div>
-
-      {/* Disease */}
-      <div className="viv-row-disease" title={entry.disease || undefined}>
-        {entry.disease || "—"}
-      </div>
-
-      {/* Classification badge */}
-      <div>
-        <span style={badgeInlineStyle(entry.classificationLevel)}>
-          {classificationShortLabel(entry.classificationLevel)}
-        </span>
-      </div>
-
-      {/* Evidence groups */}
-      <div className="viv-row-stat">
-        <FileText style={{ width: 14, height: 14, flexShrink: 0 }} />
-        <span className="viv-row-stat-val">{entry.evidenceGroupCount}</span>
-        <span>groups</span>
-      </div>
-
-      {/* Literature */}
-      <div className="viv-row-stat">
-        <BookOpen style={{ width: 14, height: 14, flexShrink: 0 }} />
-        <span className="viv-row-stat-val">{entry.literatureCount}</span>
-        <span>refs</span>
-      </div>
-
-      {/* Confidence */}
-      <div className="viv-row-stat">
-        <TrendingUp style={{ width: 14, height: 14, flexShrink: 0 }} />
-        <span className="viv-row-stat-val">{formatConfidencePercent(entry.avgConfidence)}</span>
-      </div>
-
-      {hasQualityColumn(viewPrefs) && (
-        <div style={{ minWidth: 0 }}>
-          {viewPrefs.showCategories && (
-            <CategoryDistributionBar distribution={entry.categoryDistribution} />
-          )}
-          {viewPrefs.showReviewProgress && (
-            <span style={{ marginTop: viewPrefs.showCategories ? 4 : 0, display: "block", fontSize: 11, color: "#6b7280" }}>
-              {formatReviewedCount(entry.reviewProgress)}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Updated date */}
-      {viewPrefs.showUpdated && (
-        <div className="viv-row-stat" style={{ color: "#9ca3af", fontSize: 12 }} title={entry.createdAt || undefined}>
-          <Calendar style={{ width: 12, height: 12, flexShrink: 0 }} />
-          <span>{formatDate(entry.createdAt)}</span>
-        </div>
-      )}
-
-      {/* Mobile compact stats */}
-      <div className="viv-row-mobile-stats">
-        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <FileText style={{ width: 12, height: 12 }} />
-          <span className="viv-row-stat-val">{entry.evidenceGroupCount}</span>
-        </span>
-        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <BookOpen style={{ width: 12, height: 12 }} />
-          <span className="viv-row-stat-val">{entry.literatureCount}</span>
-        </span>
-        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <TrendingUp style={{ width: 12, height: 12 }} />
-          <span className="viv-row-stat-val">{formatConfidencePercent(entry.avgConfidence)}</span>
-        </span>
-        <span style={badgeInlineStyle(entry.classificationLevel)}>
-          {classificationShortLabel(entry.classificationLevel)}
-        </span>
-        {viewPrefs.showUpdated && (
-          <span style={{ color: "#9ca3af", fontSize: 11 }}>
-            {formatDate(entry.createdAt)}
-          </span>
-        )}
-        {viewPrefs.showReviewProgress && (
-          <span style={{ color: "#6b7280", fontSize: 11 }}>
-            {formatReviewedCount(entry.reviewProgress)}
-          </span>
-        )}
-      </div>
-    </Link>
-  );
-}
-
-/* ── Classification Filter Pills ────────────────────────── */
-
-function ClassificationFilter({
-  value,
-  onChange,
-}: {
-  value?: ClassificationLevel;
-  onChange: (val?: ClassificationLevel) => void;
-}) {
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
-      <button
-        type="button"
-        onClick={() => onChange(undefined)}
-        className="viv-filter-pill"
-        style={{
-          cursor: "pointer",
-          borderRadius: 9999,
-          border: !value ? "1px solid #111827" : "1px solid #e5e7eb",
-          backgroundColor: !value ? "#111827" : "#fff",
-          color: !value ? "#fff" : "#4b5563",
-          padding: "4px 10px",
-          fontSize: 12,
-          fontWeight: 500,
-          transition: "all 0.15s",
-        }}
-      >
-        All
-      </button>
-      {CLASSIFICATION_OPTIONS.map((opt) => {
-        const hex = classificationColor(opt.value);
-        const isActive = value === opt.value;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() =>
-              onChange(value === opt.value ? undefined : opt.value)
-            }
-            className="viv-filter-pill"
-            style={{
-              cursor: "pointer",
-              borderRadius: 9999,
-              border: isActive ? "1px solid transparent" : "1px solid #e5e7eb",
-              backgroundColor: isActive ? hex : "#fff",
-              color: isActive ? "#fff" : "#4b5563",
-              padding: "4px 10px",
-              fontSize: 12,
-              fontWeight: 500,
-              transition: "all 0.15s",
-            }}
-          >
-            {opt.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 /* ── Main View ──────────────────────────────────────────── */
 
 export function VariantIndexView() {
+  const { t } = useI18n();
+  const labels = getEvidenceDbLabels(t);
+  const classificationOptions = getClassificationOptions(t);
   const {
     items,
     total,
@@ -640,25 +474,25 @@ export function VariantIndexView() {
           <StatCard
             icon={Dna}
             value={stats.totalVariants}
-            label={EVIDENCE_DB_LABELS.uniqueVariants}
+            label={labels.uniqueVariants}
             accent="#8B5CF6"
           />
           <StatCard
             icon={FileText}
             value={stats.totalEvidenceGroups}
-            label={EVIDENCE_DB_LABELS.evidenceGroups}
+            label={labels.evidenceGroups}
             accent="#0891B2"
           />
           <StatCard
             icon={BookOpen}
             value={stats.totalLiterature}
-            label={EVIDENCE_DB_LABELS.literatureSources}
+            label={labels.literatureSources}
             accent="#F59E0B"
           />
           <StatCard
             icon={TrendingUp}
             value={formatConfidencePercent(stats.avgConfidence)}
-            label={EVIDENCE_DB_LABELS.avgConfidence}
+            label={labels.avgConfidence}
             accent="#0F766E"
           />
         </div>
@@ -680,7 +514,7 @@ export function VariantIndexView() {
               popupMatchSelectWidth={true}
             >
               <Input
-                placeholder="Search by gene or variant..."
+                placeholder={t("evidenceDb.searchGenePh")}
                 prefix={<Search style={{ width: 16, height: 16, color: "#9ca3af" }} />}
                 suffix={
                   searchText ? (
@@ -720,7 +554,7 @@ export function VariantIndexView() {
               }
               popupMatchSelectWidth={true}
             >
-              <Input placeholder="Filter by disease..." />
+              <Input placeholder={t("evidenceDb.filterDiseasePh")} />
             </AutoComplete>
           </div>
 
@@ -743,17 +577,60 @@ export function VariantIndexView() {
                 transition: "background-color 0.15s",
               }}
             >
-              Clear all
+              {t("evidenceDb.clearAll")}
             </button>
           )}
         </div>
 
         {/* Classification filter pills */}
         <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #f3f4f6" }}>
-          <ClassificationFilter
-            value={filters.classification}
-            onChange={(val) => updateFilter("classification", val)}
-          />
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
+            <button
+              type="button"
+              onClick={() => updateFilter("classification", undefined)}
+              className="viv-filter-pill"
+              style={{
+                cursor: "pointer",
+                borderRadius: 9999,
+                border: !filters.classification ? "1px solid #111827" : "1px solid #e5e7eb",
+                backgroundColor: !filters.classification ? "#111827" : "#fff",
+                color: !filters.classification ? "#fff" : "#4b5563",
+                padding: "4px 10px",
+                fontSize: 12,
+                fontWeight: 500,
+                transition: "all 0.15s",
+              }}
+            >
+              {t("evidenceDb.class.all")}
+            </button>
+            {classificationOptions.map((opt) => {
+              const hex = classificationColor(opt.value);
+              const isActive = filters.classification === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() =>
+                    updateFilter("classification", filters.classification === opt.value ? undefined : opt.value)
+                  }
+                  className="viv-filter-pill"
+                  style={{
+                    cursor: "pointer",
+                    borderRadius: 9999,
+                    border: isActive ? "1px solid transparent" : "1px solid #e5e7eb",
+                    backgroundColor: isActive ? hex : "#fff",
+                    color: isActive ? "#fff" : "#4b5563",
+                    padding: "4px 10px",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -771,7 +648,7 @@ export function VariantIndexView() {
           color: "#b91c1c",
         }}>
           <AlertCircle style={{ width: 20, height: 20, flexShrink: 0 }} />
-          <span>Failed to load variant data. Please try again.</span>
+          <span>{t("evidenceDb.loadError")}</span>
         </div>
       ) : isLoading ? (
         <VariantIndexSkeleton />
@@ -788,10 +665,10 @@ export function VariantIndexView() {
         }}>
           <Dna style={{ width: 40, height: 40, color: "#d1d5db", marginBottom: 12 }} />
           <p style={{ fontSize: 14, fontWeight: 500, color: "#374151", margin: 0 }}>
-            No variants found
+            {t("evidenceDb.empty.noVariants")}
           </p>
           <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4, margin: 0 }}>
-            Try adjusting your search filters
+            {t("evidenceDb.empty.adjustFilters")}
           </p>
         </div>
       ) : (
@@ -800,7 +677,7 @@ export function VariantIndexView() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
             <p style={{ fontSize: 14, color: "#4b5563", margin: 0 }}>
               <span style={{ fontWeight: 500, color: "#111827" }}>{total}</span>{" "}
-              variant{total !== 1 ? "s" : ""} found
+              {t("evidenceDb.variantsFound")}
               {isFetching && (
                 <span style={{ marginLeft: 8, display: "inline-block" }}>
                   <Spinner size="sm" />
@@ -808,7 +685,7 @@ export function VariantIndexView() {
               )}
             </p>
             <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>
-              Page {page} of {totalPages || 1}
+              {t("evidenceDb.pageInfo", { current: String(page), total: String(totalPages || 1) })}
             </p>
             <div
               style={{
@@ -821,24 +698,24 @@ export function VariantIndexView() {
               }}
               aria-label="Variant index display fields"
             >
-              <span style={{ fontSize: 12, fontWeight: 500, color: "#6b7280" }}>Fields</span>
+              <span style={{ fontSize: 12, fontWeight: 500, color: "#6b7280" }}>{t("evidenceDb.label.evidenceFields")}</span>
               <Checkbox
                 checked={viewPrefs.showUpdated}
                 onChange={(e) => setPreference("showUpdated", e.target.checked)}
               >
-                {EVIDENCE_DB_LABELS.updated}
+                {labels.updated}
               </Checkbox>
               <Checkbox
                 checked={viewPrefs.showCategories}
                 onChange={(e) => setPreference("showCategories", e.target.checked)}
               >
-                {EVIDENCE_DB_LABELS.categories}
+                {labels.categories}
               </Checkbox>
               <Checkbox
                 checked={viewPrefs.showReviewProgress}
                 onChange={(e) => setPreference("showReviewProgress", e.target.checked)}
               >
-                {EVIDENCE_DB_LABELS.reviewProgress}
+                {labels.reviewProgress}
               </Checkbox>
             </div>
           </div>
@@ -849,15 +726,15 @@ export function VariantIndexView() {
               className="viv-list-header"
               style={{ gridTemplateColumns: variantGridTemplateColumns(viewPrefs) }}
             >
-              <span>Gene / Variant</span>
-              <span>Disease</span>
-              <span>Class.</span>
-              <span>Evidence</span>
-              <span>Refs</span>
-              <span>Conf.</span>
+              <span>{t("evidenceDb.listGene")} / {t("evidenceDb.listVariant")}</span>
+              <span>{t("evidenceDb.listDisease")}</span>
+              <span>{t("evidenceDb.listClass")}</span>
+              <span>{t("evidenceDb.listEvidence")}</span>
+              <span>{t("evidenceDb.listRefs")}</span>
+              <span>{t("evidenceDb.listConf")}</span>
               {hasQualityColumn(viewPrefs) && (
                 <span>
-                  {viewPrefs.showCategories ? EVIDENCE_DB_LABELS.categories : EVIDENCE_DB_LABELS.reviewed}
+                  {viewPrefs.showCategories ? labels.categories : labels.reviewed}
                 </span>
               )}
               {viewPrefs.showUpdated && (
@@ -865,7 +742,7 @@ export function VariantIndexView() {
                   type="button"
                   className="viv-sort-header"
                   onClick={toggleSort}
-                  title="Sort by updated date"
+                  title={labels.updated}
                   style={{
                     background: "none",
                     border: "none",
@@ -874,7 +751,7 @@ export function VariantIndexView() {
                     color: filters.sortBy === "updated" ? "#111827" : "#6b7280",
                   }}
                 >
-                  {EVIDENCE_DB_LABELS.updated}
+                  {labels.updated}
                   {filters.sortBy === "updated" && (
                     filters.sortOrder === "asc"
                       ? <ArrowUp style={{ width: 12, height: 12 }} />
@@ -889,7 +766,105 @@ export function VariantIndexView() {
                 className="edb-stagger"
                 style={{ animationDelay: `${Math.min(i * 25, 250)}ms` }}
               >
-                <VariantRow entry={entry} viewPrefs={viewPrefs} />
+                <Link
+                  to={`/evidence-db/${encodeURIComponent(entry.variantSlug)}`}
+                  state={{ variantEntry: entry }}
+                  className="viv-row"
+                  style={{ gridTemplateColumns: variantGridTemplateColumns(viewPrefs) }}
+                >
+                  {/* Gene + Variant (primary column) */}
+                  <div style={{ minWidth: 0, display: "flex", alignItems: "baseline", flexWrap: "nowrap" }} title={`${entry.gene || t("evidenceDb.unknownGene")} · ${entry.variant || t("evidenceDb.unknownVariant")}`}>
+                    <span className="viv-row-gene">{entry.gene || t("evidenceDb.unknownGene")}</span>
+                    <span style={{ margin: "0 6px", color: "#d1d5db", flexShrink: 0 }}>·</span>
+                    <span className="viv-row-variant">{entry.variant || t("evidenceDb.unknownVariant")}</span>
+                  </div>
+                  {/* Classification shown inline on mobile */}
+                  <div className="viv-row-mobile-stats" style={{ marginTop: 4 }}>
+                    <span title={entry.classification || undefined}>{entry.classification || t("evidenceDb.noClass")}</span>
+                  </div>
+
+                  {/* Disease */}
+                  <div className="viv-row-disease" title={entry.disease || undefined}>
+                    {entry.disease || "—"}
+                  </div>
+
+                  {/* Classification badge */}
+                  <div>
+                    <span style={badgeInlineStyle(entry.classificationLevel)}>
+                      {classificationShortLabel(entry.classificationLevel)}
+                    </span>
+                  </div>
+
+                  {/* Evidence groups */}
+                  <div className="viv-row-stat">
+                    <FileText style={{ width: 14, height: 14, flexShrink: 0 }} />
+                    <span className="viv-row-stat-val">{entry.evidenceGroupCount}</span>
+                    <span>{t("evidenceDb.statGroups")}</span>
+                  </div>
+
+                  {/* Literature */}
+                  <div className="viv-row-stat">
+                    <BookOpen style={{ width: 14, height: 14, flexShrink: 0 }} />
+                    <span className="viv-row-stat-val">{entry.literatureCount}</span>
+                    <span>{t("evidenceDb.statRefs")}</span>
+                  </div>
+
+                  {/* Confidence */}
+                  <div className="viv-row-stat">
+                    <TrendingUp style={{ width: 14, height: 14, flexShrink: 0 }} />
+                    <span className="viv-row-stat-val">{formatConfidencePercent(entry.avgConfidence)}</span>
+                  </div>
+
+                  {hasQualityColumn(viewPrefs) && (
+                    <div style={{ minWidth: 0 }}>
+                      {viewPrefs.showCategories && (
+                        <CategoryDistributionBar distribution={entry.categoryDistribution} />
+                      )}
+                      {viewPrefs.showReviewProgress && (
+                        <span style={{ marginTop: viewPrefs.showCategories ? 4 : 0, display: "block", fontSize: 11, color: "#6b7280" }}>
+                          {formatReviewedCount(entry.reviewProgress)}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Updated date */}
+                  {viewPrefs.showUpdated && (
+                    <div className="viv-row-stat" style={{ color: "#9ca3af", fontSize: 12 }} title={entry.createdAt || undefined}>
+                      <Calendar style={{ width: 12, height: 12, flexShrink: 0 }} />
+                      <span>{formatDate(entry.createdAt)}</span>
+                    </div>
+                  )}
+
+                  {/* Mobile compact stats */}
+                  <div className="viv-row-mobile-stats">
+                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <FileText style={{ width: 12, height: 12 }} />
+                      <span className="viv-row-stat-val">{entry.evidenceGroupCount}</span>
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <BookOpen style={{ width: 12, height: 12 }} />
+                      <span className="viv-row-stat-val">{entry.literatureCount}</span>
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <TrendingUp style={{ width: 12, height: 12 }} />
+                      <span className="viv-row-stat-val">{formatConfidencePercent(entry.avgConfidence)}</span>
+                    </span>
+                    <span style={badgeInlineStyle(entry.classificationLevel)}>
+                      {classificationShortLabel(entry.classificationLevel)}
+                    </span>
+                    {viewPrefs.showUpdated && (
+                      <span style={{ color: "#9ca3af", fontSize: 11 }}>
+                        {formatDate(entry.createdAt)}
+                      </span>
+                    )}
+                    {viewPrefs.showReviewProgress && (
+                      <span style={{ color: "#6b7280", fontSize: 11 }}>
+                        {formatReviewedCount(entry.reviewProgress)}
+                      </span>
+                    )}
+                  </div>
+                </Link>
               </div>
             ))}
           </div>
@@ -976,8 +951,8 @@ export function VariantIndexView() {
                   if (e.key === "Enter") handleJump();
                 }}
                 onBlur={handleJump}
-                aria-label="Jump to page"
-                title={`Jump to page (1–${totalPages})`}
+                aria-label={t("evidenceDb.jumpToPage")}
+                title={`${t("evidenceDb.jumpToPage")} (1–${totalPages})`}
               />
               <button
                 type="button"

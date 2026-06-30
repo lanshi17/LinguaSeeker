@@ -1,3 +1,4 @@
+import { useI18n } from "@/lib/i18n";
 import {
   ClipboardCheck,
   Database,
@@ -27,65 +28,70 @@ export type WelcomeAction =
       fallbackMessage: string;
     };
 
-const SUGGESTIONS: SuggestionChip[] = [
-  {
-    icon: <FlaskConical style={{ width: 16, height: 16 }} />,
-    title: "Run evidence pipeline",
-    description: "Start from PMID, DOI, title, or keyword",
-    action: {
-      kind: "send-message",
-      message:
-        "Start an online evidence pipeline. Identifier: PMID 28499369. Use bilingual extraction and source-grounded evidence review.",
+function getSuggestions(t: (key: string) => string): SuggestionChip[] {
+  return [
+    {
+      icon: <FlaskConical style={{ width: 16, height: 16 }} />,
+      title: t("chat.welcome.pipeline.title"),
+      description: t("chat.welcome.pipeline.desc"),
+      action: {
+        kind: "send-message",
+        message:
+          "Start an online evidence pipeline. Identifier: PMID 28499369. Use bilingual extraction and source-grounded evidence review.",
+      },
+      accentBg: "var(--color-primary-50, #ecfeff)",
+      accentColor: "var(--color-primary-600, #0891b2)",
     },
-    accentBg: "var(--color-primary-50, #ecfeff)",
-    accentColor: "var(--color-primary-600, #0891b2)",
-  },
-  {
-    icon: <Upload style={{ width: 16, height: 16 }} />,
-    title: "Upload source paper",
-    description: "Parse full text, tables, and source spans",
-    action: {
-      kind: "navigate",
-      to: "/pipeline",
-      fallbackMessage:
-        "Open the pipeline page so I can upload a PDF for bilingual evidence extraction.",
+    {
+      icon: <Upload style={{ width: 16, height: 16 }} />,
+      title: t("chat.welcome.upload.title"),
+      description: t("chat.welcome.upload.desc"),
+      action: {
+        kind: "navigate",
+        to: "/pipeline",
+        fallbackMessage:
+          "Open the pipeline page so I can upload a PDF for bilingual evidence extraction.",
+      },
+      accentBg: "var(--color-highlight-purple)",
+      accentColor: "#7c3aed",
     },
-    accentBg: "#f5f3ff",
-    accentColor: "#7c3aed",
-  },
-  {
-    icon: <Database style={{ width: 16, height: 16 }} />,
-    title: "Search evidence base",
-    description: "Find records by gene, variant, disease, PMID",
-    action: {
-      kind: "navigate",
-      to: "/evidence",
-      fallbackMessage:
-        "Open the evidence database so I can search by gene, variant, disease, PMID, or DOI.",
+    {
+      icon: <Database style={{ width: 16, height: 16 }} />,
+      title: t("chat.welcome.search.title"),
+      description: t("chat.welcome.search.desc"),
+      action: {
+        kind: "navigate",
+        to: "/evidence",
+        fallbackMessage:
+          "Open the evidence database so I can search by gene, variant, disease, PMID, or DOI.",
+      },
+      accentBg: "var(--color-highlight-green)",
+      accentColor: "#059669",
     },
-    accentBg: "#ecfdf5",
-    accentColor: "#059669",
-  },
-  {
-    icon: <ClipboardCheck style={{ width: 16, height: 16 }} />,
-    title: "Review and export",
-    description: "Check bilingual evidence before reporting",
-    action: {
-      kind: "navigate",
-      to: "/evidence?review_status=pending",
-      fallbackMessage:
-        "Show evidence items that need expert review and help prepare an evidence summary report.",
+    {
+      icon: <ClipboardCheck style={{ width: 16, height: 16 }} />,
+      title: t("chat.welcome.review.title"),
+      description: t("chat.welcome.review.desc"),
+      action: {
+        kind: "navigate",
+        to: "/evidence?review_status=pending",
+        fallbackMessage:
+          "Show evidence items that need expert review and help prepare an evidence summary report.",
+      },
+      accentBg: "var(--color-highlight-amber)",
+      accentColor: "#d97706",
     },
-    accentBg: "#fffbeb",
-    accentColor: "#d97706",
-  },
-];
+  ];
+}
 
 export interface WelcomeBlockProps {
   onPick?: (action: WelcomeAction) => void;
 }
 
 export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
+  const { t } = useI18n();
+  const suggestions = getSuggestions(t);
+
   return (
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
@@ -106,20 +112,17 @@ export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
             <Sparkles style={{ width: 16, height: 16 }} aria-hidden="true" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, letterSpacing: 0, color: "#111827" }}>
-              Start a traceable evidence workflow in{" "}
-              <span style={{ color: "var(--color-primary-600, #0891b2)" }}>Lingua Seeker</span>
+            <h2 style={{ fontSize: 15, fontWeight: 600, letterSpacing: 0, color: "var(--color-text)" }}>
+              {t("chat.welcome.heading")}
             </h2>
-            <p style={{ fontSize: 13.5, lineHeight: 1.625, color: "#4b5563" }}>
-              I can help acquire literature, extract bilingual evidence, compare
-              original and translated spans, queue expert review, and prepare
-              source-linked evidence reports.
+            <p style={{ fontSize: 13.5, lineHeight: 1.625, color: "var(--color-text-strong)" }}>
+              {t("chat.welcome.description")}
             </p>
           </div>
         </div>
 
         <div className="cv-suggestions-grid" style={{ display: "grid", gap: 8 }}>
-          {SUGGESTIONS.map((chip) => {
+          {suggestions.map((chip) => {
             const isInteractive = Boolean(onPick);
             return (
               <button
@@ -150,7 +153,7 @@ export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
                       display: "block",
                       fontSize: 13,
                       fontWeight: 500,
-                      color: "#111827",
+                      color: "var(--color-text)",
                     }}
                   >
                     {chip.title}
@@ -163,7 +166,7 @@ export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
                       fontSize: 12,
-                      color: "#6b7280",
+                      color: "var(--color-text-secondary)",
                     }}
                   >
                     {chip.description}
@@ -176,15 +179,14 @@ export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
 
         <p
           style={{
-            borderTop: "1px solid #f3f4f6",
+            borderTop: "1px solid var(--color-bg-muted)",
             paddingTop: 12,
             fontSize: 11.5,
             lineHeight: 1.625,
-            color: "#9ca3af",
+            color: "var(--color-text-muted)",
           }}
         >
-          Research support only. The assistant prepares traceable evidence for
-          qualified professional review and does not provide clinical diagnoses.
+          {t("chat.welcome.disclaimer")}
         </p>
       </div>
   );

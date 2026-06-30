@@ -1,24 +1,37 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Layout, Button } from "antd";
 import { Menu, X, List } from "lucide-react";
 import { Sidebar } from "./Sidebar";
-import { ConnectionStatus } from "./ConnectionStatus";
 import { AnimatedOutlet } from "@/components/ui/PageTransition";
 import { useAppStore } from "@/stores/appStore";
-
+import { UserGuide, hasSeenGuide } from "@/components/ui/UserGuide";
+import { useI18n } from "@/lib/i18n";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 const { Content } = Layout;
 
 export function DashboardLayout() {
   const collapsed = useAppStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useI18n();
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
+  const [guideOpen, setGuideOpen] = useState(false);
+
+  // Auto-show guide for first-time visitors
+  useEffect(() => {
+    if (!hasSeenGuide()) {
+      // Small delay so the page finishes rendering before Tour targets exist
+      const timer = setTimeout(() => setGuideOpen(true), 600);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   return (
-      <div className="dl-root" style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "#f9fafb" }}>
+      <div className="dl-root" style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "var(--color-bg)" }}>
         {/* Desktop sidebar */}
         <div className="dl-desktop-sidebar">
-          <Sidebar />
+          <Sidebar onGuideOpen={() => setGuideOpen(true)} />
         </div>
 
         {/* Mobile sidebar overlay */}
@@ -31,7 +44,7 @@ export function DashboardLayout() {
             }}
             role="dialog"
             aria-modal="true"
-            aria-label="Navigation menu"
+            aria-label={t("layout.openMenu")}
           >
             <div
               style={{
@@ -66,8 +79,8 @@ export function DashboardLayout() {
               height: 56,
               alignItems: "center",
               justifyContent: "space-between",
-              borderBottom: "1px solid #e5e7eb",
-              backgroundColor: "#fff",
+              borderBottom: "1px solid var(--color-border)",
+              backgroundColor: "var(--color-header-bg)",
             }}
           >
             {/* Mobile hamburger */}
@@ -75,12 +88,12 @@ export function DashboardLayout() {
               type="text"
               icon={mobileMenuOpen ? <X style={{ width: 18, height: 18 }} /> : <Menu style={{ width: 18, height: 18 }} />}
               onClick={() => setMobileMenuOpen((o) => !o)}
-              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-label={mobileMenuOpen ? t("layout.closeMenu") : t("layout.openMenu")}
               className="dl-mobile-btn"
               style={{
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#6b7280",
+                color: "var(--color-text-secondary)",
               }}
             />
 
@@ -89,16 +102,19 @@ export function DashboardLayout() {
               type="text"
               icon={<List style={{ width: 18, height: 18 }} />}
               onClick={toggleSidebar}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label={collapsed ? t("layout.expandSidebar") : t("layout.collapseSidebar")}
               className="dl-desktop-btn"
               style={{
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#6b7280",
+                color: "var(--color-text-secondary)",
               }}
             />
 
-            <ConnectionStatus />
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <ThemeToggle />
+              <LanguageSwitcher />
+            </div>
           </header>
 
           {/* Main content */}
@@ -108,6 +124,7 @@ export function DashboardLayout() {
             </div>
           </Content>
         </div>
+        <UserGuide open={guideOpen} onClose={() => setGuideOpen(false)} />
       </div>
   );
 }

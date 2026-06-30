@@ -1,4 +1,5 @@
 import type { ThemeConfig } from "antd";
+import { theme as antdTheme } from "antd";
 
 /**
  * Ant Design theme mapped from the former Tailwind design tokens.
@@ -7,20 +8,37 @@ import type { ThemeConfig } from "antd";
  * antd component colors. Pathogenicity colors and the display
  * font are exposed as CSS custom properties (see globals.css).
  */
-export const theme: ThemeConfig = {
+
+const sharedTokens: ThemeConfig["token"] = {
+  colorPrimary: "#0891b2",
+  colorSuccess: "#22c55e",
+  colorError: "#DC2626",
+  colorWarning: "#F59E0B",
+  colorInfo: "#0891b2",
+  fontFamily: "Figtree, 'Noto Sans', system-ui, -apple-system, sans-serif",
+  fontFamilyCode: "'JetBrains Mono', Menlo, monospace",
+  borderRadius: 8,
+};
+
+export const lightTheme: ThemeConfig = {
   token: {
-    colorPrimary: "#0891b2",
-    colorSuccess: "#22c55e",
-    colorError: "#DC2626",
-    colorWarning: "#F59E0B",
-    colorInfo: "#0891b2",
-    fontFamily: "Figtree, 'Noto Sans', system-ui, -apple-system, sans-serif",
-    fontFamilyCode: "'JetBrains Mono', Menlo, monospace",
-    borderRadius: 8,
+    ...sharedTokens,
     colorBgContainer: "#ffffff",
     colorBgLayout: "#f9fafb",
   },
 };
+
+export const darkTheme: ThemeConfig = {
+  algorithm: antdTheme.darkAlgorithm,
+  token: {
+    ...sharedTokens,
+    colorBgContainer: "#1e1e2e",
+    colorBgLayout: "#141422",
+  },
+};
+
+/** @deprecated Use lightTheme / darkTheme with useAppStore().mode instead. */
+export const theme = lightTheme;
 
 /**
  * Pathogenicity classification colors — consumed via CSS variables

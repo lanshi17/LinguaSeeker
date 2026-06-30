@@ -151,6 +151,17 @@ class TestCompareEvidenceFieldNormalized:
         assert matches[0].matched is True
         assert matches[0].match_type == "field_normalized"
 
+    def test_hgvs_p_db_value_payload_matches_three_letter_gold(self) -> None:
+        """DB row value payloads should be unwrapped before HGVS matching."""
+        expected = [{"field_id": "A.variant_hgvs_p", "value": "p.Arg69Cys"}]
+        extracted = [
+            {"field_id": "A.variant_hgvs_p", "status": "found", "value": {"value": "p.R69C"}, "confidence": 0.45},
+        ]
+        matches = compare_evidence(expected, extracted)
+        assert len(matches) == 1
+        assert matches[0].matched is True
+        assert matches[0].match_type == "field_normalized"
+
     def test_hgvs_p_exact_match_takes_priority_over_field_normalized(self) -> None:
         """When exact match exists, field_normalized is not used."""
         expected = [{"field_id": "A.variant_hgvs_p", "value": "p.R227*"}]

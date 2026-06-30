@@ -13,6 +13,7 @@ import {
 } from "antd";
 import { Search, ArrowLeft, CheckCircle2, X } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { useI18n } from "@/lib/i18n";
 import { searchEvidence, getEvidenceGroupDetail } from "@/api/evidence";
 import { patchEvidence } from "@/features/evidence-search/services/evidenceCorrection";
 import type {
@@ -26,12 +27,6 @@ interface EvidenceReviewDrawerProps {
   onClose: () => void;
 }
 
-const STATUS_OPTIONS: { label: string; value: ReviewStatusValue }[] = [
-  { label: "Approved", value: "approved" },
-  { label: "Corrected", value: "corrected" },
-  { label: "Rejected", value: "rejected" },
-];
-
 const STATUS_BADGE: Record<string, "default" | "success" | "warning" | "error"> = {
   provisional: "default",
   approved: "success",
@@ -40,8 +35,15 @@ const STATUS_BADGE: Record<string, "default" | "success" | "warning" | "error"> 
 };
 
 export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProps) {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { message } = App.useApp();
+
+  const STATUS_OPTIONS: { label: string; value: ReviewStatusValue }[] = [
+    { label: t("audit.review.status.approved"), value: "approved" },
+    { label: t("audit.review.status.corrected"), value: "corrected" },
+    { label: t("audit.review.status.rejected"), value: "rejected" },
+  ];
 
   // Search state
   const [gene, setGene] = useState("");
@@ -162,7 +164,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
 
   return (
     <Drawer
-      title="Review Evidence"
+      title={t("audit.review.title")}
       open={open}
       onClose={handleClose}
       styles={{ body: { padding: 0 }, wrapper: { width: 560 } }}
@@ -170,27 +172,27 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
       {/* Search panel — always visible when no item is selected */}
       {!selectedGroupId && (
         <div style={{ padding: "16px 24px" }}>
-          <Typography.Text style={{ fontSize: 13, color: "#6b7280", display: "block", marginBottom: 12 }}>
-            Search for stored evidence items to review, correct, or approve.
+          <Typography.Text style={{ fontSize: 13, color: "var(--color-text-secondary)", display: "block", marginBottom: 12 }}>
+            {t("audit.review.instruction")}
           </Typography.Text>
 
           <div style={{ display: "grid", gap: 10, gridTemplateColumns: "1fr 1fr 1fr" }}>
             <Input
-              placeholder="Gene"
+              placeholder={t("audit.review.genePh")}
               value={gene}
               onChange={(e) => setGene(e.target.value)}
               onPressEnter={handleSearch}
               allowClear
             />
             <Input
-              placeholder="Variant"
+              placeholder={t("audit.review.variantPh")}
               value={variant}
               onChange={(e) => setVariant(e.target.value)}
               onPressEnter={handleSearch}
               allowClear
             />
             <Input
-              placeholder="Disease"
+              placeholder={t("audit.review.diseasePh")}
               value={disease}
               onChange={(e) => setDisease(e.target.value)}
               onPressEnter={handleSearch}
@@ -206,7 +208,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
             style={{ marginTop: 10, width: "100%" }}
             disabled={!gene && !variant && !disease}
           >
-            Search evidence
+            {t("audit.review.searchBtn")}
           </Button>
 
           {/* Search results */}
@@ -218,7 +220,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
             ) : searchResults && searchResults.items.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                  {searchResults.total} result(s) found
+                  {t("audit.review.resultsFound", { count: searchResults.total })}
                 </Typography.Text>
                 {searchResults.items.map((item) => (
                   <button
@@ -231,8 +233,8 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
                       gap: 6,
                       padding: "10px 14px",
                       borderRadius: 8,
-                      border: "1px solid #e5e7eb",
-                      backgroundColor: "#fff",
+                      border: "1px solid var(--color-border)",
+                      backgroundColor: "var(--color-surface)",
                       cursor: "pointer",
                       textAlign: "left",
                       transition: "border-color 150ms, box-shadow 150ms",
@@ -242,7 +244,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
                       e.currentTarget.style.boxShadow = "0 2px 8px rgba(8, 145, 178, 0.1)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "#e5e7eb";
+                      e.currentTarget.style.borderColor = "var(--color-border)";
                       e.currentTarget.style.boxShadow = "none";
                     }}
                   >
@@ -274,7 +276,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
               </div>
             ) : searchTriggered ? (
               <Empty
-                description="No evidence found with those filters."
+                description={t("audit.review.noResults")}
                 style={{ padding: "32px 0" }}
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
               />
@@ -300,7 +302,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
               alignItems: "center",
               gap: 6,
               fontSize: 12,
-              color: "#6b7280",
+              color: "var(--color-text-secondary)",
               background: "none",
               border: "none",
               cursor: "pointer",
@@ -310,7 +312,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
             }}
           >
             <ArrowLeft style={{ width: 14, height: 14 }} />
-            Back to results
+            {t("audit.review.backToResults")}
           </button>
 
           {isDetailLoading ? (
@@ -323,10 +325,10 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
               <div
                 style={{
                   borderRadius: 8,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--color-border)",
                   padding: "12px 16px",
                   marginBottom: 16,
-                  backgroundColor: "#f9fafb",
+                  backgroundColor: "var(--color-bg)",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
@@ -348,7 +350,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
 
               {/* Editable fields */}
               <Typography.Text strong style={{ fontSize: 13, display: "block", marginBottom: 8 }}>
-                Evidence fields
+                {t("audit.review.evidenceFields")}
               </Typography.Text>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
                 {detail.items.map((item) => {
@@ -361,9 +363,9 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
                       key={item.field_id}
                       style={{
                         borderRadius: 8,
-                        border: `1px solid ${changed ? "#fcd34d" : "#e5e7eb"}`,
+                        border: `1px solid ${changed ? "var(--color-highlight-amber-border)" : "var(--color-border)"}`,
                         padding: "10px 14px",
-                        backgroundColor: changed ? "#fffbeb" : "#fff",
+                        backgroundColor: changed ? "var(--color-highlight-amber)" : "var(--color-surface)",
                         transition: "border-color 150ms, background-color 150ms",
                       }}
                     >
@@ -392,9 +394,9 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
 
                       {/* Current value */}
                       <Typography.Text
-                        style={{ fontSize: 12, color: "#4b5563", display: "block", marginBottom: 6 }}
+                        style={{ fontSize: 12, color: "var(--color-text-strong)", display: "block", marginBottom: 6 }}
                       >
-                        {item.value || <span style={{ color: "#9ca3af" }}>(empty)</span>}
+                        {item.value || <span style={{ color: "var(--color-text-muted)" }}>{t("audit.review.emptyValue")}</span>}
                       </Typography.Text>
 
                       {/* Edit input */}
@@ -402,19 +404,19 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
                         size="small"
                         placeholder={
                           cardField
-                            ? `Corrected ${cardField} (leave empty to keep original)`
-                            : "This field can only be status-reviewed"
+                            ? t("audit.review.correctedPh", { field: cardField })
+                            : t("audit.review.statusOnlyPh")
                         }
                         value={edited}
                         onChange={(e) => handleFieldChange(item.field_id, e.target.value)}
                         disabled={!cardField}
                         style={{
-                          borderColor: changed ? "#fcd34d" : undefined,
+                          borderColor: changed ? "var(--color-highlight-amber-border)" : undefined,
                         }}
                       />
                       {changed && (
-                        <Typography.Text style={{ fontSize: 10, color: "#d97706", marginTop: 4, display: "block" }}>
-                          Will be updated
+                        <Typography.Text style={{ fontSize: 10, color: "var(--color-warning-text)", marginTop: 4, display: "block" }}>
+                          {t("audit.review.willUpdate")}
                         </Typography.Text>
                       )}
                     </div>
@@ -425,8 +427,8 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
               {/* Status + reason + submit */}
               <div style={{ display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr", marginBottom: 12 }}>
                 <div>
-                  <Typography.Text style={{ fontSize: 12, fontWeight: 500, color: "#4b5563", display: "block", marginBottom: 4 }}>
-                    New status
+                  <Typography.Text style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-strong)", display: "block", marginBottom: 4 }}>
+                    {t("audit.review.newStatus")}
                   </Typography.Text>
                   <Select
                     aria-label="Review status"
@@ -438,12 +440,12 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
                   />
                 </div>
                 <div>
-                  <Typography.Text style={{ fontSize: 12, fontWeight: 500, color: "#4b5563", display: "block", marginBottom: 4 }}>
-                    Reason (optional)
+                  <Typography.Text style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-strong)", display: "block", marginBottom: 4 }}>
+                    {t("audit.review.reason")}
                   </Typography.Text>
                   <Input
                     size="small"
-                    placeholder="Why this review?"
+                    placeholder={t("audit.review.reasonPh")}
                     value={changeReason}
                     onChange={(e) => setChangeReason(e.target.value)}
                   />
@@ -458,7 +460,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
                   loading={isSubmitting}
                   disabled={!canSubmit}
                 >
-                  Submit review
+                  {t("audit.review.submit")}
                 </Button>
                 <Button
                   icon={<X style={{ width: 14, height: 14 }} />}
@@ -468,14 +470,13 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
                   }}
                   disabled={isSubmitting}
                 >
-                  Cancel
+                  {t("audit.review.cancelBtn")}
                 </Button>
               </div>
 
               {hasFieldEdits && (
-                <Typography.Text style={{ fontSize: 11, color: "#6b7280", marginTop: 8, display: "block" }}>
-                  {Object.values(editedFields).filter((v) => v.trim()).length} field(s) will be updated.
-                  This action will be recorded in the audit trail.
+                <Typography.Text style={{ fontSize: 11, color: "var(--color-text-secondary)", marginTop: 8, display: "block" }}>
+                  {t("audit.review.auditNotice", { count: Object.values(editedFields).filter((v) => v.trim()).length })}
                 </Typography.Text>
               )}
             </>

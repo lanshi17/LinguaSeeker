@@ -4,8 +4,9 @@ import { XProvider, Bubble, Sender, Conversations } from "@ant-design/x";
 import type { SenderRef } from "@ant-design/x/es/sender/interface";
 import { App } from "antd";
 import { ListChecks } from "lucide-react";
-import { extractErrorMessage } from "@/lib/api/error";
 import { TaskQueuePanel } from "@/features/pipeline";
+import { useI18n } from "@/lib/i18n";
+import { extractErrorMessage } from "@/lib/api/error";
 import type { ChatAction } from "../types/actions";
 import { sendChatMessage } from "../providers/acmgChatProvider";
 import {
@@ -33,6 +34,7 @@ export function ChatView({ processingRunId, sessionId }: ChatViewProps) {
 // ─── Full Chat View ────────────────────────────────────────────────────
 
 function FullChatView({ processingRunId }: { processingRunId?: string }) {
+  const { t } = useI18n();
   const { message } = App.useApp();
   const navigate = useNavigate();
 
@@ -250,9 +252,9 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
   return (
     <XProvider>
-      <div style={{ display: "flex", height: "100%", overflow: "hidden", backgroundColor: "#fff" }}>
+      <div style={{ display: "flex", height: "100%", overflow: "hidden", backgroundColor: "var(--color-surface)" }}>
         <Conversations
-          style={{ width: 240, borderRight: "1px solid #f0f0f0" }}
+          style={{ width: 240, borderRight: "1px solid var(--color-border)" }}
           items={conversations}
           activeKey={activeConversationKey}
           onActiveChange={handleActiveConversationChange}
@@ -273,7 +275,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
               display: "flex",
               alignItems: "center",
               gap: 8,
-              borderBottom: "1px solid #f3f4f6",
+              borderBottom: "1px solid var(--color-bg-muted)",
               padding: "6px 16px",
             }}
           >
@@ -282,32 +284,32 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
               onClick={toggleTaskQueue}
               aria-pressed={taskQueueOpen}
               aria-label={
-                taskQueueOpen ? "Hide task queue" : "Show task queue"
+                taskQueueOpen ? t("chat.hideTaskQueue") : t("chat.showTaskQueue")
               }
               className="cv-tq-btn"
               style={
                 taskQueueOpen
-                  ? { backgroundColor: "#111827", color: "#fff", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }
-                  : { color: "#6b7280" }
+                  ? { backgroundColor: "var(--color-text)", color: "var(--color-surface)", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }
+                  : { color: "var(--color-text-secondary)" }
               }
               onMouseEnter={(e) => {
                 if (!taskQueueOpen) {
-                  e.currentTarget.style.backgroundColor = "#f3f4f6";
-                  e.currentTarget.style.color = "#1f2937";
+                  e.currentTarget.style.backgroundColor = "var(--color-bg-muted)";
+                  e.currentTarget.style.color = "var(--color-code-text)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!taskQueueOpen) {
                   e.currentTarget.style.backgroundColor = "";
-                  e.currentTarget.style.color = "#6b7280";
+                  e.currentTarget.style.color = "var(--color-text-secondary)";
                 }
               }}
             >
               <ListChecks style={{ width: 14, height: 14 }} aria-hidden />
-              <span>Task Queue</span>
+              <span>{t("chat.taskQueue")}</span>
             </button>
-            <span style={{ fontSize: 10.5, color: "#9ca3af" }}>
-              {taskQueueOpen ? "Pinned on the right" : "Hidden"}
+            <span style={{ fontSize: 10.5, color: "var(--color-text-muted)" }}>
+              {taskQueueOpen ? t("chat.taskQueuePinned") : t("chat.taskQueueHidden")}
             </span>
           </div>
 
@@ -321,7 +323,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
               />
               <Sender
                 ref={senderRef}
-                style={{ borderTop: "1px solid #f3f4f6", padding: 16 }}
+                style={{ borderTop: "1px solid var(--color-bg-muted)", padding: 16 }}
                 loading={isRequesting}
                 onCancel={() => {
                   // Cancel via the provider's own AbortController for
@@ -339,7 +341,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
                   }
                 }}
                 onSubmit={handleSubmitAndClear}
-                placeholder="Ask the Lingua Seeker Agent..."
+                placeholder={t("chat.agentPlaceholder")}
               />
             </div>
 

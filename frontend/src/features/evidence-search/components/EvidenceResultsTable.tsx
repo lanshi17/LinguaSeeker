@@ -8,6 +8,7 @@ import {
   BarChart3,
   Calendar,
 } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 import { Badge } from "@/components/ui/Badge";
 import type { EvidenceSearchResult } from "../types/evidenceSearch";
 import { EvidenceTableSkeleton } from "./EvidenceTableSkeleton";
@@ -51,6 +52,7 @@ export function EvidenceResultsTable({
   onRowClick,
 }: EvidenceResultsTableProps) {
   const rows = buildLiteratureRows(results);
+  const { t } = useI18n();
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const startItem = (page - 1) * pageSize + 1;
   const endItem = Math.min(page * pageSize, total);
@@ -104,10 +106,10 @@ export function EvidenceResultsTable({
             <Search style={{ width: 32, height: 32, color: "var(--color-primary-500, #06b6d4)" }} />
           </div>
           <p style={{ marginTop: 20, fontSize: 16, fontWeight: 600, color: "#111827" }}>
-            No literature matched this search
+            {t("evidence.results.empty")}
           </p>
           <p style={{ marginTop: 8, maxWidth: 384, margin: "8px auto 0", fontSize: 14, color: "#6b7280" }}>
-            Try adjusting the gene, variant, disease, or PMID filters to broaden your search criteria.
+            {t("evidence.results.guidance")}
           </p>
         </div>
       </div>
@@ -163,12 +165,12 @@ export function EvidenceResultsTable({
             </div>
             <div>
               <p style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
-                {rows.length} literature row{rows.length !== 1 ? "s" : ""}
+                {rows.length} {t("evidence.results.rows")}
               </p>
               <p style={{ marginTop: 2, fontSize: 12, color: "#6b7280" }}>
-                {total} evidence group{total !== 1 ? "s" : ""} total
+                {total} {t("evidence.results.groups")}
                 <span style={{ margin: "0 6px", color: "#d1d5db" }}>·</span>
-                Showing {startItem}&ndash;{endItem}
+                {t("evidence.results.showing", { from: String(startItem), to: String(endItem) })}
               </p>
             </div>
           </div>
@@ -187,8 +189,7 @@ export function EvidenceResultsTable({
             <button
               onClick={() => onPageChange?.(page - 1)}
               disabled={page <= 1}
-              style={page <= 1 ? paginationBtnDisabledStyle : paginationBtnStyle}
-              aria-label="Previous page"
+              aria-label={t("evidence.results.prevPage")}
             >
               <ChevronLeft style={{ width: 16, height: 16 }} />
             </button>
@@ -216,8 +217,7 @@ export function EvidenceResultsTable({
             <button
               onClick={() => onPageChange?.(page + 1)}
               disabled={page >= totalPages}
-              style={page >= totalPages ? paginationBtnDisabledStyle : paginationBtnStyle}
-              aria-label="Next page"
+              aria-label={t("evidence.results.nextPage")}
             >
               <ChevronRight style={{ width: 16, height: 16 }} />
             </button>
@@ -258,7 +258,7 @@ export function EvidenceResultsTable({
                     className="edb-card-title edb-line-clamp-2"
                     style={{ fontSize: 14, fontWeight: 600, lineHeight: "20px", color: "#030712", transition: "color 0.15s" }}
                   >
-                    {literatureTitle(row)}
+                    {literatureTitle(row, t)}
                   </p>
                   <p
                     style={{
@@ -331,25 +331,25 @@ export function EvidenceResultsTable({
                 }}
               >
                 <th style={{ width: "20%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
-                  Literature
+                  {t("evidence.results.colLiterature")}
                 </th>
                 <th style={{ width: "18%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
-                  Evidence Focus
+                  {t("evidence.results.colFocus")}
                 </th>
                 <th style={{ width: "16%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
-                  Disease
+                  {t("evidence.results.colDisease")}
                 </th>
                 <th style={{ width: "14%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
-                  Classification
+                  {t("evidence.results.colClass")}
                 </th>
                 <th style={{ width: "10%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
-                  Created
+                  {t("evidence.results.colCreated")}
                 </th>
                 <th style={{ width: "10%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
-                  Review
+                  {t("evidence.results.colReview")}
                 </th>
                 <th style={{ width: "8%", padding: "14px 16px", textAlign: "right", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
-                  Fields
+                  {t("evidence.results.colFields")}
                 </th>
               </tr>
             </thead>
@@ -359,7 +359,7 @@ export function EvidenceResultsTable({
                   key={row.documentId}
                   role={onRowClick ? "link" : undefined}
                   tabIndex={onRowClick ? 0 : undefined}
-                  aria-label={`Open literature evidence ${row.title ?? row.pmid ?? row.documentId}`}
+                  aria-label={`${t("evidence.results.openLit")} ${row.title ?? row.pmid ?? row.documentId}`}
                   onClick={() => onRowClick?.(row)}
                   onKeyDown={(e) => {
                     if (onRowClick && (e.key === "Enter" || e.key === " ")) {
