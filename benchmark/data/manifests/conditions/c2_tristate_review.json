@@ -1,0 +1,15 @@
+{
+  "condition_id": "c2_tristate_review",
+  "label": "Full Broad Workflow with Tri-State Evidence Review",
+  "description": "Experimental condition matching C2 full broad workflow, except review validation uses approve / uncertain_keep_for_review / reject semantics. Uncertain candidates are retained as FOUND with lowered confidence for expert review; explicit reject remains a hard veto.",
+  "extraction_mode": "broad",
+  "ablation_disable_review": false,
+  "ablation_disable_target_guard": false,
+  "ablation_original_only": false,
+  "force_reextract": true,
+  "extraction_profile": "none",
+  "is_prompt_only": false,
+  "prompt_only_model": null,
+  "disabled_components": [],
+  "review_reject_policy": "tristate_review"
+}

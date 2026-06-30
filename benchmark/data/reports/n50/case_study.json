@@ -1,0 +1,248 @@
+{
+  "case_found": true,
+  "n_qualifying": 11,
+  "selected_case": {
+    "entry_id": "gs_002",
+    "field_id": "B.disease_diagnosis",
+    "full_broad_value": "{'value': 'interstitial lung disease due to ABCA3 deficiency'}",
+    "no_reflection_value": null,
+    "no_reflection_status": false,
+    "source_span": {
+      "bbox": [],
+      "page": 1,
+      "span_id": "original-p1",
+      "block_type": "text",
+      "end_offset": 241,
+      "block_index": -1,
+      "context_ref": "primary_broad_extraction",
+      "context_type": "text",
+      "start_offset": 105,
+      "text_snippet": "ATP‐binding cassette transporter A3 (ABCA3) deficiency is one of the most severe causes of childhood interstitial lung diseases (chILD).",
+      "source_precision": "corrected"
+    }
+  },
+  "all_qualifying": [
+    {
+      "entry_id": "gs_002",
+      "field_id": "B.disease_diagnosis",
+      "full_broad_value": "{'value': 'interstitial lung disease due to ABCA3 deficiency'}",
+      "no_reflection_value": null,
+      "no_reflection_status": false,
+      "source_span": {
+        "bbox": [],
+        "page": 1,
+        "span_id": "original-p1",
+        "block_type": "text",
+        "end_offset": 241,
+        "block_index": -1,
+        "context_ref": "primary_broad_extraction",
+        "context_type": "text",
+        "start_offset": 105,
+        "text_snippet": "ATP‐binding cassette transporter A3 (ABCA3) deficiency is one of the most severe causes of childhood interstitial lung diseases (chILD).",
+        "source_precision": "corrected"
+      }
+    },
+    {
+      "entry_id": "gs_003",
+      "field_id": "B.disease_diagnosis",
+      "full_broad_value": "{'value': 'monogenic diabetes'}",
+      "no_reflection_value": "{'value': 'maturity-onset diabetes of the young, type 12'}",
+      "no_reflection_status": false,
+      "source_span": {
+        "bbox": [],
+        "page": 1,
+        "span_id": "original-p1",
+        "block_type": "text",
+        "end_offset": 1817,
+        "block_index": -1,
+        "context_ref": "primary_broad_extraction",
+        "context_type": "text",
+        "start_offset": 1799,
+        "text_snippet": "monogenic diabetes",
+        "source_precision": "ambiguous"
+      }
+    },
+    {
+      "entry_id": "gs_021",
+      "field_id": "A.gene_disease_relationship",
+      "full_broad_value": "{'value': 'causative'}",
+      "no_reflection_value": "{'value': 'uncertain'}",
+      "no_reflection_status": false,
+      "source_span": {
+        "bbox": [],
+        "page": 1,
+        "span_id": "translated-p1",
+        "block_type": "text",
+        "end_offset": 36709,
+        "block_index": -1,
+        "context_ref": "primary_broad_extraction",
+        "context_type": "text",
+        "start_offset": 36585,
+        "text_snippet": "Hereditary testing for CYP1B1 mutations, a recognized hereditary cause of PCG, will be part of the screening process ( 22 ).",
+        "source_precision": "ambiguous"
+      }
+    },
+    {
+      "entry_id": "gs_035",
+      "field_id": "A.gene_symbol",
+      "full_broad_value": "{'value': 'GP1BA'}",
+      "no_reflection_value": null,
+      "no_reflection_status": false,
+      "source_span": {
+        "bbox": [],
+        "page": 1,
+        "span_id": "translated-p1",
+        "block_type": "text",
+        "end_offset": 15249,
+        "block_index": -1,
+        "context_ref": "primary_broad_extraction",
+        "context_type": "text",
+        "start_offset": 15244,
+        "text_snippet": "GP1BA",
+        "source_precision": "ambiguous"
+      }
+    },
+    {
+      "entry_id": "gs_060",
+      "field_id": "B.disease_diagnosis",
+      "full_broad_value": "{'value': 'mitochondrial disease'}",
+      "no_reflection_value": "{'value': 'cerebellar ataxia'}",
+      "no_reflection_status": false,
+      "source_span": {
+        "bbox": [],
+        "page": 1,
+        "span_id": "original-p1",
+        "block_type": "text",
+        "end_offset": 67070,
+        "block_index": -1,
+        "context_ref": "primary_broad_extraction",
+        "context_type": "text",
+        "start_offset": 67049,
+        "text_snippet": "mitochondrial disease",
+        "source_precision": "ambiguous"
+      }
+    },
+    {
+      "entry_id": "gs_071",
+      "field_id": "B.disease_diagnosis",
+      "full_broad_value": "{'value': 'MERRF syndrome'}",
+      "no_reflection_value": "{'value': 'Myoclonic epilepsy associated with ragged-red fibers (MERRF)'}",
+      "no_reflection_status": false,
+      "source_span": {
+        "bbox": [],
+        "page": 1,
+        "span_id": "original-p1",
+        "block_type": "text",
+        "end_offset": 19437,
+        "block_index": -1,
+        "context_ref": "primary_broad_extraction",
+        "context_type": "text",
+        "start_offset": 19267,
+        "text_snippet": "Further, in case 4, we identified a pathogenic heteroplasmic (70%) mitochondrial DNA variant (m.8344A>G), leading to a diagnosis of MERRF syndrome (MIM#545000; Fig. 2B ).",
+        "source_precision": "ambiguous"
+      }
+    },
+    {
+      "entry_id": "gs_079",
+      "field_id": "A.gene_disease_relationship",
+      "full_broad_value": "{'value': 'causative'}",
+      "no_reflection_value": null,
+      "no_reflection_status": false,
+      "source_span": {
+        "bbox": [],
+        "page": 1,
+        "span_id": "original-p1",
+        "block_type": "text",
+        "end_offset": 277,
+        "block_index": -1,
+        "context_ref": "primary_broad_extraction",
+        "context_type": "text",
+        "start_offset": 138,
+        "text_snippet": "Mutations in the MYO15A gene are a widely recognized cause of autosomal recessive non-syndromic sensorineural hearing loss (NSHL) globally.",
+        "source_precision": "corrected"
+      }
+    },
+    {
+      "entry_id": "gs_102",
+      "field_id": "A.gene_disease_relationship",
+      "full_broad_value": "{'value': 'causative'}",
+      "no_reflection_value": null,
+      "no_reflection_status": false,
+      "source_span": {
+        "bbox": [],
+        "page": 1,
+        "span_id": "original-p1",
+        "block_type": "text",
+        "end_offset": 5082,
+        "block_index": -1,
+        "context_ref": "primary_broad_extraction",
+        "context_type": "text",
+        "start_offset": 4992,
+        "text_snippet": "severe neonatal encephalopathy caused by a frameshift mutation in exon 3 of the MECP2 gene",
+        "source_precision": "corrected"
+      }
+    },
+    {
+      "entry_id": "gs_140",
+      "field_id": "A.gene_symbol",
+      "full_broad_value": "{'value': 'MECP2'}",
+      "no_reflection_value": null,
+      "no_reflection_status": false,
+      "source_span": {
+        "bbox": [],
+        "page": 1,
+        "span_id": "original-p1",
+        "block_type": "text",
+        "end_offset": 101,
+        "block_index": -1,
+        "context_ref": "primary_broad_extraction",
+        "context_type": "text",
+        "start_offset": 91,
+        "text_snippet": "MECP2 gene",
+        "source_precision": "ambiguous"
+      }
+    },
+    {
+      "entry_id": "gs_140",
+      "field_id": "A.gene_disease_relationship",
+      "full_broad_value": "{'value': 'causative'}",
+      "no_reflection_value": null,
+      "no_reflection_status": false,
+      "source_span": {
+        "bbox": [],
+        "page": 1,
+        "span_id": "translated-p1",
+        "block_type": "text",
+        "end_offset": 16542,
+        "block_index": -1,
+        "context_ref": "primary_broad_extraction",
+        "context_type": "text",
+        "start_offset": 16448,
+        "text_snippet": "Rett syndrome is caused by mutations in X-linked MECP2, encoding methyl-CpG-binding protein 2.",
+        "source_precision": "corrected"
+      }
+    },
+    {
+      "entry_id": "gs_148",
+      "field_id": "A.gene_symbol",
+      "full_broad_value": "{'value': 'MECP2'}",
+      "no_reflection_value": null,
+      "no_reflection_status": false,
+      "source_span": {
+        "bbox": [],
+        "page": 1,
+        "span_id": "original-p1",
+        "block_type": "text",
+        "end_offset": 2701,
+        "block_index": -1,
+        "context_ref": "primary_broad_extraction",
+        "context_type": "text",
+        "start_offset": 2679,
+        "text_snippet": "图1 患儿家系 MECP2基因外显子分析结果",
+        "source_precision": "corrected"
+      }
+    }
+  ],
+  "selection_rule": "First qualifying case by locked manifest order. 11 cases qualified in total.",
+  "narrative_template": "In entry `gs_002`, both systems initially proposed a candidate for `B.disease_diagnosis`. The full workflow's review stage flagged the candidate. The reflection step narrowed the extraction and recovered the correct value `{'value': 'interstitial lung disease due to ABCA3 deficiency'}` from the source span. The no-reflection ablation returned `no value`. This illustrates that the gain is not only from a larger prompt, but from an explicit validation-and-retry loop that changes the extraction state after a detected failure."
+}

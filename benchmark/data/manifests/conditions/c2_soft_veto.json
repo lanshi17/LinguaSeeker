@@ -1,0 +1,15 @@
+{
+  "condition_id": "c2_soft_veto",
+  "label": "Full Broad Workflow with Soft Review Veto",
+  "description": "Experimental condition matching C2 full broad workflow, except review validation reject decisions are retained as FOUND candidates with lowered confidence and review_soft_reject provenance instead of being converted to NOT_FOUND.",
+  "extraction_mode": "broad",
+  "ablation_disable_review": false,
+  "ablation_disable_target_guard": false,
+  "ablation_original_only": false,
+  "force_reextract": true,
+  "extraction_profile": "none",
+  "is_prompt_only": false,
+  "prompt_only_model": null,
+  "disabled_components": [],
+  "review_reject_policy": "soft_veto"
+}

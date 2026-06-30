@@ -13,6 +13,8 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.review_validation import (
     EvidenceReviewDecision,
     EvidenceReviewResponse,
+    EvidenceTriStateReviewDecision,
+    EvidenceTriStateReviewResponse,
     ReviewValidationStage,
 )
 
@@ -21,15 +23,21 @@ class StaticReviewProvider:
     def __init__(self, response: EvidenceReviewResponse):
         self.response = response
         self.stages: list[str] = []
+        self.output_schemas: list[type] = []
+        self.prompts: list[str] = []
 
     def invoke_structured(self, prompt, output_schema, tier, stage, response_method="json_schema"):
-        del prompt, output_schema, tier, response_method
+        del tier, response_method
         self.stages.append(stage)
+        self.output_schemas.append(output_schema)
+        self.prompts.append(prompt)
         return self.response
 
     async def ainvoke_structured(self, prompt, output_schema, tier, stage, response_method="json_schema"):
-        del prompt, output_schema, tier, response_method
+        del tier, response_method
         self.stages.append(stage)
+        self.output_schemas.append(output_schema)
+        self.prompts.append(prompt)
         return self.response
 
 
@@ -115,7 +123,7 @@ def test_review_validation_corrects_existing_candidate_raw_source() -> None:
     assert "review_track: corrected" in reviewed[0].notes
 
 
-def test_review_validation_rejects_existing_candidate() -> None:
+def test_review_validation_rejects_existing_candidate_by_default() -> None:
     provider = StaticReviewProvider(
         EvidenceReviewResponse(
             decisions=[
@@ -134,6 +142,107 @@ def test_review_validation_rejects_existing_candidate() -> None:
     assert reviewed[0].status == EvidenceStatus.NOT_FOUND
     assert reviewed[0].value is None
     assert reviewed[0].confidence == 0.0
+    assert "review_track: rejected" in reviewed[0].notes
+
+
+def test_review_validation_soft_veto_preserves_existing_candidate() -> None:
+    provider = StaticReviewProvider(
+        EvidenceReviewResponse(
+            decisions=[
+                EvidenceReviewDecision(
+                    candidate_index=0,
+                    field_id="A.variant_hgvs_p",
+                    action="reject",
+                    reason="not present in article",
+                )
+            ]
+        )
+    )
+
+    reviewed = ReviewValidationStage(provider, review_reject_policy="soft_veto").run(
+        _document(),
+        [_item("A.variant_hgvs_p", "p.Bad")],
+    )
+
+    assert reviewed[0].status == EvidenceStatus.FOUND
+    assert reviewed[0].value == "p.Bad"
+    assert reviewed[0].confidence == 0.35
+    assert reviewed[0].raw_source is not None
+    assert reviewed[0].raw_source.text_snippet == "p.Bad"
+    assert "review_track: soft_rejected" in reviewed[0].notes
+    assert "review_soft_reject" in reviewed[0].inference_basis
+
+
+def test_review_validation_default_uses_binary_review_schema() -> None:
+    provider = StaticReviewProvider(
+        EvidenceReviewResponse(
+            decisions=[
+                EvidenceReviewDecision(
+                    candidate_index=0,
+                    field_id="A.gene_symbol",
+                    action="approve",
+                    reason="directly supported",
+                )
+            ]
+        )
+    )
+
+    ReviewValidationStage(provider).run(_document(), [_item("A.gene_symbol", "MECP2")])
+
+    assert provider.output_schemas == [EvidenceReviewResponse]
+    assert "uncertain_keep_for_review" not in provider.prompts[0]
+
+
+def test_review_validation_tristate_preserves_uncertain_candidate_for_review() -> None:
+    provider = StaticReviewProvider(
+        EvidenceTriStateReviewResponse(
+            decisions=[
+                EvidenceTriStateReviewDecision(
+                    candidate_index=0,
+                    field_id="B.disease_diagnosis",
+                    action="uncertain_keep_for_review",
+                    confidence=0.6,
+                    reason="complex rare disease phrasing needs expert review",
+                )
+            ]
+        )
+    )
+
+    reviewed = ReviewValidationStage(provider, review_reject_policy="tristate_review").run(
+        _document(),
+        [_item("B.disease_diagnosis", "interstitial lung disease due to ABCA3 deficiency")],
+    )
+
+    assert provider.output_schemas == [EvidenceTriStateReviewResponse]
+    assert "uncertain_keep_for_review" in provider.prompts[0]
+    assert reviewed[0].status == EvidenceStatus.FOUND
+    assert reviewed[0].value == "interstitial lung disease due to ABCA3 deficiency"
+    assert reviewed[0].confidence == 0.45
+    assert "review_track: uncertain_keep_for_review" in reviewed[0].notes
+    assert "review_uncertain_keep_for_review" in reviewed[0].inference_basis
+
+
+def test_review_validation_tristate_reject_remains_hard_reject() -> None:
+    provider = StaticReviewProvider(
+        EvidenceTriStateReviewResponse(
+            decisions=[
+                EvidenceTriStateReviewDecision(
+                    candidate_index=0,
+                    field_id="A.gene_symbol",
+                    action="reject",
+                    reason="belongs to another target gene",
+                )
+            ]
+        )
+    )
+
+    reviewed = ReviewValidationStage(provider, review_reject_policy="tristate_review").run(
+        _document(),
+        [_item("A.gene_symbol", "BRCA1")],
+    )
+
+    assert reviewed[0].status == EvidenceStatus.NOT_FOUND
+    assert reviewed[0].value is None
     assert "review_track: rejected" in reviewed[0].notes
 
 

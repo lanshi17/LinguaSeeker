@@ -7,7 +7,7 @@
 
 ## Abstract
 
-Clinical genetics evidence curation requires structured facts that can be traced back to the source literature. Large language models can extract plausible values from biomedical articles, but prompt-only extraction does not by itself provide a reliable boundary between source-supported evidence, inferred values, and unsupported claims. We present LinguaSeeker, a cross-lingual literature evidence pipeline for expert-review prefill in clinical genetics. The default broad workflow uses a high-recall primary extraction track followed by a review track that validates, rejects, or corrects candidate evidence before normalization, source grounding, entity standardization, and read-model generation. We evaluate the production workflow on a unified 150-entry dataset spanning ClinGen, ClinVar-Fused, Rett syndrome, and Parkinson literature. All 150 entries completed successfully. Over source-supported fields eligible for single-document extraction, LinguaSeeker achieved precision 65.5%, recall 33.6%, and F1 44.4% across 1,563 field-level comparisons. We evaluate only source-supported fields eligible for single-document extraction; fields requiring cross-paper synthesis, external databases, or expert consensus are excluded from the claimed extraction scope. Performance varied by source corpus, with the strongest result on ClinGen entries (F1 76.9%) and the weakest result on Parkinson literature (F1 22.1%). The results show that source-grounded LLM pipelines can provide useful structured prefill for expert curation, while recall remains limited when expected fields are implicit, absent from the article, or dependent on external curation.
+Clinical genetics evidence curation requires structured facts that can be traced back to the source literature. Large language models can extract plausible values from biomedical articles, but prompt-only extraction does not by itself provide a reliable boundary between source-supported evidence, inferred values, and unsupported claims. We present LinguaSeeker, a cross-lingual literature evidence pipeline for expert-review prefill in clinical genetics. The default broad workflow uses a high-recall primary extraction track followed by a review track that validates, rejects, or corrects candidate evidence before normalization, source grounding, entity standardization, and read-model generation. We evaluate the production workflow on a unified 150-entry dataset spanning ClinGen, ClinVar-Fused, Rett syndrome, and Parkinson literature. All 150 entries completed successfully. Over source-supported fields eligible for single-document extraction, LinguaSeeker achieved precision 65.5%, recall 33.6%, and F1 44.4% across 1,563 field-level comparisons. Performance varied by source corpus, with the strongest result on ClinGen entries (F1 76.9%). A paired N=50 diagnostic comparison did not support an F1-superiority claim over prompt-only extraction; instead, it identified review validation as a recall bottleneck. The results position LinguaSeeker as an auditable structured-prefill pipeline whose extraction boundary and current failure modes are measurable, rather than as an autonomous clinical classification system.
 
 ## 1. Introduction
 
@@ -83,11 +83,11 @@ After evidence extraction, the pipeline standardizes gene, disease, variant, phe
 
 ## 5. Evaluation Design
 
-We report two experiments. First, a fixed random 5-entry pilot compares three workflow variants: a catalog workflow, citation-required prompt-only extraction, and the broad workflow with review validation. This experiment was used to select the production default. Second, we evaluate the default broad workflow on the full 150-entry unified dataset.
+We report three analyses. First, a fixed random 5-entry pilot compares three workflow variants: a catalog workflow, citation-required prompt-only extraction, and the broad workflow with review validation. This experiment was used to select the production default and is not used as a statistical superiority test. Second, we evaluate the default broad workflow on the full 150-entry unified dataset. Third, we run a paired N=50 diagnostic comparison and ablation to test whether the default workflow improves field-level F1 over simpler configurations and to identify bottleneck components.
 
 The primary experiment evaluates the default broad workflow on the unified 150-entry benchmark. The evaluation unit is a source-supported field value eligible for single-document extraction. Fields requiring cross-paper synthesis, external databases, or expert consensus are outside the scoring boundary. This framing evaluates the pipeline as an expert-review prefill system rather than an autonomous ACMG/ClinGen classification system.
 
-We do not use the pilot as a statistical superiority test. A powered matched comparison against an external or internal baseline is left to future work; under a medium-effect assumption, paired tests such as McNemar's test or a paired t test typically require roughly 47 paired samples to target power 0.8 at alpha=0.05. The current pilot is therefore treated only as workflow-selection evidence.
+We do not use the pilot as a statistical superiority test. The N=50 comparison uses a separate fixed-seed stratified subset and paired tests; because it was conducted after the 150-entry production run, we treat it as a diagnostic ablation rather than a preregistered superiority study.
 
 For the full evaluation, every entry is submitted through the production pipeline with forced re-extraction rather than cached results. The run executes literature ingestion, cross-lingual evidence extraction, entity standardization, and read-model generation. Evaluation is field-level: true positives are extracted values matching the unified gold field value, false positives are extracted wrong values, and false negatives are expected source-supported values not extracted. Results are stratified by source dataset and reported by field family.
 
@@ -147,16 +147,64 @@ Table 6 reports a scope-sensitivity analysis derived from the same 150-entry run
 | Covered families (A+B+C+J) | 446 | 235 | 752 | 0.655 | 0.372 | 0.475 |
 | Core article-local (A+B+J) | 440 | 216 | 713 | 0.671 | 0.382 | 0.486 |
 | Gene + phenotype (A+B) | 428 | 212 | 649 | 0.669 | 0.397 | 0.498 |
+### 6.5 N=50 Paired Comparison and Ablation
 
-### 6.5 Database Seed Output
+To audit whether the full broad workflow provides measurable benefit over simpler baselines and to identify component-level bottlenecks, we conducted a paired diagnostic experiment on a stratified N=50 subset of the unified benchmark. The sample was selected with fixed-seed stratified sampling by source dataset (ClinGen 5, ClinVar-Fused 23, Parkinson 6, Rett 16), excluding the 5-entry workflow-selection pilot to reduce leakage. The sample targets the common lower bound for detecting a medium paired effect with power 0.8 at alpha=0.05, using paired tests (McNemar's test for success/failure, paired t-test plus Wilcoxon signed-rank sensitivity for per-entry F1, clustered bootstrap by entry for field-level correctness). Because this experiment was conducted after the 150-entry production run, we treat it as a diagnostic ablation rather than a preregistered superiority study.
+
+Seven conditions were run on the same 50 entries with forced re-extraction:
+
+- C0: Prompt-only baseline (single citation-required extraction prompt, no agent workflow).
+- C1: Catalog workflow (extraction_mode="catalog", conservative catalog-style extraction).
+- C2: Full broad workflow (primary extraction + review validation + normalization + grounding + Phase 3 standardization).
+- A1: No reflection/retry (infrastructure retry disabled; the system is single-pass, so this is effectively equivalent to C2 at the workflow level).
+- A2: No review validation (review track disabled, primary extraction + grounding only).
+- A3: No target guard (gene/disease context filtering disabled).
+- A4: Original-only track (translated text branch disabled).
+
+**Table 7. N=50 main comparison table.**
+
+| condition | N | completed | TP | FP | FN | P | R | F1 | avg min/entry |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| prompt-only (C0) | 50 | 50 | 241 | 130 | 111 | 0.650 | 0.685 | 0.667 | 1.78 |
+| catalog workflow (C1) | 50 | 50 | 147 | 42 | 291 | 0.778 | 0.336 | 0.469 | 6.25 |
+| full broad workflow (C2) | 50 | 50 | 152 | 82 | 246 | 0.650 | 0.382 | 0.481 | 3.44 |
+
+The prompt-only baseline (C0) achieved the highest F1 (0.667), driven by strong recall (0.685). The paired t-test for C2 vs C0 showed a significant F1 difference (mean diff = -0.157, 95% CI [-0.216, -0.098], p = 4e-06), but in the direction of C0 being better. This result does not support a claim that the full workflow improves field-level F1 over prompt-only extraction on this sample. Instead, it shows that the current review and grounding configuration reduces recall without a compensating precision gain. The catalog workflow (C1) achieved the highest precision (0.778) but the lowest recall (0.336), with no significant F1 difference from C2 (p = 0.70).
+
+**Table 8. N=50 ablation table.**
+
+| condition | disabled component | N | P | R | F1 | ΔF1 vs C2 | paired p | interpretation |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| full broad (C2) | none | 50 | 0.650 | 0.382 | 0.481 | — | — | main condition |
+| no reflection (A1) | infrastructure retry | 50 | 0.646 | 0.365 | 0.467 | -0.014 | 0.381 | no significant difference (single-pass system) |
+| no review (A2) | review pass | 50 | 0.672 | 0.428 | 0.523 | +0.042 | 0.047 | removing review improved F1 significantly |
+| no target guard (A3) | target specificity | 50 | 0.648 | 0.407 | 0.500 | +0.019 | 0.248 | no significant difference |
+| original-only (A4) | translated branch | 50 | 0.656 | 0.410 | 0.505 | +0.024 | 0.183 | no significant difference |
+
+The ablation results show that removing the review validation pass (A2) significantly improved F1 (p = 0.047), suggesting that the current review track is over-rejecting valid candidates and reducing recall without a sufficient precision benefit. Removing the target guard (A3) and translated branch (A4) showed non-significant F1 improvements, suggesting these components may also be slightly reducing recall. The no-reflection ablation (A1) confirmed that the system is effectively single-pass in this configuration, with no significant aggregate difference from C2.
+
+**Table 9. Reflection case study: full broad vs no-reflection on entry gs_002.**
+
+| step | full broad workflow | no-reflection ablation |
+| --- | --- | --- |
+| initial extraction | extracts candidate disease diagnosis | extracts same candidate |
+| validation | review validates and corrects the candidate | no corrective validation |
+| final output | correct: "interstitial lung disease due to ABCA3 deficiency" | missing value |
+| scored result | TP | FN |
+
+In entry gs_002, the full broad workflow correctly extracted the disease diagnosis "interstitial lung disease due to ABCA3 deficiency" with source support, while the no-reflection ablation returned no value. However, this case study illustrates a field-level success, not a workflow-level advantage: across the full N=50 sample, the no-reflection ablation was not significantly worse than the full broad workflow. Eleven cases qualified under the pre-declared selection criteria.
+
+These findings should be interpreted conservatively. The N=50 experiment was not registered before the 150-entry results were known, and the direction of the ablation effects (review and grounding reducing recall) suggests that the current workflow configuration is tuned for precision at the expense of recall. The practical implication is not that the agent workflow is useless, but that the review track's rejection threshold may need recalibration to preserve valid candidates. Future work should investigate review-track threshold tuning, per-field review policies, and recall-oriented extraction modes.
+
+### 6.6 Database Seed Output
 
 The final run also generated a clean business-data seed package for downstream inspection. The package contains 150 source documents, 150 completed processing runs, 41,167 run-level evidence rows, 1,177 canonical evidence items, 150 literature profiles, 1,177 frontend search-index rows, 985 normalized entities, and 94,311 BAAI/bge-m3 embedding records. The package is exported as a data-only PostgreSQL dump so that business evidence and literature metadata can be injected into a clean `lingua_seeker` database while preserving infrastructure schema definitions.
 
 ## 7. Discussion And Limitations
 
-The results support a practical but conservative claim. The broad workflow with review validation improves the extraction tradeoff relative to the catalog workflow in the fixed pilot and runs successfully on the full unified dataset. Its precision is suitable for structured prefill and evidence triage, but recall remains limited. The largest remaining gap is not only model error: many expected fields are absent from the single document, implicit in domain conventions, or dependent on external curation sources.
+The results support a practical but conservative claim. The broad workflow runs successfully on the full unified dataset and produces source-grounded structured evidence for inspection, but the paired N=50 comparison does not support an F1-superiority claim over prompt-only extraction. The prompt-only baseline achieved higher F1 through higher recall, while the workflow's review and grounding stages made the output more auditable but also more conservative. The ablation study showed that removing the review validation pass significantly improved F1, suggesting that the current review threshold is over-rejecting valid candidates. The largest remaining gap is not only model error: many expected fields are absent from the single document, implicit in domain conventions, or dependent on external curation sources.
 
-This study has four limitations. First, the unified benchmark contains 150 heterogeneous entries. It is suitable for controlled system analysis and reproducible inspection, but it is not a population-level generalization claim. Second, the overall F1 of 0.444 reflects a deliberately broad extraction boundary. The ClinGen subset reaches F1 0.769, and scope-sensitive subsets reach F1 0.475-0.498, but the headline score includes fields that are weakly visible or not visible in single articles. Third, we do not report direct P/R/F1 comparisons against systems such as PubTator 3.0, LitVar 2.0, or MedSeeker because their primary outputs are entity annotations, variant-centric retrieval, or configurable NER rather than the same 134-field structured evidence schema; a statistically powered matched superiority test should use at least about 47 paired samples under the medium-effect, power 0.8, alpha=0.05 design assumption. Fourth, the cross-lingual evaluation uses translated evidence processing within the production workflow rather than a dedicated native multilingual gold standard. A native multilingual benchmark remains future work.
+This study has five limitations. First, the unified benchmark contains 150 heterogeneous entries. It is suitable for controlled system analysis and reproducible inspection, but it is not a population-level generalization claim. Second, the overall F1 of 0.444 reflects a deliberately broad extraction boundary. The ClinGen subset reaches F1 0.769, and scope-sensitive subsets reach F1 0.475-0.498, but the headline score includes fields that are weakly visible or not visible in single articles. Third, the N=50 paired comparison is diagnostic rather than preregistered; it found that prompt-only extraction outperformed the current full workflow in F1, so we do not claim workflow superiority. Fourth, we do not report direct P/R/F1 comparisons against systems such as PubTator 3.0, LitVar 2.0, or MedSeeker because their primary outputs are entity annotations, variant-centric retrieval, or configurable NER rather than the same 134-field structured evidence schema. Fifth, the cross-lingual evaluation uses translated evidence processing within the production workflow rather than a dedicated native multilingual gold standard. A native multilingual benchmark remains future work.
 
 The evaluation boundary is therefore central to interpretation. We score only source-supported fields eligible for single-document extraction. We do not claim that the system extracts all fields in the broader evidence catalog, nor that it performs final ACMG/ClinGen classification. The system should be used as an expert-review assistant that surfaces candidate evidence, not as an autonomous clinical decision-support system.
 
@@ -164,7 +212,7 @@ Future work should add larger matched baseline studies, native multilingual anno
 
 ## 8. Conclusion
 
-LinguaSeeker frames clinical genetics literature extraction as source-grounded evidence prefill rather than prompt-only generation or autonomous curation. The default broad workflow combines a high-recall primary track with a review track, then normalizes, grounds, standardizes, and materializes evidence for expert inspection. On the unified 150-entry evaluation, the workflow completes all entries and achieves precision 65.5%, recall 33.6%, and F1 44.4% over source-supported single-document fields. The evidence supports deploying LinguaSeeker as a practical expert-review pipeline while making clear that external curation and final clinical interpretation remain outside the automated extraction boundary.
+LinguaSeeker frames clinical genetics literature extraction as source-grounded evidence prefill rather than prompt-only generation or autonomous curation. The default broad workflow combines a high-recall primary track with a review track, then normalizes, grounds, standardizes, and materializes evidence for expert inspection. On the unified 150-entry evaluation, the workflow completes all entries and achieves precision 65.5%, recall 33.6%, and F1 44.4% over source-supported single-document fields. The N=50 diagnostic comparison shows that the current workflow should not be claimed as higher-F1 than prompt-only extraction; its value is instead in auditable structure, source grounding, database-ready evidence, and measurable bottleneck identification. External curation and final clinical interpretation remain outside the automated extraction boundary.
 
 ## Current Evidence References
 
@@ -174,4 +222,10 @@ LinguaSeeker frames clinical genetics literature extraction as source-grounded e
 - Error breakdown: `benchmark/data/reports/unified_b8_error_breakdown_20260629.json`, `benchmark/data/reports/unified_b8_error_breakdown_20260629.md`
 - Scope sensitivity: `benchmark/data/reports/unified_b8_scope_sensitivity_20260629.json`, `benchmark/data/reports/unified_b8_scope_sensitivity_20260629.md`
 - Seed package: `artifacts/unified_b8_lingua_seeker_seed_20260627.tar.gz`
+- N=50 manifest: `benchmark/data/manifests/unified_b8_n50_comparison_20260629.json`
+- N=50 condition reports: `benchmark/data/reports/n50/`
+- N=50 paired tests: `benchmark/data/reports/n50/paired_c2_vs_*.json`
+- N=50 final tables: `benchmark/data/reports/n50/final_tables.json`
+- N=50 case study: `benchmark/data/reports/n50/case_study.json`
+- N=50 design doc: `docs/active/2026-06-29-bibm-n50-comparison-ablation-design.md`
 - TeX manuscript: `docs/active/2026-06-15-bibm-main-paper-tex/main.tex`

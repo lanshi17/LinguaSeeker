@@ -1,0 +1,729 @@
+{
+  "evaluation_id": "soft_veto_n5_smoke",
+  "timestamp": "2026-06-30T13:18:00",
+  "config": {
+    "base_url": "http://127.0.0.1:8010",
+    "entry_ids": [
+      "gs_002",
+      "gs_003",
+      "gs_004",
+      "gs_005",
+      "gs_007"
+    ],
+    "ground_truth_root": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/data/ground_truth/unified",
+    "dataset": "unified",
+    "extraction_mode": "broad",
+    "review_reject_policy": "soft_veto",
+    "note": "gs_002 and gs_003 reused from interrupted runs; remaining entries submitted in this run."
+  },
+  "total_entries": 5,
+  "total_duration_s": 376.16,
+  "aggregates": {
+    "overall": {
+      "true_positives": 10,
+      "false_positives": 2,
+      "false_negatives": 3,
+      "precision": 0.8333,
+      "recall": 0.7692,
+      "f1": 0.8,
+      "value_precision": 0.8333,
+      "value_recall": 0.7692,
+      "value_f1": 0.8,
+      "grounded_true_positives": 10,
+      "grounded_false_negatives": 5,
+      "grounded_precision": 0.8333,
+      "grounded_recall": 0.6667,
+      "grounded_f1": 0.7407,
+      "db_ready_yield": 10,
+      "over_extractions": 0,
+      "entity_standardization_accuracy": 0.0,
+      "cross_lingual_consistency": 0.0
+    },
+    "by_field": {
+      "A.gene_symbol": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "over_extractions": 0
+      },
+      "B.disease_diagnosis": {
+        "precision": 0.6,
+        "recall": 1.0,
+        "f1": 0.75,
+        "over_extractions": 0
+      },
+      "A.gene_disease_relationship": {
+        "precision": 1.0,
+        "recall": 0.4,
+        "f1": 0.5714,
+        "over_extractions": 0
+      }
+    },
+    "by_classification": {
+      "Definitive": {
+        "count": 3,
+        "precision": 0.875,
+        "recall": 0.875,
+        "f1": 0.875,
+        "over_extractions": 0
+      },
+      "Moderate": {
+        "count": 1,
+        "precision": 1.0,
+        "recall": 0.6667,
+        "f1": 0.8,
+        "over_extractions": 0
+      },
+      "Limited": {
+        "count": 1,
+        "precision": 0.5,
+        "recall": 0.5,
+        "f1": 0.5,
+        "over_extractions": 0
+      }
+    },
+    "by_moi": {
+      "AR": {
+        "count": 2,
+        "precision": 1.0,
+        "recall": 0.8333,
+        "f1": 0.9091,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      },
+      "SD": {
+        "count": 1,
+        "precision": 0.6667,
+        "recall": 1.0,
+        "f1": 0.8,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      },
+      "MT": {
+        "count": 1,
+        "precision": 1.0,
+        "recall": 0.6667,
+        "f1": 0.8,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      },
+      "UD": {
+        "count": 1,
+        "precision": 0.5,
+        "recall": 0.5,
+        "f1": 0.5,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      }
+    },
+    "by_entity_type": {
+      "gene": 0.0,
+      "disease": 0.0
+    }
+  },
+  "per_entry": [
+    {
+      "entry_id": "gs_002",
+      "gene_symbol": "ABCA3",
+      "classification": "Definitive",
+      "moi": "AR",
+      "source_dataset": "clingen",
+      "original_entry_id": "clingen_002",
+      "run_id": "00a51d06-0083-42e6-b6e2-9b75dd5c6eb5",
+      "status_url": "/api/v1/pipeline/runs/00a51d06-0083-42e6-b6e2-9b75dd5c6eb5/status",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 0.0,
+      "evidence_count": 10,
+      "found_rate": 0.6,
+      "grounding_rate": 0.0,
+      "standardization_accuracy": 0.0,
+      "track_consistency": 0.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCA3",
+          "matched": true,
+          "extracted": "{'value': 'ABCA3'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "translated-p1",
+            "block_type": "text",
+            "end_offset": 2319,
+            "block_index": -1,
+            "context_ref": "primary_broad_extraction",
+            "context_type": "text",
+            "start_offset": 2225,
+            "text_snippet": "ABCA3 ( NM_001089 ), an 80 kb gene located on chromosome 16 encodes a 1704 amino acid protein.",
+            "source_precision": "ambiguous"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "interstitial lung disease due to ABCA3 deficiency",
+          "matched": true,
+          "extracted": "{'value': 'childhood interstitial lung disease due to ABCA3 deficiency'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "translated-p1",
+            "block_type": "text",
+            "end_offset": 241,
+            "block_index": -1,
+            "context_ref": "primary_broad_extraction",
+            "context_type": "text",
+            "start_offset": 105,
+            "text_snippet": "ATP‐binding cassette transporter A3 (ABCA3) deficiency is one of the most severe causes of childhood interstitial lung diseases (chILD).",
+            "source_precision": "corrected"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        }
+      ],
+      "entity_matches": {
+        "gene": {
+          "matched": false,
+          "expected_id": "HGNC:33",
+          "actual_id": null,
+          "status": "not_found"
+        },
+        "disease": {
+          "matched": false,
+          "expected_id": "MONDO:0012582",
+          "actual_id": null,
+          "status": "unmapped"
+        }
+      }
+    },
+    {
+      "entry_id": "gs_003",
+      "gene_symbol": "ABCC8",
+      "classification": "Definitive",
+      "moi": "SD",
+      "source_dataset": "clingen",
+      "original_entry_id": "clingen_005",
+      "run_id": "e1a99c8c-86d9-4be4-87c4-c0d8bc310eda",
+      "status_url": "/api/v1/pipeline/runs/e1a99c8c-86d9-4be4-87c4-c0d8bc310eda/status",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 0.0,
+      "evidence_count": 165,
+      "found_rate": 0.0788,
+      "grounding_rate": 0.0,
+      "standardization_accuracy": 0.0,
+      "track_consistency": 0.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCC8",
+          "matched": true,
+          "extracted": "{'value': 'ABCC8'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "translated-p1",
+            "block_type": "text",
+            "end_offset": 9757,
+            "block_index": -1,
+            "context_ref": "primary_broad_extraction",
+            "context_type": "text",
+            "start_offset": 9727,
+            "text_snippet": "ABCC8 c.4055G>A (p.Arg1352His)",
+            "source_precision": "ambiguous"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "monogenic diabetes",
+          "matched": false,
+          "extracted": "{'value': 'maturity-onset diabetes of the young, type 12'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "translated-p1",
+            "block_type": "text",
+            "end_offset": 718,
+            "block_index": -1,
+            "context_ref": "primary_broad_extraction",
+            "context_type": "text",
+            "start_offset": 646,
+            "text_snippet": "confirming a diagnosis of maturity-onset diabetes of the young, type 12.",
+            "source_precision": "corrected"
+          },
+          "match_type": "wrong_value",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "{'value': 'causative'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "translated-p1",
+            "block_type": "text",
+            "end_offset": 1817,
+            "block_index": -1,
+            "context_ref": "primary_broad_extraction",
+            "context_type": "text",
+            "start_offset": 1671,
+            "text_snippet": "activating (gain-of-function) ABCC8 variants impair insulin secretion and can cause diabetes, including neonatal or young-onset monogenic diabetes",
+            "source_precision": "ambiguous"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        }
+      ],
+      "entity_matches": {
+        "gene": {
+          "matched": false,
+          "expected_id": "HGNC:59",
+          "actual_id": null,
+          "status": "not_found"
+        },
+        "disease": {
+          "matched": false,
+          "expected_id": "MONDO:0015967",
+          "actual_id": "OMIM:606391",
+          "status": "standardized"
+        }
+      }
+    },
+    {
+      "entry_id": "gs_004",
+      "gene_symbol": "ABCG8",
+      "classification": "Definitive",
+      "moi": "AR",
+      "source_dataset": "clingen",
+      "original_entry_id": "clingen_008",
+      "run_id": "45071203-d8ae-4612-895c-2f3499df1a98",
+      "status_url": "/api/v1/pipeline/runs/45071203-d8ae-4612-895c-2f3499df1a98/status",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 140.29,
+      "evidence_count": 165,
+      "found_rate": 0.0788,
+      "grounding_rate": 0.0,
+      "standardization_accuracy": 0.0,
+      "track_consistency": 0.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCG8",
+          "matched": true,
+          "extracted": "{'value': 'ABCG8'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "original-p1",
+            "block_type": "text",
+            "end_offset": 5318,
+            "block_index": -1,
+            "context_ref": "primary_broad_extraction",
+            "context_type": "text",
+            "start_offset": 5288,
+            "text_snippet": "ABCG8 :c.691C>A; p.(Pro231Thr)",
+            "source_precision": "ambiguous"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "sitosterolemia",
+          "matched": true,
+          "extracted": "{'value': 'sitosterolemia'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "original-p1",
+            "block_type": "text",
+            "end_offset": 9874,
+            "block_index": -1,
+            "context_ref": "primary_broad_extraction",
+            "context_type": "text",
+            "start_offset": 9831,
+            "text_snippet": "confirming the diagnosis of sitosterolemia.",
+            "source_precision": "ambiguous"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "{'value': 'causative'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "original-p1",
+            "block_type": "text",
+            "end_offset": 415,
+            "block_index": -1,
+            "context_ref": "primary_broad_extraction",
+            "context_type": "text",
+            "start_offset": 295,
+            "text_snippet": "It results from pathogenic mutations in the ABCG5 and ABCG8 genes, which encode sterolin-1 and sterolin-2, respectively.",
+            "source_precision": "ambiguous"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        }
+      ],
+      "entity_matches": {
+        "gene": {
+          "matched": false,
+          "expected_id": "HGNC:13887",
+          "actual_id": null,
+          "status": "not_found"
+        },
+        "disease": {
+          "matched": false,
+          "expected_id": "MONDO:0008863",
+          "actual_id": null,
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "entry_id": "gs_005",
+      "gene_symbol": "MT-TI",
+      "classification": "Moderate",
+      "moi": "MT",
+      "source_dataset": "clingen",
+      "original_entry_id": "clingen_015",
+      "run_id": "babf8093-22e3-416b-b36a-9979b975cf17",
+      "status_url": "/api/v1/pipeline/runs/babf8093-22e3-416b-b36a-9979b975cf17/status",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 105.53,
+      "evidence_count": 10,
+      "found_rate": 0.2,
+      "grounding_rate": 0.0,
+      "standardization_accuracy": 0.0,
+      "track_consistency": 0.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MT-TI",
+          "matched": true,
+          "extracted": "{'value': 'MT-TI'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "original-p1",
+            "block_type": "text",
+            "end_offset": 16206,
+            "block_index": -1,
+            "context_ref": "primary_broad_extraction",
+            "context_type": "text",
+            "start_offset": 16164,
+            "text_snippet": "Moderate: TRIM63 , KLHL24 , JPH2 , MT-TI .",
+            "source_precision": "ambiguous"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "hypertrophic cardiomyopathy",
+          "matched": true,
+          "extracted": "{'value': 'hypertrophic cardiomyopathy'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "original-p1",
+            "block_type": "text",
+            "end_offset": 168,
+            "block_index": -1,
+            "context_ref": "primary_broad_extraction",
+            "context_type": "text",
+            "start_offset": 135,
+            "text_snippet": "Hypertrophic cardiomyopathy (HCM)",
+            "source_precision": "ambiguous"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        }
+      ],
+      "entity_matches": {
+        "gene": {
+          "matched": false,
+          "expected_id": "HGNC:7488",
+          "actual_id": null,
+          "status": "not_found"
+        },
+        "disease": {
+          "matched": false,
+          "expected_id": "MONDO:0005045",
+          "actual_id": null,
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "entry_id": "gs_007",
+      "gene_symbol": "TLR5",
+      "classification": "Limited",
+      "moi": "UD",
+      "source_dataset": "clingen",
+      "original_entry_id": "clingen_024",
+      "run_id": "2107d84a-fcf1-4576-9a26-1dd4da8dd115",
+      "status_url": "/api/v1/pipeline/runs/2107d84a-fcf1-4576-9a26-1dd4da8dd115/status",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 130.23,
+      "evidence_count": 10,
+      "found_rate": 0.2,
+      "grounding_rate": 0.0,
+      "standardization_accuracy": 0.0,
+      "track_consistency": 0.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "TLR5",
+          "matched": true,
+          "extracted": "{'value': 'TLR5'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "original-p1",
+            "block_type": "text",
+            "end_offset": 7495,
+            "block_index": -1,
+            "context_ref": "primary_broad_extraction",
+            "context_type": "text",
+            "start_offset": 7272,
+            "text_snippet": "TLR5 is predominantly expressed in intestinal epithelial cells and recognizes bacterial flagellin, contributing to gut homeostasis and systemic immunity, with associations in Crohn’s disease and bacterial infections [ 23 ].",
+            "source_precision": "ambiguous"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "systemic lupus erythematosus, susceptibility to, 1",
+          "matched": false,
+          "extracted": "{'value': 'systemic lupus erythematosus (SLE)'}",
+          "source_span": {
+            "bbox": [],
+            "page": 1,
+            "span_id": "original-p1",
+            "block_type": "text",
+            "end_offset": 618,
+            "block_index": -1,
+            "context_ref": "primary_broad_extraction",
+            "context_type": "text",
+            "start_offset": 547,
+            "text_snippet": "systemic autoimmune diseases such as systemic lupus erythematosus (SLE)",
+            "source_precision": "corrected"
+          },
+          "match_type": "wrong_value",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "uncertain",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": [],
+          "best_score": null,
+          "source_score": null,
+          "confidence_score": null,
+          "agreement_score": null,
+          "status_score": null,
+          "verifier_support_score": null,
+          "target_specificity_score": null,
+          "contradiction_penalty": null,
+          "accepted_track": null,
+          "normalized_value": null
+        }
+      ],
+      "entity_matches": {
+        "gene": {
+          "matched": false,
+          "expected_id": "HGNC:11851",
+          "actual_id": null,
+          "status": "not_found"
+        },
+        "disease": {
+          "matched": false,
+          "expected_id": "MONDO:0011138",
+          "actual_id": "OMIM:152700",
+          "status": "standardized"
+        }
+      }
+    }
+  ]
+}

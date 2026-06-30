@@ -1,9 +1,25 @@
 {
-  "timestamp": "2026-06-29T20:17:39",
-  "total_duration_s": 10309.64,
+  "timestamp": "2026-06-30T11:47:57",
+  "total_duration_s": 55542.84,
   "conditions": [
     {
-      "condition": "c2_full_broad",
+      "condition": "c1_catalog",
+      "status": "completed"
+    },
+    {
+      "condition": "a2_no_review",
+      "status": "completed"
+    },
+    {
+      "condition": "a3_no_target_guard",
+      "status": "completed"
+    },
+    {
+      "condition": "a4_original_only",
+      "status": "completed"
+    },
+    {
+      "condition": "a1_no_reflection",
       "status": "completed"
     }
   ],

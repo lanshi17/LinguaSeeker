@@ -100,6 +100,7 @@ async def run_condition(
         ablation_disable_review=config["ablation_disable_review"],
         ablation_disable_target_guard=config["ablation_disable_target_guard"],
         ablation_original_only=config["ablation_original_only"],
+        review_reject_policy=config.get("review_reject_policy", "hard_veto"),
     )
     elapsed = time.time() - t0
     logger.info("=== Condition {} completed in {:.0f}s ({:.1f}h) ===", condition_id, elapsed, elapsed / 3600)

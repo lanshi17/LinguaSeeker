@@ -1,5 +1,17 @@
 # Lesson Log
 
+## 2026-06-30: Negative ablation results should be reframed, not hidden
+
+**Problem**: The N=50 paired comparison showed prompt-only extraction outperforming the full workflow in F1, and the generated N=50 table artifacts also contained inconsistent FN and delta-F1 values.
+
+**Investigation**: Compared the manuscript tables with `benchmark/data/reports/n50/final_tables.json`, `aggregate_metrics.json`, and paired-test JSON files. The Markdown manuscript had the main C1/C2 FN values correct, but `final_tables.json` and `aggregate_metrics.json` had copied FP values into FN for several conditions. The ablation table also labeled the delta as `vs C2` while using the opposite sign convention.
+
+**Root cause**: The result-generation artifacts mixed two conventions: paired-test files reported `C2 - condition`, while manuscript readers expect `condition - C2` when the column is labeled `Delta F1 vs C2`. Some table aggregation fields reused FP counts as FN counts even though the reported recall/F1 implied different FN denominators.
+
+**Solution**: Reframed the BIBM paper claim as a diagnostic system evaluation rather than an F1-superiority claim, kept the negative N=50 result visible, added the N=50 diagnostic section to the TeX draft, and corrected the FN and delta-F1 values in the final table artifacts.
+
+**Prevention**: For paper tables, define the delta sign convention in the caption and validate every TP/FP/FN row against precision, recall, and F1 before copying into manuscript text. Negative results should be reported as bottleneck evidence rather than selectively removed.
+
 ## 2026-06-29: Fluent English can still be an incomplete translation
 
 **Problem**: A bilingual Chinese/English paper showed a full Chinese source document but only a short English translated document. The English side looked like a title/abstract summary, not a full block-by-block translation.
@@ -6054,3 +6066,27 @@ RUN find /opt/venv/bin -maxdepth 1 -type f -exec \
 - Root cause: The Dockerfile copied `docker-artifacts/site-packages.tar.gz` into an image layer and unpacked all Python dependencies in one layer. Docker Hub and the current network path were unstable for those oversized blobs.
 - Resolution: Added `backend/docker-artifacts` to root `.dockerignore`. Changed `backend/Dockerfile` to use BuildKit bind mounts for `site-packages.tar.gz` so the tarball is not stored as a layer, and split dependency extraction into `nvidia*`, `torch*`, `triton*/cuda*`, and remaining packages. The final pushed digest is `sha256:5232e93912cf6ee5b7fbd8c90b304bc4c8270d48ac6c6d971af2baf165b81211`.
 - Prevention: For root-context Docker builds, exclude generated artifacts in root `.dockerignore`, not only subdirectory `.dockerignore`. Avoid single multi-GB Docker layers for registry uploads; use BuildKit mounts or split layers by dependency group.
+
+## 2026-06-30 - Evidence DB bilingual reader showed non-body text and truncated translation
+
+- Problem: The Evidence DB bilingual reader displayed DOI/title/authors/references in the original track, while the translated track showed only the abstract/keywords instead of the full translated article body.
+- Investigation: Traced the frontend reader to `EvidenceGroupDetailResponse.original_blocks/translated_blocks`, then inspected `SearchService.get_group_detail`. The service preferred persisted structured blocks over full document text and passed both text and blocks through without body-section filtering.
+- Root cause: Summary-only or otherwise truncated `translated_blocks` could shadow a fuller `translated_text`; stored blocks and text were also not normalized to body sections before being returned to the reader.
+- Resolution: Added body-boundary filtering for text/blocks in `search_service.py`. Blocks are rebuilt from fuller body text when their readable text coverage is too low, so the structured reader no longer renders abstract-only translated blocks when full translated text exists.
+- Prevention: Reader regressions should test both text-section filtering and block/text coverage, because the frontend prioritizes structured blocks over flat document text.
+
+## 2026-06-30 - Review policy calibration must be explicit and cache-scoped
+
+- Problem: The N=50 review calibration follow-up needed to test soft/tristate review behavior without polluting the original C2-hard condition.
+- Investigation: The first smoke attempt produced only 401 responses because the benchmark client lacked the API key; a later partial smoke was interrupted after `gs_002`, so neither run is a valid model-quality result. Code inspection also showed that changing review reject handling globally would reuse the same pipeline/cache identity as C2-hard.
+- Root cause: Review behavior was previously an implicit implementation detail, not part of the pipeline request/config/cache scope. Benchmark reports could not distinguish hard-veto, soft-veto, and tri-state review policies.
+- Resolution: Added explicit `review_reject_policy` propagation through API, dispatcher, graph state, Phase 2 adapter, extraction service, workflow, benchmark client, and content-hash scope. Default remains `hard_veto`; non-default policies get distinct cache keys. Added `tristate_review` as a separate schema/prompt so C2-hard does not see the new `uncertain_keep_for_review` action.
+- Prevention: Experimental policy changes must be first-class run configuration and included in cache scope. Failed authentication smoke reports should be labeled operational failures, not benchmark evidence.
+
+## 2026-06-30 - Smoke verification exposed startup-only import and metric proxy gaps
+
+- Problem: Restarting the backend for the N=5 soft-veto smoke failed with `NameError: ExtractionProfile is not defined`, and the first DB-ready yield formula reported 0 despite nonzero grounded matches.
+- Investigation: Importing `EvidenceExtractionService` directly reproduced the startup failure. The DB-ready discrepancy came from `query_evidence_metrics().source_grounding.grounding_rate` returning 0.0 while the benchmark `field_matches` carried valid `source_span` data.
+- Root cause: `api.py` referenced `ExtractionProfile` and `resolve_profile_fields` without importing them. The DB-ready proxy mixed two metric sources with different grounding definitions. A final regression test also caught that the benchmark client accepted `review_reject_policy` but omitted it from the submitted API payload.
+- Resolution: Restored the missing `field_profile` imports. Redefined `db_ready_yield` as grounded true positives (`matched` and `source_span` present), making it consistent with grounded-F1 for report-level comparison. Restored `review_reject_policy` and `ablation_original_only` in the benchmark submission payload.
+- Prevention: Backend smoke runs should include an explicit service import/startup check after refactors. Composite metrics should be derived from the same evidence surface as their paired P/R/F1 metrics unless the report clearly labels a cross-source proxy. Benchmark condition parameters need payload-level tests, not only report-config tests.

@@ -1,6 +1,170 @@
 {
-  "timestamp": "2026-06-29T20:23:13",
+  "timestamp": "2026-06-30T11:52:25",
   "conditions": {
+    "a1_no_reflection_20260630_114757": {
+      "condition_id": "unknown",
+      "n": 50,
+      "completed": 49,
+      "completion_rate": 0.98,
+      "tp": 146,
+      "fp": 80,
+      "fn": 254,
+      "precision": 0.646,
+      "recall": 0.365,
+      "f1": 0.4665,
+      "avg_min_per_entry": 2.89,
+      "avg_tokens_per_entry": 0,
+      "by_source_dataset": {
+        "clingen": {
+          "n": 5,
+          "precision": 0.8182,
+          "recall": 0.6923,
+          "f1": 0.75
+        },
+        "clinvar_fused": {
+          "n": 23,
+          "precision": 0.7303,
+          "recall": 0.4276,
+          "f1": 0.5394
+        },
+        "parkinson": {
+          "n": 6,
+          "precision": 0.7826,
+          "recall": 0.1978,
+          "f1": 0.3158
+        },
+        "rett": {
+          "n": 16,
+          "precision": 0.5243,
+          "recall": 0.375,
+          "f1": 0.4372
+        }
+      },
+      "report_file": "../benchmark/data/reports/n50/a1_no_reflection_20260630_114757.json"
+    },
+    "a2_no_review_20260630_035240": {
+      "condition_id": "unknown",
+      "n": 50,
+      "completed": 50,
+      "completion_rate": 1.0,
+      "tp": 170,
+      "fp": 83,
+      "fn": 227,
+      "precision": 0.6719,
+      "recall": 0.4282,
+      "f1": 0.5231,
+      "avg_min_per_entry": 2.75,
+      "avg_tokens_per_entry": 0,
+      "by_source_dataset": {
+        "clingen": {
+          "n": 5,
+          "precision": 0.75,
+          "recall": 0.75,
+          "f1": 0.75
+        },
+        "clinvar_fused": {
+          "n": 23,
+          "precision": 0.7476,
+          "recall": 0.5133,
+          "f1": 0.6087
+        },
+        "parkinson": {
+          "n": 6,
+          "precision": 0.8261,
+          "recall": 0.2065,
+          "f1": 0.3304
+        },
+        "rett": {
+          "n": 16,
+          "precision": 0.5652,
+          "recall": 0.4545,
+          "f1": 0.5039
+        }
+      },
+      "report_file": "../benchmark/data/reports/n50/a2_no_review_20260630_035240.json"
+    },
+    "a3_no_target_guard_20260630_064518": {
+      "condition_id": "unknown",
+      "n": 50,
+      "completed": 50,
+      "completion_rate": 1.0,
+      "tp": 160,
+      "fp": 87,
+      "fn": 233,
+      "precision": 0.6478,
+      "recall": 0.4071,
+      "f1": 0.5,
+      "avg_min_per_entry": 3.45,
+      "avg_tokens_per_entry": 0,
+      "by_source_dataset": {
+        "clingen": {
+          "n": 5,
+          "precision": 0.8182,
+          "recall": 0.6923,
+          "f1": 0.75
+        },
+        "clinvar_fused": {
+          "n": 23,
+          "precision": 0.7742,
+          "recall": 0.4645,
+          "f1": 0.5806
+        },
+        "parkinson": {
+          "n": 6,
+          "precision": 0.7917,
+          "recall": 0.2088,
+          "f1": 0.3304
+        },
+        "rett": {
+          "n": 16,
+          "precision": 0.5042,
+          "recall": 0.4478,
+          "f1": 0.4743
+        }
+      },
+      "report_file": "../benchmark/data/reports/n50/a3_no_target_guard_20260630_064518.json"
+    },
+    "a4_original_only_20260630_092335": {
+      "condition_id": "unknown",
+      "n": 50,
+      "completed": 50,
+      "completion_rate": 1.0,
+      "tp": 162,
+      "fp": 85,
+      "fn": 233,
+      "precision": 0.6559,
+      "recall": 0.4101,
+      "f1": 0.5047,
+      "avg_min_per_entry": 3.17,
+      "avg_tokens_per_entry": 0,
+      "by_source_dataset": {
+        "clingen": {
+          "n": 5,
+          "precision": 0.8333,
+          "recall": 0.7692,
+          "f1": 0.8
+        },
+        "clinvar_fused": {
+          "n": 23,
+          "precision": 0.7692,
+          "recall": 0.4516,
+          "f1": 0.5691
+        },
+        "parkinson": {
+          "n": 6,
+          "precision": 0.8182,
+          "recall": 0.1957,
+          "f1": 0.3158
+        },
+        "rett": {
+          "n": 16,
+          "precision": 0.5246,
+          "recall": 0.4741,
+          "f1": 0.4981
+        }
+      },
+      "report_file": "../benchmark/data/reports/n50/a4_original_only_20260630_092335.json"
+    },
     "c0_prompt_only": {
       "condition_id": "c0_prompt_only",
       "n": 50,
@@ -8,7 +172,7 @@
       "completion_rate": 1.0,
       "tp": 241,
       "fp": 130,
-      "fn": 130,
+      "fn": 111,
       "precision": 0.6496,
       "recall": 0.6847,
       "f1": 0.6667,
@@ -42,6 +206,47 @@
       },
       "report_file": "../benchmark/data/reports/n50/c0_prompt_only_20260629_190950.json"
     },
+    "c1_catalog_20260630_013456": {
+      "condition_id": "unknown",
+      "n": 50,
+      "completed": 50,
+      "completion_rate": 1.0,
+      "tp": 147,
+      "fp": 42,
+      "fn": 291,
+      "precision": 0.7778,
+      "recall": 0.3356,
+      "f1": 0.4689,
+      "avg_min_per_entry": 6.25,
+      "avg_tokens_per_entry": 0,
+      "by_source_dataset": {
+        "clingen": {
+          "n": 5,
+          "precision": 0.9091,
+          "recall": 0.7143,
+          "f1": 0.8
+        },
+        "clinvar_fused": {
+          "n": 23,
+          "precision": 0.7368,
+          "recall": 0.359,
+          "f1": 0.4828
+        },
+        "parkinson": {
+          "n": 6,
+          "precision": 0.8,
+          "recall": 0.2198,
+          "f1": 0.3448
+        },
+        "rett": {
+          "n": 16,
+          "precision": 0.7922,
+          "recall": 0.3446,
+          "f1": 0.4803
+        }
+      },
+      "report_file": "../benchmark/data/reports/n50/c1_catalog_20260630_013456.json"
+    },
     "c2_full_broad_20260629_201739": {
       "condition_id": "unknown",
       "n": 50,
@@ -49,7 +254,7 @@
       "completion_rate": 1.0,
       "tp": 152,
       "fp": 82,
-      "fn": 82,
+      "fn": 246,
       "precision": 0.6496,
       "recall": 0.3819,
       "f1": 0.481,
@@ -82,20 +287,101 @@
         }
       },
       "report_file": "../benchmark/data/reports/n50/c2_full_broad_20260629_201739.json"
+    },
+    "master_summary": {
+      "condition_id": "unknown",
+      "n": 0,
+      "completed": 0,
+      "completion_rate": 0.0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "avg_min_per_entry": 0.0,
+      "avg_tokens_per_entry": 0,
+      "by_source_dataset": {},
+      "report_file": "../benchmark/data/reports/n50/master_summary.json"
     }
   },
   "comparison_table": [
+    {
+      "condition": "a1_no_reflection_20260630_114757",
+      "N": 50,
+      "completed": 49,
+      "TP": 146,
+      "FP": 80,
+      "FN": 254,
+      "P": 0.646,
+      "R": 0.365,
+      "F1": 0.4665,
+      "avg_min": 2.89,
+      "avg_tokens": 0
+    },
+    {
+      "condition": "a2_no_review_20260630_035240",
+      "N": 50,
+      "completed": 50,
+      "TP": 170,
+      "FP": 83,
+      "FN": 227,
+      "P": 0.6719,
+      "R": 0.4282,
+      "F1": 0.5231,
+      "avg_min": 2.75,
+      "avg_tokens": 0
+    },
+    {
+      "condition": "a3_no_target_guard_20260630_064518",
+      "N": 50,
+      "completed": 50,
+      "TP": 160,
+      "FP": 87,
+      "FN": 233,
+      "P": 0.6478,
+      "R": 0.4071,
+      "F1": 0.5,
+      "avg_min": 3.45,
+      "avg_tokens": 0
+    },
+    {
+      "condition": "a4_original_only_20260630_092335",
+      "N": 50,
+      "completed": 50,
+      "TP": 162,
+      "FP": 85,
+      "FN": 233,
+      "P": 0.6559,
+      "R": 0.4101,
+      "F1": 0.5047,
+      "avg_min": 3.17,
+      "avg_tokens": 0
+    },
     {
       "condition": "c0_prompt_only",
       "N": 50,
       "completed": 50,
       "TP": 241,
       "FP": 130,
-      "FN": 130,
+      "FN": 111,
       "P": 0.6496,
       "R": 0.6847,
       "F1": 0.6667,
       "avg_min": 1.78,
+      "avg_tokens": 0
+    },
+    {
+      "condition": "c1_catalog_20260630_013456",
+      "N": 50,
+      "completed": 50,
+      "TP": 147,
+      "FP": 42,
+      "FN": 291,
+      "P": 0.7778,
+      "R": 0.3356,
+      "F1": 0.4689,
+      "avg_min": 6.25,
       "avg_tokens": 0
     },
     {
@@ -104,11 +390,24 @@
       "completed": 50,
       "TP": 152,
       "FP": 82,
-      "FN": 82,
+      "FN": 246,
       "P": 0.6496,
       "R": 0.3819,
       "F1": 0.481,
       "avg_min": 3.44,
+      "avg_tokens": 0
+    },
+    {
+      "condition": "master_summary",
+      "N": 0,
+      "completed": 0,
+      "TP": 0,
+      "FP": 0,
+      "FN": 0,
+      "P": 0.0,
+      "R": 0.0,
+      "F1": 0.0,
+      "avg_min": 0.0,
       "avg_tokens": 0
     }
   ]

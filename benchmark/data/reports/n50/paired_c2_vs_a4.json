@@ -1,0 +1,48 @@
+{
+  "reference": "unknown",
+  "comparison": "unknown",
+  "mcnemar": {
+    "test": "mcnemar",
+    "b": 0,
+    "c": 0,
+    "n_discordant": 0,
+    "statistic": 0.0,
+    "p_value": 1.0,
+    "method": "no_discordant_pairs"
+  },
+  "paired_t": {
+    "test": "paired_t",
+    "n_pairs": 50,
+    "mean_diff": -0.022,
+    "std_diff": 0.1152,
+    "t_statistic": -1.3517,
+    "p_value": 0.182681,
+    "ci_95": [
+      -0.0539,
+      0.0099
+    ]
+  },
+  "wilcoxon": {
+    "test": "wilcoxon",
+    "n_nonzero": 20,
+    "statistic": 60.5,
+    "p_value": 0.096594
+  },
+  "clustered_bootstrap": {
+    "test": "clustered_bootstrap",
+    "n_entries": 50,
+    "mean_diff": -0.0176,
+    "ci_95": [
+      -0.052,
+      0.0169
+    ],
+    "n_bootstrap": 10000
+  },
+  "practical_effect": {
+    "mean_f1_diff": -0.022,
+    "ci_95_f1_diff": [
+      -0.0539,
+      0.0099
+    ]
+  }
+}

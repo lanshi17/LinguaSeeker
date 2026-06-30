@@ -96,6 +96,35 @@ async def test_post_pipeline_run(async_client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_post_pipeline_run_injects_review_reject_policy_to_state(
+    async_client: AsyncClient,
+):
+    """POST /api/v1/pipeline/run carries review reject policy into graph state."""
+    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        mock_runner = MagicMock()
+        mock_runner.start = AsyncMock(return_value=MagicMock())
+        mock_runner.is_running_for_source = AsyncMock(return_value=False)
+        mock_runner.compute_initial_content_hash = AsyncMock(return_value=None)
+        mock_runner.check_processing_cache = AsyncMock(return_value=None)
+        mock_get_runner.return_value = mock_runner
+
+        response = await async_client.post(
+            "/api/v1/pipeline/run",
+            json={
+                "source_type": "local",
+                "filename": "test.md",
+                "pre_parsed_markdown": "biomedical source text",
+                "mode": "full",
+                "review_reject_policy": "tristate_review",
+            },
+        )
+
+    assert response.status_code == 202
+    initial_state = mock_runner.start.call_args.args[0]
+    assert initial_state.review_reject_policy == "tristate_review"
+
+
+@pytest.mark.asyncio
 async def test_get_pipeline_status(async_client: AsyncClient):
     """GET /api/v1/pipeline/runs/{id}/status returns per-phase details."""
     mock_state = PipelineGraphState(

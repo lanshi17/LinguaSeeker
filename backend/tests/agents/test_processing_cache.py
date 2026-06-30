@@ -292,6 +292,31 @@ class TestContentHash:
         assert h_default != h_legacy
         assert h_legacy == compute_hash_from_text("content", scope_key="mode=catalog")
 
+    @pytest.mark.asyncio
+    async def test_non_default_review_policy_adds_scope_suffix(self):
+        """Experimental review policies get distinct cache scope from C2-hard."""
+        base = PipelineGraphState(
+            processing_run_id="run-1",
+            source_document_id="doc-1",
+            mode=PipelineMode.FULL,
+            source_type=SourceType.LOCAL,
+            pre_parsed_markdown="content",
+        )
+        soft = base.model_copy(update={"review_reject_policy": "soft_veto"})
+
+        h_default = await compute_content_hash(base)
+        h_soft = await compute_content_hash(soft)
+
+        assert h_default != h_soft
+        assert h_soft == compute_hash_from_text("content", scope_key="review_policy=soft_veto")
+
+        tristate = base.model_copy(update={"review_reject_policy": "tristate_review"})
+        h_tristate = await compute_content_hash(tristate)
+
+        assert h_tristate != h_default
+        assert h_tristate != h_soft
+        assert h_tristate == compute_hash_from_text("content", scope_key="review_policy=tristate_review")
+
 
 # ── Cache service tests ──────────────────────────────────────────────────
 

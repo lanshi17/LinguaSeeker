@@ -1,0 +1,108 @@
+{
+  "timestamp": "2026-06-30T11:52:34",
+  "design_doc": "docs/active/2026-06-29-bibm-n50-comparison-ablation-design.md",
+  "main_comparison": {
+    "title": "Main Comparison Table",
+    "rows": [
+      {
+        "condition": "prompt-only",
+        "N": 50,
+        "completed": 50,
+        "TP": 241,
+        "FP": 130,
+        "FN": 111,
+        "P": 0.6496,
+        "R": 0.6847,
+        "F1": 0.6667,
+        "avg_min": 1.78,
+        "avg_tokens": 0
+      },
+      {
+        "condition": "catalog workflow",
+        "N": 50,
+        "completed": 50,
+        "TP": 147,
+        "FP": 42,
+        "FN": 291,
+        "P": 0.7778,
+        "R": 0.3356,
+        "F1": 0.4689,
+        "avg_min": 6.25,
+        "avg_tokens": 0
+      },
+      {
+        "condition": "full broad workflow",
+        "N": 50,
+        "completed": 50,
+        "TP": 152,
+        "FP": 82,
+        "FN": 246,
+        "P": 0.6496,
+        "R": 0.3819,
+        "F1": 0.481,
+        "avg_min": 3.44,
+        "avg_tokens": 0
+      }
+    ]
+  },
+  "ablation": {
+    "title": "Ablation Table",
+    "rows": [
+      {
+        "condition": "full broad workflow",
+        "disabled": "none",
+        "N": 50,
+        "P": 0.6496,
+        "R": 0.3819,
+        "F1": 0.481,
+        "delta_f1": "—",
+        "paired_p": "—",
+        "interpretation": "main condition"
+      },
+      {
+        "condition": "no reflection",
+        "disabled": "reflection/retry loop",
+        "N": 50,
+        "P": 0.646,
+        "R": 0.365,
+        "F1": 0.4665,
+        "delta_f1": -0.0145,
+        "paired_p": 0.381041,
+        "interpretation": "reflection contribution"
+      },
+      {
+        "condition": "no review validation",
+        "disabled": "review pass",
+        "N": 50,
+        "P": 0.6719,
+        "R": 0.4282,
+        "F1": 0.5231,
+        "delta_f1": 0.0421,
+        "paired_p": 0.046591,
+        "interpretation": "review contribution"
+      },
+      {
+        "condition": "no target guard",
+        "disabled": "target specificity guard",
+        "N": 50,
+        "P": 0.6478,
+        "R": 0.4071,
+        "F1": 0.5,
+        "delta_f1": 0.019,
+        "paired_p": 0.248119,
+        "interpretation": "target-context contribution"
+      },
+      {
+        "condition": "original-only",
+        "disabled": "translated branch",
+        "N": 50,
+        "P": 0.6559,
+        "R": 0.4101,
+        "F1": 0.5047,
+        "delta_f1": 0.0237,
+        "paired_p": 0.182681,
+        "interpretation": "input-branch contribution"
+      }
+    ]
+  }
+}
