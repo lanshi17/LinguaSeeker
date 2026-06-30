@@ -6,16 +6,26 @@ import binascii
 import uuid
 from datetime import datetime
 from pathlib import Path, PurePosixPath
-from typing import Any, Literal
+from typing import Any
 
 import aiofiles
 from loguru import logger
 from fastapi import APIRouter, Depends, HTTPException
 from starlette.requests import Request
-from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.api.auth import require_api_key
 from src.api.rate_limit import limiter
+from src.api.v1.contracts import (
+    PhaseErrorResponse,
+    PhaseStatusResponse,
+    PhaseSummaryResponse,
+    PipelinePhasesResponse,
+    PipelineRunListResponse,
+    PipelineRunRequest,
+    PipelineRunResponse,
+    PipelineRunSummaryResponse,
+    PipelineStatusResponse,
+)
 from src.core.config import get_config
 
 from src.agents.contracts import (
@@ -27,194 +37,9 @@ from src.agents.contracts import (
     SourceType,
 )
 from src.agents.content_hash import normalize_identifier
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
-    ExtractionTarget,
-)
 from src.dao.postgresql.job_queue import JobQueueRepository
 
 router = APIRouter()
-
-
-# ── Request/Response models ──────────────────────────────────────────────────
-
-
-class PipelineRunRequest(BaseModel):
-    """Request body for starting a pipeline run."""
-
-    source_type: Literal["local", "online"]
-    mode: Literal["full", "phase"] = "full"
-    target_phase: int | None = Field(default=None, ge=1, le=3)  # N2: range validation
-    processing_run_id: str | None = None  # For phase mode re-run from existing state
-
-    # Local upload fields
-    filename: str | None = None
-    content_base64: str | None = None
-
-    # Pre-parsed markdown: bypasses Phase 1 MinerU parsing entirely.
-    # When provided, Phase 1 constructs metadata directly from this text.
-    pre_parsed_markdown: str | None = None
-
-    # Online acquisition fields
-    query: str | None = None
-    identifiers: list[str] | None = None
-    # Optional gate controls (online only). literature_types activates the
-    # typed doc-classification path in run_relevance_gate; missing/unknown
-    # doc_type is conservatively rejected.
-    relevance_gate: bool = True
-    literature_types: list[str] | None = None
-
-    # Target gene-disease hypothesis (Phase 2/3 evidence extraction)
-    extraction_target: ExtractionTarget | None = Field(default=None, alias="target")
-
-    # Extraction field profile — controls which catalog fields are sent to the
-    # LLM.  ``"none"`` (default) extracts all non-curation fields.
-    # ``"dataset_d_publication"`` restricts to the 20 fields scored in the
-    # merged_73 BIBM evaluation.  Must be explicitly set by benchmark runners.
-    extraction_profile: str = "none"
-
-    # Extraction workflow mode: "broad" (default business primary+review track) or
-    # "catalog" (rollback / historical baseline catalog track).
-    extraction_mode: str = "broad"
-    # Ablation switches for BIBM N=50 comparison experiment.
-    # See docs/active/2026-06-29-bibm-n50-comparison-ablation-design.md.
-    ablation_disable_review: bool = False
-    ablation_disable_target_guard: bool = False
-    ablation_original_only: bool = False
-    review_reject_policy: Literal["hard_veto", "soft_veto", "tristate_review"] = "hard_veto"
-    extraction_track_mode: Literal["dual", "original_only", "english_pivot"] = "dual"
-
-    @model_validator(mode="after")
-    def validate_request(self) -> "PipelineRunRequest":
-        """Validate phase mode and source-specific requirements (N1 fix)."""
-        # Phase mode requires target_phase
-        if self.mode == "phase" and self.target_phase is None:
-            raise ValueError("target_phase is required when mode is 'phase'")
-
-        # Phase mode with target > 1 requires processing_run_id
-        if self.mode == "phase" and self.target_phase is not None and self.target_phase > 1:
-            if not self.processing_run_id:
-                raise ValueError(
-                    "processing_run_id is required when mode='phase' and target_phase > 1"
-                )
-
-        # Source-specific validation (skip for phase re-run)
-        if not (self.mode == "phase" and self.processing_run_id):
-            if self.source_type == "local":
-                if not self.content_base64 and not self.pre_parsed_markdown:
-                    raise ValueError(
-                        "source_type='local' requires content_base64 or pre_parsed_markdown"
-                    )
-            elif self.source_type == "online":
-                if not self.query and not self.identifiers:
-                    raise ValueError(
-                        "source_type='online' requires query or identifiers"
-                    )
-
-        return self
-
-
-class PhaseStatusResponse(BaseModel):
-    """Per-phase status detail for API response."""
-
-    status: str
-    started_at: str | None = None
-    completed_at: str | None = None
-    duration_seconds: float | None = None
-    error: "PhaseErrorResponse | None" = None
-    summary: "PhaseSummaryResponse | None" = None
-    nodes: list["PhaseNodeResponse"] = Field(default_factory=list)
-    count: int | None = None
-
-
-class PhaseErrorResponse(BaseModel):
-    """Structured phase error returned by pipeline status API."""
-
-    message: str
-    retryable: bool
-    attempt: int
-    max_retries: int
-
-
-class PhaseSummaryResponse(BaseModel):
-    """Flexible phase summary payload with a named API type."""
-
-    model_config = ConfigDict(extra="allow")
-
-
-class PhaseNodeMetricsResponse(BaseModel):
-    """Flexible per-node metrics payload with a named API type."""
-
-    model_config = ConfigDict(extra="allow")
-
-
-class PhaseNodeResponse(BaseModel):
-    """Fine-grained phase sub-node status for UI progress rendering."""
-
-    node_id: str
-    label: str
-    status: str
-    progress: float | None = None
-    started_at: str | None = None
-    completed_at: str | None = None
-    duration_seconds: float | None = None
-    count: int | None = None
-    metrics: PhaseNodeMetricsResponse | None = None
-    error: PhaseErrorResponse | str | None = None
-
-
-class PipelinePhasesResponse(BaseModel):
-    """Pipeline phases keyed by stable phase id."""
-
-    phase_1: PhaseStatusResponse
-    phase_2: PhaseStatusResponse
-    phase_3: PhaseStatusResponse
-
-
-class PipelineRunResponse(BaseModel):
-    """Response from starting a pipeline run."""
-
-    processing_run_id: str
-    source_document_id: str
-    status: str
-    status_url: str
-
-
-class PipelineStatusResponse(BaseModel):
-    """Response for pipeline status query with per-phase details."""
-
-    processing_run_id: str
-    source_document_id: str
-    pipeline_status: str
-    current_phase: str | None = None
-    skip_phase_3_reason: str | None = None
-    phases: PipelinePhasesResponse
-    error_message: str | None = None
-    error_phase: int | None = None
-    started_at: str | None = None
-    completed_at: str | None = None
-    elapsed_seconds: float | None = None
-    title: str | None = None
-
-
-class PipelineRunSummaryResponse(BaseModel):
-    """Compact summary for pipeline run list views."""
-
-    processing_run_id: str
-    pipeline_status: str
-    title: str | None = None
-    started_at: str | None = None
-    completed_at: str | None = None
-    elapsed_seconds: float | None = None
-    current_phase: str | None = None
-    completed_phases: int = 0
-    total_phases: int = 3
-
-
-class PipelineRunListResponse(BaseModel):
-    """Paginated list of pipeline run summaries."""
-
-    items: list[PipelineRunSummaryResponse]
-    total: int
 
 
 # ── Global pipeline runner (initialized in app lifespan) ─────────────────────

@@ -4,25 +4,27 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from starlette.requests import Request
-
-from src.api.rate_limit import limiter
+from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import Request
 
 from src.api.auth import require_api_key
 from src.api.deps import get_db_session, get_phase4_factory
+from src.api.rate_limit import limiter
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     EvidenceGroupDetailResponse,
+    EvidenceGroupSummary,
     EvidencePatchRequest,
     EvidenceSearchResponse,
-    PatchResultResponse,
     LiteratureProfileDetailResponse,
     LiteratureProfileSummary,
     LiteratureSearchResponse,
-    EvidenceGroupSummary,
+    PatchResultResponse,
 )
 from src.core.visualize_evidence_with_expert_in_loop.search_service import SearchService
+from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
+from src.dao.postgresql.models import SourceDocument
 
 router = APIRouter()
 
@@ -129,8 +131,6 @@ async def search_literature(
     page_size: int = Query(50, ge=1, le=200),
 ) -> LiteratureSearchResponse:
     """Search literature profiles with per-article aggregation."""
-    from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
-
     repo = LiteratureProfileRepository(session)
     items, total = await repo.search(
         gene=gene, variant=variant, disease=disease,
@@ -152,8 +152,6 @@ async def get_literature_detail(
     _api_key: str | None = Depends(require_api_key),
 ) -> LiteratureProfileDetailResponse:
     """Return full literature profile with all evidence groups."""
-    from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
-
     repo = LiteratureProfileRepository(session)
     profile = await repo.get_by_document(source_document_id)
     if profile is None:
@@ -188,11 +186,6 @@ async def refresh_literature_profiles(
     _api_key: str | None = Depends(require_api_key),
 ) -> dict:  # noqa: dict-return — simple admin status response
     """Refresh all literature profiles from canonical evidence. Admin endpoint."""
-    from sqlalchemy import select
-
-    from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
-    from src.dao.postgresql.models import SourceDocument
-
     stmt = select(SourceDocument.source_document_id)
     result = await session.execute(stmt)
     doc_ids = [row[0] for row in result.all()]

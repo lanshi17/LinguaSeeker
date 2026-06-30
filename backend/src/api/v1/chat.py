@@ -17,6 +17,7 @@ from starlette.requests import Request
 from src.api.auth import require_api_key
 from src.api.deps import get_db_session, get_phase4_factory
 from src.api.rate_limit import limiter
+from src.api.wiring import get_local_parser
 from src.core.config import get_config
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     ChatMessageResponse,
@@ -195,18 +196,14 @@ async def parse_chat_file(
     if not content.startswith(_PDF_MAGIC):
         raise HTTPException(status_code=400, detail="File is not a valid PDF")
 
-    # ── Save to temp file for MinerU parsing ──
-    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-        tmp.write(content)
-        tmp_path = Path(tmp.name)
-
-    try:
-        # ── Parse via MinerU local parser ──
-        cfg = get_config()
+    # ── Use wired parser singleton, fall back to fresh instance ──
+    parser = get_local_parser()
+    if parser is None:
         from src.core.ingest_and_digitize_data.parse_document.local.parser import (
             MinerULocalParser,
         )
 
+        cfg = get_config()
         parser = MinerULocalParser(
             parse_url=cfg.parse_document.mineru_local_parse_url,
             model_id=cfg.parse_document.mineru_local_model_id,
@@ -215,6 +212,12 @@ async def parse_chat_file(
             api_key=cfg.inference_api_key,
         )
 
+    # ── Save to temp file for MinerU parsing ──
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+        tmp.write(content)
+        tmp_path = Path(tmp.name)
+
+    try:
         result = await parser.parse(str(tmp_path))
 
         return ChatFileParseResponse(
