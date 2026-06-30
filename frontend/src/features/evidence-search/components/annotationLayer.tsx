@@ -11,7 +11,7 @@
  * are absolutely positioned divs, so they never conflict with `<mark>` splits.
  */
 import { useEffect, useLayoutEffect, useState } from "react";
-import { Input, Button, Popover, Tooltip, Dropdown, Tag, message } from "antd";
+import { Input, Button, Popover, Tooltip, Dropdown, message } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import {
   ANNOTATION_COLORS,

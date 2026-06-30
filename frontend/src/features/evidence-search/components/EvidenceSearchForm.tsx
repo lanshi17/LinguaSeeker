@@ -43,7 +43,7 @@ export function EvidenceSearchForm({
               top: 0,
               height: "100%",
               width: 4,
-              background: "linear-gradient(to bottom, var(--color-primary-400, var(--color-primary-400)), var(--color-primary-600, #0891b2))",
+              background: "linear-gradient(to bottom, var(--color-primary-400, var(--color-primary-400)), var(--color-primary-600))",
             }}
           />
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
