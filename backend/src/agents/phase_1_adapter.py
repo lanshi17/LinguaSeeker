@@ -147,7 +147,7 @@ class Phase1Adapter:
 
             # Parse document — use absolute path to survive CWD changes
             from pathlib import Path as _Path
-            _backend_root = _Path(__file__).resolve().parent.parent.parent
+            _backend_root = _Path(__file__).resolve().parent.parent.parent.parent
             output_dir = str(_backend_root / "data" / "pipeline" / state.processing_run_id / "phase_1")
             parse_result = await self._parse.parse_local_files_and_save(
                 file_paths=[pdf_path],
@@ -182,7 +182,7 @@ class Phase1Adapter:
         assert state.pre_parsed_markdown is not None  # noqa: S101
         markdown_text = state.pre_parsed_markdown
 
-        backend_root = Path(__file__).resolve().parent.parent.parent
+        backend_root = Path(__file__).resolve().parent.parent.parent.parent
         output_dir = backend_root / "data" / "pipeline" / state.processing_run_id / "phase_1"
         output_dir.mkdir(parents=True, exist_ok=True)
 

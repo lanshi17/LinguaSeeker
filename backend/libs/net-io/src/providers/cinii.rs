@@ -1,6 +1,6 @@
 use crate::client::HttpClient;
 use crate::error::GatewayError;
-use crate::types::FetchResult;
+use crate::types::{FetchParams, FetchResult};
 
 pub struct CiniiProvider;
 
@@ -9,9 +9,10 @@ const CINII_API_URL: &str = "https://cir.nii.ac.jp/opensearch/articles";
 impl CiniiProvider {
     pub async fn search(
         client: &HttpClient,
-        query: &str,
-        limit: Option<u32>,
+        params: &FetchParams,
     ) -> Result<FetchResult, GatewayError> {
+        let query = params.query.as_deref().unwrap_or_default();
+        let limit = params.limit;
         let count = limit.unwrap_or(10).min(100);
 
         let params = serde_json::json!({
@@ -87,14 +88,6 @@ impl CiniiProvider {
             }
         }
 
-        Ok(FetchResult {
-            provider: "cinii".into(),
-            success: !items.is_empty(),
-            items,
-            downloads: vec![],
-            warnings: vec![],
-            raw: Some(json),
-            meta: None,
-        })
+        Ok(FetchResult::of_items("cinii", items, Some(json)))
     }
 }

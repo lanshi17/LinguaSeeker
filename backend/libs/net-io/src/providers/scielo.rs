@@ -1,6 +1,6 @@
 use crate::client::HttpClient;
 use crate::error::GatewayError;
-use crate::types::FetchResult;
+use crate::types::{FetchParams, FetchResult};
 
 pub struct SciEloProvider;
 
@@ -9,9 +9,10 @@ const BASE_URL: &str = "https://search.scielo.org";
 impl SciEloProvider {
     pub async fn search(
         client: &HttpClient,
-        query: &str,
-        limit: Option<u32>,
+        params: &FetchParams,
     ) -> Result<FetchResult, GatewayError> {
+        let query = params.query.as_deref().unwrap_or_default();
+        let limit = params.limit;
         let count = limit.unwrap_or(10).min(100);
         let url = format!(
             "{}/?q={}&lang=en&count={}&output=json",
@@ -64,14 +65,5 @@ impl SciEloProvider {
             }
         }
 
-        Ok(FetchResult {
-            provider: "scielo".into(),
-            success: !items.is_empty(),
-            items,
-            downloads: vec![],
-            warnings: vec![],
-            raw: Some(json),
-            meta: None,
-        })
-    }
+        Ok(FetchResult::of_items("scielo", items, Some(json)))
 }

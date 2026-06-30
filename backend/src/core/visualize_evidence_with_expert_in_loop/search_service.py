@@ -309,7 +309,7 @@ def _load_full_document_blocks(
         if result:
             return result
 
-    backend_root = Path(__file__).resolve().parents[3]
+    backend_root = Path(__file__).resolve().parents[4]
     doc_id_str = str(source_document_id)
 
     pipeline_root = backend_root / "data" / "pipeline"
@@ -488,7 +488,7 @@ def _load_full_document_text(
 
     Searches in order:
     1. ``known_output_dir`` — exact path from pipeline_run_states.state_json.
-    2. ``backend/data/pipeline/*/phase_2/{doc_id}/`` — scan current pipeline output.
+    2. ``data/pipeline/*/phase_2/{doc_id}/`` — scan current pipeline output.
     3. ``backend/output/cross_lingual/**/`` — legacy output (by UUID or identifiers).
 
     Returns concatenated text from all blocks, or None if not found.
@@ -499,10 +499,10 @@ def _load_full_document_text(
         if result:
             return result
 
-    backend_root = Path(__file__).resolve().parents[3]
+    backend_root = Path(__file__).resolve().parents[4]
     doc_id_str = str(source_document_id)
 
-    # 2. Current pipeline output: backend/data/pipeline/{run_id}/phase_2/{doc_id}/
+    # 2. Current pipeline output: data/pipeline/{run_id}/phase_2/{doc_id}/
     pipeline_root = backend_root / "data" / "pipeline"
     if pipeline_root.exists():
         for pipeline_dir in pipeline_root.iterdir():

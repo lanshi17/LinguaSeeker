@@ -7,9 +7,10 @@ pub struct DoajProvider;
 impl DoajProvider {
     pub async fn search(
         client: &HttpClient,
-        query: &str,
-        limit: Option<u32>,
+        params: &FetchParams,
     ) -> Result<FetchResult, GatewayError> {
+        let query = params.query.as_deref().unwrap_or_default();
+        let limit = params.limit;
         let url = format!(
             "https://doaj.org/api/search/articles/{}",
             urlencoding::encode(query)

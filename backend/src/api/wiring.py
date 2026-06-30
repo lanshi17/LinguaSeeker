@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from redis.asyncio import Redis as AsyncRedis
 
 from src.core.config import get_config
+from src.dao.postgresql.connection import async_session_factory, build_async_engine
 from src.dao.postgresql.job_queue import JobQueueRepository
 from src.dao.redis.connection import build_redis_client
 
@@ -116,10 +117,17 @@ def wire_dependencies() -> None:
         EntityStandardizationService,
     )
 
+    global _engine, _session_factory, _redis_client, _local_parser, _dispatcher
+
     cfg = get_config()
 
+    # ── PostgreSQL engine/session singleton ──────────────────────────
+    if _engine is None:
+        _engine = build_async_engine(cfg)
+    if _session_factory is None:
+        _session_factory = async_session_factory(_engine)
+
     # ── Redis client singleton ───────────────────────────────────────
-    global _redis_client
     _redis_client = build_redis_client(cfg)
 
     # ── Document processing cache (L1 Redis + L2 PostgreSQL) ──────────
@@ -141,7 +149,6 @@ def wire_dependencies() -> None:
         poll_interval=pd_cfg.mineru_remote_poll_interval,
         max_poll_attempts=pd_cfg.mineru_remote_max_poll_attempts,
     )
-    global _local_parser
     _local_parser = MinerULocalParser(
         parse_url=pd_cfg.mineru_local_parse_url,
         model_id=pd_cfg.mineru_local_model_id,

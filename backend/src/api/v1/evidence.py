@@ -137,7 +137,7 @@ async def search_literature(
         pmid=pmid, doi=doi, page=page, page_size=page_size,
     )
     return LiteratureSearchResponse(
-        items=[LiteratureProfileSummary(**item) for item in items],
+        items=[LiteratureProfileSummary(**vars(item)) for item in items],
         total=total, page=page, page_size=page_size,
     )
 
@@ -158,23 +158,23 @@ async def get_literature_detail(
         raise HTTPException(status_code=404, detail="Literature profile not found")
 
     return LiteratureProfileDetailResponse(
-        literature_profile_id=UUID(profile["literature_profile_id"]),
-        source_document_id=UUID(profile["source_document_id"]),
-        pmid=profile.get("pmid"),
-        doi=profile.get("doi"),
-        title=profile.get("title"),
-        authors=profile.get("authors", []),
-        journal=profile.get("journal"),
-        publication_year=profile.get("publication_year"),
+        literature_profile_id=UUID(profile.literature_profile_id),
+        source_document_id=UUID(profile.source_document_id),
+        pmid=profile.pmid,
+        doi=profile.doi,
+        title=profile.title,
+        authors=profile.authors,
+        journal=profile.journal,
+        publication_year=profile.publication_year,
         evidence_groups=[
-            EvidenceGroupSummary(**eg) for eg in profile.get("evidence_groups", [])
+            EvidenceGroupSummary(**eg) for eg in profile.evidence_groups
         ],
-        review_status=profile.get("review_status", "provisional"),
-        review_notes=profile.get("review_notes"),
-        overall_confidence=profile.get("overall_confidence"),
-        total_evidence_fields=profile.get("total_evidence_fields", 0),
-        found_count=profile.get("found_count", 0),
-        not_found_count=profile.get("not_found_count", 0),
+        review_status=profile.review_status,
+        review_notes=profile.review_notes,
+        overall_confidence=profile.overall_confidence,
+        total_evidence_fields=profile.total_evidence_fields,
+        found_count=profile.found_count,
+        not_found_count=profile.not_found_count,
     )
 
 

@@ -280,48 +280,18 @@ async fn execute_provider(
         ("openalex", Action::Search) => OpenAlexProvider::search(client, params).await,
         ("europepmc", Action::Search) => EuropePmcProvider::search(client, params).await,
         ("pmc", Action::Search) => PmcProvider::search(client, params).await,
-        ("doaj", Action::Search) => {
-            let query = params.query.as_deref().unwrap_or_default();
-            DoajProvider::search(client, query, params.limit).await
-        }
+        ("doaj", Action::Search) => DoajProvider::search(client, params).await,
         ("doaj", Action::Download) => DoajProvider::download_urls(client, params).await,
-        ("jstage", Action::Search) => {
-            let query = params.query.as_deref().unwrap_or_default();
-            JstageProvider::search(client, query, params.limit).await
-        }
+        ("jstage", Action::Search) => JstageProvider::search(client, params).await,
         ("jstage", Action::Download) => JstageProvider::download_urls(client, params).await,
-        ("scielo", Action::Search) => {
-            let query = params.query.as_deref().unwrap_or_default();
-            SciEloProvider::search(client, query, params.limit).await
-        }
-        ("base", Action::Search) => {
-            let query = params.query.as_deref().unwrap_or_default();
-            BaseProvider::search(client, query, params.limit).await
-        }
-        ("core", Action::Search) => {
-            let query = params.query.as_deref().unwrap_or_default();
-            CoreProvider::search(client, query, params.limit).await
-        }
-        ("openaire", Action::Search) => {
-            let query = params.query.as_deref().unwrap_or_default();
-            OpenAireProvider::search(client, query, params.limit).await
-        }
-        ("arxiv", Action::Search) => {
-            let query = params.query.as_deref().unwrap_or_default();
-            ArxivProvider::search(client, query, params.limit).await
-        }
-        ("biorxiv", Action::Search) => {
-            let query = params.query.as_deref().unwrap_or_default();
-            BioRxivProvider::search(client, query, params.limit).await
-        }
-        ("medrxiv", Action::Search) => {
-            let query = params.query.as_deref().unwrap_or_default();
-            MedRxivProvider::search(client, query, params.limit).await
-        }
-        ("cinii", Action::Search) => {
-            let query = params.query.as_deref().unwrap_or_default();
-            CiniiProvider::search(client, query, params.limit).await
-        }
+        ("scielo", Action::Search) => SciEloProvider::search(client, params).await,
+        ("base", Action::Search) => BaseProvider::search(client, params).await,
+        ("core", Action::Search) => CoreProvider::search(client, params).await,
+        ("openaire", Action::Search) => OpenAireProvider::search(client, params).await,
+        ("arxiv", Action::Search) => ArxivProvider::search(client, params).await,
+        ("biorxiv", Action::Search) => BioRxivProvider::search(client, params).await,
+        ("medrxiv", Action::Search) => MedRxivProvider::search(client, params).await,
+        ("cinii", Action::Search) => CiniiProvider::search(client, params).await,
         ("unpaywall", Action::Search | Action::Download) => {
             UnpaywallProvider::search(client, params).await
         }
@@ -335,7 +305,6 @@ async fn execute_provider(
             message: format!("unknown provider: {provider}"),
         }),
     }
-}
 
 // ── MinerU API functions ──────────────────────────────────────────────
 
