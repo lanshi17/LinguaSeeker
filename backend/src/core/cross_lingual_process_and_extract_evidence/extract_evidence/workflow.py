@@ -31,7 +31,12 @@ from .stages.group_assignment import GroupAssignmentStage
 from .stages.primary_broad_extraction import PrimaryBroadExtractionStage
 from .stages.quality_validation import QualityGateStage
 from .stages.role_routing import EvidenceRoleRouter
-from .stages.review_validation import ReviewValidationStage
+from .stages.review_validation import (
+    DEFAULT_REVIEW_REJECT_POLICY,
+    ReviewRejectPolicy,
+    ReviewValidationStage,
+    resolve_review_reject_policy,
+)
 from .stages.source_grounding import SourceGroundingStage
 from .stages.special_evidence import SpecialEvidenceStage
 from .target_span_recovery import TargetSpanFieldRecovery
@@ -71,10 +76,12 @@ class EvidenceExtractionWorkflow:
         extraction_mode: str = DEFAULT_EXTRACTION_WORKFLOW_MODE,
         enable_review_validation: bool = True,
         enable_target_guard: bool = True,
+        review_reject_policy: str = DEFAULT_REVIEW_REJECT_POLICY,
     ):
         self._extraction_mode = resolve_extraction_mode(extraction_mode)
         self._enable_review_validation = enable_review_validation
         self._enable_target_guard = enable_target_guard
+        self._review_reject_policy: ReviewRejectPolicy = resolve_review_reject_policy(review_reject_policy)
         self._relevance_scan = RelevanceScanStage(provider, input_budget_tokens=input_budget_tokens)
         self._catalog_extraction = CatalogExtractionStage(
             provider, input_budget_tokens=input_budget_tokens, field_profile=field_profile,
@@ -88,7 +95,10 @@ class EvidenceExtractionWorkflow:
         self._quality_gate = QualityGateStage()
         self._chain_builder = EvidenceChainBuilder()
         self._role_router = EvidenceRoleRouter()
-        self._review_validation = ReviewValidationStage(provider)
+        self._review_validation = ReviewValidationStage(
+            provider,
+            review_reject_policy=self._review_reject_policy,
+        )
         self._target_guard = TargetEntityGuard()
         self._target_span_recovery = TargetSpanFieldRecovery()
         self._item_normalizer = EvidenceItemNormalizer()

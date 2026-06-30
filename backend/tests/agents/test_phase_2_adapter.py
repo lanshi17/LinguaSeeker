@@ -137,6 +137,95 @@ async def test_phase_2_adapter_success(sample_state: PipelineGraphState):
     assert mock_build.call_args.args[1] == sample_state.extraction_target
 
 
+@pytest.mark.asyncio
+async def test_phase_2_adapter_passes_review_reject_policy(
+    sample_state: PipelineGraphState,
+):
+    """Phase 2 forwards review reject policy to evidence extraction."""
+    from src.core.cross_lingual_process_and_extract_evidence.contracts import (
+        CrossLingualOutput,
+        TranslationResult,
+    )
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+        DualEvidenceExtractionResult,
+        DualTrackDocuments,
+        EvidenceExtractionResult,
+        EvidenceExtractionStatus,
+        Track,
+        TrackDocument,
+    )
+
+    state = sample_state.model_copy(update={"review_reject_policy": "tristate_review"})
+    mock_translation = MagicMock()
+    mock_translation.run = AsyncMock(
+        return_value=TranslationResult(
+            formatted_original="Original text",
+            translated_english="Translated text",
+            source_language="en",
+            terminology_map={},
+            translation_warnings=[],
+            sentences=[],
+            segments=[],
+        )
+    )
+    mock_translation.save = MagicMock(
+        return_value=CrossLingualOutput(
+            formatted_original="Original text",
+            translated_english="Translated text",
+            source_language="en",
+            terminology_map={},
+            translation_warnings=[],
+            output_dir="/tmp/phase2/output",
+            original_json_path="/tmp/phase2/output/original.json",
+            translated_json_path="/tmp/phase2/output/translated.json",
+            image_paths=[],
+        )
+    )
+    mock_extraction_service = MagicMock()
+    mock_extraction_service.run_dual = AsyncMock(
+        return_value=DualEvidenceExtractionResult(
+            document_id="doc-456",
+            original_result=EvidenceExtractionResult(
+                status=EvidenceExtractionStatus.COMPLETED,
+                document_id="doc-456",
+                track=Track.ORIGINAL,
+            ),
+            translated_result=EvidenceExtractionResult(
+                status=EvidenceExtractionStatus.COMPLETED,
+                document_id="doc-456",
+                track=Track.TRANSLATED,
+            ),
+        )
+    )
+    adapter = Phase2Adapter(
+        translation_service=mock_translation,
+        extraction_service=mock_extraction_service,
+    )
+
+    with patch(
+        "src.agents.phase_2_adapter.EvidenceExtractionService.build_dual_documents_from_output_dir"
+    ) as mock_build:
+        mock_build.return_value = DualTrackDocuments(
+            document_id="doc-456",
+            original=TrackDocument(
+                document_id="doc-456",
+                track=Track.ORIGINAL,
+                formatted_text="original",
+                page_spans=[],
+            ),
+            translated=TrackDocument(
+                document_id="doc-456",
+                track=Track.TRANSLATED,
+                formatted_text="translated",
+                page_spans=[],
+            ),
+        )
+
+        await adapter.run(state)
+
+    assert mock_extraction_service.run_dual.call_args.kwargs["review_reject_policy"] == "tristate_review"
+
+
 
 @pytest.mark.asyncio
 async def test_phase_2_adapter_sets_skip_when_not_relevant(

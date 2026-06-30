@@ -14,7 +14,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.utils.parsing import parse_gene_from_group_id, parse_variant_from_group_id
-from src.utils.text_normalize import concat_document_text
+from src.utils.text_normalize import block_text_from_dict, concat_document_text
 
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     EvidenceChainHighlight,
@@ -43,6 +43,27 @@ _VARIANT_FIELDS = (
 _DISEASE_FIELDS = ("B.disease_diagnosis", "B.clinical_diagnosis", "B.hpo_terms")
 _CLASSIFICATION_FIELDS = ("J.authority_classification", "J.clinvar_assertion")
 _TOKEN_BOUNDARY_CHARS = r"A-Za-z0-9_"
+_BODY_START_PATTERNS = (
+    r"^［?摘要］?",
+    r"^摘\s*要\b",
+    r"^abstract\b",
+    r"^资料与方法\b",
+    r"^\d+(?:\.\d+)?\s*[　 ]*(?:资料与方法|材料与方法|方法|研究对象|结果|讨论)\b",
+    r"^methods?\b",
+    r"^results?\b",
+    r"^discussion\b",
+    r"^introduction\b",
+)
+_BODY_END_PATTERNS = (
+    r"^［?\s*参\s*考\s*文\s*献\s*］?",
+    r"^参考文献\b",
+    r"^references?\b",
+    r"^acknowledg(?:e)?ments?\b",
+    r"^conflicts?\s+of\s+interest\b",
+    r"^funding\b",
+    r"^（?本文编辑",
+)
+_BLOCK_TEXT_COVERAGE_RATIO = 0.7
 
 
 def _coerce_str(value: Any) -> str | None:
@@ -52,6 +73,73 @@ def _coerce_str(value: Any) -> str | None:
     if isinstance(value, list):
         return ", ".join(str(v) for v in value)
     return str(value)
+
+
+def _matches_any(patterns: tuple[str, ...], text: str) -> bool:
+    """Return whether stripped text matches any compiled body-boundary pattern."""
+    stripped = text.strip()
+    return any(re.search(pattern, stripped, re.IGNORECASE) for pattern in patterns)
+
+
+def _compact_len(text: str | None) -> int:
+    """Return length after whitespace compaction for coarse coverage checks."""
+    if not text:
+        return 0
+    return len(re.sub(r"\s+", "", text))
+
+
+def _filter_body_text(text: str | None) -> str | None:
+    """Remove article metadata and trailing non-body sections from display text."""
+    if not text or not text.strip():
+        return None
+
+    lines = text.splitlines()
+    start = 0
+    for index, line in enumerate(lines):
+        if _matches_any(_BODY_START_PATTERNS, line):
+            start = index
+            break
+
+    end = len(lines)
+    for index in range(start, len(lines)):
+        if _matches_any(_BODY_END_PATTERNS, lines[index]):
+            end = index
+            break
+
+    filtered = "\n".join(lines[start:end]).strip()
+    return filtered or text.strip()
+
+
+def _filter_body_blocks(blocks: list[dict] | None, text: str | None = None) -> list[dict] | None:
+    """Return body-only blocks, rebuilding from fuller text when stored blocks are truncated."""
+    body_text = _filter_body_text(text)
+    body_text_len = _compact_len(body_text)
+    blocks_text = "\n\n".join(
+        block_text_from_dict(block)
+        for block in blocks or []
+        if isinstance(block, dict) and block_text_from_dict(block)
+    )
+
+    if body_text and (not blocks or _compact_len(blocks_text) < int(body_text_len * _BLOCK_TEXT_COVERAGE_RATIO)):
+        return _markdown_to_blocks(body_text)
+    if not blocks:
+        return None
+
+    start = 0
+    for index, block in enumerate(blocks):
+        if isinstance(block, dict) and _matches_any(_BODY_START_PATTERNS, block_text_from_dict(block)):
+            start = index
+            break
+
+    end = len(blocks)
+    for index in range(start, len(blocks)):
+        block = blocks[index]
+        if isinstance(block, dict) and _matches_any(_BODY_END_PATTERNS, block_text_from_dict(block)):
+            end = index
+            break
+
+    filtered_blocks = [block for block in blocks[start:end] if isinstance(block, dict)]
+    return filtered_blocks or None
 
 def _category_from_field_id(field_id: str) -> str | None:
     """Infer the evidence category prefix from a field id."""
@@ -1020,68 +1108,45 @@ class SearchService:
                 )
             )
 
+        loaded_original_text = db_original_text or _load_full_document_text(
+            source_document_id,
+            track="original",
+            identifiers=identifiers,
+            known_output_dir=phase2_output_dir,
+        )
+        loaded_translated_text = db_translated_text or _load_full_document_text(
+            source_document_id,
+            track="translated",
+            identifiers=identifiers,
+            known_output_dir=phase2_output_dir,
+        )
+        loaded_original_blocks = db_original_blocks or _load_full_document_blocks(
+            source_document_id,
+            track="original",
+            identifiers=identifiers,
+            known_output_dir=phase2_output_dir,
+        )
+        loaded_translated_blocks = db_translated_blocks or _load_full_document_blocks(
+            source_document_id,
+            track="translated",
+            identifiers=identifiers,
+            known_output_dir=phase2_output_dir,
+        )
+        original_document_text = _filter_body_text(loaded_original_text)
+        translated_document_text = _filter_body_text(loaded_translated_text)
+        original_blocks = _filter_body_blocks(loaded_original_blocks, original_document_text)
+        translated_blocks = _filter_body_blocks(loaded_translated_blocks, translated_document_text)
+
         return EvidenceGroupDetailResponse(
             group_id=group_id,
             source_document_id=source_document_id,
             title=title,
             pmid=identifiers.get("pmid"),
             doi=identifiers.get("doi"),
-            original_document_text=(
-                db_original_text
-                or _load_full_document_text(
-                    source_document_id,
-                    track="original",
-                    identifiers=identifiers,
-                    known_output_dir=phase2_output_dir,
-                )
-            ),
-            translated_document_text=(
-                db_translated_text
-                or _load_full_document_text(
-                    source_document_id,
-                    track="translated",
-                    identifiers=identifiers,
-                    known_output_dir=phase2_output_dir,
-                )
-            ),
-            original_blocks=(
-                db_original_blocks
-                or _load_full_document_blocks(
-                    source_document_id,
-                    track="original",
-                    identifiers=identifiers,
-                    known_output_dir=phase2_output_dir,
-                )
-                or _markdown_to_blocks(
-                    db_original_text
-                    or _load_full_document_text(
-                        source_document_id,
-                        track="original",
-                        identifiers=identifiers,
-                        known_output_dir=phase2_output_dir,
-                    )
-                    or ""
-                )
-            ),
-            translated_blocks=(
-                db_translated_blocks
-                or _load_full_document_blocks(
-                    source_document_id,
-                    track="translated",
-                    identifiers=identifiers,
-                    known_output_dir=phase2_output_dir,
-                )
-                or _markdown_to_blocks(
-                    db_translated_text
-                    or _load_full_document_text(
-                        source_document_id,
-                        track="translated",
-                        identifiers=identifiers,
-                        known_output_dir=phase2_output_dir,
-                    )
-                    or ""
-                )
-            ),
+            original_document_text=original_document_text,
+            translated_document_text=translated_document_text,
+            original_blocks=original_blocks,
+            translated_blocks=translated_blocks,
             gene=gene,
             variant=variant,
             disease=disease,
