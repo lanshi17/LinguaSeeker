@@ -78,7 +78,41 @@ def compute_aggregate_metrics(all_metrics: list[EntryMetrics]) -> dict:
         if (grounded_precision + grounded_recall) > 0
         else 0.0
     )
-    db_ready_yield = grounded_tp
+    original_grounded_tp = sum(
+        1
+        for m in all_metrics
+        for f in m.field_matches
+        if f.matched
+        and isinstance(f.source_span, dict)
+        and isinstance(f.source_span.get("original_source_span"), dict)
+    )
+    original_grounded_fn = sum(
+        1
+        for m in all_metrics
+        for f in m.field_matches
+        if not (
+            f.matched
+            and isinstance(f.source_span, dict)
+            and isinstance(f.source_span.get("original_source_span"), dict)
+        )
+    )
+    original_grounded_precision = (
+        original_grounded_tp / (original_grounded_tp + fp)
+        if (original_grounded_tp + fp) > 0
+        else 0.0
+    )
+    original_grounded_recall = (
+        original_grounded_tp / (original_grounded_tp + original_grounded_fn)
+        if (original_grounded_tp + original_grounded_fn) > 0
+        else 0.0
+    )
+    original_grounded_f1 = (
+        2 * original_grounded_precision * original_grounded_recall
+        / (original_grounded_precision + original_grounded_recall)
+        if (original_grounded_precision + original_grounded_recall) > 0
+        else 0.0
+    )
+    db_ready_yield = original_grounded_tp if original_grounded_tp > 0 else grounded_tp
 
     # Per-field-type breakdown
     by_field: dict[str, dict] = {}
@@ -196,6 +230,11 @@ def compute_aggregate_metrics(all_metrics: list[EntryMetrics]) -> dict:
             "grounded_precision": round(grounded_precision, 4),
             "grounded_recall": round(grounded_recall, 4),
             "grounded_f1": round(grounded_f1, 4),
+            "original_grounded_true_positives": original_grounded_tp,
+            "original_grounded_false_negatives": original_grounded_fn,
+            "original_grounded_precision": round(original_grounded_precision, 4),
+            "original_grounded_recall": round(original_grounded_recall, 4),
+            "original_grounded_f1": round(original_grounded_f1, 4),
             "db_ready_yield": db_ready_yield,
             "over_extractions": over_extraction_count(all_metrics),
             "entity_standardization_accuracy": round(entity_standardization_accuracy, 4),

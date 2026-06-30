@@ -123,6 +123,8 @@ def _get_scope_key(state: PipelineGraphState) -> str | None:
         parts.append(f"mode={state.extraction_mode}")
     if state.review_reject_policy and state.review_reject_policy != "hard_veto":
         parts.append(f"review_policy={state.review_reject_policy}")
+    if state.extraction_track_mode and state.extraction_track_mode != "dual":
+        parts.append(f"track_mode={state.extraction_track_mode}")
     return "|".join(parts) if parts else None
 
 

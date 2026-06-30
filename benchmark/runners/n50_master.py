@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import random
 import time
 from pathlib import Path
 from typing import Any
@@ -59,10 +60,22 @@ def _load_condition(condition_id: str) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _load_manifest_entry_ids() -> list[str]:
+def _load_manifest_entry_ids(
+    sample_limit: int | None = None,
+    sample_seed: int | None = None,
+) -> list[str]:
     """Load the 50 entry IDs from the frozen manifest."""
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    return [e["entry_id"] for e in manifest["entries"]]
+    entry_ids = [e["entry_id"] for e in manifest["entries"]]
+    if sample_limit is None:
+        return entry_ids
+    if sample_limit < 1:
+        raise ValueError("sample_limit must be positive")
+    if sample_limit >= len(entry_ids):
+        return entry_ids
+    if sample_seed is None:
+        return entry_ids[:sample_limit]
+    return random.Random(sample_seed).sample(entry_ids, sample_limit)
 
 
 async def run_condition(
@@ -70,19 +83,22 @@ async def run_condition(
     base_url: str,
     concurrency: int,
     api_key: str | None = None,
+    sample_limit: int | None = None,
+    sample_seed: int | None = None,
 ) -> str:
     """Run a single condition on all 50 entries.
 
     Returns the path to the generated report.
     """
     config = _load_condition(condition_id)
-    entry_ids = _load_manifest_entry_ids()
+    entry_ids = _load_manifest_entry_ids(sample_limit=sample_limit, sample_seed=sample_seed)
 
     logger.info(
-        "=== Starting condition: {} ({} entries, mode={}, flags: review={} guard={} orig_only={}) ===",
+        "=== Starting condition: {} ({} entries, mode={}, track_mode={}, flags: review={} guard={} orig_only={}) ===",
         condition_id,
         len(entry_ids),
         config["extraction_mode"],
+        config.get("extraction_track_mode", "dual"),
         config["ablation_disable_review"],
         config["ablation_disable_target_guard"],
         config["ablation_original_only"],
@@ -101,6 +117,7 @@ async def run_condition(
         ablation_disable_target_guard=config["ablation_disable_target_guard"],
         ablation_original_only=config["ablation_original_only"],
         review_reject_policy=config.get("review_reject_policy", "hard_veto"),
+        extraction_track_mode=config.get("extraction_track_mode", "dual"),
     )
     elapsed = time.time() - t0
     logger.info("=== Condition {} completed in {:.0f}s ({:.1f}h) ===", condition_id, elapsed, elapsed / 3600)
@@ -112,6 +129,8 @@ async def run_all_conditions(
     concurrency: int,
     api_key: str | None = None,
     conditions: list[str] | None = None,
+    sample_limit: int | None = None,
+    sample_seed: int | None = None,
 ) -> None:
     """Run all pipeline conditions sequentially."""
     conditions = conditions or PIPELINE_CONDITIONS
@@ -122,7 +141,14 @@ async def run_all_conditions(
 
     for cond_id in conditions:
         try:
-            await run_condition(cond_id, base_url, concurrency, api_key=api_key)
+            await run_condition(
+                cond_id,
+                base_url,
+                concurrency,
+                api_key=api_key,
+                sample_limit=sample_limit,
+                sample_seed=sample_seed,
+            )
             results.append({"condition": cond_id, "status": "completed"})
         except Exception as e:
             logger.error("Condition {} failed: {}", cond_id, e)
@@ -139,6 +165,8 @@ async def run_all_conditions(
         "conditions": results,
         "design_doc": "docs/active/2026-06-29-bibm-n50-comparison-ablation-design.md",
         "manifest": str(MANIFEST_PATH),
+        "sample_limit": sample_limit,
+        "sample_seed": sample_seed,
     }
     summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
     logger.info("Master summary written to: {}", summary_path)
@@ -161,6 +189,8 @@ def main() -> None:
     parser.add_argument("--base-url", default="http://localhost:8000", help="Pipeline base URL")
     parser.add_argument("--concurrency", type=int, default=4, help="Max concurrent submissions")
     parser.add_argument("--api-key", default=None, help="API key for authentication")
+    parser.add_argument("--sample-limit", type=int, default=None, help="Randomly sample this many manifest entries")
+    parser.add_argument("--sample-seed", type=int, default=None, help="Seed for --sample-limit random sampling")
     parser.add_argument(
         "--conditions",
         nargs="+",
@@ -174,6 +204,8 @@ def main() -> None:
         concurrency=args.concurrency,
         api_key=args.api_key,
         conditions=args.conditions,
+        sample_limit=args.sample_limit,
+        sample_seed=args.sample_seed,
     ))
 
 

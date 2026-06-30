@@ -46,6 +46,18 @@ dual_result = await service.run_dual(documents)
 # dual_result.alignment_records are cross-track alignment summaries.
 ```
 
+For the English-pivot single-track experiment:
+
+```python
+dual_result = await service.run_dual(
+    documents,
+    extraction_track_mode="english_pivot",
+    review_reject_policy="tristate_review",
+)
+# Only the translated/English track is extracted.
+# English source spans are deterministically mapped back to original raw_source.
+```
+
 ## Research Boundary — Single-Document Extraction Scope
 
 The extraction pipeline targets fields that **a single document can directly support from its own text**. It does not claim to fill all 166 catalog fields from one paper. The 166-field catalog is the *full GDV data model*; many fields require cross-paper curation, external database lookup, or expert consensus.
@@ -165,6 +177,14 @@ DualTrackDocuments -> run(original)  -> original EvidenceExtractionResult
                    -> run(translated) -> translated EvidenceExtractionResult  (concurrent via asyncio.gather)
                    -> reconcile()     -> reconciled EvidenceExtractionResult
                    -> DualEvidenceExtractionResult
+
+English-pivot mode:
+
+DualTrackDocuments -> skip original extraction
+                   -> run(translated English track)
+                   -> translation_traceback(source -> original raw_source)
+                   -> reconcile(translated result only)
+                   -> DualEvidenceExtractionResult
 ```
 
 ## Public API
@@ -181,8 +201,18 @@ class EvidenceExtractionService:
     async def run(self, document: TrackDocument) -> EvidenceExtractionResult:
         """Run the full 12-stage pipeline asynchronously."""
 
-    async def run_dual(self, documents: DualTrackDocuments) -> DualEvidenceExtractionResult:
-        """Run original and translated tracks concurrently, then reconcile."""
+    async def run_dual(
+        self,
+        documents: DualTrackDocuments,
+        extraction_profile: ExtractionProfile | str | None = None,
+        extraction_mode: str | None = None,
+        original_only: bool = False,
+        enable_review_validation: bool | None = None,
+        enable_target_guard: bool | None = None,
+        review_reject_policy: str | None = None,
+        extraction_track_mode: str = "dual",
+    ) -> DualEvidenceExtractionResult:
+        """Run dual, original-only, or English-pivot extraction, then reconcile."""
 
     def run_sync(self, document: TrackDocument) -> EvidenceExtractionResult:
         """Synchronous wrapper. Raises RuntimeError if called from an async event loop."""
@@ -499,6 +529,20 @@ All models are Pydantic v2 `BaseModel` with strict validation.
 4. **Failure mapping** — table misses become `TABLE_UNGROUNDED`, image/figure misses become `OCR_GAP`, and all other misses become `SOURCE_INVALID`.
 
 Historical JSON without blocks is still supported: grounding falls back to pure text search with `block_index=-1` and `bbox=[]`.
+
+### English-pivot traceback
+
+`extraction_track_mode="english_pivot"` runs extraction only on the translated/English track, then calls `translation_traceback.apply_translation_traceback()` before reconciliation. This keeps the cheaper single extraction path while preserving the original-language evidence chain required by review and DB-ready scoring.
+
+The traceback uses no additional model calls:
+
+1. English grounding produces `EvidenceItem.source` on the translated `TrackDocument`.
+2. If `translated.translation_alignment` is available, the source span is mapped to the matching `TranslationAlignmentChunk` and then to the chunk's original offsets/text.
+3. If alignment is empty because the original document was already English, identity traceback searches the source snippet in `original.formatted_text`, falling back to valid source offsets.
+4. The mapped original span is stored as `EvidenceItem.raw_source` with a `translation_traceback:<chunk_id>` or `translation_traceback:identity` context marker.
+5. `StandardizationRepository` embeds traceback raw sources into persisted `source_span.original_source_span`, which powers `original_grounded_*` and DB-ready evidence metrics.
+
+Translation-stage alignment is block-level: persisted translated artifacts carry `metadata.translation_alignment`, and each chunk preserves original/English text plus offsets. The extractor consumes that typed alignment through `TrackDocument.translation_alignment`.
 
 ### Quality validation rules
 

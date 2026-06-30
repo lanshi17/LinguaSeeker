@@ -176,6 +176,52 @@ def test_build_dual_documents_accepts_extraction_target(tmp_path) -> None:
     assert docs.translated.extraction_target == target
 
 
+def test_build_dual_documents_loads_translation_alignment(tmp_path) -> None:
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
+        EvidenceExtractionService,
+    )
+
+    original_payload = {
+        "metadata": {"doc_id": "doc-align", "source_language": "zh"},
+        "formatted_text": "患者表现出严重的呼吸衰竭。\n基因检测提示ABCA3缺陷引起的间质性肺病。",
+        "blocks": [],
+    }
+    translated_payload = {
+        "metadata": {
+            "doc_id": "doc-align",
+            "source_language": "zh",
+            "translation_alignment": [
+                {
+                    "chunk_id": "c_0002",
+                    "original_text": "基因检测提示ABCA3缺陷引起的间质性肺病。",
+                    "english_text": (
+                        "Genetic testing suggested interstitial lung disease due to ABCA3 deficiency."
+                    ),
+                    "original_start_offset": 15,
+                    "original_end_offset": 39,
+                    "english_start_offset": 54,
+                    "english_end_offset": 127,
+                    "page": 1,
+                    "block_index": 1,
+                }
+            ],
+        },
+        "formatted_text": (
+            "The patient presented with severe respiratory failure.\n"
+            "Genetic testing suggested interstitial lung disease due to ABCA3 deficiency."
+        ),
+        "blocks": [],
+    }
+    (tmp_path / "original.json").write_text(json.dumps(original_payload), encoding="utf-8")
+    (tmp_path / "translated.json").write_text(json.dumps(translated_payload), encoding="utf-8")
+
+    docs = EvidenceExtractionService.build_dual_documents_from_output_dir(tmp_path)
+
+    assert docs.translated.translation_alignment[0].chunk_id == "c_0002"
+    assert docs.translated.translation_alignment[0].original_start_offset == 15
+    assert docs.translated.translation_alignment[0].english_text.endswith("ABCA3 deficiency.")
+
+
 def test_build_dual_documents_target_optional(tmp_path) -> None:
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
         EvidenceExtractionService,

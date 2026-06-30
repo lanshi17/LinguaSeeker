@@ -9,16 +9,28 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.reposito
 )
 
 
+class _FakeSavepoint:
+    """Async context manager stub for nested transactions."""
+
+    async def commit(self) -> None:
+        pass
+
+    async def rollback(self) -> None:
+        pass
+
+
 class FakeSession:
     """Minimal session that captures SQLAlchemy statements."""
 
     def __init__(self) -> None:
         self.statements = []
 
+    async def begin_nested(self):
+        return _FakeSavepoint()
+
     async def execute(self, statement):
         self.statements.append(statement)
         return FakeResult()
-
 
 class FakeResult:
     """Empty SQLAlchemy result stand-in."""

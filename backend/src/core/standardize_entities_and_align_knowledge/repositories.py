@@ -1412,6 +1412,11 @@ class StandardizationRepository:
                     if group_id not in identity_passable or field_id not in identity_fields:
                         continue
                 value = {"value": item.get("value")}
+                source_span = item.get("source") if isinstance(item.get("source"), dict) else {}
+                source_span = dict(source_span)
+                raw_source = item.get("raw_source")
+                if self._is_translation_traceback_source(raw_source):
+                    source_span["original_source_span"] = raw_source
                 specs.append(
                     RunItemSpec(
                         candidate_id="",
@@ -1430,7 +1435,7 @@ class StandardizationRepository:
                             },
                         ),
                         text_hash=self._hash_payload(item.get("value")),
-                        source_span=item.get("source") if isinstance(item.get("source"), dict) else {},
+                        source_span=source_span,
                         entity_scope_hash=scope_hashes.get(group_id, target_scope_hash),
                         raw_payload=item,
                     ),
@@ -1464,6 +1469,14 @@ class StandardizationRepository:
                 ),
             )
         return specs
+
+    @staticmethod
+    def _is_translation_traceback_source(raw_source: object) -> bool:
+        """Return whether a raw source came from deterministic translation traceback."""
+        if not isinstance(raw_source, dict):
+            return False
+        return "translation_traceback" in str(raw_source.get("context_ref", ""))
+
     def _related_run_rows(self, match: EntityMatch) -> list[RunEvidenceItem]:
         """Return run evidence rows related to the current entity match."""
         related = [

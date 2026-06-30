@@ -344,6 +344,26 @@ class TranslationSegment:
     source_text: str
     translated_text: str
     source_bbox: Optional[SentenceRegion] = None
+    chunk_id: str = ""
+    source_start_offset: int = -1
+    source_end_offset: int = -1
+    translated_start_offset: int = -1
+    translated_end_offset: int = -1
+
+
+class TranslationAlignmentChunk(BaseModel):
+    """Deterministic block-level mapping from source text to English text."""
+
+    chunk_id: str
+    original_text: str
+    english_text: str
+    original_start_offset: int = -1
+    original_end_offset: int = -1
+    english_start_offset: int = -1
+    english_end_offset: int = -1
+    page: int = 1
+    block_index: int = -1
+    bbox: list[int] = Field(default_factory=list)
 
 
 @dataclass

@@ -230,12 +230,15 @@ async def _run_pipeline_condition(
     ablation_original_only = bool(config.get("ablation_original_only", False))
     force_reextract = bool(config.get("force_reextract", True))
     extraction_profile = config.get("extraction_profile", "none")
+    review_reject_policy = config.get("review_reject_policy", "hard_veto")
+    extraction_track_mode = config.get("extraction_track_mode", "dual")
 
     logger.info(
-        "Running condition '{}' | mode={} | review={} target_guard={} "
+        "Running condition '{}' | mode={} | track_mode={} | review={} target_guard={} "
         "original_only={} | entries={} | concurrency={}",
         condition_id,
         extraction_mode,
+        extraction_track_mode,
         not ablation_disable_review,
         not ablation_disable_target_guard,
         ablation_original_only,
@@ -255,6 +258,8 @@ async def _run_pipeline_condition(
             ablation_disable_review=ablation_disable_review,
             ablation_disable_target_guard=ablation_disable_target_guard,
             ablation_original_only=ablation_original_only,
+            review_reject_policy=review_reject_policy,
+            extraction_track_mode=extraction_track_mode,
         )
     except Exception as exc:  # noqa: BLE001 - surface any pipeline failure
         logger.exception("run_evaluation failed for condition '{}': {}", condition_id, exc)
