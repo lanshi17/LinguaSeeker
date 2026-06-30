@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { XProvider, Bubble, Sender, Conversations } from "@ant-design/x";
 import type { SenderRef } from "@ant-design/x/es/sender/interface";
 import { App } from "antd";
-import { ListChecks } from "lucide-react";
+import { ListChecks, ChevronLeft, ChevronRight } from "lucide-react";
 import { TaskQueuePanel } from "@/features/pipeline";
 import { useI18n } from "@/lib/i18n";
 import { extractErrorMessage } from "@/lib/api/error";
@@ -51,6 +51,25 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         );
       } catch {
         // Storage quota or sandboxed env — silently ignore.
+      }
+      return next;
+    });
+  }, []);
+
+  const [convCollapsed, setConvCollapsed] = useState<boolean>(() => {
+    try {
+      return window.localStorage.getItem("chat.convCollapsed") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const toggleConv = useCallback(() => {
+    setConvCollapsed((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem("chat.convCollapsed", next ? "1" : "0");
+      } catch {
+        // noop
       }
       return next;
     });
@@ -253,17 +272,39 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   return (
     <XProvider>
       <div style={{ display: "flex", height: "100%", overflow: "hidden", backgroundColor: "var(--color-surface)" }}>
-        <Conversations
-          style={{ width: 240, borderRight: "1px solid var(--color-border)" }}
-          items={conversations}
-          activeKey={activeConversationKey}
-          onActiveChange={handleActiveConversationChange}
-          menu={conversationsMenu}
-          creation={{
-            onClick: handleNewChat,
-            disabled: isCreating,
+        {/* Conversation list (clipped) */}
+        <div
+          style={{
+            width: convCollapsed ? 0 : 240,
+            overflow: "hidden",
+            transition: "width 200ms ease",
+            height: "100%",
+            flexShrink: 0,
           }}
-        />
+        >
+          <Conversations
+            style={{ width: 240 }}
+            items={conversations}
+            activeKey={activeConversationKey}
+            onActiveChange={handleActiveConversationChange}
+            menu={conversationsMenu}
+            creation={{
+              onClick: handleNewChat,
+              disabled: isCreating,
+            }}
+          />
+        </div>
+
+        {/* Toggle — flex item, never clipped */}
+        <button
+          type="button"
+          onClick={toggleConv}
+          aria-label={convCollapsed ? t("chat.expandConversations") : t("chat.collapseConversations")}
+          className="cv-conv-toggle"
+          data-collapsed={convCollapsed}
+        >
+          {convCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
 
         {/* Main chat area */}
         <div style={{ display: "flex", minWidth: 0, flex: 1, flexDirection: "column" }}>
@@ -274,6 +315,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
             style={{
               display: "flex",
               alignItems: "center",
+              justifyContent: "flex-end",
               gap: 8,
               borderBottom: "1px solid var(--color-bg-muted)",
               padding: "6px 16px",
@@ -308,9 +350,6 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
               <ListChecks style={{ width: 14, height: 14 }} aria-hidden />
               <span>{t("chat.taskQueue")}</span>
             </button>
-            <span style={{ fontSize: 10.5, color: "var(--color-text-muted)" }}>
-              {taskQueueOpen ? t("chat.taskQueuePinned") : t("chat.taskQueueHidden")}
-            </span>
           </div>
 
           <div style={{ display: "flex", minHeight: 0, flex: 1 }}>

@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  EVIDENCE_DB_LABELS,
+  getEvidenceDbLabels,
   formatConfidencePercent,
   formatCoverageCount,
   formatReviewedCount,
 } from "../../src/features/evidence-db/utils/fieldLabels";
+
+/** Stub t() that returns the key itself so we can assert label keys. */
+const t = (key: string) => key;
 
 describe("fieldLabels", () => {
   it("formats confidence ratios as rounded percentages", () => {
@@ -23,7 +26,8 @@ describe("fieldLabels", () => {
   });
 
   it("centralizes repeated evidence DB labels", () => {
-    expect(EVIDENCE_DB_LABELS.reviewProgress).toBe("Review progress");
-    expect(EVIDENCE_DB_LABELS.exportReport).toBe("Export report");
+    const labels = getEvidenceDbLabels(t);
+    expect(labels.reviewProgress).toBe("evidenceDb.label.reviewProgress");
+    expect(labels.exportReport).toBe("evidenceDb.label.exportReport");
   });
 });

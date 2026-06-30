@@ -1,3 +1,5 @@
+import { STATUS_VARIANT } from "@/lib/constants/statusVariant";
+export { STATUS_VARIANT };
 import {
   FileText,
   BarChart3,
@@ -6,16 +8,6 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import type { LiteratureEvidenceRow } from "../utils/literatureRows";
 import { useI18n } from "@/lib/i18n";
-
-export const STATUS_VARIANT: Record<
-  string,
-  "default" | "success" | "warning" | "error" | "info"
-> = {
-  provisional: "default",
-  approved: "success",
-  corrected: "warning",
-  rejected: "error",
-};
 
 export function formatPercent(value?: number | null) {
   if (value == null) {
@@ -53,24 +45,24 @@ export function literatureTitle(row: LiteratureEvidenceRow, t: (key: string) => 
 
 const TONE_STYLES: Record<string, React.CSSProperties> = {
   primary: {
-    borderColor: "rgba(165, 243, 252, 0.6)",
-    backgroundColor: "rgba(236, 254, 255, 0.8)",
+    borderColor: "var(--color-primary-200)",
+    backgroundColor: "var(--color-highlight)",
     color: "var(--color-primary-800, #155e75)",
   },
   success: {
-    borderColor: "rgba(187, 247, 208, 0.6)",
-    backgroundColor: "rgba(240, 253, 244, 0.8)",
+    borderColor: "var(--color-success-200)",
+    backgroundColor: "var(--color-highlight-green)",
     color: "var(--color-success-800, #166534)",
   },
   amber: {
-    borderColor: "rgba(253, 230, 138, 0.6)",
-    backgroundColor: "rgba(255, 251, 235, 0.8)",
-    color: "#92400e",
+    borderColor: "var(--color-highlight-amber-border)",
+    backgroundColor: "var(--color-highlight-amber)",
+    color: "var(--color-warning-text)",
   },
   gray: {
-    borderColor: "#e5e7eb",
-    backgroundColor: "#f9fafb",
-    color: "#374151",
+    borderColor: "var(--color-border)",
+    backgroundColor: "var(--color-bg)",
+    color: "var(--color-text-strong)",
   },
 };
 
@@ -86,7 +78,7 @@ export function TokenList({
   const toneStyle = TONE_STYLES[tone];
 
   if (values.length === 0) {
-    return <span style={{ fontSize: 14, color: "#9ca3af" }}>{"\u2014"}</span>;
+    return <span style={{ fontSize: 14, color: "var(--color-text-muted)" }}>{"\u2014"}</span>;
   }
 
   return (
@@ -118,12 +110,12 @@ export function TokenList({
         <span
           style={{
             borderRadius: 6,
-            border: "1px solid #e5e7eb",
-            backgroundColor: "#fff",
+            border: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-surface)",
             padding: "2px 8px",
             fontSize: 12,
             fontWeight: 500,
-            color: "#6b7280",
+            color: "var(--color-text-secondary)",
             boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
           }}
         >
@@ -150,14 +142,14 @@ export function StatBadge({
         alignItems: "center",
         gap: 6,
         borderRadius: 6,
-        backgroundColor: "#f9fafb",
+        backgroundColor: "var(--color-bg)",
         padding: "4px 8px",
         fontSize: 12,
       }}
     >
-      <Icon style={{ width: 14, height: 14, color: "#9ca3af" }} />
-      <span style={{ fontWeight: 500, color: "#374151" }}>{value}</span>
-      <span style={{ color: "#6b7280" }}>{label}</span>
+      <Icon style={{ width: 14, height: 14, color: "var(--color-text-muted)" }} />
+      <span style={{ fontWeight: 500, color: "var(--color-text-strong)" }}>{value}</span>
+      <span style={{ color: "var(--color-text-secondary)" }}>{label}</span>
     </div>
   );
 }
@@ -177,8 +169,8 @@ export function LiteratureCell({ row }: { row: LiteratureEvidenceRow }) {
           alignItems: "center",
           justifyContent: "center",
           borderRadius: 8,
-          background: "linear-gradient(to bottom right, var(--color-primary-100, #cffafe), var(--color-primary-50, #ecfeff))",
-          color: "var(--color-primary-700, #0e7490)",
+          background: "linear-gradient(to bottom right, var(--color-primary-100, var(--color-primary-100)), var(--color-primary-50, #ecfeff))",
+          color: "var(--color-primary-700, var(--color-primary-700))",
           boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
           transition: "transform 0.15s",
         }}
@@ -188,7 +180,7 @@ export function LiteratureCell({ row }: { row: LiteratureEvidenceRow }) {
       <div style={{ minWidth: 0 }}>
         <p
           className="edb-row-title edb-line-clamp-2"
-          style={{ fontSize: 14, fontWeight: 600, lineHeight: "20px", color: "#030712", transition: "color 0.15s" }}
+          style={{ fontSize: 14, fontWeight: 600, lineHeight: "20px", color: "var(--color-text)", transition: "color 0.15s" }}
         >
           {literatureTitle(row, t)}
         </p>
@@ -200,13 +192,13 @@ export function LiteratureCell({ row }: { row: LiteratureEvidenceRow }) {
             whiteSpace: "nowrap",
             fontFamily: "monospace",
             fontSize: 12,
-            color: "#9ca3af",
+            color: "var(--color-text-muted)",
           }}
         >
           {row.documentId.slice(0, 8)}...
         </p>
-        <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#6b7280" }}>
-          <span style={{ borderRadius: 4, backgroundColor: "#f3f4f6", padding: "2px 6px", fontWeight: 500 }}>
+        <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--color-text-secondary)" }}>
+          <span style={{ borderRadius: 4, backgroundColor: "var(--color-bg-muted)", padding: "2px 6px", fontWeight: 500 }}>
             {t("evidence.col.pmid")} {row.pmid ?? "\u2014"}
           </span>
         </div>
@@ -230,7 +222,7 @@ export function DiseaseCell({ row }: { row: LiteratureEvidenceRow }) {
   return (
     <p
       className="edb-line-clamp-3"
-      style={{ color: "#374151" }}
+      style={{ color: "var(--color-text-strong)" }}
       title={joinedLabel(row.diseases)}
     >
       {joinedLabel(row.diseases)}
@@ -246,8 +238,8 @@ export function ClassificationCell({ row }: { row: LiteratureEvidenceRow }) {
 /** Renders the Created date column cell. */
 export function CreatedCell({ row }: { row: LiteratureEvidenceRow }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#6b7280" }}>
-      <Calendar style={{ width: 14, height: 14, color: "#9ca3af" }} />
+    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--color-text-secondary)" }}>
+      <Calendar style={{ width: 14, height: 14, color: "var(--color-text-muted)" }} />
       {formatDate(row.createdAt)}
     </div>
   );
@@ -257,10 +249,10 @@ export function CreatedCell({ row }: { row: LiteratureEvidenceRow }) {
 export function ReviewCell({ row }: { row: LiteratureEvidenceRow }) {
   return (
     <>
-      <Badge variant={STATUS_VARIANT[row.reviewStatus] ?? "info"}>
+      <Badge variant={STATUS_VARIANT[row.reviewStatus as keyof typeof STATUS_VARIANT] ?? "info"}>
         {row.reviewStatus}
       </Badge>
-      <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#6b7280" }}>
+      <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--color-text-secondary)" }}>
         <BarChart3 style={{ width: 12, height: 12 }} />
         {formatPercent(row.avgConfidence)}
       </div>
@@ -279,11 +271,11 @@ export function FieldsCell({ row }: { row: LiteratureEvidenceRow }) {
         alignItems: "center",
         justifyContent: "center",
         borderRadius: 6,
-        backgroundColor: "#f3f4f6",
+        backgroundColor: "var(--color-bg-muted)",
         padding: "0 8px",
         fontSize: 14,
         fontWeight: 600,
-        color: "#374151",
+        color: "var(--color-text-strong)",
       }}
     >
       {row.fieldCount}

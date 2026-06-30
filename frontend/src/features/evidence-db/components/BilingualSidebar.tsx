@@ -8,10 +8,10 @@ import { CategoryToggle, EvidenceNavigator } from "./SidebarControls";
 import { useI18n } from "@/lib/i18n";
 
 const STATUS_TONES: Record<ReviewStatusValue, { bg: string; color: string; border: string }> = {
-  provisional: { bg: "#f9fafb", color: "#4b5563", border: "#e5e7eb" },
-  approved: { bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" },
-  corrected: { bg: "#fffbeb", color: "#b45309", border: "#fde68a" },
-  rejected: { bg: "#fef2f2", color: "#b91c1c", border: "#fecaca" },
+  provisional: { bg: "var(--color-bg)", color: "var(--color-text-strong)", border: "var(--color-border)" },
+  approved: { bg: "var(--color-highlight-green)", color: "var(--color-success-700)", border: "var(--color-success-200)" },
+  corrected: { bg: "var(--color-highlight-amber)", color: "var(--color-warning-text)", border: "var(--color-highlight-amber-border)" },
+  rejected: { bg: "var(--color-error-bg)", color: "var(--color-error-text)", border: "var(--color-error-border)" },
 };
 
 /* ── Bilingual Evidence Sidebar ─────────────────────────── */
@@ -58,7 +58,7 @@ export function BilingualSidebar({
           <h3 style={{
             fontSize: 12,
             fontWeight: 600,
-            color: "#6b7280",
+            color: "var(--color-text-secondary)",
             textTransform: "uppercase",
             letterSpacing: 0,
             margin: 0,
@@ -75,7 +75,7 @@ export function BilingualSidebar({
                 borderRadius: 4,
                 padding: "2px 6px",
                 fontSize: 10,
-                color: "#9ca3af",
+                color: "var(--color-text-muted)",
                 border: "none",
                 backgroundColor: "transparent",
                 display: "flex",
@@ -95,7 +95,7 @@ export function BilingualSidebar({
                 borderRadius: 4,
                 padding: "2px 6px",
                 fontSize: 10,
-                color: "#9ca3af",
+                color: "var(--color-text-muted)",
                 border: "none",
                 backgroundColor: "transparent",
                 display: "flex",
@@ -127,7 +127,7 @@ export function BilingualSidebar({
           <h3 style={{
             fontSize: 12,
             fontWeight: 600,
-            color: "#6b7280",
+            color: "var(--color-text-secondary)",
             textTransform: "uppercase",
             letterSpacing: "0.05em",
             margin: 0,
@@ -144,7 +144,7 @@ export function BilingualSidebar({
                 borderRadius: 4,
                 padding: "2px 6px",
                 fontSize: 10,
-                color: "#9ca3af",
+                color: "var(--color-text-muted)",
                 border: "none",
                 backgroundColor: "transparent",
                 display: "flex",
@@ -164,7 +164,7 @@ export function BilingualSidebar({
                 borderRadius: 4,
                 padding: "2px 6px",
                 fontSize: 10,
-                color: "#9ca3af",
+                color: "var(--color-text-muted)",
                 border: "none",
                 backgroundColor: "transparent",
                 display: "flex",
@@ -190,7 +190,7 @@ export function BilingualSidebar({
                   gap: 8,
                   borderRadius: 8,
                   border: checked ? `1px solid ${tone.border}` : "1px solid transparent",
-                  backgroundColor: checked ? tone.bg : "#f9fafb",
+                  backgroundColor: checked ? tone.bg : "var(--color-bg)",
                   opacity: checked ? 1 : 0.5,
                   padding: "6px 10px",
                   fontSize: 12,
@@ -222,8 +222,8 @@ export function BilingualSidebar({
                     backgroundColor: tone.color,
                   }}
                 />
-                <span style={{ color: "#374151" }}>{label}</span>
-                <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", color: "#6b7280" }}>
+                <span style={{ color: "var(--color-text-strong)" }}>{label}</span>
+                <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", color: "var(--color-text-secondary)" }}>
                   {statusCounts[value] ?? 0}
                 </span>
               </label>
@@ -237,7 +237,7 @@ export function BilingualSidebar({
         <h3 style={{
           fontSize: 12,
           fontWeight: 600,
-          color: "#6b7280",
+          color: "var(--color-text-secondary)",
           textTransform: "uppercase",
           letterSpacing: "0.05em",
           marginBottom: 12,

@@ -92,8 +92,8 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
         width: 320,
         flexShrink: 0,
         flexDirection: "column",
-        borderLeft: "1px solid #f3f4f6",
-        backgroundColor: "#fafbfc",
+        borderLeft: "1px solid var(--color-bg-muted)",
+        backgroundColor: "var(--color-bg)",
         backdropFilter: "blur(4px)",
       }}
       aria-label={t("pipeline.queue.ariaLabel")}
@@ -104,7 +104,7 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
           display: "flex",
           alignItems: "center",
           gap: 8,
-          borderBottom: "1px solid #f3f4f6",
+          borderBottom: "1px solid var(--color-bg-muted)",
           padding: "12px 16px",
         }}
       >
@@ -117,8 +117,8 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
             justifyContent: "center",
             borderRadius: 6,
             background:
-              "linear-gradient(to bottom right, var(--color-primary-500, #06b6d4), #2563eb)",
-            color: "#fff",
+              "linear-gradient(to bottom right, var(--color-primary-500, var(--color-primary-500)), #2563eb)",
+            color: "var(--color-surface)",
             boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
           }}
         >
@@ -130,7 +130,7 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
               fontSize: 13,
               fontWeight: 600,
               letterSpacing: "-0.025em",
-              color: "#111827",
+              color: "var(--color-text)",
             }}
           >
             {t("pipeline.queue.title")}
@@ -141,7 +141,7 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
               fontSize: 10.5,
-              color: "#6b7280",
+              color: "var(--color-text-secondary)",
             }}
           >
             {activeRuns.length > 0 ? (
@@ -149,7 +149,7 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
                 <span
                   style={{
                     fontWeight: 500,
-                    color: "var(--color-primary-700, #0e7490)",
+                    color: "var(--color-primary-700, var(--color-primary-700))",
                   }}
                 >
                   {activeRuns.length}
@@ -248,10 +248,10 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
           display: "flex",
           alignItems: "center",
           gap: 8,
-          borderTop: "1px solid #f3f4f6",
+          borderTop: "1px solid var(--color-bg-muted)",
           padding: "8px 16px",
           fontSize: 10,
-          color: "#9ca3af",
+          color: "var(--color-text-muted)",
         }}
       >
         <Activity style={{ width: 12, height: 12 }} aria-hidden />
@@ -307,26 +307,26 @@ function TabButton({
       style={
         active
           ? {
-              backgroundColor: "#111827",
-              color: "#fff",
+              backgroundColor: "var(--color-text)",
+              color: "var(--color-surface)",
               boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
             }
-          : { color: "#4b5563" }
+          : { color: "var(--color-text-strong)" }
       }
       onMouseEnter={(e) => {
         if (!active) {
-          e.currentTarget.style.backgroundColor = "#f3f4f6";
-          e.currentTarget.style.color = "#111827";
+          e.currentTarget.style.backgroundColor = "var(--color-bg-muted)";
+          e.currentTarget.style.color = "var(--color-text)";
         }
       }}
       onMouseLeave={(e) => {
         if (!active) {
           e.currentTarget.style.backgroundColor = "";
-          e.currentTarget.style.color = "#4b5563";
+          e.currentTarget.style.color = "var(--color-text-strong)";
         }
       }}
     >
-      <span style={{ color: active ? "#fff" : "#9ca3af" }}>{icon}</span>
+      <span style={{ color: active ? "var(--color-surface)" : "var(--color-text-muted)" }}>{icon}</span>
       <span>{label}</span>
       {typeof count === "number" && count > 0 && (
         <span
@@ -337,8 +337,8 @@ function TabButton({
             fontSize: 9.5,
             fontWeight: 600,
             fontVariantNumeric: "tabular-nums",
-            backgroundColor: active ? "rgba(255,255,255,0.2)" : "#e5e7eb",
-            color: active ? "#fff" : "#374151",
+            backgroundColor: active ? "var(--color-surface)" : "var(--color-border)",
+            color: active ? "var(--color-surface)" : "var(--color-text-strong)",
           }}
         >
           {count}
@@ -362,7 +362,7 @@ function TabButton({
               width: "100%",
               animation: "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite",
               borderRadius: "50%",
-              backgroundColor: "#38bdf8",
+              backgroundColor: "var(--color-primary-400)",
               opacity: 0.75,
             }}
           />
@@ -373,7 +373,7 @@ function TabButton({
               width: 6,
               height: 6,
               borderRadius: "50%",
-              backgroundColor: "var(--color-primary-600, #0891b2)",
+              backgroundColor: "var(--color-primary-600, var(--color-primary-600))",
             }}
           />
         </span>
@@ -392,8 +392,8 @@ function LoadingSkeleton() {
           key={i}
           style={{
             borderRadius: 8,
-            border: "1px solid #f3f4f6",
-            backgroundColor: "#fff",
+            border: "1px solid var(--color-bg-muted)",
+            backgroundColor: "var(--color-surface)",
             padding: 12,
           }}
         >
@@ -423,13 +423,13 @@ function ErrorState({ t }: { t: TFn }) {
       style={{
         margin: "24px 12px 0",
         borderRadius: 8,
-        border: "1px solid #fee2e2",
-        backgroundColor: "rgba(254,242,242,0.6)",
+        border: "1px solid var(--color-error-100)",
+        backgroundColor: "var(--color-error-bg)",
         padding: 16,
         textAlign: "center",
       }}
     >
-      <p style={{ fontSize: 11.5, fontWeight: 500, color: "#b91c1c" }}>
+      <p style={{ fontSize: 11.5, fontWeight: 500, color: "var(--color-error-text)" }}>
         {t("pipeline.queue.loadError")}
       </p>
       <p
@@ -437,7 +437,7 @@ function ErrorState({ t }: { t: TFn }) {
           marginTop: 4,
           fontSize: 10.5,
           lineHeight: 1.625,
-          color: "rgba(220,38,38,0.8)",
+          color: "var(--color-error-text)",
         }}
       >
         {t("pipeline.queue.loadErrorHint")}
@@ -465,14 +465,14 @@ function EmptyState({ message: msg, t }: { message: string; t: TFn }) {
           alignItems: "center",
           justifyContent: "center",
           borderRadius: "50%",
-          backgroundColor: "#f3f4f6",
-          color: "#9ca3af",
+          backgroundColor: "var(--color-bg-muted)",
+          color: "var(--color-text-muted)",
         }}
       >
         <Inbox style={{ width: 16, height: 16 }} aria-hidden />
       </span>
       <p
-        style={{ marginTop: 12, fontSize: 12, fontWeight: 500, color: "#374151" }}
+        style={{ marginTop: 12, fontSize: 12, fontWeight: 500, color: "var(--color-text-strong)" }}
       >
         {msg}
       </p>
@@ -482,7 +482,7 @@ function EmptyState({ message: msg, t }: { message: string; t: TFn }) {
           maxWidth: 220,
           fontSize: 10.5,
           lineHeight: 1.625,
-          color: "#6b7280",
+          color: "var(--color-text-secondary)",
         }}
       >
         {t("pipeline.queue.dropHint")}

@@ -59,15 +59,15 @@ export function EvidenceDetailView({
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: 16,
-                backgroundColor: "#fee2e2",
+                backgroundColor: "var(--color-error-bg)",
               }}
             >
-              <AlertCircle style={{ width: 28, height: 28, color: "#ef4444" }} />
+              <AlertCircle style={{ width: 28, height: 28, color: "var(--color-error-text)" }} />
             </div>
-            <p style={{ marginTop: 16, fontSize: 14, fontWeight: 600, color: "#991b1b" }}>
+            <p style={{ marginTop: 16, fontSize: 14, fontWeight: 600, color: "var(--color-error-text)" }}>
               {t("evidence.detail.loadError")}
             </p>
-            <p style={{ marginTop: 4, fontSize: 14, color: "#dc2626" }}>
+            <p style={{ marginTop: 4, fontSize: 14, color: "var(--color-error-text)" }}>
               {error?.message ?? t("evidence.detail.notFound")}
             </p>
             <Link
@@ -78,11 +78,11 @@ export function EvidenceDetailView({
                 alignItems: "center",
                 gap: 8,
                 borderRadius: 6,
-                backgroundColor: "#dc2626",
+                backgroundColor: "var(--color-error-text)",
                 padding: "8px 16px",
                 fontSize: 14,
                 fontWeight: 500,
-                color: "#fff",
+                color: "var(--color-surface)",
                 textDecoration: "none",
                 transition: "background-color 0.15s",
               }}

@@ -155,7 +155,7 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
           if (onRequest) {
             onRequest({ messages: [{ role: "user" as const, content: trimmed }] });
           } else {
-            console.warn("[ChatView] onRequest is undefined - message sent but not displayed");
+            // onRequest should always be defined in the current architecture
           }
       } catch (err) {
         message.error(extractErrorMessage(err, "Failed to send message"));

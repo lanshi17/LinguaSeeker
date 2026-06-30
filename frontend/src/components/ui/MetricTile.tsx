@@ -15,14 +15,14 @@ const toneColors: Record<NonNullable<MetricTileProps["tone"]>, string> = {
   default: "var(--color-text)",
   primary: "var(--color-primary-700)",
   success: "var(--color-success-700)",
-  warning: "#b45309",
+  warning: "var(--color-warning-text)",
   error: "var(--color-error-text)",
 };
 
 const containerStyle: CSSProperties = {
   borderRadius: 6,
   border: "1px solid var(--color-border)",
-  backgroundColor: "rgba(249, 250, 251, 0.6)",
+  backgroundColor: "var(--color-subtle-bg)",
   padding: "8px 12px",
 };
 

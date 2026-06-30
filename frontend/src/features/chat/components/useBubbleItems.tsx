@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { BubbleItemType } from "@ant-design/x";
 import type { MessageInfo } from "@ant-design/x-sdk/es/x-chat";
 import type { ChatAction } from "../types/actions";
 import type { ChatBubbleMessage } from "../utils/messageHistory";
@@ -31,8 +32,7 @@ interface UseBubbleItemsParams {
  * thinking indicator, streaming cursor) and synthetic items for
  * pipeline confirm form, pipeline status card, and welcome block.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useBubbleItems(params: UseBubbleItemsParams): any[] {
+export function useBubbleItems(params: UseBubbleItemsParams): BubbleItemType[] {
   const {
     messages,
     activeForm,
@@ -49,8 +49,7 @@ export function useBubbleItems(params: UseBubbleItemsParams): any[] {
 
   return useMemo(() => {
     const messageKeys = toUniqueChatMessageKeys(messages);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const items: any[] = messages.map(({ id, message, status }, index) => {
+    const items: BubbleItemType[] = messages.map(({ id, message, status }, index) => {
       const messageKey = messageKeys[index];
       const action = (message as { action?: ChatAction }).action;
       const dispatchKey = `${id ?? messageKey}`;

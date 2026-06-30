@@ -17,34 +17,34 @@ interface PhaseDetailCardProps {
 }
 
 const PHASE_ICON_COLOR: Record<string, React.CSSProperties> = {
-  phase_1: { color: "#0369a1", backgroundColor: "#f0f9ff", borderBottom: "1px solid #bae6fd" },
-  phase_2: { color: "var(--color-primary-700, #0e7490)", backgroundColor: "#ecfeff", borderBottom: "1px solid #a5f3fc" },
-  phase_3: { color: "#6d28d9", backgroundColor: "#f5f3ff", borderBottom: "1px solid #ddd6fe" },
+  phase_1: { color: "var(--color-blue-700)", backgroundColor: "var(--color-blue-50)", borderBottom: "1px solid var(--color-running-border)" },
+  phase_2: { color: "var(--color-primary-700, #0e7490)", backgroundColor: "var(--color-highlight)", borderBottom: "1px solid var(--color-running-border)" },
+  phase_3: { color: "var(--color-purple-700)", backgroundColor: "var(--color-purple-50)", borderBottom: "1px solid var(--color-purple-700)" },
 };
 
-const DEFAULT_HEADER_STYLE: React.CSSProperties = { backgroundColor: "#f9fafb" };
+const DEFAULT_HEADER_STYLE: React.CSSProperties = { backgroundColor: "var(--color-bg)" };
 
 const nodeBorderColorBg = (status: ProcessingStatus): React.CSSProperties => {
   switch (status) {
     case "running":
-      return { borderColor: "#a5f3fc", backgroundColor: "rgba(236,254,255,0.4)" };
+      return { borderColor: "var(--color-running-border)", backgroundColor: "var(--color-running-bg)" };
     case "completed":
-      return { borderColor: "#bbf7d0", backgroundColor: "rgba(240,253,244,0.3)" };
+      return { borderColor: "var(--color-success-200)", backgroundColor: "var(--color-highlight-green)" };
     case "failed":
-      return { borderColor: "#fecaca", backgroundColor: "rgba(254,242,242,0.4)" };
+      return { borderColor: "var(--color-error-border)", backgroundColor: "var(--color-error-bg)" };
     case "pending":
-      return { borderColor: "#e5e7eb", backgroundColor: "rgba(249,250,251,0.5)" };
+      return { borderColor: "var(--color-border)", backgroundColor: "var(--color-subtle-bg)" };
     case "skipped":
-      return { borderColor: "#e5e7eb", backgroundColor: "rgba(249,250,251,0.3)" };
+      return { borderColor: "var(--color-border)", backgroundColor: "var(--color-subtle-bg)" };
     default:
-      return { borderColor: "#e5e7eb", backgroundColor: "rgba(249,250,251,0.5)" };
+      return { borderColor: "var(--color-border)", backgroundColor: "var(--color-subtle-bg)" };
   }
 };
 
 const progressBarBg = (status: ProcessingStatus): string => {
   if (status === "running") return "linear-gradient(to right, #7dd3fc, var(--color-primary-600, #0891b2))";
   if (status === "completed") return "var(--color-success-500, #22c55e)";
-  return "#d1d5db";
+  return "var(--color-text-muted)";
 };
 
 const PHASE_TITLE_KEYS: Record<string, string> = {
@@ -85,7 +85,7 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
           alignItems: "flex-start",
           justifyContent: "space-between",
           gap: 12,
-          borderBottom: "1px solid #f3f4f6",
+          borderBottom: "1px solid var(--color-bg-muted)",
           padding: "12px 16px",
           ...(PHASE_ICON_COLOR[phaseId] ?? DEFAULT_HEADER_STYLE),
         }}
@@ -101,7 +101,7 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
                 fontSize: 13,
                 fontWeight: 600,
                 letterSpacing: "-0.025em",
-                color: "#111827",
+                color: "var(--color-text)",
               }}
             >
               {title}
@@ -115,7 +115,7 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
                 fontSize: 11,
-                color: "#4b5563",
+                color: "var(--color-text-strong)",
               }}
             >
               {subtitle}
@@ -145,7 +145,7 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
         />
       </div>
 
-      <div style={{ borderTop: "1px solid #f3f4f6", padding: "12px 16px" }}>
+      <div style={{ borderTop: "1px solid var(--color-bg-muted)", padding: "12px 16px" }}>
         {totalNodes > 0 ? (
           <NodeList nodes={nodes} t={t} />
         ) : phase.summary ? (
@@ -153,7 +153,7 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
         ) : isLive ? (
           <EmptyLiveHint phaseId={phaseId} t={t} />
         ) : (
-          <p style={{ fontSize: 11, fontStyle: "italic", color: "#9ca3af" }}>
+          <p style={{ fontSize: 11, fontStyle: "italic", color: "var(--color-text-muted)" }}>
             {t("pipeline.phase.noDetail")}
           </p>
         )}
@@ -164,13 +164,13 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          borderTop: "1px solid #f3f4f6",
-          backgroundColor: "rgba(249,250,251,0.5)",
+          borderTop: "1px solid var(--color-bg-muted)",
+          backgroundColor: "var(--color-subtle-bg)",
           padding: "8px 16px",
           fontSize: 10,
           fontFamily: "var(--font-mono, monospace)",
           fontVariantNumeric: "tabular-nums",
-          color: "#6b7280",
+          color: "var(--color-text-secondary)",
         }}
       >
         <span>{t("pipeline.phase.started")} {formatTimestamp(phase.started_at)}</span>
@@ -180,11 +180,11 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
       {phase.error && (
         <div
           style={{
-            borderTop: "1px solid #fecaca",
-            backgroundColor: "#fef2f2",
+            borderTop: "1px solid var(--color-error-border)",
+            backgroundColor: "var(--color-error-bg)",
             padding: "8px 16px",
             fontSize: 11,
-            color: "#b91c1c",
+            color: "var(--color-error-text)",
           }}
         >
           <AlertCircle style={{ marginRight: 4, display: "inline", width: 12, height: 12 }} aria-hidden />
@@ -206,12 +206,12 @@ function PhaseStatusBadge({ status, t }: { status: ProcessingStatus; t: TFn }) {
           alignItems: "center",
           gap: 6,
           borderRadius: 9999,
-          backgroundColor: "rgba(255,255,255,0.7)",
+          backgroundColor: "var(--color-card-bg)",
           padding: "2px 8px",
           fontSize: 11,
           fontWeight: 500,
-          color: "var(--color-primary-700, #0e7490)",
-          border: "1px solid #a5f3fc",
+          color: "var(--color-primary-700, var(--color-primary-700))",
+          border: "1px solid var(--color-running-border)",
         }}
       >
         <LivePulse tone="primary" />
@@ -272,7 +272,7 @@ function NodeRow({ node }: { node: PhaseNode }) {
             whiteSpace: "nowrap",
             fontSize: 12,
             fontWeight: 500,
-            color: "#1f2937",
+            color: "var(--color-code-text)",
           }}
         >
           {node.label}
@@ -282,12 +282,12 @@ function NodeRow({ node }: { node: PhaseNode }) {
             style={{
               marginLeft: "auto",
               borderRadius: 4,
-              backgroundColor: "rgba(255,255,255,0.7)",
+              backgroundColor: "var(--color-card-bg)",
               padding: "2px 6px",
               fontFamily: "var(--font-mono, monospace)",
               fontSize: 10,
               fontVariantNumeric: "tabular-nums",
-              color: "#374151",
+              color: "var(--color-text-strong)",
             }}
           >
             {node.count.toLocaleString()}
@@ -298,7 +298,7 @@ function NodeRow({ node }: { node: PhaseNode }) {
             fontFamily: "var(--font-mono, monospace)",
             fontSize: 10,
             fontVariantNumeric: "tabular-nums",
-            color: "#6b7280",
+            color: "var(--color-text-secondary)",
           }}
         >
           {formatDuration(duration)}
@@ -311,7 +311,7 @@ function NodeRow({ node }: { node: PhaseNode }) {
             height: 2,
             overflow: "hidden",
             borderRadius: 9999,
-            backgroundColor: "rgba(255,255,255,0.6)",
+            backgroundColor: "var(--color-card-bg)",
           }}
         >
           <div
@@ -332,12 +332,12 @@ function NodeRow({ node }: { node: PhaseNode }) {
 
 function NodeStatusIcon({ status }: { status: ProcessingStatus }) {
   if (status === "running")
-    return <Loader2 className="spin" style={{ width: 14, height: 14, flexShrink: 0, color: "var(--color-primary-600, #0891b2)" }} aria-hidden />;
+    return <Loader2 className="spin" style={{ width: 14, height: 14, flexShrink: 0, color: "var(--color-primary-600, var(--color-primary-600))" }} aria-hidden />;
   if (status === "completed")
-    return <CheckCircle2 style={{ width: 14, height: 14, flexShrink: 0, color: "#16a34a" }} aria-hidden />;
+    return <CheckCircle2 style={{ width: 14, height: 14, flexShrink: 0, color: "var(--color-success-600)" }} aria-hidden />;
   if (status === "failed")
-    return <AlertCircle style={{ width: 14, height: 14, flexShrink: 0, color: "#dc2626" }} aria-hidden />;
-  return <Circle style={{ width: 14, height: 14, flexShrink: 0, color: "#9ca3af" }} aria-hidden />;
+    return <AlertCircle style={{ width: 14, height: 14, flexShrink: 0, color: "var(--color-error-text)" }} aria-hidden />;
+  return <Circle style={{ width: 14, height: 14, flexShrink: 0, color: "var(--color-text-muted)" }} aria-hidden />;
 }
 
 function SummaryBlock({ summary }: { summary: Record<string, unknown> }) {
@@ -354,7 +354,7 @@ function SummaryBlock({ summary }: { summary: Record<string, unknown> }) {
     >
       {entries.map(([k, v]) => (
         <div key={k} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, overflow: "hidden" }}>
-          <dt style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#6b7280" }}>
+          <dt style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--color-text-secondary)" }}>
             {k.replace(/_/g, " ")}
           </dt>
           <dd
@@ -364,7 +364,7 @@ function SummaryBlock({ summary }: { summary: Record<string, unknown> }) {
               whiteSpace: "nowrap",
               fontFamily: "var(--font-mono, monospace)",
               fontVariantNumeric: "tabular-nums",
-              color: "#1f2937",
+              color: "var(--color-code-text)",
             }}
           >
             {typeof v === "number" ? v.toLocaleString() : String(v)}
@@ -377,10 +377,10 @@ function SummaryBlock({ summary }: { summary: Record<string, unknown> }) {
 
 function EmptyLiveHint({ phaseId, t }: { phaseId: string; t: TFn }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: "#6b7280" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: "var(--color-text-secondary)" }}>
       <Skeleton variant="line" width={128} height={8} />
       <Skeleton variant="line" width={80} height={8} />
-      <span style={{ marginLeft: "auto", fontStyle: "italic", color: "#9ca3af" }}>
+      <span style={{ marginLeft: "auto", fontStyle: "italic", color: "var(--color-text-muted)" }}>
         {t("pipeline.phase.preparing", { phase: phaseId.replace("_", " ") })}
       </span>
     </div>
@@ -413,7 +413,7 @@ export function PhaseDetailCardSkeleton({ index = 0 }: { index?: number }) {
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "space-between",
-          borderBottom: "1px solid #f3f4f6",
+          borderBottom: "1px solid var(--color-bg-muted)",
           padding: "12px 16px",
         }}
       >
@@ -428,7 +428,7 @@ export function PhaseDetailCardSkeleton({ index = 0 }: { index?: number }) {
         <Skeleton variant="block" height={48} />
         <Skeleton variant="block" height={48} />
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, borderTop: "1px solid #f3f4f6", padding: "12px 16px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, borderTop: "1px solid var(--color-bg-muted)", padding: "12px 16px" }}>
         <Skeleton width="100%" height={12} />
         <Skeleton width="83%" height={12} />
         <Skeleton width="67%" height={12} />
@@ -438,8 +438,8 @@ export function PhaseDetailCardSkeleton({ index = 0 }: { index?: number }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          borderTop: "1px solid #f3f4f6",
-          backgroundColor: "rgba(249,250,251,0.5)",
+          borderTop: "1px solid var(--color-bg-muted)",
+          backgroundColor: "var(--color-subtle-bg)",
           padding: "8px 16px",
         }}
       >

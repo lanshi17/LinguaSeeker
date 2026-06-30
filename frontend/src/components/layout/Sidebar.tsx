@@ -1,6 +1,5 @@
-import { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MessageSquare, Database, ClipboardList, ShieldCheck, HelpCircle, type LucideIcon } from "lucide-react";
+import { MessageSquare, Database, ClipboardList, ShieldCheck, HelpCircle } from "lucide-react";
 import { Menu, Typography } from "antd";
 import { useAppStore } from "@/stores/appStore";
 import { useI18n } from "@/lib/i18n";
@@ -23,15 +22,9 @@ export function Sidebar({ mobile, onNavigate, onGuideOpen }: SidebarProps) {
   const effectiveCollapsed = mobile ? false : collapsed;
   const { t } = useI18n();
 
-  // The SVG uses @media(prefers-color-scheme:dark) internally. When the app
-  // theme diverges from the OS colour-scheme we need to compensate with a
-  // CSS filter so the logo always matches the surrounding UI.
-  const logoFilter = useMemo(() => {
-    const osDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    if (mode === "dark" && !osDark) return "invert(1) hue-rotate(180deg)";
-    if (mode === "light" && osDark) return "invert(1) hue-rotate(180deg)";
-    return undefined;
-  }, [mode]);
+  // The SVG is always the bright (light) version. In dark mode we invert it
+  // so the white background becomes dark and the colours stay reasonable.
+  const logoFilter = mode === "dark" ? "invert(1) hue-rotate(180deg)" : undefined;
 
   const NAV_ITEMS = [
     { label: t("nav.chat"), href: "/chat", icon: MessageSquare },
@@ -133,7 +126,7 @@ export function Sidebar({ mobile, onNavigate, onGuideOpen }: SidebarProps) {
                 fontFamily: "inherit",
                 transition: "color 150ms",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#0891b2")}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-primary-600)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
             >
               <HelpCircle size={16} />

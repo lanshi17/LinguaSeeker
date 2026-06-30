@@ -1,3 +1,5 @@
+import "./pipeline.css";
+
 export { PipelineStatusView } from "./components/PipelineStatusView";
 export { PhaseTimeline } from "./components/PhaseTimeline";
 export { PhaseDetailCard, PhaseDetailCardSkeleton } from "./components/PhaseDetailCard";

@@ -18,17 +18,17 @@ interface EvidenceHighlightTextProps {
 const TONE_STYLES: Record<EvidenceHighlightTone, CSSProperties> = {
   classification: {
     backgroundColor: "#fde68a",
-    color: "#451a03",
+    color: "var(--color-text-strong)",
     boxShadow: "0 0 0 1px #fcd34d",
   },
   disease: {
     backgroundColor: "#fecdd3",
-    color: "#4c0519",
+    color: "var(--color-text-strong)",
     boxShadow: "0 0 0 1px #fda4af",
   },
   functional: {
     backgroundColor: "var(--color-success-200)",
-    color: "#052e16",
+    color: "var(--color-text-strong)",
     boxShadow: "0 0 0 1px var(--color-success-300)",
   },
   gene: {
@@ -37,34 +37,34 @@ const TONE_STYLES: Record<EvidenceHighlightTone, CSSProperties> = {
     boxShadow: "0 0 0 1px var(--color-primary-300)",
   },
   neutral: {
-    backgroundColor: "#e5e7eb",
-    color: "#030712",
-    boxShadow: "0 0 0 1px #d1d5db",
+    backgroundColor: "var(--color-border)",
+    color: "var(--color-text)",
+    boxShadow: "0 0 0 1px var(--color-text-muted)",
   },
   variant: {
     backgroundColor: "#a5f3fc",
-    color: "#083344",
+    color: "var(--color-text-strong)",
     boxShadow: "0 0 0 1px #67e8f9",
   },
 };
 
 /** Inline-style equivalents for CATEGORY_COLORS mark classes. */
 const CATEGORY_MARK_STYLES: Record<string, CSSProperties> = {
-  A: { backgroundColor: "#fde68a", color: "#451a03", boxShadow: "0 0 0 1px #fcd34d" },
-  B: { backgroundColor: "#bfdbfe", color: "#172554", boxShadow: "0 0 0 1px #93c5fd" },
-  C: { backgroundColor: "#ddd6fe", color: "#2e1065", boxShadow: "0 0 0 1px #c4b5fd" },
-  D: { backgroundColor: "#a5f3fc", color: "#083344", boxShadow: "0 0 0 1px #67e8f9" },
-  E: { backgroundColor: "#a7f3d0", color: "#052e16", boxShadow: "0 0 0 1px #6ee7b7" },
-  F: { backgroundColor: "#bbf7d0", color: "#052e16", boxShadow: "0 0 0 1px #86efac" },
-  G: { backgroundColor: "#fed7aa", color: "#431407", boxShadow: "0 0 0 1px #fdba74" },
-  H: { backgroundColor: "#fecaca", color: "#450a0a", boxShadow: "0 0 0 1px #fca5a5" },
-  I: { backgroundColor: "#99f6e4", color: "#042f2e", boxShadow: "0 0 0 1px #5eead4" },
-  J: { backgroundColor: "#fbcfe8", color: "#500724", boxShadow: "0 0 0 1px #f9a8d4" },
+  A: { backgroundColor: "#fde68a", color: "var(--color-text-strong)", boxShadow: "0 0 0 1px #fcd34d" },
+  B: { backgroundColor: "#bfdbfe", color: "var(--color-text-strong)", boxShadow: "0 0 0 1px #93c5fd" },
+  C: { backgroundColor: "#ddd6fe", color: "var(--color-text-strong)", boxShadow: "0 0 0 1px #c4b5fd" },
+  D: { backgroundColor: "#a5f3fc", color: "var(--color-text-strong)", boxShadow: "0 0 0 1px #67e8f9" },
+  E: { backgroundColor: "#a7f3d0", color: "var(--color-text-strong)", boxShadow: "0 0 0 1px #6ee7b7" },
+  F: { backgroundColor: "#bbf7d0", color: "var(--color-text-strong)", boxShadow: "0 0 0 1px #86efac" },
+  G: { backgroundColor: "#fed7aa", color: "var(--color-text-strong)", boxShadow: "0 0 0 1px #fdba74" },
+  H: { backgroundColor: "var(--color-error-border)", color: "var(--color-text-strong)", boxShadow: "0 0 0 1px #fca5a5" },
+  I: { backgroundColor: "#99f6e4", color: "var(--color-text-strong)", boxShadow: "0 0 0 1px #5eead4" },
+  J: { backgroundColor: "#fbcfe8", color: "var(--color-text-strong)", boxShadow: "0 0 0 1px #f9a8d4" },
 };
 
 const INACTIVE_MARK_STYLE: CSSProperties = {
   backgroundColor: "#fef9c3",
-  color: "#111827",
+  color: "var(--color-text)",
 };
 
 function escapedRegExp(value: string) {
@@ -108,11 +108,11 @@ export function EvidenceHighlightText({
     return (
       <div style={{
         borderRadius: 8,
-        border: "1px dashed #d1d5db",
-        backgroundColor: "#f9fafb",
+        border: "1px dashed var(--color-text-muted)",
+        backgroundColor: "var(--color-bg)",
         padding: 16,
         fontSize: 14,
-        color: "#6b7280",
+        color: "var(--color-text-secondary)",
       }}>
         No source span available.
       </div>
@@ -140,22 +140,22 @@ export function EvidenceHighlightText({
   return (
     <div style={{
       borderRadius: 8,
-      border: "1px solid #e5e7eb",
-      backgroundColor: "#fff",
+      border: "1px solid var(--color-border)",
+      backgroundColor: "var(--color-surface)",
       padding: 16,
       fontSize: 14,
       lineHeight: "28px",
-      color: "#1f2937",
+      color: "var(--color-code-text)",
       boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
     }}>
-      <div style={{ marginBottom: 12, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, fontSize: 12, color: "#6b7280" }}>
+      <div style={{ marginBottom: 12, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, fontSize: 12, color: "var(--color-text-secondary)" }}>
         {label && (
           <span style={{
             borderRadius: 6,
-            backgroundColor: "#f3f4f6",
+            backgroundColor: "var(--color-bg-muted)",
             padding: "4px 8px",
             fontWeight: 500,
-            color: "#374151",
+            color: "var(--color-text-strong)",
           }}>
             {label}
           </span>
@@ -166,9 +166,9 @@ export function EvidenceHighlightText({
             data-testid="highlight-unavailable"
             style={{
               borderRadius: 4,
-              backgroundColor: "#f1f5f9",
+              backgroundColor: "var(--color-bg-muted)",
               padding: "2px 6px",
-              color: "#64748b",
+              color: "var(--color-text-muted)",
             }}
           >
             highlight unavailable

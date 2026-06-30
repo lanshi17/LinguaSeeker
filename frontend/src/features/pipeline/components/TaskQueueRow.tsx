@@ -28,19 +28,19 @@ const PULSE_TONE: Record<
 };
 
 const DOT_COLORS: Record<ProcessingStatus, string> = {
-  pending: "#9ca3af",
-  running: "#0891b2",
-  completed: "#16a34a",
-  failed: "#dc2626",
-  skipped: "#9ca3af",
+  pending: "var(--color-text-muted)",
+  running: "var(--color-primary-600)",
+  completed: "var(--color-success-600)",
+  failed: "var(--color-error-text)",
+  skipped: "var(--color-text-muted)",
 };
 
 const BADGE_STYLES: Record<ProcessingStatus, CSSProperties> = {
-  pending: { backgroundColor: "#f3f4f6", color: "#4b5563" },
-  running: { backgroundColor: "#ecfeff", color: "#0e7490" },
-  completed: { backgroundColor: "#f0fdf4", color: "#15803d" },
-  failed: { backgroundColor: "#fef2f2", color: "#b91c1c" },
-  skipped: { backgroundColor: "#f3f4f6", color: "#6b7280" },
+  pending: { backgroundColor: "var(--color-bg-muted)", color: "var(--color-text-strong)" },
+  running: { backgroundColor: "var(--color-highlight)", color: "var(--color-primary-700)" },
+  completed: { backgroundColor: "var(--color-highlight-green)", color: "var(--color-success-700)" },
+  failed: { backgroundColor: "var(--color-error-bg)", color: "var(--color-error-text)" },
+  skipped: { backgroundColor: "var(--color-bg-muted)", color: "var(--color-text-secondary)" },
 };
 
 const PHASE_BOX_DONE: CSSProperties = {
@@ -50,8 +50,8 @@ const PHASE_BOX_DONE: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   borderRadius: 3,
-  backgroundColor: "#dcfce7",
-  color: "#16a34a",
+  backgroundColor: "var(--color-success-100)",
+  color: "var(--color-success-600)",
 };
 
 const PHASE_BOX_ACTIVE: CSSProperties = {
@@ -61,8 +61,8 @@ const PHASE_BOX_ACTIVE: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   borderRadius: 3,
-  backgroundColor: "#ecfeff",
-  color: "#0891b2",
+  backgroundColor: "var(--color-highlight)",
+  color: "var(--color-primary-600)",
 };
 
 const PHASE_BOX_IDLE: CSSProperties = {
@@ -72,8 +72,8 @@ const PHASE_BOX_IDLE: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   borderRadius: 3,
-  backgroundColor: "#f3f4f6",
-  color: "#9ca3af",
+  backgroundColor: "var(--color-bg-muted)",
+  color: "var(--color-text-muted)",
 };
 
 export function TaskQueueRow({ run }: TaskQueueRowProps) {
@@ -135,7 +135,7 @@ export function TaskQueueRow({ run }: TaskQueueRowProps) {
               fontSize: 11.5,
               fontWeight: 500,
               letterSpacing: "-0.01em",
-              color: "#1f2937",
+              color: "var(--color-code-text)",
             }}
             title={run.processing_run_id}
           >
@@ -169,8 +169,8 @@ export function TaskQueueRow({ run }: TaskQueueRowProps) {
               </>
             ) : (
               <>
-                <FileText style={{ width: 12, height: 12, flexShrink: 0, color: "#9ca3af" }} />
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 11, color: "#4b5563" }} title={subtitle}>
+                <FileText style={{ width: 12, height: 12, flexShrink: 0, color: "var(--color-text-muted)" }} />
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 11, color: "var(--color-text-strong)" }} title={subtitle}>
                   {subtitle}
                 </span>
               </>
@@ -206,7 +206,7 @@ export function TaskQueueRow({ run }: TaskQueueRowProps) {
             fontFamily: "var(--font-mono)",
             fontSize: 10,
             fontVariantNumeric: "tabular-nums",
-            color: "#9ca3af",
+            color: "var(--color-text-muted)",
           }}>
             <Clock style={{ width: 10, height: 10 }} aria-hidden />
             {isLive ? formatRelative(run.started_at) : formatDuration(elapsed)}

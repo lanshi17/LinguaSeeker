@@ -24,8 +24,8 @@ export function CategoryToggle({
         alignItems: "center",
         gap: 8,
         borderRadius: 8,
-        border: checked ? "1px solid #e5e7eb" : "1px solid transparent",
-        backgroundColor: checked ? "#fff" : "#f9fafb",
+        border: checked ? "1px solid var(--color-border)" : "1px solid transparent",
+        backgroundColor: checked ? "var(--color-surface)" : "var(--color-bg)",
         opacity: checked ? 1 : 0.5,
         padding: "6px 10px",
         fontSize: 12,
@@ -59,9 +59,9 @@ export function CategoryToggle({
           alignItems: "center",
           justifyContent: "center",
           borderRadius: 4,
-          border: checked ? "1px solid transparent" : "1px solid #d1d5db",
-          backgroundColor: checked ? hex : "#fff",
-          color: checked ? "#0f172a" : undefined,
+          border: checked ? "1px solid transparent" : "1px solid var(--color-text-muted)",
+          backgroundColor: checked ? hex : "var(--color-surface)",
+          color: checked ? "var(--color-text-strong)" : undefined,
           transition: "background-color 0.15s",
         }}
       >
@@ -77,10 +77,10 @@ export function CategoryToggle({
           </svg>
         )}
       </div>
-      <span style={{ color: "#374151" }}>
+      <span style={{ color: "var(--color-text-strong)" }}>
         <span style={{ fontFamily: "var(--font-mono)" }}>{category}</span>: {categoryLabel(category)}
       </span>
-      <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", color: "#6b7280" }}>{count}</span>
+      <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", color: "var(--color-text-secondary)" }}>{count}</span>
     </label>
   );
 }
@@ -142,7 +142,7 @@ export function EvidenceNavigator({
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
               flex: 1,
-              color: "#374151",
+              color: "var(--color-text-strong)",
               fontWeight: 500,
             }}>
               {item.field_name ?? item.field_id}

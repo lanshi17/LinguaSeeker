@@ -1,3 +1,4 @@
+import { STATUS_VARIANT } from "@/lib/constants/statusVariant";
 import {
   ChevronLeft,
   ChevronRight,
@@ -17,7 +18,6 @@ import {
   type LiteratureEvidenceRow,
 } from "../utils/literatureRows";
 import {
-  STATUS_VARIANT,
   formatDate,
   joinedLabel,
   literatureTitle,
@@ -68,8 +68,8 @@ export function EvidenceResultsTable({
           position: "relative",
           overflow: "hidden",
           borderRadius: 12,
-          border: "1px dashed #d1d5db",
-          background: "linear-gradient(to bottom right, #f9fafb, #fff)",
+          border: "1px dashed var(--color-text-muted)",
+          background: "linear-gradient(to bottom right, var(--color-bg), var(--color-surface))",
           padding: "64px 24px",
           textAlign: "center",
         }}
@@ -99,42 +99,22 @@ export function EvidenceResultsTable({
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 16,
-              background: "linear-gradient(to bottom right, var(--color-primary-100, #cffafe), var(--color-primary-50, #ecfeff))",
+              background: "linear-gradient(to bottom right, var(--color-primary-100, var(--color-primary-100)), var(--color-primary-50, #ecfeff))",
               boxShadow: "inset 0 2px 4px 0 rgba(0,0,0,0.05)",
             }}
           >
-            <Search style={{ width: 32, height: 32, color: "var(--color-primary-500, #06b6d4)" }} />
+            <Search style={{ width: 32, height: 32, color: "var(--color-primary-500, var(--color-primary-500))" }} />
           </div>
-          <p style={{ marginTop: 20, fontSize: 16, fontWeight: 600, color: "#111827" }}>
+          <p style={{ marginTop: 20, fontSize: 16, fontWeight: 600, color: "var(--color-text)" }}>
             {t("evidence.results.empty")}
           </p>
-          <p style={{ marginTop: 8, maxWidth: 384, margin: "8px auto 0", fontSize: 14, color: "#6b7280" }}>
+          <p style={{ marginTop: 8, maxWidth: 384, margin: "8px auto 0", fontSize: 14, color: "var(--color-text-secondary)" }}>
             {t("evidence.results.guidance")}
           </p>
         </div>
       </div>
     );
   }
-
-  const paginationBtnStyle: React.CSSProperties = {
-    display: "flex",
-    height: 32,
-    width: 32,
-    cursor: "pointer",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 6,
-    color: "#4b5563",
-    border: "none",
-    background: "transparent",
-    transition: "all 0.15s",
-  };
-
-  const paginationBtnDisabledStyle: React.CSSProperties = {
-    ...paginationBtnStyle,
-    cursor: "not-allowed",
-    opacity: 0.3,
-  };
 
   return (
       <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -143,8 +123,8 @@ export function EvidenceResultsTable({
           className="edb-results-header"
           style={{
             borderRadius: 12,
-            border: "1px solid #e5e7eb",
-            backgroundColor: "#fff",
+            border: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-surface)",
             padding: "16px 20px",
             boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
           }}
@@ -158,18 +138,18 @@ export function EvidenceResultsTable({
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: 8,
-                backgroundColor: "var(--color-primary-50, #ecfeff)",
+                backgroundColor: "var(--color-primary-50, var(--color-primary-50))",
               }}
             >
-              <Database style={{ width: 20, height: 20, color: "var(--color-primary-600, #0891b2)" }} />
+              <Database style={{ width: 20, height: 20, color: "var(--color-primary-600, var(--color-primary-600))" }} />
             </div>
             <div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
                 {rows.length} {t("evidence.results.rows")}
               </p>
-              <p style={{ marginTop: 2, fontSize: 12, color: "#6b7280" }}>
+              <p style={{ marginTop: 2, fontSize: 12, color: "var(--color-text-secondary)" }}>
                 {total} {t("evidence.results.groups")}
-                <span style={{ margin: "0 6px", color: "#d1d5db" }}>·</span>
+                <span style={{ margin: "0 6px", color: "var(--color-text-muted)" }}>·</span>
                 {t("evidence.results.showing", { from: String(startItem), to: String(endItem) })}
               </p>
             </div>
@@ -182,7 +162,7 @@ export function EvidenceResultsTable({
               alignItems: "center",
               gap: 6,
               borderRadius: 8,
-              backgroundColor: "#f9fafb",
+              backgroundColor: "var(--color-bg)",
               padding: 4,
             }}
           >
@@ -201,16 +181,16 @@ export function EvidenceResultsTable({
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: 6,
-                backgroundColor: "#fff",
+                backgroundColor: "var(--color-surface)",
                 padding: "0 12px",
                 boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
               }}
             >
-              <span style={{ fontSize: 14, fontWeight: 500, color: "#111827" }}>
+              <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>
                 {page}
               </span>
-              <span style={{ margin: "0 4px", color: "#9ca3af" }}>/</span>
-              <span style={{ fontSize: 14, color: "#6b7280" }}>
+              <span style={{ margin: "0 4px", color: "var(--color-text-muted)" }}>/</span>
+              <span style={{ fontSize: 14, color: "var(--color-text-secondary)" }}>
                 {totalPages}
               </span>
             </div>
@@ -245,8 +225,8 @@ export function EvidenceResultsTable({
                     alignItems: "center",
                     justifyContent: "center",
                     borderRadius: 8,
-                    background: "linear-gradient(to bottom right, var(--color-primary-100, #cffafe), var(--color-primary-50, #ecfeff))",
-                    color: "var(--color-primary-700, #0e7490)",
+                    background: "linear-gradient(to bottom right, var(--color-primary-100, var(--color-primary-100)), var(--color-primary-50, #ecfeff))",
+                    color: "var(--color-primary-700, var(--color-primary-700))",
                     boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
                     transition: "transform 0.15s",
                   }}
@@ -256,7 +236,7 @@ export function EvidenceResultsTable({
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <p
                     className="edb-card-title edb-line-clamp-2"
-                    style={{ fontSize: 14, fontWeight: 600, lineHeight: "20px", color: "#030712", transition: "color 0.15s" }}
+                    style={{ fontSize: 14, fontWeight: 600, lineHeight: "20px", color: "var(--color-text)", transition: "color 0.15s" }}
                   >
                     {literatureTitle(row, t)}
                   </p>
@@ -268,28 +248,28 @@ export function EvidenceResultsTable({
                       whiteSpace: "nowrap",
                       fontFamily: "monospace",
                       fontSize: 12,
-                      color: "#9ca3af",
+                      color: "var(--color-text-muted)",
                     }}
                   >
                     {row.documentId.slice(0, 8)}...
                   </p>
                 </div>
-                <Badge variant={STATUS_VARIANT[row.reviewStatus] ?? "info"}>
+                <Badge variant={STATUS_VARIANT[row.reviewStatus as keyof typeof STATUS_VARIANT] ?? "info"}>
                   {row.reviewStatus}
                 </Badge>
               </div>
               <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 12, color: "#6b7280" }}>
-                  <span style={{ borderRadius: 4, backgroundColor: "#f3f4f6", padding: "2px 6px" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 12, color: "var(--color-text-secondary)" }}>
+                  <span style={{ borderRadius: 4, backgroundColor: "var(--color-bg-muted)", padding: "2px 6px" }}>
                     PMID {row.pmid ?? "\u2014"}
                   </span>
-                  <span style={{ borderRadius: 4, backgroundColor: "#f3f4f6", padding: "2px 6px" }}>
+                  <span style={{ borderRadius: 4, backgroundColor: "var(--color-bg-muted)", padding: "2px 6px" }}>
                     DOI {row.doi ?? "\u2014"}
                   </span>
                 </div>
                 <TokenList values={row.genes} tone="primary" />
                 <TokenList values={row.variants} tone="success" />
-                <p className="edb-line-clamp-2" style={{ fontSize: 14, color: "#374151" }}>
+                <p className="edb-line-clamp-2" style={{ fontSize: 14, color: "var(--color-text-strong)" }}>
                   {joinedLabel(row.diseases)}
                 </p>
               </div>
@@ -299,7 +279,7 @@ export function EvidenceResultsTable({
                   display: "flex",
                   flexWrap: "wrap",
                   gap: 8,
-                  borderTop: "1px solid #f3f4f6",
+                  borderTop: "1px solid var(--color-bg-muted)",
                   paddingTop: 12,
                 }}
               >
@@ -317,8 +297,8 @@ export function EvidenceResultsTable({
           style={{
             overflow: "hidden",
             borderRadius: 12,
-            border: "1px solid #e5e7eb",
-            backgroundColor: "#fff",
+            border: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-surface)",
             boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
           }}
         >
@@ -326,29 +306,29 @@ export function EvidenceResultsTable({
             <thead>
               <tr
                 style={{
-                  borderBottom: "1px solid #e5e7eb",
-                  background: "linear-gradient(to right, #f9fafb, #f9fafb, rgba(249,250,251,0.5))",
+                  borderBottom: "1px solid var(--color-border)",
+                  background: "linear-gradient(to right, var(--color-bg), var(--color-bg), var(--color-subtle-bg))",
                 }}
               >
-                <th style={{ width: "20%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
+                <th style={{ width: "20%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
                   {t("evidence.results.colLiterature")}
                 </th>
-                <th style={{ width: "18%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
+                <th style={{ width: "18%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
                   {t("evidence.results.colFocus")}
                 </th>
-                <th style={{ width: "16%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
+                <th style={{ width: "16%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
                   {t("evidence.results.colDisease")}
                 </th>
-                <th style={{ width: "14%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
+                <th style={{ width: "14%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
                   {t("evidence.results.colClass")}
                 </th>
-                <th style={{ width: "10%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
+                <th style={{ width: "10%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
                   {t("evidence.results.colCreated")}
                 </th>
-                <th style={{ width: "10%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
+                <th style={{ width: "10%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
                   {t("evidence.results.colReview")}
                 </th>
-                <th style={{ width: "8%", padding: "14px 16px", textAlign: "right", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280" }}>
+                <th style={{ width: "8%", padding: "14px 16px", textAlign: "right", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
                   {t("evidence.results.colFields")}
                 </th>
               </tr>
@@ -368,7 +348,7 @@ export function EvidenceResultsTable({
                     }
                   }}
                   className="edb-table-row"
-                  style={{ borderBottom: "1px solid #f3f4f6" }}
+                  style={{ borderBottom: "1px solid var(--color-bg-muted)" }}
                 >
                   <td style={{ padding: "16px", verticalAlign: "top" }}>
                     <LiteratureCell row={row} />

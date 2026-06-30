@@ -149,7 +149,7 @@ export function PipelineSummaryCard({
 
       <div style={{ padding: "8px 16px" }}>
         {isOnline && slots.identifiers && (
-          <div style={{ borderBottom: "1px solid #fafafa" }}>
+          <div style={{ borderBottom: "1px solid var(--color-surface)" }}>
             <FieldRow
               icon={<Tag style={{ width: 14, height: 14 }} />}
               label={t("chat.summary.identifiers")}
@@ -159,7 +159,7 @@ export function PipelineSummaryCard({
           </div>
         )}
         {isOnline && slots.query && (
-          <div style={{ borderBottom: "1px solid #fafafa" }}>
+          <div style={{ borderBottom: "1px solid var(--color-surface)" }}>
             <FieldRow
               icon={<Search style={{ width: 14, height: 14 }} />}
               label={t("chat.summary.searchQuery")}
@@ -168,7 +168,7 @@ export function PipelineSummaryCard({
           </div>
         )}
         {!isOnline && slots.filename && (
-          <div style={{ borderBottom: "1px solid #fafafa" }}>
+          <div style={{ borderBottom: "1px solid var(--color-surface)" }}>
             <FieldRow
               icon={<FileText style={{ width: 14, height: 14 }} />}
               label={t("chat.summary.document")}
@@ -177,7 +177,7 @@ export function PipelineSummaryCard({
           </div>
         )}
         {!isOnline && !slots.filename && (
-          <div style={{ borderBottom: "1px solid #fafafa" }}>
+          <div style={{ borderBottom: "1px solid var(--color-surface)" }}>
             <FieldRow
               icon={<Upload style={{ width: 14, height: 14 }} />}
               label={t("chat.summary.document")}
@@ -194,7 +194,7 @@ export function PipelineSummaryCard({
               fontWeight: 600,
               textTransform: "uppercase",
               letterSpacing: "0.05em",
-              color: "#9ca3af",
+              color: "var(--color-text-muted)",
             }}>
               {t("chat.summary.extractionTarget")}
             </span>
@@ -202,7 +202,7 @@ export function PipelineSummaryCard({
               {slots.gene_symbol && (
                 <span style={{
                   borderRadius: 9999,
-                  backgroundColor: "#ecfeff",
+                  backgroundColor: "var(--color-highlight)",
                   padding: "2px 8px",
                   fontFamily: "var(--font-mono)",
                   fontSize: 11,
@@ -215,11 +215,11 @@ export function PipelineSummaryCard({
               {slots.disease_name && (
                 <span style={{
                   borderRadius: 9999,
-                  backgroundColor: "#ecfdf5",
+                  backgroundColor: "var(--color-highlight-green)",
                   padding: "2px 8px",
                   fontSize: 11,
                   fontWeight: 500,
-                  color: "#047857",
+                  color: "var(--color-success-text)",
                 }}>
                   {t("chat.summary.disease")}: {slots.disease_name}
                 </span>
@@ -227,12 +227,12 @@ export function PipelineSummaryCard({
               {slots.variant_hgvs_p && (
                 <span style={{
                   borderRadius: 9999,
-                  backgroundColor: "#f5f3ff",
+                  backgroundColor: "var(--color-highlight-purple)",
                   padding: "2px 8px",
                   fontFamily: "var(--font-mono)",
                   fontSize: 11,
                   fontWeight: 500,
-                  color: "#6d28d9",
+                  color: "var(--color-purple-700)",
                 }}>
                   {slots.variant_hgvs_p}
                 </span>
@@ -246,7 +246,7 @@ export function PipelineSummaryCard({
         display: "flex",
         alignItems: "center",
         gap: 8,
-        borderTop: "1px solid #f3f4f6",
+        borderTop: "1px solid var(--color-bg-muted)",
         padding: "10px 16px",
       }}>
         <Button
@@ -271,7 +271,7 @@ export function PipelineSummaryCard({
               borderRadius: 6,
               padding: "6px 10px",
               fontSize: 12,
-              color: "#6b7280",
+              color: "var(--color-text-secondary)",
               border: "none",
               background: "none",
               cursor: isSubmitting || submitted ? "not-allowed" : "pointer",
@@ -279,12 +279,12 @@ export function PipelineSummaryCard({
               transition: "background-color 150ms, color 150ms",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#f9fafb";
-              e.currentTarget.style.color = "#374151";
+              e.currentTarget.style.backgroundColor = "var(--color-bg)";
+              e.currentTarget.style.color = "var(--color-text-strong)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = "transparent";
-              e.currentTarget.style.color = "#6b7280";
+              e.currentTarget.style.color = "var(--color-text-secondary)";
             }}
           >
             <MessageSquare style={{ width: 12, height: 12 }} />

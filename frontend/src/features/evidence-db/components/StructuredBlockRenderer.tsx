@@ -105,7 +105,7 @@ function HighlightedSegment({
     }
     const hex = hl.category && CATEGORY_COLORS[hl.category]
       ? CATEGORY_COLORS[hl.category].hex
-      : "#9CA3AF";
+      : "var(--color-text-muted)";
     segments.push(
       <mark
         key={`h-${hl.evidenceId}-${hl.start}`}
@@ -155,7 +155,7 @@ function HeadingBlock({
   };
   const style = sizes[level] ?? sizes[3];
   return (
-    <Tag style={{ ...style, color: "#111827", margin: 0, lineHeight: 1.4 }}>
+    <Tag style={{ ...style, color: "var(--color-text)", margin: 0, lineHeight: 1.4 }}>
       <HighlightedSegment text={text} globalStart={globalStart} highlights={highlights} />
     </Tag>
   );
@@ -171,7 +171,7 @@ function TextBlock({
   highlights: BlockHighlight[];
 }) {
   return (
-    <p style={{ fontSize: 14, lineHeight: 1.7, color: "#374151", margin: 0, whiteSpace: "pre-wrap" }}>
+    <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--color-text-strong)", margin: 0, whiteSpace: "pre-wrap" }}>
       <HighlightedSegment text={text} globalStart={globalStart} highlights={highlights} />
     </p>
   );
@@ -191,7 +191,7 @@ function TableBlock({
   return (
     <div style={{ overflowX: "auto" }}>
       {block.table_caption && block.table_caption.length > 0 && (
-        <p style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 8, fontStyle: "italic" }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-strong)", marginBottom: 8, fontStyle: "italic" }}>
           {block.table_caption.join(" ")}
         </p>
       )}
@@ -204,20 +204,20 @@ function TableBlock({
         <pre style={{
           fontSize: 13,
           lineHeight: 1.5,
-          color: "#374151",
+          color: "var(--color-text-strong)",
           whiteSpace: "pre-wrap",
           fontFamily: "var(--font-mono)",
-          backgroundColor: "#f9fafb",
+          backgroundColor: "var(--color-bg)",
           padding: 12,
           borderRadius: 6,
-          border: "1px solid #e5e7eb",
+          border: "1px solid var(--color-border)",
           margin: 0,
         }}>
           <HighlightedSegment text={text} globalStart={globalStart} highlights={highlights} />
         </pre>
       )}
       {block.table_footnote && block.table_footnote.length > 0 && (
-        <p style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
+        <p style={{ fontSize: 11, color: "var(--color-text-secondary)", marginTop: 4 }}>
           {block.table_footnote.join(" ")}
         </p>
       )}
@@ -237,7 +237,7 @@ function ListBlock({
   const items = block.list_items ?? [];
   let offset = globalStart;
   return (
-    <ul style={{ fontSize: 14, lineHeight: 1.7, color: "#374151", paddingLeft: 20, margin: 0 }}>
+    <ul style={{ fontSize: 14, lineHeight: 1.7, color: "var(--color-text-strong)", paddingLeft: 20, margin: 0 }}>
       {items.map((item, i) => {
         const itemStart = offset;
         offset += item.length + 1; // +1 for \n
@@ -265,11 +265,11 @@ function FigureBlock({
     <figure style={{ margin: 0 }}>
       {block.img_path && (
         <div style={{
-          backgroundColor: "#f3f4f6",
+          backgroundColor: "var(--color-bg-muted)",
           borderRadius: 8,
           padding: 24,
           textAlign: "center",
-          color: "#6b7280",
+          color: "var(--color-text-secondary)",
           fontSize: 13,
           marginBottom: 8,
         }}>
@@ -277,12 +277,12 @@ function FigureBlock({
         </div>
       )}
       {captions.length > 0 && (
-        <figcaption style={{ fontSize: 13, color: "#374151", fontStyle: "italic", lineHeight: 1.5 }}>
+        <figcaption style={{ fontSize: 13, color: "var(--color-text-strong)", fontStyle: "italic", lineHeight: 1.5 }}>
           {captions.join(" ")}
         </figcaption>
       )}
       {block.content && (
-        <p style={{ fontSize: 13, color: "#4b5563", marginTop: 4 }}>
+        <p style={{ fontSize: 13, color: "var(--color-text-strong)", marginTop: 4 }}>
           <HighlightedSegment text={block.content} globalStart={globalStart} highlights={highlights} />
         </p>
       )}
@@ -294,7 +294,7 @@ function CodeBlock({ block }: { block: ContentBlock }) {
   return (
     <div>
       {block.code_caption && block.code_caption.length > 0 && (
-        <p style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 4 }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-strong)", marginBottom: 4 }}>
           {block.code_caption.join(" ")}
         </p>
       )}
@@ -302,8 +302,8 @@ function CodeBlock({ block }: { block: ContentBlock }) {
         fontSize: 13,
         lineHeight: 1.5,
         fontFamily: "var(--font-mono)",
-        backgroundColor: "#1f2937",
-        color: "#e5e7eb",
+        backgroundColor: "var(--color-code-text)",
+        color: "var(--color-border)",
         padding: 16,
         borderRadius: 8,
         overflowX: "auto",
@@ -322,7 +322,7 @@ function EquationBlock({ block }: { block: ContentBlock }) {
       padding: "12px 0",
       fontSize: 15,
       fontStyle: "italic",
-      color: "#374151",
+      color: "var(--color-text-strong)",
     }}>
       {block.text ?? ""}
     </div>
@@ -334,7 +334,7 @@ function MetaBlock({ block }: { block: ContentBlock }) {
   return (
     <p style={{
       fontSize: 11,
-      color: "#9ca3af",
+      color: "var(--color-text-muted)",
       fontStyle: "italic",
       margin: 0,
     }}>

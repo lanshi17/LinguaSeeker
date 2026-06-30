@@ -7,9 +7,9 @@ import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { EvidenceReviewDrawer } from "@/features/audit/components/EvidenceReviewDrawer";
-import { searchEvidence, getEvidenceGroupDetail } from "@/api/evidence";
+import { searchEvidence, getEvidenceGroupDetail } from "@/features/evidence-search/services/evidenceSearch";
 
-vi.mock("@/api/evidence", () => ({
+vi.mock("@/features/evidence-search/services/evidenceSearch", () => ({
   searchEvidence: vi.fn(async () => ({
     items: [
       {
@@ -91,7 +91,7 @@ describe("EvidenceReviewDrawer", () => {
     await waitFor(() => expect(getEvidenceGroupDetail).toHaveBeenCalled());
     await screen.findByText("Disease diagnosis");
     expect(
-      screen.getByRole("combobox", { name: "Review status" }),
+      screen.getByRole("combobox", { name: "New status" }),
     ).toBeInTheDocument();
     expect(searchEvidence).toHaveBeenCalledWith({
       gene: "GLA",

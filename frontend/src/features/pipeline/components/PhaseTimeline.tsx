@@ -6,16 +6,16 @@ interface PhaseTimelineProps {
 }
 
 const STATUS_STYLES: Record<string, CSSProperties> = {
-  pending: { backgroundColor: "#e5e7eb", color: "#6b7280" },
+  pending: { backgroundColor: "var(--color-border)", color: "var(--color-text-secondary)" },
   running: { backgroundColor: "var(--color-primary-100)", color: "var(--color-primary-700)", animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite" },
   completed: { backgroundColor: "var(--color-success-100)", color: "var(--color-success-700)" },
-  failed: { backgroundColor: "#fee2e2", color: "#b91c1c" },
-  skipped: { backgroundColor: "#f3f4f6", color: "#9ca3af" },
+  failed: { backgroundColor: "var(--color-error-bg)", color: "var(--color-error-text)" },
+  skipped: { backgroundColor: "var(--color-bg-muted)", color: "var(--color-text-muted)" },
 };
 
 const CONNECTOR_COLORS: Record<string, string> = {
   completed: "var(--color-success-400)",
-  default: "#e5e7eb",
+  default: "var(--color-border)",
 };
 
 export function PhaseTimeline({ steps }: PhaseTimelineProps) {
@@ -46,11 +46,11 @@ export function PhaseTimeline({ steps }: PhaseTimelineProps) {
               >
                 {i + 1}
               </div>
-              <span style={{ marginTop: 8, fontSize: 12, fontWeight: 500, color: "#4b5563" }}>
+              <span style={{ marginTop: 8, fontSize: 12, fontWeight: 500, color: "var(--color-text-strong)" }}>
                 {step.label}
               </span>
               {step.duration != null && (
-                <span style={{ marginTop: 2, fontSize: 12, color: "#9ca3af" }}>
+                <span style={{ marginTop: 2, fontSize: 12, color: "var(--color-text-muted)" }}>
                   {step.duration.toFixed(1)}s
                 </span>
               )}

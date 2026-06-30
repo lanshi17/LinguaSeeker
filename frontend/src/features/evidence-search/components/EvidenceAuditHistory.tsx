@@ -5,21 +5,12 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { formatRelative } from "@/lib/utils/format";
 import { useI18n } from "@/lib/i18n";
 import { listAuditEvents } from "../services/evidenceCorrection";
-import type { ReviewStatusValue } from "../types/evidenceSearch";
+import { STATUS_VARIANT } from "@/lib/constants/statusVariant";
 
 interface EvidenceAuditHistoryProps {
   sourceDocumentId: string;
 }
 
-const STATUS_VARIANT: Record<
-  ReviewStatusValue,
-  "default" | "success" | "warning" | "error"
-> = {
-  provisional: "default",
-  approved: "success",
-  corrected: "warning",
-  rejected: "error",
-};
 
 export function EvidenceAuditHistory({
   sourceDocumentId,
@@ -38,9 +29,9 @@ export function EvidenceAuditHistory({
   );
 
   return (
-    <section style={{ borderRadius: 12, border: "1px solid #e5e7eb", backgroundColor: "#fff", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
-      <div style={{ borderBottom: "1px solid #f3f4f6", padding: "12px 20px" }}>
-        <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>
+    <section style={{ borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+      <div style={{ borderBottom: "1px solid var(--color-bg-muted)", padding: "12px 20px" }}>
+        <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
           <History style={{ width: 16, height: 16, color: "var(--color-primary-700)" }} />
           {t("evidence.audit.heading")}
         </h3>
@@ -56,7 +47,7 @@ export function EvidenceAuditHistory({
             ))}
           </div>
         ) : !relevantEvents || relevantEvents.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>{t("evidence.audit.empty")}</p>
+          <p style={{ fontSize: 12, color: "var(--color-text-muted)", margin: 0 }}>{t("evidence.audit.empty")}</p>
         ) : (
           <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 12 }}>
             {relevantEvents.map((event) => (
@@ -70,7 +61,7 @@ export function EvidenceAuditHistory({
                   borderRadius: "50%",
                   backgroundColor: "var(--color-primary-400)",
                 }} />
-                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, fontSize: 11, color: "#6b7280" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, fontSize: 11, color: "var(--color-text-secondary)" }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums" }}>
                     {formatRelative(event.created_at)}
                   </span>
@@ -78,15 +69,15 @@ export function EvidenceAuditHistory({
                     <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
                       <Badge
                         variant={
-                          STATUS_VARIANT[event.old_status] ?? "default"
+                          STATUS_VARIANT[event.old_status as keyof typeof STATUS_VARIANT] ?? "default"
                         }
                       >
                         {event.old_status}
                       </Badge>
-                      <ArrowRight style={{ width: 12, height: 12, color: "#9ca3af" }} />
+                      <ArrowRight style={{ width: 12, height: 12, color: "var(--color-text-muted)" }} />
                       <Badge
                         variant={
-                          STATUS_VARIANT[event.new_status] ?? "default"
+                          STATUS_VARIANT[event.new_status as keyof typeof STATUS_VARIANT] ?? "default"
                         }
                       >
                         {event.new_status}
@@ -97,10 +88,10 @@ export function EvidenceAuditHistory({
                 {event.field_deltas.length > 0 && (
                   <div style={{ marginTop: 4, display: "flex", flexDirection: "column", gap: 2 }}>
                     {event.field_deltas.map((d) => (
-                      <p key={d.field} style={{ fontSize: 11, color: "#4b5563", margin: 0 }}>
+                      <p key={d.field} style={{ fontSize: 11, color: "var(--color-text-strong)", margin: 0 }}>
                         <span style={{ fontWeight: 500 }}>{d.field}</span>
                         {d.old_value && (
-                          <span style={{ color: "#ef4444", textDecoration: "line-through" }}>
+                          <span style={{ color: "var(--color-error-text)", textDecoration: "line-through" }}>
                             {" "}
                             {String(d.old_value).slice(0, 40)}
                           </span>
@@ -116,7 +107,7 @@ export function EvidenceAuditHistory({
                   </div>
                 )}
                 {event.change_reason && (
-                  <p style={{ marginTop: 2, fontSize: 10, fontStyle: "italic", color: "#9ca3af" }}>
+                  <p style={{ marginTop: 2, fontSize: 10, fontStyle: "italic", color: "var(--color-text-muted)" }}>
                     {event.change_reason}
                   </p>
                 )}

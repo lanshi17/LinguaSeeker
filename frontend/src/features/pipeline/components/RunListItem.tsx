@@ -38,13 +38,13 @@ const PULSE_TONE: Record<
 const statusDotColor = (status: ProcessingStatus): string => {
   switch (status) {
     case "completed":
-      return "#16a34a";
+      return "var(--color-success-600)";
     case "failed":
-      return "#dc2626";
+      return "var(--color-error-text)";
     case "running":
-      return "#0891b2";
+      return "var(--color-primary-600)";
     default:
-      return "#9ca3af";
+      return "var(--color-text-muted)";
   }
 };
 
@@ -54,8 +54,8 @@ const progressBarBg = (
 ): string => {
   if (isLive) return "linear-gradient(to right, #7dd3fc, var(--color-primary-600, #0891b2))";
   if (status === "completed") return "var(--color-success-500, #22c55e)";
-  if (status === "failed") return "#fca5a5";
-  return "#d1d5db";
+  if (status === "failed") return "var(--color-error-text)";
+  return "var(--color-text-muted)";
 };
 
 export function RunListItem({ run, index }: RunListItemProps) {
@@ -120,7 +120,7 @@ export function RunListItem({ run, index }: RunListItemProps) {
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
               <div style={{ display: "flex", minWidth: 0, alignItems: "center", gap: 8 }}>
-                <FileText style={{ width: 14, height: 14, flexShrink: 0, color: "#9ca3af" }} aria-hidden />
+                <FileText style={{ width: 14, height: 14, flexShrink: 0, color: "var(--color-text-muted)" }} aria-hidden />
                 <span
                   style={{
                     overflow: "hidden",
@@ -130,7 +130,7 @@ export function RunListItem({ run, index }: RunListItemProps) {
                     fontSize: 13,
                     fontWeight: 500,
                     letterSpacing: "-0.025em",
-                    color: "#111827",
+                    color: "var(--color-text)",
                   }}
                   title={run.processing_run_id}
                 >
@@ -143,7 +143,7 @@ export function RunListItem({ run, index }: RunListItemProps) {
                   className="rli-copy-btn"
                 >
                   {copied ? (
-                    <Check style={{ width: 14, height: 14, color: "#16a34a" }} />
+                    <Check style={{ width: 14, height: 14, color: "var(--color-success-600)" }} />
                   ) : (
                     <Copy style={{ width: 14, height: 14 }} />
                   )}
@@ -162,7 +162,7 @@ export function RunListItem({ run, index }: RunListItemProps) {
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
                   fontSize: 12,
-                  color: "#4b5563",
+                  color: "var(--color-text-strong)",
                 }}
                 title={run.title}
               >
@@ -170,7 +170,7 @@ export function RunListItem({ run, index }: RunListItemProps) {
               </p>
             )}
             {run.current_phase && isLive && (
-              <p style={{ marginTop: 4, fontSize: 12, color: "var(--color-primary-700, #0e7490)" }}>
+              <p style={{ marginTop: 4, fontSize: 12, color: "var(--color-primary-700, var(--color-primary-700))" }}>
                 <Loader2 style={{ marginRight: 4, display: "inline", width: 12, height: 12 }} className="spin" />
                 {run.current_phase}
               </p>
@@ -183,13 +183,13 @@ export function RunListItem({ run, index }: RunListItemProps) {
                 alignItems: "center",
                 gap: 12,
                 fontSize: 11,
-                color: "#6b7280",
+                color: "var(--color-text-secondary)",
               }}
             >
               <span style={{ fontFamily: "var(--font-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>
                 {formatRelative(run.started_at)}
               </span>
-              <span style={{ color: "#d1d5db" }}>·</span>
+              <span style={{ color: "var(--color-text-muted)" }}>·</span>
               <span style={{ fontFamily: "var(--font-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>
                 {formatDuration(durationSeconds)}
               </span>
@@ -199,7 +199,7 @@ export function RunListItem({ run, index }: RunListItemProps) {
                   fontFamily: "var(--font-mono, monospace)",
                   fontSize: 10,
                   fontVariantNumeric: "tabular-nums",
-                  color: "#9ca3af",
+                  color: "var(--color-text-muted)",
                 }}
               >
                 {completedPhases}/{totalPhases} {t("pipeline.phases")}
@@ -212,7 +212,7 @@ export function RunListItem({ run, index }: RunListItemProps) {
                 height: 4,
                 overflow: "hidden",
                 borderRadius: 9999,
-                backgroundColor: "#f3f4f6",
+                backgroundColor: "var(--color-bg-muted)",
               }}
             >
               <div

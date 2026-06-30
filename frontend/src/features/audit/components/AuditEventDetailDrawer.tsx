@@ -3,7 +3,8 @@ import { ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { useI18n } from "@/lib/i18n";
 import { formatTimestamp } from "@/lib/utils/format";
-import type { ReviewAuditEventResponse, ReviewStatusValue } from "../types/audit";
+import type { ReviewAuditEventResponse } from "@/lib/types/evidence";
+import { STATUS_VARIANT } from "@/lib/constants/statusVariant";
 
 interface AuditEventDetailDrawerProps {
   event: ReviewAuditEventResponse | null;
@@ -11,15 +12,6 @@ interface AuditEventDetailDrawerProps {
   onClose: () => void;
 }
 
-const STATUS_VARIANT: Record<
-  ReviewStatusValue,
-  "default" | "success" | "warning" | "error"
-> = {
-  provisional: "default",
-  approved: "success",
-  corrected: "warning",
-  rejected: "error",
-};
 
 export function AuditEventDetailDrawer({
   event,
@@ -70,13 +62,13 @@ export function AuditEventDetailDrawer({
           {event.old_status || event.new_status ? (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
               {event.old_status && (
-                <Badge variant={STATUS_VARIANT[event.old_status] ?? "default"}>
+                <Badge variant={STATUS_VARIANT[event.old_status as keyof typeof STATUS_VARIANT] ?? "default"}>
                   {event.old_status}
                 </Badge>
               )}
               <ArrowRight style={{ width: 14, height: 14, color: "var(--color-text-muted)" }} />
               {event.new_status && (
-                <Badge variant={STATUS_VARIANT[event.new_status] ?? "default"}>
+                <Badge variant={STATUS_VARIANT[event.new_status as keyof typeof STATUS_VARIANT] ?? "default"}>
                   {event.new_status}
                 </Badge>
               )}

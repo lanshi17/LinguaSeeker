@@ -1,4 +1,5 @@
 import type {
+  ContentBlock,
   EvidenceChainHighlight,
   EvidenceGroupDetailResponse,
   EvidenceGroupItem,
@@ -597,7 +598,7 @@ export function buildEvidenceDocument(
  *  logic in `buildEvidenceDocument` but maps offsets to the block text
  *  coordinate space (blocks joined with "\n\n" separators). */
 export function buildBlockHighlightsFromValues(
-  blocks: import("../types/evidenceSearch").ContentBlock[],
+  blocks: ContentBlock[],
   detail: EvidenceGroupDetailResponse,
   track: "original" | "translated",
   selectedEvidenceId?: string | null,
