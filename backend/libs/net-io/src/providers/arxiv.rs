@@ -1,6 +1,6 @@
 use crate::client::HttpClient;
 use crate::error::GatewayError;
-use crate::types::FetchResult;
+use crate::types::{FetchParams, FetchResult};
 
 pub struct ArxivProvider;
 
@@ -9,9 +9,10 @@ const ARXIV_API_URL: &str = "https://export.arxiv.org/api/query";
 impl ArxivProvider {
     pub async fn search(
         client: &HttpClient,
-        query: &str,
-        limit: Option<u32>,
+        params: &FetchParams,
     ) -> Result<FetchResult, GatewayError> {
+        let query = params.query.as_deref().unwrap_or_default();
+        let limit = params.limit;
         let max_results = limit.unwrap_or(10).min(100);
 
         let url = format!(
@@ -70,15 +71,7 @@ impl ArxivProvider {
             }
         }
 
-        Ok(FetchResult {
-            provider: "arxiv".into(),
-            success: !items.is_empty(),
-            items,
-            downloads: vec![],
-            warnings: vec![],
-            raw: None,
-            meta: None,
-        })
+        Ok(FetchResult::of_items("arxiv", items, None))
     }
 }
 

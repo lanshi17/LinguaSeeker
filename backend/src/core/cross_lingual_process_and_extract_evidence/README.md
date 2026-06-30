@@ -56,7 +56,7 @@ result = await service.run(document)
 
 # Dual-track extraction from persisted translation output
 documents = EvidenceExtractionService.build_dual_documents_from_output_dir(
-    "backend/data/pipeline/run-1/phase_2/doc-001"
+    "data/pipeline/run-1/phase_2/doc-001"
 )
 dual_result = await service.run_dual(documents)
 # dual_result.original_result / dual_result.translated_result — independent runs

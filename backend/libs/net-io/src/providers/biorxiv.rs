@@ -1,6 +1,6 @@
 use crate::client::HttpClient;
 use crate::error::GatewayError;
-use crate::types::FetchResult;
+use crate::types::{FetchParams, FetchResult};
 
 pub struct BioRxivProvider;
 pub struct MedRxivProvider;
@@ -11,9 +11,10 @@ const MEDRXIV_API_URL: &str = "https://api.biorxiv.org/details/medrxiv";
 impl BioRxivProvider {
     pub async fn search(
         client: &HttpClient,
-        query: &str,
-        limit: Option<u32>,
+        params: &FetchParams,
     ) -> Result<FetchResult, GatewayError> {
+        let query = params.query.as_deref().unwrap_or_default();
+        let limit = params.limit;
         search_preprint_server(client, query, limit, BIORXIV_API_URL, "biorxiv").await
     }
 }
@@ -21,9 +22,10 @@ impl BioRxivProvider {
 impl MedRxivProvider {
     pub async fn search(
         client: &HttpClient,
-        query: &str,
-        limit: Option<u32>,
+        params: &FetchParams,
     ) -> Result<FetchResult, GatewayError> {
+        let query = params.query.as_deref().unwrap_or_default();
+        let limit = params.limit;
         search_preprint_server(client, query, limit, MEDRXIV_API_URL, "medrxiv").await
     }
 }
@@ -107,15 +109,7 @@ async fn search_preprint_server(
         }
     }
 
-    Ok(FetchResult {
-        provider: source.into(),
-        success: !items.is_empty(),
-        items,
-        downloads: vec![],
-        warnings: vec![],
-        raw: Some(json),
-        meta: None,
-    })
+    Ok(FetchResult::of_items(source, items, Some(json)))
 }
 
 fn epoch_days_to_date(days: u64) -> String {
