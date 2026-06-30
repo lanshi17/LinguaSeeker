@@ -185,12 +185,28 @@ async def _acquire_links_web_search(
                 all_links.extend(sr)
         return all_links
 
+    # SerpApi (second priority)
+    if ws.serpapi_api_key:
+        from .web_search.serpapi_adapter import SerpApiAdapter
+
+        adapter = SerpApiAdapter(
+            api_key=ws.serpapi_api_key,
+            engine=ws.serpapi_engine,
+            max_results=ws.max_results,
+        )
+        result = await adapter.search(query, language=language)
+        if result.warnings:
+            for w in result.warnings:
+                logger.warning("serpapi: {}", w)
+
+        return list(result.links)
+
     # Fallback to Firecrawl
-    if ws.api_key:
+    if ws.firecrawl_api_key:
         from .web_search.firecrawl_adapter import FirecrawlAdapter
 
         adapter = FirecrawlAdapter(
-            api_key=ws.api_key,
+            api_key=ws.firecrawl_api_key,
             base_url=ws.base_url,
             timeout=ws.timeout,
             max_results=ws.max_results,
@@ -208,7 +224,7 @@ async def _acquire_links_web_search(
                 all_links.extend(sr)
         return all_links
 
-    logger.info("web search skipped: no TAVILY_API_KEY or WEB_SEARCH_API_KEY configured")
+    logger.info("web search skipped: no TAVILY_API_KEY, SERPAPI_API_KEY, or WEB_SEARCH_FIRECRAWL_API_KEY configured")
     return []
 
 

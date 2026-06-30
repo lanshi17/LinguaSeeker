@@ -167,6 +167,41 @@ def test_normalize_candidates_preserves_source_quote_for_mapped_items() -> None:
     assert items[0].raw_source.text_snippet == "the variant co-segregated with disease in 5 family members"
 
 
+def test_normalize_candidates_projects_consequence_class_to_variant_type() -> None:
+    """ClinVar-style consequence labels should remain scoreable as A.variant_type."""
+    candidates = [
+        PrimaryBroadEvidenceCandidate(
+            field_id="A.variant_hgvs_p",
+            status=EvidenceStatus.FOUND,
+            value="p.R69C",
+            confidence=0.9,
+            source_quote="MTM1 p.R69C mouse model",
+        ),
+        PrimaryBroadEvidenceCandidate(
+            field_id="A.variant_type",
+            status=EvidenceStatus.FOUND,
+            value="SNV/substitution",
+            confidence=0.85,
+            source_quote="point mutation (c.205C>T)",
+        ),
+        PrimaryBroadEvidenceCandidate(
+            field_id="A.variant_consequence_class",
+            status=EvidenceStatus.FOUND,
+            value="missense",
+            confidence=0.6,
+            source_quote="p.R69C",
+        ),
+    ]
+
+    items = _normalize_candidates(candidates)
+
+    variant_type_items = [item for item in items if item.field_id == "A.variant_type"]
+    assert len(variant_type_items) == 1
+    assert variant_type_items[0].value == "missense"
+    assert variant_type_items[0].raw_source is not None
+    assert variant_type_items[0].raw_source.text_snippet == "p.R69C"
+
+
 # ── Round 2: prompt coverage tests ───────────────────────────────────────
 
 
@@ -184,16 +219,17 @@ def test_prompt_contains_gene_disease_relationship_guidance() -> None:
 
 
 def test_prompt_contains_variant_type_inference_guidance() -> None:
-    """B8 prompt must include variant_type with notation-based inference rules."""
+    """B8 prompt must define variant_type using benchmark consequence-class semantics."""
     provider = BroadProvider()
     stage = PrimaryBroadExtractionStage(provider)
     stage.run(_document())
     prompt = provider.prompts[0]
     assert "A.variant_type" in prompt
-    assert "SNV" in prompt
+    assert "missense" in prompt
+    assert "nonsense" in prompt
     assert "deletion" in prompt
     assert "frameshift" in prompt
-    assert "m." in prompt  # mitochondrial notation hint
+    assert "Do NOT use SNV/substitution" in prompt
 
 
 def test_prompt_contains_clinical_phenotypes_guidance() -> None:

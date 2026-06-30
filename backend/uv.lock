@@ -1046,6 +1046,15 @@ wheels = [
 ]
 
 [[package]]
+name = "google-search-results"
+version = "2.4.2"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/77/30/b3a6f6a2e00f8153549c2fa345c58ae1ce8e5f3153c2fe0484d444c3abcb/google_search_results-2.4.2.tar.gz", hash = "sha256:603a30ecae2af8e600b22635757a6df275dad4b934f975e67878ccd640b78245", size = 18818, upload-time = "2023-03-10T11:13:09.953Z" }
+
+[[package]]
 name = "greenlet"
 version = "3.5.1"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
@@ -1682,6 +1691,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "firecrawl-py" },
     { name = "fpdf2" },
+    { name = "google-search-results" },
     { name = "httpx", extra = ["socks"] },
     { name = "langchain-core" },
     { name = "langchain-openai" },
@@ -1745,6 +1755,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.111.0" },
     { name = "firecrawl-py", specifier = ">=4.28.2" },
     { name = "fpdf2", specifier = ">=2.8.7" },
+    { name = "google-search-results", specifier = ">=2.4.2" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.27.0" },
     { name = "httpx", extras = ["socks"], specifier = ">=0.27.0" },
     { name = "langchain-core", specifier = ">=1.4.0" },

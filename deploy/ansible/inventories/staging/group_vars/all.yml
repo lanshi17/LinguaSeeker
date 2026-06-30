@@ -69,6 +69,8 @@ redis_max_connections: 10
 web_search_base_url: "https://api.firecrawl.dev"
 web_search_timeout: 30
 web_search_max_results: 10
+web_search_tavily_search_depth: "basic"
+web_search_serpapi_engine: "google"
 
 # -- Literature Acquisition --------------------------------------------------
 unpaywall_email: "admin@your-domain.com"

@@ -38,6 +38,7 @@ dependencies = [
     "pyyaml>=6.0.0",
     "firecrawl-py>=4.28.2",
     "tavily-python>=0.5.0",
+    "google-search-results>=2.4.2",
     "matplotlib>=3.10.9",
     "weasyprint>=69.0",
     "markdown>=3.10.2",

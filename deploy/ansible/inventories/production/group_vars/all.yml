@@ -81,6 +81,8 @@ redis_max_connections: 20
 web_search_base_url: "https://api.firecrawl.dev"
 web_search_timeout: 30
 web_search_max_results: 10
+web_search_tavily_search_depth: "basic"
+web_search_serpapi_engine: "google"
 # ── Literature Acquisition ───────────────────────────────────────────────
 # Unpaywall requires a contact email (not secret — structural config).
 # API keys for pubmed/base/core go in vault.yml.

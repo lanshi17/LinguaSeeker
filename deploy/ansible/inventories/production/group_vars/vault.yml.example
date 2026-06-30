@@ -28,7 +28,9 @@ vault_embedding_remote_api_keys: []
 vault_rerank_remote_api_keys: []
 
 # -- Web Search --------------------------------------------------------------
-vault_web_search_api_key: ""
+vault_web_search_firecrawl_api_key: ""
+vault_web_search_tavily_api_key: ""
+vault_web_search_serpapi_api_key: ""
 
 # -- Model Server Auth -------------------------------------------------------
 vault_model_server_api_key: "change-me-to-a-strong-random-secret"
