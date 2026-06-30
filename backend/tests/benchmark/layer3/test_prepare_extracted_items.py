@@ -87,6 +87,18 @@ def test_filters_items_without_status_found() -> None:
     assert result[0]["value"] == "AARS2"
 
 
+def test_keeps_low_confidence_found_items_for_smoke_experiment() -> None:
+    items = [
+        {"field_id": "B.disease_diagnosis", "status": "found", "value": "MERRF syndrome", "confidence": 0.35},
+    ]
+
+    result = prepare_extracted_items(items)
+
+    assert len(result) == 1
+    assert result[0]["value"] == "MERRF syndrome"
+    assert result[0]["confidence"] == 0.35
+
+
 def test_handles_missing_confidence_gracefully() -> None:
     items = [
         {"field_id": "A.gene_symbol", "status": "found", "value": "AARS2"},

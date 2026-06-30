@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from typing import Literal
 
 from loguru import logger
 
@@ -10,17 +11,34 @@ from ..contracts import (
     EvidenceReviewDecision,
     EvidenceReviewResponse,
     EvidenceStatus,
+    EvidenceTriStateReviewDecision,
+    EvidenceTriStateReviewResponse,
     SourceLocation,
     TrackDocument,
 )
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 
+ReviewRejectPolicy = Literal["hard_veto", "soft_veto", "tristate_review"]
+DEFAULT_REVIEW_REJECT_POLICY: ReviewRejectPolicy = "hard_veto"
+
+
+def resolve_review_reject_policy(raw: str) -> ReviewRejectPolicy:
+    """Resolve review reject policy for benchmark calibration runs."""
+    if raw not in ("hard_veto", "soft_veto", "tristate_review"):
+        raise ValueError(f"Unknown review_reject_policy {raw!r}")
+    return raw  # type: ignore[return-value]
+
 
 class ReviewValidationStage:
     """Validate primary extraction candidates without adding new candidates."""
 
-    def __init__(self, provider: LangChainEvidenceProvider):
+    def __init__(
+        self,
+        provider: LangChainEvidenceProvider,
+        review_reject_policy: str = DEFAULT_REVIEW_REJECT_POLICY,
+    ):
         self._provider = provider
+        self._review_reject_policy = resolve_review_reject_policy(review_reject_policy)
 
     def run(self, document: TrackDocument, items: list[EvidenceItem]) -> list[EvidenceItem]:
         """Review primary candidates and fail open on provider errors."""
@@ -29,15 +47,15 @@ class ReviewValidationStage:
             return items
         try:
             response = self._provider.invoke_structured(
-                prompt=_build_review_prompt(document, items),
-                output_schema=EvidenceReviewResponse,
+                prompt=_build_review_prompt(document, items, self._review_reject_policy),
+                output_schema=_review_output_schema(self._review_reject_policy),
                 tier=EvidenceModelTier.STANDARD,
                 stage="review_validation",
             )
         except Exception as exc:
             logger.warning("review_validation failed open: {}", exc)
             return items
-        return _apply_review_decisions(items, response.decisions)
+        return _apply_review_decisions(items, response.decisions, self._review_reject_policy)
 
     async def run_async(self, document: TrackDocument, items: list[EvidenceItem]) -> list[EvidenceItem]:
         """Async review validation for async extraction workflows."""
@@ -46,18 +64,28 @@ class ReviewValidationStage:
             return items
         try:
             response = await self._provider.ainvoke_structured(
-                prompt=_build_review_prompt(document, items),
-                output_schema=EvidenceReviewResponse,
+                prompt=_build_review_prompt(document, items, self._review_reject_policy),
+                output_schema=_review_output_schema(self._review_reject_policy),
                 tier=EvidenceModelTier.STANDARD,
                 stage="review_validation",
             )
         except Exception as exc:
             logger.warning("review_validation failed open: {}", exc)
             return items
-        return _apply_review_decisions(items, response.decisions)
+        return _apply_review_decisions(items, response.decisions, self._review_reject_policy)
 
 
-def _build_review_prompt(document: TrackDocument, items: list[EvidenceItem]) -> str:
+def _review_output_schema(review_reject_policy: ReviewRejectPolicy) -> type[EvidenceReviewResponse | EvidenceTriStateReviewResponse]:
+    if review_reject_policy == "tristate_review":
+        return EvidenceTriStateReviewResponse
+    return EvidenceReviewResponse
+
+
+def _build_review_prompt(
+    document: TrackDocument,
+    items: list[EvidenceItem],
+    review_reject_policy: ReviewRejectPolicy,
+) -> str:
     """Build a review-only prompt over existing primary candidates."""
     candidates = [
         {
@@ -82,21 +110,44 @@ def _build_review_prompt(document: TrackDocument, items: list[EvidenceItem]) -> 
             f"TARGET VARIANT P: {target.variant_hgvs_p or 'not specified'}"
         )
     )
-    return (
-        "You are the review track for ACMG/ClinGen evidence extraction.\n"
-        "Review only the primary extraction candidates listed below. "
-        "Do not add new field IDs, do not create new candidates, and do not perform a second full extraction.\n\n"
+    decision_policy = (
         "Decision policy:\n"
         "- approve: the candidate is directly supported by the document.\n"
         "- reject: the candidate is unsupported, inferred too weakly, or belongs to another gene/disease/context.\n"
         "- correct: the candidate field is relevant but its value or source quote should be fixed.\n\n"
-        f"{target_text}\n\n"
-        "Primary candidates JSON:\n"
-        f"{json.dumps(candidates, ensure_ascii=False, indent=2)}\n\n"
+    )
+    action_instruction = (
         "Return JSON with a decisions array. Each decision must include candidate_index, field_id, "
         "action (approve, reject, or correct), confidence, source_quote, and reason. "
         "For correct, include the corrected value and a verbatim contiguous source_quote from the document. "
         "For reject, value and source_quote may be empty.\n\n"
+    )
+    if review_reject_policy == "tristate_review":
+        decision_policy = (
+            "Decision policy:\n"
+            "- approve: the candidate is directly supported by the document and can be treated as DB-ready.\n"
+            "- uncertain_keep_for_review: the candidate is plausible and relevant but needs expert review, "
+            "including long-tail medical entities, indirect entailment, or incomplete local evidence.\n"
+            "- reject: use only when the candidate is clearly unsupported, contradicted, or belongs to another "
+            "gene/disease/context. Do not reject solely because the entity is rare, compound, or domain-specific.\n"
+            "- correct: the candidate field is relevant but its value or source quote should be fixed.\n\n"
+        )
+        action_instruction = (
+            "Return JSON with a decisions array. Each decision must include candidate_index, field_id, "
+            "action (approve, uncertain_keep_for_review, reject, or correct), confidence, source_quote, and reason. "
+            "For correct, include the corrected value and a verbatim contiguous source_quote from the document. "
+            "For uncertain_keep_for_review, keep the original value unless a small quote correction is needed. "
+            "For reject, value and source_quote may be empty.\n\n"
+        )
+    return (
+        "You are the review track for ACMG/ClinGen evidence extraction.\n"
+        "Review only the primary extraction candidates listed below. "
+        "Do not add new field IDs, do not create new candidates, and do not perform a second full extraction.\n\n"
+        f"{decision_policy}"
+        f"{target_text}\n\n"
+        "Primary candidates JSON:\n"
+        f"{json.dumps(candidates, ensure_ascii=False, indent=2)}\n\n"
+        f"{action_instruction}"
         "Document text:\n"
         f"{document.formatted_text}"
     )
@@ -115,7 +166,8 @@ def _source_payload(source: SourceLocation | None) -> dict[str, object] | None:
 
 def _apply_review_decisions(
     items: list[EvidenceItem],
-    decisions: list[EvidenceReviewDecision],
+    decisions: list[EvidenceReviewDecision] | list[EvidenceTriStateReviewDecision],
+    review_reject_policy: ReviewRejectPolicy = DEFAULT_REVIEW_REJECT_POLICY,
 ) -> list[EvidenceItem]:
     """Apply review decisions while preserving the original candidate set."""
     by_index = {
@@ -137,16 +189,30 @@ def _apply_review_decisions(
             reviewed.append(item)
             continue
         if decision.action == "reject":
-            reviewed.append(_reject_item(item, decision))
+            reviewed.append(_reject_item(item, decision, review_reject_policy))
             continue
         if decision.action == "correct":
             reviewed.append(_correct_item(item, decision))
+            continue
+        if decision.action == "uncertain_keep_for_review":
+            reviewed.append(_uncertain_item(item, decision))
             continue
         reviewed.append(_append_review_note(item, "review_track: approved", decision.reason))
     return reviewed
 
 
-def _reject_item(item: EvidenceItem, decision: EvidenceReviewDecision) -> EvidenceItem:
+def _reject_item(
+    item: EvidenceItem,
+    decision: EvidenceReviewDecision,
+    review_reject_policy: ReviewRejectPolicy,
+) -> EvidenceItem:
+    if review_reject_policy == "soft_veto":
+        return item.model_copy(update={
+            "status": EvidenceStatus.FOUND,
+            "confidence": min(item.confidence, 0.35),
+            "notes": _merged_note(item.notes, "review_track: soft_rejected", decision.reason),
+            "inference_basis": [*item.inference_basis, "review_soft_reject"],
+        })
     return item.model_copy(update={
         "status": EvidenceStatus.NOT_FOUND,
         "value": None,
@@ -177,6 +243,16 @@ def _correct_item(item: EvidenceItem, decision: EvidenceReviewDecision) -> Evide
         "source": None,
         "raw_source": raw_source,
         "notes": _merged_note(item.notes, "review_track: corrected", decision.reason),
+    })
+
+
+def _uncertain_item(item: EvidenceItem, decision: EvidenceTriStateReviewDecision) -> EvidenceItem:
+    confidence = min(item.confidence, decision.confidence or item.confidence, 0.45)
+    return item.model_copy(update={
+        "status": EvidenceStatus.FOUND,
+        "confidence": confidence,
+        "notes": _merged_note(item.notes, "review_track: uncertain_keep_for_review", decision.reason),
+        "inference_basis": [*item.inference_basis, "review_uncertain_keep_for_review"],
     })
 
 

@@ -320,6 +320,18 @@ class EvidenceReviewResponse(BaseModel):
     decisions: list[EvidenceReviewDecision] = Field(default_factory=list)
 
 
+class EvidenceTriStateReviewDecision(EvidenceReviewDecision):
+    """Tri-state review decision for evidence-calibration experiments."""
+
+    action: Literal["approve", "uncertain_keep_for_review", "reject", "correct"]
+
+
+class EvidenceTriStateReviewResponse(BaseModel):
+    """Tri-state review-track output for calibration runs."""
+
+    decisions: list[EvidenceTriStateReviewDecision] = Field(default_factory=list)
+
+
 class QualityIssue(BaseModel):
     issue_type: Literal[
         "missing_source",

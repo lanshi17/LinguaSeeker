@@ -12,6 +12,8 @@ from src.core.visualize_evidence_with_expert_in_loop.search_service import (
     SearchService,
     _build_highlight,
     _coerce_str,
+    _filter_body_blocks,
+    _filter_body_text,
 )
 
 _DEFAULT_TS = datetime(2026, 1, 1, tzinfo=timezone.utc)
@@ -514,6 +516,71 @@ def test_build_highlight_returns_none_for_string_source():
     """
     assert _build_highlight("benchmark_ground_truth") is None
     assert _build_highlight("preprocessed") is None
+
+
+def test_filter_body_text_removes_article_metadata_and_references():
+    """Body text for bilingual reading starts at article content and stops before references."""
+    raw_text = """doi: 10.7499/j.issn.1008-8830.2014.04.017
+
+论著·临床研究
+
+Rett综合征的临床特点及MECP2基因突变分析
+赵培伟 何学莲 林俊
+
+［摘要］ 目的 分析典型的 Rett 综合征患者的临床特点。
+
+资料与方法
+选取 2012 年至今在本院神经内科和康复科诊断的 9 例 RTT 患儿为研究对象。
+
+2 结果
+9 例患儿均具有 RTT 的症状。
+
+讨论
+RTT是引起女孩智力低下最常见的原因之一。
+
+［参　考　文　献］
+[1] Abhishek B, Jorge C, Mriganka S. Rett syndrome.
+（本文编辑：万静）
+"""
+
+    filtered = _filter_body_text(raw_text)
+
+    assert filtered is not None
+    assert filtered.startswith("［摘要］")
+    assert "资料与方法" in filtered
+    assert "2 结果" in filtered
+    assert "讨论" in filtered
+    assert "doi:" not in filtered
+    assert "赵培伟" not in filtered
+    assert "［参　考　文　献］" not in filtered
+    assert "本文编辑" not in filtered
+
+
+def test_filter_body_blocks_rebuilds_when_stored_blocks_are_truncated():
+    """Stored summary-only blocks should not shadow a more complete translated text."""
+    translated_text = """Abstract: Objective To study Rett syndrome.
+
+Methods PCR and direct sequencing were employed to analyze MECP2.
+
+Results Heterozygous mutations were identified in 5 out of 9 patients.
+
+Discussion Mutations in the TRD may affect language ability.
+
+References
+[1] Abhishek B, Jorge C, Mriganka S. Rett syndrome.
+"""
+    stored_blocks = [
+        {"type": "text", "text": "Abstract: Objective To study Rett syndrome.", "page_idx": 0},
+    ]
+
+    blocks = _filter_body_blocks(stored_blocks, translated_text)
+
+    assert blocks is not None
+    block_text = "\n".join(str(block.get("text") or "") for block in blocks)
+    assert "Methods PCR" in block_text
+    assert "Results Heterozygous mutations" in block_text
+    assert "Discussion Mutations" in block_text
+    assert "References" not in block_text
 
 
 @pytest.mark.asyncio

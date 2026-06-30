@@ -310,6 +310,17 @@ def test_service_run_catalog_override_uses_catalog_workflow(mock_config):
     assert service._workflow_for(None, extraction_mode=None)._extraction_mode == "broad"
 
 
+def test_service_review_reject_policy_override_uses_fresh_workflow(mock_config):
+    """service.run(..., review_reject_policy='tristate_review') overrides default hard veto."""
+    service = EvidenceExtractionService(cfg=mock_config)
+
+    wf = service._workflow_for(None, review_reject_policy="tristate_review")
+
+    assert wf._review_reject_policy == "tristate_review"
+    assert wf._review_validation._review_reject_policy == "tristate_review"
+    assert service._workflow_for(None, review_reject_policy=None)._review_reject_policy == "hard_veto"
+
+
 def test_backward_compat_alias_b8_to_broad(mock_config):
     """extraction_mode='b8' (old name) resolves to 'broad'."""
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import resolve_extraction_mode

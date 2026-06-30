@@ -55,6 +55,30 @@ def compute_aggregate_metrics(all_metrics: list[EntryMetrics]) -> dict:
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
     f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
+    grounded_tp = sum(
+        1
+        for m in all_metrics
+        for f in m.field_matches
+        if f.matched and f.source_span
+    )
+    grounded_fn = sum(
+        1
+        for m in all_metrics
+        for f in m.field_matches
+        if not (f.matched and f.source_span)
+    )
+    grounded_precision = grounded_tp / (grounded_tp + fp) if (grounded_tp + fp) > 0 else 0.0
+    grounded_recall = (
+        grounded_tp / (grounded_tp + grounded_fn)
+        if (grounded_tp + grounded_fn) > 0
+        else 0.0
+    )
+    grounded_f1 = (
+        2 * grounded_precision * grounded_recall / (grounded_precision + grounded_recall)
+        if (grounded_precision + grounded_recall) > 0
+        else 0.0
+    )
+    db_ready_yield = grounded_tp
 
     # Per-field-type breakdown
     by_field: dict[str, dict] = {}
@@ -164,6 +188,15 @@ def compute_aggregate_metrics(all_metrics: list[EntryMetrics]) -> dict:
             "precision": round(precision, 4),
             "recall": round(recall, 4),
             "f1": round(f1, 4),
+            "value_precision": round(precision, 4),
+            "value_recall": round(recall, 4),
+            "value_f1": round(f1, 4),
+            "grounded_true_positives": grounded_tp,
+            "grounded_false_negatives": grounded_fn,
+            "grounded_precision": round(grounded_precision, 4),
+            "grounded_recall": round(grounded_recall, 4),
+            "grounded_f1": round(grounded_f1, 4),
+            "db_ready_yield": db_ready_yield,
             "over_extractions": over_extraction_count(all_metrics),
             "entity_standardization_accuracy": round(entity_standardization_accuracy, 4),
             "cross_lingual_consistency": round(cross_lingual_consistency, 4),
