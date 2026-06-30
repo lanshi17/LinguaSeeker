@@ -1,6 +1,6 @@
 use crate::client::HttpClient;
 use crate::error::GatewayError;
-use crate::types::FetchResult;
+use crate::types::{FetchParams, FetchResult};
 
 pub struct CoreProvider;
 
@@ -9,9 +9,10 @@ const CORE_API_URL: &str = "https://api.core.ac.uk/v3";
 impl CoreProvider {
     pub async fn search(
         client: &HttpClient,
-        query: &str,
-        limit: Option<u32>,
+        params: &FetchParams,
     ) -> Result<FetchResult, GatewayError> {
+        let query = params.query.as_deref().unwrap_or_default();
+        let limit = params.limit;
         let count = limit.unwrap_or(10).min(100);
         let api_key = std::env::var("CORE_API_KEY").unwrap_or_default();
 
@@ -80,14 +81,5 @@ impl CoreProvider {
             }
         }
 
-        Ok(FetchResult {
-            provider: "core".into(),
-            success: !items.is_empty(),
-            items,
-            downloads: vec![],
-            warnings: vec![],
-            raw: Some(json),
-            meta: None,
-        })
-    }
+        Ok(FetchResult::of_items("core", items, Some(json)))
 }

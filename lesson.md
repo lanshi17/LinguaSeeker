@@ -6191,3 +6191,28 @@ English-pivot-tristate 的 N=5 value-F1 低于 C0，需要确认 C0 命中而 En
 ### 预防措施
 - Matched comparison 报告应附带字段级 diff 或 run artifact manifest，避免事后只能看到 aggregate F1。
 - 对 English-pivot 方向做中文翻译质量归因时，必须选择 `source_language != en` 或显式使用中文源输入；不能用英文主源样本推断翻译损耗。
+
+## 2026-06-30 - Backend restart exposed dependency wiring initialization order
+
+### 问题描述
+重启后端时，`uvicorn app.main:app` 在 lifespan startup 阶段失败，错误为：
+`RuntimeError: Session factory not initialized — call wire_dependencies() first`。
+
+### 排查过程
+1. 停止旧的 `uvicorn` 进程后，前台运行 `uv run uvicorn app.main:app --host 0.0.0.0 --port 8000` 捕获完整 startup stack trace。
+2. Stack trace 指向 `app/main.py -> wire_dependencies() -> DocumentProcessingCacheService(session_factory=get_session_factory())`。
+3. 检查 `src/api/wiring.py` 后确认 `_engine` 和 `_session_factory` 从未在 `wire_dependencies()` 开始阶段初始化，却已经被 `get_session_factory()` 读取。
+4. 添加回归测试 `test_wire_dependencies_initializes_session_factory_before_use`，先复现失败，再做最小修复。
+
+### 根因分析
+`wire_dependencies()` 的装配顺序缺少 PostgreSQL engine/session factory 初始化步骤。旧后端进程已在内存中运行，掩盖了源码启动路径的回归；一旦真正重启，空模块级 `_session_factory` 会触发 startup failure。
+
+### 解决方案
+1. 在 `src/api/wiring.py` 中导入 `build_async_engine` 和 `async_session_factory`。
+2. 在 `wire_dependencies()` 开始处先创建 `_engine` 和 `_session_factory`，再构建 Redis、processing cache、phase adapters、runner 和 dispatcher。
+3. 更新 wiring 测试的 mock 目标为 `src.api.wiring.get_config`，并隔离 engine/session factory 构造。
+
+### 预防措施
+- wiring/startup 测试必须覆盖“空模块级状态下调用 `wire_dependencies()`”这一真实启动路径。
+- 对直接导入的函数，应 patch 使用方模块的引用路径，而不是 patch 定义方路径。
+- 重启服务时优先前台运行一次捕获 startup stack trace，再决定是否后台化。

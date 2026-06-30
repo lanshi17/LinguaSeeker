@@ -110,7 +110,7 @@ class Phase2Adapter:
 
             # Use absolute path to survive CWD changes
             from pathlib import Path as _Path
-            _backend_root = _Path(__file__).resolve().parent.parent.parent
+            _backend_root = _Path(__file__).resolve().parent.parent.parent.parent
             output_dir = str(_backend_root / "data" / "pipeline" / state.processing_run_id / "phase_2")
             Path(output_dir).mkdir(parents=True, exist_ok=True)
 

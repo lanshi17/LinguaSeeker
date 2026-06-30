@@ -204,7 +204,7 @@ The endpoint is used by the Evidence frontend detail page for:
 
 `_load_full_document_text()` resolves full document text from three locations in priority order:
 1. Known output directory from `pipeline_run_states.state_json` (`phase_2_output.output_dir`)
-2. `backend/data/pipeline/*/phase_2/{doc_id}/` (current pipeline)
+2. `data/pipeline/*/phase_2/{doc_id}/` (current pipeline)
 3. `backend/output/cross_lingual/**/` (legacy output, matched by UUID or identifiers)
 
 Text is concatenated from track-specific JSON files (`original.json`, `translated.json`).

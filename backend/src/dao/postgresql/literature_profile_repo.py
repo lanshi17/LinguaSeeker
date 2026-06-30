@@ -14,6 +14,7 @@ from typing import Any
 
 from sqlalchemy import func, or_, select
 
+from src.dao.postgresql.contracts import LiteratureProfileRow, LiteratureProfileSearchItem
 from src.utils.parsing import parse_gene_from_group_id, parse_variant_from_group_id
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
@@ -27,12 +28,7 @@ from src.dao.postgresql.models import (
 # ── Summary field sets (first-match-wins per category) ───────────────────────
 
 _GENE_FIELDS = ("A.gene_symbol", "A.gene_aliases")
-_VARIANT_FIELDS = (
-    "A.variant_hgvs_c",
-    "A.variant_hgvs_p",
-    "A.variant_hgvs_g",
-    "A.variant_legacy_name",
-)
+_VARIANT_FIELDS = ("A.variant_hgvs", "A.variant_hgvs_p", "A.variant_hgvs_c", "A.variant_rs_id")
 _DISEASE_FIELDS = ("B.disease_diagnosis", "B.clinical_diagnosis", "B.hpo_terms")
 _CLASSIFICATION_FIELDS = ("J.authority_classification", "J.clinvar_assertion")
 
@@ -85,23 +81,20 @@ class LiteratureProfileRepository:
 
     # ── Pure aggregation ──────────────────────────────────────────────────
 
-    def _build_evidence_groups(self, canonical_rows: list[dict]) -> list[dict]:
-        """Group canonical evidence rows into the evidence_groups structure.
+    def _build_evidence_groups(self, canonical_rows: list) -> list[dict]:
+        """Group canonical ORM rows into the evidence_groups structure.
 
         Args:
-            canonical_rows: List of dicts with keys ``canonical_evidence_id``,
-                ``source_document_id``, ``field_id``, ``review_status``,
-                ``current_best_confidence``, ``active_payload``.
+            canonical_rows: List of CanonicalEvidenceItem ORM objects.
 
         Returns:
             List of group dicts with ``group_id``, ``summary``, ``avg_confidence``,
             ``field_count``, ``review_status``, and ``fields``.
         """
-        # Ordered dict to preserve insertion order (group_id -> accumulators).
         groups: OrderedDict[str, dict] = OrderedDict()
 
         for row in canonical_rows:
-            payload = row.get("active_payload") or {}
+            payload = row.active_payload or {}
             group_id = payload.get("group_id", "")
             if not group_id:
                 continue
@@ -122,32 +115,28 @@ class LiteratureProfileRepository:
 
             grp = groups[group_id]
 
-            # Accumulate confidence for average.
-            conf = row.get("current_best_confidence")
+            conf = row.current_best_confidence
             if conf is not None:
                 grp["confidences"].append(float(conf))
 
-            # Update review status (worst-case).
-            row_status = row.get("review_status", "provisional")
+            row_status = row.review_status
             if _REVIEW_SEVERITY.get(row_status, 0) > _REVIEW_SEVERITY.get(grp["review_status"], 0):
                 grp["review_status"] = row_status
 
-            # Add field entry.
             grp["fields"].append({
-                "canonical_evidence_id": str(row["canonical_evidence_id"]),
-                "field_id": payload.get("field_id", row.get("field_id", "")),
+                "canonical_evidence_id": str(row.canonical_evidence_id),
+                "field_id": payload.get("field_id", row.field_id),
                 "field_name": payload.get("field_name", ""),
                 "category": payload.get("category", ""),
                 "value": _coerce_str(payload.get("value")),
                 "confidence": _coerce_json_number(
-                    payload.get("confidence", row.get("current_best_confidence")),
+                    payload.get("confidence", row.current_best_confidence),
                 ),
                 "status": payload.get("status", ""),
                 "track": payload.get("track", ""),
             })
 
-            # Summary extraction: first-match-wins per category.
-            field_id = row.get("field_id", "")
+            field_id = row.field_id
             summary = grp["summary"]
 
             if summary["gene"] is None and field_id in _GENE_FIELDS:
@@ -170,13 +159,12 @@ class LiteratureProfileRepository:
                 if val:
                     summary["classification"] = val
 
-        # Fallback: parse gene/variant from group_id if field-level extraction missed them
         for grp in groups.values():
             if not grp["summary"]["gene"]:
                 grp["summary"]["gene"] = parse_gene_from_group_id(grp["group_id"])
             if not grp["summary"]["variant"]:
                 grp["summary"]["variant"] = parse_variant_from_group_id(grp["group_id"])
-        # Build final output.
+
         result: list[dict] = []
         for grp in groups.values():
             confs = grp["confidences"]
@@ -240,7 +228,7 @@ class LiteratureProfileRepository:
         publication_year = raw_meta.get("publication_year")
         latest_run_id = source_doc.latest_processing_run_id if source_doc is not None else None
 
-        # 3. Canonical evidence items.
+        # 3. Canonical evidence items (ORM objects).
         cei_result = await self._session.execute(
             select(CanonicalEvidenceItem)
             .where(CanonicalEvidenceItem.source_document_id == source_document_id)
@@ -249,20 +237,9 @@ class LiteratureProfileRepository:
                 CanonicalEvidenceItem.field_id,
             )
         )
-        cei_rows_raw = cei_result.scalars().all()
+        canonical_rows = list(cei_result.scalars().all())
 
-        canonical_rows: list[dict] = []
-        for row in cei_rows_raw:
-            canonical_rows.append({
-                "canonical_evidence_id": row.canonical_evidence_id,
-                "source_document_id": row.source_document_id,
-                "field_id": row.field_id,
-                "review_status": row.review_status,
-                "current_best_confidence": row.current_best_confidence,
-                "active_payload": row.active_payload,
-            })
-
-        # 4. Aggregate.
+        # 4. Aggregate (pass ORM objects directly).
         evidence_groups = self._build_evidence_groups(canonical_rows)
 
         # 5. Statistics.
@@ -270,14 +247,14 @@ class LiteratureProfileRepository:
         found_count = sum(
             1
             for r in canonical_rows
-            if (r.get("active_payload") or {}).get("status") == "found"
+            if (r.active_payload or {}).get("status") == "found"
         )
         not_found_count = total_fields - found_count
 
         conf_values = [
-            float(r["current_best_confidence"])
+            float(r.current_best_confidence)
             for r in canonical_rows
-            if r.get("current_best_confidence") is not None
+            if r.current_best_confidence is not None
         ]
         overall_confidence = (
             round(sum(conf_values) / len(conf_values), 4)
@@ -285,10 +262,9 @@ class LiteratureProfileRepository:
             else None
         )
 
-        # Review status: worst-case across all items.
         review_status = "provisional"
         for r in canonical_rows:
-            rs = r.get("review_status", "provisional")
+            rs = r.review_status
             if _REVIEW_SEVERITY.get(rs, 0) > _REVIEW_SEVERITY.get(review_status, 0):
                 review_status = rs
 
@@ -335,8 +311,8 @@ class LiteratureProfileRepository:
 
     async def get_by_document(
         self, source_document_id: uuid.UUID
-    ) -> dict | None:
-        """Return the literature profile as a dict, or None if not found."""
+    ) -> LiteratureProfileRow | None:
+        """Return the literature profile as a typed contract, or None if not found."""
         result = await self._session.execute(
             select(LiteratureProfile).where(
                 LiteratureProfile.source_document_id == source_document_id,
@@ -346,25 +322,25 @@ class LiteratureProfileRepository:
         if row is None:
             return None
 
-        return {
-            "literature_profile_id": str(row.literature_profile_id),
-            "source_document_id": str(row.source_document_id),
-            "pmid": row.pmid,
-            "doi": row.doi,
-            "title": row.title,
-            "authors": row.authors,
-            "journal": row.journal,
-            "publication_year": row.publication_year,
-            "evidence_groups": row.evidence_groups,
-            "review_status": row.review_status,
-            "review_notes": row.review_notes,
-            "overall_confidence": float(row.overall_confidence) if row.overall_confidence is not None else None,
-            "total_evidence_fields": row.total_evidence_fields,
-            "found_count": row.found_count,
-            "not_found_count": row.not_found_count,
-            "created_at": row.created_at.isoformat() if row.created_at else None,
-            "updated_at": row.updated_at.isoformat() if row.updated_at else None,
-        }
+        return LiteratureProfileRow(
+            literature_profile_id=str(row.literature_profile_id),
+            source_document_id=str(row.source_document_id),
+            pmid=row.pmid,
+            doi=row.doi,
+            title=row.title,
+            authors=row.authors,
+            journal=row.journal,
+            publication_year=row.publication_year,
+            evidence_groups=row.evidence_groups,
+            review_status=row.review_status,
+            review_notes=row.review_notes,
+            overall_confidence=float(row.overall_confidence) if row.overall_confidence is not None else None,
+            total_evidence_fields=row.total_evidence_fields,
+            found_count=row.found_count,
+            not_found_count=row.not_found_count,
+            created_at=row.created_at.isoformat() if row.created_at else None,
+            updated_at=row.updated_at.isoformat() if row.updated_at else None,
+        )
 
     async def search(
         self,
@@ -376,7 +352,7 @@ class LiteratureProfileRepository:
         doi: str | None = None,
         page: int = 1,
         page_size: int = 50,
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[LiteratureProfileSearchItem], int]:
         """Search literature profiles with optional filters.
 
         All filter conditions are OR-combined. Returns ``(items, total_count)``.
@@ -430,7 +406,7 @@ class LiteratureProfileRepository:
         data_result = await self._session.execute(data_stmt)
         rows = data_result.scalars().all()
 
-        items: list[dict] = []
+        items: list[LiteratureProfileSearchItem] = []
         for row in rows:
             eg = row.evidence_groups or []
             merged: dict[str, str | None] = {
@@ -442,26 +418,26 @@ class LiteratureProfileRepository:
                     if merged[key] is None and s.get(key):
                         merged[key] = s[key]
 
-            items.append({
-                "literature_profile_id": str(row.literature_profile_id),
-                "source_document_id": str(row.source_document_id),
-                "pmid": row.pmid,
-                "doi": row.doi,
-                "title": row.title,
-                "journal": row.journal,
-                "publication_year": row.publication_year,
-                "review_status": row.review_status,
-                "overall_confidence": (
+            items.append(LiteratureProfileSearchItem(
+                literature_profile_id=str(row.literature_profile_id),
+                source_document_id=str(row.source_document_id),
+                pmid=row.pmid,
+                doi=row.doi,
+                title=row.title,
+                journal=row.journal,
+                publication_year=row.publication_year,
+                review_status=row.review_status,
+                overall_confidence=(
                     float(row.overall_confidence) if row.overall_confidence is not None else None
                 ),
-                "total_evidence_fields": row.total_evidence_fields,
-                "found_count": row.found_count,
-                "evidence_group_count": len(eg),
-                "gene": merged["gene"],
-                "variant": merged["variant"],
-                "disease": merged["disease"],
-                "classification": merged["classification"],
-                "created_at": row.created_at.isoformat() if row.created_at else None,
-            })
+                total_evidence_fields=row.total_evidence_fields,
+                found_count=row.found_count,
+                evidence_group_count=len(eg),
+                gene=merged["gene"],
+                variant=merged["variant"],
+                disease=merged["disease"],
+                classification=merged["classification"],
+                created_at=row.created_at.isoformat() if row.created_at else None,
+            ))
 
         return items, total_count

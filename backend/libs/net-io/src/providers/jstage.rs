@@ -7,9 +7,10 @@ pub struct JstageProvider;
 impl JstageProvider {
     pub async fn search(
         client: &HttpClient,
-        query: &str,
-        limit: Option<u32>,
+        params: &FetchParams,
     ) -> Result<FetchResult, GatewayError> {
+        let query = params.query.as_deref().unwrap_or_default();
+        let limit = params.limit;
         let params = serde_json::json!({
             "keyword": query,
             "count": limit.unwrap_or(20).min(100),

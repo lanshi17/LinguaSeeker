@@ -1,6 +1,6 @@
 use crate::client::HttpClient;
 use crate::error::GatewayError;
-use crate::types::FetchResult;
+use crate::types::{FetchParams, FetchResult};
 
 pub struct BaseProvider;
 
@@ -9,9 +9,10 @@ const BASE_API_URL: &str = "https://api.base-search.net/BaseSearch";
 impl BaseProvider {
     pub async fn search(
         client: &HttpClient,
-        query: &str,
-        limit: Option<u32>,
+        params: &FetchParams,
     ) -> Result<FetchResult, GatewayError> {
+        let query = params.query.as_deref().unwrap_or_default();
+        let limit = params.limit;
         let count = limit.unwrap_or(10).min(100);
         let api_key = std::env::var("BASE_API_KEY").unwrap_or_default();
 
@@ -79,14 +80,5 @@ impl BaseProvider {
             }
         }
 
-        Ok(FetchResult {
-            provider: "base".into(),
-            success: !items.is_empty(),
-            items,
-            downloads: vec![],
-            warnings: vec![],
-            raw: Some(json),
-            meta: None,
-        })
-    }
+        Ok(FetchResult::of_items("base", items, Some(json)))
 }

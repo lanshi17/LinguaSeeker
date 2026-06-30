@@ -50,6 +50,36 @@ impl FetchResult {
             meta: None,
         }
     }
+
+    /// Build a successful result from parsed items.
+    pub fn of_items(
+        provider: &str,
+        items: Vec<serde_json::Value>,
+        raw: Option<serde_json::Value>,
+    ) -> Self {
+        FetchResult {
+            provider: provider.into(),
+            success: !items.is_empty(),
+            items,
+            downloads: vec![],
+            warnings: vec![],
+            raw,
+            meta: None,
+        }
+    }
+
+    /// Build an empty (no-results) result for a provider.
+    pub fn empty(provider: &str) -> Self {
+        FetchResult {
+            provider: provider.into(),
+            success: false,
+            items: vec![],
+            downloads: vec![],
+            warnings: vec![],
+            raw: None,
+            meta: None,
+        }
+    }
 }
 
 // ── MinerU API types ─────────────────────────────────────────────────
