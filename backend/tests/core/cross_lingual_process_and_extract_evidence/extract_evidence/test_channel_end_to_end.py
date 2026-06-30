@@ -229,7 +229,7 @@ def test_channel_specific_filtering(
     )
     
     # Get the eligibility decision
-    decision = catalog_stage._last_eligibility_decision
+    decision = catalog_stage.last_eligibility_decision
     assert decision is not None
     
     # Assert channel-appropriate field is eligible
@@ -294,7 +294,7 @@ def test_status_semantics(
     )
     
     # Get eligibility decision
-    decision = catalog_stage._last_eligibility_decision
+    decision = catalog_stage.last_eligibility_decision
     assert decision is not None
     
     # Simulate backfill with eligibility info

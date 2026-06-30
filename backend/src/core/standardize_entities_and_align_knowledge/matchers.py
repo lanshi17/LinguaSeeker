@@ -100,7 +100,7 @@ class HybridTerminologyMatcher:
         )
 
 
-TerminologyMatcher = PreciseTerminologyMatcher
+TerminologyMatcher = HybridTerminologyMatcher
 
 __all__ = [
     "ALIAS_TYPE_PRIORITY",

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from .contracts import DiseaseContext, GeneContext, TargetContextPack
+from src.core.standardize_entities_and_align_knowledge.normalizers import collapse_spaces
 
 
 _PAREN_RE = re.compile(r"\s*\([^)]*\)")
@@ -23,7 +24,6 @@ _DASH_TRANSLATION = str.maketrans({
     "\u2014": "-",
     "\u2212": "-",
 })
-_SPACE_RE = re.compile(r"\s+")
 _SOURCE_ALIAS_SPLIT_RE = re.compile(r"[.!?\n]")
 _MONDO_DIR = (
     Path(__file__).resolve().parents[5]
@@ -129,7 +129,7 @@ def _disease_aliases(label: str) -> tuple[str, ...]:
         _strip_parenthetical(label),
         _strip_parenthetical(label).casefold(),
     ):
-        normalized = _normalize_spaces(candidate)
+        normalized = collapse_spaces(candidate)
         if normalized and normalized not in aliases:
             aliases.append(normalized)
     return tuple(aliases)
@@ -158,7 +158,7 @@ def _source_observed_mondo_aliases(
                 continue
             if not _has_target_context(source_text, match.start(), match.end(), gene_symbol, disease_label):
                 continue
-            observed = _normalize_spaces(match.group(0))
+            observed = collapse_spaces(match.group(0))
             _append_alias(aliases, observed)
             for abbreviation in _source_observed_abbreviations(source_text, candidate):
                 _append_alias(aliases, abbreviation)
@@ -175,7 +175,7 @@ def _source_aware_disease_aliases(
     source_sections = [section for section in _SOURCE_ALIAS_SPLIT_RE.split(source_text) if section.strip()]
 
     for section in source_sections:
-        normalized_section = _normalize_spaces(section).casefold()
+        normalized_section = collapse_spaces(section).casefold()
         if not normalized_section:
             continue
 
@@ -183,10 +183,10 @@ def _source_aware_disease_aliases(
             continue
 
         for phrase, abbreviation in _iter_abbreviation_phrases(section):
-            normalized_phrase = _normalize_spaces(phrase)
+            normalized_phrase = collapse_spaces(phrase)
             if not _is_safe_source_phrase(normalized_phrase):
                 continue
-            normalized_abbreviation = _normalize_spaces(abbreviation)
+            normalized_abbreviation = collapse_spaces(abbreviation)
             if normalized_abbreviation and normalized_abbreviation not in aliases:
                 aliases.append(normalized_abbreviation)
 
@@ -267,7 +267,7 @@ def _has_target_context(
 ) -> bool:
     start = max(0, start_offset - 220)
     end = min(len(source_text), end_offset + 220)
-    window = _normalize_spaces(source_text[start:end]).casefold()
+    window = collapse_spaces(source_text[start:end]).casefold()
     gene_present = bool(gene_symbol and gene_symbol.casefold() in window)
     if not gene_present:
         return False
@@ -286,7 +286,7 @@ def _target_disease_cues(disease_label: str) -> tuple[str, ...]:
 
 
 def _append_alias(aliases: list[str], alias: str) -> None:
-    normalized = _normalize_spaces(alias)
+    normalized = collapse_spaces(alias)
     if not normalized:
         return
     for candidate in (normalized, normalized.translate(_DASH_TRANSLATION)):
@@ -295,13 +295,13 @@ def _append_alias(aliases: list[str], alias: str) -> None:
 
 
 def _normalize_alias_text(value: str) -> str:
-    return _normalize_spaces(value.translate(_DASH_TRANSLATION)).casefold()
+    return collapse_spaces(value.translate(_DASH_TRANSLATION)).casefold()
 
 
 def _disease_stems(label: str) -> tuple[str, ...]:
     stems = [alias.casefold() for alias in _disease_aliases(label)]
     if "," in label:
-        prefix = _normalize_spaces(label.split(",", 1)[0])
+        prefix = collapse_spaces(label.split(",", 1)[0])
         if prefix:
             stems.append(prefix.casefold())
     return tuple(dict.fromkeys(stems))
@@ -333,7 +333,7 @@ def _strip_parenthetical(value: str) -> str:
 
 
 def _string(value: object) -> str:
-    return _normalize_spaces(str(value or ""))
+    return collapse_spaces(str(value or ""))
 
 
 def _optional_string(value: object) -> str | None:
@@ -341,5 +341,3 @@ def _optional_string(value: object) -> str | None:
     return normalized or None
 
 
-def _normalize_spaces(value: str) -> str:
-    return _SPACE_RE.sub(" ", value.strip())

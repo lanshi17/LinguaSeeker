@@ -42,6 +42,26 @@ from .workflow import DEFAULT_EXTRACTION_WORKFLOW_MODE, EvidenceExtractionWorkfl
 ExtractionTrackMode = Literal["dual", "original_only", "english_pivot"]
 
 
+def _empty_not_relevant_result(track_doc: TrackDocument) -> EvidenceExtractionResult:
+    """Build a NOT_RELEVANT placeholder result for a skipped track."""
+    return EvidenceExtractionResult(
+        status=EvidenceExtractionStatus.NOT_RELEVANT,
+        document_id=track_doc.document_id,
+        track=track_doc.track,
+        evidence_map=None,
+        evidence_items=[],
+        evidence_chains=[],
+        special_evidence=[],
+        quality_report=None,
+        normalization_issues=[],
+        extraction_target=track_doc.extraction_target,
+        phenotype_evidence=[],
+        discarded_evidence=[],
+        channel_classification=None,
+        field_eligibility_summary=None,
+    )
+
+
 class EvidenceExtractionService:
     """Public facade for one-track and dual-track evidence extraction.
 
@@ -160,39 +180,9 @@ class EvidenceExtractionService:
                 enable_target_guard=enable_target_guard,
                 review_reject_policy=review_reject_policy,
             )
-            translated_result = EvidenceExtractionResult(
-                status=EvidenceExtractionStatus.NOT_RELEVANT,
-                document_id=documents.translated.document_id,
-                track=documents.translated.track,
-                evidence_map=None,
-                evidence_items=[],
-                evidence_chains=[],
-                special_evidence=[],
-                quality_report=None,
-                normalization_issues=[],
-                extraction_target=documents.translated.extraction_target,
-                phenotype_evidence=[],
-                discarded_evidence=[],
-                channel_classification=None,
-                field_eligibility_summary=None,
-            )
+            translated_result = _empty_not_relevant_result(documents.translated)
         elif track_mode == "english_pivot":
-            original_result = EvidenceExtractionResult(
-                status=EvidenceExtractionStatus.NOT_RELEVANT,
-                document_id=documents.original.document_id,
-                track=documents.original.track,
-                evidence_map=None,
-                evidence_items=[],
-                evidence_chains=[],
-                special_evidence=[],
-                quality_report=None,
-                normalization_issues=[],
-                extraction_target=documents.original.extraction_target,
-                phenotype_evidence=[],
-                discarded_evidence=[],
-                channel_classification=None,
-                field_eligibility_summary=None,
-            )
+            original_result = _empty_not_relevant_result(documents.original)
             translated_result = await self.run(
                 documents.translated,
                 extraction_profile=extraction_profile,
@@ -436,50 +426,47 @@ def _is_section_heading(text: str) -> bool:
     return bool(_EVIDENCE_SECTION_RE.match(stripped) or _NON_EVIDENCE_SECTION_RE.match(stripped))
 
 
+def _should_skip_section(text: str, skip_non_evidence: bool) -> tuple[bool, bool]:
+    """Return (should_skip, updated_skip_flag) for a line of text."""
+    stripped = text.strip()
+    if _is_section_heading(stripped):
+        if _EVIDENCE_SECTION_RE.match(stripped):
+            return False, False
+        if _NON_EVIDENCE_SECTION_RE.match(stripped):
+            return True, True
+    return skip_non_evidence, skip_non_evidence
+
+
 def _filter_evidence_blocks(blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Remove document metadata and back matter from extraction input."""
     filtered: list[dict[str, Any]] = []
-    skip_non_evidence = False
-
+    skip = False
     for block in blocks:
         if not isinstance(block, dict):
             continue
         text = _block_text(block)
-        if _is_section_heading(text):
-            if _EVIDENCE_SECTION_RE.match(text.strip()):
-                skip_non_evidence = False
-            elif _NON_EVIDENCE_SECTION_RE.match(text.strip()):
-                skip_non_evidence = True
-
-        if skip_non_evidence:
+        skip, _ = _should_skip_section(text, skip)
+        if skip:
             continue
-
         block_type = str(block.get("type", "text")).lower()
         if block_type in {"header", "footer", "page_number"}:
             continue
         filtered.append(block)
-
     return filtered
 
 
 def _filter_evidence_text(text: str) -> str:
     """Apply the evidence-section filter to paragraph/line-only text."""
     kept: list[str] = []
-    skip_non_evidence = False
-
+    skip = False
     for part in re.split(r"\n\s*\n|\n", text):
         stripped = part.strip()
         if not stripped:
             continue
-        if _is_section_heading(stripped):
-            if _EVIDENCE_SECTION_RE.match(stripped):
-                skip_non_evidence = False
-            elif _NON_EVIDENCE_SECTION_RE.match(stripped):
-                skip_non_evidence = True
-        if skip_non_evidence:
+        skip, _ = _should_skip_section(stripped, skip)
+        if skip:
             continue
         kept.append(stripped)
-
     return "\n".join(kept)
 
 

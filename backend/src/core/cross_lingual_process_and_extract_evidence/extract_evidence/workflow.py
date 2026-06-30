@@ -123,7 +123,7 @@ class EvidenceExtractionWorkflow:
             state.document, state.evidence_map, state.channel_classification,
         )
         state.evidence_items = items
-        decision = self._catalog_extraction._last_eligibility_decision
+        decision = self._catalog_extraction.last_eligibility_decision
         if decision is not None:
             state.channel_excluded_field_ids = decision.channel_rejected_field_ids
             state.target_excluded_field_ids = decision.excluded_field_ids - decision.channel_rejected_field_ids
@@ -174,7 +174,7 @@ class EvidenceExtractionWorkflow:
             state.document, state.evidence_map, state.channel_classification,
         )
         state.evidence_items = items
-        decision = self._catalog_extraction._last_eligibility_decision
+        decision = self._catalog_extraction.last_eligibility_decision
         if decision is not None:
             state.channel_excluded_field_ids = decision.channel_rejected_field_ids
             state.target_excluded_field_ids = decision.excluded_field_ids - decision.channel_rejected_field_ids
@@ -316,26 +316,36 @@ class EvidenceExtractionWorkflow:
         logger.info("Document {} marked not relevant", state.document.document_id)
         return state
 
-    def _build_graph(self) -> Any:
-        graph = StateGraph(EvidenceExtractionState)
+    def _node_functions(self, *, async_mode: bool) -> dict[str, Any]:
+        """Return the node-name → callable mapping for sync or async mode."""
+        return {
+            "relevance_scan": self._async_node_relevance_scan if async_mode else self._node_relevance_scan,
+            "catalog_extraction": self._async_node_catalog_extraction if async_mode else self._node_catalog_extraction,
+            "special_evidence": self._async_node_special_evidence if async_mode else self._node_special_evidence,
+            "clinical_context": self._async_node_clinical_context if async_mode else self._node_clinical_context,
+            "primary_broad_extraction": self._async_node_primary_broad_extraction if async_mode else self._node_primary_broad_extraction,
+            "language_metadata": self._async_node_language_metadata if async_mode else self._node_language_metadata,
+            "group_assignment": self._node_group_assignment,
+            "role_routing": self._node_role_routing,
+            "review_validation": self._async_node_review_validation if async_mode else self._node_review_validation,
+            "value_normalization": self._node_value_normalization,
+            "target_guard": self._node_target_guard,
+            "target_span_recovery": self._node_target_span_recovery,
+            "source_grounding": self._node_source_grounding,
+            "chain_assembly": self._node_chain_assembly,
+            "quality_gate": self._node_quality_gate,
+            "catalog_backfill": self._node_catalog_backfill,
+            "not_relevant": self._node_not_relevant,
+        }
 
-        graph.add_node("relevance_scan", self._node_relevance_scan)
-        graph.add_node("catalog_extraction", self._node_catalog_extraction)
-        graph.add_node("special_evidence", self._node_special_evidence)
-        graph.add_node("clinical_context", self._node_clinical_context)
-        graph.add_node("primary_broad_extraction", self._node_primary_broad_extraction)
-        graph.add_node("language_metadata", self._node_language_metadata)
-        graph.add_node("group_assignment", self._node_group_assignment)
-        graph.add_node("role_routing", self._node_role_routing)
-        graph.add_node("review_validation", self._node_review_validation)
-        graph.add_node("value_normalization", self._node_value_normalization)
-        graph.add_node("target_guard", self._node_target_guard)
-        graph.add_node("target_span_recovery", self._node_target_span_recovery)
-        graph.add_node("source_grounding", self._node_source_grounding)
-        graph.add_node("chain_assembly", self._node_chain_assembly)
-        graph.add_node("quality_gate", self._node_quality_gate)
-        graph.add_node("catalog_backfill", self._node_catalog_backfill)
-        graph.add_node("not_relevant", self._node_not_relevant)
+    def _build_graph_with(self, nodes: dict[str, Any]) -> Any:
+        """Build a LangGraph state machine from a node-name → callable mapping.
+
+        Topology is defined once; sync vs async is determined by *nodes*.
+        """
+        graph = StateGraph(EvidenceExtractionState)
+        for name, fn in nodes.items():
+            graph.add_node(name, fn)
 
         graph.set_entry_point("relevance_scan")
         next_extraction_node = self._first_extraction_node()
@@ -368,64 +378,14 @@ class EvidenceExtractionWorkflow:
         graph.add_edge("quality_gate", "catalog_backfill")
         graph.add_edge("catalog_backfill", END)
         graph.add_edge("not_relevant", END)
-
         return graph.compile()
+
+    def _build_graph(self) -> Any:
+        return self._build_graph_with(self._node_functions(async_mode=False))
 
     def _build_async_graph(self) -> Any:
         """Build a graph variant with async LLM nodes for concurrent chunk execution."""
-        graph = StateGraph(EvidenceExtractionState)
-
-        graph.add_node("relevance_scan", self._async_node_relevance_scan)
-        graph.add_node("catalog_extraction", self._async_node_catalog_extraction)
-        graph.add_node("special_evidence", self._async_node_special_evidence)
-        graph.add_node("clinical_context", self._async_node_clinical_context)
-        graph.add_node("primary_broad_extraction", self._async_node_primary_broad_extraction)
-        graph.add_node("language_metadata", self._async_node_language_metadata)
-        graph.add_node("group_assignment", self._node_group_assignment)
-        graph.add_node("role_routing", self._node_role_routing)
-        graph.add_node("review_validation", self._async_node_review_validation)
-        graph.add_node("value_normalization", self._node_value_normalization)
-        graph.add_node("target_guard", self._node_target_guard)
-        graph.add_node("target_span_recovery", self._node_target_span_recovery)
-        graph.add_node("source_grounding", self._node_source_grounding)
-        graph.add_node("chain_assembly", self._node_chain_assembly)
-        graph.add_node("quality_gate", self._node_quality_gate)
-        graph.add_node("catalog_backfill", self._node_catalog_backfill)
-        graph.add_node("not_relevant", self._node_not_relevant)
-
-        graph.set_entry_point("relevance_scan")
-        next_extraction_node = self._first_extraction_node()
-        graph.add_conditional_edges(
-            "relevance_scan",
-            lambda s: "not_relevant" if s.status == EvidenceExtractionStatus.NOT_RELEVANT else next_extraction_node,
-            {"not_relevant": "not_relevant", next_extraction_node: next_extraction_node},
-        )
-        if self._extraction_mode == "broad":
-            graph.add_edge("primary_broad_extraction", "language_metadata")
-        else:
-            graph.add_edge("catalog_extraction", "special_evidence")
-            graph.add_edge("special_evidence", "clinical_context")
-            graph.add_edge("clinical_context", "language_metadata")
-        graph.add_edge("language_metadata", "group_assignment")
-        graph.add_edge("group_assignment", "role_routing")
-        if self._extraction_mode == "broad" and self._enable_review_validation:
-            graph.add_edge("role_routing", "review_validation")
-            graph.add_edge("review_validation", "value_normalization")
-        else:
-            graph.add_edge("role_routing", "value_normalization")
-        if self._enable_target_guard:
-            graph.add_edge("value_normalization", "target_guard")
-            graph.add_edge("target_guard", "target_span_recovery")
-        else:
-            graph.add_edge("value_normalization", "target_span_recovery")
-        graph.add_edge("target_span_recovery", "source_grounding")
-        graph.add_edge("source_grounding", "chain_assembly")
-        graph.add_edge("chain_assembly", "quality_gate")
-        graph.add_edge("quality_gate", "catalog_backfill")
-        graph.add_edge("catalog_backfill", END)
-        graph.add_edge("not_relevant", END)
-
-        return graph.compile()
+        return self._build_graph_with(self._node_functions(async_mode=True))
 
     def _first_extraction_node(self) -> str:
         if self._extraction_mode == "broad":

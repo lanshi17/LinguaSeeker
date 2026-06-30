@@ -70,7 +70,7 @@ class CatalogExtractionStage:
                 for name, catalog in CATALOG_GROUPS.items()
                 if name != "curation"
             }
-        self._last_eligibility_decision = None
+        self.last_eligibility_decision = None
 
     def _max_group_overhead(self, summary: str, extraction_target: ExtractionTarget | None) -> int:
         """Estimate the maximum prompt overhead across all catalog groups."""
@@ -385,7 +385,7 @@ class CatalogExtractionStage:
         document-channel field matrix.  ``channel_classification is None``
         is permissive — only target/source eligibility applies.
 
-        The eligibility decision is stored as :attr:`_last_eligibility_decision`
+        The eligibility decision is stored as :attr:`last_eligibility_decision`
         so the workflow can access the excluded field IDs after calling
         :meth:`run` or :meth:`run_async`.
         """
@@ -396,7 +396,7 @@ class CatalogExtractionStage:
             selected_text=selected_text,
             channel_classification=channel_classification,
         )
-        self._last_eligibility_decision = decision
+        self.last_eligibility_decision = decision
         return {
             group_name: eligible_catalog
             for group_name, catalog in self._catalog_groups.items()
