@@ -5,14 +5,12 @@ Skipped by default; requires running PostgreSQL.
 from __future__ import annotations
 
 import pytest
-from uuid import uuid4
 
 
 @pytest.mark.skip(reason="Requires a running PostgreSQL instance")
 @pytest.mark.asyncio
 async def test_literature_profile_full_lifecycle() -> None:
     """Full lifecycle: create document -> run standardization -> verify profile."""
-    from sqlalchemy import text
 
     from src.core.config import Settings
     from src.dao.postgresql.connection import async_session_factory, build_async_engine

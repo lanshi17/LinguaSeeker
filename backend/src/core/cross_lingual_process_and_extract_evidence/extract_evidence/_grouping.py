@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import re
 
-from loguru import logger
 
 from .contracts import (
     EvidenceItem,

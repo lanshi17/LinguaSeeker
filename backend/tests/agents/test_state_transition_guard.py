@@ -8,13 +8,11 @@ from __future__ import annotations
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.agents.contracts import (
     InvalidStateTransitionError,
-    PhaseErrorDetail,
     PhaseStatus,
     PhaseStatusDetail,
     PipelineGraphState,
@@ -29,7 +27,6 @@ from src.agents.state_persistence import (
     DirectStatePersistence,
     SessionBoundStatePersistence,
 )
-from src.dao.postgresql.models import PipelineRunState
 
 
 # ── Pure validation function tests (no DB) ────────────────────────────────────────

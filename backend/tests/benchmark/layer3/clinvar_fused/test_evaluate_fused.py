@@ -1,13 +1,11 @@
 """Tests for fused benchmark evaluation logic."""
 from __future__ import annotations
 
-import pytest
 
 from benchmark.datasets.clinvar_fused.evaluate_fused import (
     compare_gene_disease,
     compare_variant_precision,
     compute_aggregate_metrics,
-    evaluate_entry_from_preprocessed,
     fuzzy_match,
     normalize_text,
 )

@@ -1,7 +1,7 @@
 """Tests for core identity retry in CatalogExtractionStage."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -13,12 +13,8 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     ExtractionTarget,
     PageSpan,
     SourceLocation,
-    SourcePrecision,
     Track,
     TrackDocument,
-)
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.providers import (
-    EvidenceModelTier,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction import (
     CatalogExtractionStage,

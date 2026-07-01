@@ -49,8 +49,12 @@ jobs:
           export RERANK_BASE_URL=http://localhost:8003/v1
           export FAST_LLM_BASE_URL=http://localhost REASONING_LLM_BASE_URL=http://localhost
           export BACKEND_URL=http://localhost:8000
+          export CHAT_LLM_BASE_URL=http://localhost REASONING_LLM_API_KEY=dummy
+          export SESSION_SIGNING_KEY=dummy FAST_LLM_API_KEY=dummy CHAT_LLM_API_KEY=dummy
+          export TRANSLATION_LLM_BASE_URL=http://localhost TRANSLATION_LLM_API_KEY=dummy
 
-          for f in docker-compose.yml deploy/compose/*/docker-compose.yml; do
+          for f in deploy/compose/*/docker-compose.yml; do
+            [[ -f "$f" ]] || continue
             echo "--- Validating $f ---"
             docker compose -f "$f" config --quiet && echo "OK" || { echo "FAIL: $f"; exit 1; }
           done

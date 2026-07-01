@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import uuid
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import MagicMock
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -99,8 +99,9 @@ class TestChatSSEEvidenceContext:
         run_id, evidence_id = await self._create_test_run_with_evidence(db_session)
 
         async def mock_stream_error(*args, **kwargs):
+            if False:  # pragma: no cover
+                yield  # forces async-generator typing
             raise RuntimeError("LLM timeout")
-            yield  # noqa: unreachable -- forces async-generator typing
 
         provider = MagicMock()
         provider.stream = mock_stream_error
