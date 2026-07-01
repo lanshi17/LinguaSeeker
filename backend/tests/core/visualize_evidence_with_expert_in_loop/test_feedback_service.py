@@ -1,4 +1,5 @@
 """Tests for feedback service."""
+
 from __future__ import annotations
 
 import uuid
@@ -138,9 +139,7 @@ class TestFeedbackService:
         assert result.new_status == ReviewStatus.APPROVED
 
         # Verify audit event was recorded
-        stmt = select(ReviewAuditEvent).where(
-            ReviewAuditEvent.canonical_evidence_id == evidence_id
-        )
+        stmt = select(ReviewAuditEvent).where(ReviewAuditEvent.canonical_evidence_id == evidence_id)
         events = (await db_session.execute(stmt)).scalars().all()
         assert len(events) == 1
         assert events[0].old_status == "provisional"
@@ -163,9 +162,7 @@ class TestFeedbackService:
                 reviewer_id=None,
             )
 
-    async def test_patch_preserves_field_level_active_payload_keys(
-        self, db_session: AsyncSession
-    ) -> None:
+    async def test_patch_preserves_field_level_active_payload_keys(self, db_session: AsyncSession) -> None:
         """Patching must preserve field-level keys (group_id, source, track, entity_id)."""
         from unittest.mock import AsyncMock, patch as mock_patch
 

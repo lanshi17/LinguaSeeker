@@ -185,9 +185,7 @@ async def test_typed_gate_rejects_missing_doc_type():
     # LLM says relevant but emits no doc_type
     mock_response = MagicMock()
     mock_response.choices = [MagicMock()]
-    mock_response.choices[0].message.content = json.dumps(
-        {"relevant": True, "reason": "yes"}
-    )
+    mock_response.choices[0].message.content = json.dumps({"relevant": True, "reason": "yes"})
 
     client = MagicMock()
     client.chat.completions.create = AsyncMock(return_value=mock_response)
@@ -226,9 +224,7 @@ async def test_typed_gate_rejects_doc_type_mismatch():
 
     mock_response = MagicMock()
     mock_response.choices = [MagicMock()]
-    mock_response.choices[0].message.content = json.dumps(
-        {"relevant": True, "doc_type": "review", "reason": "ok"}
-    )
+    mock_response.choices[0].message.content = json.dumps({"relevant": True, "doc_type": "review", "reason": "ok"})
 
     client = MagicMock()
     client.chat.completions.create = AsyncMock(return_value=mock_response)

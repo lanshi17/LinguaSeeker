@@ -20,6 +20,7 @@ Usage:
     # Custom output directory
     uv run python scripts/e2e_visualize_feedback.py --output-dir /tmp/e2e_phase4
 """
+
 from __future__ import annotations
 
 import argparse
@@ -91,9 +92,7 @@ async def _query_canonical_evidence(
     limit: int = 50,
 ) -> list[dict[str, Any]]:
     """Query canonical evidence items from the database."""
-    stmt = select(CanonicalEvidenceItem).order_by(
-        CanonicalEvidenceItem.created_at.desc()
-    ).limit(limit)
+    stmt = select(CanonicalEvidenceItem).order_by(CanonicalEvidenceItem.created_at.desc()).limit(limit)
     result = await session.execute(stmt)
     items = result.scalars().all()
     return [
@@ -166,15 +165,15 @@ async def run_visualize_feedback(
                 limit=max_items,
             )
             if not evidence_items:
-                logger.warning(
-                    "No canonical evidence found in DB. "
-                    "Run Phase 1-3 pipeline first to populate evidence."
+                logger.warning("No canonical evidence found in DB. Run Phase 1-3 pipeline first to populate evidence.")
+                _write_json(
+                    saved_dir / "summary.json",
+                    {
+                        "phase": "visualize_feedback",
+                        "status": "no_evidence",
+                        "created_at": datetime.now().isoformat(),
+                    },
                 )
-                _write_json(saved_dir / "summary.json", {
-                    "phase": "visualize_feedback",
-                    "status": "no_evidence",
-                    "created_at": datetime.now().isoformat(),
-                })
                 return saved_dir
 
             logger.info("Found {} canonical evidence items", len(evidence_items))
@@ -209,14 +208,16 @@ async def run_visualize_feedback(
                     patch=patch_request,
                     reviewer_id=reviewer_id,
                 )
-                patches.append({
-                    "canonical_evidence_id": str(ce_id),
-                    "field_id": field_id,
-                    "deltas": patch_result.deltas,
-                    "old_status": patch_result.old_status.value,
-                    "new_status": patch_result.new_status.value,
-                    "field_deltas": _json_ready(patch_result.field_deltas),
-                })
+                patches.append(
+                    {
+                        "canonical_evidence_id": str(ce_id),
+                        "field_id": field_id,
+                        "deltas": patch_result.deltas,
+                        "old_status": patch_result.old_status.value,
+                        "new_status": patch_result.new_status.value,
+                        "field_deltas": _json_ready(patch_result.field_deltas),
+                    }
+                )
 
                 # Test approval workflow: corrected -> approved
                 logger.info("  [feedback] Approving {}", field_id)
@@ -230,14 +231,16 @@ async def run_visualize_feedback(
                     patch=approve_request,
                     reviewer_id=reviewer_id,
                 )
-                patches.append({
-                    "canonical_evidence_id": str(ce_id),
-                    "field_id": field_id,
-                    "deltas": approve_result.deltas,
-                    "old_status": approve_result.old_status.value,
-                    "new_status": approve_result.new_status.value,
-                    "field_deltas": _json_ready(approve_result.field_deltas),
-                })
+                patches.append(
+                    {
+                        "canonical_evidence_id": str(ce_id),
+                        "field_id": field_id,
+                        "deltas": approve_result.deltas,
+                        "old_status": approve_result.old_status.value,
+                        "new_status": approve_result.new_status.value,
+                        "field_deltas": _json_ready(approve_result.field_deltas),
+                    }
+                )
 
             await session.commit()
             logger.info("[feedback] Applied {} patch operations", len(patches))
@@ -251,26 +254,25 @@ async def run_visualize_feedback(
                 span = await source_linker.get_bilingual_span(
                     canonical_evidence_id=ce_id,
                 )
-                bilingual_spans.append({
-                    "canonical_evidence_id": str(ce_id),
-                    "has_original": span.original_track is not None,
-                    "has_translated": span.translated_track is not None,
-                    "alignment_confidence": span.alignment_confidence,
-                })
+                bilingual_spans.append(
+                    {
+                        "canonical_evidence_id": str(ce_id),
+                        "has_original": span.original_track is not None,
+                        "has_translated": span.translated_track is not None,
+                        "alignment_confidence": span.alignment_confidence,
+                    }
+                )
 
-            bilingual_count = sum(
-                1 for s in bilingual_spans
-                if s["has_original"] and s["has_translated"]
-            )
+            bilingual_count = sum(1 for s in bilingual_spans if s["has_original"] and s["has_translated"])
             if bilingual_count == 0 and bilingual_spans:
                 logger.warning(
-                    "[source-linker] 0/{} items have bilingual spans -- "
-                    "run_evidence_items may lack track data",
+                    "[source-linker] 0/{} items have bilingual spans -- run_evidence_items may lack track data",
                     len(bilingual_spans),
                 )
             logger.info(
                 "[source-linker] {} items, {} bilingual alignments",
-                len(bilingual_spans), bilingual_count,
+                len(bilingual_spans),
+                bilingual_count,
             )
 
             # ── 3. ChatService: create session + messages ────────────────
@@ -366,20 +368,23 @@ async def run_visualize_feedback(
                     limit=50,
                 )
                 for event in events:
-                    all_audit_events.append({
-                        "review_event_id": str(event.review_event_id),
-                        "canonical_evidence_id": str(event.canonical_evidence_id),
-                        "target_type": event.target_type,
-                        "old_status": event.old_status,
-                        "new_status": event.new_status,
-                        "field_deltas": event.field_deltas,
-                        "change_reason": event.change_reason,
-                        "created_at": event.created_at.isoformat() if event.created_at else None,
-                    })
+                    all_audit_events.append(
+                        {
+                            "review_event_id": str(event.review_event_id),
+                            "canonical_evidence_id": str(event.canonical_evidence_id),
+                            "target_type": event.target_type,
+                            "old_status": event.old_status,
+                            "new_status": event.new_status,
+                            "field_deltas": event.field_deltas,
+                            "change_reason": event.change_reason,
+                            "created_at": event.created_at.isoformat() if event.created_at else None,
+                        }
+                    )
 
             logger.info(
                 "[delta-audit] {} audit events across {} evidence items",
-                len(all_audit_events), len(evidence_items),
+                len(all_audit_events),
+                len(evidence_items),
             )
 
             # ── Save outputs ─────────────────────────────────────────────
@@ -409,9 +414,7 @@ async def run_visualize_feedback(
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Run Phase 4 evidence review & feedback E2E"
-    )
+    parser = argparse.ArgumentParser(description="Run Phase 4 evidence review & feedback E2E")
     parser.add_argument(
         "--processing-run-id",
         type=UUID,

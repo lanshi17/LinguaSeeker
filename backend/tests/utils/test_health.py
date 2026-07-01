@@ -1,4 +1,5 @@
 """Tests for startup health checks."""
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
@@ -47,6 +48,7 @@ async def test_check_redis_uses_wiring_singleton() -> None:
 
     with patch("src.api.wiring.get_redis_client", return_value=mock_client):
         from src.utils.health import _check_redis
+
         result = await _check_redis()
 
     assert result is True
@@ -58,6 +60,7 @@ async def test_check_redis_uses_wiring_singleton() -> None:
 @pytest.mark.asyncio
 async def test_check_all_reports_postgres_failure():
     """PostgreSQL failure should be reported as False."""
+
     @asynccontextmanager
     async def _mock_connect():
         raise ConnectionError("refused")

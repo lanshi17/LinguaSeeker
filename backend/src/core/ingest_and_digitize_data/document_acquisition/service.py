@@ -38,9 +38,7 @@ class DocumentAcquisitionService:
             DocumentAcquisitionResult with acquisition result.
         """
         start_time = time.time()
-        self.logger.debug(
-            f"Acquisition started: source={request.source.value}"
-        )
+        self.logger.debug(f"Acquisition started: source={request.source.value}")
 
         try:
             if request.source == AcquisitionSource.LOCAL:
@@ -57,9 +55,7 @@ class DocumentAcquisitionService:
             )
             return result
         except ValueError as e:
-            self.logger.warning(
-                f"Acquisition failed: source={request.source.value}, error={e}"
-            )
+            self.logger.warning(f"Acquisition failed: source={request.source.value}, error={e}")
             return DocumentAcquisitionResult(
                 success=False,
                 source=request.source,
@@ -67,9 +63,7 @@ class DocumentAcquisitionService:
                 elapsed_time=time.time() - start_time,
             )
         except Exception as e:
-            self.logger.error(
-                f"Unexpected error: source={request.source.value}, error={e}"
-            )
+            self.logger.error(f"Unexpected error: source={request.source.value}, error={e}")
             raise
 
     def _handle_upload(self, request: DocumentAcquisitionRequest) -> DocumentAcquisitionResult:
@@ -189,11 +183,7 @@ class DocumentAcquisitionService:
         # (Phase 1 adapter) don't report "Acquisition failed: None".
         error = result.get("error")
         if not success and not error:
-            error = (
-                "; ".join(warnings_list)
-                if warnings_list
-                else "No candidates or downloads returned by any provider"
-            )
+            error = "; ".join(warnings_list) if warnings_list else "No candidates or downloads returned by any provider"
 
         return DocumentAcquisitionResult(
             success=success,

@@ -3,6 +3,7 @@
 Extracts a typed feature vector from existing CandidateScore and internal
 candidate objects. No model training or label access.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -107,9 +108,7 @@ def extract_features(
     source = item.source or item.raw_source
     has_source = 1.0 if source is not None else 0.0
     source_is_exact = 1.0 if source is not None and source.source_precision == SourcePrecision.EXACT else 0.0
-    source_is_corrected = (
-        1.0 if source is not None and source.source_precision == SourcePrecision.CORRECTED else 0.0
-    )
+    source_is_corrected = 1.0 if source is not None and source.source_precision == SourcePrecision.CORRECTED else 0.0
     span_length = _span_length(source) if source is not None else 0.0
 
     status_is_found = 1.0 if item.status == EvidenceStatus.FOUND else 0.0

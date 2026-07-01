@@ -1,4 +1,5 @@
 """Tests for prompt-only citation-required LLM baseline behavior."""
+
 from __future__ import annotations
 
 from benchmark.analysis.baselines.llm_common import (

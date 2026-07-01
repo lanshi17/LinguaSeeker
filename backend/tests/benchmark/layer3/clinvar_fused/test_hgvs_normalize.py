@@ -1,4 +1,5 @@
 """Tests for HGVS normalization utilities."""
+
 from __future__ import annotations
 
 import pytest
@@ -87,32 +88,35 @@ class TestNormalizeHgvsP:
 class TestNormalizeVariantType:
     """Tests for variant type normalization."""
 
-    @pytest.mark.parametrize("input_type,expected", [
-        ("single nucleotide variant", "missense"),
-        ("Single nucleotide variant", "missense"),
-        ("SNV", "missense"),
-        ("missense", "missense"),
-        ("Missense variant", "missense"),
-        ("nonsense", "nonsense"),
-        ("Stop gained", "nonsense"),
-        ("frameshift", "frameshift"),
-        ("Frameshift variant", "frameshift"),
-        ("splice site", "splice_site"),
-        ("splice donor variant", "splice_site"),
-        ("splice acceptor variant", "splice_site"),
-        ("deletion", "deletion"),
-        ("Deletion", "deletion"),
-        ("insertion", "insertion"),
-        ("dup", "dup"),
-        ("Duplication", "dup"),
-        ("Indel", "deletion"),
-        ("copy number loss", "cnv"),
-        ("CNV", "cnv"),
-        ("synonymous", "synonymous"),
-        ("intron variant", "other"),
-        ("unknown_type", "other"),
-        ("", ""),
-    ])
+    @pytest.mark.parametrize(
+        "input_type,expected",
+        [
+            ("single nucleotide variant", "missense"),
+            ("Single nucleotide variant", "missense"),
+            ("SNV", "missense"),
+            ("missense", "missense"),
+            ("Missense variant", "missense"),
+            ("nonsense", "nonsense"),
+            ("Stop gained", "nonsense"),
+            ("frameshift", "frameshift"),
+            ("Frameshift variant", "frameshift"),
+            ("splice site", "splice_site"),
+            ("splice donor variant", "splice_site"),
+            ("splice acceptor variant", "splice_site"),
+            ("deletion", "deletion"),
+            ("Deletion", "deletion"),
+            ("insertion", "insertion"),
+            ("dup", "dup"),
+            ("Duplication", "dup"),
+            ("Indel", "deletion"),
+            ("copy number loss", "cnv"),
+            ("CNV", "cnv"),
+            ("synonymous", "synonymous"),
+            ("intron variant", "other"),
+            ("unknown_type", "other"),
+            ("", ""),
+        ],
+    )
     def test_variant_type_mapping(self, input_type: str, expected: str) -> None:
         assert normalize_variant_type(input_type) == expected
 
@@ -121,16 +125,12 @@ class TestParseClinvarName:
     """Tests for ClinVar Name field parsing."""
 
     def test_standard_format(self) -> None:
-        result = _parse_hgvs_from_clinvar_name(
-            "NM_007294.4(BRCA1):c.5266dupC (p.Gln1756ProfsTer74)"
-        )
+        result = _parse_hgvs_from_clinvar_name("NM_007294.4(BRCA1):c.5266dupC (p.Gln1756ProfsTer74)")
         assert result["hgvs_c"] == "c.5266dupC"
         assert result["hgvs_p"] == "p.Gln1756ProfsTer74"
 
     def test_coding_only(self) -> None:
-        result = _parse_hgvs_from_clinvar_name(
-            "NM_000059.3(BRCA2):c.7397C>T"
-        )
+        result = _parse_hgvs_from_clinvar_name("NM_000059.3(BRCA2):c.7397C>T")
         assert result["hgvs_c"] == "c.7397C>T"
         assert result["hgvs_p"] == ""
 
@@ -146,9 +146,7 @@ class TestParseClinvarHgvsName:
     """Tests for full ClinVar Name parsing with normalization."""
 
     def test_full_parse(self) -> None:
-        result = _parse_clinvar_hgvs_name(
-            "NM_007294.4(BRCA1):c.5266dupC (p.Gln1756ProfsTer74)"
-        )
+        result = _parse_clinvar_hgvs_name("NM_007294.4(BRCA1):c.5266dupC (p.Gln1756ProfsTer74)")
         assert result["hgvs_c"] == "c.5266dupC"
         assert result["hgvs_p"] == "p.Gln1756ProfsTer74"
         assert result["normalized_c"] == "c.5266dupC"

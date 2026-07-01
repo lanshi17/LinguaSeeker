@@ -17,7 +17,12 @@ from .gateway import (
     search_provider,
 )
 from .normalizers import normalize_items
-from .pubmed_service import OnlineAcquisitionPubMedArticle, OnlineAcquisitionPubMedCandidate, OnlineAcquisitionPubMedService, get_pubmed_service
+from .pubmed_service import (
+    OnlineAcquisitionPubMedArticle,
+    OnlineAcquisitionPubMedCandidate,
+    OnlineAcquisitionPubMedService,
+    get_pubmed_service,
+)
 from .search_service import build_provider_plan, search_multilingual
 from .workflow import multilingual_acquisition_workflow, online_acquisition_workflow
 

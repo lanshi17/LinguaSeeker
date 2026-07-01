@@ -1,4 +1,5 @@
 """Interface for translators — Clean Architecture boundary."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -15,7 +16,9 @@ class BaseTranslator(ABC):
     """
 
     @abstractmethod
-    async def run_pipeline(self, formatted: FormattedDocument) -> Tuple[Dict[str, str], str, List[str], List[str], List[str]]:
+    async def run_pipeline(
+        self, formatted: FormattedDocument
+    ) -> Tuple[Dict[str, str], str, List[str], List[str], List[str]]:
         """Run the full translation pipeline.
 
         Returns (terminology_map, translated, source_segments, translated_parts, warnings).

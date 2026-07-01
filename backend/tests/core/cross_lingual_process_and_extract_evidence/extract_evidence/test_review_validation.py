@@ -1,4 +1,5 @@
 """Tests for primary-candidate review validation stage."""
+
 from __future__ import annotations
 
 import pytest

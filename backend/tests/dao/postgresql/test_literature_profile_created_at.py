@@ -1,4 +1,5 @@
 """Tests for created_at exposure in literature profile search."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, AsyncMock
@@ -38,6 +39,7 @@ async def test_search_result_dict_contains_created_at():
     data_result.scalars.return_value.all.return_value = [mock_row]
 
     call_count = 0
+
     async def mock_execute(stmt):
         nonlocal call_count
         call_count += 1

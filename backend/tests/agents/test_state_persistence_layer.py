@@ -1,4 +1,5 @@
 """Tests for pipeline state persistence layer."""
+
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone, timedelta
@@ -86,9 +87,7 @@ async def test_save_state_idempotent(db_session: AsyncSession, sample_state: Pip
 
 
 @pytest.mark.asyncio
-async def test_save_preserves_structured_errors(
-    db_session: AsyncSession, sample_state: PipelineGraphState
-):
+async def test_save_preserves_structured_errors(db_session: AsyncSession, sample_state: PipelineGraphState):
     """Structured error details survive round-trip through database."""
     sample_state.phase_1_status = PhaseStatusDetail(
         status=PhaseStatus.FAILED,
@@ -241,7 +240,6 @@ async def test_recover_orphaned_runs_fails_stale_heartbeat(db_session: AsyncSess
     assert loaded.error_message == "Pipeline heartbeat expired"
 
 
-
 @pytest.mark.asyncio
 async def test_build_raw_metadata_extracts_title(tmp_path):
     """_build_raw_metadata reads title/authors/journal from Phase 1 metadata.json."""
@@ -251,9 +249,7 @@ async def test_build_raw_metadata_extracts_title(tmp_path):
 
     meta_path = tmp_path / "metadata.json"
     meta_path.write_text(
-        json.dumps(
-            {"title": "Rett Syndrome Study", "authors": ["Doe J"], "journal": "Nature"}
-        ),
+        json.dumps({"title": "Rett Syndrome Study", "authors": ["Doe J"], "journal": "Nature"}),
         encoding="utf-8",
     )
 
@@ -313,9 +309,7 @@ async def test_build_raw_metadata_no_phase_1_output():
 
 
 @pytest.mark.asyncio
-async def test_direct_persistence_persists_title_to_source_document(
-    db_session: AsyncSession, tmp_path
-):
+async def test_direct_persistence_persists_title_to_source_document(db_session: AsyncSession, tmp_path):
     """DirectStatePersistence.save() persists the Phase 1 title to SourceDocument.raw_metadata."""
     import json
     from src.agents.contracts import Phase1Output
@@ -347,9 +341,7 @@ async def test_direct_persistence_persists_title_to_source_document(
 
 
 @pytest.mark.asyncio
-async def test_direct_persistence_updates_title_on_existing_source_document(
-    db_session: AsyncSession, tmp_path
-):
+async def test_direct_persistence_updates_title_on_existing_source_document(db_session: AsyncSession, tmp_path):
     """When SD already exists, a later save with Phase 1 title updates raw_metadata."""
     import json
     from src.agents.contracts import Phase1Output

@@ -1,4 +1,5 @@
 """Tests for field-profiled extraction and source-visible validation."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -39,6 +40,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages
 # ---------------------------------------------------------------------------
 # Field profile tests
 # ---------------------------------------------------------------------------
+
 
 def test_dataset_d_field_count_is_at_most_20():
     assert len(DATASET_D_FIELDS) <= 20
@@ -95,6 +97,7 @@ def test_build_profiled_catalog_high_signal_has_fewer_fields():
 # Source-visible gate tests for ClinicalContextStage
 # ---------------------------------------------------------------------------
 
+
 def _doc_with_text(text: str) -> TrackDocument:
     return TrackDocument(
         document_id="doc-sv-1",
@@ -117,7 +120,8 @@ def test_source_visible_gate_accepts_value_present_in_document():
             value="seizures; developmental regression",
             confidence=0.85,
             source=SourceLocation(
-                context_type="text", context_ref="",
+                context_type="text",
+                context_ref="",
                 text_snippet="seizures and developmental regression",
             ),
         ),
@@ -140,7 +144,8 @@ def test_source_visible_gate_rejects_value_not_in_document():
             value="seizures; ataxia; tremor",
             confidence=0.85,
             source=SourceLocation(
-                context_type="text", context_ref="",
+                context_type="text",
+                context_ref="",
                 text_snippet="seizures and ataxia",
             ),
         ),
@@ -165,7 +170,8 @@ def test_source_visible_gate_accepts_when_snippet_in_document():
             value="loss of acquired hand skills; stereotypic movements",
             confidence=0.85,
             source=SourceLocation(
-                context_type="text", context_ref="",
+                context_type="text",
+                context_ref="",
                 text_snippet="loss of acquired hand skills and stereotypic movements",
             ),
         ),
@@ -187,7 +193,8 @@ def test_source_visible_gate_rejects_empty_snippet():
             value="female",
             confidence=0.85,
             source=SourceLocation(
-                context_type="text", context_ref="",
+                context_type="text",
+                context_ref="",
                 text_snippet="",
             ),
         ),
@@ -220,6 +227,7 @@ def test_source_visible_gate_handles_no_source():
 # Profile opt-in tests
 # ---------------------------------------------------------------------------
 
+
 def test_resolve_profile_none_returns_none():
     assert resolve_profile_fields(None) is None
     assert resolve_profile_fields(ExtractionProfile.NONE) is None
@@ -247,19 +255,19 @@ def test_default_service_does_not_use_dataset_d_fields():
     from unittest.mock import patch, MagicMock
 
     # Patch at the module level to avoid real LLM initialization
-    with patch(
-        "src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api.LangChainEvidenceProvider",
-    ), patch(
-        "src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api.EvidenceExtractionConfigContext",
+    with (
+        patch(
+            "src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api.LangChainEvidenceProvider",
+        ),
+        patch(
+            "src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api.EvidenceExtractionConfigContext",
+        ),
     ):
         # Default (NONE) should pass None to the workflow (no field restriction)
         EvidenceExtractionService(cfg=MagicMock())  # noqa: B018 -- smoke-check construction
         # The workflow's catalog groups should include ALL non-curation fields
         all_extractable = {
-            spec.field_id
-            for name, specs in CATALOG_GROUPS.items()
-            if name != "curation"
-            for spec in specs
+            spec.field_id for name, specs in CATALOG_GROUPS.items() if name != "curation" for spec in specs
         }
         # With DATASET_D_FIELDS, the set would be much smaller (~20).
         # With NONE (default), it should be all ~143 extractable fields.
@@ -274,10 +282,13 @@ def test_service_with_dataset_d_profile_restricts_fields():
     )
     from unittest.mock import patch, MagicMock
 
-    with patch(
-        "src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api.LangChainEvidenceProvider",
-    ), patch(
-        "src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api.EvidenceExtractionConfigContext",
+    with (
+        patch(
+            "src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api.LangChainEvidenceProvider",
+        ),
+        patch(
+            "src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api.EvidenceExtractionConfigContext",
+        ),
     ):
         service = EvidenceExtractionService(
             cfg=MagicMock(),
@@ -292,6 +303,7 @@ def test_service_with_dataset_d_profile_restricts_fields():
 # Source-visible gate whitespace normalization tests
 # ---------------------------------------------------------------------------
 
+
 def test_source_visible_gate_accepts_whitespace_normalized_snippet():
     """Snippet with different whitespace formatting should still match."""
     text = "The patient  had   seizures and  developmental regression."
@@ -305,7 +317,8 @@ def test_source_visible_gate_accepts_whitespace_normalized_snippet():
             value="seizures; developmental regression",
             confidence=0.85,
             source=SourceLocation(
-                context_type="text", context_ref="",
+                context_type="text",
+                context_ref="",
                 text_snippet="The patient had seizures and developmental regression.",
             ),
         ),
@@ -329,7 +342,8 @@ def test_source_visible_gate_accepts_tab_vs_space():
             value="seizures present",
             confidence=0.85,
             source=SourceLocation(
-                context_type="text", context_ref="",
+                context_type="text",
+                context_ref="",
                 text_snippet="The patient had seizures.",
             ),
         ),
@@ -352,7 +366,8 @@ def test_source_visible_gate_case_sensitive():
             value="seizures",
             confidence=0.85,
             source=SourceLocation(
-                context_type="text", context_ref="",
+                context_type="text",
+                context_ref="",
                 text_snippet="seizures",
             ),
         ),
@@ -367,6 +382,7 @@ def test_source_visible_gate_case_sensitive():
 # Rejection counter tests
 # ---------------------------------------------------------------------------
 
+
 def test_rejection_counters_exposed():
     """After _merge, rejection reasons should be accessible for audit."""
     text = "The patient was a 4-year-old female."
@@ -380,7 +396,8 @@ def test_rejection_counters_exposed():
             value="seizures; ataxia",
             confidence=0.85,
             source=SourceLocation(
-                context_type="text", context_ref="",
+                context_type="text",
+                context_ref="",
                 text_snippet="seizures and ataxia",
             ),
         ),
@@ -391,9 +408,7 @@ def test_rejection_counters_exposed():
     # Rejection counters should be set
     assert hasattr(ClinicalContextStage, "_rejection_reasons")
     counters = ClinicalContextStage._rejection_reasons
-    assert any("not_in_document" in k for k in counters), (
-        f"Expected not_in_document rejection, got: {counters}"
-    )
+    assert any("not_in_document" in k for k in counters), f"Expected not_in_document rejection, got: {counters}"
 
 
 # ---------------------------------------------------------------------------
@@ -401,9 +416,7 @@ def test_rejection_counters_exposed():
 # ---------------------------------------------------------------------------
 
 _ALL_FIELD_IDS = frozenset(spec.field_id for spec in EVIDENCE_FIELD_SPECS)
-_NON_K_FIELD_IDS = frozenset(
-    spec.field_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id != "K"
-)
+_NON_K_FIELD_IDS = frozenset(spec.field_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id != "K")
 
 
 def _cls(channels: list[DocumentEvidenceChannel]) -> DocumentChannelClassification:
@@ -434,9 +447,7 @@ def test_resolve_channel_case_report_count():
 
 
 def test_resolve_channel_functional_study_count():
-    fields = resolve_channel_profile_fields(
-        _cls([DocumentEvidenceChannel.FUNCTIONAL_STUDY])
-    )
+    fields = resolve_channel_profile_fields(_cls([DocumentEvidenceChannel.FUNCTIONAL_STUDY]))
     # A(22) + E(7) + F(24) + I(16) + H(9) + J(6) = 84
     assert len(fields) == 84
 
@@ -465,9 +476,7 @@ def test_resolve_channel_no_field_outside_catalog():
 
 
 def test_resolve_channel_curation_always_excluded():
-    k_fields = frozenset(
-        spec.field_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id == "K"
-    )
+    k_fields = frozenset(spec.field_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id == "K")
     for channel in DocumentEvidenceChannel:
         fields = resolve_channel_profile_fields(_cls([channel]))
         assert fields.isdisjoint(k_fields)

@@ -1,4 +1,5 @@
 """Tests for database-related application configuration."""
+
 from __future__ import annotations
 
 from src.core.config import Settings

@@ -1,4 +1,5 @@
 """Tests for Phase 2 adapter (translation + evidence extraction)."""
+
 import asyncio
 import json
 import pytest
@@ -39,7 +40,6 @@ def sample_state(tmp_path) -> PipelineGraphState:
             disease_name="ABCA3 deficiency",
         ),
     )
-
 
 
 @pytest.mark.asyncio
@@ -315,7 +315,6 @@ async def test_phase_2_adapter_passes_extraction_track_mode(
     assert mock_extraction_service.run_dual.call_args.kwargs["extraction_track_mode"] == "english_pivot"
 
 
-
 @pytest.mark.asyncio
 async def test_phase_2_adapter_sets_skip_when_not_relevant(
     sample_state: PipelineGraphState,
@@ -415,9 +414,7 @@ async def test_phase_2_adapter_raises_retryable_on_api_timeout(
     import openai
 
     mock_translation = MagicMock()
-    mock_translation.run = AsyncMock(
-        side_effect=openai.APITimeoutError(request=None)
-    )
+    mock_translation.run = AsyncMock(side_effect=openai.APITimeoutError(request=None))
 
     mock_extraction_service = MagicMock()
 

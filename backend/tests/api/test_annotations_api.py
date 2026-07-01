@@ -10,6 +10,7 @@ NOTE: A ``StaticPool`` is required so that every request session shares the
 same in-memory SQLite database (otherwise each connection gets its own
 ephemeral DB).
 """
+
 from __future__ import annotations
 
 import uuid
@@ -68,8 +69,11 @@ async def _app_client() -> AsyncGenerator[tuple[AsyncClient, uuid.UUID], None]:
 
     with (
         patch("src.core.config.get_config") as mock_cfg,
-        patch("src.utils.health.check_all_connections", new_callable=AsyncMock,
-              return_value=MagicMock(failed_services=MagicMock(return_value=[]))),
+        patch(
+            "src.utils.health.check_all_connections",
+            new_callable=AsyncMock,
+            return_value=MagicMock(failed_services=MagicMock(return_value=[])),
+        ),
         patch("src.api.deps.get_session_factory", return_value=session_factory),
     ):
         from src.core.config import Settings
@@ -128,9 +132,7 @@ async def test_create_list_update_delete_flow():
         assert items[0]["id"] == ann_id
 
         # Patch color + note.
-        resp = await client.patch(
-            f"{base}/{ann_id}", json={"color": "#fecaca", "note": "updated note"}
-        )
+        resp = await client.patch(f"{base}/{ann_id}", json={"color": "#fecaca", "note": "updated note"})
         assert resp.status_code == 200, resp.text
         patched = resp.json()
         assert patched["color"] == "#fecaca"

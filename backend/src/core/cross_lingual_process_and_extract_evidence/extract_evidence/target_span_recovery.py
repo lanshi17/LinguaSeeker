@@ -1,4 +1,5 @@
 """Deterministic recovery of high-signal fields from already selected target spans."""
+
 from __future__ import annotations
 
 import re
@@ -63,11 +64,7 @@ def _selected_target_snippets(items: list[EvidenceItem]) -> tuple[str, ...]:
 
 
 def _missing_field_ids(items: list[EvidenceItem]) -> set[str]:
-    present = {
-        item.field_id
-        for item in items
-        if item.status == EvidenceStatus.FOUND and _has_value(item.value)
-    }
+    present = {item.field_id for item in items if item.status == EvidenceStatus.FOUND and _has_value(item.value)}
     return {
         "A.gene_disease_relationship",
         "A.variant_type",

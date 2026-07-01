@@ -22,14 +22,16 @@ class TestParseResponse:
     """Unit tests for _parse_response."""
 
     def test_valid_json(self) -> None:
-        raw = json.dumps({
-            "en": "Rett syndrome MECP2 mutation",
-            "zh": "Rett综合征 MECP2 突变 病例报告",
-            "ja": "レット症候群 MECP2 変異 症例報告",
-            "de": "Rett-Syndrom MECP2 Mutation Fallbericht",
-            "fr": "Syndrome de Rett mutation MECP2 cas clinique",
-            "ru": "Синдром Ретта мутация MECP2 клинический случай",
-        })
+        raw = json.dumps(
+            {
+                "en": "Rett syndrome MECP2 mutation",
+                "zh": "Rett综合征 MECP2 突变 病例报告",
+                "ja": "レット症候群 MECP2 変異 症例報告",
+                "de": "Rett-Syndrom MECP2 Mutation Fallbericht",
+                "fr": "Syndrome de Rett mutation MECP2 cas clinique",
+                "ru": "Синдром Ретта мутация MECP2 клинический случай",
+            }
+        )
         result = _parse_response(raw, "Rett syndrome MECP2 mutation")
         assert isinstance(result, TranslatedQueries)
         assert result.en == "Rett syndrome MECP2 mutation"
@@ -47,10 +49,16 @@ class TestParseResponse:
             _parse_response(raw, "test")
 
     def test_empty_language_falls_back_to_source(self) -> None:
-        raw = json.dumps({
-            "en": "test", "zh": "", "ja": "test",
-            "de": "test", "fr": "test", "ru": "test",
-        })
+        raw = json.dumps(
+            {
+                "en": "test",
+                "zh": "",
+                "ja": "test",
+                "de": "test",
+                "fr": "test",
+                "ru": "test",
+            }
+        )
         result = _parse_response(raw, "original query")
         assert result.zh == "original query"
 
@@ -59,18 +67,30 @@ class TestParseResponse:
             _parse_response("not json at all", "test")
 
     def test_null_value_falls_back_to_source(self) -> None:
-        raw = json.dumps({
-            "en": "test", "zh": None, "ja": "test",
-            "de": "test", "fr": "test", "ru": "test",
-        })
+        raw = json.dumps(
+            {
+                "en": "test",
+                "zh": None,
+                "ja": "test",
+                "de": "test",
+                "fr": "test",
+                "ru": "test",
+            }
+        )
         result = _parse_response(raw, "original query")
         assert result.zh == "original query"
 
     def test_as_dict(self) -> None:
-        raw = json.dumps({
-            "en": "en_q", "zh": "zh_q", "ja": "ja_q",
-            "de": "de_q", "fr": "fr_q", "ru": "ru_q",
-        })
+        raw = json.dumps(
+            {
+                "en": "en_q",
+                "zh": "zh_q",
+                "ja": "ja_q",
+                "de": "de_q",
+                "fr": "fr_q",
+                "ru": "ru_q",
+            }
+        )
         result = _parse_response(raw, "src")
         d = result.as_dict()
         assert set(d.keys()) == set(TARGET_LANGUAGES)
@@ -129,8 +149,7 @@ class TestTranslateQuery:
         mock_cfg.llm.all_api_keys = []
         mock_cfg.llm.max_tokens = 4096
         with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition."
-            "query_translator.get_config",
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.query_translator.get_config",
             return_value=mock_cfg,
         ):
             with pytest.raises(ValueError, match="LLM model"):

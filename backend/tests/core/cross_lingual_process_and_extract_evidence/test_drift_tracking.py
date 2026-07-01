@@ -1,4 +1,5 @@
 """Tests for character drift tracking between raw, formatted, and translated text."""
+
 import json
 
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
@@ -147,10 +148,14 @@ class TestOriginalLayoutReport:
             sentences=[{"index": 0, "page": 1, "start_offset": 0, "end_offset": 50, "length": 50, "text": "test"}],
             format_drifts=[
                 SentenceDrift(
-                    sentence_index=0, page=1,
-                    raw_start=0, raw_end=55,
-                    formatted_start=0, formatted_end=50,
-                    drift=-5, text="test",
+                    sentence_index=0,
+                    page=1,
+                    raw_start=0,
+                    raw_end=55,
+                    formatted_start=0,
+                    formatted_end=50,
+                    drift=-5,
+                    text="test",
                 ),
             ],
         )
@@ -181,11 +186,15 @@ class TestTranslatedLayoutReport:
             translation_drifts=[
                 SegmentDrift(
                     segment_index=0,
-                    source_start=0, source_end=100,
-                    translated_start=0, translated_end=120,
-                    source_length=100, translated_length=120,
+                    source_start=0,
+                    source_end=100,
+                    translated_start=0,
+                    translated_end=120,
+                    source_length=100,
+                    translated_length=120,
                     length_drift=20,
-                    source_text="source", translated_text="translated",
+                    source_text="source",
+                    translated_text="translated",
                 ),
             ],
         )

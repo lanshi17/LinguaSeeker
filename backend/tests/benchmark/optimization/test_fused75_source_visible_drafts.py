@@ -1,4 +1,5 @@
 """Tests for fused-75 source-visible draft preannotation."""
+
 from __future__ import annotations
 
 import json

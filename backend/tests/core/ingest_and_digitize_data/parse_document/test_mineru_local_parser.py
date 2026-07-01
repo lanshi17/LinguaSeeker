@@ -1,4 +1,5 @@
 """Tests for MinerU local parser."""
+
 from __future__ import annotations
 
 import base64
@@ -219,8 +220,9 @@ class TestMinerULocalParserParse:
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("pathlib.Path.read_bytes", return_value=b"%PDF fake"), patch(
-            "httpx.AsyncClient", return_value=mock_client
+        with (
+            patch("pathlib.Path.read_bytes", return_value=b"%PDF fake"),
+            patch("httpx.AsyncClient", return_value=mock_client),
         ):
             result = await parser.parse("/tmp/test.pdf")
 
@@ -249,8 +251,9 @@ class TestMinerULocalParserParse:
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("pathlib.Path.read_bytes", return_value=b"%PDF fake"), patch(
-            "httpx.AsyncClient", return_value=mock_client
+        with (
+            patch("pathlib.Path.read_bytes", return_value=b"%PDF fake"),
+            patch("httpx.AsyncClient", return_value=mock_client),
         ):
             result = await parser.parse("/tmp/test.pdf")
 
@@ -272,8 +275,9 @@ class TestMinerULocalParserParse:
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("pathlib.Path.read_bytes", return_value=b"%PDF fake"), patch(
-            "httpx.AsyncClient", return_value=mock_client
+        with (
+            patch("pathlib.Path.read_bytes", return_value=b"%PDF fake"),
+            patch("httpx.AsyncClient", return_value=mock_client),
         ):
             with pytest.raises(MinerUAPIError, match="MinerU service returned 500"):
                 await parser.parse("/tmp/test.pdf")
@@ -287,8 +291,9 @@ class TestMinerULocalParserParse:
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("pathlib.Path.read_bytes", return_value=b"%PDF fake"), patch(
-            "httpx.AsyncClient", return_value=mock_client
+        with (
+            patch("pathlib.Path.read_bytes", return_value=b"%PDF fake"),
+            patch("httpx.AsyncClient", return_value=mock_client),
         ):
             with pytest.raises(MinerUAPIError, match="Request to MinerU service failed"):
                 await parser.parse("/tmp/test.pdf")
@@ -310,8 +315,9 @@ class TestMinerULocalParserParse:
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("pathlib.Path.read_bytes", return_value=b"%PDF fake"), patch(
-            "httpx.AsyncClient", return_value=mock_client
+        with (
+            patch("pathlib.Path.read_bytes", return_value=b"%PDF fake"),
+            patch("httpx.AsyncClient", return_value=mock_client),
         ):
             await parser.parse("/tmp/test.pdf")
 

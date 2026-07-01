@@ -81,7 +81,7 @@ def test_catalog_prompt_declares_pre_scoped_eligible_fields() -> None:
     assert "pre-scoped" in lower
     assert "eligible fields" in lower
     assert "do not add fields outside this catalog" in lower
-    assert "set status=\"not_found\" for listed eligible fields" in lower
+    assert 'set status="not_found" for listed eligible fields' in lower
 
 
 def test_catalog_prompt_absorbs_expanded_field_guidance_without_baseline_limits() -> None:
@@ -360,6 +360,7 @@ def test_catalog_prompt_omits_target_section_when_not_provided() -> None:
 # Channel strategy guidance tests
 # ---------------------------------------------------------------------------
 
+
 def _cls(channels: list[DocumentEvidenceChannel]) -> DocumentChannelClassification:
     return DocumentChannelClassification(
         selected_channels=list(channels),
@@ -434,6 +435,7 @@ def test_channel_strategy_mixed_concrete_concatenates_without_duplicate_generic(
     # No generic text when concrete channels are present
     assert "standard catalog rules" not in guidance
 
+
 def test_channel_strategy_bare_mixed_expands_to_all_concrete():
     """Bare MIXED expands effective_channels to all three concrete channels."""
     guidance = get_channel_strategy_guidance(_cls([DocumentEvidenceChannel.MIXED]))
@@ -463,9 +465,7 @@ def test_catalog_prompt_cohort_study_contains_cohort_strategy():
 
 
 def test_catalog_prompt_mixed_contains_both_strategy_sections():
-    prompt = _catalog_prompt(
-        _cls([DocumentEvidenceChannel.CASE_REPORT, DocumentEvidenceChannel.FUNCTIONAL_STUDY])
-    )
+    prompt = _catalog_prompt(_cls([DocumentEvidenceChannel.CASE_REPORT, DocumentEvidenceChannel.FUNCTIONAL_STUDY]))
     assert "CASE-REPORT STRATEGY" in prompt
     assert "FUNCTIONAL-STUDY STRATEGY" in prompt
 
@@ -481,6 +481,7 @@ def test_catalog_prompt_none_classification_uses_generic_strategy():
     prompt = _catalog_prompt(None)
     assert "DOCUMENT-CHANNEL STRATEGY" in prompt
     assert "standard catalog rules" in prompt
+
 
 def test_catalog_prompt_strategy_appears_between_catalog_scope_and_rules():
     prompt = _catalog_prompt(_cls([DocumentEvidenceChannel.CASE_REPORT]))

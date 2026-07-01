@@ -1,4 +1,5 @@
 """Tests for deterministic fused-75 split selection."""
+
 from __future__ import annotations
 
 import json

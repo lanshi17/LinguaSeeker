@@ -1,4 +1,5 @@
 """Deterministic original/translation evidence alignment helpers."""
+
 from __future__ import annotations
 
 import re
@@ -14,6 +15,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
 from src.utils.text_normalize import SPACE_RE as _SPACE_RE
 from src.utils.text_normalize import normalize_text as _normalize_text
 from src.utils.text_normalize import normalize_value as _normalize_value
+
 _RELATIONSHIP_VALUES = {
     "associated",
     "association",
@@ -38,10 +40,26 @@ _CONFLICT_VALUES = {
     "no_relationship",
 }
 _NEGATION_CUES = {
-    "no", "not", "none", "without", "absent", "absence",
-    "denies", "denied", "negative", "non",
-    "rare", "unrelated", "ruled out", "excluded",
-    "failed", "did not", "doesn't", "doesn t", "don't", "don t",
+    "no",
+    "not",
+    "none",
+    "without",
+    "absent",
+    "absence",
+    "denies",
+    "denied",
+    "negative",
+    "non",
+    "rare",
+    "unrelated",
+    "ruled out",
+    "excluded",
+    "failed",
+    "did not",
+    "doesn't",
+    "doesn t",
+    "don't",
+    "don t",
 }
 # Field-id substrings whose values are quantitative medical evidence. A numeric
 # drift in these fields changes clinical interpretation (allele count, frequency,
@@ -245,8 +263,6 @@ def _value_text(item: EvidenceItem | None) -> str:
     if isinstance(item.value, list):
         return "|".join(str(value) for value in item.value)
     return str(item.value)
-
-
 
 
 def _span_id(item: EvidenceItem | None) -> str:

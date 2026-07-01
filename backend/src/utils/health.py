@@ -3,6 +3,7 @@
 Call ``check_all_connections()`` during FastAPI lifespan startup to verify
 that all critical infrastructure is reachable before accepting requests.
 """
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -27,8 +28,6 @@ class HealthResult:
         return [name for name, ok in self.__dict__.items() if not ok]
 
 
-
-
 # ── Service check registry ───────────────────────────────────────────────
 # Add new checks here; they are auto-discovered by check_all_connections().
 
@@ -37,9 +36,11 @@ _CHECK_REGISTRY: dict[str, Callable[[], Awaitable[bool]]] = {}
 
 def _register(name: str) -> Callable:
     """Decorator to register a health check function by service name."""
+
     def decorator(fn: Callable[[], Awaitable[bool]]) -> Callable:
         _CHECK_REGISTRY[name] = fn
         return fn
+
     return decorator
 
 

@@ -1,4 +1,5 @@
 """Tests for DB-derived layer-3 report construction."""
+
 from __future__ import annotations
 
 import pytest

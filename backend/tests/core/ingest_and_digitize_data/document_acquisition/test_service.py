@@ -88,15 +88,18 @@ class TestDocumentAcquisitionService:
             "warnings": [],
             "route": None,
         }
-        with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
-            new_callable=AsyncMock,
-            return_value=mock_result,
-        ) as mock_ml, patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.online_acquisition_workflow",
-            new_callable=AsyncMock,
-            return_value=mock_result,
-        ) as mock_single:
+        with (
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+                new_callable=AsyncMock,
+                return_value=mock_result,
+            ) as mock_ml,
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.online_acquisition_workflow",
+                new_callable=AsyncMock,
+                return_value=mock_result,
+            ) as mock_single,
+        ):
             result = await service.acquire(request)
             mock_ml.assert_awaited_once()
             mock_single.assert_not_awaited()
@@ -143,7 +146,11 @@ class TestDocumentAcquisitionService:
             relevance_gate=False,
         )
         mock_result = {
-            "success": True, "items": [], "downloads": [], "warnings": [], "route": None,
+            "success": True,
+            "items": [],
+            "downloads": [],
+            "warnings": [],
+            "route": None,
         }
         with patch(
             "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
@@ -172,15 +179,18 @@ class TestDocumentAcquisitionService:
             "warnings": [],
             "route": None,
         }
-        with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
-            new_callable=AsyncMock,
-            return_value=mock_result,
-        ) as mock_ml, patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.online_acquisition_workflow",
-            new_callable=AsyncMock,
-            return_value=mock_result,
-        ) as mock_single:
+        with (
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+                new_callable=AsyncMock,
+                return_value=mock_result,
+            ) as mock_ml,
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.online_acquisition_workflow",
+                new_callable=AsyncMock,
+                return_value=mock_result,
+            ) as mock_single,
+        ):
             await service.acquire(request)
             mock_single.assert_awaited_once()
             mock_ml.assert_not_awaited()
@@ -201,15 +211,18 @@ class TestDocumentAcquisitionService:
             "warnings": [],
             "route": None,
         }
-        with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
-            new_callable=AsyncMock,
-            return_value=mock_result,
-        ) as mock_ml, patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.online_acquisition_workflow",
-            new_callable=AsyncMock,
-            return_value=mock_result,
-        ) as mock_single:
+        with (
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+                new_callable=AsyncMock,
+                return_value=mock_result,
+            ) as mock_ml,
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.online_acquisition_workflow",
+                new_callable=AsyncMock,
+                return_value=mock_result,
+            ) as mock_single,
+        ):
             await service.acquire(request)
             mock_single.assert_awaited_once()
             mock_ml.assert_not_awaited()
@@ -317,7 +330,6 @@ class TestDocumentAcquisitionService:
         result = await service.acquire(request)
         assert result.elapsed_time > 0
         os.unlink(result.stored_file.file_path)
-
 
     @pytest.mark.asyncio
     async def test_acquire_online_failure_surfaces_warnings_as_error(self):

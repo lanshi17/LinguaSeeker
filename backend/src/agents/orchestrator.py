@@ -8,6 +8,7 @@ Architecture:
 - Upstream dependency validation for single-phase mode
 - Adapters raise classified errors; orchestrator catches and decides
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -181,33 +182,36 @@ class PipelineOrchestrator:
         except RetryablePhaseError as e:
             logger.error("Phase {} failed after retries: {}", e.phase, str(e))
             return await self._handle_phase_failure(
-                state, e, e.phase, retryable=True,
-                attempt=e.attempt, max_retries=self._retry.max_retries,
+                state,
+                e,
+                e.phase,
+                retryable=True,
+                attempt=e.attempt,
+                max_retries=self._retry.max_retries,
             )
 
         except PermanentPhaseError as e:
             logger.error("Phase {} failed permanently: {}", e.phase, str(e))
             return await self._handle_phase_failure(
-                state, e, e.phase, retryable=False, attempt=0, max_retries=0,
+                state,
+                e,
+                e.phase,
+                retryable=False,
+                attempt=0,
+                max_retries=0,
             )
 
     async def _node_phase_1(self, state: PipelineGraphState) -> PipelineGraphState:
         """Execute Phase 1: acquisition + parsing."""
-        return await self._execute_phase(
-            self._adapters["phase_1"], state, "phase_1"
-        )
+        return await self._execute_phase(self._adapters["phase_1"], state, "phase_1")
 
     async def _node_phase_2(self, state: PipelineGraphState) -> PipelineGraphState:
         """Execute Phase 2: translation + evidence extraction."""
-        return await self._execute_phase(
-            self._adapters["phase_2"], state, "phase_2"
-        )
+        return await self._execute_phase(self._adapters["phase_2"], state, "phase_2")
 
     async def _node_phase_3(self, state: PipelineGraphState) -> PipelineGraphState:
         """Execute Phase 3: entity standardization."""
-        return await self._execute_phase(
-            self._adapters["phase_3"], state, "phase_3"
-        )
+        return await self._execute_phase(self._adapters["phase_3"], state, "phase_3")
 
     def _route_entry(self, state: PipelineGraphState) -> str:
         """Route entry point: start at target phase in phase mode, or phase 1 in full mode."""
@@ -270,9 +274,7 @@ class PipelineOrchestrator:
 
         return graph.compile()
 
-    async def _validate_upstream(
-        self, state: PipelineGraphState
-    ) -> PipelineGraphState | None:
+    async def _validate_upstream(self, state: PipelineGraphState) -> PipelineGraphState | None:
         """Validate upstream phases have completed for single-phase mode.
 
         Returns updated state with error if validation fails, None if OK.

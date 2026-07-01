@@ -83,7 +83,7 @@ def _result(document_id: str, track: Track, value: str) -> EvidenceExtractionRes
                 group_id="gene=GLA|variant=__missing__",
                 requires_external_completion=True,
                 external_completion_note="Population frequency must be completed externally.",
-            )
+            ),
         ],
         evidence_chains=[
             EvidenceChain(

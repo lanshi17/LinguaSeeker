@@ -1,4 +1,5 @@
 """Data contracts for document parsing results."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

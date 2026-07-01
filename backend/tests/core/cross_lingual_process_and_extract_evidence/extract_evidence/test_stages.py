@@ -17,11 +17,19 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.providers import (
     EvidenceModelTier,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction import CatalogExtractionStage
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction import (
+    CatalogExtractionStage,
+)
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.evidence_map import RelevanceScanStage
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.quality_validation import QualityGateStage
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.source_grounding import SourceGroundingStage
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.special_evidence import SpecialEvidenceStage
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.quality_validation import (
+    QualityGateStage,
+)
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.source_grounding import (
+    SourceGroundingStage,
+)
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.special_evidence import (
+    SpecialEvidenceStage,
+)
 
 
 def _doc() -> TrackDocument:
@@ -66,9 +74,14 @@ def test_catalog_extraction_stage_calls_strong_tier():
         value="GLA",
         confidence=0.9,
         source=SourceLocation(
-            span_id="p1", page=1, start_offset=38, end_offset=41,
-            context_type="text", context_ref="",
-            text_snippet="GLA", source_precision=SourcePrecision.EXACT,
+            span_id="p1",
+            page=1,
+            start_offset=38,
+            end_offset=41,
+            context_type="text",
+            context_ref="",
+            text_snippet="GLA",
+            source_precision=SourcePrecision.EXACT,
         ),
     )
     provider.invoke_structured.return_value = [item]
@@ -97,8 +110,7 @@ def test_catalog_extraction_stage_uses_target_recall_first_block_selection() -> 
             ContentBlock(text="Administrative header without target evidence."),
             ContentBlock(
                 text=(
-                    "Biallelic pathogenic variants in ABCB4 cause progressive familial "
-                    "intrahepatic cholestasis type 3."
+                    "Biallelic pathogenic variants in ABCB4 cause progressive familial intrahepatic cholestasis type 3."
                 ),
             ),
         ],
@@ -269,7 +281,7 @@ def test_special_evidence_stage_keeps_case_control_records_for_g_fields():
                     context_ref="",
                     text_snippet="Fabry disease",
                 ),
-            )
+            ),
         ],
     )
 
@@ -574,9 +586,14 @@ def test_source_grounding_stage_uses_grounder():
         status=EvidenceStatus.FOUND,
         value="GLA",
         source=SourceLocation(
-            span_id="p1", page=1, start_offset=gla_start, end_offset=gla_start + 3,
-            context_type="text", context_ref="",
-            text_snippet="GLA", source_precision=SourcePrecision.EXACT,
+            span_id="p1",
+            page=1,
+            start_offset=gla_start,
+            end_offset=gla_start + 3,
+            context_type="text",
+            context_ref="",
+            text_snippet="GLA",
+            source_precision=SourcePrecision.EXACT,
         ),
         confidence=0.9,
     )
@@ -596,9 +613,14 @@ def test_quality_validation_stage_returns_report():
         status=EvidenceStatus.FOUND,
         value="GLA",
         source=SourceLocation(
-            span_id="p1", page=1, start_offset=38, end_offset=41,
-            context_type="text", context_ref="",
-            text_snippet="GLA", source_precision=SourcePrecision.EXACT,
+            span_id="p1",
+            page=1,
+            start_offset=38,
+            end_offset=41,
+            context_type="text",
+            context_ref="",
+            text_snippet="GLA",
+            source_precision=SourcePrecision.EXACT,
         ),
         confidence=0.9,
     )
@@ -628,10 +650,12 @@ def test_evidence_map_stage_chunks_long_document_and_merges_maps():
     document = TrackDocument(
         document_id="doc-1",
         track=Track.ORIGINAL,
-        formatted_text="\n\n".join([
-            "GLA " + ("A" * 160),
-            "BRCA1 c.5266dupC " + ("B" * 160),
-        ]),
+        formatted_text="\n\n".join(
+            [
+                "GLA " + ("A" * 160),
+                "BRCA1 c.5266dupC " + ("B" * 160),
+            ]
+        ),
         page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=400)],
     )
 
@@ -642,10 +666,7 @@ def test_evidence_map_stage_chunks_long_document_and_merges_maps():
     assert result.evidence_map.gene_terms == ["GLA", "BRCA1"]
     assert result.evidence_map.variant_terms == ["c.5266dupC"]
     assert provider.invoke_structured.call_count >= 2
-    assert all(
-        call.kwargs["stage"].startswith("relevance_scan/")
-        for call in provider.invoke_structured.call_args_list
-    )
+    assert all(call.kwargs["stage"].startswith("relevance_scan/") for call in provider.invoke_structured.call_args_list)
 
 
 def test_catalog_extraction_stage_chunks_block_prompts_and_keeps_global_block_indices():
@@ -712,8 +733,7 @@ def test_catalog_extraction_stage_chunks_block_prompts_and_keeps_global_block_in
     assert "[Block 0 | text | page 1]" in "\n".join(prompts)
     assert "[Block 2 | table | page 3]" in "\n".join(prompts)
     assert all(
-        call.kwargs["stage"].startswith("catalog_extraction/")
-        for call in provider.invoke_structured.call_args_list
+        call.kwargs["stage"].startswith("catalog_extraction/") for call in provider.invoke_structured.call_args_list
     )
     assert {item.value for item in result} == {"GLA", "c.1000G>A"}
     assert all(item.source is None for item in result)

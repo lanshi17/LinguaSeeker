@@ -1,4 +1,5 @@
 """Tests for reconcile ablation case-study extraction."""
+
 from __future__ import annotations
 
 import json

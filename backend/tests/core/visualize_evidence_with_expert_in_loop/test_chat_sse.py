@@ -1,4 +1,5 @@
 """Tests for chat SSE streaming."""
+
 from __future__ import annotations
 
 import uuid
@@ -24,10 +25,7 @@ class TestParseDelimited:
         assert action is None
 
     def test_delimiter_with_action_json(self) -> None:
-        raw = (
-            "Found 3 results.\n"
-            '<<<ACTION>>>\n{"intent": "search-evidence", "slots": {"gene": "GLA"}}'
-        )
+        raw = 'Found 3 results.\n<<<ACTION>>>\n{"intent": "search-evidence", "slots": {"gene": "GLA"}}'
         reply, action = _parse_delimited(raw)
         assert reply == "Found 3 results."
         assert action is not None
@@ -182,9 +180,7 @@ class TestChatSSEEvidenceContext:
 
 @pytest.mark.asyncio
 class TestChatRouterEnvelope:
-    async def test_emits_text_then_done_when_action_is_null(
-        self, db_session: AsyncSession
-    ) -> None:
+    async def test_emits_text_then_done_when_action_is_null(self, db_session: AsyncSession) -> None:
         async def mock_stream(*args, **kwargs):
             yield ("Could you share the PMID or PDF?", None)
 
@@ -205,9 +201,7 @@ class TestChatRouterEnvelope:
         assert types == ["text", "done"]
         assert events[0]["content"] == "Could you share the PMID or PDF?"
 
-    async def test_emits_action_event_when_slots_complete(
-        self, db_session: AsyncSession
-    ) -> None:
+    async def test_emits_action_event_when_slots_complete(self, db_session: AsyncSession) -> None:
         async def mock_stream(*args, **kwargs):
             yield (
                 "Starting the pipeline now.",
@@ -237,9 +231,7 @@ class TestChatRouterEnvelope:
         assert action_event["intent"] == "start-pipeline"
         assert action_event["slots"]["query"] == "PMID:34521984"
 
-    async def test_persists_action_alongside_message(
-        self, db_session: AsyncSession
-    ) -> None:
+    async def test_persists_action_alongside_message(self, db_session: AsyncSession) -> None:
         async def mock_stream(*args, **kwargs):
             yield (
                 "Opening the upload form.",
@@ -264,9 +256,7 @@ class TestChatRouterEnvelope:
         assert assistant_msgs[0].action is not None
         assert assistant_msgs[0].action.intent == "upload-pdf"
 
-    async def test_increments_text_chunks_before_action(
-        self, db_session: AsyncSession
-    ) -> None:
+    async def test_increments_text_chunks_before_action(self, db_session: AsyncSession) -> None:
         """Text chunks are forwarded as SSE events before the final tuple."""
 
         async def mock_stream(*args, **kwargs):
@@ -301,9 +291,7 @@ class TestChatRouterEnvelope:
         types = [e["type"] for e in events]
         assert types == ["text", "text", "text", "action", "done"]
 
-    async def test_increments_text_then_action_persists_full_reply(
-        self, db_session: AsyncSession
-    ) -> None:
+    async def test_increments_text_then_action_persists_full_reply(self, db_session: AsyncSession) -> None:
         """The persisted message contains the full accumulated reply text."""
 
         async def mock_stream(*args, **kwargs):

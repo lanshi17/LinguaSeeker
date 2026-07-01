@@ -90,7 +90,9 @@ class TestMergeAndDedupe:
 class TestAcquireLinksApi:
     @pytest.mark.asyncio
     async def test_parallel_search_returns_items(self):
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _acquire_links_api
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
+            _acquire_links_api,
+        )
         from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
             OnlineAcquisitionGatewayResult,
         )
@@ -121,7 +123,9 @@ class TestAcquireLinksApi:
 
     @pytest.mark.asyncio
     async def test_provider_failure_does_not_crash(self):
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _acquire_links_api
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
+            _acquire_links_api,
+        )
 
         with patch(
             "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
@@ -140,7 +144,9 @@ class TestAcquireLinksApi:
 class TestDownloadCandidates:
     @pytest.mark.asyncio
     async def test_download_doi_route(self, tmp_path):
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _download_candidates
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
+            _download_candidates,
+        )
         from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
             OnlineAcquisitionGatewayResult,
         )
@@ -158,14 +164,17 @@ class TestDownloadCandidates:
             source_trace=[],
         )
 
-        with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
-            new_callable=AsyncMock,
-            return_value=mock_unpaywall,
-        ), patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
-            new_callable=AsyncMock,
-            return_value=(str(tmp_path / "paper.pdf"), "https://example.com/paper.pdf", []),
+        with (
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
+                new_callable=AsyncMock,
+                return_value=mock_unpaywall,
+            ),
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+                new_callable=AsyncMock,
+                return_value=(str(tmp_path / "paper.pdf"), "https://example.com/paper.pdf", []),
+            ),
         ):
             # Create the file so it passes validation
             (tmp_path / "paper.pdf").write_bytes(b"%PDF-1.4 fake")
@@ -178,7 +187,9 @@ class TestDownloadCandidates:
     @pytest.mark.asyncio
     async def test_download_doi_with_list_title(self, tmp_path):
         """Crossref returns title as list — download must still trigger."""
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _download_candidates
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
+            _download_candidates,
+        )
         from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
             OnlineAcquisitionGatewayResult,
         )
@@ -203,14 +214,17 @@ class TestDownloadCandidates:
             search_called = True
             return mock_unpaywall
 
-        with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
-            new_callable=AsyncMock,
-            side_effect=mock_search,
-        ), patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
-            new_callable=AsyncMock,
-            return_value=(str(tmp_path / "paper.pdf"), "https://example.com/paper.pdf", []),
+        with (
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
+                new_callable=AsyncMock,
+                side_effect=mock_search,
+            ),
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+                new_callable=AsyncMock,
+                return_value=(str(tmp_path / "paper.pdf"), "https://example.com/paper.pdf", []),
+            ),
         ):
             (tmp_path / "paper.pdf").write_bytes(b"%PDF-1.4 fake")
             results = await _download_candidates(candidates, str(tmp_path))
@@ -221,14 +235,18 @@ class TestDownloadCandidates:
 
     @pytest.mark.asyncio
     async def test_download_empty_candidates(self, tmp_path):
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _download_candidates
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
+            _download_candidates,
+        )
 
         results = await _download_candidates([], str(tmp_path))
         assert results == []
 
     @pytest.mark.asyncio
     async def test_download_failure_returns_empty(self, tmp_path):
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _download_candidates
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
+            _download_candidates,
+        )
 
         candidates = [{"url": "https://example.com/bad.pdf", "title": "Bad Paper"}]
 
@@ -243,17 +261,22 @@ class TestDownloadCandidates:
 
     @pytest.mark.asyncio
     async def test_download_unexpected_exception_is_logged(self, tmp_path):
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _download_candidates
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
+            _download_candidates,
+        )
 
         candidates = [{"url": "https://example.com/bad.pdf", "title": "Bad Paper"}]
 
-        with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
-            new_callable=AsyncMock,
-            side_effect=ValueError("bad url"),
-        ), patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.logger"
-        ) as mock_logger:
+        with (
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+                new_callable=AsyncMock,
+                side_effect=ValueError("bad url"),
+            ),
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.logger"
+            ) as mock_logger,
+        ):
             results = await _download_candidates(candidates, str(tmp_path))
 
         assert results == []

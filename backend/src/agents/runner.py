@@ -1,4 +1,5 @@
 """Background pipeline runner with asyncio task management and DB fallback."""
+
 from __future__ import annotations
 
 import asyncio
@@ -56,6 +57,7 @@ class PipelineRunner:
     def _start_heartbeat(self, run_id: str) -> asyncio.Task | None:
         """Start the heartbeat background task for a pipeline run."""
         try:
+
             async def _heartbeat_loop():
                 consecutive_failures = 0
                 while True:
@@ -70,11 +72,11 @@ class PipelineRunner:
                             run_id,
                             consecutive_failures,
                         )
+
             return asyncio.create_task(_heartbeat_loop())
         except Exception:
             logger.warning("Heartbeat task creation failed for run={}", run_id)
             return None
-
 
     async def start(self, initial_state: PipelineGraphState) -> asyncio.Task:
         """Start a pipeline run as a background task.
@@ -118,13 +120,9 @@ class PipelineRunner:
                 # Cache completed result for dedup on identical future submissions
                 if self._processing_cache is not None and initial_state.content_hash:
                     try:
-                        await self._processing_cache.cache_result(
-                            initial_state.content_hash, result
-                        )
+                        await self._processing_cache.cache_result(initial_state.content_hash, result)
                     except Exception:
-                        logger.exception(
-                            "Failed to cache processing result for run={}", run_id
-                        )
+                        logger.exception("Failed to cache processing result for run={}", run_id)
                 return result
             except (Exception, asyncio.CancelledError) as e:
                 is_cancel = isinstance(e, asyncio.CancelledError)
@@ -134,9 +132,7 @@ class PipelineRunner:
                 last_state = self._last_states.get(run_id)
                 base_state = last_state if last_state is not None else initial_state
                 current_phase = (
-                    base_state.error_phase
-                    if base_state.error_phase is not None
-                    else _derive_error_phase(base_state)
+                    base_state.error_phase if base_state.error_phase is not None else _derive_error_phase(base_state)
                 )
                 error_state = base_state.model_copy(
                     update={
@@ -150,9 +146,7 @@ class PipelineRunner:
                 try:
                     await self._persistence.save(error_state)
                 except Exception:
-                    logger.exception(
-                        "Failed to persist error state for run={}", run_id
-                    )
+                    logger.exception("Failed to persist error state for run={}", run_id)
                 if is_cancel:
                     raise
                 return error_state
@@ -209,9 +203,7 @@ class PipelineRunner:
 
     async def recover_orphaned_runs(self, *, heartbeat_timeout_seconds: int = 300) -> int:
         """Mark runs stuck in non-terminal states as FAILED after server restart."""
-        return await self._persistence.recover_orphaned_runs(
-            heartbeat_timeout_seconds=heartbeat_timeout_seconds
-        )
+        return await self._persistence.recover_orphaned_runs(heartbeat_timeout_seconds=heartbeat_timeout_seconds)
 
     async def list_runs(
         self,
@@ -223,7 +215,10 @@ class PipelineRunner:
     ) -> tuple[list[PipelineRunSummaryRow], int]:
         """List pipeline run summaries (newest first)."""
         return await self._persistence.list_runs(
-            limit=limit, offset=offset, status=status, search=search,
+            limit=limit,
+            offset=offset,
+            status=status,
+            search=search,
         )
 
     async def shutdown(self, timeout: float = 60.0) -> None:
@@ -263,7 +258,8 @@ class PipelineRunner:
             pending_ids = [rid for rid, t in active.items() if t in pending]
             logger.warning(
                 "Cancelling {} pipeline task(s) that exceeded shutdown timeout: {}",
-                len(pending), pending_ids,
+                len(pending),
+                pending_ids,
             )
             for task in pending:
                 task.cancel()
@@ -291,9 +287,7 @@ class PipelineRunner:
         # Cross-worker dedup: check persistence for active source keys
         return await self._persistence.has_active_source_key(source_key)
 
-    async def check_processing_cache(
-        self, content_hash: str
-    ) -> PipelineGraphState | None:
+    async def check_processing_cache(self, content_hash: str) -> PipelineGraphState | None:
         """Check the L1/L2 processing cache for a previously completed result.
 
         Returns the cached PipelineGraphState if found, or None on miss.
@@ -307,9 +301,7 @@ class PipelineRunner:
             return None
         return result.state
 
-    async def compute_initial_content_hash(
-        self, state: PipelineGraphState
-    ) -> str | None:
+    async def compute_initial_content_hash(self, state: PipelineGraphState) -> str | None:
         """Compute the content hash for an initial pipeline state.
 
         Delegates to the content_hash module, which handles local uploads

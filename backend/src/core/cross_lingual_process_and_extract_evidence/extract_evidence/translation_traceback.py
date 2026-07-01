@@ -1,4 +1,5 @@
 """Deterministic English-to-original traceback for translated evidence."""
+
 from __future__ import annotations
 
 import re
@@ -28,12 +29,10 @@ def apply_translation_traceback(
     return result.model_copy(
         update={
             "evidence_items": [
-                _trace_item(original_document, translated_document, item)
-                for item in result.evidence_items
+                _trace_item(original_document, translated_document, item) for item in result.evidence_items
             ],
             "phenotype_evidence": [
-                _trace_item(original_document, translated_document, item)
-                for item in result.phenotype_evidence
+                _trace_item(original_document, translated_document, item) for item in result.phenotype_evidence
             ],
             "special_evidence": [
                 _trace_special_record(original_document, translated_document, record)
@@ -201,10 +200,7 @@ def _select_alignment_chunk(
 ) -> TranslationAlignmentChunk | None:
     if source.start_offset >= 0 and source.end_offset >= source.start_offset:
         for chunk in chunks:
-            if (
-                chunk.english_start_offset <= source.start_offset
-                and source.end_offset <= chunk.english_end_offset
-            ):
+            if chunk.english_start_offset <= source.start_offset and source.end_offset <= chunk.english_end_offset:
                 return chunk
 
     snippet = _normalize(source.text_snippet)
@@ -226,15 +222,10 @@ def _select_alignment_pair(
 
     if source.start_offset >= 0 and source.end_offset >= source.start_offset:
         matching = [
-            pair for pair in chunk.span_pairs
-            if (
-                pair.english_start_offset <= source.start_offset
-                and source.end_offset <= pair.english_end_offset
-            )
-            or (
-                source.start_offset < pair.english_end_offset
-                and source.end_offset > pair.english_start_offset
-            )
+            pair
+            for pair in chunk.span_pairs
+            if (pair.english_start_offset <= source.start_offset and source.end_offset <= pair.english_end_offset)
+            or (source.start_offset < pair.english_end_offset and source.end_offset > pair.english_start_offset)
         ]
         if matching:
             return min(

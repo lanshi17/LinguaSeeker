@@ -1,9 +1,9 @@
 """Tests for new data contracts."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-
 
 
 def test_parser_name_literal():

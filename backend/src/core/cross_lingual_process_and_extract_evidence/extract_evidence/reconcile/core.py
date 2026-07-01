@@ -1,4 +1,5 @@
 """Deterministic source-grounded reconcile for dual-track evidence extraction."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -49,11 +50,7 @@ def reconcile_results(
     )
     accepted_evidence = [decision.accepted for decision in evidence_decisions if decision.accepted is not None]
     accepted_phenotype = [decision.accepted for decision in phenotype_decisions if decision.accepted is not None]
-    rejected_evidence = [
-        item
-        for decision in (*evidence_decisions, *phenotype_decisions)
-        for item in decision.rejected
-    ]
+    rejected_evidence = [item for decision in (*evidence_decisions, *phenotype_decisions) for item in decision.rejected]
 
     result = EvidenceExtractionResult(
         status=_reconciled_status(original, translated),
@@ -86,7 +83,10 @@ def _build_candidates(
     translated_items = translated.phenotype_evidence if phenotype else translated.evidence_items
     return tuple(
         [
-            *(_Candidate(item=item, track=Track.ORIGINAL, normalized_value=_normalize_value(item.value)) for item in original_items),
+            *(
+                _Candidate(item=item, track=Track.ORIGINAL, normalized_value=_normalize_value(item.value))
+                for item in original_items
+            ),
             *(
                 _Candidate(item=item, track=Track.TRANSLATED, normalized_value=_normalize_value(item.value))
                 for item in translated_items
@@ -99,10 +99,7 @@ def _decide_fields(candidates: tuple[_Candidate, ...], params: ReconcileParams) 
     decisions: list[FieldDecision] = []
     for field_id in sorted({candidate.item.field_id for candidate in candidates}):
         field_candidates = tuple(candidate for candidate in candidates if candidate.item.field_id == field_id)
-        scored = tuple(
-            (candidate, _score_candidate(candidate, field_candidates))
-            for candidate in field_candidates
-        )
+        scored = tuple((candidate, _score_candidate(candidate, field_candidates)) for candidate in field_candidates)
         ranked = sorted(
             scored,
             key=lambda entry: (
@@ -115,8 +112,7 @@ def _decide_fields(candidates: tuple[_Candidate, ...], params: ReconcileParams) 
         accepted_candidate, accepted_score = ranked[0]
         competing_score = _first_conflicting_score(accepted_score, ranked)
         requires_review = (
-            competing_score is not None
-            and accepted_score.score - competing_score.score < params.conflict_margin
+            competing_score is not None and accepted_score.score - competing_score.score < params.conflict_margin
         )
         rationale = _accepted_rationale(accepted_score, requires_review)
         accepted = _annotate_accepted(accepted_candidate.item, rationale, accepted_score, requires_review)
@@ -143,10 +139,7 @@ def _score_candidate(candidate: _Candidate, field_candidates: tuple[_Candidate, 
     agreement_score = _agreement_score(candidate, field_candidates)
     status_score = _status_score(candidate.item.status)
     score = round(
-        0.45 * source_score
-        + 0.30 * confidence_score
-        + 0.15 * agreement_score
-        + 0.10 * status_score,
+        0.45 * source_score + 0.30 * confidence_score + 0.15 * agreement_score + 0.10 * status_score,
         12,
     )
     return CandidateScore(
@@ -207,8 +200,7 @@ def _accepted_rationale(
     requires_review: bool,
 ) -> str:
     rationale = (
-        f"source-grounded cross-track reconcile selected {score.track.value} "
-        f"candidate with score={score.score:.3f}"
+        f"source-grounded cross-track reconcile selected {score.track.value} candidate with score={score.score:.3f}"
     )
     if score.agreement_score > 0:
         rationale += " and cross-track agreement"
@@ -256,8 +248,6 @@ def _append_note(existing: str, addition: str) -> str:
     if addition in existing:
         return existing
     return f"{existing.rstrip()} {addition}"
-
-
 
 
 def _deduplicate_chains(

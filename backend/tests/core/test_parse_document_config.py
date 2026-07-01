@@ -1,4 +1,5 @@
 """Tests for parse document configuration."""
+
 from __future__ import annotations
 
 

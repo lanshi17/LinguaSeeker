@@ -1,4 +1,5 @@
 """Evidence search service with field-level pivoting."""
+
 from __future__ import annotations
 
 import json
@@ -118,9 +119,7 @@ def _filter_body_blocks(blocks: list[dict] | None, text: str | None = None) -> l
     body_text = _filter_body_text(text)
     body_text_len = _compact_len(body_text)
     blocks_text = "\n\n".join(
-        block_text_from_dict(block)
-        for block in blocks or []
-        if isinstance(block, dict) and block_text_from_dict(block)
+        block_text_from_dict(block) for block in blocks or [] if isinstance(block, dict) and block_text_from_dict(block)
     )
 
     if body_text and (not blocks or _compact_len(blocks_text) < int(body_text_len * _BLOCK_TEXT_COVERAGE_RATIO)):
@@ -144,6 +143,7 @@ def _filter_body_blocks(blocks: list[dict] | None, text: str | None = None) -> l
     filtered_blocks = [block for block in blocks[start:end] if isinstance(block, dict)]
     return filtered_blocks or None
 
+
 def _category_from_field_id(field_id: str) -> str | None:
     """Infer the evidence category prefix from a field id."""
     if not field_id:
@@ -154,7 +154,9 @@ def _category_from_field_id(field_id: str) -> str | None:
 
 
 def _extract_summary_field(
-    field_id: str, value: str | None, target: dict[str, str | None],
+    field_id: str,
+    value: str | None,
+    target: dict[str, str | None],
 ) -> None:
     """Extract gene/variant/disease/classification into target dict if not already set."""
     if field_id in _GENE_FIELDS and not target.get("gene"):
@@ -295,6 +297,7 @@ def _load_blocks_from_dir(doc_dir: Path, track: str) -> list[dict] | None:
         return blocks
     return None
 
+
 def _load_full_document_blocks(
     source_document_id: str | UUID,
     track: str = "original",
@@ -335,11 +338,7 @@ def _load_full_document_blocks(
                 return result
 
         if identifiers:
-            search_keys = [
-                v.replace("/", "_")
-                for v in identifiers.values()
-                if v
-            ]
+            search_keys = [v.replace("/", "_") for v in identifiers.values() if v]
             for lang_dir in legacy_root.iterdir():
                 if not lang_dir.is_dir():
                     continue
@@ -352,6 +351,7 @@ def _load_full_document_blocks(
                             return result
 
     return None
+
 
 def _markdown_to_blocks(markdown: str) -> list[dict] | None:
     """Parse a markdown document into MinerU-style ContentBlock dicts.
@@ -375,23 +375,27 @@ def _markdown_to_blocks(markdown: str) -> list[dict] | None:
         # Heading: # / ## / ### ...
         heading = re.match(r"^(#{1,6})\s+(.+)$", stripped)
         if heading:
-            blocks.append({
-                "type": "title",
-                "text_level": len(heading.group(1)),
-                "text": heading.group(2).strip(),
-                "page_idx": 0,
-            })
+            blocks.append(
+                {
+                    "type": "title",
+                    "text_level": len(heading.group(1)),
+                    "text": heading.group(2).strip(),
+                    "page_idx": 0,
+                }
+            )
             i += 1
             continue
         # Image: ![alt](path)
         image = re.match(r"^!\[([^\]]*)\]\(([^)]+)\)\s*$", stripped)
         if image:
-            blocks.append({
-                "type": "image",
-                "img_path": image.group(2).strip(),
-                "image_caption": [image.group(1)] if image.group(1) else [],
-                "page_idx": 0,
-            })
+            blocks.append(
+                {
+                    "type": "image",
+                    "img_path": image.group(2).strip(),
+                    "image_caption": [image.group(1)] if image.group(1) else [],
+                    "page_idx": 0,
+                }
+            )
             i += 1
             continue
         # HTML table: <table>...</table>
@@ -404,12 +408,14 @@ def _markdown_to_blocks(markdown: str) -> list[dict] | None:
             if i < n:
                 table_lines.append(lines[i])
                 i += 1
-            blocks.append({
-                "type": "table",
-                "table_body": "\n".join(table_lines),
-                "text": "",
-                "page_idx": 0,
-            })
+            blocks.append(
+                {
+                    "type": "table",
+                    "table_body": "\n".join(table_lines),
+                    "text": "",
+                    "page_idx": 0,
+                }
+            )
             continue
         # Markdown table: | ... | with separator row
         if stripped.startswith("|") and i + 1 < n and re.match(r"^\|[\s:|-]+\|?\s*$", lines[i + 1].strip()):
@@ -420,16 +426,18 @@ def _markdown_to_blocks(markdown: str) -> list[dict] | None:
                 i += 1
             header_cells = [c.strip() for c in table_lines[0].strip("|").split("|")]
             rows = [[c.strip() for c in tl.strip("|").split("|")] for tl in table_lines[2:]]
-            html = '<table><thead><tr>' + "".join(f"<th>{c}</th>" for c in header_cells) + "</tr></thead><tbody>"
+            html = "<table><thead><tr>" + "".join(f"<th>{c}</th>" for c in header_cells) + "</tr></thead><tbody>"
             for row in rows:
                 html += "<tr>" + "".join(f"<td>{c}</td>" for c in row) + "</tr>"
             html += "</tbody></table>"
-            blocks.append({
-                "type": "table",
-                "table_body": html,
-                "text": "",
-                "page_idx": 0,
-            })
+            blocks.append(
+                {
+                    "type": "table",
+                    "table_body": html,
+                    "text": "",
+                    "page_idx": 0,
+                }
+            )
             continue
         # List items: - / * / 1.
         if re.match(r"^[-*]\s+", stripped) or re.match(r"^\d+\.\s+", stripped):
@@ -437,12 +445,14 @@ def _markdown_to_blocks(markdown: str) -> list[dict] | None:
             while i < n and (re.match(r"^[-*]\s+", lines[i].strip()) or re.match(r"^\d+\.\s+", lines[i].strip())):
                 items.append(re.sub(r"^[-*]\s+|^\d+\.\s+", "", lines[i].strip()))
                 i += 1
-            blocks.append({
-                "type": "list",
-                "list_items": items,
-                "text": "\n".join(items),
-                "page_idx": 0,
-            })
+            blocks.append(
+                {
+                    "type": "list",
+                    "list_items": items,
+                    "text": "\n".join(items),
+                    "page_idx": 0,
+                }
+            )
             continue
         # Blank line: skip
         if not stripped:
@@ -463,12 +473,16 @@ def _markdown_to_blocks(markdown: str) -> list[dict] | None:
                 break
             para_lines.append(lines[i])
             i += 1
-        blocks.append({
-            "type": "text",
-            "text": "\n".join(para_lines).strip(),
-            "page_idx": 0,
-        })
+        blocks.append(
+            {
+                "type": "text",
+                "text": "\n".join(para_lines).strip(),
+                "page_idx": 0,
+            }
+        )
     return blocks if blocks else None
+
+
 def _load_from_dir(doc_dir: Path, track: str) -> str | None:
     """Try to load and concatenate text from a single document directory."""
     doc_file = doc_dir / f"{track}.json"
@@ -620,11 +634,7 @@ def _load_full_document_text(
                 return result
 
         if identifiers:
-            search_keys = [
-                v.replace("/", "_")
-                for v in identifiers.values()
-                if v
-            ]
+            search_keys = [v.replace("/", "_") for v in identifiers.values() if v]
             for lang_dir in legacy_root.iterdir():
                 if not lang_dir.is_dir():
                     continue
@@ -704,11 +714,7 @@ class SearchService:
         if per_filter_clauses:
             matching_group_ids: set[str] | None = None
             for clause in per_filter_clauses:
-                filter_stmt = (
-                    select(group_id_expr)
-                    .where(clause)
-                    .group_by(group_id_expr)
-                )
+                filter_stmt = select(group_id_expr).where(clause).group_by(group_id_expr)
                 result = await self._session.execute(filter_stmt)
                 ids = {row[0] for row in result.all() if row[0]}
                 if matching_group_ids is None:
@@ -881,11 +887,7 @@ class SearchService:
             metadata_result = await self._session.execute(metadata_stmt)
             for row in metadata_result.all():
                 raw_metadata = row.raw_metadata or {}
-                title = (
-                    _coerce_str(raw_metadata.get("title"))
-                    if isinstance(raw_metadata, dict)
-                    else None
-                )
+                title = _coerce_str(raw_metadata.get("title")) if isinstance(raw_metadata, dict) else None
                 if title:
                     title_map[str(row.source_document_id)] = title
                 availability_map[str(row.source_document_id)] = {
@@ -1008,19 +1010,14 @@ class SearchService:
             SourceDocumentIdentifier.source_document_id == source_document_id
         )
         ident_result = await self._session.execute(ident_stmt)
-        identifiers = {
-            ident.identifier_type: ident.identifier_value
-            for ident in ident_result.scalars().all()
-        }
+        identifiers = {ident.identifier_type: ident.identifier_value for ident in ident_result.scalars().all()}
         metadata_stmt = select(
             SourceDocument.raw_metadata,
             SourceDocument.original_text,
             SourceDocument.translated_text,
             SourceDocument.original_blocks,
             SourceDocument.translated_blocks,
-        ).where(
-            SourceDocument.source_document_id == source_document_id
-        )
+        ).where(SourceDocument.source_document_id == source_document_id)
         metadata_result = await self._session.execute(metadata_stmt)
         metadata_row = metadata_result.one_or_none()
         raw_metadata = (metadata_row[0] if metadata_row else None) or {}
@@ -1028,11 +1025,7 @@ class SearchService:
         db_translated_text: str | None = metadata_row[2] if metadata_row else None
         db_original_blocks: list[dict] | None = metadata_row[3] if metadata_row else None
         db_translated_blocks: list[dict] | None = metadata_row[4] if metadata_row else None
-        title = (
-            _coerce_str(raw_metadata.get("title"))
-            if isinstance(raw_metadata, dict)
-            else None
-        )
+        title = _coerce_str(raw_metadata.get("title")) if isinstance(raw_metadata, dict) else None
 
         # Look up phase_2 output_dir from persisted pipeline state
         phase2_output_dir: str | None = None
@@ -1061,11 +1054,7 @@ class SearchService:
             field_name = payload.get("field_name")
             category = payload.get("category") or _category_from_field_id(field_id)
             track = payload.get("track")
-            confidence = (
-                float(row.current_best_confidence)
-                if row.current_best_confidence is not None
-                else None
-            )
+            confidence = float(row.current_best_confidence) if row.current_best_confidence is not None else None
             if confidence is not None:
                 confidences.append(confidence)
 
@@ -1103,7 +1092,6 @@ class SearchService:
                 )
             )
 
-
         # Fallback: parse gene/variant from group_id if field-level extraction missed them
         if not gene and group_id:
             gene = parse_gene_from_group_id(group_id)
@@ -1125,8 +1113,7 @@ class SearchService:
                 if track == "original":
                     if original_row is not None:
                         logger.debug(
-                            "Duplicate original track for field_id={}: "
-                            "overwriting with canonical_evidence_id={}",
+                            "Duplicate original track for field_id={}: overwriting with canonical_evidence_id={}",
                             field_id,
                             row.canonical_evidence_id,
                         )
@@ -1134,8 +1121,7 @@ class SearchService:
                 elif track == "translated":
                     if translated_row is not None:
                         logger.debug(
-                            "Duplicate translated track for field_id={}: "
-                            "overwriting with canonical_evidence_id={}",
+                            "Duplicate translated track for field_id={}: overwriting with canonical_evidence_id={}",
                             field_id,
                             row.canonical_evidence_id,
                         )
@@ -1165,24 +1151,26 @@ class SearchService:
                 continue
 
             original_source = (
-                original_row.active_payload.get("source")
-                if original_row and original_row.active_payload else {}
+                original_row.active_payload.get("source") if original_row and original_row.active_payload else {}
             ) or {}
             translated_source = (
-                translated_row.active_payload.get("source")
-                if translated_row and translated_row.active_payload else {}
+                translated_row.active_payload.get("source") if translated_row and translated_row.active_payload else {}
             ) or {}
             original_value = (
                 _coerce_str(original_row.active_payload.get("value"))
-                if original_row and original_row.active_payload else None
+                if original_row and original_row.active_payload
+                else None
             )
             translated_value = (
                 _coerce_str(translated_row.active_payload.get("value"))
-                if translated_row and translated_row.active_payload else None
+                if translated_row and translated_row.active_payload
+                else None
             )
 
             original = _build_highlight(original_source, original_value) if original_source is not None else None
-            translated = _build_highlight(translated_source, translated_value) if translated_source is not None else None
+            translated = (
+                _build_highlight(translated_source, translated_value) if translated_source is not None else None
+            )
 
             # Fall back to reconciled row's highlight when original/translated
             # sources are non-dict (e.g. "benchmark_ground_truth" strings)

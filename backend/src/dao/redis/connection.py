@@ -4,6 +4,7 @@ Mirrors the PostgreSQL ``connection.py`` pattern: a pure builder function
 that creates a ``redis.asyncio.Redis`` client from application config.
 The singleton lifecycle is managed by ``src.api.wiring``.
 """
+
 from __future__ import annotations
 
 import redis.asyncio as aioredis

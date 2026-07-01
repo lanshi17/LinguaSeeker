@@ -1,4 +1,5 @@
 """Tests for API key authentication."""
+
 from __future__ import annotations
 
 import hashlib
@@ -14,10 +15,9 @@ from httpx import ASGITransport, AsyncClient
 def _sign_token(payload_dict: dict, secret: str) -> str:
     """Helper: create a signed session token matching the backend format."""
     from src.api.auth import _b64url_encode
+
     payload = _b64url_encode(json.dumps(payload_dict).encode("utf-8"))
-    signature = _b64url_encode(
-        hmac.new(secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).digest()
-    )
+    signature = _b64url_encode(hmac.new(secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).digest())
     return f"{payload}.{signature}"
 
 
@@ -26,6 +26,7 @@ def _mock_config_with_api_key():
     """Provide config with API_KEY set."""
     with patch("src.core.config.get_config") as mock_cfg:
         from src.core.config import Settings
+
         mock_cfg.return_value = Settings(api_key="test-secret-key")
         yield mock_cfg
 
@@ -34,10 +35,14 @@ def _mock_config_with_api_key():
 async def test_write_route_rejected_without_api_key(_mock_config_with_api_key):
     """Write routes should return 401 when API_KEY is set but not provided."""
     with (
-        patch("src.utils.health.check_all_connections", new_callable=AsyncMock,
-              return_value=MagicMock(failed_services=MagicMock(return_value=[]))),
+        patch(
+            "src.utils.health.check_all_connections",
+            new_callable=AsyncMock,
+            return_value=MagicMock(failed_services=MagicMock(return_value=[])),
+        ),
     ):
         from app.main import create_app
+
         app = create_app()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -57,8 +62,11 @@ async def test_write_route_accepted_with_valid_api_key(_mock_config_with_api_key
     mock_session.commit = AsyncMock()
 
     with (
-        patch("src.utils.health.check_all_connections", new_callable=AsyncMock,
-              return_value=MagicMock(failed_services=MagicMock(return_value=[]))),
+        patch(
+            "src.utils.health.check_all_connections",
+            new_callable=AsyncMock,
+            return_value=MagicMock(failed_services=MagicMock(return_value=[])),
+        ),
         patch("src.api.v1.evidence.get_phase4_factory") as mock_factory,
         patch("src.api.deps.get_session_factory") as mock_sf,
     ):
@@ -73,16 +81,19 @@ async def test_write_route_accepted_with_valid_api_key(_mock_config_with_api_key
         from src.core.visualize_evidence_with_expert_in_loop.contracts import ReviewStatus
 
         mock_service = MagicMock()
-        mock_service.patch_evidence = AsyncMock(return_value=PatchResult(
-            canonical_evidence_id="00000000-0000-0000-0000-000000000000",
-            old_status=ReviewStatus.PROVISIONAL,
-            new_status=ReviewStatus.CORRECTED,
-            deltas=1,
-            field_deltas=[],
-        ))
+        mock_service.patch_evidence = AsyncMock(
+            return_value=PatchResult(
+                canonical_evidence_id="00000000-0000-0000-0000-000000000000",
+                old_status=ReviewStatus.PROVISIONAL,
+                new_status=ReviewStatus.CORRECTED,
+                deltas=1,
+                field_deltas=[],
+            )
+        )
         mock_factory.return_value.create_feedback_service.return_value = mock_service
 
         from app.main import create_app
+
         app = create_app()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -99,13 +110,18 @@ async def test_read_routes_open_when_no_api_key_configured():
     """When API_KEY is empty, all routes are accessible without auth."""
     with (
         patch("src.core.config.get_config") as mock_cfg,
-        patch("src.utils.health.check_all_connections", new_callable=AsyncMock,
-              return_value=MagicMock(failed_services=MagicMock(return_value=[]))),
+        patch(
+            "src.utils.health.check_all_connections",
+            new_callable=AsyncMock,
+            return_value=MagicMock(failed_services=MagicMock(return_value=[])),
+        ),
     ):
         from src.core.config import Settings
+
         mock_cfg.return_value = Settings(api_key="")  # No key configured
 
         from app.main import create_app
+
         app = create_app()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -122,8 +138,10 @@ def test_get_signing_key_falls_back_to_api_key():
     """When session_signing_key is empty, _get_signing_key returns api_key."""
     with patch("src.api.auth.get_config") as mock_cfg:
         from src.core.config import Settings
+
         mock_cfg.return_value = Settings(api_key="my-api-key", session_signing_key="")
         from src.api.auth import _get_signing_key
+
         assert _get_signing_key() == "my-api-key"
 
 
@@ -131,8 +149,10 @@ def test_get_signing_key_uses_dedicated_key():
     """When session_signing_key is set, _get_signing_key returns it."""
     with patch("src.api.auth.get_config") as mock_cfg:
         from src.core.config import Settings
+
         mock_cfg.return_value = Settings(api_key="my-api-key", session_signing_key="dedicated-signing-key")
         from src.api.auth import _get_signing_key
+
         assert _get_signing_key() == "dedicated-signing-key"
 
 
@@ -148,12 +168,14 @@ async def test_session_cookie_signed_with_signing_key_accepted():
         patch("src.api.v1.auth.get_config", mock_cfg),
     ):
         from src.core.config import Settings
+
         mock_cfg.return_value = Settings(
             api_key="my-api-key",
             session_signing_key=signing_key,
         )
 
         from app.main import create_app
+
         app = create_app()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -176,12 +198,14 @@ async def test_session_cookie_signed_with_api_key_rejected_when_signing_key_set(
         patch("src.api.v1.auth.get_config", mock_cfg),
     ):
         from src.core.config import Settings
+
         mock_cfg.return_value = Settings(
             api_key="my-api-key",
             session_signing_key="dedicated-signing-key",
         )
 
         from app.main import create_app
+
         app = create_app()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -205,12 +229,14 @@ async def test_login_creates_cookie_with_signing_key():
         patch("src.api.v1.auth.get_config", mock_cfg),
     ):
         from src.core.config import Settings
+
         mock_cfg.return_value = Settings(
             api_key=api_key,
             session_signing_key=signing_key,
         )
 
         from app.main import create_app
+
         app = create_app()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -224,6 +250,6 @@ async def test_login_creates_cookie_with_signing_key():
             assert cookie is not None
 
             from src.api.auth import _validate_session
+
             assert _validate_session(cookie, signing_key) is True
             assert _validate_session(cookie, api_key) is False
-

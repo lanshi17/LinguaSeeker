@@ -1,4 +1,5 @@
 """Source document formatting and normalization with bbox tracking."""
+
 from __future__ import annotations
 
 import re
@@ -71,7 +72,7 @@ def extract_sentences(
     # Track split positions directly to avoid ambiguous text.find()
     last_end = 0
     for match in pattern.finditer(text):
-        segment = text[last_end:match.start()].strip()
+        segment = text[last_end : match.start()].strip()
         if segment:
             page = _resolve_page(last_end, page_offset_map) if page_offset_map else 0
             sentences.append(
@@ -188,9 +189,7 @@ def _format_markdown(
     and tracks sentence-level positions for bbox mapping.
     """
     if not raw_markdown:
-        raw_markdown = "\n\n".join(
-            p.get("markdown", "") for p in pages
-        )
+        raw_markdown = "\n\n".join(p.get("markdown", "") for p in pages)
 
     raw_copy = raw_markdown  # Preserve for drift computation
 
@@ -255,8 +254,9 @@ class MarkdownFormatter(BaseFormatter):
         try:
             # Use the translator's LLM invocation with retry
             from langchain_core.messages import HumanMessage
+
             response = self._llm.invoke([HumanMessage(content=prompt)])
-            formatted = response.content if hasattr(response, 'content') else str(response)
+            formatted = response.content if hasattr(response, "content") else str(response)
 
             if _is_html(formatted):
                 logger.warning("LLM format output is HTML (likely error page), keeping original")
@@ -266,7 +266,8 @@ class MarkdownFormatter(BaseFormatter):
             if abs(len(formatted) - len(doc.formatted_markdown)) > len(doc.formatted_markdown) * 0.3:
                 logger.warning(
                     "LLM format output length mismatch ({} vs {} chars), keeping original",
-                    len(formatted), len(doc.formatted_markdown),
+                    len(formatted),
+                    len(doc.formatted_markdown),
                 )
                 return doc
 
@@ -278,6 +279,7 @@ class MarkdownFormatter(BaseFormatter):
 
             # Update document with LLM-formatted text
             from .formatter import extract_sentences, build_page_offset_map
+
             page_offset_map = build_page_offset_map(
                 [{"page_number": i, "markdown": ""} for i in range(doc.metadata.get("page_count", 1))]
             )

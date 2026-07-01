@@ -1,4 +1,5 @@
 """SSRF protection — URL safety validation."""
+
 from __future__ import annotations
 
 import ipaddress
@@ -15,13 +16,7 @@ def is_private_ip(hostname: str) -> bool:
 
     for _family, _type, _proto, _canonname, sockaddr in addrinfos:
         ip = ipaddress.ip_address(sockaddr[0])
-        if (
-            ip.is_private
-            or ip.is_loopback
-            or ip.is_link_local
-            or ip.is_reserved
-            or ip.is_multicast
-        ):
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
             return True
     return False
 

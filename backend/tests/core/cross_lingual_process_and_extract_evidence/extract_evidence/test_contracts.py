@@ -371,6 +371,7 @@ def test_extraction_result_and_state_carry_normalization_issues() -> None:
     assert result.normalization_issues == [issue]
     assert state.normalization_issues == [issue]
 
+
 def test_extraction_target_contract_normalizes_scope_identity() -> None:
     target = ExtractionTarget(
         gene_symbol=" abca3 ",
@@ -382,8 +383,7 @@ def test_extraction_target_contract_normalizes_scope_identity() -> None:
     assert target.gene_symbol == "ABCA3"
     assert target.disease_name == "Interstitial lung disease due to ABCA3 deficiency"
     assert target.scope_key == (
-        "gene=ABCA3|disease=interstitial lung disease due to abca3 deficiency|"
-        "variant_p=p.Q215*|clingen=CGGV:0001"
+        "gene=ABCA3|disease=interstitial lung disease due to abca3 deficiency|variant_p=p.Q215*|clingen=CGGV:0001"
     )
 
 

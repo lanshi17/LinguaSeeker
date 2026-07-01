@@ -1,4 +1,5 @@
 """Tests for parse_document service."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch

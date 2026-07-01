@@ -1,4 +1,5 @@
 """Tests for the centralized exception hierarchy."""
+
 from __future__ import annotations
 
 from src.utils.exceptions import (

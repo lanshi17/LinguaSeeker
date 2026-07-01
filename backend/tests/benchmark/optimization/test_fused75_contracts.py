@@ -1,4 +1,5 @@
 """Tests for fused-75 optimization split contracts."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -54,7 +55,7 @@ def test_manifest_rejects_invalid_split_value() -> None:
                     "selection_reason": "bad split",
                     "sha256": "a" * 64,
                 },
-            )
+            ),
         )
 
 
@@ -106,7 +107,7 @@ def test_entry_paths_serialize_as_stable_json_strings() -> None:
                 selection_reason="held out test",
                 sha256="a" * 64,
             ),
-        )
+        ),
     )
 
     payload = manifest.model_dump(mode="json")

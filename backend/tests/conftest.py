@@ -3,6 +3,7 @@
 Unit tests use SQLite in-memory for speed (no DB dependency).
 Integration tests use PostgreSQL test DB (requires DB setup).
 """
+
 from __future__ import annotations
 
 import asyncio

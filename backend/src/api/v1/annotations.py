@@ -6,6 +6,7 @@ raw character offsets without interpreting the coordinate system — the
 frontend owns offset semantics (flattened ``textContent`` of a rendered
 paragraph).
 """
+
 from __future__ import annotations
 
 from datetime import datetime

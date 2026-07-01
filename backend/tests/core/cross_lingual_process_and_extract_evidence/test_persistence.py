@@ -1,4 +1,5 @@
 """Tests for document persistence service."""
+
 from __future__ import annotations
 
 import json
@@ -124,9 +125,7 @@ class TestDocumentPersistenceService:
                 TranslationSegment(
                     index=1,
                     source_text="基因检测提示ABCA3缺陷引起的间质性肺病。",
-                    translated_text=(
-                        "Genetic testing suggested interstitial lung disease due to ABCA3 deficiency."
-                    ),
+                    translated_text=("Genetic testing suggested interstitial lung disease due to ABCA3 deficiency."),
                     source_bbox=SentenceRegion(
                         page=1,
                         start_offset=15,

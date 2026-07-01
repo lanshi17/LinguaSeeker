@@ -1,4 +1,5 @@
 """Review-validation stage for primary extraction candidates."""
+
 from __future__ import annotations
 
 import json
@@ -75,7 +76,9 @@ class ReviewValidationStage:
         return _apply_review_decisions(items, response.decisions, self._review_reject_policy)
 
 
-def _review_output_schema(review_reject_policy: ReviewRejectPolicy) -> type[EvidenceReviewResponse | EvidenceTriStateReviewResponse]:
+def _review_output_schema(
+    review_reject_policy: ReviewRejectPolicy,
+) -> type[EvidenceReviewResponse | EvidenceTriStateReviewResponse]:
     if review_reject_policy == "tristate_review":
         return EvidenceTriStateReviewResponse
     return EvidenceReviewResponse
@@ -172,11 +175,7 @@ def _apply_review_decisions(
     review_reject_policy: ReviewRejectPolicy = DEFAULT_REVIEW_REJECT_POLICY,
 ) -> list[EvidenceItem]:
     """Apply review decisions while preserving the original candidate set."""
-    by_index = {
-        decision.candidate_index: decision
-        for decision in decisions
-        if decision.candidate_index is not None
-    }
+    by_index = {decision.candidate_index: decision for decision in decisions if decision.candidate_index is not None}
     by_field: dict[str, EvidenceReviewDecision] = {}
     for decision in decisions:
         if decision.candidate_index is None and decision.field_id not in by_field:
@@ -209,41 +208,49 @@ def _reject_item(
     review_reject_policy: ReviewRejectPolicy,
 ) -> EvidenceItem:
     if review_reject_policy == "soft_veto":
-        return item.model_copy(update={
-            "status": EvidenceStatus.FOUND,
-            "confidence": min(item.confidence, 0.35),
-            "notes": _merged_note(item.notes, "review_track: soft_rejected", decision.reason),
-            "inference_basis": [*item.inference_basis, "review_soft_reject"],
-        })
+        return item.model_copy(
+            update={
+                "status": EvidenceStatus.FOUND,
+                "confidence": min(item.confidence, 0.35),
+                "notes": _merged_note(item.notes, "review_track: soft_rejected", decision.reason),
+                "inference_basis": [*item.inference_basis, "review_soft_reject"],
+            }
+        )
     if review_reject_policy == "tristate_review" and _is_non_human_model_variant_reject(item, decision.reason):
-        return item.model_copy(update={
-            "status": EvidenceStatus.FOUND,
-            "confidence": min(item.confidence, 0.35),
-            "notes": _merged_note(
-                item.notes,
-                "review_track: non_human_model_soft_rejected",
-                decision.reason,
-            ),
-            "inference_basis": [*item.inference_basis, "review_non_human_model_soft_reject"],
-        })
-    return item.model_copy(update={
-        "status": EvidenceStatus.NOT_FOUND,
-        "value": None,
-        "confidence": 0.0,
-        "source": None,
-        "raw_source": None,
-        "assigned_acmg_codes": [],
-        "assigned_clingen_modules": [],
-        "notes": _merged_note(item.notes, "review_track: rejected", decision.reason),
-    })
+        return item.model_copy(
+            update={
+                "status": EvidenceStatus.FOUND,
+                "confidence": min(item.confidence, 0.35),
+                "notes": _merged_note(
+                    item.notes,
+                    "review_track: non_human_model_soft_rejected",
+                    decision.reason,
+                ),
+                "inference_basis": [*item.inference_basis, "review_non_human_model_soft_reject"],
+            }
+        )
+    return item.model_copy(
+        update={
+            "status": EvidenceStatus.NOT_FOUND,
+            "value": None,
+            "confidence": 0.0,
+            "source": None,
+            "raw_source": None,
+            "assigned_acmg_codes": [],
+            "assigned_clingen_modules": [],
+            "notes": _merged_note(item.notes, "review_track: rejected", decision.reason),
+        }
+    )
 
 
-_VARIANT_REVIEW_FIELDS = frozenset({
-    "A.variant_hgvs_c",
-    "A.variant_hgvs_p",
-    "A.variant_type",
-    "A.variant_consequence_class",
-})
+_VARIANT_REVIEW_FIELDS = frozenset(
+    {
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "A.variant_consequence_class",
+    }
+)
 
 _NON_HUMAN_MODEL_REJECT_HINTS = (
     "mouse",
@@ -276,24 +283,28 @@ def _correct_item(item: EvidenceItem, decision: EvidenceReviewDecision) -> Evide
             text_snippet=decision.source_quote.strip(),
             block_index=source.block_index if source else -1,
         )
-    return item.model_copy(update={
-        "status": EvidenceStatus.FOUND,
-        "value": value,
-        "confidence": decision.confidence or item.confidence,
-        "source": None,
-        "raw_source": raw_source,
-        "notes": _merged_note(item.notes, "review_track: corrected", decision.reason),
-    })
+    return item.model_copy(
+        update={
+            "status": EvidenceStatus.FOUND,
+            "value": value,
+            "confidence": decision.confidence or item.confidence,
+            "source": None,
+            "raw_source": raw_source,
+            "notes": _merged_note(item.notes, "review_track: corrected", decision.reason),
+        }
+    )
 
 
 def _uncertain_item(item: EvidenceItem, decision: EvidenceTriStateReviewDecision) -> EvidenceItem:
     confidence = min(item.confidence, decision.confidence or item.confidence, 0.45)
-    return item.model_copy(update={
-        "status": EvidenceStatus.FOUND,
-        "confidence": confidence,
-        "notes": _merged_note(item.notes, "review_track: uncertain_keep_for_review", decision.reason),
-        "inference_basis": [*item.inference_basis, "review_uncertain_keep_for_review"],
-    })
+    return item.model_copy(
+        update={
+            "status": EvidenceStatus.FOUND,
+            "confidence": confidence,
+            "notes": _merged_note(item.notes, "review_track: uncertain_keep_for_review", decision.reason),
+            "inference_basis": [*item.inference_basis, "review_uncertain_keep_for_review"],
+        }
+    )
 
 
 def _append_review_note(item: EvidenceItem, prefix: str, reason: str) -> EvidenceItem:

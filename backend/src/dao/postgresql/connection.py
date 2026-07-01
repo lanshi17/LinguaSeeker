@@ -1,4 +1,5 @@
 """Async SQLAlchemy connection helpers."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable

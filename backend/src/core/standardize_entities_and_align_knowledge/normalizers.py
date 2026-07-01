@@ -1,4 +1,5 @@
 """Normalization helpers shared by terminology import and matching."""
+
 from __future__ import annotations
 
 import hashlib

@@ -1,4 +1,5 @@
 """Artifact stripping for LLM translation output."""
+
 from __future__ import annotations
 
 import re
@@ -92,7 +93,8 @@ def strip_source_contamination(translated: str, source_language: str = "unknown"
         # If >= 10% CJK, treat as source-language — skip it
         logger.debug(
             "Skipping leading source paragraph (cjk_ratio={:.2f}): {}...",
-            cjk_ratio, stripped[:60],
+            cjk_ratio,
+            stripped[:60],
         )
     else:
         # All paragraphs are source-language — nothing to strip
@@ -121,15 +123,13 @@ def strip_source_contamination(translated: str, source_language: str = "unknown"
         # content, treat it as source-language contamination
         if cjk_ratio > 0.40 and len(clean_parts) >= 2:
             # Check if we already have enough English content before this
-            english_chars = sum(
-                len(p) for p in clean_parts
-                if len(_CJK_RE.findall(p)) / (len(p) or 1) < 0.20
-            )
+            english_chars = sum(len(p) for p in clean_parts if len(_CJK_RE.findall(p)) / (len(p) or 1) < 0.20)
             if english_chars > 200:
                 contamination_started = True
                 logger.debug(
                     "Stripping trailing source contamination at paragraph (cjk_ratio={:.2f}): {}...",
-                    cjk_ratio, stripped[:60],
+                    cjk_ratio,
+                    stripped[:60],
                 )
                 break
 
@@ -146,7 +146,8 @@ def strip_source_contamination(translated: str, source_language: str = "unknown"
 
     logger.info(
         "Stripped source contamination: {} -> {} chars",
-        len(translated), len(result),
+        len(translated),
+        len(result),
     )
     return result
 
@@ -231,24 +232,26 @@ def strip_prompt_echo(text: str) -> str:
         last_match = m
 
     if last_match:
-        translation = text[last_match.end():].strip()
+        translation = text[last_match.end() :].strip()
         # Strip leading markers like ":" or "**" after the marker
         translation = re.sub(r"^[:\s*]+", "", translation).strip()
         if translation and len(translation) > 10:
             logger.debug(
                 "Stripped prompt echo ({} -> {} chars)",
-                len(text), len(translation),
+                len(text),
+                len(translation),
             )
             return translation
 
     # Fallback: try [TRANSLATE THIS SEGMENT] specifically
     match = _TRANSLATE_THIS_RE.search(text)
     if match:
-        translation = text[match.end():].strip()
+        translation = text[match.end() :].strip()
         if translation:
             logger.debug(
                 "Stripped prompt echo via fallback ({} -> {} chars)",
-                len(text), len(translation),
+                len(text),
+                len(translation),
             )
             return translation
 

@@ -1,7 +1,6 @@
 """Tests for MarkdownFormatter HTML detection."""
 
 
-
 def test_apply_llm_formatting_detects_html_response():
     """Formatter must detect HTML in LLM output and skip formatting."""
     from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.format.formatter import _is_html

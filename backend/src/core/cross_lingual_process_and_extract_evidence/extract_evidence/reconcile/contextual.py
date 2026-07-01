@@ -1,4 +1,5 @@
 """Contextual verifier-driven cross-track reconcile."""
+
 from __future__ import annotations
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
@@ -57,11 +58,7 @@ def reconcile_with_context(
     )
     accepted_evidence = [decision.accepted for decision in evidence_decisions if decision.accepted is not None]
     accepted_phenotype = [decision.accepted for decision in phenotype_decisions if decision.accepted is not None]
-    rejected_evidence = [
-        item
-        for decision in (*evidence_decisions, *phenotype_decisions)
-        for item in decision.rejected
-    ]
+    rejected_evidence = [item for decision in (*evidence_decisions, *phenotype_decisions) for item in decision.rejected]
     result = EvidenceExtractionResult(
         status=_reconciled_status(original, translated),
         document_id=original.document_id,
@@ -92,8 +89,7 @@ def _decide_fields(
     for field_id in sorted({candidate.item.field_id for candidate in candidates}):
         field_candidates = tuple(candidate for candidate in candidates if candidate.item.field_id == field_id)
         scored = tuple(
-            (candidate, _score_candidate(candidate, field_candidates, context))
-            for candidate in field_candidates
+            (candidate, _score_candidate(candidate, field_candidates, context)) for candidate in field_candidates
         )
         ranked = sorted(
             scored,
@@ -107,8 +103,7 @@ def _decide_fields(
         accepted_candidate, accepted_score = ranked[0]
         competing_score = _first_conflicting_score(accepted_score, ranked)
         requires_review = (
-            competing_score is not None
-            and accepted_score.score - competing_score.score < params.conflict_margin
+            competing_score is not None and accepted_score.score - competing_score.score < params.conflict_margin
         )
         rationale = _accepted_rationale(accepted_score, requires_review)
         accepted = _annotate_accepted(
@@ -196,7 +191,8 @@ def _can_override(item: EvidenceItem, verification: EvidenceVerificationResult) 
         item.field_id == "A.gene_disease_relationship"
         and verification.support_score >= 0.55
         and verification.contradiction_score < 0.5
-        and verification.recommended_value in {
+        and verification.recommended_value
+        in {
             "causative",
             "susceptibility",
             "uncertain",
@@ -213,7 +209,8 @@ def _can_apply_relationship_override(item: EvidenceItem, score: CandidateScore) 
         and score.verifier_support_score >= 0.55
         and score.contradiction_penalty < 0.5
         and score.source_score > 0.0
-        and score.normalized_value in {
+        and score.normalized_value
+        in {
             "causative",
             "susceptibility",
             "uncertain",
@@ -225,10 +222,7 @@ def _can_apply_relationship_override(item: EvidenceItem, score: CandidateScore) 
 
 
 def _accepted_rationale(score: CandidateScore, requires_review: bool) -> str:
-    rationale = (
-        f"contextual verifier reconcile selected {score.track.value} candidate "
-        f"with score={score.score:.3f}"
-    )
+    rationale = f"contextual verifier reconcile selected {score.track.value} candidate with score={score.score:.3f}"
     if score.verifier_support_score > 0:
         rationale += f", verifier_support={score.verifier_support_score:.3f}"
     if score.target_specificity_score > 0:

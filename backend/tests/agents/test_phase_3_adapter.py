@@ -1,4 +1,5 @@
 """Tests for Phase 3 adapter (entity standardization)."""
+
 import json
 
 import pytest

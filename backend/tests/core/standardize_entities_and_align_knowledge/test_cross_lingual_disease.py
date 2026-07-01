@@ -1,4 +1,5 @@
 """Tests for the cross-lingual disease name resolver."""
+
 from __future__ import annotations
 
 import pytest

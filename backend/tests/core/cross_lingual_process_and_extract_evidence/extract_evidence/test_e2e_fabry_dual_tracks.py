@@ -21,15 +21,10 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workfl
 _BACKEND_DIR = Path(__file__).resolve().parents[4]
 _LEGACY_FABRY_OUTPUT_DIR = _BACKEND_DIR / "output" / "zh" / "法布雷病1例"
 _CROSS_LINGUAL_FABRY_OUTPUT_DIR = _BACKEND_DIR / "output" / "cross_lingual" / "zh" / "法布雷病1例"
-_FABRY_OUTPUT_DIR = (
-    _LEGACY_FABRY_OUTPUT_DIR
-    if _LEGACY_FABRY_OUTPUT_DIR.exists()
-    else _CROSS_LINGUAL_FABRY_OUTPUT_DIR
-)
-_FABRY_OUTPUT_READY = (
-    (_FABRY_OUTPUT_DIR / "original.json").exists()
-    and (_FABRY_OUTPUT_DIR / "translated.json").exists()
-)
+_FABRY_OUTPUT_DIR = _LEGACY_FABRY_OUTPUT_DIR if _LEGACY_FABRY_OUTPUT_DIR.exists() else _CROSS_LINGUAL_FABRY_OUTPUT_DIR
+_FABRY_OUTPUT_READY = (_FABRY_OUTPUT_DIR / "original.json").exists() and (
+    _FABRY_OUTPUT_DIR / "translated.json"
+).exists()
 
 
 @pytest.fixture
@@ -148,12 +143,10 @@ async def test_fabry_output_fixture_runs_original_and_translated_tracks_independ
     assert result.original_result.track == Track.ORIGINAL
     assert result.translated_result.track == Track.TRANSLATED
     original_diagnosis = next(
-        item for item in result.original_result.evidence_items
-        if item.field_id == "B.disease_diagnosis"
+        item for item in result.original_result.evidence_items if item.field_id == "B.disease_diagnosis"
     )
     translated_diagnosis = next(
-        item for item in result.translated_result.evidence_items
-        if item.field_id == "B.disease_diagnosis"
+        item for item in result.translated_result.evidence_items if item.field_id == "B.disease_diagnosis"
     )
     assert original_diagnosis.value == "法布雷病"
     assert translated_diagnosis.value == "Fabry disease"

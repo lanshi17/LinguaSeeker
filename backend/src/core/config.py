@@ -136,7 +136,6 @@ class EmbeddingConfig(_BaseProviderConfig):
         return keys
 
 
-
 class RerankConfig(_BaseProviderConfig):
     """Rerank model with optional remote fallback.
 
@@ -165,7 +164,6 @@ class RerankConfig(_BaseProviderConfig):
                 seen.add(k)
                 keys.append(k)
         return keys
-
 
 
 class MinerUConfig(BaseModel):
@@ -223,14 +221,7 @@ class WebSearchConfig(BaseModel):
 
 # Domains that bypass the proxy and connect directly.
 # "cn" matches all *.cn and *.com.cn / *.ac.cn / *.edu.cn / etc.
-_DEFAULT_NO_PROXY = (
-    "cn,"
-    "ncbi.nlm.nih.gov,"
-    "nlm.nih.gov,"
-    "unpaywall.org,"
-    "localhost,"
-    "127.0.0.1"
-)
+_DEFAULT_NO_PROXY = "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
 
 
 class NetworkConfig(BaseModel):
@@ -297,7 +288,6 @@ class Settings(BaseSettings):
     fast_llm_timeout: int = 0
     fast_llm_max_retries: int = 0
 
-
     # ── Preferred reasoning LLM flat fields (REASONING_LLM_*) ──────────
 
     reasoning_llm_api_key: str = ""
@@ -332,7 +322,6 @@ class Settings(BaseSettings):
     translation_llm_temperature: float | None = None
     translation_llm_max_retries: int = 0
 
-
     # ── Embedding flat fields (EMBEDDING_*) ──────────────────────────────
 
     embedding_base_url: str = ""
@@ -344,7 +333,6 @@ class Settings(BaseSettings):
     embedding_remote_api_key: str = ""
     embedding_remote_api_keys: list[str] = Field(default_factory=list)
     embedding_remote_model: str = ""
-
 
     # ── Rerank flat fields (RERANK_*) ────────────────────────────────────
 
@@ -396,7 +384,6 @@ class Settings(BaseSettings):
     postgres_max_overflow: int = 30
     pgvector_enabled: bool = True
 
-
     # ── Web Search flat fields (WEB_SEARCH_*) ───────────────────────────
 
     web_search_firecrawl_api_key: str = ""
@@ -410,12 +397,10 @@ class Settings(BaseSettings):
     serpapi_api_key: str = ""  # SerpApi API key
     serpapi_engine: str = "google"  # "google", "google_scholar", "bing", etc.
 
-
     # ── Network / proxy flat fields (NETWORK_*) ─────────────────────────
 
     network_proxy: str = ""
     network_no_proxy: str = _DEFAULT_NO_PROXY
-
 
     # ── Nested domain models (populated by validator) ────────────────────
 
@@ -443,7 +428,7 @@ class Settings(BaseSettings):
                 f"pgvector column dimension {PGVECTOR_DIMENSION}. "
                 f"Set EMBEDDING_DIMENSION={PGVECTOR_DIMENSION} or update the migration."
             )
-        
+
         self.llm = LLMConfig(
             api_key=self.fast_llm_api_key,
             api_keys=self.fast_llm_api_keys,

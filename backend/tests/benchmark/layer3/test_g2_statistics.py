@@ -1,4 +1,5 @@
 """Tests for BIBM G2 paired statistics over reconcile ablation reports."""
+
 from __future__ import annotations
 
 import json

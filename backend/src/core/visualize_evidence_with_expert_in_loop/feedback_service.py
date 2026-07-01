@@ -1,4 +1,5 @@
 """Feedback service for evidence review and correction."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -59,9 +60,7 @@ class FeedbackService:
         5. If deltas > 0: INSERT review_audit_event
         6. Return PatchResult
         """
-        stmt = select(CanonicalEvidenceItem).where(
-            CanonicalEvidenceItem.canonical_evidence_id == canonical_evidence_id
-        )
+        stmt = select(CanonicalEvidenceItem).where(CanonicalEvidenceItem.canonical_evidence_id == canonical_evidence_id)
         result = await self._session.execute(stmt)
         evidence = result.scalar_one()
 
@@ -84,9 +83,7 @@ class FeedbackService:
         field_deltas = DeltaAuditService.compute_deltas(old_card, new_card)
 
         old_status = ReviewStatus(evidence.review_status)
-        new_status = patch.new_status or (
-            ReviewStatus.CORRECTED if field_deltas else old_status
-        )
+        new_status = patch.new_status or (ReviewStatus.CORRECTED if field_deltas else old_status)
 
         # Merge: update patched card fields into the raw payload
         for field_name, field_value in patch.fields.items():

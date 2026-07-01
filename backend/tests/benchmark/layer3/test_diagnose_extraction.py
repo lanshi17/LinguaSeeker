@@ -1,4 +1,5 @@
 """Tests for layer-3 extraction diagnostics."""
+
 from __future__ import annotations
 
 import json
@@ -59,9 +60,7 @@ def _write_report(path: Path, total_entries: int, f1: float) -> None:
             },
             {
                 "pipeline_status": "failed",
-                "field_matches": [
-                    {"field_id": "A.gene_disease_relationship", "match_type": "wrong_value"}
-                ],
+                "field_matches": [{"field_id": "A.gene_disease_relationship", "match_type": "wrong_value"}],
             },
         ],
     }

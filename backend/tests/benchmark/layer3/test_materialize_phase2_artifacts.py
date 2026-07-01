@@ -1,4 +1,5 @@
 """Tests for materializing Phase 2 artifacts into Layer 3 ground truth."""
+
 from __future__ import annotations
 
 import json

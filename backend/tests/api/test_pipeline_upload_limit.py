@@ -1,4 +1,5 @@
 """Tests for pipeline upload size limits."""
+
 from __future__ import annotations
 
 import base64
@@ -13,12 +14,18 @@ async def test_upload_rejects_oversized_files():
     """POST /api/v1/pipeline/run should reject files exceeding size limit."""
     large_content = base64.b64encode(b"x" * (101 * 1024 * 1024)).decode()
 
-    with patch("src.core.config.get_config") as mock_cfg, \
-         patch("src.api.auth.get_config", mock_cfg), \
-         patch("src.utils.health.check_all_connections", new_callable=AsyncMock,
-               return_value=AsyncMock(failed_services=AsyncMock(return_value=[]))), \
-         patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+    with (
+        patch("src.core.config.get_config") as mock_cfg,
+        patch("src.api.auth.get_config", mock_cfg),
+        patch(
+            "src.utils.health.check_all_connections",
+            new_callable=AsyncMock,
+            return_value=AsyncMock(failed_services=AsyncMock(return_value=[])),
+        ),
+        patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner,
+    ):
         from src.core.config import Settings
+
         mock_cfg.return_value = Settings(
             api_key="test-secret",
             mineru_max_file_size_mb=100,
@@ -29,6 +36,7 @@ async def test_upload_rejects_oversized_files():
         mock_get_runner.return_value = mock_runner
 
         from app.main import create_app
+
         app = create_app()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -52,12 +60,18 @@ async def test_upload_rejects_oversized_files():
 @pytest.mark.asyncio
 async def test_upload_rejects_invalid_base64():
     """POST /api/v1/pipeline/run should reject invalid base64 content with 422."""
-    with patch("src.core.config.get_config") as mock_cfg, \
-         patch("src.api.auth.get_config", mock_cfg), \
-         patch("src.utils.health.check_all_connections", new_callable=AsyncMock,
-               return_value=AsyncMock(failed_services=AsyncMock(return_value=[]))), \
-         patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+    with (
+        patch("src.core.config.get_config") as mock_cfg,
+        patch("src.api.auth.get_config", mock_cfg),
+        patch(
+            "src.utils.health.check_all_connections",
+            new_callable=AsyncMock,
+            return_value=AsyncMock(failed_services=AsyncMock(return_value=[])),
+        ),
+        patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner,
+    ):
         from src.core.config import Settings
+
         mock_cfg.return_value = Settings(api_key="test-secret")
 
         mock_runner = MagicMock()
@@ -65,6 +79,7 @@ async def test_upload_rejects_invalid_base64():
         mock_get_runner.return_value = mock_runner
 
         from app.main import create_app
+
         app = create_app()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:

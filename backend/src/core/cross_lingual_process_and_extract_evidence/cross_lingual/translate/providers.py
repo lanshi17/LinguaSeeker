@@ -1,4 +1,5 @@
 """LLM client factory and retry logic for translation pipeline."""
+
 from __future__ import annotations
 
 import asyncio
@@ -141,7 +142,11 @@ async def invoke_with_retry(
             delay = _BACKOFF_BASE * (2 ** (attempt - 1))
             logger.warning(
                 "Stage {} attempt {}/{} failed: {}. Retrying in {:.0f}s",
-                stage, attempt, _MAX_RETRIES, exc, delay,
+                stage,
+                attempt,
+                _MAX_RETRIES,
+                exc,
+                delay,
             )
             if attempt < _MAX_RETRIES:
                 await asyncio.sleep(delay)
@@ -181,7 +186,11 @@ async def invoke_json_with_retry(
             delay = _BACKOFF_BASE * (2 ** (attempt - 1))
             logger.warning(
                 "JSON stage {} attempt {}/{} failed: {}. Retrying in {:.0f}s",
-                stage, attempt, _MAX_RETRIES, exc, delay,
+                stage,
+                attempt,
+                _MAX_RETRIES,
+                exc,
+                delay,
             )
             if attempt < _MAX_RETRIES:
                 await asyncio.sleep(delay)

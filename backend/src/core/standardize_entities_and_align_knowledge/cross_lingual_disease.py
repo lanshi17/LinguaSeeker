@@ -12,6 +12,7 @@ with the highest token-set overlap (Jaccard similarity) wins. ``pg_trgm`` is not
 installed in the current deployment, so trigram ``similarity()`` is intentionally
 omitted; the token-ILIKE path already covers the partial-match cases.
 """
+
 from __future__ import annotations
 
 import re
@@ -57,11 +58,7 @@ def _tokenize_disease_query(text: str) -> list[str]:
     Tokens are alphanumeric runs longer than two characters that are not in the
     stopword set. Order is preserved for deterministic query construction.
     """
-    return [
-        token
-        for token in _TOKEN_RE.findall(text)
-        if len(token) > 2 and token not in _STOPWORDS
-    ]
+    return [token for token in _TOKEN_RE.findall(text) if len(token) > 2 and token not in _STOPWORDS]
 
 
 def _jaccard_overlap(query_tokens: set[str], alias_tokens: set[str]) -> float:

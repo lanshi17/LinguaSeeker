@@ -15,6 +15,7 @@ MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024
 @dataclass(frozen=True)
 class LocalUploadedFile:
     """Represents a validated uploaded file."""
+
     filename: str
     content: bytes
     content_type: Optional[str] = None
@@ -27,6 +28,7 @@ class LocalUploadedFile:
 @dataclass(frozen=True)
 class LocalStoredFile:
     """Result of storing a file to disk."""
+
     file_path: str
     sha256: str
     original_filename: str
@@ -37,6 +39,7 @@ class LocalStoredFile:
 @dataclass
 class LocalUploadResult:
     """Final upload result returned to caller."""
+
     success: bool
     stored_file: Optional[LocalStoredFile] = None
     warnings: List[str] = field(default_factory=list)

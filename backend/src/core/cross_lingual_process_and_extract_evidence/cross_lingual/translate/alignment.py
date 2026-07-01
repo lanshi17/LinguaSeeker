@@ -1,4 +1,5 @@
 """Semantic and fallback span alignment for original-English translations."""
+
 from __future__ import annotations
 
 import re
@@ -76,17 +77,19 @@ def validate_span_pairs(
             continue
 
         pair_index = len(accepted) + 1
-        accepted.append(TranslationSpanPair(
-            pair_id=f"{chunk.chunk_id}-p_{pair_index:04d}",
-            original_text=original_text,
-            english_text=english_text,
-            original_start_offset=original_start,
-            original_end_offset=original_end,
-            english_start_offset=english_start,
-            english_end_offset=english_end,
-            confidence=raw.confidence,
-            method=method,
-        ))
+        accepted.append(
+            TranslationSpanPair(
+                pair_id=f"{chunk.chunk_id}-p_{pair_index:04d}",
+                original_text=original_text,
+                english_text=english_text,
+                original_start_offset=original_start,
+                original_end_offset=original_end,
+                english_start_offset=english_start,
+                english_end_offset=english_end,
+                confidence=raw.confidence,
+                method=method,
+            )
+        )
         original_cursor = original_local_end
         english_cursor = english_local_end
 
@@ -132,7 +135,11 @@ def build_fallback_span_pairs(chunk: TranslationAlignmentChunk) -> list[Translat
     english_cursor = 0
     for source_index, source_token in enumerate(source_tokens):
         english_index = _select_fallback_english_index(
-            source_token, english_tokens, english_cursor, source_index, len(source_tokens),
+            source_token,
+            english_tokens,
+            english_cursor,
+            source_index,
+            len(source_tokens),
         )
         if english_index is None:
             break
@@ -140,17 +147,19 @@ def build_fallback_span_pairs(chunk: TranslationAlignmentChunk) -> list[Translat
         english_cursor = english_index + 1
 
         pair_index = len(pairs) + 1
-        pairs.append(TranslationSpanPair(
-            pair_id=f"{chunk.chunk_id}-fb_{pair_index:04d}",
-            original_text=source_token.text,
-            english_text=english_token.text,
-            original_start_offset=chunk.original_start_offset + source_token.start,
-            original_end_offset=chunk.original_start_offset + source_token.end,
-            english_start_offset=chunk.english_start_offset + english_token.start,
-            english_end_offset=chunk.english_start_offset + english_token.end,
-            confidence=0.2,
-            method="deterministic_token",
-        ))
+        pairs.append(
+            TranslationSpanPair(
+                pair_id=f"{chunk.chunk_id}-fb_{pair_index:04d}",
+                original_text=source_token.text,
+                english_text=english_token.text,
+                original_start_offset=chunk.original_start_offset + source_token.start,
+                original_end_offset=chunk.original_start_offset + source_token.end,
+                english_start_offset=chunk.english_start_offset + english_token.start,
+                english_end_offset=chunk.english_start_offset + english_token.end,
+                confidence=0.2,
+                method="deterministic_token",
+            )
+        )
 
     return pairs
 
@@ -165,7 +174,7 @@ def _build_alignment_prompt(chunk: TranslationAlignmentChunk, source_language: s
     }
     return (
         "Align clinically meaningful source-language words or phrases to their English translation.\n"
-        "Return ONLY a JSON object with key \"pairs\" whose value is an array of objects.\n"
+        'Return ONLY a JSON object with key "pairs" whose value is an array of objects.\n'
         "Each object must contain exact copied substrings: original_text, english_text, confidence.\n"
         "Prefer biomedical terms, gene symbols, variants, diseases, numbers, section labels, and key verbs.\n"
         "Do not invent text. Preserve monotonic reading order when possible.\n\n"
@@ -192,11 +201,13 @@ def _parse_raw_pairs(payload: Any) -> list[RawAlignmentPair]:
         confidence = item.get("confidence", 0.0)
         if not isinstance(confidence, (int, float)):
             confidence = 0.0
-        pairs.append(RawAlignmentPair(
-            original_text=original_text,
-            english_text=english_text,
-            confidence=max(0.0, min(float(confidence), 1.0)),
-        ))
+        pairs.append(
+            RawAlignmentPair(
+                original_text=original_text,
+                english_text=english_text,
+                confidence=max(0.0, min(float(confidence), 1.0)),
+            )
+        )
     return pairs
 
 

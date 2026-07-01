@@ -1,4 +1,5 @@
 """Tests for semantic similarity terminology matching."""
+
 from __future__ import annotations
 
 import pytest
@@ -31,9 +32,7 @@ class FakeRerankProvider:
             (),
             {
                 "model": "rerank-a",
-                "results": (
-                    type("RerankItem", (), {"index": 0, "document": documents[0], "relevance_score": 0.91})(),
-                ),
+                "results": (type("RerankItem", (), {"index": 0, "document": documents[0], "relevance_score": 0.91})(),),
             },
         )()
 

@@ -1,4 +1,5 @@
 """Prompt templates for terminology extraction and system prompt generation."""
+
 from __future__ import annotations
 
 

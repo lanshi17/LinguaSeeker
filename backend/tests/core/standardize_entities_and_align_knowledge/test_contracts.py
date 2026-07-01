@@ -1,4 +1,5 @@
 """Tests for Phase 3 standardization contracts."""
+
 from __future__ import annotations
 
 from src.core.standardize_entities_and_align_knowledge.contracts import (

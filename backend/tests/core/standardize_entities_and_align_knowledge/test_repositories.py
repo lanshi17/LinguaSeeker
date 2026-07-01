@@ -1,4 +1,5 @@
 """Tests for Phase 3 persistence repository helpers."""
+
 from __future__ import annotations
 
 import uuid
@@ -449,7 +450,9 @@ async def test_upsert_terminology_batch_deduplicates_alias_conflict_keys_for_cop
 
     await repo.upsert_terminology_batch(batch)
 
-    alias_copy = next(call for call in session.driver.copy_calls if call["table_name"].startswith("tmp_terminology_aliases"))
+    alias_copy = next(
+        call for call in session.driver.copy_calls if call["table_name"].startswith("tmp_terminology_aliases")
+    )
     assert len(alias_copy["records"]) == 1
 
 
@@ -494,8 +497,7 @@ async def test_upsert_terminology_batch_deduplicates_relationship_conflict_keys_
     await repo.upsert_terminology_batch(batch)
 
     relationship_copy = next(
-        call for call in session.driver.copy_calls
-        if call["table_name"].startswith("tmp_terminology_relationships")
+        call for call in session.driver.copy_calls if call["table_name"].startswith("tmp_terminology_relationships")
     )
     assert len(relationship_copy["records"]) == 1
 
@@ -835,7 +837,6 @@ async def test_upsert_normalized_entity_standardized_variant_keeps_clinvar_id() 
     assert normalized_entity.standardization_status == "standardized"
 
 
-
 class _CanonicalPayloadSession:
     """Session stub that returns staged NormalizedEntity rows on lookup.
 
@@ -863,15 +864,9 @@ class _CanonicalPayloadSession:
         for index, value in enumerate(self.added, start=1):
             if hasattr(value, "entity_id") and getattr(value, "entity_id", None) is None:
                 value.entity_id = uuid.UUID(int=index)  # type: ignore[attr-defined]
-            if (
-                hasattr(value, "run_evidence_item_id")
-                and getattr(value, "run_evidence_item_id", None) is None
-            ):
+            if hasattr(value, "run_evidence_item_id") and getattr(value, "run_evidence_item_id", None) is None:
                 value.run_evidence_item_id = uuid.UUID(int=index)  # type: ignore[attr-defined]
-            if (
-                hasattr(value, "canonical_evidence_id")
-                and getattr(value, "canonical_evidence_id", None) is None
-            ):
+            if hasattr(value, "canonical_evidence_id") and getattr(value, "canonical_evidence_id", None) is None:
                 value.canonical_evidence_id = uuid.UUID(int=index)  # type: ignore[attr-defined]
 
 
@@ -931,9 +926,7 @@ async def test_upsert_canonical_evidence_writes_variant_payload_keys() -> None:
     await repo.insert_run_evidence_items(input_data, (match,))
     await repo.upsert_canonical_evidence(input_data, (match,), (entity_id,))
 
-    canonical_rows = [
-        value for value in session.added if value.__class__.__name__ == "CanonicalEvidenceItem"
-    ]
+    canonical_rows = [value for value in session.added if value.__class__.__name__ == "CanonicalEvidenceItem"]
     assert len(canonical_rows) == 1
     payload = canonical_rows[0].active_payload
     assert payload["variant_id"] == "ClinVarVariation:4468"
@@ -957,9 +950,7 @@ async def test_upsert_canonical_evidence_writes_gene_payload_keys() -> None:
     await repo.insert_run_evidence_items(input_data, (match,))
     await repo.upsert_canonical_evidence(input_data, (match,), (entity_id,))
 
-    canonical_rows = [
-        value for value in session.added if value.__class__.__name__ == "CanonicalEvidenceItem"
-    ]
+    canonical_rows = [value for value in session.added if value.__class__.__name__ == "CanonicalEvidenceItem"]
     assert len(canonical_rows) == 1
     payload = canonical_rows[0].active_payload
     assert payload["variant_id"] is None
@@ -1042,9 +1033,7 @@ async def test_upsert_canonical_evidence_matches_existing_uuid_document_id() -> 
 
     await repo.upsert_canonical_evidence(input_data, (match,), (entity_id,))
 
-    canonical_rows = [
-        value for value in session.added if value.__class__.__name__ == "CanonicalEvidenceItem"
-    ]
+    canonical_rows = [value for value in session.added if value.__class__.__name__ == "CanonicalEvidenceItem"]
     assert canonical_rows == []
     assert existing_item.current_best_run_evidence_id == run_row.run_evidence_item_id
     assert existing_item.current_best_status == "found"
@@ -1197,15 +1186,29 @@ class TestBuildRunItemSpecsGeneVariantGate:
 
     def test_persists_items_from_complete_gene_variant_groups(self) -> None:
         repo = StandardizationRepository(FakeSession())
-        input_data = self._make_input({
-            "original": {
-                "track": "original",
-                "evidence_items": [
-                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found", "value": "BRCA1", "confidence": 0.9},
-                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "found", "value": "p.L34V", "confidence": 0.9},
-                ],
-            },
-        })
+        input_data = self._make_input(
+            {
+                "original": {
+                    "track": "original",
+                    "evidence_items": [
+                        {
+                            "field_id": "A.gene_symbol",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "BRCA1",
+                            "confidence": 0.9,
+                        },
+                        {
+                            "field_id": "A.variant_hgvs_p",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "p.L34V",
+                            "confidence": 0.9,
+                        },
+                    ],
+                },
+            }
+        )
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
@@ -1215,15 +1218,29 @@ class TestBuildRunItemSpecsGeneVariantGate:
     def test_identity_fields_survive_gene_only_group(self) -> None:
         """Gene+disease without variant: identity fields persist, not dropped."""
         repo = StandardizationRepository(FakeSession())
-        input_data = self._make_input({
-            "original": {
-                "track": "original",
-                "evidence_items": [
-                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found", "value": "BRCA1", "confidence": 0.9},
-                    {"field_id": "B.disease_diagnosis", "group_id": "g1", "status": "found", "value": "Breast cancer", "confidence": 0.9},
-                ],
-            },
-        })
+        input_data = self._make_input(
+            {
+                "original": {
+                    "track": "original",
+                    "evidence_items": [
+                        {
+                            "field_id": "A.gene_symbol",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "BRCA1",
+                            "confidence": 0.9,
+                        },
+                        {
+                            "field_id": "B.disease_diagnosis",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "Breast cancer",
+                            "confidence": 0.9,
+                        },
+                    ],
+                },
+            }
+        )
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
@@ -1234,30 +1251,50 @@ class TestBuildRunItemSpecsGeneVariantGate:
     def test_gene_disease_relationship_survives_identity_only_group(self) -> None:
         """Approved relationship evidence should persist even if variant anchors are absent."""
         repo = StandardizationRepository(FakeSession())
-        input_data = self._make_input({
-            "reconciled": {
-                "track": "reconciled",
-                "evidence_items": [
-                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found", "value": "MTM1", "confidence": 0.95},
-                    {
-                        "field_id": "A.gene_disease_relationship",
-                        "group_id": "g1",
-                        "status": "found",
-                        "value": "causative",
-                        "confidence": 0.95,
-                    },
-                    {
-                        "field_id": "B.disease_diagnosis",
-                        "group_id": "g1",
-                        "status": "found",
-                        "value": "X-linked myotubular myopathy",
-                        "confidence": 0.95,
-                    },
-                    {"field_id": "A.variant_hgvs_c", "group_id": "g1", "status": "not_found", "value": None, "confidence": 0.0},
-                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "not_found", "value": None, "confidence": 0.0},
-                ],
-            },
-        })
+        input_data = self._make_input(
+            {
+                "reconciled": {
+                    "track": "reconciled",
+                    "evidence_items": [
+                        {
+                            "field_id": "A.gene_symbol",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "MTM1",
+                            "confidence": 0.95,
+                        },
+                        {
+                            "field_id": "A.gene_disease_relationship",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "causative",
+                            "confidence": 0.95,
+                        },
+                        {
+                            "field_id": "B.disease_diagnosis",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "X-linked myotubular myopathy",
+                            "confidence": 0.95,
+                        },
+                        {
+                            "field_id": "A.variant_hgvs_c",
+                            "group_id": "g1",
+                            "status": "not_found",
+                            "value": None,
+                            "confidence": 0.0,
+                        },
+                        {
+                            "field_id": "A.variant_hgvs_p",
+                            "group_id": "g1",
+                            "status": "not_found",
+                            "value": None,
+                            "confidence": 0.0,
+                        },
+                    ],
+                },
+            }
+        )
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
@@ -1269,31 +1306,33 @@ class TestBuildRunItemSpecsGeneVariantGate:
 
     def test_translation_traceback_raw_source_is_embedded_in_source_span(self) -> None:
         repo = StandardizationRepository(FakeSession())
-        input_data = self._make_input({
-            "reconciled": {
-                "track": "reconciled",
-                "evidence_items": [
-                    {
-                        "field_id": "B.disease_diagnosis",
-                        "group_id": "g1",
-                        "status": "found",
-                        "value": "interstitial lung disease due to ABCA3 deficiency",
-                        "confidence": 0.82,
-                        "source": {
-                            "text_snippet": "interstitial lung disease due to ABCA3 deficiency",
-                            "start_offset": 10,
-                            "end_offset": 61,
-                        },
-                        "raw_source": {
-                            "text_snippet": "ABCA3缺陷引起的间质性肺病",
-                            "start_offset": 5,
-                            "end_offset": 21,
-                            "context_ref": "Results | translation_traceback:c_0001",
-                        },
-                    }
-                ],
-            },
-        })
+        input_data = self._make_input(
+            {
+                "reconciled": {
+                    "track": "reconciled",
+                    "evidence_items": [
+                        {
+                            "field_id": "B.disease_diagnosis",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "interstitial lung disease due to ABCA3 deficiency",
+                            "confidence": 0.82,
+                            "source": {
+                                "text_snippet": "interstitial lung disease due to ABCA3 deficiency",
+                                "start_offset": 10,
+                                "end_offset": 61,
+                            },
+                            "raw_source": {
+                                "text_snippet": "ABCA3缺陷引起的间质性肺病",
+                                "start_offset": 5,
+                                "end_offset": 21,
+                                "context_ref": "Results | translation_traceback:c_0001",
+                            },
+                        }
+                    ],
+                },
+            }
+        )
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
@@ -1302,15 +1341,29 @@ class TestBuildRunItemSpecsGeneVariantGate:
 
     def test_filters_out_variant_only_group(self) -> None:
         repo = StandardizationRepository(FakeSession())
-        input_data = self._make_input({
-            "original": {
-                "track": "original",
-                "evidence_items": [
-                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "found", "value": "p.L34V", "confidence": 0.9},
-                    {"field_id": "D.allele_frequency", "group_id": "g1", "status": "found", "value": 0.001, "confidence": 0.8},
-                ],
-            },
-        })
+        input_data = self._make_input(
+            {
+                "original": {
+                    "track": "original",
+                    "evidence_items": [
+                        {
+                            "field_id": "A.variant_hgvs_p",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "p.L34V",
+                            "confidence": 0.9,
+                        },
+                        {
+                            "field_id": "D.allele_frequency",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": 0.001,
+                            "confidence": 0.8,
+                        },
+                    ],
+                },
+            }
+        )
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
@@ -1319,20 +1372,52 @@ class TestBuildRunItemSpecsGeneVariantGate:
     def test_mixed_groups_complete_and_identity_persisted(self) -> None:
         """Gene+variant group persists all; gene-only group persists identity fields."""
         repo = StandardizationRepository(FakeSession())
-        input_data = self._make_input({
-            "original": {
-                "track": "original",
-                "evidence_items": [
-                    # Complete group g1 (gene+variant)
-                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found", "value": "BRCA1", "confidence": 0.9},
-                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "found", "value": "p.L34V", "confidence": 0.9},
-                    {"field_id": "B.disease_diagnosis", "group_id": "g1", "status": "found", "value": "Breast cancer", "confidence": 0.9},
-                    # Identity-only group g2 (gene+disease, no variant)
-                    {"field_id": "A.gene_symbol", "group_id": "g2", "status": "found", "value": "TP53", "confidence": 0.8},
-                    {"field_id": "B.disease_diagnosis", "group_id": "g2", "status": "found", "value": "Li-Fraumeni", "confidence": 0.8},
-                ],
-            },
-        })
+        input_data = self._make_input(
+            {
+                "original": {
+                    "track": "original",
+                    "evidence_items": [
+                        # Complete group g1 (gene+variant)
+                        {
+                            "field_id": "A.gene_symbol",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "BRCA1",
+                            "confidence": 0.9,
+                        },
+                        {
+                            "field_id": "A.variant_hgvs_p",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "p.L34V",
+                            "confidence": 0.9,
+                        },
+                        {
+                            "field_id": "B.disease_diagnosis",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "Breast cancer",
+                            "confidence": 0.9,
+                        },
+                        # Identity-only group g2 (gene+disease, no variant)
+                        {
+                            "field_id": "A.gene_symbol",
+                            "group_id": "g2",
+                            "status": "found",
+                            "value": "TP53",
+                            "confidence": 0.8,
+                        },
+                        {
+                            "field_id": "B.disease_diagnosis",
+                            "group_id": "g2",
+                            "status": "found",
+                            "value": "Li-Fraumeni",
+                            "confidence": 0.8,
+                        },
+                    ],
+                },
+            }
+        )
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
@@ -1346,14 +1431,22 @@ class TestBuildRunItemSpecsGeneVariantGate:
     def test_no_gate_when_no_groups_exist(self) -> None:
         """When there are no groups at all (no group_id items), gate is not applied."""
         repo = StandardizationRepository(FakeSession())
-        input_data = self._make_input({
-            "original": {
-                "track": "original",
-                "evidence_items": [
-                    {"field_id": "B.disease_diagnosis", "group_id": "", "status": "found", "value": "Cancer", "confidence": 0.9},
-                ],
-            },
-        })
+        input_data = self._make_input(
+            {
+                "original": {
+                    "track": "original",
+                    "evidence_items": [
+                        {
+                            "field_id": "B.disease_diagnosis",
+                            "group_id": "",
+                            "status": "found",
+                            "value": "Cancer",
+                            "confidence": 0.9,
+                        },
+                    ],
+                },
+            }
+        )
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
@@ -1389,15 +1482,29 @@ class TestBuildRunItemSpecsGeneVariantGate:
     def test_variant_only_group_still_blocked(self) -> None:
         """Group with only variant (no gene/disease anchor) is still blocked."""
         repo = StandardizationRepository(FakeSession())
-        input_data = self._make_input({
-            "original": {
-                "track": "original",
-                "evidence_items": [
-                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "found", "value": "p.L34V", "confidence": 0.7},
-                    {"field_id": "D.allele_frequency", "group_id": "g1", "status": "found", "value": 0.001, "confidence": 0.8},
-                ],
-            },
-        })
+        input_data = self._make_input(
+            {
+                "original": {
+                    "track": "original",
+                    "evidence_items": [
+                        {
+                            "field_id": "A.variant_hgvs_p",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "p.L34V",
+                            "confidence": 0.7,
+                        },
+                        {
+                            "field_id": "D.allele_frequency",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": 0.001,
+                            "confidence": 0.8,
+                        },
+                    ],
+                },
+            }
+        )
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
@@ -1407,20 +1514,22 @@ class TestBuildRunItemSpecsGeneVariantGate:
     def test_hgvs_identity_survives_structured_gene_group_id(self) -> None:
         """A grouped HGVS item with an encoded gene anchor is not variant-only noise."""
         repo = StandardizationRepository(FakeSession())
-        input_data = self._make_input({
-            "reconciled": {
-                "track": "reconciled",
-                "evidence_items": [
-                    {
-                        "field_id": "A.variant_hgvs_p",
-                        "group_id": "gene=MTM1|variant=p.R69C",
-                        "status": "found",
-                        "value": "p.R69C",
-                        "confidence": 0.45,
-                    },
-                ],
-            },
-        })
+        input_data = self._make_input(
+            {
+                "reconciled": {
+                    "track": "reconciled",
+                    "evidence_items": [
+                        {
+                            "field_id": "A.variant_hgvs_p",
+                            "group_id": "gene=MTM1|variant=p.R69C",
+                            "status": "found",
+                            "value": "p.R69C",
+                            "confidence": 0.45,
+                        },
+                    ],
+                },
+            }
+        )
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
@@ -1431,17 +1540,43 @@ class TestBuildRunItemSpecsGeneVariantGate:
     def test_variant_dependent_fields_blocked_in_identity_only_group(self) -> None:
         """Non-identity fields are blocked when group has no variant co-location."""
         repo = StandardizationRepository(FakeSession())
-        input_data = self._make_input({
-            "original": {
-                "track": "original",
-                "evidence_items": [
-                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found", "value": "MECP2", "confidence": 0.9},
-                    {"field_id": "B.disease_diagnosis", "group_id": "g1", "status": "found", "value": "Rett syndrome", "confidence": 0.9},
-                    {"field_id": "D.allele_frequency", "group_id": "g1", "status": "found", "value": 0.001, "confidence": 0.8},
-                    {"field_id": "C.segregation_cosegregation_with_disease", "group_id": "g1", "status": "found", "value": "yes", "confidence": 0.7},
-                ],
-            },
-        })
+        input_data = self._make_input(
+            {
+                "original": {
+                    "track": "original",
+                    "evidence_items": [
+                        {
+                            "field_id": "A.gene_symbol",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "MECP2",
+                            "confidence": 0.9,
+                        },
+                        {
+                            "field_id": "B.disease_diagnosis",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "Rett syndrome",
+                            "confidence": 0.9,
+                        },
+                        {
+                            "field_id": "D.allele_frequency",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": 0.001,
+                            "confidence": 0.8,
+                        },
+                        {
+                            "field_id": "C.segregation_cosegregation_with_disease",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "yes",
+                            "confidence": 0.7,
+                        },
+                    ],
+                },
+            }
+        )
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
@@ -1456,21 +1591,71 @@ class TestBuildRunItemSpecsGeneVariantGate:
         (gene, disease) survive via the identity gate.
         """
         repo = StandardizationRepository(FakeSession())
-        input_data = self._make_input({
-            "original": {
-                "track": "original",
-                "evidence_items": [
-                    {"field_id": "A.gene_symbol", "group_id": "g1", "status": "found", "value": "MECP2", "confidence": 0.9},
-                    {"field_id": "A.variant_hgvs_c", "group_id": "g1", "status": "not_found", "value": None, "confidence": 0.0},
-                    {"field_id": "A.variant_hgvs_p", "group_id": "g1", "status": "not_found", "value": None, "confidence": 0.0},
-                    {"field_id": "B.disease_diagnosis", "group_id": "g1", "status": "found", "value": "Rett syndrome", "confidence": 0.85},
-                    {"field_id": "B.clinical_phenotypes", "group_id": "g1", "status": "found", "value": "loss of purposeful hand skills", "confidence": 0.8},
-                    {"field_id": "B.sex", "group_id": "g1", "status": "found", "value": "Female", "confidence": 0.9},
-                    {"field_id": "B.age_of_onset", "group_id": "g1", "status": "not_found", "value": None, "confidence": 0.0},
-                    {"field_id": "B.mode_of_inheritance_reported", "group_id": "g1", "status": "found", "value": "X-linked dominant", "confidence": 0.7},
-                ],
-            },
-        })
+        input_data = self._make_input(
+            {
+                "original": {
+                    "track": "original",
+                    "evidence_items": [
+                        {
+                            "field_id": "A.gene_symbol",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "MECP2",
+                            "confidence": 0.9,
+                        },
+                        {
+                            "field_id": "A.variant_hgvs_c",
+                            "group_id": "g1",
+                            "status": "not_found",
+                            "value": None,
+                            "confidence": 0.0,
+                        },
+                        {
+                            "field_id": "A.variant_hgvs_p",
+                            "group_id": "g1",
+                            "status": "not_found",
+                            "value": None,
+                            "confidence": 0.0,
+                        },
+                        {
+                            "field_id": "B.disease_diagnosis",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "Rett syndrome",
+                            "confidence": 0.85,
+                        },
+                        {
+                            "field_id": "B.clinical_phenotypes",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "loss of purposeful hand skills",
+                            "confidence": 0.8,
+                        },
+                        {
+                            "field_id": "B.sex",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "Female",
+                            "confidence": 0.9,
+                        },
+                        {
+                            "field_id": "B.age_of_onset",
+                            "group_id": "g1",
+                            "status": "not_found",
+                            "value": None,
+                            "confidence": 0.0,
+                        },
+                        {
+                            "field_id": "B.mode_of_inheritance_reported",
+                            "group_id": "g1",
+                            "status": "found",
+                            "value": "X-linked dominant",
+                            "confidence": 0.7,
+                        },
+                    ],
+                },
+            }
+        )
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
@@ -1487,42 +1672,44 @@ class TestBuildRunItemSpecsGeneVariantGate:
     def test_gene_anchored_groups_keep_review_ready_fields_without_variant_colocation(self) -> None:
         """Source-backed review-ready fields should survive the identity gate."""
         repo = StandardizationRepository(FakeSession())
-        input_data = self._make_input({
-            "reconciled": {
-                "track": "reconciled",
-                "evidence_items": [
-                    {
-                        "field_id": "A.gene_symbol",
-                        "group_id": "gene=GBA|variant=__missing__",
-                        "status": "found",
-                        "value": "GBA",
-                        "confidence": 0.95,
-                    },
-                    {
-                        "field_id": "A.variant_type",
-                        "group_id": "gene=GBA|variant=__missing__",
-                        "status": "found",
-                        "value": "missense",
-                        "confidence": 0.7,
-                    },
-                    {
-                        "field_id": "J.clinvar_assertion",
-                        "group_id": "gene=GBA|variant=__missing__",
-                        "status": "found",
-                        "value": "Pathogenic (ACMG)",
-                        "confidence": 0.72,
-                        "source": {"text_snippet": "classified as Pathogenic under ACMG criteria"},
-                    },
-                    {
-                        "field_id": "B.case_count",
-                        "group_id": "gene=GBA|variant=__missing__",
-                        "status": "found",
-                        "value": 517,
-                        "confidence": 0.8,
-                    },
-                ],
-            },
-        })
+        input_data = self._make_input(
+            {
+                "reconciled": {
+                    "track": "reconciled",
+                    "evidence_items": [
+                        {
+                            "field_id": "A.gene_symbol",
+                            "group_id": "gene=GBA|variant=__missing__",
+                            "status": "found",
+                            "value": "GBA",
+                            "confidence": 0.95,
+                        },
+                        {
+                            "field_id": "A.variant_type",
+                            "group_id": "gene=GBA|variant=__missing__",
+                            "status": "found",
+                            "value": "missense",
+                            "confidence": 0.7,
+                        },
+                        {
+                            "field_id": "J.clinvar_assertion",
+                            "group_id": "gene=GBA|variant=__missing__",
+                            "status": "found",
+                            "value": "Pathogenic (ACMG)",
+                            "confidence": 0.72,
+                            "source": {"text_snippet": "classified as Pathogenic under ACMG criteria"},
+                        },
+                        {
+                            "field_id": "B.case_count",
+                            "group_id": "gene=GBA|variant=__missing__",
+                            "status": "found",
+                            "value": 517,
+                            "confidence": 0.8,
+                        },
+                    ],
+                },
+            }
+        )
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
@@ -1534,34 +1721,36 @@ class TestBuildRunItemSpecsGeneVariantGate:
     def test_clinvar_assertion_without_authority_is_review_only(self) -> None:
         """Unanchored article classifications should not enter DB-ready as found ClinVar assertions."""
         repo = StandardizationRepository(FakeSession())
-        input_data = self._make_input({
-            "reconciled": {
-                "track": "reconciled",
-                "evidence_items": [
-                    {
-                        "field_id": "A.gene_symbol",
-                        "group_id": "gene=ACADVL|variant=c.848T>C;c.1844G>A",
-                        "status": "found",
-                        "value": "ACADVL",
-                        "confidence": 0.95,
-                    },
-                    {
-                        "field_id": "J.clinvar_assertion",
-                        "group_id": "gene=ACADVL|variant=c.848T>C;c.1844G>A",
-                        "status": "found",
-                        "value": "likely benign (for c.1844G>A, p.(Arg615Gln))",
-                        "confidence": 0.45,
-                        "source": {
-                            "text_snippet": (
-                                "The variant c.1844G>A, p.(Arg615Gln) found in patient number 10 "
-                                "was reclassified as likely benign."
-                            ),
+        input_data = self._make_input(
+            {
+                "reconciled": {
+                    "track": "reconciled",
+                    "evidence_items": [
+                        {
+                            "field_id": "A.gene_symbol",
+                            "group_id": "gene=ACADVL|variant=c.848T>C;c.1844G>A",
+                            "status": "found",
+                            "value": "ACADVL",
+                            "confidence": 0.95,
                         },
-                        "notes": "classification mentioned; not explicitly tied to ClinVar",
-                    },
-                ],
-            },
-        })
+                        {
+                            "field_id": "J.clinvar_assertion",
+                            "group_id": "gene=ACADVL|variant=c.848T>C;c.1844G>A",
+                            "status": "found",
+                            "value": "likely benign (for c.1844G>A, p.(Arg615Gln))",
+                            "confidence": 0.45,
+                            "source": {
+                                "text_snippet": (
+                                    "The variant c.1844G>A, p.(Arg615Gln) found in patient number 10 "
+                                    "was reclassified as likely benign."
+                                ),
+                            },
+                            "notes": "classification mentioned; not explicitly tied to ClinVar",
+                        },
+                    ],
+                },
+            }
+        )
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 
@@ -1572,28 +1761,30 @@ class TestBuildRunItemSpecsGeneVariantGate:
     def test_clinvar_assertion_with_acmg_authority_stays_found(self) -> None:
         """ACMG-backed assertions remain DB-ready even without target-variant injection."""
         repo = StandardizationRepository(FakeSession())
-        input_data = self._make_input({
-            "reconciled": {
-                "track": "reconciled",
-                "evidence_items": [
-                    {
-                        "field_id": "A.gene_symbol",
-                        "group_id": "gene=MECP2|variant=c.799_800insAGGAAGC",
-                        "status": "found",
-                        "value": "MECP2",
-                        "confidence": 0.95,
-                    },
-                    {
-                        "field_id": "J.clinvar_assertion",
-                        "group_id": "gene=MECP2|variant=c.799_800insAGGAAGC",
-                        "status": "found",
-                        "value": "Pathogenic",
-                        "confidence": 0.9,
-                        "source": {"text_snippet": "determined to be pathogenic (PVS1 + PM2 + PM6)"},
-                    },
-                ],
-            },
-        })
+        input_data = self._make_input(
+            {
+                "reconciled": {
+                    "track": "reconciled",
+                    "evidence_items": [
+                        {
+                            "field_id": "A.gene_symbol",
+                            "group_id": "gene=MECP2|variant=c.799_800insAGGAAGC",
+                            "status": "found",
+                            "value": "MECP2",
+                            "confidence": 0.95,
+                        },
+                        {
+                            "field_id": "J.clinvar_assertion",
+                            "group_id": "gene=MECP2|variant=c.799_800insAGGAAGC",
+                            "status": "found",
+                            "value": "Pathogenic",
+                            "confidence": 0.9,
+                            "source": {"text_snippet": "determined to be pathogenic (PVS1 + PM2 + PM6)"},
+                        },
+                    ],
+                },
+            }
+        )
 
         specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
 

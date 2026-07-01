@@ -1,4 +1,5 @@
 """Tests for terminology embedding index building."""
+
 from __future__ import annotations
 
 import pytest
@@ -100,10 +101,7 @@ async def test_embedding_indexer_can_filter_entity_types_and_sources() -> None:
 @pytest.mark.asyncio
 async def test_embedding_indexer_chunks_large_delete_sets() -> None:
     """Embedding rebuild should chunk stale-row deletes to stay under asyncpg argument limits."""
-    rows = [
-        FakeEntry(f"e{i}", "disease", "OMIM", f"Disease {i}", f"OMIM:{i}")
-        for i in range(40000)
-    ]
+    rows = [FakeEntry(f"e{i}", "disease", "OMIM", f"Disease {i}", f"OMIM:{i}") for i in range(40000)]
     session = FakeSession(rows)
     indexer = TerminologyEmbeddingIndexer(session, FakeEmbeddingProvider())
 
@@ -114,7 +112,9 @@ async def test_embedding_indexer_chunks_large_delete_sets() -> None:
         source_dbs={"OMIM"},
     )
 
-    delete_statements = [statement for statement in session.statements if "DELETE FROM terminology_embeddings" in str(statement)]
+    delete_statements = [
+        statement for statement in session.statements if "DELETE FROM terminology_embeddings" in str(statement)
+    ]
     assert len(delete_statements) >= 2
 
 
@@ -136,6 +136,7 @@ async def test_embedding_indexer_commits_each_embedding_batch_when_session_suppo
 
     assert count == 3
     assert session.commit_calls == 2
+
 
 @pytest.mark.asyncio
 async def test_embedding_indexer_insert_uses_on_conflict_do_update_for_idempotency() -> None:
@@ -162,4 +163,3 @@ async def test_embedding_indexer_insert_uses_on_conflict_do_update_for_idempoten
     assert stmt._post_values_clause is not None, (
         "pg_insert must use on_conflict_do_update to ensure idempotent rebuilds"
     )
-

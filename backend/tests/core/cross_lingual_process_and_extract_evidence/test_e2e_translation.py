@@ -7,6 +7,7 @@ Catches three classes of regression:
 
 Uses real parsed data from: backend/downloads/zh/法布雷病1例.pdf
 """
+
 from __future__ import annotations
 
 import json
@@ -109,10 +110,7 @@ def mock_ctx():
 
 def _make_blocks(texts: list[str], page_idx: int = 0) -> list[ContentBlock]:
     """Create text ContentBlocks from a list of strings."""
-    return [
-        ContentBlock(type="text", text=t, page_idx=page_idx)
-        for t in texts
-    ]
+    return [ContentBlock(type="text", text=t, page_idx=page_idx) for t in texts]
 
 
 def _make_doc(
@@ -169,9 +167,16 @@ class TestRedactedMislabeling:
     def test_adjacent_all_heading_words(self):
         """All common section headings must be cleaned of adjacent [REDACTED]."""
         headings = [
-            "References", "Abstract", "Introduction", "Background",
-            "Methods", "Results", "Discussion", "Conclusion",
-            "Acknowledgments", "Keywords",
+            "References",
+            "Abstract",
+            "Introduction",
+            "Background",
+            "Methods",
+            "Results",
+            "Discussion",
+            "Conclusion",
+            "Acknowledgments",
+            "Keywords",
         ]
         for h in headings:
             after = f"{h} [REDACTED]"
@@ -200,10 +205,7 @@ class TestRedactedMislabeling:
 
     def test_pipeline_strips_false_redacted_from_references(self):
         """run_pipeline output must not contain Re[REDACTED]ferences."""
-        translated = (
-            "## Re[REDACTED]ferences\n\n1. Smith et al. 2020\n"
-            "2. Ab[REDACTED]stract of Jones et al. 2021"
-        )
+        translated = "## Re[REDACTED]ferences\n\n1. Smith et al. 2020\n2. Ab[REDACTED]stract of Jones et al. 2021"
         # Simulate post-processing applied in run_pipeline
         result = fix_word_boundary_redacted(translated)
         assert "References" in result
@@ -260,21 +262,16 @@ class TestDocumentBoundary:
         """Multiple blocks must be cleanly separated."""
         blocks = []
         for i in range(5):
-            blocks.append(
-                f"[BLOCK_{i+1}] Document {i+1} unique content "
-                f"with identifier DOC{i+1}_MARKER"
-            )
+            blocks.append(f"[BLOCK_{i + 1}] Document {i + 1} unique content with identifier DOC{i + 1}_MARKER")
         marked = "\n\n".join(blocks)
         parts = split_by_markers(marked, 5)
         assert len(parts) == 5
         for i, part in enumerate(parts):
-            assert f"DOC{i+1}_MARKER" in part
+            assert f"DOC{i + 1}_MARKER" in part
             # Each block must NOT contain other blocks' identifiers
             for j in range(5):
                 if j != i:
-                    assert f"DOC{j+1}_MARKER" not in part, (
-                        f"Block {i+1} contains content from block {j+1}"
-                    )
+                    assert f"DOC{j + 1}_MARKER" not in part, f"Block {i + 1} contains content from block {j + 1}"
 
     def test_build_translated_blocks_delimiter_isolation(self):
         """Translated blocks joined by delimiter must split back cleanly."""
@@ -291,7 +288,10 @@ class TestDocumentBoundary:
             f"Fabry disease is an X-linked inherited disorder"
         )
         result = build_translated_blocks(
-            original, [], translated, text_block_indices=[0, 1, 2, 3],
+            original,
+            [],
+            translated,
+            text_block_indices=[0, 1, 2, 3],
         )
         assert len(result) == 4
         assert "Fabry Disease" in result[0].text
@@ -309,26 +309,26 @@ class TestDocumentBoundary:
             ContentBlock(type="title", text="法布雷病1例", page_idx=0),
             ContentBlock(type="text", text="患者携带GLA基因变异", page_idx=0),
         ]
-        doc1_translated = (
-            f"A Case of Fabry Disease{self.SEP}"
-            f"The patient carried a GLA gene variant"
-        )
+        doc1_translated = f"A Case of Fabry Disease{self.SEP}The patient carried a GLA gene variant"
 
         # Document 2: PKU case
         doc2_blocks = [
             ContentBlock(type="title", text="苯丙酮尿症1例", page_idx=0),
             ContentBlock(type="text", text="患者携带PAH基因变异", page_idx=0),
         ]
-        doc2_translated = (
-            f"A Case of Phenylketonuria{self.SEP}"
-            f"The patient carried a PAH gene variant"
-        )
+        doc2_translated = f"A Case of Phenylketonuria{self.SEP}The patient carried a PAH gene variant"
 
         result1 = build_translated_blocks(
-            doc1_blocks, [], doc1_translated, text_block_indices=[0, 1],
+            doc1_blocks,
+            [],
+            doc1_translated,
+            text_block_indices=[0, 1],
         )
         result2 = build_translated_blocks(
-            doc2_blocks, [], doc2_translated, text_block_indices=[0, 1],
+            doc2_blocks,
+            [],
+            doc2_translated,
+            text_block_indices=[0, 1],
         )
 
         # Doc 1 must not contain Doc 2 content
@@ -342,9 +342,7 @@ class TestDocumentBoundary:
         """_join_blocks_with_markers must assign sequential [BLOCK_N] markers."""
         blocks = _make_blocks(["Title A", "Body A", "Title B", "Body B"])
         non_empty = list(enumerate(blocks))
-        marked, indices, prefixes, overrides = (
-            join_blocks_with_markers(non_empty)
-        )
+        marked, indices, prefixes, overrides = join_blocks_with_markers(non_empty)
         assert "[BLOCK_1]" in marked
         assert "[BLOCK_2]" in marked
         assert "[BLOCK_3]" in marked
@@ -361,6 +359,7 @@ class TestDocumentBoundary:
         from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.format.segmenter import (
             segment_text,
         )
+
         # Two paragraphs that are distinct documents
         doc1 = "法布雷病是一种罕见的X连锁遗传病。患者通常在儿童期或青春期出现症状。"
         doc2 = "苯丙酮尿症是一种常染色体隐性遗传病。患者需要终身饮食管理。"
@@ -391,14 +390,14 @@ class TestProductNamePreservation:
 
     # Names that LLMs commonly "correct"
     FRAGILE_NAMES = [
-        "pET156",       # LLM "corrects" to pET15b
-        "CondonPlus",   # LLM "corrects" to CodonPlus
-        "pUC118",       # may get changed to pUC18
-        "BL21(DE3)",    # strain designation
-        "Rosetta-gami", # may get hyphenated differently
-        "pcDNA3.1+",    # may get simplified
-        "pGEM-T",       # may get changed
-        "Top10",        # may get changed to TOP10
+        "pET156",  # LLM "corrects" to pET15b
+        "CondonPlus",  # LLM "corrects" to CodonPlus
+        "pUC118",  # may get changed to pUC18
+        "BL21(DE3)",  # strain designation
+        "Rosetta-gami",  # may get hyphenated differently
+        "pcDNA3.1+",  # may get simplified
+        "pGEM-T",  # may get changed
+        "Top10",  # may get changed to TOP10
     ]
 
     def test_product_names_in_prompt_rules(self):
@@ -408,6 +407,7 @@ class TestProductNamePreservation:
             get_full_document_translate_prompt,
             get_self_review_prompt,
         )
+
         prompt = get_translate_prompt("test", "")
         full_prompt = get_full_document_translate_prompt("test", "")
         review_prompt = get_self_review_prompt("source", "translated")
@@ -416,9 +416,7 @@ class TestProductNamePreservation:
         for p in [prompt, full_prompt, review_prompt]:
             assert "pET156" in p, "Product name preservation rule missing"
             assert "CondonPlus" in p, "Product name preservation rule missing"
-            assert "silently" in p.lower() or "silent" in p.lower(), (
-                "Silent correction warning missing"
-            )
+            assert "silently" in p.lower() or "silent" in p.lower(), "Silent correction warning missing"
 
     def test_product_names_survive_post_processing(self):
         """Post-processing functions must not alter product names."""
@@ -433,9 +431,7 @@ class TestProductNamePreservation:
             result = fix_email_placeholder(result)
             result = fix_ocr_truncations(result)
             result = fix_word_boundary_redacted(result)
-            assert name in result, (
-                f"Post-processing changed product name '{name}' → '{result}'"
-            )
+            assert name in result, f"Post-processing changed product name '{name}' → '{result}'"
 
     def test_product_names_in_terminology_map(self):
         """Product names must not be filtered by _parse_terminology."""
@@ -451,6 +447,7 @@ class TestProductNamePreservation:
         from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.prompts import (
             get_full_document_translate_prompt,
         )
+
         prompt = get_full_document_translate_prompt("test content", "terms")
         # Must contain explicit preservation rule
         assert "catalog numbers" in prompt.lower() or "accession" in prompt.lower()
@@ -461,6 +458,7 @@ class TestProductNamePreservation:
         from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.prompts import (
             get_self_review_prompt,
         )
+
         prompt = get_self_review_prompt("source", "translated")
         # Must instruct to revert silent corrections
         assert "pET15b" in prompt, "Self-review must mention reverted name pET15b"
@@ -478,10 +476,12 @@ class TestPipelineRegression:
 
     def _mock_invoke_factory(self, response_text: str):
         """Create a mock LLM that returns fixed text."""
+
         def mock_invoke(*args, **kwargs):
             mock_response = MagicMock()
             mock_response.content = response_text
             return mock_response
+
         return mock_invoke
 
     def test_translated_blocks_no_redacted_in_english_headings(self):
@@ -518,20 +518,20 @@ class TestPipelineRegression:
         ]
 
         # Simulate correct LLM output (no cross-contamination)
-        art1_translated = (
-            f"A Case of Fabry Disease{sep}"
-            f"The patient carried a GLA gene variant c.644A>G"
-        )
-        art2_translated = (
-            f"Family Analysis of Phenylketonuria{sep}"
-            f"The proband carried a PAH gene c.1222C>T"
-        )
+        art1_translated = f"A Case of Fabry Disease{sep}The patient carried a GLA gene variant c.644A>G"
+        art2_translated = f"Family Analysis of Phenylketonuria{sep}The proband carried a PAH gene c.1222C>T"
 
         result1 = build_translated_blocks(
-            art1, [], art1_translated, text_block_indices=[0, 1],
+            art1,
+            [],
+            art1_translated,
+            text_block_indices=[0, 1],
         )
         result2 = build_translated_blocks(
-            art2, [], art2_translated, text_block_indices=[0, 1],
+            art2,
+            [],
+            art2_translated,
+            text_block_indices=[0, 1],
         )
 
         # Verify isolation
@@ -552,7 +552,10 @@ class TestPipelineRegression:
         # Simulate LLM that does NOT change names (correct behavior)
         correct_output = "The target protein was expressed using pET156 vector in CondonPlus host strain."
         result = build_translated_blocks(
-            source_blocks, [], correct_output, text_block_indices=[0],
+            source_blocks,
+            [],
+            correct_output,
+            text_block_indices=[0],
         )
         assert "pET156" in result[0].text
         assert "CondonPlus" in result[0].text
@@ -562,6 +565,7 @@ class TestPipelineRegression:
         from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.prompts import (
             get_self_review_prompt,
         )
+
         source = "使用pET156载体在CondonPlus宿主菌中表达。"
         # Simulate LLM that silently "corrected" names
         bad_translation = "The protein was expressed using pET15b vector in CodonPlus host strain."
@@ -607,13 +611,9 @@ class TestRealDataFabryPdf:
         """The PDF must parse into two distinct articles."""
         art1, art2 = _load_real_blocks()
         # Article 1: Fabry disease
-        assert any("法布雷病" in b.text for b in art1), (
-            "Article 1 should mention Fabry disease"
-        )
+        assert any("法布雷病" in b.text for b in art1), "Article 1 should mention Fabry disease"
         # Article 2: NR0B1/DAX-1 adrenal hypoplasia
-        assert any("NR0B1" in b.text or "DAX" in b.text for b in art2), (
-            "Article 2 should mention NR0B1/DAX-1"
-        )
+        assert any("NR0B1" in b.text or "DAX" in b.text for b in art2), "Article 2 should mention NR0B1/DAX-1"
 
     def test_article1_content_isolation(self):
         """Article 1 translated blocks must not contain Article 2 content."""
@@ -622,9 +622,7 @@ class TestRealDataFabryPdf:
         # Fabry article must not contain DAX-1 content
         art1_text = " ".join(b.text for b in art1_tr)
         assert "DAX-1" not in art1_text, "Article 1 contaminated with DAX-1"
-        assert "adrenal hypoplasia" not in art1_text.lower(), (
-            "Article 1 contaminated with adrenal hypoplasia"
-        )
+        assert "adrenal hypoplasia" not in art1_text.lower(), "Article 1 contaminated with adrenal hypoplasia"
 
     def test_article2_content_isolation(self):
         """Article 2 translated blocks must not contain Article 1 content."""
@@ -649,9 +647,7 @@ class TestRealDataFabryPdf:
         for block in art1_tr:
             text = block.text
             # No [REDACTED] inside English words
-            assert "Re[REDACTED]" not in text, (
-                f"Mid-word [REDACTED] in block: {text[:80]}"
-            )
+            assert "Re[REDACTED]" not in text, f"Mid-word [REDACTED] in block: {text[:80]}"
 
         # Check for the known bug: "References [REDACTED]" in stored output
         # This should be caught by fix_word_boundary_redacted when applied
@@ -671,17 +667,15 @@ class TestRealDataFabryPdf:
 
         # Key terms from the Fabry disease article
         expected_terms = [
-            "GLA",           # gene name
-            "Fabry",         # disease name
-            "p.R227X",       # mutation notation
-            "galactosidase", # enzyme name (may be α-galactosidase or alpha-galactosidase)
-            "141",           # serum creatinine value
-            "204.9",         # troponin I value
+            "GLA",  # gene name
+            "Fabry",  # disease name
+            "p.R227X",  # mutation notation
+            "galactosidase",  # enzyme name (may be α-galactosidase or alpha-galactosidase)
+            "141",  # serum creatinine value
+            "204.9",  # troponin I value
         ]
         for term in expected_terms:
-            assert term in art1_text, (
-                f"Medical term '{term}' missing from translated Article 1"
-            )
+            assert term in art1_text, f"Medical term '{term}' missing from translated Article 1"
 
     def test_article1_preserves_numeric_values(self):
         """Numeric lab values must not be altered or redacted."""
@@ -701,10 +695,7 @@ class TestRealDataFabryPdf:
         art1_tr, _ = _load_translated_blocks()
 
         # Find the author block
-        author_blocks = [
-            b for b in art1_tr
-            if "Zhang" in b.text and "Jiang" in b.text
-        ]
+        author_blocks = [b for b in art1_tr if "Zhang" in b.text and "Jiang" in b.text]
         assert len(author_blocks) >= 1, "Author names (Zhang, Jiang) not found"
         author_text = author_blocks[0].text
         assert "Shao" in author_text, "Author 'Shao' missing"
@@ -737,12 +728,13 @@ class TestRealDataFabryPdf:
         art1_tr, art2_tr = _load_translated_blocks()
 
         prompt_markers = [
-            "SYSTEM PROMPT", "CRITICAL RULES", "TERMINOLOGY STAGE",
-            "TRANSLATE_STAGE", "Bilingual Terminology Map",
+            "SYSTEM PROMPT",
+            "CRITICAL RULES",
+            "TERMINOLOGY STAGE",
+            "TRANSLATE_STAGE",
+            "Bilingual Terminology Map",
             "Preservation Rules",
         ]
         for block in art1_tr + art2_tr:
             for marker in prompt_markers:
-                assert marker not in block.text, (
-                    f"Prompt artifact '{marker}' found in: {block.text[:80]}"
-                )
+                assert marker not in block.text, f"Prompt artifact '{marker}' found in: {block.text[:80]}"

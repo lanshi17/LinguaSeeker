@@ -7,6 +7,7 @@ Usage:
     uv run python scripts/e2e_extract_evidence.py --input-dir output/zh/法布雷病1例
     uv run python scripts/e2e_extract_evidence.py --output-dir output/extract_evidence
 """
+
 from __future__ import annotations
 
 import argparse
@@ -36,11 +37,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 LEGACY_FABRY_INPUT_DIR = BACKEND_DIR / "output" / "zh" / "法布雷病1例"
 CROSS_LINGUAL_FABRY_INPUT_DIR = BACKEND_DIR / "output" / "cross_lingual" / "zh" / "法布雷病1例"
-DEFAULT_INPUT_DIR = (
-    LEGACY_FABRY_INPUT_DIR
-    if LEGACY_FABRY_INPUT_DIR.exists()
-    else CROSS_LINGUAL_FABRY_INPUT_DIR
-)
+DEFAULT_INPUT_DIR = LEGACY_FABRY_INPUT_DIR if LEGACY_FABRY_INPUT_DIR.exists() else CROSS_LINGUAL_FABRY_INPUT_DIR
 DEFAULT_OUTPUT_DIR = BACKEND_DIR / "output" / "extract_evidence"
 
 
@@ -123,20 +120,14 @@ def _track_summary(result: EvidenceExtractionResult) -> dict[str, Any]:
     if report is None:
         found_count = sum(1 for item in result.evidence_items if item.status == EvidenceStatus.FOUND)
         not_found_count = sum(1 for item in result.evidence_items if item.status == EvidenceStatus.NOT_FOUND)
-        source_invalid_count = sum(
-            1 for item in result.evidence_items
-            if item.status == EvidenceStatus.SOURCE_INVALID
-        )
-        ocr_gap_count = sum(
-            1 for item in result.evidence_items
-            if item.status == EvidenceStatus.OCR_GAP
-        )
+        source_invalid_count = sum(1 for item in result.evidence_items if item.status == EvidenceStatus.SOURCE_INVALID)
+        ocr_gap_count = sum(1 for item in result.evidence_items if item.status == EvidenceStatus.OCR_GAP)
         table_ungrounded_count = sum(
-            1 for item in result.evidence_items
-            if item.status == EvidenceStatus.TABLE_UNGROUNDED
+            1 for item in result.evidence_items if item.status == EvidenceStatus.TABLE_UNGROUNDED
         )
         ambiguous_count = sum(
-            1 for item in result.evidence_items
+            1
+            for item in result.evidence_items
             if item.source is not None and item.source.source_precision.value == "ambiguous"
         )
     else:
@@ -148,23 +139,16 @@ def _track_summary(result: EvidenceExtractionResult) -> dict[str, Any]:
         ambiguous_count = report.ambiguous_source_count
     group_ids = sorted({item.group_id for item in result.evidence_items if item.group_id})
     chain_levels: dict[str, int] = {}
-    case_ids = sorted({
-        case_id
-        for chain in result.evidence_chains
-        for case_id in chain.case_ids
-    })
-    special_evidence_ids = sorted({
-        special_id
-        for chain in result.evidence_chains
-        for special_id in chain.special_evidence_ids
-    })
+    case_ids = sorted({case_id for chain in result.evidence_chains for case_id in chain.case_ids})
+    special_evidence_ids = sorted(
+        {special_id for chain in result.evidence_chains for special_id in chain.special_evidence_ids}
+    )
     for chain in result.evidence_chains:
         chain_levels[chain.chain_level] = chain_levels.get(chain.chain_level, 0) + 1
     grounded_source_count = sum(1 for item in result.evidence_items if item.source is not None)
     raw_source_count = sum(1 for item in result.evidence_items if item.raw_source is not None)
     block_grounded_source_count = sum(
-        1 for item in result.evidence_items
-        if item.source is not None and item.source.block_index >= 0
+        1 for item in result.evidence_items if item.source is not None and item.source.block_index >= 0
     )
     source_precision_counts: dict[str, int] = {}
     for item in result.evidence_items:
@@ -172,16 +156,10 @@ def _track_summary(result: EvidenceExtractionResult) -> dict[str, Any]:
             continue
         precision = item.source.source_precision.value
         source_precision_counts[precision] = source_precision_counts.get(precision, 0) + 1
-    assigned_acmg_codes = sorted({
-        code
-        for item in result.evidence_items
-        for code in item.assigned_acmg_codes
-    })
-    assigned_clingen_modules = sorted({
-        module
-        for item in result.evidence_items
-        for module in item.assigned_clingen_modules
-    })
+    assigned_acmg_codes = sorted({code for item in result.evidence_items for code in item.assigned_acmg_codes})
+    assigned_clingen_modules = sorted(
+        {module for item in result.evidence_items for module in item.assigned_clingen_modules}
+    )
     return {
         "status": result.status.value,
         "track": result.track.value,

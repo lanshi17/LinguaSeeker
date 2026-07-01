@@ -1,4 +1,5 @@
 """Tests for Alembic async migration environment."""
+
 from __future__ import annotations
 
 import sys
@@ -61,7 +62,6 @@ def _load_embedding_revision_module():
     return module
 
 
-
 def _captured_created_table(table_name: str, monkeypatch) -> list[object]:
     """Capture columns and constraints passed to op.create_table for a table."""
     module = _load_initial_revision_module()
@@ -116,9 +116,7 @@ def test_env_py_imports_models_metadata() -> None:
     assert "from src.dao.postgresql.models import Base" in source, (
         "env.py must import Base from src.dao.postgresql.models"
     )
-    assert "target_metadata = Base.metadata" in source, (
-        "env.py must wire target_metadata to Base.metadata"
-    )
+    assert "target_metadata = Base.metadata" in source, "env.py must wire target_metadata to Base.metadata"
 
     # Verify the metadata contains the expected tables.
     from src.dao.postgresql.models import Base  # noqa: E402
@@ -126,9 +124,7 @@ def test_env_py_imports_models_metadata() -> None:
     metadata = Base.metadata
     assert "source_documents" in metadata.tables, "source_documents must be in metadata"
     assert "run_evidence_items" in metadata.tables, "run_evidence_items must be in metadata"
-    assert "canonical_evidence_items" in metadata.tables, (
-        "canonical_evidence_items must be in metadata"
-    )
+    assert "canonical_evidence_items" in metadata.tables, "canonical_evidence_items must be in metadata"
 
 
 def test_env_py_uses_async_migration() -> None:
@@ -140,9 +136,7 @@ def test_env_py_uses_async_migration() -> None:
     assert "target_metadata" in source, "env.py must reference target_metadata"
     assert "asyncio.run" in source, "env.py must use asyncio.run for async migrations"
     assert "run_sync" in source, "env.py must use connection.run_sync for migrations"
-    assert "create_async_engine" in source, (
-        "env.py must use create_async_engine for online mode"
-    )
+    assert "create_async_engine" in source, "env.py must use create_async_engine for online mode"
 
 
 # ── Revision chain ────────────────────────────────────────────────────────
@@ -268,12 +262,10 @@ def test_terminology_relationships_migration_defines_unique_identity_constraint(
 
     module.upgrade()
 
-    unique_constraints = [
-        item for item in captured
-        if isinstance(item, sa.UniqueConstraint)
-    ]
+    unique_constraints = [item for item in captured if isinstance(item, sa.UniqueConstraint)]
     assert any(
-        tuple(constraint.columns.keys() or getattr(constraint, "_pending_colargs", ())) == (
+        tuple(constraint.columns.keys() or getattr(constraint, "_pending_colargs", ()))
+        == (
             "subject_entry_id",
             "object_entry_id",
             "relationship_type",
@@ -349,13 +341,8 @@ def test_terminology_migration_relationship_identity_unique(monkeypatch) -> None
     monkeypatch.setattr(module.op, "f", lambda name: name)
     module.upgrade()
 
-    unique_constraints = [
-        item for item in captured if isinstance(item, sa.UniqueConstraint)
-    ]
-    assert any(
-        constraint.name == "uq_terminology_relationships_identity"
-        for constraint in unique_constraints
-    )
+    unique_constraints = [item for item in captured if isinstance(item, sa.UniqueConstraint)]
+    assert any(constraint.name == "uq_terminology_relationships_identity" for constraint in unique_constraints)
 
 
 def _load_variant_internal_id_revision_module():
@@ -397,8 +384,7 @@ def test_variant_internal_id_migration_creates_unique_index(monkeypatch) -> None
         and table == "normalized_entities"
         and cols == ["external_id"]
         and kwargs.get("unique") is True
-        and str(kwargs.get("postgresql_where"))
-        == "external_id LIKE 'internal:variant:%'"
+        and str(kwargs.get("postgresql_where")) == "external_id LIKE 'internal:variant:%'"
         for name, table, cols, kwargs in created
     )
 
@@ -417,10 +403,10 @@ def test_variant_internal_id_migration_downgrade_drops_index(monkeypatch) -> Non
     module.downgrade()
 
     assert any(
-        name == "uq_normalized_entities_variant_internal_id"
-        and kwargs.get("table_name") == "normalized_entities"
+        name == "uq_normalized_entities_variant_internal_id" and kwargs.get("table_name") == "normalized_entities"
         for name, kwargs in dropped
     )
+
 
 # ── Database-dependent tests (skip when PostgreSQL is unavailable) ─────────
 

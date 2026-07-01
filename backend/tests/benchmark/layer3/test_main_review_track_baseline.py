@@ -1,4 +1,5 @@
 """Tests for primary-extraction plus review-track baseline."""
+
 from __future__ import annotations
 
 from benchmark.analysis.baselines.main_review_track import (

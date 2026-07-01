@@ -139,10 +139,7 @@ def _candidate_keys(candidate: Dict[str, Any]) -> List[tuple[str, str]]:
     if doi:
         keys.append(("doi", doi))
     url = _clean_identifier(
-        candidate.get("url")
-        or candidate.get("detail_link")
-        or identifiers.get("url")
-        or identifiers.get("detail_link")
+        candidate.get("url") or candidate.get("detail_link") or identifiers.get("url") or identifiers.get("detail_link")
     )
     if url:
         keys.append(("url", url))
@@ -174,9 +171,7 @@ def _build_candidate_id(candidate: Dict[str, Any]) -> str:
         "url": candidate.get("url"),
         "title": candidate.get("title"),
     }
-    digest = hashlib.sha1(
-        json.dumps(identity, ensure_ascii=False, sort_keys=True).encode("utf-8")
-    ).hexdigest()
+    digest = hashlib.sha1(json.dumps(identity, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
     return f"cand-{digest[:12]}"
 
 
@@ -222,14 +217,9 @@ def rank_candidates(
         normalized_title = _normalize_title(candidate.get("title"))
         exact_title = int(bool(normalized_expected_title and normalized_title == normalized_expected_title))
         provider_match = int(
-            bool(
-                normalized_provider
-                and str(candidate.get("provider") or "").strip().lower() == normalized_provider
-            )
+            bool(normalized_provider and str(candidate.get("provider") or "").strip().lower() == normalized_provider)
         )
-        has_doi = int(
-            bool(_clean_identifier(candidate.get("doi") or (candidate.get("identifiers") or {}).get("doi")))
-        )
+        has_doi = int(bool(_clean_identifier(candidate.get("doi") or (candidate.get("identifiers") or {}).get("doi"))))
         year_str = str(candidate.get("year") or "")
         try:
             year = int(year_str)
@@ -270,20 +260,14 @@ async def search_multilingual(
         )
         items = normalize_items(result.provider, result.items) if result.success else []
         for item in items:
-            collected.append(
-                _normalize_candidate(item.model_dump(), plan_item)
-            )
+            collected.append(_normalize_candidate(item.model_dump(), plan_item))
 
         collected = dedupe_candidates(collected)
-        collected = rank_candidates(
-            collected, expected_title=target, preferred_provider=preferred_provider
-        )
+        collected = rank_candidates(collected, expected_title=target, preferred_provider=preferred_provider)
         if len(collected) >= candidate_limit:
             return collected[:candidate_limit]
 
-    return rank_candidates(
-        collected, expected_title=target, preferred_provider=preferred_provider
-    )[:candidate_limit]
+    return rank_candidates(collected, expected_title=target, preferred_provider=preferred_provider)[:candidate_limit]
 
 
 async def search_parallel(
@@ -314,11 +298,10 @@ async def search_parallel(
     for i, result in enumerate(results):
         if isinstance(result, Exception):
             from loguru import logger as _logger
+
             _logger.warning("Provider {} search failed: {}", plan[i]["provider"], result)
             continue
         collected.extend(result)
 
     collected = dedupe_candidates(collected)
-    return rank_candidates(
-        collected, expected_title=query, preferred_provider=preferred_provider
-    )[:candidate_limit]
+    return rank_candidates(collected, expected_title=query, preferred_provider=preferred_provider)[:candidate_limit]

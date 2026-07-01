@@ -47,21 +47,23 @@ def test_text_prompt_chunks_keep_short_text_single_chunk():
 
 
 def test_merge_evidence_maps_stable_deduplicates_terms():
-    merged = merge_evidence_maps([
-        DocumentEvidenceMap(
-            relevant=False,
-            disease_terms=["Fabry disease"],
-            gene_terms=["GLA"],
-            structure_hints=["Table 1"],
-        ),
-        DocumentEvidenceMap(
-            relevant=True,
-            disease_terms=["Fabry disease", "cardiomyopathy"],
-            gene_terms=["GLA", "BRCA1"],
-            variant_terms=["c.1000G>A"],
-            structure_hints=["Table 1", "Figure 2"],
-        ),
-    ])
+    merged = merge_evidence_maps(
+        [
+            DocumentEvidenceMap(
+                relevant=False,
+                disease_terms=["Fabry disease"],
+                gene_terms=["GLA"],
+                structure_hints=["Table 1"],
+            ),
+            DocumentEvidenceMap(
+                relevant=True,
+                disease_terms=["Fabry disease", "cardiomyopathy"],
+                gene_terms=["GLA", "BRCA1"],
+                variant_terms=["c.1000G>A"],
+                structure_hints=["Table 1", "Figure 2"],
+            ),
+        ]
+    )
 
     assert merged.relevant is True
     assert merged.disease_terms == ["Fabry disease", "cardiomyopathy"]

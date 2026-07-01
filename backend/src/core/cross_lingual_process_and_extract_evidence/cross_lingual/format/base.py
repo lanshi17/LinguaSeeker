@@ -1,4 +1,5 @@
 """Interface for document formatters — Clean Architecture boundary."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -15,5 +16,4 @@ class BaseFormatter(ABC):
         self,
         pages: List[Dict[str, Any]],
         content_blocks: List[Dict[str, Any]] | None = None,
-    ) -> FormattedDocument:
-        ...
+    ) -> FormattedDocument: ...

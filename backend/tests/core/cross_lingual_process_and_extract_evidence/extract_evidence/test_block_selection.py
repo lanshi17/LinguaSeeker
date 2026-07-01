@@ -29,8 +29,7 @@ def test_select_recall_first_blocks_always_keeps_target_gene_and_disease_block()
             ContentBlock(text="Background list of unrelated cholestasis disorders."),
             ContentBlock(
                 text=(
-                    "Biallelic pathogenic variants in ABCB4 cause progressive familial "
-                    "intrahepatic cholestasis type 3."
+                    "Biallelic pathogenic variants in ABCB4 cause progressive familial intrahepatic cholestasis type 3."
                 )
             ),
             ContentBlock(text="General discussion of liver disease."),
@@ -107,10 +106,7 @@ def test_select_recall_first_blocks_includes_neighbor_context_when_budget_allows
         [
             ContentBlock(text="The proband had neonatal cholestasis and elevated GGT."),
             ContentBlock(
-                text=(
-                    "Biallelic pathogenic ABCB4 changes cause progressive familial "
-                    "intrahepatic cholestasis type 3."
-                )
+                text=("Biallelic pathogenic ABCB4 changes cause progressive familial intrahepatic cholestasis type 3.")
             ),
             ContentBlock(text="Segregation analysis confirmed both parents were carriers."),
             ContentBlock(text="Unrelated references and acknowledgements."),
@@ -129,10 +125,7 @@ def test_select_recall_first_blocks_neighbor_expansion_respects_max_blocks() -> 
         [
             ContentBlock(text="The proband had neonatal cholestasis and elevated GGT."),
             ContentBlock(
-                text=(
-                    "Biallelic pathogenic ABCB4 changes cause progressive familial "
-                    "intrahepatic cholestasis type 3."
-                )
+                text=("Biallelic pathogenic ABCB4 changes cause progressive familial intrahepatic cholestasis type 3.")
             ),
             ContentBlock(text="Segregation analysis confirmed both parents were carriers."),
         ]
@@ -149,10 +142,7 @@ def test_select_recall_first_blocks_prefers_target_neighbor_over_unrelated_score
         [
             ContentBlock(text="The proband had neonatal cholestasis and elevated GGT."),
             ContentBlock(
-                text=(
-                    "Biallelic pathogenic ABCB4 changes cause progressive familial "
-                    "intrahepatic cholestasis type 3."
-                )
+                text=("Biallelic pathogenic ABCB4 changes cause progressive familial intrahepatic cholestasis type 3.")
             ),
             ContentBlock(text="An unrelated BRCA1 variant was discussed in the methods."),
         ]

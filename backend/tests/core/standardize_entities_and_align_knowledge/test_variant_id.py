@@ -1,4 +1,5 @@
 """Tests for deterministic internal variant identifiers."""
+
 from __future__ import annotations
 
 from src.core.standardize_entities_and_align_knowledge.variant_id import (
@@ -16,9 +17,7 @@ def test_internal_variant_id_stable_and_prefixed() -> None:
 
 
 def test_internal_variant_id_normalizes_input() -> None:
-    assert make_internal_variant_id(" c.4748T>G ", "dicer1") == make_internal_variant_id(
-        "c.4748T>G", "DICER1"
-    )
+    assert make_internal_variant_id(" c.4748T>G ", "dicer1") == make_internal_variant_id("c.4748T>G", "DICER1")
 
 
 def test_internal_variant_id_empty_gene() -> None:

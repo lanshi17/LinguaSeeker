@@ -4,6 +4,7 @@ Validates that the extraction workflow stamps ``article_language`` /
 ``is_english`` / ``evidence_source_language`` / ``requires_translation`` onto
 every emitted evidence item, sourced from the document's known language track.
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock

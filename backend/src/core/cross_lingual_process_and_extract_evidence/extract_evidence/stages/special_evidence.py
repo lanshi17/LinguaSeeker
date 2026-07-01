@@ -1,4 +1,5 @@
 """Special evidence pass — functional, case-control, authority, contradiction evidence."""
+
 from __future__ import annotations
 
 import asyncio
@@ -37,12 +38,14 @@ class SpecialEvidenceStage:
         current_items: list[EvidenceItem],
     ) -> list[SpecialEvidenceRecord]:
         summary = self._summarize_items(current_items)
-        overhead = estimate_tokens(get_special_evidence_prompt(
-            document_id=document.document_id,
-            track=document.track,
-            text="",
-            current_items_summary=summary,
-        ))
+        overhead = estimate_tokens(
+            get_special_evidence_prompt(
+                document_id=document.document_id,
+                track=document.track,
+                text="",
+                current_items_summary=summary,
+            )
+        )
         chunks = build_block_prompt_chunks(
             document,
             input_budget_tokens=self._input_budget_tokens,
@@ -99,12 +102,14 @@ class SpecialEvidenceStage:
     ) -> list[SpecialEvidenceRecord]:
         """Async version — runs chunk LLM calls concurrently with semaphore."""
         summary = self._summarize_items(current_items)
-        overhead = estimate_tokens(get_special_evidence_prompt(
-            document_id=document.document_id,
-            track=document.track,
-            text="",
-            current_items_summary=summary,
-        ))
+        overhead = estimate_tokens(
+            get_special_evidence_prompt(
+                document_id=document.document_id,
+                track=document.track,
+                text="",
+                current_items_summary=summary,
+            )
+        )
         chunks = build_block_prompt_chunks(
             document,
             input_budget_tokens=self._input_budget_tokens,

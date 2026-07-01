@@ -1,4 +1,5 @@
 """Tests for Benchmark C expansion entry selection."""
+
 from __future__ import annotations
 
 import csv

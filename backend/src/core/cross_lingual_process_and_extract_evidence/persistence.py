@@ -1,4 +1,5 @@
 """Local file persistence for cross-lingual documents and images."""
+
 from __future__ import annotations
 
 import json
@@ -151,9 +152,7 @@ class DocumentPersistenceService:
         # authoritative translated text used during extraction).
         translated_path = base / "translated.json"
         translation_alignment = _build_translation_alignment(result)
-        translation_alignment_payload = [
-            chunk.model_dump(mode="json") for chunk in translation_alignment
-        ]
+        translation_alignment_payload = [chunk.model_dump(mode="json") for chunk in translation_alignment]
         translated_data: dict = {
             "metadata": {
                 "doc_id": doc_id,
@@ -173,8 +172,10 @@ class DocumentPersistenceService:
         source_parts = [seg.source_text for seg in result.segments]
         translated_parts = [seg.translated_text for seg in result.segments]
         from .cross_lingual.translate.postprocess import compute_translation_drift
+
         translation_drifts = compute_translation_drift(
-            source_parts, translated_parts,
+            source_parts,
+            translated_parts,
         )
 
         # Save metadata.json (enhanced with drift info)

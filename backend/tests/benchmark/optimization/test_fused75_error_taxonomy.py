@@ -1,4 +1,5 @@
 """Tests for fused-75 adjudicated error taxonomy."""
+
 from __future__ import annotations
 
 import json
@@ -12,7 +13,11 @@ from benchmark.optimization.fused75.error_taxonomy import (
     write_detailed_error_taxonomy_report,
     write_fn_root_cause_taxonomy_report,
 )
-from benchmark.optimization.fused75.evaluate_adjudicated import AdjudicatedEntryResult, AdjudicatedFieldResult, AdjudicatedMetric
+from benchmark.optimization.fused75.evaluate_adjudicated import (
+    AdjudicatedEntryResult,
+    AdjudicatedFieldResult,
+    AdjudicatedMetric,
+)
 
 
 def _entry(entry_id: str, fields: tuple[AdjudicatedFieldResult, ...]) -> AdjudicatedEntryResult:

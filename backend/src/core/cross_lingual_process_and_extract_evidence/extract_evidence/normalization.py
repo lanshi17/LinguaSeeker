@@ -1,4 +1,5 @@
 """Deterministic ACMG evidence value normalization."""
+
 from __future__ import annotations
 
 import re
@@ -55,7 +56,8 @@ class AcmgEvidenceValueNormalizer:
     }
 
     def normalize(
-        self, items: list[EvidenceItem],
+        self,
+        items: list[EvidenceItem],
     ) -> tuple[list[EvidenceItem], list[EvidenceNormalizationIssue]]:
         normalized: list[EvidenceItem] = []
         issues: list[EvidenceNormalizationIssue] = []
@@ -68,7 +70,8 @@ class AcmgEvidenceValueNormalizer:
         return merged, issues
 
     def _normalize_one(
-        self, item: EvidenceItem,
+        self,
+        item: EvidenceItem,
     ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
         if item.status != EvidenceStatus.FOUND or item.value is None:
             return item, []
@@ -116,7 +119,9 @@ class AcmgEvidenceValueNormalizer:
         return item, []
 
     def _with_value_issue(
-        self, item: EvidenceItem, normalized_value: object,
+        self,
+        item: EvidenceItem,
+        normalized_value: object,
     ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
         return (
             item.model_copy(update={"value": normalized_value}),
@@ -133,7 +138,8 @@ class AcmgEvidenceValueNormalizer:
         )
 
     def _normalize_de_novo(
-        self, item: EvidenceItem,
+        self,
+        item: EvidenceItem,
     ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
         text = str(item.value).strip().lower()
         if item.value is False or text in {"0", "false", "not de novo", "not_de_novo", "inherited"}:
@@ -145,7 +151,8 @@ class AcmgEvidenceValueNormalizer:
         return item, []
 
     def _normalize_consanguinity(
-        self, item: EvidenceItem,
+        self,
+        item: EvidenceItem,
     ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
         text = str(item.value).strip()
         lower = text.lower()
@@ -160,7 +167,8 @@ class AcmgEvidenceValueNormalizer:
         return item, []
 
     def _normalize_obligate_carriers(
-        self, item: EvidenceItem,
+        self,
+        item: EvidenceItem,
     ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
         if item.value is True:
             return self._with_value_issue(item, 2)
@@ -176,14 +184,12 @@ class AcmgEvidenceValueNormalizer:
         return item, []
 
     def _normalize_gene_symbol(
-        self, item: EvidenceItem,
+        self,
+        item: EvidenceItem,
     ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
         value = item.value
         if isinstance(value, list):
-            normalized = [
-                unicodedata.normalize("NFKC", str(v)).strip().upper()
-                for v in value
-            ]
+            normalized = [unicodedata.normalize("NFKC", str(v)).strip().upper() for v in value]
         elif isinstance(value, str):
             normalized = unicodedata.normalize("NFKC", value).strip().upper()
         else:
@@ -193,7 +199,8 @@ class AcmgEvidenceValueNormalizer:
         return self._with_value_issue(item, normalized)
 
     def _normalize_age_of_onset(
-        self, item: EvidenceItem,
+        self,
+        item: EvidenceItem,
     ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
         text = str(item.value).strip()
         lower = text.lower()
@@ -215,7 +222,8 @@ class AcmgEvidenceValueNormalizer:
         return item, []
 
     def _reject_in_silico_functional(
-        self, item: EvidenceItem,
+        self,
+        item: EvidenceItem,
     ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
         text = str(item.value or "").strip().lower()
         if "in silico" in text or "computational" in text:
@@ -234,7 +242,8 @@ class AcmgEvidenceValueNormalizer:
         return item, []
 
     def _normalize_prediction_tools(
-        self, item: EvidenceItem,
+        self,
+        item: EvidenceItem,
     ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
         if isinstance(item.value, list):
             values = [str(v).strip() for v in item.value if str(v).strip()]
@@ -292,7 +301,8 @@ class AcmgEvidenceValueNormalizer:
         )
 
     def _merge_duplicates(
-        self, items: list[EvidenceItem],
+        self,
+        items: list[EvidenceItem],
     ) -> tuple[list[EvidenceItem], list[EvidenceNormalizationIssue]]:
         by_key: dict[tuple[str, str, str, str], EvidenceItem] = {}
         order: list[tuple[str, str, str, str]] = []
@@ -371,10 +381,12 @@ class AcmgEvidenceValueNormalizer:
         return winner
 
     def _reject_item(self, item: EvidenceItem) -> EvidenceItem:
-        return item.model_copy(update={
-            "status": EvidenceStatus.NOT_FOUND,
-            "value": None,
-            "confidence": 0.0,
-            "assigned_acmg_codes": [],
-            "assigned_clingen_modules": [],
-        })
+        return item.model_copy(
+            update={
+                "status": EvidenceStatus.NOT_FOUND,
+                "value": None,
+                "confidence": 0.0,
+                "assigned_acmg_codes": [],
+                "assigned_clingen_modules": [],
+            }
+        )

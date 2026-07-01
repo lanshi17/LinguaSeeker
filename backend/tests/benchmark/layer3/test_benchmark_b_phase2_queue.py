@@ -1,4 +1,5 @@
 """Tests for Benchmark B multilingual Phase 2 queue manifests."""
+
 from __future__ import annotations
 
 import json

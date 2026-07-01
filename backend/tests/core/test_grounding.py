@@ -1,7 +1,6 @@
 """Tests for evidence grounding fuzzy match."""
 
 
-
 def test_ground_one_matches_ellipsis_snippet_fuzzy():
     """Snippets with '...' should match by verifying each fragment appears in order."""
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.core import _fuzzy_ellipsis_match

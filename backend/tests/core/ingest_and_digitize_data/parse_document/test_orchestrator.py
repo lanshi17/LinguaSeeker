@@ -1,4 +1,5 @@
 """Tests for orchestrator module."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -185,8 +186,10 @@ async def test_url_fallback_downloads_to_temp_and_cleans_up(mock_remote, mock_lo
 
     orchestrator = DocumentParseOrchestrator(remote=mock_remote, local=mock_local)
 
-    with patch("src.core.ingest_and_digitize_data.parse_document.orchestrator.httpx.AsyncClient") as mock_cls, \
-         patch("src.core.ingest_and_digitize_data.parse_document.orchestrator._validate_url_safe"):
+    with (
+        patch("src.core.ingest_and_digitize_data.parse_document.orchestrator.httpx.AsyncClient") as mock_cls,
+        patch("src.core.ingest_and_digitize_data.parse_document.orchestrator._validate_url_safe"),
+    ):
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
         result = await orchestrator.parse("https://example.com/paper.pdf")
@@ -209,8 +212,10 @@ async def test_url_fallback_rejects_non_pdf_content_type(mock_remote, mock_local
 
     orchestrator = DocumentParseOrchestrator(remote=mock_remote, local=mock_local)
 
-    with patch("src.core.ingest_and_digitize_data.parse_document.orchestrator.httpx.AsyncClient") as mock_cls, \
-         patch("src.core.ingest_and_digitize_data.parse_document.orchestrator._validate_url_safe"):
+    with (
+        patch("src.core.ingest_and_digitize_data.parse_document.orchestrator.httpx.AsyncClient") as mock_cls,
+        patch("src.core.ingest_and_digitize_data.parse_document.orchestrator._validate_url_safe"),
+    ):
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
         with pytest.raises(ParserExhaustedError) as exc_info:
@@ -230,8 +235,10 @@ async def test_url_fallback_rejects_non_pdf_signature(mock_remote, mock_local):
 
     orchestrator = DocumentParseOrchestrator(remote=mock_remote, local=mock_local)
 
-    with patch("src.core.ingest_and_digitize_data.parse_document.orchestrator.httpx.AsyncClient") as mock_cls, \
-         patch("src.core.ingest_and_digitize_data.parse_document.orchestrator._validate_url_safe"):
+    with (
+        patch("src.core.ingest_and_digitize_data.parse_document.orchestrator.httpx.AsyncClient") as mock_cls,
+        patch("src.core.ingest_and_digitize_data.parse_document.orchestrator._validate_url_safe"),
+    ):
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
         with pytest.raises(ParserExhaustedError) as exc_info:
@@ -260,8 +267,10 @@ async def test_url_fallback_rejects_http_error(mock_remote, mock_local):
 
     orchestrator = DocumentParseOrchestrator(remote=mock_remote, local=mock_local)
 
-    with patch("src.core.ingest_and_digitize_data.parse_document.orchestrator.httpx.AsyncClient") as mock_cls, \
-         patch("src.core.ingest_and_digitize_data.parse_document.orchestrator._validate_url_safe"):
+    with (
+        patch("src.core.ingest_and_digitize_data.parse_document.orchestrator.httpx.AsyncClient") as mock_cls,
+        patch("src.core.ingest_and_digitize_data.parse_document.orchestrator._validate_url_safe"),
+    ):
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
         with pytest.raises(ParserExhaustedError) as exc_info:

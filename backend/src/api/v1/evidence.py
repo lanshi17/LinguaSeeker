@@ -1,4 +1,5 @@
 """Evidence review, feedback, and search routes."""
+
 from __future__ import annotations
 
 from uuid import UUID
@@ -133,12 +134,19 @@ async def search_literature(
     """Search literature profiles with per-article aggregation."""
     repo = LiteratureProfileRepository(session)
     items, total = await repo.search(
-        gene=gene, variant=variant, disease=disease,
-        pmid=pmid, doi=doi, page=page, page_size=page_size,
+        gene=gene,
+        variant=variant,
+        disease=disease,
+        pmid=pmid,
+        doi=doi,
+        page=page,
+        page_size=page_size,
     )
     return LiteratureSearchResponse(
         items=[LiteratureProfileSummary(**vars(item)) for item in items],
-        total=total, page=page, page_size=page_size,
+        total=total,
+        page=page,
+        page_size=page_size,
     )
 
 
@@ -166,9 +174,7 @@ async def get_literature_detail(
         authors=profile.authors,
         journal=profile.journal,
         publication_year=profile.publication_year,
-        evidence_groups=[
-            EvidenceGroupSummary(**eg) for eg in profile.evidence_groups
-        ],
+        evidence_groups=[EvidenceGroupSummary(**eg) for eg in profile.evidence_groups],
         review_status=profile.review_status,
         review_notes=profile.review_notes,
         overall_confidence=profile.overall_confidence,

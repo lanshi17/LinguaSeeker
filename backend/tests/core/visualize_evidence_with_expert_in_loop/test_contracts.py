@@ -1,4 +1,5 @@
 """Tests for Phase 4 contracts."""
+
 from __future__ import annotations
 
 import pytest
@@ -46,9 +47,18 @@ class TestEvidenceCardPayload:
     def test_diff_fields_constant(self) -> None:
         """DIFF_FIELDS contains exactly the expected field names."""
         expected = {
-            "gene", "variant", "phenotype", "disease", "classification",
-            "evidence_strength", "evidence_type", "functional_impact",
-            "inheritance_pattern", "zygosity", "references", "summary",
+            "gene",
+            "variant",
+            "phenotype",
+            "disease",
+            "classification",
+            "evidence_strength",
+            "evidence_type",
+            "functional_impact",
+            "inheritance_pattern",
+            "zygosity",
+            "references",
+            "summary",
         }
         assert set(EvidenceCardPayload.DIFF_FIELDS) == expected
 
@@ -114,6 +124,7 @@ class TestSourceSpanDict:
     def test_track_span_source_span_is_typed(self) -> None:
         """TrackSpan.source_span should use SourceSpanDict, not bare dict."""
         import inspect
+
         sig = inspect.signature(TrackSpan)
         source_span_type = sig.parameters["source_span"].annotation
         assert source_span_type is not dict

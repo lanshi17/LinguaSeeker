@@ -19,7 +19,11 @@ from src.utils.rust_io import net_io
 from src.utils.text import sanitize_filename
 from src.utils.ssrf import validate_url_safe
 
-from .contracts import OnlineAcquisitionGatewayRequest, OnlineAcquisitionGatewayResult, OnlineAcquisitionSourceTraceEntry
+from .contracts import (
+    OnlineAcquisitionGatewayRequest,
+    OnlineAcquisitionGatewayResult,
+    OnlineAcquisitionSourceTraceEntry,
+)
 
 
 _PDF_LINK_PATTERNS = [
@@ -166,9 +170,7 @@ async def download_file_from_url(
 
         # Fallback: httpx (handles HTML→PDF redirect same as existing code)
         try:
-            async with httpx.AsyncClient(
-                proxy=proxy, timeout=60, follow_redirects=True
-            ) as client:
+            async with httpx.AsyncClient(proxy=proxy, timeout=60, follow_redirects=True) as client:
                 resp = await client.get(current_url)
                 resp.raise_for_status()
 
@@ -309,6 +311,7 @@ def _failure_result(provider: str, error: Exception, action: str = "search") -> 
         source_trace=[trace],
     )
 
+
 async def _search_jstage_via_pyjstage(
     request: OnlineAcquisitionGatewayRequest,
 ) -> OnlineAcquisitionGatewayResult:
@@ -327,28 +330,37 @@ async def _search_jstage_via_pyjstage(
 
         items: list[dict[str, Any]] = []
         for entry in result.entries:
-            items.append({
-                "article_title_en": (entry.article_title or {}).get("en", ""),
-                "article_title_ja": (entry.article_title or {}).get("ja", ""),
-                "material_title_en": (entry.material_title or {}).get("en", ""),
-                "material_title_ja": (entry.material_title or {}).get("ja", ""),
-                "doi": entry.doi or "",
-                "link": entry.link or "",
-                "issn": entry.issn or "",
-                "eissn": entry.eissn or "",
-                "pubyear": entry.pubyear or "",
-            })
+            items.append(
+                {
+                    "article_title_en": (entry.article_title or {}).get("en", ""),
+                    "article_title_ja": (entry.article_title or {}).get("ja", ""),
+                    "material_title_en": (entry.material_title or {}).get("en", ""),
+                    "material_title_ja": (entry.material_title or {}).get("ja", ""),
+                    "doi": entry.doi or "",
+                    "link": entry.link or "",
+                    "issn": entry.issn or "",
+                    "eissn": entry.eissn or "",
+                    "pubyear": entry.pubyear or "",
+                }
+            )
 
         elapsed = (_time.monotonic() - start) * 1000
         get_health_tracker().record("jstage", success=True, latency_ms=elapsed)
         trace = OnlineAcquisitionSourceTraceEntry(
-            provider="jstage", attempt=1, action="search",
-            success=True, items_count=len(items),
-            downloads_count=0, warnings=[],
+            provider="jstage",
+            attempt=1,
+            action="search",
+            success=True,
+            items_count=len(items),
+            downloads_count=0,
+            warnings=[],
         )
         return OnlineAcquisitionGatewayResult(
-            provider="jstage", success=True, items=items,
-            downloads=[], warnings=[],
+            provider="jstage",
+            success=True,
+            items=items,
+            downloads=[],
+            warnings=[],
             source_trace=[trace],
         )
     except Exception as exc:

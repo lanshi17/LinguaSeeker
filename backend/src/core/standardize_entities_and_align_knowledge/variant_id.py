@@ -1,4 +1,5 @@
 """Deterministic internal variant identifiers for unmatched variants."""
+
 from __future__ import annotations
 
 import hashlib

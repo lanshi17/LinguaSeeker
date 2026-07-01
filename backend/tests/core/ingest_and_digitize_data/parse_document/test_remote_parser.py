@@ -1,4 +1,5 @@
 """Tests for remote parser module."""
+
 from __future__ import annotations
 
 

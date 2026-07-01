@@ -1,4 +1,5 @@
 """Application dependency wiring — single source of truth for engine & session factory."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -160,7 +161,8 @@ def wire_dependencies() -> None:
     parse_service = ParseDocumentService(parse_orchestrator)
     translation_service = TranslationService(cfg=cfg)
     extraction_service = EvidenceExtractionService(
-        cfg=cfg, extraction_profile=ExtractionProfile.NONE,
+        cfg=cfg,
+        extraction_profile=ExtractionProfile.NONE,
     )
     standardization_service = EntityStandardizationService(cfg=cfg)
 

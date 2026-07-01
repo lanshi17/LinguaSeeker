@@ -1,4 +1,5 @@
 """Public facade for one-track and dual-track evidence extraction."""
+
 from __future__ import annotations
 
 import asyncio
@@ -99,7 +100,8 @@ class EvidenceExtractionService:
         self._review_reject_policy = resolve_review_reject_policy(review_reject_policy)
         profile_fields = resolve_profile_fields(extraction_profile)
         self._workflow = EvidenceExtractionWorkflow(
-            provider=self._provider, field_profile=profile_fields,
+            provider=self._provider,
+            field_profile=profile_fields,
             extraction_mode=extraction_mode,
             enable_review_validation=enable_review_validation,
             enable_target_guard=enable_target_guard,
@@ -126,12 +128,8 @@ class EvidenceExtractionService:
         state = await workflow.run_async(document)
 
         # Compute field eligibility summary from state
-        not_applicable_count = sum(
-            1 for item in state.evidence_items if item.status == EvidenceStatus.NOT_APPLICABLE
-        )
-        not_attempted_count = sum(
-            1 for item in state.evidence_items if item.status == EvidenceStatus.NOT_ATTEMPTED
-        )
+        not_applicable_count = sum(1 for item in state.evidence_items if item.status == EvidenceStatus.NOT_APPLICABLE)
+        not_attempted_count = sum(1 for item in state.evidence_items if item.status == EvidenceStatus.NOT_ATTEMPTED)
         field_eligibility_summary = FieldEligibilitySummary(
             eligible_field_count=len(state.evidence_items) - not_applicable_count - not_attempted_count,
             channel_excluded_field_count=len(state.channel_excluded_field_ids),
@@ -234,20 +232,15 @@ class EvidenceExtractionService:
             asyncio.get_running_loop()
         except RuntimeError:
             return asyncio.run(self.run(document))
-        raise RuntimeError(
-            "run_sync() cannot be called from within a running event loop. "
-            "Use run() instead."
-        )
+        raise RuntimeError("run_sync() cannot be called from within a running event loop. Use run() instead.")
 
     def run_dual_sync(self, documents: DualTrackDocuments) -> DualEvidenceExtractionResult:
         try:
             asyncio.get_running_loop()
         except RuntimeError:
             return asyncio.run(self.run_dual(documents))
-        raise RuntimeError(
-            "run_dual_sync() cannot be called from within a running event loop. "
-            "Use run_dual() instead."
-        )
+        raise RuntimeError("run_dual_sync() cannot be called from within a running event loop. Use run_dual() instead.")
+
     def _workflow_for(
         self,
         extraction_profile: ExtractionProfile | str | None,
@@ -264,7 +257,11 @@ class EvidenceExtractionService:
         mode = extraction_mode or self._extraction_mode
         erv = self._enable_review_validation if enable_review_validation is None else enable_review_validation
         etg = self._enable_target_guard if enable_target_guard is None else enable_target_guard
-        rrp = self._review_reject_policy if review_reject_policy is None else resolve_review_reject_policy(review_reject_policy)
+        rrp = (
+            self._review_reject_policy
+            if review_reject_policy is None
+            else resolve_review_reject_policy(review_reject_policy)
+        )
         if (
             extraction_profile is None
             and mode == self._extraction_mode
@@ -275,7 +272,8 @@ class EvidenceExtractionService:
             return self._workflow
         profile_fields = resolve_profile_fields(extraction_profile)
         return EvidenceExtractionWorkflow(
-            provider=self._provider, field_profile=profile_fields,
+            provider=self._provider,
+            field_profile=profile_fields,
             extraction_mode=mode,
             enable_review_validation=erv,
             enable_target_guard=etg,
@@ -289,9 +287,7 @@ class EvidenceExtractionService:
     ) -> DualTrackDocuments:
         base = Path(output_dir)
         original = _build_track_document_from_json(base / "original.json", Track.ORIGINAL, extraction_target)
-        translated = _build_track_document_from_json(
-            base / "translated.json", Track.TRANSLATED, extraction_target
-        )
+        translated = _build_track_document_from_json(base / "translated.json", Track.TRANSLATED, extraction_target)
         return DualTrackDocuments(
             document_id=original.document_id,
             original=original,
@@ -475,20 +471,22 @@ def _parse_content_blocks(blocks: list[dict[str, Any]]) -> list[ContentBlock]:
     for block in blocks:
         if not isinstance(block, dict):
             continue
-        parsed.append(ContentBlock(
-            type=str(block.get("type", "text")),
-            page_idx=int(block.get("page_idx", 0)),
-            bbox=list(block.get("bbox", [])),
-            text=str(block.get("text", "")),
-            content=str(block.get("content", "")),
-            table_body=str(block.get("table_body", "")),
-            img_path=str(block.get("img_path", "")),
-            image_caption=[str(v) for v in block.get("image_caption", [])],
-            table_caption=[str(v) for v in block.get("table_caption", [])],
-            chart_caption=[str(v) for v in block.get("chart_caption", [])],
-            code_body=str(block.get("code_body", "")),
-            list_items=[str(v) for v in block.get("list_items", [])],
-        ))
+        parsed.append(
+            ContentBlock(
+                type=str(block.get("type", "text")),
+                page_idx=int(block.get("page_idx", 0)),
+                bbox=list(block.get("bbox", [])),
+                text=str(block.get("text", "")),
+                content=str(block.get("content", "")),
+                table_body=str(block.get("table_body", "")),
+                img_path=str(block.get("img_path", "")),
+                image_caption=[str(v) for v in block.get("image_caption", [])],
+                table_caption=[str(v) for v in block.get("table_caption", [])],
+                chart_caption=[str(v) for v in block.get("chart_caption", [])],
+                code_body=str(block.get("code_body", "")),
+                list_items=[str(v) for v in block.get("list_items", [])],
+            )
+        )
     return parsed
 
 
@@ -523,9 +521,7 @@ def _format_blocks_with_page_spans(blocks: list[dict[str, Any]], track: Track) -
         for page_idx, (start, end) in sorted(page_ranges.items())
     ]
     if not page_spans:
-        page_spans.append(
-            PageSpan(span_id=f"{track.value}-p1", page=1, start_offset=0, end_offset=0)
-        )
+        page_spans.append(PageSpan(span_id=f"{track.value}-p1", page=1, start_offset=0, end_offset=0))
     return formatted_text, page_spans
 
 

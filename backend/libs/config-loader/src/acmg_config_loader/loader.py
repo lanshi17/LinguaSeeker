@@ -69,6 +69,7 @@ def _flatten_and_set_env(data: ConfigData, environ: MutableMapping[str, str], pr
         if env_key not in environ:
             if isinstance(value, list):
                 import json as _json
+
                 environ[env_key] = _json.dumps(value)
             else:
                 environ[env_key] = str(value)

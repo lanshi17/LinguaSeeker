@@ -1,4 +1,5 @@
 """Tests for HGVS variant notation normalizer used in ClinVar alias matching."""
+
 from __future__ import annotations
 
 from src.core.standardize_entities_and_align_knowledge.hgvs_normalizer import (
@@ -15,6 +16,7 @@ def test_three_letter_protein_to_one_letter() -> None:
 def test_one_letter_protein_passes_through() -> None:
     """One-letter protein notation passes through unchanged."""
     assert "p.Arg243*" in expand_hgvs_aliases("p.Arg243*")
+
 
 def test_three_letter_ref_with_stop_symbol_alt() -> None:
     """Three-letter ref with literal `*` alt also yields a one-letter ref alias."""

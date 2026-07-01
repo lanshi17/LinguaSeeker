@@ -1,4 +1,5 @@
 """Terminology import parsers for Phase 3 reference data."""
+
 from __future__ import annotations
 
 import csv
@@ -368,10 +369,7 @@ def parse_clingen_rows(root: Path, version: str) -> ImportBatch:
             for row in reader:
                 gene_symbol = (row.get("Gene Symbol") or row.get("GENE SYMBOL") or "").strip()
                 score = (
-                    row.get("Score")
-                    or row.get("Haploinsufficiency Score")
-                    or row.get("HAPLOINSUFFICIENCY")
-                    or ""
+                    row.get("Score") or row.get("Haploinsufficiency Score") or row.get("HAPLOINSUFFICIENCY") or ""
                 ).strip()
                 if not gene_symbol:
                     continue
@@ -407,11 +405,14 @@ def build_clinvar_core_tsv(source_path: Path, target_path: Path) -> int:
     target_path.parent.mkdir(parents=True, exist_ok=True)
     rows_written = 0
     previous_row: tuple[str, ...] | None = None
-    with source_path.open(encoding="utf-8", newline="") as source_handle, target_path.open(
-        "w",
-        encoding="utf-8",
-        newline="",
-    ) as target_handle:
+    with (
+        source_path.open(encoding="utf-8", newline="") as source_handle,
+        target_path.open(
+            "w",
+            encoding="utf-8",
+            newline="",
+        ) as target_handle,
+    ):
         header_line = _find_header_line(source_handle, comment_prefix="#")
         if header_line is None:
             return 0
@@ -560,6 +561,8 @@ def iter_clinvar_batches(path: Path, version: str, chunk_size: int) -> Iterator[
     final_batch = flush_batch()
     if final_batch is not None:
         yield final_batch
+
+
 def _collect_alias_values(primary_symbol: str, *fields: str | None) -> list[str]:
     """Collect stable alias payload values preserving first-seen order."""
     values: list[str] = []

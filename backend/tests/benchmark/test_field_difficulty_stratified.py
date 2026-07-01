@@ -2,6 +2,7 @@
 
 Covers field classification, metric aggregation, and edge cases.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -22,36 +23,45 @@ from benchmark.analysis.diagnostics.field_difficulty_stratified import (
 class TestClassifyField:
     """Tests for field_id → difficulty tier classification."""
 
-    @pytest.mark.parametrize("field_id", [
-        "A.gene_symbol",
-        "B.disease_diagnosis",
-        "A.gene_disease_relationship",
-        "A.variant_hgvs_p",
-        "A.variant_hgvs_c",
-        "A.variant_type",
-        "A.variant_consequence_class",
-    ])
+    @pytest.mark.parametrize(
+        "field_id",
+        [
+            "A.gene_symbol",
+            "B.disease_diagnosis",
+            "A.gene_disease_relationship",
+            "A.variant_hgvs_p",
+            "A.variant_hgvs_c",
+            "A.variant_type",
+            "A.variant_consequence_class",
+        ],
+    )
     def test_simple_explicit_fields(self, field_id: str) -> None:
         assert classify_field(field_id) == "simple_explicit"
 
-    @pytest.mark.parametrize("field_id", [
-        "B.mode_of_inheritance_reported",
-        "B.clinical_phenotypes",
-        "B.hpo_terms",
-        "B.sex",
-        "B.age_of_onset",
-        "K.mode_of_inheritance",
-    ])
+    @pytest.mark.parametrize(
+        "field_id",
+        [
+            "B.mode_of_inheritance_reported",
+            "B.clinical_phenotypes",
+            "B.hpo_terms",
+            "B.sex",
+            "B.age_of_onset",
+            "K.mode_of_inheritance",
+        ],
+    )
     def test_medium_contextual_fields(self, field_id: str) -> None:
         assert classify_field(field_id) == "medium_contextual"
 
-    @pytest.mark.parametrize("field_id", [
-        "C.de_novo_status",
-        "C.segregation",
-        "C.functional_assay",
-        "C.contradictory_evidence",
-        "C.source_grounded_evidence",
-    ])
+    @pytest.mark.parametrize(
+        "field_id",
+        [
+            "C.de_novo_status",
+            "C.segregation",
+            "C.functional_assay",
+            "C.contradictory_evidence",
+            "C.source_grounded_evidence",
+        ],
+    )
     def test_complex_evidence_fields(self, field_id: str) -> None:
         assert classify_field(field_id) == "complex_evidence"
 
@@ -152,18 +162,28 @@ class TestComputeStratifiedMetrics:
 
     def test_simple_field_system_wins(self) -> None:
         """SYSTEM matches gene_symbol, B0 doesn't."""
-        sys_report = self._make_report([
-            self._make_entry("e1", [
-                self._make_match("A.gene_symbol", True),
-                self._make_match("B.disease_diagnosis", True),
-            ]),
-        ])
-        b0_report = self._make_report([
-            self._make_entry("e1", [
-                self._make_match("A.gene_symbol", False, "wrong_value"),
-                self._make_match("B.disease_diagnosis", True),
-            ]),
-        ])
+        sys_report = self._make_report(
+            [
+                self._make_entry(
+                    "e1",
+                    [
+                        self._make_match("A.gene_symbol", True),
+                        self._make_match("B.disease_diagnosis", True),
+                    ],
+                ),
+            ]
+        )
+        b0_report = self._make_report(
+            [
+                self._make_entry(
+                    "e1",
+                    [
+                        self._make_match("A.gene_symbol", False, "wrong_value"),
+                        self._make_match("B.disease_diagnosis", True),
+                    ],
+                ),
+            ]
+        )
         cats, field_gl, unknowns = compute_stratified_metrics(sys_report, b0_report, "test")
         simple = cats["simple_explicit"]
         assert simple.system_tp == 2
@@ -171,34 +191,54 @@ class TestComputeStratifiedMetrics:
 
     def test_medium_field_system_wins(self) -> None:
         """SYSTEM matches inheritance, B0 misses it."""
-        sys_report = self._make_report([
-            self._make_entry("e1", [
-                self._make_match("A.gene_symbol", True),
-                self._make_match("B.mode_of_inheritance_reported", True),
-            ]),
-        ])
-        b0_report = self._make_report([
-            self._make_entry("e1", [
-                self._make_match("A.gene_symbol", True),
-                self._make_match("B.mode_of_inheritance_reported", False, "missing"),
-            ]),
-        ])
+        sys_report = self._make_report(
+            [
+                self._make_entry(
+                    "e1",
+                    [
+                        self._make_match("A.gene_symbol", True),
+                        self._make_match("B.mode_of_inheritance_reported", True),
+                    ],
+                ),
+            ]
+        )
+        b0_report = self._make_report(
+            [
+                self._make_entry(
+                    "e1",
+                    [
+                        self._make_match("A.gene_symbol", True),
+                        self._make_match("B.mode_of_inheritance_reported", False, "missing"),
+                    ],
+                ),
+            ]
+        )
         cats, _, _ = compute_stratified_metrics(sys_report, b0_report, "test")
         assert cats["medium_contextual"].system_tp == 1
         assert cats["medium_contextual"].b0_fn == 1
 
     def test_unknown_field_classified(self) -> None:
         """Unknown field_ids go to 'other' category."""
-        sys_report = self._make_report([
-            self._make_entry("e1", [
-                self._make_match("X.new_field", True),
-            ]),
-        ])
-        b0_report = self._make_report([
-            self._make_entry("e1", [
-                self._make_match("X.new_field", False, "missing"),
-            ]),
-        ])
+        sys_report = self._make_report(
+            [
+                self._make_entry(
+                    "e1",
+                    [
+                        self._make_match("X.new_field", True),
+                    ],
+                ),
+            ]
+        )
+        b0_report = self._make_report(
+            [
+                self._make_entry(
+                    "e1",
+                    [
+                        self._make_match("X.new_field", False, "missing"),
+                    ],
+                ),
+            ]
+        )
         cats, _, unknowns = compute_stratified_metrics(sys_report, b0_report, "test")
         assert "other" in cats
         assert "X.new_field" in unknowns
@@ -206,19 +246,25 @@ class TestComputeStratifiedMetrics:
     def test_empty_reports(self) -> None:
         """Empty reports produce no categories."""
         cats, field_gl, unknowns = compute_stratified_metrics(
-            self._make_report([]), self._make_report([]), "test",
+            self._make_report([]),
+            self._make_report([]),
+            "test",
         )
         assert len(cats) == 0
         assert len(field_gl) == 0
 
     def test_common_entries_only(self) -> None:
         """Only entries present in both reports are compared."""
-        sys_report = self._make_report([
-            self._make_entry("e1", [self._make_match("A.gene_symbol", True)]),
-            self._make_entry("e2", [self._make_match("A.gene_symbol", True)]),
-        ])
-        b0_report = self._make_report([
-            self._make_entry("e1", [self._make_match("A.gene_symbol", True)]),
-        ])
+        sys_report = self._make_report(
+            [
+                self._make_entry("e1", [self._make_match("A.gene_symbol", True)]),
+                self._make_entry("e2", [self._make_match("A.gene_symbol", True)]),
+            ]
+        )
+        b0_report = self._make_report(
+            [
+                self._make_entry("e1", [self._make_match("A.gene_symbol", True)]),
+            ]
+        )
         cats, _, _ = compute_stratified_metrics(sys_report, b0_report, "test")
         assert cats["simple_explicit"].expected_count == 1  # only e1

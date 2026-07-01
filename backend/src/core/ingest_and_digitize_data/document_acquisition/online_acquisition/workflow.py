@@ -43,9 +43,21 @@ PMID_PATTERN = re.compile(r"PMID[:\s]*([0-9]{5,9})", re.IGNORECASE)
 
 # API providers to search in parallel (order matters for result priority)
 _API_SEARCH_PROVIDERS = [
-    "crossref", "unpaywall", "openalex", "europepmc", "pmc",
-    "doaj", "jstage", "arxiv", "biorxiv", "medrxiv",
-    "scielo", "base", "core", "openaire", "cinii",
+    "crossref",
+    "unpaywall",
+    "openalex",
+    "europepmc",
+    "pmc",
+    "doaj",
+    "jstage",
+    "arxiv",
+    "biorxiv",
+    "medrxiv",
+    "scielo",
+    "base",
+    "core",
+    "openaire",
+    "cinii",
 ]
 
 # Identifier-specific provider overrides
@@ -159,6 +171,7 @@ async def _acquire_links_web_search(
 ) -> List[SearchLink]:
     """Phase 1b: Search via web search adapter (Tavily preferred, Firecrawl fallback)."""
     from src.core.config import get_config
+
     cfg = get_config()
     ws = cfg.web_search
 
@@ -321,13 +334,15 @@ def _merge_and_dedupe(
             seen_dois.add(doi)
         seen_urls.add(url)
 
-        merged.append({
-            "url": url,
-            "title": link.title or "",
-            "doi": link.doi or "",
-            "_source_provider": link.source or "firecrawl",
-            "_candidate_type": "firecrawl",
-        })
+        merged.append(
+            {
+                "url": url,
+                "title": link.title or "",
+                "doi": link.doi or "",
+                "_source_provider": link.source or "firecrawl",
+                "_candidate_type": "firecrawl",
+            }
+        )
 
     return merged
 
@@ -381,9 +396,7 @@ async def _download_candidates(
                 )
                 oa_url = resolve_oa_url(result)
                 if oa_url:
-                    file_path, final_url, warns = await download_file_from_url(
-                        oa_url, download_path, filename_stem
-                    )
+                    file_path, final_url, warns = await download_file_from_url(oa_url, download_path, filename_stem)
                     if file_path:
                         return DownloadResult(
                             file_path=file_path,
@@ -402,9 +415,7 @@ async def _download_candidates(
                 f"https://www.ncbi.nlm.nih.gov/pmc/articles/{pmcid}/pdf/",
             ]
             for pdf_url in pmcid_url_candidates:
-                file_path, final_url, warns = await download_file_from_url(
-                    pdf_url, download_path, filename_stem
-                )
+                file_path, final_url, warns = await download_file_from_url(pdf_url, download_path, filename_stem)
                 if file_path:
                     return DownloadResult(
                         file_path=file_path,
@@ -416,9 +427,7 @@ async def _download_candidates(
 
         # Route 3: Direct URL download
         if url:
-            file_path, final_url, warns = await download_file_from_url(
-                url, download_path, filename_stem
-            )
+            file_path, final_url, warns = await download_file_from_url(url, download_path, filename_stem)
             if file_path:
                 return DownloadResult(
                     file_path=file_path,
@@ -454,14 +463,8 @@ def _apply_type_filter(
         ni.literature_type = lt.value if lt else None
         if lt and lt.value in literature_types:
             typed_items.append(ni)
-    allowed_dois = {
-        (ni.doi or "").strip().lower()
-        for ni in typed_items if ni.doi
-    }
-    allowed_titles = {
-        (ni.title or "").strip().lower()[:80]
-        for ni in typed_items if ni.title
-    }
+    allowed_dois = {(ni.doi or "").strip().lower() for ni in typed_items if ni.doi}
+    allowed_titles = {(ni.title or "").strip().lower()[:80] for ni in typed_items if ni.title}
     if allowed_dois or allowed_titles:
         filtered = []
         for c in candidates:
@@ -472,6 +475,7 @@ def _apply_type_filter(
         if filtered:
             candidates = filtered
     return typed_items, candidates
+
 
 # ── Main Entry Point ────────────────────────────────────────────────────
 
@@ -522,69 +526,81 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
     if request.prefer == "web":
         try:
             firecrawl_links = await _acquire_links_web_search(query=query, language=language)
-            source_trace.append(_source_trace_entry(
-                provider="firecrawl",
-                success=bool(firecrawl_links),
-                items_count=len(firecrawl_links),
-            ))
+            source_trace.append(
+                _source_trace_entry(
+                    provider="firecrawl",
+                    success=bool(firecrawl_links),
+                    items_count=len(firecrawl_links),
+                )
+            )
         except Exception as exc:
             logger.warning("firecrawl acquisition failed: {}", exc)
             warning = f"firecrawl acquisition failed: {exc}"
             warnings.append(warning)
-            source_trace.append(_source_trace_entry(
-                provider="firecrawl",
-                success=False,
-                warnings=[warning],
-                error=str(exc),
-            ))
+            source_trace.append(
+                _source_trace_entry(
+                    provider="firecrawl",
+                    success=False,
+                    warnings=[warning],
+                    error=str(exc),
+                )
+            )
             firecrawl_links = []
     elif request.prefer == "api":
         try:
             api_items = await _acquire_links_api(query=query, identifiers=id_params, limit=request.limit)
-            source_trace.append(_source_trace_entry(
-                provider="api",
-                success=bool(api_items),
-                items_count=len(api_items),
-            ))
+            source_trace.append(
+                _source_trace_entry(
+                    provider="api",
+                    success=bool(api_items),
+                    items_count=len(api_items),
+                )
+            )
         except Exception as exc:
             logger.warning("api acquisition failed: {}", exc)
             warning = f"api acquisition failed: {exc}"
             warnings.append(warning)
-            source_trace.append(_source_trace_entry(
-                provider="api",
-                success=False,
-                warnings=[warning],
-                error=str(exc),
-            ))
+            source_trace.append(
+                _source_trace_entry(
+                    provider="api",
+                    success=False,
+                    warnings=[warning],
+                    error=str(exc),
+                )
+            )
             api_items = []
     else:
         # Auto: deterministic identifiers (DOI/PMID/PMCID) route API-only —
         # direct provider APIs are authoritative and Firecrawl would only
         # waste credits scraping landing pages that never yield PDFs.
-        has_deterministic_id = bool(
-            identifiers.get("doi") or identifiers.get("pmid") or identifiers.get("pmcid")
-        )
+        has_deterministic_id = bool(identifiers.get("doi") or identifiers.get("pmid") or identifiers.get("pmcid"))
 
         if has_deterministic_id:
             try:
                 api_items = await _acquire_links_api(
-                    query=query, identifiers=id_params, limit=request.limit,
+                    query=query,
+                    identifiers=id_params,
+                    limit=request.limit,
                 )
-                source_trace.append(_source_trace_entry(
-                    provider="api",
-                    success=bool(api_items),
-                    items_count=len(api_items),
-                ))
+                source_trace.append(
+                    _source_trace_entry(
+                        provider="api",
+                        success=bool(api_items),
+                        items_count=len(api_items),
+                    )
+                )
             except Exception as exc:
                 logger.warning("api acquisition failed: {}", exc)
                 warning = f"api acquisition failed: {exc}"
                 warnings.append(warning)
-                source_trace.append(_source_trace_entry(
-                    provider="api",
-                    success=False,
-                    warnings=[warning],
-                    error=str(exc),
-                ))
+                source_trace.append(
+                    _source_trace_entry(
+                        provider="api",
+                        success=False,
+                        warnings=[warning],
+                        error=str(exc),
+                    )
+                )
             route = OnlineAcquisitionRouteInfo(
                 prefer=request.prefer,
                 api_provider=request.api_provider,
@@ -602,36 +618,44 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
                 logger.warning("api acquisition failed: {}", api_result)
                 warning = f"api acquisition failed: {api_result}"
                 warnings.append(warning)
-                source_trace.append(_source_trace_entry(
-                    provider="api",
-                    success=False,
-                    warnings=[warning],
-                    error=str(api_result),
-                ))
+                source_trace.append(
+                    _source_trace_entry(
+                        provider="api",
+                        success=False,
+                        warnings=[warning],
+                        error=str(api_result),
+                    )
+                )
             else:
                 api_items = api_result
-                source_trace.append(_source_trace_entry(
-                    provider="api",
-                    success=bool(api_items),
-                    items_count=len(api_items),
-                ))
+                source_trace.append(
+                    _source_trace_entry(
+                        provider="api",
+                        success=bool(api_items),
+                        items_count=len(api_items),
+                    )
+                )
             if isinstance(firecrawl_result, Exception):
                 logger.warning("firecrawl acquisition failed: {}", firecrawl_result)
                 warning = f"firecrawl acquisition failed: {firecrawl_result}"
                 warnings.append(warning)
-                source_trace.append(_source_trace_entry(
-                    provider="firecrawl",
-                    success=False,
-                    warnings=[warning],
-                    error=str(firecrawl_result),
-                ))
+                source_trace.append(
+                    _source_trace_entry(
+                        provider="firecrawl",
+                        success=False,
+                        warnings=[warning],
+                        error=str(firecrawl_result),
+                    )
+                )
             else:
                 firecrawl_links = firecrawl_result
-                source_trace.append(_source_trace_entry(
-                    provider="firecrawl",
-                    success=bool(firecrawl_links),
-                    items_count=len(firecrawl_links),
-                ))
+                source_trace.append(
+                    _source_trace_entry(
+                        provider="firecrawl",
+                        success=bool(firecrawl_links),
+                        items_count=len(firecrawl_links),
+                    )
+                )
 
     candidates = _merge_and_dedupe(api_items, firecrawl_links)
 
@@ -662,7 +686,9 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
                 pass
 
     normalized_items, candidates = _apply_type_filter(
-        normalized_items, candidates, list(request.literature_types) if request.literature_types else None,
+        normalized_items,
+        candidates,
+        list(request.literature_types) if request.literature_types else None,
     )
 
     clean_candidates = [{k: v for k, v in c.items() if not k.startswith("_")} for c in candidates]
@@ -706,17 +732,11 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
             literature_types=list(request.literature_types) or None,
         )
         # Keep only relevant downloads (and those with errors — conservative)
-        relevant_paths = {
-            j.file_path for j in gate_result.judgments
-            if j.relevant or j.error
-        }
+        relevant_paths = {j.file_path for j in gate_result.judgments if j.relevant or j.error}
         filtered = [d for d in downloads if d.get("file_path") in relevant_paths]
         removed = gate_result.irrelevant
         if removed:
-            warnings.append(
-                f"RELEVANCE_GATE: {removed}/{gate_result.total} downloads "
-                f"removed as irrelevant"
-            )
+            warnings.append(f"RELEVANCE_GATE: {removed}/{gate_result.total} downloads removed as irrelevant")
             downloads = filtered
 
     return OnlineAcquisitionResponse(
@@ -796,7 +816,6 @@ async def _batch_parse_downloads(
     return downloads
 
 
-
 async def search_language(
     query: str,
     language: str,
@@ -855,8 +874,7 @@ async def multilingual_acquisition_workflow(
     # === Phase 1: Parallel Multi-Lingual Search ===
     per_lang_limit = max(5, request.limit // len(TARGET_LANGUAGES))
     search_tasks = [
-        search_language(query, lang, candidate_limit=per_lang_limit)
-        for lang, query in translations.as_dict().items()
+        search_language(query, lang, candidate_limit=per_lang_limit) for lang, query in translations.as_dict().items()
     ]
     lang_results = await asyncio.gather(*search_tasks, return_exceptions=True)
 
@@ -865,19 +883,23 @@ async def multilingual_acquisition_workflow(
         if isinstance(result, Exception):
             logger.warning("language '{}' search failed: {}", lang, result)
             warnings.append(f"SEARCH_FAILED_{lang}: {result}")
-            source_trace.append(_source_trace_entry(
-                provider=f"multilingual-{lang}",
-                success=False,
-                warnings=[str(result)],
-                error=str(result),
-            ))
+            source_trace.append(
+                _source_trace_entry(
+                    provider=f"multilingual-{lang}",
+                    success=False,
+                    warnings=[str(result)],
+                    error=str(result),
+                )
+            )
         else:
             all_candidates.extend(result)
-            source_trace.append(_source_trace_entry(
-                provider=f"multilingual-{lang}",
-                success=bool(result),
-                items_count=len(result),
-            ))
+            source_trace.append(
+                _source_trace_entry(
+                    provider=f"multilingual-{lang}",
+                    success=bool(result),
+                    items_count=len(result),
+                )
+            )
 
     # Global dedup across all languages
     all_candidates = dedupe_candidates(all_candidates)
@@ -901,7 +923,7 @@ async def multilingual_acquisition_workflow(
         ).model_dump()
 
     # Limit total candidates
-    all_candidates = all_candidates[:request.limit]
+    all_candidates = all_candidates[: request.limit]
 
     logger.info(
         "multilingual search: {} candidates from {} languages",
@@ -924,7 +946,9 @@ async def multilingual_acquisition_workflow(
                 pass
 
     normalized_items, all_candidates = _apply_type_filter(
-        normalized_items, all_candidates, list(request.literature_types) if request.literature_types else None,
+        normalized_items,
+        all_candidates,
+        list(request.literature_types) if request.literature_types else None,
     )
 
     clean_candidates = [{k: v for k, v in c.items() if not k.startswith("_")} for c in all_candidates]
@@ -962,8 +986,11 @@ async def multilingual_acquisition_workflow(
             "url": dr.url,
             "warnings": dr.warnings,
             "search_lang": next(
-                (c.get("search_lang", "") for c in all_candidates
-                 if (dr.doi and c.get("doi") == dr.doi) or (dr.url and c.get("url") == dr.url)),
+                (
+                    c.get("search_lang", "")
+                    for c in all_candidates
+                    if (dr.doi and c.get("doi") == dr.doi) or (dr.url and c.get("url") == dr.url)
+                ),
                 "",
             ),
         }
@@ -986,17 +1013,11 @@ async def multilingual_acquisition_workflow(
             delete_files=True,
             literature_types=list(request.literature_types) or None,
         )
-        relevant_paths = {
-            j.file_path for j in gate_result.judgments
-            if j.relevant or j.error
-        }
+        relevant_paths = {j.file_path for j in gate_result.judgments if j.relevant or j.error}
         filtered = [d for d in downloads if d.get("file_path") in relevant_paths]
         removed = gate_result.irrelevant
         if removed:
-            warnings.append(
-                f"RELEVANCE_GATE: {removed}/{gate_result.total} downloads "
-                f"removed as irrelevant"
-            )
+            warnings.append(f"RELEVANCE_GATE: {removed}/{gate_result.total} downloads removed as irrelevant")
             downloads = filtered
 
     return OnlineAcquisitionResponse(

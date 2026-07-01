@@ -1,4 +1,5 @@
 """Observability utilities — LangSmith tracing + structured logging."""
+
 from __future__ import annotations
 
 import asyncio
@@ -14,6 +15,7 @@ def traced_node(name: str) -> Callable:
 
     Works with both sync and async functions.
     """
+
     def decorator(fn: Callable) -> Callable:
         is_async = asyncio.iscoroutinefunction(fn)
 
@@ -42,4 +44,5 @@ def traced_node(name: str) -> Callable:
                 raise
 
         return async_wrapper if is_async else sync_wrapper
+
     return decorator

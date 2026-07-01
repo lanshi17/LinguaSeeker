@@ -1,4 +1,5 @@
 """Tests for B7 expanded prompt baseline (stronger single-prompt baseline)."""
+
 from __future__ import annotations
 
 import json
@@ -198,9 +199,19 @@ def test_expanded_response_schema_compatible_with_evaluator() -> None:
                 {"field_id": "A.variant_consequence_class", "status": "found", "value": "missense", "confidence": 0.8},
                 {"field_id": "B.sex", "status": "found", "value": "female", "confidence": 0.9},
                 {"field_id": "B.age_of_onset", "status": "found", "value": "2 years", "confidence": 0.7},
-                {"field_id": "B.mode_of_inheritance_reported", "status": "found", "value": "X-linked dominant", "confidence": 0.8},
+                {
+                    "field_id": "B.mode_of_inheritance_reported",
+                    "status": "found",
+                    "value": "X-linked dominant",
+                    "confidence": 0.8,
+                },
                 {"field_id": "C.inheritance_source", "status": "found", "value": "explicit", "confidence": 0.7},
-                {"field_id": "B.clinical_phenotypes", "status": "found", "value": "stereotypic hand movements", "confidence": 0.7},
+                {
+                    "field_id": "B.clinical_phenotypes",
+                    "status": "found",
+                    "value": "stereotypic hand movements",
+                    "confidence": 0.7,
+                },
                 {"field_id": "C.de_novo_status", "status": "found", "value": "de novo", "confidence": 0.9},
                 {"field_id": "C.segregation", "status": "not_found", "value": "", "confidence": 0.0},
                 {"field_id": "C.functional_assay", "status": "not_found", "value": "", "confidence": 0.0},
@@ -260,14 +271,16 @@ async def test_expanded_baseline_report_has_correct_baseline_id(tmp_path: Path) 
     entry_dir.mkdir(parents=True)
     (entry_dir / "source.md").write_text("MECP2 causes Rett syndrome.", encoding="utf-8")
     (entry_dir / "expected.json").write_text(
-        json.dumps({
-            "entry_id": "test_000",
-            "gene_symbol": "MECP2",
-            "disease_label": "Rett syndrome",
-            "expected_evidence": [
-                {"field_id": "A.gene_symbol", "value": "MECP2"},
-            ],
-        }),
+        json.dumps(
+            {
+                "entry_id": "test_000",
+                "gene_symbol": "MECP2",
+                "disease_label": "Rett syndrome",
+                "expected_evidence": [
+                    {"field_id": "A.gene_symbol", "value": "MECP2"},
+                ],
+            }
+        ),
         encoding="utf-8",
     )
     (ground_truth_dir / "selection.json").write_text(

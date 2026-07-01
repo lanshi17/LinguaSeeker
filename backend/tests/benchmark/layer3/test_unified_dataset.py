@@ -1,4 +1,5 @@
 """Tests for unified dataset as default benchmark, sharding, provenance, and queued status."""
+
 from __future__ import annotations
 
 import json
@@ -110,10 +111,14 @@ class TestLoadEntries:
         (tmp_path / "manifest.json").write_text(json.dumps(manifest))
         # Only gs_000 has expected.json
         (tmp_path / "gs_000").mkdir()
-        (tmp_path / "gs_000" / "expected.json").write_text(json.dumps({
-            "gene_symbol": "A",
-            "expected_evidence": [],
-        }))
+        (tmp_path / "gs_000" / "expected.json").write_text(
+            json.dumps(
+                {
+                    "gene_symbol": "A",
+                    "expected_evidence": [],
+                }
+            )
+        )
 
         entries = _load_entries(tmp_path)
         assert len(entries) == 1
@@ -204,10 +209,16 @@ class TestStratifiedMetrics:
     def test_groups_by_source_dataset(self) -> None:
         from benchmark.core.contracts import FieldMatch
 
-        m1 = EntryMetrics(entry_id="gs_000", gene_symbol="A", classification="Definitive", language="en", source_dataset="clingen")
+        m1 = EntryMetrics(
+            entry_id="gs_000", gene_symbol="A", classification="Definitive", language="en", source_dataset="clingen"
+        )
         m1.field_matches = [FieldMatch(field_id="A.gene_symbol", expected_value="A", matched=True)]
-        m2 = EntryMetrics(entry_id="gs_001", gene_symbol="B", classification="Moderate", language="en", source_dataset="rett")
-        m2.field_matches = [FieldMatch(field_id="A.gene_symbol", expected_value="B", matched=False, match_type="missing")]
+        m2 = EntryMetrics(
+            entry_id="gs_001", gene_symbol="B", classification="Moderate", language="en", source_dataset="rett"
+        )
+        m2.field_matches = [
+            FieldMatch(field_id="A.gene_symbol", expected_value="B", matched=False, match_type="missing")
+        ]
 
         result = _compute_stratified_metrics([m1, m2])
         assert "clingen" in result

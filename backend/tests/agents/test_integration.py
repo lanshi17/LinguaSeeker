@@ -1,4 +1,5 @@
 """Integration test for full pipeline orchestrator."""
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from src.agents.contracts import (

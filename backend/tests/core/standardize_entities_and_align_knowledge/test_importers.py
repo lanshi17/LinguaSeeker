@@ -1,4 +1,5 @@
 """Tests for Phase 3 terminology import parsers."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -88,8 +89,7 @@ def test_parse_clingen_rows_builds_mondo_entries_and_relationships(tmp_path: Pat
     root = tmp_path / "clingen"
     root.mkdir()
     (root / "Clingen-Gene-Disease-Summary.csv").write_text(
-        "GENE SYMBOL,DISEASE LABEL,DISEASE ID,CLASSIFICATION\n"
-        "BRCA2,Breast cancer,MONDO:0012934,Definitive\n",
+        "GENE SYMBOL,DISEASE LABEL,DISEASE ID,CLASSIFICATION\nBRCA2,Breast cancer,MONDO:0012934,Definitive\n",
         encoding="utf-8",
     )
     (root / "Clingen-Dosage-Sensitivity.csv").write_text(
@@ -128,17 +128,17 @@ def test_parse_clingen_rows_skips_preamble_before_csv_header(tmp_path: Path) -> 
     root = tmp_path / "clingen"
     root.mkdir()
     (root / "Clingen-Gene-Disease-Summary.csv").write_text(
-        "\"CLINGEN GENE DISEASE VALIDITY CURATIONS\",\"\"\n"
-        "\"FILE CREATED: 2026-05-25\",\"\"\n"
-        "\"GENE SYMBOL\",\"GENE ID (HGNC)\",\"DISEASE LABEL\",\"DISEASE ID (MONDO)\",\"CLASSIFICATION\"\n"
-        "\"BRCA2\",\"1101\",\"Breast cancer\",\"MONDO:0012934\",\"Definitive\"\n",
+        '"CLINGEN GENE DISEASE VALIDITY CURATIONS",""\n'
+        '"FILE CREATED: 2026-05-25",""\n'
+        '"GENE SYMBOL","GENE ID (HGNC)","DISEASE LABEL","DISEASE ID (MONDO)","CLASSIFICATION"\n'
+        '"BRCA2","1101","Breast cancer","MONDO:0012934","Definitive"\n',
         encoding="utf-8",
     )
     (root / "Clingen-Dosage-Sensitivity.csv").write_text(
-        "\"CLINGEN DOSAGE SENSITIVITY CURATIONS\",\"\"\n"
-        "\"FILE CREATED: 2026-05-25\",\"\"\n"
-        "\"GENE SYMBOL\",\"HGNC ID\",\"HAPLOINSUFFICIENCY\",\"TRIPLOSENSITIVITY\",\"ONLINE REPORT\",\"DATE\"\n"
-        "\"GLA\",\"4296\",\"3\",\"0\",\"https://example.test\",\"2026-05-25\"\n",
+        '"CLINGEN DOSAGE SENSITIVITY CURATIONS",""\n'
+        '"FILE CREATED: 2026-05-25",""\n'
+        '"GENE SYMBOL","HGNC ID","HAPLOINSUFFICIENCY","TRIPLOSENSITIVITY","ONLINE REPORT","DATE"\n'
+        '"GLA","4296","3","0","https://example.test","2026-05-25"\n',
         encoding="utf-8",
     )
 
@@ -238,24 +238,28 @@ def test_build_clinvar_core_tsv_keeps_only_requested_fields(tmp_path: Path) -> N
 
     assert rows_written == 1
     written = target.read_text(encoding="utf-8").splitlines()
-    assert written[0] == "\t".join([
-        "VariationID",
-        "Name",
-        "GeneSymbol",
-        "ClinicalSignificance",
-        "ReviewStatus",
-        "RS# (dbSNP)",
-        "PhenotypeIDS",
-    ])
-    assert written[1] == "\t".join([
-        "12345",
-        "NM_000059.4(BRCA2):c.5946del",
-        "BRCA2",
-        "Pathogenic",
-        "criteria provided, single submitter",
-        "80359550",
-        "OMIM:612555",
-    ])
+    assert written[0] == "\t".join(
+        [
+            "VariationID",
+            "Name",
+            "GeneSymbol",
+            "ClinicalSignificance",
+            "ReviewStatus",
+            "RS# (dbSNP)",
+            "PhenotypeIDS",
+        ]
+    )
+    assert written[1] == "\t".join(
+        [
+            "12345",
+            "NM_000059.4(BRCA2):c.5946del",
+            "BRCA2",
+            "Pathogenic",
+            "criteria provided, single submitter",
+            "80359550",
+            "OMIM:612555",
+        ]
+    )
 
 
 def test_build_clinvar_core_tsv_filters_zero_star_rows_and_contiguous_duplicates(tmp_path: Path) -> None:
@@ -354,13 +358,7 @@ def test_parse_hpo_rows_obo_flushes_on_new_non_term_stanza(tmp_path: Path) -> No
     root = tmp_path / "hpo_typedef"
     root.mkdir()
     (root / "hp.obo").write_text(
-        "[Term]\n"
-        "id: HP:0000001\n"
-        "name: Term one\n"
-        "\n"
-        "[Typedef]\n"
-        "id: part_of\n"
-        "name: part of\n",
+        "[Term]\nid: HP:0000001\nname: Term one\n\n[Typedef]\nid: part_of\nname: part of\n",
         encoding="utf-8",
     )
 

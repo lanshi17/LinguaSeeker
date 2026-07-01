@@ -1,4 +1,5 @@
 """Evidence map stage — relevance scan and document channel classification."""
+
 from __future__ import annotations
 
 import asyncio
@@ -45,11 +46,13 @@ class RelevanceScanStage:
         )
 
     def run(self, document: TrackDocument) -> RelevanceScanResult:
-        overhead = estimate_tokens(get_evidence_map_prompt(
-            document_id=document.document_id,
-            track=document.track,
-            text="",
-        ))
+        overhead = estimate_tokens(
+            get_evidence_map_prompt(
+                document_id=document.document_id,
+                track=document.track,
+                text="",
+            )
+        )
         chunks = build_text_prompt_chunks(
             document.formatted_text,
             input_budget_tokens=self._input_budget_tokens,
@@ -63,22 +66,25 @@ class RelevanceScanStage:
                 track=document.track,
                 text=f"{chunk_note}{chunk.text}",
             )
-            outputs.append(self._provider.invoke_structured(
-                prompt=prompt,
-                output_schema=RelevanceScanOutput,
-                tier=EvidenceModelTier.FAST,
-                stage="relevance_scan" if chunk.total == 1 else f"relevance_scan/{chunk.index}",
-                response_method="json_mode",
-            ))
+            outputs.append(
+                self._provider.invoke_structured(
+                    prompt=prompt,
+                    output_schema=RelevanceScanOutput,
+                    tier=EvidenceModelTier.FAST,
+                    stage="relevance_scan" if chunk.total == 1 else f"relevance_scan/{chunk.index}",
+                    response_method="json_mode",
+                )
+            )
         merged_map = merge_evidence_maps(outputs)
         classifications = [self._extract_classification(o) for o in outputs]
         merged_cls = merge_channel_classifications(classifications)
         logger.debug(
-            "Relevance scan: doc_id={}, track={}, relevant={}, disease={}, gene={}, variant={}, "
-            "channels={}",
-            document.document_id, document.track.value,
+            "Relevance scan: doc_id={}, track={}, relevant={}, disease={}, gene={}, variant={}, channels={}",
+            document.document_id,
+            document.track.value,
             merged_map.relevant,
-            len(merged_map.disease_terms), len(merged_map.gene_terms),
+            len(merged_map.disease_terms),
+            len(merged_map.gene_terms),
             len(merged_map.variant_terms),
             [ch.value for ch in merged_cls.selected_channels],
         )
@@ -86,11 +92,13 @@ class RelevanceScanStage:
 
     async def run_async(self, document: TrackDocument) -> RelevanceScanResult:
         """Async version — runs chunk LLM calls concurrently with semaphore."""
-        overhead = estimate_tokens(get_evidence_map_prompt(
-            document_id=document.document_id,
-            track=document.track,
-            text="",
-        ))
+        overhead = estimate_tokens(
+            get_evidence_map_prompt(
+                document_id=document.document_id,
+                track=document.track,
+                text="",
+            )
+        )
         chunks = build_text_prompt_chunks(
             document.formatted_text,
             input_budget_tokens=self._input_budget_tokens,
@@ -127,18 +135,17 @@ class RelevanceScanStage:
                 continue
             outputs.append(result)
         if not outputs and errors:
-            raise RuntimeError(
-                f"Relevance scan failed for all {len(chunks)} chunks: {errors[0]}"
-            )
+            raise RuntimeError(f"Relevance scan failed for all {len(chunks)} chunks: {errors[0]}")
         merged_map = merge_evidence_maps(outputs)
         classifications = [self._extract_classification(o) for o in outputs]
         merged_cls = merge_channel_classifications(classifications)
         logger.debug(
-            "Relevance scan: doc_id={}, track={}, relevant={}, disease={}, gene={}, variant={}, "
-            "channels={}",
-            document.document_id, document.track.value,
+            "Relevance scan: doc_id={}, track={}, relevant={}, disease={}, gene={}, variant={}, channels={}",
+            document.document_id,
+            document.track.value,
             merged_map.relevant,
-            len(merged_map.disease_terms), len(merged_map.gene_terms),
+            len(merged_map.disease_terms),
+            len(merged_map.gene_terms),
             len(merged_map.variant_terms),
             [ch.value for ch in merged_cls.selected_channels],
         )

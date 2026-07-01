@@ -1,4 +1,5 @@
 """Integration test with real LLM. Skipped unless env vars are present."""
+
 from __future__ import annotations
 
 import os
@@ -82,14 +83,13 @@ async def test_fabry_dual_track_evidence_extraction_with_real_llm():
     )
 
     completed_results = [
-        track_result for track_result in (result.original_result, result.translated_result)
+        track_result
+        for track_result in (result.original_result, result.translated_result)
         if track_result.status == EvidenceExtractionStatus.COMPLETED
     ]
     assert completed_results
     assert any(
-        item.status.value == "found"
-        for track_result in completed_results
-        for item in track_result.evidence_items
+        item.status.value == "found" for track_result in completed_results for item in track_result.evidence_items
     )
     for track_result in completed_results:
         assert track_result.quality_report is not None

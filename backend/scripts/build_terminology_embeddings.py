@@ -6,6 +6,7 @@ Usage:
     uv run python scripts/build_terminology_embeddings.py --entity-types disease phenotype
     uv run python scripts/build_terminology_embeddings.py --source-dbs OMIM HPO MONDO
 """
+
 from __future__ import annotations
 
 import argparse

@@ -1,4 +1,5 @@
 """Tests for async workflow execution."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -92,8 +93,7 @@ async def test_workflow_run_async_legacy_completed() -> None:
     assert state.evidence_map is not None
     assert state.evidence_map.relevant is True
     assert not any(
-        call.kwargs["stage"] == "primary_broad_extraction"
-        for call in mock_provider.ainvoke_structured.call_args_list
+        call.kwargs["stage"] == "primary_broad_extraction" for call in mock_provider.ainvoke_structured.call_args_list
     )
 
 
@@ -115,8 +115,7 @@ async def test_workflow_run_async_default_uses_primary_broad_extraction() -> Non
 
     assert state.status == EvidenceExtractionStatus.COMPLETED
     assert any(
-        call.kwargs["stage"] == "primary_broad_extraction"
-        for call in mock_provider.ainvoke_structured.call_args_list
+        call.kwargs["stage"] == "primary_broad_extraction" for call in mock_provider.ainvoke_structured.call_args_list
     )
     assert not any(
         call.kwargs["stage"].startswith("catalog_extraction")

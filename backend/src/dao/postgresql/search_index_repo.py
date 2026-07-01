@@ -6,6 +6,7 @@ uses a unique index on ``canonical_evidence_id`` so that a future switch
 to a materialized view with ``REFRESH MATERIALIZED VIEW CONCURRENTLY``
 remains possible.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -114,36 +115,20 @@ class SearchIndexRepository:
 
         if gene:
             # Text search on active_payload->>'gene' (case-insensitive).
-            conditions.append(
-                cast(
-                    frontend_search_index.c.active_payload["gene"], Text
-                ).ilike(f"%{gene}%")
-            )
+            conditions.append(cast(frontend_search_index.c.active_payload["gene"], Text).ilike(f"%{gene}%"))
 
         if variant:
-            conditions.append(
-                cast(
-                    frontend_search_index.c.active_payload["variant"], Text
-                ).ilike(f"%{variant}%")
-            )
+            conditions.append(cast(frontend_search_index.c.active_payload["variant"], Text).ilike(f"%{variant}%"))
 
         if disease:
-            conditions.append(
-                cast(
-                    frontend_search_index.c.active_payload["disease"], Text
-                ).ilike(f"%{disease}%")
-            )
+            conditions.append(cast(frontend_search_index.c.active_payload["disease"], Text).ilike(f"%{disease}%"))
 
         if gene_ids:
             # gene_ids is a JSONB array; use ?| overlap operator.
-            conditions.append(
-                frontend_search_index.c.gene_ids.op("?|")(gene_ids)
-            )
+            conditions.append(frontend_search_index.c.gene_ids.op("?|")(gene_ids))
 
         if variant_ids:
-            conditions.append(
-                frontend_search_index.c.variant_ids.op("?|")(variant_ids)
-            )
+            conditions.append(frontend_search_index.c.variant_ids.op("?|")(variant_ids))
 
         if doi is not None:
             conditions.append(frontend_search_index.c.doi == doi)
@@ -169,9 +154,7 @@ class SearchIndexRepository:
     async def refresh(self) -> None:
         """Truncate then rebuild the search index from canonical evidence."""
         try:
-            await self._session.execute(
-                text("DELETE FROM frontend_search_index")
-            )
+            await self._session.execute(text("DELETE FROM frontend_search_index"))
         except Exception as exc:
             # In SQLite test environments the table may not exist.
             # Only swallow "no such table"; re-raise everything else

@@ -1,4 +1,5 @@
 """Tests for fused benchmark evaluation logic."""
+
 from __future__ import annotations
 
 
@@ -36,10 +37,13 @@ class TestFuzzyMatch:
         assert fuzzy_match("breast cancer", "Hereditary breast and ovarian cancer syndrome") is True
 
     def test_disease_word_overlap(self) -> None:
-        assert fuzzy_match(
-            "Charcot-Marie-Tooth disease",
-            "Charcot-Marie-Tooth disease axonal type 2N",
-        ) is True
+        assert (
+            fuzzy_match(
+                "Charcot-Marie-Tooth disease",
+                "Charcot-Marie-Tooth disease axonal type 2N",
+            )
+            is True
+        )
 
     def test_no_match(self) -> None:
         assert fuzzy_match("BRCA1", "TP53") is False
@@ -190,14 +194,20 @@ class TestComputeAggregateMetrics:
             pipeline_status="preprocessed",
             field_results=[
                 FieldResult(
-                    field_id="A.gene_symbol", expected_value="BRCA1",
-                    evaluation_type="precision_recall", matched=True,
-                    extracted_value="BRCA1", match_type="exact",
+                    field_id="A.gene_symbol",
+                    expected_value="BRCA1",
+                    evaluation_type="precision_recall",
+                    matched=True,
+                    extracted_value="BRCA1",
+                    match_type="exact",
                 ),
                 FieldResult(
-                    field_id="A.variant_hgvs_c", expected_value="c.5266dupC",
-                    evaluation_type="precision_only", matched=True,
-                    extracted_value="c.5266dupC", match_type="candidate_match",
+                    field_id="A.variant_hgvs_c",
+                    expected_value="c.5266dupC",
+                    evaluation_type="precision_only",
+                    matched=True,
+                    extracted_value="c.5266dupC",
+                    match_type="candidate_match",
                 ),
             ],
         )

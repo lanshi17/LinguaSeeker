@@ -1,4 +1,5 @@
 """Shared ASGI middleware for the main backend."""
+
 from __future__ import annotations
 
 import time

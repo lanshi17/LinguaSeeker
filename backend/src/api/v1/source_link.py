@@ -1,4 +1,5 @@
 """Source linker routes for evidence traceability."""
+
 from __future__ import annotations
 
 from uuid import UUID
@@ -25,9 +26,7 @@ async def get_bilingual_span(
     """Retrieve bilingual traceability span for an evidence card."""
     factory = get_phase4_factory()
     linker = factory.create_source_linker(session)
-    return await linker.get_bilingual_span(
-        canonical_evidence_id=canonical_evidence_id
-    )
+    return await linker.get_bilingual_span(canonical_evidence_id=canonical_evidence_id)
 
 
 @router.get("/{canonical_evidence_id}/{track}", response_model=TrackSpan | None)

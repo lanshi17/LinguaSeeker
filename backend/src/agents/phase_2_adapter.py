@@ -4,6 +4,7 @@ Uses TranslationService.run() + .save() for translation.
 Uses EvidenceExtractionService.build_dual_documents_from_output_dir() + .run_dual()
 for dual-track evidence extraction.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -110,6 +111,7 @@ class Phase2Adapter:
 
             # Use absolute path to survive CWD changes
             from pathlib import Path as _Path
+
             _backend_root = _Path(__file__).resolve().parent.parent.parent.parent
             output_dir = str(_backend_root / "data" / "pipeline" / state.processing_run_id / "phase_2")
             Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -177,10 +179,8 @@ class Phase2Adapter:
 
             # Check if document is relevant
             both_not_relevant = (
-                dual_result.original_result.status
-                == EvidenceExtractionStatus.NOT_RELEVANT
-                and dual_result.translated_result.status
-                == EvidenceExtractionStatus.NOT_RELEVANT
+                dual_result.original_result.status == EvidenceExtractionStatus.NOT_RELEVANT
+                and dual_result.translated_result.status == EvidenceExtractionStatus.NOT_RELEVANT
             )
 
             if both_not_relevant:

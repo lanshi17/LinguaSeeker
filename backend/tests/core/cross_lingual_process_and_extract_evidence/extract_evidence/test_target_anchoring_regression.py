@@ -1,4 +1,5 @@
 """Regression coverage for target anchoring extraction failures."""
+
 from __future__ import annotations
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
@@ -51,12 +52,14 @@ def test_abca3_target_corrects_gene_list_containing_target() -> None:
 
 
 def test_aars2_syndromes_and_nodopathy_do_not_enter_primary_evidence() -> None:
-    primary, phenotype, discarded = EvidenceRoleRouter().route([
-        _item("A.gene_symbol", "AARS2"),
-        _item("B.disease_diagnosis", "COXPD8", EvidenceRole.PHENOTYPE),
-        _item("B.disease_diagnosis", "LKENP", EvidenceRole.PHENOTYPE),
-        _item("B.disease_diagnosis", "Anti-NF155 autoimmune nodopathy", EvidenceRole.COMPARATOR),
-    ])
+    primary, phenotype, discarded = EvidenceRoleRouter().route(
+        [
+            _item("A.gene_symbol", "AARS2"),
+            _item("B.disease_diagnosis", "COXPD8", EvidenceRole.PHENOTYPE),
+            _item("B.disease_diagnosis", "LKENP", EvidenceRole.PHENOTYPE),
+            _item("B.disease_diagnosis", "Anti-NF155 autoimmune nodopathy", EvidenceRole.COMPARATOR),
+        ]
+    )
 
     assert [item.value for item in primary] == ["AARS2"]
     assert [item.value for item in phenotype] == ["COXPD8", "LKENP"]

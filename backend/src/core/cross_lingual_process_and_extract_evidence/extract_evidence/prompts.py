@@ -1,4 +1,5 @@
 """Prompt builders for evidence extraction stages."""
+
 from __future__ import annotations
 
 import json
@@ -62,10 +63,7 @@ def format_block_prompt_entry(index: int, block: ContentBlock, body: str | None 
     mapped_type = map_block_type(block.type)
     caption = block_context_ref(block)
     caption_part = f" | caption: {caption}" if caption else ""
-    return (
-        f"[Block {index} | {mapped_type} | page {block.page_idx + 1}{caption_part}]\n"
-        f"{block_body}"
-    )
+    return f"[Block {index} | {mapped_type} | page {block.page_idx + 1}{caption_part}]\n{block_body}"
 
 
 def build_block_prompt_text(
@@ -152,7 +150,6 @@ DOCUMENT TEXT:
 """
 
 
-
 def _target_prompt_section(extraction_target: ExtractionTarget | None) -> str:
     if extraction_target is None:
         return "TARGET: Not provided."
@@ -183,7 +180,6 @@ def disease_boundary_guidance() -> str:
 - Do NOT extract comorbidities, complications, manifestations, phenotypes, or general medical history as the primary diagnosis.
 - Do NOT extract background diseases from introductions, reviews, controls, or family history unless the target gene is directly linked to that disease in the same evidence context.
 - Do NOT over-specialize or under-specialize the target disease name. Preserve the target-level disease boundary supported by the evidence span."""
-
 
 
 _CASE_REPORT_STRATEGY = """CASE-REPORT STRATEGY:
@@ -408,8 +404,7 @@ def get_source_ambiguity_review_prompt(
     candidate_locations: list[dict[str, int]],
 ) -> str:
     candidates_text = "\n".join(
-        f"  - page={c['page']}, start={c['start_offset']}, end={c['end_offset']}"
-        for c in candidate_locations
+        f"  - page={c['page']}, start={c['start_offset']}, end={c['end_offset']}" for c in candidate_locations
     )
     return f"""A text snippet appears multiple times in a document. Select the best source location.
 

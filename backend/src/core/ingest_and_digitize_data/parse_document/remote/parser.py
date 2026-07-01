@@ -1,4 +1,5 @@
 """Remote MinerU parser via cloud API."""
+
 from __future__ import annotations
 
 import asyncio
@@ -468,12 +469,14 @@ class MinerURemoteParser(ParserStrategy):
                 # Try alternative key
                 page_md = page_info.get("markdown", "")
             full_markdown_parts.append(page_md)
-            pages.append({
-                "page_number": i,
-                "markdown": page_md,
-                "figures": [],
-                "tables": [],
-            })
+            pages.append(
+                {
+                    "page_number": i,
+                    "markdown": page_md,
+                    "figures": [],
+                    "tables": [],
+                }
+            )
 
         abstract = data.get("abstract")
         if not abstract:
@@ -498,12 +501,14 @@ class MinerURemoteParser(ParserStrategy):
         for i, md_file in enumerate(sorted(md_files), start=1):
             content = md_file.read_text(encoding="utf-8")
             full_markdown_parts.append(content)
-            pages.append({
-                "page_number": i,
-                "markdown": content,
-                "figures": [],
-                "tables": [],
-            })
+            pages.append(
+                {
+                    "page_number": i,
+                    "markdown": content,
+                    "figures": [],
+                    "tables": [],
+                }
+            )
 
         combined_markdown = "\n\n".join(full_markdown_parts)
         abstract = extract_abstract_from_markdown(combined_markdown)
@@ -556,11 +561,13 @@ class MinerURemoteParser(ParserStrategy):
                 if block_type == "image":
                     caption = block.get("image_caption", [])
                     img_path = block.get("img_path")
-                    figures.append({
-                        "index": len(figures) + 1,
-                        "caption": str(caption[0]) if caption else "",
-                        "img_path": img_path,
-                    })
+                    figures.append(
+                        {
+                            "index": len(figures) + 1,
+                            "caption": str(caption[0]) if caption else "",
+                            "img_path": img_path,
+                        }
+                    )
                 elif block_type == "table":
                     table_body = block.get("table_body", "")
                     headers, rows = html_table_to_structured(table_body) if table_body else ([], [])
@@ -568,12 +575,14 @@ class MinerURemoteParser(ParserStrategy):
 
             page_md = "\n\n".join(parts)
             full_parts.append(page_md)
-            pages.append(_MinerUPageData(
-                page_number=page_number,
-                markdown=page_md,
-                figures=figures,
-                tables=tables,
-            ))
+            pages.append(
+                _MinerUPageData(
+                    page_number=page_number,
+                    markdown=page_md,
+                    figures=figures,
+                    tables=tables,
+                )
+            )
 
         combined_markdown = "\n\n".join(full_parts)
         abstract = extract_abstract_from_markdown(combined_markdown)

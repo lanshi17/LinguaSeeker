@@ -3,6 +3,7 @@
 Covers MOI normalization, gene-disease relationship normalization,
 and the integration of field normalization into compare_evidence.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -22,32 +23,35 @@ from benchmark.core.matching import compare_evidence
 class TestNormalizeMoi:
     """Tests for mode-of-inheritance normalization."""
 
-    @pytest.mark.parametrize("input_val,expected", [
-        # Canonical codes pass through
-        ("AD", "AD"),
-        ("AR", "AR"),
-        ("XL", "XL"),
-        ("Mitochondrial", "Mitochondrial"),
-        ("Somatic Mosaicism", "Somatic Mosaicism"),
-        ("Undetermined", "Undetermined"),
-        # Full descriptions → canonical
-        ("autosomal dominant", "AD"),
-        ("autosomal recessive", "AR"),
-        ("autosomal dominant with reduced penetrance", "AD"),
-        ("X-linked dominant", "XL"),
-        ("X-linked recessive", "XL"),
-        ("X-linked", "XL"),
-        ("x-linked", "XL"),
-        # Chinese
-        ("X连锁显性遗传", "XL"),
-        ("常染色体显性遗传", "AD"),
-        ("常染色体隐性", "AR"),
-        # Compound descriptions
-        ("X-linked dominant; de novo mutation in this patient", "XL"),
-        ("De novo in most RTT cases; X-linked", "XL"),
-        # Empty
-        ("", ""),
-    ])
+    @pytest.mark.parametrize(
+        "input_val,expected",
+        [
+            # Canonical codes pass through
+            ("AD", "AD"),
+            ("AR", "AR"),
+            ("XL", "XL"),
+            ("Mitochondrial", "Mitochondrial"),
+            ("Somatic Mosaicism", "Somatic Mosaicism"),
+            ("Undetermined", "Undetermined"),
+            # Full descriptions → canonical
+            ("autosomal dominant", "AD"),
+            ("autosomal recessive", "AR"),
+            ("autosomal dominant with reduced penetrance", "AD"),
+            ("X-linked dominant", "XL"),
+            ("X-linked recessive", "XL"),
+            ("X-linked", "XL"),
+            ("x-linked", "XL"),
+            # Chinese
+            ("X连锁显性遗传", "XL"),
+            ("常染色体显性遗传", "AD"),
+            ("常染色体隐性", "AR"),
+            # Compound descriptions
+            ("X-linked dominant; de novo mutation in this patient", "XL"),
+            ("De novo in most RTT cases; X-linked", "XL"),
+            # Empty
+            ("", ""),
+        ],
+    )
     def test_moi_mapping(self, input_val: str, expected: str) -> None:
         assert normalize_moi(input_val) == expected
 
@@ -66,33 +70,39 @@ class TestNormalizeMoi:
 class TestNormalizeGeneDiseaseRelationship:
     """Tests for gene-disease relationship normalization."""
 
-    @pytest.mark.parametrize("input_val,expected", [
-        # Canonical enum values
-        ("causative", "causative"),
-        ("uncertain", "uncertain"),
-        ("disputed", "disputed"),
-        ("refuted", "refuted"),
-        ("unknown", "unknown"),
-        # Free text → canonical
-        ("MECP2 mutations cause Rett syndrome", "causative"),
-        ("MECP2 is responsible for Rett syndrome", "causative"),
-        ("Rett syndrome is due mainly to loss-of-function variations", "causative"),
-        ("The relationship is uncertain", "uncertain"),
-        ("Evidence is limited", "uncertain"),
-        ("The association is disputed", "disputed"),
-        ("No evidence of association", "refuted"),
-        ("Gene not associated with disease", "refuted"),
-        # Empty
-        ("", ""),
-    ])
+    @pytest.mark.parametrize(
+        "input_val,expected",
+        [
+            # Canonical enum values
+            ("causative", "causative"),
+            ("uncertain", "uncertain"),
+            ("disputed", "disputed"),
+            ("refuted", "refuted"),
+            ("unknown", "unknown"),
+            # Free text → canonical
+            ("MECP2 mutations cause Rett syndrome", "causative"),
+            ("MECP2 is responsible for Rett syndrome", "causative"),
+            ("Rett syndrome is due mainly to loss-of-function variations", "causative"),
+            ("The relationship is uncertain", "uncertain"),
+            ("Evidence is limited", "uncertain"),
+            ("The association is disputed", "disputed"),
+            ("No evidence of association", "refuted"),
+            ("Gene not associated with disease", "refuted"),
+            # Empty
+            ("", ""),
+        ],
+    )
     def test_gdr_mapping(self, input_val: str, expected: str) -> None:
         assert normalize_gene_disease_relationship(input_val) == expected
 
-    @pytest.mark.parametrize("input_val,expected", [
-        ("associated", "causative"),
-        ("related", "causative"),
-        ("linked", "causative"),
-    ])
+    @pytest.mark.parametrize(
+        "input_val,expected",
+        [
+            ("associated", "causative"),
+            ("related", "causative"),
+            ("linked", "causative"),
+        ],
+    )
     def test_gdr_associated_synonyms(self, input_val: str, expected: str) -> None:
         """Broad relationship terms normalize to 'causative' for monogenic disease genes."""
         assert normalize_gene_disease_relationship(input_val) == expected
@@ -129,10 +139,13 @@ class TestNormalizeFieldForMatching:
         assert normalize_field_for_matching("A.gene_disease_relationship", "causative") == "causative"
 
     def test_hpo_terms_dispatch_maps_raw_phenotypes_to_ids(self) -> None:
-        assert normalize_field_for_matching(
-            "B.hpo_terms",
-            "seizures; developmental delay; hypotonia; atrial septal defect; severe neonatal encephalopathy",
-        ) == "HP:0001250;HP:0001252;HP:0001263;HP:0001631;HP:0012759"
+        assert (
+            normalize_field_for_matching(
+                "B.hpo_terms",
+                "seizures; developmental delay; hypotonia; atrial septal defect; severe neonatal encephalopathy",
+            )
+            == "HP:0001250;HP:0001252;HP:0001263;HP:0001631;HP:0012759"
+        )
 
     def test_unknown_field_returns_unchanged(self) -> None:
         assert normalize_field_for_matching("A.gene_symbol", "BRCA1") == "BRCA1"
@@ -183,8 +196,12 @@ class TestCompareEvidenceFieldNormalized:
         """AD (ClinGen ground truth) matches 'autosomal dominant with reduced penetrance'."""
         expected = [{"field_id": "B.mode_of_inheritance_reported", "value": "AD"}]
         extracted = [
-            {"field_id": "B.mode_of_inheritance_reported", "status": "found",
-             "value": "autosomal dominant with reduced penetrance", "confidence": 0.85},
+            {
+                "field_id": "B.mode_of_inheritance_reported",
+                "status": "found",
+                "value": "autosomal dominant with reduced penetrance",
+                "confidence": 0.85,
+            },
         ]
         matches = compare_evidence(expected, extracted)
         assert len(matches) == 1
@@ -195,8 +212,12 @@ class TestCompareEvidenceFieldNormalized:
         """XL (ClinGen) matches 'X-linked dominant'."""
         expected = [{"field_id": "B.mode_of_inheritance_reported", "value": "XL"}]
         extracted = [
-            {"field_id": "B.mode_of_inheritance_reported", "status": "found",
-             "value": "X-linked dominant", "confidence": 0.9},
+            {
+                "field_id": "B.mode_of_inheritance_reported",
+                "status": "found",
+                "value": "X-linked dominant",
+                "confidence": 0.9,
+            },
         ]
         matches = compare_evidence(expected, extracted)
         assert matches[0].matched is True
@@ -206,8 +227,7 @@ class TestCompareEvidenceFieldNormalized:
         """'single nucleotide variant' (ClinVar) matches 'missense' (pipeline enum)."""
         expected = [{"field_id": "A.variant_type", "value": "missense"}]
         extracted = [
-            {"field_id": "A.variant_type", "status": "found",
-             "value": "single nucleotide variant", "confidence": 0.8},
+            {"field_id": "A.variant_type", "status": "found", "value": "single nucleotide variant", "confidence": 0.8},
         ]
         matches = compare_evidence(expected, extracted)
         assert matches[0].matched is True
@@ -217,8 +237,12 @@ class TestCompareEvidenceFieldNormalized:
         """'causative' (ClinGen enum) matches 'MECP2 mutations cause Rett syndrome'."""
         expected = [{"field_id": "A.gene_disease_relationship", "value": "causative"}]
         extracted = [
-            {"field_id": "A.gene_disease_relationship", "status": "found",
-             "value": "MECP2 mutations cause Rett syndrome", "confidence": 0.9},
+            {
+                "field_id": "A.gene_disease_relationship",
+                "status": "found",
+                "value": "MECP2 mutations cause Rett syndrome",
+                "confidence": 0.9,
+            },
         ]
         matches = compare_evidence(expected, extracted)
         assert matches[0].matched is True
@@ -238,8 +262,12 @@ class TestCompareEvidenceFieldNormalized:
         """AD does not match AR."""
         expected = [{"field_id": "B.mode_of_inheritance_reported", "value": "AD"}]
         extracted = [
-            {"field_id": "B.mode_of_inheritance_reported", "status": "found",
-             "value": "autosomal recessive", "confidence": 0.9},
+            {
+                "field_id": "B.mode_of_inheritance_reported",
+                "status": "found",
+                "value": "autosomal recessive",
+                "confidence": 0.9,
+            },
         ]
         matches = compare_evidence(expected, extracted)
         assert len(matches) == 1
@@ -250,8 +278,7 @@ class TestCompareEvidenceFieldNormalized:
         """'associated' (ground truth) matches 'causative' (system extraction)."""
         expected = [{"field_id": "A.gene_disease_relationship", "value": "associated"}]
         extracted = [
-            {"field_id": "A.gene_disease_relationship", "status": "found",
-             "value": "causative", "confidence": 0.9},
+            {"field_id": "A.gene_disease_relationship", "status": "found", "value": "causative", "confidence": 0.9},
         ]
         matches = compare_evidence(expected, extracted)
         assert len(matches) == 1
@@ -262,24 +289,32 @@ class TestCompareEvidenceFieldNormalized:
         """'associated' (ground truth) should match 'susceptibility' for risk genes like GBA."""
         expected = [{"field_id": "A.gene_disease_relationship", "value": "associated"}]
         extracted = [
-            {"field_id": "A.gene_disease_relationship", "status": "found",
-             "value": "susceptibility", "confidence": 0.85},
+            {
+                "field_id": "A.gene_disease_relationship",
+                "status": "found",
+                "value": "susceptibility",
+                "confidence": 0.85,
+            },
         ]
         matches = compare_evidence(expected, extracted)
         assert len(matches) == 1
         assert matches[0].matched is True
 
     def test_hpo_ids_match_raw_symptom_text(self) -> None:
-        expected = [{
-            "field_id": "B.hpo_terms",
-            "value": "HP:0001252; HP:0001263; HP:0012759; HP:0001631; HP:0001250",
-        }]
-        extracted = [{
-            "field_id": "B.hpo_terms",
-            "status": "found",
-            "value": "seizures; developmental delay; hypotonia; atrial septal defect; severe neonatal encephalopathy",
-            "confidence": 0.8,
-        }]
+        expected = [
+            {
+                "field_id": "B.hpo_terms",
+                "value": "HP:0001252; HP:0001263; HP:0012759; HP:0001631; HP:0001250",
+            }
+        ]
+        extracted = [
+            {
+                "field_id": "B.hpo_terms",
+                "status": "found",
+                "value": "seizures; developmental delay; hypotonia; atrial septal defect; severe neonatal encephalopathy",
+                "confidence": 0.8,
+            }
+        ]
 
         matches = compare_evidence(expected, extracted)
 

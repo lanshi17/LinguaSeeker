@@ -1,4 +1,5 @@
 """Tests for async stage chunk parallelization."""
+
 from __future__ import annotations
 
 import asyncio

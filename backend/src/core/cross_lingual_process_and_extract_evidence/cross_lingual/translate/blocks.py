@@ -1,4 +1,5 @@
 """Block-level merge, split, and marker operations for translation."""
+
 from __future__ import annotations
 
 import re
@@ -70,10 +71,12 @@ def merge_short_keywords(
         if len(run_indices) >= 2:
             # Merge: join texts, keep first block_idx
             combined = _KW_MERGE_SEP.join(run_texts)
-            merged.append((
-                run_indices[0],
-                ContentBlock(type="text", text=combined),
-            ))
+            merged.append(
+                (
+                    run_indices[0],
+                    ContentBlock(type="text", text=combined),
+                )
+            )
             merge_map[len(merged) - 1] = len(run_indices)
         else:
             # Single — not merged, pass through original
@@ -95,7 +98,8 @@ def merge_short_keywords(
 
     logger.info(
         "Keyword merge: {} blocks → {} blocks ({} groups merged)",
-        len(non_empty), len(merged),
+        len(non_empty),
+        len(merged),
         sum(1 for v in merge_map.values() if v > 1),
     )
     return merged, merge_map
@@ -145,7 +149,9 @@ def split_merged_keywords(
             result.extend([""] * (count - 1))
             logger.warning(
                 "Could not split merged keyword block {} (expected {} parts): {}",
-                i, count, text[:60],
+                i,
+                count,
+                text[:60],
             )
     return result
 
@@ -180,7 +186,7 @@ def join_blocks_with_markers(
         kw_match = re.match(r"^【[^】]+】\s*", text)
         if kw_match:
             bracket = kw_match.group(0)
-            text = text[kw_match.end():]
+            text = text[kw_match.end() :]
             # Keep 【关键词】 for re-add; drop 【摘要】
             if "摘要" not in bracket:
                 prefix = bracket.strip()

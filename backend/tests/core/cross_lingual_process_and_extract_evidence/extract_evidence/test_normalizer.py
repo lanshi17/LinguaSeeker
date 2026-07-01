@@ -116,6 +116,7 @@ def test_normalizer_backfills_full_catalog_per_group():
     assert any(i.field_id == "A.gene_symbol" and i.status == EvidenceStatus.FOUND for i in group_items)
     assert any(i.field_id == "A.variant_hgvs_c" and i.status == EvidenceStatus.NOT_FOUND for i in group_items)
 
+
 def test_field_value_normalizer_extracts_gene_from_related_phrase() -> None:
     item = EvidenceItem(
         field_id="A.gene_symbol",

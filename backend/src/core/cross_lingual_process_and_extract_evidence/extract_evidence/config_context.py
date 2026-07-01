@@ -3,6 +3,7 @@
 Reads directly from FAST_LLM and REASONING_LLM config — no separate
 evidence_extraction config section needed.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

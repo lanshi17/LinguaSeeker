@@ -202,15 +202,8 @@ def normalize_unpaywall(item: Dict[str, Any]) -> OnlineAcquisitionItem:
     year = _extract_year(item.get("year") or item.get("published_date"))
     authors = _normalize_authors(item.get("authors") or item.get("author"))
     best_oa = item.get("best_oa_location") or {}
-    url = _clean_text(
-        item.get("url")
-        or best_oa.get("url")
-        or best_oa.get("landing_page_url")
-        or item.get("doi_url")
-    )
-    links = _extract_links(
-        [url, item.get("url"), item.get("doi_url"), best_oa.get("url"), best_oa.get("url_for_pdf")]
-    )
+    url = _clean_text(item.get("url") or best_oa.get("url") or best_oa.get("landing_page_url") or item.get("doi_url"))
+    links = _extract_links([url, item.get("url"), item.get("doi_url"), best_oa.get("url"), best_oa.get("url_for_pdf")])
     return OnlineAcquisitionItem(
         source="unpaywall",
         title=title,
@@ -299,9 +292,7 @@ def normalize_pmc(item: Dict[str, Any]) -> OnlineAcquisitionItem:
 
     # Fallback: generic format
     strings = _collect_strings(item)
-    title = _first(item.get("title")) or _find_first_match(
-        re.compile(r"<title>(.+?)</title>"), strings
-    )
+    title = _first(item.get("title")) or _find_first_match(re.compile(r"<title>(.+?)</title>"), strings)
     doi = _find_first_match(DOI_PATTERN, strings)
     pmcid = _find_first_match(re.compile(r"\bPMC\d+\b", re.IGNORECASE), strings)
     journal = _first(item.get("journal_title")) or _first(item.get("journal"))
@@ -399,7 +390,12 @@ def _normalize_openalex_authorships(authorships: Any) -> List[str]:
 def normalize_openalex(item: Dict[str, Any]) -> OnlineAcquisitionItem:
     title = _clean_text(item.get("title"))
     authorships = item.get("authorships")
-    if isinstance(authorships, list) and authorships and isinstance(authorships[0], dict) and "author" in authorships[0]:
+    if (
+        isinstance(authorships, list)
+        and authorships
+        and isinstance(authorships[0], dict)
+        and "author" in authorships[0]
+    ):
         authors = _normalize_openalex_authorships(authorships)
     else:
         authors = _normalize_authors(authorships or item.get("authors"))
@@ -415,7 +411,11 @@ def normalize_openalex(item: Dict[str, Any]) -> OnlineAcquisitionItem:
     language = _clean_text(item.get("language"))
     keywords_raw = item.get("keywords") or []
     keywords = _dedupe(
-        [_clean_text(v.get("display_name")) for v in keywords_raw if isinstance(v, dict) and _clean_text(v.get("display_name"))]
+        [
+            _clean_text(v.get("display_name"))
+            for v in keywords_raw
+            if isinstance(v, dict) and _clean_text(v.get("display_name"))
+        ]
     )
     return OnlineAcquisitionItem(
         source="openalex",
@@ -635,7 +635,9 @@ def normalize_web_generic(item: Dict[str, Any]) -> OnlineAcquisitionItem:
         language=_clean_text(item.get("language")),
         publisher=_clean_text(item.get("publisher")),
         identifiers={},
-        keywords=_dedupe([_clean_text(v) for v in _as_list(item.get("subjects") or item.get("keywords")) if _clean_text(v)]),
+        keywords=_dedupe(
+            [_clean_text(v) for v in _as_list(item.get("subjects") or item.get("keywords")) if _clean_text(v)]
+        ),
     )
 
 

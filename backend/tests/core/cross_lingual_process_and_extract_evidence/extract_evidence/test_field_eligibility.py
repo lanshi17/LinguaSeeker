@@ -20,10 +20,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.field_
 
 def _extractable_field_ids() -> frozenset[str]:
     return frozenset(
-        spec.field_id
-        for group_name, group in CATALOG_GROUPS.items()
-        if group_name != "curation"
-        for spec in group
+        spec.field_id for group_name, group in CATALOG_GROUPS.items() if group_name != "curation" for spec in group
     )
 
 
@@ -53,9 +50,7 @@ def test_target_always_includes_core_identity_fields() -> None:
 
     decision = FieldEligibilityPolicy().decide(extraction_target=target, evidence_map=None)
 
-    assert {"A.gene_symbol", "A.gene_disease_relationship", "B.disease_diagnosis"}.issubset(
-        decision.allowed_field_ids
-    )
+    assert {"A.gene_symbol", "A.gene_disease_relationship", "B.disease_diagnosis"}.issubset(decision.allowed_field_ids)
     assert "target:core_identity" in decision.reasons
 
 
@@ -235,9 +230,7 @@ def test_cell_disease_phrase_does_not_trigger_functional_fields() -> None:
 # ---------------------------------------------------------------------------
 
 _ALL_FIELD_IDS = frozenset(spec.field_id for spec in EVIDENCE_FIELD_SPECS)
-_NON_K_FIELD_IDS = frozenset(
-    spec.field_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id != "K"
-)
+_NON_K_FIELD_IDS = frozenset(spec.field_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id != "K")
 
 
 def _cls(channels: list[DocumentEvidenceChannel]) -> DocumentChannelClassification:
@@ -254,7 +247,8 @@ def test_decide_with_channels_none_classification_returns_base():
     target = ExtractionTarget(gene_symbol="ABCA3", disease_name="ABCA3 deficiency")
     base = FieldEligibilityPolicy().decide(extraction_target=target)
     composed = FieldEligibilityPolicy().decide_with_channels(
-        extraction_target=target, channel_classification=None,
+        extraction_target=target,
+        channel_classification=None,
     )
     assert composed.allowed_field_ids == base.allowed_field_ids
     assert composed.reasons == base.reasons
@@ -324,10 +318,12 @@ def test_mixed_case_and_functional_uses_union_before_intersection():
     # C fields have no target-cue path, so use no-target to test pure channel union.
     composed = FieldEligibilityPolicy().decide_with_channels(
         extraction_target=None,
-        channel_classification=_cls([
-            DocumentEvidenceChannel.CASE_REPORT,
-            DocumentEvidenceChannel.FUNCTIONAL_STUDY,
-        ]),
+        channel_classification=_cls(
+            [
+                DocumentEvidenceChannel.CASE_REPORT,
+                DocumentEvidenceChannel.FUNCTIONAL_STUDY,
+            ]
+        ),
     )
     # F fields allowed via functional_study
     assert "F.assay_id" in composed.allowed_field_ids
@@ -380,9 +376,7 @@ def test_decide_with_channels_result_is_subset_of_base():
 
 def test_decide_with_channels_excludes_curation_always():
     target = ExtractionTarget(gene_symbol="GLA", disease_name="Fabry disease")
-    k_fields = frozenset(
-        spec.field_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id == "K"
-    )
+    k_fields = frozenset(spec.field_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id == "K")
     for channel in DocumentEvidenceChannel:
         composed = FieldEligibilityPolicy().decide_with_channels(
             extraction_target=target,

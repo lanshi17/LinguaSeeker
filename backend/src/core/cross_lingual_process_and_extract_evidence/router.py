@@ -1,4 +1,5 @@
 """Independent routing logic — decoupled from orchestrator."""
+
 from __future__ import annotations
 
 from typing import Literal

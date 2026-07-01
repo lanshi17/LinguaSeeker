@@ -1,4 +1,5 @@
 """Tests for global error handlers."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
@@ -22,8 +23,10 @@ async def error_client():
         ),
     ):
         from src.core.config import Settings
+
         mock_cfg.return_value = Settings()
         from app.main import create_app
+
         app = create_app()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:

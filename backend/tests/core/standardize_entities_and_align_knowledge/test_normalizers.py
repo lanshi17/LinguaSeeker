@@ -1,4 +1,5 @@
 """Tests for Phase 3 standardization normalization helpers."""
+
 from __future__ import annotations
 
 from src.core.standardize_entities_and_align_knowledge.normalizers import (
@@ -67,10 +68,7 @@ def test_entity_scope_hash_is_order_independent() -> None:
 
 def test_entity_scope_hash_for_empty_bindings_matches_empty_stable_value() -> None:
     """Entity-scope hashing handles empty bindings deterministically."""
-    assert make_entity_scope_hash([]) == (
-        "e3b0c44298fc1c149afbf4c8996fb924"
-        "27ae41e4649b934ca495991b7852b855"
-    )
+    assert make_entity_scope_hash([]) == ("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
 
 
 def test_normalize_lookup_text_preserves_chinese() -> None:
@@ -102,6 +100,7 @@ def test_target_scope_bindings_change_entity_scope_hash() -> None:
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
         ExtractionTarget,
     )
+
     abca3 = ExtractionTarget(gene_symbol="ABCA3", disease_name="ABCA3 deficiency")
     cftr = ExtractionTarget(gene_symbol="CFTR", disease_name="cystic fibrosis")
     entity_bindings = [("subject", "HGNC:33"), ("context", "MONDO:0000001")]

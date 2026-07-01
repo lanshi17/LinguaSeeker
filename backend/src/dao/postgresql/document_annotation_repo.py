@@ -4,6 +4,7 @@ Provides async CRUD over user-created text-selection annotations. Functions
 mirror the style of :mod:`literature_profile_repo` and operate directly on an
 ``AsyncSession`` so callers control transaction boundaries.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -30,9 +31,7 @@ async def list_annotations(
     Returns:
         Sequence of ``DocumentAnnotation`` ORM rows ordered by creation time.
     """
-    stmt = select(DocumentAnnotation).where(
-        DocumentAnnotation.source_document_id == source_document_id
-    )
+    stmt = select(DocumentAnnotation).where(DocumentAnnotation.source_document_id == source_document_id)
     if track is not None:
         stmt = stmt.where(DocumentAnnotation.track == track)
     stmt = stmt.order_by(DocumentAnnotation.created_at, DocumentAnnotation.id)
@@ -40,9 +39,7 @@ async def list_annotations(
     return result.scalars().all()
 
 
-async def get_annotation(
-    session: AsyncSession, annotation_id: uuid.UUID
-) -> DocumentAnnotation | None:
+async def get_annotation(session: AsyncSession, annotation_id: uuid.UUID) -> DocumentAnnotation | None:
     """Fetch a single annotation by id, or None if not found."""
     stmt = select(DocumentAnnotation).where(DocumentAnnotation.id == annotation_id)
     result = await session.execute(stmt)

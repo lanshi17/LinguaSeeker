@@ -1,4 +1,5 @@
 """API dependencies."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator

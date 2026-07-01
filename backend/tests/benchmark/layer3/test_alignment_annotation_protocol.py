@@ -1,4 +1,5 @@
 """Tests for Benchmark A alignment annotation protocol validation."""
+
 from __future__ import annotations
 
 import json

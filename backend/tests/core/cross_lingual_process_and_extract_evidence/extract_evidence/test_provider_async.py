@@ -1,4 +1,5 @@
 """Tests for async provider methods."""
+
 from __future__ import annotations
 
 import asyncio
@@ -115,7 +116,6 @@ async def test_ainvoke_json_text_falls_back_to_raw_client_after_attribute_error(
     assert result == _SampleOutput(value="raw-ok")
     pool_client.ainvoke.assert_awaited_once()
     raw_client.ainvoke.assert_awaited_once()
-
 
 
 @pytest.mark.asyncio

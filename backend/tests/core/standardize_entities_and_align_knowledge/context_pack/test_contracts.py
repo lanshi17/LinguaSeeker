@@ -1,4 +1,5 @@
 """Tests for target-safe context pack contracts."""
+
 from __future__ import annotations
 
 import dataclasses

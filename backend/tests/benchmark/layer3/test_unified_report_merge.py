@@ -1,4 +1,5 @@
 """Tests for unified report merge — by_source_dataset TP/FP/FN must match overall."""
+
 from __future__ import annotations
 
 import json
@@ -52,11 +53,15 @@ class TestBySourceDatasetAggregation:
     def test_tp_fp_fn_basic(self):
         """One matched (TP), one wrong_value (FP), one missing (FN)."""
         metrics = [
-            _make_entry("e1", "ds_a", [
-                _make_field("f1", matched=True, match_type="exact"),
-                _make_field("f2", match_type="wrong_value"),
-                _make_field("f3", match_type="missing"),
-            ]),
+            _make_entry(
+                "e1",
+                "ds_a",
+                [
+                    _make_field("f1", matched=True, match_type="exact"),
+                    _make_field("f2", match_type="wrong_value"),
+                    _make_field("f3", match_type="missing"),
+                ],
+            ),
         ]
         result = compute_by_source_dataset(metrics)
         ds = result["ds_a"]
@@ -67,10 +72,14 @@ class TestBySourceDatasetAggregation:
     def test_extra_found_values_count_as_fp(self):
         """extra_found_values contribute to FP count."""
         metrics = [
-            _make_entry("e1", "ds_a", [
-                _make_field("f1", matched=True, match_type="exact"),
-                _make_field("f2", match_type="exact", extra_found_values=["extra1", "extra2"]),
-            ]),
+            _make_entry(
+                "e1",
+                "ds_a",
+                [
+                    _make_field("f1", matched=True, match_type="exact"),
+                    _make_field("f2", match_type="exact", extra_found_values=["extra1", "extra2"]),
+                ],
+            ),
         ]
         result = compute_by_source_dataset(metrics)
         ds = result["ds_a"]
@@ -82,9 +91,13 @@ class TestBySourceDatasetAggregation:
     def test_wrong_value_plus_extra_found(self):
         """wrong_value field with extra_found_values: both count as FP."""
         metrics = [
-            _make_entry("e1", "ds_a", [
-                _make_field("f1", match_type="wrong_value", extra_found_values=["x"]),
-            ]),
+            _make_entry(
+                "e1",
+                "ds_a",
+                [
+                    _make_field("f1", match_type="wrong_value", extra_found_values=["x"]),
+                ],
+            ),
         ]
         result = compute_by_source_dataset(metrics)
         ds = result["ds_a"]
@@ -97,19 +110,27 @@ class TestBySourceDatasetAggregation:
         """by_source_dataset sums must equal overall TP/FP/FN."""
         metrics = [
             # Dataset A: TP=1, FP=1 (wrong_value), FN=1 (missing)
-            _make_entry("e1", "ds_a", [
-                _make_field("f1", matched=True, match_type="exact"),
-                _make_field("f2", match_type="wrong_value"),
-                _make_field("f3", match_type="missing"),
-            ]),
+            _make_entry(
+                "e1",
+                "ds_a",
+                [
+                    _make_field("f1", matched=True, match_type="exact"),
+                    _make_field("f2", match_type="wrong_value"),
+                    _make_field("f3", match_type="missing"),
+                ],
+            ),
             # Dataset B: TP=2, FP=2 (1 wrong_value + 1 extra_found), FN=1 (none)
-            _make_entry("e2", "ds_b", [
-                _make_field("f4", matched=True, match_type="exact"),
-                _make_field("f5", matched=True, match_type="exact"),
-                _make_field("f6", match_type="wrong_value"),
-                _make_field("f7", match_type="exact", extra_found_values=["extra"]),
-                _make_field("f8", match_type="none"),
-            ]),
+            _make_entry(
+                "e2",
+                "ds_b",
+                [
+                    _make_field("f4", matched=True, match_type="exact"),
+                    _make_field("f5", matched=True, match_type="exact"),
+                    _make_field("f6", match_type="wrong_value"),
+                    _make_field("f7", match_type="exact", extra_found_values=["extra"]),
+                    _make_field("f8", match_type="none"),
+                ],
+            ),
         ]
 
         by_src = compute_by_source_dataset(metrics)
@@ -140,16 +161,23 @@ class TestMergedReportIntegration:
     def _write_shard(self, tmpdir: Path, name: str, entries: list[dict]) -> Path:
         """Write a minimal shard report JSON."""
         path = tmpdir / name
-        path.write_text(json.dumps({
-            "config": {"extraction_mode": "broad"},
-            "total_entries": len(entries),
-            "total_duration_s": 100,
-            "per_entry": entries,
-        }))
+        path.write_text(
+            json.dumps(
+                {
+                    "config": {"extraction_mode": "broad"},
+                    "total_entries": len(entries),
+                    "total_duration_s": 100,
+                    "per_entry": entries,
+                }
+            )
+        )
         return path
 
     def _make_per_entry(
-        self, entry_id: str, source_dataset: str, field_matches: list[dict],
+        self,
+        entry_id: str,
+        source_dataset: str,
+        field_matches: list[dict],
     ) -> dict:
         return {
             "entry_id": entry_id,
@@ -174,24 +202,65 @@ class TestMergedReportIntegration:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
 
-            shard1 = self._write_shard(tmpdir, "shard0.json", [
-                self._make_per_entry("e1", "ds_a", [
-                    {"field_id": "f1", "expected_value": "ev", "matched": True,
-                     "match_type": "exact", "extra_found_values": []},
-                    {"field_id": "f2", "expected_value": "ev", "matched": False,
-                     "match_type": "wrong_value", "extra_found_values": ["x"]},
-                    {"field_id": "f3", "expected_value": "ev", "matched": False,
-                     "match_type": "missing", "extra_found_values": []},
-                ]),
-            ])
-            shard2 = self._write_shard(tmpdir, "shard1.json", [
-                self._make_per_entry("e2", "ds_b", [
-                    {"field_id": "f4", "expected_value": "ev", "matched": True,
-                     "match_type": "exact", "extra_found_values": []},
-                    {"field_id": "f5", "expected_value": "ev", "matched": False,
-                     "match_type": "none", "extra_found_values": []},
-                ]),
-            ])
+            shard1 = self._write_shard(
+                tmpdir,
+                "shard0.json",
+                [
+                    self._make_per_entry(
+                        "e1",
+                        "ds_a",
+                        [
+                            {
+                                "field_id": "f1",
+                                "expected_value": "ev",
+                                "matched": True,
+                                "match_type": "exact",
+                                "extra_found_values": [],
+                            },
+                            {
+                                "field_id": "f2",
+                                "expected_value": "ev",
+                                "matched": False,
+                                "match_type": "wrong_value",
+                                "extra_found_values": ["x"],
+                            },
+                            {
+                                "field_id": "f3",
+                                "expected_value": "ev",
+                                "matched": False,
+                                "match_type": "missing",
+                                "extra_found_values": [],
+                            },
+                        ],
+                    ),
+                ],
+            )
+            shard2 = self._write_shard(
+                tmpdir,
+                "shard1.json",
+                [
+                    self._make_per_entry(
+                        "e2",
+                        "ds_b",
+                        [
+                            {
+                                "field_id": "f4",
+                                "expected_value": "ev",
+                                "matched": True,
+                                "match_type": "exact",
+                                "extra_found_values": [],
+                            },
+                            {
+                                "field_id": "f5",
+                                "expected_value": "ev",
+                                "matched": False,
+                                "match_type": "none",
+                                "extra_found_values": [],
+                            },
+                        ],
+                    ),
+                ],
+            )
 
             report = build_merged_report([shard1, shard2])
             overall = report["aggregates"]["overall"]

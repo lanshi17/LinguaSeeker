@@ -1,4 +1,5 @@
 """Group assignment for variant-centered evidence grouping."""
+
 from __future__ import annotations
 
 import re
@@ -111,7 +112,9 @@ class GroupAssigner:
             variant = self._match_variant_for_gene(item, items)
             return make_group_id(item.value, variant)
         if item.field_id in self._VARIANT_FIELDS:
-            gene = self._resolve_gene_for_variant(item, [candidate for candidate in items if candidate.field_id == self._GENE_FIELD], document)
+            gene = self._resolve_gene_for_variant(
+                item, [candidate for candidate in items if candidate.field_id == self._GENE_FIELD], document
+            )
             return make_group_id(gene, item.value)
 
         matched = self._match_group_by_text(item, group_ids)
@@ -132,8 +135,10 @@ class GroupAssigner:
 
     def _match_variant_for_gene(self, gene_item: EvidenceItem, items: list[EvidenceItem]) -> object:
         same_block_variants = [
-            item for item in items
-            if item.field_id in self._VARIANT_FIELDS and self._block_index_for_item(item) == self._block_index_for_item(gene_item)
+            item
+            for item in items
+            if item.field_id in self._VARIANT_FIELDS
+            and self._block_index_for_item(item) == self._block_index_for_item(gene_item)
         ]
         if same_block_variants:
             return same_block_variants[0].value
@@ -189,11 +194,13 @@ class GroupAssigner:
         ranked = []
         for group_id in group_ids:
             distances = anchors.get(group_id) or []
-            ranked.append((
-                min(abs(block - block_index) for block in distances) if distances else float("inf"),
-                self._group_sort_key(group_id),
-                group_id,
-            ))
+            ranked.append(
+                (
+                    min(abs(block - block_index) for block in distances) if distances else float("inf"),
+                    self._group_sort_key(group_id),
+                    group_id,
+                )
+            )
         ranked.sort()
         return ranked[0][2]
 
@@ -255,4 +262,3 @@ class GroupAssigner:
     def _infer_gene_from_text(text: str) -> str:
         match = re.search(r"\b([A-Z][A-Z0-9-]{1,})\b", text)
         return match.group(1) if match else ""
-

@@ -1,4 +1,5 @@
 """Document parse orchestrator with remote-first fallback."""
+
 from __future__ import annotations
 
 import tempfile
@@ -16,7 +17,6 @@ from src.utils.ssrf import validate_url_safe
 _MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024  # 100 MB
 _ALLOWED_CONTENT_TYPES = {"application/pdf", "application/octet-stream"}
 _PDF_MAGIC = b"%PDF"
-
 
 
 class DocumentParseOrchestrator(ParserStrategy):
@@ -76,12 +76,8 @@ class DocumentParseOrchestrator(ParserStrategy):
                             validate_url_safe(final_url)
 
                         content_type = resp.headers.get("content-type", "")
-                        if content_type and not any(
-                            ct in content_type for ct in _ALLOWED_CONTENT_TYPES
-                        ):
-                            raise MinerUAPIError(
-                                f"Unexpected content-type for PDF download: {content_type}"
-                            )
+                        if content_type and not any(ct in content_type for ct in _ALLOWED_CONTENT_TYPES):
+                            raise MinerUAPIError(f"Unexpected content-type for PDF download: {content_type}")
 
                         downloaded = 0
                         async for chunk in resp.aiter_bytes():
@@ -98,9 +94,7 @@ class DocumentParseOrchestrator(ParserStrategy):
                 with open(local_path, "rb") as f:
                     magic = f.read(4)
                 if magic != _PDF_MAGIC:
-                    raise MinerUAPIError(
-                        f"Downloaded file is not a PDF (magic: {magic!r})"
-                    )
+                    raise MinerUAPIError(f"Downloaded file is not a PDF (magic: {magic!r})")
             except Exception as download_err:
                 tmp_file.close()
                 Path(local_path).unlink(missing_ok=True)
@@ -134,7 +128,5 @@ class DocumentParseOrchestrator(ParserStrategy):
         """
         parser = getattr(self._remote, "parse_local_files", None)
         if parser is None:
-            raise AttributeError(
-                f"Remote parser '{self._remote.name}' does not support parse_local_files"
-            )
+            raise AttributeError(f"Remote parser '{self._remote.name}' does not support parse_local_files")
         return await parser(file_paths, **kwargs)

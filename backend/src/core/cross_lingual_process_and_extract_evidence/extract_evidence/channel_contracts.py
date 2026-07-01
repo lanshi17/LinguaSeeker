@@ -19,6 +19,7 @@ authority assertions may be referenced by any paper. Category K
 (gene-disease validity curation) is cross-paper only and therefore never
 single-paper extractable, so it is excluded from every channel.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -84,11 +85,7 @@ def channel_categories(channel: DocumentEvidenceChannel) -> frozenset[str]:
             union |= _CHANNEL_CATEGORIES[concrete]
         return frozenset(union)
     # UNKNOWN -- every single-paper (non-curation) category.
-    return frozenset(
-        spec.category_id
-        for spec in EVIDENCE_FIELD_SPECS
-        if spec.category_id != _CURATION_CATEGORY
-    )
+    return frozenset(spec.category_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id != _CURATION_CATEGORY)
 
 
 class FieldEligibilityReason(BaseModel):
@@ -147,11 +144,7 @@ class DocumentChannelClassification(BaseModel):
         # also detected a concrete channel, trust the concrete signal.
         concrete_present = any(channel in _CONCRETE_CHANNELS for channel in deduped)
         if DocumentEvidenceChannel.UNKNOWN in deduped and concrete_present:
-            deduped = [
-                channel
-                for channel in deduped
-                if channel is not DocumentEvidenceChannel.UNKNOWN
-            ]
+            deduped = [channel for channel in deduped if channel is not DocumentEvidenceChannel.UNKNOWN]
         self.selected_channels = deduped
         return self
 
@@ -217,9 +210,7 @@ def compute_channel_eligibility(
                 )
             )
             continue
-        covering = [
-            ch for ch in effective if spec.category_id in cats_by_channel[ch]
-        ]
+        covering = [ch for ch in effective if spec.category_id in cats_by_channel[ch]]
         if spec.category_id in category_union:
             allowed.append(spec.field_id)
             if covering:
@@ -325,9 +316,7 @@ def merge_channel_classifications(
     return winner
 
 
-_CHANNEL_VALUE_MAP: dict[str, DocumentEvidenceChannel] = {
-    ch.value: ch for ch in DocumentEvidenceChannel
-}
+_CHANNEL_VALUE_MAP: dict[str, DocumentEvidenceChannel] = {ch.value: ch for ch in DocumentEvidenceChannel}
 
 
 def parse_channel_classification(

@@ -12,6 +12,7 @@ Requires:
 
 Output saved to /tmp/e2e_output/{lang}/{pdf_stem}/{mode}/
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -398,9 +399,7 @@ class TestMinerULocalE2E:
 
             results.append((pdf_name, lang, result))
             logger.info(
-                f"E2E local: {pdf_name} -> "
-                f"{result.metadata.total_pages} pages, "
-                f"{len(result.full_markdown)} chars"
+                f"E2E local: {pdf_name} -> {result.metadata.total_pages} pages, {len(result.full_markdown)} chars"
             )
 
         # Summary
@@ -428,9 +427,7 @@ class TestMinerUApiE2E:
         assert (out_dir / "metadata.json").exists()
 
         logger.info(
-            f"E2E API: {pdf_name} -> "
-            f"{result.metadata.total_pages} pages, "
-            f"{len(result.full_markdown)} chars markdown"
+            f"E2E API: {pdf_name} -> {result.metadata.total_pages} pages, {len(result.full_markdown)} chars markdown"
         )
 
     @pytest.mark.asyncio
@@ -450,9 +447,7 @@ class TestMinerUApiE2E:
 
             results.append((pdf_name, lang, result))
             logger.info(
-                f"E2E API: {pdf_name} -> "
-                f"{result.metadata.total_pages} pages, "
-                f"{len(result.full_markdown)} chars"
+                f"E2E API: {pdf_name} -> {result.metadata.total_pages} pages, {len(result.full_markdown)} chars"
             )
 
         # Summary

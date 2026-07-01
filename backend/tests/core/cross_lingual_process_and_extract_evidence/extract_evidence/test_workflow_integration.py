@@ -70,7 +70,9 @@ class FakeProvider:
                     status=EvidenceStatus.FOUND,
                     value="c.5266dupC",
                     confidence=0.9,
-                    raw_source=SourceLocation(block_index=0, context_type="text", context_ref="", text_snippet="c.5266dupC"),
+                    raw_source=SourceLocation(
+                        block_index=0, context_type="text", context_ref="", text_snippet="c.5266dupC"
+                    ),
                 ),
                 EvidenceItem(
                     field_id="B.disease_diagnosis",
@@ -79,7 +81,9 @@ class FakeProvider:
                     status=EvidenceStatus.FOUND,
                     value="Breast cancer",
                     confidence=0.9,
-                    raw_source=SourceLocation(block_index=0, context_type="text", context_ref="", text_snippet="Breast cancer"),
+                    raw_source=SourceLocation(
+                        block_index=0, context_type="text", context_ref="", text_snippet="Breast cancer"
+                    ),
                 ),
             ]
         if stage == "special_evidence":
@@ -153,7 +157,10 @@ class ChunkingProvider:
                     value="GLA",
                     confidence=0.9,
                     raw_source=SourceLocation(
-                        block_index=0, context_type="text", context_ref="", text_snippet="GLA",
+                        block_index=0,
+                        context_type="text",
+                        context_ref="",
+                        text_snippet="GLA",
                     ),
                 )
             ]
@@ -182,7 +189,9 @@ async def test_workflow_accepts_chunking_budget_override_for_regression():
     )
 
     workflow = EvidenceExtractionWorkflow(
-        provider=provider, input_budget_tokens=90, extraction_mode="catalog",
+        provider=provider,
+        input_budget_tokens=90,
+        extraction_mode="catalog",
     )
     state = await workflow.run(document)
 
@@ -240,8 +249,6 @@ async def test_workflow_review_validation_fails_open() -> None:
 
     assert "review_validation" in provider.stages
     assert any(
-        item.field_id == "A.gene_symbol"
-        and item.status == EvidenceStatus.FOUND
-        and item.value == "BRCA1"
+        item.field_id == "A.gene_symbol" and item.status == EvidenceStatus.FOUND and item.value == "BRCA1"
         for item in state.evidence_items
     )

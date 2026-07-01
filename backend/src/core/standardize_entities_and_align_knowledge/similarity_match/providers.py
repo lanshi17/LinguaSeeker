@@ -1,4 +1,5 @@
 """HTTP providers for semantic standardization matching."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -90,10 +91,7 @@ class EmbeddingHttpProvider:
         response.raise_for_status()
         body = response.json()
         if self._api_style == self._SIMPLE:
-            vectors = tuple(
-                tuple(float(value) for value in item["embedding"])
-                for item in body.get("results", [])
-            )
+            vectors = tuple(tuple(float(value) for value in item["embedding"]) for item in body.get("results", []))
         else:
             data = sorted(body.get("data", []), key=lambda item: item.get("index", 0))
             vectors = tuple(tuple(float(value) for value in item["embedding"]) for item in data)
@@ -104,7 +102,6 @@ class EmbeddingHttpProvider:
         if self._api_style == self._SIMPLE:
             return self._base_url
         return self._base_url if self._base_url.endswith("/v1") else f"{self._base_url}/v1"
-
 
 
 class RerankHttpProvider:
@@ -207,7 +204,6 @@ class RerankHttpProvider:
         if self._api_style == self._SIMPLE:
             return self._base_url
         return self._base_url if self._base_url.endswith("/v1") else f"{self._base_url}/v1"
-
 
 
 class FallbackEmbeddingProvider:

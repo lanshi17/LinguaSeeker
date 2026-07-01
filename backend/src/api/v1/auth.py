@@ -3,6 +3,7 @@
 Provides /login (set signed cookie), /logout (clear cookie), and
 /me (check current session) for SPA authentication flow.
 """
+
 from __future__ import annotations
 
 import hmac

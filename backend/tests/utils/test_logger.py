@@ -1,4 +1,5 @@
 """Tests for the shared logging configuration."""
+
 from __future__ import annotations
 
 import logging
@@ -29,8 +30,7 @@ def test_setup_logging_installs_stderr_sink():
     handlers = _logger._core.handlers
     # Verify at least one handler writes to stderr
     stderr_sinks = [
-        h for h in handlers.values()
-        if hasattr(h, "_sink") and getattr(h._sink, "_stream", None) is sys.stderr
+        h for h in handlers.values() if hasattr(h, "_sink") and getattr(h._sink, "_stream", None) is sys.stderr
     ]
     assert len(stderr_sinks) >= 1, "Expected at least one stderr handler"
 
@@ -55,7 +55,8 @@ def test_log_dir_created(tmp_path: Path):
         assert test_dir.exists()
         # Verify at least one file sink was registered
         file_sinks = [
-            h for h in _logger._core.handlers.values()
+            h
+            for h in _logger._core.handlers.values()
             if hasattr(h, "_sink") and getattr(h._sink, "_path", None) is not None
         ]
         assert len(file_sinks) >= 1, "Expected at least one file sink after setup_logging()"

@@ -1,4 +1,5 @@
 """Tests for main orchestrator graph."""
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from src.agents.contracts import (
@@ -45,9 +46,7 @@ def mock_retry_executor():
 
 
 @pytest.mark.asyncio
-async def test_orchestrator_runs_all_phases(
-    sample_state, mock_adapters, mock_persistence, mock_retry_executor
-):
+async def test_orchestrator_runs_all_phases(sample_state, mock_adapters, mock_persistence, mock_retry_executor):
     """Orchestrator runs all 3 phases in sequence."""
     phase1_output = Phase1Output(
         pdf_path="/tmp/test.pdf",
@@ -136,9 +135,7 @@ async def test_orchestrator_stops_on_permanent_failure(
     sample_state, mock_adapters, mock_persistence, mock_retry_executor
 ):
     """Orchestrator stops execution when a phase raises PermanentPhaseError."""
-    mock_adapters["phase_1"].run.side_effect = PermanentPhaseError(
-        "Acquisition failed", phase=1
-    )
+    mock_adapters["phase_1"].run.side_effect = PermanentPhaseError("Acquisition failed", phase=1)
 
     async def _pass_through(**kw):
         return await kw["operation"](kw["state"])
@@ -160,9 +157,7 @@ async def test_orchestrator_stops_on_permanent_failure(
 
 
 @pytest.mark.asyncio
-async def test_orchestrator_validates_upstream_for_phase_mode(
-    mock_adapters, mock_persistence, mock_retry_executor
-):
+async def test_orchestrator_validates_upstream_for_phase_mode(mock_adapters, mock_persistence, mock_retry_executor):
     """Orchestrator rejects single-phase mode when upstream phases haven't completed."""
     state = PipelineGraphState(
         processing_run_id="run-123",
@@ -261,9 +256,7 @@ async def test_orchestrator_notifies_on_state_change(
     )
 
     notifications: list[str] = []
-    orchestrator.on_state_change = lambda _run_id, state: notifications.append(
-        state.pipeline_status.value
-    )
+    orchestrator.on_state_change = lambda _run_id, state: notifications.append(state.pipeline_status.value)
 
     await orchestrator.run(sample_state)
 

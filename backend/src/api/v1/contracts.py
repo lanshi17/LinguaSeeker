@@ -1,4 +1,5 @@
 """Pydantic request/response models for pipeline and phase API routes."""
+
 from __future__ import annotations
 
 from typing import Literal
@@ -56,22 +57,16 @@ class PipelineRunRequest(BaseModel):
 
         if self.mode == "phase" and self.target_phase is not None and self.target_phase > 1:
             if not self.processing_run_id:
-                raise ValueError(
-                    "processing_run_id is required when mode='phase' and target_phase > 1"
-                )
+                raise ValueError("processing_run_id is required when mode='phase' and target_phase > 1")
 
         # Source-specific validation (skip for phase re-run)
         if not (self.mode == "phase" and self.processing_run_id):
             if self.source_type == "local":
                 if not self.content_base64 and not self.pre_parsed_markdown:
-                    raise ValueError(
-                        "source_type='local' requires content_base64 or pre_parsed_markdown"
-                    )
+                    raise ValueError("source_type='local' requires content_base64 or pre_parsed_markdown")
             elif self.source_type == "online":
                 if not self.query and not self.identifiers:
-                    raise ValueError(
-                        "source_type='online' requires query or identifiers"
-                    )
+                    raise ValueError("source_type='online' requires query or identifiers")
 
         return self
 

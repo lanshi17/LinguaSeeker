@@ -1,4 +1,5 @@
 """Field eligibility policy for target-scoped evidence extraction."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -161,12 +162,7 @@ class FieldEligibilityPolicy:
 
     @classmethod
     def _extractable_specs(cls) -> tuple[EvidenceFieldSpec, ...]:
-        return tuple(
-            spec
-            for group_name, group in CATALOG_GROUPS.items()
-            if group_name != "curation"
-            for spec in group
-        )
+        return tuple(spec for group_name, group in CATALOG_GROUPS.items() if group_name != "curation" for spec in group)
 
     @classmethod
     def _extractable_field_ids(cls) -> frozenset[str]:

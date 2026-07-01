@@ -1,4 +1,5 @@
 """Delta audit service for evidence review tracking."""
+
 from __future__ import annotations
 
 from uuid import UUID
@@ -81,13 +82,10 @@ class DeltaAuditService:
         if source_document_id:
             stmt = stmt.join(
                 CanonicalEvidenceItem,
-                CanonicalEvidenceItem.canonical_evidence_id
-                == ReviewAuditEvent.canonical_evidence_id,
+                CanonicalEvidenceItem.canonical_evidence_id == ReviewAuditEvent.canonical_evidence_id,
             ).where(CanonicalEvidenceItem.source_document_id == source_document_id)
         if canonical_evidence_id:
-            stmt = stmt.where(
-                ReviewAuditEvent.canonical_evidence_id == canonical_evidence_id
-            )
+            stmt = stmt.where(ReviewAuditEvent.canonical_evidence_id == canonical_evidence_id)
         if reviewer_id:
             stmt = stmt.where(ReviewAuditEvent.reviewer_id == reviewer_id)
         stmt = stmt.order_by(ReviewAuditEvent.created_at.desc()).limit(limit)

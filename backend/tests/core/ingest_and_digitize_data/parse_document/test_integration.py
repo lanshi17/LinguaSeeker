@@ -2,6 +2,7 @@
 
 These tests require a running MinerU service (port 44321). Mark with @pytest.mark.integration to skip in CI.
 """
+
 from __future__ import annotations
 
 import json

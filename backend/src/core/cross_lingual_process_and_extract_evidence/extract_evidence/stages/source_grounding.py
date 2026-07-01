@@ -1,4 +1,5 @@
 """Source grounding stage — validates and repairs source spans."""
+
 from __future__ import annotations
 
 from ..contracts import EvidenceItem, SpecialEvidenceRecord, TrackDocument

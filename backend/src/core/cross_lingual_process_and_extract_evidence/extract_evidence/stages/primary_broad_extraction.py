@@ -1,4 +1,5 @@
 """B8 primary broad extraction stage."""
+
 from __future__ import annotations
 
 from loguru import logger
@@ -217,30 +218,34 @@ def _normalize_candidates(
     return FieldValueNormalizer.normalize_items(merge_sparse_evidence_items(items))
 
 
-_CONSEQUENCE_VARIANT_TYPES = frozenset({
-    "missense",
-    "nonsense",
-    "frameshift",
-    "splice-site",
-    "splice site",
-    "splicing",
-    "deletion",
-    "insertion",
-    "duplication",
-    "tRNA",
-    "trna",
-    "CNV",
-    "cnv",
-})
+_CONSEQUENCE_VARIANT_TYPES = frozenset(
+    {
+        "missense",
+        "nonsense",
+        "frameshift",
+        "splice-site",
+        "splice site",
+        "splicing",
+        "deletion",
+        "insertion",
+        "duplication",
+        "tRNA",
+        "trna",
+        "CNV",
+        "cnv",
+    }
+)
 
-_STRUCTURAL_VARIANT_TYPE_VALUES = frozenset({
-    "snv",
-    "snv/substitution",
-    "single nucleotide variant",
-    "single nucleotide substitution",
-    "substitution",
-    "point mutation",
-})
+_STRUCTURAL_VARIANT_TYPE_VALUES = frozenset(
+    {
+        "snv",
+        "snv/substitution",
+        "single nucleotide variant",
+        "single nucleotide substitution",
+        "substitution",
+        "point mutation",
+    }
+)
 
 
 def _project_consequence_class_to_variant_type(items: list[EvidenceItem]) -> list[EvidenceItem]:
@@ -272,15 +277,17 @@ def _project_consequence_class_to_variant_type(items: list[EvidenceItem]) -> lis
         return items
 
     spec = get_field_spec("A.variant_type")
-    projected = consequence_item.model_copy(update={
-        "field_id": spec.field_id,
-        "category": spec.category_id,
-        "field_name": spec.field_name,
-        "notes": _append_note(
-            consequence_item.notes,
-            "projected from A.variant_consequence_class for benchmark-compatible variant_type",
-        ),
-    })
+    projected = consequence_item.model_copy(
+        update={
+            "field_id": spec.field_id,
+            "category": spec.category_id,
+            "field_name": spec.field_name,
+            "notes": _append_note(
+                consequence_item.notes,
+                "projected from A.variant_consequence_class for benchmark-compatible variant_type",
+            ),
+        }
+    )
     kept = [
         item
         for item in items

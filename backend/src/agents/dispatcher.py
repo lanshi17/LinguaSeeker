@@ -5,6 +5,7 @@ executes it via PipelineRunner, and updates the job status on completion
 or failure.  Only one job runs at a time (the DB claim guarantees this
 even across multiple backend processes).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -100,9 +101,7 @@ class SingleJobDispatcher:
         try:
             initial_state = PipelineGraphState.from_request_data(rd)
         except Exception as exc:
-            logger.exception(
-                "Failed to build initial state for job_id={}", job.job_id
-            )
+            logger.exception("Failed to build initial state for job_id={}", job.job_id)
             await self._job_queue.fail(job.job_id, f"Invalid request data: {exc}")
             return
 

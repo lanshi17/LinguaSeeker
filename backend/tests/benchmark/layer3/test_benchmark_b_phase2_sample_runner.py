@@ -1,4 +1,5 @@
 """Tests for the Benchmark B Phase 2 sample runner."""
+
 from __future__ import annotations
 
 import base64

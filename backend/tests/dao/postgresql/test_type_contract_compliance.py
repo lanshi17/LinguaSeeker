@@ -1,4 +1,5 @@
 """Tests for DAO type-contract compliance rules."""
+
 from __future__ import annotations
 
 from pathlib import Path

@@ -1,4 +1,5 @@
 """Tests for request body size limit middleware."""
+
 from __future__ import annotations
 
 from starlette.applications import Starlette

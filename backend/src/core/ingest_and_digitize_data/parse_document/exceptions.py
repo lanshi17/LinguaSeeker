@@ -1,4 +1,5 @@
 """Custom exceptions for document parsing."""
+
 from __future__ import annotations
 
 

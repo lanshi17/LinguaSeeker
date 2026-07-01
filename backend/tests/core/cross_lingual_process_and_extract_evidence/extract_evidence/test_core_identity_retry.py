@@ -1,4 +1,5 @@
 """Tests for core identity retry in CatalogExtractionStage."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -57,7 +58,8 @@ def _found(field_id: str, value: str, confidence: float = 0.9) -> EvidenceItem:
         value=value,
         confidence=confidence,
         source=SourceLocation(
-            context_type="text", context_ref="",
+            context_type="text",
+            context_ref="",
             text_snippet=value,
         ),
     )
@@ -78,6 +80,7 @@ def _not_found(field_id: str) -> EvidenceItem:
 # CatalogExtractionStage runs 2 groups (high_signal, supporting) by default.
 # Each group produces one invoke_structured call.  Tests must supply enough
 # return values for the normal extraction calls BEFORE any retry call.
+
 
 def _normal_ok() -> list[EvidenceItem]:
     """Normal extraction that returns both core identity fields."""
@@ -106,6 +109,7 @@ def _normal_missing_both() -> list[EvidenceItem]:
 
 # ── Test 1: No retry when both core fields are FOUND ─────────────────
 
+
 def test_no_retry_when_core_fields_present():
     """Retry must not fire when A.gene_symbol AND B.disease_diagnosis are FOUND."""
     provider = MagicMock()
@@ -121,14 +125,15 @@ def test_no_retry_when_core_fields_present():
 
 # ── Test 2: Retry fires when A.gene_symbol missing ──────────────────
 
+
 def test_retry_when_gene_symbol_missing():
     """Retry must fire when A.gene_symbol is not FOUND."""
     provider = MagicMock()
     # First 2 calls: normal extraction (2 groups), both missing gene symbol
     # Third call: retry
     provider.invoke_structured.side_effect = [
-        _normal_missing_gene(),   # group 1
-        _normal_missing_gene(),   # group 2
+        _normal_missing_gene(),  # group 1
+        _normal_missing_gene(),  # group 2
         [_found("A.gene_symbol", "MECP2", confidence=0.85)],  # retry
     ]
     stage = CatalogExtractionStage(provider)
@@ -147,6 +152,7 @@ def test_retry_when_gene_symbol_missing():
 
 # ── Test 3: Retry fires when B.disease_diagnosis missing ────────────
 
+
 def test_retry_when_disease_diagnosis_missing():
     """Retry must fire when B.disease_diagnosis is not FOUND."""
     provider = MagicMock()
@@ -155,8 +161,8 @@ def test_retry_when_disease_diagnosis_missing():
         _not_found("B.disease_diagnosis"),
     ]
     provider.invoke_structured.side_effect = [
-        normal_no_disease,   # group 1
-        normal_no_disease,   # group 2
+        normal_no_disease,  # group 1
+        normal_no_disease,  # group 2
         [_found("B.disease_diagnosis", "Rett syndrome", confidence=0.8)],  # retry
     ]
     stage = CatalogExtractionStage(provider)
@@ -170,13 +176,14 @@ def test_retry_when_disease_diagnosis_missing():
 
 # ── Test 4: Retry output merges into final result ───────────────────
 
+
 def test_retry_output_merged_into_result():
     """Items from retry must appear in the final merged output."""
     provider = MagicMock()
     provider.invoke_structured.side_effect = [
-        _normal_missing_both(),   # group 1
-        _normal_missing_both(),   # group 2
-        [   # retry
+        _normal_missing_both(),  # group 1
+        _normal_missing_both(),  # group 2
+        [  # retry
             _found("A.gene_symbol", "MECP2", confidence=0.85),
             _found("B.disease_diagnosis", "Rett syndrome", confidence=0.8),
             _found("A.variant_hgvs_c", "c.880C>T", confidence=0.75),
@@ -193,6 +200,7 @@ def test_retry_output_merged_into_result():
 
 
 # ── Test 5: Retry does not overwrite higher-confidence FOUND ────────
+
 
 def test_retry_does_not_overwrite_higher_confidence():
     """Retry must not replace an existing FOUND item with lower confidence."""
@@ -223,6 +231,7 @@ def test_retry_does_not_overwrite_higher_confidence():
 
 # ── Test 6: No retry when extraction_target is absent ───────────────
 
+
 def test_no_retry_without_extraction_target():
     """Retry must not fire when document.extraction_target is None."""
     provider = MagicMock()
@@ -239,6 +248,7 @@ def test_no_retry_without_extraction_target():
 
 
 # ── Test 7: Async path has equivalent retry behavior ────────────────
+
 
 @pytest.mark.asyncio
 async def test_async_retry_when_gene_symbol_missing():
@@ -267,6 +277,7 @@ async def test_async_retry_when_gene_symbol_missing():
 
 
 # ── Test 8: Retry prompt contains only four core identity fields ────
+
 
 def test_retry_prompt_contains_only_core_fields():
     """The retry prompt must list only A.gene_symbol, B.disease_diagnosis,

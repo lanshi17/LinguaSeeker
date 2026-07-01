@@ -4,6 +4,7 @@ Tests the full chain from fixture document → relevance scan → channel classi
 → field eligibility → extraction status semantics for case_report, functional_study,
 and cohort_study channels.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -91,6 +92,7 @@ def _get_status_by_field(items: list[EvidenceItem], field_id: str) -> EvidenceSt
 # Test cases
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize(
     "fixture,expected_channel,expected_categories,excluded_categories",
     [
@@ -103,7 +105,14 @@ def _get_status_by_field(items: list[EvidenceItem], field_id: str) -> EvidenceSt
         (
             "functional_study.md",
             DocumentEvidenceChannel.FUNCTIONAL_STUDY,
-            {"A", "E", "F", "I", "H", "J"},  # Variant, Computational, Functional, Gene Function, Contradiction, Authority
+            {
+                "A",
+                "E",
+                "F",
+                "I",
+                "H",
+                "J",
+            },  # Variant, Computational, Functional, Gene Function, Contradiction, Authority
             {"B", "C"},  # Case, Segregation
         ),
         (
@@ -123,7 +132,7 @@ def test_channel_classification_and_eligibility(
     """Test full chain: fixture → relevance scan → classification → eligibility."""
     # Load fixture
     document = _doc_from_fixture(fixture)
-    
+
     # Mock provider to return expected channel classification
     provider = MagicMock()
     provider.invoke_structured.return_value = _scan_output(
@@ -131,24 +140,24 @@ def test_channel_classification_and_eligibility(
         confidence=0.85,
         rationale=f"Document classified as {expected_channel.value}",
     )
-    
+
     # Run relevance scan
     scan_stage = RelevanceScanStage(provider)
     scan_result = scan_stage.run(document)
-    
+
     # Assert channel classification
     assert scan_result.channel_classification is not None
     assert expected_channel in scan_result.channel_classification.selected_channels
     assert scan_result.channel_classification.confidence == 0.85
-    
+
     # Assert evidence map
     assert scan_result.evidence_map.relevant is True
-    
+
     # Run catalog extraction with channel classification
     catalog_provider = MagicMock()
     catalog_provider.invoke_structured.return_value = []
     catalog_stage = CatalogExtractionStage(catalog_provider)
-    
+
     # Get eligible catalog groups
     chunks = [MagicMock(index=1, total=1, text=document.formatted_text[:500])]
     groups = catalog_stage._eligible_catalog_groups(
@@ -157,17 +166,17 @@ def test_channel_classification_and_eligibility(
         chunks,
         channel_classification=scan_result.channel_classification,
     )
-    
+
     # Collect all eligible field IDs
     eligible_field_ids: set[str] = set()
     for specs in groups.values():
         eligible_field_ids |= {spec.field_id for spec in specs}
-    
+
     # Assert expected categories are eligible
     for cat in expected_categories:
         cat_fields = {spec.field_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id == cat}
         assert cat_fields.issubset(eligible_field_ids), f"Category {cat} should be eligible"
-    
+
     # Assert excluded categories are not eligible
     for cat in excluded_categories:
         cat_fields = {spec.field_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id == cat}
@@ -205,44 +214,45 @@ def test_channel_specific_filtering(
 ) -> None:
     """Test that channel-specific fields are included/excluded correctly."""
     document = _doc_from_fixture(fixture)
-    
+
     # Mock provider for relevance scan
     scan_provider = MagicMock()
-    scan_provider.invoke_structured.return_value = _scan_output(
-        channels=[expected_channel.value]
-    )
-    
+    scan_provider.invoke_structured.return_value = _scan_output(channels=[expected_channel.value])
+
     # Run relevance scan
     scan_stage = RelevanceScanStage(scan_provider)
     scan_result = scan_stage.run(document)
-    
+
     # Mock provider for catalog extraction (return empty list)
     catalog_provider = MagicMock()
     catalog_provider.invoke_structured.return_value = []
     catalog_stage = CatalogExtractionStage(catalog_provider)
-    
+
     # Run catalog extraction
     catalog_stage.run(
         document,
         scan_result.evidence_map,
         channel_classification=scan_result.channel_classification,
     )
-    
+
     # Get the eligibility decision
     decision = catalog_stage.last_eligibility_decision
     assert decision is not None
-    
+
     # Assert channel-appropriate field is eligible
-    assert channel_appropriate_field in decision.allowed_field_ids, \
+    assert channel_appropriate_field in decision.allowed_field_ids, (
         f"{channel_appropriate_field} should be eligible for {expected_channel.value}"
-    
+    )
+
     # Assert channel-excluded field is not eligible
-    assert channel_excluded_field not in decision.allowed_field_ids, \
+    assert channel_excluded_field not in decision.allowed_field_ids, (
         f"{channel_excluded_field} should be excluded for {expected_channel.value}"
-    
+    )
+
     # Assert channel-excluded field is in channel_rejected_field_ids
-    assert channel_excluded_field in decision.channel_rejected_field_ids, \
+    assert channel_excluded_field in decision.channel_rejected_field_ids, (
         f"{channel_excluded_field} should be in channel_rejected_field_ids"
+    )
 
 
 @pytest.mark.parametrize(
@@ -259,17 +269,15 @@ def test_status_semantics(
 ) -> None:
     """Test that eligible absent fields are NOT_FOUND, channel-excluded are NOT_APPLICABLE."""
     document = _doc_from_fixture(fixture)
-    
+
     # Mock provider for relevance scan
     scan_provider = MagicMock()
-    scan_provider.invoke_structured.return_value = _scan_output(
-        channels=[expected_channel.value]
-    )
-    
+    scan_provider.invoke_structured.return_value = _scan_output(channels=[expected_channel.value])
+
     # Run relevance scan
     scan_stage = RelevanceScanStage(scan_provider)
     scan_result = scan_stage.run(document)
-    
+
     # Mock provider for catalog extraction (return one found item)
     catalog_provider = MagicMock()
     # Return a single found item for A.gene_symbol
@@ -285,31 +293,32 @@ def test_status_semantics(
         )
     ]
     catalog_stage = CatalogExtractionStage(catalog_provider)
-    
+
     # Run catalog extraction
     items = catalog_stage.run(
         document,
         scan_result.evidence_map,
         channel_classification=scan_result.channel_classification,
     )
-    
+
     # Get eligibility decision
     decision = catalog_stage.last_eligibility_decision
     assert decision is not None
-    
+
     # Simulate backfill with eligibility info
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.core import (
         EvidenceItemNormalizer,
     )
+
     normalizer = EvidenceItemNormalizer()
     normalized = normalizer.normalize_grouped(
         items,
         channel_excluded_field_ids=decision.channel_rejected_field_ids,
     )
-    
+
     # Assert A.gene_symbol is FOUND (was extracted)
     assert _get_status_by_field(normalized, "A.gene_symbol") == EvidenceStatus.FOUND
-    
+
     # Assert a channel-excluded field is NOT_APPLICABLE
     # Pick a field from an excluded category
     if expected_channel == DocumentEvidenceChannel.CASE_REPORT:
@@ -318,9 +327,9 @@ def test_status_semantics(
         excluded_field = "G.odds_ratio"  # Category G not in functional_study
     else:
         excluded_field = "F.assay_type"  # Category F not in cohort_study
-    
+
     assert _get_status_by_field(normalized, excluded_field) == EvidenceStatus.NOT_APPLICABLE
-    
+
     # Assert an eligible but absent field is NOT_FOUND
     if expected_channel == DocumentEvidenceChannel.CASE_REPORT:
         eligible_absent = "B.clinical_phenotypes"  # Category B is eligible for case_report
@@ -328,7 +337,7 @@ def test_status_semantics(
         eligible_absent = "F.functional_result"  # Category F is eligible for functional_study
     else:
         eligible_absent = "D.allele_frequency"  # Category D is eligible for cohort_study
-    
+
     assert _get_status_by_field(normalized, eligible_absent) == EvidenceStatus.NOT_FOUND
 
 
@@ -346,22 +355,20 @@ def test_json_round_trip(
 ) -> None:
     """Test that result model can be serialized and reloaded with all metadata."""
     document = _doc_from_fixture(fixture)
-    
+
     # Mock provider for relevance scan
     scan_provider = MagicMock()
-    scan_provider.invoke_structured.return_value = _scan_output(
-        channels=[expected_channel.value]
-    )
-    
+    scan_provider.invoke_structured.return_value = _scan_output(channels=[expected_channel.value])
+
     # Run relevance scan
     scan_stage = RelevanceScanStage(scan_provider)
     scan_result = scan_stage.run(document)
-    
+
     # Create a result with channel metadata
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
         FieldEligibilitySummary,
     )
-    
+
     summary = FieldEligibilitySummary(
         eligible_field_count=73,
         channel_excluded_field_count=70,
@@ -369,7 +376,7 @@ def test_json_round_trip(
         not_applicable_count=70,
         not_attempted_count=0,
     )
-    
+
     result = EvidenceExtractionResult(
         status=EvidenceExtractionStatus.COMPLETED,
         document_id=document.document_id,
@@ -378,27 +385,27 @@ def test_json_round_trip(
         channel_classification=scan_result.channel_classification,
         field_eligibility_summary=summary,
     )
-    
+
     # Serialize to JSON
     json_str = result.model_dump_json()
-    
+
     # Deserialize
     restored = EvidenceExtractionResult.model_validate_json(json_str)
-    
+
     # Verify channel classification
     assert restored.channel_classification is not None
     assert expected_channel in restored.channel_classification.selected_channels
     assert restored.channel_classification.confidence == 0.85
-    
+
     # Verify field eligibility summary
     assert restored.field_eligibility_summary is not None
     assert restored.field_eligibility_summary.eligible_field_count == 73
     assert restored.field_eligibility_summary.channel_excluded_field_count == 70
-    
+
     # Verify evidence map
     assert restored.evidence_map is not None
     assert restored.evidence_map.relevant is True
-    
+
     # Verify output schema unchanged
     assert isinstance(restored, EvidenceExtractionResult)
     assert restored.status == EvidenceExtractionStatus.COMPLETED

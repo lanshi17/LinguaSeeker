@@ -13,6 +13,7 @@ Write path (``cache_result``):
   1. L2 PostgreSQL: upsert into ``document_processing_cache``.
   2. L1 Redis: set ``docproc:{content_hash}`` with TTL.
 """
+
 from __future__ import annotations
 
 import json
@@ -63,9 +64,7 @@ class DocumentProcessingCacheService:
 
     # ── Public API ──────────────────────────────────────────────────────
 
-    async def get_cached_result(
-        self, content_hash: str
-    ) -> CacheLookupResult | None:
+    async def get_cached_result(self, content_hash: str) -> CacheLookupResult | None:
         """Look up a cached processing result by content hash.
 
         Checks L1 (Redis) first, then L2 (PostgreSQL). On L2 hit,
@@ -85,9 +84,7 @@ class DocumentProcessingCacheService:
             if raw is not None:
                 state = self._deserialize_state(raw)
                 if state is not None:
-                    logger.debug(
-                        "Processing cache L1 hit: hash={}", content_hash[:12]
-                    )
+                    logger.debug("Processing cache L1 hit: hash={}", content_hash[:12])
                     return CacheLookupResult(state=state, source="l1_redis")
         except Exception:
             logger.warning(

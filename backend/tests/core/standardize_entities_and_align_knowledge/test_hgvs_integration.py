@@ -13,6 +13,7 @@ the dev DB (audited 24 unmapped/ambiguous variants) now resolve to a concrete
 ClinVar ``external_id`` — or, for genuinely novel variants, are left UNMAPPED
 so Phase 4 assigns a deterministic internal ``internal:variant:<sha12>`` id.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -102,14 +103,10 @@ def _clinvar_terminology(
 @pytest.mark.asyncio
 async def test_three_letter_protein_matches_clinvar_one_letter() -> None:
     """Three-letter protein variant p.(Glu292Val) matches ClinVar alias p.E292V."""
-    terminology = _clinvar_terminology(
-        "p.E292V", entry_id="entry-vcv0001", external_id="VCV000000001"
-    )
+    terminology = _clinvar_terminology("p.E292V", entry_id="entry-vcv0001", external_id="VCV000000001")
     repository = FakeRepository({"p.E292V": (terminology,)})
 
-    match = await PreciseTerminologyMatcher(repository).match(
-        _variant_candidate("p.(Glu292Val)")
-    )
+    match = await PreciseTerminologyMatcher(repository).match(_variant_candidate("p.(Glu292Val)"))
 
     assert match.status == MatchStatus.STANDARDIZED
     assert match.external_id == "VCV000000001"
@@ -119,14 +116,10 @@ async def test_three_letter_protein_matches_clinvar_one_letter() -> None:
 @pytest.mark.asyncio
 async def test_bare_dna_notation_matches_clinvar_bare_form() -> None:
     """Bare DNA notation c.727C>T matches ClinVar alias stored as c.727C>T."""
-    terminology = _clinvar_terminology(
-        "c.727C>T", entry_id="entry-vcv0002", external_id="VCV000000002"
-    )
+    terminology = _clinvar_terminology("c.727C>T", entry_id="entry-vcv0002", external_id="VCV000000002")
     repository = FakeRepository({"c.727C>T": (terminology,)})
 
-    match = await PreciseTerminologyMatcher(repository).match(
-        _variant_candidate("c.727C>T")
-    )
+    match = await PreciseTerminologyMatcher(repository).match(_variant_candidate("c.727C>T"))
 
     assert match.status == MatchStatus.STANDARDIZED
     assert match.external_id == "VCV000000002"
@@ -143,14 +136,10 @@ async def test_bare_dna_notation_matches_clinvar_bare_form() -> None:
         ("p.Trp159Ter", "p.W159*"),
     ],
 )
-def test_expand_hgvs_aliases_covers_all_unmapped_patterns(
-    raw_text: str, expected_alias: str
-) -> None:
+def test_expand_hgvs_aliases_covers_all_unmapped_patterns(raw_text: str, expected_alias: str) -> None:
     """Every unmapped DB variant pattern expands to its ClinVar-equivalent alias."""
     aliases = expand_hgvs_aliases(raw_text)
-    assert expected_alias in aliases, (
-        f"expected {expected_alias!r} in expansions of {raw_text!r}, got {aliases}"
-    )
+    assert expected_alias in aliases, f"expected {expected_alias!r} in expansions of {raw_text!r}, got {aliases}"
 
 
 # ---------------------------------------------------------------------------
@@ -236,9 +225,7 @@ async def test_previously_unmapped_variant_form_resolves(
         alias_map[alias_key] = alias_map.get(alias_key, ()) + (term,)
 
     repository = FakeRepository(alias_map)
-    match = await PreciseTerminologyMatcher(repository).match(
-        _variant_candidate(raw_text, gene_symbol=gene_symbol)
-    )
+    match = await PreciseTerminologyMatcher(repository).match(_variant_candidate(raw_text, gene_symbol=gene_symbol))
 
     assert match.status == MatchStatus.STANDARDIZED
     assert match.external_id == expected_external_id
@@ -269,9 +256,7 @@ async def test_multi_gene_protein_hit_resolves_to_candidate_gene() -> None:
     )
     repository = FakeRepository({"p.A168T": (drd4, brca1)})
 
-    match = await PreciseTerminologyMatcher(repository).match(
-        _variant_candidate("p.A168T", gene_symbol="DRD4")
-    )
+    match = await PreciseTerminologyMatcher(repository).match(_variant_candidate("p.A168T", gene_symbol="DRD4"))
 
     assert match.status == MatchStatus.STANDARDIZED
     assert match.external_id == "ClinVarVariation:DRD4"
@@ -290,9 +275,7 @@ async def test_novel_variant_with_no_clinvar_alias_is_unmapped() -> None:
     """
     repository = FakeRepository({})
 
-    match = await PreciseTerminologyMatcher(repository).match(
-        _variant_candidate("c.9999X>Y", gene_symbol="NOVELGENE")
-    )
+    match = await PreciseTerminologyMatcher(repository).match(_variant_candidate("c.9999X>Y", gene_symbol="NOVELGENE"))
 
     assert match.status == MatchStatus.UNMAPPED
     assert match.external_id is None

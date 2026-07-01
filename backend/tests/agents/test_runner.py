@@ -1,4 +1,5 @@
 """Tests for background pipeline runner."""
+
 import asyncio
 
 import pytest
@@ -66,9 +67,7 @@ def sample_state() -> PipelineGraphState:
 
 
 @pytest.mark.asyncio
-async def test_runner_executes_in_background(
-    sample_state, mock_orchestrator, mock_semaphore, mock_persistence
-):
+async def test_runner_executes_in_background(sample_state, mock_orchestrator, mock_semaphore, mock_persistence):
     """PipelineRunner executes pipeline in background task."""
     completed_state = sample_state.model_copy(deep=True)
     completed_state.pipeline_status = PipelineStatus.COMPLETED
@@ -88,9 +87,7 @@ async def test_runner_executes_in_background(
 
 
 @pytest.mark.asyncio
-async def test_runner_cleans_rerun_artifacts_before_phase_rerun_claim(
-    mock_orchestrator, mock_semaphore
-):
+async def test_runner_cleans_rerun_artifacts_before_phase_rerun_claim(mock_orchestrator, mock_semaphore):
     """Phase reruns must clear stale downstream DB artifacts before restarting."""
     calls: list[str] = []
 
@@ -133,9 +130,7 @@ async def test_runner_cleans_rerun_artifacts_before_phase_rerun_claim(
 
 
 @pytest.mark.asyncio
-async def test_runner_captures_errors(
-    sample_state, mock_orchestrator, mock_semaphore, mock_persistence
-):
+async def test_runner_captures_errors(sample_state, mock_orchestrator, mock_semaphore, mock_persistence):
     """PipelineRunner captures and logs errors without crashing."""
     mock_orchestrator.run.side_effect = RuntimeError("Unexpected error")
 
@@ -179,9 +174,7 @@ async def test_runner_get_last_state_falls_back_to_db(
 
 
 @pytest.mark.asyncio
-async def test_runner_get_last_state_returns_none(
-    sample_state, mock_orchestrator, mock_semaphore, mock_persistence
-):
+async def test_runner_get_last_state_returns_none(sample_state, mock_orchestrator, mock_semaphore, mock_persistence):
     """get_last_state returns None when neither memory nor DB has the run."""
     mock_persistence.load.return_value = None
 
@@ -276,9 +269,7 @@ async def test_is_running_for_source_ignores_terminal_states(sample_state):
 
 
 @pytest.mark.asyncio
-async def test_cancelled_task_persists_failed_state(
-    sample_state, mock_semaphore, mock_persistence
-):
+async def test_cancelled_task_persists_failed_state(sample_state, mock_semaphore, mock_persistence):
     """Cancelled pipeline must record FAILED state and persist it."""
     orch = MagicMock()
     reached_orchestrator = asyncio.Event()
@@ -312,9 +303,7 @@ async def test_cancelled_task_persists_failed_state(
 
 
 @pytest.mark.asyncio
-async def test_cancelled_task_preserves_current_phase(
-    sample_state, mock_semaphore, mock_persistence
-):
+async def test_cancelled_task_preserves_current_phase(sample_state, mock_semaphore, mock_persistence):
     """Cancelled pipeline must report the phase that was actually running, not phase 0."""
     orch = MagicMock()
     reached_orchestrator = asyncio.Event()
@@ -324,6 +313,7 @@ async def test_cancelled_task_preserves_current_phase(
         # Simulate the orchestrator having progressed to phase 2 by
         # updating the cached state before hanging.
         from src.agents.contracts import PipelineGraphState
+
         if isinstance(state, PipelineGraphState):
             state.error_phase = 2
         reached_orchestrator.set()
@@ -423,9 +413,7 @@ async def test_get_last_state_is_read_only_for_active_db_runs(
 
 
 @pytest.mark.asyncio
-async def test_get_last_state_does_not_mark_active_run_as_failed(
-    sample_state, mock_semaphore, mock_persistence
-):
+async def test_get_last_state_does_not_mark_active_run_as_failed(sample_state, mock_semaphore, mock_persistence):
     """get_last_state must NOT mark a run as FAILED if an active task exists."""
     db_state = sample_state.model_copy(deep=True)
     db_state.pipeline_status = PipelineStatus.RUNNING
@@ -513,9 +501,7 @@ async def test_shutdown_waits_for_active_tasks(sample_state, mock_semaphore, moc
 
 
 @pytest.mark.asyncio
-async def test_shutdown_returns_immediately_when_no_active_tasks(
-    mock_orchestrator, mock_semaphore, mock_persistence
-):
+async def test_shutdown_returns_immediately_when_no_active_tasks(mock_orchestrator, mock_semaphore, mock_persistence):
     """shutdown() should return immediately when no tasks are running."""
     runner = PipelineRunner(
         orchestrator=mock_orchestrator,
@@ -528,9 +514,7 @@ async def test_shutdown_returns_immediately_when_no_active_tasks(
 
 
 @pytest.mark.asyncio
-async def test_shutdown_cancels_tasks_after_timeout(
-    sample_state, mock_semaphore, mock_persistence
-):
+async def test_shutdown_cancels_tasks_after_timeout(sample_state, mock_semaphore, mock_persistence):
     """shutdown() should cancel tasks that exceed the grace timeout."""
     orch = MagicMock()
     task_started = asyncio.Event()
@@ -585,9 +569,7 @@ async def test_get_last_state_does_not_fail_active_db_run_from_another_worker(
 
 
 @pytest.mark.asyncio
-async def test_runner_error_state_preserves_latest_phase_outputs(
-    sample_state, mock_semaphore, mock_persistence
-):
+async def test_runner_error_state_preserves_latest_phase_outputs(sample_state, mock_semaphore, mock_persistence):
     """Error state must use the latest cached state as model_copy base, not initial_state."""
     from src.agents.contracts import Phase1Output, PhaseStatus, PhaseStatusDetail
 
@@ -629,8 +611,11 @@ async def test_is_running_for_source_checks_persistence_when_cache_misses(
     """is_running_for_source falls back to persistence for cross-worker dedup."""
     mock_persistence.has_active_source_key = AsyncMock(return_value=True)
     runner = PipelineRunner(
-        mock_orchestrator, mock_semaphore, mock_persistence,
-        worker_id="worker-a", heartbeat_interval_seconds=0.01,
+        mock_orchestrator,
+        mock_semaphore,
+        mock_persistence,
+        worker_id="worker-a",
+        heartbeat_interval_seconds=0.01,
     )
 
     assert await runner.is_running_for_source("pmid:123") is True

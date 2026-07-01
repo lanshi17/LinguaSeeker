@@ -39,12 +39,8 @@ def test_loader_runs_with_synthetic_config(tmp_path) -> None:
     (root / "config" / "defaults" / "main.yaml").write_text(
         "service:\n  port: 8000\n  name: default\n", encoding="utf-8"
     )
-    (root / "config" / "environments" / "development.yaml").write_text(
-        "service:\n  port: 9000\n", encoding="utf-8"
-    )
-    (root / "config" / "vault" / "development.yaml").write_text(
-        "service:\n  secret: top\n", encoding="utf-8"
-    )
+    (root / "config" / "environments" / "development.yaml").write_text("service:\n  port: 9000\n", encoding="utf-8")
+    (root / "config" / "vault" / "development.yaml").write_text("service:\n  secret: top\n", encoding="utf-8")
 
     environ: dict[str, str] = {}
     load_backend_config_into_env(root, environ=environ)

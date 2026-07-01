@@ -1,4 +1,5 @@
 """Tests for SourceLinker read path."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -136,10 +137,15 @@ async def test_get_bilingual_span_returns_different_tracks() -> None:
 
     # Call 1 (original): canonical + best_run(match) = 2 queries
     # Call 2 (translated): canonical + best_run(mismatch) + fallback = 3 queries
-    session.execute = AsyncMock(side_effect=[
-        canonical_result, original_best,   # get_track_span("original")
-        canonical_result, original_best, translated_fallback,  # get_track_span("translated")
-    ])
+    session.execute = AsyncMock(
+        side_effect=[
+            canonical_result,
+            original_best,  # get_track_span("original")
+            canonical_result,
+            original_best,
+            translated_fallback,  # get_track_span("translated")
+        ]
+    )
 
     linker = SourceLinker(session)
     bilingual = await linker.get_bilingual_span(canonical_evidence_id=canonical_id)

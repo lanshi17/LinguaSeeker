@@ -59,7 +59,7 @@ def load_layered_config(environment: str) -> ConfigData:
       3. vault/<environment>.yaml (optional, git-ignored)
     """
     merged = {}
-    
+
     # Layer 1: defaults/main.yaml (required)
     defaults_path = CONFIG_ROOT / "defaults" / "main.yaml"
     if defaults_path.exists():
@@ -68,7 +68,7 @@ def load_layered_config(environment: str) -> ConfigData:
         merged = deep_merge(merged, defaults)
     else:
         print(f"Warning: {defaults_path} not found", file=sys.stderr)
-    
+
     # Layer 2: environments/<env>.yaml (optional)
     env_path = CONFIG_ROOT / "environments" / f"{environment}.yaml"
     if env_path.exists():
@@ -77,7 +77,7 @@ def load_layered_config(environment: str) -> ConfigData:
         merged = deep_merge(merged, env_config)
     else:
         print(f"Info: {env_path} not found, using defaults only", file=sys.stderr)
-    
+
     # Layer 3: vault/<env>.yaml (optional, secrets)
     vault_path = CONFIG_ROOT / "vault" / f"{environment}.yaml"
     if vault_path.exists():
@@ -86,7 +86,7 @@ def load_layered_config(environment: str) -> ConfigData:
         merged = deep_merge(merged, vault_secrets)
     else:
         print(f"Info: {vault_path} not found, no secrets loaded", file=sys.stderr)
-    
+
     return merged
 
 
@@ -97,7 +97,7 @@ def render_config_template(config_data: ConfigData, environment: str) -> str:
         loader=FileSystemLoader(str(template_dir)),
         keep_trailing_newline=True,
     )
-    
+
     template = env.get_template("config.yaml.j2")
     return template.render(environment=environment, **config_data)
 
@@ -116,13 +116,13 @@ def main() -> None:
         help="Output file path (default: stdout)",
     )
     args = parser.parse_args()
-    
+
     # Load layered configuration
     config_data = load_layered_config(args.env)
-    
+
     # Render template
     rendered = render_config_template(config_data, args.env)
-    
+
     # Write output
     if args.output:
         output_path = Path(args.output)

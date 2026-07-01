@@ -3,6 +3,7 @@
 Uses SELECT FOR UPDATE SKIP LOCKED to guarantee atomic single-claim
 and prevent double-execution of queued jobs.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -84,9 +85,7 @@ class JobQueueRepository:
             # Update: transition the locked row to running
             stmt = (
                 update(PipelineJob)
-                .where(
-                    PipelineJob.job_id == select(candidate.c.job_id).scalar_subquery()
-                )
+                .where(PipelineJob.job_id == select(candidate.c.job_id).scalar_subquery())
                 .where(PipelineJob.status == "queued")
                 .values(
                     status="running",
@@ -150,9 +149,7 @@ class JobQueueRepository:
         async with self._session_factory() as session:
             result = await session.execute(
                 select(PipelineJob.status)
-                .where(
-                    PipelineJob.processing_run_id == uuid.UUID(processing_run_id)
-                )
+                .where(PipelineJob.processing_run_id == uuid.UUID(processing_run_id))
                 .order_by(PipelineJob.created_at.desc())
                 .limit(1)
             )
@@ -163,8 +160,6 @@ class JobQueueRepository:
         """Return the number of currently running jobs (for diagnostics)."""
         async with self._session_factory() as session:
             result = await session.execute(
-                select(func.count())
-                .select_from(PipelineJob)
-                .where(PipelineJob.status == "running")
+                select(func.count()).select_from(PipelineJob).where(PipelineJob.status == "running")
             )
             return result.scalar() or 0

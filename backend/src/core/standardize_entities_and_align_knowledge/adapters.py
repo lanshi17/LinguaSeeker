@@ -1,4 +1,5 @@
 """Adapters that translate Phase 2 evidence output into Phase 3 input."""
+
 from __future__ import annotations
 
 import re

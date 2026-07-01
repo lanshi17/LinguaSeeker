@@ -1,4 +1,5 @@
 """Recall-first block selection for target-scoped evidence extraction."""
+
 from __future__ import annotations
 
 import re
@@ -9,6 +10,7 @@ from dataclasses import dataclass
 from ..contracts import ContentBlock, ExtractionTarget, TrackDocument
 from ..prompts import block_readable_text
 from src.utils.text_normalize import normalize_text as _normalize_text
+
 _RELATIONSHIP_CUE_RE = re.compile(
     r"\b("
     r"cause|causes|caused|causative|pathogenic|likely pathogenic|biallelic|monoallelic|"
@@ -144,10 +146,7 @@ def _expand_with_neighbors(
 ) -> tuple[SelectedBlock, ...]:
     """Add immediate neighbors around target blocks while respecting max_blocks."""
     by_index = {block.index: block for block in scored}
-    target_blocks = [
-        block for block in scored
-        if "target_gene" in block.reasons or "target_disease" in block.reasons
-    ]
+    target_blocks = [block for block in scored if "target_gene" in block.reasons or "target_disease" in block.reasons]
     for block in sorted(target_blocks, key=lambda item: (-item.score, item.index)):
         for neighbor_index in (block.index - 1, block.index + 1):
             if (
@@ -195,9 +194,7 @@ def _contains_any_alias(normalized_text: str, aliases: tuple[str, ...]) -> bool:
 
 def _contains_disease_family(normalized_text: str, disease_name: str) -> bool:
     tokens = [
-        token
-        for token in re.findall(r"[a-z0-9]+", disease_name.casefold())
-        if len(token) > 2 and not token.isdigit()
+        token for token in re.findall(r"[a-z0-9]+", disease_name.casefold()) if len(token) > 2 and not token.isdigit()
     ]
     if len(tokens) < 3:
         return False
@@ -238,8 +235,6 @@ def _has_section_cue(block: ContentBlock, text: str) -> bool:
     if block.type.casefold() in {"title", "abstract", "header"}:
         return True
     return bool(_SECTION_CUE_RE.search(text))
-
-
 
 
 def _remove_parentheticals(value: str) -> str:

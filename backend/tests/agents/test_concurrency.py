@@ -1,4 +1,5 @@
 """Tests for concurrency control and retry logic."""
+
 import pytest
 import asyncio
 from unittest.mock import MagicMock
@@ -56,6 +57,7 @@ async def test_retry_executor_retries_on_retryable_error():
 @pytest.mark.asyncio
 async def test_retry_executor_passes_through_permanent_errors():
     """RetryablePhaseExecutor does NOT retry PermanentPhaseError."""
+
     async def permanent_failure(state):
         raise PermanentPhaseError("Configuration error", phase=2)
 

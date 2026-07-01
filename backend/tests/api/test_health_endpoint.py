@@ -1,4 +1,5 @@
 """Tests for health endpoint type safety."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel
@@ -13,9 +14,7 @@ def test_health_endpoint_returns_basemodel():
         if hasattr(route, "path") and route.path == "/health":
             # With `from __future__ import annotations`, inspect.signature
             # returns a string. Use the known class directly.
-            assert issubclass(HealthResponse, BaseModel), (
-                "HealthResponse should be BaseModel subclass"
-            )
+            assert issubclass(HealthResponse, BaseModel), "HealthResponse should be BaseModel subclass"
             assert hasattr(HealthResponse, "model_fields"), "Should be a Pydantic model"
             assert "status" in HealthResponse.model_fields, "Must have 'status' field"
             break

@@ -1,4 +1,5 @@
 """Tests for Benchmark B pilot selection."""
+
 from __future__ import annotations
 
 import json
@@ -79,7 +80,9 @@ def test_benchmark_b_pilot_selector_writes_frozen_manifest(tmp_path: Path) -> No
         )
     )
     payload = benchmark_b_pilot_selection_to_payload(report)
-    report_path = write_benchmark_b_pilot_selection(report, output_path=ground_truth_root / "benchmark_b_pilot_selection.json")
+    report_path = write_benchmark_b_pilot_selection(
+        report, output_path=ground_truth_root / "benchmark_b_pilot_selection.json"
+    )
 
     assert payload["summary"]["selected_count"] == 10
     assert payload["selected_cases"][0]["source_files"][0]["path"].endswith("clingen_000.pdf")

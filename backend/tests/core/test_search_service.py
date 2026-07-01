@@ -1,7 +1,6 @@
 """Tests for search_service track deduplication."""
 
 
-
 def test_dedup_by_field_id_and_track():
     """Deduplication by (field_id, track) keeps the most recently updated row."""
     from dataclasses import dataclass

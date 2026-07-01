@@ -1,4 +1,5 @@
 """Tests for original-English semantic span alignment contracts and helpers."""
+
 from __future__ import annotations
 
 import pytest
@@ -41,15 +42,17 @@ def test_translation_span_pair_serializes_semantic_method() -> None:
 
 
 def test_translation_alignment_chunk_accepts_legacy_payload_without_span_pairs() -> None:
-    chunk = TranslationAlignmentChunk.model_validate({
-        "chunk_id": "c_0001",
-        "original_text": "患儿存在MECP2基因突变。",
-        "english_text": "The child had an MECP2 gene mutation.",
-        "original_start_offset": 0,
-        "original_end_offset": 14,
-        "english_start_offset": 0,
-        "english_end_offset": 39,
-    })
+    chunk = TranslationAlignmentChunk.model_validate(
+        {
+            "chunk_id": "c_0001",
+            "original_text": "患儿存在MECP2基因突变。",
+            "english_text": "The child had an MECP2 gene mutation.",
+            "original_start_offset": 0,
+            "original_end_offset": 14,
+            "english_start_offset": 0,
+            "english_end_offset": 39,
+        }
+    )
 
     assert chunk.span_pairs == []
 
@@ -143,10 +146,7 @@ def test_build_fallback_span_pairs_emits_monotonic_pairs_for_rett_text() -> None
     chunk = TranslationAlignmentChunk(
         chunk_id="c_0003",
         original_text="患儿存在MECP2基因c.194delC突变，最终确诊为Rett综合征。",
-        english_text=(
-            "The child had an MECP2 gene c.194delC mutation and was finally "
-            "diagnosed with Rett syndrome."
-        ),
+        english_text=("The child had an MECP2 gene c.194delC mutation and was finally diagnosed with Rett syndrome."),
         original_start_offset=50,
         original_end_offset=84,
         english_start_offset=120,
@@ -179,7 +179,7 @@ async def test_generate_chunk_span_pairs_uses_semantic_json(monkeypatch) -> None
             '{"pairs": ['
             '{"original_text": "MECP2基因", "english_text": "MECP2 gene", "confidence": 0.92},'
             '{"original_text": "Rett综合征", "english_text": "Rett syndrome", "confidence": 0.94}'
-            ']}'
+            "]}"
         )
 
     monkeypatch.setattr(

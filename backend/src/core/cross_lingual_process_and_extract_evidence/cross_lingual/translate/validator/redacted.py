@@ -1,4 +1,5 @@
 """Redacted value detection and marking for OCR-processed documents."""
+
 from __future__ import annotations
 
 import re

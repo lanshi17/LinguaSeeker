@@ -1,4 +1,5 @@
 """Tests for chat API routes."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -163,9 +164,7 @@ async def test_append_message_can_generate_reply_when_requested(
 
     with patch("src.api.v1.chat.get_phase4_factory") as mock_factory:
         mock_service = MagicMock()
-        mock_service.append_message = AsyncMock(
-            side_effect=[user_response, assistant_response]
-        )
+        mock_service.append_message = AsyncMock(side_effect=[user_response, assistant_response])
         mock_service.generate_reply = AsyncMock(return_value="BRCA1 answer")
         mock_factory.return_value.create_chat_service.return_value = mock_service
 

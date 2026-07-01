@@ -1,4 +1,5 @@
 """Tests for fused-75 prompt-engineering baseline metadata."""
+
 from __future__ import annotations
 
 from benchmark.optimization.fused75.run_baseline_prompt import DEFAULT_PROMPT_BASELINE_MODEL

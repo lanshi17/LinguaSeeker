@@ -63,6 +63,7 @@ def test_pipeline_state_defaults():
 
 def test_pipeline_state_rejects_missing_pages():
     import pytest
+
     with pytest.raises(Exception):
         PipelineState()  # pages is required
 

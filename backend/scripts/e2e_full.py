@@ -34,6 +34,7 @@ Usage:
     # Custom output dir
     uv run python scripts/e2e_full.py --output-dir /tmp/e2e_test
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -122,10 +123,7 @@ async def stage_parse(
         return None
 
     parse_result = list(result.results.values())[0]
-    pages = [
-        {"page_number": p.page_number, "markdown": p.markdown}
-        for p in parse_result.pages
-    ]
+    pages = [{"page_number": p.page_number, "markdown": p.markdown} for p in parse_result.pages]
 
     parsed = {
         "pages": pages,
@@ -133,14 +131,19 @@ async def stage_parse(
         "content_blocks": parse_result.content_blocks,
     }
 
-    save_json(out_dir / "parsed.json", {
-        "pages": pages,
-        "content_blocks": parse_result.content_blocks,
-    })
+    save_json(
+        out_dir / "parsed.json",
+        {
+            "pages": pages,
+            "content_blocks": parse_result.content_blocks,
+        },
+    )
 
     logger.info(
         "[parse] OK: {} pages, {} chars, {} blocks",
-        len(pages), len(parse_result.full_markdown), len(parse_result.content_blocks),
+        len(pages),
+        len(parse_result.full_markdown),
+        len(parse_result.content_blocks),
     )
     return parsed
 
@@ -193,9 +196,13 @@ async def stage_translate(
 
     logger.info(
         "[translate] OK: lang={} | {:.1f}s | {}->{} chars | segs={} | blocks={} | warnings={}",
-        result.source_language, elapsed,
-        len(result.formatted_original), len(result.translated_english),
-        len(result.segments), len(result.original_blocks), result.translation_warnings,
+        result.source_language,
+        elapsed,
+        len(result.formatted_original),
+        len(result.translated_english),
+        len(result.segments),
+        len(result.original_blocks),
+        result.translation_warnings,
     )
     return True
 
@@ -235,7 +242,11 @@ async def stage_extract(
 
     logger.info(
         "[extract] OK: {:.1f}s | doc={} | original_items={} | translated_items={} | output={}",
-        elapsed, doc_id_val, orig_items, trans_items, saved_dir,
+        elapsed,
+        doc_id_val,
+        orig_items,
+        trans_items,
+        saved_dir,
     )
     return True
 
@@ -251,16 +262,24 @@ def _ensure_evidence_env_from_llm() -> None:
         cfg_reasoning = None
     mappings = {
         "EVIDENCE_EXTRACTION_API_KEY": (
-            ("FAST_LLM_API_KEY", "LLM_API_KEY"), cfg_llm, "api_key",
+            ("FAST_LLM_API_KEY", "LLM_API_KEY"),
+            cfg_llm,
+            "api_key",
         ),
         "EVIDENCE_EXTRACTION_BASE_URL": (
-            ("FAST_LLM_BASE_URL", "LLM_BASE_URL"), cfg_llm, "base_url",
+            ("FAST_LLM_BASE_URL", "LLM_BASE_URL"),
+            cfg_llm,
+            "base_url",
         ),
         "EVIDENCE_EXTRACTION_FAST_MODEL": (
-            ("FAST_LLM_MODEL", "LLM_MODEL"), cfg_llm, "model",
+            ("FAST_LLM_MODEL", "LLM_MODEL"),
+            cfg_llm,
+            "model",
         ),
         "EVIDENCE_EXTRACTION_STANDARD_MODEL": (
-            ("FAST_LLM_MODEL", "LLM_MODEL"), cfg_llm, "model",
+            ("FAST_LLM_MODEL", "LLM_MODEL"),
+            cfg_llm,
+            "model",
         ),
         "EVIDENCE_EXTRACTION_STRONG_MODEL": (
             ("REASONING_LLM_MODEL", "FAST_LLM_MODEL", "LLM_MODEL"),
@@ -337,9 +356,7 @@ async def stage_visualize(
 ) -> bool:
     """Evidence review & expert feedback loop over database canonical evidence."""
     # Query canonical evidence
-    stmt = select(CanonicalEvidenceItem).order_by(
-        CanonicalEvidenceItem.created_at.desc()
-    ).limit(10)
+    stmt = select(CanonicalEvidenceItem).order_by(CanonicalEvidenceItem.created_at.desc()).limit(10)
     result = await db_session.execute(stmt)
     items = result.scalars().all()
 
@@ -398,8 +415,7 @@ async def stage_visualize(
 
     if spans_with_both == 0 and items:
         logger.warning(
-            "[visualize] 0/{} items have bilingual spans -- "
-            "run_evidence_items may lack track data",
+            "[visualize] 0/{} items have bilingual spans -- run_evidence_items may lack track data",
             len(items),
         )
 
@@ -455,7 +471,11 @@ async def stage_visualize(
     elapsed = time.time() - t0
     logger.info(
         "[visualize] OK: {:.1f}s | items={} | patches={} | bilingual_spans={} | audit_events={}",
-        elapsed, len(items), patches, spans_with_both, total_events,
+        elapsed,
+        len(items),
+        patches,
+        spans_with_both,
+        total_events,
     )
     return True
 
@@ -540,12 +560,13 @@ async def run_pipeline(
 
                 # visualize
                 if "visualize" in stages and db_session_factory is not None:
-                    processing_run_id = (
-                        std_result.get("processing_run_id") if std_result else None
-                    )
+                    processing_run_id = std_result.get("processing_run_id") if std_result else None
                     async with get_async_session(db_session_factory) as session:
                         ok = await stage_visualize(
-                            out_dir, doc_id, session, processing_run_id,
+                            out_dir,
+                            doc_id,
+                            session,
+                            processing_run_id,
                         )
                         if ok:
                             stats["visualize"] += 1

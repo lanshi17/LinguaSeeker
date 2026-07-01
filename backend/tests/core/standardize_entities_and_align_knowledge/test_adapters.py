@@ -1,4 +1,5 @@
 """Tests for adapting Phase 2 dual extraction output into Phase 3 input."""
+
 from __future__ import annotations
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
@@ -40,11 +41,15 @@ def test_dual_result_adapter_extracts_chain_candidates() -> None:
 
     adapter = DualResultAdapter()
     output = adapter.to_standardization_input(
-        result, source_document_id="source-1", processing_run_id="run-1",
+        result,
+        source_document_id="source-1",
+        processing_run_id="run-1",
     )
 
     assert [candidate.entity_type for candidate in output.candidates] == [
-        EntityType.GENE, EntityType.DISEASE, EntityType.VARIANT,
+        EntityType.GENE,
+        EntityType.DISEASE,
+        EntityType.VARIANT,
     ]
     variant_candidate = output.candidates[2]
     assert variant_candidate.metadata["gene_symbol"] == "BRCA1"
@@ -94,10 +99,14 @@ def test_dual_result_adapter_extracts_phenotypes_from_supported_fields() -> None
 
     adapter = DualResultAdapter()
     output = adapter.to_standardization_input(
-        result, source_document_id="source-2", processing_run_id="run-2",
+        result,
+        source_document_id="source-2",
+        processing_run_id="run-2",
     )
 
-    phenotype_texts = [candidate.raw_text for candidate in output.candidates if candidate.entity_type == EntityType.PHENOTYPE]
+    phenotype_texts = [
+        candidate.raw_text for candidate in output.candidates if candidate.entity_type == EntityType.PHENOTYPE
+    ]
     assert phenotype_texts == ["HP:0001250", "Seizure", "Developmental delay"]
 
 
@@ -122,7 +131,9 @@ def test_dual_result_adapter_deduplicates_same_chain_across_tracks() -> None:
 
     adapter = DualResultAdapter()
     output = adapter.to_standardization_input(
-        result, source_document_id="source-dedup", processing_run_id="run-dedup",
+        result,
+        source_document_id="source-dedup",
+        processing_run_id="run-dedup",
     )
 
     gene_candidates = [c for c in output.candidates if c.entity_type == EntityType.GENE]
@@ -159,7 +170,9 @@ def test_dual_result_adapter_splits_chinese_compound_phenotypes() -> None:
 
     adapter = DualResultAdapter()
     output = adapter.to_standardization_input(
-        result, source_document_id="source-zh", processing_run_id="run-zh",
+        result,
+        source_document_id="source-zh",
+        processing_run_id="run-zh",
     )
 
     phenotype_texts = [c.raw_text for c in output.candidates if c.entity_type == EntityType.PHENOTYPE]
@@ -194,7 +207,9 @@ def test_dual_result_adapter_splits_english_comma_phenotypes() -> None:
 
     adapter = DualResultAdapter()
     output = adapter.to_standardization_input(
-        result, source_document_id="s1", processing_run_id="r1",
+        result,
+        source_document_id="s1",
+        processing_run_id="r1",
     )
     phenotype_texts = [c.raw_text for c in output.candidates if c.entity_type == EntityType.PHENOTYPE]
     assert phenotype_texts == ["edema", "proteinuria", "arrhythmia"]
@@ -211,6 +226,7 @@ def test_dual_result_adapter_carries_target_and_phenotype_evidence() -> None:
         ExtractionTarget,
         Track,
     )
+
     target = ExtractionTarget(gene_symbol="AARS2", disease_name="AARS2-related leukodystrophy")
     result = DualEvidenceExtractionResult(
         document_id="doc-target",

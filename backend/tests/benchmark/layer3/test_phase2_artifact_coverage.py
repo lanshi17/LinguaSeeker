@@ -1,4 +1,5 @@
 """Tests for Phase 2 artifact coverage planning."""
+
 from __future__ import annotations
 
 import json

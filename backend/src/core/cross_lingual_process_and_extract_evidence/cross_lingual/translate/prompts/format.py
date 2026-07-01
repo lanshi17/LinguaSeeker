@@ -1,4 +1,5 @@
 """Prompt templates for the document formatting/normalization stage."""
+
 from __future__ import annotations
 
 

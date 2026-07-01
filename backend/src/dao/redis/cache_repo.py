@@ -3,6 +3,7 @@
 Stores JSON payloads under namespaced keys. Invalidation uses transactional Redis
 pipelines so partial network failures cannot leave stale cache behind.
 """
+
 from __future__ import annotations
 
 import json
@@ -10,6 +11,7 @@ import json
 from typing_extensions import TypedDict
 
 import redis.asyncio as aioredis
+
 
 class CachePrefixes(TypedDict):
     """Key namespace prefixes for the read-model cache."""
@@ -61,7 +63,11 @@ class CacheRepository:
         return self._decode(raw)
 
     async def _set(
-        self, namespace: str, entry_id: str, value: dict[str, object], ttl: int = 3600,
+        self,
+        namespace: str,
+        entry_id: str,
+        value: dict[str, object],
+        ttl: int = 3600,
     ) -> None:
         await self._client.set(self._key(namespace, entry_id), self._encode(value), ex=ttl)
 
@@ -72,33 +78,44 @@ class CacheRepository:
         return await self._get(CACHE_PREFIX["document"], document_id)
 
     async def set_document(
-        self, document_id: str, value: dict[str, object], ttl: int = 3600,
+        self,
+        document_id: str,
+        value: dict[str, object],
+        ttl: int = 3600,
     ) -> None:
         await self._set(CACHE_PREFIX["document"], document_id, value, ttl)
 
     # ── Canonical evidence cache ──────────────────────────────────────
 
     async def get_canonical_evidence(
-        self, canonical_evidence_id: str,
+        self,
+        canonical_evidence_id: str,
     ) -> dict[str, object] | None:  # noqa  # dict-return: unstructured cache JSON.
         """Return an unstructured cached canonical evidence payload."""
         return await self._get(CACHE_PREFIX["canonical"], canonical_evidence_id)
 
     async def set_canonical_evidence(
-        self, canonical_evidence_id: str, value: dict[str, object], ttl: int = 3600,
+        self,
+        canonical_evidence_id: str,
+        value: dict[str, object],
+        ttl: int = 3600,
     ) -> None:
         await self._set(CACHE_PREFIX["canonical"], canonical_evidence_id, value, ttl)
 
     # ── Entity cache ──────────────────────────────────────────────────
 
     async def get_entity(
-        self, entity_id: str,
+        self,
+        entity_id: str,
     ) -> dict[str, object] | None:  # noqa  # dict-return: unstructured cache JSON.
         """Return an unstructured cached entity payload."""
         return await self._get(CACHE_PREFIX["entity"], entity_id)
 
     async def set_entity(
-        self, entity_id: str, value: dict[str, object], ttl: int = 3600,
+        self,
+        entity_id: str,
+        value: dict[str, object],
+        ttl: int = 3600,
     ) -> None:
         await self._set(CACHE_PREFIX["entity"], entity_id, value, ttl)
 

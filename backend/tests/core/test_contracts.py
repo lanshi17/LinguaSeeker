@@ -7,8 +7,7 @@ from pydantic import ValidationError
 def test_source_location_accepts_academic_section_types():
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import SourceLocation
 
-    for section in ("results", "discussion", "methods", "background",
-                    "introduction", "conclusion", "abstract"):
+    for section in ("results", "discussion", "methods", "background", "introduction", "conclusion", "abstract"):
         loc = SourceLocation(context_type=section, context_ref="test", text_snippet="test")
         assert loc.context_type == section
 

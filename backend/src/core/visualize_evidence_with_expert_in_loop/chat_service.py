@@ -1,4 +1,5 @@
 """Chat service for evidence review conversations."""
+
 from __future__ import annotations
 
 import re
@@ -55,7 +56,7 @@ CHAT_AGENT_CAPABILITIES_PROMPT = (
     "   a. Decide source_type first. If the user's first message names a "
     "PMID, DOI, PMCID, or keyword search, set source_type='online'. If the "
     "user says 'upload a PDF' or similar, set source_type='local' and guide "
-    "them to the Task Management page where they can click \"New Task\" to "
+    'them to the Task Management page where they can click "New Task" to '
     "upload a PDF or enter search terms directly.\n"
     "   c. For source_type='local': after the user creates a task on the "
     "Task Management page, tell them to check its progress there.\n"
@@ -175,9 +176,7 @@ class ChatService:
 
     async def _require_session(self, *, session_id: UUID) -> ChatSession:
         """Fetch a chat session or raise NotFoundException if it doesn't exist."""
-        result = await self._session.execute(
-            select(ChatSession).where(ChatSession.chat_session_id == session_id)
-        )
+        result = await self._session.execute(select(ChatSession).where(ChatSession.chat_session_id == session_id))
         session = result.scalar_one_or_none()
         if session is None:
             raise NotFoundException("ChatSession", str(session_id))
@@ -299,9 +298,7 @@ class ChatService:
         - Associated entities (via bindings)
         - Source span snippet
         """
-        stmt = select(CanonicalEvidenceItem).where(
-            CanonicalEvidenceItem.canonical_evidence_id == canonical_evidence_id
-        )
+        stmt = select(CanonicalEvidenceItem).where(CanonicalEvidenceItem.canonical_evidence_id == canonical_evidence_id)
         result = await self._session.execute(stmt)
         evidence = result.scalar_one_or_none()
 
@@ -348,9 +345,7 @@ class ChatService:
             if entities:
                 context_parts.append("\n**Associated Entities**")
                 for entity in entities[:5]:
-                    context_parts.append(
-                        f"- {entity.entity_type}: {entity.display_name} ({entity.external_id})"
-                    )
+                    context_parts.append(f"- {entity.entity_type}: {entity.display_name} ({entity.external_id})")
 
             # Source snippet from the best run item
             stmt = select(RunEvidenceItem).where(
@@ -438,7 +433,7 @@ class ChatService:
         if not fields:
             return (
                 "I couldn't parse a field correction from your message. "
-                "Try: \"change gene to BRCA2\" or \"把分类改为 pathogenic\". "
+                'Try: "change gene to BRCA2" or "把分类改为 pathogenic". '
                 "You can also use the Edit button on the evidence detail page."
             )
 
@@ -458,10 +453,7 @@ class ChatService:
             logger.warning("Chat correction failed: {}", exc)
             return f"Correction failed: {exc}"
 
-        delta_parts = [
-            f"**{d.field}**: ~~{d.old_value}~~ → {d.new_value}"
-            for d in result.field_deltas
-        ]
+        delta_parts = [f"**{d.field}**: ~~{d.old_value}~~ → {d.new_value}" for d in result.field_deltas]
         summary = "\n".join(delta_parts) if delta_parts else "Status updated."
         return (
             f"Correction applied to evidence `{str(evidence_id)[:8]}…`.\n\n"
@@ -531,9 +523,7 @@ class ChatService:
 
         context = ""
         if evidence_id:
-            context = await self._build_evidence_context(
-                canonical_evidence_id=evidence_id
-            )
+            context = await self._build_evidence_context(canonical_evidence_id=evidence_id)
 
         system_prompt = self._system_prompt(has_evidence_context=bool(context))
 
@@ -547,6 +537,7 @@ class ChatService:
             from src.core.visualize_evidence_with_expert_in_loop.providers import (
                 ChatLLMProvider,
             )
+
             provider = ChatLLMProvider()
 
         reply = await provider.generate(
@@ -586,9 +577,7 @@ class ChatService:
 
         context = ""
         if evidence_id:
-            context = await self._build_evidence_context(
-                canonical_evidence_id=evidence_id
-            )
+            context = await self._build_evidence_context(canonical_evidence_id=evidence_id)
 
         system_prompt = self._system_prompt(has_evidence_context=bool(context))
 
@@ -602,6 +591,7 @@ class ChatService:
             from src.core.visualize_evidence_with_expert_in_loop.providers import (
                 ChatLLMProvider,
             )
+
             provider = ChatLLMProvider()
 
         if not context:
