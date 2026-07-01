@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -349,10 +349,25 @@ class TranslationSegment:
     source_end_offset: int = -1
     translated_start_offset: int = -1
     translated_end_offset: int = -1
+    span_pairs: list[TranslationSpanPair] = field(default_factory=list)
+
+
+class TranslationSpanPair(BaseModel):
+    """Semantic or fallback span mapping between original and English text."""
+
+    pair_id: str
+    original_text: str
+    english_text: str
+    original_start_offset: int
+    original_end_offset: int
+    english_start_offset: int
+    english_end_offset: int
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    method: Literal["semantic_llm", "deterministic_token"] = "deterministic_token"
 
 
 class TranslationAlignmentChunk(BaseModel):
-    """Deterministic block-level mapping from source text to English text."""
+    """Block-level mapping from source text to English text."""
 
     chunk_id: str
     original_text: str
@@ -364,6 +379,7 @@ class TranslationAlignmentChunk(BaseModel):
     page: int = 1
     block_index: int = -1
     bbox: list[int] = Field(default_factory=list)
+    span_pairs: list[TranslationSpanPair] = Field(default_factory=list)
 
 
 @dataclass

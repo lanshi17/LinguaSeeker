@@ -1,22 +1,16 @@
 """Deterministic source grounding and quality validation."""
 from __future__ import annotations
 
-import ast
-from dataclasses import dataclass
 import re
 
 from loguru import logger
 
-from .catalog import EVIDENCE_FIELD_SPECS, EvidenceFieldSpec
 from .contracts import (
     ContentBlock,
     EvidenceChain,
     EvidenceItem,
     EvidenceStatus,
-    ExtractionTarget,
     PageSpan,
-    QualityIssue,
-    QualityReport,
     SourceLocation,
     SourcePrecision,
     SpecialEvidenceRecord,
@@ -40,6 +34,33 @@ _MISSING_GROUP_VALUE = "__missing__"
 _FULLWIDTH_TO_HALFWIDTH = {
     full: half for full, half in zip(range(0xFF01, 0xFF5F), range(0x21, 0x7F))
 }
+_AA3_TO_1 = {
+    "Ala": "A",
+    "Arg": "R",
+    "Asn": "N",
+    "Asp": "D",
+    "Cys": "C",
+    "Gln": "Q",
+    "Glu": "E",
+    "Gly": "G",
+    "His": "H",
+    "Ile": "I",
+    "Leu": "L",
+    "Lys": "K",
+    "Met": "M",
+    "Phe": "F",
+    "Pro": "P",
+    "Ser": "S",
+    "Thr": "T",
+    "Trp": "W",
+    "Tyr": "Y",
+    "Val": "V",
+}
+_AA1_TO_3 = {value: key for key, value in _AA3_TO_1.items()}
+_PROTEIN_3LETTER_SUB_RE = re.compile(r"p\.([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|Ter|\*|X|stop)")
+_PROTEIN_1LETTER_SUB_RE = re.compile(r"p\.([A-Z])(\d+)([A-Z]|\*)")
+_PROTEIN_3LETTER_FS_TER_RE = re.compile(r"p\.([A-Z][a-z]{2})(\d+)fsTer(\d+)")
+_PROTEIN_1LETTER_FS_STAR_RE = re.compile(r"p\.([A-Z])(\d+)fs\*(\d+)")
 """Fullwidth ASCII variants (U+FF01–U+FF5E) → halfwidth ASCII (U+0021–U+007E).
 
 A 1:1 character mapping, so it preserves index_map correspondence in
@@ -139,7 +160,7 @@ class SourceGrounder:
                 })
 
 
-        grounded_source = self._ground_source(document, source)
+        grounded_source = self._ground_source(document, source, item.field_id)
         if grounded_source is None:
             block = self._block_for_index(document, source.block_index)
             mapped_type = self._map_block_type(block.type) if block is not None else source.block_type
@@ -172,7 +193,7 @@ class SourceGrounder:
 
         return item.model_copy(update={"source": grounded_source, "raw_source": source})
 
-    def _ground_source(self, document: TrackDocument, source: SourceLocation) -> SourceLocation | None:
+    def _ground_source(self, document: TrackDocument, source: SourceLocation, field_id: str = "") -> SourceLocation | None:
         block = self._block_for_index(document, source.block_index)
         if block is not None:
             block_text = self._block_readable_text(block)
@@ -191,7 +212,7 @@ class SourceGrounder:
                 "source_precision": SourcePrecision.EXACT,
             })
 
-        corrected = self._search_snippet(document, source, source.text_snippet, "")
+        corrected = self._search_snippet(document, source, source.text_snippet, field_id)
         if corrected is None:
             return None
         if len(corrected) > 1:
@@ -333,7 +354,6 @@ class SourceGrounder:
         snippet: str,
         field_id: str,
     ) -> list[SourceLocation] | None:
-        del field_id
         text = document.formatted_text
         spans = document.page_spans
         direct_results = self._find_snippet_occurrences(text, spans, snippet, source)
@@ -349,7 +369,92 @@ class SourceGrounder:
             if normalized_results:
                 return normalized_results
 
+        for alias in self._grounding_aliases(field_id, snippet):
+            alias_results = self._find_snippet_occurrences(text, spans, alias, source)
+            if alias_results:
+                return alias_results
+            normalized_alias = self._normalize_snippet_for_search(alias)
+            if not normalized_alias:
+                continue
+            normalized_alias_results = self._find_normalized_occurrences(text, spans, normalized_alias, source)
+            if normalized_alias_results:
+                return normalized_alias_results
+
         return None
+
+    @classmethod
+    def _grounding_aliases(cls, field_id: str, snippet: str) -> list[str]:
+        """Return strict source-search aliases for known notation drift."""
+        if field_id != "A.variant_hgvs_p":
+            return []
+        aliases: list[str] = []
+
+        def _add(value: str) -> None:
+            value = value.strip()
+            if value and value != snippet and value not in aliases:
+                aliases.append(value)
+
+        compact_parentheses = re.sub(r"\s*([()])\s*", r"\1", snippet)
+        _add(compact_parentheses)
+        if compact_parentheses.startswith("p."):
+            _add(compact_parentheses[2:])
+
+        for source_text in (snippet, compact_parentheses):
+            converted = cls._protein_3letter_to_1letter(source_text)
+            if converted is not None:
+                _add(converted)
+                if converted.startswith("p."):
+                    _add(converted[2:])
+            expanded = cls._protein_1letter_to_3letter(source_text)
+            if expanded is not None:
+                _add(expanded)
+
+        return aliases
+
+    @staticmethod
+    def _protein_3letter_to_1letter(value: str) -> str | None:
+        fs_match = _PROTEIN_3LETTER_FS_TER_RE.search(value)
+        if fs_match is not None:
+            ref = _AA3_TO_1.get(fs_match.group(1))
+            if ref is None:
+                return None
+            return f"p.{ref}{fs_match.group(2)}fs*{fs_match.group(3)}"
+
+        match = _PROTEIN_3LETTER_SUB_RE.search(value)
+        if match is None:
+            return None
+        ref = _AA3_TO_1.get(match.group(1))
+        if ref is None:
+            return None
+        alt_text = match.group(3)
+        if alt_text in {"Ter", "*", "X", "stop"}:
+            alt = "*"
+        else:
+            alt = _AA3_TO_1.get(alt_text)
+        if alt is None:
+            return None
+        return f"p.{ref}{match.group(2)}{alt}"
+
+    @staticmethod
+    def _protein_1letter_to_3letter(value: str) -> str | None:
+        fs_match = _PROTEIN_1LETTER_FS_STAR_RE.search(value)
+        if fs_match is not None:
+            ref = _AA1_TO_3.get(fs_match.group(1))
+            if ref is None:
+                return None
+            return f"p.{ref}{fs_match.group(2)}fsTer{fs_match.group(3)}"
+
+        match = _PROTEIN_1LETTER_SUB_RE.search(value)
+        if match is None:
+            return None
+        ref = _AA1_TO_3.get(match.group(1))
+        if ref is None:
+            return None
+        alt_text = match.group(3)
+        alt = "Ter" if alt_text == "*" else _AA1_TO_3.get(alt_text)
+        if alt is None:
+            return None
+        return f"p.{ref}{match.group(2)}{alt}"
 
     @staticmethod
     def _snippet_has_ellipsis(snippet: str) -> bool:

@@ -39,10 +39,12 @@ from ...config_context import TranslationConfigContext
 from ...contracts import (
     ContentBlock,
     FormattedDocument,
+    TranslationAlignmentChunk,
     TranslationResult,
     TranslationSegment,
 )
 from ..format.segmenter import estimate_tokens, segment_text
+from .alignment import generate_chunk_span_pairs
 from .base import BaseTranslator
 from .language_detector import _CJK_RE, detect_language
 from .prompts import (
@@ -850,6 +852,44 @@ class MultiStageTranslator(BaseTranslator):
         # Errors are already logged inside _translate_batch
         return aux_translations
 
+    async def _attach_span_pairs_to_segments(
+        self,
+        segments: list[TranslationSegment],
+        source_language: str,
+    ) -> None:
+        """Attach semantic/fallback span pairs to translation segments."""
+
+        async def _align(segment: TranslationSegment) -> None:
+            if (
+                not segment.source_text.strip()
+                or not segment.translated_text.strip()
+                or segment.source_start_offset < 0
+                or segment.source_end_offset <= segment.source_start_offset
+                or segment.translated_start_offset < 0
+                or segment.translated_end_offset <= segment.translated_start_offset
+            ):
+                return
+            chunk_id = segment.chunk_id or f"c_{segment.index + 1:04d}"
+            chunk = TranslationAlignmentChunk(
+                chunk_id=chunk_id,
+                original_text=segment.source_text,
+                english_text=segment.translated_text,
+                original_start_offset=segment.source_start_offset,
+                original_end_offset=segment.source_end_offset,
+                english_start_offset=segment.translated_start_offset,
+                english_end_offset=segment.translated_end_offset,
+                page=segment.source_bbox.page if segment.source_bbox is not None else 1,
+                block_index=segment.index,
+            )
+            segment.span_pairs = await generate_chunk_span_pairs(
+                self._json_llm,
+                chunk,
+                source_language,
+                f"alignment/{chunk_id}",
+            )
+
+        await asyncio.gather(*[_align(segment) for segment in segments])
+
     async def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
         blocks = formatted.original_blocks or []
         terminology_map, translated, source_segments, translated_parts, warnings = (
@@ -963,6 +1003,11 @@ class MultiStageTranslator(BaseTranslator):
                 )
             else:
                 raise
+
+        await self._attach_span_pairs_to_segments(
+            tr_segments,
+            formatted.source_language or "unknown",
+        )
 
         # Flag blocks with quality issues for manual review
         flagged = flag_quality_issues(translated_blocks)

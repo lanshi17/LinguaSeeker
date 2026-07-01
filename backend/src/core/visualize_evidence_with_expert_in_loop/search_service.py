@@ -16,6 +16,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.utils.parsing import parse_gene_from_group_id, parse_variant_from_group_id
 from src.utils.text_normalize import block_text_from_dict, concat_document_text
 
+from src.core.cross_lingual_process_and_extract_evidence.contracts import (
+    TranslationAlignmentChunk,
+)
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     EvidenceChainHighlight,
     EvidenceFieldDistribution,
@@ -477,6 +480,99 @@ def _load_from_dir(doc_dir: Path, track: str) -> str | None:
     except Exception:
         logger.warning("Failed to load full {} text from {}", track, doc_file)
         return None
+
+
+def _parse_translation_alignment(raw: Any) -> list[TranslationAlignmentChunk]:
+    """Parse persisted translation alignment chunks."""
+    if not isinstance(raw, list):
+        return []
+
+    chunks: list[TranslationAlignmentChunk] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        try:
+            chunks.append(TranslationAlignmentChunk.model_validate(item))
+        except ValueError:
+            logger.warning("Skipping invalid translation alignment chunk: {}", item)
+    return chunks
+
+
+def _load_translation_alignment_from_dir(doc_dir: Path) -> list[TranslationAlignmentChunk]:
+    """Load translation alignment metadata from one persisted document directory."""
+    for filename in ("metadata.json", "translated.json"):
+        path = doc_dir / filename
+        if not path.exists():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            logger.warning("Failed to load translation alignment from {}", path)
+            continue
+        if not isinstance(data, dict):
+            continue
+        raw = data.get("translation_alignment")
+        metadata = data.get("metadata")
+        if raw is None and isinstance(metadata, dict):
+            raw = metadata.get("translation_alignment")
+        chunks = _parse_translation_alignment(raw)
+        if chunks:
+            return chunks
+    return []
+
+
+def _load_translation_alignment(
+    source_document_id: str | UUID,
+    raw_metadata: Any,
+    identifiers: dict[str, str] | None = None,
+    known_output_dir: str | None = None,
+) -> list[TranslationAlignmentChunk]:
+    """Load validated translation alignment for an evidence detail response."""
+    if isinstance(raw_metadata, dict):
+        chunks = _parse_translation_alignment(raw_metadata.get("translation_alignment"))
+        if chunks:
+            return chunks
+
+    if known_output_dir:
+        chunks = _load_translation_alignment_from_dir(Path(known_output_dir))
+        if chunks:
+            return chunks
+
+    backend_root = Path(__file__).resolve().parents[4]
+    doc_id_str = str(source_document_id)
+    pipeline_root = backend_root / "data" / "pipeline"
+    if pipeline_root.exists():
+        for pipeline_dir in pipeline_root.iterdir():
+            if not pipeline_dir.is_dir():
+                continue
+            chunks = _load_translation_alignment_from_dir(pipeline_dir / "phase_2" / doc_id_str)
+            if chunks:
+                return chunks
+
+    legacy_root = backend_root / "output" / "cross_lingual"
+    if legacy_root.exists():
+        for lang_dir in legacy_root.iterdir():
+            if not lang_dir.is_dir():
+                continue
+            chunks = _load_translation_alignment_from_dir(lang_dir / doc_id_str)
+            if chunks:
+                return chunks
+
+        if identifiers:
+            search_keys = [value.replace("/", "_") for value in identifiers.values() if value]
+            for lang_dir in legacy_root.iterdir():
+                if not lang_dir.is_dir():
+                    continue
+                for child in lang_dir.iterdir():
+                    if not child.is_dir():
+                        continue
+                    if child.name in search_keys or child.name.replace("/", "_") in search_keys:
+                        chunks = _load_translation_alignment_from_dir(child)
+                        if chunks:
+                            return chunks
+
+    return []
+
 
 def _load_full_document_text(
     source_document_id: str | UUID,
@@ -1143,6 +1239,12 @@ class SearchService:
         translated_document_text = _filter_body_text(loaded_translated_text)
         original_blocks = _filter_body_blocks(loaded_original_blocks, original_document_text)
         translated_blocks = _filter_body_blocks(loaded_translated_blocks, translated_document_text)
+        translation_alignment = _load_translation_alignment(
+            source_document_id,
+            raw_metadata,
+            identifiers=identifiers,
+            known_output_dir=phase2_output_dir,
+        )
 
         return EvidenceGroupDetailResponse(
             group_id=group_id,
@@ -1163,4 +1265,5 @@ class SearchService:
             distribution=distribution,
             items=detail_items,
             traces=traces,
+            translation_alignment=translation_alignment,
         )

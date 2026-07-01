@@ -9,6 +9,7 @@ from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     SentenceRegion,
     TranslationResult,
     TranslationSegment,
+    TranslationSpanPair,
 )
 from src.core.cross_lingual_process_and_extract_evidence.persistence import (
     DocumentPersistenceService,
@@ -147,6 +148,52 @@ class TestDocumentPersistenceService:
         assert alignment[1]["english_text"].endswith("ABCA3 deficiency.")
         assert alignment[1]["original_start_offset"] == 15
         assert alignment[1]["english_start_offset"] > alignment[0]["english_end_offset"]
+
+    def test_save_persists_translation_alignment_span_pairs(self, tmp_path: Path):
+        service = DocumentPersistenceService()
+        span_pair = TranslationSpanPair(
+            pair_id="c_0001-p_0001",
+            original_text="ABCA3缺陷",
+            english_text="ABCA3 deficiency",
+            original_start_offset=10,
+            original_end_offset=17,
+            english_start_offset=31,
+            english_end_offset=47,
+            confidence=0.93,
+            method="semantic_llm",
+        )
+        result = TranslationResult(
+            formatted_original="基因检测提示ABCA3缺陷。",
+            translated_english="Genetic testing suggested ABCA3 deficiency.",
+            source_language="zh",
+            terminology_map={"ABCA3缺陷": "ABCA3 deficiency"},
+            translation_warnings=[],
+            sentences=[],
+            segments=[
+                TranslationSegment(
+                    index=0,
+                    source_text="基因检测提示ABCA3缺陷。",
+                    translated_text="Genetic testing suggested ABCA3 deficiency.",
+                    source_start_offset=0,
+                    source_end_offset=18,
+                    translated_start_offset=0,
+                    translated_end_offset=48,
+                    span_pairs=[span_pair],
+                ),
+            ],
+        )
+
+        saved = service.save(result, output_dir=str(tmp_path), doc_id="doc-span-align")
+
+        translated = json.loads(saved.translated_json_path.read_text(encoding="utf-8"))
+        metadata = json.loads(saved.metadata_path.read_text(encoding="utf-8"))
+        translated_pair = translated["metadata"]["translation_alignment"][0]["span_pairs"][0]
+        metadata_pair = metadata["translation_alignment"][0]["span_pairs"][0]
+        assert translated_pair == metadata_pair
+        assert translated_pair["pair_id"] == "c_0001-p_0001"
+        assert translated_pair["original_text"] == "ABCA3缺陷"
+        assert translated_pair["english_text"] == "ABCA3 deficiency"
+        assert translated_pair["method"] == "semantic_llm"
 
     def test_save_copies_images(self, tmp_path: Path):
         # Create fake source images

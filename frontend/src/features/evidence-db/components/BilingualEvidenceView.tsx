@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -14,6 +14,11 @@ import {
   hasTranslatedDocumentText,
   countEvidenceCategories,
 } from "@/features/evidence-search/utils/evidenceDocument";
+import {
+  buildAlignmentHighlightMap,
+  buildAlignmentHighlightsForBlocks,
+  type AlignmentInteractionState,
+} from "@/features/evidence-search/utils/translationAlignment";
 import { BilingualEvidenceSkeleton } from "./BilingualEvidenceSkeleton";
 import { DocumentReader } from "./DocumentReader";
 import type { FieldTypeOption } from "@/features/evidence-search/components/annotationLayer";
@@ -99,6 +104,8 @@ export function BilingualEvidenceView({
     string | undefined
   >(undefined);
   const [exportOpen, setExportOpen] = useState(false);
+  const [hoveredAlignmentPairId, setHoveredAlignmentPairId] = useState<string | null>(null);
+  const [pinnedAlignmentPairId, setPinnedAlignmentPairId] = useState<string | null>(null);
 
   // ── Scroll sync state ──────────────────────────────────────────────
   const [isScrollSyncEnabled, setIsScrollSyncEnabled] = useState(loadScrollSyncSetting);
@@ -109,6 +116,27 @@ export function BilingualEvidenceView({
   const toggleScrollSync = useCallback((enabled: boolean) => {
     setIsScrollSyncEnabled(enabled);
     saveScrollSyncSetting(enabled);
+  }, []);
+  const alignmentState = useMemo<AlignmentInteractionState>(
+    () => ({
+      hoveredPairId: hoveredAlignmentPairId,
+      pinnedPairId: pinnedAlignmentPairId,
+    }),
+    [hoveredAlignmentPairId, pinnedAlignmentPairId],
+  );
+  const handleAlignmentToggle = useCallback((pairId: string) => {
+    setPinnedAlignmentPairId((current) => (current === pairId ? null : pairId));
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setHoveredAlignmentPairId(null);
+        setPinnedAlignmentPairId(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // original → translated, and translated → original
@@ -237,6 +265,22 @@ export function BilingualEvidenceView({
     [groupDetail, selectedEvidenceId, enabledCategories],
   );
 
+  const originalAlignmentHighlights = useMemo(
+    () =>
+      groupDetail && originalDoc
+        ? buildAlignmentHighlightMap(groupDetail, originalDoc, "original", alignmentState)
+        : {},
+    [alignmentState, groupDetail, originalDoc],
+  );
+
+  const translatedAlignmentHighlights = useMemo(
+    () =>
+      groupDetail && translatedDoc
+        ? buildAlignmentHighlightMap(groupDetail, translatedDoc, "translated", alignmentState)
+        : {},
+    [alignmentState, groupDetail, translatedDoc],
+  );
+
   const hasTranslation = groupDetail
     ? hasTranslatedDocumentText(groupDetail)
     : false;
@@ -257,6 +301,24 @@ export function BilingualEvidenceView({
         : [],
     };
   }, [groupDetail, selectedEvidenceId, enabledCategories]);
+
+  const buildBlockAlignmentHighlights = useMemo(() => {
+    if (!groupDetail) return { original: [], translated: [] };
+    return {
+      original: buildAlignmentHighlightsForBlocks(
+        groupDetail.original_blocks,
+        groupDetail,
+        "original",
+        alignmentState,
+      ),
+      translated: buildAlignmentHighlightsForBlocks(
+        groupDetail.translated_blocks,
+        groupDetail,
+        "translated",
+        alignmentState,
+      ),
+    };
+  }, [alignmentState, groupDetail]);
 
   const categoryCounts = useMemo(
     () => (groupDetail ? countEvidenceCategories(groupDetail.items.filter((i) => i.value?.trim())) : {}),
@@ -479,6 +541,8 @@ export function BilingualEvidenceView({
               accentColor="#3B82F6"
               blocks={groupDetail?.original_blocks}
               blockHighlights={buildBlockHighlights.original}
+              blockAlignmentHighlights={buildBlockAlignmentHighlights.original}
+              alignmentHighlightsByParagraph={originalAlignmentHighlights}
               sourceDocumentId={sourceDocumentId}
               annotations={originalAnnotations}
               reviewContexts={reviewContexts}
@@ -487,6 +551,9 @@ export function BilingualEvidenceView({
               onCreateAnnotation={handleCreateAnnotation}
               onUpdateAnnotation={handleUpdateAnnotation}
               onDeleteAnnotation={handleDeleteAnnotation}
+              onAlignmentHover={setHoveredAlignmentPairId}
+              onAlignmentLeave={() => setHoveredAlignmentPairId(null)}
+              onAlignmentToggle={handleAlignmentToggle}
               onAssignField={handleAssignField}
               fieldTypes={fieldTypes}
             />
@@ -500,6 +567,8 @@ export function BilingualEvidenceView({
                 accentColor="#8B5CF6"
                 blocks={groupDetail?.translated_blocks}
                 blockHighlights={buildBlockHighlights.translated}
+                blockAlignmentHighlights={buildBlockAlignmentHighlights.translated}
+                alignmentHighlightsByParagraph={translatedAlignmentHighlights}
                 sourceDocumentId={sourceDocumentId}
                 annotations={translatedAnnotations}
                 reviewContexts={reviewContexts}
@@ -508,6 +577,9 @@ export function BilingualEvidenceView({
                 onCreateAnnotation={handleCreateAnnotation}
                 onUpdateAnnotation={handleUpdateAnnotation}
                 onDeleteAnnotation={handleDeleteAnnotation}
+                onAlignmentHover={setHoveredAlignmentPairId}
+                onAlignmentLeave={() => setHoveredAlignmentPairId(null)}
+                onAlignmentToggle={handleAlignmentToggle}
                 onAssignField={handleAssignField}
                 fieldTypes={fieldTypes}
               />

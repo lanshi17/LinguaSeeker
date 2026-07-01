@@ -1273,15 +1273,18 @@ class StandardizationRepository:
     _GATE_IDENTITY_FIELDS: frozenset[str] = frozenset({
         "A.gene_symbol",
         "A.gene_disease_relationship",
+        "A.variant_type",
         "A.variant_hgvs_c",
         "A.variant_hgvs_p",
         "B.disease_diagnosis",
         "B.clinical_phenotypes",
         "B.sex",
         "B.age_of_onset",
+        "B.case_count",
         "B.mode_of_inheritance_reported",
         "C.inheritance_source",
         "C.de_novo_status",
+        "J.clinvar_assertion",
     })
 
     @staticmethod

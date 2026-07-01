@@ -283,7 +283,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
           }}
         >
           <Conversations
-            style={{ width: 240 }}
+            style={{ width: 240, boxSizing: "border-box" }}
             items={conversations}
             activeKey={activeConversationKey}
             onActiveChange={handleActiveConversationChange}

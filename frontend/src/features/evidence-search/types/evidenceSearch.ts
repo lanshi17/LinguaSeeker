@@ -85,6 +85,36 @@ export interface EvidenceTrackTrace {
   alignment_confidence?: number | null;
 }
 
+export type TranslationSpanPairMethod =
+  | "semantic_llm"
+  | "deterministic_token";
+
+export interface TranslationSpanPair {
+  pair_id: string;
+  original_text: string;
+  english_text: string;
+  original_start_offset: number;
+  original_end_offset: number;
+  english_start_offset: number;
+  english_end_offset: number;
+  confidence: number;
+  method: TranslationSpanPairMethod;
+}
+
+export interface TranslationAlignmentChunk {
+  chunk_id: string;
+  original_text: string;
+  english_text: string;
+  original_start_offset: number;
+  original_end_offset: number;
+  english_start_offset: number;
+  english_end_offset: number;
+  page: number;
+  block_index: number;
+  bbox?: number[];
+  span_pairs?: TranslationSpanPair[];
+}
+
 /** Structured document block following MinerU content_list.json format. */
 export interface ContentBlock {
   type: string;
@@ -127,6 +157,7 @@ export interface EvidenceGroupDetailResponse {
   distribution: EvidenceFieldDistribution;
   items: EvidenceGroupItem[];
   traces: EvidenceTrackTrace[];
+  translation_alignment?: TranslationAlignmentChunk[];
 }
 
 export type { ReviewStatusValue, DeltaEntry, ReviewAuditEventResponse } from "@/lib/types/evidence";

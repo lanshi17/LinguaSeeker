@@ -132,6 +132,8 @@ benchmark/config/vault/secrets.yml
 
 # ── Archive ───────────────────────────────────────────────────────────────
 **/archive/*
+!docs/archive/
+!docs/archive/**
 
 # ── Old version reference ─────────────────────────────────────────────────
 .old_version
