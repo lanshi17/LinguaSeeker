@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import tempfile
 from pathlib import Path
 
 from benchmark.analysis.dataset_curation.leakage_check import (

@@ -1,6 +1,5 @@
 """Tests for MarkdownFormatter HTML detection."""
 
-import pytest
 
 
 def test_apply_llm_formatting_detects_html_response():

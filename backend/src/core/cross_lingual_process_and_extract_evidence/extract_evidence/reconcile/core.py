@@ -21,7 +21,6 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconc
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.alignment import (
     build_alignment_records,
 )
-from src.utils.text_normalize import normalize_text as _normalize_text
 from src.utils.text_normalize import normalize_value as _normalize_value
 
 

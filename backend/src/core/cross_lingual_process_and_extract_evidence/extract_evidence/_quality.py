@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import ast
 
-from dataclasses import dataclass
 
 from .catalog import EVIDENCE_FIELD_SPECS, EvidenceFieldSpec
 from .contracts import (

@@ -7,7 +7,7 @@ def test_permanent_os_errors_are_excluded_from_retryable():
     """Verify _PERMANENT_OS_ERRORS are NOT accidentally caught by _RETRYABLE_ERRORS in the except chain."""
     from src.agents.contracts import build_retryable_errors
 
-    retryable = build_retryable_errors()
+    build_retryable_errors()  # verify it builds without error
     # The real fix: _PERMANENT_OS_ERRORS must be listed BEFORE _RETRYABLE_ERRORS
     # in the except chain. This test verifies FileNotFoundError IS a subclass
     # of OSError (which is in retryable) — confirming the ordering is necessary.
@@ -29,7 +29,6 @@ def test_os_error_is_retryable():
 async def test_file_not_found_is_not_retried_by_executor():
     """FileNotFoundError should fail immediately, not retry."""
     from src.agents.concurrency import RetryablePhaseExecutor
-    from src.agents.contracts import PermanentPhaseError
 
     executor = RetryablePhaseExecutor(max_retries=2, backoff_base=0.01)
     call_count = 0

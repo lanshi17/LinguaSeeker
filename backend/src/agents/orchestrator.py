@@ -318,7 +318,7 @@ class PipelineOrchestrator:
             validate_pipeline_status_transition(
                 state.pipeline_status,
                 PipelineStatus.RUNNING,
-                context=f"orchestrator.run() start",
+                context="orchestrator.run() start",
             )
         except InvalidStateTransitionError:
             logger.exception(
