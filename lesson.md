@@ -1,5 +1,17 @@
 # Lesson Log
 
+## 2026-07-01: 文献搜索去重应使用文献身份键，不应只依赖 source_document_id
+
+**问题**: 证据搜索页中同一篇文献可能因为不同 `source_document_id` 显示为多行，表格列宽也让标题、PMID/DOI、证据标签互相挤压，阅读困难。
+
+**排查过程**: 先追踪 `EvidenceSearchView -> EvidenceResultsTable -> buildLiteratureRows` 数据流，确认前端只按 `source_document_id || group_id` 聚合。后端 `literature_profiles` 也按 `source_document_id` 建 profile，因此重复入库的同 PMID/DOI 文献会作为多条 profile 返回。TDD 红灯测试最初被既有 Node 测试配置和旧导出问题挡住，改用独立 Bun 测试文件复现 `2 !== 1`。Lint 阶段发现普通 helper 命名为 `useLatestCreatedAt` 会触发 React hooks 规则。
+
+**根因分析**: 展示层把处理实例身份误当作文献身份；`source_document_id` 只能代表一次入库/处理，不足以表达“同一篇文献”。排版问题来自文献列过窄、短 document id 占据主信息位置、长 DOI/token 缺少足够溢出控制。
+
+**解决方案**: `buildLiteratureRows` 改为按多 key 聚合：PMID、归一化 DOI、长度足够的规范化标题，最后 fallback 到 document id，并支持跨 key 合并。表格改为更宽的文献列、可横向滚动的最小宽度、标题下直接展示 PMID/DOI，移动卡片移除重复标识符行。
+
+**预防措施**: 文献级列表、统计和缓存逻辑必须区分 literature identity 与 processing/source identity。普通工具函数不要以 `use*` 命名，除非它是真正的 React hook。新增去重逻辑时优先写独立、可直接运行的红灯测试，避免被无关测试夹带问题阻塞。
+
 ## 2026-06-30: Negative ablation results should be reframed, not hidden
 
 **Problem**: The N=50 paired comparison showed prompt-only extraction outperforming the full workflow in F1, and the generated N=50 table artifacts also contained inconsistent FN and delta-F1 values.

@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-07-01T12:39:10",
-  "total_duration_s": 6313.4,
+  "timestamp": "2026-07-01T21:58:38",
+  "total_duration_s": 33235.36,
   "conditions": [
     {
       "condition": "c0_prompt_only",
@@ -29,6 +29,6 @@
   ],
   "design_doc": "docs/active/2026-06-29-bibm-n50-comparison-ablation-design.md",
   "manifest": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/data/manifests/unified_b8_n50_comparison_20260629.json",
-  "sample_limit": 5,
-  "sample_seed": 20260701
+  "sample_limit": null,
+  "sample_seed": null
 }
