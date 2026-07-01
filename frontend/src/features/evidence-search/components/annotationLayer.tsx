@@ -12,6 +12,7 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Input, Button, Popover, Tooltip, Select, message } from "antd";
+import { useI18n } from "@/lib/i18n";
 import { DeleteOutlined } from "@ant-design/icons";
 import {
   ANNOTATION_COLORS,
@@ -197,6 +198,7 @@ export function AnnotationLayer({
   onAssignField,
   fieldTypes = [],
 }: AnnotationLayerProps) {
+  const { t } = useI18n();
   const [overlays, setOverlays] = useState<OverlayRect[]>([]);
   const [selection, setSelection] = useState<SelectionInfo | null>(null);
   const [activeAnnotationId, setActiveAnnotationId] = useState<string | null>(null);
@@ -255,7 +257,7 @@ export function AnnotationLayer({
     });
     window.getSelection()?.removeAllRanges();
     setSelection(null);
-    message.success("标注已创建");
+    message.success(t("annotation.created"));
   };
 
   return (
@@ -282,7 +284,7 @@ export function AnnotationLayer({
               cursor: "pointer",
               borderRadius: 2,
             }}
-            aria-label={ann.note ? `标注: ${ann.note}` : "用户标注"}
+            aria-label={ann.note ? t("annotation.label", { note: ann.note }) : t("annotation.user")}
           />
         );
       })}
@@ -306,7 +308,7 @@ export function AnnotationLayer({
           }}
         >
           {onCreateAnnotation && ANNOTATION_COLORS.map((c) => (
-            <Tooltip key={c} title="创建标注">
+            <Tooltip key={c} title={t("annotation.create")}>
               <button
                 type="button"
                 onClick={() => handleCreate(c)}
@@ -320,7 +322,7 @@ export function AnnotationLayer({
                   cursor: "pointer",
                   padding: 0,
                 }}
-                aria-label={`使用 ${c} 创建标注`}
+                aria-label={t("annotation.createWithColor", { color: c })}
               />
             </Tooltip>
           ))}
@@ -330,7 +332,7 @@ export function AnnotationLayer({
           {onAssignField && fieldTypes.length > 0 && (
             <Select
               showSearch
-              placeholder="+ 字段"
+              placeholder={t("annotation.addField")}
               size="small"
               style={{ width: 160, fontSize: 11 }}
               popupMatchSelectWidth={260}
@@ -374,7 +376,7 @@ export function AnnotationLayer({
           if (!open) setActiveAnnotationId(null);
         }}
         trigger="click"
-        title="编辑标注"
+        title={t("annotation.edit")}
         content={
           activeAnnotation ? (
             <AnnotationEditor
@@ -404,19 +406,20 @@ function AnnotationEditor({
   onDelete?: (id: string) => void;
   onDone: () => void;
 }) {
+  const { t } = useI18n();
   const [note, setNote] = useState(annotation.note ?? "");
   const [color, setColor] = useState(annotation.color ?? DEFAULT_ANNOTATION_COLOR);
 
   const handleSave = () => {
     onUpdate?.(annotation.id, { color, note: note.trim() || null });
     onDone();
-    message.success("已保存");
+    message.success(t("annotation.saved"));
   };
 
   const handleDelete = () => {
     onDelete?.(annotation.id);
     onDone();
-    message.success("已删除");
+    message.success(t("annotation.deleted"));
   };
 
   return (
@@ -437,14 +440,14 @@ function AnnotationEditor({
               cursor: "pointer",
               padding: 0,
             }}
-            aria-label={`选择颜色 ${c}`}
+            aria-label={t("annotation.pickColor", { color: c })}
           />
         ))}
       </div>
       <Input.TextArea
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="批注..."
+        placeholder={t("annotation.notePlaceholder")}
         autoSize={{ minRows: 2, maxRows: 5 }}
       />
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
@@ -455,10 +458,10 @@ function AnnotationEditor({
           onClick={handleDelete}
           disabled={!onDelete}
         >
-          删除
+          {t("common.delete")}
         </Button>
         <Button type="primary" size="small" onClick={handleSave} disabled={!onUpdate}>
-          保存
+          {t("common.save")}
         </Button>
       </div>
     </div>

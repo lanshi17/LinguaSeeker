@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from hashlib import sha256
@@ -53,6 +54,11 @@ CANONICAL_STATUS_PRIORITY = {
 }
 
 CANONICAL_ELIGIBLE_STATUSES = {"found", "source_invalid", "ocr_gap", "table_ungrounded"}
+_CLINVAR_ASSERTION_REVIEW_STATUS = "context_contamination"
+_CLINVAR_AUTHORITY_RE = re.compile(
+    r"\b(?:ClinVar|ClinGen|ACMG|PVS\d?|PS\d?|PM\d?|PP\d?|BA\d?|BS\d?|BP\d?)\b",
+    re.IGNORECASE,
+)
 
 CanonicalIdentityKey = tuple[str, str, str, str]
 
@@ -1434,13 +1440,14 @@ class StandardizationRepository:
                 raw_source = item.get("raw_source")
                 if self._is_translation_traceback_source(raw_source):
                     source_span["original_source_span"] = raw_source
+                item_status = self._admission_status_for_item(item)
                 specs.append(
                     RunItemSpec(
                         candidate_id="",
                         track=track,
                         field_id=str(item.get("field_id", "")),
                         group_id=group_id,
-                        status=self._normalize_enum_like_string(item.get("status")),
+                        status=item_status,
                         value=value,
                         confidence=item.get("confidence"),
                         position_hash=self._hash_payload(
@@ -1493,6 +1500,31 @@ class StandardizationRepository:
         if not isinstance(raw_source, dict):
             return False
         return "translation_traceback" in str(raw_source.get("context_ref", ""))
+
+    def _admission_status_for_item(self, item: dict[str, Any]) -> str:
+        """Return the DB admission status for one Phase 2 evidence item."""
+        status = self._normalize_enum_like_string(item.get("status"))
+        if item.get("field_id") != "J.clinvar_assertion" or status != "found":
+            return status
+        if self._has_clinvar_assertion_authority(item):
+            return status
+        return _CLINVAR_ASSERTION_REVIEW_STATUS
+
+    @staticmethod
+    def _has_clinvar_assertion_authority(item: dict[str, Any]) -> bool:
+        """Return whether an assertion is explicitly tied to ClinVar/ACMG authority."""
+        snippets: list[str] = []
+        for key in ("value", "source_database"):
+            value = item.get(key)
+            if value not in (None, ""):
+                snippets.append(str(value))
+        for key in ("source", "raw_source"):
+            value = item.get(key)
+            if isinstance(value, dict):
+                snippet = value.get("text_snippet")
+                if snippet not in (None, ""):
+                    snippets.append(str(snippet))
+        return any(_CLINVAR_AUTHORITY_RE.search(snippet) for snippet in snippets)
 
     def _related_run_rows(self, match: EntityMatch) -> list[RunEvidenceItem]:
         """Return run evidence rows related to the current entity match."""

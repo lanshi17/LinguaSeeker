@@ -17,12 +17,11 @@ function readCookie(name: string): string | null {
   return m ? decodeURIComponent(m[1]) : null;
 }
 
-/** Detect locale: cookie → browser language → "en". */
+/** Detect locale: cookie → "en". Always defaults to English. */
 function detectLocale(): "en" | "zh" {
   const saved = readCookie(LANG_COOKIE);
   if (saved === "en" || saved === "zh") return saved;
-  const browser = navigator.language.toLowerCase();
-  return browser.startsWith("zh") ? "zh" : "en";
+  return "en";
 }
 
 /** Detect theme: cookie → prefers-color-scheme → "light". Side-effects: sets data-theme. */

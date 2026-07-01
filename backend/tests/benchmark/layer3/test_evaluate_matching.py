@@ -8,6 +8,7 @@ import pytest
 from benchmark.core import (
     EntryMetrics,
     FieldMatch,
+    article_supported_expected_evidence,
     compare_evidence,
     compute_aggregate_metrics,
     evaluate_one,
@@ -44,6 +45,44 @@ def test_compare_evidence_counts_extra_found_candidate_as_over_extraction() -> N
     assert matches[0].matched
     assert matches[0].match_type == "exact"
     assert matches[0].extra_found_values == ["BRCA1"]
+
+
+def test_article_supported_expected_evidence_excludes_external_gold_and_precision_only() -> None:
+    """Article-only scorer view excludes external DB gold and non-recall fields."""
+    entry = {
+        "gold_source": "database",
+        "annotation_provenance": "clingen_clinvar_join",
+        "expected_evidence": [
+            {
+                "field_id": "A.variant_hgvs_c",
+                "value": "c.1182+1G>A",
+                "source": "clinvar",
+                "evaluation_type": "precision_only",
+            },
+            {
+                "field_id": "J.clinvar_assertion",
+                "value": "Likely pathogenic",
+                "source": "clinvar",
+                "evaluation_type": "precision_only",
+            },
+            {
+                "field_id": "B.hpo_terms",
+                "value": "HP:0001250",
+                "source": "article",
+                "evaluation_type": "precision_recall",
+            },
+            {
+                "field_id": "A.functional_domain_or_hotspot",
+                "value": "TRD (aa 201-310)",
+                "source": "article",
+                "evaluation_type": "precision_only",
+            },
+        ],
+    }
+
+    filtered = article_supported_expected_evidence(entry)
+
+    assert [item["field_id"] for item in filtered] == ["B.hpo_terms"]
 
 
 def test_compare_evidence_deduplicates_extra_found_values() -> None:

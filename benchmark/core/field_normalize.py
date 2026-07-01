@@ -32,6 +32,7 @@ from benchmark.datasets.clinvar_fused.hgvs_normalize import (
 __all__ = [
     "normalize_field_for_matching",
     "normalize_gene_disease_relationship",
+    "normalize_hpo_terms",
     "normalize_moi",
     "normalize_variant_type",
 ]
@@ -197,6 +198,36 @@ def normalize_gene_disease_relationship(value: str) -> str:
     return lower
 
 
+# ── HPO phenotype normalization ───────────────────────────────────────
+
+_HPO_ID_RE = re.compile(r"HP:\d{7}", re.IGNORECASE)
+
+# Conservative benchmark-side phrase map.  Phase 3 still owns full terminology
+# matching; this fallback only bridges common raw article phrases in value-F1.
+_HPO_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
+    ("HP:0001250", re.compile(r"\b(?:seizure|seizures|epileptic|epileptiform)\b", re.IGNORECASE)),
+    ("HP:0001252", re.compile(r"\b(?:hypotonia|low\s+muscular\s+tension|abnormal\s+muscular\s+tension)\b", re.IGNORECASE)),
+    ("HP:0001263", re.compile(r"\b(?:developmental\s+(?:delay|backwardness|regression)|global\s+developmental\s+delay)\b", re.IGNORECASE)),
+    ("HP:0001631", re.compile(r"\batrial\s+septal\s+defect\b", re.IGNORECASE)),
+    ("HP:0012759", re.compile(r"\b(?:severe\s+)?neonatal\s+encephalopathy\b", re.IGNORECASE)),
+    ("HP:0002353", re.compile(r"\b(?:abnormal\s+EEG|spike\s+slow\s+waves?|slow\s+waves?)\b", re.IGNORECASE)),
+]
+
+
+def normalize_hpo_terms(value: str) -> str:
+    """Normalize HPO IDs and selected raw phenotype phrases for matching."""
+    if not value or not value.strip():
+        return ""
+    text = value.strip()
+    ids = {match.upper() for match in _HPO_ID_RE.findall(text)}
+    for hpo_id, pattern in _HPO_PATTERNS:
+        if pattern.search(text):
+            ids.add(hpo_id)
+    if not ids:
+        return text
+    return ";".join(sorted(ids))
+
+
 # ── Dispatch ──────────────────────────────────────────────────────────
 
 # Fields that benefit from specialized normalization.
@@ -204,6 +235,7 @@ _HGVS_FIELDS = {"A.variant_hgvs_c", "A.variant_hgvs_p"}
 _MOI_FIELDS = {"B.mode_of_inheritance_reported", "K.mode_of_inheritance"}
 _VARIANT_TYPE_FIELDS = {"A.variant_type"}
 _GDR_FIELDS = {"A.gene_disease_relationship"}
+_HPO_FIELDS = {"B.hpo_terms", "B.clinical_phenotypes"}
 
 
 def normalize_field_for_matching(field_id: str, value: str) -> str:
@@ -222,4 +254,6 @@ def normalize_field_for_matching(field_id: str, value: str) -> str:
         return normalize_variant_type(value)
     if field_id in _GDR_FIELDS:
         return normalize_gene_disease_relationship(value)
+    if field_id in _HPO_FIELDS:
+        return normalize_hpo_terms(value)
     return value
