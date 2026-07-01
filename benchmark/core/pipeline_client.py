@@ -12,6 +12,7 @@ import re
 import sys
 import time
 import uuid
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -20,9 +21,10 @@ import yaml
 from loguru import logger
 from sqlalchemy import select, text
 
-from benchmark.core.contracts import EntryMetrics
+from benchmark.core.contracts import EntryMetrics, FieldMatch
 from benchmark.core.evidence_metrics import query_evidence_metrics
 from benchmark.core.matching import (
+    article_supported_expected_evidence,
     compare_evidence,
     fuzzy_match_value,
     mark_expected_fields_missing,
@@ -58,6 +60,21 @@ POLL_INTERVAL_S = 5.0
 MAX_POLL_ATTEMPTS = 360  # 30 min max per entry
 TERMINAL_STATUSES = {"completed", "failed"}
 QUEUED_STATUSES = {"queued"}  # normal waiting state, not an error
+
+
+def _compare_article_supported_evidence(
+    entry: dict[str, Any],
+    extracted_items: list[dict],
+    *,
+    mondo: Any | None = None,
+) -> list[FieldMatch]:
+    """Compare only expected fields valid for article-constrained recall."""
+    return compare_evidence(
+        article_supported_expected_evidence(entry),
+        extracted_items,
+        mondo=mondo,
+        expected_standardization=entry.get("expected_standardization"),
+    )
 
 
 def _run_id_from_status_url(status_url: str) -> str | None:
@@ -418,6 +435,11 @@ async def evaluate_one(
                 mondo=mondo,
                 expected_standardization=entry.get("expected_standardization"),
             )
+            metrics.article_supported_field_matches = _compare_article_supported_evidence(
+                entry,
+                cleaned_items,
+                mondo=mondo,
+            )
 
             # Track consistency from preprocessed data
             orig_by_field = {i["field_id"]: str(i["value"]) for i in original_items if i["status"] == "found"}
@@ -517,6 +539,11 @@ async def evaluate_one(
                         cleaned_items,
                         mondo=mondo,
                         expected_standardization=entry.get("expected_standardization"),
+                    )
+                    metrics.article_supported_field_matches = _compare_article_supported_evidence(
+                        entry,
+                        cleaned_items,
+                        mondo=mondo,
                     )
 
                     # Entity standardization comparison
@@ -760,6 +787,11 @@ async def run_evaluation(
     from benchmark.core.aggregate import compute_aggregate_metrics
 
     aggregates = compute_aggregate_metrics(all_metrics)
+    article_supported_metrics = [
+        replace(m, field_matches=m.article_supported_field_matches)
+        for m in all_metrics
+    ]
+    article_supported_aggregates = compute_aggregate_metrics(article_supported_metrics)
 
     # Build report \u2014 include provenance and shard metadata
     report: dict[str, Any] = {
@@ -780,10 +812,14 @@ async def run_evaluation(
             "extraction_track_mode": extraction_track_mode,
             "shard_index": shard_index,
             "shard_size": shard_size,
+            "metric_views": ["raw", "article_supported"],
         },
         "total_entries": len(entries),
         "total_duration_s": round(elapsed, 2),
-        "aggregates": aggregates,
+        "aggregates": {
+            **aggregates,
+            "article_supported": article_supported_aggregates["overall"],
+        },
         "per_entry": [
             {
                 "entry_id": m.entry_id,
@@ -821,6 +857,24 @@ async def run_evaluation(
                      "accepted_track": f.accepted_track,
                      "normalized_value": f.normalized_value}
                     for f in m.field_matches
+                ],
+                "article_supported_field_matches": [
+                    {"field_id": f.field_id, "expected": f.expected_value,
+                     "matched": f.matched, "extracted": f.extracted_value,
+                     "source_span": f.source_span,
+                     "match_type": f.match_type,
+                     "extra_found_values": f.extra_found_values,
+                     "best_score": f.best_score,
+                     "source_score": f.source_score,
+                     "confidence_score": f.confidence_score,
+                     "agreement_score": f.agreement_score,
+                     "status_score": f.status_score,
+                     "verifier_support_score": f.verifier_support_score,
+                     "target_specificity_score": f.target_specificity_score,
+                     "contradiction_penalty": f.contradiction_penalty,
+                     "accepted_track": f.accepted_track,
+                     "normalized_value": f.normalized_value}
+                    for f in m.article_supported_field_matches
                 ],
                 "entity_matches": m.entity_matches,
             }

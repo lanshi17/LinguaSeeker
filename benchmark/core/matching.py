@@ -16,6 +16,7 @@ from benchmark.core.contracts import EntryMetrics, FieldMatch
 from benchmark.core.field_normalize import normalize_field_for_matching
 
 __all__ = [
+    "article_supported_expected_evidence",
     "normalize_comparison_text",
     "fuzzy_match_value",
     "compare_evidence",
@@ -140,6 +141,40 @@ def prepare_extracted_items(items: list[dict]) -> list[dict]:
 
 # Fields that benefit from ontology ancestry matching
 _DISEASE_FIELDS = {"B.disease_diagnosis", "B.disease_phenotype"}
+
+_ARTICLE_SOURCE_VALUES = {"", "article", "literature", "paper", "source_text"}
+_EXTERNAL_SOURCE_VALUES = {"database", "clinvar", "clingen", "clingen_clinvar_join", "external"}
+
+
+def article_supported_expected_evidence(entry: dict[str, Any]) -> list[dict]:
+    """Return expected fields that should count in article-only recall metrics.
+
+    The raw benchmark view remains unchanged.  This filtered view prevents
+    database-derived gold or precision-only curation fields from being counted
+    as false negatives for a document-constrained extractor.
+    """
+    return [
+        expected
+        for expected in entry.get("expected_evidence", [])
+        if _is_article_supported_expected(expected, entry)
+    ]
+
+
+def _is_article_supported_expected(expected: dict[str, Any], entry: dict[str, Any]) -> bool:
+    evaluation_type = str(expected.get("evaluation_type", "")).strip().lower()
+    if evaluation_type == "precision_only":
+        return False
+
+    source = str(expected.get("source", "")).strip().lower()
+    if source in _EXTERNAL_SOURCE_VALUES:
+        return False
+    if source not in _ARTICLE_SOURCE_VALUES:
+        return False
+
+    gold_source = str(entry.get("gold_source", "")).strip().lower()
+    if gold_source in _EXTERNAL_SOURCE_VALUES and source != "article":
+        return False
+    return True
 
 
 def compare_evidence(
@@ -298,6 +333,12 @@ def mark_expected_fields_missing(
     """Populate missing field matches when no usable extraction result exists."""
     metrics.field_matches = compare_evidence(
         entry.get("expected_evidence", []),
+        [],
+        mondo=mondo,
+        expected_standardization=entry.get("expected_standardization"),
+    )
+    metrics.article_supported_field_matches = compare_evidence(
+        article_supported_expected_evidence(entry),
         [],
         mondo=mondo,
         expected_standardization=entry.get("expected_standardization"),

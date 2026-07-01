@@ -587,6 +587,17 @@ const zh: Record<EnKeys, string> = {
   "common.version": "版本",
   "theme.light": "切换为亮色模式",
   "theme.dark": "切换为暗色模式",
+  "annotation.created": "标注已创建",
+  "annotation.user": "用户标注",
+  "annotation.label": "标注: {note}",
+  "annotation.create": "创建标注",
+  "annotation.createWithColor": "使用 {color} 创建标注",
+  "annotation.addField": "+ 字段",
+  "annotation.edit": "编辑标注",
+  "annotation.saved": "已保存",
+  "annotation.deleted": "已删除",
+  "annotation.pickColor": "选择颜色 {color}",
+  "annotation.notePlaceholder": "批注…",
 };
 
 export { zh };
