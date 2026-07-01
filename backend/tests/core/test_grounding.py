@@ -1,6 +1,5 @@
 """Tests for evidence grounding fuzzy match."""
 
-import pytest
 
 
 def test_ground_one_matches_ellipsis_snippet_fuzzy():

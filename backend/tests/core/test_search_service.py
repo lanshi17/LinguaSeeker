@@ -1,6 +1,5 @@
 """Tests for search_service track deduplication."""
 
-import pytest
 
 
 def test_dedup_by_field_id_and_track():
