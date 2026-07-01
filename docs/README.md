@@ -46,17 +46,50 @@ docs/
 
 ## 活跃计划和参考
 
+### BIBM 主论文
+
 | 日期 | 标题 | 状态 |
 |------|------|------|
-| 2026-06-29 | Evidence DB Field Model Implementation Plan | in-progress |
-| 2026-06-27 | Backend Host Deployment Guide | reference |
-| 2026-06-25 | Lingua Seeker v1.0.0 Release Checklist | in-progress |
-| 2026-06-23 | Environment Consistency Standard | reference |
-| 2026-06-21 | BIBM Main Paper TeX | in-progress |
-| 2026-06-21 | BIBM Main Paper Manuscript Draft | in-progress |
-| 2026-06-15 | ClinGen + ClinVar Fused Benchmark Dataset Plan | in-progress |
-| 2026-05-13 | Phase Workflow Overview | reference |
-| 2026-05-09 | APP_FLOW / TECH_STACK / BACKEND_STRUCTURE | reference |
+| 2026-06-15 | [BIBM Main Paper TeX](active/2026-06-15-bibm-main-paper-tex/) | in-progress |
+| 2026-06-15 | [BIBM Main Paper Manuscript Draft](active/2026-06-15-bibm-main-paper-manuscript-draft.md) | in-progress |
+| 2026-06-15 | [BIBM Main Paper Outline](active/2026-06-15-bibm-main-paper-outline.md) | in-progress |
+| 2026-06-15 | [BIBM Main Paper Limitations](active/2026-06-15-bibm-main-paper-limitations.md) | in-progress |
+| 2026-06-15 | [BIBM Main Paper Tables Guide](active/2026-06-15-main-paper-tables-guide.md) | in-progress |
+| 2026-06-14 | [BIBM Main Paper Detailed Execution Plan](active/2026-06-14-bibm-main-paper-detailed-execution-plan.md) | in-progress |
+| 2026-06-14 | [BIBM Main Paper Effect Improvement Plan](active/2026-06-14-bibm-main-paper-effect-improvement-plan.md) | in-progress |
+| 2026-06-14 | [BIBM Main Paper G3 Semantic Boundary Repair](active/2026-06-14-bibm-main-paper-g3-semantic-boundary-repair-plan.md) | in-progress |
+| 2026-06-14 | [BIBM Main Paper Rescue Plan](active/2026-06-14-bibm-main-paper-rescue.md) | in-progress |
+| 2026-06-14 | [BIBM Main Paper Roadmap](active/2026-06-14-bibm-main-paper-roadmap.md) | in-progress |
+| 2026-06-13 | [BIBM G1 Decision Memo](active/2026-06-13-bibm-g1-decision.md) | in-progress |
+| 2026-06-12 | [BIBM Novelty Plan](active/2026-06-12-bibm-novelty.md) | in-progress |
+
+### 基准测试与数据
+
+| 日期 | 标题 | 状态 |
+|------|------|------|
+| 2026-06-29 | [Evidence DB Field Model Implementation Plan](active/2026-06-29-evidence-db-field-model-plan.md) | in-progress |
+| 2026-06-15 | [ClinGen + ClinVar Fused Benchmark Dataset Plan](active/2026-06-15-clingen-clinvar-fused-benchmark-dataset-plan.md) | in-progress |
+| 2026-06-14 | [Traceability Metrics Guide](active/2026-06-14-traceability-metrics-guide.md) | reference |
+
+### 发布与运维
+
+| 日期 | 标题 | 状态 |
+|------|------|------|
+| 2026-06-25 | [Lingua Seeker v1.0.0 Release Checklist](active/2026-06-25-v1-release-checklist.md) | in-progress |
+| 2026-06-27 | [Backend Host Deployment Guide](active/2026-06-27-backend-host-deployment-guide.md) | reference |
+| 2026-06-23 | [Environment Consistency Standard](active/2026-06-23-environment-consistency.md) | reference |
+
+### 架构参考
+
+| 日期 | 标题 | 状态 |
+|------|------|------|
+| — | [APP_FLOW](active/APP_FLOW.md) | reference |
+| — | [BACKEND_STRUCTURE](active/BACKEND_STRUCTURE.md) | reference |
+| — | [FRONTEND_GUIDELINES](active/FRONTEND_GUIDELINES.md) | reference |
+| — | [IMPLEMENTATION_PLAN](active/IMPLEMENTATION_PLAN.md) | reference |
+| — | [Methods: Literature Filtering](active/methods_literature_filtering.md) | reference |
+| — | [Phase Workflow Overview](active/phase_workflow_overview.md) | reference |
+| — | [TECH_STACK](active/TECH_STACK.md) | reference |
 
 完整列表见本目录源文件。
 
@@ -64,9 +97,9 @@ docs/
 
 | 日期 | 标题 | 状态 |
 |------|------|------|
-| 2026-06-29 | BIBM N=50 Comparison and Ablation Experiment Design | planned |
-| 2026-06-24 | BIBM Dataset D Pipeline Optimization Design | proposed |
-| 2026-06-20 | Variant ID Guarantee Plan | planned |
+| 2026-06-29 | [BIBM N=50 Comparison and Ablation Experiment Design](planned/2026-06-29-bibm-n50-comparison-ablation-design.md) | planned |
+| 2026-06-24 | [BIBM Dataset D Pipeline Optimization Design](planned/2026-06-24-bibm-dataset-d-pipeline-optimization-design.md) | proposed |
+| 2026-06-20 | [Variant ID Guarantee Plan](planned/2026-06-20-variant-id-guarantee-plan.md) | planned |
 
 ## 归档计划
 
