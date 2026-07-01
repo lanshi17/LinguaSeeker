@@ -1,27 +1,27 @@
 # GitHub Actions
 
-> Three build pipelines plus a config-validation check: frontend and backend independently build to GHCR, manual (or automatic) trigger for SSH cross-host deployment.
+> CI pipeline for lint/test plus a build-and-deploy pipeline for the backend image to GHCR.
 
 ```
 push to dev / master / release/**
         │
-        ├──► build-frontend.yml ──► ghcr.io/<owner>/lingua-seeker-frontend:<tag>
-        │                                      │
-        ├──► build-backend.yml  ──► ghcr.io/<owner>/lingua-seeker-backend:<tag>
+        ├──► ci.yml            ──► backend ruff lint, frontend lint + type-check + test, rust test
+        │
+        ├──► build-backend.yml ──► ghcr.io/<owner>/lingua-seeker-backend:<tag>
         │                                      │
         ├──► config-validation.yml ──► cross-service config consistency check
         │
-        └──► (master only) workflow_run ──► deploy.yml ──► SSH to hosts pull + up -d
+        └──► (master only) workflow_run ──► deploy.yml ──► SSH to backend host pull + up -d
 ```
 
 ## Workflows
 
 | File | Trigger | Purpose |
 |------|---------|---------|
-| `.github/workflows/build-frontend.yml` | push / PR / manual | bun build SPA + nginx image to GHCR |
+| `.github/workflows/ci.yml` | push / PR | Backend lint (ruff), frontend lint + type-check + test (vitest), rust test |
 | `.github/workflows/build-backend.yml` | push / PR / manual | uv + maturin + Python runtime image to GHCR |
 | `.github/workflows/config-validation.yml` | push / PR touching config files | Cross-service configuration consistency validation across environments |
-| `.github/workflows/deploy.yml` | manual / build-* completion (master only) | SSH to two hosts, `docker compose pull && up -d` |
+| `.github/workflows/deploy.yml` | manual / build-backend completion | SSH to backend host, `docker compose pull && up -d` |
 
 ## Image Tag Strategy
 
@@ -43,7 +43,6 @@ Rollback: switch `IMAGE_TAG` back to a previous SHA.
 
 - `GITHUB_TOKEN`: logs into GHCR to push images. Provided automatically by the workflow.
   - Repo Settings > Actions > General > Workflow permissions > select **Read and write permissions**.
-  - After the first push, packages default to private. Link the frontend/backend packages to the repo in GHCR Package settings and make them public or add a read-package PAT as needed.
 
 ### Environment-level (`production` / `staging`)
 
@@ -54,16 +53,11 @@ Rollback: switch `IMAGE_TAG` back to a previous SHA.
 | `BACKEND_HOST` | Public / VPN address of the backend host |
 | `BACKEND_USER` | SSH user on the backend host (needs `docker compose` permission) |
 | `BACKEND_SSH_KEY` | Private key (PEM, no passphrase). Issue a dedicated deploy key; lock `authorized_keys` with `command=`. |
-| `FRONTEND_HOST` | Frontend host address |
-| `FRONTEND_USER` | SSH user on the frontend host |
-| `FRONTEND_SSH_KEY` | Private key |
 | `GHCR_PULL_TOKEN` | Only needed when GHCR images are private: a PAT with `read:packages` scope for the deploy host to log into GHCR. |
 
 > Default SSH port is 22. For non-standard ports, add `port: ${{ secrets.BACKEND_PORT }}` to the `appleboy/ssh-action` step.
 
 ## Deploy Host Preparation
-
-Both target hosts need:
 
 ```bash
 # 1. Install docker + compose v2 (omitted)
@@ -73,11 +67,10 @@ sudo install -d -o "$USER" -g "$USER" /opt/lingua-seeker
 git clone [redacted-email]:[redacted-user]/CrossEvidence.git /opt/lingua-seeker
 
 # 3. Fill in the .env for this host (not version-controlled)
-cd /opt/lingua-seeker/deploy/compose/backend-host    # or frontend-host
+cd /opt/lingua-seeker/deploy/compose/backend-host
 cp .env.example .env  &&  vim .env
 
-# 4. Backend host only: mount config files
-cd /opt/lingua-seeker/deploy/compose/backend-host
+# 4. Mount config files
 mkdir -p config/vault
 cp ../../../backend/config/environments/production.yaml.example config/production.yaml
 cp ../../../backend/config/vault/production.yaml.example         config/vault/production.yaml
@@ -91,16 +84,18 @@ sudo usermod -aG docker $USER
 
 ## Trigger Modes
 
+### CI (every push / PR)
+
+- `ci.yml` runs ruff lint on the backend, ESLint + TypeScript type-check + vitest on the frontend, and `cargo test` on all three Rust crates.
+
 ### Automatic Build
 
-- Push to `dev` / `master` / `release/**` that touches the corresponding paths automatically builds and pushes images to GHCR.
+- Push to `dev` / `master` / `release/**` that touches backend paths automatically builds and pushes the image to GHCR.
 - PRs build but do not push (serves as Dockerfile syntax regression check).
 
 ### Automatic Deploy (master only)
 
-- After a successful build on `master`, `workflow_run` triggers `deploy.yml`:
-  - build-backend completes -> rolls only backend containers;
-  - build-frontend completes -> rolls only frontend containers.
+- After a successful `build-backend` on `master`, `workflow_run` triggers `deploy.yml` to roll the backend containers.
 - To require manual review, enable *Required reviewers* on the Environment (production).
 
 ### Manual Deploy / Rollback
@@ -111,19 +106,16 @@ GitHub > Actions > **deploy** > Run workflow:
 |-------|--------|
 | environment | `production` / `staging` |
 | image_tag | e.g. `sha-abc1234`, `latest`, `v1.2.0` |
-| target | `both` / `backend` / `frontend` |
 
 The deploy script includes migration and health checks:
-
-- Backend: `docker compose exec backend uv run alembic upgrade head`, then `docker image prune -f`.
-- Frontend: after pulling the image, loops `curl http://127.0.0.1/health` for up to 60 seconds; on failure dumps `docker compose logs --tail=80` and exits non-zero.
+- `docker compose exec backend uv run alembic upgrade head`, then `docker image prune -f`.
 
 ## Config Validation
 
-`config-validation.yml` runs on PRs and pushes that touch configuration files. It validates cross-service configuration consistency across all environments, checking that backend config, frontend `.env`, Docker Compose, and Ansible inventories are aligned.
+`config-validation.yml` runs on PRs and pushes that touch configuration files. It validates configuration consistency across all environments, checking that backend config, Docker Compose, and Ansible inventories are aligned.
 
 ## Relationship with Ansible
 
 - The Ansible deployment path (`deploy/ansible/`) is unaffected and is used for source-code + systemd bare-metal deployments.
-- The GitHub Actions deployment path targets the "two Docker hosts" topology using `deploy/compose/`.
+- The GitHub Actions deployment path targets the Docker host topology using `deploy/compose/`.
 - Both paths share the `backend/config/` configuration contract and the `X-API-Key` injection point. **Use only one path per machine** -- do not mix them.

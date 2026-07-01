@@ -8,7 +8,6 @@ on:
     branches: [dev, master, staging]
     paths:
       - "backend/config/**"
-      - "frontend/.env*"
       - "deploy/compose/**"
       - "deploy/ansible/**"
       - ".github/workflows/config-validation.yml"
@@ -16,7 +15,6 @@ on:
     branches: [dev, master]
     paths:
       - "backend/config/**"
-      - "frontend/.env*"
       - "deploy/compose/**"
       - "deploy/ansible/**"
 

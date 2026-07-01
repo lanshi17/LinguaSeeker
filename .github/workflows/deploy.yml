@@ -1,20 +1,17 @@
 # Cross-host deploy via SSH.
 #
-# Pulls the freshly-built GHCR images on the target servers and brings up
-# the compose stacks under deploy/compose/.
+# Pulls the freshly-built GHCR image on the target server and brings up
+# the backend compose stack under deploy/compose/.
 #
-# Requires the following GitHub Environments + secrets (kept per-env):
+# Requires the following GitHub Environments + secrets (per-env):
 #
 #   production:
 #     BACKEND_HOST          public DNS / IP of backend host
 #     BACKEND_USER          SSH user (sudoer)
 #     BACKEND_SSH_KEY       private key (PEM, no passphrase)
-#     FRONTEND_HOST         public DNS / IP of frontend host
-#     FRONTEND_USER         SSH user (sudoer)
-#     FRONTEND_SSH_KEY      private key
 #     GHCR_PULL_TOKEN       PAT (read:packages) — only needed if GHCR images are private
 #
-# The deploy script assumes the repo is already checked out on each host
+# The deploy script assumes the repo is already checked out on the host
 # under DEPLOY_ROOT (default: /opt/lingua-seeker). It does NOT rsync code
 # — it just `docker compose pull && up -d` after re-tagging the image.
 
@@ -34,14 +31,8 @@ on:
         required: true
         type: string
         default: latest
-      target:
-        description: "Which side to update"
-        required: true
-        type: choice
-        options: [both, backend, frontend]
-        default: both
   workflow_run:
-    workflows: [build-backend, build-frontend]
+    workflows: [build-backend]
     types: [completed]
     branches: [master, dev]
 
@@ -52,7 +43,7 @@ concurrency:
 
 jobs:
   resolve:
-    name: resolve target & tag
+    name: resolve tag
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'workflow_dispatch' ||
@@ -60,7 +51,6 @@ jobs:
     outputs:
       environment: ${{ steps.pick.outputs.environment }}
       image_tag:   ${{ steps.pick.outputs.image_tag }}
-      target:      ${{ steps.pick.outputs.target }}
     steps:
       - id: pick
         run: |
@@ -68,7 +58,6 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "environment=${{ inputs.environment }}" >> "$GITHUB_OUTPUT"
             echo "image_tag=${{ inputs.image_tag }}"     >> "$GITHUB_OUTPUT"
-            echo "target=${{ inputs.target }}"           >> "$GITHUB_OUTPUT"
           else
             # workflow_run trigger: master → production, dev → staging.
             BRANCH="${{ github.event.workflow_run.head_branch }}"
@@ -78,18 +67,11 @@ jobs:
               echo "environment=staging"    >> "$GITHUB_OUTPUT"
             fi
             echo "image_tag=latest"       >> "$GITHUB_OUTPUT"
-            # Only push the side whose build just finished.
-            case "${{ github.event.workflow_run.name }}" in
-              build-backend)  echo "target=backend"  >> "$GITHUB_OUTPUT" ;;
-              build-frontend) echo "target=frontend" >> "$GITHUB_OUTPUT" ;;
-              *)              echo "target=both"     >> "$GITHUB_OUTPUT" ;;
-            esac
           fi
 
   deploy-backend:
     name: backend host
     needs: resolve
-    if: needs.resolve.outputs.target == 'backend' || needs.resolve.outputs.target == 'both'
     runs-on: ubuntu-latest
     environment: ${{ needs.resolve.outputs.environment }}
     steps:
@@ -99,8 +81,6 @@ jobs:
           host:     ${{ secrets.BACKEND_HOST }}
           username: ${{ secrets.BACKEND_USER }}
           key:      ${{ secrets.BACKEND_SSH_KEY }}
-          # IMAGE_TAG is consumed by deploy/compose/backend-host/docker-compose.yml
-          # for the `image:` field and for tagging during `up -d`.
           envs: IMAGE_TAG,GHCR_USER,GHCR_TOKEN,REPO_OWNER
           script_stop: true
           script: |
@@ -130,62 +110,6 @@ jobs:
             docker compose --env-file .env exec -T backend uv run alembic upgrade head
 
             docker image prune -f
-        env:
-          IMAGE_TAG:  ${{ needs.resolve.outputs.image_tag }}
-          GHCR_USER:  ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
-          REPO_OWNER: ${{ github.repository_owner }}
-
-  deploy-frontend:
-    name: frontend host
-    needs: [resolve, deploy-backend]
-    # Run frontend even if backend was skipped (target=frontend) but not if
-    # backend was attempted and failed.
-    if: |
-      always() &&
-      (needs.resolve.outputs.target == 'frontend' || needs.resolve.outputs.target == 'both') &&
-      (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped')
-    runs-on: ubuntu-latest
-    environment: ${{ needs.resolve.outputs.environment }}
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host:     ${{ secrets.FRONTEND_HOST }}
-          username: ${{ secrets.FRONTEND_USER }}
-          key:      ${{ secrets.FRONTEND_SSH_KEY }}
-          envs: IMAGE_TAG,GHCR_USER,GHCR_TOKEN,REPO_OWNER
-          script_stop: true
-          script: |
-            set -euo pipefail
-            DEPLOY_ROOT="${DEPLOY_ROOT:-/opt/lingua-seeker}"
-            ENV="${{ needs.resolve.outputs.environment }}"
-            BRANCH="master"
-            [[ "$ENV" == "staging" ]] && BRANCH="dev"
-            cd "$DEPLOY_ROOT"
-            git fetch --depth=1 origin "$BRANCH"
-            git checkout -f "origin/$BRANCH"
-
-            if [[ -n "${GHCR_TOKEN:-}" ]]; then
-              echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-            fi
-
-            cd deploy/compose/frontend-host
-            test -f .env || { echo "missing .env on host" >&2; exit 1; }
-
-            IMAGE_TAG="$IMAGE_TAG" docker compose --env-file .env pull
-            IMAGE_TAG="$IMAGE_TAG" docker compose --env-file .env up -d --remove-orphans
-
-            # Smoke check: nginx proxies /health to the backend host.
-            for i in {1..20}; do
-              if curl -fsS http://127.0.0.1/health > /dev/null; then
-                echo "health OK"; exit 0
-              fi
-              sleep 3
-            done
-            echo "health check failed" >&2
-            docker compose --env-file .env logs --tail=80
-            exit 1
         env:
           IMAGE_TAG:  ${{ needs.resolve.outputs.image_tag }}
           GHCR_USER:  ${{ github.actor }}
