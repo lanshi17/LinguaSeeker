@@ -1,38 +1,45 @@
-# deploy/compose -- Docker Compose Deployment
+# deploy/compose — Docker Compose 部署
 
-Docker Compose configurations for deploying Lingua Seeker in various topologies.
+> Lingua Seeker 各种拓扑的 Docker Compose 部署配置。
 
-## Variants
+## 概述
+
+本目录包含多种 Docker Compose 部署变体，覆盖开发、预发布、跨主机和单机场景。所有变体共享相同的配置契约（`backend/config/` 加载顺序、`vault/production.yaml` 密钥结构）。
+
+## 部署变体
 
 ```
 deploy/compose/
-├── dev-infra/               # Local dev: Postgres + Redis only (backend runs on host)
+├── dev-infra/               # 本地开发：仅 Postgres + Redis（后端在主机运行）
 │   └── docker-compose.yml
-├── staging/                 # Pre-release: backend + Postgres + Redis
+├── staging/                 # 预发布：backend + Postgres + Redis
 │   └── docker-compose.yml
-├── backend-host/            # Cross-host: backend + Postgres + Redis (backend server)
+├── backend-host/            # 跨主机：backend + Postgres + Redis（后端服务器）
 │   ├── docker-compose.yml
 │   ├── .env.example
-│   └── config/              # Mounted production.yaml + vault/
-├── frontend-host/           # Cross-host: nginx + SPA (frontend server)
+│   └── config/              # 挂载的 production.yaml + vault/
+├── frontend-host/           # 跨主机：nginx + SPA（前端服务器）
 │   ├── docker-compose.yml
 │   └── .env.example
-└── single-server/           # All-in-one: backend + Postgres + Redis (inference services external)
-    ├── docker-compose.yml
-    ├── .env.example
-    ├── deploy.sh            # Initial deployment script
-    ├── update.sh            # Incremental code-only update script
-    └── patch-backend.Dockerfile
+├── single-server/           # 一体化：backend + Postgres + Redis（推理服务外部）
+│   ├── docker-compose.yml
+│   ├── .env.example
+│   ├── deploy.sh            # 初始部署脚本
+│   ├── update.sh            # 增量代码更新脚本
+│   └── patch-backend.Dockerfile
+├── debug-prod/              # 生产调试配置
+└── README.md
+```
 
-| Variant | Services | Use Case |
-|---------|----------|----------|
-| `dev-infra/` | Postgres + Redis | Local development; backend started via `uv run uvicorn` on host |
-| `staging/` | Backend + Postgres + Redis | Pre-release validation; inference services external |
-| `backend-host/` | Backend + Postgres + Redis | Backend half of cross-host deployment |
-| `frontend-host/` | Nginx + SPA | Frontend half of cross-host deployment |
-| `single-server/` | Backend + Postgres + Redis | All-in-one server (inference services external) |
+| 变体 | 服务 | 用途 |
+|------|------|------|
+| `dev-infra/` | Postgres + Redis | 本地开发，后端通过 `uv run uvicorn` 在主机启动 |
+| `staging/` | Backend + Postgres + Redis | 预发布验证，推理服务外部 |
+| `backend-host/` | Backend + Postgres + Redis | 跨主机部署的后端部分 |
+| `frontend-host/` | Nginx + SPA | 跨主机部署的前端部分 |
+| `single-server/` | Backend + Postgres + Redis | 一体化服务器（推理服务外部） |
 
-## Cross-Host Deployment (backend-host + frontend-host)
+## 跨主机部署（backend-host + frontend-host）
 
 ```
 Browser
@@ -55,68 +62,61 @@ Browser
 |  | :8000    | | :5432    | | :6379  | |
 |  +----------+ +----------+ +--------+ |
 +---------------------------------------+
-                  |
-                  v (optional)
-+---------------------------------------+
-|  Inference Services (external project)|
-|  embedding :8002 / rerank :8003      |
-|  doc-parse :44321                      |
-+---------------------------------------+
 ```
 
-### Key Design Decisions
+### 关键设计决策
 
-- **SPA origin** -- Frontend builds with `VITE_API_BASE_URL=/api/v1`; the browser always requests the current domain. CORS is handled by the frontend Nginx reverse-proxying to the backend.
-- **X-API-Key injection** -- Injected by the frontend Nginx via `proxy_set_header X-API-Key`; the browser never sees the credential.
-- **Backend exposure** -- Backend port defaults to `127.0.0.1`; set `BACKEND_BIND=0.0.0.0` and use a firewall to allow only the frontend host IP. Postgres and Redis bind to `127.0.0.1` only.
-- **Config injection** -- `production.yaml` and `vault/production.yaml` are mounted read-only into the backend container. Environment variables in `.env` have the highest priority.
-- **CORS** -- `CORS_ORIGINS` must match the actual browser origin (scheme + port), e.g. `https://app.example.com`.
+- **SPA 来源** — 前端构建使用 `VITE_API_BASE_URL=/api/v1`，浏览器始终请求当前域名
+- **X-API-Key 注入** — 由前端 Nginx 通过 `proxy_set_header` 注入，浏览器永远看不到凭证
+- **后端暴露** — 后端端口默认绑定 `127.0.0.1`，设置 `BACKEND_BIND=0.0.0.0` 并配置防火墙
+- **配置注入** — `production.yaml` 和 `vault/production.yaml` 以只读方式挂载到后端容器
 
-## Single-Server Deployment
-Designed for CentOS 7.9+ servers. Runs backend, Postgres, and Redis locally. Inference services (embedding, rerank, doc-parse) are external Docker containers deployed separately.
+## 单机部署
 
-### Prerequisites
+适用于 CentOS 7.9+ 服务器，本地运行 backend、Postgres 和 Redis。推理服务（embedding、rerank、doc-parse）为外部 Docker 容器。
+
+### 前置条件
 
 - Docker CE 20.10+
-- Backend image loaded: `lingua-seeker-backend:local`
-- External inference services running (embedding :8002, rerank :8003, doc-parse :44321)
+- 已加载后端镜像：`lingua-seeker-backend:local`
+- 外部推理服务运行中（embedding :8002、rerank :8003、doc-parse :44321）
 
-### Initial Deploy
+### 初始部署
 
 ```bash
 cd deploy/compose/single-server
-cp .env.example .env   # edit with real secrets
-./deploy.sh            # checks prerequisites, copies files, starts services, health check
+cp .env.example .env   # 编辑真实密钥
+./deploy.sh            # 检查前置条件、复制文件、启动服务、健康检查
 ```
 
-### Incremental Updates
+### 增量更新
 
 ```bash
-# Code-only updates (no dependency rebuild, runs on target server):
-./update.sh backend          # update backend only
+./update.sh backend          # 仅更新后端
 ```
-Uses thin overlay Dockerfiles (`patch-backend.Dockerfile`) that copy only changed source files onto existing images for fast rebuilds.
 
-## Dev Infrastructure
+使用薄覆盖 Dockerfile（`patch-backend.Dockerfile`），仅复制变更的源文件到现有镜像。
 
-Lightweight compose for local development. Only Postgres and Redis; the backend runs on the host via `uv run uvicorn`.
+## 开发基础设施
+
+轻量级 Compose，仅 Postgres 和 Redis，后端通过 `uv run uvicorn` 在主机运行：
 
 ```bash
 docker compose -f deploy/compose/dev-infra/docker-compose.yml up -d
 ```
 
-## Images
+## 镜像构建
 
-| Service | Dockerfile | Build Context |
-|---------|-----------|---------------|
-| Frontend | `frontend/Dockerfile` | `frontend/` (multi-stage: bun build -> nginx) |
-| Backend | `backend/Dockerfile` | repo root (needs `backend/` and `libs/config-loader/`) |
+| 服务 | Dockerfile | 构建上下文 |
+|------|-----------|-----------|
+| Frontend | `frontend/Dockerfile` | `frontend/`（多阶段：bun build -> nginx） |
+| Backend | `backend/Dockerfile` | 仓库根目录（需要 `backend/` 和 `libs/config-loader/`） |
 
-> **Note**: Embedding, Rerank, and Doc-Parse inference services are built and published by a separate project. They are not part of this repository's build lifecycle.
+> **注意**：Embedding、Rerank 和 Doc-Parse 推理服务由独立项目构建和发布。
 
-## Relationship with Ansible
+## 与 Ansible 的关系
 
-- Ansible (`deploy/ansible/`) is the bare-metal / systemd deployment path.
-- This directory is the containerized deployment path using the same configuration contracts.
-- Both share: `backend/config/` loading order, `vault/production.yaml` secrets, `cors_origins`, `api_key` structure.
-- Choose one approach per server; do not run both on the same machine.
+- Ansible（`deploy/ansible/`）是裸机 / systemd 部署路径
+- 本目录是容器化部署路径，使用相同的配置契约
+- 两者共享：`backend/config/` 加载顺序、`vault/production.yaml` 密钥结构
+- 每台服务器选择一种方式，不要在同一机器上同时运行

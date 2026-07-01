@@ -1,453 +1,121 @@
-# standardize_entities_and_align_knowledge
+# Phase 3 — 标准化实体与知识对齐
 
-> Deterministic Phase 3 entity standardization slice. It imports local biomedical terminology sources, adapts Phase 2 dual-track evidence output into typed candidates, matches those candidates to reference identifiers, and persists normalized entities plus evidence bindings into the PostgreSQL MVP schema.
+> 将提取的生物医学实体（基因、变异、疾病、表型）确定性地映射到标准化术语库，为下游 ACMG 评分和证据整合提供对齐后的规范实体。
 
-## Quick Start
+## 概述
+
+Phase 3 是 Lingua Seeker 管道的核心标准化阶段。它接收 Phase 2 输出的双轨证据提取结果（`DualEvidenceExtractionResult`），通过混合匹配策略将实体提及映射到统一术语库（HGNC、ClinVar、OMIM、HPO、ClinGen），然后持久化标准化结果并生成 ACMG-ready 证据集。
+
+### 关键特性
+
+- **混合匹配**：先执行精确匹配（别名优先级排序），未命中时回退到语义相似度匹配
+- **跨语言疾病解析**：支持中文疾病名称通过 token-ILIKE 匹配回退到英文术语
+- **HGVS 规范化**：支持三字母→单字母蛋白质变异转换、ClinVar 别名扩展
+- **确定性内部变异 ID**：未匹配变异通过 `sha256` 摘要生成稳定标识符
+- **流式 ClinVar 导入**：分块处理避免单次内存溢出
+- **ACMG 投影**：将标准化表型（HPO）投影为下游规则引擎消费的紧凑键值对
+
+## 目录结构
+
+```
+standardize_entities_and_align_knowledge/
+├── __init__.py              # 包声明
+├── api.py                   # 公共门面：EntityStandardizationService、术语导入/嵌入构建
+├── core.py                  # StandardizationService：编排匹配与持久化
+├── contracts.py             # 类型化数据契约（EntityType, EntityMatch, StandardizationResult 等）
+├── adapters.py              # DualResultAdapter：Phase 2 输出 → Phase 3 输入
+├── matchers.py              # HybridTerminologyMatcher：精确 + 语义混合匹配门面
+├── normalizers.py           # 共享规范化工具（文本折叠、基因符号、疾病跨语言映射）
+├── repositories.py          # StandardizationRepository：PostgreSQL 持久化（术语、匹配、绑定、规范证据）
+├── importers.py             # 术语导入解析器（HGNC、OMIM、HPO、ClinGen、ClinVar）
+├── variant_id.py            # 未匹配变异的确定性内部 ID 生成
+├── hgvs_normalizer.py       # HGVS 变异规范化与别名扩展
+├── acmg_projection.py       # AcmgReadyProjector：标准化实体 → ACMG-ready 证据事实
+├── cross_lingual_disease.py # CrossLingualDiseaseResolver：非英文疾病名 token 模糊匹配
+├── precise_match/           # 精确术语匹配子模块
+├── similarity_match/        # 语义相似度匹配子模块
+└── context_pack/            # 目标安全上下文包子模块
+```
+
+## 核心组件
+
+### EntityStandardizationService（`api.py`）
+公共门面，负责组装依赖链（适配器→匹配器→仓储→服务），提供：
+- `standardize()` — 处理一次标准化运行
+- `import_terminology()` — 导入本地术语源
+- `build_terminology_embeddings()` — 构建 pgvector 嵌入索引
+
+### StandardizationService（`core.py`）
+内部编排层，依次执行：
+1. 确保运行父记录存在
+2. 对每个候选执行匹配
+3. 上规范化实体
+4. 持久化运行证据、绑定、规范证据
+5. 刷新文献档案和搜索索引
+6. 投影 ACMG-ready 证据集
+
+### HybridTerminologyMatcher（`matchers.py`）
+混合匹配策略：
+- 优先 `PreciseTerminologyMatcher`（别名类型优先级 + 源库排序）
+- 未映射时尝试 `CrossLingualDiseaseResolver`（仅疾病类型）
+- 最终回退 `SimilarityTerminologyMatcher`（pgvector 嵌入检索 + rerank）
+
+### DualResultAdapter（`adapters.py`）
+将 Phase 2 的 `DualEvidenceExtractionResult` 转换为 `StandardizationInput`，处理：
+- 原始/翻译/审计轨的证据字段映射
+- 表型字段拆分（中文分号/逗号分隔）
+- 实体类型 → 绑定角色的推断
+
+### AcmgReadyProjector（`acmg_projection.py`）
+将标准化匹配结果投影为 ACMG 消费者可直接使用的证据事实：
+- 提取已标准化的 HPO 表型 ID
+- 关联原始证据值和置信度
+
+## 数据流
+
+```
+Phase 2 DualEvidenceExtractionResult
+        │
+        ▼
+   DualResultAdapter ──→ StandardizationInput
+        │                    (candidates + evidence_items)
+        ▼
+   HybridTerminologyMatcher
+        │
+        ├─→ PreciseTerminologyMatcher (精确匹配)
+        │       └─→ HGNC/ClinVar/OMIM/HPO/ClinGen 别名查找
+        ├─→ CrossLingualDiseaseResolver (跨语言疾病)
+        └─→ SimilarityTerminologyMatcher (语义匹配)
+                └─→ pgvector 嵌入检索 + rerank
+        │
+        ▼
+   EntityMatch[] ──→ StandardizationRepository
+        │                ├─ upsert_normalized_entity
+        │                ├─ persist_run_evidence
+        │                ├─ persist_bindings
+        │                ├─ upsert_canonical_evidence
+        │                ├─ refresh_literature_profile
+        │                └─ refresh_search_index
+        ▼
+   AcmgReadyProjector ──→ StandardizationResult
+```
+
+## 使用方式
 
 ```python
-from src.core.config import get_config
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
-    DualEvidenceExtractionResult,
-)
 from src.core.standardize_entities_and_align_knowledge.api import (
     EntityStandardizationService,
+    import_terminology,
+    build_terminology_embeddings,
 )
 
-cfg = get_config()
-service = EntityStandardizationService(cfg=cfg)
+# 标准化一次运行的证据
+service = EntityStandardizationService(settings)
+result = await service.standardize(dual_extraction_result)
 
-result: DualEvidenceExtractionResult = ...
-output = await service.run_dual_result(
-    session=async_session,
-    result=result,
-    source_document_id="source-document-id",
-    processing_run_id="processing-run-id",
-)
+# 导入术语数据
+await import_terminology(settings, sources=("hgnc", "omim", "hpo", "clingen", "clinvar"))
 
-assert output.match_count >= 0
+# 构建语义嵌入
+count = await build_terminology_embeddings(settings, entity_type="gene")
 ```
-
-Importing reference data uses the CLI entry point:
-
-```bash
-cd backend
-uv run ../scripts/import_terminology.py \
-  --version 2026-05-25 \
-  --terminology-root ../database/terminology_database \
-  --sources hgnc omim hpo clingen clinvar
-```
-
-Building terminology embeddings for semantic matching:
-
-```bash
-cd backend
-uv run ../scripts/build_terminology_embeddings.py
-```
-
-## Architecture
-
-```text
-DualEvidenceExtractionResult
-  -> DualResultAdapter
-  -> StandardizationInput
-  -> StandardizationService
-     -> HybridTerminologyMatcher
-        -> CrossLingualDiseaseResolver (token-ILIKE + Jaccard fallback for non-English disease names)
-        -> PreciseTerminologyMatcher (deterministic alias lookup)
-           -> expand_hgvs_aliases() (HGVS normalization for variant matching)
-        -> SimilarityTerminologyMatcher (semantic fallback)
-           -> FallbackEmbeddingProvider
-              -> local:  EmbeddingHttpProvider -> inference service /v1/embeddings
-              -> remote: EmbeddingHttpProvider -> remote API (fallback)
-           -> PgvectorTerminologyRepository -> pgvector cosine distance
-           -> FallbackRerankProvider
-              -> local:  RerankHttpProvider -> inference service /v1/rerank
-              -> remote: RerankHttpProvider -> remote API (fallback)
-     -> AcmgReadyProjector (ACMG rules-engine facts)
-     -> StandardizationRepository
-        -> terminology_entries / terminology_aliases / terminology_relationships
-        -> terminology_embeddings (pgvector)
-        -> normalized_entities / run_evidence_items / evidence_entity_bindings / canonical_evidence_items
-     -> refresh_literature_profile()
-     -> refresh_search_index()
-```
-
-The slice follows the repo's vertical-slice layout:
-
-- `api.py`: public facade (`EntityStandardizationService`) and terminology import/embedding entry points
-- `contracts.py`: typed service contracts
-- `adapters.py`: Phase 2 to Phase 3 boundary adapter
-- `importers.py`: local terminology file parsers (HGNC, OMIM, HPO, ClinGen, ClinVar)
-- `matchers.py`: matcher facade with `HybridTerminologyMatcher`
-- `precise_match/`: deterministic source-priority matching
-- `similarity_match/`: semantic matching via pgvector and inference service (providers, repositories, indexer, contracts)
-- `repositories.py`: write boundary to SQLAlchemy ORM models
-- `normalizers.py`: shared text normalization, scope hashing, and cross-lingual disease mapping
-- `cross_lingual_disease.py`: deterministic cross-lingual disease name resolution via token-based ILIKE + Jaccard similarity
-- `hgvs_normalizer.py`: HGVS variant notation normalization (three-letter to one-letter, transcript prefix stripping, list expansion)
-- `variant_id.py`: deterministic internal variant identifiers for unmatched variants
-- `acmg_projection.py`: projects standardized entities into ACMG-ready evidence facts
-- `providers.py`: standalone embedding provider (legacy, used for direct API calls)
-- `core.py`: orchestration only
-- `context_pack/`: context pack assembly helpers
-
-## Public API
-
-### `EntityStandardizationService`
-
-| Method | Signature | Description |
-|---|---|---|
-| `__init__` | `(cfg: Settings)` | Accepts global config. Session is passed per-call. |
-| `run_dual_result` | `(session: AsyncSession, result: DualEvidenceExtractionResult, *, source_document_id: str, processing_run_id: str) -> StandardizationResult` | Adapts a dual-track extraction result, matches all candidates, and persists normalized state. |
-
-### `import_terminology`
-
-| Method | Signature | Description |
-|---|---|---|
-| `import_terminology` | `(*, cfg: Any, terminology_root: Path, version: str, sources: list[str]) -> None` | Loads requested local terminology batches, opens an async DB session, and upserts each batch. |
-
-### `build_terminology_embeddings`
-
-| Method | Signature | Description |
-|---|---|---|
-| `build_terminology_embeddings` | `(*, cfg: Any, entity_types: set[EntityType] \| None = None, source_dbs: set[str] \| None = None) -> int` | Builds pgvector embeddings for imported terminology entries. Returns count of embeddings written. Idempotent via upsert. Optional filters restrict to specific entity types or source databases. |
-
-### `StandardizationResult`
-
-```python
-@dataclass(frozen=True)
-class StandardizationResult:
-    document_id: str
-    match_count: int
-    standardized_count: int
-    ambiguous_count: int
-    unmapped_count: int
-    normalized_entity_ids: tuple[str, ...]
-    matches: tuple[EntityMatch, ...] = ()
-    acmg_ready: AcmgReadyEvidenceSet | None = None
-```
-
-Returned by `StandardizationService.run()` and the facade. Counts are per candidate, not per evidence item. The `matches` field carries the full `EntityMatch` tuple for downstream inspection. The `acmg_ready` field provides a projected `AcmgReadyEvidenceSet` when ACMG-eligible phenotype matches exist.
-
-## Contracts
-
-### Core enums
-
-- `EntityType`: `gene`, `disease`, `phenotype`, `variant`
-- `BindingRole`: `subject`, `target`, `context`, `mention`
-- `MatchStatus`: `standardized`, `unmapped`, `ambiguous`
-- `MatchMethod`: `precise`, `similarity`
-- `CanonicalStatusRank`: symbolic status ordering used by canonical evidence selection
-
-### Main dataclasses
-
-| Type | Purpose |
-|---|---|
-| `StandardizationCandidate` | One entity mention extracted from a chain or phenotype field |
-| `TerminologyCandidate` | One repository lookup hit from `terminology_aliases` |
-| `SimilarityCandidate` | Semantic retrieval candidate from pgvector and rerank |
-| `EntityMatch` | Match decision for one candidate |
-| `StandardizationInput` | Service boundary input for one processing run |
-| `StandardizationResult` | Service summary output |
-| `AcmgReadyEvidenceItem` | Normalized evidence fact for ACMG scoring consumers |
-| `AcmgReadyEvidenceSet` | Document-level normalized evidence projection |
-| `ImportEntry` / `ImportAlias` / `ImportRelationship` / `ImportBatch` | Parser staging payloads for terminology import |
-
-## Import Flow
-
-Reference import is split into two layers:
-
-1. `importers.py` parses local files into immutable staging objects.
-2. `repositories.py::upsert_terminology_batch()` converts those staging objects into ORM rows.
-
-Current parsers:
-
-| Source | Entry point | Output |
-|---|---|---|
-| HGNC | `parse_hgnc_rows()` | gene entries + aliases |
-| OMIM | `parse_omim_rows()` | disease entries + aliases |
-| HPO | `parse_hpo_rows()` | phenotype entries + aliases |
-| ClinGen | `parse_clingen_rows()` | MONDO fallback disease entries + relationships |
-| ClinVar | `parse_clinvar_rows()` / `iter_clinvar_batches()` | variant entries + aliases + scalar clinical-significance relationships |
-
-Important implementation details:
-
-- ClinVar rows stream through `_iter_tsv_rows()` and `iter_clinvar_batches()`; the parser does not load the whole file into memory.
-- A reduced core TSV (`build_clinvar_core_tsv()`) is generated from the raw export to strip unnecessary columns before import.
-- `is_importable_clinvar_review_status()` excludes 0-star or evidence-free ClinVar rows.
-- `upsert_terminology_batch()` resolves relationship subjects and objects by either external ID or alias lookup.
-- Bulk upsert uses PostgreSQL `INSERT ... ON CONFLICT` for production sessions; falls back to per-row upsert for test doubles. An optional COPY-based staging path (`_copy_upsert_*`) uses `asyncpg.copy_records_to_table` via temp tables for high-throughput scenarios.
-
-## Matcher Rules
-
-`HybridTerminologyMatcher` runs precise matching first, then falls back to cross-lingual disease resolution (for disease candidates), and finally to semantic matching for remaining unmapped candidates.
-
-### Precise Matching
-
-Source priority by entity type:
-
-- gene: `HGNC`
-- disease: `OMIM`, then `HPO` / `MONDO`
-- phenotype: `HPO`
-- variant: `ClinVar`
-
-Alias priority within a source:
-
-`primary > alias > previous_symbol > name > rsid`
-
-If exactly one candidate remains after ranking, the result is `standardized`. If multiple remain, it is `ambiguous`. If none remain, it falls through to cross-lingual resolution (disease only) and then semantic matching.
-
-### Variant Matching
-
-Variant matching uses `expand_hgvs_aliases()` from `hgvs_normalizer.py` to produce all equivalent HGVS forms (three-letter to one-letter amino acid conversion, transcript prefix stripping, list literal expansion, stop codon normalization). Each form is looked up in the repository and results are merged by `entry_id` to avoid double-counting.
-
-For multi-hit ClinVar results, gene-symbol context filtering (`_filter_variant_candidates_by_gene_context`) narrows candidates using the candidate's `gene_symbol` metadata against ClinVar entries' gene symbols. When no gene match exists and multiple cross-gene variants match, the result is `UNMAPPED` rather than `AMBIGUOUS`, and Phase 4 assigns an internal variant ID via `variant_id.py`.
-
-### Cross-Lingual Disease Resolution
-
-For DISEASE candidates that miss the precise matcher, `CrossLingualDiseaseResolver` in `cross_lingual_disease.py` attempts a deterministic fallback before semantic matching:
-
-1. Normalize via `normalize_disease_lookup_text()` (applies the hardcoded Chinese-to-English disease name map).
-2. Split the normalized name into significant tokens (filtering stopwords).
-3. Query disease aliases whose `normalized_alias` ILIKE-matches every token.
-4. Pick the match with the highest token-set Jaccard overlap.
-
-This enables resolution of non-English disease names without LLM calls or embedding inference.
-
-### Semantic Matching
-
-When precise matching returns `unmapped` (and cross-lingual resolution does not apply or fails), the system:
-
-1. Embeds the candidate text via inference service `/v1/embeddings`
-2. Retrieves nearest neighbors from `terminology_embeddings` using pgvector cosine distance
-3. Reranks candidates via inference service `/v1/rerank`
-4. Accepts the top candidate if rerank score exceeds threshold (default 0.7)
-5. Returns `ambiguous` if top two candidates are too close (margin < 0.05)
-
-Semantic matches are persisted with `match_method="similarity"` and include `similarity_score` and `semantic_candidates` in the raw payload for auditability.
-
-### Graceful Degradation
-
-Embedding and rerank providers use a local-first, remote-fallback strategy (mirroring the MinerU document parsing pattern). `FallbackEmbeddingProvider` and `FallbackRerankProvider` try the local inference service first; if it's unavailable (connection error, timeout, HTTP error), they fall back to a configured remote provider (e.g. SiliconFlow). If no remote is configured, the original error propagates. This prevents transient inference service outages from blocking the standardization pipeline.
-
-If both local and remote providers fail (or no remote is configured and local fails), `HybridTerminologyMatcher` logs a warning and returns `unmapped` with `match_method="similarity"` and a rationale describing the failure.
-
-## Repository Write Boundaries
-
-`StandardizationRepository` owns all persistence:
-
-### Terminology reference writes
-
-- `upsert_terminology_batch()`
-  - inserts or updates `TerminologyEntry`
-  - inserts or updates `TerminologyAlias`
-  - inserts or updates `TerminologyRelationship`
-  - supports bulk upsert via `pg_insert ... ON CONFLICT DO UPDATE` for production sessions
-  - optional COPY-based staging path for high-throughput scenarios
-
-### Run persistence
-
-- `upsert_normalized_entity()`
-  - writes `NormalizedEntity`
-  - preserves `raw_payload` rationale and terminology candidate IDs
-
-- `insert_run_evidence_items()`
-  - writes `RunEvidenceItem`
-  - prefers real `track_payloads["*/evidence_items"]` when available
-  - falls back to candidate-derived records when only match data exists
-
-- `insert_entity_bindings()`
-  - writes `EvidenceEntityBinding`
-  - maps roles from candidate roles already assigned by the adapter
-
-- `upsert_canonical_evidence()`
-  - writes or updates `CanonicalEvidenceItem`
-  - uses status priority `found > source_invalid > ocr_gap > table_ungrounded > not_found`
-  - does not create canonical rows for ordinary `not_found`
-  - batch-loads existing canonical items in chunks of 5000 to stay under PostgreSQL's parameter limit
-
-### Read model refresh
-
-After persistence, the repository (called from `StandardizationService`) refreshes two read models:
-
-- `refresh_literature_profile()` -- rebuilds `literature_profiles` via `LiteratureProfileRepository`
-- `refresh_search_index()` -- rebuilds `frontend_search_index` via `SearchIndexRepository`
-
-The repository is the only place allowed to translate Phase 3 contracts into ORM rows.
-
-## ACMG Projection
-
-`AcmgReadyProjector` in `acmg_projection.py` projects standardized entities into compact key-value evidence for downstream rules-based ACMG consumers. It extracts standardized HPO phenotype IDs from proband phenotype fields (`B.hpo_terms`, `B.clinical_phenotypes`) and builds an `AcmgReadyEvidenceSet` with the highest confidence from the source evidence items.
-
-## Usage Patterns
-
-### 1. Standardize one dual-track result
-
-```python
-service = EntityStandardizationService(cfg=cfg)
-result = await service.run_dual_result(
-    session=session,
-    result=dual_result,
-    source_document_id="source-1",
-    processing_run_id="run-1",
-)
-
-print(result.standardized_count, result.ambiguous_count, result.unmapped_count)
-for match in result.matches:
-    print(match.candidate.raw_text, match.status.value, match.external_id)
-```
-
-### 2. Match a single candidate in isolation
-
-```python
-from src.core.standardize_entities_and_align_knowledge.precise_match import PreciseTerminologyMatcher
-from src.core.standardize_entities_and_align_knowledge.repositories import StandardizationRepository
-
-repo = StandardizationRepository(session)
-matcher = PreciseTerminologyMatcher(repo)
-match = await matcher.match(candidate)
-```
-
-### 3. Load terminology data without running the full pipeline
-
-```python
-from pathlib import Path
-
-from src.core.standardize_entities_and_align_knowledge.importers import parse_clinvar_rows
-
-batch = parse_clinvar_rows(
-    Path("database/terminology_database/clinvar/variant_summary.txt"),
-    version="clinvar_20260525",
-)
-await repository.upsert_terminology_batch(batch)
-```
-
-## Extension Guide
-
-### Add a new terminology source
-
-1. Add a parser in `importers.py` returning `ImportBatch`.
-2. Extend `_load_import_batches()` in `api.py`.
-3. Add parser tests with tiny fixtures.
-4. Keep normalization in `normalizers.py` so import-time and query-time behavior stay aligned.
-
-### Add a new entity type
-
-1. Extend `EntityType` and `ROLE_BY_ENTITY_TYPE`.
-2. Decide source priority in `matchers.py`.
-3. Update repository normalization rules in `_normalize_entity_text()`.
-4. Add adapter extraction logic if the entity originates from Phase 2 fields.
-
-### Change canonical selection rules
-
-The canonical decision logic is isolated in:
-
-- `CANONICAL_STATUS_PRIORITY`
-- `CANONICAL_ELIGIBLE_STATUSES`
-- `upsert_canonical_evidence()`
-
-Change those together and add a repository/service test before modifying production behavior.
-
-## Performance Notes
-
-- ClinVar import is streamed row-by-row. Avoid any helper that materializes the full TSV.
-- Candidate matching uses precise lookup on `terminology_aliases.normalized_alias` as the first pass. Only unmapped candidates fall through to the semantic (pgvector) path.
-- `DualResultAdapter` deduplicates by `(entity_type, normalized_text, chain_id)` so duplicate original/translated chains do not double the candidate count.
-- Bulk terminology upsert uses PostgreSQL `INSERT ... ON CONFLICT` for production sessions; per-row upsert for test doubles. The optional COPY staging path (`asyncpg.copy_records_to_table` via temp tables) handles high-throughput scenarios.
-- Canonical evidence upserts batch-load existing items in chunks of 5000 to stay under PostgreSQL's parameter limit.
-
-## Cross-Lingual Normalization
-
-`normalizers.py` provides cross-lingual normalization for disease names. A built-in Chinese-to-English disease name mapping (`_CROSS_LINGUAL_DISEASE_MAP`) covers common medical genetics terms (e.g., "fabry disease" and others). The `normalize_disease_lookup_text()` function applies this mapping automatically, enabling the precise matcher to resolve Chinese disease names against English terminology entries.
-
-Beyond the hardcoded map, `CrossLingualDiseaseResolver` in `cross_lingual_disease.py` provides a database-query-only fallback using PostgreSQL `ILIKE` with token-based Jaccard similarity scoring.
-
-## Vector Similarity Search (pgvector)
-
-Phase 3 supports optional semantic similarity search via pgvector as a fallback when deterministic matching returns no results.
-
-### Architecture
-
-```text
-HybridTerminologyMatcher
-    ├── PreciseTerminologyMatcher (deterministic alias lookup)
-    ├── CrossLingualDiseaseResolver (disease-only, token-ILIKE fallback)
-    └── unmapped?
-        └── SimilarityTerminologyMatcher
-            ├── FallbackEmbeddingProvider
-            │   ├── local  -> inference service /v1/embeddings
-            │   └── remote -> remote API (fallback)
-            ├── PgvectorTerminologyRepository -> pgvector cosine retrieval
-            └── FallbackRerankProvider
-                ├── local  -> inference service /v1/rerank
-                └── remote -> remote API (fallback)
-```
-
-### Enabling
-
-1. Ensure `pgvector_enabled: true` in PostgreSQL config
-2. Run the pgvector migration: `uv run alembic upgrade head`
-3. Start inference services with embedding model loaded
-4. Generate embeddings: `uv run python scripts/build_terminology_embeddings.py`
-
-### Tables
-
-- `terminology_embeddings`: embedding vectors indexed by HNSW for cosine similarity search
-
-### Performance
-
-- HNSW index with m=16, ef_construction=200 provides fast approximate nearest neighbor search
-- Embedding generation is batched (configurable batch_size, default 10)
-- Consider running embedding generation during off-peak hours for large terminology databases
-
-## Unsupported Next Iteration Features
-
-These are intentionally out of scope in the current implementation:
-
-- fused-result input path (`FusedResultAdapter`)
-- LLM/agent-driven entity reasoning
-- full dbSNP import
-- review queue UI
-- full MONDO graph import
-- production-grade bulk upsert optimization for multi-million-row terminology refreshes
-
-## Dependencies
-
-| Dependency | Purpose |
-|---|---|
-| `pydantic` | Phase 2 extraction contracts consumed by the adapter |
-| `sqlalchemy` | ORM-backed persistence to the MVP schema |
-| `asyncpg` | PostgreSQL async driver used by `dao.connection` |
-| `alembic` | migration management for terminology reference tables |
-| `pgvector` | PostgreSQL vector similarity search for semantic matching |
-| `httpx` | Async HTTP client for inference service embedding and rerank calls |
-| `pytest` / `pytest-asyncio` | unit and integration-style verification |
-| `ruff` | lint enforcement |
-
-## Testing
-
-Targeted verification used for this module:
-
-```bash
-cd backend
-uv run pytest tests/core/standardize_entities_and_align_knowledge tests/dao/test_models.py tests/dao/test_alembic_migration.py tests/core/test_config.py -v
-uv run ruff check src tests
-```
-
-Coverage areas currently present:
-
-- ORM + Alembic parity for terminology and pgvector tables
-- contract and normalizer stability
-- parser behavior and helper edge cases
-- deterministic matcher ranking
-- semantic matcher with mock embedding/rerank providers
-- hybrid matcher fallback behavior
-- adapter candidate extraction and deduplication
-- service orchestration
-- facade integration with fake repository/session wiring
-- repository staging behavior for terminology batches and evidence persistence
-- embedding dimension validation
-- cross-lingual disease normalization
-- ACMG projection
-- HGVS alias expansion
-- internal variant ID generation

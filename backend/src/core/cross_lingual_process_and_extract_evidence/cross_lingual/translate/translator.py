@@ -624,7 +624,16 @@ class MultiStageTranslator(BaseTranslator):
 
         for attempt in range(1, self._MAX_SEGMENT_RETRIES + 1):
             # On retry, use a stronger prompt if previous attempt had CJK issues
-            if attempt > 1 and "source_language_content" in str(last_error):
+            if attempt > 1 and "incomplete_translation" in str(last_error):
+                retry_prompt = (
+                    "The previous translation was incomplete and compressed the source into a summary. "
+                    "Translate the following source text completely into English, sentence by sentence. "
+                    "Do NOT summarize, omit, merge, or shorten any medical details. "
+                    "Output ONLY the complete English translation.\n\n"
+                    f"{source_segment}"
+                )
+                translated = await invoke_with_retry(self._llm, retry_prompt, stage, system_prompt)
+            elif attempt > 1 and "source_language_content" in str(last_error):
                 retry_prompt = (
                     f"Translate the following text from Chinese to English. "
                     f"Output ONLY the English translation. "
@@ -735,7 +744,10 @@ class MultiStageTranslator(BaseTranslator):
             logger.warning("Translation validation warning: {}", error_summary)
             # Critical failures: refuse to produce a result that is clearly
             # untranslated. Raising prevents the caller from persisting garbage.
-            if any(kw in error_summary for kw in ("unchanged", "non_english_output", "empty")):
+            if any(
+                kw in error_summary
+                for kw in ("unchanged", "non_english_output", "empty", "incomplete_translation")
+            ):
                 raise TranslationError(error_summary) from exc
 
         # Validate image references preserved

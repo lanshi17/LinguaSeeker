@@ -1,20 +1,18 @@
-# MinIO DAO
+# MinIO — S3 兼容对象存储
 
-> MinIO / S3-compatible object storage data access layer. **Currently a placeholder** -- not yet implemented. Planned for binary artifact storage (PDFs, images, parsed outputs).
+> S3 兼容对象存储数据访问层（预留占位）。
 
-## Status
+## 概述
 
-This sub-package contains only `__init__.py`. No repository, connection, or configuration code has been implemented yet. No MinIO configuration exists in `src.core.config`.
+`minio` 子包是 MinIO / S3 兼容对象存储的预留占位模块，当前仅包含空的 `__init__.py` 包声明。计划用于存储原始文档文件、处理中间产物等大型二进制对象。
 
-## Planned Purpose
+## 目录结构
 
-When implemented, this module will provide:
+```
+minio/
+└── __init__.py     # 空包声明（占位）
+```
 
-- Async MinIO client wrapper using `minio` Python SDK
-- Upload/download for pipeline artifacts (PDFs, images, parsed markdown)
-- Bucket lifecycle management
-- SHA-256 content-addressed storage for deduplication
+## 状态
 
-## Current Workaround
-
-File I/O currently uses `files_io` (the `rust_io.files` PyO3 extension) for local and S3-compatible file operations, or direct filesystem access. See `src.utils.rust_io` for the native extension bridge.
+📌 **占位** — 尚未实现具体功能。未来计划集成 `minio` 或 `boto3` Python 客户端，提供文档文件的上传、下载和管理操作。

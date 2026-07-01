@@ -1,59 +1,73 @@
-# Translate Prompts
+# Prompts 翻译提示模板
 
-> LLM prompt templates for the 3-stage translation pipeline: terminology extraction, segment translation, and document formatting.
+> 翻译管线各阶段的 LLM 提示模板
 
-## Public API
+## 概述
 
-### `terminology.py`
+`prompts` 模块集中管理翻译管线的所有 LLM 提示模板，涵盖术语提取、文档格式化、翻译和自审四个阶段。所有函数返回可直接用于 LLM 调用的提示字符串。
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `get_terminology_prompt` | `(markdown_content: str) -> str` | Terminology extraction stage prompt. Asks LLM to extract bilingual term pairs. |
-| `get_system_prompt_generation_prompt` | `(markdown_sample, source_language) -> str` | Meta-prompt: generate optimal translation system prompt for the document. |
+## 结构
 
-### `translate.py`
+```
+prompts/
+├── __init__.py        # 导出所有提示函数
+├── terminology.py     # 术语提取与 system prompt 生成
+├── format.py          # 文档格式化与缺失值标记
+└── translate.py       # 翻译与自审
+```
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `get_translate_prompt` | `(markdown_segment, terminology, prev_context="", next_context="") -> str` | Human message for translating one segment. Assembles context, terminology, and rules. Adds `«BLK»` preservation directive if markers detected. |
-| `get_full_document_translate_prompt` | `(marked_source, terminology, *, strict=False) -> str` | Full-document block-mode translation prompt with `[BLOCK_N]` markers. When `strict=True`, appends an English-only directive for retry after per-block language check failure. |
-| `get_self_review_prompt` | `(source, translated) -> str` | Self-review stage: compare source vs translation for 13 quality checks (untranslated text, placeholders, title conventions, author names, evidence strength, product names, etc.). |
+## 核心组件
 
-### `format.py`
+### 术语提取 (`terminology.py`)
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `get_prescan_prompt` | `(source_text: str) -> str` | LLM prescan to identify and mark missing/redacted values with `[REDACTED]`. |
-| `get_format_prompt` | `(markdown_content: str) -> str` | Document formatting: structure normalization + redacted value marking. |
+| 函数 | 说明 |
+|------|------|
+| `get_terminology_prompt(markdown_content)` | 生成术语提取提示，要求 LLM 提取双语术语对和保留规则（HGVS、基因符号、蛋白名、DOI/PMID） |
+| `get_system_prompt_generation_prompt(markdown_sample, source_language)` | 元提示：让 LLM 根据文档样本自动生成最优翻译 system prompt。包含严格的翻译约束（直译、不推断缺失值、保留 `[REDACTED]` 标记、variant/mutation 区分） |
 
-## Internal Design
+### 格式化 (`format.py`)
 
-All prompts are pure functions returning strings. No side effects, no LLM calls.
+| 函数 | 说明 |
+|------|------|
+| `get_prescan_prompt(source_text)` | 预扫描提示：让 LLM 识别并标记所有缺失/空白/脱敏值（年龄、日期、数量、剂量等），插入 `[REDACTED]` |
+| `get_format_prompt(markdown_content)` | 3 任务格式化提示：(1) 结构规范化 (2) 标记缺失值 `[REDACTED]` (3) 修复 OCR 截断（如"长 间期"→"长 R-R 间期"） |
 
-### `terminology.py`
+### 翻译 (`translate.py`)
 
-- `get_terminology_prompt()` prefixes the prompt with `TERMINOLOGY_STAGE` marker (used by artifact stripping). Instructs the LLM to extract bilingual term pairs, preserve HGVS/gene symbols/protein names/accession IDs/DOI/PMID.
-- `get_system_prompt_generation_prompt()` is a meta-prompt that asks an LLM to generate a document-tailored system prompt. Embeds critical constraints: literal translation, evidence strength mapping, variant/mutation distinction, `[REDACTED]` preservation, no ACMG language.
+| 函数 | 说明 |
+|------|------|
+| `get_translate_prompt(markdown_segment, terminology, prev_context, next_context)` | 分段翻译提示，包含前后上下文窗口、术语表、翻译指令。支持 `«BLK»` 段落分隔符保留 |
+| `get_full_document_translate_prompt(marked_source, terminology, strict=False)` | 全段翻译提示，一次性翻译整个文档。`strict=True` 时添加更严格的翻译约束 |
+| `get_self_review_prompt(source_text, translated_text)` | 自审提示：对比源文本和翻译，修正错误、遗漏和术语不一致 |
 
-### `translate.py`
+### 关键翻译约束
 
-Both translation prompts embed detailed biomedical translation rules:
+所有翻译提示均包含以下核心约束：
+- **直译** — 不升级或降级证据强度（"提示"→"suggestive of"，非"confirming"）
+- **不推断** — 保留所有 `[REDACTED]` 标记，不补充缺失值
+- **保留结构** — Markdown 格式、图像引用、`«BLK»` 分隔符原样保留
+- **生物医学标识符** — HGVS、基因符号、蛋白名、DOI/PMID 不翻译
+- **variant vs mutation** — 默认用 "variant" 翻译"变异"，仅当原文明确写"突变"时用 "mutation"
 
-- **Evidence strength:** 提示->suggestive of, 支持->supportive of, 考虑->consistent with, 明确->confirmed
-- **Variant terminology:** 变异->variant (default), 突变->mutation (only when source explicitly says 突变)
-- **Medical English:** 'suspected' not 'suspicious' for 疑似/可疑; 'family screening' for 家系筛查
-- **Chinese patterns:** Title pattern 'X病N例' -> 'A case of X'; '包括X在内' -> 'including X' (spell out noun)
-- **Author names:** Space-separated pinyin with given name before surname (杜涓 -> Du Juan)
-- **Preservation:** All `[REDACTED]` markers, `«BLK»` paragraph separators, `[BLOCK_N]` markers, product names, vector names, strain designations, catalog numbers, accession IDs
-- **`strict` mode** (`get_full_document_translate_prompt`): Appends directive requiring output to be entirely English, no bilingual format, only allowing pinyin names and established English scientific terms as non-English content
+## 使用
 
-The self-review prompt (`get_self_review_prompt`) checks 13 quality issues: untranslated text, placeholder artifacts (bare dates, 'blank'), redundant section prefixes, title conventions, author spacing, evidence strength terms, medical terminology, dangling modifiers, keyword capitalization, email placeholders, product name fidelity, and no-added-inference constraint.
+```python
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.prompts import (
+    get_terminology_prompt,
+    get_translate_prompt,
+    get_self_review_prompt,
+    get_system_prompt_generation_prompt,
+)
 
-### `format.py`
+# 术语提取
+term_prompt = get_terminology_prompt(markdown_text)
 
-- `get_prescan_prompt()` instructs the LLM to scan for missing/blank/redacted values and insert `[REDACTED]` markers
-- `get_format_prompt()` combines three tasks: structure normalization, `[REDACTED]` marker insertion for missing values, and OCR truncation repair (e.g., '长 间期' -> '长 R-R 间期')
+# 分段翻译
+translate_prompt = get_translate_prompt(
+    segment_text, terminology=term_map_str,
+    prev_context=prev, next_context=next
+)
 
-## Testing
-
-Prompt tests verify template structure and variable substitution.
+# 自审
+review_prompt = get_self_review_prompt(source_text, translated_text)
+```

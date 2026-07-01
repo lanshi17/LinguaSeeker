@@ -1,32 +1,36 @@
-# vault -- Secrets for Compose Backend
+# vault — Compose 后端密钥配置
 
-This directory holds the encrypted secrets file mounted into the backend container.
+> 挂载到后端容器的加密密钥文件目录。
 
-## File
+## 概述
 
-| File | Container Path | Permissions |
-|------|---------------|-------------|
-| `production.yaml` | `/app/config/vault/production.yaml` (read-only) | 0600 |
+本目录存放后端容器运行时所需的密钥配置文件，以只读方式挂载到容器中。文件已 git 忽略（`*.yaml` 排除，本 README 豁免）。
 
-## Required Secrets
+## 文件
 
-Create `production.yaml` from the project template:
+| 文件 | 容器路径 | 权限 |
+|------|---------|------|
+| `production.yaml` | `/app/config/vault/production.yaml`（只读） | 0600 |
+
+## 必需密钥
+
+从项目模板创建 `production.yaml`：
 
 ```bash
 cp ../../../backend/config/vault/production.yaml.example production.yaml
 chmod 600 production.yaml
 ```
 
-The vault file must contain at minimum:
+vault 文件必须至少包含：
 
-- `postgres.password` -- PostgreSQL password
-- `redis.password` -- Redis password (if configured)
-- `fast_llm.api_key` -- Fast LLM API key
-- `reasoning_llm.api_key` -- Reasoning LLM API key
+- `postgres.password` — PostgreSQL 密码
+- `redis.password` — Redis 密码（如已配置）
+- `fast_llm.api_key` — Fast LLM API 密钥
+- `reasoning_llm.api_key` — Reasoning LLM API 密钥
 
-## Security
+## 安全
 
-- This directory is git-ignored (`*.yaml` excluded, this README is exempt).
-- The file is mounted read-only into the container.
-- Never commit real secrets to version control.
-- For the Ansible deployment path, the equivalent file is `deploy/ansible/inventories/<env>/group_vars/vault.yml` (encrypted with `ansible-vault`).
+- 本目录已 git 忽略（`*.yaml` 排除，本 README 豁免）
+- 文件以只读方式挂载到容器
+- 绝不将真实密钥提交到版本控制
+- Ansible 部署路径的等效文件为 `deploy/ansible/inventories/<env>/group_vars/vault.yml`（使用 `ansible-vault` 加密）

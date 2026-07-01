@@ -1,185 +1,90 @@
-# Format Module
+# Format 文档格式化模块
 
-> Phase 2 submodule — normalizes parsed document markdown, segments text for LLM context windows, extracts sentences with page-level tracking, and computes character drift for bbox preservation.
+> 源文档格式化、OCR 修复、Markdown 规范化和 token 预算分段
 
-## Quick Start
+## 概述
+
+`format` 模块负责将 MinerU 解析输出转换为标准化 Markdown 文本，同时进行 OCR 修复、缺失值标记和字符级位置追踪。输出的 `FormattedDocument` 供下游翻译管线使用。
+
+## 结构
+
+```
+format/
+├── __init__.py      # 空模块入口
+├── base.py          # BaseFormatter 抽象接口
+├── formatter.py     # MarkdownFormatter 具体实现
+└── segmenter.py     # Token 预算文本分段器
+```
+
+## 核心组件
+
+### BaseFormatter (`base.py`)
+
+抽象基类，定义格式化接口：
 
 ```python
-from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.format.formatter import (
-    MarkdownFormatter,
-)
-from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.format.segmenter import (
-    segment_text,
-)
+class BaseFormatter(ABC):
+    @abstractmethod
+    def format(self, pages, content_blocks=None) -> FormattedDocument: ...
+```
 
-# Normalize MinerU-parsed document
+可替换实现，便于测试或替代格式化策略。
+
+### MarkdownFormatter (`formatter.py`)
+
+核心格式化实现：
+
+- **页面偏移映射** (`build_page_offset_map`) — 从页面数据构建字符偏移到页码的映射
+- **句子提取** (`extract_sentences`) — 按中英文句号分割文本，追踪每个句子的起止偏移
+- **Markdown 格式化** (`_format_markdown`) — 空白规范化、标题间距修复、`[REDACTED]` 标记注入
+- **字符漂移计算** (`compute_format_drift`) — 比较原始文本与格式化文本中句子位置的漂移
+- **HTML 检测** (`_is_html`) — 识别 HTML 文档并适配处理
+- **内容块模式** — 当提供 `content_blocks` 时，从结构化 JSON 构建 `FormattedDocument`，包含 `PageSpan` 和 `ContentBlock`
+
+### Token 分段器 (`segmenter.py`)
+
+将文本分段以适应 LLM 上下文窗口：
+
+- **`estimate_tokens(text)`** — 粗略 token 估算：ASCII 字符 / 4，CJK 字符各算 1
+- **`segment_text(text, max_tokens, prompt_overhead_tokens)`** — 按段落边界分段，支持 CJK 混合内容的自适应字符/token 比率
+- **`_split_paragraph`** — 在 token 预算内拆分单个段落，优先按句子边界切割
+
+## 数据流
+
+```
+MinerU pages + content_list.json
+    │
+    ▼
+MarkdownFormatter.format()
+    │
+    ├── 从 content_blocks 构建结构化文本 + PageSpan
+    │   或从 pages 直接提取 markdown
+    │
+    ├── extract_sentences() → 句子级位置追踪
+    ├── _normalize_whitespace() → 空白规范化
+    ├── _fix_markdown_headings() → 标题修复
+    ├── mark_redacted_values() → 缺失值标记
+    │
+    ▼
+FormattedDocument
+    ├── formatted_markdown: str       # 格式化后的 Markdown
+    ├── original_text: str            # 原始文本
+    ├── sentences: List[SentenceRegion]  # 句子位置
+    ├── layout_report: OriginalLayoutReport  # 布局漂移报告
+    ├── content_blocks: List[ContentBlock]   # 结构化内容块
+    └── page_spans: List[PageSpan]           # 页面跨度
+```
+
+## 使用
+
+```python
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.format.formatter import MarkdownFormatter
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.format.segmenter import segment_text
+
+# 格式化文档
 formatter = MarkdownFormatter()
-doc = formatter.format(pages, content_blocks=blocks)
-print(f"{len(doc.sentences)} sentences across {doc.metadata['page_count']} pages")
+formatted = formatter.format(pages, content_blocks=blocks)
 
-# Segment for LLM input
-chunks = segment_text(doc.formatted_markdown, max_tokens=4096)
-```
-
-## Architecture
-
-```
-segment_text() [segmenter.py]
-│
-├─ estimate_tokens()  — rough tokenizer (ASCII ÷ 4, CJK × 1)
-├─ _split_paragraph()  — sentence-level sub-splitting with max_chars guard
-└─ paragraph-level merge → preserves structure
-    └─ CJK ratio-aware char budget (4.0 - cjk_ratio * 2.8 chars/token)
-
-MarkdownFormatter [formatter.py]
-│
-├─ _format_markdown()  — join pages, normalize whitespace, fix headings
-│   └─ ContentBlock.from_mineru_block()  — build structured blocks from MinerU content_list
-├─ build_page_offset_map()  — char offset → page number
-├─ _resolve_page()  — resolve character offset to page via offset map
-├─ extract_sentences()  — split on 。！？.!?  with page tracking (regex finditer)
-├─ compute_format_drift()  — raw ↔ formatted position mapping (exact → normalized prefix)
-├─ _find_raw_offset()  — find sentence position in raw text (exact → fuzzy fallback)
-├─ _is_html()  — detect HTML error pages from LLM output
-└─ _apply_llm_formatting()  — optional LLM redaction detection
-    └─ HTML rejection + length-mismatch safety (>30%) + [REDACTED] marker counting
-```
-
-## Public API
-
-### `MarkdownFormatter`
-
-```python
-class MarkdownFormatter(BaseFormatter):
-    def __init__(self, llm: Any = None)
-    def format(self, pages: List[Dict], content_blocks: List[Dict] | None = None) -> FormattedDocument
-    def compute_drift(self, raw_text: str, formatted_sentences: List[SentenceRegion]) -> List[SentenceDrift]
-```
-
-### `segment_text()`
-
-```python
-def segment_text(
-    text: str,
-    max_tokens: int = 8192,
-    prompt_overhead_tokens: int = 0,
-) -> List[str]:
-```
-
-Token-budgeted segmentation. Splits on paragraph boundaries first, then sentences, finally hard-splits. Adjusts char budget based on CJK ratio using a blended formula: `chars_per_token = 4.0 - cjk_ratio * 2.8` (ASCII-heavy ~4 chars/token, CJK-heavy ~1.2 chars/token). The internal `_split_paragraph()` also enforces a `max_chars` guard derived from the token budget.
-
-### Key Functions
-
-| Function | Purpose |
-|----------|---------|
-| `build_page_offset_map(pages)` | Maps character offsets to page numbers for bbox tracking |
-| `_resolve_page(offset, page_map)` | Resolve a character offset to its page number via the offset map |
-| `extract_sentences(text, page_offset_map)` | Sentence splitting with page-level position tracking (regex `finditer`, trailing segment capture) |
-| `compute_format_drift(raw_text, sentences)` | Aligns formatted sentences back to raw text positions (exact -> normalized-prefix fuzzy) |
-| `_find_raw_offset(sentence, raw_text, search_start)` | Find sentence position in raw text; returns `(-1, -1)` if not found |
-| `estimate_tokens(text)` | Approximates token count (no LLM needed) |
-| `_is_html(text)` | Detect HTML documents (used to reject LLM error pages) |
-
-### Data Types (from parent contracts)
-
-| Type | Description |
-|------|-------------|
-| `FormattedDocument` | Normalized markdown, sentences, metadata, raw original, original blocks |
-| `SentenceRegion` | Sentence text with page, start/end offset |
-| `SentenceDrift` | Drift mapping between raw and formatted positions (sentence_index, page, raw/formatted offsets, drift delta) |
-| `ContentBlock` | Structured content block with bbox; built from MinerU blocks via `ContentBlock.from_mineru_block()` |
-
-## Internal Design
-
-### Token estimation
-
-`estimate_tokens()` uses a hybrid heuristic: ASCII characters count as 0.25 tokens each (`ascii_chars / 4`), non-ASCII (CJK) characters count as 1 token each. This matches OpenAI/Claude tokenizer behavior closely enough for budget management without requiring a real tokenizer dependency. O(n) scan, ~0.1ms for 100KB text.
-
-### Page tracking
-
-`build_page_offset_map()` records the cumulative character position at which each page starts. `extract_sentences()` then resolves each sentence's start offset through this map to determine its page number. This enables downstream bbox → page → sentence resolution.
-
-### Drift computation
-
-Formatting (whitespace normalization, heading fixes) shifts character positions. `compute_format_drift()` uses fuzzy string matching (exact → normalized prefix) to realign formatted sentences to raw text, producing per-sentence offset deltas.
-
-### LLM formatting
-
-When `llm` is provided, `_apply_llm_formatting()` sends the formatted markdown to the LLM with a redaction-detection prompt (from `translate.prompts.get_format_prompt`). Safety checks:
-- Output is rejected if it looks like an HTML error page (`_is_html()`)
-- Output is rejected if length differs by >30% from input
-- `[REDACTED]` marker count is logged (new markers added by LLM)
-- On failure, the original document is preserved unchanged
-
-The LLM is invoked synchronously via LangChain's `invoke()` (not async).
-
-## Usage Patterns
-
-### Basic formatting
-
-```python
-formatter = MarkdownFormatter()
-doc = formatter.format(mineru_pages)
-# doc.formatted_markdown — cleaned text
-# doc.sentences — list of SentenceRegion with page numbers
-```
-
-### With LLM redaction detection
-
-```python
-from langchain_core.language_models import BaseChatModel
-llm = get_llm()  # your LangChain model
-formatter = MarkdownFormatter(llm=llm)
-doc = formatter.format(pages)
-# [REDACTED] markers inserted for sensitive content
-```
-
-### Text segmentation for translation
-
-```python
-chunks = segment_text(
-    long_article,
-    max_tokens=4096,
-    prompt_overhead_tokens=500,  # reserve for system prompt
-)
-for i, chunk in enumerate(chunks):
-    print(f"Chunk {i}: {len(chunk)} chars, ~{estimate_tokens(chunk)} tokens")
-```
-
-## Extension Guide
-
-### Adding a new formatter
-
-Subclass `BaseFormatter`:
-
-```python
-class MyFormatter(BaseFormatter):
-    def format(self, pages, content_blocks=None) -> FormattedDocument:
-        # Custom formatting logic
-        return FormattedDocument(...)
-```
-
-### Changing segmentation strategy
-
-Modify `_split_paragraph()` to use a different sub-division heuristic, or change `estimate_tokens()` to use a real tokenizer library.
-
-## Performance Notes
-
-- `estimate_tokens()` is O(n) but very fast (~0.1 ms for 100 KB text)
-- `_find_raw_offset()` uses linear search as fallback — worst case O(n²) for highly divergent texts
-- Segmentation is CPU-bound, no I/O
-
-## Dependencies
-
-| Dependency | Purpose |
-|------------|---------|
-| `re` | Sentence splitting, whitespace normalization |
-| `loguru` | Logging |
-| `langchain_core.messages.HumanMessage` | LLM formatting (optional) |
-| Parent contracts (`...contracts`) | FormattedDocument, SentenceRegion, ContentBlock |
-
-## Testing
-
-```bash
-uv run pytest tests/ -k "format" -v
+# 分段用于 LLM 输入
+chunks = segment_text(formatted.formatted_markdown, max_tokens=8192)
 ```

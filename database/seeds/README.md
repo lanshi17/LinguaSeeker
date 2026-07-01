@@ -1,35 +1,39 @@
 # database/seeds
 
-> Reserved for database seed scripts that populate initial reference data.
+> 数据库种子脚本预留目录，用于填充初始参考数据。
 
-## Current Status
+## 概述
 
-This directory is currently empty (only `.gitkeep`). Seed data is loaded at runtime via the terminology import script:
+本目录当前为空（仅 `.gitkeep`）。种子数据通过运行时脚本加载，而非静态 SQL 文件。
+
+## 当前状态
+
+种子数据通过术语导入脚本加载：
 
 ```bash
-# Import terminology database files into PostgreSQL
+# 导入术语数据库文件到 PostgreSQL
 uv run python scripts/data/import/import_terminology.py \
   --terminology-root database/terminology_database \
   --version 2026.05
 
-# Import specific sources
+# 导入特定来源
 uv run python scripts/data/import/import_terminology.py \
   --terminology-root database/terminology_database \
   --version 2026.05 \
   --sources hgnc clinvar
 
-# Import with pgvector embeddings
+# 导入并生成 pgvector 嵌入
 uv run python scripts/data/import/import_terminology.py \
   --terminology-root database/terminology_database \
   --version 2026.05 \
   --generate-embeddings
 ```
 
-## Purpose
+## 用途
 
-This directory is intended for SQL or Python seed scripts that populate:
-- Default system configurations
-- Initial user accounts (development only)
-- Reference/lookup data
+本目录计划存放 SQL 或 Python 种子脚本，用于填充：
+- 默认系统配置
+- 初始用户账户（仅开发环境）
+- 参考/查找数据
 
-Seed scripts should be idempotent (safe to re-run).
+种子脚本应为幂等操作（可安全重复运行）。

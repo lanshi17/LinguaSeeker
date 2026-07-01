@@ -1,16 +1,18 @@
-# Neo4j DAO
+# Neo4j — 图数据库
 
-> Neo4j graph database data access layer. **Currently a placeholder** -- not yet implemented. Planned for knowledge graph relationships between genes, variants, diseases, and evidence.
+> 图数据库数据访问层（预留占位）。
 
-## Status
+## 概述
 
-This sub-package contains only `__init__.py`. No repository, connection, or configuration code has been implemented yet. No Neo4j configuration exists in `src.core.config`.
+`neo4j` 子包是 Neo4j 图数据库的预留占位模块，当前仅包含空的 `__init__.py` 包声明。计划用于存储生物医学实体之间的关系图谱（基因-变异-疾病-表型关联）。
 
-## Planned Purpose
+## 目录结构
 
-When implemented, this module will provide:
+```
+neo4j/
+└── __init__.py     # 空包声明（占位）
+```
 
-- Async Neo4j driver wrapper using `neo4j` Python SDK
-- Cypher query repositories for gene-variant-disease relationships
-- Entity graph traversal for evidence linking
-- Bulk import from standardized entity data
+## 状态
+
+📌 **占位** — 尚未实现具体功能。未来计划集成 `neo4j` Python 驱动，提供图查询和实体关系遍历能力。

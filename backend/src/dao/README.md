@@ -1,150 +1,90 @@
-# DAO
+# DAO — 数据访问层
 
-> Async PostgreSQL persistence, Redis read-cache, and read-side search-index helpers for the backend data access layer.
+> 按存储后端组织的统一数据访问层，为管道各阶段提供 PostgreSQL、Redis、Neo4j、MinIO 的持久化和缓存抽象。
 
-## Sub-package Organization
+## 概述
+
+`dao` 包是 Lingua Seeker 的持久化基础设施层，按存储后端划分为四个子包。当前实际实现包括 PostgreSQL（主存储）和 Redis（读缓存），Neo4j 和 MinIO 为预留占位。
+
+### 存储后端状态
+
+| 后端 | 状态 | 用途 |
+|------|------|------|
+| **PostgreSQL** | ✅ 完整实现 | ORM 模型、连接管理、术语/证据/审查/任务队列仓储 |
+| **Redis** | ✅ 完整实现 | 异步读缓存，事务性失效 |
+| **Neo4j** | 📌 占位 | 图数据库（预留） |
+| **MinIO** | 📌 占位 | S3 兼容对象存储（预留） |
+
+## 目录结构
 
 ```
-src/dao/
-├── postgresql/    # SQLAlchemy ORM models, connection, and query repositories
-├── redis/         # Async Redis cache operations
-├── neo4j/         # Graph database access (placeholder)
-└── minio/         # MinIO / S3-compatible object storage (placeholder)
+dao/
+├── __init__.py           # 包声明：子包说明
+├── postgresql/           # PostgreSQL 主存储
+│   ├── __init__.py       # 懒加载导出（避免 eager pgvector 依赖）
+│   ├── connection.py     # 异步 SQLAlchemy 引擎和会话工厂
+│   ├── contracts.py      # DAO 基础设施契约
+│   ├── models.py         # SQLAlchemy ORM 模型（20+ 表）
+│   ├── job_queue.py      # 持久化任务队列（SELECT FOR UPDATE SKIP LOCKED）
+│   ├── literature_profile_repo.py  # 文献档案聚合仓储
+│   ├── search_index_repo.py        # 前端搜索索引仓储
+│   └── document_annotation_repo.py # 文档标注 CRUD
+├── redis/                # Redis 读缓存
+│   ├── __init__.py       # 懒加载导出
+│   ├── connection.py     # 异步 Redis 客户端构建
+│   └── cache_repo.py     # CacheRepository：JSON 缓存 + 事务性失效
+├── neo4j/                # 图数据库（占位）
+│   └── __init__.py
+└── minio/                # 对象存储（占位）
+    └── __init__.py
 ```
 
-## Architecture
+## 核心设计模式
 
-```text
-src.core.config.Settings
-        |
-        v
-postgresql/connection.py  ->  AsyncEngine / async_sessionmaker / session context
-        |
-        +--> postgresql/models.py                    ORM models (Alembic-managed)
-        +--> postgresql/contracts.py                 Typed infrastructure contracts
-        +--> postgresql/search_index_repo.py         Flattened read projection queries
-        +--> postgresql/literature_profile_repo.py   Per-document evidence group aggregation
-        +--> postgresql/document_annotation_repo.py  Document annotation CRUD
-        +--> redis/connection.py                   Async Redis client builder
-        +--> redis/cache_repo.py                     Redis read-cache and invalidation
-```
+### 懒加载导出
+PostgreSQL 和 Redis 子包使用 `__getattr__` 实现懒加载，避免在未使用时触发 pgvector 或 redis.asyncio 的导入开销。
 
-Singleton lifecycle is managed by `src.api.wiring`: `wire_dependencies()` creates engine, session factory, and Redis client on startup; `dispose_engine()` and `dispose_redis()` release resources on shutdown.
+### 连接构建器模式
+`connection.py` 提供纯构建函数（`build_async_engine`、`build_redis_client`），不管理单例生命周期——单例由 `src.api.wiring` 控制。
 
-The normalized PostgreSQL write model is migration-managed through `Base.metadata` in `postgresql/models.py`. The `frontend_search_index` table in `postgresql/search_index_repo.py` uses standalone `MetaData` so Alembic autogenerate does not treat the manual read projection as core write-model drift.
+### 会话管理
+PostgreSQL 使用 `async_sessionmaker` + `@asynccontextmanager` 的 `get_async_session()` 模式，由调用方控制事务边界。
 
-## Public API
+## 关键模型（PostgreSQL）
 
-### postgresql/connection.py
+| 模型 | 表名 | 用途 |
+|------|------|------|
+| `SourceDocument` | `source_documents` | 稳定的源文档根，跨处理运行 |
+| `ProcessingRun` | `processing_runs` | 管道执行的可复现性边界 |
+| `NormalizedEntity` | `normalized_entities` | 标准化和未映射实体的统一字典 |
+| `RunEvidenceItem` | `run_evidence_items` | 单次运行产生的版本化证据项 |
+| `CanonicalEvidenceItem` | `canonical_evidence_items` | 跨运行的当前最佳规范证据 |
+| `EvidenceEntityBinding` | `evidence_entity_bindings` | 证据与实体的超边关系 |
+| `TerminologyEntry` | `terminology_entries` | 从术语数据库导入的统一参考实体 |
+| `TerminologyAlias` | `terminology_aliases` | 术语匹配的索引查找别名 |
+| `TerminologyEmbedding` | `terminology_embeddings` | pgvector 语义嵌入 |
+| `LiteratureProfile` | `literature_profiles` | 每文档聚合的证据概览 |
+| `ReviewAuditEvent` | `review_audit_events` | 证据审查操作的审计追踪 |
+| `ChatSession` / `ChatMessage` | `chat_sessions` / `chat_messages` | LLM 对话会话和消息 |
+| `PipelineJob` | `pipeline_jobs` | 持久化任务队列 |
+| `PipelineRunState` | `pipeline_run_states` | 管道编排器检查点 |
+| `DocumentAnnotation` | `document_annotations` | 用户创建的文档标注 |
 
-| Function | Description |
-|---|---|
-| `build_asyncpg_connect_args` | Builds asyncpg `server_settings` with the configured schema search path |
-| `build_async_engine` | Creates a SQLAlchemy async engine from config (DSN, pool size, overflow, search path) |
-| `async_session_factory` | Binds `AsyncSession` instances to an engine with `expire_on_commit=False` |
-| `get_async_session` | Context-managed session helper requiring an explicit factory |
-
-### postgresql/models.py
-
-`Base` is the Alembic target metadata for the normalized schema. Key model groups:
-
-- **Document lifecycle:** `SourceDocument`, `SourceDocumentIdentifier`, `ProcessingRun`, `PipelineRunState`, `DocumentProcessingCache`
-- **Evidence:** `RunEvidenceItem`, `CanonicalEvidenceItem`, `EvidenceEntityBinding`
-- **Entity and terminology:** `NormalizedEntity`, `EntityMergeEvent`, `TerminologyEntry`, `TerminologyAlias`, `TerminologyRelationship`, `TerminologyEmbedding`
-- **Phase 4:** `User`, `ReviewAuditEvent`, `LiteratureProfile`, `ChatSession`, `ChatMessage`, `DocumentAnnotation`
-
-### postgresql/literature_profile_repo.py
-
-| Method | Description |
-|---|---|
-| `refresh_for_document` | Rebuild the `literature_profiles` row for a given `source_document_id` from canonical evidence |
-| `get_by_document` | Retrieve a single literature profile by `source_document_id` |
-| `search` | Search literature profiles with optional filters (gene, variant, disease, pmid, doi), paginated |
-
-### postgresql/search_index_repo.py
-
-| Method | Description |
-|---|---|
-| `search` | Queries `frontend_search_index` with OR-combined filters (gene, variant, disease, gene_ids, variant_ids, doi, pmid, field_id) |
-| `refresh` | Truncates and rebuilds the read projection from canonical evidence and source identifiers |
-
-### postgresql/document_annotation_repo.py
-
-| Function | Description |
-|---|---|
-| `list_annotations` | Return annotations for a document, optionally filtered by track |
-| `get_annotation` | Fetch a single annotation by UUID |
-| `create_annotation` | Insert a new annotation and return the persisted row |
-| `update_annotation` | Patch mutable fields (color, note) of an annotation |
-| `delete_annotation` | Delete an annotation by UUID |
-
-### redis/connection.py
-
-| Function | Description |
-|---|---|
-| `build_redis_client` | Creates an async Redis client from config (host, port, db, password, max_connections) |
-
-### redis/cache_repo.py
-
-| Method | Description |
-|---|---|
-| `get_document` / `set_document` | Read/write unstructured document cache payload |
-| `get_canonical_evidence` / `set_canonical_evidence` | Read/write canonical evidence cache payload |
-| `get_entity` / `set_entity` | Read/write entity cache payload |
-| `invalidate_document` / `invalidate_canonical_evidence` / `invalidate_entity` | Remove individual cached entries |
-| `invalidate_all` | Transactional bulk invalidation across all key types |
-
-## Usage Patterns
-
-### Create a session factory at startup
+## 使用方式
 
 ```python
-from src.dao.postgresql.connection import async_session_factory, build_async_engine
+from src.dao.postgresql import build_async_engine, async_session_factory, get_async_session
+from src.dao.postgresql.models import TerminologyEntry, CanonicalEvidenceItem
+from src.dao.redis import CacheRepository, build_redis_client
 
-engine = build_async_engine()
-session_factory = async_session_factory(engine)
-# In production, src/api/wiring.py manages this lifecycle
+# PostgreSQL
+engine = build_async_engine(settings)
+factory = async_session_factory(engine)
+async with get_async_session(factory) as session:
+    result = await session.execute(select(TerminologyEntry).limit(10))
+
+# Redis
+redis = build_redis_client(settings)
+cache = CacheRepository(redis)
+await cache.set("doc", "key", {"data": "value"})
 ```
-
-### Use the search projection
-
-```python
-from src.dao.postgresql.connection import get_async_session
-from src.dao.postgresql.search_index_repo import SearchIndexRepository
-
-async with get_async_session(session_factory) as session:
-    repo = SearchIndexRepository(session)
-    rows = await repo.search(gene_ids=["BRCA1"], limit=20)
-```
-
-### Invalidate cache after a run completes
-
-```python
-from src.dao.redis.cache_repo import CacheRepository
-
-cache = CacheRepository(redis_client)
-await cache.invalidate_all(
-    document_ids=[source_document_id],
-    canonical_evidence_ids=changed_canonical_ids,
-    entity_ids=changed_entity_ids,
-)
-```
-
-## Dependencies
-
-| Dependency | Purpose |
-|---|---|
-| SQLAlchemy 2.0 | Async ORM, metadata, table definitions, SQL expressions |
-| asyncpg | PostgreSQL async driver behind SQLAlchemy |
-| pgvector | Vector type and cosine distance operators for `TerminologyEmbedding` |
-| Alembic | Migration environment under `database/migrations/` |
-| redis.asyncio | Async Redis cache client |
-
-## Testing
-
-```bash
-cd backend
-uv run pytest tests/dao -v
-```
-
-Integration tests that require live PostgreSQL or Redis are marked skipped by default.

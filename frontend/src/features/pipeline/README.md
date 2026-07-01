@@ -1,123 +1,105 @@
-# Pipeline Feature
+# Pipeline 流水线功能
 
-> Manages the 3-phase evidence extraction pipeline: status polling, per-phase visualization, run history, and real-time task queue.
+> 三阶段文献处理流水线的启动、监控和历史管理
 
-## Structure
+## 概述
+
+Pipeline 模块管理 Lingua Seeker 的三阶段文献处理流水线：
+1. **Phase 1 — 文献获取**（Acquisition）：解析 PDF/在线检索
+2. **Phase 2 — 证据提取**（Extraction）：LLM 驱动的 ACMG 证据提取
+3. **Phase 3 — 标准化**（Standardization）：证据标准化与入库
+
+支持启动新运行、实时监控进度（2 秒轮询）、查看历史记录和阶段详情。
+
+## 文件结构
 
 ```
-features/pipeline/
-|-- index.ts                           # Barrel exports
-|-- components/
-|   |-- PipelineStatusView.tsx         # Orchestrates timeline + phase cards for a single run
-|   |-- PhaseTimeline.tsx             # Visual step-by-step progress (numbered circles)
-|   |-- PhaseDetailCard.tsx           # Per-phase status card with timing, sub-nodes, and errors
-|   |-- RunHistory.tsx                # List of past pipeline runs with search/filter
-|   |-- RunListItem.tsx               # Individual run row in history list
-|   |-- TaskQueuePanel.tsx            # Real-time sidebar panel showing active/recent/failed runs
-|   +-- TaskQueueRow.tsx              # Individual row in the task queue panel
-|-- hooks/
-|   |-- usePipelineRun.ts             # useMutation for POST /pipeline/run
-|   |-- usePipelineRuns.ts            # useQuery for listing pipeline runs
-|   |-- usePipelineStatus.ts          # useQuery with 2s polling, auto-stops on terminal state
-|   +-- usePhaseTimeline.ts           # Projects PipelineStatusResponse to PhaseTimelineStep[]
-|-- services/
-|   +-- pipeline.ts                   # startPipelineRun(), getPipelineStatus(), listPipelineRuns()
-+-- types/
-    +-- pipeline.ts                   # PipelineRunRequest/Response, PipelineStatusResponse, PhaseStatus, PhaseNode, etc.
+pipeline/
+├── index.ts                          # 模块导出
+├── pipeline.css                      # 样式
+├── components/
+│   ├── PipelineStatusView.tsx        # 流水线状态主视图
+│   ├── PhaseTimeline.tsx             # 阶段时间线
+│   ├── PhaseDetailCard.tsx           # 阶段详情卡片
+│   ├── RunHistory.tsx                # 运行历史列表
+│   ├── RunListItem.tsx               # 运行列表项
+│   ├── TaskQueuePanel.tsx            # 任务队列面板
+│   └── TaskQueueRow.tsx              # 任务队列行
+├── hooks/
+│   ├── usePipelineRun.ts            # 启动运行 mutation hook
+│   ├── usePipelineStatus.ts         # 运行状态轮询 hook（2s 间隔）
+│   ├── usePipelineRuns.ts           # 运行列表查询 hook（5s 轮询）
+│   └── usePhaseTimeline.ts          # 阶段时间线数据投影 hook
+├── services/
+│   └── pipeline.ts                  # API 服务层
+├── types/
+│   └── pipeline.ts                  # 流水线类型定义
+└── README.md
 ```
 
-## Usage
+## 关键组件
 
-```tsx
-import {
-  PipelineStatusView,
-  PhaseTimeline,
-  RunHistory,
-  TaskQueuePanel,
-  usePipelineRun,
-  usePipelineStatus,
-  usePipelineRuns,
-} from "@/features/pipeline";
+### `PipelineStatusView`
 
-// Status view for a single run
-<PipelineStatusView runId="abc-123" />
+流水线运行状态主视图，展示当前运行的阶段进度、任务队列和指标。
 
-// Run history page
-<RunHistory />
+### `PhaseTimeline`
 
-// Task queue sidebar (used inside ChatView)
-<TaskQueuePanel onClose={toggleTaskQueue} />
+阶段时间线组件，水平展示三个阶段的状态和耗时。
 
-// Programmatic usage
-const { mutateAsync: startRun } = usePipelineRun();
-const result = await startRun({ source_type: "online", mode: "full", query: "BRCA1" });
-const { data } = usePipelineStatus(runId);  // Polls every 2s
-```
+### `PhaseDetailCard`
 
-## Components
+单个阶段的详情卡片，展示子节点（文献提供者、LLM 步骤）的状态、耗时和指标。
 
-| Component | Description |
-|-----------|-------------|
-| `PipelineStatusView` | Page-level orchestrator for a single run: renders `PhaseTimeline` and `PhaseDetailCard` for each phase. |
-| `PhaseTimeline` | Visual step-by-step progress with numbered circles, labels, and status indicators. |
-| `PhaseDetailCard` | Per-phase card showing status, timing, sub-node details, counts, metrics, and errors. Exports `PhaseDetailCardSkeleton` for loading state. |
-| `RunHistory` | Searchable, filterable list of all pipeline runs with status indicators. |
-| `RunListItem` | Individual run row: title, status badge, elapsed time, phase progress. |
-| `TaskQueuePanel` | Real-time sidebar panel with three tabs (Active, Recent, Failed). Shows live pipeline status with pulsing indicators and sync timestamp. |
-| `TaskQueueRow` | Individual run card in the task queue: status dot, title, elapsed time, phase progress bar. |
+### `RunHistory`
+
+运行历史列表，支持分页、状态筛选和搜索。
+
+### `TaskQueuePanel` / `TaskQueueRow`
+
+任务队列面板，展示流水线中各任务的执行状态。
 
 ## Hooks
 
-| Hook | Returns | Description |
-|------|---------|-------------|
-| `usePipelineRun` | `useMutation` result | Starts a new pipeline run via `POST /pipeline/run`. |
-| `usePipelineStatus(runId)` | `{ data, isLoading, ... }` | Polls `GET /pipeline/runs/{id}/status` every 2s. Auto-stops polling on terminal states (`completed`, `failed`, `skipped`). |
-| `usePipelineRuns()` | `{ data, isLoading, isError, dataUpdatedAt }` | Lists all pipeline runs via `GET /pipeline/runs`. Polls every 5s. Tolerates 404/501 gracefully. |
-| `usePhaseTimeline(statusData)` | `PhaseTimelineStep[]` | Projects `PipelineStatusResponse` to ordered timeline steps with status and duration. |
+### `usePipelineRun()`
 
-## Types
+启动新流水线运行的 mutation hook。
 
-| Type | Description |
-|------|-------------|
-| `PipelineRunRequest` | POST body: `source_type`, `mode`, `content_base64?`, `filename?`, `pre_parsed_markdown?`, `query?`, `identifiers?`, `target_phase?`, `processing_run_id?`, `target?` |
-| `PipelineRunResponse` | POST result: `processing_run_id`, `source_document_id`, `status`, `status_url` |
-| `PipelineStatusResponse` | Status: `processing_run_id`, `pipeline_status`, `current_phase?`, `phases` (keyed by phase_id), `error_message?`, `started_at?`, `completed_at?`, `elapsed_seconds?`, `title?` |
-| `PhaseStatus` | Per-phase: `status`, `started_at?`, `completed_at?`, `duration_seconds?`, `error?`, `summary?`, `nodes?` (sub-nodes), `count?` |
-| `PhaseNode` | Sub-node: `node_id`, `label`, `status`, `progress?`, `started_at?`, `completed_at?`, `duration_seconds?`, `count?`, `metrics?`, `error?` |
-| `PipelineRunSummary` | Compact run summary for list view: `processing_run_id`, `pipeline_status`, `title?`, `started_at?`, `completed_at?`, `elapsed_seconds?`, `current_phase?`, `completed_phases?`, `total_phases?` |
-| `PipelineRunListResponse` | List response: `items[]`, `total` |
-| `PhaseTimelineStep` | Projected step: `phaseId`, `label`, `status`, `duration?` |
+- **返回**: `useMutation` 对象，调用 `startPipelineRun(body)`
 
-## Phases
+### `usePipelineStatus(runId)`
 
-| Phase ID | Label |
-|----------|-------|
-| `phase_1` | Document Acquisition |
-| `phase_2` | Evidence Extraction |
-| `phase_3` | Entity Standardization |
+运行状态轮询 hook。
 
-Polling stops automatically on `completed`, `failed`, or `skipped` status.
+- 运行中/排队中：每 2 秒轮询
+- 终态（completed/failed/skipped）或超过 30 分钟：停止轮询
+- **返回**: `{ data: PipelineStatusResponse, isLoading, error }`
 
-## API Endpoints
+### `usePipelineRuns(params?)`
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/v1/pipeline/run` | POST | Start a new pipeline run |
-| `/api/v1/pipeline/runs/{id}/status` | GET | Get status for a single run |
-| `/api/v1/pipeline/runs` | GET | List all pipeline runs (paginated) |
+运行列表查询 hook。
 
-## Testing
+- 支持分页、状态筛选、搜索
+- 每 5 秒轮询更新
+- **返回**: `{ data: PipelineRunListResponse, isLoading }`
 
-Tests not yet implemented for pipeline feature. Test directory: `frontend/tests/pipeline/` (planned).
+### `usePhaseTimeline(status, t)`
 
-## Dependencies
+将 `PipelineStatusResponse` 投影为 `PhaseTimelineStep[]`，用于时间线组件渲染。
 
-| Dependency | Purpose |
-|------------|---------|
-| `@tanstack/react-query` | Data fetching, polling, mutations |
-| `react-router-dom` | Navigation (Link, useNavigate) |
-| `antd` | Card, Table, Button, Tag, Typography |
-| `lucide-react` | Icons (Activity, AlertTriangle, Inbox, etc.) |
-| `@/components/ui` | Skeleton, LivePulse, MetricTile |
-| `@/lib/hooks` | `useElapsedSeconds` |
-| `@/lib/utils` | `formatDuration`, `formatRelative` |
+## API 端点
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/pipeline/run` | 启动流水线运行 |
+| GET | `/pipeline/runs/{id}/status` | 查询运行状态 |
+| GET | `/pipeline/runs` | 列出运行历史 |
+
+## 类型
+
+- `PipelineRunRequest` — 启动请求（source_type、mode、content_base64、query 等）
+- `PipelineStatusResponse` — 运行状态（pipeline_status、phases 字典）
+- `PhaseStatus` — 阶段状态（status、duration_seconds、PhaseNode 子节点）
+- `PipelineRunSummary` — 运行历史摘要
+- `ProcessingStatus` — 状态枚举：`pending` / `running` / `completed` / `failed` / `skipped`
+- `PhaseId` — 阶段标识：`phase_1` / `phase_2` / `phase_3`

@@ -1,167 +1,142 @@
-# reconcile
+# Reconcile 双轨证据交叉校验
 
-> Deterministic cross-track reconciliation for source-grounded evidence extraction. It merges original and translated `EvidenceExtractionResult` objects, selects accepted evidence with auditable scores, and emits alignment records for traceability and cross-lingual analysis.
+> 确定性源文本定位交叉校验和上下文验证器驱动校验
 
-## Quick Start
+## 概述
+
+`reconcile` 模块实现原文轨和译文轨提取结果的交叉校验。通过对齐记录构建、候选评分和字段级决策，将双轨证据合并为单一源文本定位的最终结果。支持两种模式：纯确定性校验和上下文验证器增强校验。
+
+## 结构
+
+```
+reconcile/
+├── __init__.py        # 导出核心类型
+├── api.py             # CrossTrackReconcileService — 公共 API
+├── contracts.py       # ReconcileParams, CandidateScore, FieldDecision, ReconcileOutput
+├── core.py            # 确定性源文本定位校验
+├── contextual.py      # 上下文验证器增强校验
+├── alignment.py       # 原文/译文对齐记录构建
+└── features.py        # 候选特征向量提取（用于学习型仲裁）
+```
+
+## 核心组件
+
+### 公共 API (`api.py`)
+
+`CrossTrackReconcileService` — 双轨校验的公共门面：
 
 ```python
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.api import (
-    CrossTrackReconcileService,
-)
-
-service = CrossTrackReconcileService()
-reconciled = service.run(original_result, translated_result)
-output = service.run_with_output(original_result, translated_result, context_pack=target_context)
-print(reconciled.evidence_items)
-print(output.alignment_records)
+class CrossTrackReconcileService:
+    def __init__(self, params: ReconcileParams = ReconcileParams())
+    def run(original, translated, context_pack=None) -> EvidenceExtractionResult
+    def run_with_output(original, translated, context_pack=None) -> ReconcileOutput
 ```
 
-## Architecture
+- `context_pack=None` 时使用纯确定性校验（`reconcile_results`）
+- 提供 `context_pack` 时使用上下文验证器增强校验（`reconcile_with_context`）
+
+### 数据契约 (`contracts.py`)
+
+| 类型 | 说明 |
+|------|------|
+| `ReconcileParams` | 校验参数（`conflict_margin=0.15`） |
+| `CandidateScore` | 候选评分分解：source_score、confidence_score、agreement_score、status_score、verifier_support_score、target_specificity_score、contradiction_penalty |
+| `FieldDecision` | 字段级决策：accepted（接受项）、rejected（拒绝项）、requires_review、rationale |
+| `ReconcileOutput` | 完整校验输出：result + decisions + alignment_records |
+
+### 确定性校验 (`core.py`)
+
+`reconcile_results(original, translated, params)` — 纯规则驱动的双轨校验：
+
+- **候选构建** — 从两轨提取结果构建 `_Candidate`（含 track、normalized_value）
+- **字段决策** — 对每个字段的候选评分排序，最高分接受，其余拒绝
+- **评分体系**：
+  - `source_score` — 有源文本 > 无源文本
+  - `status_score` — FOUND > NOT_FOUND > 其他
+  - `agreement_score` — 两轨值一致时加分
+  - `conflict_margin` — 冲突边距阈值
+- **注解** — 接受项添加 `inference_basis`（"source-grounded cross-track reconcile"），拒绝项记录拒绝理由
+- **链去重** — 对结果中的 `EvidenceChain` 去重
+
+### 上下文校验 (`contextual.py`)
+
+`reconcile_with_context(original, translated, context_pack, params)` — 增强版校验：
+
+在确定性校验基础上引入 `TargetContextPack`（来自标准化实体与知识对齐模块）：
+
+- **验证器评分** (`score_candidate_support`) — 使用 `EvidenceVerificationInput` 评估候选与目标上下文的一致性
+- **目标特异性评分** — 评估候选值与目标基因/疾病的匹配度
+- **矛盾惩罚** — 验证器检测到矛盾时施加惩罚
+- **关系覆盖** — 特定条件下允许验证器覆盖关系字段
+- **疾病规范化** — 可将疾病名规范化为目标上下文的标准名称
+
+### 对齐记录 (`alignment.py`)
+
+构建字段级对齐记录，追踪原文轨和译文轨的证据一致性：
+
+- `build_alignment_records` — 逐字段比较两轨最佳证据项
+- **对齐标签** (`EvidenceAlignmentLabel`)：AGREES / PARTIAL / CONFLICT / MISSING
+- **支持标签** (`EvidenceSupportLabel`)：SUPPORTS / PARTIAL_SUPPORT / CONTRADICTS / INSUFFICIENT
+- **检测逻辑**：
+  - 关系漂移（causative ↔ protective 等）
+  - 冲突值（pathogenic ↔ benign 等）
+  - 否定丢失（一侧有否定词另一侧无）
+  - 数值漂移（定量医学值跨轨变化）
+
+### 特征提取 (`features.py`)
+
+`CandidateFeatureVector` — 为学习型仲裁器提取 21 维特征向量：
+
+- 源文本特征（source_score、has_source、source_is_exact/corrected、span_length）
+- 置信度与状态特征
+- 一致性与验证器特征（agreement_score、verifier_support_score、target_specificity_score）
+- 矛盾与字段特征
+- 交互特征（source × agreement、verifier × no_contradiction 等）
+
+## 数据流
 
 ```
-original EvidenceExtractionResult ┐
-                                  ├─ reconcile_results() ────────────→ ReconcileOutput
-                                  ├─ reconcile_with_context(context) ─→ ReconcileOutput
-translated EvidenceExtractionResult┘
-                                      │
-                                      ├─ _build_candidates()
-                                      ├─ _decide_fields()
-                                      ├─ _deduplicate_chains()
-                                      ├─ build_alignment_records()
-                                      └─ EvidenceExtractionResult(track=RECONCILED)
+EvidenceExtractionResult (原文轨)
+    +
+EvidenceExtractionResult (译文轨)
+    │
+    ▼
+build_alignment_records()
+    │  → 字段级对齐记录
+    ▼
+_decide_fields()
+    │
+    ├── 确定性模式：_score_candidate() → 源文本/状态/一致性评分
+    └── 上下文模式：_score_candidate() + 验证器评分 + 目标特异性
+    │
+    ▼
+FieldDecision (每字段: accepted + rejected)
+    │
+    ▼
+组装 EvidenceExtractionResult
+    │  → 合并接受项 + 注解 + 链去重
+    ▼
+ReconcileOutput
+    ├── result: EvidenceExtractionResult
+    ├── decisions: tuple[FieldDecision, ...]
+    └── alignment_records: tuple[EvidenceAlignmentRecord, ...]
 ```
 
-The slice is split into five layers:
-
-- `core.py` handles deterministic candidate building, scoring, and field decisions.
-- `contextual.py` adds target-context verifier scores and relationship/disease canonicalization.
-- `alignment.py` turns dual-track outputs into `EvidenceAlignmentRecord` entries.
-- `api.py` exposes the public service wrapper used by callers and tests.
-- `features.py` exposes a pure, typed feature vector for offline learned-arbitrator analysis.
-
-## Public API
-
-### `CrossTrackReconcileService`
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `__init__` | `(self, params: ReconcileParams = ReconcileParams()) -> None` | Stores reconcile tuning constants. |
-| `run` | `(self, original: EvidenceExtractionResult, translated: EvidenceExtractionResult, context_pack: TargetContextPack | None = None) -> EvidenceExtractionResult` | Reconciles both tracks and returns the merged extraction result. Uses contextual verifier reconciliation when `context_pack` is supplied. |
-| `run_with_output` | `(self, original: EvidenceExtractionResult, translated: EvidenceExtractionResult, context_pack: TargetContextPack | None = None) -> ReconcileOutput` | Reconciles both tracks and returns the merged result plus decisions and alignment records. |
-
-### `reconcile_results`
-
-| Signature | Description |
-|-----------|-------------|
-| `(original: EvidenceExtractionResult, translated: EvidenceExtractionResult, params: ReconcileParams = ReconcileParams()) -> ReconcileOutput` | Deterministically reconciles the two tracks and returns the merged result plus field decisions. |
-
-### `reconcile_with_context`
-
-| Signature | Description |
-|-----------|-------------|
-| `(original: EvidenceExtractionResult, translated: EvidenceExtractionResult, context: TargetContextPack, params: ReconcileParams = ReconcileParams()) -> ReconcileOutput` | Same reconciliation flow with target-context verifier scores and alignment records attached. |
-
-### `build_alignment_records`
-
-| Signature | Description |
-|-----------|-------------|
-| `(original: EvidenceExtractionResult, translated: EvidenceExtractionResult, *, entry_id: str = "") -> tuple[EvidenceAlignmentRecord, ...]` | Builds per-field alignment records from the best original/translated evidence items. |
-
-### `CandidateFeatureVector`
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `to_list` | `(self) -> list[float]` | Serializes the feature vector for downstream modeling. |
-| `feature_names` | `() -> tuple[str, ...]` | Returns the stable feature ordering. |
-
-### `extract_features`
-
-| Signature | Description |
-|-----------|-------------|
-| `(score: CandidateScore, item: EvidenceItem, track: Track) -> CandidateFeatureVector` | Extracts the offline arbitrator feature vector from a candidate score and evidence item. |
-
-### `ReconcileParams`
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `conflict_margin` | `float` | Margin used when deciding whether a cross-track conflict requires review. |
-
-### `ReconcileOutput`
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `result` | `EvidenceExtractionResult` | Merged reconciled output. |
-| `decisions` | `tuple[FieldDecision, ...]` | Field-level accept/reject decisions. |
-| `alignment_records` | `tuple[EvidenceAlignmentRecord, ...]` | Cross-track alignment summary. |
-
-## Internal Design
-
-`reconcile_results()` and `reconcile_with_context()` both build candidate pairs per field, score them, choose accepted evidence, and collect rejected items for review. The reconciled result preserves the original document identity, merges special evidence and normalization issues, and keeps the evidence chains deduplicated.
-
-`build_alignment_records()` compares the best original and translated items per field and labels each pair as aligned, partial, drifted, conflict, or missing. Accepted evidence is expected to have a recoverable source span and a non-drifted alignment state.
-
-`features.py` is intentionally separate from the runtime reconcile path. It turns the existing score decomposition into a fixed-order numeric vector for offline policy evaluation, without reading labels or training a model.
-
-## Usage Patterns
+## 使用
 
 ```python
-# 1. Simple reconciliation
-output = reconcile_results(original_result, translated_result)
-
-# 2. Context-aware reconciliation with target-specific verifier support
-output = reconcile_with_context(original_result, translated_result, target_context)
-
-# 3. Production facade with auditable output
-output = CrossTrackReconcileService().run_with_output(
-    original_result,
-    translated_result,
-    context_pack=target_context,
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile import (
+    CrossTrackReconcileService, ReconcileParams,
 )
 
-# 4. Inspect accepted vs rejected fields
-for decision in output.decisions:
-    print(decision.field_id, decision.accepted, decision.requires_review)
+# 确定性校验
+service = CrossTrackReconcileService(params=ReconcileParams(conflict_margin=0.15))
+result = service.run(original_result, translated_result)
 
-# 5. Export alignment records for benchmarking or production traceability
-for record in output.alignment_records:
-    print(record.field_id, record.alignment_label, record.support_label)
-
-# 6. Build offline arbitrator features
-vector = extract_features(score, evidence_item, Track.ORIGINAL)
-features = vector.to_list()
+# 上下文增强校验
+output = service.run_with_output(
+    original_result, translated_result,
+    context_pack=target_context_pack,
+)
+# output.decisions 可审计每字段决策
 ```
-
-## Extension Guide
-
-- Add new reconcile behavior in `core.py` only if it changes deterministic field selection.
-- Add new traceability metadata in `contracts.py` and surface it through `ReconcileOutput`.
-- Keep alignment-specific logic in `alignment.py`; do not mix it into the selection path.
-- Keep production context creation outside this module; pass in `TargetContextPack` so benchmark and runtime callers share the same verifier contract without sharing data sources.
-- Keep learned-policy experimentation in `features.py` or benchmark code, not in runtime reconcile.
-
-## Performance Notes
-
-- The reconcile path is deterministic and in-memory.
-- Alignment building is linear in the number of accepted evidence items.
-- Feature extraction is cheap enough to use inside benchmark loops.
-- The main cost comes from upstream extraction and verifier scoring, not from this module.
-
-## Dependencies
-
-| Dependency | Purpose |
-|------------|---------|
-| `EvidenceExtractionResult` | Input/output contract for dual-track reconciliation. |
-| `EvidenceAlignmentRecord` | Traceable cross-track alignment output. |
-| `TargetContextPack` | Target-specific verifier context for context-aware reconciliation. |
-| `CandidateScore` | Decomposed candidate score used by feature extraction. |
-
-## Testing
-
-Run the focused reconcile and benchmark tests from `backend/`:
-
-```bash
-uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/reconcile -v
-uv run pytest tests/benchmark/layer3 -v
-```
-
-The current suite covers deterministic field selection, contextual verifier overrides, alignment labeling, traceability gates, and feature-vector extraction.

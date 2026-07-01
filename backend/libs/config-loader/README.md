@@ -1,60 +1,60 @@
 # acmg-config-loader
 
-Shared layered YAML configuration loader used by backend services and inference services. Loads configuration files in order of increasing specificity, then flattens nested keys into uppercase environment variables. Existing environment variables always win (never overwritten).
+> 纯 Python 分层 YAML 配置加载器，供后端服务和推理服务共享使用。
 
-## Loading Order
+## 概览
 
-1. `backend/config/defaults/main.yaml` -- base defaults
-2. `backend/config/environments/<env>.yaml` -- environment overrides (`ENVIRONMENT` env var, defaults to `development`)
-3. `backend/config/vault/<env>.yaml` -- secrets (git-ignored)
+`acmg-config-loader` 从 `backend/config` 目录按层级加载 YAML 配置文件，合并后将缺失的键注入环境变量。加载顺序为：
 
-Each layer is deep-merged on top of the previous one.
+1. `defaults/main.yaml` — 全局默认值
+2. `environments/<env>.yaml` — 环境特定覆盖（`env` 取自 `ENVIRONMENT` 环境变量，默认 `development`）
+3. `vault/<env>.yaml` — 敏感配置覆盖
 
-## Usage
+已存在的环境变量**不会被覆盖**（环境变量优先级最高）。
+
+## 公开 API
+
+| 函数/类型 | 签名 | 说明 |
+|-----------|------|------|
+| `load_backend_config_into_env` | `(backend_root: Path, environ: MutableMapping[str, str] \| None = None) -> None` | 加载分层 YAML 配置并注入环境变量 |
+| `ConfigData` | `TypeAlias = dict[str, Any]` | 配置数据类型别名 |
+
+### 内部函数
+
+| 函数 | 说明 |
+|------|------|
+| `_deep_merge(base, override)` | 递归合并嵌套字典，override 覆盖 base |
+| `_flatten_and_set_env(data, environ, prefix)` | 将嵌套键展平为大写环境变量名（`SECTION_KEY`），仅设置不存在的键 |
+
+## 架构
+
+```
+acmg_config_loader/
+├── __init__.py     # 导出 ConfigData、load_backend_config_into_env
+└── loader.py       # 核心加载逻辑
+```
+
+- 使用 `yaml.safe_load` 安全解析 YAML
+- 嵌套键通过 `_` 连接并转大写（如 `database.host` → `DATABASE_HOST`）
+- 列表值自动序列化为 JSON 字符串
+- 依赖 `pyyaml`，导入失败时静默返回
+
+## 使用示例
 
 ```python
 from pathlib import Path
 from acmg_config_loader import load_backend_config_into_env
 
+# 加载配置到 os.environ
 load_backend_config_into_env(Path("/path/to/backend"))
-# Now all config values are available as uppercase env vars
+
+import os
+print(os.environ.get("DATABASE_HOST"))
 ```
 
-The function accepts an optional `environ` dict for testing; defaults to `os.environ`.
+## 依赖
 
-## Consumers
-
-- `backend/` (FastAPI app)
-- `services/` (inference microservices)
-
-## Dependencies
-
-Pure stdlib + PyYAML -- no FastAPI / Pydantic / vLLM dependency.
-
-| Dependency | Version |
-|------------|---------|
-| `pyyaml` | `>=6.0.0` |
-
-## Development
-
-```bash
-cd libs/config-loader
-uv pip install -e ".[dev]"
-uv run pytest
-```
-
-## Structure
-
-```
-libs/config-loader/
-├── src/
-│   └── acmg_config_loader/
-│       ├── __init__.py          # Public API: ConfigData, load_backend_config_into_env
-│       └── loader.py            # Implementation: deep merge + env var flattening
-├── tests/
-│   ├── conftest.py
-│   └── test_loader_isolated.py
-├── pyproject.toml
-├── uv.lock
-└── .gitignore
-```
+| 依赖 | 版本 | 说明 |
+|------|------|------|
+| `pyyaml` | `>=6.0.0` | YAML 解析 |
+| `pytest` | `>=8.2.0` | 开发依赖（dev） |

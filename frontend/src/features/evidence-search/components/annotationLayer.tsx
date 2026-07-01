@@ -10,8 +10,8 @@
  * and structurally decoupled from evidence-highlight DOM wrapping — overlays
  * are absolutely positioned divs, so they never conflict with `<mark>` splits.
  */
-import { useEffect, useLayoutEffect, useState } from "react";
-import { Input, Button, Popover, Tooltip, Dropdown, message } from "antd";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Input, Button, Popover, Tooltip, Select, message } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import {
   ANNOTATION_COLORS,
@@ -19,6 +19,7 @@ import {
   type AnnotationTrack,
   type UserAnnotation,
 } from "../types/annotations";
+import { CATEGORY_COLORS } from "../utils/evidenceDocument";
 
 interface TextNodeOffset {
   node: Text;
@@ -146,6 +147,13 @@ function selectionInContainer(container: HTMLElement): SelectionInfo | null {
   };
 }
 
+/** A field type option for the "Assign to field" dropdown. */
+export interface FieldTypeOption {
+  fieldId: string;
+  label: string;
+  category?: string | null;
+}
+
 export interface AnnotationLayerProps {
   /** Ref to the container whose visible text the annotations anchor to. */
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -174,7 +182,7 @@ export interface AnnotationLayerProps {
    */
   onAssignField?: (selectedText: string, fieldType: string) => void;
   /** Available field types for the "Assign to field" dropdown. */
-  fieldTypes?: string[];
+  fieldTypes?: FieldTypeOption[];
 }
 
 export function AnnotationLayer({
@@ -192,6 +200,7 @@ export function AnnotationLayer({
   const [overlays, setOverlays] = useState<OverlayRect[]>([]);
   const [selection, setSelection] = useState<SelectionInfo | null>(null);
   const [activeAnnotationId, setActiveAnnotationId] = useState<string | null>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     const el = containerRef.current;
@@ -217,13 +226,16 @@ export function AnnotationLayer({
     if (!onCreateAnnotation && !onAssignField) return;
     const el = containerRef.current;
     if (!el) return;
-
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Ignore clicks inside the selection popup, antd portals, or reviewable marks
+      if (popupRef.current?.contains(target)) return;
+      if (target.closest?.(".ant-select-dropdown")) return;
+      if (target.closest?.("[data-reviewable]")) return;
       requestAnimationFrame(() => {
         setSelection(selectionInContainer(el));
       });
     };
-
     document.addEventListener("mouseup", handleMouseUp);
     return () => document.removeEventListener("mouseup", handleMouseUp);
   }, [containerRef, onCreateAnnotation, onAssignField]);
@@ -277,6 +289,8 @@ export function AnnotationLayer({
 
       {selection && (onCreateAnnotation || onAssignField) && (
         <div
+          ref={popupRef}
+          onMouseDown={(e) => e.stopPropagation()}
           style={{
             position: "fixed",
             top: Math.max(8, selection.rect.top - 48),
@@ -314,21 +328,42 @@ export function AnnotationLayer({
             <div style={{ width: 1, height: 20, background: "var(--color-border)", margin: "0 2px" }} />
           )}
           {onAssignField && fieldTypes.length > 0 && (
-            <Dropdown
-              menu={{
-                items: fieldTypes.map((ft) => ({ key: ft, label: ft })),
-                onClick: ({ key }) => {
-                  onAssignField(selection.selectedText, key);
-                  window.getSelection()?.removeAllRanges();
-                  setSelection(null);
-                },
+            <Select
+              showSearch
+              placeholder="+ 字段"
+              size="small"
+              style={{ width: 160, fontSize: 11 }}
+              popupMatchSelectWidth={260}
+              optionFilterProp="label"
+              onChange={(value: string) => {
+                onAssignField(selection.selectedText, value);
+                window.getSelection()?.removeAllRanges();
+                setSelection(null);
               }}
-              trigger={["click"]}
-            >
-              <Button size="small" style={{ fontSize: 11, height: 22, padding: "0 8px" }}>
-                + 字段
-              </Button>
-            </Dropdown>
+              options={fieldTypes.map((ft) => {
+                const hex = ft.category && CATEGORY_COLORS[ft.category]?.hex;
+                return {
+                  value: ft.fieldId,
+                  label: (
+                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      {hex && (
+                        <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: hex, flexShrink: 0 }} />
+                      )}
+                      <span style={{ fontWeight: 500 }}>{ft.label}</span>
+                      <span style={{ fontSize: 10, color: "var(--color-text-muted)", fontFamily: "var(--font-mono)" }}>
+                        {ft.fieldId}
+                      </span>
+                    </span>
+                  ),
+                };
+              })}
+              filterOption={(input, option) => {
+                const ft = fieldTypes.find((f) => f.fieldId === option?.value);
+                if (!ft) return false;
+                const search = `${ft.label} ${ft.fieldId} ${ft.category ?? ""}`.toLowerCase();
+                return search.includes(input.toLowerCase());
+              }}
+            />
           )}
         </div>
       )}

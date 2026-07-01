@@ -38,6 +38,22 @@ def test_validate_good_translation():
     validate_translation_output(source, translated)
 
 
+def test_validate_rejects_compressed_long_translation():
+    source = (
+        "患儿男，5月龄，因间断咳嗽半月余入院。患儿住院期间自主呼吸障碍显著，"
+        "予以呼吸机辅助呼吸、对症综合治疗后情况好转出院。半年后因发热、咳嗽、"
+        "气促再次入院。基因检测发现MECP2基因存在c.194delC半合突变，父母该位点均无异常。"
+        "结合临床表现，最终确诊为先天型Rett综合征。"
+    ) * 6
+    translated = (
+        "This case report describes a boy with Rett syndrome caused by a novel "
+        "MECP2 mutation and highlights the importance of genetic testing."
+    )
+
+    with pytest.raises(ValueError, match="incomplete_translation"):
+        validate_translation_output(source, translated)
+
+
 def test_summarize_validation_error():
     exc = ValueError("translation_validation_failed: empty")
     summary = summarize_validation_error(exc)
@@ -84,6 +100,18 @@ def test_validate_segment_good():
     translated = "The patient carries a novel BRCA1 variant."
     # Should not raise
     validate_segment(source, translated)
+
+
+def test_validate_segment_rejects_compressed_long_source():
+    source = (
+        "患儿住院期间自主呼吸障碍显著，语言能力丧失，手部技能丧失并出现刻板动作，"
+        "生长发育迟滞。二代基因检测发现MECP2基因存在c.194delC半合突变，"
+        "此突变尚未见文献报道，其父母该位点均无变异。"
+    ) * 4
+    translated = "The patient had Rett syndrome caused by a novel MECP2 mutation."
+
+    with pytest.raises(ValueError, match="incomplete_translation"):
+        validate_segment(source, translated)
 
 
 def test_validate_segment_short_english():

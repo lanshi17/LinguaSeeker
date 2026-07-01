@@ -1,41 +1,39 @@
-# Layer 3 Evaluation -- ClinGen Ground Truth
+# Layer 3 Evaluation — ClinGen Ground Truth
 
-> **Status: DEPRECATED SHIM.** This package (`benchmark/layer3/`) contains only
-> backward-compatible import shims after the 2026-06-18 framework refactor.
-> All substantive code now lives in `benchmark.core`, `benchmark.datasets`,
-> `benchmark.runners`, and `benchmark.analysis`. The shims will be removed in
-> Phase 6 of the refactor.
+> **状态：已弃用垫片。** 本包（`benchmark/layer3/`）仅包含 2026-06-18 框架重构后的向后兼容导入垫片。所有实质代码已移至 `benchmark.core`、`benchmark.datasets`、`benchmark.runners` 和 `benchmark.analysis`。垫片将在重构 Phase 6 移除。
 
-Automated evaluation of pipeline evidence extraction accuracy against ClinGen gene-disease validity curation data.
+## 概述
 
-## New Module Locations
+基于 ClinGen 基因-疾病有效性审查数据的管线证据提取准确率自动评估。原始代码已拆分到多个规范包中。
 
-| Old path | New path | Role |
-|----------|----------|------|
-| `benchmark.layer3.evaluate` | `benchmark.core` | Matching algorithms, contracts, aggregate metrics, pipeline client |
-| `benchmark.layer3.mondo_hierarchy` | `benchmark.core.mondo_hierarchy` | MONDO ontology hierarchy for ancestry matching |
-| `benchmark.layer3.select_entries` | `benchmark.datasets.clingen.select_entries` | Entry selection from ClinGen CSV |
-| `benchmark.layer3.fetch_literature` | `benchmark.datasets.clingen.fetch_literature` | EuropePMC literature search |
-| `benchmark.layer3.download_pdfs` | `benchmark.datasets.clingen.download_pdfs` | PMC full-text download + JATS-to-markdown |
-| `benchmark.layer3.generate_ground_truth` | `benchmark.datasets.clingen.generate_ground_truth` | Ground truth JSON generation |
-| `benchmark.layer3.visualize` | `benchmark.datasets.clingen.visualize` | Matplotlib charts and HTML report |
-| `benchmark.layer3.preprocess` | `benchmark.runners.clingen_preprocess` | Phase 1+2 preprocessing + caching |
-| `benchmark.layer3.baselines` | `benchmark.analysis.baselines` | LLM baseline strategies and sweep |
-| `benchmark.layer3.clinvar_fused` | `benchmark.datasets.clinvar_fused` | ClinVar fused dataset pipeline |
+## 新模块位置
 
-## Files
+| 旧路径 | 新路径 | 角色 |
+|--------|--------|------|
+| `benchmark.layer3.evaluate` | `benchmark.core` | 匹配算法、contracts、聚合指标、管线客户端 |
+| `benchmark.layer3.mondo_hierarchy` | `benchmark.core.mondo_hierarchy` | MONDO 本体层次用于祖先匹配 |
+| `benchmark.layer3.select_entries` | `benchmark.datasets.clingen.select_entries` | ClinGen CSV 条目选择 |
+| `benchmark.layer3.fetch_literature` | `benchmark.datasets.clingen.fetch_literature` | EuropePMC 文献搜索 |
+| `benchmark.layer3.download_pdfs` | `benchmark.datasets.clingen.download_pdfs` | PMC 全文下载 + JATS-to-markdown |
+| `benchmark.layer3.generate_ground_truth` | `benchmark.datasets.clingen.generate_ground_truth` | 真值 JSON 生成 |
+| `benchmark.layer3.visualize` | `benchmark.datasets.clingen.visualize` | Matplotlib 图表和 HTML 报告 |
+| `benchmark.layer3.preprocess` | `benchmark.runners.clingen_preprocess` | Phase 1+2 预处理 + 缓存 |
+| `benchmark.layer3.baselines` | `benchmark.analysis.baselines` | LLM 基线策略和扫描 |
+| `benchmark.layer3.clinvar_fused` | `benchmark.datasets.clinvar_fused` | ClinVar 融合数据集管线 |
 
-| File | Purpose |
-|------|---------|
-| `__init__.py` | Deprecated shim: lazy `__getattr__` redirects to new locations |
-| `evaluate.py` | Deprecated shim: re-exports all public symbols from `benchmark.core` |
-| `mondo_hierarchy.py` | Deprecated shim: redirects to `benchmark.core.mondo_hierarchy` |
-| `analysis/` | Deprecated shim package: redirects to `benchmark.analysis.*` subgroups |
-| `baselines/` | Contains `__init__.py` (legacy package marker) |
-| `clinvar_fused/` | Contains `__init__.py` + `pdf_generation.log` + `translation*.log` |
-| `ground_truth/` | Ground truth data: `clingen_000..029` entries + `rett/` |
+## 文件
 
-## Stable Imports (use these)
+| 文件 | 用途 |
+|------|------|
+| `__init__.py` | 已弃用垫片：lazy `__getattr__` 重定向到新位置 |
+| `evaluate.py` | 已弃用垫片：从 `benchmark.core` 重新导出所有公共符号 |
+| `mondo_hierarchy.py` | 已弃用垫片：重定向到 `benchmark.core.mondo_hierarchy` |
+| `analysis/` | 已弃用垫片包：重定向到 `benchmark.analysis.*` 子组 |
+| `baselines/` | 包含 `__init__.py`（遗留包标记） |
+| `clinvar_fused/` | 包含 `__init__.py` + 日志文件 |
+| `ground_truth/` | 真值数据：`clingen_000..029` 条目 + `rett/` |
+
+## 规范导入
 
 ```python
 from benchmark.core import (
@@ -46,95 +44,52 @@ from benchmark.core import (
 )
 ```
 
-The deprecated `benchmark.layer3.*` shims still work but emit `DeprecationWarning`.
+已弃用的 `benchmark.layer3.*` 垫片仍然有效但会发出 `DeprecationWarning`。
 
-## Data Layout
+## 核心 API
 
-Ground truth and reports are under `benchmark/data/`:
+### `compare_evidence`（`benchmark.core.matching`）
 
-```
-benchmark/data/
-  ground_truth/
-    clingen/           # 30 entries: clingen_000..clingen_029 + selection.json
-    clinvar_fused/     # ClinVar fused entries
-    rett/              # Rett syndrome entries
-  reports/
-    eval/              # Evaluation JSON reports
-    reconcile/         # Reconcile ablations & case studies
-    baseline/          # LLM baseline reports & summary tables
-    traceability/      # Traceability metric reports
-    benchmark_b/       # Multilingual pilot Phase 2 outputs
-    curation/          # Dataset curation / readiness / inventory
-    paper/             # Paper-specific tables & rescue manifests
-    diagnostics/       # diagnose_* outputs
-    clinvar_fused/     # Fused-dataset eval reports
-    pipeline_e2e/      # HTTP pipeline benchmark runs
-```
+核心比较逻辑。对每个期望字段：查找匹配 `field_id` 且 `status="found"` 的提取候选 → 模糊匹配每个候选 → 选择最佳（exact > fuzzy > ontology_ancestor）→ 疾病字段回退到 MONDO 祖先。
 
-Path constants are centralized in `benchmark.core.paths`:
+### `FieldMatch` / `EntryMetrics`（`benchmark.core.contracts`）
 
-```python
-from benchmark.core.paths import GROUND_TRUTH_ROOT, REPORTS_ROOT, BENCHMARK_ROOT, RAW_PDF_ROOT
-```
+`FieldMatch`：`field_id`、`expected_value`、`matched`、`match_type`（exact/fuzzy/ontology_ancestor/missing/wrong_value）。
+`EntryMetrics`：`entry_id`、`gene_symbol`、`classification`、`field_matches`、`found_rate`、`grounding_rate`。
 
-## Key APIs
+### `compute_aggregate_metrics`（`benchmark.core.aggregate`）
 
-### `compare_evidence` (`benchmark.core.matching`)
+返回嵌套字典：`overall`（P/R/F1 + 过度提取）、`by_field`、`by_classification`、`by_moi`、`by_entity_type`。
 
-Core comparison logic. For each expected field:
-1. Finds extracted candidates with matching `field_id` and `status="found"`
-2. Fuzzy-matches each candidate; picks best (exact > fuzzy > ontology_ancestor)
-3. Falls back to MONDO ancestry for disease fields
-4. Tracks `extra_found_values` (over-extractions)
+## 真值选择
 
-### `FieldMatch` (`benchmark.core.contracts`)
+30 条 ClinGen Gene-Disease Summary CSV 条目：
 
-Dataclass with: `field_id`, `expected_value`, `matched`, `extracted_value`, `match_type` (exact/fuzzy/ontology_ancestor/missing/wrong_value), `extra_found_values`, scoring fields.
+| 分类 | 数量 | MOI 覆盖 |
+|------|------|---------|
+| Definitive | 10 | AD、AR、XL、MT、SD |
+| Strong | 5 | AD、AR、XL |
+| Moderate | 5 | AD、AR、XL |
+| Limited | 5 | AD、AR、XL |
+| Refuted | 3 | AD、AR |
+| Disputed | 2 | AD、XL |
 
-### `EntryMetrics` (`benchmark.core.contracts`)
-
-Dataclass with: `entry_id`, `gene_symbol`, `classification`, `pipeline_status`, `field_matches`, `entity_matches`, `standardization_accuracy`, `track_consistency`, `found_rate`, `grounding_rate`.
-
-### `compute_aggregate_metrics` (`benchmark.core.aggregate`)
-
-Returns nested dict with `overall` (P/R/F1 + over-extractions), `by_field`, `by_classification`, `by_moi`, `by_entity_type`.
-
-### `MondoHierarchy` (`benchmark.core.mondo_hierarchy`)
-
-Parses MONDO ontology (OBO Graph JSON) for disease ancestry checking.
-
-## Ground Truth Selection
-
-30 entries from ClinGen Gene-Disease Summary CSV:
-
-| Classification | Count | MOI Coverage |
-|----------------|-------|-------------|
-| Definitive | 10 | AD, AR, XL, MT, SD |
-| Strong | 5 | AD, AR, XL |
-| Moderate | 5 | AD, AR, XL |
-| Limited | 5 | AD, AR, XL |
-| Refuted | 3 | AD, AR |
-| Disputed | 2 | AD, XL |
-
-## Usage
+## 使用方法
 
 ```bash
 cd backend
 
-# Evaluate all 30 entries
+# 评估所有 30 条目
 uv run python -m benchmark.layer3.evaluate --base-url http://localhost:8000 --concurrency 2
 
-# Specific entries
+# 特定条目
 uv run python -m benchmark.layer3.evaluate --entries clingen_000 clingen_001
 
-# Preprocess for fast re-evaluation
+# 预处理以快速重新评估
 uv run python -m benchmark.runners.clingen_preprocess --entries clingen_000 clingen_001
-
-# Generate visualization
-uv run python -m benchmark.datasets.clingen.visualize
 ```
 
-## Testing
+## 测试
 
 ```bash
 cd backend

@@ -49,6 +49,13 @@ def mock_translator():
 
     # Mock invoke_json_with_retry to return valid JSON (used by _translate_one_segment)
     async def _async_json_invoke(llm, prompt, stage, system_prompt=""):
+        if stage.startswith("translate/"):
+            marker = "[TRANSLATE THIS SEGMENT]\n"
+            if marker in prompt:
+                source_segment = prompt.split(marker, 1)[1].split("\n\nReturn a JSON object", 1)[0]
+                repeat_count = max(1, len(source_segment) // 25)
+                translation = ("This is translated test text. " * repeat_count).strip()
+                return f'{{"translation": "{translation}"}}'
         return f'{{"translation": "result_for_{stage}"}}'
 
     mock_json_invoke = AsyncMock(side_effect=_async_json_invoke)

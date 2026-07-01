@@ -1,137 +1,161 @@
-# API v1 Routes
+# API V1
 
-> REST endpoint definitions for LinguaSeeker's v1 API. All routes are mounted under `/api/v1` and delegate to the orchestrator or Phase 4 services via injected dependencies.
+> V1 REST API 路由——管线编排、证据审核、聊天、标注、审计和溯源接口。
 
-## Route Map
+## Overview
+
+`v1/` 包含 Lingua Seeker 后端 V1 版本的所有 REST API 路由。路由前缀为 `/api/v1`，通过 `router.py` 聚合后注册到主应用。每个路由模块对应一个业务域。
+
+## Structure
 
 ```
-/api/v1
-├── /auth
-│   ├── POST   /login                                   # Validate password, set signed session cookie
-│   ├── POST   /logout                                  # Delete session cookie
-│   └── GET    /me                                      # Check session cookie validity
-├── /pipeline
-│   ├── POST   /run                                     # Start a pipeline run
-│   ├── GET    /runs                                    # List pipeline run summaries (paginated)
-│   └── GET    /runs/{processing_run_id}/status          # Poll run status
-├── /evidence
-│   ├── GET    /groups/detail                            # Evidence group detail with distribution
-│   ├── PATCH  /{canonical_evidence_id}                  # Patch evidence card (Phase 4)
-│   ├── GET    /search                                   # Search evidence cards with pagination
-│   ├── GET    /literature/search                        # Search literature profiles
-│   ├── GET    /literature/{source_document_id}/detail    # Full literature profile detail
-│   └── POST   /literature/refresh                       # Refresh all literature profiles (admin)
-├── /delta-audit
-│   └── GET    /                                         # List audit events with filters
-├── /source-link
-│   ├── GET    /{canonical_evidence_id}/bilingual         # Bilingual traceability span
-│   └── GET    /{canonical_evidence_id}/{track}           # Single-track source span
-├── /chat
-│   ├── POST   /sessions                                 # Create chat session
-│   ├── GET    /sessions/{processing_run_id}              # List sessions for a run
-│   ├── GET    /sessions/{session_id}/messages            # List messages
-│   ├── POST   /sessions/{session_id}/messages            # Append message (auto-reply)
-│   └── GET    /sessions/{session_id}/stream              # SSE streaming reply
-└── /documents
-    ├── GET    /{source_document_id}/annotations          # List annotations for a document
-    ├── POST   /{source_document_id}/annotations          # Create annotation
-    ├── PATCH  /{source_document_id}/annotations/{id}     # Update annotation (color, note)
-    └── DELETE /{source_document_id}/annotations/{id}     # Delete annotation
+v1/
+├── router.py            # 路由聚合器（注册所有子路由到 /api/v1）
+├── pipeline.py          # 管线编排路由（/api/v1/pipeline/*）
+├── evidence.py          # 证据审核路由（/api/v1/evidence/*）
+├── chat.py              # 聊天路由（/api/v1/chat/*）
+├── annotations.py       # 文档标注 CRUD（/api/v1/documents/*）
+├── delta_audit.py       # 审计事件查询（/api/v1/delta-audit/*）
+├── source_link.py       # 证据溯源路由（/api/v1/source-link/*）
+├── auth.py              # 会话认证路由（/api/v1/auth/*）
+├── contracts.py         # Pydantic 请求/响应模型
+└── __init__.py
 ```
 
-## Public API
+## Key Components
 
-### Auth Routes (`auth.py`)
+### `router.py` — 路由聚合
 
-| Endpoint | Method | Request | Response | Description |
-|----------|--------|---------|----------|-------------|
-| `/auth/login` | POST | `LoginRequest` (`password: str`) | `LoginResponse` | Validate admin password against `API_KEY`, set HMAC-signed `ce_session` HttpOnly cookie (8-hour TTL). Returns 401 on invalid credentials, 500 if auth not configured. |
-| `/auth/logout` | POST | -- | `LogoutResponse` | Delete the session cookie. |
-| `/auth/me` | GET | -- | `AuthMeResponse` | Return `authenticated: true/false` based on session cookie validity. |
+```python
+router = APIRouter(prefix="/api/v1")
+router.include_router(pipeline.router, prefix="/pipeline", tags=["pipeline"])
+router.include_router(evidence.router, prefix="/evidence", tags=["evidence"])
+router.include_router(delta_audit.router, prefix="/delta-audit", tags=["delta-audit"])
+router.include_router(source_link.router, prefix="/source-link", tags=["source-link"])
+router.include_router(chat.router, prefix="/chat", tags=["chat"])
+router.include_router(auth.router, prefix="/auth", tags=["auth"])
+router.include_router(annotations.router, prefix="/documents", tags=["annotations"])
+```
 
-### Pipeline Routes (`pipeline.py`)
+### `pipeline.py` — 管线编排路由
 
-| Endpoint | Method | Request | Response | Description |
-|----------|--------|---------|----------|-------------|
-| `/pipeline/run` | POST | `PipelineRunRequest` | `PipelineRunResponse` (202) | Start async pipeline run. Rate-limited to 10/min. Returns immediately with `processing_run_id`. Checks for duplicate in-progress runs (409). Checks L1/L2 processing cache for identical content hash (returns `status: "cached"` on hit). |
-| `/pipeline/runs` | GET | Query: `limit`, `offset`, `status`, `search` | `PipelineRunListResponse` | List pipeline run summaries (newest first) with optional status filter and substring search. |
-| `/pipeline/runs/{id}/status` | GET | -- | `PipelineStatusResponse` | Poll pipeline status with per-phase details. Checks memory cache first, then PostgreSQL. |
+| 端点 | 方法 | 说明 | 限流 |
+|------|------|------|------|
+| `/pipeline/run` | POST | 提交管线运行任务（入队到 job queue） | 10/分钟 |
+| `/pipeline/runs` | GET | 列出所有运行摘要（分页） | — |
+| `/pipeline/runs/{id}/status` | GET | 查询运行状态和各阶段详情 | — |
+| `/pipeline/runs/{id}/state` | GET | 获取完整管线状态 | — |
+| `/pipeline/runs/{id}/cancel` | POST | 取消运行中的管线 | 5/分钟 |
+| `/pipeline/runs/{id}/rerun` | POST | 重跑指定阶段 | 5/分钟 |
 
-#### `PipelineRunRequest`
+支持 `PipelineRunRequest` 配置：文档来源（本地文件/在线标识符）、运行模式（全流程/单阶段）、提取目标、文献类型等。
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `source_type` | `"local" \| "online"` | required | Document source |
-| `mode` | `"full" \| "phase"` | `"full"` | Run all phases or a single phase |
-| `target_phase` | `int \| None` | `None` | Phase 1--3 (required when `mode="phase"`) |
-| `processing_run_id` | `str \| None` | `None` | Existing run ID for phase mode re-run (required when `target_phase > 1`) |
-| `filename` | `str \| None` | `None` | Original filename (local upload) |
-| `content_base64` | `str \| None` | `None` | Base64-encoded file content (local upload) |
-| `pre_parsed_markdown` | `str \| None` | `None` | Pre-parsed markdown to bypass MinerU parsing (local upload) |
-| `query` | `str \| None` | `None` | Search query (online) |
-| `identifiers` | `list[str] \| None` | `None` | DOI/PMID/PMCID (online) |
-| `relevance_gate` | `bool` | `true` | Enable relevance gate for online acquisition |
-| `literature_types` | `list[str] \| None` | `None` | Document type filter for typed classification path |
-| `target` / `extraction_target` | `ExtractionTarget \| None` | `None` | Target gene-disease hypothesis for Phase 2/3 |
+### `evidence.py` — 证据审核路由
 
-### Evidence Routes (`evidence.py`)
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/evidence/groups/detail` | GET | 分组证据详情（含分布和溯源） |
+| `/evidence/{id}` | PATCH | 更新证据卡片并记录审计事件 |
+| `/evidence/search` | GET | 证据搜索（字段级透视和分页） |
+| `/evidence/literature/search` | GET | 文献档案搜索（按文章聚合） |
+| `/evidence/literature/{id}` | GET | 文献档案详情 |
+| `/evidence/literature/refresh` | POST | 刷新所有文献档案（管理员） |
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/evidence/groups/detail` | GET | Return evidence group detail with distribution and traceability. Query params: `group_id`, `source_document_id` (at least one required). |
-| `/evidence/{id}` | PATCH | Apply expert feedback patch to a canonical evidence card. Rate-limited to 30/min. Returns `PatchResult`. |
-| `/evidence/search` | GET | Search evidence cards with field-level pivoting and pagination. Filters: `gene`, `variant`, `disease`, `pmid`, `doi`, `page`, `page_size`. |
-| `/evidence/literature/search` | GET | Search literature profiles with per-article aggregation. Same filter params as evidence search. |
-| `/evidence/literature/{source_document_id}/detail` | GET | Return full literature profile with all evidence groups. |
-| `/evidence/literature/refresh` | POST | Refresh all literature profiles from canonical evidence. Admin endpoint, rate-limited to 5/min. |
+### `chat.py` — 聊天路由
 
-### Chat Routes (`chat.py`)
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/chat/sessions` | POST | 创建聊天会话 |
+| `/chat/sessions/{id}` | GET | 列出处理运行的所有会话 |
+| `/chat/sessions/{id}/messages` | GET | 列出会话消息 |
+| `/chat/sessions/{id}/messages` | POST | 追加消息（支持自动回复） |
+| `/chat/sessions/{id}/stream` | GET | SSE 流式 AI 回复（15 秒心跳） |
+| `/chat/files/parse` | POST | 解析上传的 PDF（聊天上下文） |
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/chat/sessions` | POST | Create a new chat session bound to a processing run. Rate-limited to 30/min. |
-| `/chat/sessions/{run_id}` | GET | List all chat sessions for a processing run. |
-| `/chat/sessions/{sid}/messages` | GET | List messages in a session. Query param: `limit` (default 100). |
-| `/chat/sessions/{sid}/messages` | POST | Append message; optionally auto-generates AI reply when `auto_reply=true`. Rate-limited to 60/min. |
-| `/chat/sessions/{sid}/stream` | GET | SSE streaming AI reply with 15s keepalive heartbeat. Rate-limited to 10/min. |
+### `annotations.py` — 文档标注 CRUD
 
-### Delta Audit Routes (`delta_audit.py`)
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/documents/{id}/annotations` | GET | 列出文档标注（可按 track 过滤） |
+| `/documents/{id}/annotations` | POST | 创建标注 |
+| `/documents/{id}/annotations/{id}` | PATCH | 更新标注（颜色、备注） |
+| `/documents/{id}/annotations/{id}` | DELETE | 删除标注 |
+| `/documents/{id}/images/{name}` | GET | 提供文档提取的图片 |
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/delta-audit` | GET | List review audit events. Filters: `canonical_evidence_id`, `source_document_id`, `reviewer_id`, `limit` (1--1000, default 100). |
+### `delta_audit.py` — 审计事件
 
-### Source Link Routes (`source_link.py`)
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/delta-audit/` | GET | 列出审核审计事件（可按证据/文档/审核人过滤） |
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/source-link/{id}/bilingual` | GET | Retrieve bilingual (original + translated) traceability span |
-| `/source-link/{id}/{track}` | GET | Retrieve source span for one track (`original` or `translated`). Returns null if no span exists. |
+### `source_link.py` — 证据溯源
 
-### Document Annotation Routes (`annotations.py`)
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/source-link/{id}/bilingual` | GET | 双语溯源文本跨度 |
+| `/source-link/{id}/{track}` | GET | 单轨道溯源（原文/译文） |
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/documents/{doc_id}/annotations` | GET | List annotations for a document. Optional query param: `track` (original/translated). |
-| `/documents/{doc_id}/annotations` | POST | Create a new annotation. Fields: `track`, `paragraph_id`, `start_offset`, `end_offset`, `color`, `note`, `author`. Returns 201. |
-| `/documents/{doc_id}/annotations/{annotation_id}` | PATCH | Update mutable fields (`color`, `note`) of an annotation. Returns 404 if annotation does not belong to the document. |
-| `/documents/{doc_id}/annotations/{annotation_id}` | DELETE | Delete an annotation. Returns 204 on success, 404 if not found. |
+### `auth.py` — 会话认证
 
-## Internal Design
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/auth/login` | POST | 密码登录，设置签名会话 Cookie |
+| `/auth/logout` | POST | 删除会话 Cookie |
+| `/auth/me` | GET | 查询当前认证状态 |
 
-- Pipeline routes manage a global `_pipeline_runner` singleton set during app startup via `set_pipeline_runner()`.
-- Phase 4 routes use `get_phase4_factory()` to create per-request service instances with fresh DB sessions.
-- All routes are thin -- validation via Pydantic models, error handling via `HTTPException`, zero business logic.
-- Duplicate run prevention: `POST /pipeline/run` checks `runner.is_running_for_source()` and returns 409 if a run is already in progress for the same source key.
-- Processing cache: `POST /pipeline/run` computes a content hash and checks L1/L2 cache; returns cached result immediately if identical document was already processed.
-- Upload path traversal prevention: filenames are sanitized via `PurePosixPath.name` to strip directory components.
-- File size enforcement: base64 content is checked against `mineru.max_file_size_mb` before decoding.
-- All routes are protected by `require_api_key` dependency (disabled when no API key is configured).
-- Rate limits are enforced via the `@limiter.limit()` decorator using the shared slowapi singleton.
+### `contracts.py` — 请求/响应模型
 
-## Testing
+核心 Pydantic 模型：
+
+| 模型 | 用途 |
+|------|------|
+| `PipelineRunRequest` | 管线运行请求（文档来源、模式、提取目标） |
+| `PipelineRunResponse` | 运行提交响应（run_id、status_url） |
+| `PipelineStatusResponse` | 状态查询响应（含各阶段详情） |
+| `PipelineRunListResponse` | 运行列表响应（分页） |
+| `PhaseStatusResponse` | 单阶段状态详情 |
+| `PhaseNodeResponse` | 细粒度子节点进度 |
+
+## Usage / Patterns
+
+### 认证
+
+所有写操作和状态查询需要认证（API Key 或会话 Cookie）：
 
 ```bash
-cd backend
-uv run pytest tests/api/ -v
+# API Key 方式
+curl -H "X-API-Key: your-key" http://localhost:8000/api/v1/pipeline/runs
+
+# 会话 Cookie 方式
+curl -c cookies.txt -X POST http://localhost:8000/api/v1/auth/login \
+  -d '{"password": "your-password"}'
+curl -b cookies.txt http://localhost:8000/api/v1/pipeline/runs
 ```
+
+### 提交管线运行
+
+```bash
+curl -X POST -H "X-API-Key: your-key" \
+  -H "Content-Type: application/json" \
+  -d '{"local_path": "/path/to/paper.pdf"}' \
+  http://localhost:8000/api/v1/pipeline/run
+```
+
+### 查询状态
+
+```bash
+curl -H "X-API-Key: your-key" \
+  http://localhost:8000/api/v1/pipeline/runs/{run_id}/status
+```
+
+## Dependencies
+
+| 依赖 | 用途 |
+|------|------|
+| FastAPI | 路由和依赖注入 |
+| `src.api.auth` | 认证依赖 |
+| `src.api.deps` | 数据库会话和 Phase4 工厂 |
+| `src.api.rate_limit` | 限流装饰器 |
+| `src.agents.*` | 管线运行器和作业队列 |
+| `src.dao.postgresql.*` | 数据库仓储 |
+| `src.core.*` | 业务逻辑服务 |

@@ -1,216 +1,175 @@
 # LinguaSeeker
 
-Multi-Agent infrastructure platform for medical genetics literature automation and structured evidence extraction. It provides a four-phase evidence pipeline: literature acquisition and digitization, cross-lingual dual evidence extraction and fusion, entity standardization and knowledge alignment, and bilingual visualization with expert-in-the-loop feedback.
+> 医学遗传学文献自动化和结构化证据提取的多智能体基础设施平台。提供四阶段证据管线：文献获取与数字化、跨语言双轨证据提取与融合、实体标准化与知识对齐、双语可视化与专家反馈。
 
-## Release Status
+## 发布状态
 
-**Current release:** `v1.0.0`
+**当前版本：** `v1.0.0`
 
-The first stable release freezes the current FastAPI backend, Vite + React frontend, Rust native I/O extensions, database schema contract, and deployment configuration shape. Production deployments should pin backend and frontend images to the same immutable tag, preferably `v1.0.0` or the matching `sha-<short>` image tag from GitHub Actions.
+首个稳定版本冻结当前 FastAPI 后端、Vite + React 前端、Rust 原生 I/O 扩展、数据库 schema 契约和部署配置。生产部署应将后端和前端镜像固定到相同的不可变标签。
 
-Release execution is tracked in [docs/active/2026-06-25-v1-release-checklist.md](docs/active/2026-06-25-v1-release-checklist.md). Do not deploy from a dirty worktree; run the release checklist verification commands before tagging or rolling out.
+## 技术栈
 
-## Tech Stack
+| 层级 | 技术 |
+|------|------|
+| 前端 | Vite、React 18、TypeScript（strict）、Ant Design、Zustand、React Query、Axios、React Router |
+| 后端 | Python 3.12、FastAPI、SQLAlchemy 2.0（async）、Alembic、LangGraph |
+| 原生 I/O | Rust（PyO3/maturin 扩展：rust-io、files-io、net-io） |
+| 推理 | 外部 Docker 容器：Embedding(:8002)、Rerank(:8003)、Doc-Parse(:44321) |
+| 数据库 | PostgreSQL 16（pgvector）、Redis 8.0 |
+| 基础设施 | Docker Compose、Ansible |
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Vite, React 18, TypeScript (strict), Ant Design, Zustand, React Query, Axios, React Router |
-| Backend | Python 3.12, FastAPI, SQLAlchemy 2.0 (async), Alembic, LangGraph |
-| Native I/O | Rust (PyO3/maturin extensions: rust-io, files-io, net-io) |
-| Inference | External Docker containers: Embedding (:8002), Rerank (:8003), Doc-Parse (:44321) — built by separate project |
-| Database | PostgreSQL 16 (pgvector), Redis 8.0 |
-| Infra | Docker Compose, Ansible |
-
-## Project Structure
+## 项目结构
 
 ```
 .
-├── backend/                        # FastAPI application
-│   ├── app/                        # Entry point (main.py only)
-│   ├── src/                        # Business logic (Orchestrated Vertical Slice Architecture)
-│   │   ├── agents/                 # Pipeline orchestrator (LangGraph)
-│   │   ├── api/                    # FastAPI routes (v1/)
-│   │   ├── core/                   # Feature slices (Phase 1-4)
-│   │   │   ├── config.py                       # Settings
+├── backend/                        # FastAPI 应用
+│   ├── app/                        # 入口点（main.py）
+│   ├── src/                        # 业务逻辑（编排垂直切片架构）
+│   │   ├── agents/                 # 管线编排器（LangGraph）
+│   │   ├── api/                    # FastAPI 路由（v1/）
+│   │   ├── core/                   # 功能切片（Phase 1-4）
+│   │   │   ├── config.py                       # 配置
 │   │   │   ├── ingest_and_digitize_data/       # Phase 1
 │   │   │   ├── cross_lingual_process_and_extract_evidence/  # Phase 2
 │   │   │   ├── standardize_entities_and_align_knowledge/    # Phase 3
 │   │   │   └── visualize_evidence_with_expert_in_loop/      # Phase 4
-│   │   ├── dao/                    # Data access (PostgreSQL, Redis)
-│   │   └── utils/                  # Shared utilities
-│   ├── libs/                       # Rust native extensions (rust-io, files-io, net-io)
-│   ├── config/                     # Layered YAML config (defaults, environments, vault)
-│   ├── tests/                      # Backend tests
-│   ├── alembic/                    # Migration scaffold
-│   └── pyproject.toml              # Python project (uv-managed)
-├── frontend/                       # Vite + React application
-│   ├── src/                        # Application source
-│   │   ├── pages/                  # Route-level page components
-│   │   ├── components/             # Reusable UI components (antd-based)
-│   │   ├── api/                    # API client functions
-│   │   ├── hooks/                  # Custom React hooks
-│   │   ├── stores/                 # Zustand state stores
-│   │   ├── types/                  # TypeScript type definitions
-│   │   └── utils/                  # Utility functions
-│   ├── tests/                      # Frontend tests
-│   └── package.json                # Node project (bun-managed)
-├── database/                       # Alembic migrations + terminology data
-│   ├── migrations/                 # SQL migration scripts (versions/)
-│   ├── terminology_database/       # Reference data (ClinVar, ClinGen, HPO, OMIM, etc.)
-│   └── config/                     # DB config files
-├── deploy/                         # Deployment configurations
-│   ├── compose/                    # Docker Compose deployment
-│   │   ├── single-server/          # All-in-one deployment (backend + external inference services)
-│   │   ├── backend-host/           # Backend + Postgres + Redis
-│   │   ├── frontend-host/          # Nginx + pre-built SPA
-│   │   └── staging/                # Staging environment
-│   └── ansible/                    # Ansible deployment automation
-│       ├── roles/                  # backend, frontend, postgres, redis, nginx
-│       ├── playbooks/              # site.yml, healthcheck.yml
+│   │   ├── dao/                    # 数据访问（PostgreSQL、Redis）
+│   │   └── utils/                  # 共享工具
+│   ├── libs/                       # Rust 原生扩展
+│   ├── config/                     # 分层 YAML 配置
+│   ├── tests/                      # 后端测试
+│   └── pyproject.toml              # Python 项目（uv 管理）
+├── frontend/                       # Vite + React 应用
+│   ├── src/                        # 应用源码
+│   │   ├── pages/                  # 路由级页面组件
+│   │   ├── components/             # 可复用 UI 组件（antd）
+│   │   ├── api/                    # API 客户端
+│   │   ├── hooks/                  # 自定义 React Hooks
+│   │   ├── stores/                 # Zustand 状态存储
+│   │   ├── types/                  # TypeScript 类型定义
+│   │   └── utils/                  # 工具函数
+│   ├── tests/                      # 前端测试
+│   └── package.json                # Node 项目（bun 管理）
+├── database/                       # Alembic 迁移 + 术语数据
+│   ├── migrations/                 # SQL 迁移脚本（23 个版本）
+│   ├── terminology_database/       # 参考数据（ClinVar、ClinGen、HPO、OMIM 等）
+│   └── config/                     # 数据库配置
+├── deploy/                         # 部署配置
+│   ├── compose/                    # Docker Compose 部署
+│   │   ├── single-server/          # 一体化部署
+│   │   ├── backend-host/           # 后端 + Postgres + Redis
+│   │   ├── frontend-host/          # Nginx + 预构建 SPA
+│   │   └── staging/                # 预发布环境
+│   └── ansible/                    # Ansible 部署自动化
+│       ├── roles/                  # backend、frontend、postgres、redis、nginx
+│       ├── playbooks/              # site.yml、healthcheck.yml
 │       └── inventories/            # production/
-├── docs/                           # Documentation (active, planned, archive)
-├── benchmark/                      # Pipeline benchmarking + evaluation
-├── scripts/                        # Project-level utility scripts
-├── knowledges/                     # Knowledge base documents (ACMG guidelines, etc.)
-├── data/                           # Sample PDFs for testing
-├── libs/                           # Shared Python libraries (config-loader)
-├── docker-compose.yml              # Local development orchestration
-├── AGENTS.md                       # Project rules and conventions
-├── progress.txt                    # Progress tracking
-└── lesson.md                       # Retrospective notes
+├── docs/                           # 文档（active、planned、archive）
+├── benchmark/                      # 管线基准测试 + 评估
+├── scripts/                        # 项目级运维脚本
+├── knowledges/                     # 知识库文档（ACMG 指南等）
+├── data/                           # 测试 PDF + 管线运行产物
+├── libs/                           # 共享 Python 库（config-loader）
+├── artifacts/                      # 数据库导出和术语导出
+├── AGENTS.md                       # 项目规则和约定
+├── copier.yaml                     # Copier 模板配置
+└── README.md
 ```
 
-## Getting Started
+## 快速开始
 
-### Prerequisites
+### 前置条件
 
 - Docker & Docker Compose
-- [bun](https://bun.sh/) (frontend package manager & runtime)
-- [uv](https://docs.astral.sh/uv/) (Python package manager)
-- Rust toolchain (for native I/O libraries)
+- [bun](https://bun.sh/)（前端包管理器和运行时）
+- [uv](https://docs.astral.sh/uv/)（Python 包管理器）
+- Rust 工具链（用于原生 I/O 库）
 
-### Run with Docker (Local Development)
+### Docker 本地开发
 
 ```bash
 docker compose up
 ```
 
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- PostgreSQL: `localhost:5432`
-- Redis: `localhost:6379`
+- 前端：http://localhost:3000
+- 后端 API：http://localhost:8000
+- PostgreSQL：`localhost:5432`
+- Redis：`localhost:6379`
 
-### Local Development
+### 本地开发
 
-**Backend:**
-
+**后端：**
 ```bash
 cd backend
 uv pip install -e ".[dev]"
 uv run uvicorn app.main:app --reload
 ```
 
-**Frontend:**
-
+**前端：**
 ```bash
 cd frontend
 bun install
 bun run dev
 ```
 
-**Rust native libraries:**
+**推理服务（外部）：**
 
-```bash
-cd backend/libs/rust-io     # or files-io, net-io
-cargo test
-```
+模型推理（Embedding、Rerank、Doc-Parse）由外部 Docker 容器提供，在 `backend/config/` 中配置服务 URL。
 
-**Inference services (external):**
+## 开发命令
 
-Model inference (Embedding, Rerank, Doc-Parse) is provided by external Docker containers built and published by a separate project. Configure the service URLs in `backend/config/`:
+| 命令 | 描述 |
+|------|------|
+| `cd backend && uv run ruff check` | 后端代码检查 |
+| `cd backend && uv run pytest` | 运行所有后端测试 |
+| `cd frontend && bun run lint` | 前端代码检查 |
+| `cd frontend && bun run type-check` | TypeScript 类型检查 |
+| `cd frontend && bun run build` | 生产构建 |
+| `cd frontend && bun run test` | 前端测试 |
+| `cd backend/libs/rust-io && cargo test` | Rust 测试 |
 
-```yaml
-# In backend/config/environments/<env>.yaml or defaults/main.yaml
-embedding:
-  base_url: "http://localhost:8002/v1"
-rerank:
-  base_url: "http://localhost:8003/v1"
-mineru:
-  local_parse_url: "http://localhost:44321"
-```
+## 部署
 
-## Development Commands
+### 数据库环境
 
-| Command | Description |
-|---------|-------------|
-| `cd backend && uv run ruff check` | Lint backend (Google Python Style) |
-| `cd backend && uv run pytest` | Run all backend tests |
-| `cd backend && uv run pytest tests/path/to/test.py::test_name` | Run a single test |
-| `cd frontend && bun run lint` | Lint frontend code |
-| `cd frontend && bun run type-check` | TypeScript type check |
-| `cd frontend && bun run build` | Production build |
-| `cd frontend && bun run test` | Run frontend tests |
-| `cd backend/libs/rust-io && cargo test` | Run Rust tests |
-| `cd backend/libs/rust-io && cargo bench` | Run Rust benchmarks |
-
-## Deployment
-
-### Release Deployment (`v1.0.0`)
-
-For the first stable release, build and deploy both images with the same tag:
-
-```bash
-# Build/publish through GitHub Actions workflow_dispatch with tag=v1.0.0,
-# then deploy manually with image_tag=v1.0.0.
-```
-
-Before deployment, confirm all environments use the canonical database contract:
-
-| Environment | Database | Schema | User |
-|-------------|----------|--------|------|
+| 环境 | 数据库 | Schema | 用户 |
+|------|--------|--------|------|
 | Development | `dev_lingua_seeker` | `lingua_seeker` | `lingua_seeker` |
 | Staging | `staging_lingua_seeker` | `lingua_seeker` | `lingua_seeker` |
 | Production | `lingua_seeker` | `lingua_seeker` | `lingua_seeker` |
 
-### Single-Server (All-in-one)
-
-Backend, postgres, and redis on one machine. Inference services (embedding/rerank/doc-parse) are external Docker containers deployed separately.
+### 单机部署
 
 ```bash
-# 1. Prepare config
 cd /opt/lingua-seeker
-cp deploy/compose/single-server/.env.example .env  # edit secrets
-# Create config/environments/production.yaml + config/vault/production.yaml
-
-# 2. Start services
+cp deploy/compose/single-server/.env.example .env
 docker-compose --env-file .env up -d
-
-# 3. Database migration (first time)
 docker exec lingua-backend uv run alembic upgrade head
 ```
 
-See [deploy/compose/single-server/](deploy/compose/single-server/) for details.
+详见 [deploy/compose/single-server/](deploy/compose/single-server/)。
 
-### Split Frontend/Backend
+### 分离前后端
 
-Frontend (nginx + SPA) and backend (FastAPI + Postgres + Redis) on separate hosts, connected via private network. See [deploy/compose/README.md](deploy/compose/README.md).
+前端（nginx + SPA）和后端（FastAPI + Postgres + Redis）部署在独立主机。详见 [deploy/compose/README.md](deploy/compose/README.md)。
 
 ### Ansible
 
-Bare-metal / systemd deployment via Ansible roles. See [deploy/ansible/](deploy/ansible/).
+裸机 / systemd 部署。详见 [deploy/ansible/](deploy/ansible/)。
 
-## Branch Strategy
+## 分支策略
 
-- **`dev`** -- primary development branch
-- **`master`** -- merged manually only, no direct pushes
+- **`dev`** — 主开发分支
+- **`master`** — 仅手动合并，禁止直接推送
 
-## Conventions
+## 约定
 
-See [AGENTS.md](./AGENTS.md) for full project rules. Key points:
+详见 [AGENTS.md](./AGENTS.md)。关键要点：
 
-- Package managers: `uv` (Python), `bun` (Node.js), `cargo` (Rust) -- never system-level
-- Logging: `loguru`, output to `logs/` with timestamp naming
-- Testing: `pytest` (backend), `vitest` (frontend), `cargo test` (Rust)
-- Code style: Google Style Guide enforced via Ruff (Python) and ESLint (TypeScript)
-- Commit messages: Conventional Commits (`feat:`, `fix:`, `docs:`, etc.)
-- API versioning: `/api/v1/` prefix
+- 包管理器：`uv`（Python）、`bun`（Node.js）、`cargo`（Rust）
+- 日志：`loguru`，输出到 `logs/`
+- 测试：`pytest`（后端）、`vitest`（前端）、`cargo test`（Rust）
+- 代码风格：Google Style Guide，Ruff（Python）和 ESLint（TypeScript）
+- 提交信息：Conventional Commits（`feat:`、`fix:`、`docs:` 等）
+- API 版本：`/api/v1/` 前缀

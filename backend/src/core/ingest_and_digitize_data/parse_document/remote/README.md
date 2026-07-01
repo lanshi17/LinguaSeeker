@@ -1,162 +1,120 @@
-# Parse Document — Remote
+# Remote Parser 远程解析器
 
-> Remote PDF parser using MinerU cloud API via the Rust `net-io` layer. Supports single-document parsing with 4-tier content extraction fallback, and local file batch upload with pre-signed URLs.
+> 通过 MinerU 云端 API 解析 PDF，支持异步任务提交与轮询。
 
-## Quick Start
+## 概述
+
+`remote` 子模块实现 `ParserStrategy` 接口，调用 MinerU 云端 API 进行 PDF 解析。采用异步任务模式：提交解析任务 → 轮询状态 → 下载结果。支持单文件解析和批量本地文件上传解析，是 `DocumentParseOrchestrator` 的首选解析器。
+
+## 结构
+
+```
+remote/
+├── __init__.py    # 导出 MinerURemoteParser
+├── parser.py      # MinerURemoteParser 实现（云 API + 批量上传）
+└── README.md
+```
+
+## 核心组件
+
+### parser.py — 远程 MinerU 解析器
+
+- **`MinerURemoteParser`**（实现 `ParserStrategy`）：
+  - `name` → `"mineru-remote"`
+  - 构造参数：
+    - `api_token`：MinerU 云 API Token
+    - `poll_interval`：轮询间隔（秒）
+    - `max_poll_attempts`：最大轮询次数
+  - `parse(pdf_path)` → `ParseResult`：
+    1. 支持本地路径和 URL 输入
+    2. 提交解析任务到 MinerU 云 API
+    3. 轮询任务状态直到完成或超时
+    4. 下载并解析结果（Markdown + 图片 + 元数据）
+  - `parse_local_files(file_paths, **kwargs)` → `MinerULocalBatchParseResult`：
+    1. 上传本地文件到 MinerU 预签名 URL
+    2. 提交批量解析任务
+    3. 轮询批量状态直到所有文件完成
+    4. 返回每个文件的解析结果
+
+### 内部类型
+
+- **`_MinerUPageData`**：单页原始数据（page_number/markdown/figures/tables）
+- **`_MinerURawResult`**：完整原始结果（state/total_pages/title/authors/abstract/pages/full_markdown/images/raw_blocks）
+
+### 关键特性
+
+- 使用 `net_io`（Rust IO 层）进行 HTTP 请求
+- 支持 `MinerUModelVersion`：`pipeline`、`vlm`、`MinerU-HTML`
+- 支持 `MinerUExtraFormat`：`docx`、`html`、`latex`
+- 结果解析使用 `common/converters.py` 的 `block_to_markdown()` 和 `html_table_to_structured()`
+- 提取文档摘要使用 `markdown_helpers.extract_abstract_from_markdown()`
+- 超时抛出 `MinerUTimeoutError`，API 错误抛出 `MinerUAPIError`
+
+## 数据流
+
+```
+PDF 文件路径（本地或 URL）
+        ↓
+MinerURemoteParser.parse()
+        ↓
+提交解析任务 → MinerU 云 API
+        ↓
+轮询任务状态 (poll_interval × max_attempts)
+  ├── running/converting → 继续等待
+  ├── done → 下载结果
+  └── failed → MinerUAPIError
+        ↓
+下载结果 JSON {
+    state, total_pages, title, authors, abstract,
+    pages: [ { page_number, markdown, figures, tables } ],
+    full_markdown, images, raw_blocks
+}
+        ↓
+解析结果
+  ├── DocumentMetadata(title, authors, journal, abstract)
+  ├── List[PageContent] (按 page 分组)
+  ├── images: { name: bytes }
+  └── block_to_markdown() 处理 raw_blocks
+        ↓
+ParseResult { metadata, pages, full_markdown, images, parser_name="mineru-remote" }
+```
+
+### 批量解析流程
+
+```
+List[file_paths]
+        ↓
+上传到 MinerU 预签名 URL (net_io.put)
+        ↓
+提交批量任务
+        ↓
+轮询批量状态 → MinerUBatchStatus
+        ↓
+MinerULocalBatchParseResult {
+    batch_id, status: MinerUBatchStatus,
+    results: { filename: ParseResult }
+}
+```
+
+## 使用
 
 ```python
 from src.core.ingest_and_digitize_data.parse_document.remote.parser import MinerURemoteParser
 
-parser = MinerURemoteParser(api_token="your_token")
+parser = MinerURemoteParser(
+    api_token="your-mineru-token",
+    poll_interval=2,
+    max_poll_attempts=150,
+)
 
-# Single URL parse
+# 单文件解析
+result = await parser.parse("/data/papers/example.pdf")
+# 或 URL
 result = await parser.parse("https://example.com/paper.pdf")
-# result.full_markdown, result.pages, result.images, result.content_blocks
 
-# Batch parse local files
-batch = await parser.parse_local_files(
-    ["/data/paper1.pdf", "/data/paper2.pdf"],
-    model_version="vlm",
-    data_ids=["paper-1", "paper-2"],
-)
-for file_name, parse_result in batch.results.items():
-    print(file_name, parse_result.full_markdown[:200])
-print(batch.failed_files)
-```
-
-## Architecture
-
-```
-MinerURemoteParser.parse(pdf_url)
-  │
-  ├─ _create_task(pdf_url)
-  │    → rust_io.net.mineru_create_task() → task_id
-  │
-  ├─ _poll_result(task_id)
-  │    → rust_io.net.mineru_get_result() → poll until done/failed/timeout
-  │
-  ├─ _download_and_parse_zip(zip_url)
-  │    → httpx download → extract to temp dir
-  │    → _parse_extracted_content() → 4-tier fallback
-  │
-  └─ _build_result(_MinerURawResult) → ParseResult
-
-MinerURemoteParser.parse_local_files(file_paths, ...)
-  │
-  ├─ upload_local_files()
-  │    → rust_io.net.mineru_upload_local_files() → batch_id + pre-signed URLs
-  │
-  ├─ poll_batch_until_terminal(batch_id)
-  │    → rust_io.net.mineru_batch_result() → poll until all files terminal
-  │
-  └─ For each done file: _download_and_parse_zip() → _build_result()
-       → MinerULocalBatchParseResult
-```
-
-## Public API
-
-### `MinerURemoteParser(ParserStrategy)`
-
-```python
-MinerURemoteParser(
-    api_token: str,
-    poll_interval: float = 2.0,
-    max_poll_attempts: int = 150,
-)
-```
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `__init__` | `(api_token: str, poll_interval=2.0, max_poll_attempts=150)` | Configure MinerU API token and polling behavior |
-| `name` | `-> str` | Returns `"mineru-remote"` |
-| `parse` | `async (pdf_url: str) -> ParseResult` | Single document parse via MinerU cloud API |
-| `upload_local_files` | `async (file_paths, *, model_version, enable_formula, ...) -> MinerULocalBatchUploadResult` | Upload local files via MinerU batch API |
-| `poll_batch_result` | `async (batch_id, *, timeout_ms, proxy) -> MinerUBatchStatus` | Fetch current batch status once |
-| `poll_batch_until_terminal` | `async (batch_id, *, timeout_ms, proxy) -> MinerUBatchStatus` | Poll until all files done/failed |
-| `parse_local_files` | `async (file_paths, *, model_version, ...) -> MinerULocalBatchParseResult` | Upload + poll + parse: full batch lifecycle |
-
-### `parse_local_files` parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `file_paths` | `list[str]` | required | 1–50 local file paths |
-| `model_version` | `MinerUModelVersion` | `"vlm"` | `"pipeline"`, `"vlm"`, or `"MinerU-HTML"` |
-| `enable_formula` | `bool \| None` | `True` | Enable formula extraction |
-| `enable_table` | `bool \| None` | `True` | Enable table extraction |
-| `language` | `str \| None` | `"ch"` | Document language hint |
-| `data_ids` | `list[str] \| None` | `None` | Custom IDs per file (must match length) |
-| `is_ocr` | `bool \| None` | `None` | Force OCR mode |
-| `page_ranges` | `str \| None` | `None` | Page range filter |
-| `extra_formats` | `list[MinerUExtraFormat] \| None` | `None` | Additional output formats (`"docx"`, `"html"`, `"latex"`) |
-| `timeout_ms` | `int \| None` | `None` | API timeout override |
-| `proxy` | `str \| None` | `None` | Proxy override |
-
-## Internal Design
-
-### 4-Tier Content Extraction Fallback
-
-`_parse_extracted_content()` discovers the best available format from a downloaded zip:
-
-| Priority | Format | Description |
-|----------|--------|-------------|
-| 1 | `*_content_list.json` | Structured blocks (text/image/table) — most feature-rich. Figures and tables are extracted per page. |
-| 2 | `layout.json` with `pdf_info` | Legacy MinerU format with per-page `page_content` |
-| 3 | Individual `.md` files | Markdown-per-page format, sorted alphabetically |
-| 4 | `full.md` only | Single markdown → treated as 1-page document |
-
-If none yield content, raises `MinerUAPIError`.
-
-### Content List Parsing
-
-`_parse_content_list_json()` processes MinerU's `content_list` format:
-- Groups blocks by `page_idx`
-- Filters out `"discarded"` blocks
-- Converts text blocks to Markdown via `block_to_markdown()`
-- Extracts image captions and `img_path` for figure metadata
-- Parses HTML table bodies via `html_table_to_structured()` for structured table data
-- Extracts abstract from combined markdown via `_extract_abstract_from_markdown()`
-
-### Image Collection
-
-`_collect_images()` searches for `images/` directories at any nesting level in the extracted zip. This handles layouts where the zip root contains a subdirectory (e.g. `some-root/images/fig.jpg`). Images are keyed as `"images/<filename>"` in the result.
-
-### Abstract Extraction
-
-`_extract_abstract_from_markdown()` extracts abstract text from MinerU-generated markdown:
-- Matches English headings: "Abstract", "ABSTRACT"
-- Matches Chinese headings: "摘要", "【摘要】"
-- Handles optional Markdown heading markers (`#`, `##`, `###`) and bold (`**`)
-- Falls back to first substantial paragraph (>30 chars) before "Introduction", "Keywords", "Background", etc.
-- Returns `None` if no abstract is found
-
-### Batch Lifecycle
-
-1. **Upload**: `upload_local_files()` calls `rust_io.net.mineru_upload_local_files()` which returns pre-signed URLs. Files are PUT to these URLs directly.
-2. **Poll**: `poll_batch_until_terminal()` loops `poll_batch_result()` at `poll_interval` until all files reach a terminal state (`done` or `failed`). Timeout after `max_poll_attempts`.
-3. **Parse**: For each `done` file, downloads and parses the result zip via the same `_download_and_parse_zip()` path as single-file parsing.
-
-### Response Validation
-
-`_require_success_response()` validates MinerU API responses by checking the `code` field (must be `0` or `"0"`). Non-zero codes raise `MinerUAPIError` with the response `msg`.
-
-## Configuration
-
-| Env Var | Default | Description |
-|---------|---------|-------------|
-| `MINERU_API_TOKEN` | `""` | MinerU cloud API token (loaded from top-level config) |
-| `MINERU_REMOTE_POLL_INTERVAL` | `2.0` | Polling interval (seconds) |
-| `MINERU_REMOTE_MAX_POLL_ATTEMPTS` | `150` | Max poll attempts before timeout |
-
-## Dependencies
-
-| Dependency | Purpose |
-|------------|---------|
-| `rust_io.net` (via `src.utils.rust_io`) | MinerU API calls (Rust/PyO3): `mineru_create_task`, `mineru_get_result`, `mineru_upload_local_files`, `mineru_batch_result` |
-| `httpx` | Async HTTP for zip download |
-
-## Testing
-
-```bash
-cd backend
-uv run pytest tests/core/ingest_and_digitize_data/parse_document/ -v -k remote
+# 批量解析
+batch_result = await parser.parse_local_files([
+    "/data/papers/paper1.pdf",
+    "/data/papers/paper2.pdf",
+])
 ```
