@@ -56,7 +56,7 @@ docs/
 | 2026-06-21 | BIBM Main Paper Manuscript Draft | in-progress |
 | 2026-06-15 | ClinGen + ClinVar Fused Benchmark Dataset Plan | in-progress |
 | 2026-05-13 | Phase Workflow Overview | reference |
-| 2026-05-09 | PRD / APP_FLOW / TECH_STACK / BACKEND_STRUCTURE | reference |
+| 2026-05-09 | APP_FLOW / TECH_STACK / BACKEND_STRUCTURE | reference |
 
 完整列表见本目录源文件。
 
@@ -74,6 +74,7 @@ docs/
 |------|------|------|
 | 2026-07-01 | [Semantic Word Alignment Design](archive/plans/2026-07-01-semantic-word-alignment-design.md) | completed |
 | 2026-07-01 | [Semantic Word Alignment Implementation Plan](archive/plans/2026-07-01-semantic-word-alignment-plan.md) | completed |
+| — | [PRD — LinguaSeeker](archive/plans/PRD.md) | completed |
 
 ## 图表
 
