@@ -105,6 +105,74 @@ def test_source_grounding_marks_snippet_not_found_as_source_invalid():
     assert grounded[0].raw_source.text_snippet == "TP53"
 
 
+def test_source_grounding_recovers_protein_hgvs_missing_p_prefix():
+    text = "A homozygous missense mutation, Thr240Met, was found in exon 6."
+    document = TrackDocument(
+        document_id="doc-hgvs-alias",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=len(text))],
+    )
+    item = EvidenceItem(
+        field_id="A.variant_hgvs_p",
+        category="A",
+        field_name="HGVS protein variant",
+        status=EvidenceStatus.FOUND,
+        value="p.Thr240Met",
+        raw_source=SourceLocation(
+            span_id="p1",
+            page=1,
+            start_offset=0,
+            end_offset=len("p.Thr240Met"),
+            context_type="text",
+            context_ref="Results",
+            text_snippet="p.Thr240Met",
+            source_precision=SourcePrecision.EXACT,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])[0]
+
+    assert grounded.status == EvidenceStatus.FOUND
+    assert grounded.source is not None
+    assert grounded.source.text_snippet == "Thr240Met"
+
+
+def test_source_grounding_recovers_protein_hgvs_compound_parenthesis_spacing():
+    text = "The report lists p.R267fs*6(p.Arg267fsTer6) in MECP2."
+    document = TrackDocument(
+        document_id="doc-hgvs-compound",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=len(text))],
+    )
+    item = EvidenceItem(
+        field_id="A.variant_hgvs_p",
+        category="A",
+        field_name="HGVS protein variant",
+        status=EvidenceStatus.FOUND,
+        value="p.R267fs*6 (p.Arg267fsTer6)",
+        raw_source=SourceLocation(
+            span_id="p1",
+            page=1,
+            start_offset=0,
+            end_offset=len("p.R267fs*6 (p.Arg267fsTer6)"),
+            context_type="text",
+            context_ref="Results",
+            text_snippet="p.R267fs*6 (p.Arg267fsTer6)",
+            source_precision=SourcePrecision.EXACT,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])[0]
+
+    assert grounded.status == EvidenceStatus.FOUND
+    assert grounded.source is not None
+    assert grounded.source.text_snippet == "p.R267fs*6(p.Arg267fsTer6)"
+
+
 def test_source_grounding_marks_missing_image_source_as_ocr_gap():
     item = EvidenceItem(
         field_id="A.variant_hgvs_p",

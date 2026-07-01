@@ -2,9 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Status:** planned
+**Status:** completed
 **Created:** 2026-07-01
-**Completed:** N/A
+**Completed:** 2026-07-01
 **PR:** N/A
 
 **Goal:** Add semantic word/phrase span-pair alignment between original-language blocks and English translations, with deterministic fallback and frontend linked hover/click behavior.
@@ -13,9 +13,11 @@
 
 **Tech Stack:** FastAPI backend, Pydantic contracts, pytest, Vite + React + TypeScript + Antd frontend, Vitest/Testing Library, existing LLM JSON invocation utilities.
 
+**Progress:** Tasks 1-9 completed on 2026-07-01.
+
 ---
 
-### Task 1: Add Typed Alignment Contracts
+### Task 1: Add Typed Alignment Contracts `[completed]`
 
 **Files:**
 - Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/contracts.py`
@@ -52,7 +54,7 @@ to `TranslationAlignmentChunk`.
 
 Run the same pytest command. Expected: pass.
 
-### Task 2: Build Span Pair Validation and Fallback
+### Task 2: Build Span Pair Validation and Fallback `[completed]`
 
 **Files:**
 - Create: `backend/src/core/cross_lingual_process_and_extract_evidence/cross_lingual/translate/alignment.py`
@@ -90,7 +92,7 @@ Use full-document offsets from the chunk and locate copied text inside `chunk.or
 
 Run the same pytest command. Expected: pass.
 
-### Task 3: Generate Semantic Alignment Per Chunk
+### Task 3: Generate Semantic Alignment Per Chunk `[completed]`
 
 **Files:**
 - Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/cross_lingual/translate/alignment.py`
@@ -139,7 +141,7 @@ Keep the call after block/segment translations are known and before persistence 
 
 Run translation alignment tests. Expected: pass.
 
-### Task 4: Persist Span Pairs in Translation Alignment
+### Task 4: Persist Span Pairs in Translation Alignment `[completed]`
 
 **Files:**
 - Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/contracts.py`
@@ -167,7 +169,7 @@ Ensure the chunk keeps `span_pairs` and that offsets are full-document offsets. 
 
 Run focused tests. Expected: pass.
 
-### Task 5: Use Span Pairs for Narrow Traceback
+### Task 5: Use Span Pairs for Narrow Traceback `[completed]`
 
 **Files:**
 - Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/translation_traceback.py`
@@ -208,7 +210,7 @@ Use pair offsets when the English source range intersects or is contained by a p
 
 Run traceback tests. Expected: pass.
 
-### Task 6: Expose Span Pairs Through API and Frontend Types
+### Task 6: Expose Span Pairs Through API and Frontend Types `[completed]`
 
 **Files:**
 - Modify: backend API schemas that serialize evidence detail translation alignment, if they do not already pass through `model_dump()`.
@@ -243,7 +245,7 @@ to the translation alignment type.
 
 Run `bun run type-check`. Expected: pass.
 
-### Task 7: Add Linked Reader Interaction
+### Task 7: Add Linked Reader Interaction `[completed]`
 
 **Files:**
 - Modify: `frontend/src/features/evidence-search/components/BilingualCompareView.tsx`
@@ -281,7 +283,7 @@ Add linked span state at bilingual view level and pass it into both readers. Use
 
 Run focused frontend tests and `bun run type-check`.
 
-### Task 8: Integration Verification
+### Task 8: Integration Verification `[completed]`
 
 **Files:**
 - Existing backend/frontend files only.
@@ -315,7 +317,7 @@ Expected: all pass, unless pre-existing unrelated frontend changes fail; documen
 
 Run the app stack, open a bilingual evidence detail with span pairs, and verify hover/click links both panes. Use Playwright if the frontend test environment supports it.
 
-### Task 9: Documentation and Progress
+### Task 9: Documentation and Progress `[completed]`
 
 **Files:**
 - Modify: `progress.txt`

@@ -1,5 +1,5 @@
 import { STATUS_VARIANT } from "@/lib/constants/statusVariant";
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -28,6 +28,12 @@ import {
   type EvidenceDocumentHighlight,
   type EvidenceDocumentParagraph,
 } from "../utils/evidenceDocument";
+import {
+  buildAlignmentHighlightMap,
+  type AlignmentHighlightMap,
+  type AlignmentInteractionState,
+  type AlignmentTextHighlight,
+} from "../utils/translationAlignment";
 import { categoryLabel } from "../utils/categoryStyles";
 import { MarkdownDocumentViewer } from "./MarkdownDocumentViewer";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -73,6 +79,26 @@ function markInlineStyle(hex?: string, selected?: boolean): React.CSSProperties 
     base.outlineOffset = "2px";
   }
   return base;
+}
+
+function alignmentInlineStyle(
+  alignment: AlignmentTextHighlight,
+  hasEvidence: boolean,
+): React.CSSProperties {
+  const activeColor = alignment.pinned ? "#7C3AED" : "#0891B2";
+  if (hasEvidence) {
+    return alignment.active
+      ? { outline: `2px solid ${activeColor}`, outlineOffset: "2px" }
+      : {};
+  }
+  return {
+    borderRadius: 4,
+    padding: "2px 4px",
+    backgroundColor: alignment.active ? `${activeColor}30` : "rgba(8, 145, 178, 0.12)",
+    boxShadow: alignment.active ? `0 0 0 1px ${activeColor}70` : "0 0 0 1px rgba(8, 145, 178, 0.22)",
+    cursor: "pointer",
+    transition: "background-color 0.12s, box-shadow 0.12s",
+  };
 }
 
 /* ---- Utility functions ---- */
@@ -243,6 +269,10 @@ function HighlightedParagraph({
   track,
   annotations = [],
   reviewContexts,
+  alignmentHighlights = [],
+  onAlignmentHover,
+  onAlignmentLeave,
+  onAlignmentToggle,
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
@@ -253,18 +283,72 @@ function HighlightedParagraph({
   track: AnnotationTrack;
   annotations?: UserAnnotation[];
   reviewContexts?: ReviewContextMap;
+  alignmentHighlights?: AlignmentTextHighlight[];
+  onAlignmentHover?: (pairId: string) => void;
+  onAlignmentLeave?: () => void;
+  onAlignmentToggle?: (pairId: string) => void;
   onAssignField?: (selectedText: string, fieldType: string) => void;
   fieldTypes?: FieldTypeOption[];
 } & AnnotationHandlers) {
   const contentRef = useRef<HTMLDivElement>(null);
   const highlights = normalizedHighlights(paragraph);
+  const alignments = [...alignmentHighlights]
+    .map((alignment) => ({
+      ...alignment,
+      start: Math.max(0, Math.min(alignment.start, paragraph.text.length)),
+      end: Math.max(0, Math.min(alignment.end, paragraph.text.length)),
+    }))
+    .filter((alignment) => alignment.end > alignment.start)
+    .sort((a, b) => a.start - b.start);
   const nodes: ReactNode[] = [];
-  let cursor = 0;
 
-  highlights.forEach((highlight, index) => {
-    if (highlight.start > cursor) {
-      nodes.push(paragraph.text.slice(cursor, highlight.start));
+  const boundaries = new Set<number>([0, paragraph.text.length]);
+  for (const highlight of highlights) {
+    boundaries.add(highlight.start);
+    boundaries.add(highlight.end);
+  }
+  for (const alignment of alignments) {
+    boundaries.add(alignment.start);
+    boundaries.add(alignment.end);
+  }
+
+  const orderedBoundaries = [...boundaries].sort((a, b) => a - b);
+  for (let index = 0; index < orderedBoundaries.length - 1; index++) {
+    const start = orderedBoundaries[index];
+    const end = orderedBoundaries[index + 1];
+    if (end <= start) {
+      continue;
     }
+    const text = paragraph.text.slice(start, end);
+    const highlight = highlights.find((candidate) => candidate.start < end && candidate.end > start);
+    const alignment = alignments.find((candidate) => candidate.start < end && candidate.end > start);
+
+    if (!highlight && !alignment) {
+      nodes.push(<span key={`plain-${start}`}>{text}</span>);
+      continue;
+    }
+
+    if (!highlight && alignment) {
+      nodes.push(
+        <span
+          key={`alignment-${alignment.pairId}-${start}`}
+          data-alignment-pair-id={alignment.pairId}
+          data-alignment-active={alignment.active ? "true" : "false"}
+          style={alignmentInlineStyle(alignment, false)}
+          onMouseEnter={() => onAlignmentHover?.(alignment.pairId)}
+          onMouseLeave={() => onAlignmentLeave?.()}
+          onClick={() => onAlignmentToggle?.(alignment.pairId)}
+        >
+          {text}
+        </span>,
+      );
+      continue;
+    }
+
+    if (!highlight) {
+      continue;
+    }
+
     const hex = highlight.category && CATEGORY_COLORS[highlight.category]
       ? CATEGORY_COLORS[highlight.category].hex
       : undefined;
@@ -274,24 +358,31 @@ function HighlightedParagraph({
       padding: "2px 4px",
       fontWeight: 600,
       ...markInlineStyle(hex, highlight.selected),
+      ...(alignment ? alignmentInlineStyle(alignment, true) : {}),
       ...(reviewInfo ? { cursor: "pointer" as const } : {}),
     };
     nodes.push(
       <mark
-        key={`${highlight.evidenceId}-${highlight.start}-${index}`}
+        key={`${highlight.evidenceId}-${start}-${index}`}
         data-reviewable={reviewInfo ? "true" : undefined}
+        data-alignment-pair-id={alignment?.pairId}
+        data-alignment-active={alignment?.active ? "true" : undefined}
         style={markStyle}
-        onClick={reviewInfo ? (e) => openFieldReviewMenu(e, reviewInfo) : undefined}
+        onMouseEnter={alignment ? () => onAlignmentHover?.(alignment.pairId) : undefined}
+        onMouseLeave={alignment ? () => onAlignmentLeave?.() : undefined}
+        onClick={(e) => {
+          if (alignment) {
+            onAlignmentToggle?.(alignment.pairId);
+          }
+          if (reviewInfo) {
+            openFieldReviewMenu(e, reviewInfo);
+          }
+        }}
         onContextMenu={reviewInfo ? (e) => openFieldReviewMenu(e, reviewInfo) : undefined}
       >
-        {paragraph.text.slice(highlight.start, highlight.end)}
+        {text}
       </mark>,
     );
-    cursor = highlight.end;
-  });
-
-  if (cursor < paragraph.text.length) {
-    nodes.push(paragraph.text.slice(cursor));
   }
 
   return (
@@ -337,6 +428,10 @@ function EvidenceDocumentReader({
   track,
   annotations = [],
   reviewContexts,
+  alignmentHighlightsByParagraph = {},
+  onAlignmentHover,
+  onAlignmentLeave,
+  onAlignmentToggle,
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
@@ -348,6 +443,10 @@ function EvidenceDocumentReader({
   track: AnnotationTrack;
   annotations?: UserAnnotation[];
   reviewContexts?: ReviewContextMap;
+  alignmentHighlightsByParagraph?: AlignmentHighlightMap;
+  onAlignmentHover?: (pairId: string) => void;
+  onAlignmentLeave?: () => void;
+  onAlignmentToggle?: (pairId: string) => void;
   onAssignField?: (selectedText: string, fieldType: string) => void;
   fieldTypes?: FieldTypeOption[];
 } & AnnotationHandlers) {
@@ -388,6 +487,10 @@ function EvidenceDocumentReader({
                 paragraphId={fullTextParagraph.id}
                 track={track}
                 annotations={annotationsFor(fullTextParagraph.id)}
+                alignmentHighlights={alignmentHighlightsByParagraph[fullTextParagraph.id] ?? []}
+                onAlignmentHover={onAlignmentHover}
+                onAlignmentLeave={onAlignmentLeave}
+                onAlignmentToggle={onAlignmentToggle}
                 onCreateAnnotation={onCreateAnnotation}
                 onUpdateAnnotation={onUpdateAnnotation}
                 onDeleteAnnotation={onDeleteAnnotation}
@@ -400,6 +503,10 @@ function EvidenceDocumentReader({
                 track={track}
                 annotations={annotationsFor(paragraph.id)}
                 reviewContexts={reviewContexts}
+                alignmentHighlights={alignmentHighlightsByParagraph[paragraph.id] ?? []}
+                onAlignmentHover={onAlignmentHover}
+                onAlignmentLeave={onAlignmentLeave}
+                onAlignmentToggle={onAlignmentToggle}
                 onCreateAnnotation={onCreateAnnotation}
                 onUpdateAnnotation={onUpdateAnnotation}
                 onDeleteAnnotation={onDeleteAnnotation}
@@ -414,6 +521,10 @@ function EvidenceDocumentReader({
                 track={track}
                 annotations={annotationsFor(paragraph.id)}
                 reviewContexts={reviewContexts}
+                alignmentHighlights={alignmentHighlightsByParagraph[paragraph.id] ?? []}
+                onAlignmentHover={onAlignmentHover}
+                onAlignmentLeave={onAlignmentLeave}
+                onAlignmentToggle={onAlignmentToggle}
                 onCreateAnnotation={onCreateAnnotation}
                 onUpdateAnnotation={onUpdateAnnotation}
                 onDeleteAnnotation={onDeleteAnnotation}
@@ -576,6 +687,28 @@ export function BilingualCompareView({
   const [enabledCategories, setEnabledCategories] = useState<Set<string>>(
     () => new Set(EVIDENCE_CATEGORIES),
   );
+  const [hoveredAlignmentPairId, setHoveredAlignmentPairId] = useState<string | null>(null);
+  const [pinnedAlignmentPairId, setPinnedAlignmentPairId] = useState<string | null>(null);
+  const alignmentState = useMemo<AlignmentInteractionState>(
+    () => ({
+      hoveredPairId: hoveredAlignmentPairId,
+      pinnedPairId: pinnedAlignmentPairId,
+    }),
+    [hoveredAlignmentPairId, pinnedAlignmentPairId],
+  );
+  const handleAlignmentToggle = useCallback((pairId: string) => {
+    setPinnedAlignmentPairId((current) => (current === pairId ? null : pairId));
+  }, []);
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setHoveredAlignmentPairId(null);
+        setPinnedAlignmentPairId(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
   const selectedItem =
     detail.items.find(
       (item) => item.canonical_evidence_id === selectedEvidenceId,
@@ -609,6 +742,14 @@ export function BilingualCompareView({
         enabledCategories,
       ),
     [detail, enabledTones, selectedEvidenceId, enabledCategories],
+  );
+  const originalAlignmentHighlights = useMemo(
+    () => buildAlignmentHighlightMap(detail, originalDocument, "original", alignmentState),
+    [alignmentState, detail, originalDocument],
+  );
+  const translatedAlignmentHighlights = useMemo(
+    () => buildAlignmentHighlightMap(detail, translatedDocument, "translated", alignmentState),
+    [alignmentState, detail, translatedDocument],
   );
   const showTranslatedDocument = hasTranslatedDocumentText(detail);
   const sourceDocumentId = detail.source_document_id;
@@ -980,6 +1121,10 @@ export function BilingualCompareView({
                 track="original"
                 annotations={originalAnnotations}
                 reviewContexts={reviewContexts}
+                alignmentHighlightsByParagraph={originalAlignmentHighlights}
+                onAlignmentHover={setHoveredAlignmentPairId}
+                onAlignmentLeave={() => setHoveredAlignmentPairId(null)}
+                onAlignmentToggle={handleAlignmentToggle}
                 onCreateAnnotation={handleCreateAnnotation}
                 onUpdateAnnotation={handleUpdateAnnotation}
                 onDeleteAnnotation={handleDeleteAnnotation}
@@ -993,6 +1138,10 @@ export function BilingualCompareView({
                   track="translated"
                   annotations={translatedAnnotations}
                   reviewContexts={reviewContexts}
+                  alignmentHighlightsByParagraph={translatedAlignmentHighlights}
+                  onAlignmentHover={setHoveredAlignmentPairId}
+                  onAlignmentLeave={() => setHoveredAlignmentPairId(null)}
+                  onAlignmentToggle={handleAlignmentToggle}
                   onCreateAnnotation={handleCreateAnnotation}
                   onUpdateAnnotation={handleUpdateAnnotation}
                   onDeleteAnnotation={handleDeleteAnnotation}

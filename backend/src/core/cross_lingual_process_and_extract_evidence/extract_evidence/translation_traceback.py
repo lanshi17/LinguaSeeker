@@ -13,7 +13,7 @@ from .contracts import (
     SpecialEvidenceRecord,
     TrackDocument,
 )
-from ..contracts import TranslationAlignmentChunk
+from ..contracts import TranslationAlignmentChunk, TranslationSpanPair
 
 
 _SPACE_RE = re.compile(r"\s+")
@@ -97,6 +97,35 @@ def _map_source_to_original(
     chunk = _select_alignment_chunk(chunks, source)
     if chunk is None:
         return None
+
+    pair = _select_alignment_pair(chunk, source)
+    if pair is not None:
+        start, end = pair.original_start_offset, pair.original_end_offset
+        precision = SourcePrecision.EXACT
+        snippet = pair.original_text
+        if start >= 0 and end >= start and end <= len(original_document.formatted_text):
+            snippet = original_document.formatted_text[start:end]
+        span = _find_span(original_document.page_spans, start, end)
+        block_index = _find_block_index(original_document, snippet, chunk.block_index)
+        bbox = original_document.blocks[block_index].bbox if 0 <= block_index < len(original_document.blocks) else []
+        context_ref = (
+            f"{source.context_ref} | translation_traceback:{chunk.chunk_id}:{pair.pair_id}"
+            if source.context_ref
+            else f"translation_traceback:{chunk.chunk_id}:{pair.pair_id}"
+        )
+        return SourceLocation(
+            span_id=span.span_id,
+            page=span.page,
+            start_offset=start,
+            end_offset=end,
+            context_type=source.context_type,
+            context_ref=context_ref,
+            text_snippet=snippet,
+            block_index=block_index,
+            bbox=bbox,
+            block_type=source.block_type,
+            source_precision=precision,
+        )
 
     start, end, precision = _resolve_original_offsets(original_document, chunk)
     snippet = chunk.original_text
@@ -184,6 +213,41 @@ def _select_alignment_chunk(
             english = _normalize(chunk.english_text)
             if snippet in english or english in snippet:
                 return chunk
+    return None
+
+
+def _select_alignment_pair(
+    chunk: TranslationAlignmentChunk,
+    source: SourceLocation,
+) -> TranslationSpanPair | None:
+    """Select the narrowest span pair matching the English source location."""
+    if not chunk.span_pairs:
+        return None
+
+    if source.start_offset >= 0 and source.end_offset >= source.start_offset:
+        matching = [
+            pair for pair in chunk.span_pairs
+            if (
+                pair.english_start_offset <= source.start_offset
+                and source.end_offset <= pair.english_end_offset
+            )
+            or (
+                source.start_offset < pair.english_end_offset
+                and source.end_offset > pair.english_start_offset
+            )
+        ]
+        if matching:
+            return min(
+                matching,
+                key=lambda pair: pair.english_end_offset - pair.english_start_offset,
+            )
+
+    snippet = _normalize(source.text_snippet)
+    if snippet:
+        for pair in chunk.span_pairs:
+            english = _normalize(pair.english_text)
+            if snippet in english or english in snippet:
+                return pair
     return None
 
 

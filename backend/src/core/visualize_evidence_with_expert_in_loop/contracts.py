@@ -9,6 +9,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from src.core.cross_lingual_process_and_extract_evidence.contracts import (
+    TranslationAlignmentChunk,
+)
+
 
 class SourceSpanDict(TypedDict, total=False):
     """Structured source span stored in JSONB.
@@ -360,6 +364,7 @@ class EvidenceGroupDetailResponse(BaseModel):
     distribution: EvidenceFieldDistribution
     items: list[EvidenceGroupItem]
     traces: list[EvidenceTrackTrace]
+    translation_alignment: list[TranslationAlignmentChunk] = Field(default_factory=list)
 
 
 class LiteratureProfileSummary(BaseModel):
