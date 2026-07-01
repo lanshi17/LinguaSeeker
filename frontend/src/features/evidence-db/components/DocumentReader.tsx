@@ -7,6 +7,10 @@ import { StructuredBlockRenderer, type BlockHighlight } from "./StructuredBlockR
 import { MarkdownDocumentViewer } from "@/features/evidence-search/components/MarkdownDocumentViewer";
 import { AnnotationLayer, type FieldTypeOption } from "@/features/evidence-search/components/annotationLayer";
 import type { AnnotationTrack, UserAnnotation } from "@/features/evidence-search/types/annotations";
+import type {
+  AlignmentHighlightMap,
+  AlignmentTextHighlight,
+} from "@/features/evidence-search/utils/translationAlignment";
 import { useI18n } from "@/lib/i18n";
 
 /** Shared CRUD handler shape for user annotations. */
@@ -34,6 +38,8 @@ export function DocumentReader({
   accentColor,
   blocks,
   blockHighlights,
+  blockAlignmentHighlights = [],
+  alignmentHighlightsByParagraph = {},
   sourceDocumentId,
   annotations = [],
   reviewContexts,
@@ -42,6 +48,9 @@ export function DocumentReader({
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
+  onAlignmentHover,
+  onAlignmentLeave,
+  onAlignmentToggle,
   onAssignField,
   fieldTypes,
 }: {
@@ -51,11 +60,16 @@ export function DocumentReader({
   accentColor: string;
   blocks?: ContentBlock[] | null;
   blockHighlights?: BlockHighlight[];
+  blockAlignmentHighlights?: AlignmentTextHighlight[];
+  alignmentHighlightsByParagraph?: AlignmentHighlightMap;
   sourceDocumentId?: string;
   annotations?: UserAnnotation[];
   reviewContexts?: ReviewContextMap;
   scrollContainerRef?: MutableRefObject<HTMLDivElement | null>;
   onContainerScroll?: (e: UIEvent<HTMLDivElement>) => void;
+  onAlignmentHover?: (pairId: string) => void;
+  onAlignmentLeave?: () => void;
+  onAlignmentToggle?: (pairId: string) => void;
   onAssignField?: (selectedText: string, fieldType: string) => void;
   fieldTypes?: FieldTypeOption[];
 } & AnnotationHandlers) {
@@ -109,7 +123,14 @@ export function DocumentReader({
         style={{ maxHeight: 600, overflowY: "auto", padding: 16, position: "relative" }}
       >
         {hasBlocks ? (
-          <StructuredBlockRenderer blocks={blocks} highlights={blockHighlights ?? []} />
+          <StructuredBlockRenderer
+            blocks={blocks}
+            highlights={blockHighlights ?? []}
+            alignmentHighlights={blockAlignmentHighlights}
+            onAlignmentHover={onAlignmentHover}
+            onAlignmentLeave={onAlignmentLeave}
+            onAlignmentToggle={onAlignmentToggle}
+          />
         ) : document.paragraphs.length === 0 ? (
           <div style={{
             display: "flex",
@@ -133,6 +154,10 @@ export function DocumentReader({
                 paragraphId={fullTextPara.id}
                 track={track}
                 sourceDocumentId={sourceDocumentId}
+                alignmentHighlights={alignmentHighlightsByParagraph[fullTextPara.id] ?? []}
+                onAlignmentHover={onAlignmentHover}
+                onAlignmentLeave={onAlignmentLeave}
+                onAlignmentToggle={onAlignmentToggle}
               />
             )}
             {snippetParas.map((para) => (
@@ -149,7 +174,14 @@ export function DocumentReader({
                     {t("evidenceDb.doc.page", { page: String(para.page) })}
                   </span>
                 )}
-                <HighlightedText paragraph={para} reviewContexts={reviewContexts} />
+                <HighlightedText
+                  paragraph={para}
+                  reviewContexts={reviewContexts}
+                  alignmentHighlights={alignmentHighlightsByParagraph[para.id] ?? []}
+                  onAlignmentHover={onAlignmentHover}
+                  onAlignmentLeave={onAlignmentLeave}
+                  onAlignmentToggle={onAlignmentToggle}
+                />
               </div>
             ))}
           </div>

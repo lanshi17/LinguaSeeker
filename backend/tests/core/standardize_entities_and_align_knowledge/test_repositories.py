@@ -1484,6 +1484,52 @@ class TestBuildRunItemSpecsGeneVariantGate:
         # 5 found + 3 not_found = 8 total identity fields
         assert len(specs) == 8
 
+    def test_gene_anchored_groups_keep_review_ready_fields_without_variant_colocation(self) -> None:
+        """Source-backed review-ready fields should survive the identity gate."""
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({
+            "reconciled": {
+                "track": "reconciled",
+                "evidence_items": [
+                    {
+                        "field_id": "A.gene_symbol",
+                        "group_id": "gene=GBA|variant=__missing__",
+                        "status": "found",
+                        "value": "GBA",
+                        "confidence": 0.95,
+                    },
+                    {
+                        "field_id": "A.variant_type",
+                        "group_id": "gene=GBA|variant=__missing__",
+                        "status": "found",
+                        "value": "missense",
+                        "confidence": 0.7,
+                    },
+                    {
+                        "field_id": "J.clinvar_assertion",
+                        "group_id": "gene=GBA|variant=__missing__",
+                        "status": "found",
+                        "value": "Pathogenic",
+                        "confidence": 0.72,
+                    },
+                    {
+                        "field_id": "B.case_count",
+                        "group_id": "gene=GBA|variant=__missing__",
+                        "status": "found",
+                        "value": 517,
+                        "confidence": 0.8,
+                    },
+                ],
+            },
+        })
+
+        specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+        found_field_ids = {spec.field_id for spec in specs if spec.status == "found"}
+        assert "A.variant_type" in found_field_ids
+        assert "J.clinvar_assertion" in found_field_ids
+        assert "B.case_count" in found_field_ids
+
     def test_find_identity_passable_groups(self) -> None:
         """Groups with gene or disease in FOUND are passable."""
         payloads = {

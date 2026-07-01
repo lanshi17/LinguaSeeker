@@ -342,3 +342,31 @@ def test_prompt_contains_clinvar_assertion_guidance() -> None:
     assert "Pathogenic" in prompt or "pathogenic" in prompt
     assert "expert panel" in prompt.lower()
     assert "ONLY when" in prompt or "Extract ONLY" in prompt
+
+
+def test_prompt_contains_high_recall_global_field_guidance() -> None:
+    """Primary prompt should explicitly cover the high-FN document-level fields."""
+    provider = BroadProvider()
+    stage = PrimaryBroadExtractionStage(provider)
+    stage.run(_document())
+    prompt = provider.prompts[0]
+
+    assert "B.hpo_terms" in prompt
+    assert "HPO" in prompt
+    assert "A.functional_domain_or_hotspot" in prompt
+    assert "domain" in prompt.lower()
+    assert "document-level" in prompt.lower()
+
+
+def test_prompt_treats_inheritance_and_clinvar_as_recall_first_candidates() -> None:
+    """Primary extraction should ask for explicit low-confidence candidates instead of blank fields."""
+    provider = BroadProvider()
+    stage = PrimaryBroadExtractionStage(provider)
+    stage.run(_document())
+    prompt = provider.prompts[0]
+
+    assert "family history" in prompt.lower()
+    assert "inheritance section" in prompt.lower()
+    assert "ClinVar" in prompt
+    assert "ACMG" in prompt
+    assert "low-confidence" in prompt.lower()

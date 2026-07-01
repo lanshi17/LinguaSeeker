@@ -7,6 +7,7 @@ import rehypeRaw from "rehype-raw";
 import "katex/dist/katex.min.css";
 import { categoryLabel } from "../utils/categoryStyles";
 import { CATEGORY_COLORS, type EvidenceDocumentHighlight } from "../utils/evidenceDocument";
+import type { AlignmentTextHighlight } from "../utils/translationAlignment";
 import { AnnotationLayer } from "./annotationLayer";
 import type { AnnotationTrack, UserAnnotation } from "../types/annotations";
 
@@ -21,6 +22,10 @@ interface MarkdownDocumentViewerProps {
   sourceDocumentId?: string;
   /** User-authored annotations anchored to this paragraph's visible text. */
   annotations?: UserAnnotation[];
+  alignmentHighlights?: AlignmentTextHighlight[];
+  onAlignmentHover?: (pairId: string) => void;
+  onAlignmentLeave?: () => void;
+  onAlignmentToggle?: (pairId: string) => void;
   onCreateAnnotation?: (payload: {
     paragraph_id: string;
     track: AnnotationTrack;
@@ -61,6 +66,39 @@ function applyMarkStyle(mark: HTMLElement, category?: string | null, selected?: 
   }
 }
 
+function applyAlignmentStyle(element: HTMLElement, alignment: AlignmentTextHighlight, hasEvidence: boolean) {
+  const activeColor = alignment.pinned ? "#7C3AED" : "#0891B2";
+  element.dataset.alignmentPairId = alignment.pairId;
+  element.dataset.alignmentActive = alignment.active ? "true" : "false";
+  element.addEventListener("mouseenter", () => {
+    element.dispatchEvent(new CustomEvent("alignment-hover", {
+      bubbles: true,
+      detail: alignment.pairId,
+    }));
+  });
+  element.addEventListener("mouseleave", () => {
+    element.dispatchEvent(new CustomEvent("alignment-leave", { bubbles: true }));
+  });
+  element.addEventListener("click", () => {
+    element.dispatchEvent(new CustomEvent("alignment-toggle", {
+      bubbles: true,
+      detail: alignment.pairId,
+    }));
+  });
+  if (hasEvidence) {
+    if (alignment.active) {
+      element.style.outline = `2px solid ${activeColor}`;
+      element.style.outlineOffset = "2px";
+    }
+    return;
+  }
+  element.style.borderRadius = "3px";
+  element.style.padding = "0 2px";
+  element.style.backgroundColor = alignment.active ? `${activeColor}30` : "rgba(8, 145, 178, 0.12)";
+  element.style.boxShadow = alignment.active ? `0 0 0 1px ${activeColor}70` : "0 0 0 1px rgba(8, 145, 178, 0.22)";
+  element.style.cursor = "pointer";
+}
+
 /**
  * Render markdown content (GFM tables, LaTeX math via KaTeX) with evidence
  * highlight overlays, plus an optional user-annotation layer.
@@ -79,6 +117,10 @@ export function MarkdownDocumentViewer({
   track,
   sourceDocumentId,
   annotations = [],
+  alignmentHighlights = [],
+  onAlignmentHover,
+  onAlignmentLeave,
+  onAlignmentToggle,
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
@@ -88,7 +130,20 @@ export function MarkdownDocumentViewer({
   // ---- Evidence highlight pass (raw-Markdown offsets) ----
   useEffect(() => {
     const el = containerRef.current;
-    if (!el || highlights.length === 0) return;
+    if (!el || (highlights.length === 0 && alignmentHighlights.length === 0)) return;
+
+    const handleAlignmentHover = (event: Event) => {
+      onAlignmentHover?.((event as CustomEvent<string>).detail);
+    };
+    const handleAlignmentLeave = () => {
+      onAlignmentLeave?.();
+    };
+    const handleAlignmentToggle = (event: Event) => {
+      onAlignmentToggle?.((event as CustomEvent<string>).detail);
+    };
+    el.addEventListener("alignment-hover", handleAlignmentHover);
+    el.addEventListener("alignment-leave", handleAlignmentLeave);
+    el.addEventListener("alignment-toggle", handleAlignmentToggle);
 
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
     const textNodes: Text[] = [];
@@ -112,7 +167,8 @@ export function MarkdownDocumentViewer({
       rawPos = nodeEnd;
 
       const splitSet = new Set<number>();
-      const covering: Array<{ hlIndex: number; start: number; end: number }> = [];
+      const evidenceCovering: Array<{ hlIndex: number; start: number; end: number }> = [];
+      const alignmentCovering: Array<{ hlIndex: number; start: number; end: number }> = [];
 
       for (let hi = 0; hi < highlights.length; hi++) {
         const hl = highlights[hi];
@@ -124,10 +180,23 @@ export function MarkdownDocumentViewer({
 
         if (localStart > 0) splitSet.add(localStart);
         if (localEnd < content.length) splitSet.add(localEnd);
-        covering.push({ hlIndex: hi, start: localStart, end: localEnd });
+        evidenceCovering.push({ hlIndex: hi, start: localStart, end: localEnd });
       }
 
-      if (covering.length === 0) continue;
+      for (let hi = 0; hi < alignmentHighlights.length; hi++) {
+        const alignment = alignmentHighlights[hi];
+        if (alignment.end <= nodeStart || alignment.start >= nodeEnd) continue;
+
+        const localStart = Math.max(0, alignment.start - nodeStart);
+        const localEnd = Math.min(content.length, alignment.end - nodeStart);
+        if (localEnd <= localStart) continue;
+
+        if (localStart > 0) splitSet.add(localStart);
+        if (localEnd < content.length) splitSet.add(localEnd);
+        alignmentCovering.push({ hlIndex: hi, start: localStart, end: localEnd });
+      }
+
+      if (evidenceCovering.length === 0 && alignmentCovering.length === 0) continue;
 
       const splits = Array.from(splitSet).sort((a, b) => a - b);
 
@@ -155,27 +224,44 @@ export function MarkdownDocumentViewer({
       }
 
       for (const seg of segments) {
-        const cover = covering.find(
+        const evidenceCover = evidenceCovering.find(
           (c) => c.start < seg.end && c.end > seg.start,
         );
-        if (!cover) continue;
+        const alignmentCover = alignmentCovering.find(
+          (c) => c.start < seg.end && c.end > seg.start,
+        );
+        if (!evidenceCover && !alignmentCover) continue;
         if (!seg.node.parentNode) continue;
 
-        const hl = highlights[cover.hlIndex];
-        const mark = document.createElement("mark");
-        applyMarkStyle(mark, hl.category, hl.selected);
-        mark.setAttribute(
-          "aria-label",
-          `${categoryLabel(hl.category)} evidence: ${hl.label}`,
-        );
-        mark.dataset.evidenceId = hl.evidenceId;
-        seg.node.parentNode.insertBefore(mark, seg.node);
-        mark.appendChild(seg.node);
-        marks.push(mark);
+        const element = evidenceCover
+          ? document.createElement("mark")
+          : document.createElement("span");
+        if (evidenceCover) {
+          const hl = highlights[evidenceCover.hlIndex];
+          applyMarkStyle(element, hl.category, hl.selected);
+          element.setAttribute(
+            "aria-label",
+            `${categoryLabel(hl.category)} evidence: ${hl.label}`,
+          );
+          element.dataset.evidenceId = hl.evidenceId;
+        }
+        if (alignmentCover) {
+          applyAlignmentStyle(
+            element,
+            alignmentHighlights[alignmentCover.hlIndex],
+            Boolean(evidenceCover),
+          );
+        }
+        seg.node.parentNode.insertBefore(element, seg.node);
+        element.appendChild(seg.node);
+        marks.push(element);
       }
     }
 
     return () => {
+      el.removeEventListener("alignment-hover", handleAlignmentHover);
+      el.removeEventListener("alignment-leave", handleAlignmentLeave);
+      el.removeEventListener("alignment-toggle", handleAlignmentToggle);
       for (const mark of marks) {
         if (!mark.parentNode) continue;
         while (mark.firstChild) {
@@ -184,7 +270,14 @@ export function MarkdownDocumentViewer({
         mark.parentNode.removeChild(mark);
       }
     };
-  }, [markdown, highlights]);
+  }, [
+    markdown,
+    highlights,
+    alignmentHighlights,
+    onAlignmentHover,
+    onAlignmentLeave,
+    onAlignmentToggle,
+  ]);
 
   return (
     <div
@@ -220,7 +313,7 @@ export function MarkdownDocumentViewer({
         paragraphId={paragraphId}
         track={track}
         annotations={annotations}
-        recomputeDeps={[markdown, highlights]}
+        recomputeDeps={[markdown, highlights, alignmentHighlights]}
         onCreateAnnotation={onCreateAnnotation}
         onUpdateAnnotation={onUpdateAnnotation}
         onDeleteAnnotation={onDeleteAnnotation}

@@ -6298,6 +6298,26 @@ English-pivot-tristate 在 `gs_075` 上丢失 `A.gene_disease_relationship`、`A
 - 没有 `original_blocks` 的路径也必须有文档级完整性校验，否则 structured block coverage 保护不到纯文本/segment fallback。
 - 大文档测试 mock 不应返回与输入长度无关的短占位符，否则会掩盖真实 coverage 语义。
 
+## 2026-07-01 - Semantic alignment threshold must not skip short biomedical clauses
+
+### 问题描述
+实现 `generate_chunk_span_pairs()` 时，初始 `_MIN_SEMANTIC_ALIGNMENT_CHARS=20` 导致 `MECP2基因突变导致Rett综合征。` 这类短但信息密集的中文医学句子跳过语义 LLM 对齐，直接进入 deterministic fallback。
+
+### 排查过程
+1. 先写 `test_generate_chunk_span_pairs_uses_semantic_json`，让 fake JSON provider 返回 `MECP2基因 -> MECP2 gene` 和 `Rett综合征 -> Rett syndrome`。
+2. 测试失败，返回的 pairs 全部是 `deterministic_token`。
+3. 检查执行路径后确认并非 JSON 解析失败，而是原文长度低于语义对齐最小阈值，提前 fallback。
+
+### 根因分析
+中文医学文本信息密度高，字符数不能直接类比英文 token 数。过高的最小长度阈值会跳过最需要精确对齐的短实体/短诊断句。
+
+### 解决方案
+将 `_MIN_SEMANTIC_ALIGNMENT_CHARS` 从 20 降到 8，只跳过极短片段。重新运行 alignment 测试后语义 JSON 路径和 fallback 路径均通过。
+
+### 预防措施
+- CJK 阈值要按信息密度设置，不能照搬英文长度直觉。
+- 对齐测试必须覆盖短医学实体句，而不仅是长段落。
+
 ## 2026-07-01 - N50 pipeline benchmark reports must be validated before interpretation
 
 ### 问题描述
@@ -6325,3 +6345,151 @@ Benchmark runner 的 `--api-key` 参数默认为空，但本地后端 API 路由
 - 解读任何 benchmark report 前必须先检查 `pipeline_status`、`timeout_and_errors`、`total_duration_s` 和 `completed` 数量；0 秒全量完成应视为无效报告。
 - `n50_master` 后续应考虑在 condition summary 中区分 `completed_with_entry_errors`，或当 401/5xx 覆盖所有 entries 时直接 fail fast。
 - 需要进入 `reports/n50/` 的实验报告应带明确 `config.condition_id`，否则 paired/aggregate 脚本会显示 `unknown` 并容易覆盖解释口径。
+
+## 2026-07-01 - N50 tri-state FN bucket labels need phase2 artifact validation
+
+### 问题描述
+N=50 `c2_english_pivot_tristate` 报告中 207 个 FN 被初步归为 review、primary/candidate generation、source grounding、scorer/boundary 等 buckets。用户要求继续拆解 163 个 `primary_or_candidate_generation_missing` 黑盒，并验证 `A.variant_type` 与 `A.variant_hgvs_p` 的修复方向。
+
+### 排查过程
+1. 创建离线诊断脚本 `benchmark/analysis/n50_comparison/diagnose_tristate_fn.py`，只读取 `benchmark/data/reports/n50/*` 与 `data/pipeline/<run_id>/phase_2/extraction_result.json`，不调用模型。
+2. 对 163 个 primary bucket FN 比较 `translated_result.evidence_items` 与 `reconciled_result.evidence_items`，判断 verifier 前是否已有 `found` 候选。
+3. 对全部 207 个 FN 用 benchmark 当前 matcher 做 phase2 artifact vs final report 重判，区分 phase2 无候选、source_invalid 可恢复、phase2 正确但最终丢失、候选值错误。
+4. 对 `A.variant_type` boundary rows 与 `A.variant_hgvs_p` source-invalid rows 做字段专项重判，避免把所有失败都归因于 normalizer 或 HGVS 宽松匹配。
+5. 本轮开始时曾用裸 `python` 做只读 JSON 探查，违反项目“Python 统一通过 uv”规范；后续已切换为 `uv run python`，并记录本复盘。
+
+### 根因分析
+- 163 个 `primary_or_candidate_generation_missing` 在 phase2 artifact 中全部只有 pre-reconcile `not_found`，没有任何 `found` 候选；当前证据支持主瓶颈在 Phase 2 candidate breadth / primary schema，而不是 contextual verifier 把正确候选压掉。
+- 全部 207 个 FN 的二级分类为：174 个 phase2 无 found 候选，13 个候选存在但值错误或无效，11 个 source_invalid 若放行可匹配 gold，9 个 phase2 reconciled 已正确但 final report/DB 显示 missing。
+- `A.variant_type` 的 13 个 boundary rows 并非都能靠 mapping 字典修复：当前 matcher 离线重判只有 7/13 可从 phase2 artifact 匹配，另外 6/13 是候选值确实错误。
+- `A.variant_hgvs_p` 的 6 个 source-invalid rows 也不是全部 HGVS 缩写/全拼问题：只有 2/6 若放行可命中 gold，另外 4/6 指向了错误变异。
+
+### 解决方案
+1. 生成固定诊断报告 `benchmark/data/reports/n50/c2_english_pivot_tristate_phase2_fn_diagnosis_20260701.json`，作为后续 prompt、admission、grounding 修复的证据输入。
+2. 将下一轮优化优先级调整为 primary/candidate breadth：重点字段为 `J.clinvar_assertion`、`B.hpo_terms`、`B.mode_of_inheritance_reported`、`A.functional_domain_or_hotspot`。
+3. 将 source_invalid 修复缩小为值已匹配 gold 的 11 个 case，而不是全局放宽 source grounding。
+4. 将 phase2-correct-but-final-missing 的 9 个 case 独立交给 Phase 3/DB admission 或 report scorer 跟踪，避免误归因到 normalizer。
+
+### 预防措施
+- 任何 “death bucket” 标签进入研发优先级前，都必须和 phase2 artifacts 做二级验证；bucket 名不能直接等同根因。
+- 修复建议必须先估算可恢复上限，例如 source-invalid 先计算 “promote to found 后是否匹配 gold”。
+- 项目内 Python 探查、脚本和测试均使用 `uv run python` / `uv run pytest` / `uv run ruff`，禁止裸 `python`。
+
+## 2026-07-01 - N50 tri-state FN fixes should stay narrow after bucket validation
+
+### 问题描述
+离线诊断确认 N=50 `c2_english_pivot_tristate` 的 163 个 primary bucket FN 在 phase2 中全部没有 found 候选，同时另有 9 个 phase2 正确但 final missing、11 个 source_invalid 值可恢复。需要执行修复，但不能重新引入“全局放宽 verifier/grounding”的脏数据风险。
+
+### 排查过程
+1. 为 Primary prompt 新增红测，要求覆盖 `B.hpo_terms`、`A.functional_domain_or_hotspot`，并对 inheritance/ClinVar 给出 recall-first 但显式证据优先的候选说明。
+2. 为 Phase 3 persistence gate 新增红测，复现 gene-anchored group 没有完整 gene+variant co-location 时，`A.variant_type`、`J.clinvar_assertion`、`B.case_count` 被静默丢弃。
+3. 为 SourceGrounder 新增红测，复现 `p.Thr240Met` vs `Thr240Met`、`p.R267fs*6 (p.Arg267fsTer6)` vs `p.R267fs*6(p.Arg267fsTer6)` 的窄 HGVS source matching failure。
+4. 按 TDD 顺序确认红测失败后再实现；实现后跑目标文件级测试与 Ruff。
+
+### 根因分析
+- Primary prompt 原本没有要求抽 `B.hpo_terms` 和 `A.functional_domain_or_hotspot`，且 inheritance / ClinVar 规则偏向空值，无法覆盖文档级全局推断字段。
+- Phase 3 identity survival 清单只保留基础 identity/clinical context 字段；对 gene-anchored、source-backed 的 `A.variant_type`、`J.clinvar_assertion`、`B.case_count` 仍然过窄，导致 phase2 正确候选在入库前消失。
+- SourceGrounder 的片段搜索已经有直接/规范化匹配，但没有针对 HGVS protein 常见文本漂移的白名单 alias：缺失 `p.`、括号空格差异、one-letter/three-letter amino-acid notation。
+
+### 解决方案
+1. 扩展 primary broad extraction prompt：新增 HPO/phenotype、functional domain/hotspot、inheritance source scan、ClinVar/ACMG low-confidence found candidate guidance。
+2. 将 `A.variant_type`、`J.clinvar_assertion`、`B.case_count` 加入 Phase 3 gene-anchored identity survival 清单，只在 passable group 中保留，不全局放开。
+3. 在 SourceGrounder 中只对 `A.variant_hgvs_p` 生成严格 alias：compact parentheses、drop `p.` prefix、3-letter→1-letter、1-letter→3-letter、fsTer ↔ fs*。
+
+### 预防措施
+- Prompt 扩召回必须配套 field-level prompt tests，避免未来字段说明回退。
+- Persistence gate 新增字段应先从 phase2-correct-but-final-missing 的证据恢复上限反推，不要把所有字段都加入 survival 清单。
+- Grounding alias 只能针对已证实的 notation drift，并绑定 field_id；不能把 `source_invalid` 全局改成 found。
+
+
+## 2026-07-01: antd 组件 content-box 盒模型与 overflow:hidden 父容器冲突导致右侧内容被裁切
+
+**问题**: AI Chat 侧边栏的会话列表项（"Session f0cee55f"）右侧的省略号菜单图标被部分遮挡，用户无法看到完整图标。
+
+**排查过程**: 通过浏览器 DevTools 检查 `.ant-conversations` 元素的几何属性，发现：
+- 组件渲染宽度 clientWidth=264px，scrollWidth=264px
+- 但父容器（clipping container）宽度只有 240px，overflow:hidden
+- convRight=513 而 containerRight=489 → 右侧 24px 被裁切
+- 24px 正好等于 padding:12px × 2（左右各 12px）
+
+**根因**: `@ant-design/x` 的 Conversations 组件默认使用 `box-sizing: content-box`（antd CSS-in-JS 引擎默认值）。在 ChatView.tsx 中设置了 `style={{ width: 240 }}`，但 content-box 模式下 width 只包含内容区域，padding 额外加在外面 → 实际渲染宽度 = 240 + 12×2 = 264px。父容器是 240px 的 `overflow:hidden` div，导致右侧 24px（恰好是省略号菜单图标位置）被裁切。
+
+**解决方案**: 在 Conversations 组件的 style 中添加 `boxSizing: 'border-box'`，使 240px 包含 padding，渲染宽度 = 240px，与父容器一致。验证：convRight=489 = containerRight=489，裁切消除。
+
+**预防措施**:
+- 使用 antd / @ant-design/x 组件并指定固定宽度时，必须确认组件的 box-sizing 默认值。antd CSS-in-JS 组件默认 content-box，与 CSS reset 中常见的 `* { box-sizing: border-box }` 不同。
+- 当组件被放入 `overflow: hidden` 的定宽父容器时，box-sizing 差异会导致 padding 溢出被裁切。应在组件 style 中显式设置 `boxSizing: 'border-box'`。
+- 排查"内容被遮挡"类 UI 问题时，优先用 DevTools 比较 `getBoundingClientRect().right` 与父容器 `right`，差值即为裁切量，再与 padding/border/margin 对照定位根因。
+
+## 2026-07-01 - Span-pair reader alignment tests must derive offsets from fixture text
+
+### 问题描述
+实现双栏 reader 的 span-pair hover/click 联动时，前端 `HighlightedTextAlignment` 红测最初手写 `c.194delC` 的 start/end offset，导致测试期望与 fixture 文本实际位置偏移 1 个字符。
+
+### 排查过程
+1. 运行 `bun run test -- HighlightedTextAlignment` 后，测试找不到完整 `c.194delC` span。
+2. 查看 Testing Library 输出的 DOM，发现组件渲染出的 alignment span 为 `.194delC `，说明渲染切段逻辑按输入 offset 工作，错误在测试 fixture offset。
+3. 将测试 offset 改为由 `text.indexOf("c.194delC")` 推导，避免手写字符计数。
+4. 再次运行聚焦测试，确认 2 个 reader alignment 测试通过。
+
+### 根因分析
+医学文本包含 CJK、标点和空格混排，人工数 offset 容易漏算空格或中文字符边界。span-pair alignment 的核心契约是字符 offset，测试如果用错 offset，会把 fixture 错误误判为渲染逻辑错误。
+
+### 解决方案
+测试 fixture 中所有可由文本推导的 start/end offset 均使用 `indexOf()` 或同等定位逻辑生成；只在专门测试错误 offset/fallback 的用例中手写不匹配 offset。
+
+### 预防措施
+- 前端 span/offset 测试默认从 fixture 文本推导 offset，不手写字符计数。
+- 当 DOM 输出切出相邻字符时，先检查测试输入 offset，再检查组件切段算法。
+- 对 API 返回 full-document offset 但 UI 渲染 filtered text 的情况，必须有按 pair text 重新定位的 fallback 测试覆盖。
+
+## 2026-07-01 - Frontend node type-test script has pre-existing tsconfig drift
+
+### 问题描述
+为 `EvidenceGroupDetailResponse.translation_alignment` 增加类型契约测试时，`bun run test:node` 能捕获缺失字段红测，但同一脚本还会因既有 TypeScript 配置问题失败。
+
+### 排查过程
+1. 新增 `frontend/tests/evidence-search/evidenceSearchTypes.test.ts` 后运行 `bun run test:node`。
+2. 输出同时包含预期的 `translation_alignment` 缺失错误，以及既有 `import.meta` 被 CommonJS 输出拒绝、Node 内置模块类型缺失、`countEvidenceHighlightTones` 导出缺失等错误。
+3. 更新前端 API 类型后再次运行，`translation_alignment` 相关错误消失，但既有 `test:node` 配置错误仍存在。
+4. 本次主要验证改用 `bun run type-check`、`bun run test`、聚焦 Vitest 与 ESLint；`test:node` 失败作为既有脚本问题记录，不纳入本次功能阻塞。
+
+### 根因分析
+`tsconfig.test.json` 使用 NodeNext/CommonJS 相关输出路径编译包含 Vite `import.meta` 的前端源码，同时未声明 Node 类型；该问题在本次改动前已影响多个现有 `.test.ts` 文件。
+
+### 解决方案
+保留类型契约 fixture，确保未来修复 `test:node` 后可覆盖 alignment 类型；本次功能验收使用当前项目有效的 `tsc --noEmit` 和 Vitest 测试链路。
+
+### 预防措施
+- 新增前端类型测试前先确认对应 tsconfig 是否纳入并能独立通过。
+- Vite/React 项目的 Node runner type-test 配置应与浏览器源码隔离，避免 CommonJS 编译 Vite-only `import.meta` 文件。
+- 最终验收需明确区分本次改动失败与既有测试脚本漂移。
+
+## 2026-07-01 - Targeted N5 smoke validates narrow tri-state FN fixes but exposes ClinVar anchoring risk
+
+### 问题描述
+对 N=50 tri-state FN 的三项窄修复完成后，需要先用低成本 N=5 smoke 验证动态 LLM JSON 稳定性、完整 pipeline 存活率，以及 HGVS/Phase3/primary 扩召回是否真实进入运行路径。
+
+### 排查过程
+1. 检查 8000 端口后端进程启动时间，发现旧 uvicorn 进程启动于 2026-06-30 20:29，早于本轮修复，且未启用 `--reload`。
+2. 重启后端并确认 `/api/v1/health` 返回 200，避免 smoke 使用旧代码。
+3. 用 `uv run python` 直接调用 `benchmark.core.pipeline_client.run_evaluation`，选择 targeted entries：`gs_010`, `gs_012`, `gs_071`, `gs_081`, `gs_102`。
+4. 使用 `c2_english_pivot_tristate` 等价参数强制 re-extract，并从后端配置读取 API key，不打印密钥。
+5. 复制报告到 `benchmark/data/reports/n50/c2_english_pivot_tristate_n5_targeted_smoke_20260701_105507.json`，再与旧 N=50 tri-state 报告 `c2_english_pivot_tristate_20260701_024458.json` 做同 5 篇 matched 对比。
+
+### 根因分析
+- 三项窄修复确实进入动态路径：official smoke value-F1=0.7536、grounded-F1=0.6667；按同 5 篇 strict field-match audit，旧 tri-state F1=0.5714，新 smoke F1=0.6667，主要来自 recall 提升。
+- Phase3 admission 修复生效：`gs_071.J.clinvar_assertion` 从 missing 变为 matched，`Pathogenic (ACMG)` 被保留到最终报告。
+- HGVS protein source alias 生效：`gs_081.A.variant_hgvs_p` 的 `p.Thr240Met` 和 `gs_102.A.variant_hgvs_p` 的 `p.R267fs*6` 均从旧 missing/source-invalid 类失败变为 matched。
+- Primary prompt 扩召回有收益但仍不充分：`gs_010.B.mode_of_inheritance_reported` 从 missing 变为 matched；但 `gs_102.B.hpo_terms` 和 `A.functional_domain_or_hotspot` 仍 missing。
+- ClinVar/ACMG 扩召回暴露 variant-anchor 风险：`gs_010.J.clinvar_assertion` 旧报告 fuzzy matched `Pathogenic`，新报告抓到邻近变异 `c.1844G>A, p.(Arg615Gln)` 的 likely benign，导致 wrong_value。
+
+### 解决方案
+1. N=5 smoke 通过 pipeline 存活性门槛：5/5 completed，无 timeout/error/parser failure；报告已固定保存。
+2. N=50 前应保留三项窄修复，但对 `J.clinvar_assertion` 增加 variant/gene anchor 约束，避免从同文档邻近变异窃取 classification。
+3. HPO/domain 的 prompt 扩召回还不能视为完成；需要从 phase2 artifact 继续确认是 primary 仍未抽取，还是后续 verifier/admission 抑制。
+
+### 预防措施
+- Prompt 扩召回必须用 targeted matched smoke 检查邻近实体污染；不能只看总 F1 提升。
+- 对 ClinVar/ACMG 字段，value 必须绑定同一 variant/gene/source row；低置信度候选可以保留，但不能无锚点直接替代 gold 目标。
+- 每次压测前检查后端进程启动时间；无 `--reload` 时必须重启，否则 benchmark 可能验证旧代码。

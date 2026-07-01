@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { ContentBlock } from "@/features/evidence-search/types/evidenceSearch";
 import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
+import type { AlignmentTextHighlight } from "@/features/evidence-search/utils/translationAlignment";
 
 /* ── Types ──────────────────────────────────────────────── */
 
@@ -22,6 +23,12 @@ interface BlockWithRange {
   globalOffset: number;
   /** Extracted display text for this block. */
   text: string;
+}
+
+interface AlignmentHandlers {
+  onAlignmentHover?: (pairId: string) => void;
+  onAlignmentLeave?: () => void;
+  onAlignmentToggle?: (pairId: string) => void;
 }
 
 /* ── Text extraction from blocks ────────────────────────── */
@@ -74,10 +81,18 @@ function HighlightedSegment({
   text,
   globalStart,
   highlights,
+  alignmentHighlights = [],
+  onAlignmentHover,
+  onAlignmentLeave,
+  onAlignmentToggle,
 }: {
   text: string;
   globalStart: number;
   highlights: BlockHighlight[];
+  alignmentHighlights?: AlignmentTextHighlight[];
+  onAlignmentHover?: (pairId: string) => void;
+  onAlignmentLeave?: () => void;
+  onAlignmentToggle?: (pairId: string) => void;
 }) {
   const localHighlights = useMemo(() => {
     return highlights
@@ -87,28 +102,84 @@ function HighlightedSegment({
         if (start >= text.length || end <= 0 || start >= end) return null;
         return { ...h, start, end };
       })
-      .filter(Boolean)
+      .filter((h): h is BlockHighlight & { start: number; end: number } => h !== null)
       .sort((a, b) => a!.start - b!.start);
   }, [text, globalStart, highlights]);
+  const localAlignmentHighlights = useMemo(() => {
+    return alignmentHighlights
+      .map((h) => {
+        const start = Math.max(0, h.start - globalStart);
+        const end = Math.min(text.length, h.end - globalStart);
+        if (start >= text.length || end <= 0 || start >= end) return null;
+        return { ...h, start, end };
+      })
+      .filter((h): h is AlignmentTextHighlight => h !== null)
+      .sort((a, b) => a!.start - b!.start);
+  }, [text, globalStart, alignmentHighlights]);
 
-  if (localHighlights.length === 0) {
+  if (localHighlights.length === 0 && localAlignmentHighlights.length === 0) {
     return <>{text}</>;
   }
 
   const segments: React.ReactNode[] = [];
-  let cursor = 0;
-
+  const boundaries = new Set<number>([0, text.length]);
   for (const hl of localHighlights) {
     if (!hl) continue;
-    if (cursor < hl.start) {
-      segments.push(<span key={`p-${cursor}`}>{text.slice(cursor, hl.start)}</span>);
+    boundaries.add(hl.start);
+    boundaries.add(hl.end);
+  }
+  for (const alignment of localAlignmentHighlights) {
+    if (!alignment) continue;
+    boundaries.add(alignment.start);
+    boundaries.add(alignment.end);
+  }
+
+  const orderedBoundaries = [...boundaries].sort((a, b) => a - b);
+  for (let index = 0; index < orderedBoundaries.length - 1; index++) {
+    const start = orderedBoundaries[index];
+    const end = orderedBoundaries[index + 1];
+    if (end <= start) {
+      continue;
     }
-    const hex = hl.category && CATEGORY_COLORS[hl.category]
-      ? CATEGORY_COLORS[hl.category].hex
+    const evidence = localHighlights.find((hl) => hl && hl.start < end && hl.end > start);
+    const alignment = localAlignmentHighlights.find(
+      (hl) => hl && hl.start < end && hl.end > start,
+    );
+    const segmentText = text.slice(start, end);
+    if (!evidence && !alignment) {
+      segments.push(<span key={`p-${start}`}>{segmentText}</span>);
+      continue;
+    }
+    if (!evidence && alignment) {
+      segments.push(
+        <span
+          key={`a-${alignment.pairId}-${start}`}
+          data-alignment-pair-id={alignment.pairId}
+          data-alignment-active={alignment.active ? "true" : "false"}
+          onMouseEnter={() => onAlignmentHover?.(alignment.pairId)}
+          onMouseLeave={() => onAlignmentLeave?.()}
+          onClick={() => onAlignmentToggle?.(alignment.pairId)}
+          style={alignmentSegmentStyle(alignment, false)}
+        >
+          {segmentText}
+        </span>,
+      );
+      continue;
+    }
+    if (!evidence) {
+      continue;
+    }
+    const hex = evidence.category && CATEGORY_COLORS[evidence.category]
+      ? CATEGORY_COLORS[evidence.category].hex
       : "var(--color-text-muted)";
     segments.push(
       <mark
-        key={`h-${hl.evidenceId}-${hl.start}`}
+        key={`h-${evidence.evidenceId}-${start}`}
+        data-alignment-pair-id={alignment?.pairId}
+        data-alignment-active={alignment?.active ? "true" : undefined}
+        onMouseEnter={alignment ? () => onAlignmentHover?.(alignment.pairId) : undefined}
+        onMouseLeave={alignment ? () => onAlignmentLeave?.() : undefined}
+        onClick={alignment ? () => onAlignmentToggle?.(alignment.pairId) : undefined}
         style={{
           backgroundColor: `${hex}50`,
           color: `${hex}f0`,
@@ -116,20 +187,38 @@ function HighlightedSegment({
           borderRadius: 2,
           padding: "0 2px",
           cursor: "help",
+          ...alignmentSegmentStyle(alignment, true),
         }}
-        title={`${hl.label} (${hl.fieldId})`}
+        title={`${evidence.label} (${evidence.fieldId})`}
       >
-        {text.slice(hl.start, hl.end)}
+        {segmentText}
       </mark>,
     );
-    cursor = hl.end;
-  }
-
-  if (cursor < text.length) {
-    segments.push(<span key={`t-${cursor}`}>{text.slice(cursor)}</span>);
   }
 
   return <>{segments}</>;
+}
+
+function alignmentSegmentStyle(
+  alignment: AlignmentTextHighlight | undefined,
+  hasEvidence: boolean,
+): React.CSSProperties {
+  if (!alignment) {
+    return {};
+  }
+  const activeColor = alignment.pinned ? "#7C3AED" : "#0891B2";
+  if (hasEvidence) {
+    return alignment.active
+      ? { outline: `2px solid ${activeColor}`, outlineOffset: 2 }
+      : {};
+  }
+  return {
+    borderRadius: 3,
+    padding: "0 2px",
+    backgroundColor: alignment.active ? `${activeColor}30` : "rgba(8, 145, 178, 0.12)",
+    boxShadow: alignment.active ? `0 0 0 1px ${activeColor}70` : "0 0 0 1px rgba(8, 145, 178, 0.22)",
+    cursor: "pointer",
+  };
 }
 
 /* ── Individual block renderers ─────────────────────────── */
@@ -139,12 +228,17 @@ function HeadingBlock({
   text,
   globalStart,
   highlights,
+  alignmentHighlights,
+  onAlignmentHover,
+  onAlignmentLeave,
+  onAlignmentToggle,
 }: {
   block: ContentBlock;
   text: string;
   globalStart: number;
   highlights: BlockHighlight[];
-}) {
+  alignmentHighlights: AlignmentTextHighlight[];
+} & AlignmentHandlers) {
   const level = block.text_level ?? 2;
   const Tag = `h${Math.min(Math.max(level, 1), 6)}` as keyof React.JSX.IntrinsicElements;
   const sizes: Record<number, { fontSize: number; fontWeight: number }> = {
@@ -156,7 +250,15 @@ function HeadingBlock({
   const style = sizes[level] ?? sizes[3];
   return (
     <Tag style={{ ...style, color: "var(--color-text)", margin: 0, lineHeight: 1.4 }}>
-      <HighlightedSegment text={text} globalStart={globalStart} highlights={highlights} />
+      <HighlightedSegment
+        text={text}
+        globalStart={globalStart}
+        highlights={highlights}
+        alignmentHighlights={alignmentHighlights}
+        onAlignmentHover={onAlignmentHover}
+        onAlignmentLeave={onAlignmentLeave}
+        onAlignmentToggle={onAlignmentToggle}
+      />
     </Tag>
   );
 }
@@ -165,14 +267,27 @@ function TextBlock({
   text,
   globalStart,
   highlights,
+  alignmentHighlights,
+  onAlignmentHover,
+  onAlignmentLeave,
+  onAlignmentToggle,
 }: {
   text: string;
   globalStart: number;
   highlights: BlockHighlight[];
-}) {
+  alignmentHighlights: AlignmentTextHighlight[];
+} & AlignmentHandlers) {
   return (
     <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--color-text-strong)", margin: 0, whiteSpace: "pre-wrap" }}>
-      <HighlightedSegment text={text} globalStart={globalStart} highlights={highlights} />
+      <HighlightedSegment
+        text={text}
+        globalStart={globalStart}
+        highlights={highlights}
+        alignmentHighlights={alignmentHighlights}
+        onAlignmentHover={onAlignmentHover}
+        onAlignmentLeave={onAlignmentLeave}
+        onAlignmentToggle={onAlignmentToggle}
+      />
     </p>
   );
 }
@@ -182,12 +297,17 @@ function TableBlock({
   text,
   globalStart,
   highlights,
+  alignmentHighlights,
+  onAlignmentHover,
+  onAlignmentLeave,
+  onAlignmentToggle,
 }: {
   block: ContentBlock;
   text: string;
   globalStart: number;
   highlights: BlockHighlight[];
-}) {
+  alignmentHighlights: AlignmentTextHighlight[];
+} & AlignmentHandlers) {
   return (
     <div style={{ overflowX: "auto" }}>
       {block.table_caption && block.table_caption.length > 0 && (
@@ -213,7 +333,15 @@ function TableBlock({
           border: "1px solid var(--color-border)",
           margin: 0,
         }}>
-          <HighlightedSegment text={text} globalStart={globalStart} highlights={highlights} />
+          <HighlightedSegment
+            text={text}
+            globalStart={globalStart}
+            highlights={highlights}
+            alignmentHighlights={alignmentHighlights}
+            onAlignmentHover={onAlignmentHover}
+            onAlignmentLeave={onAlignmentLeave}
+            onAlignmentToggle={onAlignmentToggle}
+          />
         </pre>
       )}
       {block.table_footnote && block.table_footnote.length > 0 && (
@@ -229,11 +357,16 @@ function ListBlock({
   block,
   globalStart,
   highlights,
+  alignmentHighlights,
+  onAlignmentHover,
+  onAlignmentLeave,
+  onAlignmentToggle,
 }: {
   block: ContentBlock;
   globalStart: number;
   highlights: BlockHighlight[];
-}) {
+  alignmentHighlights: AlignmentTextHighlight[];
+} & AlignmentHandlers) {
   const items = block.list_items ?? [];
   let offset = globalStart;
   return (
@@ -243,7 +376,15 @@ function ListBlock({
         offset += item.length + 1; // +1 for \n
         return (
           <li key={i} style={{ marginBottom: 4 }}>
-            <HighlightedSegment text={item} globalStart={itemStart} highlights={highlights} />
+            <HighlightedSegment
+              text={item}
+              globalStart={itemStart}
+              highlights={highlights}
+              alignmentHighlights={alignmentHighlights}
+              onAlignmentHover={onAlignmentHover}
+              onAlignmentLeave={onAlignmentLeave}
+              onAlignmentToggle={onAlignmentToggle}
+            />
           </li>
         );
       })}
@@ -255,11 +396,16 @@ function FigureBlock({
   block,
   globalStart,
   highlights,
+  alignmentHighlights,
+  onAlignmentHover,
+  onAlignmentLeave,
+  onAlignmentToggle,
 }: {
   block: ContentBlock;
   globalStart: number;
   highlights: BlockHighlight[];
-}) {
+  alignmentHighlights: AlignmentTextHighlight[];
+} & AlignmentHandlers) {
   const captions = block.image_caption ?? block.chart_caption ?? [];
   return (
     <figure style={{ margin: 0 }}>
@@ -283,7 +429,15 @@ function FigureBlock({
       )}
       {block.content && (
         <p style={{ fontSize: 13, color: "var(--color-text-strong)", marginTop: 4 }}>
-          <HighlightedSegment text={block.content} globalStart={globalStart} highlights={highlights} />
+          <HighlightedSegment
+            text={block.content}
+            globalStart={globalStart}
+            highlights={highlights}
+            alignmentHighlights={alignmentHighlights}
+            onAlignmentHover={onAlignmentHover}
+            onAlignmentLeave={onAlignmentLeave}
+            onAlignmentToggle={onAlignmentToggle}
+          />
         </p>
       )}
     </figure>
@@ -348,10 +502,15 @@ function MetaBlock({ block }: { block: ContentBlock }) {
 export function StructuredBlockRenderer({
   blocks,
   highlights,
+  alignmentHighlights = [],
+  onAlignmentHover,
+  onAlignmentLeave,
+  onAlignmentToggle,
 }: {
   blocks: ContentBlock[];
   highlights: BlockHighlight[];
-}) {
+  alignmentHighlights?: AlignmentTextHighlight[];
+} & AlignmentHandlers) {
   const blockRanges = useMemo(() => buildBlockRanges(blocks), [blocks]);
 
   return (
@@ -364,8 +523,20 @@ export function StructuredBlockRenderer({
         const blockHighlights = highlights.filter(
           (h) => h.globalStart < globalOffset + text.length && h.globalEnd > globalOffset,
         );
+        const blockAlignmentHighlights = alignmentHighlights.filter(
+          (h) => h.start < globalOffset + text.length && h.end > globalOffset,
+        );
 
-        const props = { block, text, globalStart: globalOffset, highlights: blockHighlights };
+        const props = {
+          block,
+          text,
+          globalStart: globalOffset,
+          highlights: blockHighlights,
+          alignmentHighlights: blockAlignmentHighlights,
+          onAlignmentHover,
+          onAlignmentLeave,
+          onAlignmentToggle,
+        };
 
         switch (block.type) {
           case "title":

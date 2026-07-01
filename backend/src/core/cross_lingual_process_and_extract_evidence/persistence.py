@@ -89,6 +89,7 @@ def _build_translation_alignment(result: TranslationResult) -> list[TranslationA
                 english_end_offset=english_end,
                 page=segment.source_bbox.page if segment.source_bbox is not None else 1,
                 block_index=segment.index,
+                span_pairs=segment.span_pairs,
             )
         )
     return alignment
