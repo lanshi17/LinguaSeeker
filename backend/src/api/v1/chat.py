@@ -1,4 +1,5 @@
 """Chat routes for evidence review conversations."""
+
 from __future__ import annotations
 
 import json

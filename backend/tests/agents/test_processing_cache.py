@@ -6,6 +6,7 @@ Tests cover:
   - Cache write: L2 upsert + L1 set.
   - Graceful degradation when Redis or PostgreSQL fails.
 """
+
 from __future__ import annotations
 
 import json
@@ -338,9 +339,7 @@ class TestCacheServiceLookup:
         mock_redis.get.assert_awaited_once_with("docproc:abc123")
 
     @pytest.mark.asyncio
-    async def test_l1_miss_l2_hit_backfills_l1(
-        self, cache_service, mock_redis, mock_session_factory, sample_state
-    ):
+    async def test_l1_miss_l2_hit_backfills_l1(self, cache_service, mock_redis, mock_session_factory, sample_state):
         """L2 PostgreSQL hit returns state and backfills L1."""
         mock_redis.get.return_value = None  # L1 miss
 
@@ -379,9 +378,7 @@ class TestCacheServiceLookup:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_l1_failure_falls_back_to_l2(
-        self, cache_service, mock_redis, mock_session_factory, sample_state
-    ):
+    async def test_l1_failure_falls_back_to_l2(self, cache_service, mock_redis, mock_session_factory, sample_state):
         """L1 Redis failure gracefully falls back to L2."""
         mock_redis.get.side_effect = Exception("Redis connection lost")
 
@@ -403,9 +400,7 @@ class TestCacheServiceWrite:
     """Tests for cache write (L1 + L2 write path)."""
 
     @pytest.mark.asyncio
-    async def test_cache_result_writes_both_tiers(
-        self, cache_service, mock_redis, mock_session_factory, sample_state
-    ):
+    async def test_cache_result_writes_both_tiers(self, cache_service, mock_redis, mock_session_factory, sample_state):
         """cache_result writes to both L2 PostgreSQL and L1 Redis."""
         mock_session = MagicMock()
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
@@ -484,9 +479,7 @@ class TestRunnerCacheIntegration:
         from src.agents.runner import PipelineRunner
 
         mock_cache = MagicMock()
-        mock_cache.get_cached_result = AsyncMock(
-            return_value=CacheLookupResult(state=sample_state, source="l1_redis")
-        )
+        mock_cache.get_cached_result = AsyncMock(return_value=CacheLookupResult(state=sample_state, source="l1_redis"))
 
         runner = PipelineRunner(
             orchestrator=MagicMock(),

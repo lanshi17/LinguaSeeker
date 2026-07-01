@@ -1,4 +1,5 @@
 """Value normalization for evidence items and raw sources."""
+
 from __future__ import annotations
 
 import re
@@ -13,12 +14,17 @@ from .contracts import (
 
 _MISSING_GROUP_VALUE = "__missing__"
 
+
 def normalize_group_token(value: object) -> str:
     text = str(value or "").strip()
     text = re.sub(r"\s+", "", text)
     return text or _MISSING_GROUP_VALUE
+
+
 def make_group_id(gene: object, variant: object) -> str:
     return f"gene={normalize_group_token(gene)}|variant={normalize_group_token(variant)}"
+
+
 class EvidenceItemNormalizer:
     """Normalizes model evidence output to the static field catalog."""
 
@@ -95,19 +101,19 @@ class EvidenceItemNormalizer:
         if spec.field_id == "D.allele_frequency" and status != EvidenceStatus.FOUND:
             requires_external_completion = True
             if not external_completion_note:
-                external_completion_note = (
-                    "Population frequency must be completed by an external annotation provider."
-                )
+                external_completion_note = "Population frequency must be completed by an external annotation provider."
 
-        return item.model_copy(update={
-            "category": spec.category_id,
-            "field_name": spec.field_name,
-            "status": status,
-            "assigned_acmg_codes": assigned_acmg_codes,
-            "assigned_clingen_modules": assigned_clingen_modules,
-            "requires_external_completion": requires_external_completion,
-            "external_completion_note": external_completion_note,
-        })
+        return item.model_copy(
+            update={
+                "category": spec.category_id,
+                "field_name": spec.field_name,
+                "status": status,
+                "assigned_acmg_codes": assigned_acmg_codes,
+                "assigned_clingen_modules": assigned_clingen_modules,
+                "requires_external_completion": requires_external_completion,
+                "external_completion_note": external_completion_note,
+            }
+        )
 
     def _not_found_item(self, spec: EvidenceFieldSpec) -> EvidenceItem:
         return EvidenceItem(
@@ -156,6 +162,8 @@ class EvidenceItemNormalizer:
         current_score = (rank[current.status], current.confidence)
         candidate_score = (rank[candidate.status], candidate.confidence)
         return candidate if candidate_score > current_score else current
+
+
 class RawSourceNormalizer:
     """Moves ungrounded LLM sources to raw_source before grounding."""
 
@@ -167,10 +175,14 @@ class RawSourceNormalizer:
             if item.source is None:
                 normalized.append(item)
                 continue
-            normalized.append(item.model_copy(update={
-                "raw_source": item.source,
-                "source": None,
-            }))
+            normalized.append(
+                item.model_copy(
+                    update={
+                        "raw_source": item.source,
+                        "source": None,
+                    }
+                )
+            )
         return normalized
 
     def normalize_special_records(self, records: list[SpecialEvidenceRecord]) -> list[SpecialEvidenceRecord]:
@@ -179,19 +191,30 @@ class RawSourceNormalizer:
             if record.source is None:
                 normalized.append(record)
                 continue
-            normalized.append(record.model_copy(update={
-                "raw_source": record.source,
-                "source": None,
-            }))
+            normalized.append(
+                record.model_copy(
+                    update={
+                        "raw_source": record.source,
+                        "source": None,
+                    }
+                )
+            )
         return normalized
+
+
 class FieldValueNormalizer:
     """Enforces enum/format constraints on specific evidence field values."""
 
     # Fields with strict enum constraints
     _ENUM_FIELDS: dict[str, tuple[str, ...]] = {
         "A.gene_disease_relationship": (
-            "causative", "associated", "susceptibility",
-            "uncertain", "disputed", "refuted", "no_relationship",
+            "causative",
+            "associated",
+            "susceptibility",
+            "uncertain",
+            "disputed",
+            "refuted",
+            "no_relationship",
         ),
     }
 
@@ -201,17 +224,58 @@ class FieldValueNormalizer:
         re.IGNORECASE,
     )
     _GENE_NON_SYMBOL_VALUES = {
-        "ACMG", "CNV", "DNA", "HGNC", "HGVS", "OMIM", "RNA", "SNP",
+        "ACMG",
+        "CNV",
+        "DNA",
+        "HGNC",
+        "HGVS",
+        "OMIM",
+        "RNA",
+        "SNP",
     }
     _GENE_PLACEHOLDER_OR_COMMON_WORDS = {
-        "unknown", "none", "not found", "not_found", "n/a", "na",
-        "gene", "genes", "patient", "patients", "proband", "family",
-        "control", "controls", "case", "cases", "study", "studies",
-        "sample", "samples", "variant", "variants", "mutation",
-        "mutations", "exon", "exons", "intron", "introns",
-        "chromosome", "deletion", "insertion", "analysis", "testing",
-        "normal", "abnormal", "positive", "negative", "wildtype",
-        "heterozygous", "homozygous", "carrier", "carriers",
+        "unknown",
+        "none",
+        "not found",
+        "not_found",
+        "n/a",
+        "na",
+        "gene",
+        "genes",
+        "patient",
+        "patients",
+        "proband",
+        "family",
+        "control",
+        "controls",
+        "case",
+        "cases",
+        "study",
+        "studies",
+        "sample",
+        "samples",
+        "variant",
+        "variants",
+        "mutation",
+        "mutations",
+        "exon",
+        "exons",
+        "intron",
+        "introns",
+        "chromosome",
+        "deletion",
+        "insertion",
+        "analysis",
+        "testing",
+        "normal",
+        "abnormal",
+        "positive",
+        "negative",
+        "wildtype",
+        "heterozygous",
+        "homozygous",
+        "carrier",
+        "carriers",
     }
 
     @classmethod
@@ -265,11 +329,13 @@ class FieldValueNormalizer:
     @staticmethod
     def _reject_gene_symbol(item: EvidenceItem) -> EvidenceItem:
         """Reject a gene symbol value as not_found."""
-        return item.model_copy(update={
-            "status": EvidenceStatus.NOT_FOUND,
-            "value": None,
-            "confidence": 0.0,
-        })
+        return item.model_copy(
+            update={
+                "status": EvidenceStatus.NOT_FOUND,
+                "value": None,
+                "confidence": 0.0,
+            }
+        )
 
     @classmethod
     def _normalize_enum(cls, item: EvidenceItem, valid_values: tuple[str, ...]) -> EvidenceItem:
@@ -341,4 +407,3 @@ class FieldValueNormalizer:
                 return item.model_copy(update={"value": value})
         # Default: keep original but log
         return item
-

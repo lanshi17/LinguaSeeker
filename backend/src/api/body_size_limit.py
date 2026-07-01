@@ -9,6 +9,7 @@ Content-Length header.
 Uses a raw ASGI middleware (not BaseHTTPMiddleware) so that streaming
 responses such as SSE are not buffered.
 """
+
 from __future__ import annotations
 
 from starlette.types import ASGIApp, Receive, Scope, Send
@@ -81,12 +82,16 @@ class BodySizeLimitMiddleware:
 
     @staticmethod
     async def _send_error(send: Send, status: int, body: bytes) -> None:
-        await send({
-            "type": "http.response.start",
-            "status": status,
-            "headers": [[b"content-type", b"application/json"]],
-        })
-        await send({
-            "type": "http.response.body",
-            "body": body,
-        })
+        await send(
+            {
+                "type": "http.response.start",
+                "status": status,
+                "headers": [[b"content-type", b"application/json"]],
+            }
+        )
+        await send(
+            {
+                "type": "http.response.body",
+                "body": body,
+            }
+        )

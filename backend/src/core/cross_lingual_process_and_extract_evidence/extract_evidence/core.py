@@ -1,4 +1,5 @@
 """Deterministic source grounding and quality validation."""
+
 from __future__ import annotations
 
 import re
@@ -31,9 +32,7 @@ _MAX_SNIPPET_MATCHES = 50
 _ELLIPSIS_PATTERN = re.compile(r"\.\.\.|…")
 _MULTISPACE_PATTERN = re.compile(r"\s+")
 _MISSING_GROUP_VALUE = "__missing__"
-_FULLWIDTH_TO_HALFWIDTH = {
-    full: half for full, half in zip(range(0xFF01, 0xFF5F), range(0x21, 0x7F))
-}
+_FULLWIDTH_TO_HALFWIDTH = {full: half for full, half in zip(range(0xFF01, 0xFF5F), range(0x21, 0x7F))}
 _AA3_TO_1 = {
     "Ala": "A",
     "Arg": "R",
@@ -68,6 +67,7 @@ A 1:1 character mapping, so it preserves index_map correspondence in
 fuzzy substring match without risking false positives.
 """
 
+
 def _normalize_for_grounding(text: str) -> str:
     """Normalize text for fuzzy grounding: collapse whitespace, lowercase."""
     text = _MULTISPACE_PATTERN.sub(" ", text).strip()
@@ -97,6 +97,8 @@ def _fuzzy_ellipsis_match(snippet: str, doc_text: str) -> bool:
             return False
         last_pos = pos
     return True
+
+
 class SourceGrounder:
     """Validates and repairs source spans against the document."""
 
@@ -150,15 +152,18 @@ class SourceGrounder:
             if _fuzzy_ellipsis_match(snippet, block_text):
                 logger.debug("Snippet matched via fuzzy grounding (ellipsis fragments found in order)")
             else:
-                logger.warning("Snippet '{}' contains ellipsis and not found via fuzzy match, marking SOURCE_INVALID", snippet)
-                return item.model_copy(update={
-                    "status": EvidenceStatus.SOURCE_INVALID,
-                    "raw_source": source,
-                    "source": None,
-                    "assigned_acmg_codes": [],
-                    "assigned_clingen_modules": [],
-                })
-
+                logger.warning(
+                    "Snippet '{}' contains ellipsis and not found via fuzzy match, marking SOURCE_INVALID", snippet
+                )
+                return item.model_copy(
+                    update={
+                        "status": EvidenceStatus.SOURCE_INVALID,
+                        "raw_source": source,
+                        "source": None,
+                        "assigned_acmg_codes": [],
+                        "assigned_clingen_modules": [],
+                    }
+                )
 
         grounded_source = self._ground_source(document, source, item.field_id)
         if grounded_source is None:
@@ -166,51 +171,65 @@ class SourceGrounder:
             mapped_type = self._map_block_type(block.type) if block is not None else source.block_type
             if mapped_type == "table":
                 logger.warning("Snippet '{}' not found in table source, marking TABLE_UNGROUNDED", snippet)
-                return item.model_copy(update={
-                    "status": EvidenceStatus.TABLE_UNGROUNDED,
-                    "raw_source": source,
-                    "source": None,
-                    "assigned_acmg_codes": [],
-                    "assigned_clingen_modules": [],
-                })
+                return item.model_copy(
+                    update={
+                        "status": EvidenceStatus.TABLE_UNGROUNDED,
+                        "raw_source": source,
+                        "source": None,
+                        "assigned_acmg_codes": [],
+                        "assigned_clingen_modules": [],
+                    }
+                )
             if mapped_type in {"image", "figure"}:
                 logger.warning("Snippet '{}' not found in document image/table source, marking OCR_GAP", snippet)
-                return item.model_copy(update={
-                    "status": EvidenceStatus.OCR_GAP,
+                return item.model_copy(
+                    update={
+                        "status": EvidenceStatus.OCR_GAP,
+                        "raw_source": source,
+                        "source": None,
+                        "assigned_acmg_codes": [],
+                        "assigned_clingen_modules": [],
+                    }
+                )
+            logger.warning("Snippet '{}' not found in document, marking SOURCE_INVALID", snippet)
+            return item.model_copy(
+                update={
+                    "status": EvidenceStatus.SOURCE_INVALID,
                     "raw_source": source,
                     "source": None,
                     "assigned_acmg_codes": [],
                     "assigned_clingen_modules": [],
-                })
-            logger.warning("Snippet '{}' not found in document, marking SOURCE_INVALID", snippet)
-            return item.model_copy(update={
-                "status": EvidenceStatus.SOURCE_INVALID,
-                "raw_source": source,
-                "source": None,
-                "assigned_acmg_codes": [],
-                "assigned_clingen_modules": [],
-            })
+                }
+            )
 
         return item.model_copy(update={"source": grounded_source, "raw_source": source})
 
-    def _ground_source(self, document: TrackDocument, source: SourceLocation, field_id: str = "") -> SourceLocation | None:
+    def _ground_source(
+        self, document: TrackDocument, source: SourceLocation, field_id: str = ""
+    ) -> SourceLocation | None:
         block = self._block_for_index(document, source.block_index)
         if block is not None:
             block_text = self._block_readable_text(block)
             if source.text_snippet and source.text_snippet in block_text:
-                return self._build_source_from_text(document, source, source.text_snippet, block_index=source.block_index, block=block)
+                return self._build_source_from_text(
+                    document, source, source.text_snippet, block_index=source.block_index, block=block
+                )
 
         if self._is_exact_match(document, source):
             block_match = self._find_block_for_offsets(document, source.start_offset, source.end_offset)
             if block_match is None:
-                return source.model_copy(update={"block_index": -1, "bbox": [], "source_precision": SourcePrecision.EXACT})
+                return source.model_copy(
+                    update={"block_index": -1, "bbox": [], "source_precision": SourcePrecision.EXACT}
+                )
             block_index, matched_block = block_match
-            return source.model_copy(update={
-                "block_index": block_index,
-                "bbox": matched_block.bbox,
-                "block_type": self._map_block_type(matched_block.type),
-                "source_precision": SourcePrecision.EXACT,
-            })
+            return source.model_copy(
+                update={
+                    "block_index": block_index,
+                    "bbox": matched_block.bbox,
+                    "block_type": self._map_block_type(matched_block.type),
+                    "source_precision": SourcePrecision.EXACT,
+                }
+            )
 
         corrected = self._search_snippet(document, source, source.text_snippet, field_id)
         if corrected is None:
@@ -225,11 +244,13 @@ class SourceGrounder:
         if block_match is None:
             return corrected_source.model_copy(update={"block_index": -1, "bbox": []})
         block_index, matched_block = block_match
-        return corrected_source.model_copy(update={
-            "block_index": block_index,
-            "bbox": matched_block.bbox,
-            "block_type": self._map_block_type(matched_block.type),
-        })
+        return corrected_source.model_copy(
+            update={
+                "block_index": block_index,
+                "bbox": matched_block.bbox,
+                "block_type": self._map_block_type(matched_block.type),
+            }
+        )
 
     @staticmethod
     def _raw_input_source(item: EvidenceItem) -> SourceLocation | None:
@@ -252,11 +273,22 @@ class SourceGrounder:
         return "\n".join(parts).strip()
 
     # Class-level constant — immutable, safe to share across instances/subclasses.
-    _KNOWN_CONTEXT_TYPES = frozenset({
-        "text", "table", "figure", "supplementary", "caption",
-        "abstract", "introduction", "methods", "results", "discussion",
-        "conclusion", "background",
-    })
+    _KNOWN_CONTEXT_TYPES = frozenset(
+        {
+            "text",
+            "table",
+            "figure",
+            "supplementary",
+            "caption",
+            "abstract",
+            "introduction",
+            "methods",
+            "results",
+            "discussion",
+            "conclusion",
+            "background",
+        }
+    )
 
     @staticmethod
     def _map_block_type(block_type: str) -> str:
@@ -480,37 +512,41 @@ class SourceGrounder:
             end_pos = pos + len(snippet)
             span = self._find_span(spans, pos, end_pos)
             if span:
-                results.append(SourceLocation(
-                    span_id=span.span_id,
-                    page=span.page,
-                    start_offset=pos,
-                    end_offset=end_pos,
-                    context_type=source.context_type,
-                    context_ref=source.context_ref,
-                    text_snippet=snippet,
-                    block_index=source.block_index,
-                    bbox=source.bbox,
-                    block_type=source.block_type,
-                    source_precision=SourcePrecision.EXACT,
-                ))
+                results.append(
+                    SourceLocation(
+                        span_id=span.span_id,
+                        page=span.page,
+                        start_offset=pos,
+                        end_offset=end_pos,
+                        context_type=source.context_type,
+                        context_ref=source.context_ref,
+                        text_snippet=snippet,
+                        block_index=source.block_index,
+                        bbox=source.bbox,
+                        block_type=source.block_type,
+                        source_precision=SourcePrecision.EXACT,
+                    )
+                )
             else:
                 # Fallback: snippet is in the text but no page span covers it.
                 # Create a grounded SourceLocation with best-effort metadata so
                 # B8 items (block_index=-1, sparse page_spans) are not silently
                 # dropped as SOURCE_INVALID.
-                results.append(SourceLocation(
-                    span_id=f"grounded-{pos}",
-                    page=1,
-                    start_offset=pos,
-                    end_offset=end_pos,
-                    context_type=source.context_type,
-                    context_ref=source.context_ref,
-                    text_snippet=snippet,
-                    block_index=-1,
-                    bbox=[],
-                    block_type="text",
-                    source_precision=SourcePrecision.CORRECTED,
-                ))
+                results.append(
+                    SourceLocation(
+                        span_id=f"grounded-{pos}",
+                        page=1,
+                        start_offset=pos,
+                        end_offset=end_pos,
+                        context_type=source.context_type,
+                        context_ref=source.context_ref,
+                        text_snippet=snippet,
+                        block_index=-1,
+                        bbox=[],
+                        block_type="text",
+                        source_precision=SourcePrecision.CORRECTED,
+                    )
+                )
             idx = pos + 1
 
         return results
@@ -527,7 +563,9 @@ class SourceGrounder:
         idx = 0
         while True:
             if len(results) >= _MAX_SNIPPET_MATCHES:
-                logger.warning("Normalized snippet '{}' found >{} times, truncating", normalized_snippet, _MAX_SNIPPET_MATCHES)
+                logger.warning(
+                    "Normalized snippet '{}' found >{} times, truncating", normalized_snippet, _MAX_SNIPPET_MATCHES
+                )
                 break
             pos = normalized_text.find(normalized_snippet, idx)
             if pos == -1:
@@ -537,34 +575,38 @@ class SourceGrounder:
             actual_end = index_map[end_pos - 1] + 1
             span = self._find_span(spans, actual_start, actual_end)
             if span:
-                results.append(SourceLocation(
-                    span_id=span.span_id,
-                    page=span.page,
-                    start_offset=actual_start,
-                    end_offset=actual_end,
-                    context_type=source.context_type,
-                    context_ref=source.context_ref,
-                    text_snippet=text[actual_start:actual_end],
-                    block_index=source.block_index,
-                    bbox=source.bbox,
-                    block_type=source.block_type,
-                    source_precision=SourcePrecision.EXACT,
-                ))
+                results.append(
+                    SourceLocation(
+                        span_id=span.span_id,
+                        page=span.page,
+                        start_offset=actual_start,
+                        end_offset=actual_end,
+                        context_type=source.context_type,
+                        context_ref=source.context_ref,
+                        text_snippet=text[actual_start:actual_end],
+                        block_index=source.block_index,
+                        bbox=source.bbox,
+                        block_type=source.block_type,
+                        source_precision=SourcePrecision.EXACT,
+                    )
+                )
             else:
                 # Fallback: normalized snippet found but no page span covers it.
-                results.append(SourceLocation(
-                    span_id=f"grounded-{actual_start}",
-                    page=1,
-                    start_offset=actual_start,
-                    end_offset=actual_end,
-                    context_type=source.context_type,
-                    context_ref=source.context_ref,
-                    text_snippet=text[actual_start:actual_end],
-                    block_index=-1,
-                    bbox=[],
-                    block_type="text",
-                    source_precision=SourcePrecision.CORRECTED,
-                ))
+                results.append(
+                    SourceLocation(
+                        span_id=f"grounded-{actual_start}",
+                        page=1,
+                        start_offset=actual_start,
+                        end_offset=actual_end,
+                        context_type=source.context_type,
+                        context_ref=source.context_ref,
+                        text_snippet=text[actual_start:actual_end],
+                        block_index=-1,
+                        bbox=[],
+                        block_type="text",
+                        source_precision=SourcePrecision.CORRECTED,
+                    )
+                )
             idx = pos + 1
         return results
 
@@ -584,12 +626,7 @@ class SourceGrounder:
         previous_kept = ""
         for index, char in enumerate(value):
             if char.isspace():
-                if (
-                    previous_kept
-                    and previous_kept.isascii()
-                    and index + 1 < len(value)
-                    and value[index + 1].isascii()
-                ):
+                if previous_kept and previous_kept.isascii() and index + 1 < len(value) and value[index + 1].isascii():
                     if chars and chars[-1] != " ":
                         chars.append(" ")
                         previous_kept = " "
@@ -628,6 +665,8 @@ class SourceGrounder:
             if span.start_offset <= start and end <= span.end_offset:
                 return span
         return None
+
+
 class EvidenceChainBuilder:
     """Builds variant-centered identity chains from grounded grouped evidence."""
 
@@ -665,32 +704,27 @@ class EvidenceChainBuilder:
             else:
                 chain_level = "singleton"
 
-            case_ids = sorted({
-                str(item.value)
-                for item in by_field.get("B.case_id", [])
-                if item.value is not None
-            })
-            special_indices = [
-                index for index, record in enumerate(special_records)
-                if record.group_id == group_id
-            ]
+            case_ids = sorted({str(item.value) for item in by_field.get("B.case_id", []) if item.value is not None})
+            special_indices = [index for index, record in enumerate(special_records) if record.group_id == group_id]
             contradictions = [
                 record.description
                 for record in special_records
                 if record.group_id == group_id and record.record_type == "contradiction"
             ]
 
-            chains.append(EvidenceChain(
-                chain_id=group_id,
-                chain_level=chain_level,
-                gene_text=str(gene.value) if gene is not None and gene.value is not None else "",
-                disease_text=str(disease.value) if disease is not None and disease.value is not None else "",
-                variant_text=str(variant.value) if variant is not None and variant.value is not None else "",
-                case_ids=case_ids,
-                special_evidence_ids=[f"special-{index}" for index in special_indices],
-                evidence_field_ids=sorted({item.field_id for item in group_items}),
-                contradictions=contradictions,
-            ))
+            chains.append(
+                EvidenceChain(
+                    chain_id=group_id,
+                    chain_level=chain_level,
+                    gene_text=str(gene.value) if gene is not None and gene.value is not None else "",
+                    disease_text=str(disease.value) if disease is not None and disease.value is not None else "",
+                    variant_text=str(variant.value) if variant is not None and variant.value is not None else "",
+                    case_ids=case_ids,
+                    special_evidence_ids=[f"special-{index}" for index in special_indices],
+                    evidence_field_ids=sorted({item.field_id for item in group_items}),
+                    contradictions=contradictions,
+                )
+            )
         return sorted(chains, key=lambda chain: chain.chain_id)
 
     @staticmethod
@@ -706,6 +740,8 @@ class EvidenceChainBuilder:
     def _first_value(by_field: dict[str, list[EvidenceItem]], field_id: str) -> EvidenceItem | None:
         values = by_field.get(field_id, [])
         return values[0] if values else None
+
+
 class SpecialEvidenceValidator:
     """Filters special evidence records that are not safe to consume."""
 
@@ -720,10 +756,7 @@ class SpecialEvidenceValidator:
             for item in current_items
             if item.status == EvidenceStatus.FOUND and (item.source is not None or item.raw_source is not None)
         }
-        return [
-            record for record in records
-            if self._is_valid_record(record, valid_field_ids, document)
-        ]
+        return [record for record in records if self._is_valid_record(record, valid_field_ids, document)]
 
     def _is_valid_record(
         self,
@@ -734,10 +767,7 @@ class SpecialEvidenceValidator:
         source = record.source or record.raw_source
         if source is None:
             return False
-        if (
-            source.start_offset == source.end_offset
-            and not self._source_is_traceable(source, document)
-        ):
+        if source.start_offset == source.end_offset and not self._source_is_traceable(source, document):
             return False
         if not self._source_is_traceable(source, document):
             return False
@@ -758,16 +788,14 @@ class SpecialEvidenceValidator:
                 if value.strip():
                     block_text_parts.append(value.strip())
             if block.list_items:
-                block_text_parts.extend(
-                    item.strip() for item in block.list_items if item.strip()
-                )
+                block_text_parts.extend(item.strip() for item in block.list_items if item.strip())
             if source.text_snippet in "\n".join(block_text_parts):
                 return True
         text = document.formatted_text
         if source.start_offset >= source.end_offset and len(source.text_snippet) < 8:
             return False
         if source.start_offset >= 0 and source.end_offset <= len(text):
-            if text[source.start_offset:source.end_offset] == source.text_snippet:
+            if text[source.start_offset : source.end_offset] == source.text_snippet:
                 return True
         if len(source.text_snippet) < 8:
             return False

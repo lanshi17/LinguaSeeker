@@ -1,4 +1,5 @@
 """Tests for deterministic terminology matching."""
+
 from __future__ import annotations
 
 import pytest
@@ -128,8 +129,12 @@ async def test_disease_match_prefers_omim_over_hpo_and_mondo() -> None:
         chain_id="chain-2",
         track="translated",
     )
-    omim = TerminologyCandidate("e1", EntityType.DISEASE, "OMIM", "OMIM:114480", "Breast cancer", "breast cancer", "name")
-    hpo = TerminologyCandidate("e2", EntityType.DISEASE, "HPO", "HP:0100013", "Breast neoplasm", "breast cancer", "alias")
+    omim = TerminologyCandidate(
+        "e1", EntityType.DISEASE, "OMIM", "OMIM:114480", "Breast cancer", "breast cancer", "name"
+    )
+    hpo = TerminologyCandidate(
+        "e2", EntityType.DISEASE, "HPO", "HP:0100013", "Breast neoplasm", "breast cancer", "alias"
+    )
 
     match = await TerminologyMatcher(FakeRepository([hpo, omim])).match(candidate)
 

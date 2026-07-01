@@ -1,4 +1,5 @@
 """Tests for the Phase 3 public API facade."""
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
@@ -78,7 +79,10 @@ async def test_import_terminology_loads_batches_and_calls_repository(monkeypatch
     monkeypatch.setattr(
         api_module,
         "_ensure_clinvar_core_path",
-        lambda path: preprocess_calls.append((path, path.with_name("variant_summary.core.tsv"))) or path.with_name("variant_summary.core.tsv"),
+        lambda path: (
+            preprocess_calls.append((path, path.with_name("variant_summary.core.tsv")))
+            or path.with_name("variant_summary.core.tsv")
+        ),
     )
     monkeypatch.setattr(api_module, "build_async_engine", lambda cfg: FakeEngine())
     monkeypatch.setattr(api_module, "async_session_factory", lambda engine: "factory")
@@ -94,6 +98,7 @@ async def test_import_terminology_loads_batches_and_calls_repository(monkeypatch
     @asynccontextmanager
     async def fake_get_async_session(factory):
         assert factory == "factory"
+
         class FakeSession:
             async def commit(self) -> None:
                 commit_called["value"] = True
@@ -111,15 +116,19 @@ async def test_import_terminology_loads_batches_and_calls_repository(monkeypatch
     )
 
     assert received_batches == loaded_batches
-    assert preprocess_calls == [(
-        tmp_path / "clinvar" / "variant_summary.txt",
-        tmp_path / "clinvar" / "variant_summary.core.tsv",
-    )]
-    assert clinvar_stream_calls == [(
-        tmp_path / "clinvar" / "variant_summary.core.tsv",
-        "test-version",
-        10_000,
-    )]
+    assert preprocess_calls == [
+        (
+            tmp_path / "clinvar" / "variant_summary.txt",
+            tmp_path / "clinvar" / "variant_summary.core.tsv",
+        )
+    ]
+    assert clinvar_stream_calls == [
+        (
+            tmp_path / "clinvar" / "variant_summary.core.tsv",
+            "test-version",
+            10_000,
+        )
+    ]
     assert commit_called["value"] is True
     assert disposed["value"] is True
 
@@ -146,26 +155,34 @@ async def test_import_clinvar_stream_commits_each_chunk(monkeypatch, tmp_path: P
         "iter_clinvar_batches",
         lambda **kwargs: iter(
             (
-                ImportBatch(entries=(ImportEntry(
-                    entity_type=EntityType.VARIANT,
-                    source_db="ClinVar",
-                    external_id="ClinVarVariation:1",
-                    display_name="variant-1",
-                    normalized_name="variant-1",
-                    aliases=("variant-1",),
-                    raw_payload={},
-                    version="v1",
-                ),)),
-                ImportBatch(entries=(ImportEntry(
-                    entity_type=EntityType.VARIANT,
-                    source_db="ClinVar",
-                    external_id="ClinVarVariation:2",
-                    display_name="variant-2",
-                    normalized_name="variant-2",
-                    aliases=("variant-2",),
-                    raw_payload={},
-                    version="v1",
-                ),)),
+                ImportBatch(
+                    entries=(
+                        ImportEntry(
+                            entity_type=EntityType.VARIANT,
+                            source_db="ClinVar",
+                            external_id="ClinVarVariation:1",
+                            display_name="variant-1",
+                            normalized_name="variant-1",
+                            aliases=("variant-1",),
+                            raw_payload={},
+                            version="v1",
+                        ),
+                    )
+                ),
+                ImportBatch(
+                    entries=(
+                        ImportEntry(
+                            entity_type=EntityType.VARIANT,
+                            source_db="ClinVar",
+                            external_id="ClinVarVariation:2",
+                            display_name="variant-2",
+                            normalized_name="variant-2",
+                            aliases=("variant-2",),
+                            raw_payload={},
+                            version="v1",
+                        ),
+                    )
+                ),
             ),
         ),
     )
@@ -319,7 +336,20 @@ async def test_build_terminology_embeddings_passes_scope_filters(monkeypatch) ->
 
     class FakeCfg:
         api_key = ""
-        embedding = type("EmbeddingCfg", (), {"base_url": "http://localhost:8002/v1", "api_key": "", "model": "embed-model", "batch_size": 16, "api_style": "openai", "remote_base_url": "", "remote_api_key": "", "remote_model": ""})()
+        embedding = type(
+            "EmbeddingCfg",
+            (),
+            {
+                "base_url": "http://localhost:8002/v1",
+                "api_key": "",
+                "model": "embed-model",
+                "batch_size": 16,
+                "api_style": "openai",
+                "remote_base_url": "",
+                "remote_api_key": "",
+                "remote_model": "",
+            },
+        )()
 
     count = await api_module.build_terminology_embeddings(
         cfg=FakeCfg(),
@@ -328,10 +358,12 @@ async def test_build_terminology_embeddings_passes_scope_filters(monkeypatch) ->
     )
 
     assert count == 7
-    assert build_calls == [{
-        "embedding_model": "embed-model",
-        "batch_size": 16,
-        "entity_types": {EntityType.DISEASE, EntityType.PHENOTYPE},
-        "source_dbs": {"OMIM", "HPO", "MONDO"},
-    }]
+    assert build_calls == [
+        {
+            "embedding_model": "embed-model",
+            "batch_size": 16,
+            "entity_types": {EntityType.DISEASE, EntityType.PHENOTYPE},
+            "source_dbs": {"OMIM", "HPO", "MONDO"},
+        }
+    ]
     assert disposed["value"] is True

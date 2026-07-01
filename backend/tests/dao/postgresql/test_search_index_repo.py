@@ -1,4 +1,5 @@
 """Tests for flattened search index repository."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -268,7 +269,8 @@ async def test_refresh_and_search_integration() -> None:
 
     # Create search index table (it may already exist from migration)
     async with engine.begin() as conn:
-        await conn.execute(text("""
+        await conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS frontend_search_index (
                 canonical_evidence_id UUID PRIMARY KEY,
                 pmid TEXT,
@@ -282,7 +284,8 @@ async def test_refresh_and_search_integration() -> None:
                 search_text TEXT NOT NULL DEFAULT '',
                 active_payload JSONB DEFAULT '{}'::jsonb
             )
-        """))
+        """)
+        )
 
     async with session_factory() as session:
         repo = SearchIndexRepository(session)

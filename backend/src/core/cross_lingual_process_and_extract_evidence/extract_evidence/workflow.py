@@ -5,6 +5,7 @@ Name mapping:
 - quality_validation.py now hosts the quality_gate stage.
 - chain_building is now chain_assembly.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -84,7 +85,9 @@ class EvidenceExtractionWorkflow:
         self._review_reject_policy: ReviewRejectPolicy = resolve_review_reject_policy(review_reject_policy)
         self._relevance_scan = RelevanceScanStage(provider, input_budget_tokens=input_budget_tokens)
         self._catalog_extraction = CatalogExtractionStage(
-            provider, input_budget_tokens=input_budget_tokens, field_profile=field_profile,
+            provider,
+            input_budget_tokens=input_budget_tokens,
+            field_profile=field_profile,
         )
         self._special_evidence = SpecialEvidenceStage(provider, input_budget_tokens=input_budget_tokens)
         self._clinical_context = ClinicalContextStage(provider, input_budget_tokens=input_budget_tokens)
@@ -120,7 +123,9 @@ class EvidenceExtractionWorkflow:
 
     def _node_catalog_extraction(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         items = self._catalog_extraction.run(
-            state.document, state.evidence_map, state.channel_classification,
+            state.document,
+            state.evidence_map,
+            state.channel_classification,
         )
         state.evidence_items = items
         decision = self._catalog_extraction.last_eligibility_decision
@@ -134,7 +139,6 @@ class EvidenceExtractionWorkflow:
         state.special_evidence = records
         return state
 
-
     def _node_language_metadata(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         """Stamp article_language metadata onto every emitted EvidenceItem.
 
@@ -146,13 +150,11 @@ class EvidenceExtractionWorkflow:
         """
         article_language = _resolve_article_language(state.document)
         state.evidence_items = [
-            _stamp_language(item, state.document, article_language)
-            for item in state.evidence_items
+            _stamp_language(item, state.document, article_language) for item in state.evidence_items
         ]
         if state.phenotype_evidence:
             state.phenotype_evidence = [
-                _stamp_language(item, state.document, article_language)
-                for item in state.phenotype_evidence
+                _stamp_language(item, state.document, article_language) for item in state.phenotype_evidence
             ]
         return state
 
@@ -171,7 +173,9 @@ class EvidenceExtractionWorkflow:
 
     async def _async_node_catalog_extraction(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         items = await self._catalog_extraction.run_async(
-            state.document, state.evidence_map, state.channel_classification,
+            state.document,
+            state.evidence_map,
+            state.channel_classification,
         )
         state.evidence_items = items
         decision = self._catalog_extraction.last_eligibility_decision
@@ -230,7 +234,6 @@ class EvidenceExtractionWorkflow:
         state.discarded_evidence = discarded
         return state
 
-
     def _node_value_normalization(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         items, issues = self._value_normalizer.normalize(state.evidence_items)
         state.evidence_items = items
@@ -268,7 +271,6 @@ class EvidenceExtractionWorkflow:
         state.evidence_items = grounded_items
         state.special_evidence = grounded_special
         return state
-
 
     def _node_chain_assembly(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         state.evidence_chains = self._chain_builder.build(state.evidence_items, state.special_evidence)
@@ -323,7 +325,9 @@ class EvidenceExtractionWorkflow:
             "catalog_extraction": self._async_node_catalog_extraction if async_mode else self._node_catalog_extraction,
             "special_evidence": self._async_node_special_evidence if async_mode else self._node_special_evidence,
             "clinical_context": self._async_node_clinical_context if async_mode else self._node_clinical_context,
-            "primary_broad_extraction": self._async_node_primary_broad_extraction if async_mode else self._node_primary_broad_extraction,
+            "primary_broad_extraction": self._async_node_primary_broad_extraction
+            if async_mode
+            else self._node_primary_broad_extraction,
             "language_metadata": self._async_node_language_metadata if async_mode else self._node_language_metadata,
             "group_assignment": self._node_group_assignment,
             "role_routing": self._node_role_routing,
@@ -391,7 +395,6 @@ class EvidenceExtractionWorkflow:
         if self._extraction_mode == "broad":
             return "primary_broad_extraction"
         return "catalog_extraction"
-
 
     async def run(self, document: TrackDocument) -> EvidenceExtractionState:
         initial_state = EvidenceExtractionState(document=document)

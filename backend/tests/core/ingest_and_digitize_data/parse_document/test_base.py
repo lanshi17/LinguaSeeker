@@ -1,4 +1,5 @@
 """Tests for parse_document base class."""
+
 from __future__ import annotations
 
 import pytest

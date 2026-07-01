@@ -1,4 +1,5 @@
 """Contracts for evidence extraction."""
+
 from __future__ import annotations
 
 import re
@@ -15,7 +16,6 @@ class Track(str, Enum):
     ORIGINAL = "original"
     TRANSLATED = "translated"
     RECONCILED = "reconciled"
-
 
 
 _SPACE_RE = re.compile(r"\s+")
@@ -58,7 +58,6 @@ class EvidenceRole(str, Enum):
     PHENOTYPE = "phenotype"
     COMPARATOR = "comparator"
     CONTEXT = "context"
-
 
 
 class ExternalIds(BaseModel):
@@ -107,7 +106,6 @@ class TrackDocument(BaseModel):
     extraction_target: ExtractionTarget | None = None
 
 
-
 class SourcePrecision(str, Enum):
     EXACT = "exact"
     CORRECTED = "corrected"
@@ -120,10 +118,24 @@ class SourceLocation(BaseModel):
     start_offset: int = -1
     end_offset: int = -1
     context_type: Literal[
-        "text", "table", "figure", "supplementary", "caption",
-        "abstract", "introduction", "methods", "results", "discussion",
-        "conclusion", "background", "references", "title", "summary",
-        "case_report", "affiliations", "patients",
+        "text",
+        "table",
+        "figure",
+        "supplementary",
+        "caption",
+        "abstract",
+        "introduction",
+        "methods",
+        "results",
+        "discussion",
+        "conclusion",
+        "background",
+        "references",
+        "title",
+        "summary",
+        "case_report",
+        "affiliations",
+        "patients",
     ]
     context_ref: str
     text_snippet: str
@@ -131,6 +143,7 @@ class SourceLocation(BaseModel):
     bbox: list[int] = Field(default_factory=list)
     block_type: Literal["text", "table", "figure", "image", "caption", "supplementary"] = "text"
     source_precision: SourcePrecision = SourcePrecision.EXACT
+
 
 class EvidenceStatus(str, Enum):
     FOUND = "found"
@@ -159,7 +172,6 @@ class EvidenceSupportLabel(str, Enum):
     SUPPORTS = "supports"
     CONTRADICTS = "contradicts"
     INSUFFICIENT = "insufficient"
-
 
 
 class EvidenceItem(BaseModel):
@@ -222,6 +234,7 @@ class EvidenceAlignmentRecord(BaseModel):
     support_label: EvidenceSupportLabel
     drift_reason: str = ""
     confidence: float = Field(ge=0.0, le=1.0)
+
 
 class EvidenceChain(BaseModel):
     chain_id: str
@@ -350,7 +363,6 @@ class QualityIssue(BaseModel):
     severity: Literal["warning", "error"] = "warning"
 
 
-
 class QualityReport(BaseModel):
     passed: bool
     scorable: bool = True
@@ -366,7 +378,6 @@ class QualityReport(BaseModel):
     human_review_required: bool = False
     human_review_reasons: list[str] = Field(default_factory=list)
     human_review_by_category: dict[str, list[str]] = Field(default_factory=dict)
-
 
 
 class EvidenceExtractionStatus(str, Enum):
@@ -408,7 +419,6 @@ class FieldEligibilitySummary(BaseModel):
     not_attempted_count: int = 0
 
 
-
 class EvidenceExtractionResult(BaseModel):
     status: EvidenceExtractionStatus
     document_id: str
@@ -424,7 +434,6 @@ class EvidenceExtractionResult(BaseModel):
     discarded_evidence: list[EvidenceItem] = Field(default_factory=list)
     channel_classification: DocumentChannelClassification | None = None
     field_eligibility_summary: FieldEligibilitySummary | None = None
-
 
 
 class DualTrackDocuments(BaseModel):

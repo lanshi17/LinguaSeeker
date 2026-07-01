@@ -1,4 +1,5 @@
 """Concurrency control and retry logic for pipeline orchestrator."""
+
 from __future__ import annotations
 
 import asyncio
@@ -55,7 +56,7 @@ class RetryablePhaseExecutor:
                 last_error = e
                 e.attempt = attempt
                 if attempt < self._max_retries:
-                    backoff = self._backoff_base * (2 ** attempt)
+                    backoff = self._backoff_base * (2**attempt)
                     logger.warning(
                         "{} retryable error (attempt {}/{}): {}. Retrying in {:.1f}s",
                         phase_name,

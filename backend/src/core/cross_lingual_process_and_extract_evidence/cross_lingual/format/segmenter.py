@@ -1,4 +1,5 @@
 """Token-budgeted text segmentation for LLM context windows."""
+
 from __future__ import annotations
 
 import re
@@ -88,9 +89,7 @@ def segment_text(
     current = ""
     for unit in paragraph_units:
         candidate = unit if not current else f"{current}\n\n{unit}"
-        if estimate_tokens(candidate) <= effective_max and (
-            max_chars is None or len(candidate) <= max_chars
-        ):
+        if estimate_tokens(candidate) <= effective_max and (max_chars is None or len(candidate) <= max_chars):
             current = candidate
             continue
         if current:

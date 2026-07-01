@@ -1,4 +1,5 @@
 """Prompt templates for the translation and self-review stages."""
+
 from __future__ import annotations
 
 

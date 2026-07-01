@@ -1,4 +1,5 @@
 """Tests for document channel classification in the relevance scan stage."""
+
 from __future__ import annotations
 
 import json
@@ -33,6 +34,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _doc() -> TrackDocument:
     return TrackDocument(
@@ -73,6 +75,7 @@ def _scan_output(
 # parse_channel_classification unit tests
 # ---------------------------------------------------------------------------
 
+
 def test_parse_case_report_string():
     cls = parse_channel_classification(["case_report"], confidence=0.9, rationale="single proband")
     assert cls.selected_channels == [DocumentEvidenceChannel.CASE_REPORT]
@@ -96,9 +99,7 @@ def test_parse_mixed_string():
 
 
 def test_parse_multiple_concrete_channels():
-    cls = parse_channel_classification(
-        ["case_report", "functional_study"], confidence=0.82, rationale="hybrid"
-    )
+    cls = parse_channel_classification(["case_report", "functional_study"], confidence=0.82, rationale="hybrid")
     assert cls.selected_channels == [
         DocumentEvidenceChannel.CASE_REPORT,
         DocumentEvidenceChannel.FUNCTIONAL_STUDY,
@@ -159,15 +160,14 @@ def test_parse_deduplicates_channels():
 # Stage run() — channel parsing from mocked provider
 # ---------------------------------------------------------------------------
 
+
 def test_stage_case_report_response_parses_to_case_report():
     provider = MagicMock()
     provider.invoke_structured.return_value = _scan_output(channels=["case_report"])
     result = RelevanceScanStage(provider).run(_doc())
     assert isinstance(result, RelevanceScanResult)
     assert result.evidence_map.relevant is True
-    assert result.channel_classification.selected_channels == [
-        DocumentEvidenceChannel.CASE_REPORT
-    ]
+    assert result.channel_classification.selected_channels == [DocumentEvidenceChannel.CASE_REPORT]
     assert result.channel_classification.confidence == 0.85
 
 
@@ -175,25 +175,19 @@ def test_stage_functional_study_response_parses_to_functional_study():
     provider = MagicMock()
     provider.invoke_structured.return_value = _scan_output(channels=["functional_study"])
     result = RelevanceScanStage(provider).run(_doc())
-    assert result.channel_classification.selected_channels == [
-        DocumentEvidenceChannel.FUNCTIONAL_STUDY
-    ]
+    assert result.channel_classification.selected_channels == [DocumentEvidenceChannel.FUNCTIONAL_STUDY]
 
 
 def test_stage_cohort_response_parses_to_cohort_study():
     provider = MagicMock()
     provider.invoke_structured.return_value = _scan_output(channels=["cohort_study"])
     result = RelevanceScanStage(provider).run(_doc())
-    assert result.channel_classification.selected_channels == [
-        DocumentEvidenceChannel.COHORT_STUDY
-    ]
+    assert result.channel_classification.selected_channels == [DocumentEvidenceChannel.COHORT_STUDY]
 
 
 def test_stage_mixed_with_multiple_concrete_channels_preserves_both():
     provider = MagicMock()
-    provider.invoke_structured.return_value = _scan_output(
-        channels=["case_report", "functional_study"]
-    )
+    provider.invoke_structured.return_value = _scan_output(channels=["case_report", "functional_study"])
     result = RelevanceScanStage(provider).run(_doc())
     assert set(result.channel_classification.selected_channels) == {
         DocumentEvidenceChannel.CASE_REPORT,
@@ -215,9 +209,7 @@ def test_stage_missing_channel_fields_falls_back_to_unknown():
     provider.invoke_structured.return_value = DocumentEvidenceMap(relevant=True, gene_terms=["GLA"])
     result = RelevanceScanStage(provider).run(_doc())
     assert result.evidence_map.relevant is True
-    assert result.channel_classification.selected_channels == [
-        DocumentEvidenceChannel.UNKNOWN
-    ]
+    assert result.channel_classification.selected_channels == [DocumentEvidenceChannel.UNKNOWN]
     assert result.channel_classification.confidence == 0.0
 
 
@@ -225,9 +217,7 @@ def test_stage_empty_channel_list_falls_back_to_unknown():
     provider = MagicMock()
     provider.invoke_structured.return_value = _scan_output(channels=[])
     result = RelevanceScanStage(provider).run(_doc())
-    assert result.channel_classification.selected_channels == [
-        DocumentEvidenceChannel.UNKNOWN
-    ]
+    assert result.channel_classification.selected_channels == [DocumentEvidenceChannel.UNKNOWN]
 
 
 def test_stage_uses_relevance_scan_output_schema():
@@ -247,9 +237,7 @@ def test_stage_relevant_false_still_returns_result_with_map():
     result = RelevanceScanStage(provider).run(_doc())
     assert result.evidence_map.relevant is False
     # Channel classification is still parsed — it does not make a doc irrelevant by itself
-    assert result.channel_classification.selected_channels == [
-        DocumentEvidenceChannel.CASE_REPORT
-    ]
+    assert result.channel_classification.selected_channels == [DocumentEvidenceChannel.CASE_REPORT]
 
 
 def test_stage_prompt_contains_channel_classification_instructions():
@@ -268,6 +256,7 @@ def test_stage_prompt_contains_channel_classification_instructions():
 # Workflow behavior — relevant=false sets NOT_RELEVANT
 # ---------------------------------------------------------------------------
 
+
 def test_relevant_false_sets_not_relevant_in_state():
     """Simulate the workflow node logic: relevant=false → NOT_RELEVANT status,
     but channel_classification is still stored."""
@@ -284,9 +273,7 @@ def test_relevant_false_sets_not_relevant_in_state():
     assert state.status == EvidenceExtractionStatus.NOT_RELEVANT
     assert state.evidence_map.relevant is False
     assert state.channel_classification is not None
-    assert state.channel_classification.selected_channels == [
-        DocumentEvidenceChannel.CASE_REPORT
-    ]
+    assert state.channel_classification.selected_channels == [DocumentEvidenceChannel.CASE_REPORT]
 
 
 def test_relevant_true_preserves_completed_status_and_channel():
@@ -301,31 +288,32 @@ def test_relevant_true_preserves_completed_status_and_channel():
         state.status = EvidenceExtractionStatus.NOT_RELEVANT
 
     assert state.status == EvidenceExtractionStatus.COMPLETED
-    assert state.channel_classification.selected_channels == [
-        DocumentEvidenceChannel.FUNCTIONAL_STUDY
-    ]
+    assert state.channel_classification.selected_channels == [DocumentEvidenceChannel.FUNCTIONAL_STUDY]
 
 
 # ---------------------------------------------------------------------------
 # JSON round trip: mocked provider response → EvidenceExtractionState
 # ---------------------------------------------------------------------------
 
+
 def test_json_round_trip_from_mocked_response_to_state():
     """Full round trip: LLM JSON → RelevanceScanOutput → stage → state.channel_classification."""
-    raw_json = json.dumps({
-        "relevant": True,
-        "disease_terms": ["Fabry disease"],
-        "gene_terms": ["GLA"],
-        "variant_terms": ["p.R227X"],
-        "case_references": ["proband"],
-        "authority_references": [],
-        "contradictions": [],
-        "structure_hints": [],
-        "selected_channels": ["case_report", "functional_study"],
-        "confidence": 0.82,
-        "rationale": "Case report with functional assay evidence.",
-        "supporting_block_ids": ["block_3", "block_7"],
-    })
+    raw_json = json.dumps(
+        {
+            "relevant": True,
+            "disease_terms": ["Fabry disease"],
+            "gene_terms": ["GLA"],
+            "variant_terms": ["p.R227X"],
+            "case_references": ["proband"],
+            "authority_references": [],
+            "contradictions": [],
+            "structure_hints": [],
+            "selected_channels": ["case_report", "functional_study"],
+            "confidence": 0.82,
+            "rationale": "Case report with functional assay evidence.",
+            "supporting_block_ids": ["block_3", "block_7"],
+        }
+    )
     parsed = RelevanceScanOutput.model_validate_json(raw_json)
 
     provider = MagicMock()
@@ -364,15 +352,14 @@ def test_state_channel_classification_json_round_trip():
     dumped = state.model_dump_json()
     restored = EvidenceExtractionState.model_validate_json(dumped)
     assert restored.channel_classification is not None
-    assert restored.channel_classification.selected_channels == [
-        DocumentEvidenceChannel.CASE_REPORT
-    ]
+    assert restored.channel_classification.selected_channels == [DocumentEvidenceChannel.CASE_REPORT]
     assert restored.channel_classification.confidence == 0.9
 
 
 # ---------------------------------------------------------------------------
 # Multi-chunk merge behavior
 # ---------------------------------------------------------------------------
+
 
 def test_multi_chunk_merges_channel_classifications():
     """When chunks produce different channels, the merge unions concrete channels."""
@@ -424,14 +411,13 @@ def test_multi_chunk_all_unknown_returns_unknown():
     result = stage.run(document)
 
     assert provider.invoke_structured.call_count >= 2
-    assert result.channel_classification.selected_channels == [
-        DocumentEvidenceChannel.UNKNOWN
-    ]
+    assert result.channel_classification.selected_channels == [DocumentEvidenceChannel.UNKNOWN]
 
 
 # ---------------------------------------------------------------------------
 # merge_channel_classifications unit tests
 # ---------------------------------------------------------------------------
+
 
 def test_merge_empty_returns_unknown():
     merged = merge_channel_classifications([])

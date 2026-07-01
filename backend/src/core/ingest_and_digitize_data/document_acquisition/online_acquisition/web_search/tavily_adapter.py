@@ -82,11 +82,13 @@ class TavilyAdapter(WebSearchAdapter):
                 title = item.get("title", "")
                 if not url:
                     continue
-                all_links.append(SearchLink(
-                    url=url,
-                    source="tavily",
-                    title=title or None,
-                ))
+                all_links.append(
+                    SearchLink(
+                        url=url,
+                        source="tavily",
+                        title=title or None,
+                    )
+                )
 
         except Exception as exc:
             msg = f"tavily search failed: {exc}"

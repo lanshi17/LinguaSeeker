@@ -5,6 +5,7 @@ consistently marks as ``not_found`` due to attention dilution across 62+
 fields.  This focused pass uses a small field set (≤10) with explicit
 extraction guidance per field.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -62,12 +63,14 @@ class ClinicalContextStage:
     ) -> list[EvidenceItem]:
         """Run clinical context extraction and return *new* items to merge."""
         summary = self._summarize_items(current_items)
-        overhead = estimate_tokens(get_clinical_context_prompt(
-            document_id=document.document_id,
-            track=document.track,
-            text="",
-            current_items_summary=summary,
-        ))
+        overhead = estimate_tokens(
+            get_clinical_context_prompt(
+                document_id=document.document_id,
+                track=document.track,
+                text="",
+                current_items_summary=summary,
+            )
+        )
         chunks = build_block_prompt_chunks(
             document,
             input_budget_tokens=self._input_budget_tokens,
@@ -95,7 +98,8 @@ class ClinicalContextStage:
             except Exception:
                 logger.warning(
                     "clinical_context chunk {}/{} failed, skipping",
-                    chunk.index, chunk.total,
+                    chunk.index,
+                    chunk.total,
                 )
         return self._merge(all_new, current_items, document.formatted_text)
 
@@ -107,12 +111,14 @@ class ClinicalContextStage:
     ) -> list[EvidenceItem]:
         """Async variant with concurrent chunk execution."""
         summary = self._summarize_items(current_items)
-        overhead = estimate_tokens(get_clinical_context_prompt(
-            document_id=document.document_id,
-            track=document.track,
-            text="",
-            current_items_summary=summary,
-        ))
+        overhead = estimate_tokens(
+            get_clinical_context_prompt(
+                document_id=document.document_id,
+                track=document.track,
+                text="",
+                current_items_summary=summary,
+            )
+        )
         chunks = build_block_prompt_chunks(
             document,
             input_budget_tokens=self._input_budget_tokens,
@@ -205,9 +211,7 @@ class ClinicalContextStage:
                 continue
 
             # Source-visible gate: snippet must appear in document
-            snippet = cls._normalize_ws(
-                item.source.text_snippet if item.source else ""
-            )
+            snippet = cls._normalize_ws(item.source.text_snippet if item.source else "")
             if not snippet:
                 rejection_counts[f"{item.field_id}:empty_snippet"] = (
                     rejection_counts.get(f"{item.field_id}:empty_snippet", 0) + 1

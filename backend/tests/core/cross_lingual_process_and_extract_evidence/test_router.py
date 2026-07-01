@@ -1,4 +1,5 @@
 """Tests for LanguageRouter."""
+
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     FormattedDocument,
     PipelineState,

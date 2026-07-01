@@ -7,6 +7,7 @@ The module-level ``limiter`` is created once and never replaced —
 ``init_limiter()`` reconfigures its storage so that decorators applied
 at import time always reference the same object.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

@@ -1,4 +1,5 @@
 """Tests for get_db_session commit/rollback behavior."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -71,6 +72,7 @@ async def test_get_db_session_rollbacks_on_exception():
     @test_app.exception_handler(500)
     async def handler(request, exc):
         from fastapi.responses import JSONResponse
+
         return JSONResponse(status_code=500, content={"error": str(exc.detail)})
 
     with patch("src.api.deps.get_session_factory", return_value=mock_factory):

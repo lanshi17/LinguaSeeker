@@ -1,4 +1,5 @@
 """Build target-safe context packs from benchmark or runtime metadata."""
+
 from __future__ import annotations
 
 import json
@@ -16,21 +17,18 @@ from src.core.standardize_entities_and_align_knowledge.normalizers import collap
 _PAREN_RE = re.compile(r"\s*\([^)]*\)")
 _ABBREVIATION_RE = re.compile(r"\b([A-Z][A-Z0-9]{1,9})\b")
 _ALIAS_ABBREVIATION_SKIPLIST = {"MIM", "OMIM", "ID"}
-_DASH_TRANSLATION = str.maketrans({
-    "\u2010": "-",
-    "\u2011": "-",
-    "\u2012": "-",
-    "\u2013": "-",
-    "\u2014": "-",
-    "\u2212": "-",
-})
-_SOURCE_ALIAS_SPLIT_RE = re.compile(r"[.!?\n]")
-_MONDO_DIR = (
-    Path(__file__).resolve().parents[5]
-    / "database"
-    / "terminology_database"
-    / "mondo"
+_DASH_TRANSLATION = str.maketrans(
+    {
+        "\u2010": "-",
+        "\u2011": "-",
+        "\u2012": "-",
+        "\u2013": "-",
+        "\u2014": "-",
+        "\u2212": "-",
+    }
 )
+_SOURCE_ALIAS_SPLIT_RE = re.compile(r"[.!?\n]")
+_MONDO_DIR = Path(__file__).resolve().parents[5] / "database" / "terminology_database" / "mondo"
 _MONDO_CACHE_PATH = _MONDO_DIR / "mondo_hierarchy_cache.json"
 _STOPWORDS = {
     "cell",
@@ -339,5 +337,3 @@ def _string(value: object) -> str:
 def _optional_string(value: object) -> str | None:
     normalized = _string(value)
     return normalized or None
-
-

@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 def reset_lock_global():
     """Reset module-level global between tests to prevent stale state."""
     import app.main
+
     app.main._startup_lock_raw_conn = None
     yield
     app.main._startup_lock_raw_conn = None

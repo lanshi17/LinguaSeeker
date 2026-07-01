@@ -4,7 +4,9 @@ from unittest.mock import patch
 
 import pytest
 
-from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import OnlineAcquisitionGatewayRequest
+from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
+    OnlineAcquisitionGatewayRequest,
+)
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway import (
     _build_fetch_params,
     _choose_item,

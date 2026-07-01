@@ -1,4 +1,5 @@
 """Pipeline orchestrator API routes."""
+
 from __future__ import annotations
 
 import base64
@@ -109,6 +110,7 @@ def _build_source_key(body: PipelineRunRequest, content_hash: str | None = None)
         return base_key
     return f"{base_key}|{body.extraction_target.scope_key}"
 
+
 def _determine_current_phase(state: PipelineGraphState) -> str | None:
     """Determine which phase is currently running."""
     phase_map = {
@@ -199,7 +201,9 @@ def _prepare_phase_rerun_state(
 
 @router.post("/run", response_model=PipelineRunResponse, status_code=202)
 @limiter.limit("10/minute")
-async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_key: str | None = Depends(require_api_key)):
+async def start_pipeline_run(
+    request: Request, body: PipelineRunRequest, _api_key: str | None = Depends(require_api_key)
+):
     """Enqueue a new pipeline run job.
 
     Returns immediately with processing_run_id and status_url.
@@ -405,7 +409,10 @@ async def list_pipeline_runs(
     """
     runner = get_pipeline_runner()
     rows, total = await runner.list_runs(
-        limit=limit, offset=offset, status=status, search=search,
+        limit=limit,
+        offset=offset,
+        status=status,
+        search=search,
     )
 
     items = []

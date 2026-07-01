@@ -1,4 +1,5 @@
 """SQLAlchemy ORM models for the MVP persistence schema."""
+
 from __future__ import annotations
 
 import uuid
@@ -109,9 +110,7 @@ class LiteratureProfile(Base, TimestampMixin):
         Index("ix_literature_profiles_review_status", "review_status"),
     )
 
-    literature_profile_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    literature_profile_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     source_document_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("source_documents.source_document_id"),
@@ -160,9 +159,7 @@ class LiteratureProfile(Base, TimestampMixin):
     total_evidence_fields: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
     found_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
     not_found_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
-    latest_processing_run_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), nullable=True
-    )
+    latest_processing_run_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
 
 
 class User(Base, TimestampMixin):
@@ -591,9 +588,7 @@ class ChatMessage(Base):
     """Chat message in a session."""
 
     __tablename__ = "chat_messages"
-    __table_args__ = (
-        Index("ix_chat_messages_session_created", "chat_session_id", "created_at"),
-    )
+    __table_args__ = (Index("ix_chat_messages_session_created", "chat_session_id", "created_at"),)
 
     message_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -680,10 +675,7 @@ class PipelineRunState(Base):
     # Durable worker lease fields for multi-worker coordination
     source_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     owner_worker_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    heartbeat_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-
+    heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class PipelineJob(Base):
@@ -704,34 +696,16 @@ class PipelineJob(Base):
         ),
     )
 
-    job_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
-    processing_run_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), nullable=False
-    )
-    source_document_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), nullable=False
-    )
-    status: Mapped[str] = mapped_column(
-        String(16), nullable=False, default="queued", server_default=text("'queued'")
-    )
-    priority: Mapped[int] = mapped_column(
-        Integer, nullable=False, default=0, server_default=text("0")
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
-    )
-    started_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    finished_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    job_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    processing_run_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    source_document_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="queued", server_default=text("'queued'"))
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    request_data: Mapped[dict[str, object]] = mapped_column(
-        JSONB, nullable=False, default=dict
-    )
+    request_data: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
     worker_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
 
@@ -745,22 +719,16 @@ class DocumentProcessingCache(Base):
     """
 
     __tablename__ = "document_processing_cache"
-    __table_args__ = (
-        Index("ix_document_processing_cache_created_at", "created_at"),
-    )
+    __table_args__ = (Index("ix_document_processing_cache_created_at", "created_at"),)
 
-    cache_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    cache_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     content_hash: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
     source_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     processing_run_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("source_documents.source_document_id"), nullable=False
     )
     result_state: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
@@ -784,9 +752,7 @@ class DocumentAnnotation(Base, TimestampMixin):
         Index("ix_document_annotations_doc_track", "source_document_id", "track"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     source_document_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("source_documents.source_document_id"),

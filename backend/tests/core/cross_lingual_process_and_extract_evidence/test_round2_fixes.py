@@ -5,6 +5,7 @@ Tests for:
 2. Per-block language detection: catches partial translation failures (e.g. ru)
 3. Bilingual block deduplication: removes duplicate blocks from zh bilingual docs
 """
+
 from __future__ import annotations
 
 import pytest
@@ -281,7 +282,9 @@ class TestBilingualBlockDedup:
     def test_keeps_longer_block(self):
         """When two blocks are near-duplicates, the longer one is kept."""
         shorter = ContentBlock(type="text", text="BRCA1 mutations in breast cancer patients are pathogenic", page_idx=0)
-        longer = ContentBlock(type="text", text="BRCA1 mutations in breast cancer patients are generally pathogenic", page_idx=0)
+        longer = ContentBlock(
+            type="text", text="BRCA1 mutations in breast cancer patients are generally pathogenic", page_idx=0
+        )
         blocks = [shorter, longer]
         result = deduplicate_bilingual_blocks(blocks)
         # Tokens overlap: {brca1, mutations, in, breast, cancer, patients, are, pathogenic} = 8
@@ -317,6 +320,7 @@ class TestStrictRetryPrompt:
         from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.prompts import (
             get_full_document_translate_prompt,
         )
+
         prompt = get_full_document_translate_prompt("test content", "terms")
         assert "STRICT ENGLISH-ONLY" not in prompt
 
@@ -325,6 +329,7 @@ class TestStrictRetryPrompt:
         from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.prompts import (
             get_full_document_translate_prompt,
         )
+
         prompt = get_full_document_translate_prompt("test content", "terms", strict=True)
         assert "STRICT ENGLISH-ONLY" in prompt
         # Must explicitly forbid reproducing source alongside translation
@@ -363,7 +368,11 @@ class TestPerBlockRetryBehavior:
         call_count = {"n": 0}
 
         async def fake_run_pipeline(
-            self, formatted, blocks=None, *, strict=False,
+            self,
+            formatted,
+            blocks=None,
+            *,
+            strict=False,
         ):
             pipeline_calls.append(strict)
             call_count["n"] += 1
@@ -376,17 +385,18 @@ class TestPerBlockRetryBehavior:
         def fake_check_block_language(blocks, source_language):
             check_calls.append(len(check_calls) + 1)
             if len(check_calls) == 1:
-                raise TranslationError(
-                    "translation_validation_failed: per_block_check — 5/5 blocks still in zh"
-                )
+                raise TranslationError("translation_validation_failed: per_block_check — 5/5 blocks still in zh")
             # Second check (after retry) returns without raising
 
         async def fake_extract_terminology(self, formatted):
             return ""
+
         async def fake_self_review(self, source, translated, system_prompt=""):
             return translated
+
         async def fake_translate_segments(self, formatted, terminology, blocks=None, *, strict=False):
             return ("", [], [])
+
         async def fake_translate_aux(self, blocks, system_prompt=""):
             return {}
 
@@ -401,7 +411,10 @@ class TestPerBlockRetryBehavior:
         monkeypatch.setattr(MultiStageTranslator, "_translate_auxiliary_blocks", fake_translate_aux)
 
         formatted = FormattedDocument(
-            formatted_markdown="text", source_language="zh", original_blocks=[], sentences=[],
+            formatted_markdown="text",
+            source_language="zh",
+            original_blocks=[],
+            sentences=[],
         )
         result = await translator.translate_to_result(formatted)
 
@@ -435,22 +448,27 @@ class TestPerBlockRetryBehavior:
         translator = MultiStageTranslator(ctx=ctx)
 
         async def fake_run_pipeline(
-            self, formatted, blocks=None, *, strict=False,
+            self,
+            formatted,
+            blocks=None,
+            *,
+            strict=False,
         ):
             return ({}, "output", [], [], [])
 
         # Always raise (both first and second attempt fail the check)
         def fake_check_block_language(blocks, source_language):
-            raise TranslationError(
-                "translation_validation_failed: per_block_check — 5/5 blocks still in zh"
-            )
+            raise TranslationError("translation_validation_failed: per_block_check — 5/5 blocks still in zh")
 
         async def fake_extract_terminology(self, formatted):
             return ""
+
         async def fake_self_review(self, source, translated, system_prompt=""):
             return translated
+
         async def fake_translate_segments(self, formatted, terminology, blocks=None, *, strict=False):
             return ("", [], [])
+
         async def fake_translate_aux(self, blocks, system_prompt=""):
             return {}
 
@@ -465,7 +483,10 @@ class TestPerBlockRetryBehavior:
         monkeypatch.setattr(MultiStageTranslator, "_translate_auxiliary_blocks", fake_translate_aux)
 
         formatted = FormattedDocument(
-            formatted_markdown="text", source_language="zh", original_blocks=[], sentences=[],
+            formatted_markdown="text",
+            source_language="zh",
+            original_blocks=[],
+            sentences=[],
         )
         with pytest.raises(TranslationError, match="per_block_check"):
             await translator.translate_to_result(formatted)
@@ -493,7 +514,11 @@ class TestPerBlockRetryBehavior:
         pipeline_calls: list[bool] = []
 
         async def fake_run_pipeline(
-            self, formatted, blocks=None, *, strict=False,
+            self,
+            formatted,
+            blocks=None,
+            *,
+            strict=False,
         ):
             pipeline_calls.append(strict)
             return ({}, "output", [], [], [])
@@ -503,10 +528,13 @@ class TestPerBlockRetryBehavior:
 
         async def fake_extract_terminology(self, formatted):
             return ""
+
         async def fake_self_review(self, source, translated, system_prompt=""):
             return translated
+
         async def fake_translate_segments(self, formatted, terminology, blocks=None, *, strict=False):
             return ("", [], [])
+
         async def fake_translate_aux(self, blocks, system_prompt=""):
             return {}
 
@@ -521,7 +549,10 @@ class TestPerBlockRetryBehavior:
         monkeypatch.setattr(MultiStageTranslator, "_translate_auxiliary_blocks", fake_translate_aux)
 
         formatted = FormattedDocument(
-            formatted_markdown="text", source_language="zh", original_blocks=[], sentences=[],
+            formatted_markdown="text",
+            source_language="zh",
+            original_blocks=[],
+            sentences=[],
         )
         with pytest.raises(TranslationError, match="non_english_output"):
             await translator.translate_to_result(formatted)

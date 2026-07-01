@@ -1,4 +1,5 @@
 """Provider health tracking with sliding window stats."""
+
 from __future__ import annotations
 
 import threading
@@ -35,9 +36,7 @@ class ProviderHealthTracker:
         with self._lock:
             if provider not in self._records:
                 self._records[provider] = []
-            self._records[provider].append(
-                _Record(timestamp=time.time(), success=success, latency_ms=latency_ms)
-            )
+            self._records[provider].append(_Record(timestamp=time.time(), success=success, latency_ms=latency_ms))
 
     def _prune(self, records: List[_Record]) -> List[_Record]:
         cutoff = time.time() - self._window
@@ -61,12 +60,11 @@ class ProviderHealthTracker:
 
     def reorder_plan(self, plan: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Reorder provider plan: deprioritize unhealthy providers."""
+
         def _sort_key(item: Dict[str, Any]) -> tuple[int, float]:
             stats = self.get_stats(item["provider"])
             # Unhealthy (high failure) goes to end
-            is_unhealthy = int(
-                stats.failure_count >= self._min_samples and stats.success_rate < 0.5
-            )
+            is_unhealthy = int(stats.failure_count >= self._min_samples and stats.success_rate < 0.5)
             return (is_unhealthy, -stats.success_rate)
 
         return sorted(plan, key=_sort_key)

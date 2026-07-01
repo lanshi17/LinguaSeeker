@@ -3,6 +3,7 @@
 Reads parsed markdown from output/cross_lingual/{lang}/{doc}/original.md,
 runs the translation pipeline, and saves results.
 """
+
 from __future__ import annotations
 
 import sys
@@ -76,9 +77,14 @@ def run_e2e():
 
             logger.info(
                 "OK {} / {} | lang={} | {:.1f}s | src={} chars → dst={} chars | segments={} | warnings={}",
-                lang, doc_id, result.source_language, elapsed,
-                len(result.formatted_original), len(result.translated_english),
-                len(result.segments), result.translation_warnings,
+                lang,
+                doc_id,
+                result.source_language,
+                elapsed,
+                len(result.formatted_original),
+                len(result.translated_english),
+                len(result.segments),
+                result.translation_warnings,
             )
         except Exception:
             logger.exception("FAILED {} / {}", lang, doc_id)

@@ -1,4 +1,5 @@
 """Token-budgeted prompt chunking helpers for evidence extraction."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -92,7 +93,10 @@ def build_block_prompt_chunks(
     """Split document blocks into prompt-safe chunks while preserving block indices."""
     if not document.blocks:
         return build_text_prompt_chunks(
-            document.formatted_text, input_budget_tokens, prompt_overhead_tokens, seam_context_chars,
+            document.formatted_text,
+            input_budget_tokens,
+            prompt_overhead_tokens,
+            seam_context_chars,
         )
 
     effective_budget = max(1, input_budget_tokens - prompt_overhead_tokens - _SAFETY_MARGIN_TOKENS)
@@ -217,7 +221,4 @@ def _block_entries(
         max_tokens=effective_budget,
         prompt_overhead_tokens=header_overhead,
     )
-    return [
-        (format_block_prompt_entry(block_index, block, segment), (block_index,))
-        for segment in body_segments
-    ]
+    return [(format_block_prompt_entry(block_index, block, segment), (block_index,)) for segment in body_segments]

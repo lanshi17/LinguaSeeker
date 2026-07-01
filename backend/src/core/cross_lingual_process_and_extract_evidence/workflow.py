@@ -1,4 +1,5 @@
 """Pure orchestrator — graph wiring + public service API. Zero business logic."""
+
 from __future__ import annotations
 
 import asyncio
@@ -34,6 +35,7 @@ class TranslationService:
         self._ctx = TranslationConfigContext.from_config(cfg)
         # Create LLM for formatter (redaction detection + OCR repair)
         from src.utils.llm_adapter import create_llm_client
+
         formatter_llm = create_llm_client(
             model=self._ctx.model,
             base_url=self._ctx.base_url,
@@ -140,7 +142,9 @@ class TranslationService:
 
         logger.info(
             "Pipeline complete: {} sentences, {} segments, lang={}",
-            len(result.sentences), len(result.segments), result.source_language,
+            len(result.sentences),
+            len(result.segments),
+            result.source_language,
         )
         return result
 
@@ -153,10 +157,7 @@ class TranslationService:
             asyncio.get_running_loop()
         except RuntimeError:
             return asyncio.run(self.run(pages, content_blocks=content_blocks))
-        raise RuntimeError(
-            "run_sync() cannot be called from within a running event loop. "
-            "Use run() instead."
-        )
+        raise RuntimeError("run_sync() cannot be called from within a running event loop. Use run() instead.")
 
     def save(
         self,

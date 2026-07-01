@@ -72,7 +72,5 @@ async def test_phase_1_uses_pre_parsed_markdown_from_acquisition(tmp_path):
     assert "MECP2 c.473C>T" in written
 
     # Title is extracted from the first "# " heading into metadata.json
-    meta = _json.loads(
-        Path(result.phase_1_output.metadata_path).read_text(encoding="utf-8")
-    )
+    meta = _json.loads(Path(result.phase_1_output.metadata_path).read_text(encoding="utf-8"))
     assert meta["title"] == "Title"

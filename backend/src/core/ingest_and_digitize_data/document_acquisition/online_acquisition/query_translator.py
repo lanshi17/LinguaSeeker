@@ -171,10 +171,7 @@ def _parse_response(raw: str, source_query: str) -> TranslatedQueries:
         raise ValueError(f"Translation response missing languages: {missing}")
 
     # Ensure all values are strings and stripped (handle JSON null → fallback)
-    cleaned = {
-        lang: str(obj[lang]).strip() if obj[lang] is not None else ""
-        for lang in TARGET_LANGUAGES
-    }
+    cleaned = {lang: str(obj[lang]).strip() if obj[lang] is not None else "" for lang in TARGET_LANGUAGES}
     empty = [lang for lang, val in cleaned.items() if not val]
     if empty:
         logger.warning("Empty translations for languages: {}", empty)

@@ -1,4 +1,5 @@
 """Contracts for pipeline orchestrator state, types, and error hierarchy."""
+
 from __future__ import annotations
 
 import functools
@@ -112,44 +113,62 @@ class InvalidStateTransitionError(Exception):
 # Valid transitions for PipelineStatus.
 # Phase reruns allow any terminal state to return to PENDING.
 _VALID_PIPELINE_TRANSITIONS: dict[PipelineStatus, frozenset[PipelineStatus]] = {
-    PipelineStatus.PENDING: frozenset({
-        PipelineStatus.RUNNING,
-        PipelineStatus.FAILED,
-    }),
-    PipelineStatus.RUNNING: frozenset({
-        PipelineStatus.COMPLETED,
-        PipelineStatus.FAILED,
-    }),
-    PipelineStatus.FAILED: frozenset({
-        PipelineStatus.PENDING,  # phase rerun / retry
-    }),
-    PipelineStatus.COMPLETED: frozenset({
-        PipelineStatus.PENDING,  # phase rerun (unusual but allowed)
-    }),
+    PipelineStatus.PENDING: frozenset(
+        {
+            PipelineStatus.RUNNING,
+            PipelineStatus.FAILED,
+        }
+    ),
+    PipelineStatus.RUNNING: frozenset(
+        {
+            PipelineStatus.COMPLETED,
+            PipelineStatus.FAILED,
+        }
+    ),
+    PipelineStatus.FAILED: frozenset(
+        {
+            PipelineStatus.PENDING,  # phase rerun / retry
+        }
+    ),
+    PipelineStatus.COMPLETED: frozenset(
+        {
+            PipelineStatus.PENDING,  # phase rerun (unusual but allowed)
+        }
+    ),
 }
 
 # Valid transitions for PhaseStatus.
 # Phase reruns allow terminal states to return to PENDING.
 _VALID_PHASE_TRANSITIONS: dict[PhaseStatus, frozenset[PhaseStatus]] = {
-    PhaseStatus.PENDING: frozenset({
-        PhaseStatus.RUNNING,
-        PhaseStatus.SKIPPED,
-        PhaseStatus.FAILED,
-    }),
-    PhaseStatus.RUNNING: frozenset({
-        PhaseStatus.COMPLETED,
-        PhaseStatus.FAILED,
-        PhaseStatus.SKIPPED,
-    }),
-    PhaseStatus.COMPLETED: frozenset({
-        PhaseStatus.PENDING,  # phase rerun
-    }),
-    PhaseStatus.SKIPPED: frozenset({
-        PhaseStatus.PENDING,  # phase rerun
-    }),
-    PhaseStatus.FAILED: frozenset({
-        PhaseStatus.PENDING,  # phase rerun / retry
-    }),
+    PhaseStatus.PENDING: frozenset(
+        {
+            PhaseStatus.RUNNING,
+            PhaseStatus.SKIPPED,
+            PhaseStatus.FAILED,
+        }
+    ),
+    PhaseStatus.RUNNING: frozenset(
+        {
+            PhaseStatus.COMPLETED,
+            PhaseStatus.FAILED,
+            PhaseStatus.SKIPPED,
+        }
+    ),
+    PhaseStatus.COMPLETED: frozenset(
+        {
+            PhaseStatus.PENDING,  # phase rerun
+        }
+    ),
+    PhaseStatus.SKIPPED: frozenset(
+        {
+            PhaseStatus.PENDING,  # phase rerun
+        }
+    ),
+    PhaseStatus.FAILED: frozenset(
+        {
+            PhaseStatus.PENDING,  # phase rerun / retry
+        }
+    ),
 }
 
 
@@ -285,7 +304,9 @@ PERMANENT_OS_ERRORS: tuple[type, ...] = (FileNotFoundError, PermissionError, IsA
 
 
 def classify_phase_error(
-    phase_num: int, error: Exception, retryable_errors: tuple[type, ...],
+    phase_num: int,
+    error: Exception,
+    retryable_errors: tuple[type, ...],
 ) -> None:
     """Classify and re-raise an error as RetryablePhaseError or PermanentPhaseError.
 
@@ -302,15 +323,19 @@ def classify_phase_error(
         raise error
     if isinstance(error, PERMANENT_OS_ERRORS):
         raise PermanentPhaseError(
-            f"Phase {phase_num} permanent file error: {error}", phase=phase_num,
+            f"Phase {phase_num} permanent file error: {error}",
+            phase=phase_num,
         ) from error
     if isinstance(error, retryable_errors):
         raise RetryablePhaseError(
-            f"Phase {phase_num} transient error: {error}", phase=phase_num,
+            f"Phase {phase_num} transient error: {error}",
+            phase=phase_num,
         ) from error
     raise PermanentPhaseError(
-        f"Phase {phase_num} unexpected error: {error}", phase=phase_num,
+        f"Phase {phase_num} unexpected error: {error}",
+        phase=phase_num,
     ) from error
+
 
 # ── Phase output models (typed, not bare dict) ─────────────────────────────
 
@@ -372,15 +397,13 @@ class PhaseStatusDetail(BaseModel):
 
     @classmethod
     def complete(
-        cls, started_at: str | None, summary: dict[str, Any] | None = None,
+        cls,
+        started_at: str | None,
+        summary: dict[str, Any] | None = None,
     ) -> PhaseStatusDetail:
         """Build a COMPLETED status detail, computing duration from started_at."""
         now = datetime.now().isoformat()
-        duration = (
-            (datetime.now() - datetime.fromisoformat(started_at)).total_seconds()
-            if started_at
-            else None
-        )
+        duration = (datetime.now() - datetime.fromisoformat(started_at)).total_seconds() if started_at else None
         return cls(
             status=PhaseStatus.COMPLETED,
             started_at=started_at,
@@ -504,11 +527,7 @@ class PipelineGraphState(BaseModel):
             relevance_gate=rd.get("relevance_gate", True),
             literature_types=rd.get("literature_types"),
             created_at=rd.get("created_at", ""),
-            extraction_target=(
-                ExtractionTarget(**rd["extraction_target"])
-                if rd.get("extraction_target")
-                else None
-            ),
+            extraction_target=(ExtractionTarget(**rd["extraction_target"]) if rd.get("extraction_target") else None),
             extraction_profile=rd.get("extraction_profile", "none"),
             extraction_mode=rd.get("extraction_mode", "broad"),
             ablation_disable_review=rd.get("ablation_disable_review", False),

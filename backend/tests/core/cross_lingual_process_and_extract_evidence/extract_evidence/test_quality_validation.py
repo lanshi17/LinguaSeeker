@@ -6,7 +6,10 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     SourceLocation,
     SourcePrecision,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.core import EvidenceItemNormalizer, QualityValidator
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.core import (
+    EvidenceItemNormalizer,
+    QualityValidator,
+)
 
 
 def _found(field_id: str, group_id: str) -> EvidenceItem:
@@ -378,6 +381,7 @@ def test_normalizer_keeps_source_invalid_without_source_invalid():
     assert diagnosis.status == EvidenceStatus.SOURCE_INVALID
     assert diagnosis.value == "Diagnosis confirmed by genetic testing and clinical features"
 
+
 def test_quality_validation_counts_context_contamination():
     item = EvidenceItem(
         field_id="A.gene_symbol",
@@ -437,7 +441,9 @@ def test_quality_gate_marks_special_record_without_source_for_review():
         description="Assay evidence",
         group_id=group_id,
         source=None,
-        raw_source=SourceLocation(block_index=1, context_type="figure", context_ref="Figure 1", text_snippet="assay evidence"),
+        raw_source=SourceLocation(
+            block_index=1, context_type="figure", context_ref="Figure 1", text_snippet="assay evidence"
+        ),
     )
 
     report = QualityValidator(required_field_ids=set()).validate(

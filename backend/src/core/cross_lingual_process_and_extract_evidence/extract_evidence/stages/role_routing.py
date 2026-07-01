@@ -1,4 +1,5 @@
 """Role routing stage — separates primary evidence from phenotype/comparator/context."""
+
 from __future__ import annotations
 
 from loguru import logger

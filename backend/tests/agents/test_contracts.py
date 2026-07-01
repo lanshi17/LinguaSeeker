@@ -1,4 +1,5 @@
 """Tests for pipeline orchestrator contracts."""
+
 from src.agents.contracts import (
     PipelineGraphState,
     PhaseStatus,
@@ -160,6 +161,7 @@ def test_phase_status_detail():
     assert detail.status == PhaseStatus.COMPLETED
     assert detail.duration_seconds == 300.0
     assert detail.error is None
+
 
 def test_pipeline_graph_state_carries_extraction_target() -> None:
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (

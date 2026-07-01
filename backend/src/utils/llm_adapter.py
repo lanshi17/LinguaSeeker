@@ -13,6 +13,7 @@ Usage:
     # Key pool (high concurrency)
     client = create_llm_client(model="gpt-4", api_keys=["sk-1...", "sk-2..."], base_url="...")
 """
+
 from __future__ import annotations
 
 import itertools
@@ -151,9 +152,7 @@ class _StructuredOutputWrapper:
         idx = self._pool._next_index()
         tried = {idx}
         client = self._pool._clients[idx]
-        structured = client.with_structured_output(
-            self._schema, method=self._method, **self._kwargs
-        )
+        structured = client.with_structured_output(self._schema, method=self._method, **self._kwargs)
         try:
             result = structured.invoke(messages, **kwargs)
             self._pool._mark_success(idx)
@@ -187,9 +186,7 @@ class _StructuredOutputWrapper:
         idx = self._pool._next_index()
         tried = {idx}
         client = self._pool._clients[idx]
-        structured = client.with_structured_output(
-            self._schema, method=self._method, **self._kwargs
-        )
+        structured = client.with_structured_output(self._schema, method=self._method, **self._kwargs)
         try:
             result = await structured.ainvoke(messages, **kwargs)
             self._pool._mark_success(idx)
@@ -223,10 +220,7 @@ class _StructuredOutputWrapper:
 def _is_auth_error(exc: Exception) -> bool:
     """Check if exception is an authentication/authorization error."""
     text = str(exc).lower()
-    return any(
-        kw in text
-        for kw in ("401", "403", "unauthorized", "forbidden", "invalid api key", "authentication")
-    )
+    return any(kw in text for kw in ("401", "403", "unauthorized", "forbidden", "invalid api key", "authentication"))
 
 
 def create_llm_client(

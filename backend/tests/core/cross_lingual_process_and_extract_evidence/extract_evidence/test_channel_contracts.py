@@ -1,4 +1,5 @@
 """Tests for document evidence channel contracts."""
+
 from __future__ import annotations
 
 import json
@@ -25,15 +26,11 @@ EXPECTED_CHANNEL_CATEGORIES: dict[DocumentEvidenceChannel, frozenset[str]] = {
     DocumentEvidenceChannel.COHORT_STUDY: frozenset({"A", "D", "G", "H", "J"}),
 }
 
-_NON_CURATION_CATEGORIES = frozenset(
-    spec.category_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id != "K"
-)
+_NON_CURATION_CATEGORIES = frozenset(spec.category_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id != "K")
 
 
 def _field_ids_for_categories(categories: frozenset[str]) -> frozenset[str]:
-    return frozenset(
-        spec.field_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id in categories
-    )
+    return frozenset(spec.field_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id in categories)
 
 
 def _all_field_ids() -> frozenset[str]:
@@ -51,6 +48,7 @@ def _classification(channels, **kwargs) -> DocumentChannelClassification:
 
 # -- enum ----------------------------------------------------------------
 
+
 def test_channel_enum_has_required_members() -> None:
     values = {ch.value for ch in DocumentEvidenceChannel}
     assert values == {
@@ -64,12 +62,9 @@ def test_channel_enum_has_required_members() -> None:
 
 # -- channel_categories --------------------------------------------------
 
-@pytest.mark.parametrize(
-    "channel,expected", list(EXPECTED_CHANNEL_CATEGORIES.items())
-)
-def test_channel_categories_for_concrete_channels(
-    channel: DocumentEvidenceChannel, expected: frozenset[str]
-) -> None:
+
+@pytest.mark.parametrize("channel,expected", list(EXPECTED_CHANNEL_CATEGORIES.items()))
+def test_channel_categories_for_concrete_channels(channel: DocumentEvidenceChannel, expected: frozenset[str]) -> None:
     assert channel_categories(channel) == expected
 
 
@@ -91,6 +86,7 @@ def test_every_channel_excludes_curation_category() -> None:
 
 # -- DocumentChannelClassification ---------------------------------------
 
+
 def test_classification_round_trips_required_fields() -> None:
     cls = _classification([DocumentEvidenceChannel.CASE_REPORT])
     assert cls.selected_channels == [DocumentEvidenceChannel.CASE_REPORT]
@@ -108,22 +104,16 @@ def test_classification_confidence_bounds_enforced() -> None:
 
 def test_classification_requires_at_least_one_channel() -> None:
     with pytest.raises(ValidationError):
-        DocumentChannelClassification(
-            selected_channels=[], confidence=0.9, rationale="x"
-        )
+        DocumentChannelClassification(selected_channels=[], confidence=0.9, rationale="x")
 
 
 def test_classification_deduplicates_selected_channels() -> None:
-    cls = _classification(
-        [DocumentEvidenceChannel.CASE_REPORT, DocumentEvidenceChannel.CASE_REPORT]
-    )
+    cls = _classification([DocumentEvidenceChannel.CASE_REPORT, DocumentEvidenceChannel.CASE_REPORT])
     assert cls.selected_channels == [DocumentEvidenceChannel.CASE_REPORT]
 
 
 def test_classification_drops_unknown_when_concrete_present() -> None:
-    cls = _classification(
-        [DocumentEvidenceChannel.UNKNOWN, DocumentEvidenceChannel.CASE_REPORT]
-    )
+    cls = _classification([DocumentEvidenceChannel.UNKNOWN, DocumentEvidenceChannel.CASE_REPORT])
     assert cls.selected_channels == [DocumentEvidenceChannel.CASE_REPORT]
 
 
@@ -133,9 +123,7 @@ def test_classification_keeps_unknown_when_alone() -> None:
 
 
 def test_effective_channels_concrete_returned_as_is() -> None:
-    cls = _classification(
-        [DocumentEvidenceChannel.CASE_REPORT, DocumentEvidenceChannel.FUNCTIONAL_STUDY]
-    )
+    cls = _classification([DocumentEvidenceChannel.CASE_REPORT, DocumentEvidenceChannel.FUNCTIONAL_STUDY])
     assert cls.effective_channels == [
         DocumentEvidenceChannel.CASE_REPORT,
         DocumentEvidenceChannel.FUNCTIONAL_STUDY,
@@ -158,21 +146,18 @@ def test_effective_channels_unknown_is_empty() -> None:
 
 # -- compute_channel_eligibility -----------------------------------------
 
+
 @pytest.mark.parametrize("channel", list(EXPECTED_CHANNEL_CATEGORIES))
 def test_single_channel_eligibility_matches_category_set(
     channel: DocumentEvidenceChannel,
 ) -> None:
     eligibility = compute_channel_eligibility(_classification([channel]))
     assert eligibility.channels == [channel]
-    assert eligibility.allowed_field_ids == _field_ids_for_categories(
-        EXPECTED_CHANNEL_CATEGORIES[channel]
-    )
+    assert eligibility.allowed_field_ids == _field_ids_for_categories(EXPECTED_CHANNEL_CATEGORIES[channel])
 
 
 def test_case_report_excludes_functional_and_population_fields() -> None:
-    eligibility = compute_channel_eligibility(
-        _classification([DocumentEvidenceChannel.CASE_REPORT])
-    )
+    eligibility = compute_channel_eligibility(_classification([DocumentEvidenceChannel.CASE_REPORT]))
     assert "F.assay_id" not in eligibility.allowed_field_ids
     assert "D.allele_frequency" not in eligibility.allowed_field_ids
     assert "G.odds_ratio" not in eligibility.allowed_field_ids
@@ -181,9 +166,7 @@ def test_case_report_excludes_functional_and_population_fields() -> None:
 
 
 def test_functional_study_includes_functional_and_computational_fields() -> None:
-    eligibility = compute_channel_eligibility(
-        _classification([DocumentEvidenceChannel.FUNCTIONAL_STUDY])
-    )
+    eligibility = compute_channel_eligibility(_classification([DocumentEvidenceChannel.FUNCTIONAL_STUDY]))
     assert "F.assay_id" in eligibility.allowed_field_ids
     assert "I.animal_model_type" in eligibility.allowed_field_ids
     assert "E.conservation_score" in eligibility.allowed_field_ids
@@ -192,9 +175,7 @@ def test_functional_study_includes_functional_and_computational_fields() -> None
 
 
 def test_cohort_study_includes_population_and_case_control_fields() -> None:
-    eligibility = compute_channel_eligibility(
-        _classification([DocumentEvidenceChannel.COHORT_STUDY])
-    )
+    eligibility = compute_channel_eligibility(_classification([DocumentEvidenceChannel.COHORT_STUDY]))
     assert "D.allele_frequency" in eligibility.allowed_field_ids
     assert "G.odds_ratio" in eligibility.allowed_field_ids
     assert "F.assay_id" not in eligibility.allowed_field_ids
@@ -202,12 +183,8 @@ def test_cohort_study_includes_population_and_case_control_fields() -> None:
 
 
 def test_curation_fields_always_excluded() -> None:
-    eligibility = compute_channel_eligibility(
-        _classification([DocumentEvidenceChannel.MIXED])
-    )
-    k_fields = {
-        spec.field_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id == "K"
-    }
+    eligibility = compute_channel_eligibility(_classification([DocumentEvidenceChannel.MIXED]))
+    k_fields = {spec.field_id for spec in EVIDENCE_FIELD_SPECS if spec.category_id == "K"}
     assert k_fields.isdisjoint(eligibility.allowed_field_ids)
     assert k_fields <= eligibility.excluded_field_ids
 
@@ -227,16 +204,11 @@ def test_allowed_plus_excluded_partitions_full_catalog(
 ) -> None:
     eligibility = compute_channel_eligibility(_classification([channel]))
     assert eligibility.allowed_field_ids.isdisjoint(eligibility.excluded_field_ids)
-    assert (
-        eligibility.allowed_field_ids | eligibility.excluded_field_ids
-        == _all_field_ids()
-    )
+    assert eligibility.allowed_field_ids | eligibility.excluded_field_ids == _all_field_ids()
 
 
 def test_reasons_cover_every_catalog_field() -> None:
-    eligibility = compute_channel_eligibility(
-        _classification([DocumentEvidenceChannel.CASE_REPORT])
-    )
+    eligibility = compute_channel_eligibility(_classification([DocumentEvidenceChannel.CASE_REPORT]))
     assert len(eligibility.reasons) == len(EVIDENCE_FIELD_SPECS)
     assert {r.field_id for r in eligibility.reasons} == _all_field_ids()
     eligible = [r for r in eligibility.reasons if r.eligible]
@@ -246,22 +218,16 @@ def test_reasons_cover_every_catalog_field() -> None:
 
 
 def test_eligible_reasons_cite_covering_channels_for_concrete_classification() -> None:
-    eligibility = compute_channel_eligibility(
-        _classification([DocumentEvidenceChannel.CASE_REPORT])
-    )
+    eligibility = compute_channel_eligibility(_classification([DocumentEvidenceChannel.CASE_REPORT]))
     for reason in eligibility.reasons:
         if reason.eligible:
             assert reason.channels == [DocumentEvidenceChannel.CASE_REPORT]
 
 
 def test_unknown_classification_falls_back_to_all_single_paper_fields() -> None:
-    eligibility = compute_channel_eligibility(
-        _classification([DocumentEvidenceChannel.UNKNOWN])
-    )
+    eligibility = compute_channel_eligibility(_classification([DocumentEvidenceChannel.UNKNOWN]))
     assert eligibility.channels == [DocumentEvidenceChannel.UNKNOWN]
-    assert eligibility.allowed_field_ids == _field_ids_for_categories(
-        _NON_CURATION_CATEGORIES
-    )
+    assert eligibility.allowed_field_ids == _field_ids_for_categories(_NON_CURATION_CATEGORIES)
     for reason in eligibility.reasons:
         if reason.eligible:
             assert reason.channels == []
@@ -269,10 +235,9 @@ def test_unknown_classification_falls_back_to_all_single_paper_fields() -> None:
 
 # -- mixed-channel behavior ----------------------------------------------
 
+
 def test_mixed_is_superset_of_each_single_channel() -> None:
-    mixed = compute_channel_eligibility(
-        _classification([DocumentEvidenceChannel.MIXED])
-    )
+    mixed = compute_channel_eligibility(_classification([DocumentEvidenceChannel.MIXED]))
     for channel in EXPECTED_CHANNEL_CATEGORIES:
         single = compute_channel_eligibility(_classification([channel]))
         assert single.allowed_field_ids <= mixed.allowed_field_ids
@@ -280,9 +245,7 @@ def test_mixed_is_superset_of_each_single_channel() -> None:
 
 def test_two_concrete_channels_yields_union_of_their_fields() -> None:
     eligibility = compute_channel_eligibility(
-        _classification(
-            [DocumentEvidenceChannel.CASE_REPORT, DocumentEvidenceChannel.FUNCTIONAL_STUDY]
-        )
+        _classification([DocumentEvidenceChannel.CASE_REPORT, DocumentEvidenceChannel.FUNCTIONAL_STUDY])
     )
     expected = _field_ids_for_categories(
         EXPECTED_CHANNEL_CATEGORIES[DocumentEvidenceChannel.CASE_REPORT]
@@ -296,9 +259,7 @@ def test_two_concrete_channels_yields_union_of_their_fields() -> None:
 
 
 def test_bare_mixed_equals_all_concrete_union() -> None:
-    bare = compute_channel_eligibility(
-        _classification([DocumentEvidenceChannel.MIXED])
-    )
+    bare = compute_channel_eligibility(_classification([DocumentEvidenceChannel.MIXED]))
     explicit = compute_channel_eligibility(
         _classification(
             [
@@ -319,9 +280,7 @@ def test_bare_mixed_equals_all_concrete_union() -> None:
 
 def test_mixed_field_covered_by_multiple_channels_lists_all() -> None:
     eligibility = compute_channel_eligibility(
-        _classification(
-            [DocumentEvidenceChannel.CASE_REPORT, DocumentEvidenceChannel.FUNCTIONAL_STUDY]
-        )
+        _classification([DocumentEvidenceChannel.CASE_REPORT, DocumentEvidenceChannel.FUNCTIONAL_STUDY])
     )
     # A and H are common to both channels.
     a_reason = next(r for r in eligibility.reasons if r.field_id == "A.gene_symbol")
@@ -335,6 +294,7 @@ def test_mixed_field_covered_by_multiple_channels_lists_all() -> None:
 
 
 # -- serialization -------------------------------------------------------
+
 
 def test_classification_json_round_trip() -> None:
     cls = _classification(
@@ -363,9 +323,7 @@ def test_field_eligibility_reason_json_round_trip() -> None:
 
 
 def test_channel_field_eligibility_json_round_trip_preserves_field_sets() -> None:
-    eligibility = compute_channel_eligibility(
-        _classification([DocumentEvidenceChannel.FUNCTIONAL_STUDY])
-    )
+    eligibility = compute_channel_eligibility(_classification([DocumentEvidenceChannel.FUNCTIONAL_STUDY]))
     restored = ChannelFieldEligibility.model_validate_json(eligibility.model_dump_json())
     assert restored.channels == eligibility.channels
     assert restored.allowed_field_ids == eligibility.allowed_field_ids

@@ -1,4 +1,5 @@
 """Translation quality validation."""
+
 from __future__ import annotations
 
 import re
@@ -64,9 +65,12 @@ def validate_translation_output(source_text: str, translated_text: str) -> None:
 
     # Check if output is just echoed prompt (no actual translation)
     prompt_markers = (
-        "SYSTEM PROMPT:", "You are a biomedical translation engine",
-        "You are a prompt engineering expert", "CRITICAL RULES",
-        "TERMINOLOGY STAGE", "TRANSLATE_STAGE",
+        "SYSTEM PROMPT:",
+        "You are a biomedical translation engine",
+        "You are a prompt engineering expert",
+        "CRITICAL RULES",
+        "TERMINOLOGY STAGE",
+        "TRANSLATE_STAGE",
     )
     first_200 = translated[:200].upper()
     if any(marker.upper() in first_200 for marker in prompt_markers):

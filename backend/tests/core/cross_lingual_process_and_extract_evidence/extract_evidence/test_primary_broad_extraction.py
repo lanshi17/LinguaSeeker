@@ -1,4 +1,5 @@
 """Tests for the B8 primary broad extraction stage."""
+
 from __future__ import annotations
 
 import pytest

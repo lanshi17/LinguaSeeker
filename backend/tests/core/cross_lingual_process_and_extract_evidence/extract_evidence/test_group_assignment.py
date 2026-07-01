@@ -78,7 +78,9 @@ def test_group_assigner_assigns_special_records_to_existing_group():
         SpecialEvidenceRecord(
             record_type="functional",
             description="BRCA1 c.5266dupC showed loss of function",
-            raw_source=SourceLocation(block_index=0, context_type="text", context_ref="", text_snippet="loss of function"),
+            raw_source=SourceLocation(
+                block_index=0, context_type="text", context_ref="", text_snippet="loss of function"
+            ),
         )
     ]
 

@@ -1,4 +1,5 @@
 """Precise deterministic terminology matching rules for Phase 3."""
+
 from __future__ import annotations
 
 from src.core.standardize_entities_and_align_knowledge.contracts import (
@@ -130,9 +131,7 @@ class PreciseTerminologyMatcher:
             return ()
         best_priority = min(ALIAS_TYPE_PRIORITY.get(candidate.alias_type, 99) for candidate in choices)
         return tuple(
-            candidate
-            for candidate in choices
-            if ALIAS_TYPE_PRIORITY.get(candidate.alias_type, 99) == best_priority
+            candidate for candidate in choices if ALIAS_TYPE_PRIORITY.get(candidate.alias_type, 99) == best_priority
         )
 
     def _filter_variant_candidates_by_gene_context(
@@ -179,8 +178,7 @@ class PreciseTerminologyMatcher:
         same_gene = tuple(
             choice
             for choice in choices
-            if normalize_gene_symbol(str(choice.raw_payload.get("gene_symbol", "") or "")) == norm_gene
-            and norm_gene
+            if normalize_gene_symbol(str(choice.raw_payload.get("gene_symbol", "") or "")) == norm_gene and norm_gene
         )
         if same_gene:
             best = self._apply_alias_type_priority(same_gene) or same_gene

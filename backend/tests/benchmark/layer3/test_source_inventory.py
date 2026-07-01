@@ -1,4 +1,5 @@
 """Tests for raw source inventory generation."""
+
 from __future__ import annotations
 
 import hashlib

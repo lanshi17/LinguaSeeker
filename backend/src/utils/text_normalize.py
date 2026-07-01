@@ -1,4 +1,5 @@
 """Shared text normalization helpers for the evidence extraction pipeline."""
+
 from __future__ import annotations
 
 import re
@@ -55,9 +56,7 @@ def concat_document_text(doc_data: dict) -> str | None:
     blocks = doc_data.get("blocks", [])
     if isinstance(blocks, list) and blocks:
         text = "\n\n".join(
-            block_text_from_dict(block)
-            for block in blocks
-            if isinstance(block, dict) and block_text_from_dict(block)
+            block_text_from_dict(block) for block in blocks if isinstance(block, dict) and block_text_from_dict(block)
         )
         if text:
             return text

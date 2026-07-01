@@ -1,6 +1,5 @@
 """Tests for inference service config in Settings."""
 
-
 from src.core.config import Settings
 
 

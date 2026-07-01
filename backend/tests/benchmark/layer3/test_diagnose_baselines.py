@@ -1,4 +1,5 @@
 """Tests for layer-3 system-vs-baseline diagnostics."""
+
 from __future__ import annotations
 
 import json

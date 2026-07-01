@@ -1,4 +1,5 @@
 """Tests for three-way comparison: B0-naive vs B7-expanded vs SYSTEM."""
+
 from __future__ import annotations
 
 import pytest
@@ -39,48 +40,72 @@ def _match(field_id: str, matched: bool, match_type: str = "exact") -> dict:
 @pytest.fixture
 def sample_reports():
     """Three mock reports with 2 entries each."""
-    sys_report = _make_report([
-        _make_entry("rett_001", [
-            _match("A.gene_symbol", True),
-            _match("B.disease_diagnosis", True),
-            _match("B.sex", True),
-            _match("C.de_novo_status", True),
-        ]),
-        _make_entry("rett_002", [
-            _match("A.gene_symbol", True),
-            _match("B.disease_diagnosis", True),
-            _match("B.sex", False, "missing"),
-            _match("C.de_novo_status", False, "wrong_value"),
-        ]),
-    ])
-    b0_report = _make_report([
-        _make_entry("rett_001", [
-            _match("A.gene_symbol", True),
-            _match("B.disease_diagnosis", True),
-            _match("B.sex", False, "missing"),
-            _match("C.de_novo_status", False, "missing"),
-        ]),
-        _make_entry("rett_002", [
-            _match("A.gene_symbol", True),
-            _match("B.disease_diagnosis", True),
-            _match("B.sex", False, "missing"),
-            _match("C.de_novo_status", False, "missing"),
-        ]),
-    ])
-    b7_report = _make_report([
-        _make_entry("rett_001", [
-            _match("A.gene_symbol", True),
-            _match("B.disease_diagnosis", True),
-            _match("B.sex", True),
-            _match("C.de_novo_status", False, "missing"),
-        ]),
-        _make_entry("rett_002", [
-            _match("A.gene_symbol", True),
-            _match("B.disease_diagnosis", True),
-            _match("B.sex", False, "missing"),
-            _match("C.de_novo_status", False, "missing"),
-        ]),
-    ])
+    sys_report = _make_report(
+        [
+            _make_entry(
+                "rett_001",
+                [
+                    _match("A.gene_symbol", True),
+                    _match("B.disease_diagnosis", True),
+                    _match("B.sex", True),
+                    _match("C.de_novo_status", True),
+                ],
+            ),
+            _make_entry(
+                "rett_002",
+                [
+                    _match("A.gene_symbol", True),
+                    _match("B.disease_diagnosis", True),
+                    _match("B.sex", False, "missing"),
+                    _match("C.de_novo_status", False, "wrong_value"),
+                ],
+            ),
+        ]
+    )
+    b0_report = _make_report(
+        [
+            _make_entry(
+                "rett_001",
+                [
+                    _match("A.gene_symbol", True),
+                    _match("B.disease_diagnosis", True),
+                    _match("B.sex", False, "missing"),
+                    _match("C.de_novo_status", False, "missing"),
+                ],
+            ),
+            _make_entry(
+                "rett_002",
+                [
+                    _match("A.gene_symbol", True),
+                    _match("B.disease_diagnosis", True),
+                    _match("B.sex", False, "missing"),
+                    _match("C.de_novo_status", False, "missing"),
+                ],
+            ),
+        ]
+    )
+    b7_report = _make_report(
+        [
+            _make_entry(
+                "rett_001",
+                [
+                    _match("A.gene_symbol", True),
+                    _match("B.disease_diagnosis", True),
+                    _match("B.sex", True),
+                    _match("C.de_novo_status", False, "missing"),
+                ],
+            ),
+            _make_entry(
+                "rett_002",
+                [
+                    _match("A.gene_symbol", True),
+                    _match("B.disease_diagnosis", True),
+                    _match("B.sex", False, "missing"),
+                    _match("C.de_novo_status", False, "missing"),
+                ],
+            ),
+        ]
+    )
     return sys_report, b0_report, b7_report
 
 

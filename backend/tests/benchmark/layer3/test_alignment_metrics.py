@@ -1,4 +1,5 @@
 """Tests for cross-lingual evidence alignment metrics."""
+
 from __future__ import annotations
 
 import json

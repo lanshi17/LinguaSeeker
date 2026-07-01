@@ -1,4 +1,5 @@
 """Translation engine for biomedical documents."""
+
 from __future__ import annotations
 
 import asyncio
@@ -116,8 +117,12 @@ class MultiStageTranslator(BaseTranslator):
 
     def __init__(self, ctx: TranslationConfigContext):
         self._ctx = ctx
-        self._llm = create_llm(ctx.model, ctx.api_key, ctx.base_url, ctx.temperature, ctx.max_tokens, ctx.timeout, api_keys=ctx.api_keys)
-        self._json_llm = create_json_llm(ctx.model, ctx.api_key, ctx.base_url, ctx.temperature, ctx.max_tokens, ctx.timeout, api_keys=ctx.api_keys)
+        self._llm = create_llm(
+            ctx.model, ctx.api_key, ctx.base_url, ctx.temperature, ctx.max_tokens, ctx.timeout, api_keys=ctx.api_keys
+        )
+        self._json_llm = create_json_llm(
+            ctx.model, ctx.api_key, ctx.base_url, ctx.temperature, ctx.max_tokens, ctx.timeout, api_keys=ctx.api_keys
+        )
 
     @staticmethod
     def _parse_terminology(raw: str, source_language: str = "unknown") -> Dict[str, str]:
@@ -284,7 +289,9 @@ class MultiStageTranslator(BaseTranslator):
 
         if len(segments) <= 1:
             raw = await invoke_with_retry(
-                self._llm, get_terminology_prompt(text), "terminology",
+                self._llm,
+                get_terminology_prompt(text),
+                "terminology",
             )
             return self._clean_terminology(raw)
 
@@ -320,8 +327,8 @@ class MultiStageTranslator(BaseTranslator):
         """
         prompt = (
             "Extract bilingual term pairs from the following biomedical text. "
-            "Return a JSON object with a single key \"terms\" whose value is an array "
-            "of strings in the format \"source_term: target_term\". "
+            'Return a JSON object with a single key "terms" whose value is an array '
+            'of strings in the format "source_term: target_term". '
             "Focus on biomedical terms, drug names, gene names, disease names, "
             "and technical abbreviations. Include at most 30 pairs.\n\n"
             f"Text:\n{text[:6000]}"
@@ -377,18 +384,21 @@ class MultiStageTranslator(BaseTranslator):
         merged_blocks, merge_map = merge_short_keywords(non_empty)
 
         # Join blocks with markers (strips prefixes)
-        marked_source, block_indices, stripped_prefixes, english_overrides = (
-            join_blocks_with_markers(merged_blocks)
-        )
+        marked_source, block_indices, stripped_prefixes, english_overrides = join_blocks_with_markers(merged_blocks)
 
         logger.info(
             "Translating {} blocks in single call ({} chars), {} English-only blocks preserved, strict={}",
-            len(merged_blocks), len(marked_source), len(english_overrides), strict,
+            len(merged_blocks),
+            len(marked_source),
+            len(english_overrides),
+            strict,
         )
 
         # Single LLM call for the entire document
         prompt = get_full_document_translate_prompt(
-            marked_source, terminology, strict=strict,
+            marked_source,
+            terminology,
+            strict=strict,
         )
         translated = await invoke_with_retry(self._llm, prompt, "translate/full", system_prompt)
 
@@ -415,11 +425,13 @@ class MultiStageTranslator(BaseTranslator):
                 logger.debug("Preserved English block {}: {}...", seq, english_overrides[seq][:60])
             elif prefix and idx < len(translated_parts):
                 if _CJK_RE.search(prefix):
-                    task = asyncio.create_task(invoke_with_retry(
-                        self._llm,
-                        f"Translate this label to English (short, 2-5 words): {prefix}",
-                        f"translate/prefix/{idx + 1}",
-                    ))
+                    task = asyncio.create_task(
+                        invoke_with_retry(
+                            self._llm,
+                            f"Translate this label to English (short, 2-5 words): {prefix}",
+                            f"translate/prefix/{idx + 1}",
+                        )
+                    )
                     prefix_tasks.append((idx, task))
                 else:
                     translated_parts[idx] = f"{prefix}{translated_parts[idx]}"
@@ -444,7 +456,9 @@ class MultiStageTranslator(BaseTranslator):
         joined = _BLOCK_SEP.join(translated_parts)
         logger.info(
             "Translated {} blocks in single call ({} -> {} chars)",
-            len(non_empty), len(marked_source), len(joined),
+            len(non_empty),
+            len(marked_source),
+            len(joined),
         )
         return joined, source_texts, translated_parts
 
@@ -488,7 +502,8 @@ class MultiStageTranslator(BaseTranslator):
         if len(reviewed) < len(translated_text) * 0.5:
             logger.warning(
                 "Self-review too short ({} vs {} chars), keeping original",
-                len(reviewed), len(translated_text),
+                len(reviewed),
+                len(translated_text),
             )
             return translated_text
 
@@ -501,12 +516,15 @@ class MultiStageTranslator(BaseTranslator):
 
         logger.info(
             "Self-review complete ({} -> {} chars)",
-            len(translated_text), len(reviewed),
+            len(translated_text),
+            len(reviewed),
         )
         return reviewed
 
     async def translate_segments(
-        self, formatted: FormattedDocument, terminology: str,
+        self,
+        formatted: FormattedDocument,
+        terminology: str,
         blocks: List[ContentBlock] | None = None,
         *,
         strict: bool = False,
@@ -534,12 +552,17 @@ class MultiStageTranslator(BaseTranslator):
         # guaranteed block-level alignment.
         self._text_block_indices: list[int] = []
         if blocks:
-            non_empty = [(i, b) for i, b in enumerate(blocks)
-                         if b.text.strip() and (b.type in ("text", "title") or
-                                                (b.type == "footer" and _DOI_RE.search(b.text)))]
+            non_empty = [
+                (i, b)
+                for i, b in enumerate(blocks)
+                if b.text.strip() and (b.type in ("text", "title") or (b.type == "footer" and _DOI_RE.search(b.text)))
+            ]
             if non_empty:
                 return await self._translate_blocks(
-                    formatted, terminology, non_empty, strict=strict,
+                    formatted,
+                    terminology,
+                    non_empty,
+                    strict=strict,
                 )
 
         text = formatted.formatted_markdown
@@ -562,7 +585,7 @@ class MultiStageTranslator(BaseTranslator):
             budget_chars = int(len(terminology) * (available * 0.4) / (term_tokens or 1) * 0.9)
             # Snap to nearest newline to avoid splitting mid-entry
             cut = terminology.rfind("\n", 0, max(budget_chars, 200))
-            terminology = terminology[:max(cut, 200)]
+            terminology = terminology[: max(cut, 200)]
             term_tokens = estimate_tokens(terminology)
             logger.warning("Truncated terminology to {} tokens", term_tokens)
 
@@ -571,7 +594,12 @@ class MultiStageTranslator(BaseTranslator):
         max_segment_tokens = self._INPUT_BUDGET - overhead
         logger.info(
             "Token budget: sys={} + base={} + ctx={} + terms={} = overhead={}, segment_max={}",
-            sys_tokens, base_tokens, ctx_tokens, term_tokens, overhead, max_segment_tokens,
+            sys_tokens,
+            base_tokens,
+            ctx_tokens,
+            term_tokens,
+            overhead,
+            max_segment_tokens,
         )
 
         segments = segment_text(text, max_tokens=max(2000, max_segment_tokens), prompt_overhead_tokens=overhead)
@@ -580,11 +608,15 @@ class MultiStageTranslator(BaseTranslator):
 
         async def _translate_segment(idx: int, segment: str) -> str:
             # Provide neighboring context so the LLM can translate coherently
-            prev_ctx = segments[idx - 1][-self._CONTEXT_CHARS:] if idx >= 1 else ""
-            next_ctx = segments[idx + 1][:self._CONTEXT_CHARS] if idx + 1 < total else ""
+            prev_ctx = segments[idx - 1][-self._CONTEXT_CHARS :] if idx >= 1 else ""
+            next_ctx = segments[idx + 1][: self._CONTEXT_CHARS] if idx + 1 < total else ""
             translated = await self._translate_one_segment(
-                segment, terminology, idx + 1, total,
-                prev_context=prev_ctx, next_context=next_ctx,
+                segment,
+                terminology,
+                idx + 1,
+                total,
+                prev_context=prev_ctx,
+                next_context=next_ctx,
                 system_prompt=system_prompt,
             )
             logger.info("Translate segment {}/{} done", idx + 1, total)
@@ -618,8 +650,10 @@ class MultiStageTranslator(BaseTranslator):
     ) -> str:
         """Translate a single segment with validation and retry."""
         prompt = get_translate_prompt(
-            source_segment, terminology,
-            prev_context=prev_context, next_context=next_context,
+            source_segment,
+            terminology,
+            prev_context=prev_context,
+            next_context=next_context,
         )
         stage = f"translate/{idx}"
         last_error = ""
@@ -644,10 +678,7 @@ class MultiStageTranslator(BaseTranslator):
                 translated = await invoke_with_retry(self._llm, retry_prompt, stage, system_prompt)
             elif attempt == 1:
                 # First attempt: use JSON mode to prevent prompt echo
-                json_prompt = (
-                    f"{prompt}\n\n"
-                    "Return a JSON object with key \"translation\" containing the translated text."
-                )
+                json_prompt = f'{prompt}\n\nReturn a JSON object with key "translation" containing the translated text.'
                 try:
                     raw = await invoke_json_with_retry(self._json_llm, json_prompt, stage, system_prompt)
                     data = json.loads(raw)
@@ -666,7 +697,8 @@ class MultiStageTranslator(BaseTranslator):
 
             # Strip any source-language contamination from this segment
             translated = strip_source_contamination(
-                translated, self._detect_source_lang(source_segment),
+                translated,
+                self._detect_source_lang(source_segment),
             )
 
             # Validate segment quality
@@ -677,12 +709,18 @@ class MultiStageTranslator(BaseTranslator):
                 last_error = str(exc)
                 logger.warning(
                     "Segment {}/{} attempt {}/{} validation failed: {}",
-                    idx, total, attempt, self._MAX_SEGMENT_RETRIES, exc,
+                    idx,
+                    total,
+                    attempt,
+                    self._MAX_SEGMENT_RETRIES,
+                    exc,
                 )
                 if attempt == self._MAX_SEGMENT_RETRIES:
                     # Last attempt — accept whatever we have
                     logger.warning(
-                        "Segment {}/{} max retries reached, accepting as-is", idx, total,
+                        "Segment {}/{} max retries reached, accepting as-is",
+                        idx,
+                        total,
                     )
                     return translated
 
@@ -699,19 +737,25 @@ class MultiStageTranslator(BaseTranslator):
     # ── Full pipeline ────────────────────────────────────────────────────
 
     async def run_pipeline(
-        self, formatted: FormattedDocument, blocks: List[ContentBlock] | None = None,
+        self,
+        formatted: FormattedDocument,
+        blocks: List[ContentBlock] | None = None,
         *,
         strict: bool = False,
     ) -> Tuple[Dict[str, str], str, str, str, List[str], List[str], List[str]]:
         # ── Stage 1: Translate (terminology + full-document translation) ──
         terminology = await self.extract_terminology(formatted)
         translated, source_segments, translated_parts = await self.translate_segments(
-            formatted, terminology, blocks=blocks, strict=strict,
+            formatted,
+            terminology,
+            blocks=blocks,
+            strict=strict,
         )
 
         # ── Stage 2: Self-review (LLM quality check and correction) ──────
         translated = await self._self_review(
-            formatted.formatted_markdown, translated,
+            formatted.formatted_markdown,
+            translated,
         )
 
         # ── Stage 3: Normalize (validate, clean, strip artifacts) ────────
@@ -733,7 +777,9 @@ class MultiStageTranslator(BaseTranslator):
                 logger.warning(
                     "Detected LLM repetition loop: {} chars ({}x source), {} unique headings. "
                     "Trimming to first occurrence of repeated content.",
-                    len(translated), len(translated) // source_len, len(unique_headings),
+                    len(translated),
+                    len(translated) // source_len,
+                    len(unique_headings),
                 )
                 warnings.append("repetition_loop")
                 translated = trim_repetitive_content(translated)
@@ -747,8 +793,7 @@ class MultiStageTranslator(BaseTranslator):
             # Critical failures: refuse to produce a result that is clearly
             # untranslated. Raising prevents the caller from persisting garbage.
             if any(
-                kw in error_summary
-                for kw in ("unchanged", "non_english_output", "empty", "incomplete_translation")
+                kw in error_summary for kw in ("unchanged", "non_english_output", "empty", "incomplete_translation")
             ):
                 raise TranslationError(error_summary) from exc
 
@@ -814,17 +859,16 @@ class MultiStageTranslator(BaseTranslator):
         batch_size = 10
         batches: list[list[tuple[int, str, str]]] = []
         for batch_start in range(0, len(to_translate), batch_size):
-            batches.append(to_translate[batch_start:batch_start + batch_size])
+            batches.append(to_translate[batch_start : batch_start + batch_size])
 
         async def _translate_batch(batch: list[tuple[int, str, str]]) -> None:
             items_json = [
-                {"index": idx, "field": field, "text": text}
-                for idx, (_block_idx, field, text) in enumerate(batch)
+                {"index": idx, "field": field, "text": text} for idx, (_block_idx, field, text) in enumerate(batch)
             ]
             prompt = (
                 "Translate each item from Chinese to English. "
-                "Return a JSON object with key \"translations\" whose value is an array "
-                "of objects, each with \"index\" (int) and \"translation\" (string). "
+                'Return a JSON object with key "translations" whose value is an array '
+                'of objects, each with "index" (int) and "translation" (string). '
                 "Preserve numbering and formatting.\n\n"
                 f"Items:\n{json.dumps(items_json, ensure_ascii=False)}"
             )
@@ -892,8 +936,8 @@ class MultiStageTranslator(BaseTranslator):
 
     async def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
         blocks = formatted.original_blocks or []
-        terminology_map, translated, source_segments, translated_parts, warnings = (
-            await self.run_pipeline(formatted, blocks=blocks if blocks else None)
+        terminology_map, translated, source_segments, translated_parts, warnings = await self.run_pipeline(
+            formatted, blocks=blocks if blocks else None
         )
         tr_segments: list[TranslationSegment] = []
         # Compute translated segment offsets by tracking cumulative position
@@ -910,15 +954,18 @@ class MultiStageTranslator(BaseTranslator):
             source_end = source_start + len(src_seg) if source_start >= 0 else -1
             translated_start = translated.find(tr_text, translated_offset) if tr_text else -1
             translated_end = translated_start + len(tr_text) if translated_start >= 0 else -1
-            tr_segments.append(TranslationSegment(
-                index=idx, source_text=src_seg,
-                translated_text=tr_text,
-                source_bbox=src_bbox,
-                source_start_offset=source_start,
-                source_end_offset=source_end,
-                translated_start_offset=translated_start,
-                translated_end_offset=translated_end,
-            ))
+            tr_segments.append(
+                TranslationSegment(
+                    index=idx,
+                    source_text=src_seg,
+                    translated_text=tr_text,
+                    source_bbox=src_bbox,
+                    source_start_offset=source_start,
+                    source_end_offset=source_end,
+                    translated_start_offset=translated_start,
+                    translated_end_offset=translated_end,
+                )
+            )
             if source_end >= 0:
                 source_offset = source_end
             if translated_end >= 0:
@@ -929,8 +976,10 @@ class MultiStageTranslator(BaseTranslator):
 
         # Build translated blocks: split translated text on block delimiter
         translated_blocks = build_translated_blocks(
-            blocks, tr_segments, translated,
-            text_block_indices=getattr(self, '_text_block_indices', None),
+            blocks,
+            tr_segments,
+            translated,
+            text_block_indices=getattr(self, "_text_block_indices", None),
             aux_translations=aux_translations,
         )
 
@@ -946,23 +995,26 @@ class MultiStageTranslator(BaseTranslator):
         try:
             check_block_coverage(blocks, translated_blocks)
             check_block_language(
-                translated_blocks, formatted.source_language or "unknown",
+                translated_blocks,
+                formatted.source_language or "unknown",
             )
         except TranslationError as exc:
-            if (
-                ("per_block_check" in str(exc) or "block_coverage" in str(exc))
-                and self._MAX_PER_BLOCK_RETRIES > 0
-            ):
+            if ("per_block_check" in str(exc) or "block_coverage" in str(exc)) and self._MAX_PER_BLOCK_RETRIES > 0:
                 logger.warning(
                     "Translation block quality check failed ({}). "
                     "Retrying translation with strict English-only prompt.",
                     exc,
                 )
                 (
-                    terminology_map, translated, source_segments,
-                    translated_parts, warnings,
+                    terminology_map,
+                    translated,
+                    source_segments,
+                    translated_parts,
+                    warnings,
                 ) = await self.run_pipeline(
-                    formatted, blocks=blocks if blocks else None, strict=True,
+                    formatted,
+                    blocks=blocks if blocks else None,
+                    strict=True,
                 )
                 tr_segments = []
                 translated_offset = 0
@@ -978,28 +1030,34 @@ class MultiStageTranslator(BaseTranslator):
                     source_end = source_start + len(src_seg) if source_start >= 0 else -1
                     translated_start = translated.find(tr_text, translated_offset) if tr_text else -1
                     translated_end = translated_start + len(tr_text) if translated_start >= 0 else -1
-                    tr_segments.append(TranslationSegment(
-                        index=idx, source_text=src_seg,
-                        translated_text=tr_text,
-                        source_bbox=src_bbox,
-                        source_start_offset=source_start,
-                        source_end_offset=source_end,
-                        translated_start_offset=translated_start,
-                        translated_end_offset=translated_end,
-                    ))
+                    tr_segments.append(
+                        TranslationSegment(
+                            index=idx,
+                            source_text=src_seg,
+                            translated_text=tr_text,
+                            source_bbox=src_bbox,
+                            source_start_offset=source_start,
+                            source_end_offset=source_end,
+                            translated_start_offset=translated_start,
+                            translated_end_offset=translated_end,
+                        )
+                    )
                     if source_end >= 0:
                         source_offset = source_end
                     if translated_end >= 0:
                         translated_offset = translated_end
                 translated_blocks = build_translated_blocks(
-                    blocks, tr_segments, translated,
-                    text_block_indices=getattr(self, '_text_block_indices', None),
+                    blocks,
+                    tr_segments,
+                    translated,
+                    text_block_indices=getattr(self, "_text_block_indices", None),
                     aux_translations=aux_translations,
                 )
                 translated_blocks = deduplicate_bilingual_blocks(translated_blocks)
                 check_block_coverage(blocks, translated_blocks)
                 check_block_language(
-                    translated_blocks, formatted.source_language or "unknown",
+                    translated_blocks,
+                    formatted.source_language or "unknown",
                 )
             else:
                 raise
@@ -1019,8 +1077,10 @@ class MultiStageTranslator(BaseTranslator):
             formatted_original=formatted.formatted_markdown,
             translated_english=translated,
             source_language=formatted.source_language or "unknown",
-            terminology_map=terminology_map, translation_warnings=warnings,
-            sentences=formatted.sentences, segments=tr_segments,
+            terminology_map=terminology_map,
+            translation_warnings=warnings,
+            sentences=formatted.sentences,
+            segments=tr_segments,
             original_blocks=blocks,
             translated_blocks=translated_blocks,
         )

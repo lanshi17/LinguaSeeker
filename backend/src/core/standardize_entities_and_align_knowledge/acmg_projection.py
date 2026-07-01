@@ -1,4 +1,5 @@
 """Project standardized entities into ACMG-ready evidence facts."""
+
 from __future__ import annotations
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
@@ -28,7 +29,8 @@ class AcmgReadyProjector:
         items: list[AcmgReadyEvidenceItem] = []
         hpo_ids = self._hpo_ids(matches)
         phenotype_raw_values = self._raw_values(
-            input_data.evidence_items, {"B.hpo_terms", "B.clinical_phenotypes"},
+            input_data.evidence_items,
+            {"B.hpo_terms", "B.clinical_phenotypes"},
         )
         if hpo_ids:
             items.append(
@@ -39,7 +41,8 @@ class AcmgReadyProjector:
                     raw_values=phenotype_raw_values,
                     source_field_ids=("B.hpo_terms", "B.clinical_phenotypes"),
                     confidence=self._max_confidence(
-                        input_data.evidence_items, {"B.hpo_terms", "B.clinical_phenotypes"},
+                        input_data.evidence_items,
+                        {"B.hpo_terms", "B.clinical_phenotypes"},
                     ),
                 ),
             )
@@ -60,7 +63,9 @@ class AcmgReadyProjector:
         return ids
 
     def _raw_values(
-        self, evidence_items: tuple[object, ...], field_ids: set[str],
+        self,
+        evidence_items: tuple[object, ...],
+        field_ids: set[str],
     ) -> tuple[str, ...]:
         values: list[str] = []
         for item in evidence_items:
@@ -77,13 +82,13 @@ class AcmgReadyProjector:
         return tuple(values)
 
     def _max_confidence(
-        self, evidence_items: tuple[object, ...], field_ids: set[str],
+        self,
+        evidence_items: tuple[object, ...],
+        field_ids: set[str],
     ) -> float:
         confidences = [
             item.confidence
             for item in evidence_items
-            if isinstance(item, EvidenceItem)
-            and item.status == EvidenceStatus.FOUND
-            and item.field_id in field_ids
+            if isinstance(item, EvidenceItem) and item.status == EvidenceStatus.FOUND and item.field_id in field_ids
         ]
         return max(confidences, default=0.0)

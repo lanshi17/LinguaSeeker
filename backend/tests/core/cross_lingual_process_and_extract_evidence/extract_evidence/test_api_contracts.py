@@ -16,7 +16,6 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api im
 import json
 
 
-
 def test_track_document_carries_minimal_content_blocks():
     doc = TrackDocument(
         document_id="doc-1",
@@ -194,9 +193,7 @@ def test_build_dual_documents_loads_translation_alignment(tmp_path) -> None:
                 {
                     "chunk_id": "c_0002",
                     "original_text": "基因检测提示ABCA3缺陷引起的间质性肺病。",
-                    "english_text": (
-                        "Genetic testing suggested interstitial lung disease due to ABCA3 deficiency."
-                    ),
+                    "english_text": ("Genetic testing suggested interstitial lung disease due to ABCA3 deficiency."),
                     "original_start_offset": 15,
                     "original_end_offset": 39,
                     "english_start_offset": 54,
@@ -280,14 +277,16 @@ def test_build_dual_documents_skips_non_evidence_sections_in_formatted_text(tmp_
 
     payload = {
         "metadata": {"doc_id": "doc-formatted-sections", "source_language": "en"},
-        "formatted_text": "\n".join([
-            "Abstract MECP2 c.913insT was detected.",
-            "Results Five children had MECP2 variants.",
-            "References",
-            "[1] Amir RE. MECP2 unrelated citation.",
-            "Acknowledgments",
-            "We thank the sequencing facility.",
-        ]),
+        "formatted_text": "\n".join(
+            [
+                "Abstract MECP2 c.913insT was detected.",
+                "Results Five children had MECP2 variants.",
+                "References",
+                "[1] Amir RE. MECP2 unrelated citation.",
+                "Acknowledgments",
+                "We thank the sequencing facility.",
+            ]
+        ),
         "blocks": [],
     }
     (tmp_path / "original.json").write_text(json.dumps(payload), encoding="utf-8")

@@ -1,4 +1,5 @@
 """Tests for fused-75 optimization leaderboard generation."""
+
 from __future__ import annotations
 
 import json

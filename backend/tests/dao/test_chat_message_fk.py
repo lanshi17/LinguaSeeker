@@ -1,4 +1,5 @@
 """Tests for ChatMessage foreign key constraints."""
+
 from __future__ import annotations
 
 from src.dao.postgresql.models import ChatMessage

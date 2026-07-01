@@ -1,4 +1,5 @@
 """Tests for deterministic evidence verification."""
+
 from __future__ import annotations
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.verify.contracts import (
@@ -106,9 +107,7 @@ def test_score_candidate_support_marks_unclear_pathogenic_link_as_uncertain() ->
     result = score_candidate_support(
         _verification_input(
             candidate_value="associated",
-            source_snippet=(
-                "Whether this represents a pathogenic link or an incidental finding remains unclear."
-            ),
+            source_snippet=("Whether this represents a pathogenic link or an incidental finding remains unclear."),
         )
     )
 
@@ -200,9 +199,7 @@ def test_score_candidate_support_marks_predicted_targets_as_disputed() -> None:
     result = score_candidate_support(
         _verification_input(
             candidate_value="associated",
-            source_snippet=(
-                "some of the targets predicted for it included several BMP receptors involved in PAH"
-            ),
+            source_snippet=("some of the targets predicted for it included several BMP receptors involved in PAH"),
             source_precision="corrected",
             target_gene="BMPR2",
             target_disease="pulmonary arterial hypertension",
@@ -250,8 +247,7 @@ def test_score_candidate_support_does_not_refute_without_negative_source_evidenc
         _verification_input(
             candidate_value="associated",
             source_snippet=(
-                "CHRNA7 have been reported to be associated with neuropsychiatric "
-                "phenotypes including epilepsy."
+                "CHRNA7 have been reported to be associated with neuropsychiatric phenotypes including epilepsy."
             ),
             target_gene="CHRNA7",
             target_disease="epilepsy",

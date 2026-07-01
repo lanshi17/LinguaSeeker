@@ -107,9 +107,11 @@ _DEFAULT_MAX_TOKENS = 4096
 
 # ── Result types ──────────────────────────────────────────────────────────
 
+
 @dataclass
 class RelevanceJudgment:
     """Result of relevance check for a single PDF."""
+
     file_path: str
     relevant: bool = False
     doc_type: str = ""
@@ -120,6 +122,7 @@ class RelevanceJudgment:
 @dataclass
 class RelevanceGateResult:
     """Aggregated result of the relevance gate."""
+
     total: int = 0
     relevant: int = 0
     irrelevant: int = 0
@@ -129,6 +132,7 @@ class RelevanceGateResult:
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────
+
 
 def _extract_text(
     pdf_path: str,
@@ -175,6 +179,7 @@ def _parse_response(raw: str) -> Tuple[bool, str, str]:
 
 
 # ── Core ──────────────────────────────────────────────────────────────────
+
 
 async def _check_one(
     client: AsyncOpenAI,
@@ -338,10 +343,7 @@ async def run_relevance_gate(
         else:
             result.irrelevant += 1
             result.removed_paths.append(judgment.file_path)
-            logger.info(
-                f"relevance_gate: removing {Path(judgment.file_path).name} "
-                f"— {judgment.reason[:80]}"
-            )
+            logger.info(f"relevance_gate: removing {Path(judgment.file_path).name} — {judgment.reason[:80]}")
 
     # Delete irrelevant files from disk
     if delete_files and result.removed_paths:

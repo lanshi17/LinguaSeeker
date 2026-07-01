@@ -1,4 +1,5 @@
 """Tests for pipeline API routes."""
+
 import pytest
 from httpx import AsyncClient
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -452,7 +453,6 @@ async def test_post_pipeline_run_same_filename_different_hash_not_blocked(async_
     mock_runner.is_running_for_source.assert_awaited_once_with("content:different-hash")
 
 
-
 @pytest.mark.asyncio
 async def test_post_pipeline_run_accepts_extraction_target(async_client: AsyncClient):
     with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
@@ -495,9 +495,7 @@ async def test_post_pipeline_run_duplicate_source_key_race_returns_409(async_cli
         runner.is_running_for_source = AsyncMock(return_value=False)
         runner.compute_initial_content_hash = AsyncMock(return_value=None)
         runner.check_processing_cache = AsyncMock(return_value=None)
-        runner.start = AsyncMock(
-            side_effect=IntegrityError("insert", {}, Exception("duplicate source_key"))
-        )
+        runner.start = AsyncMock(side_effect=IntegrityError("insert", {}, Exception("duplicate source_key")))
         mock_get_runner.return_value = runner
 
         response = await async_client.post(

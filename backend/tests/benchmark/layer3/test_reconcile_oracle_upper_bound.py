@@ -1,4 +1,5 @@
 """Tests for offline reconcile oracle upper-bound diagnostics."""
+
 from __future__ import annotations
 
 import json

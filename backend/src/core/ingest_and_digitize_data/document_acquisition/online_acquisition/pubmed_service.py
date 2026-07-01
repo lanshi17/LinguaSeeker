@@ -43,8 +43,7 @@ class OnlineAcquisitionPubMedService:
         api_key: Optional[str] = None,
     ) -> None:
         self.base_url = (
-            base_url
-            or os.getenv("PUBMED_BASE_URL", "https://eutils.ncbi.nlm.nih.gov/entrez/eutils")
+            base_url or os.getenv("PUBMED_BASE_URL", "https://eutils.ncbi.nlm.nih.gov/entrez/eutils")
         ).rstrip("/")
         self.api_key = api_key or os.getenv("PUBMED_API_KEY", "")
 
@@ -73,9 +72,7 @@ class OnlineAcquisitionPubMedService:
             esearch_resp.raise_for_status()
             esearch_payload = esearch_resp.json()
 
-            pmids: List[str] = (
-                esearch_payload.get("esearchresult", {}).get("idlist", []) or []
-            )
+            pmids: List[str] = esearch_payload.get("esearchresult", {}).get("idlist", []) or []
             if not pmids:
                 return []
 
@@ -86,9 +83,7 @@ class OnlineAcquisitionPubMedService:
             }
             if self.api_key:
                 summary_params["api_key"] = self.api_key
-            summary_resp = await client.get(
-                f"{self.base_url}/esummary.fcgi", params=summary_params
-            )
+            summary_resp = await client.get(f"{self.base_url}/esummary.fcgi", params=summary_params)
             summary_resp.raise_for_status()
             summary_payload = summary_resp.json()
 
@@ -114,9 +109,7 @@ class OnlineAcquisitionPubMedService:
                     pmcid=pmcid,
                     doi=doi,
                     title=str(row.get("title") or "").strip(),
-                    journal=str(
-                        row.get("fulljournalname") or row.get("source") or ""
-                    ).strip(),
+                    journal=str(row.get("fulljournalname") or row.get("source") or "").strip(),
                     pub_date=str(row.get("pubdate") or "").strip(),
                 )
             )
@@ -145,15 +138,11 @@ class OnlineAcquisitionPubMedService:
             fetch_params["api_key"] = self.api_key
 
         async with httpx.AsyncClient(timeout=15.0) as client:
-            summary_resp = await client.get(
-                f"{self.base_url}/esummary.fcgi", params=summary_params
-            )
+            summary_resp = await client.get(f"{self.base_url}/esummary.fcgi", params=summary_params)
             summary_resp.raise_for_status()
             summary_payload = summary_resp.json()
 
-            fetch_resp = await client.get(
-                f"{self.base_url}/efetch.fcgi", params=fetch_params
-            )
+            fetch_resp = await client.get(f"{self.base_url}/efetch.fcgi", params=fetch_params)
             fetch_resp.raise_for_status()
             fetch_xml = fetch_resp.text
 
@@ -175,9 +164,7 @@ class OnlineAcquisitionPubMedService:
         return OnlineAcquisitionPubMedArticle(
             pmid=normalized_pmid,
             title=str(row.get("title") or "").strip(),
-            journal=str(
-                row.get("fulljournalname") or row.get("source") or ""
-            ).strip(),
+            journal=str(row.get("fulljournalname") or row.get("source") or "").strip(),
             pub_date=str(row.get("pubdate") or "").strip(),
             abstract=abstract_text,
         )

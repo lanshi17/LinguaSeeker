@@ -3,6 +3,7 @@
 Validates that InvalidStateTransitionError is raised for illegal status
 pipeline/phase transitions, and that legal transitions pass through.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -294,9 +295,7 @@ class TestDirectStatePersistenceTransitionGuard:
             await persistence.save(state)
 
     @pytest.mark.asyncio
-    async def test_metadata_only_save_identity_no_status_change_succeeds(
-        self, db_session: AsyncSession
-    ):
+    async def test_metadata_only_save_identity_no_status_change_succeeds(self, db_session: AsyncSession):
         """Saving with same status (metadata update) succeeds."""
         persistence = DirectStatePersistence(db_session)
         state = self._make_state(pipeline_status=PipelineStatus.RUNNING)
@@ -388,9 +387,7 @@ class TestSessionBoundTransitionGuard:
         )
 
     @pytest.mark.asyncio
-    async def test_invalid_transition_raises_with_session_bound(
-        self, db_session: AsyncSession
-    ):
+    async def test_invalid_transition_raises_with_session_bound(self, db_session: AsyncSession):
         """SessionBoundStatePersistence enforces transition guards."""
         persistence = SessionBoundStatePersistence(_make_session_factory(db_session))
 
@@ -404,9 +401,7 @@ class TestSessionBoundTransitionGuard:
             await persistence.save(state)
 
     @pytest.mark.asyncio
-    async def test_valid_transition_succeeds_with_session_bound(
-        self, db_session: AsyncSession
-    ):
+    async def test_valid_transition_succeeds_with_session_bound(self, db_session: AsyncSession):
         """SessionBoundStatePersistence allows valid transitions."""
         persistence = SessionBoundStatePersistence(_make_session_factory(db_session))
 
@@ -420,9 +415,7 @@ class TestSessionBoundTransitionGuard:
         assert loaded.pipeline_status == PipelineStatus.RUNNING
 
     @pytest.mark.asyncio
-    async def test_recover_orphaned_runs_uses_valid_transition(
-        self, db_session: AsyncSession
-    ):
+    async def test_recover_orphaned_runs_uses_valid_transition(self, db_session: AsyncSession):
         """recover_orphaned_runs produces valid PENDING/RUNNING → FAILED transition."""
         from datetime import timedelta
 

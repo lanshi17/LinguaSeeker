@@ -1,4 +1,5 @@
 """Shared logging configuration — loguru sinks + stdlib interception."""
+
 from __future__ import annotations
 
 import logging

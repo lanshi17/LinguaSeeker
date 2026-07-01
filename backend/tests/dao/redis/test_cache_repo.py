@@ -1,4 +1,5 @@
 """Tests for Redis cache repository helpers."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -77,9 +78,7 @@ async def test_set_document_cache() -> None:
     repo = CacheRepository(client)
 
     await repo.set_document("doc-789", {"title": "Stored"}, ttl=300)
-    client.set.assert_awaited_once_with(
-        "doc:doc-789", '{"title": "Stored"}', ex=300
-    )
+    client.set.assert_awaited_once_with("doc:doc-789", '{"title": "Stored"}', ex=300)
 
 
 @pytest.mark.asyncio
@@ -209,9 +208,7 @@ async def test_cache_repo_has_no_token_or_session_helpers() -> None:
     """CacheRepository must not expose token or session cache methods."""
     from src.dao.redis.cache_repo import CacheRepository
 
-    public_methods = [
-        m for m in dir(CacheRepository) if not m.startswith("_")
-    ]
+    public_methods = [m for m in dir(CacheRepository) if not m.startswith("_")]
     for keyword in ("token", "session", "auth"):
         assert not any(keyword in m.lower() for m in public_methods), (
             f"CacheRepository must not contain token/session methods: found {keyword}"

@@ -1,4 +1,5 @@
 """Tests for offline cross-track reconcile ablation reports."""
+
 from __future__ import annotations
 
 import json
@@ -239,13 +240,13 @@ def test_run_ablation_compares_all_strategies_on_same_entries(tmp_path: Path) ->
     )
     (entry_dir / "expected.json").write_text(
         json.dumps(
-                {
-                    "expected_evidence": [
-                        {"field_id": "A.gene_symbol", "value": "BRCA1"},
-                        {"field_id": "B.disease_diagnosis", "value": "Breast cancer"},
-                    ]
-                }
-            ),
+            {
+                "expected_evidence": [
+                    {"field_id": "A.gene_symbol", "value": "BRCA1"},
+                    {"field_id": "B.disease_diagnosis", "value": "Breast cancer"},
+                ]
+            }
+        ),
         encoding="utf-8",
     )
     (artifact_dir / "extraction_result.json").write_text(

@@ -4,6 +4,7 @@ Phase 4 (evidence review, chat, audit, source linking) is interactive
 request-response, not a LangGraph pipeline node.  This factory provides
 the agents-layer boundary so API routes never import core services directly.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

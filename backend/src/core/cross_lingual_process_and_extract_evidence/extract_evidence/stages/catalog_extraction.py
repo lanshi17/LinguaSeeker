@@ -7,6 +7,7 @@ The curation group (23 fields, K) is cross-paper GDV metadata and is filtered
 out here; it is filled by the downstream gene-disease validity pipeline.
 Groups run concurrently per chunk via asyncio.Semaphore (see _DEFAULT_CHUNK_CONCURRENCY).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -32,18 +33,22 @@ from ...cross_lingual.format.segmenter import estimate_tokens
 _DEFAULT_CHUNK_CONCURRENCY = 5
 
 # Core identity fields whose absence triggers a focused retry.
-_CORE_IDENTITY_FIELD_IDS: frozenset[str] = frozenset({
-    "A.gene_symbol",
-    "B.disease_diagnosis",
-})
+_CORE_IDENTITY_FIELD_IDS: frozenset[str] = frozenset(
+    {
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+    }
+)
 
 # All fields accepted from the core identity retry (trigger + bonus).
-_RETRY_ACCEPT_FIELD_IDS: frozenset[str] = frozenset({
-    "A.gene_symbol",
-    "B.disease_diagnosis",
-    "A.variant_hgvs_c",
-    "A.variant_hgvs_p",
-})
+_RETRY_ACCEPT_FIELD_IDS: frozenset[str] = frozenset(
+    {
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+    }
+)
 
 
 class CatalogExtractionError(Exception):
@@ -65,22 +70,23 @@ class CatalogExtractionStage:
         if field_profile is not None:
             self._catalog_groups = build_profiled_catalog(field_profile)
         else:
-            self._catalog_groups = {
-                name: catalog
-                for name, catalog in CATALOG_GROUPS.items()
-                if name != "curation"
-            }
+            self._catalog_groups = {name: catalog for name, catalog in CATALOG_GROUPS.items() if name != "curation"}
         self.last_eligibility_decision = None
 
     def _max_group_overhead(self, summary: str, extraction_target: ExtractionTarget | None) -> int:
         """Estimate the maximum prompt overhead across all catalog groups."""
         max_overhead = 0
         for catalog in self._catalog_groups.values():
-            overhead = estimate_tokens(get_catalog_extraction_prompt(
-                document_id="", track=Track.ORIGINAL, text="",
-                catalog=catalog, evidence_map_summary=summary,
-                extraction_target=extraction_target,
-            ))
+            overhead = estimate_tokens(
+                get_catalog_extraction_prompt(
+                    document_id="",
+                    track=Track.ORIGINAL,
+                    text="",
+                    catalog=catalog,
+                    evidence_map_summary=summary,
+                    extraction_target=extraction_target,
+                )
+            )
             max_overhead = max(max_overhead, overhead)
         return max_overhead
 
@@ -99,7 +105,10 @@ class CatalogExtractionStage:
             block_indices=self._recall_first_block_indices(document),
         )
         catalog_groups = self._eligible_catalog_groups(
-            document, evidence_map, chunks, channel_classification,
+            document,
+            evidence_map,
+            chunks,
+            channel_classification,
         )
         extracted: list[EvidenceItem] = []
         for chunk in chunks:
@@ -142,7 +151,10 @@ class CatalogExtractionStage:
             block_indices=self._recall_first_block_indices(document),
         )
         catalog_groups = self._eligible_catalog_groups(
-            document, evidence_map, chunks, channel_classification,
+            document,
+            evidence_map,
+            chunks,
+            channel_classification,
         )
         sem = asyncio.Semaphore(_DEFAULT_CHUNK_CONCURRENCY)
         num_tasks = len(chunks) * len(catalog_groups)
@@ -175,7 +187,9 @@ class CatalogExtractionStage:
         ]
         logger.info(
             "catalog_extraction: {} chunks × {} groups = {} tasks",
-            len(chunks), len(catalog_groups), num_tasks,
+            len(chunks),
+            len(catalog_groups),
+            num_tasks,
         )
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -202,7 +216,8 @@ class CatalogExtractionStage:
             if failure_rate > 0.5:
                 logger.warning(
                     "catalog_extraction: {}/{} tasks failed, result is partial",
-                    failed, num_tasks,
+                    failed,
+                    num_tasks,
                 )
 
         merged = merge_sparse_evidence_items(extracted)
@@ -213,9 +228,7 @@ class CatalogExtractionStage:
     @staticmethod
     def _missing_core_fields(items: list[EvidenceItem]) -> frozenset[str]:
         """Return the set of core identity field_ids that are not FOUND."""
-        found_ids = frozenset(
-            i.field_id for i in items if i.status == EvidenceStatus.FOUND
-        )
+        found_ids = frozenset(i.field_id for i in items if i.status == EvidenceStatus.FOUND)
         return frozenset(fid for fid in _CORE_IDENTITY_FIELD_IDS if fid not in found_ids)
 
     def _maybe_retry_core_identity(
@@ -400,11 +413,7 @@ class CatalogExtractionStage:
         return {
             group_name: eligible_catalog
             for group_name, catalog in self._catalog_groups.items()
-            if (
-                eligible_catalog := tuple(
-                    spec for spec in catalog if spec.field_id in decision.allowed_field_ids
-                )
-            )
+            if (eligible_catalog := tuple(spec for spec in catalog if spec.field_id in decision.allowed_field_ids))
         }
 
     @staticmethod

@@ -11,6 +11,7 @@ non-curation catalog fields (143 fields).  Named profiles such as
 benchmark runner or evaluation config — so that field-budgeted extraction
 is never a hidden default.
 """
+
 from __future__ import annotations
 
 from enum import Enum
@@ -35,33 +36,37 @@ class ExtractionProfile(str, Enum):
 
 
 # Fields scored in the merged_73 SYSTEM evaluation.
-_SCORED_FIELDS: frozenset[str] = frozenset({
-    "A.gene_symbol",
-    "B.disease_diagnosis",
-    "A.gene_disease_relationship",
-    "A.variant_hgvs_c",
-    "A.variant_hgvs_p",
-    "A.variant_type",
-    "A.functional_domain_or_hotspot",
-    "B.sex",
-    "B.age_of_onset",
-    "B.mode_of_inheritance_reported",
-    "B.clinical_phenotypes",
-    "B.hpo_terms",
-    "C.de_novo_status",
-})
+_SCORED_FIELDS: frozenset[str] = frozenset(
+    {
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "A.functional_domain_or_hotspot",
+        "B.sex",
+        "B.age_of_onset",
+        "B.mode_of_inheritance_reported",
+        "B.clinical_phenotypes",
+        "B.hpo_terms",
+        "C.de_novo_status",
+    }
+)
 
 # Identity fields needed for evidence chain assembly but not directly scored.
 # These support group_assignment, role_routing, and chain_assembly stages.
-_IDENTITY_FIELDS: frozenset[str] = frozenset({
-    "A.variant_hgvs_g",        # genomic variant for chain identity
-    "A.transcript_id",         # transcript for variant context
-    "B.proband_status",        # case identity
-    "B.case_count",            # PS4 support
-    "B.consanguinity",         # PM3 support
-    "C.inheritance_source",    # de novo context
-    "D.allele_frequency",      # BA1/BS1 support
-})
+_IDENTITY_FIELDS: frozenset[str] = frozenset(
+    {
+        "A.variant_hgvs_g",  # genomic variant for chain identity
+        "A.transcript_id",  # transcript for variant context
+        "B.proband_status",  # case identity
+        "B.case_count",  # PS4 support
+        "B.consanguinity",  # PM3 support
+        "C.inheritance_source",  # de novo context
+        "D.allele_frequency",  # BA1/BS1 support
+    }
+)
 
 # Combined profile for dataset D evaluation.
 DATASET_D_FIELDS: frozenset[str] = _SCORED_FIELDS | _IDENTITY_FIELDS

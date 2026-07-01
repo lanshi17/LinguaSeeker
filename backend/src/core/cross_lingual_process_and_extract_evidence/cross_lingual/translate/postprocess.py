@@ -1,4 +1,5 @@
 """Post-processing: dedup, quality flagging, language check, block building."""
+
 from __future__ import annotations
 
 import re
@@ -106,13 +107,16 @@ def trim_repetitive_content(text: str) -> str:
     if len(result) < 30 and len(result) < len(text) * 0.10:
         logger.warning(
             "Repetition trim left {} chars ({:.0f}% of original), keeping original",
-            len(result), len(result) / max(len(text), 1) * 100,
+            len(result),
+            len(result) / max(len(text), 1) * 100,
         )
         return text
 
     logger.info(
         "Trimmed repetitive content: {} -> {} chars ({} paragraphs removed)",
-        len(text), len(result), removed_count,
+        len(text),
+        len(result),
+        removed_count,
     )
     return result
 
@@ -129,7 +133,7 @@ def fallback_block_text(
         src = seg.source_text.strip()
         if not src:
             continue
-        src_start = src[:max(len(block_text) * 2, 100)]
+        src_start = src[: max(len(block_text) * 2, 100)]
         if src in block_text or block_text in src_start:
             return seg.translated_text
     return ""
@@ -177,13 +181,15 @@ def build_translated_blocks(
                 idx_map[indices[j]] = piece
         logger.info(
             "Split translated text on block delimiter: {} pieces from {} blocks",
-            len(pieces), len(original_blocks),
+            len(pieces),
+            len(original_blocks),
         )
 
     # Count text/title blocks for single-block shortcut
     # Include footer blocks with DOI information as they are also text-based
-    text_blocks = [b for b in original_blocks if b.type in ("text", "title") or
-                   (b.type == "footer" and _DOI_RE.search(b.text))]
+    text_blocks = [
+        b for b in original_blocks if b.type in ("text", "title") or (b.type == "footer" and _DOI_RE.search(b.text))
+    ]
 
     # Block types that are not body text — filter from downstream output
     # Exception: footer blocks containing DOI information are preserved
@@ -201,12 +207,14 @@ def build_translated_blocks(
             if block.type == "footer" and _DOI_RE.search(block.text):
                 doi_blocks_preserved += 1
                 # Preserve DOI footer as-is (no translation needed)
-                translated_blocks.append(ContentBlock(
-                    type=block.type,
-                    page_idx=block.page_idx,
-                    bbox=block.bbox,
-                    text=block.text,
-                ))
+                translated_blocks.append(
+                    ContentBlock(
+                        type=block.type,
+                        page_idx=block.page_idx,
+                        bbox=block.bbox,
+                        text=block.text,
+                    )
+                )
                 continue
             filtered_non_body += 1
             continue
@@ -220,7 +228,8 @@ def build_translated_blocks(
                 new_text = translated_text.strip()
             else:
                 new_text = fallback_block_text(
-                    block, segments,
+                    block,
+                    segments,
                 )
             # Filter empty text/title blocks
             if not new_text.strip():
@@ -290,18 +299,18 @@ def build_translated_blocks(
         logger.info("Preserved {} footer blocks containing DOI information", doi_blocks_preserved)
     logger.info(
         "Block mapping: {} original → {} translated ({} filtered: {} non-body + {} empty)",
-        len(original_blocks), len(translated_blocks),
-        filtered_non_body + empty_count, filtered_non_body, empty_count,
+        len(original_blocks),
+        len(translated_blocks),
+        filtered_non_body + empty_count,
+        filtered_non_body,
+        empty_count,
     )
     return translated_blocks
 
 
 def _translatable_text_blocks(blocks: list[ContentBlock]) -> list[ContentBlock]:
     """Return text-like body blocks expected to have translated counterparts."""
-    return [
-        block for block in blocks
-        if block.type in ("text", "title") and block.text.strip()
-    ]
+    return [block for block in blocks if block.type in ("text", "title") and block.text.strip()]
 
 
 def check_block_coverage(
@@ -327,10 +336,7 @@ def check_block_coverage(
 
     block_coverage = len(translated_text_blocks) / len(original_text_blocks)
     char_coverage = translated_chars / original_chars
-    if (
-        block_coverage < _MIN_TRANSLATED_BLOCK_COVERAGE
-        or char_coverage < _MIN_TRANSLATED_CHAR_COVERAGE
-    ):
+    if block_coverage < _MIN_TRANSLATED_BLOCK_COVERAGE or char_coverage < _MIN_TRANSLATED_CHAR_COVERAGE:
         raise TranslationError(
             "translation_validation_failed: block_coverage — "
             f"{len(translated_text_blocks)}/{len(original_text_blocks)} text blocks "
@@ -368,10 +374,7 @@ def check_block_language(
         # looks like it wasn't translated (high similarity to source)
         return  # Already covered by validate_translation_output
 
-    text_blocks = [
-        b for b in blocks
-        if b.type in ("text", "title") and b.text.strip()
-    ]
+    text_blocks = [b for b in blocks if b.type in ("text", "title") and b.text.strip()]
     if not text_blocks:
         return
 
@@ -398,7 +401,10 @@ def check_block_language(
     if untranslated > 0:
         logger.warning(
             "Per-block language check: {}/{} blocks still in {} ({:.0f}%)",
-            untranslated, total, source_language, ratio * 100,
+            untranslated,
+            total,
+            source_language,
+            ratio * 100,
         )
 
 
@@ -430,16 +436,13 @@ def deduplicate_bilingual_blocks(
 
         # Check against the previous text block in result
         prev = result[-1] if result else None
-        if (
-            prev
-            and prev.type in ("text", "title")
-            and prev.text.strip()
-        ):
+        if prev and prev.type in ("text", "title") and prev.text.strip():
             tokens_cur = _tokens(block.text)
             tokens_prev = _tokens(prev.text)
             if tokens_cur and tokens_prev:
                 overlap = len(tokens_cur & tokens_prev) / max(
-                    len(tokens_cur | tokens_prev), 1,
+                    len(tokens_cur | tokens_prev),
+                    1,
                 )
                 if overlap > _DEDUP_SIMILARITY_THRESHOLD:
                     # Keep the longer block (likely the translated one)
@@ -453,7 +456,9 @@ def deduplicate_bilingual_blocks(
     if removed:
         logger.info(
             "Deduplicated {} bilingual block pairs ({} → {})",
-            removed, len(blocks), len(result),
+            removed,
+            len(blocks),
+            len(result),
         )
     return result
 

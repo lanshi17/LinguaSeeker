@@ -1,4 +1,5 @@
 """FastAPI application entry point."""
+
 from __future__ import annotations
 
 import json
@@ -26,6 +27,7 @@ from src.utils.security_headers import SecurityHeadersMiddleware, SecurityHeader
 
 class ErrorDetail(TypedDict, total=False):
     """Error detail structure."""
+
     code: str
     message: str
     details: list[dict[str, Any]]
@@ -33,6 +35,7 @@ class ErrorDetail(TypedDict, total=False):
 
 class ErrorResponseBody(TypedDict):
     """Error response envelope."""
+
     error: ErrorDetail
     request_id: str
 
@@ -130,7 +133,9 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Lingua Seeker backend (env={})", cfg.environment)
 
     if cfg.network.proxy:
-        logger.info("Network proxy enabled: {} (bypass: {} domains)", cfg.network.proxy, len(cfg.network.no_proxy.split(",")))
+        logger.info(
+            "Network proxy enabled: {} (bypass: {} domains)", cfg.network.proxy, len(cfg.network.no_proxy.split(","))
+        )
     else:
         logger.info("Network proxy disabled — all connections are direct")
 
@@ -151,6 +156,7 @@ async def lifespan(app: FastAPI):
     # Ensure standalone tables (independent MetaData, not managed by Alembic) exist
     # Use advisory lock to prevent multi-worker races on table creation and recovery
     from src.dao.postgresql.search_index_repo import search_index_metadata
+
     _wiring.get_session_factory()  # trigger lazy engine creation
     engine = _wiring.get_engine()
 
@@ -163,6 +169,7 @@ async def lifespan(app: FastAPI):
 
     # Recover pipeline runs interrupted by server restart (only if we hold the lock)
     from src.api.v1.pipeline import get_pipeline_runner
+
     if startup_lock_acquired:
         try:
             runner = get_pipeline_runner()
@@ -180,8 +187,7 @@ async def lifespan(app: FastAPI):
         failed = checks.failed_services()
         if failed:
             for svc in failed:
-                logger.log("DEBUG" if svc == "redis" else "WARNING",
-                           "Startup connectivity check failed: {}", svc)
+                logger.log("DEBUG" if svc == "redis" else "WARNING", "Startup connectivity check failed: {}", svc)
         else:
             logger.info("Startup connectivity check passed")
     except Exception as exc:
@@ -272,6 +278,7 @@ def create_app() -> FastAPI:
 
     # ── Body size limit (before ASGI reads body into memory) ──────────
     from src.api.body_size_limit import BodySizeLimitMiddleware
+
     _app.add_middleware(BodySizeLimitMiddleware, max_bytes=cfg.mineru.max_file_size_mb * 1024 * 1024)
 
     # ── Rate limiting ───────────────────────────────────────────────────

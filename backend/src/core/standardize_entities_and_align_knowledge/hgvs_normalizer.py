@@ -5,6 +5,7 @@ lookups against ClinVar aliases match regardless of whether the source used
 three-letter or one-letter amino acid codes, transcript prefixes, or list
 literals.
 """
+
 from __future__ import annotations
 
 import re

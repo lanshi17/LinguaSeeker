@@ -1,4 +1,5 @@
 """Tests for request monitoring middleware."""
+
 from __future__ import annotations
 
 import pytest
@@ -88,6 +89,7 @@ async def test_sse_streaming_not_broken_by_middleware():
         async def generate():
             yield "data: chunk1\n\n"
             yield "data: chunk2\n\n"
+
         return StreamingResponse(generate(), media_type="text/event-stream")
 
     transport = ASGITransport(app=app)

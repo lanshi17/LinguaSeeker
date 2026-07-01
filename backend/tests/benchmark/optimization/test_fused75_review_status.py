@@ -1,4 +1,5 @@
 """Tests for fused-75 adjudication review status helpers."""
+
 from __future__ import annotations
 
 import json

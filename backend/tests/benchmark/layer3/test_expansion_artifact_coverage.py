@@ -1,4 +1,5 @@
 """Tests for Benchmark C expansion artifact coverage reporting."""
+
 from __future__ import annotations
 
 import json

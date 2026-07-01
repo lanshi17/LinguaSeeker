@@ -1,4 +1,5 @@
 """Translation pipeline exceptions."""
+
 from __future__ import annotations
 
 

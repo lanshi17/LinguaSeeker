@@ -1,4 +1,5 @@
 """Matcher facade exports for Phase 3 standardization."""
+
 from __future__ import annotations
 
 from dataclasses import replace
@@ -22,6 +23,7 @@ from src.core.standardize_entities_and_align_knowledge.precise_match.core import
 from src.core.standardize_entities_and_align_knowledge.similarity_match.core import (
     SemanticMatchServiceError,
 )
+
 
 class HybridTerminologyMatcher:
     """Run precise matching first, then semantic matching for unmapped mentions.
@@ -49,10 +51,7 @@ class HybridTerminologyMatcher:
         if precise_match.status != MatchStatus.UNMAPPED:
             return precise_match
 
-        if (
-            candidate.entity_type == EntityType.DISEASE
-            and self._cross_lingual_disease_resolver is not None
-        ):
+        if candidate.entity_type == EntityType.DISEASE and self._cross_lingual_disease_resolver is not None:
             cross_lingual_match = await self._try_cross_lingual_resolve(candidate)
             if cross_lingual_match is not None:
                 return cross_lingual_match

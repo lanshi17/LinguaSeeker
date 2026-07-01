@@ -1,4 +1,5 @@
 """Tests for local parser module."""
+
 from __future__ import annotations
 
 

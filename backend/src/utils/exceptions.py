@@ -4,6 +4,7 @@ All domain exceptions inherit from ``ACMGException`` which carries a
 human-readable ``message`` and a stable ``code`` string.  The API layer
 uses these codes in structured error responses.
 """
+
 from __future__ import annotations
 
 
@@ -89,14 +90,16 @@ _STATUS_TO_CODE: dict[int, str] = {
 # Standard codes are derived from _STATUS_TO_CODE; domain-specific
 # overrides are merged on top (e.g. LLM_ERROR → 502 Bad Gateway).
 _CODE_TO_STATUS: dict[str, int] = {v: k for k, v in _STATUS_TO_CODE.items()}
-_CODE_TO_STATUS.update({
-    "DATABASE_ERROR": 500,
-    "LLM_ERROR": 502,
-    "SERVICE_ERROR": 503,
-    "TRANSLATION_ERROR": 502,
-    "PARSING_ERROR": 500,
-    "PHASE_ERROR": 500,
-})
+_CODE_TO_STATUS.update(
+    {
+        "DATABASE_ERROR": 500,
+        "LLM_ERROR": 502,
+        "SERVICE_ERROR": 503,
+        "TRANSLATION_ERROR": 502,
+        "PARSING_ERROR": 500,
+        "PHASE_ERROR": 500,
+    }
+)
 
 
 def error_code_from_exception(exc: Exception, *, status_code: int | None = None) -> str:

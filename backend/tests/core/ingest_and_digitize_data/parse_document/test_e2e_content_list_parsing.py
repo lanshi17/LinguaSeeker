@@ -1,4 +1,5 @@
 """Unit tests for MinerU content_list.json parsing logic."""
+
 from __future__ import annotations
 
 from src.core.ingest_and_digitize_data.parse_document.common.converters import (

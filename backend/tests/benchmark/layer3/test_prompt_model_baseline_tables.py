@@ -1,4 +1,5 @@
 """Tests for prompt-only model baseline paper tables."""
+
 from __future__ import annotations
 
 import json

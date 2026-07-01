@@ -1,4 +1,5 @@
 """Tests for ClinicalContextStage — focused supplement pass for phenotype/clinical fields."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -30,6 +31,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 def _doc(text: str | None = None) -> TrackDocument:
     body = text or (
@@ -85,6 +87,7 @@ def _not_found_item(field_id: str) -> EvidenceItem:
 # Test: prompt content
 # ---------------------------------------------------------------------------
 
+
 def test_clinical_context_prompt_contains_phenotype_extraction_guidance():
     prompt = get_clinical_context_prompt(
         document_id="doc-1",
@@ -139,6 +142,7 @@ def test_clinical_context_prompt_contains_inheritance_guidance():
 # Test: field count ≤ 10
 # ---------------------------------------------------------------------------
 
+
 def test_clinical_context_field_count_is_at_most_10():
     assert len(CLINICAL_CONTEXT_FIELDS) <= 10
 
@@ -158,6 +162,7 @@ def test_clinical_context_fields_include_required_targets():
 # ---------------------------------------------------------------------------
 # Test: LLM call strategy
 # ---------------------------------------------------------------------------
+
 
 def test_clinical_context_stage_calls_strong_tier():
     provider = MagicMock()
@@ -201,6 +206,7 @@ def test_clinical_context_stage_returns_evidence_items():
 # Test: merge strategy — does not overwrite existing FOUND with lower confidence
 # ---------------------------------------------------------------------------
 
+
 def test_clinical_context_does_not_overwrite_higher_confidence_existing():
     existing = [
         _found_item("B.clinical_phenotypes", "seizures; ataxia", confidence=0.95),
@@ -233,6 +239,7 @@ def test_clinical_context_does_not_overwrite_higher_confidence_existing():
 # ---------------------------------------------------------------------------
 # Test: merge strategy — fills in NOT_FOUND fields
 # ---------------------------------------------------------------------------
+
 
 def test_clinical_context_fills_not_found_fields():
     existing = [
@@ -281,6 +288,7 @@ def test_clinical_context_fills_not_found_fields():
 # Test: merge strategy — replaces NOT_FOUND even with existing found items of lower confidence
 # ---------------------------------------------------------------------------
 
+
 def test_clinical_context_replaces_lower_confidence_found():
     text = "The patient had seizures and loss of acquired hand skills."
     existing = [
@@ -315,6 +323,7 @@ def test_clinical_context_replaces_lower_confidence_found():
 # Test: failure resilience — LLM failure does not crash pipeline
 # ---------------------------------------------------------------------------
 
+
 def test_clinical_context_stage_handles_llm_failure_gracefully():
     provider = MagicMock()
     provider.invoke_structured.side_effect = RuntimeError("LLM timeout")
@@ -337,6 +346,7 @@ def test_clinical_context_stage_handles_malformed_response():
 # ---------------------------------------------------------------------------
 # Test: dedup — identical value + field_id not added twice
 # ---------------------------------------------------------------------------
+
 
 def test_clinical_context_no_duplicate_value():
     existing = [
@@ -370,6 +380,7 @@ def test_clinical_context_no_duplicate_value():
 # Test: prompt includes current_items_summary
 # ---------------------------------------------------------------------------
 
+
 def test_clinical_context_prompt_includes_current_items_summary():
     provider = MagicMock()
     provider.invoke_structured.return_value = []
@@ -386,6 +397,7 @@ def test_clinical_context_prompt_includes_current_items_summary():
 # ---------------------------------------------------------------------------
 # Test: async variant
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_clinical_context_stage_async_calls_strong_tier():

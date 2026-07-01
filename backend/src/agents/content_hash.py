@@ -8,6 +8,7 @@ pipeline. The hash incorporates:
   - The extraction target scope key (so the same document processed
     for different gene-disease hypotheses does NOT collide).
 """
+
 from __future__ import annotations
 
 import hashlib

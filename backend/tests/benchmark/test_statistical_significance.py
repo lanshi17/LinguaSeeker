@@ -1,4 +1,5 @@
 """Tests for bootstrap CI and paired significance testing."""
+
 from __future__ import annotations
 
 import numpy as np

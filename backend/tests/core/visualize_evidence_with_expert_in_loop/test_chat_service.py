@@ -1,4 +1,5 @@
 """Tests for chat service."""
+
 from __future__ import annotations
 
 import uuid
@@ -16,6 +17,7 @@ from src.utils.exceptions import NotFoundException
 def test_detect_intent_uses_module_level_compiled_patterns():
     """Regex patterns should be compiled at module level, not per call."""
     import src.core.visualize_evidence_with_expert_in_loop.chat_service as mod
+
     assert hasattr(mod, "_QUESTION_PATTERNS")
     assert hasattr(mod, "_CORRECTION_PATTERNS")
     assert all(hasattr(p, "search") for p in mod._QUESTION_PATTERNS)
@@ -61,9 +63,7 @@ class TestChatService:
         assert msg.role == "user"
         assert msg.content == "What is the gene?"
 
-    async def test_append_message_nonexistent_session_raises_not_found(
-        self, db_session: AsyncSession
-    ) -> None:
+    async def test_append_message_nonexistent_session_raises_not_found(self, db_session: AsyncSession) -> None:
         """Appending to a non-existent session raises NotFoundException (404)."""
         service = ChatService(db_session)
         fake_id = uuid.uuid4()
@@ -77,9 +77,7 @@ class TestChatService:
                 entity_id=None,
             )
 
-    async def test_list_messages_nonexistent_session_raises_not_found(
-        self, db_session: AsyncSession
-    ) -> None:
+    async def test_list_messages_nonexistent_session_raises_not_found(self, db_session: AsyncSession) -> None:
         """Listing messages for a non-existent session raises NotFoundException."""
         service = ChatService(db_session)
         fake_id = uuid.uuid4()
@@ -150,15 +148,11 @@ class TestChatService:
                 entity_id=None,
             )
 
-        messages = await service.list_messages(
-            session_id=session.chat_session_id, limit=5
-        )
+        messages = await service.list_messages(session_id=session.chat_session_id, limit=5)
 
         assert len(messages) == 5
 
-    async def test_generate_reply_without_evidence_uses_general_chat_prompt(
-        self, db_session: AsyncSession
-    ) -> None:
+    async def test_generate_reply_without_evidence_uses_general_chat_prompt(self, db_session: AsyncSession) -> None:
         """Standalone chat uses a general assistant prompt without evidence context."""
         provider = MagicMock()
         provider.generate = AsyncMock(return_value="I can help start a pipeline.")
@@ -176,9 +170,7 @@ class TestChatService:
         assert "Lingua Seeker" in kwargs["system_prompt"]
         assert "pipeline" in kwargs["system_prompt"].lower()
 
-    async def test_build_evidence_context_uses_current_best_run_id(
-        self, db_session: AsyncSession
-    ) -> None:
+    async def test_build_evidence_context_uses_current_best_run_id(self, db_session: AsyncSession) -> None:
         """_build_evidence_context resolves canonical -> current_best_run_evidence_id -> entity + source."""
         from src.dao.postgresql.models import (
             CanonicalEvidenceItem,

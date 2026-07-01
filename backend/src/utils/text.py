@@ -1,4 +1,5 @@
 """Text processing utilities — sanitization, JSON cleanup, group-id parsing, abstract extraction."""
+
 from __future__ import annotations
 
 import re

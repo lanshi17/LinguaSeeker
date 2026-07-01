@@ -1,4 +1,5 @@
 """Typed contracts for Phase 4 evidence review and feedback."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -139,9 +140,7 @@ class DeltaEntry(BaseModel):
     def validate_field_name(cls, v: str) -> str:
         """Reject arbitrary field paths to prevent injection."""
         if v not in EvidenceCardPayload.DIFF_FIELDS:
-            raise ValueError(
-                f"Invalid field '{v}'. Must be one of {EvidenceCardPayload.DIFF_FIELDS}"
-            )
+            raise ValueError(f"Invalid field '{v}'. Must be one of {EvidenceCardPayload.DIFF_FIELDS}")
         return v
 
 
@@ -250,9 +249,7 @@ class EvidencePatchRequest(BaseModel):
         """Ensure all field names are in DIFF_FIELDS."""
         invalid = set(v.keys()) - set(EvidenceCardPayload.DIFF_FIELDS)
         if invalid:
-            raise ValueError(
-                f"Invalid fields: {invalid}. Must be subset of {EvidenceCardPayload.DIFF_FIELDS}"
-            )
+            raise ValueError(f"Invalid fields: {invalid}. Must be subset of {EvidenceCardPayload.DIFF_FIELDS}")
         return v
 
     @model_validator(mode="after")
@@ -261,8 +258,6 @@ class EvidencePatchRequest(BaseModel):
         if not self.fields and self.new_status is None:
             raise ValueError("Provide at least one of 'fields' or 'new_status'")
         return self
-
-
 
 
 class EvidenceSearchResult(BaseModel):

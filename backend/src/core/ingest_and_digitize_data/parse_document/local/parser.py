@@ -1,4 +1,5 @@
 """Local MinerU parser via the external MinerU FastAPI service ``/file_parse`` endpoint."""
+
 from __future__ import annotations
 
 import asyncio
@@ -88,9 +89,7 @@ class MinerULocalParser(ParserStrategy):
                 resp.raise_for_status()
                 return resp.json()
         except httpx.HTTPStatusError as e:
-            raise MinerUAPIError(
-                f"MinerU service returned {e.response.status_code}: {e.response.text}"
-            ) from e
+            raise MinerUAPIError(f"MinerU service returned {e.response.status_code}: {e.response.text}") from e
         except httpx.RequestError as e:
             raise MinerUAPIError(f"Request to MinerU service failed: {e}") from e
 

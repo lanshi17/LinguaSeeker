@@ -2,6 +2,7 @@
 
 Raises classified errors for orchestrator-level retry decisions.
 """
+
 from __future__ import annotations
 
 import json
@@ -123,9 +124,7 @@ class Phase1Adapter:
                 # has no OA copy. Not retryable — retrying would hit the same
                 # providers and get the same empty result.
                 reasons = list(acquisition_result.warnings or [])
-                detail = (
-                    f" ({'; '.join(reasons[:3])})" if reasons else ""
-                )
+                detail = f" ({'; '.join(reasons[:3])})" if reasons else ""
                 raise PermanentPhaseError(
                     f"Full-text PDF unavailable for the given identifier{detail}. "
                     f"The article may be paywalled or no OA copy is indexed.",
@@ -147,6 +146,7 @@ class Phase1Adapter:
 
             # Parse document — use absolute path to survive CWD changes
             from pathlib import Path as _Path
+
             _backend_root = _Path(__file__).resolve().parent.parent.parent.parent
             output_dir = str(_backend_root / "data" / "pipeline" / state.processing_run_id / "phase_1")
             parse_result = await self._parse.parse_local_files_and_save(
@@ -176,7 +176,8 @@ class Phase1Adapter:
             classify_phase_error(1, e, _RETRYABLE_ERRORS)
 
     async def _build_from_pre_parsed(
-        self, state: PipelineGraphState,
+        self,
+        state: PipelineGraphState,
     ) -> PipelineGraphState:
         """Construct Phase1Output from pre-parsed markdown, skipping MinerU."""
         assert state.pre_parsed_markdown is not None  # noqa: S101

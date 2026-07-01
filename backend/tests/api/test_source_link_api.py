@@ -1,4 +1,5 @@
 """Tests for source link API routes."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -26,9 +27,7 @@ async def test_get_bilingual_span(async_client: AsyncClient):
         mock_linker.get_bilingual_span = AsyncMock(return_value=mock_response)
         mock_factory.return_value.create_source_linker.return_value = mock_linker
 
-        response = await async_client.get(
-            f"/api/v1/source-link/{evidence_id}/bilingual"
-        )
+        response = await async_client.get(f"/api/v1/source-link/{evidence_id}/bilingual")
         assert response.status_code == 200
         assert response.json()["canonical_evidence_id"] == str(evidence_id)
 
@@ -53,9 +52,7 @@ async def test_get_track_span(async_client: AsyncClient):
         mock_linker.get_track_span = AsyncMock(return_value=mock_response)
         mock_factory.return_value.create_source_linker.return_value = mock_linker
 
-        response = await async_client.get(
-            f"/api/v1/source-link/{evidence_id}/original"
-        )
+        response = await async_client.get(f"/api/v1/source-link/{evidence_id}/original")
         assert response.status_code == 200
         data = response.json()
         assert data["track"] == "original"
@@ -70,8 +67,6 @@ async def test_get_track_span_returns_null_for_missing_track(async_client: Async
         mock_linker.get_track_span = AsyncMock(return_value=None)
         mock_factory.return_value.create_source_linker.return_value = mock_linker
 
-        response = await async_client.get(
-            f"/api/v1/source-link/{uuid4()}/translated"
-        )
+        response = await async_client.get(f"/api/v1/source-link/{uuid4()}/translated")
         assert response.status_code == 200
         assert response.json() is None

@@ -1,4 +1,5 @@
 """Tests for MinerU parser."""
+
 from __future__ import annotations
 
 import json
@@ -44,9 +45,11 @@ class TestMinerURemoteParser:
             "msg": "ok",
         }
 
-        with patch("rust_io.net.mineru_create_task", new_callable=AsyncMock, return_value=mock_create_response), \
-             patch("rust_io.net.mineru_get_result", new_callable=AsyncMock, return_value=mock_poll_response), \
-             patch.object(parser, "_download_and_parse_zip", new_callable=AsyncMock) as mock_download:
+        with (
+            patch("rust_io.net.mineru_create_task", new_callable=AsyncMock, return_value=mock_create_response),
+            patch("rust_io.net.mineru_get_result", new_callable=AsyncMock, return_value=mock_poll_response),
+            patch.object(parser, "_download_and_parse_zip", new_callable=AsyncMock) as mock_download,
+        ):
             mock_download.return_value = {
                 "state": "done",
                 "total_pages": 2,
@@ -108,8 +111,10 @@ class TestMinerURemoteParser:
             "msg": "ok",
         }
 
-        with patch("rust_io.net.mineru_create_task", new_callable=AsyncMock, return_value=mock_create_response), \
-             patch("rust_io.net.mineru_get_result", new_callable=AsyncMock, return_value=mock_pending_response):
+        with (
+            patch("rust_io.net.mineru_create_task", new_callable=AsyncMock, return_value=mock_create_response),
+            patch("rust_io.net.mineru_get_result", new_callable=AsyncMock, return_value=mock_pending_response),
+        ):
             with pytest.raises(MinerUTimeoutError):
                 await parser.parse("https://example.com/test.pdf")
 
@@ -126,8 +131,10 @@ class TestMinerURemoteParser:
             "msg": "ok",
         }
 
-        with patch("rust_io.net.mineru_create_task", new_callable=AsyncMock, return_value=mock_create_response), \
-             patch("rust_io.net.mineru_get_result", new_callable=AsyncMock, return_value=mock_failed_response):
+        with (
+            patch("rust_io.net.mineru_create_task", new_callable=AsyncMock, return_value=mock_create_response),
+            patch("rust_io.net.mineru_get_result", new_callable=AsyncMock, return_value=mock_failed_response),
+        ):
             with pytest.raises(MinerUAPIError, match="Task failed"):
                 await parser.parse("https://example.com/test.pdf")
 
@@ -144,8 +151,10 @@ class TestMinerURemoteParser:
             "msg": "bad token",
         }
 
-        with patch("rust_io.net.mineru_create_task", new_callable=AsyncMock, return_value=mock_create_response), \
-             patch("rust_io.net.mineru_get_result", new_callable=AsyncMock, return_value=mock_poll_response):
+        with (
+            patch("rust_io.net.mineru_create_task", new_callable=AsyncMock, return_value=mock_create_response),
+            patch("rust_io.net.mineru_get_result", new_callable=AsyncMock, return_value=mock_poll_response),
+        ):
             with pytest.raises(MinerUAPIError, match="MinerU get result failed: bad token"):
                 await parser.parse("https://example.com/test.pdf")
 
@@ -287,9 +296,7 @@ class TestMinerURemoteParser:
                     "page_idx": 0,
                 },
             ]
-            (content_dir / "test_content_list.json").write_text(
-                json.dumps(content_list), encoding="utf-8"
-            )
+            (content_dir / "test_content_list.json").write_text(json.dumps(content_list), encoding="utf-8")
 
             result = parser._parse_extracted_content(content_dir)
 
@@ -400,7 +407,9 @@ class TestMinerURemoteParser:
             "data": {"batch_id": "batch-1", "file_urls": ["https://upload.example/paper"]},
         }
 
-        with patch("rust_io.net.mineru_upload_local_files", new_callable=AsyncMock, return_value=upload_response) as upload:
+        with patch(
+            "rust_io.net.mineru_upload_local_files", new_callable=AsyncMock, return_value=upload_response
+        ) as upload:
             result = await parser.upload_local_files([str(file_path)], data_ids=["paper-1"], model_version="vlm")
 
         assert result.batch_id == "batch-1"
@@ -441,7 +450,12 @@ class TestMinerURemoteParser:
             "data": {
                 "batch_id": "batch-1",
                 "extract_result": [
-                    {"file_name": "paper.pdf", "state": "done", "full_zip_url": "https://example.com/result.zip", "err_msg": ""}
+                    {
+                        "file_name": "paper.pdf",
+                        "state": "done",
+                        "full_zip_url": "https://example.com/result.zip",
+                        "err_msg": "",
+                    }
                 ],
             },
         }
@@ -487,7 +501,12 @@ class TestMinerURemoteParser:
             "data": {
                 "batch_id": "batch-1",
                 "extract_result": [
-                    {"file_name": "first.pdf", "state": "done", "full_zip_url": "https://example.com/first.zip", "err_msg": ""},
+                    {
+                        "file_name": "first.pdf",
+                        "state": "done",
+                        "full_zip_url": "https://example.com/first.zip",
+                        "err_msg": "",
+                    },
                     {"file_name": "second.pdf", "state": "failed", "err_msg": "parse failed"},
                 ],
             },
@@ -504,9 +523,11 @@ class TestMinerURemoteParser:
             "images": {},
         }
 
-        with patch("rust_io.net.mineru_upload_local_files", new_callable=AsyncMock, return_value=upload_response), \
-             patch("rust_io.net.mineru_batch_result", new_callable=AsyncMock, return_value=status_response), \
-             patch.object(parser, "_download_and_parse_zip", new_callable=AsyncMock, return_value=raw):
+        with (
+            patch("rust_io.net.mineru_upload_local_files", new_callable=AsyncMock, return_value=upload_response),
+            patch("rust_io.net.mineru_batch_result", new_callable=AsyncMock, return_value=status_response),
+            patch.object(parser, "_download_and_parse_zip", new_callable=AsyncMock, return_value=raw),
+        ):
             result = await parser.parse_local_files([str(first), str(second)])
 
         assert result.batch_id == "batch-1"
@@ -534,10 +555,14 @@ class TestMinerURemoteParser:
             "images": {},
         }
 
-        with patch("rust_io.net.mineru_create_task", new_callable=AsyncMock, return_value=mock_create_response) as create_task, \
-             patch("rust_io.net.mineru_get_result", new_callable=AsyncMock, return_value=mock_poll_response), \
-             patch("rust_io.net.mineru_upload_local_files", new_callable=AsyncMock) as upload_local_files, \
-             patch.object(parser, "_download_and_parse_zip", new_callable=AsyncMock, return_value=raw):
+        with (
+            patch(
+                "rust_io.net.mineru_create_task", new_callable=AsyncMock, return_value=mock_create_response
+            ) as create_task,
+            patch("rust_io.net.mineru_get_result", new_callable=AsyncMock, return_value=mock_poll_response),
+            patch("rust_io.net.mineru_upload_local_files", new_callable=AsyncMock) as upload_local_files,
+            patch.object(parser, "_download_and_parse_zip", new_callable=AsyncMock, return_value=raw),
+        ):
             result = await parser.parse("https://example.com/paper.pdf")
 
         assert result.full_markdown == "ok"

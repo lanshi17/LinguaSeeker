@@ -1,4 +1,5 @@
 """Public facade for Phase 3 entity standardization."""
+
 from __future__ import annotations
 
 import inspect

@@ -10,8 +10,21 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 # --- Literal types ---
 
 ApiProvider = Literal[
-    "crossref", "unpaywall", "openalex", "europepmc", "pmc", "jstage", "doaj",
-    "scielo", "base", "core", "openaire", "arxiv", "biorxiv", "medrxiv", "cinii"
+    "crossref",
+    "unpaywall",
+    "openalex",
+    "europepmc",
+    "pmc",
+    "jstage",
+    "doaj",
+    "scielo",
+    "base",
+    "core",
+    "openaire",
+    "arxiv",
+    "biorxiv",
+    "medrxiv",
+    "cinii",
 ]
 PreferStrategy = Literal["auto", "api", "web"]
 ActionStrategy = Literal["search", "download"]
@@ -77,6 +90,7 @@ class OnlineAcquisitionRequest(BaseModel):
 
 # --- Unified Item ---
 
+
 class OnlineAcquisitionItem(BaseModel):
     """Standardized literature metadata item."""
 
@@ -98,6 +112,7 @@ class OnlineAcquisitionItem(BaseModel):
 
 # --- Route Info ---
 
+
 class OnlineAcquisitionRouteInfo(BaseModel):
     """Routing decision summary."""
 
@@ -108,6 +123,7 @@ class OnlineAcquisitionRouteInfo(BaseModel):
 
 
 # --- Response ---
+
 
 class OnlineAcquisitionResponse(BaseModel):
     """Unified response for literature search/download."""
@@ -125,6 +141,7 @@ class OnlineAcquisitionResponse(BaseModel):
 
 
 # --- Gateway contracts (internal) ---
+
 
 @dataclass
 class OnlineAcquisitionSourceTraceEntry:

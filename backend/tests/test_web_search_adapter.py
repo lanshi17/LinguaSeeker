@@ -52,7 +52,9 @@ class TestFirecrawlAdapter:
             FirecrawlAdapter,
         )
 
-        adapter = FirecrawlAdapter(api_key="fc-test-key", base_url="https://api.firecrawl.dev", timeout=10, max_results=5)
+        adapter = FirecrawlAdapter(
+            api_key="fc-test-key", base_url="https://api.firecrawl.dev", timeout=10, max_results=5
+        )
         assert adapter.api_key == "fc-test-key"
         assert adapter.max_results == 5
 
@@ -98,9 +100,11 @@ class TestFirecrawlAdapter:
             web: ListType[WebResult] = []
 
         adapter = FirecrawlAdapter(api_key="fc-test-key")
-        mock_response = SearchResponse(web=[
-            WebResult(url="https://journal.com/article/1", title="Paper One"),
-        ])
+        mock_response = SearchResponse(
+            web=[
+                WebResult(url="https://journal.com/article/1", title="Paper One"),
+            ]
+        )
 
         with patch.object(adapter, "_client", new_callable=MagicMock) as mock_client:
             mock_client.search = AsyncMock(return_value=mock_response)
@@ -229,7 +233,7 @@ class TestFirecrawlAdapter:
         adapter = FirecrawlAdapter(api_key="fc-test-key")
 
         markdown_result = {
-            "markdown": '[PDF](https://journal.com/paper.pdf)',
+            "markdown": "[PDF](https://journal.com/paper.pdf)",
             "metadata": {},
         }
 

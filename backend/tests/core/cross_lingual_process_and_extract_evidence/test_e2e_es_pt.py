@@ -9,6 +9,7 @@ unchanged source text. Validates:
 
 Uses real parsed data from: backend/output/es/ and backend/output/pt/
 """
+
 from __future__ import annotations
 
 import json
@@ -192,9 +193,7 @@ class TestTerminologyLatinScript:
     def test_es_terminology_empty_in_stored_data(self, doc_id: str):
         """Spanish docs have empty terminology in stored data (pre-fix bug)."""
         meta = _load_metadata(doc_id)
-        assert meta.get("terminology_map") == {}, (
-            f"{doc_id}: stored terminology should be empty"
-        )
+        assert meta.get("terminology_map") == {}, f"{doc_id}: stored terminology should be empty"
 
     def test_pt_case_report_has_terminology(self):
         """pt_case_report has non-empty terminology (partial success)."""
@@ -223,10 +222,7 @@ class TestRedactedInNames:
 
     def test_multiple_name_insertions_stripped(self):
         """Multiple name-internal [REDACTED] must all be stripped."""
-        text = (
-            "Takayuki [REDACTED]okia and Masako [REDACTED]omori "
-            "and Takayuki [REDACTED]omoto"
-        )
+        text = "Takayuki [REDACTED]okia and Masako [REDACTED]omori and Takayuki [REDACTED]omoto"
         result = fix_word_boundary_redacted(text)
         assert "[REDACTED]" not in result
 
@@ -244,8 +240,7 @@ class TestRedactedInNames:
 
     def test_heading_adjacent_redacted_stripped(self):
         """'References [REDACTED]' must be stripped for any language."""
-        for heading in ["References", "Abstract", "Introduction", "Methods",
-                        "Results", "Discussion", "Conclusion"]:
+        for heading in ["References", "Abstract", "Introduction", "Methods", "Results", "Discussion", "Conclusion"]:
             text = f"{heading} [REDACTED]"
             result = fix_word_boundary_redacted(text)
             assert "[REDACTED]" not in result, f"Failed for: {text}"
@@ -280,8 +275,7 @@ class TestBlockStructure:
         orig_text = [b for b in orig if b.type in ("text", "title") and b.text.strip()]
         tr_text = [b for b in tr if b.type in ("text", "title") and b.text.strip()]
         assert len(tr_text) >= len(orig_text) * 0.5, (
-            f"{doc_id}: too many text blocks lost: "
-            f"{len(orig_text)} → {len(tr_text)}"
+            f"{doc_id}: too many text blocks lost: {len(orig_text)} → {len(tr_text)}"
         )
 
     @pytest.mark.parametrize("doc_id", _ALL_ES_PT)
@@ -289,15 +283,16 @@ class TestBlockStructure:
         """Translated output must not contain echoed prompt instructions."""
         blocks = _load_translated_blocks(doc_id)
         prompt_markers = [
-            "SYSTEM PROMPT", "CRITICAL RULES", "TERMINOLOGY STAGE",
-            "TRANSLATE_STAGE", "Bilingual Terminology Map",
+            "SYSTEM PROMPT",
+            "CRITICAL RULES",
+            "TERMINOLOGY STAGE",
+            "TRANSLATE_STAGE",
+            "Bilingual Terminology Map",
             "Preservation Rules",
         ]
         for block in blocks:
             for marker in prompt_markers:
-                assert marker not in block.text, (
-                    f"{doc_id}: prompt artifact '{marker}' in: {block.text[:80]}"
-                )
+                assert marker not in block.text, f"{doc_id}: prompt artifact '{marker}' in: {block.text[:80]}"
 
     @pytest.mark.parametrize("doc_id", _ALL_ES_PT)
     def test_no_mid_word_redacted_in_output(self, doc_id: str):
@@ -305,9 +300,7 @@ class TestBlockStructure:
         blocks = _load_translated_blocks(doc_id)
         for block in blocks:
             # Check for mid-word [REDACTED]
-            assert "Re[REDACTED]" not in block.text, (
-                f"{doc_id}: mid-word [REDACTED] in: {block.text[:80]}"
-            )
+            assert "Re[REDACTED]" not in block.text, f"{doc_id}: mid-word [REDACTED] in: {block.text[:80]}"
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -330,8 +323,7 @@ class TestStoredFailureData:
         assert len(drifts) > 0, f"{doc_id}: no drifts"
         zero_drift = sum(1 for d in drifts if d.get("length_drift") == 0)
         assert zero_drift == len(drifts), (
-            f"{doc_id}: expected all segments unchanged, "
-            f"got {zero_drift}/{len(drifts)} with zero drift"
+            f"{doc_id}: expected all segments unchanged, got {zero_drift}/{len(drifts)} with zero drift"
         )
 
     @pytest.mark.parametrize("doc_id", _PT_DOCS)
@@ -339,21 +331,14 @@ class TestStoredFailureData:
         """All Portuguese docs must have validation failure warning."""
         meta = _load_metadata(doc_id)
         warnings = meta.get("translation_warnings", [])
-        has_warning = any(
-            "unchanged" in w or "non_english_output" in w
-            for w in warnings
-        )
-        assert has_warning, (
-            f"{doc_id}: expected validation warning, got {warnings}"
-        )
+        has_warning = any("unchanged" in w or "non_english_output" in w for w in warnings)
+        assert has_warning, f"{doc_id}: expected validation warning, got {warnings}"
 
     @pytest.mark.parametrize("doc_id", _ES_DOCS)
     def test_es_docs_have_empty_terminology(self, doc_id: str):
         """Spanish docs must have empty terminology map (pre-fix bug)."""
         meta = _load_metadata(doc_id)
-        assert meta.get("terminology_map") == {}, (
-            f"{doc_id}: expected empty terminology map"
-        )
+        assert meta.get("terminology_map") == {}, f"{doc_id}: expected empty terminology map"
 
     @pytest.mark.parametrize("doc_id", _ALL_ES_PT)
     def test_source_language_correct(self, doc_id: str):
@@ -373,8 +358,7 @@ class TestStoredFailureData:
         zero_drift = sum(1 for d in drifts if d.get("length_drift") == 0)
         # pt_case_report: 95/105 unchanged; pt_cancer_mama: 37/37; pt_cuidado: 145/145
         assert zero_drift >= len(drifts) * 0.9, (
-            f"{doc_id}: expected >=90% segments unchanged, "
-            f"got {zero_drift}/{len(drifts)}"
+            f"{doc_id}: expected >=90% segments unchanged, got {zero_drift}/{len(drifts)}"
         )
 
 
@@ -404,14 +388,17 @@ class TestPipelineIntegration:
         """When LLM returns Spanish text unchanged, TranslationError must be raised."""
         source = "Experiencia de cuidadores familiares de mujeres con cáncer de mama: una revisión integradora"
         # _invoke_with_retry returns str directly; simulate LLM returning unchanged text
-        with patch(
-            'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry',
-            new_callable=AsyncMock,
-            return_value=source,
-        ), patch(
-            'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry',
-            new_callable=AsyncMock,
-            return_value='{"terms": []}',
+        with (
+            patch(
+                "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry",
+                new_callable=AsyncMock,
+                return_value=source,
+            ),
+            patch(
+                "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry",
+                new_callable=AsyncMock,
+                return_value='{"terms": []}',
+            ),
         ):
             translator = MultiStageTranslator(ctx=self._mock_ctx())
             doc = _make_doc(source, lang="es")
@@ -422,14 +409,17 @@ class TestPipelineIntegration:
     async def test_unchanged_pt_triggers_error(self):
         """When LLM returns Portuguese text unchanged, TranslationError must be raised."""
         source = "Câncer de Mama X Diagnóstico"
-        with patch(
-            'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry',
-            new_callable=AsyncMock,
-            return_value=source,
-        ), patch(
-            'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry',
-            new_callable=AsyncMock,
-            return_value='{"terms": []}',
+        with (
+            patch(
+                "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry",
+                new_callable=AsyncMock,
+                return_value=source,
+            ),
+            patch(
+                "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry",
+                new_callable=AsyncMock,
+                return_value='{"terms": []}',
+            ),
         ):
             translator = MultiStageTranslator(ctx=self._mock_ctx())
             doc = _make_doc(source, lang="pt")
@@ -444,6 +434,7 @@ class TestPipelineIntegration:
         terminology = "cáncer: cancer\nmama: breast"
 
         call_count = 0
+
         async def mock_invoke(llm, prompt, stage, system_prompt=""):
             nonlocal call_count
             call_count += 1
@@ -453,14 +444,17 @@ class TestPipelineIntegration:
                 return terminology
             return translated
 
-        with patch(
-            'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry',
-            new_callable=AsyncMock,
-            side_effect=mock_invoke,
-        ), patch(
-            'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry',
-            new_callable=AsyncMock,
-            return_value=f'{{"translation": "{translated}"}}',
+        with (
+            patch(
+                "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry",
+                new_callable=AsyncMock,
+                side_effect=mock_invoke,
+            ),
+            patch(
+                "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry",
+                new_callable=AsyncMock,
+                return_value=f'{{"translation": "{translated}"}}',
+            ),
         ):
             translator = MultiStageTranslator(ctx=self._mock_ctx())
             doc = _make_doc(source, lang="es")

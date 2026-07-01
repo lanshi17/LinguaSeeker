@@ -6,6 +6,7 @@ Usage:
     cd backend
     uv run python -m scripts.backfill_metadata
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -141,9 +142,7 @@ async def backfill(session: AsyncSession) -> dict:
 
         # Update literature_profiles.title
         lp_result = await session.execute(
-            select(LiteratureProfile).where(
-                LiteratureProfile.source_document_id == doc_id
-            )
+            select(LiteratureProfile).where(LiteratureProfile.source_document_id == doc_id)
         )
         lp = lp_result.scalar_one_or_none()
         if lp is not None and not lp.title:
@@ -153,8 +152,11 @@ async def backfill(session: AsyncSession) -> dict:
     await session.commit()
     logger.info(
         "Backfill complete: {} total, {} meta updated, {} profile updated, {} skipped, {} not found",
-        stats["total"], stats["updated_meta"], stats["updated_profile"],
-        stats["skipped"], stats["not_found"],
+        stats["total"],
+        stats["updated_meta"],
+        stats["updated_profile"],
+        stats["skipped"],
+        stats["not_found"],
     )
     return stats
 

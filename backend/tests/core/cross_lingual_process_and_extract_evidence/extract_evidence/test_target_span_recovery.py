@@ -11,7 +11,9 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.target
 )
 
 
-def _doc(text: str, *, gene: str = "ABCA4", disease: str = "Stargardt disease", variant: str = "p.Gly1961Glu") -> TrackDocument:
+def _doc(
+    text: str, *, gene: str = "ABCA4", disease: str = "Stargardt disease", variant: str = "p.Gly1961Glu"
+) -> TrackDocument:
     return TrackDocument(
         document_id="doc-1",
         track=Track.ORIGINAL,

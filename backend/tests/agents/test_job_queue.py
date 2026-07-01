@@ -3,6 +3,7 @@
 Unit tests use mocked persistence (SQLite doesn't support FOR UPDATE SKIP LOCKED).
 Integration tests with PostgreSQL can be added separately.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -49,7 +50,8 @@ def _make_job(
         job_id=job_id,
         processing_run_id=processing_run_id,
         source_document_id=source_document_id,
-        request_data=request_data or {
+        request_data=request_data
+        or {
             "mode": "full",
             "source_type": "local",
             "created_at": "2026-06-25T00:00:00",
@@ -211,9 +213,7 @@ async def test_dispatcher_failed_job_does_not_block_queue(mock_runner, mock_job_
 @pytest.mark.asyncio
 async def test_dispatcher_runner_exception_marks_job_failed(mock_runner, mock_job_queue):
     """Exception from runner.start() is caught and job is marked as failed."""
-    mock_job_queue.claim_next = AsyncMock(
-        side_effect=[_make_job("job-crash", "run-1"), None]
-    )
+    mock_job_queue.claim_next = AsyncMock(side_effect=[_make_job("job-crash", "run-1"), None])
 
     error_task = asyncio.get_running_loop().create_future()
     error_task.set_exception(RuntimeError("LLM timeout"))
@@ -286,12 +286,16 @@ async def test_dispatcher_cleans_up_temp_file(mock_runner, mock_job_queue):
     """Upload temp files are cleaned up after job execution."""
     mock_job_queue.claim_next = AsyncMock(
         side_effect=[
-            _make_job("job-1", "run-1", request_data={
-                "mode": "full",
-                "source_type": "local",
-                "upload_file_path": "/tmp/fake_upload.pdf",
-                "created_at": "2026-06-25T00:00:00",
-            }),
+            _make_job(
+                "job-1",
+                "run-1",
+                request_data={
+                    "mode": "full",
+                    "source_type": "local",
+                    "upload_file_path": "/tmp/fake_upload.pdf",
+                    "created_at": "2026-06-25T00:00:00",
+                },
+            ),
             None,
         ]
     )
@@ -328,11 +332,15 @@ async def test_dispatcher_invalid_request_data_marks_failed(mock_runner, mock_jo
     """Invalid request data (e.g. bad enum) marks the job as failed."""
     mock_job_queue.claim_next = AsyncMock(
         side_effect=[
-            _make_job("job-bad", "run-1", request_data={
-                "mode": "INVALID_MODE",
-                "source_type": "local",
-                "created_at": "2026-06-25T00:00:00",
-            }),
+            _make_job(
+                "job-bad",
+                "run-1",
+                request_data={
+                    "mode": "INVALID_MODE",
+                    "source_type": "local",
+                    "created_at": "2026-06-25T00:00:00",
+                },
+            ),
             None,
         ]
     )
@@ -383,9 +391,7 @@ async def test_dispatcher_recovery_after_restart(mock_runner, mock_job_queue):
     This simulates the scenario: a job was enqueued, server restarted,
     and the dispatcher starts fresh — it should still claim the queued job.
     """
-    mock_job_queue.claim_next = AsyncMock(
-        side_effect=[_make_job("job-old", "run-old"), None]
-    )
+    mock_job_queue.claim_next = AsyncMock(side_effect=[_make_job("job-old", "run-old"), None])
     completed = _completed_state("run-old")
     task = asyncio.get_running_loop().create_future()
     task.set_result(completed)

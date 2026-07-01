@@ -34,12 +34,16 @@ class FakeStandardizationService:
         matches = (
             EntityMatch(
                 candidate=StandardizationCandidate(
-                    candidate_id="c1", entity_type=EntityType.GENE,
-                    role=BindingRole.SUBJECT, raw_text="GLA",
-                    chain_id="chain-1", track="original",
+                    candidate_id="c1",
+                    entity_type=EntityType.GENE,
+                    role=BindingRole.SUBJECT,
+                    raw_text="GLA",
+                    chain_id="chain-1",
+                    track="original",
                 ),
                 status=MatchStatus.STANDARDIZED,
-                external_id="HGNC:4296", display_name="GLA",
+                external_id="HGNC:4296",
+                display_name="GLA",
             ),
         )
         return StandardizationResult(
@@ -205,11 +209,13 @@ async def test_run_standardize_entities_can_refresh_and_import(
     )
 
     assert import_calls == [(Path("/tmp/terminology"), "2026-05-26", ("hgnc", "clinvar"))]
-    assert refresh_calls == [(
-        tmp_path / "cross_lingual" / "zh" / "法布雷病1例",
-        extract_dir.parent.parent,
-        "refresh-1",
-    )]
+    assert refresh_calls == [
+        (
+            tmp_path / "cross_lingual" / "zh" / "法布雷病1例",
+            extract_dir.parent.parent,
+            "refresh-1",
+        )
+    ]
 
 
 def test_default_extract_evidence_dir_points_to_fabry_latest() -> None:

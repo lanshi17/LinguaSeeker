@@ -1,4 +1,5 @@
 """Tests for runtime Benchmark B phase 2 augmentation metrics."""
+
 from __future__ import annotations
 
 import json

@@ -6,6 +6,7 @@ Verifies that:
 - Workflow result includes field eligibility summary.
 - Dual-track result preserves metadata for both original and translated.
 """
+
 from __future__ import annotations
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.channel_contracts import (
@@ -24,6 +25,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_channel_classification(channels=None):
     """Create a DocumentChannelClassification for testing."""
@@ -63,17 +65,18 @@ def _make_result(**kwargs):
 # Test: contract serializes/deserializes channel_classification
 # ---------------------------------------------------------------------------
 
+
 def test_result_serializes_channel_classification():
     """EvidenceExtractionResult JSON round-trip preserves channel_classification."""
     classification = _make_channel_classification()
     result = _make_result(channel_classification=classification)
-    
+
     # Serialize to JSON
     json_str = result.model_dump_json()
-    
+
     # Deserialize
     restored = EvidenceExtractionResult.model_validate_json(json_str)
-    
+
     assert restored.channel_classification is not None
     assert restored.channel_classification.selected_channels == [DocumentEvidenceChannel.CASE_REPORT]
     assert restored.channel_classification.confidence == 0.85
@@ -85,10 +88,10 @@ def test_result_serializes_field_eligibility_summary():
     """EvidenceExtractionResult JSON round-trip preserves field_eligibility_summary."""
     summary = _make_field_eligibility_summary()
     result = _make_result(field_eligibility_summary=summary)
-    
+
     json_str = result.model_dump_json()
     restored = EvidenceExtractionResult.model_validate_json(json_str)
-    
+
     assert restored.field_eligibility_summary is not None
     assert restored.field_eligibility_summary.eligible_field_count == 73
     assert restored.field_eligibility_summary.channel_excluded_field_count == 70
@@ -100,20 +103,20 @@ def test_result_serializes_field_eligibility_summary():
 def test_result_with_none_channel_classification():
     """EvidenceExtractionResult works with channel_classification=None."""
     result = _make_result(channel_classification=None)
-    
+
     json_str = result.model_dump_json()
     restored = EvidenceExtractionResult.model_validate_json(json_str)
-    
+
     assert restored.channel_classification is None
 
 
 def test_result_with_none_field_eligibility_summary():
     """EvidenceExtractionResult works with field_eligibility_summary=None."""
     result = _make_result(field_eligibility_summary=None)
-    
+
     json_str = result.model_dump_json()
     restored = EvidenceExtractionResult.model_validate_json(json_str)
-    
+
     assert restored.field_eligibility_summary is None
 
 
@@ -121,13 +124,14 @@ def test_result_with_none_field_eligibility_summary():
 # Test: FieldEligibilitySummary serialization
 # ---------------------------------------------------------------------------
 
+
 def test_field_eligibility_summary_serialization():
     """FieldEligibilitySummary JSON round-trip."""
     summary = _make_field_eligibility_summary()
-    
+
     json_str = summary.model_dump_json()
     restored = FieldEligibilitySummary.model_validate_json(json_str)
-    
+
     assert restored.eligible_field_count == summary.eligible_field_count
     assert restored.channel_excluded_field_count == summary.channel_excluded_field_count
     assert restored.target_excluded_field_count == summary.target_excluded_field_count
@@ -138,7 +142,7 @@ def test_field_eligibility_summary_serialization():
 def test_field_eligibility_summary_defaults():
     """FieldEligibilitySummary defaults to zeros."""
     summary = FieldEligibilitySummary()
-    
+
     assert summary.eligible_field_count == 0
     assert summary.channel_excluded_field_count == 0
     assert summary.target_excluded_field_count == 0
@@ -150,11 +154,12 @@ def test_field_eligibility_summary_defaults():
 # Test: dual-track result preserves metadata
 # ---------------------------------------------------------------------------
 
+
 def test_dual_track_result_preserves_channel_metadata():
     """DualEvidenceExtractionResult preserves channel_classification for both tracks."""
     original_classification = _make_channel_classification([DocumentEvidenceChannel.CASE_REPORT])
     translated_classification = _make_channel_classification([DocumentEvidenceChannel.FUNCTIONAL_STUDY])
-    
+
     original_summary = FieldEligibilitySummary(
         eligible_field_count=73,
         channel_excluded_field_count=70,
@@ -165,7 +170,7 @@ def test_dual_track_result_preserves_channel_metadata():
         channel_excluded_field_count=59,
         not_applicable_count=59,
     )
-    
+
     original_result = _make_result(
         track=Track.ORIGINAL,
         channel_classification=original_classification,
@@ -176,26 +181,28 @@ def test_dual_track_result_preserves_channel_metadata():
         channel_classification=translated_classification,
         field_eligibility_summary=translated_summary,
     )
-    
+
     dual = DualEvidenceExtractionResult(
         document_id="test-doc-1",
         original_result=original_result,
         translated_result=translated_result,
     )
-    
+
     # Serialize and deserialize
     json_str = dual.model_dump_json()
     restored = DualEvidenceExtractionResult.model_validate_json(json_str)
-    
+
     # Verify original
     assert restored.original_result.channel_classification is not None
     assert restored.original_result.channel_classification.selected_channels == [DocumentEvidenceChannel.CASE_REPORT]
     assert restored.original_result.field_eligibility_summary is not None
     assert restored.original_result.field_eligibility_summary.eligible_field_count == 73
-    
+
     # Verify translated
     assert restored.translated_result.channel_classification is not None
-    assert restored.translated_result.channel_classification.selected_channels == [DocumentEvidenceChannel.FUNCTIONAL_STUDY]
+    assert restored.translated_result.channel_classification.selected_channels == [
+        DocumentEvidenceChannel.FUNCTIONAL_STUDY
+    ]
     assert restored.translated_result.field_eligibility_summary is not None
     assert restored.translated_result.field_eligibility_summary.eligible_field_count == 84
 
@@ -204,16 +211,17 @@ def test_dual_track_result_preserves_channel_metadata():
 # Test: multiple channel classification
 # ---------------------------------------------------------------------------
 
+
 def test_result_with_multiple_channels():
     """EvidenceExtractionResult works with multiple channel classifications."""
     classification = _make_channel_classification(
         [DocumentEvidenceChannel.CASE_REPORT, DocumentEvidenceChannel.FUNCTIONAL_STUDY]
     )
     result = _make_result(channel_classification=classification)
-    
+
     json_str = result.model_dump_json()
     restored = EvidenceExtractionResult.model_validate_json(json_str)
-    
+
     assert restored.channel_classification is not None
     assert len(restored.channel_classification.selected_channels) == 2
     assert DocumentEvidenceChannel.CASE_REPORT in restored.channel_classification.selected_channels
@@ -223,6 +231,7 @@ def test_result_with_multiple_channels():
 # ---------------------------------------------------------------------------
 # Test: result with all new fields populated
 # ---------------------------------------------------------------------------
+
 
 def test_result_with_all_new_fields():
     """EvidenceExtractionResult works with all new fields populated."""
@@ -234,15 +243,15 @@ def test_result_with_all_new_fields():
         not_applicable_count=83,
         not_attempted_count=23,
     )
-    
+
     result = _make_result(
         channel_classification=classification,
         field_eligibility_summary=summary,
     )
-    
+
     json_str = result.model_dump_json()
     restored = EvidenceExtractionResult.model_validate_json(json_str)
-    
+
     assert restored.channel_classification is not None
     assert restored.channel_classification.selected_channels == [DocumentEvidenceChannel.COHORT_STUDY]
     assert restored.field_eligibility_summary is not None

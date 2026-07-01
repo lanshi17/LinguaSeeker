@@ -1,4 +1,5 @@
 """Tests for Phase 1 adapter (acquisition + parsing)."""
+
 import pytest
 from datetime import datetime
 from pathlib import Path
@@ -152,9 +153,7 @@ async def test_phase_1_adapter_raises_retryable_on_timeout(
     )
 
     mock_parse = MagicMock()
-    mock_parse.parse_local_files_and_save = AsyncMock(
-        side_effect=MinerUTimeoutError(total_timeout=120.0)
-    )
+    mock_parse.parse_local_files_and_save = AsyncMock(side_effect=MinerUTimeoutError(total_timeout=120.0))
 
     adapter = Phase1Adapter(
         acquisition_service=mock_acquisition,

@@ -3,6 +3,7 @@
 Focuses on startup lifecycle — error handler behavior is covered in
 test_error_handlers.py (Task 5).
 """
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
@@ -26,8 +27,10 @@ async def integration_client():
         ),
     ):
         from src.core.config import Settings
+
         mock_cfg.return_value = Settings()
         from app.main import create_app
+
         app = create_app()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -75,6 +78,7 @@ async def test_lifespan_disposes_redis_on_shutdown() -> None:
         patch("src.core.config.get_config") as mock_cfg,
     ):
         from src.core.config import Settings
+
         mock_cfg.return_value = Settings()
 
         from app.main import lifespan
@@ -110,6 +114,7 @@ async def test_lifespan_disposal_order_is_lifo() -> None:
         mock_dispose_pg.side_effect = lambda: call_order.append("pg")
 
         from src.core.config import Settings
+
         mock_cfg.return_value = Settings()
 
         from app.main import lifespan
@@ -141,6 +146,7 @@ async def test_lifespan_disposal_exception_safety() -> None:
         mock_dispose_redis.side_effect = RuntimeError("redis boom")
 
         from src.core.config import Settings
+
         mock_cfg.return_value = Settings()
 
         from app.main import lifespan

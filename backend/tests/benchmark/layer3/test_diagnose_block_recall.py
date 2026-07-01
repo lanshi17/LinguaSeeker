@@ -1,4 +1,5 @@
 """Tests for block-level recall diagnostics."""
+
 from __future__ import annotations
 
 import json
@@ -121,9 +122,7 @@ def test_block_recall_payload_summarizes_generation_and_table_misses(tmp_path: P
     gt_root = tmp_path / "ground_truth"
     _write_ground_truth(gt_root)
 
-    payload = diagnostics_to_payload(
-        build_block_recall_diagnostics(report_path, ground_truth_dir=gt_root)
-    )
+    payload = diagnostics_to_payload(build_block_recall_diagnostics(report_path, ground_truth_dir=gt_root))
 
     assert payload["summary"]["total_missing_fields"] == 2
     assert payload["summary"]["likely_generation_missing"] == 2

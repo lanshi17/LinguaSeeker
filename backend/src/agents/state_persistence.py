@@ -4,6 +4,7 @@ Two implementations:
 - DirectStatePersistence: binds a single session (unit tests).
 - SessionBoundStatePersistence: session-per-operation (production).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -71,9 +72,11 @@ async def _build_raw_metadata(state: PipelineGraphState) -> dict[str, object]:
     if not state.phase_1_output or not state.phase_1_output.metadata_path:
         return meta
     try:
+
         def _read() -> dict:
             with open(state.phase_1_output.metadata_path, encoding="utf-8") as f:
                 return json.load(f)
+
         phase1_meta = await asyncio.to_thread(_read)
         if isinstance(phase1_meta, dict):
             title = phase1_meta.get("title")
@@ -88,12 +91,16 @@ async def _build_raw_metadata(state: PipelineGraphState) -> dict[str, object]:
     except (OSError, json.JSONDecodeError):
         pass
     return meta
+
+
 async def _read_doc_json(path: str) -> str | None:
     """Read a Phase 2 JSON file and return concatenated document text."""
     try:
+
         def _read() -> dict:
             with open(path, encoding="utf-8") as f:
                 return json.load(f)
+
         data = await asyncio.to_thread(_read)
     except (OSError, json.JSONDecodeError):
         return None
@@ -127,11 +134,7 @@ async def _load_phase2_document_text(state: PipelineGraphState) -> tuple[str | N
 
 def _is_phase2_rerun(state: PipelineGraphState) -> bool:
     """Return True when a save belongs to a Phase 2-or-earlier rerun."""
-    return (
-        state.mode == PipelineMode.PHASE
-        and state.target_phase is not None
-        and state.target_phase <= 2
-    )
+    return state.mode == PipelineMode.PHASE and state.target_phase is not None and state.target_phase <= 2
 
 
 async def _persist_phase2_document_text(
@@ -208,9 +211,7 @@ async def _reset_phase_rerun_artifacts(
                 CanonicalEvidenceItem.source_document_id == doc_id
             )
             await session.execute(
-                delete(frontend_search_index).where(
-                    frontend_search_index.c.canonical_evidence_id.in_(canonical_ids)
-                )
+                delete(frontend_search_index).where(frontend_search_index.c.canonical_evidence_id.in_(canonical_ids))
             )
         except Exception:
             logger.debug(
@@ -218,31 +219,23 @@ async def _reset_phase_rerun_artifacts(
                 exc_info=True,
             )
 
-        run_item_ids = select(RunEvidenceItem.run_evidence_item_id).where(
-            RunEvidenceItem.processing_run_id == run_id
-        )
+        run_item_ids = select(RunEvidenceItem.run_evidence_item_id).where(RunEvidenceItem.processing_run_id == run_id)
         await session.execute(
             update(CanonicalEvidenceItem)
             .where(CanonicalEvidenceItem.current_best_run_evidence_id.in_(run_item_ids))
             .values(current_best_run_evidence_id=None)
         )
         await session.execute(
-            delete(EvidenceEntityBinding).where(
-                EvidenceEntityBinding.run_evidence_item_id.in_(run_item_ids)
-            )
+            delete(EvidenceEntityBinding).where(EvidenceEntityBinding.run_evidence_item_id.in_(run_item_ids))
         )
-        await session.execute(
-            delete(RunEvidenceItem).where(RunEvidenceItem.processing_run_id == run_id)
-        )
+        await session.execute(delete(RunEvidenceItem).where(RunEvidenceItem.processing_run_id == run_id))
         await session.execute(
             delete(CanonicalEvidenceItem).where(
                 CanonicalEvidenceItem.source_document_id == doc_id,
                 CanonicalEvidenceItem.review_status == "provisional",
             )
         )
-        await session.execute(
-            delete(LiteratureProfile).where(LiteratureProfile.source_document_id == doc_id)
-        )
+        await session.execute(delete(LiteratureProfile).where(LiteratureProfile.source_document_id == doc_id))
 
 
 _TERMINAL_PHASE_STATUSES = frozenset({"completed", "skipped"})
@@ -319,9 +312,7 @@ class DirectStatePersistence:
 
         await _persist_phase2_document_text(self._session, state, sd_id)
 
-        existing = await self._session.get(
-            PipelineRunState, UUID(state.processing_run_id)
-        )
+        existing = await self._session.get(PipelineRunState, UUID(state.processing_run_id))
         # ── State transition guard ──
         if existing is not None:
             old_state = PipelineGraphState.model_validate(existing.state_json)
@@ -374,9 +365,7 @@ class DirectStatePersistence:
         await self._session.commit()
 
     async def load(self, processing_run_id: str) -> Optional[PipelineGraphState]:
-        record = await self._session.get(
-            PipelineRunState, UUID(processing_run_id)
-        )
+        record = await self._session.get(PipelineRunState, UUID(processing_run_id))
         if record is None:
             return None
         return PipelineGraphState.model_validate(record.state_json)
@@ -451,9 +440,7 @@ class SessionBoundStatePersistence:
             # Load existing state (if any) to validate the transition is legal.
             # This is an extra read per save, but correctness in a medical
             # pipeline is worth the cost.
-            existing = await session.get(
-                PipelineRunState, UUID(state.processing_run_id)
-            )
+            existing = await session.get(PipelineRunState, UUID(state.processing_run_id))
             if existing is not None:
                 old_state = PipelineGraphState.model_validate(existing.state_json)
                 ctx = f"run={state.processing_run_id}"
@@ -516,9 +503,7 @@ class SessionBoundStatePersistence:
 
     async def load(self, processing_run_id: str) -> Optional[PipelineGraphState]:
         async with self._session_factory() as session:
-            record = await session.get(
-                PipelineRunState, UUID(processing_run_id)
-            )
+            record = await session.get(PipelineRunState, UUID(processing_run_id))
             if record is None:
                 return None
             return PipelineGraphState.model_validate(record.state_json)
@@ -539,10 +524,7 @@ class SessionBoundStatePersistence:
                     PipelineRunState.pipeline_status.in_(("pending", "running")),
                     (
                         (PipelineRunState.heartbeat_at < timeout_cutoff)
-                        | (
-                            (PipelineRunState.heartbeat_at.is_(None))
-                            & (PipelineRunState.updated_at < timeout_cutoff)
-                        )
+                        | ((PipelineRunState.heartbeat_at.is_(None)) & (PipelineRunState.updated_at < timeout_cutoff))
                     ),
                 )
             )
@@ -627,17 +609,10 @@ class SessionBoundStatePersistence:
                     | cast(PipelineRunState.source_key, String).ilike(pattern)
                 )
 
-            count_result = await session.execute(
-                select(func.count()).select_from(base.subquery())
-            )
+            count_result = await session.execute(select(func.count()).select_from(base.subquery()))
             total = count_result.scalar() or 0
 
-            stmt = (
-                base
-                .order_by(PipelineRunState.created_at.desc())
-                .limit(limit)
-                .offset(offset)
-            )
+            stmt = base.order_by(PipelineRunState.created_at.desc()).limit(limit).offset(offset)
             result = await session.execute(stmt)
             records = result.scalars().all()
 

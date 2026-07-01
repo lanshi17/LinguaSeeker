@@ -1,4 +1,5 @@
 """HTML parsers for document content extraction."""
+
 from __future__ import annotations
 
 from html.parser import HTMLParser

@@ -1,4 +1,5 @@
 """Tests for parallel search."""
+
 import pytest
 from unittest.mock import patch, MagicMock
 

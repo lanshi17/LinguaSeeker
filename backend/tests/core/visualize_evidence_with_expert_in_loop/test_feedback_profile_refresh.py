@@ -1,4 +1,5 @@
 """Tests for literature profile refresh after feedback patch."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -58,9 +59,7 @@ class TestFeedbackProfileRefresh:
 
         service = FeedbackService(session)
 
-        with patch.object(
-            service, "_refresh_literature_profile", new_callable=AsyncMock
-        ) as mock_refresh:
+        with patch.object(service, "_refresh_literature_profile", new_callable=AsyncMock) as mock_refresh:
             with patch.object(service, "_refresh_search_index", new_callable=AsyncMock):
                 patch_req = EvidencePatchRequest(
                     fields={"phenotype": "Updated"},
@@ -110,12 +109,8 @@ class TestFeedbackProfileRefresh:
 
         service = FeedbackService(session)
 
-        with patch.object(
-            service, "_refresh_literature_profile", new_callable=AsyncMock
-        ):
-            with patch.object(
-                service, "_refresh_search_index", new_callable=AsyncMock
-            ) as mock_refresh_index:
+        with patch.object(service, "_refresh_literature_profile", new_callable=AsyncMock):
+            with patch.object(service, "_refresh_search_index", new_callable=AsyncMock) as mock_refresh_index:
                 patch_req = EvidencePatchRequest(
                     fields={"phenotype": "Updated"},
                     change_reason="test",
@@ -139,9 +134,7 @@ class TestFeedbackProfileRefresh:
         doc_id = uuid4()
 
         # Patch at the source module since the import is lazy (inside the method).
-        with patch(
-            "src.dao.postgresql.literature_profile_repo.LiteratureProfileRepository"
-        ) as mock_repo_cls:
+        with patch("src.dao.postgresql.literature_profile_repo.LiteratureProfileRepository") as mock_repo_cls:
             mock_repo = MagicMock()
             mock_repo.refresh_for_document = AsyncMock()
             mock_repo_cls.return_value = mock_repo
@@ -160,9 +153,7 @@ class TestFeedbackProfileRefresh:
         session = MagicMock()
         service = FeedbackService(session)
 
-        with patch(
-            "src.dao.postgresql.search_index_repo.SearchIndexRepository"
-        ) as mock_repo_cls:
+        with patch("src.dao.postgresql.search_index_repo.SearchIndexRepository") as mock_repo_cls:
             mock_repo = MagicMock()
             mock_repo.refresh = AsyncMock()
             mock_repo_cls.return_value = mock_repo
@@ -210,9 +201,7 @@ class TestFeedbackProfileRefresh:
 
         service = FeedbackService(session)
 
-        with patch.object(
-            service, "_refresh_literature_profile", new_callable=AsyncMock
-        ) as mock_refresh:
+        with patch.object(service, "_refresh_literature_profile", new_callable=AsyncMock) as mock_refresh:
             # Same value => no delta
             patch_req = EvidencePatchRequest(
                 fields={"phenotype": "Fabry disease"},
@@ -275,14 +264,10 @@ class TestFeedbackProfileRefresh:
             "record_audit_event",
             side_effect=tracking_record_audit,
         ):
-            with patch.object(
-                service, "_refresh_literature_profile", new_callable=AsyncMock
-            ) as mock_refresh:
+            with patch.object(service, "_refresh_literature_profile", new_callable=AsyncMock) as mock_refresh:
                 mock_refresh.side_effect = lambda _: call_order.append("refresh")
 
-                with patch.object(
-                    service, "_refresh_search_index", new_callable=AsyncMock
-                ) as mock_refresh_index:
+                with patch.object(service, "_refresh_search_index", new_callable=AsyncMock) as mock_refresh_index:
                     mock_refresh_index.side_effect = lambda: call_order.append("search_index")
 
                     patch_req = EvidencePatchRequest(

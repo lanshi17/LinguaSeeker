@@ -1,4 +1,5 @@
 """Tests for the learned arbitrator leakage audit."""
+
 from __future__ import annotations
 
 import json
@@ -73,9 +74,7 @@ class TestReconcileSourceIsolation:
     def test_leaky_source_fails(self, tmp_path: Path) -> None:
         fake_dir = tmp_path / "reconcile"
         fake_dir.mkdir()
-        (fake_dir / "leaky.py").write_text(
-            "from benchmark.layer3.evaluate import compare_evidence\n", encoding="utf-8"
-        )
+        (fake_dir / "leaky.py").write_text("from benchmark.layer3.evaluate import compare_evidence\n", encoding="utf-8")
         result = check_reconcile_source_isolation(fake_dir)
         assert result.passed is False
         assert "evaluate" in result.detail

@@ -1,4 +1,5 @@
 """Persistence repository for Phase 3 terminology and evidence state."""
+
 from __future__ import annotations
 
 import json
@@ -535,7 +536,15 @@ class StandardizationRepository:
         await copy_driver.copy_records_to_table(
             temp_table,
             records=records,
-            columns=("alias_id", "entry_id", "entity_type", "alias_text", "normalized_alias", "alias_type", "source_db"),
+            columns=(
+                "alias_id",
+                "entry_id",
+                "entity_type",
+                "alias_text",
+                "normalized_alias",
+                "alias_type",
+                "source_db",
+            ),
         )
         await self.session.execute(
             text(
@@ -689,9 +698,7 @@ class StandardizationRepository:
         known_external_ids: dict[str, Any],
     ) -> dict[str, Any]:
         """Resolve DB entry IDs for all external references present in a batch."""
-        references = {
-            entry.external_id for entry in batch.entries
-        }
+        references = {entry.external_id for entry in batch.entries}
         references.update(alias.external_id for alias in batch.aliases)
         references.update(relationship.subject_external_id for relationship in batch.relationships)
         references.update(
@@ -973,10 +980,7 @@ class StandardizationRepository:
         # Chunked to stay under PostgreSQL's 65535 parameter limit
         # (4 cols per tuple → max ~16K tuples; 5000 is a safe margin).
         _BATCH_SIZE = 5000
-        eligible_rows = [
-            row for row, _ in self._run_item_rows
-            if row.status in CANONICAL_ELIGIBLE_STATUSES
-        ]
+        eligible_rows = [row for row, _ in self._run_item_rows if row.status in CANONICAL_ELIGIBLE_STATUSES]
         existing_lookup: dict[tuple, CanonicalEvidenceItem] = {}
         if eligible_rows:
             identity_tuples = [
@@ -984,7 +988,7 @@ class StandardizationRepository:
                 for row in eligible_rows
             ]
             for start in range(0, len(identity_tuples), _BATCH_SIZE):
-                chunk = identity_tuples[start:start + _BATCH_SIZE]
+                chunk = identity_tuples[start : start + _BATCH_SIZE]
                 batch_stmt = select(CanonicalEvidenceItem).where(
                     tuple_(
                         CanonicalEvidenceItem.source_document_id,
@@ -1010,10 +1014,8 @@ class StandardizationRepository:
         entity_id_values = [eid for eid in entity_ids_by_candidate_id.values() if eid]
         entity_externals_by_id: dict[str, tuple[str | None, str, str]] = {}
         for start in range(0, len(entity_id_values), _BATCH_SIZE):
-            chunk = entity_id_values[start:start + _BATCH_SIZE]
-            entity_stmt = select(NormalizedEntity).where(
-                cast(NormalizedEntity.entity_id, String).in_(chunk)
-            )
+            chunk = entity_id_values[start : start + _BATCH_SIZE]
+            entity_stmt = select(NormalizedEntity).where(cast(NormalizedEntity.entity_id, String).in_(chunk))
             entity_result = await self.session.execute(entity_stmt)
             for entity in entity_result.scalars().all():
                 entity_externals_by_id[str(entity.entity_id)] = (
@@ -1039,16 +1041,8 @@ class StandardizationRepository:
                 external_id, entity_type, _display_name = entity_tuple
             else:
                 external_id, entity_type, _display_name = None, "", ""
-            variant_ids = (
-                [external_id]
-                if entity_type == EntityType.VARIANT.value and external_id
-                else []
-            )
-            gene_ids = (
-                [external_id]
-                if entity_type == EntityType.GENE.value and external_id
-                else []
-            )
+            variant_ids = [external_id] if entity_type == EntityType.VARIANT.value and external_id else []
+            gene_ids = [external_id] if entity_type == EntityType.GENE.value and external_id else []
             entity_ids_list = [external_id] if external_id else []
             search_text = self._build_search_text(row, external_id, entity_tuple)
             payload = {
@@ -1091,9 +1085,8 @@ class StandardizationRepository:
             incoming_priority = CANONICAL_STATUS_PRIORITY.get(row.status, -1)
             current_priority = CANONICAL_STATUS_PRIORITY.get(existing.current_best_status, -1)
             better_status = incoming_priority > current_priority
-            better_confidence = (
-                incoming_priority == current_priority
-                and (row.confidence or 0) > (existing.current_best_confidence or 0)
+            better_confidence = incoming_priority == current_priority and (row.confidence or 0) > (
+                existing.current_best_confidence or 0
             )
             if better_status or better_confidence:
                 existing.current_best_run_evidence_id = row.run_evidence_item_id
@@ -1258,6 +1251,7 @@ class StandardizationRepository:
     def _json_text(self, payload: Any) -> str:
         """Serialize staging payloads for COPY temp tables."""
         return json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str)
+
     def _build_chain_scope_hashes(
         self,
         input_data: StandardizationInput,
@@ -1270,28 +1264,29 @@ class StandardizationRepository:
             identity = match.external_id or match.candidate.raw_text
             grouped[match.candidate.chain_id].append((match.candidate.role.value, identity))
         return {
-            chain_id: make_entity_scope_hash([*target_bindings, *bindings])
-            for chain_id, bindings in grouped.items()
+            chain_id: make_entity_scope_hash([*target_bindings, *bindings]) for chain_id, bindings in grouped.items()
         }
 
     # Identity fields that can persist without variant co-location.
     # These represent core facts extractable independently of variant evidence.
-    _GATE_IDENTITY_FIELDS: frozenset[str] = frozenset({
-        "A.gene_symbol",
-        "A.gene_disease_relationship",
-        "A.variant_type",
-        "A.variant_hgvs_c",
-        "A.variant_hgvs_p",
-        "B.disease_diagnosis",
-        "B.clinical_phenotypes",
-        "B.sex",
-        "B.age_of_onset",
-        "B.case_count",
-        "B.mode_of_inheritance_reported",
-        "C.inheritance_source",
-        "C.de_novo_status",
-        "J.clinvar_assertion",
-    })
+    _GATE_IDENTITY_FIELDS: frozenset[str] = frozenset(
+        {
+            "A.gene_symbol",
+            "A.gene_disease_relationship",
+            "A.variant_type",
+            "A.variant_hgvs_c",
+            "A.variant_hgvs_p",
+            "B.disease_diagnosis",
+            "B.clinical_phenotypes",
+            "B.sex",
+            "B.age_of_onset",
+            "B.case_count",
+            "B.mode_of_inheritance_reported",
+            "C.inheritance_source",
+            "C.de_novo_status",
+            "J.clinvar_assertion",
+        }
+    )
 
     @staticmethod
     def _find_gene_variant_complete_groups(track_payloads: dict[str, Any]) -> set[str] | None:
@@ -1322,16 +1317,17 @@ class StandardizationRepository:
         return {
             gid
             for gid, fields in group_fields.items()
-            if "A.gene_symbol" in fields
-            and ("A.variant_hgvs_c" in fields or "A.variant_hgvs_p" in fields)
+            if "A.gene_symbol" in fields and ("A.variant_hgvs_c" in fields or "A.variant_hgvs_p" in fields)
         }
 
     # Only these fields can make a group passable for identity-field survival.
     # Variant alone (without gene or disease) does not qualify.
-    _GATE_ANCHOR_FIELDS: frozenset[str] = frozenset({
-        "A.gene_symbol",
-        "B.disease_diagnosis",
-    })
+    _GATE_ANCHOR_FIELDS: frozenset[str] = frozenset(
+        {
+            "A.gene_symbol",
+            "B.disease_diagnosis",
+        }
+    )
 
     @staticmethod
     def _group_id_has_gene_anchor(group_id: str) -> bool:

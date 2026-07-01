@@ -1,4 +1,5 @@
 """Tests for utils/observability.py."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -56,6 +57,7 @@ class TestTracedNode:
     @pytest.mark.asyncio
     async def test_traced_node_with_async_function(self):
         """traced_node should properly await async functions and log correctly."""
+
         @traced_node("async_test")
         async def async_fn(x: int) -> int:
             return x * 2

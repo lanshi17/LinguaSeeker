@@ -1,4 +1,5 @@
 """Tests for the arbitrator candidate dataset extraction."""
+
 from __future__ import annotations
 
 
@@ -30,6 +31,7 @@ class TestSnippetHash:
     def test_valid_source(self) -> None:
         class FakeSource:
             text_snippet = "hello world"
+
         result = _snippet_hash(FakeSource())
         assert len(result) == 16
         assert all(c in "0123456789abcdef" for c in result)
@@ -37,6 +39,7 @@ class TestSnippetHash:
     def test_empty_snippet(self) -> None:
         class EmptySource:
             text_snippet = ""
+
         assert _snippet_hash(EmptySource()) == ""
 
 

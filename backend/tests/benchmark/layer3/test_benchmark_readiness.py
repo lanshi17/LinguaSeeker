@@ -1,4 +1,5 @@
 """Tests for Benchmark A readiness reporting."""
+
 from __future__ import annotations
 
 import json

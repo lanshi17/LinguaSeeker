@@ -4,6 +4,7 @@ Verifies that ``CatalogExtractionStage`` intersects the existing target/source
 field eligibility with the document-channel field matrix, so the LLM prompt
 only contains fields extractable from the detected channel(s).
 """
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -33,6 +34,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _doc(text: str = "GLA c.1000G>A Fabry disease") -> TrackDocument:
     return TrackDocument(
@@ -75,6 +77,7 @@ def _population_field_ids() -> set[str]:
 # No classification (backward compatible) — existing behavior preserved
 # ---------------------------------------------------------------------------
 
+
 def test_no_classification_preserves_existing_behavior():
     """channel_classification=None (default) → no channel filter, existing behavior."""
     provider = MagicMock()
@@ -91,12 +94,15 @@ def test_no_classification_preserves_existing_behavior():
 # Case report — excludes functional-only F fields
 # ---------------------------------------------------------------------------
 
+
 def test_case_report_excludes_F_fields_from_prompt():
     provider = MagicMock()
     provider.invoke_structured.return_value = []
     stage = CatalogExtractionStage(provider)
     target = ExtractionTarget(
-        gene_symbol="GLA", disease_name="Fabry disease", variant_hgvs_p="p.R227X",
+        gene_symbol="GLA",
+        disease_name="Fabry disease",
+        variant_hgvs_p="p.R227X",
     )
     document = TrackDocument(
         document_id="doc-1",
@@ -124,12 +130,15 @@ def test_case_report_excludes_F_fields_from_prompt():
 # Functional study — includes F fields, excludes case-only B/C
 # ---------------------------------------------------------------------------
 
+
 def test_functional_study_includes_F_fields():
     provider = MagicMock()
     provider.invoke_structured.return_value = []
     stage = CatalogExtractionStage(provider)
     target = ExtractionTarget(
-        gene_symbol="GLA", disease_name="Fabry disease", variant_hgvs_p="p.R227X",
+        gene_symbol="GLA",
+        disease_name="Fabry disease",
+        variant_hgvs_p="p.R227X",
     )
     document = TrackDocument(
         document_id="doc-1",
@@ -157,6 +166,7 @@ def test_functional_study_includes_F_fields():
 # ---------------------------------------------------------------------------
 # Cohort study — includes D/G, excludes F
 # ---------------------------------------------------------------------------
+
 
 def test_cohort_study_includes_DG_excludes_F():
     provider = MagicMock()
@@ -191,6 +201,7 @@ def test_cohort_study_includes_DG_excludes_F():
 # Mixed case_report + functional_study — union before intersection
 # ---------------------------------------------------------------------------
 
+
 def test_mixed_case_and_functional_includes_both_F_and_BC():
     provider = MagicMock()
     provider.invoke_structured.return_value = []
@@ -207,10 +218,12 @@ def test_mixed_case_and_functional_includes_both_F_and_BC():
     stage.run(
         document,
         DocumentEvidenceMap(relevant=True, gene_terms=["GLA"]),
-        channel_classification=_cls([
-            DocumentEvidenceChannel.CASE_REPORT,
-            DocumentEvidenceChannel.FUNCTIONAL_STUDY,
-        ]),
+        channel_classification=_cls(
+            [
+                DocumentEvidenceChannel.CASE_REPORT,
+                DocumentEvidenceChannel.FUNCTIONAL_STUDY,
+            ]
+        ),
     )
     all_prompt_fields: set[str] = set()
     for call in provider.invoke_structured.call_args_list:
@@ -231,6 +244,7 @@ def test_mixed_case_and_functional_includes_both_F_and_BC():
 # Unknown — permissive, preserves existing behavior
 # ---------------------------------------------------------------------------
 
+
 def test_unknown_classification_is_permissive():
     provider = MagicMock()
     provider.invoke_structured.return_value = []
@@ -249,6 +263,7 @@ def test_unknown_classification_is_permissive():
 # ---------------------------------------------------------------------------
 # _eligible_catalog_groups direct test
 # ---------------------------------------------------------------------------
+
 
 def test_eligible_catalog_groups_case_report_filters_functional():
     stage = CatalogExtractionStage(MagicMock())
@@ -286,7 +301,6 @@ def test_eligible_catalog_groups_none_classification_returns_all_groups():
 # ---------------------------------------------------------------------------
 # Channel strategy guidance in prompts — sync and async
 # ---------------------------------------------------------------------------
-
 
 
 def test_run_passes_channel_strategy_into_prompt():

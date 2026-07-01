@@ -1,4 +1,5 @@
 """Tests for inference service semantic matching providers."""
+
 from __future__ import annotations
 
 import httpx
@@ -116,6 +117,7 @@ async def test_embedding_provider_does_not_duplicate_v1_prefix() -> None:
 @pytest.mark.asyncio
 async def test_rerank_provider_returns_ranked_scores() -> None:
     """Rerank provider maps inference service rerank results into typed scores."""
+
     async def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,

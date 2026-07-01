@@ -1,4 +1,5 @@
 """Tests for prepare_extracted_items() — alias remapping, malformed filtering, dedup."""
+
 from __future__ import annotations
 
 from benchmark.core.matching import prepare_extracted_items

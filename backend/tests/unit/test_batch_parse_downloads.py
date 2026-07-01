@@ -68,9 +68,7 @@ async def test_batch_parse_downloads_handles_missing_results(tmp_path):
 @pytest.mark.asyncio
 async def test_batch_parse_downloads_empty_list_noop():
     """Empty input returns an empty list without invoking MinerU."""
-    with patch(
-        "src.core.ingest_and_digitize_data.parse_document.create_parse_service"
-    ) as mock_factory:
+    with patch("src.core.ingest_and_digitize_data.parse_document.create_parse_service") as mock_factory:
         out = await _batch_parse_downloads([])
     assert out == []
     mock_factory.assert_not_called()

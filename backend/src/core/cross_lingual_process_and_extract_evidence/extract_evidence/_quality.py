@@ -1,4 +1,5 @@
 """Quality validation and target entity guarding."""
+
 from __future__ import annotations
 
 import ast
@@ -37,10 +38,12 @@ class TargetEntityGuard:
         values = self._extract_gene_values(item.value)
         if len(values) > 1:
             if target.gene_symbol in values:
-                return item.model_copy(update={
-                    "value": target.gene_symbol,
-                    "notes": self._append_note(item.notes, "target_guard:list_to_target"),
-                })
+                return item.model_copy(
+                    update={
+                        "value": target.gene_symbol,
+                        "notes": self._append_note(item.notes, "target_guard:list_to_target"),
+                    }
+                )
             return self._contaminated(
                 item,
                 f"target gene {target.gene_symbol} not in extracted gene list {values}",
@@ -55,14 +58,14 @@ class TargetEntityGuard:
 
     @staticmethod
     def _contaminated(item: EvidenceItem, reason: str) -> EvidenceItem:
-        return item.model_copy(update={
-            "status": EvidenceStatus.CONTEXT_CONTAMINATION,
-            "notes": (
-                f"{item.notes}; target_guard:{reason}" if item.notes else f"target_guard:{reason}"
-            ),
-            "assigned_acmg_codes": [],
-            "assigned_clingen_modules": [],
-        })
+        return item.model_copy(
+            update={
+                "status": EvidenceStatus.CONTEXT_CONTAMINATION,
+                "notes": (f"{item.notes}; target_guard:{reason}" if item.notes else f"target_guard:{reason}"),
+                "assigned_acmg_codes": [],
+                "assigned_clingen_modules": [],
+            }
+        )
 
     @staticmethod
     def _extract_gene_values(value: object) -> list[str]:
@@ -81,6 +84,8 @@ class TargetEntityGuard:
     @staticmethod
     def _append_note(existing: str, note: str) -> str:
         return f"{existing}; {note}" if existing else note
+
+
 class QualityValidator:
     """Rule-based quality validation for extracted evidence."""
 
@@ -130,12 +135,14 @@ class QualityValidator:
                         human_review_by_category["workflow"].append(reason)
                         human_review_reasons.append(reason)
                     else:
-                        issues.append(QualityIssue(
-                            issue_type="missing_source",
-                            field_id=item.field_id,
-                            description=f"Found item {item.field_id} has no source",
-                            severity="error",
-                        ))
+                        issues.append(
+                            QualityIssue(
+                                issue_type="missing_source",
+                                field_id=item.field_id,
+                                description=f"Found item {item.field_id} has no source",
+                                severity="error",
+                            )
+                        )
                 elif item.source.source_precision == SourcePrecision.AMBIGUOUS:
                     ambiguous_source_count += 1
                     reason = f"{item.field_id} has ambiguous source grounding"
@@ -161,38 +168,45 @@ class QualityValidator:
             elif item.status == EvidenceStatus.CONTEXT_CONTAMINATION:
                 context_contamination_count += 1
                 reason = f"{item.field_id} rejected as target context contamination: {item.notes}"
-                issues.append(QualityIssue(
-                    issue_type="context_contamination",
-                    field_id=item.field_id,
-                    description=item.notes,
-                    severity="error",
-                ))
+                issues.append(
+                    QualityIssue(
+                        issue_type="context_contamination",
+                        field_id=item.field_id,
+                        description=item.notes,
+                        severity="error",
+                    )
+                )
                 human_review_reasons.append(reason)
                 human_review_by_category["workflow"].append(reason)
         missing_required = self._required - {
-            item.field_id for item in items
+            item.field_id
+            for item in items
             if item.status == EvidenceStatus.FOUND
             and item.source is not None
             and item.source.source_precision != SourcePrecision.AMBIGUOUS
         }
         for field_id in missing_required:
-            issues.append(QualityIssue(
-                issue_type="missing_required",
-                field_id=field_id,
-                description=f"Required field {field_id} is missing",
-                severity="warning",
-            ))
+            issues.append(
+                QualityIssue(
+                    issue_type="missing_required",
+                    field_id=field_id,
+                    description=f"Required field {field_id} is missing",
+                    severity="warning",
+                )
+            )
             reason = f"{field_id} is required for scoring but is not grounded"
             human_review_reasons.append(reason)
             human_review_by_category["scoring_gate"].append(reason)
 
         for contradiction in contradictions:
-            issues.append(QualityIssue(
-                issue_type="contradiction",
-                field_id="",
-                description=contradiction,
-                severity="warning",
-            ))
+            issues.append(
+                QualityIssue(
+                    issue_type="contradiction",
+                    field_id="",
+                    description=contradiction,
+                    severity="warning",
+                )
+            )
             reason = f"Contradiction requires review: {contradiction}"
             human_review_reasons.append(reason)
             human_review_by_category["contradictions"].append(reason)
@@ -209,7 +223,8 @@ class QualityValidator:
         full_chain_group_ids = {chain.chain_id for chain in full_chains}
         full_chain_items = [item for item in items if item.group_id in full_chain_group_ids]
         full_chain_missing_required = self._required - {
-            item.field_id for item in full_chain_items
+            item.field_id
+            for item in full_chain_items
             if item.status == EvidenceStatus.FOUND
             and item.source is not None
             and item.source.source_precision != SourcePrecision.AMBIGUOUS
@@ -217,7 +232,8 @@ class QualityValidator:
 
         scorable = len(full_chains) > 0 and len(full_chain_missing_required) == 0
         if any(
-            item.status in {
+            item.status
+            in {
                 EvidenceStatus.SOURCE_INVALID,
                 EvidenceStatus.OCR_GAP,
                 EvidenceStatus.TABLE_UNGROUNDED,
@@ -264,6 +280,8 @@ class QualityValidator:
             human_review_reasons=human_review_reasons,
             human_review_by_category=human_review_by_category,
         )
+
+
 class IntraTrackConflictChecker:
     """Checks for contradictions within a single track's evidence."""
 
@@ -279,12 +297,13 @@ class IntraTrackConflictChecker:
             if len(field_items) > 1:
                 values = {str(item.value) for item in field_items}
                 if len(values) > 1:
-                    issues.append(QualityIssue(
-                        issue_type="contradiction",
-                        field_id=field_id,
-                        description=f"Multiple conflicting values for {field_id}: {values}",
-                        severity="warning",
-                    ))
+                    issues.append(
+                        QualityIssue(
+                            issue_type="contradiction",
+                            field_id=field_id,
+                            description=f"Multiple conflicting values for {field_id}: {values}",
+                            severity="warning",
+                        )
+                    )
 
         return issues
-

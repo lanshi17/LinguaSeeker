@@ -7,6 +7,7 @@ Usage:
     uv run python scripts/e2e_standardize_entities.py --refresh-upstream
     uv run python scripts/e2e_standardize_entities.py --import-terminology
 """
+
 from __future__ import annotations
 
 import argparse
@@ -157,13 +158,15 @@ def _summary(
         "translated_evidence_item_count": len(dual_result.translated_result.evidence_items),
         "refreshed_upstream": refreshed_upstream,
     }
-    summary.update(build_summary_metadata(
-        imported_terminology=imported_terminology,
-        terminology_sources=terminology_sources,
-        terminology_version=terminology_version,
-        terminology_entry_count=terminology_entry_count,
-        embedding_available=embedding_available,
-    ))
+    summary.update(
+        build_summary_metadata(
+            imported_terminology=imported_terminology,
+            terminology_sources=terminology_sources,
+            terminology_version=terminology_version,
+            terminology_entry_count=terminology_entry_count,
+            embedding_available=embedding_available,
+        )
+    )
     summary["terminology_root"] = str(terminology_root)
     return summary
 

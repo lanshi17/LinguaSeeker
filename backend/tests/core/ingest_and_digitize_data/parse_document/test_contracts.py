@@ -1,4 +1,5 @@
 """Tests for parse_document contracts."""
+
 from __future__ import annotations
 
 import pytest

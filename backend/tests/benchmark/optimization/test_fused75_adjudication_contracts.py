@@ -1,4 +1,5 @@
 """Tests for fused-75 adjudication contracts."""
+
 from __future__ import annotations
 
 from pathlib import Path

@@ -1,4 +1,5 @@
 """Quality validation stage — rule-based validation of extracted evidence."""
+
 from __future__ import annotations
 
 from ..contracts import EvidenceChain, EvidenceItem, QualityReport, SpecialEvidenceRecord

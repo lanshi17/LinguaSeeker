@@ -1,4 +1,5 @@
 """Tests for delta audit API routes."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
@@ -72,8 +73,7 @@ async def test_patch_evidence_event_is_queryable_by_source_document(
             new_callable=AsyncMock,
         ),
         patch(
-            "src.core.visualize_evidence_with_expert_in_loop.feedback_service."
-            "FeedbackService._refresh_search_index",
+            "src.core.visualize_evidence_with_expert_in_loop.feedback_service.FeedbackService._refresh_search_index",
             new_callable=AsyncMock,
         ),
     ):

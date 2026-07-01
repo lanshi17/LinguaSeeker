@@ -1,4 +1,5 @@
 """Tests for dual extraction reconcile integration."""
+
 from __future__ import annotations
 
 import pytest
@@ -34,9 +35,15 @@ class StubEvidenceExtractionService(EvidenceExtractionService):
         self._results = results
         self._reconcile_service = CrossTrackReconcileService()
 
-    async def run(self, document: TrackDocument, extraction_profile=None, extraction_mode=None,
-                  enable_review_validation=None, enable_target_guard=None,
-                  review_reject_policy=None) -> EvidenceExtractionResult:
+    async def run(
+        self,
+        document: TrackDocument,
+        extraction_profile=None,
+        extraction_mode=None,
+        enable_review_validation=None,
+        enable_target_guard=None,
+        review_reject_policy=None,
+    ) -> EvidenceExtractionResult:
         del extraction_profile, extraction_mode, enable_review_validation, enable_target_guard, review_reject_policy
         result = self._results[document.track]
         if result.extraction_target is None and document.extraction_target is not None:

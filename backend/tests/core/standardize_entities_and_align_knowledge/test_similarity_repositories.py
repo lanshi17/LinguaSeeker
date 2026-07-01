@@ -1,4 +1,5 @@
 """Tests for pgvector terminology similarity repository."""
+
 from __future__ import annotations
 
 import pytest
@@ -31,6 +32,7 @@ class FakeSession:
     async def execute(self, statement):
         self.statements.append(statement)
         return FakeResult()
+
 
 class FakeResult:
     """Empty SQLAlchemy result stand-in."""

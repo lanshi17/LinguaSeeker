@@ -1,4 +1,5 @@
 """Tests for source-grounding diagnostics."""
+
 from __future__ import annotations
 
 import json

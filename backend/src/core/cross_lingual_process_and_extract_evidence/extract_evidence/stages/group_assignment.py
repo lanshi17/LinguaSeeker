@@ -1,4 +1,5 @@
 """Group assignment stage for variant-centered evidence chains."""
+
 from __future__ import annotations
 
 from ..contracts import EvidenceItem, SpecialEvidenceRecord, TrackDocument

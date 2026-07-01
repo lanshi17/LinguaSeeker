@@ -41,12 +41,14 @@ _NATIVE_IMPORT_ERRORS = (ImportError, RuntimeError, SystemError, OSError)
 
 try:
     import rust_io.files as files_io  # noqa: F401, F811
+
     FILES_AVAILABLE = True
 except _NATIVE_IMPORT_ERRORS:
     logger.warning("rust_io.files not available — file I/O features disabled")
 
 try:
     import rust_io.net as net_io  # noqa: F401, F811
+
     NET_AVAILABLE = True
 except _NATIVE_IMPORT_ERRORS:
     logger.warning("rust_io.net not available — HTTP / MinerU features disabled")

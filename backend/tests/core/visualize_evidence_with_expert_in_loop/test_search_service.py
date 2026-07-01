@@ -1,4 +1,5 @@
 """Tests for evidence search service aggregation."""
+
 from __future__ import annotations
 
 import json
@@ -136,13 +137,17 @@ async def test_search_evidence_includes_document_title():
         ),
     ]
 
-    service = SearchService(_FakeSession([
-        _FakeResult(scalar=1),                    # count of groups
-        _FakeResult(rows=[page_row]),             # Pass 1 page rows
-        _FakeResult(rows=[detail_row]),           # Pass 2 detail rows
-        _FakeResult(scalars=identifiers),         # SourceDocumentIdentifier
-        _FakeResult(rows=metadata),               # SourceDocument metadata
-    ]))
+    service = SearchService(
+        _FakeSession(
+            [
+                _FakeResult(scalar=1),  # count of groups
+                _FakeResult(rows=[page_row]),  # Pass 1 page rows
+                _FakeResult(rows=[detail_row]),  # Pass 2 detail rows
+                _FakeResult(scalars=identifiers),  # SourceDocumentIdentifier
+                _FakeResult(rows=metadata),  # SourceDocument metadata
+            ]
+        )
+    )
 
     response = await service.search_evidence()
 
@@ -192,13 +197,17 @@ async def test_search_evidence_includes_source_availability_flags():
         ),
     ]
 
-    service = SearchService(_FakeSession([
-        _FakeResult(scalar=1),
-        _FakeResult(rows=[page_row]),
-        _FakeResult(rows=[detail_row]),
-        _FakeResult(scalars=[]),
-        _FakeResult(rows=metadata),
-    ]))
+    service = SearchService(
+        _FakeSession(
+            [
+                _FakeResult(scalar=1),
+                _FakeResult(rows=[page_row]),
+                _FakeResult(rows=[detail_row]),
+                _FakeResult(scalars=[]),
+                _FakeResult(rows=metadata),
+            ]
+        )
+    )
 
     response = await service.search_evidence()
 
@@ -236,13 +245,17 @@ async def test_search_evidence_includes_created_at():
         created_at=ts,
     )
 
-    service = SearchService(_FakeSession([
-        _FakeResult(scalar=1),                    # count of groups
-        _FakeResult(rows=[page_row]),             # Pass 1 page rows
-        _FakeResult(rows=[detail_row]),           # Pass 2 detail rows
-        _FakeResult(scalars=[]),                  # SourceDocumentIdentifier (empty)
-        _FakeResult(rows=[]),                     # SourceDocument metadata (empty)
-    ]))
+    service = SearchService(
+        _FakeSession(
+            [
+                _FakeResult(scalar=1),  # count of groups
+                _FakeResult(rows=[page_row]),  # Pass 1 page rows
+                _FakeResult(rows=[detail_row]),  # Pass 2 detail rows
+                _FakeResult(scalars=[]),  # SourceDocumentIdentifier (empty)
+                _FakeResult(rows=[]),  # SourceDocument metadata (empty)
+            ]
+        )
+    )
 
     response = await service.search_evidence()
 
@@ -313,12 +326,16 @@ async def test_get_group_detail_pivots_distribution_and_traces():
         ),
     ]
 
-    service = SearchService(_FakeSession([
-        _FakeResult(rows=rows),
-        _FakeResult(scalars=identifiers),
-        _FakeResult(rows=[({"title": "BRCA1 evidence paper"}, None, None, None, None)]),
-        _FakeResult(scalar=None),  # PipelineRunState.state_json query
-    ]))
+    service = SearchService(
+        _FakeSession(
+            [
+                _FakeResult(rows=rows),
+                _FakeResult(scalars=identifiers),
+                _FakeResult(rows=[({"title": "BRCA1 evidence paper"}, None, None, None, None)]),
+                _FakeResult(scalar=None),  # PipelineRunState.state_json query
+            ]
+        )
+    )
 
     detail = await service.get_group_detail(group_id=group_id)
 
@@ -399,12 +416,16 @@ async def test_get_group_detail_includes_translation_alignment_span_pairs(tmp_pa
         )
     ]
 
-    service = SearchService(_FakeSession([
-        _FakeResult(rows=rows),
-        _FakeResult(scalars=[]),
-        _FakeResult(rows=[({"title": "MECP2 case report"}, None, None, None, None)]),
-        _FakeResult(scalar={"phase_2_output": {"output_dir": str(output_dir)}}),
-    ]))
+    service = SearchService(
+        _FakeSession(
+            [
+                _FakeResult(rows=rows),
+                _FakeResult(scalars=[]),
+                _FakeResult(rows=[({"title": "MECP2 case report"}, None, None, None, None)]),
+                _FakeResult(scalar={"phase_2_output": {"output_dir": str(output_dir)}}),
+            ]
+        )
+    )
 
     detail = await service.get_group_detail(group_id=group_id)
 
@@ -464,12 +485,16 @@ async def test_get_group_detail_includes_value_anchors_for_paired_field():
         ),
     ]
 
-    service = SearchService(_FakeSession([
-        _FakeResult(rows=rows),
-        _FakeResult(scalars=[]),
-        _FakeResult(rows=[({}, None, None, None, None)]),
-        _FakeResult(scalar=None),  # PipelineRunState.state_json query
-    ]))
+    service = SearchService(
+        _FakeSession(
+            [
+                _FakeResult(rows=rows),
+                _FakeResult(scalars=[]),
+                _FakeResult(rows=[({}, None, None, None, None)]),
+                _FakeResult(scalar=None),  # PipelineRunState.state_json query
+            ]
+        )
+    )
 
     detail = await service.get_group_detail(group_id=group_id)
 
@@ -487,12 +512,14 @@ def test_coerce_str_joins_list_values():
 
 def test_build_highlight_clamps_invalid_offsets():
     """_build_highlight clamps end_offset that exceeds text length."""
-    highlight = _build_highlight({
-        "text_snippet": "BRCA1 was detected.",
-        "start_offset": 0,
-        "end_offset": 200,
-        "page": 3,
-    })
+    highlight = _build_highlight(
+        {
+            "text_snippet": "BRCA1 was detected.",
+            "start_offset": 0,
+            "end_offset": 200,
+            "page": 3,
+        }
+    )
 
     assert highlight is not None
     assert highlight.highlight_end == len("BRCA1 was detected.")
@@ -691,12 +718,16 @@ async def test_get_group_detail_handles_string_source_field():
         ),
     ]
 
-    service = SearchService(_FakeSession([
-        _FakeResult(rows=rows),
-        _FakeResult(scalars=[]),
-        _FakeResult(rows=[({}, None, None, None, None)]),
-        _FakeResult(scalar=None),
-    ]))
+    service = SearchService(
+        _FakeSession(
+            [
+                _FakeResult(rows=rows),
+                _FakeResult(scalars=[]),
+                _FakeResult(rows=[({}, None, None, None, None)]),
+                _FakeResult(scalar=None),
+            ]
+        )
+    )
 
     detail = await service.get_group_detail(group_id=group_id)
 
@@ -733,12 +764,16 @@ async def test_get_group_detail_skips_field_ids_without_standard_tracks():
     ]
     identifiers: list = []
 
-    service = SearchService(_FakeSession([
-        _FakeResult(rows=rows),
-        _FakeResult(scalars=identifiers),
-        _FakeResult(rows=[({}, None, None, None, None)]),
-        _FakeResult(scalar=None),  # PipelineRunState.state_json query
-    ]))
+    service = SearchService(
+        _FakeSession(
+            [
+                _FakeResult(rows=rows),
+                _FakeResult(scalars=identifiers),
+                _FakeResult(rows=[({}, None, None, None, None)]),
+                _FakeResult(scalar=None),  # PipelineRunState.state_json query
+            ]
+        )
+    )
 
     detail = await service.get_group_detail(group_id=group_id)
 
@@ -774,12 +809,16 @@ async def test_get_group_detail_single_track_field_produces_partial_trace():
     ]
     identifiers: list = []
 
-    service = SearchService(_FakeSession([
-        _FakeResult(rows=rows),
-        _FakeResult(scalars=identifiers),
-        _FakeResult(rows=[({}, None, None, None, None)]),
-        _FakeResult(scalar=None),  # PipelineRunState.state_json query
-    ]))
+    service = SearchService(
+        _FakeSession(
+            [
+                _FakeResult(rows=rows),
+                _FakeResult(scalars=identifiers),
+                _FakeResult(rows=[({}, None, None, None, None)]),
+                _FakeResult(scalar=None),  # PipelineRunState.state_json query
+            ]
+        )
+    )
 
     detail = await service.get_group_detail(group_id=group_id)
 
@@ -840,12 +879,16 @@ async def test_get_group_detail_falls_back_to_reconciled_track():
         ),
     ]
 
-    service = SearchService(_FakeSession([
-        _FakeResult(rows=rows),
-        _FakeResult(scalars=[]),
-        _FakeResult(rows=[({}, None, None, None, None)]),
-        _FakeResult(scalar=None),
-    ]))
+    service = SearchService(
+        _FakeSession(
+            [
+                _FakeResult(rows=rows),
+                _FakeResult(scalars=[]),
+                _FakeResult(rows=[({}, None, None, None, None)]),
+                _FakeResult(scalar=None),
+            ]
+        )
+    )
 
     detail = await service.get_group_detail(group_id=group_id)
 

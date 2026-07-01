@@ -1,4 +1,5 @@
 """Facade for source-grounded cross-track reconcile."""
+
 from __future__ import annotations
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (

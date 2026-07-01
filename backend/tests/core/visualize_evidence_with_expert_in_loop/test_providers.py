@@ -1,4 +1,5 @@
 """Tests for Phase 4 LLM providers."""
+
 import pytest
 from src.core.visualize_evidence_with_expert_in_loop.providers import (
     ReasoningLLMProvider,
@@ -50,6 +51,7 @@ async def test_reasoning_llm_provider_reuses_httpx_client():
 
             # httpx.AsyncClient should only be instantiated once
             import httpx
+
             assert httpx.AsyncClient.call_count == 1
 
         await provider.close()

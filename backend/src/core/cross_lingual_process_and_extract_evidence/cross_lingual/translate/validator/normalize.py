@@ -1,4 +1,5 @@
 """Text normalization and OCR artifact repair."""
+
 from __future__ import annotations
 
 import re
@@ -6,24 +7,24 @@ import re
 
 # Translation table for CJK punctuation -> ASCII equivalents
 _CJK_PUNCT_MAP = {
-    0x3000: " ",   # full-width space
-    0xFF0C: ",",   # Chinese comma
-    0x3002: ".",   # Chinese period
-    0xFF1B: ";",   # Chinese semicolon
-    0xFF1A: ":",   # Chinese colon
-    0xFF08: "(",   # Chinese left paren
-    0xFF09: ")",   # Chinese right paren
-    0xFF1F: "?",   # Chinese question mark
-    0xFF01: "!",   # Chinese exclamation
-    0x201C: '"',   # left double quotation mark
-    0x201D: '"',   # right double quotation mark
-    0x2018: "'",   # left single quotation mark
-    0x2019: "'",   # right single quotation mark
-    0x3010: "[",   # left black lenticular bracket
-    0x3011: "]",   # right black lenticular bracket
-    0x300A: "<",   # left double angle bracket
-    0x300B: ">",   # right double angle bracket
-    0x3001: ",",   # Chinese enumeration comma
+    0x3000: " ",  # full-width space
+    0xFF0C: ",",  # Chinese comma
+    0x3002: ".",  # Chinese period
+    0xFF1B: ";",  # Chinese semicolon
+    0xFF1A: ":",  # Chinese colon
+    0xFF08: "(",  # Chinese left paren
+    0xFF09: ")",  # Chinese right paren
+    0xFF1F: "?",  # Chinese question mark
+    0xFF01: "!",  # Chinese exclamation
+    0x201C: '"',  # left double quotation mark
+    0x201D: '"',  # right double quotation mark
+    0x2018: "'",  # left single quotation mark
+    0x2019: "'",  # right single quotation mark
+    0x3010: "[",  # left black lenticular bracket
+    0x3011: "]",  # right black lenticular bracket
+    0x300A: "<",  # left double angle bracket
+    0x300B: ">",  # right double angle bracket
+    0x3001: ",",  # Chinese enumeration comma
 }
 _CJK_PUNCT_TABLE = str.maketrans(_CJK_PUNCT_MAP)
 
@@ -41,23 +42,23 @@ def normalize_cjk_punctuation(text: str) -> str:
 
 # Patterns for OCR/parse artifacts that produce empty placeholders
 _PLACEHOLDER_PATTERNS = [
-    (re.compile(r"\[\s*\]"), ""),           # [ ] → remove
-    (re.compile(r"\(year\)"), ""),          # (year) → remove
-    (re.compile(r"\(month\)"), ""),         # (month) → remove
-    (re.compile(r"\(day\)"), ""),           # (day) → remove
-    (re.compile(r"\[year\]"), ""),          # [year] → remove
-    (re.compile(r"\[month\]"), ""),         # [month] → remove
-    (re.compile(r"\[day\]"), ""),           # [day] → remove
-    (re.compile(r"\[age\]"), ""),           # [age] → remove
-    (re.compile(r"\[imaging\]"), ""),       # [imaging] → remove
+    (re.compile(r"\[\s*\]"), ""),  # [ ] → remove
+    (re.compile(r"\(year\)"), ""),  # (year) → remove
+    (re.compile(r"\(month\)"), ""),  # (month) → remove
+    (re.compile(r"\(day\)"), ""),  # (day) → remove
+    (re.compile(r"\[year\]"), ""),  # [year] → remove
+    (re.compile(r"\[month\]"), ""),  # [month] → remove
+    (re.compile(r"\[day\]"), ""),  # [day] → remove
+    (re.compile(r"\[age\]"), ""),  # [age] → remove
+    (re.compile(r"\[imaging\]"), ""),  # [imaging] → remove
     # LLM-generated "blank" placeholders from OCR-missing values
-    (re.compile(r"\bblank\b"), ""),         # standalone "blank" → remove
-    (re.compile(r"\[blank\]"), ""),         # [blank] → remove
+    (re.compile(r"\bblank\b"), ""),  # standalone "blank" → remove
+    (re.compile(r"\[blank\]"), ""),  # [blank] → remove
     # Bare CJK date placeholders that the LLM may pass through untranslated
-    (re.compile(r"年\s*月\s*日"), ""),       # 年月日 → remove
+    (re.compile(r"年\s*月\s*日"), ""),  # 年月日 → remove
     (re.compile(r"\byear[,\s]+month[,\s]+day\b"), ""),  # LLM-translated date placeholder (with/without commas)
     # Empty parentheses from OCR (no content inside)
-    (re.compile(r"\(\s*\)"), ""),            # () → remove
+    (re.compile(r"\(\s*\)"), ""),  # () → remove
 ]
 
 
@@ -147,25 +148,29 @@ def fix_ocr_truncations(text: str) -> str:
 # e.g., "Re[REDACTED]ferences" → "References"
 # e.g., "Takayuki [REDACTED]okia" → "Takayuki Motoki" (after strip)
 _REDACTED_IN_WORD_RE = re.compile(
-    r"(?<=[A-Za-z])\[REDACTED\](?=[A-Za-z])"   # mid-word: Re[REDACTED]ferences
-    r"|\[REDACTED\](?=[a-z])"                    # space-before-lowercase: [REDACTED]okia
+    r"(?<=[A-Za-z])\[REDACTED\](?=[A-Za-z])"  # mid-word: Re[REDACTED]ferences
+    r"|\[REDACTED\](?=[a-z])"  # space-before-lowercase: [REDACTED]okia
 )
 
 # Pattern for [REDACTED] adjacent to common English section headings.
 # e.g., "References [REDACTED]" or "[REDACTED] Abstract" — the LLM
 # misinterprets headings as containing missing values.
 _REDACTED_HEADING_WORDS = (
-    "References", "Abstract", "Introduction", "Background",
-    "Methods", "Results", "Discussion", "Conclusion",
-    "Acknowledgments", "Acknowledgements", "Keywords",
+    "References",
+    "Abstract",
+    "Introduction",
+    "Background",
+    "Methods",
+    "Results",
+    "Discussion",
+    "Conclusion",
+    "Acknowledgments",
+    "Acknowledgements",
+    "Keywords",
 )
 _REDACTED_ADJ_HEADING_RE = re.compile(
-    r"(?:"
-    + "|".join(re.escape(w) for w in _REDACTED_HEADING_WORDS)
-    + r")\s*\[REDACTED\]|"
-    r"\[REDACTED\]\s*(?:"
-    + "|".join(re.escape(w) for w in _REDACTED_HEADING_WORDS)
-    + r")",
+    r"(?:" + "|".join(re.escape(w) for w in _REDACTED_HEADING_WORDS) + r")\s*\[REDACTED\]|"
+    r"\[REDACTED\]\s*(?:" + "|".join(re.escape(w) for w in _REDACTED_HEADING_WORDS) + r")",
     re.IGNORECASE,
 )
 

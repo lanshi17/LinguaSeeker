@@ -1,4 +1,5 @@
 """Deterministic evidence support verification."""
+
 from __future__ import annotations
 
 import re
@@ -144,11 +145,7 @@ def score_candidate_support(item: EvidenceVerificationInput) -> EvidenceVerifica
         disease_list_penalty=disease_list_penalty,
     )
     contradiction_score = 0.8 if refute_score and not disputed_score else 0.0
-    requires_review = (
-        contradiction_score >= 0.7
-        or target_specificity_score < 0.5
-        or support_score < 0.6
-    )
+    requires_review = contradiction_score >= 0.7 or target_specificity_score < 0.5 or support_score < 0.6
     rationale = _rationale(
         gene_present=gene_present,
         disease_present=disease_present,

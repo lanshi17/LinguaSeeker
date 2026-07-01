@@ -1,4 +1,5 @@
 """Regression tests for English-to-original translation traceback."""
+
 from __future__ import annotations
 
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (

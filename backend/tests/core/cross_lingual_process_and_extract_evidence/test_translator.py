@@ -126,12 +126,14 @@ async def test_translate_one_segment_uses_completeness_retry_prompt(mock_ctx, mo
 
 def test_providers_create_llm():
     from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers import create_llm
+
     llm = create_llm(model="test-model", api_key="test-key", base_url="http://localhost:8001/v1", temperature=0.0)
     assert llm is not None
 
 
 def test_providers_create_json_llm():
     from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers import create_json_llm
+
     llm = create_json_llm(model="test-model", api_key="test-key", base_url="http://localhost:8001/v1", temperature=0.0)
     assert llm is not None
 
@@ -259,16 +261,18 @@ def test_check_block_language_rejects_mostly_untranslated_chinese_blocks():
 
 
 def test_trim_repetitive_content_removes_repeated_heading_blocks():
-    text = "\n\n".join([
-        "# Abstract",
-        "The study analyzed MECP2 mutations.",
-        "# Results",
-        "Five children carried variants.",
-        "# Results",
-        "Five children carried variants again.",
-        "# Discussion",
-        "The variants may affect development.",
-    ])
+    text = "\n\n".join(
+        [
+            "# Abstract",
+            "The study analyzed MECP2 mutations.",
+            "# Results",
+            "Five children carried variants.",
+            "# Results",
+            "Five children carried variants again.",
+            "# Discussion",
+            "The variants may affect development.",
+        ]
+    )
 
     result = trim_repetitive_content(text)
 
@@ -384,10 +388,14 @@ async def test_invoke_with_retry_transient_then_success(mock_ctx):
     t = MultiStageTranslator(ctx=mock_ctx)
     mock_response = MagicMock()
     mock_response.content = "success"
-    with patch("langchain_openai.ChatOpenAI.ainvoke", new_callable=AsyncMock, side_effect=[
-        httpx.ConnectError("connection failed"),
-        mock_response,
-    ]):
+    with patch(
+        "langchain_openai.ChatOpenAI.ainvoke",
+        new_callable=AsyncMock,
+        side_effect=[
+            httpx.ConnectError("connection failed"),
+            mock_response,
+        ],
+    ):
         result = await invoke_with_retry(t._llm, "test prompt", "test")
         assert result == "success"
 
@@ -497,7 +505,10 @@ def test_build_translated_blocks_delimiter_split():
     ]
     translated = f"Título{_SEP}Texto del cuerpo"
     result = build_translated_blocks(
-        original, [], translated, text_block_indices=[0, 1],
+        original,
+        [],
+        translated,
+        text_block_indices=[0, 1],
     )
 
     assert len(result) == 2
@@ -520,15 +531,17 @@ def test_build_translated_blocks_title_preserves_level():
 
 
 def test_build_translated_blocks_image_copied_as_is():
-    original = [ContentBlock(
-        type="image",
-        img_path="images/fig1.jpg",
-        content="A diagram",
-        image_caption=["Figure 1"],
-        image_footnote=["Source: X"],
-        sub_type="photo",
-        page_idx=1,
-    )]
+    original = [
+        ContentBlock(
+            type="image",
+            img_path="images/fig1.jpg",
+            content="A diagram",
+            image_caption=["Figure 1"],
+            image_footnote=["Source: X"],
+            sub_type="photo",
+            page_idx=1,
+        )
+    ]
     result = build_translated_blocks(original, [], "some text")
 
     assert len(result) == 1
@@ -542,13 +555,15 @@ def test_build_translated_blocks_image_copied_as_is():
 
 
 def test_build_translated_blocks_table_copied_as_is():
-    original = [ContentBlock(
-        type="table",
-        table_body="<table><tr><td>1</td></tr></table>",
-        table_caption=["Table 1"],
-        table_footnote=["* p<0.05"],
-        page_idx=2,
-    )]
+    original = [
+        ContentBlock(
+            type="table",
+            table_body="<table><tr><td>1</td></tr></table>",
+            table_caption=["Table 1"],
+            table_footnote=["* p<0.05"],
+            page_idx=2,
+        )
+    ]
     result = build_translated_blocks(original, [], "some text")
 
     assert result[0].type == "table"
@@ -565,7 +580,10 @@ def test_build_translated_blocks_mixed_types():
     ]
     translated = f"Título{_SEP}Texto del cuerpo"
     result = build_translated_blocks(
-        original, [], translated, text_block_indices=[0, 1],
+        original,
+        [],
+        translated,
+        text_block_indices=[0, 1],
     )
 
     assert len(result) == 3
@@ -598,7 +616,10 @@ def test_build_translated_blocks_preserves_doi_footer():
     ]
     translated = f"Translated Title{_BLOCK_SEP}Translated Body"
     result = build_translated_blocks(
-        original, [], translated, text_block_indices=[0, 1],
+        original,
+        [],
+        translated,
+        text_block_indices=[0, 1],
     )
     # Title + Body translated, DOI footer preserved as-is
     assert len(result) == 3
@@ -625,9 +646,11 @@ def test_translate_segments_includes_doi_footer_blocks():
         ContentBlock(type="header", text="Journal Header", page_idx=0),
     ]
     # Replicate the filter from translate_segments (translator.py:483-485)
-    non_empty = [(i, b) for i, b in enumerate(blocks)
-                 if b.text.strip() and (b.type in ("text", "title") or
-                                        (b.type == "footer" and _DOI_RE.search(b.text)))]
+    non_empty = [
+        (i, b)
+        for i, b in enumerate(blocks)
+        if b.text.strip() and (b.type in ("text", "title") or (b.type == "footer" and _DOI_RE.search(b.text)))
+    ]
     indices = [i for i, _ in non_empty]
     # title (0), text (1), DOI footer (2) should be included
     # page-only footer (3) and header (4) should be excluded

@@ -1,4 +1,5 @@
 """Tests for layer-3 baseline evaluation runners."""
+
 from __future__ import annotations
 
 import json
@@ -245,7 +246,7 @@ def test_baseline_llm_response_normalizes_schema_drift() -> None:
                     "status": "not_found",
                     "value": "",
                     "confidence": "No explicit support in the source text.",
-                }
+                },
             ]
         }
     )

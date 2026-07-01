@@ -1,4 +1,5 @@
 """Integration test for the full translation pipeline with mocked LLM."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -53,18 +54,24 @@ def test_full_pipeline_chinese(mock_chat_cls, mock_cfg, chinese_pages):
     mock_chat_cls.return_value = mock_llm
 
     # Mock each LLM call: (terminology + system prompt gen + translate + self-review) × 2 runs
-    _translate_response = "The patient carries a novel BRCA1 gene variant. This variant leads to loss of protein function."
-    _sys_prompt = "You are a biomedical translation engine. Translate from Chinese to English. Preserve markdown structure."
-    mock_llm.ainvoke = AsyncMock(side_effect=[
-        _mock_llm_response("基因:gene\n变异:variant"),   # terminology (run 1)
-        _mock_llm_response(_sys_prompt),                 # system prompt (run 1)
-        _mock_llm_response(_translate_response),         # translate (run 1)
-        _mock_llm_response(_translate_response),         # self-review (run 1)
-        _mock_llm_response("基因:gene\n变异:variant"),   # terminology (run 2)
-        _mock_llm_response(_sys_prompt),                 # system prompt (run 2)
-        _mock_llm_response(_translate_response),         # translate (run 2)
-        _mock_llm_response(_translate_response),         # self-review (run 2)
-    ])
+    _translate_response = (
+        "The patient carries a novel BRCA1 gene variant. This variant leads to loss of protein function."
+    )
+    _sys_prompt = (
+        "You are a biomedical translation engine. Translate from Chinese to English. Preserve markdown structure."
+    )
+    mock_llm.ainvoke = AsyncMock(
+        side_effect=[
+            _mock_llm_response("基因:gene\n变异:variant"),  # terminology (run 1)
+            _mock_llm_response(_sys_prompt),  # system prompt (run 1)
+            _mock_llm_response(_translate_response),  # translate (run 1)
+            _mock_llm_response(_translate_response),  # self-review (run 1)
+            _mock_llm_response("基因:gene\n变异:variant"),  # terminology (run 2)
+            _mock_llm_response(_sys_prompt),  # system prompt (run 2)
+            _mock_llm_response(_translate_response),  # translate (run 2)
+            _mock_llm_response(_translate_response),  # self-review (run 2)
+        ]
+    )
 
     service = TranslationService(cfg=mock_cfg)
     result = service.run_sync(chinese_pages)

@@ -15,9 +15,13 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     TrackDocument,
     ExtractionTarget,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import EvidenceNormalizationIssueType
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    EvidenceNormalizationIssueType,
+)
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.core import EvidenceChainBuilder
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.normalization import AcmgEvidenceValueNormalizer
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.normalization import (
+    AcmgEvidenceValueNormalizer,
+)
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import EvidenceExtractionWorkflow
 
 
@@ -324,17 +328,20 @@ def test_service_review_reject_policy_override_uses_fresh_workflow(mock_config):
 def test_backward_compat_alias_b8_to_broad(mock_config):
     """extraction_mode='b8' (old name) resolves to 'broad'."""
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import resolve_extraction_mode
+
     assert resolve_extraction_mode("b8") == "broad"
 
 
 def test_backward_compat_alias_legacy_to_catalog(mock_config):
     """extraction_mode='legacy' (old name) resolves to 'catalog'."""
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import resolve_extraction_mode
+
     assert resolve_extraction_mode("legacy") == "catalog"
 
 
 def test_resolve_extraction_mode_unknown_raises():
     """Unknown mode string raises ValueError."""
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import resolve_extraction_mode
+
     with pytest.raises(ValueError, match="Unknown extraction_mode"):
         resolve_extraction_mode("unknown")

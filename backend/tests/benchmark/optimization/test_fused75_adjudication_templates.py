@@ -1,4 +1,5 @@
 """Tests for fused-75 adjudication template generation."""
+
 from __future__ import annotations
 
 import json
@@ -77,11 +78,17 @@ def test_create_adjudication_templates_is_stable(tmp_path: Path) -> None:
     for entry_id in entry_ids:
         _write_entry(dataset_root, entry_id)
     split_manifest_path = tmp_path / "split.json"
-    write_split_manifest(build_split_manifest(dataset_root=dataset_root, dev_count=1, test_count=1), split_manifest_path)
+    write_split_manifest(
+        build_split_manifest(dataset_root=dataset_root, dev_count=1, test_count=1), split_manifest_path
+    )
 
     output_root = tmp_path / "adjudication"
-    create_adjudication_templates(split_manifest_path=split_manifest_path, output_root=output_root, dataset_root=dataset_root)
+    create_adjudication_templates(
+        split_manifest_path=split_manifest_path, output_root=output_root, dataset_root=dataset_root
+    )
     first = (output_root / "dev" / "fused_000.json").read_bytes()
-    create_adjudication_templates(split_manifest_path=split_manifest_path, output_root=output_root, dataset_root=dataset_root)
+    create_adjudication_templates(
+        split_manifest_path=split_manifest_path, output_root=output_root, dataset_root=dataset_root
+    )
 
     assert (output_root / "dev" / "fused_000.json").read_bytes() == first

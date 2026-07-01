@@ -3,6 +3,7 @@
 Raises classified errors for orchestrator-level retry decisions.
 Sets skip_phase_3_reason when standardized_count == 0.
 """
+
 from __future__ import annotations
 
 import json
@@ -62,9 +63,7 @@ class Phase3Adapter:
 
         # Skip if Phase 2 set a skip reason
         if state.skip_phase_3_reason is not None:
-            logger.info(
-                "Phase 3 skipped: reason={}", state.skip_phase_3_reason.value
-            )
+            logger.info("Phase 3 skipped: reason={}", state.skip_phase_3_reason.value)
             state.phase_3_status = PhaseStatusDetail(
                 status=PhaseStatus.SKIPPED,
                 started_at=datetime.now().isoformat(),
@@ -100,7 +99,10 @@ class Phase3Adapter:
             trans_items = len(dual_result.translated_result.evidence_items)
             logger.info(
                 "Phase 3 extraction loaded: orig_chains={}, trans_chains={}, orig_items={}, trans_items={}",
-                orig_chains, trans_chains, orig_items, trans_items,
+                orig_chains,
+                trans_chains,
+                orig_items,
+                trans_items,
             )
 
             # Run standardization with a fresh session

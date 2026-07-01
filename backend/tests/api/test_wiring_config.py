@@ -1,4 +1,5 @@
 """Tests for wiring config propagation to parsers."""
+
 from __future__ import annotations
 
 from contextlib import ExitStack
@@ -42,6 +43,7 @@ def _patch_wire_deps(stack: ExitStack):
 def test_remote_parser_receives_all_config():
     """MinerURemoteParser should receive poll_interval and max_poll_attempts."""
     from src.core.config import get_config
+
     get_config.cache_clear()
 
     pd = ParseDocumentConfig(
@@ -65,6 +67,7 @@ def test_remote_parser_receives_all_config():
         mock_cfg.return_value = cfg
 
         from src.api.wiring import wire_dependencies
+
         wire_dependencies()
 
         _, kwargs = mock_remote.call_args
@@ -76,6 +79,7 @@ def test_remote_parser_receives_all_config():
 def test_local_parser_receives_all_config():
     """MinerULocalParser should receive parse_url, model_id, timeout, dpi."""
     from src.core.config import get_config
+
     get_config.cache_clear()
 
     pd = ParseDocumentConfig(
@@ -99,6 +103,7 @@ def test_local_parser_receives_all_config():
         mock_cfg.return_value = cfg
 
         from src.api.wiring import wire_dependencies
+
         wire_dependencies()
 
         _, kwargs = mock_local.call_args
@@ -111,6 +116,7 @@ def test_local_parser_receives_all_config():
 def test_wire_dependencies_initializes_session_factory_before_use():
     """wire_dependencies should create the DB session factory during startup."""
     from src.core.config import get_config
+
     get_config.cache_clear()
 
     pd = ParseDocumentConfig(

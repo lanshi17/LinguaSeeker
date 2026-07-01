@@ -1,4 +1,5 @@
 """LLM provider for structured evidence extraction."""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -115,8 +116,7 @@ class LangChainEvidenceProvider:
                 # burning retries and raising.
                 if self._is_response_format_incompatibility(exc):
                     logger.warning(
-                        "Stage {} transient error masks response_format incompatibility, "
-                        "falling back to JSON text: {}",
+                        "Stage {} transient error masks response_format incompatibility, falling back to JSON text: {}",
                         stage,
                         exc,
                     )
@@ -134,7 +134,9 @@ class LangChainEvidenceProvider:
                     return self._invoke_json_text(client, prompt, output_schema)
                 if attempt >= self._ctx.max_retries:
                     break
-                logger.warning("Stage {} structured output failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
+                logger.warning(
+                    "Stage {} structured output failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc
+                )
         raise RuntimeError(f"Stage {stage} failed structured output") from last_exc
 
     async def ainvoke_structured(
@@ -167,8 +169,7 @@ class LangChainEvidenceProvider:
                 # of burning retries and raising.
                 if self._is_response_format_incompatibility(exc):
                     logger.warning(
-                        "Stage {} transient error masks response_format incompatibility, "
-                        "falling back to JSON text: {}",
+                        "Stage {} transient error masks response_format incompatibility, falling back to JSON text: {}",
                         stage,
                         exc,
                     )
@@ -186,7 +187,9 @@ class LangChainEvidenceProvider:
                     return await self._ainvoke_json_text(client, prompt, output_schema)
                 if attempt >= self._ctx.max_retries:
                     break
-                logger.warning("Stage {} structured output failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
+                logger.warning(
+                    "Stage {} structured output failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc
+                )
         raise RuntimeError(f"Stage {stage} failed structured output") from last_exc
 
     async def _ainvoke_json_text(
@@ -209,7 +212,7 @@ class LangChainEvidenceProvider:
         except AttributeError:
             # langchain may internally call .model_dump() on list schemas;
             # fall back to the first raw client without pool wrapper
-            raw = client._clients[0] if hasattr(client, '_clients') and client._clients else client
+            raw = client._clients[0] if hasattr(client, "_clients") and client._clients else client
             message = await raw.ainvoke([HumanMessage(content=fallback_prompt)])
         content = message.content
         if not isinstance(content, str):
@@ -264,7 +267,7 @@ class LangChainEvidenceProvider:
         try:
             message = client.invoke([HumanMessage(content=fallback_prompt)])
         except AttributeError:
-            raw = client._clients[0] if hasattr(client, '_clients') and client._clients else client
+            raw = client._clients[0] if hasattr(client, "_clients") and client._clients else client
             message = raw.invoke([HumanMessage(content=fallback_prompt)])
         content = message.content
         if not isinstance(content, str):
@@ -305,9 +308,7 @@ class LangChainEvidenceProvider:
     def _is_unsupported_response_format(exc: Exception) -> bool:
         text = str(exc).lower()
         return "response_format" in text and (
-            "unavailable" in text
-            or "unsupported" in text
-            or "invalid_request_error" in text
+            "unavailable" in text or "unsupported" in text or "invalid_request_error" in text
         )
 
     @staticmethod

@@ -539,7 +539,9 @@ def test_grounder_keeps_table_caption_hit_as_found():
         status=EvidenceStatus.FOUND,
         value="Table 1",
         confidence=0.9,
-        raw_source=SourceLocation(block_index=0, context_type="table", context_ref="Table 1. Variants", text_snippet="Table 1. Variants"),
+        raw_source=SourceLocation(
+            block_index=0, context_type="table", context_ref="Table 1. Variants", text_snippet="Table 1. Variants"
+        ),
     )
 
     grounded = SourceGrounder().ground_items(doc, [item])[0]
@@ -557,7 +559,9 @@ def test_grounder_marks_image_miss_as_ocr_gap():
         status=EvidenceStatus.FOUND,
         value="missing gel band",
         confidence=0.7,
-        raw_source=SourceLocation(block_index=2, context_type="figure", context_ref="Figure 1", text_snippet="missing gel band"),
+        raw_source=SourceLocation(
+            block_index=2, context_type="figure", context_ref="Figure 1", text_snippet="missing gel band"
+        ),
     )
 
     grounded = SourceGrounder().ground_items(doc, [item])[0]
@@ -570,7 +574,9 @@ def test_grounder_preserves_special_record_on_failure_with_no_source():
     record = SpecialEvidenceRecord(
         record_type="functional",
         description="Missing figure evidence",
-        raw_source=SourceLocation(block_index=2, context_type="figure", context_ref="Figure 1", text_snippet="not present"),
+        raw_source=SourceLocation(
+            block_index=2, context_type="figure", context_ref="Figure 1", text_snippet="not present"
+        ),
         group_id="gene=BRCA1|variant=c.5266dupC",
     )
 

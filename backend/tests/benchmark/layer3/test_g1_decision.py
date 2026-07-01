@@ -1,4 +1,5 @@
 """Tests for reproducible BIBM G1 decision reporting."""
+
 from __future__ import annotations
 
 from pathlib import Path

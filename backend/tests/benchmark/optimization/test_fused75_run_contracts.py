@@ -1,4 +1,5 @@
 """Tests for fused-75 pipeline run contracts."""
+
 from __future__ import annotations
 
 import json

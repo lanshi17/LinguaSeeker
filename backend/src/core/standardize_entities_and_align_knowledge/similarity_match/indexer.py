@@ -1,4 +1,5 @@
 """Build pgvector embeddings for imported terminology entries."""
+
 from __future__ import annotations
 
 import hashlib
@@ -48,7 +49,9 @@ class TerminologyEmbeddingIndexer:
         """Embed terminology entries, cleaning stale rows and upserting current ones."""
         statement = select(TerminologyEntry)
         if entity_types:
-            statement = statement.where(TerminologyEntry.entity_type.in_([entity_type.value for entity_type in entity_types]))
+            statement = statement.where(
+                TerminologyEntry.entity_type.in_([entity_type.value for entity_type in entity_types])
+            )
         if source_dbs:
             statement = statement.where(TerminologyEntry.source_db.in_(source_dbs))
         result = await self._session.execute(statement.order_by(TerminologyEntry.entry_id))

@@ -15,6 +15,7 @@ class AcquisitionSource(str, Enum):
     LOCAL = "local"
     ONLINE = "online"
 
+
 @dataclass(frozen=True)
 class DocumentDownloadEntry:
     """A single download result from online acquisition.
@@ -28,6 +29,7 @@ class DocumentDownloadEntry:
     pdf_url: Optional[str] = None
     resolved_url: Optional[str] = None
     pre_parsed_markdown: Optional[str] = None
+
 
 @dataclass
 class DocumentAcquisitionRequest:

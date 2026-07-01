@@ -1,4 +1,5 @@
 """Tests for MVP database ORM metadata."""
+
 from __future__ import annotations
 
 from sqlalchemy import CheckConstraint, Index, Table, UniqueConstraint
@@ -21,8 +22,8 @@ EXPECTED_TABLES = {
     "terminology_relationships",
     "users",
     "review_audit_events",  # Phase 4
-    "chat_sessions",        # Phase 4
-    "chat_messages",        # Phase 4
+    "chat_sessions",  # Phase 4
+    "chat_messages",  # Phase 4
 }
 
 
@@ -228,11 +229,7 @@ def test_review_audit_events_canonical_evidence_fk() -> None:
     """Review audit events reference the canonical evidence they modify."""
     table = _table("review_audit_events")
     fk_cols = [c for c in table.columns if c.foreign_keys]
-    assert any(
-        "canonical_evidence_items.canonical_evidence_id" in str(fk)
-        for c in fk_cols
-        for fk in c.foreign_keys
-    )
+    assert any("canonical_evidence_items.canonical_evidence_id" in str(fk) for c in fk_cols for fk in c.foreign_keys)
 
 
 def test_review_audit_events_field_deltas_jsonb() -> None:
@@ -252,22 +249,14 @@ def test_chat_sessions_processing_run_fk() -> None:
     """Chat sessions bound to a processing run."""
     table = _table("chat_sessions")
     fk_cols = [c for c in table.columns if c.foreign_keys]
-    assert any(
-        "processing_runs.processing_run_id" in str(fk)
-        for c in fk_cols
-        for fk in c.foreign_keys
-    )
+    assert any("processing_runs.processing_run_id" in str(fk) for c in fk_cols for fk in c.foreign_keys)
 
 
 def test_chat_messages_session_fk() -> None:
     """Chat messages reference their session."""
     table = _table("chat_messages")
     fk_cols = [c for c in table.columns if c.foreign_keys]
-    assert any(
-        "chat_sessions.chat_session_id" in str(fk)
-        for c in fk_cols
-        for fk in c.foreign_keys
-    )
+    assert any("chat_sessions.chat_session_id" in str(fk) for c in fk_cols for fk in c.foreign_keys)
 
 
 def test_chat_messages_role_column() -> None:
@@ -304,9 +293,7 @@ def test_pipeline_run_state_has_pipeline_status_column() -> None:
 
     # Verify the index is on the column, not an expression
     table = PipelineRunState.__table__
-    status_indexes = [
-        idx for idx in table.indexes if idx.name == "ix_pipeline_run_states_pipeline_status"
-    ]
+    status_indexes = [idx for idx in table.indexes if idx.name == "ix_pipeline_run_states_pipeline_status"]
     assert len(status_indexes) == 1
     idx = status_indexes[0]
     # Column-based index: columns should contain 'pipeline_status'

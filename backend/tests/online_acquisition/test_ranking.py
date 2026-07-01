@@ -1,4 +1,5 @@
 """Tests for enhanced ranking."""
+
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.search_service import rank_candidates
 
 

@@ -44,13 +44,16 @@ class TestOnlineAcquisitionWorkflow:
 
     @pytest.mark.asyncio
     async def test_search_no_providers(self):
-        with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
-            new_callable=AsyncMock,
-        ) as mock_search, patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow._acquire_links_firecrawl",
-            new_callable=AsyncMock,
-            return_value=[],
+        with (
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
+                new_callable=AsyncMock,
+            ) as mock_search,
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow._acquire_links_firecrawl",
+                new_callable=AsyncMock,
+                return_value=[],
+            ),
         ):
             mock_search.return_value = AsyncMock(
                 success=False, items=[], downloads=[], warnings=[], provider="crossref", source_trace=[]
@@ -75,14 +78,17 @@ class TestOnlineAcquisitionWorkflow:
             source_trace=[],
         )
 
-        with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
-            new_callable=AsyncMock,
-            return_value=mock_result,
-        ), patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow._acquire_links_firecrawl",
-            new_callable=AsyncMock,
-            return_value=[],
+        with (
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
+                new_callable=AsyncMock,
+                return_value=mock_result,
+            ),
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow._acquire_links_firecrawl",
+                new_callable=AsyncMock,
+                return_value=[],
+            ),
         ):
             result = await online_acquisition_workflow({"action": "search", "query": "BRCA1"})
 
@@ -97,11 +103,13 @@ class TestOnlineAcquisitionWorkflow:
             new_callable=AsyncMock,
             side_effect=RuntimeError("firecrawl down"),
         ):
-            result = await online_acquisition_workflow({
-                "action": "search",
-                "query": "BRCA1",
-                "prefer": "web",
-            })
+            result = await online_acquisition_workflow(
+                {
+                    "action": "search",
+                    "query": "BRCA1",
+                    "prefer": "web",
+                }
+            )
 
         assert result["success"] is False
         assert any("firecrawl acquisition failed" in warning for warning in result["warnings"])
@@ -119,11 +127,13 @@ class TestOnlineAcquisitionWorkflow:
             new_callable=AsyncMock,
             return_value=[SearchLink(url="https://example.com/paper.pdf", title="Paper")],
         ):
-            result = await online_acquisition_workflow({
-                "action": "search",
-                "query": "BRCA1",
-                "prefer": "web",
-            })
+            result = await online_acquisition_workflow(
+                {
+                    "action": "search",
+                    "query": "BRCA1",
+                    "prefer": "web",
+                }
+            )
 
         assert result["success"] is True
         assert result["raw"]["source_trace"][0]["provider"] == "firecrawl"
@@ -217,14 +227,17 @@ class TestDownloadCandidatesDoiRouting:
             download_calls.append(url)
             return str(tmp_path / "out.pdf"), url, []
 
-        with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
-            new_callable=AsyncMock,
-            return_value=mock_gateway_result,
-        ), patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
-            new_callable=AsyncMock,
-            side_effect=fake_download,
+        with (
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
+                new_callable=AsyncMock,
+                return_value=mock_gateway_result,
+            ),
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+                new_callable=AsyncMock,
+                side_effect=fake_download,
+            ),
         ):
             downloads = await _download_candidates(
                 [{"doi": "10.1234/test", "title": "T"}],
@@ -261,14 +274,17 @@ class TestDownloadCandidatesDoiRouting:
                 return str(tmp_path / "out.pdf"), url, []
             return None, None, []
 
-        with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
-            new_callable=AsyncMock,
-            return_value=mock_gateway_result,
-        ), patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
-            new_callable=AsyncMock,
-            side_effect=fake_download,
+        with (
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
+                new_callable=AsyncMock,
+                return_value=mock_gateway_result,
+            ),
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+                new_callable=AsyncMock,
+                side_effect=fake_download,
+            ),
         ):
             downloads = await _download_candidates(
                 [{"doi": "10.1234/test", "pmcid": "PMC123", "title": "T"}],
@@ -282,17 +298,21 @@ class TestDownloadCandidatesDoiRouting:
     @pytest.mark.asyncio
     async def test_doi_unpaywall_exception_falls_through_to_url(self, tmp_path):
         """An unpaywall exception is caught; download continues to direct URL route."""
+
         async def fake_download(url, download_path, filename_stem):
             return str(tmp_path / "out.pdf"), url, []
 
-        with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
-            new_callable=AsyncMock,
-            side_effect=RuntimeError("unpaywall down"),
-        ), patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
-            new_callable=AsyncMock,
-            side_effect=fake_download,
+        with (
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
+                new_callable=AsyncMock,
+                side_effect=RuntimeError("unpaywall down"),
+            ),
+            patch(
+                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+                new_callable=AsyncMock,
+                side_effect=fake_download,
+            ),
         ):
             downloads = await _download_candidates(
                 [{"doi": "10.1234/test", "url": "https://example.com/paper.pdf", "title": "T"}],
@@ -336,6 +356,7 @@ class TestDownloadCandidatesDirectUrlRouting:
     @pytest.mark.asyncio
     async def test_no_identifiers_no_download(self, tmp_path):
         """Candidate with no DOI/PMCID/URL produces no downloads."""
+
         async def fake_download(url, download_path, filename_stem):
             return str(tmp_path / "out.pdf"), url, []
 

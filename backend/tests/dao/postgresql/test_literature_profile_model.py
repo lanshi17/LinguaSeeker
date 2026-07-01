@@ -1,4 +1,5 @@
 """Tests for LiteratureProfile ORM model."""
+
 from __future__ import annotations
 
 

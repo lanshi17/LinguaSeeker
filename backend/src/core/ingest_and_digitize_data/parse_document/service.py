@@ -1,4 +1,5 @@
 """Public service interface for document parsing."""
+
 from __future__ import annotations
 
 import json
@@ -102,6 +103,7 @@ class ParseDocumentService:
                 try:
                     if isinstance(data, str):
                         import base64
+
                         data = base64.b64decode(data.split(",", 1)[-1])
                     img_path = images_dir / name
                     img_path.write_bytes(data)

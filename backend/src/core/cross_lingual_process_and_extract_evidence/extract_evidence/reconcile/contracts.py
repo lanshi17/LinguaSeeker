@@ -1,4 +1,5 @@
 """Typed contracts for source-grounded cross-track reconcile."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

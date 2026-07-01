@@ -1,4 +1,5 @@
 """Tests for contextual reconcile no-lift diagnostics."""
+
 from __future__ import annotations
 
 import json
@@ -181,9 +182,7 @@ def test_diagnosis_payload_includes_counts_scores_and_summary(tmp_path: Path) ->
         "non_target_contamination": 1,
         "wrong_relationship_semantics": 1,
     }
-    relationship_row = next(
-        row for row in payload["rows"] if row["field_id"] == "A.gene_disease_relationship"
-    )
+    relationship_row = next(row for row in payload["rows"] if row["field_id"] == "A.gene_disease_relationship")
     assert relationship_row["candidate_count"] == 1
     assert relationship_row["found_candidate_count"] == 1
     assert relationship_row["source_valid_candidate_count"] == 1
@@ -199,10 +198,7 @@ def test_diagnosis_excludes_successful_non_exact_disease_matches(tmp_path: Path)
         strategy="context_verifier_reconcile",
     )
 
-    rows = {
-        f"{row.entry_id}:{row.field_id}:{row.match_type}"
-        for row in diagnosis.rows
-    }
+    rows = {f"{row.entry_id}:{row.field_id}:{row.match_type}" for row in diagnosis.rows}
 
     assert "clingen_004:B.disease_diagnosis:fuzzy" not in rows
 

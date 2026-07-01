@@ -1,4 +1,5 @@
 """Tests for target-safe context pack loading."""
+
 from __future__ import annotations
 import dataclasses
 import json
@@ -24,9 +25,7 @@ def test_build_context_pack_from_expected_json_uses_only_safe_fields(tmp_path: P
                 "mondo_id": "MONDO:0013212",
                 "moi": "AD",
                 "classification": "Definitive",
-                "expected_evidence": [
-                    {"field_id": "A.gene_disease_relationship", "value": "causative"}
-                ],
+                "expected_evidence": [{"field_id": "A.gene_disease_relationship", "value": "causative"}],
                 "source_pmid": "41743127",
                 "source_pmc": "PMC12929025",
             }
@@ -154,7 +153,9 @@ def test_build_context_pack_harvests_safe_source_stem_aliases(tmp_path: Path) ->
     assert "TLR7" not in pack.disease.aliases
 
 
-def test_build_context_pack_harvests_source_observed_mondo_disease_aliases(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_build_context_pack_harvests_source_observed_mondo_disease_aliases(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     expected_path = tmp_path / "expected.json"
     expected_path.write_text(
         json.dumps(
@@ -165,9 +166,7 @@ def test_build_context_pack_harvests_source_observed_mondo_disease_aliases(tmp_p
                 "mondo_id": "MONDO:0100038",
                 "moi": "AD",
                 "classification": "Definitive",
-                "expected_evidence": [
-                    {"field_id": "A.gene_disease_relationship", "value": "causative"}
-                ],
+                "expected_evidence": [{"field_id": "A.gene_disease_relationship", "value": "causative"}],
             }
         ),
         encoding="utf-8",
@@ -185,6 +184,7 @@ def test_build_context_pack_harvests_source_observed_mondo_disease_aliases(tmp_p
         _MondoAliasIndex,
         _load_mondo_alias_index,
     )
+
     _load_mondo_alias_index.cache_clear()
     monkeypatch.setattr(
         "src.core.standardize_entities_and_align_knowledge.context_pack.core._load_mondo_alias_index",

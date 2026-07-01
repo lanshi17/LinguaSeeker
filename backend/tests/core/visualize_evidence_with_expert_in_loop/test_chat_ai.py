@@ -1,4 +1,5 @@
 """Tests for chat AI reply generation."""
+
 from __future__ import annotations
 
 import uuid
@@ -21,23 +22,17 @@ class TestChatAI:
         evidence_id = await self._create_evidence_with_bindings(db_session)
         service = ChatService(db_session)
 
-        context = await service._build_evidence_context(
-            canonical_evidence_id=evidence_id
-        )
+        context = await service._build_evidence_context(canonical_evidence_id=evidence_id)
 
         assert "GLA" in context
         assert "Fabry disease" in context
         assert "Patient diagnosed with Fabry disease" in context
 
-    async def test_build_evidence_context_missing_evidence_returns_empty(
-        self, db_session: AsyncSession
-    ) -> None:
+    async def test_build_evidence_context_missing_evidence_returns_empty(self, db_session: AsyncSession) -> None:
         """Missing evidence IDs should not raise NoResultFound."""
         service = ChatService(db_session)
 
-        context = await service._build_evidence_context(
-            canonical_evidence_id=uuid.uuid4()
-        )
+        context = await service._build_evidence_context(canonical_evidence_id=uuid.uuid4())
 
         assert context == ""
 

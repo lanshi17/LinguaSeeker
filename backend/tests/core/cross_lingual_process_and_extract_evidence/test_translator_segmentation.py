@@ -1,4 +1,5 @@
 """Tests for MultiStageTranslator segmentation in the 3-stage pipeline."""
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -98,8 +99,8 @@ async def test_translate_segments_segments_large_document(mock_translator, large
 @pytest.mark.asyncio
 async def test_run_pipeline_with_large_document(mock_translator, large_document):
     """Full pipeline should complete without token limit errors."""
-    terminology_map, translated, segments, translated_parts, warnings = (
-        await mock_translator.run_pipeline(large_document)
+    terminology_map, translated, segments, translated_parts, warnings = await mock_translator.run_pipeline(
+        large_document
     )
     assert terminology_map is not None
     assert translated is not None

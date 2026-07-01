@@ -50,8 +50,7 @@ _SCRAPE_SCHEMA: Dict[str, Any] = {
             "type": "array",
             "items": {"type": "string"},
             "description": (
-                "Other potential fulltext/PDF download URLs on the page "
-                "(e.g. alternate mirrors, supplementary PDFs)."
+                "Other potential fulltext/PDF download URLs on the page (e.g. alternate mirrors, supplementary PDFs)."
             ),
         },
     },
@@ -175,15 +174,20 @@ class FirecrawlAdapter(WebSearchAdapter):
         # ── Try JSON mode first ──
         try:
             client = self._get_client()
-            raw_result = await client.scrape(url, formats=[{
-                "type": "json",
-                "schema": _SCRAPE_SCHEMA,
-                "prompt": (
-                    "Extract the article title, DOI, and direct PDF download URL "
-                    "from this academic/journal page. Also list any other fulltext "
-                    "or PDF links found on the page."
-                ),
-            }])
+            raw_result = await client.scrape(
+                url,
+                formats=[
+                    {
+                        "type": "json",
+                        "schema": _SCRAPE_SCHEMA,
+                        "prompt": (
+                            "Extract the article title, DOI, and direct PDF download URL "
+                            "from this academic/journal page. Also list any other fulltext "
+                            "or PDF links found on the page."
+                        ),
+                    }
+                ],
+            )
             result = _to_dict(raw_result)
 
             json_data = result.get("json") or {}

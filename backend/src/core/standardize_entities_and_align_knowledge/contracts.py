@@ -1,4 +1,5 @@
 """Typed contracts for Phase 3 entity standardization."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

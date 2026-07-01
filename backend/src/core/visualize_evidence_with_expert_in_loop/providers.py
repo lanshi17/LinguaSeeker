@@ -1,4 +1,5 @@
 """LLM provider wrappers for Phase 4 chat service."""
+
 from __future__ import annotations
 
 import json
@@ -25,7 +26,7 @@ _ENVELOPE_INSTRUCTION = (
     "2. If you have enough information to dispatch an action AND the user "
     "has confirmed, append the action on a new line:\n"
     f"{_ACTION_DELIMITER}\n"
-    "{{\"intent\": \"...\", \"slots\": {{...}}}}\n"
+    '{{"intent": "...", "slots": {{...}}}}\n'
     "3. If no action is needed, do NOT include the delimiter.\n\n"
     "NEVER include the delimiter inside your reply text. "
     "NEVER wrap the delimiter or action in code fences."
@@ -212,7 +213,11 @@ class ChatLLMProvider(_BaseLLMProvider):
         return data["choices"][0]["message"]["content"]
 
     async def route_intent(
-        self, *, system_prompt: str, user_message: str, history: list[dict[str, str]] | None = None,
+        self,
+        *,
+        system_prompt: str,
+        user_message: str,
+        history: list[dict[str, str]] | None = None,
     ) -> tuple[str, ChatAction | None]:
         self._ensure_configured("Chat LLM")
         full_system = f"{system_prompt}\n\n{_ENVELOPE_INSTRUCTION}"
@@ -225,7 +230,11 @@ class ChatLLMProvider(_BaseLLMProvider):
         return _parse_delimited(raw)
 
     async def route_intent_stream(
-        self, *, system_prompt: str, user_message: str, history: list[dict[str, str]] | None = None,
+        self,
+        *,
+        system_prompt: str,
+        user_message: str,
+        history: list[dict[str, str]] | None = None,
     ) -> AsyncIterator[str | tuple[str, ChatAction | None]]:
         """Streaming variant of route_intent with delimiter-aware chunking."""
         self._ensure_configured("Chat LLM")

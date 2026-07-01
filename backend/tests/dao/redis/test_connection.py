@@ -1,9 +1,11 @@
 """Tests for Redis connection helpers."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 
 def test_build_redis_client_passes_config_params() -> None:
     """build_redis_client forwards all config values to redis.asyncio.Redis."""

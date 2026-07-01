@@ -80,11 +80,13 @@ class SerpApiAdapter(WebSearchAdapter):
                 title = item.get("title", "")
                 if not url:
                     continue
-                all_links.append(SearchLink(
-                    url=url,
-                    source=f"serpapi-{self._engine}",
-                    title=title or None,
-                ))
+                all_links.append(
+                    SearchLink(
+                        url=url,
+                        source=f"serpapi-{self._engine}",
+                        title=title or None,
+                    )
+                )
 
             # Google Scholar results (when engine=google_scholar)
             for item in response.get("organic_results", []):
@@ -92,22 +94,26 @@ class SerpApiAdapter(WebSearchAdapter):
                 title = item.get("title", "")
                 if not url or any(link.url == url for link in all_links):
                     continue
-                all_links.append(SearchLink(
-                    url=url,
-                    source="serpapi-google_scholar",
-                    title=title or None,
-                ))
+                all_links.append(
+                    SearchLink(
+                        url=url,
+                        source="serpapi-google_scholar",
+                        title=title or None,
+                    )
+                )
 
             # Inline PDF links from result resources (Scholar-specific)
             for item in response.get("organic_results", []):
                 for resource in item.get("resources", []):
                     resource_url = resource.get("link", "")
                     if resource_url and resource_url not in {link.url for link in all_links}:
-                        all_links.append(SearchLink(
-                            url=resource_url,
-                            source="serpapi-scholar-pdf",
-                            title=item.get("title"),
-                        ))
+                        all_links.append(
+                            SearchLink(
+                                url=resource_url,
+                                source="serpapi-scholar-pdf",
+                                title=item.get("title"),
+                            )
+                        )
 
         except Exception as exc:
             msg = f"serpapi search failed: {exc}"
