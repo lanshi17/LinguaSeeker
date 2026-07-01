@@ -20,6 +20,7 @@ from __future__ import annotations
 from benchmark.core.aggregate import compute_aggregate_metrics
 from benchmark.core.contracts import EntryMetrics, FieldMatch
 from benchmark.core.matching import (
+    article_supported_expected_evidence,
     compare_evidence,
     fuzzy_match_value,
     mark_expected_fields_missing,
@@ -60,6 +61,7 @@ __all__ = [
     "EntryMetrics",
     # matching
     "compare_evidence",
+    "article_supported_expected_evidence",
     "fuzzy_match_value",
     "mark_expected_fields_missing",
     "normalize_comparison_text",

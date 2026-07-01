@@ -583,6 +583,17 @@ const en = {
   "common.version": "Version",
   "theme.light": "Switch to Light Mode",
   "theme.dark": "Switch to Dark Mode",
+  "annotation.created": "Annotation created",
+  "annotation.user": "User annotation",
+  "annotation.label": "Annotation: {note}",
+  "annotation.create": "Create annotation",
+  "annotation.createWithColor": "Create annotation with {color}",
+  "annotation.addField": "+ Field",
+  "annotation.edit": "Edit annotation",
+  "annotation.saved": "Saved",
+  "annotation.deleted": "Deleted",
+  "annotation.pickColor": "Pick color {color}",
+  "annotation.notePlaceholder": "Note…",
 } as const;
 
 export { en };

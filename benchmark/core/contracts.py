@@ -52,6 +52,7 @@ class EntryMetrics:
     last_current_phase: str | None = None
     duration_s: float = 0.0
     field_matches: list[FieldMatch] = field(default_factory=list)
+    article_supported_field_matches: list[FieldMatch] = field(default_factory=list)
     entity_matches: dict[str, bool] = field(default_factory=dict)
     standardization_accuracy: float = 0.0
     track_consistency: float = 0.0

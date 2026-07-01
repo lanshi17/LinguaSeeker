@@ -10,6 +10,7 @@ import pytest
 from benchmark.core.field_normalize import (
     normalize_field_for_matching,
     normalize_gene_disease_relationship,
+    normalize_hpo_terms,
     normalize_moi,
 )
 from benchmark.core.matching import compare_evidence
@@ -126,6 +127,12 @@ class TestNormalizeFieldForMatching:
 
     def test_gdr_dispatch(self) -> None:
         assert normalize_field_for_matching("A.gene_disease_relationship", "causative") == "causative"
+
+    def test_hpo_terms_dispatch_maps_raw_phenotypes_to_ids(self) -> None:
+        assert normalize_field_for_matching(
+            "B.hpo_terms",
+            "seizures; developmental delay; hypotonia; atrial septal defect; severe neonatal encephalopathy",
+        ) == "HP:0001250;HP:0001252;HP:0001263;HP:0001631;HP:0012759"
 
     def test_unknown_field_returns_unchanged(self) -> None:
         assert normalize_field_for_matching("A.gene_symbol", "BRCA1") == "BRCA1"
@@ -261,3 +268,27 @@ class TestCompareEvidenceFieldNormalized:
         matches = compare_evidence(expected, extracted)
         assert len(matches) == 1
         assert matches[0].matched is True
+
+    def test_hpo_ids_match_raw_symptom_text(self) -> None:
+        expected = [{
+            "field_id": "B.hpo_terms",
+            "value": "HP:0001252; HP:0001263; HP:0012759; HP:0001631; HP:0001250",
+        }]
+        extracted = [{
+            "field_id": "B.hpo_terms",
+            "status": "found",
+            "value": "seizures; developmental delay; hypotonia; atrial septal defect; severe neonatal encephalopathy",
+            "confidence": 0.8,
+        }]
+
+        matches = compare_evidence(expected, extracted)
+
+        assert matches[0].matched is True
+        assert matches[0].match_type == "field_normalized"
+
+
+class TestNormalizeHpoTerms:
+    """Tests for benchmark-side HPO ID normalization."""
+
+    def test_maps_eeg_terms_without_matching_unrelated_expected_ids(self) -> None:
+        assert normalize_hpo_terms("abnormal EEG; spike slow waves") == "HP:0002353"

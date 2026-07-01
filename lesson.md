@@ -6493,3 +6493,56 @@ N=50 `c2_english_pivot_tristate` 报告中 207 个 FN 被初步归为 review、p
 - Prompt 扩召回必须用 targeted matched smoke 检查邻近实体污染；不能只看总 F1 提升。
 - 对 ClinVar/ACMG 字段，value 必须绑定同一 variant/gene/source row；低置信度候选可以保留，但不能无锚点直接替代 gold 目标。
 - 每次压测前检查后端进程启动时间；无 `--reload` 时必须重启，否则 benchmark 可能验证旧代码。
+
+## 2026-07-01 - Targeted smoke risk slices must separate extraction failure from gold/source mismatch
+
+### 问题描述
+N=5 targeted smoke 暴露 `gs_010.J.clinvar_assertion` 新增 wrong_value，以及 `gs_102.B.hpo_terms`、`A.functional_domain_or_hotspot` 仍未对上 gold。初步解释可能把两者归因到 prompt 扩召回不足、翻译/解析缺失或简单的跨实体污染。
+
+### 排查过程
+1. 检查 `gs_010` article source，确认 gold 目标 `c.1182+1G>A`、`c.1837C>T`、`c.343del`、`p.Arg613Trp`、`Likely pathogenic/Pathogenic` 不在当前文本轨中。
+2. 检查 `gs_010` gold，确认其 `source_dataset=clinvar_fused`、`annotation_provenance=clingen_clinvar_join`、`gold_source=database`，而非纯 article extraction gold。
+3. 检查 `gs_010` phase2 artifact，确认系统抽到的 `likely benign (for c.1844G>A, p.(Arg615Gln))` 有 exact raw source，但属于文章内邻近非 gold variant；同时 variant 字段被合并为 `c.848T>C; c.1844G>A` 和 `p.(Val283Ala); p.(Arg615Gln)` semicolon group。
+4. 检查 `gs_102` source，确认症状证据存在，如 severe encephalopathy、developmental delay、hypotonia、seizures、atrial septal defect、abnormal EEG/MRI；但 `TRD`、`transcriptional repression domain`、`aa 201-310` 不在文本中。
+5. 检查 `gs_102` phase2 artifact，确认系统已抽到 `B.hpo_terms=abnormal EEG; spike slow waves; slow waves; brain atrophy` 和 `A.functional_domain_or_hotspot=exon 3`，且均有 exact raw source。
+
+### 根因分析
+- `gs_010` 的新增错误不只是 prompt 口头 anchor 不够强，而是当前 extraction target 没有目标 variant 锚点，gold 又来自外部 ClinVar join。系统在 article-only 文本中只能找到非 gold 的 `p.Arg615Gln likely benign`，这会污染 precision；但它无法凭空恢复 article 中不存在的 database gold variants。
+- 当前 Phase 2 Primary 契约是扁平 `field_id/value/source_quote` 候选列表，后置 `GroupAssigner` 只能从已合并的 value 字符串生成 group_id，无法可靠拆回多个 variant-centered entity records。
+- `gs_102` 不是翻译或解析层丢失。HPO 失败主要是 phenotype text 到 HPO ID 的 ontology normalization 问题；TRD/domain 失败需要外部 MECP2 domain knowledge 或 gold 边界调整，因为 source text 只支持 `exon 3`。
+
+### 解决方案
+本轮不做代码改动，不启动 N=50。下一步若继续优化，应先定义 gold/source 边界：
+- 对 database/ClinVar-derived gold，需明确是否允许外部 ClinVar join 或向 extraction target 注入 gold variants；否则 article-only extractor 应拒绝将非 gold 邻近变异的 assertion 当作目标值。
+- 对多变异文章内属性，优先设计 variant-centered nested candidate schema，而不是继续在扁平字段上增加局部 prompt anchor。
+- 对 `gs_102`，将 HPO ID 映射作为 normalization/ontology task 处理；TRD 作为 external knowledge completion 或从 article-only scoring 中剔除/降权。
+
+### 预防措施
+- 每个 smoke regression 必须同时检查 source text、gold provenance、phase2 artifact，不仅看 field-level F1。
+- 对 `gold_source=database` 的字段，评估报告应单独分层，避免把 article extraction failure 与 external DB join failure 混算。
+- 对临床 assertion 字段，若没有 explicit target variant 或 variant-centered group，不应把低置信度邻近 assertion 自动计入最终 value-F1。
+
+## 2026-07-01 - Keep gold immutable and add article-supported metric views
+
+### 问题描述
+`gs_010` 和 `gs_102` 显示 raw gold 同时包含 article-supported evidence、database-derived ClinVar joins，以及 precision-only curation fields。直接把这些字段混进单一 FN denominator 会让 article-only extractor 被惩罚为漏抽外部知识。
+
+### 排查过程
+1. 复查 scorer 调用链，确认 `compare_evidence()` 只接收 `expected_evidence` 和 extracted items，旧逻辑未使用 `gold_source`、`source` 或 `evaluation_type`。
+2. 复查 Phase 3 admission gate，确认近期 gene-anchored identity survival 会让 `J.clinvar_assertion` 在无 variant co-location 时作为 `found` 进入 DB/report。
+3. 复查 HPO 路径，确认 Phase 3 adapter 已将 `B.hpo_terms` 转成 phenotype candidates，但 benchmark value-F1 没有对 raw symptom text 做 HP ID fallback。
+
+### 根因分析
+- 修改 gold dataset 会破坏 provenance 和复现实验审计；正确做法是保留 raw gold，并在 scorer 中增加一个 article-supported 视图。
+- `evaluation_type=precision_only` 不应贡献 article-only recall/FN；`source=clinvar/clingen/database` 的字段也不应惩罚 article-only extraction。
+- `J.clinvar_assertion` 需要 authority-aware admission：只有 source/value 明确出现 ClinVar、ClinGen、ACMG 或 ACMG code 时才保持 `found`；普通文章内 “likely benign” classification 应降为 review-only contamination 状态。
+
+### 解决方案
+1. 新增 `article_supported_expected_evidence()`，报告保留 raw metrics，同时增加 `article_supported` aggregate 和 per-entry `article_supported_field_matches`。
+2. 新增保守 HPO normalizer fallback，将常见 raw symptom strings 映射到 HP IDs，用于 benchmark field-normalized matching。
+3. 在 Phase 3 persistence admission 中将无 authority 的 `J.clinvar_assertion` status 改为 `context_contamination`，raw payload 保留，避免进入 DB-ready/value-F1。
+
+### 预防措施
+- Benchmark gold 不直接改写；所有边界重定义优先做成可审计的 metric view。
+- 外部数据库 gold、precision-only curation fields、article-supported recall fields 必须分层报告。
+- ClinVar/ACMG assertion 字段必须检查 authority evidence，不能仅凭 “pathogenic/benign” 字面 classification 入库。

@@ -1509,8 +1509,9 @@ class TestBuildRunItemSpecsGeneVariantGate:
                         "field_id": "J.clinvar_assertion",
                         "group_id": "gene=GBA|variant=__missing__",
                         "status": "found",
-                        "value": "Pathogenic",
+                        "value": "Pathogenic (ACMG)",
                         "confidence": 0.72,
+                        "source": {"text_snippet": "classified as Pathogenic under ACMG criteria"},
                     },
                     {
                         "field_id": "B.case_count",
@@ -1529,6 +1530,75 @@ class TestBuildRunItemSpecsGeneVariantGate:
         assert "A.variant_type" in found_field_ids
         assert "J.clinvar_assertion" in found_field_ids
         assert "B.case_count" in found_field_ids
+
+    def test_clinvar_assertion_without_authority_is_review_only(self) -> None:
+        """Unanchored article classifications should not enter DB-ready as found ClinVar assertions."""
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({
+            "reconciled": {
+                "track": "reconciled",
+                "evidence_items": [
+                    {
+                        "field_id": "A.gene_symbol",
+                        "group_id": "gene=ACADVL|variant=c.848T>C;c.1844G>A",
+                        "status": "found",
+                        "value": "ACADVL",
+                        "confidence": 0.95,
+                    },
+                    {
+                        "field_id": "J.clinvar_assertion",
+                        "group_id": "gene=ACADVL|variant=c.848T>C;c.1844G>A",
+                        "status": "found",
+                        "value": "likely benign (for c.1844G>A, p.(Arg615Gln))",
+                        "confidence": 0.45,
+                        "source": {
+                            "text_snippet": (
+                                "The variant c.1844G>A, p.(Arg615Gln) found in patient number 10 "
+                                "was reclassified as likely benign."
+                            ),
+                        },
+                        "notes": "classification mentioned; not explicitly tied to ClinVar",
+                    },
+                ],
+            },
+        })
+
+        specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+        assertion = next(spec for spec in specs if spec.field_id == "J.clinvar_assertion")
+        assert assertion.status == "context_contamination"
+        assert assertion.raw_payload["status"] == "found"
+
+    def test_clinvar_assertion_with_acmg_authority_stays_found(self) -> None:
+        """ACMG-backed assertions remain DB-ready even without target-variant injection."""
+        repo = StandardizationRepository(FakeSession())
+        input_data = self._make_input({
+            "reconciled": {
+                "track": "reconciled",
+                "evidence_items": [
+                    {
+                        "field_id": "A.gene_symbol",
+                        "group_id": "gene=MECP2|variant=c.799_800insAGGAAGC",
+                        "status": "found",
+                        "value": "MECP2",
+                        "confidence": 0.95,
+                    },
+                    {
+                        "field_id": "J.clinvar_assertion",
+                        "group_id": "gene=MECP2|variant=c.799_800insAGGAAGC",
+                        "status": "found",
+                        "value": "Pathogenic",
+                        "confidence": 0.9,
+                        "source": {"text_snippet": "determined to be pathogenic (PVS1 + PM2 + PM6)"},
+                    },
+                ],
+            },
+        })
+
+        specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+        assertion = next(spec for spec in specs if spec.field_id == "J.clinvar_assertion")
+        assert assertion.status == "found"
 
     def test_find_identity_passable_groups(self) -> None:
         """Groups with gene or disease in FOUND are passable."""

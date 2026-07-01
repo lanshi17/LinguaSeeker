@@ -65,7 +65,7 @@ export function Sidebar({ mobile, onNavigate, onGuideOpen }: SidebarProps) {
         }}
       >
         <img
-          src="/favicon.svg"
+          src="https://acmg-bucket.oss-cn-shenzhen.aliyuncs.com/favicon.svg"
           alt="Lingua Seeker logo"
           width={28}
           height={28}
