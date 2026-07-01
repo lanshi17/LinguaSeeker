@@ -90,7 +90,7 @@ export function TokenList({
         <span
           key={value}
           style={{
-            maxWidth: "12rem",
+            maxWidth: "min(14rem, 100%)",
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
@@ -126,6 +126,64 @@ export function TokenList({
   );
 }
 
+function IdentifierChip({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string | null;
+}) {
+  return (
+    <span
+      title={value ?? undefined}
+      style={{
+        display: "inline-flex",
+        minWidth: 0,
+        maxWidth: "100%",
+        alignItems: "center",
+        gap: 4,
+        borderRadius: 4,
+        backgroundColor: "var(--color-bg-muted)",
+        padding: "2px 6px",
+        fontSize: 12,
+        color: "var(--color-text-secondary)",
+      }}
+    >
+      <span style={{ flexShrink: 0, fontWeight: 600 }}>{label}</span>
+      <span
+        style={{
+          minWidth: 0,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          fontFamily: "var(--font-mono, monospace)",
+        }}
+      >
+        {value ?? "\u2014"}
+      </span>
+    </span>
+  );
+}
+
+export function LiteratureIdentifiers({ row }: { row: LiteratureEvidenceRow }) {
+  const { t } = useI18n();
+  return (
+    <div
+      style={{
+        marginTop: 6,
+        display: "flex",
+        minWidth: 0,
+        maxWidth: "100%",
+        flexWrap: "wrap",
+        gap: 6,
+      }}
+    >
+      <IdentifierChip label={t("evidence.col.pmid")} value={row.pmid} />
+      <IdentifierChip label="DOI" value={row.doi} />
+    </div>
+  );
+}
+
 export function StatBadge({
   icon: Icon,
   value,
@@ -139,6 +197,7 @@ export function StatBadge({
     <div
       style={{
         display: "flex",
+        minWidth: 0,
         alignItems: "center",
         gap: 6,
         borderRadius: 6,
@@ -149,7 +208,7 @@ export function StatBadge({
     >
       <Icon style={{ width: 14, height: 14, color: "var(--color-text-muted)" }} />
       <span style={{ fontWeight: 500, color: "var(--color-text-strong)" }}>{value}</span>
-      <span style={{ color: "var(--color-text-secondary)" }}>{label}</span>
+      <span style={{ color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>{label}</span>
     </div>
   );
 }
@@ -177,31 +236,14 @@ export function LiteratureCell({ row }: { row: LiteratureEvidenceRow }) {
       >
         <FileText style={{ width: 18, height: 18 }} />
       </span>
-      <div style={{ minWidth: 0 }}>
+      <div style={{ minWidth: 0, flex: 1 }}>
         <p
           className="edb-row-title edb-line-clamp-2"
           style={{ fontSize: 14, fontWeight: 600, lineHeight: "20px", color: "var(--color-text)", transition: "color 0.15s" }}
         >
           {literatureTitle(row, t)}
         </p>
-        <p
-          style={{
-            marginTop: 4,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            fontFamily: "monospace",
-            fontSize: 12,
-            color: "var(--color-text-muted)",
-          }}
-        >
-          {row.documentId.slice(0, 8)}...
-        </p>
-        <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--color-text-secondary)" }}>
-          <span style={{ borderRadius: 4, backgroundColor: "var(--color-bg-muted)", padding: "2px 6px", fontWeight: 500 }}>
-            {t("evidence.col.pmid")} {row.pmid ?? "\u2014"}
-          </span>
-        </div>
+        <LiteratureIdentifiers row={row} />
       </div>
     </div>
   );
@@ -238,7 +280,7 @@ export function ClassificationCell({ row }: { row: LiteratureEvidenceRow }) {
 /** Renders the Created date column cell. */
 export function CreatedCell({ row }: { row: LiteratureEvidenceRow }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--color-text-secondary)" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap", fontSize: 12, color: "var(--color-text-secondary)" }}>
       <Calendar style={{ width: 14, height: 14, color: "var(--color-text-muted)" }} />
       {formatDate(row.createdAt)}
     </div>
@@ -252,7 +294,7 @@ export function ReviewCell({ row }: { row: LiteratureEvidenceRow }) {
       <Badge variant={STATUS_VARIANT[row.reviewStatus as keyof typeof STATUS_VARIANT] ?? "info"}>
         {row.reviewStatus}
       </Badge>
-      <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--color-text-secondary)" }}>
+      <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap", fontSize: 12, color: "var(--color-text-secondary)" }}>
         <BarChart3 style={{ width: 12, height: 12 }} />
         {formatPercent(row.avgConfidence)}
       </div>
