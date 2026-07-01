@@ -64,6 +64,8 @@ docs/
 
 | 日期 | 标题 | 状态 |
 |------|------|------|
+| 2026-07-01 | [Semantic Word Alignment Design](planned/2026-07-01-semantic-word-alignment-design.md) | planned |
+| 2026-07-01 | [Semantic Word Alignment Implementation Plan](planned/2026-07-01-semantic-word-alignment-plan.md) | planned |
 | 2026-06-29 | BIBM N=50 Comparison and Ablation Experiment Design | planned |
 | 2026-06-24 | BIBM Dataset D Pipeline Optimization Design | proposed |
 | 2026-06-20 | Variant ID Guarantee Plan | planned |
