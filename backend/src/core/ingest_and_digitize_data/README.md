@@ -1,84 +1,83 @@
-# Ingest & Digitize Data (Phase 1)
+# Ingest and Digitize Data 文献采集与数字化
 
-> Phase 1 of the LinguaSeeker pipeline: acquire documents (local upload or online literature search) and parse them into structured markdown via MinerU. Provides a unified facade that routes to the appropriate acquisition source and a parsing service that handles both local and remote MinerU backends.
+> 阶段 1 流水线：从多种来源采集文献 PDF 并解析为结构化 Markdown。
 
-## Quick Start
+## 概述
 
-```python
-from src.core.ingest_and_digitize_data.document_acquisition import (
-    DocumentAcquisitionService,
-    DocumentAcquisitionRequest,
-    AcquisitionSource,
-)
+本模块是 ACMG Lingua 阶段 1 的顶层入口，协调两个子流程：**文档采集**（document_acquisition）和**文档解析**（parse_document）。采集环节支持本地文件上传和在线文献搜索/下载；解析环节使用 MinerU 引擎将 PDF 转换为结构化的 Markdown、表格和图片数据。
 
-service = DocumentAcquisitionService()
-
-# Local upload with dedup
-result = await service.acquire(DocumentAcquisitionRequest(
-    source=AcquisitionSource.LOCAL,
-    filename="paper.pdf",
-    content=pdf_bytes,
-    deduplicate=True,
-))
-
-# Online search
-result = await service.acquire(DocumentAcquisitionRequest(
-    source=AcquisitionSource.ONLINE,
-    action="search",
-    query="BRCA1 variant classification",
-    limit=10,
-))
-```
-
-## Architecture
+## 结构
 
 ```
 ingest_and_digitize_data/
-├── document_acquisition/    # Unified acquisition facade
-│   ├── service.py           # DocumentAcquisitionService.acquire()
-│   ├── contracts.py         # Request/Response models
-│   ├── local_upload/        # File upload with SHA-256 dedup
-│   └── online_acquisition/  # Multi-provider search + download
-│       ├── workflow.py       # Fallback chain orchestration
-│       ├── gateway.py        # Rust net_io bridge
-│       ├── search_service.py # Multilingual provider routing
-│       └── web/              # JS-rendered site scrapers
-│
-└── parse_document/          # Document parsing via MinerU
-    ├── service.py           # ParseDocumentService
-    ├── orchestrator.py      # Remote/local parser selection
-    ├── common/              # Shared parsing utilities
-    ├── local/               # MinerU local VLM parsing
-    └── remote/              # MinerU cloud API parsing
+├── README.md
+├── document_acquisition/     # 文档采集子模块
+│   ├── contracts.py          # 统一数据类型（AcquisitionSource、Request/Result）
+│   ├── service.py            # 统一门面服务 DocumentAcquisitionService
+│   ├── local_upload/         # 本地文件上传
+│   └── online_acquisition/   # 在线文献搜索与下载
+└── parse_document/           # 文档解析子模块
+    ├── contracts.py          # 解析结果数据类型（ParseResult、PageContent 等）
+    ├── base.py               # 解析器抽象基类 ParserStrategy
+    ├── service.py            # 解析服务 ParseDocumentService
+    ├── orchestrator.py       # 解析编排器（远程优先→本地回退）
+    ├── exceptions.py         # 自定义异常
+    ├── common/               # 通用解析工具
+    ├── local/                # 本地 MinerU 解析器
+    └── remote/               # 远程 MinerU 云 API 解析器
 ```
 
-**Data flow:**
+## 核心组件
+
+### 文档采集（document_acquisition）
+
+- **`DocumentAcquisitionService`**：统一门面，根据 `AcquisitionSource`（LOCAL/ONLINE）分发到对应处理器
+- **`DocumentAcquisitionRequest`**：统一请求，包含本地上传参数（filename/content）和在线获取参数（query/identifiers/limit）
+- **`DocumentAcquisitionResult`**：统一响应，包含存储文件信息或在线获取的文献列表/下载结果
+
+### 文档解析（parse_document）
+
+- **`ParseDocumentService`**：高级门面，提供 `parse()`、`parse_and_save()`、`dedup()` 等接口
+- **`DocumentParseOrchestrator`**：远程优先、本地回退的解析编排策略
+- **`ParserStrategy`**：解析器抽象基类，`MinerURemoteParser` 和 `MinerULocalParser` 为具体实现
+- **`create_parse_service()`**：工厂函数，从配置创建完整的解析服务实例
+
+## 数据流
 
 ```
-User input (file bytes or search query)
-  │
-  ▼
+用户文件 / 在线搜索
+        ↓
 DocumentAcquisitionService.acquire()
-  ├── LOCAL  → local_upload/ → SHA-256 dedup → disk write
-  └── ONLINE → online_acquisition/ → provider chain → PDF download
-  │
-  ▼
-ParseDocumentService.parse_local_files_and_save()
-  ├── remote → MinerURemoteParser (cloud API)
-  └── local  → MinerULocalParser (MinerU service :44321)
-  │
-  ▼
-Output: {md_path, metadata_path, images_dir}
+        ↓
+本地上传 → validate → hash → store
+在线获取 → search → download → relevance_gate
+        ↓
+    PDF 文件路径
+        ↓
+ParseDocumentService.parse()
+        ↓
+DocumentParseOrchestrator (remote → local fallback)
+        ↓
+ParseResult { metadata, pages[], full_markdown }
 ```
 
-## Sub-module Reference
+## 使用
 
-- **[document_acquisition/](./document_acquisition/README.md)** — Unified acquisition facade, multi-provider search, download fallback chains, web scrapers
-- **[parse_document/](./parse_document/README.md)** — MinerU document parsing (local /file_parse + remote API), output normalization
+```python
+from src.core.ingest_and_digitize_data.document_acquisition import (
+    DocumentAcquisitionService, DocumentAcquisitionRequest, AcquisitionSource
+)
+from src.core.ingest_and_digitize_data.parse_document import create_parse_service
 
-## Testing
+# 采集文献
+svc = DocumentAcquisitionService()
+result = await svc.acquire(DocumentAcquisitionRequest(
+    source=AcquisitionSource.ONLINE,
+    query="ACMG variant classification",
+    limit=10,
+))
 
-```bash
-cd backend
-uv run pytest tests/core/ingest_and_digitize_data/ -v
+# 解析 PDF
+parse_svc = create_parse_service()
+parsed = await parse_svc.parse(result.downloads[0].file_path)
 ```

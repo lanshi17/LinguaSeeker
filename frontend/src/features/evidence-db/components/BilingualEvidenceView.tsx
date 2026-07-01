@@ -16,7 +16,9 @@ import {
 } from "@/features/evidence-search/utils/evidenceDocument";
 import { BilingualEvidenceSkeleton } from "./BilingualEvidenceSkeleton";
 import { DocumentReader } from "./DocumentReader";
+import type { FieldTypeOption } from "@/features/evidence-search/components/annotationLayer";
 import type { ReviewContextMap } from "./HighlightedText";
+import { FieldReviewMenu } from "@/features/evidence-search/components/FieldReviewPopover";
 import type { FieldReviewInfo } from "@/features/evidence-search/components/FieldReviewPopover";
 import type { BlockHighlight } from "./StructuredBlockRenderer";
 import { ActiveEvidenceCard } from "./ActiveEvidenceCard";
@@ -52,6 +54,7 @@ import type {
 import { patchEvidence } from "@/features/evidence-search/services/evidenceCorrection";
 import { App } from "antd";
 import { useI18n } from "@/lib/i18n";
+import { EVIDENCE_FIELD_SPECS } from "@/lib/constants/evidenceFields";
 
 const REVIEW_STATUSES: ReviewStatusValue[] = [
   "provisional",
@@ -193,9 +196,13 @@ export function BilingualEvidenceView({
     }
   }, [groupDetail, message, queryClient, sourceDocumentId, t]);
 
-  const fieldTypes = useMemo(
-    () => groupDetail?.items.map((item) => item.field_id) ?? [],
-    [groupDetail],
+  const fieldTypes = useMemo<FieldTypeOption[]>(
+    () => EVIDENCE_FIELD_SPECS.map((spec) => ({
+      fieldId: spec.fieldId,
+      label: spec.fieldName,
+      category: spec.categoryId,
+    })),
+    [],
   );
 
   const originalAnnotations = allAnnotations.filter((a) => a.track === "original");
@@ -304,9 +311,6 @@ export function BilingualEvidenceView({
     return map;
   }, [groupDetail]);
 
-  const handleReviewed = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ["evidence-group-detail", undefined, sourceDocumentId] });
-  }, [queryClient, sourceDocumentId]);
 
   const toggleCategory = (cat: string) => {
     setEnabledCategories((prev) => {
@@ -383,6 +387,7 @@ export function BilingualEvidenceView({
   return (
     <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <style>{bevEmbeddedCSS}</style>
+      <FieldReviewMenu />
 
       {/* Breadcrumb */}
       <nav style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "var(--color-text-muted)" }}>
@@ -482,7 +487,6 @@ export function BilingualEvidenceView({
               onCreateAnnotation={handleCreateAnnotation}
               onUpdateAnnotation={handleUpdateAnnotation}
               onDeleteAnnotation={handleDeleteAnnotation}
-              onReviewed={handleReviewed}
               onAssignField={handleAssignField}
               fieldTypes={fieldTypes}
             />
@@ -504,7 +508,6 @@ export function BilingualEvidenceView({
                 onCreateAnnotation={handleCreateAnnotation}
                 onUpdateAnnotation={handleUpdateAnnotation}
                 onDeleteAnnotation={handleDeleteAnnotation}
-                onReviewed={handleReviewed}
                 onAssignField={handleAssignField}
                 fieldTypes={fieldTypes}
               />

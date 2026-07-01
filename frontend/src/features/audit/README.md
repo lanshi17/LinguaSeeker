@@ -1,131 +1,78 @@
-# Audit Feature
+# Audit 审阅审计功能
 
-> Review and inspect Phase 4 evidence corrections, status changes, and field-level audit deltas.
+> 证据审阅事件的查询、展示和批量审阅操作
 
-## Quick Start
+## 概述
 
-```tsx
-import { AuditView } from "@/features/audit";
+Audit 模块提供证据审阅审计功能，包括：查看审阅事件历史、筛选特定证据/文档的审阅记录、批量审阅证据（批准/修正/拒绝）。审阅事件每 10 秒自动轮询更新。
 
-export function AuditPage() {
-  return <AuditView />;
-}
-```
-
-`AuditView` fetches recent audit events, renders summary metrics and a table, opens event details, and provides the `EvidenceReviewDrawer` entry point for correcting stored evidence.
-
-## Structure
+## 文件结构
 
 ```
-features/audit/
-|-- index.ts                          # Barrel exports
-|-- components/
-|   |-- AuditView.tsx                 # Page-level orchestrator: metrics, filters, table, drawers
-|   |-- AuditEventTable.tsx           # antd Table with status transitions, field changes, reasons
-|   |-- AuditEventDetailDrawer.tsx    # Drawer showing event metadata and field-level old/new values
-|   +-- EvidenceReviewDrawer.tsx      # Search evidence, edit fields, submit status/value corrections
-|-- hooks/
-|   +-- useAuditEvents.ts            # React Query hook polling audit events (10s interval)
-|-- services/
-|   +-- audit.ts                     # listAuditEvents() -> GET /api/v1/delta-audit/
-|-- types/
-|   +-- audit.ts                     # AuditEventQuery, DeltaEntry, ReviewStatusValue, ReviewAuditEventResponse
-+-- utils/
-    +-- reviewPatch.ts               # cardFieldForFieldId(), buildReviewPatchOperations()
+audit/
+├── index.ts                          # 模块导出
+├── components/
+│   ├── AuditView.tsx                 # 审阅页面主视图
+│   ├── AuditEventTable.tsx           # 审阅事件列表表格
+│   ├── AuditEventDetailDrawer.tsx    # 事件详情抽屉
+│   └── EvidenceReviewDrawer.tsx      # 证据审阅操作抽屉（批量审阅）
+├── hooks/
+│   └── useAuditEvents.ts            # 审阅事件查询 hook（10s 轮询）
+├── services/
+│   └── audit.ts                      # API 服务层
+├── types/
+│   └── audit.ts                      # 类型定义
+├── utils/
+│   └── reviewPatch.ts               # 审阅补丁构建工具
+└── README.md
 ```
 
-## Architecture
+## 关键组件
 
-```text
-AuditPage
-  -> AuditView
-      -> useAuditEvents()
-          -> GET /api/v1/delta-audit/
-      -> AuditEventTable
-      -> AuditEventDetailDrawer
-      -> EvidenceReviewDrawer
-          -> searchEvidence()            (from @/api/evidence)
-          -> getEvidenceGroupDetail()    (from @/api/evidence)
-          -> buildReviewPatchOperations()
-          -> PATCH /api/v1/evidence/{canonical_evidence_id}
-          -> invalidate ["audit", "events"]
-```
+### `AuditView`
 
-## Public API
+审阅审计页面主视图，组合 `AuditEventTable` 展示审阅事件列表。
 
-### Components
+### `AuditEventTable`
 
-| Export | Signature | Description |
-| --- | --- | --- |
-| `AuditView` | `function AuditView(): JSX.Element` | Page-level orchestrator for audit metrics, filters, table, detail drawer, and evidence review drawer. |
-| `AuditEventTable` | `function AuditEventTable({ events, loading, onRowClick }): JSX.Element` | Displays audit events with status transitions, field-change counts, reasons, and row click selection. |
-| `AuditEventDetailDrawer` | `function AuditEventDetailDrawer({ event, open, onClose }): JSX.Element \| null` | Shows event metadata and field-level old/new values with diff-style rendering. |
-| `EvidenceReviewDrawer` | `function EvidenceReviewDrawer({ open, onClose }): JSX.Element` | Searches evidence groups by gene/variant/disease, lets reviewers edit mapped fields, submits status and value corrections, and refreshes audit events. |
+审阅事件列表表格，展示事件 ID、证据 ID、审阅人、状态变更、变更原因、时间等字段。
 
-### Hooks and Services
+### `AuditEventDetailDrawer`
 
-| Export | Signature | Description |
-| --- | --- | --- |
-| `useAuditEvents` | `function useAuditEvents(query?: AuditEventQuery)` | React Query hook polling audit event lists every 10s. Query key includes all filter params. |
-| `listAuditEvents` | `async function listAuditEvents(query?): Promise<ReviewAuditEventResponse[]>` | Calls `GET /api/v1/delta-audit/` with optional filters (canonical_evidence_id, source_document_id, reviewer_id, limit). |
+单个审阅事件的详情抽屉，展示字段级别的变更差异（`DeltaEntry`）。
 
-### Types
+### `EvidenceReviewDrawer`
 
-| Type | Description |
-| --- | --- |
-| `AuditEventQuery` | Query params: `canonical_evidence_id?`, `source_document_id?`, `reviewer_id?`, `limit?` |
-| `DeltaEntry` | Field-level change: `field`, `old_value`, `new_value` |
-| `ReviewStatusValue` | `"provisional" \| "approved" \| "corrected" \| "rejected"` |
-| `ReviewAuditEventResponse` | Full audit event: `review_event_id`, `canonical_evidence_id`, `reviewer_id`, `target_type`, `old_status`, `new_status`, `field_deltas`, `change_reason`, `created_at` |
-| `ReviewPatchOperation` | Output of `buildReviewPatchOperations`: `canonicalEvidenceId` + `body` |
+证据批量审阅操作抽屉。
 
-### Patch Utilities
+- 支持三种操作：批准（approved）、修正（corrected）、拒绝（rejected）
+- 可编辑证据字段值并附加变更原因
+- 使用 `buildReviewPatchOperations` 构建批量补丁请求
 
-| Export | Signature | Description |
-| --- | --- | --- |
-| `cardFieldForFieldId` | `(fieldId: string) => string \| null` | Maps Phase 4 field IDs (e.g. `A.gene_symbol`) to backend card fields (e.g. `gene`). Returns null for unmapped fields. |
-| `buildReviewPatchOperations` | `(args) => ReviewPatchOperation[]` | Converts field-level group edits into `PATCH /evidence/{id}` operations. Unmapped fields become status-only updates. |
+## Hooks
 
-## Field Mapping
+### `useAuditEvents(query?)`
 
-The backend accepts only card-level patch fields:
+查询审阅事件，支持按 `canonical_evidence_id`、`source_document_id`、`reviewer_id` 筛选。
 
-| Field ID | Card field |
-| --- | --- |
-| `A.gene_symbol` | `gene` |
-| `B.disease_diagnosis` | `disease` |
-| `B.clinical_diagnosis` | `disease` |
-| `J.authority_classification` | `classification` |
-| `A.variant_hgvs_*` | `variant` |
-| `A.variant_legacy_name` | `variant` |
+- **轮询**: 每 10 秒自动刷新
+- **返回**: `{ data, isLoading, error }`
 
-Unmapped fields can still be approved, corrected, or rejected as status-only reviews. Their value input is disabled in `EvidenceReviewDrawer`.
+## API 端点
 
-## Data Flow
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/delta-audit/` | 查询审阅事件列表 |
 
-1. `AuditView` loads audit events with `useAuditEvents({ limit: 500 })`.
-2. Users filter by status (segmented control) or search local event fields.
-3. `EvidenceReviewDrawer` searches evidence by gene, variant, or disease.
-4. Selecting a group loads field-level detail.
-5. Edits are keyed by stable `field_id`, not display labels.
-6. `buildReviewPatchOperations()` maps editable field IDs to backend card fields.
-7. Each operation calls `patchEvidence(canonicalEvidenceId, body)`.
-8. Backend `FeedbackService` updates `CanonicalEvidenceItem`, records `ReviewAuditEvent`, and refreshes derived profile/search views.
-9. Frontend invalidates `["audit", "events"]`, so the new event appears in the audit table.
+## 类型
 
-## Testing
+- `AuditEventQuery` — 查询参数
+- `DeltaEntry` — 字段变更差异（`{ field, old_value, new_value }`）
+- `ReviewStatusValue` — 审阅状态：`provisional` / `approved` / `corrected` / `rejected`
+- `ReviewAuditEventResponse` — 审阅事件响应
 
-```bash
-cd frontend
-bun run test tests/audit/reviewPatch.test.tsx tests/audit/useAuditEvents.test.tsx
-```
+## 工具函数
 
-## Dependencies
+### `buildReviewPatchOperations`
 
-| Dependency | Purpose |
-| --- | --- |
-| `antd` | Drawer, Table, Input, Button, Segmented, Tag, Typography, Select |
-| `@tanstack/react-query` | Audit event fetching, polling, cache invalidation |
-| `axios` via `apiClient` | HTTP transport for Phase 4 APIs |
-| `lucide-react` | Icons (Search, ArrowRight, ClipboardCheck, ArrowLeft, CheckCircle2, X) |
-| Local UI primitives | `Badge`, `MetricTile`, formatting utilities |
+根据编辑的字段值和目标状态，构建批量审阅补丁操作列表。自动映射字段 ID 到后端字段名（如 `A.gene_symbol` → `gene`）。

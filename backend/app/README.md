@@ -1,96 +1,101 @@
-# app
+# App
 
-> FastAPI application entry point for the LinguaSeeker backend. Creates the ASGI app via a factory function, configures lifespan hooks, middleware, and mounts the v1 router.
+> FastAPI 应用入口——创建应用实例、管理生命周期、注册中间件和路由。
 
-## Quick Start
+## Overview
 
-```bash
-cd backend
+`app/` 包含 FastAPI 应用的创建和生命周期管理。`main.py` 是整个后端的入口点，负责初始化所有基础设施（PostgreSQL、Redis、管线编排器）、注册中间件（安全头、请求体大小限制、请求监控、限流）和挂载 API 路由。
 
-# Development server with auto-reload
-uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
-# Production (use factory mode)
-uv run uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8000
-```
-
-## Architecture
+## Structure
 
 ```
 app/
+├── main.py            # FastAPI 应用创建和生命周期管理
+├── main.py.jinja      # Jinja2 模板版本（用于项目脚手架）
 ├── __init__.py
-└── main.py     # create_app() factory, lifespan, middleware, error handlers
+└── README.md
 ```
 
-Note: Security headers middleware (`SecurityHeadersMiddleware`, `SecurityHeadersMiddlewareHSTS`) and body size limit middleware (`BodySizeLimitMiddleware`) are defined in `src/utils/security_headers.py` and `src/api/body_size_limit.py` respectively, then registered in `create_app()`.
+## Key Components
 
-### `main.py`
+### `create_app()`
 
-| Symbol | Type | Description |
-|--------|------|-------------|
-| `create_app()` | factory | Builds and configures the FastAPI application |
-| `app` | `FastAPI` | Module-level instance (`create_app()` called at import) |
-| `lifespan` | `asynccontextmanager` | Startup/shutdown lifecycle management |
+构建并配置 FastAPI 实例：
 
-### Factory Pattern
+1. 加载配置（`get_config()`）
+2. 注册安全中间件（`SecurityHeadersMiddlewareHSTS` / `SecurityHeadersMiddleware`）
+3. 注册请求体大小限制中间件（`BodySizeLimitMiddleware`）
+4. 注册请求监控中间件（`RequestMonitorMiddleware`）
+5. 初始化限流器（`init_limiter()`）
+6. 挂载 V1 API 路由（`v1_router`）
+7. 配置 CORS
+8. 注册全局异常处理器
 
-`create_app()` is the primary entry point. The module-level `app` variable calls it at import time for `uvicorn app.main:app`. Tests use `create_app()` directly after mocking config.
+### `lifespan()`
 
-### Lifespan Flow
+应用生命周期管理（启动和关闭）：
 
-**Startup:**
-1. Clears system proxy env vars (ALL_PROXY, HTTP_PROXY, etc.) -- app-level proxy routing in `NetworkConfig` handles selective proxying instead
-2. Initializes logging via `setup_logging()`
-3. Calls `wire_dependencies()` from `src/api/wiring.py` -- assembles engine, session factory, Redis client, phase adapters, orchestrator, runner, and Phase4Factory
-4. Acquires a PostgreSQL advisory lock (`pg_try_advisory_lock`) to prevent multi-worker races during table creation and orphan recovery
-5. Creates standalone database tables (search index metadata) -- only if this worker holds the advisory lock
-6. Recovers orphaned pipeline runs (heartbeat-stale runs stuck in pending/running) -- only if this worker holds the advisory lock; releases lock afterward
-7. Runs startup health checks (non-blocking -- warns but does not crash)
+**启动阶段：**
+- 清除系统代理环境变量（避免干扰应用层代理路由）
+- 初始化日志系统（`setup_logging()`）
+- 调用 `wire_dependencies()` 组装完整服务依赖图
+- 启动作业调度器（`SingleJobDispatcher.start()`）
+- 创建独立表（`frontend_search_index`）——使用 PostgreSQL advisory lock 防止多 worker 竞争
+- 恢复被中断的管线运行（`recover_orphaned_runs()`）
+- 执行基础设施连接健康检查（`check_all_connections()`）
 
-**Shutdown:**
-1. Waits for in-flight pipeline tasks to complete (90s timeout; cancelled tasks get 5s grace to persist FAILED state)
-2. Closes Phase4ServiceFactory (disposes httpx client in ChatLLMProvider)
-3. Disposes Redis client
-4. Disposes PostgreSQL engine
+**关闭阶段：**
+- 停止作业调度器（`dispatcher.stop()`）
+- 等待活跃管线任务完成（`runner.shutdown()`）
+- 关闭 Phase4ServiceFactory 资源
+- 释放 Redis 和 PostgreSQL 连接池
 
-### Middleware Stack (outermost first)
+### 错误处理
 
-1. **Request monitoring** -- raw ASGI middleware that logs every request with method, path, status, latency, and X-Request-ID; does NOT buffer response body (safe for SSE/chunked streaming)
-2. **CORS** -- configured from `cfg.cors_origins_list`; credentials disabled when origins is `*`
-3. **Security headers** -- adds X-Content-Type-Options, X-Frame-Options, CSP, Referrer-Policy, Permissions-Policy; HSTS variant (`SecurityHeadersMiddlewareHSTS`) used in production
-4. **Body size limit** -- rejects requests exceeding `cfg.mineru.max_file_size_mb`
-5. **Rate limiting** -- via `slowapi`
+全局异常处理器统一返回结构化错误响应：
 
-### Mounted Routes
-
-All routes are under the `/api/v1` prefix, mounted via `src/api/v1/router.py`:
-
-| Prefix | Router | Tags |
-|--------|--------|------|
-| `/api/v1/pipeline` | `pipeline.router` | pipeline |
-| `/api/v1/evidence` | `evidence.router` | evidence |
-| `/api/v1/delta-audit` | `delta_audit.router` | delta-audit |
-| `/api/v1/source-link` | `source_link.router` | source-link |
-| `/api/v1/chat` | `chat.router` | chat |
-| `/api/v1/auth` | `auth.router` | auth |
-| `/api/v1/documents` | `annotations.router` | annotations |
-| `/health` | inline | -- |
-
-### Error Handlers
-
-Global handlers for `ACMGException`, `StarletteHTTPException`, and `RequestValidationError`. All return structured JSON envelopes with `error.code`, `error.message`, `request_id`, and optional `error.details`. Every response includes an `X-Request-ID` header.
-
-### Health Endpoint
-
-```
-GET /health -> {"status": "ok"}
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "...",
+    "details": [...]
+  },
+  "request_id": "uuid"
+}
 ```
 
-Startup health checks (PostgreSQL, Redis) run asynchronously after the app starts. Redis failures are logged at DEBUG level (non-critical); all other failures are logged at WARNING level.
+每个响应携带 `X-Request-ID` 头，错误时同时包含在响应体中。
 
-## Testing
+### 模块级实例
+
+```python
+app: FastAPI = create_app()  # uvicorn app.main:app 入口
+```
+
+## Usage / Patterns
+
+### 启动服务
 
 ```bash
 cd backend
-uv run pytest tests/api/ -v
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
+
+### 测试中使用
+
+```python
+from app.main import create_app
+app = create_app()  # 程序化创建，测试和自定义入口使用
+```
+
+## Dependencies
+
+| 依赖 | 用途 |
+|------|------|
+| FastAPI | Web 框架 |
+| uvicorn | ASGI 服务器 |
+| `src.api.wiring` | 依赖注入和服务组装 |
+| `src.api.v1.router` | V1 API 路由 |
+| `src.utils.*` | 中间件、日志、健康检查 |
+| `src.agents.*` | 管线运行器和作业调度器 |

@@ -1,79 +1,135 @@
 # API
 
-> FastAPI HTTP boundary for the LinguaSeeker backend. Provides REST endpoints, authentication, middleware, and dependency injection. All business logic is delegated to `agents/` and `core/` -- this layer is thin and stateless.
+> HTTP API 层——依赖注入、认证、限流、中间件和路由注册。
 
-## Architecture
+## Overview
+
+`api/` 是 Lingua Seeker 后端的 HTTP 接口层。负责应用级依赖组装（`wiring.py`）、请求认证（`auth.py`）、限流（`rate_limit.py`）、请求体大小限制（`body_size_limit.py`）和 V1 路由注册。所有路由定义在 `v1/` 子包中。
+
+## Structure
 
 ```
-src/api/
-├── __init__.py
-├── wiring.py           # DI assembly: engine -> session_factory -> Redis -> adapters -> orchestrator -> runner -> Phase4Factory
-├── deps.py             # FastAPI dependencies: get_db_session, get_phase4_factory
-├── auth.py             # API-key + session-cookie authentication (require_api_key)
-├── body_size_limit.py  # Request body size middleware (BodySizeLimitMiddleware)
-├── rate_limit.py       # Rate limiting singleton (slowapi, Redis-backed with in-memory fallback)
-└── v1/
-    ├── __init__.py
-    ├── router.py       # Root v1 router (prefix /api/v1)
-    ├── pipeline.py     # Pipeline orchestrator endpoints
-    ├── evidence.py     # Evidence search, detail, and feedback endpoints
-    ├── chat.py         # Chat session and message endpoints (SSE streaming)
-    ├── source_link.py  # Source traceability endpoints
-    ├── delta_audit.py  # Delta audit log endpoints
-    ├── annotations.py  # Document annotation CRUD endpoints
-    └── auth.py         # Session-cookie login/logout/me endpoints
+api/
+├── wiring.py              # 依赖注入和服务组装（应用启动时调用一次）
+├── auth.py                # API Key + HMAC 会话认证
+├── deps.py                # FastAPI 依赖项（数据库会话、Phase4ServiceFactory）
+├── body_size_limit.py     # 请求体大小限制 ASGI 中间件
+├── rate_limit.py          # Redis/内存限流器
+├── v1/                    # V1 API 路由
+│   ├── router.py          #   路由聚合器
+│   ├── pipeline.py        #   管线编排路由
+│   ├── evidence.py        #   证据审核路由
+│   ├── chat.py            #   聊天路由
+│   ├── annotations.py     #   文档标注 CRUD
+│   ├── delta_audit.py     #   审计事件查询
+│   ├── source_link.py     #   证据溯源路由
+│   ├── auth.py            #   会话认证路由
+│   └── contracts.py       #   Pydantic 请求/响应模型
+└── __init__.py
 ```
 
-## Public API
+## Key Components
 
-### wiring.py
+### `wiring.py` — 依赖注入
 
-Module-level singletons initialized once during app lifespan.
+`wire_dependencies()` 在应用启动时调用一次，组装完整服务依赖图：
 
-| Symbol | Type | Description |
-|--------|------|-------------|
-| `get_session_factory()` | `async_sessionmaker[AsyncSession]` | Lazy-init singleton for DB sessions |
-| `get_engine()` | `AsyncEngine \| None` | Return current engine (or `None` before wiring) |
-| `dispose_engine()` | `async () -> None` | Teardown engine on shutdown |
-| `get_redis_client()` | `AsyncRedis \| None` | Return current Redis client (or `None` before wiring) |
-| `dispose_redis()` | `async () -> None` | Teardown Redis client on shutdown |
-| `wire_dependencies()` | `() -> None` | Assemble full service graph: Redis, engine, session, processing cache, acquisition/parse/translation/extraction/standardization services, phase adapters, orchestrator, runner, Phase4Factory |
-
-### deps.py
-
-FastAPI `Depends()` providers.
-
-| Symbol | Type | Description |
-|--------|------|-------------|
-| `get_db_session()` | `AsyncGenerator[AsyncSession]` | Yield an async DB session per request; commits on success, rolls back on exception |
-| `get_phase4_factory()` | `Phase4ServiceFactory` | Return global Phase 4 factory (raises if not initialized) |
-| `set_phase4_factory(factory)` | `(Phase4ServiceFactory) -> None` | Set global factory (called from `wire_dependencies`) |
-
-### auth.py
-
-| Symbol | Type | Description |
-|--------|------|-------------|
-| `require_api_key()` | `async (...) -> str \| None` | FastAPI dependency that validates `X-API-Key` header or `ce_session` cookie against configured `API_KEY`. Returns `None` if no key is configured (auth disabled). Uses constant-time comparison via `hmac.compare_digest`. |
-| `SESSION_COOKIE` | `str` | Cookie name: `ce_session` |
-| `SESSION_DURATION_SEC` | `int` | Session lifetime: 28800 (8 hours) |
-| `_validate_session(token, secret)` | `-> bool` | Validate an HMAC-SHA256 signed session token (payload.signature format) |
-
-### body_size_limit.py
-
-| Symbol | Type | Description |
-|--------|------|-------------|
-| `BodySizeLimitMiddleware` | `class(ASGIApp)` | Raw ASGI middleware that rejects requests whose body exceeds `max_bytes` (default 100 MB). Checks `Content-Length` for fast reject; wraps `receive` for chunked transfers. Returns 413 JSON on limit exceeded. Does not buffer streaming responses (SSE-safe). |
-
-### rate_limit.py
-
-| Symbol | Type | Description |
-|--------|------|-------------|
-| `limiter` | `Limiter` | Module-level singleton slowapi `Limiter`, starts with in-memory storage |
-| `init_limiter()` | `() -> Limiter` | Reconfigure the singleton's storage backend. Attempts Redis first; falls back to in-memory if Redis is unavailable. Called from `create_app()` after config is loaded. |
-
-## Testing
-
-```bash
-cd backend
-uv run pytest tests/api/ -v
 ```
+cfg → engine → session_factory
+  → Redis client → DocumentProcessingCacheService
+  → DocumentAcquisitionService + ParseDocumentService
+  → TranslationService + EvidenceExtractionService
+  → EntityStandardizationService
+  → Phase1Adapter + Phase2Adapter + Phase3Adapter
+  → SessionBoundStatePersistence
+  → PipelineOrchestrator → PipelineRunner
+  → SingleJobDispatcher
+  → Phase4ServiceFactory
+  → JobQueueRepository
+```
+
+提供单例访问器：`get_engine()`、`get_session_factory()`、`get_redis_client()`、`get_local_parser()`、`get_dispatcher()`。
+
+### `auth.py` — 认证
+
+支持两种认证方式：
+
+- **X-API-Key 头** — 直接与配置的 `api_key` 比较（HMAC 常量时间比较）
+- **会话 Cookie** (`ce_session`) — HMAC-SHA256 签名的 JWT-like 令牌，8 小时有效期
+
+```python
+# 路由中使用
+async def handler(_api_key: str | None = Depends(require_api_key)):
+    ...
+```
+
+`require_api_key` 依赖项检查 API Key 或会话 Cookie，任一有效即可通过。
+
+### `deps.py` — FastAPI 依赖项
+
+| 依赖 | 说明 |
+|------|------|
+| `get_db_session()` | 提供异步数据库会话（自动 commit/rollback） |
+| `get_phase4_factory()` | 返回全局 Phase4ServiceFactory 实例 |
+
+### `body_size_limit.py` — 请求体限制
+
+原始 ASGI 中间件（非 BaseHTTPMiddleware），避免缓冲流式响应：
+
+- 检查 `Content-Length` 头（快速拒绝）
+- 包装 `receive` 跟踪实际接收字节（处理 chunked 传输）
+- 超限时返回 413 并排空剩余消息
+- 默认限制 100MB
+
+### `rate_limit.py` — 限流
+
+基于 slowapi 的限流器：
+
+- 生产环境使用 Redis 存储（跨 worker 共享）
+- 本地开发自动降级为内存存储
+- 模块级单例 `limiter`，`init_limiter()` 切换存储后端
+
+```python
+@router.post("/run")
+@limiter.limit("10/minute")
+async def handler(request: Request, ...):
+    ...
+```
+
+## Usage / Patterns
+
+### 应用启动流程
+
+```python
+# app/main.py lifespan
+wire_dependencies()           # 组装依赖
+dispatcher.start()            # 启动作业调度
+check_all_connections()       # 健康检查
+```
+
+### 路由中访问数据库
+
+```python
+async def handler(session: AsyncSession = Depends(get_db_session)):
+    result = await session.execute(select(Model))
+```
+
+### 路由中访问 Phase 4 服务
+
+```python
+async def handler(session: AsyncSession = Depends(get_db_session)):
+    factory = get_phase4_factory()
+    service = factory.create_feedback_service(session)
+```
+
+## Dependencies
+
+| 依赖 | 用途 |
+|------|------|
+| FastAPI | 路由和依赖注入 |
+| slowapi | 限流 |
+| Starlette | ASGI 中间件 |
+| SQLAlchemy | 数据库会话 |
+| `src.agents.*` | 管线运行器、调度器、服务工厂 |
+| `src.dao.*` | 数据访问 |
+| `src.core.config` | 配置 |

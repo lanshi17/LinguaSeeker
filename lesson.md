@@ -6271,3 +6271,57 @@ English-pivot-tristate 在 `gs_075` 上丢失 `A.gene_disease_relationship`、`A
 - Field-level benchmark report 应区分 missing、wrong_value、scorer_payload_mismatch，避免把 scorer 解包问题误诊为抽取失败。
 - Admission gate 的测试样本必须覆盖 deterministic group_id，而不是只覆盖人工 `g1` 组。
 - Review prompt 中的 domain exclusion 规则需要明确 hard reject 与 soft penalty 的边界；动物模型可以影响 DB-ready 置信度，但不应删除已定锚 variant identity。
+
+## 2026-07-01 - Long Chinese translation could be compressed into English summary
+
+### 问题描述
+用户反馈 Rett 综合征中文原文与英文译文严重不对齐：原文保留完整摘要、临床资料、讨论和参考文献，而英文译文只剩标题、摘要式 Clinical Data、Discussion 与简化 references，属于长文被压缩成英文摘要。
+
+### 排查过程
+1. 通过 CodeGraph 定位翻译链路：`translate_to_result -> run_pipeline -> translate_segments -> validate_translation_output`。
+2. 检查现有 `check_block_coverage()` 后发现它只能在 `original_blocks` 存在并构造 `translated_blocks` 后比较 block/char coverage。
+3. 检查 `validate_translation_output()` 与 `validate_segment()`，确认它们只覆盖空输出、未翻译、非英文、unchanged 和重复循环，没有拒绝“流畅英文但严重短于源文”的摘要式输出。
+4. 先添加失败测试，复现长中文病例文本被一两句英文摘要通过 validator 与 `run_pipeline()` 的问题。
+5. 周边测试发现大文档测试夹具用 `result_for_translate/N` 作为翻译占位，新的完整性校验正确拦截；随后将 mock 改成按输入段落长度生成等比例英文占位译文。
+
+### 根因分析
+已有防线偏重“是否翻译成英文”和“block 映射是否完整”。当解析结果没有 structured blocks，或翻译在 segment/full-document 阶段已经变成英文摘要时，语言检测会通过，block coverage 又没有输入可比对，导致摘要式译文被保存并在双语阅读器中展示为严重不对齐。
+
+### 解决方案
+1. 在 translation validator 中新增保守完整性校验：仅对较长、非英文源文本启用，按译文/原文长度比拒绝不可能覆盖源文的短译文。
+2. 在 segment 级使用较低阈值提前触发 retry，在 document 级使用现有 block coverage 同量级阈值做最终拦截。
+3. 将 `incomplete_translation` 纳入 `run_pipeline()` 临界错误，避免将摘要式英文作为 warning 继续返回和持久化。
+4. 添加 Rett-style 中文病例压缩译文回归测试，并修正大文档翻译 mock 以反映真实翻译长度。
+
+### 预防措施
+- 翻译质量测试必须覆盖三类失败：未翻译、只译部分 block、英文摘要式压缩；不能只依赖语言检测。
+- 没有 `original_blocks` 的路径也必须有文档级完整性校验，否则 structured block coverage 保护不到纯文本/segment fallback。
+- 大文档测试 mock 不应返回与输入长度无关的短占位符，否则会掩盖真实 coverage 语义。
+
+## 2026-07-01 - N50 pipeline benchmark reports must be validated before interpretation
+
+### 问题描述
+运行 `n50_master` 的 English-pivot hard/tristate 全量条件时，第一次命令没有传 API key。Runner 对每个 entry 记录 `Pipeline error: 401 Unauthorized`，但仍生成了一个 N=50、F1=0 的 report，并把 condition 标记为 completed。如果直接聚合该文件，会把认证失败误读成模型/工作流性能崩溃。
+
+### 排查过程
+1. 观察首轮输出发现所有 50 个 entry 都在 `/api/v1/pipeline/run` 提交阶段立即 401，耗时为 0 秒。
+2. 用不触发模型调用的 status endpoint 做认证探针：错误的环境变量 key 返回 401；通过 `src.core.config.get_config().api_key` 读取后端运行时配置后返回 404，证明认证已通过且只是 run id 不存在。
+3. 删除无效 `eval_unified_20260630_211237.json`，用运行时 API key 重跑 `c2_english_pivot_hard` 和 `c2_english_pivot_tristate`。
+4. 重跑完成后检查 `aggregates.timeout_and_errors` 为 0、每个条件 `total_entries=50`，再复制到 `benchmark/data/reports/n50/` 并注入明确 `condition_id` 供 paired tests 使用。
+
+### 根因分析
+Benchmark runner 的 `--api-key` 参数默认为空，但本地后端 API 路由启用了 `X-API-Key` 鉴权。`run_evaluation()` 把每个 entry 的提交异常转换为 per-entry error metrics 并继续跑完整个 manifest，因此“命令退出 0 + report 生成”不等于有效 benchmark。
+
+### 解决方案
+1. 正式 N=50 重跑命令从后端配置加载运行时 API key，仅作为 shell 变量传入 `--api-key`，不打印密钥。
+2. 生成有效报告：
+   - `benchmark/data/reports/n50/c2_english_pivot_hard_20260701_001136.json`
+   - `benchmark/data/reports/n50/c2_english_pivot_tristate_20260701_024458.json`
+   - `benchmark/data/reports/n50/c2_english_pivot_hard_vs_tristate_delta_20260701.json`
+   - `benchmark/data/reports/n50/paired_c2_english_pivot_hard_vs_tristate_20260701.json`
+3. 结果显示 tri-state 相对 hard：TP +15、FP +6、FN -21、value-F1 0.5432 -> 0.5757、grounded-F1 0.4891 -> 0.5153、original-grounded-F1 0.4639 -> 0.4810、DB-ready yield 167 -> 177。
+
+### 预防措施
+- 解读任何 benchmark report 前必须先检查 `pipeline_status`、`timeout_and_errors`、`total_duration_s` 和 `completed` 数量；0 秒全量完成应视为无效报告。
+- `n50_master` 后续应考虑在 condition summary 中区分 `completed_with_entry_errors`，或当 401/5xx 覆盖所有 entries 时直接 fail fast。
+- 需要进入 `reports/n50/` 的实验报告应带明确 `config.condition_id`，否则 paired/aggregate 脚本会显示 `unknown` 并容易覆盖解释口径。

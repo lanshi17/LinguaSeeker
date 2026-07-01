@@ -1,23 +1,25 @@
 # BIBM Main Paper TeX Draft
 
-**Status:** in-progress
-**Created:** 2026-06-15
-**Completed:** --
-**PR:** --
+> **状态：** in-progress
+> **创建日期：** 2026-06-15
 
-This directory contains the IEEEtran-style TeX manuscript for the BIBM main paper: "LinguaSeeker: Source-Grounded Cross-Lingual Evidence Extraction for Clinical Genetics Literature."
+## 概述
 
-## Files
+本目录包含 BIBM 主论文的 IEEEtran 格式 TeX 手稿："LinguaSeeker: Source-Grounded Cross-Lingual Evidence Extraction for Clinical Genetics Literature"。
 
-- `main.tex` -- anonymous double-column IEEE conference draft. Includes abstract, introduction, related work, method, experiments, and results sections. Reports the default broad workflow on the unified 150-entry benchmark: P=65.5%, R=33.6%, F1=44.4%, 150/150 completed. Also includes the external system positioning table and scope-sensitivity analysis.
-- `refs.bib` -- BibTeX bibliography.
-- `figures/method_figure.tex` -- TikZ vector method figure showing the broad workflow with source-document and translation input branches, primary extraction, review validation, normalization/source grounding, entity standardization, and read models.
-- `figures/source_dataset_metrics.tex` -- TikZ grouped bar chart showing precision, recall, and F1 by source dataset.
+## 文件列表
 
-## Build Notes
+| 文件 | 描述 |
+|------|------|
+| `main.tex` | 匿名双栏 IEEE 会议草稿。包含摘要、引言、相关工作、方法、实验和结果章节。报告统一 150 条目基准上的默认宽工作流：P=65.5%、R=33.6%、F1=44.4%，150/150 完成。还包含外部系统定位表和范围敏感性分析。 |
+| `refs.bib` | BibTeX 参考文献 |
+| `figures/method_figure.tex` | TikZ 矢量方法图：宽工作流的源文档和翻译输入分支、主提取、审查验证、标准化/源定位、实体标准化和读模型 |
+| `figures/source_dataset_metrics.tex` | TikZ 分组柱状图：按来源数据集的精确率、召回率和 F1 |
 
-- Uses `\documentclass[conference]{IEEEtran}` for BIBM submission format.
-- Method name macro: `\methodname` expands to `LinguaSeeker`; `\bmode` expands to `broad`.
-- Tables are kept compact and scientific in tone.
-- The figures are intentionally schematic and grayscale-friendly rather than decorative.
-- Scope sensitivity numbers are generated from `benchmark/analysis/paper_artifacts/summarize_unified_b8_scope.py`, which writes `benchmark/data/reports/unified_b8_scope_sensitivity_20260629.json` and `.md`.
+## 构建说明
+
+- 使用 `\documentclass[conference]{IEEEtran}` 适配 BIBM 提交格式
+- 方法名宏：`\methodname` 展开为 `LinguaSeeker`；`\bmode` 展开为 `broad`
+- 表格保持紧凑和科学风格
+- 图表为灰度友好、示意性设计
+- 范围敏感性数据由 `benchmark/analysis/paper_artifacts/summarize_unified_b8_scope.py` 生成

@@ -1,31 +1,35 @@
 # Parkinson Literature Dataset
 
-Utilities for converting a Parkinson disease literature collection XLSX workbook into auditable JSON artifacts, with optional PMC PDF downloading.
+> 将帕金森病文献集合 XLSX 工作簿转换为可审计 JSON 数据的工具集，支持可选的 PMC PDF 下载。
 
-## Files
+## 概述
 
-| File | Purpose |
-|------|---------|
-| `xlsx_dataset.py` | XLSX reader and structural audit (stdlib only, no `openpyxl`/`pandas`) |
-| `export_dataset.py` | Export workbook sheets to JSONL + audit report |
-| `fetch_pdfs.py` | Download open-access PMC PDFs for publication rows |
+本模块使用纯 Python 标准库（`ZipFile` + `xml.etree.ElementTree`）解析 XLSX 工作簿，无需 `openpyxl` 或 `pandas` 依赖。工作簿包含 7 个工作表、6291 行数据，涵盖测序研究、变异、家系、样本、功能实验和出版物元数据。
 
-## Quick Start
+## 文件列表
+
+| 文件 | 用途 |
+|------|------|
+| `xlsx_dataset.py` | XLSX 读取器和结构审计（纯标准库） |
+| `export_dataset.py` | 导出工作表为 JSONL + 审计报告 |
+| `fetch_pdfs.py` | 下载开放获取 PMC PDF |
+
+## 快速开始
 
 ```bash
-# Export workbook to JSONL + audit report
+# 导出工作簿为 JSONL + 审计报告
 uv run --project backend python -m benchmark.datasets.parkinson_literature.export_dataset \
   --input 'tmp/test_liter_collect(1).xlsx' \
   --output-dir benchmark/data/processed/parkinson_literature
 
-# Fetch PMC PDFs for publication rows
+# 获取 PMC PDF
 uv run --project backend python -m benchmark.datasets.parkinson_literature.fetch_pdfs \
   --publication-jsonl benchmark/data/processed/parkinson_literature/table7_publication_info.jsonl \
   --output-dir benchmark/data/processed/parkinson_literature/publications \
   --limit 5
 ```
 
-## Architecture
+## 架构
 
 ```text
 XLSX workbook
@@ -36,83 +40,55 @@ XLSX workbook
   -> audit_report.json + sheet-level JSONL files
 ```
 
-The module uses only Python standard library APIs for XLSX parsing (via `ZipFile` + `xml.etree.ElementTree`), avoiding third-party dependencies.
-
-## Public API
+## 公共 API
 
 ### `xlsx_dataset.py`
 
-| Symbol | Signature | Description |
-|--------|-----------|-------------|
-| `WorkbookTable` | `dataclass` | Normalized rows from one sheet: `name`, `headers`, `rows`, `row_numbers` |
-| `ColumnProfile` | `dataclass` | Completeness profile: `name`, `non_empty_count`, `sample_values` |
-| `SheetAudit` | `dataclass` | Per-sheet audit: row/column counts, non-empty counts, identifier coverage, duplicate keys |
-| `DatasetAuditReport` | `dataclass` | Top-level report: `sheet_count`, `total_data_rows`, per-sheet audits |
-| `load_workbook_tables` | `(path: Path) -> Mapping[str, WorkbookTable]` | Read all sheets from `.xlsx` archive |
-| `build_audit_report` | `(tables) -> DatasetAuditReport` | Compute structural quality metrics |
+| 符号 | 描述 |
+|------|------|
+| `WorkbookTable` | 归一化行数据：`name`、`headers`、`rows`、`row_numbers` |
+| `ColumnProfile` | 完整性配置：`name`、`non_empty_count`、`sample_values` |
+| `SheetAudit` | 每表审计：行列计数、非空计数、标识符覆盖、重复键 |
+| `DatasetAuditReport` | 顶层报告：`sheet_count`、`total_data_rows`、每表审计 |
+| `load_workbook_tables` | 读取 `.xlsx` 归档中的所有工作表 |
+| `build_audit_report` | 计算结构质量指标 |
 
 ### `export_dataset.py`
 
-| Symbol | Signature | Description |
-|--------|-----------|-------------|
-| `DatasetExportPaths` | `dataclass` | Paths written: `audit_report`, `jsonl_paths` |
-| `export_dataset` | `(input_path, output_dir) -> DatasetExportPaths` | Write JSONL files + audit report |
+| 符号 | 描述 |
+|------|------|
+| `DatasetExportPaths` | 输出路径：`audit_report`、`jsonl_paths` |
+| `export_dataset` | 写入 JSONL 文件 + 审计报告 |
 
 ### `fetch_pdfs.py`
 
-| Symbol | Signature | Description |
-|--------|-----------|-------------|
-| `PublicationPdfRecord` | `dataclass` | Per-publication download status |
-| `PublicationPdfFetchReport` | `dataclass` | Aggregate fetch summary |
-| `fetch_publication_pdfs` | `async (publication_jsonl, output_dir, ...) -> PublicationPdfFetchReport` | Resolve PubMed metadata, download PMC PDFs |
+| 符号 | 描述 |
+|------|------|
+| `PublicationPdfRecord` | 每出版物下载状态 |
+| `PublicationPdfFetchReport` | 聚合获取摘要 |
+| `fetch_publication_pdfs` | 解析 PubMed 元数据，下载 PMC PDF |
 
-## Normalization Rules
+## 工作簿概览
 
-- `""`, `/`, `\` are normalized to JSON `null`
-- Strings are trimmed
-- PubMed IDs like `16643317.0` are normalized to `16643317`
-- Output rows preserve traceability with `_sheet` and `_row_number`
-- Sheet filenames are made filesystem-safe (e.g. `table2_seq_study&var` -> `table2_seq_study_var.jsonl`)
+| 工作表 | 行数 | 列数 | 用途 |
+|--------|------|------|------|
+| `table1_seq_study_info` | 1580 | 17 | 测序研究队列元数据 |
+| `table2_seq_study&var` | 1033 | 9 | 变异级病例/对照计数 |
+| `table3_sample&var` | 1150 | 9 | 样本-变异基因型关系 |
+| `tabel4_family_info` | 456 | 12 | 家系分离信息 |
+| `table5_samp_info` | 859 | 15 | 个体样本表型元数据 |
+| `Table6_func_study_info` | 506 | 26 | 功能实验证据 |
+| `table7_publication_info` | 707 | 8 | 出版物元数据 |
 
-## Workbook Summary
+## 标准化规则
 
-7 sheets, 6291 data rows:
+- `""`、`/`、`\` 标准化为 JSON `null`
+- 字符串去首尾空白
+- PubMed ID 如 `16643317.0` 标准化为 `16643317`
+- 输出行保留 `_sheet` 和 `_row_number` 可溯源
 
-| Sheet | Rows | Columns | Role |
-|-------|------|---------|------|
-| `table1_seq_study_info` | 1580 | 17 | Sequencing study cohort metadata |
-| `table2_seq_study&var` | 1033 | 9 | Variant-level case/control counts |
-| `table3_sample&var` | 1150 | 9 | Sample-variant genotype relationships |
-| `tabel4_family_info` | 456 | 12 | Family segregation information |
-| `table5_samp_info` | 859 | 15 | Individual sample phenotype metadata |
-| `Table6_func_study_info` | 506 | 26 | Functional assay evidence |
-| `table7_publication_info` | 707 | 8 | Publication metadata |
-
-## PDF Fetch Results
-
-Full acquisition run stored under `benchmark/data/processed/parkinson_literature/publications_full/`:
-
-| Metric | Count |
-|--------|------:|
-| Unique publication PMIDs requested | 598 |
-| PubMed metadata resolved | 584 |
-| PMCID/PDF candidates | 249 |
-| PDFs downloaded | 176 |
-| Not open access / no PMCID | 346 |
-| Download failed | 73 |
-| Metadata missing/error | 3 |
-
-## Limitations
-
-- The export is structural, not a biological correctness audit
-- Duplicate composite keys are reported but not resolved
-- The workbook has mixed Chinese/English notes and typo-preserved sheet names (e.g. `tabel4_family_info`)
-- Some columns (`OR`, `CI`) are mostly empty and need domain review
-- PDF downloading is limited to open-access PMC records; paywalled records are recorded but not downloaded
-
-## Testing
+## 测试
 
 ```bash
 uv run --project pytest backend/tests/benchmark/layer3/test_parkinson_literature_dataset.py -q
-uv run --project ruff check benchmark/datasets/parkinson_literature backend/tests/benchmark/layer3/test_parkinson_literature_dataset.py
 ```

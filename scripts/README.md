@@ -1,221 +1,152 @@
 # Scripts
 
-> Project-level operational scripts for LinguaSeeker -- data management, cleanup, generation, and development servers. Run from the project root.
+> LinguaSeeker 项目级运维脚本——数据管理、清理、生成和开发服务器。从项目根目录运行。
 
-## Directory Structure
+## 概述
+
+本目录包含项目级操作脚本，涵盖数据导入/清理/分析/生成、开发服务器启动、以及 Docker 镜像构建推送。所有 Python 脚本通过 `uv run` 使用后端虚拟环境，Shell 脚本自动切换到正确目录。
+
+## 目录结构
 
 ```
 scripts/
 ├── data/
-│   ├── import/                           Data import scripts
-│   │   ├── import_benchmark_ground_truth.py   Import benchmark ground truth with dual-track traceability
-│   │   ├── import_terminology.py              Import terminology database files into PostgreSQL
-│   │   ├── backfill_variant_ids.py            Backfill variant identifiers for existing data
-│   │   └── reindex_clinvar_aliases.py         Reindex ClinVar aliases for search optimization
-│   ├── cleanup/                          Data cleanup and refactoring scripts
-│   │   ├── delete_unmapped_entities.py        Delete unmapped genes and variants from database
-│   │   ├── delete_incomplete_gene_variant_groups.py  Delete evidence items from groups without gene-variant coexistence
-│   │   ├── refactor_benchmark_imports.py      Refactor benchmark module imports after reorganization
-│   │   └── refactor_benchmark_reports.py      Refactor benchmark report file paths after reorganization
-│   ├── analyze/                          Log/data analysis scripts
-│   │   └── analyze_logs.py                   drain3 log template clustering for WARNING/ERROR mining
-│   ├── generate/                         Data generation scripts
-│   │   └── generate_ground_truth_pdfs.py     Translate ground-truth literature and generate PDFs
-├── dev/                                Development server scripts
-│   ├── start_backend_dev.sh                Start FastAPI backend with hot-reload and optional infra
-│   ├── start_frontend_dev.sh               Start Vite frontend dev server
-├── deploy/                             Deployment image scripts
-│   └── build_push_backend_image.sh        Build, smoke-test, and push backend Docker image
-└── README.md                           This file
+│   ├── import/                           数据导入脚本
+│   │   ├── import_benchmark_ground_truth.py   导入基准真值（双轨可追溯性）
+│   │   ├── import_terminology.py              导入术语数据库到 PostgreSQL
+│   │   ├── backfill_variant_ids.py            回填变异标识符
+│   │   └── reindex_clinvar_aliases.py         重建 ClinVar 别名索引
+│   ├── cleanup/                          数据清理和重构脚本
+│   │   ├── delete_unmapped_entities.py        删除未映射的基因和变异
+│   │   ├── delete_incomplete_gene_variant_groups.py  删除不完整的基因-变异组
+│   │   ├── refactor_benchmark_imports.py      重构基准模块导入
+│   │   └── refactor_benchmark_reports.py      重构基准报告文件路径
+│   ├── analyze/                          日志/数据分析脚本
+│   │   └── analyze_logs.py                   drain3 日志模板聚类挖掘
+│   └── generate/                         数据生成脚本
+│       └── generate_ground_truth_pdfs.py     翻译真值文献并生成 PDF
+├── dev/                                开发服务器脚本
+│   ├── start_backend_dev.sh                启动 FastAPI 后端（热重载 + 可选基础设施）
+│   └── start_frontend_dev.sh               启动 Vite 前端开发服务器
+├── deploy/                             部署镜像脚本
+│   └── build_push_backend_image.sh        构建、冒烟测试和推送后端 Docker 镜像
+├── reconstruct_phase1_metadata.py        重建 Phase 1 元数据
+├── refresh_business_read_models.py       刷新业务读模型
+├── rerun_phase2_phase3.py                重跑 Phase 2 + Phase 3
+├── rerun_phase3.py                       重跑 Phase 3
+├── reset_lingua_seeker_business_results.sql  重置业务结果 SQL
+├── run_all_shards.sh                     运行所有分片
+├── run_benchmark_b8.sh                   运行 Benchmark B8
+├── run_benchmark_shard.sh                运行基准分片
+└── README.md
 ```
 
-> Terminology embedding builds live in `backend/scripts/build_terminology_embeddings.py`.
+## 脚本清单
 
-## Scripts
+### 数据导入
 
-### Data Import Scripts
+| 脚本 | 语言 | 用途 |
+|------|------|------|
+| `import_benchmark_ground_truth.py` | Python | 导入基准真值，支持双轨可追溯性（原文+译文） |
+| `import_terminology.py` | Python | 导入本地术语文件（hgnc、omim、hpo、clingen、clinvar）到 PostgreSQL |
+| `backfill_variant_ids.py` | Python | 回填已有数据的变异标识符 |
+| `reindex_clinvar_aliases.py` | Python | 重建 ClinVar 别名索引以优化搜索 |
 
-| Script | Language | Purpose |
-|--------|----------|---------|
-| `import_benchmark_ground_truth.py` | Python | Import benchmark ground truth with dual-track traceability (original + translated) |
-| `import_terminology.py` | Python | Import local terminology files (hgnc, omim, hpo, clingen, clinvar) into PostgreSQL reference tables |
-| `backfill_variant_ids.py` | Python | Backfill variant identifiers for existing data |
-| `reindex_clinvar_aliases.py` | Python | Reindex ClinVar aliases for search optimization |
+### 数据清理
 
-### Data Cleanup Scripts
+| 脚本 | 语言 | 用途 |
+|------|------|------|
+| `delete_unmapped_entities.py` | Python | 删除数据库中未映射的基因和变异 |
+| `delete_incomplete_gene_variant_groups.py` | Python | 删除缺少基因或变异字段的证据项 |
+| `refactor_benchmark_imports.py` | Python | 目录重组后重构基准模块导入 |
+| `refactor_benchmark_reports.py` | Python | 目录重组后重构基准报告路径 |
 
-| Script | Language | Purpose |
-|--------|----------|---------|
-| `delete_unmapped_entities.py` | Python | Delete unmapped genes and variants from database |
-| `delete_incomplete_gene_variant_groups.py` | Python | Delete evidence items from groups that lack both gene and variant fields in FOUND status, and items with empty group_id |
-| `refactor_benchmark_imports.py` | Python | Refactor benchmark module imports after directory reorganization |
-| `refactor_benchmark_reports.py` | Python | Refactor benchmark report file paths after directory reorganization |
+### 数据分析
 
-### Data Analysis Scripts
-
-| Script | Language | Purpose |
-|--------|----------|---------|
-| `analyze_logs.py` | Python | Cluster backend logs (`logs/*.log[.gz]`) with drain3 template mining to surface dominant WARNING/ERROR patterns, source locations, and root-cause buckets |
-
-#### Analyze Logs
+| 脚本 | 语言 | 用途 |
+|------|------|------|
+| `analyze_logs.py` | Python | 使用 drain3 模板挖掘聚类后端日志中的 WARNING/ERROR 模式 |
 
 ```bash
-# Mine all WARNING/ERROR patterns across every log file
+# 挖掘所有 WARNING/ERROR 模式
 cd backend && uv run python ../scripts/data/analyze/analyze_logs.py
 
-# Restrict to recent logs and show more detail
+# 限制最近日志，显示更多详情
 cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --since 2026-06-23 --top 40
 
-# Also write a JSON report for later diffing
-cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --json reports/log-analysis-20260623.json
-
-# Only ERROR level, custom similarity threshold (lower merges more)
-cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --levels ERROR --sim-th 0.5
+# 输出 JSON 报告
+cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --json reports/log-analysis.json
 ```
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--logs` | `logs/` | Log directory (`.log` and `.log.gz`) |
-| `--levels` | `WARNING ERROR` | Log levels to include |
-| `--top` | `30` | Number of top templates/locations to display |
-| `--since` | -- | Earliest log date (`YYYY-MM-DD`, filename-based) to include |
-| `--json` | -- | Write a JSON report to this path (in addition to stdout) |
-| `--sim-th` | `0.5` | drain3 similarity threshold; lower merges templates more aggressively |
-| `--depth` | `5` | drain3 tree depth |
+### 数据生成
 
-> Requires `drain3` (already a backend dev dependency). Read-only against `logs/`.
+| 脚本 | 语言 | 用途 |
+|------|------|------|
+| `generate_ground_truth_pdfs.py` | Python | 通过 LLM API 将真值文献翻译为 zh/ja/ko/fr/de/es，使用 weasyprint 生成 PDF |
 
-### Data Generation Scripts
+### 开发服务器
 
-| Script | Language | Purpose |
-|--------|----------|---------|
-| `generate_ground_truth_pdfs.py` | Python | Translate ground-truth literature to zh/ja/ko/fr/de/es via LLM API, generate PDFs with weasyprint |
-
-### Development Server Scripts
-
-| Script | Language | Purpose |
-|--------|----------|---------|
-| `start_backend_dev.sh` | Shell | Start uvicorn with hot-reload; supports `--with-infra` to start Postgres + Redis containers, or `--infra` for infra management only |
-| `start_frontend_dev.sh` | Shell | Start Vite frontend dev server |
-
-### Deployment Scripts
-
-| Script | Language | Purpose |
-|--------|----------|---------|
-| `deploy/build_push_backend_image.sh` | Shell | Build `backend/Dockerfile`, verify the runtime image, and push the backend image to Docker Hub |
-
-## Usage
-
-### Import Benchmark Ground Truth
+| 脚本 | 语言 | 用途 |
+|------|------|------|
+| `start_backend_dev.sh` | Shell | 启动 uvicorn 热重载，支持 `--with-infra` 启动 Postgres + Redis 容器 |
+| `start_frontend_dev.sh` | Shell | 启动 Vite 前端开发服务器 |
 
 ```bash
-# Import all datasets
-cd backend && uv run python ../scripts/data/import/import_benchmark_ground_truth.py
-
-# Import specific dataset
-cd backend && uv run python ../scripts/data/import/import_benchmark_ground_truth.py --datasets rett
-
-# Import single entry
-cd backend && uv run python ../scripts/data/import/import_benchmark_ground_truth.py --entry-id rett_001
-
-# Dry run
-cd backend && uv run python ../scripts/data/import/import_benchmark_ground_truth.py --dry-run
-```
-
-### Import Terminology Data
-
-```bash
-# Import all sources with a version tag
-uv run python scripts/data/import/import_terminology.py --version 2024-01
-
-# Import specific sources only
-uv run python scripts/data/import/import_terminology.py --version 2024-01 --sources hgnc omim hpo
-
-# Import and generate embeddings in one step
-uv run python scripts/data/import/import_terminology.py --version 2024-01 --generate-embeddings
-```
-
-| Flag | Required | Default | Description |
-|------|----------|---------|-------------|
-| `--version` | Yes | -- | Terminology data version tag |
-| `--sources` | No | `hgnc omim hpo clingen clinvar` | Space-separated list of sources to import |
-| `--terminology-root` | No | `database/terminology_database` | Path to local terminology files |
-| `--generate-embeddings` | No | `false` | Generate pgvector embeddings after import |
-
-### Delete Unmapped Entities
-
-```bash
-# Dry run to see what would be deleted
-cd backend && uv run python ../scripts/data/cleanup/delete_unmapped_entities.py --dry-run
-
-# Actually delete unmapped entities
-cd backend && uv run python ../scripts/data/cleanup/delete_unmapped_entities.py
-```
-
-### Delete Incomplete Gene-Variant Groups
-
-```bash
-# Dry run
-cd backend && uv run python ../scripts/data/cleanup/delete_incomplete_gene_variant_groups.py --dry-run
-
-# Actually delete
-cd backend && uv run python ../scripts/data/cleanup/delete_incomplete_gene_variant_groups.py
-```
-
-### Generate Ground-Truth PDFs
-
-```bash
-uv run python scripts/data/generate/generate_ground_truth_pdfs.py
-```
-
-Reads from `benchmark/layer3/ground_truth/` and outputs to `benchmark/pipeline/input/ground_truth/`.
-
-### Start Development Servers
-
-```bash
-# Backend (default port 8000)
+# 后端（默认端口 8000）
 ./scripts/dev/start_backend_dev.sh
-./scripts/dev/start_backend_dev.sh --port 8001  # custom port
-./scripts/dev/start_backend_dev.sh --with-infra  # start Postgres + Redis first
+./scripts/dev/start_backend_dev.sh --port 8001          # 自定义端口
+./scripts/dev/start_backend_dev.sh --with-infra          # 先启动 Postgres + Redis
 
-# Infra management only (no backend)
+# 仅基础设施管理
 ./scripts/dev/start_backend_dev.sh --infra up -d
 ./scripts/dev/start_backend_dev.sh --infra down
-./scripts/dev/start_backend_dev.sh --infra status
 
-# Frontend
+# 前端
 ./scripts/dev/start_frontend_dev.sh
 ```
 
-### Build and Push Backend Image
+### 部署脚本
+
+| 脚本 | 语言 | 用途 |
+|------|------|------|
+| `deploy/build_push_backend_image.sh` | Shell | 构建 `backend/Dockerfile`、验证运行时镜像、推送到 Docker Hub |
 
 ```bash
-# Default: docker.io/lanshi47/lingua-seeker-backend:latest
+# 默认：docker.io/lanshi47/lingua-seeker-backend:latest
 ./scripts/deploy/build_push_backend_image.sh
 
-# Custom tag
+# 自定义标签
 ./scripts/deploy/build_push_backend_image.sh --tag 20260629
 
-# Build and smoke-test without pushing
+# 构建和冒烟测试，不推送
 ./scripts/deploy/build_push_backend_image.sh --no-push
 ```
 
-The script requires `docker-artifacts/site-packages.tar.gz` and `docker-artifacts/venv-bin.tar.gz`, matching `backend/Dockerfile`.
+### 管线重跑脚本
 
+| 脚本 | 用途 |
+|------|------|
+| `reconstruct_phase1_metadata.py` | 重建 Phase 1 元数据 |
+| `refresh_business_read_models.py` | 刷新业务 CQRS 读模型 |
+| `rerun_phase2_phase3.py` | 重跑 Phase 2 + Phase 3 |
+| `rerun_phase3.py` | 仅重跑 Phase 3 |
+| `reset_lingua_seeker_business_results.sql` | 重置业务结果的 SQL 脚本 |
+| `run_all_shards.sh` | 运行所有基准分片 |
+| `run_benchmark_b8.sh` | 运行 Benchmark B8 |
+| `run_benchmark_shard.sh` | 运行单个基准分片 |
 
-## Prerequisites
+## 前置条件
 
-- **uv** -- Python dependency management (see [CLAUDE.md](../CLAUDE.md))
-- **bun** -- Frontend dependency management
-- **PostgreSQL** -- Must be running and migrated for data scripts
-- **Inference services** -- Must be running for embedding generation
-- **LLM API** -- Must be configured for `generate_ground_truth_pdfs.py`
-- **weasyprint** -- Required for PDF generation (installed via backend dependencies)
+- **uv** — Python 依赖管理
+- **bun** — 前端依赖管理
+- **PostgreSQL** — 数据脚本需运行中且已迁移
+- **推理服务** — 嵌入生成需运行中
+- **LLM API** — `generate_ground_truth_pdfs.py` 需已配置
+- **weasyprint** — PDF 生成需要（通过后端依赖安装）
 
-## Notes
+## 注意事项
 
-- All Python scripts use the backend's virtual environment via `uv run`. No separate dependencies needed.
-- Shell scripts auto-`cd` to the correct directory (`backend/` or `services/`) relative to their own location.
-- `start_backend_dev.sh` watches `src/` and `app/` for changes, excluding logs, pycache, and migrations to avoid spurious reloads during pipeline execution.
-- `import_terminology.py` and `delete_unmapped_entities.py` use `loguru` for structured logging to stderr.
-- `import_benchmark_ground_truth.py` supports idempotent imports with cascade cleanup on re-import.
+- 所有 Python 脚本通过 `uv run` 使用后端虚拟环境，无需单独安装依赖
+- Shell 脚本自动 `cd` 到相对于自身位置的正确目录
+- `start_backend_dev.sh` 监听 `src/` 和 `app/` 变更，排除日志、pycache 和迁移以避免管线执行期间的虚假重载
+- `import_terminology.py` 和 `delete_unmapped_entities.py` 使用 `loguru` 结构化日志输出到 stderr

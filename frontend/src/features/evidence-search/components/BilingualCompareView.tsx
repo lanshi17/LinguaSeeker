@@ -38,12 +38,13 @@ import {
   updateAnnotation,
 } from "@/features/evidence-search/services/annotations";
 import type { AnnotationCreateRequest, AnnotationTrack, AnnotationUpdateRequest, UserAnnotation } from "../types/annotations";
-import { AnnotationLayer } from "./annotationLayer";
-import { FieldReviewPopover } from "./FieldReviewPopover";
+import { AnnotationLayer, type FieldTypeOption } from "./annotationLayer";
+import { openFieldReviewMenu, FieldReviewMenu } from "./FieldReviewPopover";
 import type { FieldReviewInfo } from "./FieldReviewPopover";
 import type { ReviewContextMap } from "@/features/evidence-db/components/HighlightedText";
 import { useI18n } from "@/lib/i18n";
 import { patchEvidence } from "../services/evidenceCorrection";
+import { EVIDENCE_FIELD_SPECS } from "@/lib/constants/evidenceFields";
 
 /* ---- Constants ---- */
 
@@ -245,7 +246,6 @@ function HighlightedParagraph({
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
-  onReviewed,
   onAssignField,
   fieldTypes,
 }: {
@@ -254,8 +254,7 @@ function HighlightedParagraph({
   annotations?: UserAnnotation[];
   reviewContexts?: ReviewContextMap;
   onAssignField?: (selectedText: string, fieldType: string) => void;
-  fieldTypes?: string[];
-  onReviewed?: () => void;
+  fieldTypes?: FieldTypeOption[];
 } & AnnotationHandlers) {
   const contentRef = useRef<HTMLDivElement>(null);
   const highlights = normalizedHighlights(paragraph);
@@ -269,30 +268,24 @@ function HighlightedParagraph({
     const hex = highlight.category && CATEGORY_COLORS[highlight.category]
       ? CATEGORY_COLORS[highlight.category].hex
       : undefined;
-    const markEl = (
+    const reviewInfo = reviewContexts?.get(highlight.evidenceId);
+    const markStyle = {
+      borderRadius: 4,
+      padding: "2px 4px",
+      fontWeight: 600,
+      ...markInlineStyle(hex, highlight.selected),
+      ...(reviewInfo ? { cursor: "pointer" as const } : {}),
+    };
+    nodes.push(
       <mark
         key={`${highlight.evidenceId}-${highlight.start}-${index}`}
-        style={{
-          borderRadius: 4,
-          padding: "2px 4px",
-          fontWeight: 600,
-          ...markInlineStyle(hex, highlight.selected),
-        }}
+        data-reviewable={reviewInfo ? "true" : undefined}
+        style={markStyle}
+        onClick={reviewInfo ? (e) => openFieldReviewMenu(e, reviewInfo) : undefined}
+        onContextMenu={reviewInfo ? (e) => openFieldReviewMenu(e, reviewInfo) : undefined}
       >
         {paragraph.text.slice(highlight.start, highlight.end)}
-      </mark>
-    );
-    const reviewInfo = reviewContexts?.get(highlight.evidenceId);
-    nodes.push(
-      reviewInfo ? (
-        <FieldReviewPopover
-          key={`${highlight.evidenceId}-${highlight.start}-${index}`}
-          info={reviewInfo}
-          onReviewed={onReviewed}
-        >
-          {markEl}
-        </FieldReviewPopover>
-      ) : markEl,
+      </mark>,
     );
     cursor = highlight.end;
   });
@@ -347,7 +340,6 @@ function EvidenceDocumentReader({
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
-  onReviewed,
   onAssignField,
   fieldTypes,
 }: {
@@ -357,8 +349,7 @@ function EvidenceDocumentReader({
   annotations?: UserAnnotation[];
   reviewContexts?: ReviewContextMap;
   onAssignField?: (selectedText: string, fieldType: string) => void;
-  fieldTypes?: string[];
-  onReviewed?: () => void;
+  fieldTypes?: FieldTypeOption[];
 } & AnnotationHandlers) {
   const { t } = useI18n();
   const fullTextParagraph = paragraphs.find((p) => p.id.endsWith("-full-text"));
@@ -412,7 +403,6 @@ function EvidenceDocumentReader({
                 onCreateAnnotation={onCreateAnnotation}
                 onUpdateAnnotation={onUpdateAnnotation}
                 onDeleteAnnotation={onDeleteAnnotation}
-                onReviewed={onReviewed}
                 onAssignField={onAssignField}
                 fieldTypes={fieldTypes}
               />
@@ -427,7 +417,6 @@ function EvidenceDocumentReader({
                 onCreateAnnotation={onCreateAnnotation}
                 onUpdateAnnotation={onUpdateAnnotation}
                 onDeleteAnnotation={onDeleteAnnotation}
-                onReviewed={onReviewed}
                 onAssignField={onAssignField}
                 fieldTypes={fieldTypes}
               />
@@ -686,10 +675,13 @@ export function BilingualCompareView({
       // error handled by caller
     }
   };
-
-  const fieldTypes = useMemo(
-    () => detail.items.map((item) => item.field_id),
-    [detail.items],
+  const fieldTypes = useMemo<FieldTypeOption[]>(
+    () => EVIDENCE_FIELD_SPECS.map((spec) => ({
+      fieldId: spec.fieldId,
+      label: spec.fieldName,
+      category: spec.categoryId,
+    })),
+    [],
   );
 
   const originalAnnotations = allAnnotations.filter((a) => a.track === "original");
@@ -712,9 +704,6 @@ export function BilingualCompareView({
     return map;
   }, [detail.items, groupId]);
 
-  const handleReviewed = () => {
-    void queryClient.invalidateQueries({ queryKey: ["evidence-group-detail", groupId] });
-  };
 
 
   const toggleCategory = (cat: string) => {
@@ -731,6 +720,7 @@ export function BilingualCompareView({
 
   return (
       <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <FieldReviewMenu />
         <Link
           to={`/evidence/detail?groupId=${encodeURIComponent(groupId)}`}
           className="edb-back-link"
@@ -993,7 +983,6 @@ export function BilingualCompareView({
                 onCreateAnnotation={handleCreateAnnotation}
                 onUpdateAnnotation={handleUpdateAnnotation}
                 onDeleteAnnotation={handleDeleteAnnotation}
-                onReviewed={handleReviewed}
                 onAssignField={handleAssignField}
                 fieldTypes={fieldTypes}
               />
@@ -1007,7 +996,6 @@ export function BilingualCompareView({
                   onCreateAnnotation={handleCreateAnnotation}
                   onUpdateAnnotation={handleUpdateAnnotation}
                   onDeleteAnnotation={handleDeleteAnnotation}
-                  onReviewed={handleReviewed}
                   onAssignField={handleAssignField}
                   fieldTypes={fieldTypes}
                 />

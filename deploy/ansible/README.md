@@ -1,54 +1,58 @@
-# deploy/ansible -- Production Deployment
+# deploy/ansible — 生产部署
 
-Ansible-based provisioning and deployment for Lingua Seeker production and staging environments.
+> Lingua Seeker 生产和预发布环境的 Ansible 自动化配置与部署。
 
-## Directory Structure
+## 概述
+
+基于 Ansible 的裸机配置管理和部署系统，支持多服务器拓扑（web/app/db 分组）和单机部署。通过 systemd 管理服务生命周期，支持 Let's Encrypt TLS 自动证书、PostgreSQL 自动备份、以及 GPU 推理容器部署。
+
+## 目录结构
 
 ```
 deploy/ansible/
-├── ansible.cfg                              Ansible configuration (inventory, vault, SSH)
-├── .vault_pass                              Vault password file (git-ignored)
-├── .gitignore                               Ignores .vault_pass, *.retry
+├── ansible.cfg                              Ansible 配置（inventory、vault、SSH）
+├── .vault_pass                              Vault 密码文件（git 忽略）
+├── .gitignore                               忽略 .vault_pass、*.retry
 ├── inventories/
 │   ├── production/
-│   │   ├── hosts.yml                        Multi-server inventory (web/app/db groups)
-│   │   ├── hosts-single-server.yml.example  Single-server inventory template
+│   │   ├── hosts.yml                        多服务器 inventory（web/app/db 分组）
+│   │   ├── hosts-single-server.yml.example  单机 inventory 模板
 │   │   └── group_vars/
-│   │       ├── all.yml                      Structural config (safe to commit)
-│   │       ├── vault.yml.example            Secrets template
-│   │       └── .gitignore                   Excludes vault.yml from git
+│   │       ├── all.yml                      结构化配置（可提交）
+│   │       ├── vault.yml.example            密钥模板
+│   │       └── .gitignore                   排除 vault.yml
 │   └── staging/
-│       ├── hosts.yml                        Staging inventory
+│       ├── hosts.yml                        预发布 inventory
 │       └── group_vars/
-│           ├── all.yml                      Staging structural config
-│           └── vault.yml.example            Staging secrets template
+│           ├── all.yml                      预发布结构化配置
+│           └── vault.yml.example            预发布密钥模板
 ├── playbooks/
-│   ├── site.yml                             Main deployment playbook
-│   └── healthcheck.yml                      Post-deployment verification
+│   ├── site.yml                             主部署 playbook
+│   └── healthcheck.yml                      部署后验证
 └── roles/
-    ├── common/                              Base packages, deploy user, sysctl, logrotate
-    ├── postgres/                            PostgreSQL 16 via Docker + daily backup
-    ├── redis/                               Redis 8.0 via Docker
-    ├── backend/                             FastAPI backend (uv + systemd)
-    ├── frontend/                            Vite + React SPA (bun build + systemd)
-    └── nginx/                               Nginx reverse proxy + Let's Encrypt TLS
+    ├── common/                              基础包、deploy 用户、sysctl、logrotate
+    ├── postgres/                            PostgreSQL 16 Docker + 每日备份
+    ├── redis/                               Redis 8.0 Docker
+    ├── backend/                             FastAPI 后端（uv + systemd）
+    ├── frontend/                            Vite + React SPA（bun build + systemd）
+    └── nginx/                               Nginx 反向代理 + Let's Encrypt TLS
 ```
 
-Each role follows standard Ansible structure: `tasks/`, `handlers/`, `defaults/`, `templates/`.
+每个角色遵循标准 Ansible 结构：`tasks/`、`handlers/`、`defaults/`、`templates/`。
 
-## Prerequisites
+## 前置条件
 
-- Ansible >= 2.14 on the control machine
-- Target hosts: Ubuntu 22.04+ / Debian 12+ with SSH access
-- `deploy` user with sudo privileges on all hosts
-- `community.docker` collection (`ansible-galaxy collection install community.docker`)
-- GPU host for inference services: NVIDIA driver + CUDA
+- 控制机安装 Ansible >= 2.14
+- 目标主机：Ubuntu 22.04+ / Debian 12+，SSH 访问
+- 所有主机需 `deploy` 用户且有 sudo 权限
+- `community.docker` collection（`ansible-galaxy collection install community.docker`）
+- GPU 主机需 NVIDIA 驱动 + CUDA
 
-## Quick Start
+## 快速开始
 
-### 1. Configure Inventory
+### 1. 配置 Inventory
 
-Edit `inventories/production/hosts.yml` and replace placeholder IPs:
+编辑 `inventories/production/hosts.yml` 替换占位 IP：
 
 ```yaml
 web-01:
@@ -59,13 +63,12 @@ db-01:
   ansible_host: "203.0.113.30"
 ```
 
-For single-server deployment:
-
+单机部署：
 ```bash
 cp inventories/production/hosts-single-server.yml.example inventories/production/hosts.yml
 ```
 
-### 2. Configure Secrets
+### 2. 配置密钥
 
 ```bash
 cp inventories/production/group_vars/vault.yml.example inventories/production/group_vars/vault.yml
@@ -74,113 +77,68 @@ echo "your-vault-password" > .vault_pass
 chmod 600 .vault_pass
 ```
 
-### 3. Deploy
+### 3. 部署
 
 ```bash
 cd deploy/ansible
 ansible-galaxy collection install community.docker
 
-# Full deployment
+# 完整部署
 ansible-playbook playbooks/site.yml
 
-# Deploy specific components
+# 部署特定组件
 ansible-playbook playbooks/site.yml --tags infra         # DB + Redis
-ansible-playbook playbooks/site.yml --tags backend        # Backend only
-ansible-playbook playbooks/site.yml --tags frontend       # Frontend + Nginx
-ansible-playbook playbooks/site.yml --tags model-server   # Inference services only
+ansible-playbook playbooks/site.yml --tags backend        # 仅后端
+ansible-playbook playbooks/site.yml --tags frontend       # 前端 + Nginx
+ansible-playbook playbooks/site.yml --tags model-server   # 仅推理服务
 
-# Dry run
+# 干运行
 ansible-playbook playbooks/site.yml --check --diff
 
-# Post-deployment health check
+# 部署后健康检查
 ansible-playbook playbooks/healthcheck.yml
 ```
 
-## Host Topology
+## 主机拓扑
 
-| Group | Host | Services | Port |
-|-------|------|----------|------|
-| `web` | web-01 | Nginx (:80/:443), Frontend (:3000) | 80, 443, 3000 |
-| `app` | app-01 | Backend (FastAPI :8000), Inference Services (:8002-8003,:44321) | 8000, 8002-8003, 44321 |
-| `db` | db-01 | PostgreSQL 16 (:5432), Redis 8.0 (:6379) | 5432, 6379 |
+| 分组 | 主机 | 服务 | 端口 |
+|------|------|------|------|
+| `web` | web-01 | Nginx (:80/:443)、Frontend (:3000) | 80、443、3000 |
+| `app` | app-01 | Backend (FastAPI :8000)、推理服务 (:8002-8003,:44321) | 8000、8002-8003、44321 |
+| `db` | db-01 | PostgreSQL 16 (:5432)、Redis 8.0 (:6379) | 5432、6379 |
 
-## Roles
+## 角色说明
 
-### common
-Installs base packages (curl, wget, git, htop, jq, python3, etc.), creates the `deploy` user, sets up project directories (`/opt/lingua-seeker`, `/opt/lingua-seeker-data/`), configures sysctl tuning, and deploys logrotate.
+| 角色 | 功能 |
+|------|------|
+| **common** | 安装基础包、创建 deploy 用户、配置 sysctl 和 logrotate |
+| **postgres** | Docker 运行 PostgreSQL 16（pgvector），每日 03:00 自动备份，30 天保留 |
+| **redis** | Docker 运行 Redis 8.0，AOF 持久化，512MB 内存限制 |
+| **backend** | 安装 uv、rsync 同步代码、部署 systemd 服务（`acmg-backend`） |
+| **frontend** | 安装 bun、构建 SPA、部署 systemd 服务（`acmg-frontend`） |
+| **nginx** | Nginx + Certbot，Let's Encrypt TLS，安全头（HSTS、CSP 等） |
+| **推理服务** | 独立 Docker 容器：embedding(:8002)、rerank(:8003)、doc-parse(:44321) |
 
-### postgres
-Runs PostgreSQL 16 via Docker (`pgvector/pgvector:pg18`) with tuned memory parameters (shared_buffers=512MB, effective_cache_size=1536MB). Deploys an init script for schema creation. Sets up automated daily backups at 03:00 via cron to `/opt/lingua-seeker-data/postgres-backups/` with 30-day retention.
+## 关键特性
 
-### redis
-Runs Redis 8.0 via Docker (`redis:8.0-alpine`) with AOF persistence, 512MB memory limit, and optional password authentication.
+- **TLS / Let's Encrypt** — 首次部署仅 HTTP，certbot 获取证书后切换 TLS，自动续期
+- **自动备份** — PostgreSQL 每日 03:00 cron 备份，存储于 `/opt/lingua-seeker-data/postgres-backups/`
+- **安全性** — `vault.yml` 使用 `ansible-vault` 加密，systemd 服务运行于 `NoNewPrivileges` + `ProtectSystem=strict`
+- **两种 Nginx 拓扑** — 单主机或分主机（独立前端/后端域名）
 
-### backend
-Installs `uv`, syncs backend source code via rsync, deploys `production.yaml` and `vault/production.yaml` templates, installs Python dependencies with `uv sync --no-dev`, runs Alembic migrations, and manages a systemd service (`acmg-backend`). The backend binds to `127.0.0.1` and is only reachable through Nginx.
+## 维护
 
-### inference services (Docker)
-Deploys inference services as independent Docker containers, each with its own GPU:
-- `embedding` on port 8002 (bge-m3)
-- `rerank` on port 8003 (bge-reranker-v2-m3)
-- `doc-parse` on port 44321 (MinerU2.5-Pro)
-
-Requires NVIDIA Container Toolkit. Model weights must be pre-downloaded to `/opt/lingua-seeker-data/models/`.
-
-### frontend
-Installs `bun`, syncs and builds the Vite + React frontend (`bun install --frozen-lockfile && bun run build`). Deploys a systemd service (`acmg-frontend`) that serves the built SPA on port 3000. Frontend environment secrets are stored in `/etc/lingua-seeker/frontend.env`.
-
-### nginx
-Installs Nginx and Certbot. On first deploy, starts with HTTP-only config for ACME certificate provisioning, then switches to full TLS with Let's Encrypt. Includes security headers (HSTS, CSP, X-Frame-Options, Permissions-Policy). Supports both single-host and split-host (separate frontend/backend domain) topologies via different site config templates. API requests have `X-API-Key` injected by Nginx; the browser never sees the key.
-
-## Architecture
-
-```
-Client (HTTPS)
-    |
-    v
-+---------------------------+
-|   Nginx (web-01)          |  TLS termination, reverse proxy, certbot
-+---+-----------+-----------+
-    |           |
-    v           v
-+--------+  +----------+
-|Frontend|  | Backend  |
-| :3000  |  |  :8000   |
-+--------+  +--+----+--+
-               |    |
-               v    v
-         +------+ +------------------+
-         |Redis | | Inference Svc    |
-         |:6379 | | :8002-8003,:44321 (GPU) |
-         +------+ +------------------+
-               |
-               v
-         +------------+
-         | PostgreSQL |
-         |   :5432    |
-         +------------+
-```
-
-## Key Features
-
-- **TLS / Let's Encrypt** -- First deploy starts HTTP-only; certbot obtains the certificate, Nginx redeploys with TLS. Auto-renewal via `certbot.timer`.
-- **Automated backup** -- PostgreSQL daily backup at 03:00 via cron. Stored at `/opt/lingua-seeker-data/postgres-backups/`, retained 30 days.
-- **Security** -- `vault.yml` encrypted with `ansible-vault`, git-ignored. All systemd services run with `NoNewPrivileges` and `ProtectSystem=strict`. Database ports bound to `127.0.0.1`. API key injected by Nginx, never exposed to the browser.
-- **External inference services** -- Embedding, reranking, and document parsing run as independent Docker containers on ports 8002-8003 and 44321.
-- **Two Nginx topologies** -- Single-host (all services on one server) or split-host (separate frontend and backend domains with cross-origin API proxy).
-
-## Maintenance
 ```bash
-# Check service status
+# 检查服务状态
 ansible app -m systemd -a "name=acmg-backend" --become
 ansible web -m systemd -a "name=acmg-frontend" --become
 
-# View logs
+# 查看日志
 ansible app -m shell -a "journalctl -u acmg-backend -n 50 --no-pager" --become
 
-# Run health check
+# 健康检查
 ansible-playbook playbooks/healthcheck.yml
 
-# Rolling restart (backend only)
+# 滚动重启（仅后端）
 ansible-playbook playbooks/site.yml --tags backend
 ```

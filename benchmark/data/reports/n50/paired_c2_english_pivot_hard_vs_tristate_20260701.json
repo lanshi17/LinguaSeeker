@@ -1,0 +1,48 @@
+{
+  "reference": "c2_english_pivot_hard",
+  "comparison": "c2_english_pivot_tristate",
+  "mcnemar": {
+    "test": "mcnemar",
+    "b": 0,
+    "c": 4,
+    "n_discordant": 4,
+    "statistic": 0.0,
+    "p_value": 0.125,
+    "method": "exact_binomial"
+  },
+  "paired_t": {
+    "test": "paired_t",
+    "n_pairs": 50,
+    "mean_diff": -0.05,
+    "std_diff": 0.1773,
+    "t_statistic": -1.9949,
+    "p_value": 0.051628,
+    "ci_95": [
+      -0.0991,
+      -0.0009
+    ]
+  },
+  "wilcoxon": {
+    "test": "wilcoxon",
+    "n_nonzero": 28,
+    "statistic": 115.5,
+    "p_value": 0.046288
+  },
+  "clustered_bootstrap": {
+    "test": "clustered_bootstrap",
+    "n_entries": 50,
+    "mean_diff": -0.0384,
+    "ci_95": [
+      -0.0832,
+      0.0067
+    ],
+    "n_bootstrap": 10000
+  },
+  "practical_effect": {
+    "mean_f1_diff": -0.05,
+    "ci_95_f1_diff": [
+      -0.0991,
+      -0.0009
+    ]
+  }
+}

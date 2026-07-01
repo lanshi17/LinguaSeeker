@@ -1,0 +1,951 @@
+{
+  "reports": {
+    "hard": "benchmark/data/reports/n50/c2_english_pivot_hard_20260701_001136.json",
+    "tristate": "benchmark/data/reports/n50/c2_english_pivot_tristate_20260701_024458.json"
+  },
+  "overall_delta": {
+    "true_positives": 15,
+    "false_positives": 6,
+    "false_negatives": -21,
+    "precision": 0.00029999999999996696,
+    "recall": 0.043999999999999984,
+    "f1": 0.03249999999999997,
+    "grounded_f1": 0.0262,
+    "original_grounded_f1": 0.017100000000000004,
+    "db_ready_yield": 10
+  },
+  "improved_entries": 18,
+  "regressed_entries": 10,
+  "unchanged_entries": 22,
+  "top_improvements": [
+    {
+      "entry_id": "gs_049",
+      "source_dataset": "clinvar_fused",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 7,
+        "p": 1.0,
+        "r": 0.125,
+        "f1": 0.2222222222222222
+      },
+      "tristate": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 3,
+        "p": 1.0,
+        "r": 0.625,
+        "f1": 0.7692307692307693
+      },
+      "delta_tp": 4,
+      "delta_fp": 0,
+      "delta_fn": -4,
+      "delta_f1": 0.547009
+    },
+    {
+      "entry_id": "gs_007",
+      "source_dataset": "clingen",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 2,
+        "p": 0.0,
+        "r": 0.0,
+        "f1": 0.0
+      },
+      "tristate": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 1,
+        "p": 0.5,
+        "r": 0.5,
+        "f1": 0.5
+      },
+      "delta_tp": 1,
+      "delta_fp": 0,
+      "delta_fn": -1,
+      "delta_f1": 0.5
+    },
+    {
+      "entry_id": "gs_055",
+      "source_dataset": "clinvar_fused",
+      "animal_model_terms": false,
+      "hard": {
+        "tp": 0,
+        "fp": 2,
+        "fn": 6,
+        "p": 0.0,
+        "r": 0.0,
+        "f1": 0.0
+      },
+      "tristate": {
+        "tp": 2,
+        "fp": 3,
+        "fn": 3,
+        "p": 0.4,
+        "r": 0.4,
+        "f1": 0.4000000000000001
+      },
+      "delta_tp": 2,
+      "delta_fp": 1,
+      "delta_fn": -3,
+      "delta_f1": 0.4
+    },
+    {
+      "entry_id": "gs_148",
+      "source_dataset": "rett",
+      "animal_model_terms": false,
+      "hard": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 13,
+        "p": 0.0,
+        "r": 0.0,
+        "f1": 0.0
+      },
+      "tristate": {
+        "tp": 3,
+        "fp": 1,
+        "fn": 9,
+        "p": 0.75,
+        "r": 0.25,
+        "f1": 0.375
+      },
+      "delta_tp": 3,
+      "delta_fp": 1,
+      "delta_fn": -4,
+      "delta_f1": 0.375
+    },
+    {
+      "entry_id": "gs_089",
+      "source_dataset": "parkinson",
+      "animal_model_terms": false,
+      "hard": {
+        "tp": 2,
+        "fp": 1,
+        "fn": 4,
+        "p": 0.6666666666666666,
+        "r": 0.3333333333333333,
+        "f1": 0.4444444444444444
+      },
+      "tristate": {
+        "tp": 4,
+        "fp": 2,
+        "fn": 1,
+        "p": 0.6666666666666666,
+        "r": 0.8,
+        "f1": 0.7272727272727272
+      },
+      "delta_tp": 2,
+      "delta_fp": 1,
+      "delta_fn": -3,
+      "delta_f1": 0.282828
+    },
+    {
+      "entry_id": "gs_129",
+      "source_dataset": "rett",
+      "animal_model_terms": false,
+      "hard": {
+        "tp": 4,
+        "fp": 2,
+        "fn": 6,
+        "p": 0.6666666666666666,
+        "r": 0.4,
+        "f1": 0.5
+      },
+      "tristate": {
+        "tp": 7,
+        "fp": 2,
+        "fn": 3,
+        "p": 0.7777777777777778,
+        "r": 0.7,
+        "f1": 0.7368421052631577
+      },
+      "delta_tp": 3,
+      "delta_fp": 0,
+      "delta_fn": -3,
+      "delta_f1": 0.236842
+    },
+    {
+      "entry_id": "gs_033",
+      "source_dataset": "clinvar_fused",
+      "animal_model_terms": false,
+      "hard": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 5,
+        "p": 1.0,
+        "r": 0.375,
+        "f1": 0.5454545454545454
+      },
+      "tristate": {
+        "tp": 5,
+        "fp": 2,
+        "fn": 1,
+        "p": 0.7142857142857143,
+        "r": 0.8333333333333334,
+        "f1": 0.7692307692307692
+      },
+      "delta_tp": 2,
+      "delta_fp": 2,
+      "delta_fn": -4,
+      "delta_f1": 0.223776
+    },
+    {
+      "entry_id": "gs_099",
+      "source_dataset": "rett",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 5,
+        "p": 1.0,
+        "r": 0.375,
+        "f1": 0.5454545454545454
+      },
+      "tristate": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 3,
+        "p": 1.0,
+        "r": 0.625,
+        "f1": 0.7692307692307693
+      },
+      "delta_tp": 2,
+      "delta_fp": 0,
+      "delta_fn": -2,
+      "delta_f1": 0.223776
+    },
+    {
+      "entry_id": "gs_035",
+      "source_dataset": "clinvar_fused",
+      "animal_model_terms": false,
+      "hard": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 8,
+        "p": 0.0,
+        "r": 0.0,
+        "f1": 0.0
+      },
+      "tristate": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 7,
+        "p": 1.0,
+        "r": 0.125,
+        "f1": 0.2222222222222222
+      },
+      "delta_tp": 1,
+      "delta_fp": 0,
+      "delta_fn": -1,
+      "delta_f1": 0.222222
+    },
+    {
+      "entry_id": "gs_109",
+      "source_dataset": "rett",
+      "animal_model_terms": false,
+      "hard": {
+        "tp": 3,
+        "fp": 1,
+        "fn": 5,
+        "p": 0.75,
+        "r": 0.375,
+        "f1": 0.5
+      },
+      "tristate": {
+        "tp": 5,
+        "fp": 1,
+        "fn": 3,
+        "p": 0.8333333333333334,
+        "r": 0.625,
+        "f1": 0.7142857142857143
+      },
+      "delta_tp": 2,
+      "delta_fp": 0,
+      "delta_fn": -2,
+      "delta_f1": 0.214286
+    }
+  ],
+  "top_regressions": [
+    {
+      "entry_id": "gs_081",
+      "source_dataset": "parkinson",
+      "animal_model_terms": false,
+      "hard": {
+        "tp": 6,
+        "fp": 1,
+        "fn": 1,
+        "p": 0.8571428571428571,
+        "r": 0.8571428571428571,
+        "f1": 0.8571428571428571
+      },
+      "tristate": {
+        "tp": 2,
+        "fp": 1,
+        "fn": 5,
+        "p": 0.6666666666666666,
+        "r": 0.2857142857142857,
+        "f1": 0.4
+      },
+      "delta_tp": -4,
+      "delta_fp": 0,
+      "delta_fn": 4,
+      "delta_f1": -0.457143
+    },
+    {
+      "entry_id": "gs_048",
+      "source_dataset": "clinvar_fused",
+      "animal_model_terms": false,
+      "hard": {
+        "tp": 4,
+        "fp": 2,
+        "fn": 2,
+        "p": 0.6666666666666666,
+        "r": 0.6666666666666666,
+        "f1": 0.6666666666666666
+      },
+      "tristate": {
+        "tp": 2,
+        "fp": 1,
+        "fn": 5,
+        "p": 0.6666666666666666,
+        "r": 0.2857142857142857,
+        "f1": 0.4
+      },
+      "delta_tp": -2,
+      "delta_fp": -1,
+      "delta_fn": 3,
+      "delta_f1": -0.266667
+    },
+    {
+      "entry_id": "gs_097",
+      "source_dataset": "parkinson",
+      "animal_model_terms": false,
+      "hard": {
+        "tp": 4,
+        "fp": 8,
+        "fn": 2,
+        "p": 0.3333333333333333,
+        "r": 0.6666666666666666,
+        "f1": 0.4444444444444444
+      },
+      "tristate": {
+        "tp": 2,
+        "fp": 8,
+        "fn": 4,
+        "p": 0.2,
+        "r": 0.3333333333333333,
+        "f1": 0.25
+      },
+      "delta_tp": -2,
+      "delta_fp": 0,
+      "delta_fn": 2,
+      "delta_f1": -0.194444
+    },
+    {
+      "entry_id": "gs_015",
+      "source_dataset": "clinvar_fused",
+      "animal_model_terms": false,
+      "hard": {
+        "tp": 3,
+        "fp": 2,
+        "fn": 3,
+        "p": 0.6,
+        "r": 0.5,
+        "f1": 0.5454545454545454
+      },
+      "tristate": {
+        "tp": 2,
+        "fp": 2,
+        "fn": 4,
+        "p": 0.5,
+        "r": 0.3333333333333333,
+        "f1": 0.4
+      },
+      "delta_tp": -1,
+      "delta_fp": 0,
+      "delta_fn": 1,
+      "delta_f1": -0.145455
+    },
+    {
+      "entry_id": "gs_083",
+      "source_dataset": "parkinson",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 5,
+        "fp": 1,
+        "fn": 0,
+        "p": 0.8333333333333334,
+        "r": 1.0,
+        "f1": 0.9090909090909091
+      },
+      "tristate": {
+        "tp": 4,
+        "fp": 0,
+        "fn": 2,
+        "p": 1.0,
+        "r": 0.6666666666666666,
+        "f1": 0.8
+      },
+      "delta_tp": -1,
+      "delta_fp": -1,
+      "delta_fn": 2,
+      "delta_f1": -0.109091
+    },
+    {
+      "entry_id": "gs_108",
+      "source_dataset": "rett",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 5,
+        "fp": 2,
+        "fn": 5,
+        "p": 0.7142857142857143,
+        "r": 0.5,
+        "f1": 0.588235294117647
+      },
+      "tristate": {
+        "tp": 4,
+        "fp": 3,
+        "fn": 5,
+        "p": 0.5714285714285714,
+        "r": 0.4444444444444444,
+        "f1": 0.5
+      },
+      "delta_tp": -1,
+      "delta_fp": 1,
+      "delta_fn": 0,
+      "delta_f1": -0.088235
+    },
+    {
+      "entry_id": "gs_145",
+      "source_dataset": "rett",
+      "animal_model_terms": false,
+      "hard": {
+        "tp": 5,
+        "fp": 3,
+        "fn": 5,
+        "p": 0.625,
+        "r": 0.5,
+        "f1": 0.5555555555555556
+      },
+      "tristate": {
+        "tp": 4,
+        "fp": 4,
+        "fn": 5,
+        "p": 0.5,
+        "r": 0.4444444444444444,
+        "f1": 0.47058823529411764
+      },
+      "delta_tp": -1,
+      "delta_fp": 1,
+      "delta_fn": 0,
+      "delta_f1": -0.084967
+    },
+    {
+      "entry_id": "gs_102",
+      "source_dataset": "rett",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 5,
+        "fp": 3,
+        "fn": 5,
+        "p": 0.625,
+        "r": 0.5,
+        "f1": 0.5555555555555556
+      },
+      "tristate": {
+        "tp": 4,
+        "fp": 3,
+        "fn": 6,
+        "p": 0.5714285714285714,
+        "r": 0.4,
+        "f1": 0.47058823529411764
+      },
+      "delta_tp": -1,
+      "delta_fp": 0,
+      "delta_fn": 1,
+      "delta_f1": -0.084967
+    },
+    {
+      "entry_id": "gs_143",
+      "source_dataset": "rett",
+      "animal_model_terms": false,
+      "hard": {
+        "tp": 8,
+        "fp": 2,
+        "fn": 2,
+        "p": 0.8,
+        "r": 0.8,
+        "f1": 0.8000000000000002
+      },
+      "tristate": {
+        "tp": 7,
+        "fp": 4,
+        "fn": 1,
+        "p": 0.6363636363636364,
+        "r": 0.875,
+        "f1": 0.7368421052631579
+      },
+      "delta_tp": -1,
+      "delta_fp": 2,
+      "delta_fn": -1,
+      "delta_f1": -0.063158
+    },
+    {
+      "entry_id": "gs_117",
+      "source_dataset": "rett",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 8,
+        "fp": 2,
+        "fn": 3,
+        "p": 0.8,
+        "r": 0.7272727272727273,
+        "f1": 0.761904761904762
+      },
+      "tristate": {
+        "tp": 7,
+        "fp": 2,
+        "fn": 4,
+        "p": 0.7777777777777778,
+        "r": 0.6363636363636364,
+        "f1": 0.7000000000000001
+      },
+      "delta_tp": -1,
+      "delta_fp": 0,
+      "delta_fn": 1,
+      "delta_f1": -0.061905
+    }
+  ],
+  "animal_model_entries": [
+    {
+      "entry_id": "gs_002",
+      "source_dataset": "clingen",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 1,
+        "p": 1.0,
+        "r": 0.6666666666666666,
+        "f1": 0.8
+      },
+      "tristate": {
+        "tp": 2,
+        "fp": 1,
+        "fn": 0,
+        "p": 0.6666666666666666,
+        "r": 1.0,
+        "f1": 0.8
+      },
+      "delta_tp": 0,
+      "delta_fp": 1,
+      "delta_fn": -1,
+      "delta_f1": 0.0
+    },
+    {
+      "entry_id": "gs_007",
+      "source_dataset": "clingen",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 2,
+        "p": 0.0,
+        "r": 0.0,
+        "f1": 0.0
+      },
+      "tristate": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 1,
+        "p": 0.5,
+        "r": 0.5,
+        "f1": 0.5
+      },
+      "delta_tp": 1,
+      "delta_fp": 0,
+      "delta_fn": -1,
+      "delta_f1": 0.5
+    },
+    {
+      "entry_id": "gs_016",
+      "source_dataset": "clinvar_fused",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 4,
+        "fp": 2,
+        "fn": 2,
+        "p": 0.6666666666666666,
+        "r": 0.6666666666666666,
+        "f1": 0.6666666666666666
+      },
+      "tristate": {
+        "tp": 4,
+        "fp": 2,
+        "fn": 2,
+        "p": 0.6666666666666666,
+        "r": 0.6666666666666666,
+        "f1": 0.6666666666666666
+      },
+      "delta_tp": 0,
+      "delta_fp": 0,
+      "delta_fn": 0,
+      "delta_f1": 0.0
+    },
+    {
+      "entry_id": "gs_020",
+      "source_dataset": "clinvar_fused",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 4,
+        "fp": 0,
+        "fn": 4,
+        "p": 1.0,
+        "r": 0.5,
+        "f1": 0.6666666666666666
+      },
+      "tristate": {
+        "tp": 4,
+        "fp": 1,
+        "fn": 3,
+        "p": 0.8,
+        "r": 0.5714285714285714,
+        "f1": 0.6666666666666666
+      },
+      "delta_tp": 0,
+      "delta_fp": 1,
+      "delta_fn": -1,
+      "delta_f1": 0.0
+    },
+    {
+      "entry_id": "gs_025",
+      "source_dataset": "clinvar_fused",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 8,
+        "p": 0.0,
+        "r": 0.0,
+        "f1": 0.0
+      },
+      "tristate": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 8,
+        "p": 0.0,
+        "r": 0.0,
+        "f1": 0.0
+      },
+      "delta_tp": 0,
+      "delta_fp": 0,
+      "delta_fn": 0,
+      "delta_f1": 0.0
+    },
+    {
+      "entry_id": "gs_043",
+      "source_dataset": "clinvar_fused",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 3,
+        "p": 1.0,
+        "r": 0.5,
+        "f1": 0.6666666666666666
+      },
+      "tristate": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 3,
+        "p": 1.0,
+        "r": 0.5,
+        "f1": 0.6666666666666666
+      },
+      "delta_tp": 0,
+      "delta_fp": 0,
+      "delta_fn": 0,
+      "delta_f1": 0.0
+    },
+    {
+      "entry_id": "gs_046",
+      "source_dataset": "clinvar_fused",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 7,
+        "p": 1.0,
+        "r": 0.125,
+        "f1": 0.2222222222222222
+      },
+      "tristate": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 7,
+        "p": 1.0,
+        "r": 0.125,
+        "f1": 0.2222222222222222
+      },
+      "delta_tp": 0,
+      "delta_fp": 0,
+      "delta_fn": 0,
+      "delta_f1": 0.0
+    },
+    {
+      "entry_id": "gs_049",
+      "source_dataset": "clinvar_fused",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 7,
+        "p": 1.0,
+        "r": 0.125,
+        "f1": 0.2222222222222222
+      },
+      "tristate": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 3,
+        "p": 1.0,
+        "r": 0.625,
+        "f1": 0.7692307692307693
+      },
+      "delta_tp": 4,
+      "delta_fp": 0,
+      "delta_fn": -4,
+      "delta_f1": 0.547009
+    },
+    {
+      "entry_id": "gs_052",
+      "source_dataset": "clinvar_fused",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 5,
+        "fp": 3,
+        "fn": 0,
+        "p": 0.625,
+        "r": 1.0,
+        "f1": 0.7692307692307693
+      },
+      "tristate": {
+        "tp": 5,
+        "fp": 2,
+        "fn": 1,
+        "p": 0.7142857142857143,
+        "r": 0.8333333333333334,
+        "f1": 0.7692307692307692
+      },
+      "delta_tp": 0,
+      "delta_fp": -1,
+      "delta_fn": 1,
+      "delta_f1": -0.0
+    },
+    {
+      "entry_id": "gs_075",
+      "source_dataset": "clinvar_fused",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 6,
+        "fp": 0,
+        "fn": 2,
+        "p": 1.0,
+        "r": 0.75,
+        "f1": 0.8571428571428571
+      },
+      "tristate": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 1,
+        "p": 1.0,
+        "r": 0.875,
+        "f1": 0.9333333333333333
+      },
+      "delta_tp": 1,
+      "delta_fp": 0,
+      "delta_fn": -1,
+      "delta_f1": 0.07619
+    },
+    {
+      "entry_id": "gs_083",
+      "source_dataset": "parkinson",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 5,
+        "fp": 1,
+        "fn": 0,
+        "p": 0.8333333333333334,
+        "r": 1.0,
+        "f1": 0.9090909090909091
+      },
+      "tristate": {
+        "tp": 4,
+        "fp": 0,
+        "fn": 2,
+        "p": 1.0,
+        "r": 0.6666666666666666,
+        "f1": 0.8
+      },
+      "delta_tp": -1,
+      "delta_fp": -1,
+      "delta_fn": 2,
+      "delta_f1": -0.109091
+    },
+    {
+      "entry_id": "gs_093",
+      "source_dataset": "parkinson",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 2,
+        "fp": 1,
+        "fn": 52,
+        "p": 0.6666666666666666,
+        "r": 0.037037037037037035,
+        "f1": 0.07017543859649122
+      },
+      "tristate": {
+        "tp": 2,
+        "fp": 1,
+        "fn": 52,
+        "p": 0.6666666666666666,
+        "r": 0.037037037037037035,
+        "f1": 0.07017543859649122
+      },
+      "delta_tp": 0,
+      "delta_fp": 0,
+      "delta_fn": 0,
+      "delta_f1": 0.0
+    },
+    {
+      "entry_id": "gs_099",
+      "source_dataset": "rett",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 5,
+        "p": 1.0,
+        "r": 0.375,
+        "f1": 0.5454545454545454
+      },
+      "tristate": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 3,
+        "p": 1.0,
+        "r": 0.625,
+        "f1": 0.7692307692307693
+      },
+      "delta_tp": 2,
+      "delta_fp": 0,
+      "delta_fn": -2,
+      "delta_f1": 0.223776
+    },
+    {
+      "entry_id": "gs_102",
+      "source_dataset": "rett",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 5,
+        "fp": 3,
+        "fn": 5,
+        "p": 0.625,
+        "r": 0.5,
+        "f1": 0.5555555555555556
+      },
+      "tristate": {
+        "tp": 4,
+        "fp": 3,
+        "fn": 6,
+        "p": 0.5714285714285714,
+        "r": 0.4,
+        "f1": 0.47058823529411764
+      },
+      "delta_tp": -1,
+      "delta_fp": 0,
+      "delta_fn": 1,
+      "delta_f1": -0.084967
+    },
+    {
+      "entry_id": "gs_108",
+      "source_dataset": "rett",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 5,
+        "fp": 2,
+        "fn": 5,
+        "p": 0.7142857142857143,
+        "r": 0.5,
+        "f1": 0.588235294117647
+      },
+      "tristate": {
+        "tp": 4,
+        "fp": 3,
+        "fn": 5,
+        "p": 0.5714285714285714,
+        "r": 0.4444444444444444,
+        "f1": 0.5
+      },
+      "delta_tp": -1,
+      "delta_fp": 1,
+      "delta_fn": 0,
+      "delta_f1": -0.088235
+    },
+    {
+      "entry_id": "gs_117",
+      "source_dataset": "rett",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 8,
+        "fp": 2,
+        "fn": 3,
+        "p": 0.8,
+        "r": 0.7272727272727273,
+        "f1": 0.761904761904762
+      },
+      "tristate": {
+        "tp": 7,
+        "fp": 2,
+        "fn": 4,
+        "p": 0.7777777777777778,
+        "r": 0.6363636363636364,
+        "f1": 0.7000000000000001
+      },
+      "delta_tp": -1,
+      "delta_fp": 0,
+      "delta_fn": 1,
+      "delta_f1": -0.061905
+    },
+    {
+      "entry_id": "gs_149",
+      "source_dataset": "rett",
+      "animal_model_terms": true,
+      "hard": {
+        "tp": 7,
+        "fp": 3,
+        "fn": 3,
+        "p": 0.7,
+        "r": 0.7,
+        "f1": 0.7
+      },
+      "tristate": {
+        "tp": 7,
+        "fp": 3,
+        "fn": 3,
+        "p": 0.7,
+        "r": 0.7,
+        "f1": 0.7
+      },
+      "delta_tp": 0,
+      "delta_fp": 0,
+      "delta_fn": 0,
+      "delta_f1": 0.0
+    }
+  ]
+}

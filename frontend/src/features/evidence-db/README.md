@@ -1,198 +1,111 @@
-# Evidence DB -- Variant-Centric Evidence Database
+# Evidence DB 变异数据库功能
 
-> Three-level browse experience for clinical genetics evidence, organized by variant identifier. Users drill from a variant index to variant detail with evidence fields and literature references to bilingual document comparison with multi-color category highlighting.
+> 以变异为中心的证据浏览，支持双语文献对比和质量评估
 
-## Quick Start
+## 概述
 
-```tsx
-import { VariantIndexView, VariantDetailView, BilingualEvidenceView } from "@/features/evidence-db";
+Evidence DB 模块将扁平的证据搜索结果聚合为变异维度的索引视图，提供两级浏览体验：L1 变异索引（按基因/变异/疾病聚合）和 L2 变异详情（含文献列表和双语证据视图）。支持致病性排序、审阅进度追踪和客户端筛选分页。
 
-// L1: variant index grid
-<VariantIndexView />
-
-// L2: single variant detail (requires variantSlug from URL param)
-<VariantDetailView variantSlug="BRCA1:c.5266dupC:breast_cancer" />
-
-// L3: bilingual comparison (requires both variantSlug and sourceDocumentId)
-<BilingualEvidenceView variantSlug="BRCA1:c.5266dupC:breast_cancer" sourceDocumentId="abc-123" />
-```
-
-Routing is handled by `EvidenceDbPage` (`src/pages/EvidenceDbPage.tsx`), which reads `useParams()` and delegates to the correct view:
-
-| Level | URL | Component |
-|-------|-----|-----------|
-| L1 | `/evidence-db` | `VariantIndexView` |
-| L2 | `/evidence-db/:variantSlug` | `VariantDetailView` |
-| L3 | `/evidence-db/:variantSlug/:sourceDocId` | `BilingualEvidenceView` |
-
-## Structure
+## 文件结构
 
 ```
-features/evidence-db/
-|-- index.ts                             # Barrel exports
-|-- types/
-|   +-- variantDb.ts                     # VariantIndexEntry, VariantDetailData, LiteratureReference, etc.
-|-- services/
-|   +-- variantDb.ts                     # fetchAllEvidence, fetchEvidenceGroupDetail
-|-- hooks/
-|   |-- useVariantIndex.ts              # Fetch + aggregate + filter + paginate variant index
-|   |-- useEvidenceDbViewPrefs.ts       # Persisted L1 display-field preferences
-|   +-- useVariantDetail.ts             # Fetch variant entry + all group details
-|-- components/
-|   |-- VariantIndexView.tsx            # L1: searchable variant grid with stats and pagination
-|   |-- VariantIndexSkeleton.tsx        # Loading skeleton for variant index
-|   |-- VariantDetailView.tsx           # L2: variant hero with evidence by category and literature sidebar
-|   |-- VariantDetailSkeleton.tsx       # Loading skeleton for variant detail
-|   |-- BilingualEvidenceView.tsx       # L3: bilingual document reader with category highlighting
-|   |-- BilingualEvidenceSkeleton.tsx   # Loading skeleton for bilingual view
-|   |-- BilingualSidebar.tsx            # Sidebar for bilingual comparison navigation
-|   |-- ActiveEvidenceCard.tsx          # Card showing currently selected evidence item
-|   |-- DocumentReader.tsx              # Full document reader with highlight rendering
-|   |-- HighlightedText.tsx             # Inline highlight span renderer
-|   |-- LiteratureHeader.tsx            # Literature document header (title, PMID, DOI)
-|   |-- SidebarControls.tsx             # Sidebar filter/toggle controls
-|   |-- StructuredBlockRenderer.tsx     # Renders MinerU structured content blocks (tables, images, code, lists)
-|   +-- bevStyles.ts                    # Shared inline style constants for the bilingual evidence view
-+-- utils/
-    |-- fieldLabels.ts                  # shared labels and metric formatting helpers
-    |-- fieldModel.ts                   # review progress, coverage, conflict, source availability helpers
-    |-- variantAggregation.ts           # aggregateVariants, filterAndPaginateVariants
-    +-- pathogenicity.ts                # classifyLevel, classificationColor, classificationBadgeStyle, classificationLabel
+evidence-db/
+├── index.ts                          # 模块导出
+├── evidence-db.css                   # 样式
+├── components/
+│   ├── VariantIndexView.tsx          # L1: 变异索引表格
+│   ├── VariantDetailView.tsx         # L2: 变异详情视图
+│   ├── VariantIndexSkeleton.tsx      # 索引骨架屏
+│   ├── VariantDetailSkeleton.tsx     # 详情骨架屏
+│   ├── BilingualEvidenceView.tsx     # 双语证据对比视图
+│   ├── BilingualEvidenceSkeleton.tsx # 双语视图骨架屏
+│   ├── BilingualSidebar.tsx          # 双语视图侧边栏
+│   ├── SidebarControls.tsx           # 侧边栏控制面板
+│   ├── LiteratureHeader.tsx          # 文献头部信息
+│   ├── DocumentReader.tsx            # 文档阅读器
+│   ├── StructuredBlockRenderer.tsx   # 结构化内容块渲染
+│   ├── HighlightedText.tsx           # 高亮文本组件
+│   └── bevStyles.ts                  # 双语视图样式常量
+├── hooks/
+│   ├── useVariantIndex.ts           # 变异索引数据 hook（客户端聚合）
+│   ├── useVariantDetail.ts          # 变异详情数据 hook
+│   └── useEvidenceDbViewPrefs.ts    # 视图偏好持久化 hook
+├── services/
+│   └── variantDb.ts                 # API 服务层（复用 evidence-search）
+├── types/
+│   └── variantDb.ts                 # 变异相关类型定义
+├── utils/
+│   ├── variantAggregation.ts        # 证据 → 变异聚合算法
+│   ├── fieldModel.ts                # 字段质量模型（审阅进度、覆盖率）
+│   ├── pathogenicity.ts             # 致病性分类与排序
+│   ├── variantDetailHelpers.ts      # 详情页数据构建
+│   ├── fieldLabels.ts               # 字段标签映射
+│   └── scrollSync.ts               # 双语面板同步滚动
+└── README.md
 ```
 
-## Architecture
+## 关键组件
 
-```
-                    EvidenceDbPage
-                    (useParams router dispatch)
-                           |
-              +------------+-------------+
-              |            |             |
-         VariantIndex  VariantDetail  BilingualEvidence
-           View (L1)     View (L2)       View (L3)
-              |            |             |
-              v            v             v
-         useVariantIndex  useVariantDetail
-         (React Query)    (React Query)
-              |            |
-              v            v
-         fetchAllEvidence  fetchEvidenceGroupDetail
-         (GET /evidence/search)  (GET /evidence/groups/detail)
-              |
-              v
-         aggregateVariants -> groups flat results by
-         gene:variant:disease into VariantIndexEntry[]
-         filterAndPaginateVariants -> applies filters + pagination
-```
+### `VariantIndexView`
 
-### Data Flow
+L1 变异索引页面。展示所有变异的聚合列表，支持：
+- 搜索/筛选（基因、变异、疾病）
+- 致病性排序
+- 审阅进度徽章
+- 分页浏览
 
-1. **L1**: `fetchAllEvidence()` fetches all evidence search results (page_size=1000) -> `aggregateVariants()` splits multi-variant values into one row per variant site, then groups by `gene:variant:disease` composite key -> `filterAndPaginateVariants()` applies client-side filters and pagination -> React Query caches with 60s stale time.
+### `VariantDetailView`
 
-2. **L2**: When reached from L1, `VariantRow` passes the selected `VariantIndexEntry` through React Router state so `useVariantDetail()` can reuse the exact `groupDocumentPairs` already shown in the list. Direct URL loads still use a variant-scoped search query, with a full-index fallback if the scoped query misses a listed variant. The hook then fetches `EvidenceGroupDetailResponse` for concrete (group_id, source_document_id) pairs via `Promise.allSettled` -> flattens all evidence items -> builds `LiteratureReference[]` with bilingual item maps for the sidebar -> derives `quality` metrics (review progress, category coverage, contradiction count) via `fieldModel.ts`.
+L2 变异详情页面。展示单个变异的所有证据：
+- 文献列表（按来源文档分组）
+- 双语证据对比（原文/翻译）
+- 字段覆盖率和质量指标
 
-3. **L3**: Uses `useEvidenceGroupDetail` from `@/features/evidence-search` to fetch the full group detail -> derives literature quality (full text, translation, review progress) via `fieldModel.ts` -> `buildEvidenceDocument()` constructs paragraphs with highlight ranges from traces -> category toggles filter which highlights are visible -> review-status toggles filter the evidence navigator -> evidence navigator selects a specific field to emphasize -> `ActiveEvidenceCard` reports whether the selected field has a trace-backed source span.
+### `BilingualEvidenceView`
 
-## Public API
+双语文档对比视图，支持：
+- 原文/翻译并排显示
+- 证据高亮（按类别着色）
+- 同步滚动
+- 文本标注（annotations）
 
-### Components
+## Hooks
 
-| Component | Props | Description |
-|-----------|-------|-------------|
-| `VariantIndexView` | -- | L1: searchable variant grid with stats, classification filters, pagination |
-| `VariantDetailView` | `variantSlug: string` | L2: variant hero with confidence ring, evidence by category, literature sidebar |
-| `BilingualEvidenceView` | `variantSlug: string`, `sourceDocumentId: string` | L3: bilingual document reader with category highlighting |
+### `useVariantIndex()`
 
-### Hooks
+变异索引数据管理。
 
-| Hook | Returns | Description |
-|------|---------|-------------|
-| `useVariantIndex` | `{ items, total, page, pageSize, stats, isLoading, isFetching, error, filters, updateFilter, setPage, clearFilters, refetch }` | Fetches + aggregates + filters variant index data client-side |
-| `useEvidenceDbViewPrefs` | `{ prefs, setPreference }` | Persists L1 display toggles for Updated, Categories, and Review progress with safe localStorage parsing |
-| `useVariantDetail` | `{ detail, isLoading, isFetching, error }` | Fetches variant entry + all group details for a single variant, builds bilingual maps |
+- 拉取全量证据（page_size=1000），客户端聚合为变异维度
+- 支持搜索、筛选、排序、分页
+- **返回**: `{ entries, total, filters, updateFilter, setPage, clearFilters }`
 
-### Types
+### `useVariantDetail(variantSlug, seededEntry?)`
 
-| Type | Description |
-|------|-------------|
-| `VariantIndexEntry` | Aggregated variant: slug, gene, variant, disease, classification, counts, category distribution, review progress, groupIds, sourceDocumentIds, exact groupDocumentPairs, representative |
-| `VariantIndexData` | Paginated response: items, total, page, pageSize, stats (classificationDistribution) |
-| `VariantDetailData` | L2 response: entry, evidenceGroups, literature, allItems, reconciledItems, bilingualItems, quality summary |
-| `LiteratureReference` | Sidebar reference: sourceDocumentId, title, pmid, doi, groupId, fieldCount, categories, full-text/translation availability, review progress, conflict count, bilingualItems |
-| `VariantIndexFilters` | Filter state: gene, variant, disease, classification, page, pageSize, sortBy, sortOrder |
-| `ClassificationLevel` | `"pathogenic" \| "likely_pathogenic" \| "uncertain" \| "likely_benign" \| "benign"` |
+变异详情数据管理。
 
-### Utils
+- 解析 variantSlug 获取证据行
+- 并行查询所有关联的证据组详情
+- 构建文献引用列表和质量摘要
+- **返回**: `{ detail, isLoading, refetch }`
 
-| Function | Description |
-|----------|-------------|
-| `classifyLevel(classification)` | Maps classification string -> `ClassificationLevel` |
-| `classificationColor(level)` | Hex color for dark-theme rendering |
-| `classificationBadgeStyle(level)` | Inline CSS style object for badge (bg, text, border) |
-| `classificationLabel(level)` / `classificationShortLabel(level)` | Human-readable / abbreviated labels |
-| `formatConfidencePercent(value)` | Formats nullable confidence ratios as rounded percentages |
-| `formatReviewedCount(progress)` | Formats review progress as `Reviewed x/y` |
-| `formatCoverageCount(coverage)` | Formats category coverage as `covered/total` |
-| `aggregateVariants(results)` | Splits multi-variant values into one row per variant site, groups flat `EvidenceSearchResult[]` -> `VariantIndexEntry[]` |
-| `filterAndPaginateVariants(entries, filters)` | Applies filters + pagination -> `VariantIndexData` |
-| `computeReviewProgress(items)` | Counts approved/corrected/rejected/provisional states and computes reviewed ratio |
-| `computeCoverage(distribution)` | Computes category coverage against the known A-J evidence categories |
-| `computeConflictCount(items)` | Counts contradiction evidence from category `H` or `H.*` field ids |
-| `computeVariantQuality(groups)` | Derives L2 quality summary from loaded evidence group details |
-| `computeLiteratureQuality(detail)` | Derives literature-level source availability, review progress, and conflict count for L2/L3 |
-| `hasFullText(detail)` / `hasTranslation(detail)` | Detects source availability from document text, structured blocks, and traces |
+### `useEvidenceDbViewPrefs()`
 
-### L3 Reader Behavior
+视图偏好持久化（localStorage），控制显示/隐藏列（更新时间、分类、审阅进度）。
 
-- `LiteratureHeader` accepts an optional `quality` prop and shows `Full text`, `Translated`, and `Reviewed x/y` beside document identity and export actions.
-- `BilingualEvidenceView` keeps category filtering and review-status filtering separate: category filters affect document highlights and navigator rows; review-status filters affect only navigator rows.
-- `ActiveEvidenceCard` shows confidence, review status, track, page, and source span availability so reviewers can judge the selected field without leaving the reader.
+## 核心工具
 
-### L1 Display Preferences
+### `aggregateVariants`
 
-- `VariantIndexView` keeps the default compact field set visible: Updated, Categories, and Review progress.
-- Advanced users can hide any of those three fields from the result list without changing the underlying filters or API query.
-- Preferences are stored in localStorage under `lingua:evidence-db:view-prefs`; invalid stored values fall back to defaults.
+将扁平的 `EvidenceSearchResult[]` 按 `gene:variant:disease` 复合键聚合为 `VariantIndexEntry[]`。计算证据组数、文献数、平均置信度、分类分布和审阅进度。
 
-## Design
+### `classifyLevel` / `severityRank`
 
-The evidence DB uses a light theme matching the dashboard's design system. CSS utility classes defined in `globals.css`:
+致病性分类映射：`pathogenic` > `likely_pathogenic` > `uncertain` > `likely_benign` > `benign`。提供颜色和标签。
 
-- `.edb-hero` -- teal-tinted gradient header
-- `.edb-card` -- white card container
-- `.edb-card-clickable` -- white card with teal hover
-- `.edb-ring` -- confidence ring indicator
-- `.edb-cat-strip` -- category color strip
-- `.edb-scroll` -- scrollable container
-- `.edb-stagger` -- staggered entrance animation
+### `computeVariantQuality` / `computeLiteratureQuality`
 
-**Pathogenicity scale**: `#B91C1C` (P) -> `#DC2626` (LP) -> `#6B7280` (VUS) -> `#0D9488` (LB) -> `#0F766E` (B)
+质量评估：审阅进度（已审/待审比例）、字段覆盖率、冲突计数、全文/翻译可用性。
 
-## API Endpoints
+### `scrollSync`
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/v1/evidence/search` | GET | Fetch all evidence search results (page_size=1000 for aggregation) |
-| `/api/v1/evidence/groups/detail` | GET | Fetch full detail for a single evidence group (items + traces + document text) |
-
-## Testing
-
-```bash
-cd frontend
-bun run test tests/evidence-db/fieldModel.test.tsx
-bun run test tests/evidence-db/variantAggregation.test.tsx
-bun run test tests/evidence-db/LiteratureHeader.test.tsx
-bun run test tests/evidence-db/ActiveEvidenceCard.test.tsx
-bun run test tests/evidence-db/useEvidenceDbViewPrefs.test.tsx
-bun run test tests/evidence-db/fieldLabels.test.tsx
-```
-
-## Dependencies
-
-| Dependency | Purpose |
-|------------|---------|
-| `@tanstack/react-query` | Data fetching, caching (60s stale time shared across L1-L3) |
-| `react-router-dom` | URL param routing, `Link` navigation |
-| `lucide-react` | Icons |
-| `@/features/evidence-search` | Shared types (`EvidenceSearchResult` includes `has_full_text` / `has_translation`, `EvidenceGroupDetailResponse`), utils (`CATEGORY_COLORS`, `buildEvidenceDocument`, `categoryLabel`), hooks (`useEvidenceGroupDetail`) |
-| `@/lib/api/client` | Axios instance for API calls |
+双语面板同步滚动：使用滚动比例（0–1）而非绝对像素，通过 guard ref 防止反馈循环。

@@ -1,159 +1,98 @@
-# Configuration Management -- Ansible-Style Layered Structure
+# Config
 
-This directory implements an **Ansible-inspired layered configuration architecture** that separates concerns: base defaults, environment-specific overrides, secrets, and rendered templates.
+> 分层配置管理系统——defaults → environment → vault 三层合并，敏感信息与结构配置分离。
 
-## Directory Structure
+## Overview
+
+`config/` 管理 Lingua Seeker 后端的全部配置。采用三层合并策略：基础默认值 → 环境特定覆盖 → 敏感信息注入。配置通过 `src.core.config.Settings`（Pydantic Settings）在启动时加载，敏感信息（API keys、密码）与结构配置物理隔离。
+
+## Structure
 
 ```
-backend/config/
-├── defaults/
-│   └── main.yaml              # Base structural defaults (safe to commit)
-├── environments/
-│   ├── development.yaml       # Dev-specific overrides (safe to commit)
-│   ├── staging.yaml           # Staging-specific overrides (safe to commit)
-│   ├── production.yaml        # Production overrides (safe to commit)
-│   └── production.yaml.example
-├── vault/
-│   ├── development.yaml       # Dev secrets (git-ignored, NEVER commit)
+config/
+├── defaults/                  # 基础默认值（所有环境共享，可提交）
+│   └── main.yaml              #   LLM、数据库、网络、推理服务等默认配置
+├── environments/              # 环境特定结构配置（可提交）
+│   ├── development.yaml       #   开发环境覆盖（LLM 端点、数据库名、代理）
+│   ├── production.yaml        #   生产环境覆盖
+│   ├── production.yaml.example
+│   └── staging.yaml           #   预发布环境覆盖
+├── vault/                     # 敏感信息（git-ignored，不提交）
+│   ├── development.yaml       #   开发环境密钥
+│   ├── production.yaml        #   生产环境密钥
 │   ├── development.yaml.example
-│   ├── production.yaml        # Prod secrets (git-ignored, NEVER commit)
 │   ├── production.yaml.example
 │   └── staging.yaml.example
-├── templates/
-│   └── config.yaml.j2         # Jinja2 template for debugging exports
-└── README.md                  # This file
+├── templates/                 # 配置渲染模板（调试/导出用）
+│   └── config.yaml.j2         #   Jinja2 模板，合并三层变量
+└── README.md
 ```
 
-## Loading Order (Priority: Low -> High)
+## Key Components
 
-1. **`defaults/main.yaml`** -- Base structural defaults (models, ports, timeouts, etc.)
-2. **`environments/<env>.yaml`** -- Environment-specific structural overrides (hosts, URLs, pool sizes)
-3. **`vault/<env>.yaml`** -- Secrets (API keys, passwords, tokens) -- **git-ignored**
-4. **Environment variables** -- Highest priority, override all YAML values
+### 加载顺序（优先级从低到高）
 
-## Design Principles
+1. `defaults/main.yaml` — 基础默认值（模型、端口、连接池等）
+2. `environments/<env>.yaml` — 环境覆盖（`development` / `staging` / `production`）
+3. `vault/<env>.yaml` — 敏感信息（API keys、密码、签名密钥）
+4. 环境变量 — 最高优先级，覆盖所有 YAML 配置
 
-### Data vs. Logic Separation
-- **Data**: YAML files contain configuration values (hosts, models, ports, credentials)
-- **Logic**: Python code in `src/core/config_loader.py` handles loading and merging; `src/core/config.py` handles typed validation
-- **Templates**: Jinja2 templates in `templates/` render layered data for debugging only
+### `defaults/main.yaml`
 
-### Variable vs. Template Separation
-- **Variables**: Structured nested YAML (`app.name`, `fast_llm.model`, `postgres.host`)
-- **Templates**: Flat key-value format expected by `pydantic-settings` (`app_name`, `fast_llm_model`, `postgres_host`)
+定义全部配置项的结构化默认值：
 
-### Environment Isolation
-- Each environment (development, staging, production) has its own override files
-- Secrets are isolated in `vault/` and never committed to version control
-- Structural config (hosts, URLs, pool sizes) can be safely committed
+| 配置块 | 说明 |
+|--------|------|
+| `fast_llm` / `reasoning_llm` / `chat_llm` / `translation_llm` | 四类 LLM 模型配置 |
+| `embedding` / `rerank` | 向量嵌入和重排序模型（含远程 fallback） |
+| `postgres` / `redis` | 数据库和缓存连接参数 |
+| `mineru` | MinerU 文档解析服务配置 |
+| `web_search` | 网络搜索服务（Firecrawl、Tavily、SerpAPI） |
+| `network` | HTTP 代理和域名绕过规则 |
+| `unpaywall` / `pubmed` / `base` / `core` | 文献采集服务提供商配置 |
 
-## Usage
+### `vault/`
 
-### 1. Development Setup
+存放 API keys、数据库密码、session 签名密钥等敏感信息。每个环境有对应的 `.yaml` 文件和 `.yaml.example` 模板。`vault/*.yaml` 在 `.gitignore` 中排除。
 
-```bash
-# The config loader reads backend/config as the only file-based config source
-# Default environment is 'development'
-uv run uvicorn app.main:app --reload
+关键敏感配置：
+- `session_signing_key` — HMAC-SHA256 会话签名密钥（必须与 `api_key` 不同）
+- `fast_llm.api_key` / `reasoning_llm.api_key` 等 — LLM 服务 API keys（支持 `api_keys` 列表用于密钥池轮转）
+- `postgres.user` / `postgres.password` — 数据库凭证
 
-# Or explicitly set environment
-ENVIRONMENT=development uv run uvicorn app.main:app --reload
-```
+### 字段命名约定
 
-**Files loaded**:
-- `config/defaults/main.yaml`
-- `config/environments/development.yaml`
-- `config/vault/development.yaml` (if exists, for secrets)
+嵌套字段展平为环境变量：`fast_llm.model` → `FAST_LLM_MODEL`，`cors_origins` → `CORS_ORIGINS`。
 
-### 2. Production Setup
+## Usage / Patterns
 
-```bash
-# Set environment to production
-ENVIRONMENT=production uv run uvicorn app.main:app
+### 运行时加载
 
-# Or via environment variable
-export ENVIRONMENT=production
-uv run uvicorn app.main:app
-```
-
-**Files loaded**:
-- `config/defaults/main.yaml`
-- `config/environments/production.yaml`
-- `config/vault/production.yaml` (if exists, for secrets)
-
-### 3. Render Configuration (Optional Debugging)
-
-For debugging or inspecting the merged layered values:
-
-```bash
-# Render to stdout
-uv run python scripts/render_config.py --env development
-
-# Render to a temporary file
-uv run python scripts/render_config.py --env production --output /tmp/lingua-seeker-config.yaml
-```
-
-Rendered files are not read by the runtime loader. Runtime configuration remains `backend/config/` plus explicit environment variables.
-
-## Adding New Configuration Variables
-
-### Step 1: Add to defaults/main.yaml
-
-```yaml
-# In config/defaults/main.yaml
-new_service:
-  host: "localhost"
-  port: 9999
-  timeout: 30
-```
-
-### Step 2: Add environment overrides (if needed)
-
-```yaml
-# In config/environments/production.yaml
-new_service:
-  host: "production-host"
-  port: 9999
-  timeout: 60
-```
-
-### Step 3: Add secrets to vault (if needed)
-
-```yaml
-# In config/vault/production.yaml
-new_service:
-  api_key: "secret-api-key"
-```
-
-### Step 4: Update config.py
-
-Add flat fields to the `Settings` class:
+配置在 `src.core.config` 模块导入时自动加载：
 
 ```python
-# In src/core/config.py
-class Settings(BaseSettings):
-    # Flat fields (auto-populated from flattened YAML)
-    new_service_host: str = "localhost"
-    new_service_port: int = 9999
-    new_service_timeout: int = 30
-    new_service_api_key: str = ""
+from src.core.config import get_config
+cfg = get_config()
+print(cfg.fast_llm.model)
 ```
 
-The shared loader automatically converts:
-- `new_service.host` -> `NEW_SERVICE_HOST`
-- `new_service.port` -> `NEW_SERVICE_PORT`
-- `new_service.api_key` -> `NEW_SERVICE_API_KEY`
+### 渲染完整配置（调试）
 
-## Security Best Practices
+```bash
+uv run python scripts/render_config.py --env development
+```
 
-1. **Never commit secrets** -- `vault/*.yaml` files are git-ignored
-2. **Use environment variables** for CI/CD secrets (highest priority)
-3. **Rotate secrets regularly** -- update vault files and restart services
-4. **Audit access** -- restrict vault file permissions (`chmod 600`)
-5. **Use example files** -- commit `*.yaml.example` templates with placeholder values
+### 新增配置项
 
-## References
+1. 在 `defaults/main.yaml` 添加默认值
+2. 在 `src.core.config.Settings` 中添加对应的 Pydantic 字段
+3. 如需环境差异，在 `environments/<env>.yaml` 中覆盖
 
-- **Config Loader**: `backend/src/core/config_loader.py` (`load_backend_config_into_env()`)
-- **Typed Settings**: `backend/src/core/config.py` (`Settings`, `get_config()`)
-- **Render Script**: `backend/scripts/render_config.py`
+## Dependencies
+
+| 依赖 | 用途 |
+|------|------|
+| `acmg-config-loader` (libs/config-loader) | 分层 YAML 加载和环境变量注入 |
+| `pydantic-settings` | `Settings` 基类和环境变量绑定 |
+| PyYAML | YAML 解析 |
+| Jinja2 | 配置模板渲染（仅 `render_config.py`） |
