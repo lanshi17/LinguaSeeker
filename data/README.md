@@ -1,37 +1,36 @@
 # Data
 
-> Sample and test PDF files used for pipeline testing. Organized by ISO 639-1 language code.
+> 管线测试用的样本和测试 PDF 文件，以及管线运行产物。按 ISO 639-1 语言代码组织。
 
-## Directory Structure
+## 概述
+
+本目录存放管线测试和基准运行所需的数据文件，包括测试 PDF、下载的文献、以及管线运行的 UUID 目录产物。
+
+## 目录结构
 
 ```
-downloads/
-├── en/                                    English (1 PDF)
-│   └── 10.3389_fimmu.2025.1655475.pdf
-├── ja/                                    Japanese (3 PDFs)
-│   ├── 32_2015-0041.pdf
-│   ├── 33_2017-0026.pdf
-│   └── 52_26.pdf
-├── ru/                                    Russian (1 PDF)
-│   └── elibrary_53981733_40074746.pdf
-├── zh/                                    Chinese (4 PDFs)
-│   ├── GLA基因c.92C_A突变法布雷病家系1例.pdf
-│   ├── 法布雷病1例.pdf
-│   ├── 一个15例患病的法布雷病家系分析.pdf
-│   └── 一例极早发型炎症性肠病患儿的临床及IL10RA基因变异分析.pdf
-└── v1.1/                                  Revised versions
-    ├── en/
-    │   └── 10.1186_s13256-023-03889-y.pdf
-    └── ja/
-        └── ATP2A2.pdf
+data/
+├── pipeline/                           管线运行产物（UUID 目录）
+│   ├── <uuid-1>/                       每次管线运行的完整产物
+│   ├── <uuid-2>/
+│   ├── ...
+│   └── run-pre-parsed/                 预解析运行数据
+├── downloads/                          下载的文献 PDF
+│   ├── en/                             英文
+│   ├── ja/                             日文
+│   ├── ru/                             俄文
+│   ├── zh/                             中文
+│   ├── v1.1/                           修订版本
+│   ├── v1.2/                           更新版本
+│   └── Active_maintenance_of_*.pdf     个别测试文件
+└── README.md
 ```
 
-## Usage
+## 用途
 
-These files are used for:
+- **管线运行产物** — `pipeline/` 下的 UUID 目录存储每次管线运行的完整中间和最终产物
+- **文献测试** — `downloads/` 下按语言组织的 PDF 用于解析器测试和跨语言提取验证
+- **管线集成测试** — 使用真实文献的端到端文档处理
+- **跨语言提取** — 双语证据提取和翻译验证
 
-- **Parser testing** -- Validating PDF text extraction across languages (en, ja, ru, zh)
-- **Pipeline integration testing** -- End-to-end document processing with real literature
-- **Cross-lingual extraction** -- Bilingual evidence extraction and translation validation
-
-The `v1.1/` directory contains revised or updated versions of documents for testing version-aware processing.
+`v1.1/` 和 `v1.2/` 目录包含文档的修订或更新版本，用于测试版本感知处理。

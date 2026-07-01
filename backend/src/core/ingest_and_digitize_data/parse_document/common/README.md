@@ -1,65 +1,73 @@
-# Parse Document Common
+# Common 通用解析工具
 
-> Shared conversion and parsing utilities for the document parsing module. Provides HTML-to-markdown conversion and HTML table extraction used by both local and remote parsers.
+> 文档解析的通用工具集：HTML 表格解析和内容块 Markdown 转换。
 
-## Quick Start
+## 概述
 
-```python
-from src.core.ingest_and_digitize_data.parse_document.common.converters import (
-    html_table_to_markdown,
-    html_table_to_structured,
-    block_to_markdown,
-)
+`common` 子包提供文档解析过程中共享的工具函数和解析器。核心功能包括 HTML 表格到 Markdown/结构化数据的转换，以及 MinerU content_list 块到 Markdown 的转换。被 `local/parser.py` 和 `remote/parser.py` 共同使用。
 
-# Convert HTML table to markdown
-md = html_table_to_markdown("<table><tr><td>Gene</td><td>BRCA1</td></tr></table>")
-# | Gene | BRCA1 |
-# | --- | --- |
+## 结构
 
-# Extract structured headers + rows
-headers, rows = html_table_to_structured(html_table)
-
-# Convert MinerU content_list block to markdown
-md = block_to_markdown({"type": "text", "text": "Patient data..."})
+```
+common/
+├── __init__.py       # 导出 TableParser、转换函数
+├── converters.py     # 内容转换：HTML 表格→Markdown、block→Markdown
+├── parsers.py        # HTML 解析器：TableParser
+└── README.md
 ```
 
-## Public API
+## 核心组件
 
-### `converters.py`
+### parsers.py — HTML 解析器
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `html_table_to_markdown` | `(html: str) -> str` | Convert HTML `<table>` to markdown table format with header separator |
-| `html_table_to_structured` | `(html: str) -> tuple[list[str], list[list[str]]]` | Extract (headers, rows) from HTML table |
-| `block_to_markdown` | `(block: dict) -> str` | Convert a MinerU content_list block to markdown |
+- **`TableParser`**（继承 `HTMLParser`）：解析 HTML `<table>` 元素
+  - `rows: list[list[str]]`：提取的行数据
+  - `has_th: bool`：是否包含 `<th>` 表头行
+  - 逐行解析 `<tr>` → `<td>`/`<th>` 单元格
 
-### `parsers.py`
+### converters.py — 内容转换
 
-| Class | Description |
-|-------|-------------|
-| `TableParser(HTMLParser)` | HTML table parser that extracts rows and detects `<th>` header rows. Uses stdlib `html.parser`. |
+- **`html_table_to_markdown(html)`**：HTML `<table>` → Markdown 表格字符串
+  - 使用 `TableParser` 提取行列，自动生成表头分隔符
 
-#### `TableParser`
+- **`html_table_to_structured(html)`**：HTML `<table>` → `(headers, rows)` 结构化数据
+  - 返回 `(list[str], list[list[str]])` 元组
 
-| Attribute | Type | Description |
-|-----------|------|-------------|
-| `rows` | `list[list[str]]` | Extracted table rows |
-| `has_th` | `bool` | Whether `<th>` tags were found |
+- **`block_to_markdown(block)`**：MinerU content_list 单个块 → Markdown
+  - 支持类型：`text`、`image`（含 caption）、`table`（HTML 或结构化）、`list`、`equation`、`code`、`chart`、`header`/`footer` 等
+  - 图片渲染为 `![caption](img_path)` 格式
+  - 表格自动调用 `html_table_to_markdown()` 转换
 
-## Internal Design
+## 数据流
 
-`TableParser` is a simple state-machine HTML parser using stdlib `html.parser.HTMLParser`. It tracks `<td>`/`<th>` cell boundaries and accumulates text content. No external dependencies.
+```
+MinerU content_list blocks
+        ↓
+block_to_markdown(block)
+  ├── text     → 直接输出
+  ├── image    → ![caption](path)
+  ├── table    → html_table_to_markdown() → Markdown 表格
+  ├── list     → - item1\n- item2
+  ├── equation → text
+  ├── code     → ```lang\ncode\n```
+  └── chart    → chart caption
+        ↓
+Markdown 字符串
+```
 
-`block_to_markdown` handles MinerU content_list block types:
-- `text` — with optional `text_level` for Markdown headings
-- `image` — with caption, image path, and footnote
-- `table` — with caption, HTML body converted via `html_table_to_markdown`, and footnote
-- `list` — bullet list items
-- `equation` — equation text
-- `code` — fenced code blocks
-- `chart` — with caption and footnote
-- `header`, `footer`, `page_number`, `aside_text`, `page_footnote` — passthrough text
+## 使用
 
-## Dependencies
+```python
+from src.core.ingest_and_digitize_data.parse_document.common import (
+    html_table_to_markdown, html_table_to_structured, block_to_markdown, TableParser
+)
 
-No external dependencies — uses only stdlib (`html.parser`, `re`).
+# HTML 表格 → Markdown
+md = html_table_to_markdown("<table><tr><td>A</td><td>B</td></tr></table>")
+
+# HTML 表格 → 结构化数据
+headers, rows = html_table_to_structured(html_content)
+
+# MinerU block → Markdown
+markdown = block_to_markdown({"type": "text", "text": "Hello world"})
+```

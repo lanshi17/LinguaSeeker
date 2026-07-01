@@ -52,6 +52,78 @@ def test_translator_llm(mock_ctx):
     assert t._llm is not None
 
 
+@pytest.mark.asyncio
+async def test_run_pipeline_rejects_compressed_long_translation(mock_ctx, monkeypatch):
+    translator = MultiStageTranslator(ctx=mock_ctx)
+    source = (
+        "患儿男，5月龄，因间断咳嗽半月余入院。患儿住院期间自主呼吸障碍显著，"
+        "语言能力丧失，手部技能丧失并出现刻板动作，生长发育迟滞。二代基因检测发现"
+        "MECP2基因存在c.194delC半合突变，此突变尚未见文献报道，父母该位点均无变异。"
+    ) * 8
+    summary_translation = (
+        "This report describes a boy with Rett syndrome caused by a novel "
+        "MECP2 mutation and emphasizes genetic testing."
+    )
+
+    async def fake_extract_terminology(formatted):
+        return ""
+
+    async def fake_translate_segments(formatted, terminology, blocks=None, *, strict=False):
+        return summary_translation, [formatted.formatted_markdown], [summary_translation]
+
+    async def fake_self_review(source_text, translated_text, system_prompt=""):
+        return translated_text
+
+    monkeypatch.setattr(translator, "extract_terminology", fake_extract_terminology)
+    monkeypatch.setattr(translator, "translate_segments", fake_translate_segments)
+    monkeypatch.setattr(translator, "_self_review", fake_self_review)
+
+    formatted = FormattedDocument(
+        formatted_markdown=source,
+        source_language="zh",
+    )
+
+    with pytest.raises(TranslationError, match="incomplete_translation"):
+        await translator.run_pipeline(formatted)
+
+
+@pytest.mark.asyncio
+async def test_translate_one_segment_uses_completeness_retry_prompt(mock_ctx, monkeypatch):
+    translator = MultiStageTranslator(ctx=mock_ctx)
+    source = (
+        "患儿住院期间自主呼吸障碍显著，语言能力丧失，手部技能丧失并出现刻板动作，"
+        "生长发育迟滞。二代基因检测发现MECP2基因存在c.194delC半合突变。"
+    ) * 5
+    full_translation = (
+        "During hospitalization, the child had marked spontaneous breathing impairment, "
+        "loss of language ability, loss of hand skills, stereotyped movements, and growth "
+        "retardation. Next-generation sequencing identified a c.194delC hemizygous "
+        "mutation in the MECP2 gene. "
+    ) * 4
+    retry_prompts: list[str] = []
+
+    async def fake_json_invoke(llm, prompt, stage, system_prompt=""):
+        return '{"translation": "Brief Rett syndrome summary."}'
+
+    async def fake_invoke(llm, prompt, stage, system_prompt=""):
+        retry_prompts.append(prompt)
+        return full_translation
+
+    monkeypatch.setattr(
+        "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry",
+        fake_json_invoke,
+    )
+    monkeypatch.setattr(
+        "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry",
+        fake_invoke,
+    )
+
+    result = await translator._translate_one_segment(source, "", 1, 1)
+
+    assert result == full_translation.strip()
+    assert any("previous translation was incomplete" in prompt.lower() for prompt in retry_prompts)
+
+
 def test_providers_create_llm():
     from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers import create_llm
     llm = create_llm(model="test-model", api_key="test-key", base_url="http://localhost:8001/v1", temperature=0.0)

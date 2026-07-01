@@ -1,133 +1,97 @@
-# Chat Feature
+# Chat 对话功能
 
-> AI-powered conversational interface for variant classification discussion. Uses `@ant-design/x` UI components and Server-Sent Events (SSE) for streaming.
+> 基于 SSE 流式传输的 AI 对话系统，支持 ACMG 证据上下文问答
 
-## Structure
+## 概述
+
+Chat 模块实现了与 Lingua Seeker 后端 AI 代理的实时对话功能。支持独立对话和绑定到处理运行（processing run）的上下文对话。使用 Server-Sent Events（SSE）实现流式回复，支持 Markdown 渲染、意图识别和操作确认。
+
+## 文件结构
 
 ```
-features/chat/
-|-- index.ts                           # Barrel exports
-|-- components/
-|   |-- ChatView.tsx                   # Main chat UI (multi-session + single-session modes)
-|   |-- SingleSessionChat.tsx          # Lightweight single-session chat (no sidebar)
-|   |-- chatConfig.tsx                 # Shared chat config: ChatViewProps, Bubble roles
-|   |-- ThinkingIndicator.tsx          # Loading animation during LLM inference
-|   |-- WelcomeBlock.tsx               # Welcome screen with quick action buttons
-|   |-- ChatActionBubble.tsx           # Renders action intents from the LLM agent
-|   |-- useBubbleItems.tsx             # Transforms messages into Bubble.List items
-|   |-- useChatProvider.ts             # Manages active AcmgChatProvider per session
-|   |-- useSessionConversations.tsx    # Conversations sidebar state and operations
-|   |-- useSessionUIState.ts           # Per-session ephemeral UI state (forms, pipeline status)
-|   |-- usePipelineActions.ts          # Pipeline confirm/cancel action handlers
-|   +-- forms/
-|       |-- PipelineSummaryCard.tsx    # Conversational "Ready to start?" confirmation card
-|       |-- PipelineStatusCard.tsx     # Pipeline status summary card
-|       +-- index.ts                   # Barrel export for forms
-|-- hooks/
-|   +-- useChatSessions.ts             # Session list management (backend + localStorage)
-|-- providers/
-|   +-- acmgChatProvider.ts            # AcmgChatProvider: SSE streaming via @ant-design/x-sdk
-|-- services/
-|   +-- chat.ts                        # REST API: createSession, listSessions, listMessages, appendMessage, streamUrl
-|-- types/
-|   |-- chat.ts                        # ChatRole, ChatSessionResponse, ChatMessageResponse
-|   +-- actions.ts                     # ChatActionIntent, ChatAction (discriminated union)
-+-- utils/
-    |-- localSessions.ts               # Browser localStorage session persistence
-    |-- markdown.tsx                   # ChatMarkdown: Markdown rendering for chat bubbles (GFM + math)
-    |-- messageHistory.ts              # Message history conversion to/from @ant-design/x format
-    |-- messageRequests.ts             # Message request body construction
-    |-- messageStore.ts                # Local message state management
-    +-- sse.ts                         # SSE event parsing: text, action, done, keepalive, error
+chat/
+├── index.ts                          # 模块导出
+├── chat.css                          # 对话界面样式
+├── components/
+│   ├── ChatView.tsx                  # 对话主视图（消息列表 + 输入框）
+│   ├── SingleSessionChat.tsx         # 单会话对话包装器
+│   ├── WelcomeBlock.tsx              # 欢迎界面/空状态
+│   ├── ChatActionBubble.tsx          # 操作确认气泡（流水线启动等）
+│   ├── ThinkingIndicator.tsx         # AI 思考中指示器
+│   ├── chatConfig.tsx                # 对话配置（操作意图 → 提示词映射）
+│   ├── useBubbleItems.tsx            # 消息气泡列表构建 hook
+│   ├── useChatProvider.ts            # 聊天 Provider 管理 hook
+│   ├── useSessionConversations.tsx   # 会话消息历史管理 hook
+│   ├── useSessionUIState.ts          # 会话 UI 状态 hook
+│   ├── usePipelineActions.ts         # 流水线操作处理 hook
+│   └── forms/                        # 对话内表单组件
+├── hooks/
+│   └── useChatSessions.ts           # 会话列表管理 hook
+├── providers/
+│   └── acmgChatProvider.ts          # 自定义 SSE 聊天 Provider
+├── services/
+│   └── chat.ts                      # API 服务层
+├── types/
+│   ├── chat.ts                      # 会话/消息类型定义
+│   └── actions.ts                   # 操作意图类型定义
+├── utils/
+│   ├── markdown.tsx                 # 轻量 Markdown 渲染器
+│   ├── localSessions.ts            # 本地会话持久化（localStorage）
+│   ├── messageHistory.ts           # 消息历史转换工具
+│   ├── messageRequests.ts          # 消息请求体构建
+│   ├── messageStore.ts             # SDK 消息缓存管理
+│   └── sse.ts                      # SSE 事件解析与处理
+└── README.md
 ```
 
-## Usage
+## 关键组件
 
-```tsx
-// Full chat with conversation sidebar and task queue
-<ChatView />
+### `ChatView`
 
-// Full chat tied to a pipeline run
-<ChatView processingRunId="run-abc" />
+对话主视图，集成 `@ant-design/x` 聊天组件。
 
-// Single session mode (direct URL navigation)
-<ChatView sessionId="session-xyz" />
-```
+- 消息列表展示（用户/助手气泡）
+- 流式 AI 回复（SSE）
+- 操作意图处理（确认流水线、搜索证据等）
+- Markdown 渲染（支持加粗、代码块、列表、数学公式）
 
-## Chat Modes
+### `AcmgChatProvider`
 
-**FullChatView** (default `/chat`): Renders a `Conversations` sidebar from `@ant-design/x` for managing multiple chat sessions, a main bubble area, a `Sender` input, and an optional `TaskQueuePanel`. Standalone sessions are persisted in `localStorage`; pipeline-bound sessions are fetched from the backend.
+自定义 `AbstractChatProvider` 实现，绑定后端 SSE 流。
 
-**SingleSessionChat** (`/chat/:sessionId`): Lightweight view without sidebar. Loads message history from the backend on mount, renders bubbles with markdown and thinking indicators, and streams SSE replies.
+- **SSE 事件格式**: `text`（文本块）、`action`（操作意图）、`done`（完成）、`keepalive`（心跳）、`error`（错误）
+- **后端意图检测**: question → LLM 回复、correction → 确认、note → 无回复
 
-## SSE Protocol
+### `ChatMarkdown`
 
-Backend streams standard SSE `data:` lines where each data payload is JSON:
-
-| Event Type | Payload | Description |
-|------------|---------|-------------|
-| `text` | `{"type":"text","content":"..."}` | Incremental assistant text chunk |
-| `action` | `{"type":"action","intent":"...","slots":{}}` | Agent action intent with slots |
-| `done` | `{"type":"done"}` | Stream complete |
-| `keepalive` | `{"type":"keepalive"}` | Connection heartbeat (15s) |
-| `error` | `{"type":"error","message":"..."}` | Error message |
-
-The SSE parser in `utils/sse.ts` (`appendAssistantChunk`) accumulates `"text"` chunks into the assistant message content and attaches `"action"` events as structured `ChatAction` objects.
-
-## Chat Action Intents
-
-The LLM backend can emit action intents alongside free-text replies:
-
-| Intent | Behavior |
-|--------|----------|
-| `confirm-pipeline` | Opens inline pipeline confirmation form |
-| `search-evidence` | Navigates to `/evidence?gene=...&variant=...` |
-| `review-changes` | Navigates to `/evidence?review_status=...` |
-| `check-pipeline-status` | Navigates to `/pipeline/:runId` or `/pipeline` |
-| `start-pipeline` | Deprecated (legacy), shows info nudge |
-| `upload-pdf` | Deprecated (legacy), shows info nudge |
-| `classify-variant` | Recognized but form not yet implemented |
-| `interpret-evidence` | Recognized but form not yet implemented |
-
-## Provider Architecture
-
-`AcmgChatProvider` extends `AbstractChatProvider` from `@ant-design/x-sdk`. On request:
-1. User message is persisted via `POST /chat/sessions/{id}/messages` (done by `sendChatMessage()` before the provider runs).
-2. Provider opens SSE stream via `GET /chat/sessions/{id}/stream?user_message=...`.
-3. Tokens are parsed from the SSE stream and accumulated into the assistant bubble.
-4. AbortController supports cancellation via the `Sender` cancel button or navigation.
+轻量级、无依赖的 Markdown 渲染器，支持 `**bold**`、`*italic*`、`` `code` ``、代码块、列表。不使用 `dangerouslySetInnerHTML`，流式安全。
 
 ## Hooks
 
-| Hook | Description |
-|------|-------------|
-| `useChatSessions(runId?)` | Lists/creates sessions. When `runId` is null, manages standalone sessions in `localStorage`; otherwise fetches from backend. |
-| `useChatProvider(sessionKey)` | Manages active `AcmgChatProvider` instance per session with `useXChat` integration. |
-| `useSessionConversations(runId, clearRef)` | Conversations sidebar: items, active key, create/switch/delete. |
-| `useSessionUIState(sessionKey)` | Per-session ephemeral state: active form, pipeline status, dispatched actions. |
-| `useBubbleItems(...)` | Transforms `useXChat` messages into `Bubble.List` items with action rendering. |
-| `usePipelineActions(...)` | Handles pipeline confirm/cancel from chat action forms. |
+### `useChatSessions(processingRunId?)`
 
-## Utils
+管理会话列表。
 
-| Module | Description |
-|--------|-------------|
-| `localSessions.ts` | Persists standalone session metadata in `localStorage` (`chat.sessions`, `chat.activeSession`) |
-| `markdown.tsx` | `ChatMarkdown` component: `react-markdown` with GFM, math (KaTeX), and custom styling |
-| `messageHistory.ts` | Converts backend `ChatMessageResponse[]` to `@ant-design/x` format and back |
-| `messageRequests.ts` | Builds request body for `POST /chat/sessions/{id}/messages` |
-| `messageStore.ts` | Local message state management for optimistic updates |
-| `sse.ts` | SSE event parser: `appendAssistantChunk()` accumulates text/action/done/keepalive/error events |
+- 独立模式：使用 localStorage 持久化（最多 20 个会话）
+- 绑定模式：从后端获取特定运行的会话列表
+- **返回**: `{ sessions, createSession, removeSession, isLoading }`
 
-## Standalone Sessions
+## API 端点
 
-`/chat` supports standalone sessions without a pipeline run. Session metadata (ID, creation time, message count) is persisted in browser `localStorage`. The active session ID is also stored there so reloads restore the last active conversation. Message history and assistant replies are persisted in the backend database. If a session returns 404, it is automatically removed from localStorage.
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/chat/sessions` | 创建会话 |
+| GET | `/chat/sessions/{runId}` | 列出会话 |
+| GET | `/chat/sessions/{id}/messages` | 获取消息历史 |
+| POST | `/chat/sessions/{id}/messages` | 发送用户消息 |
+| GET | `/chat/sessions/{id}/stream` | SSE 流式回复 |
 
-## Testing
+## 操作意图（ChatActionIntent）
 
-```bash
-cd frontend
-bun run test tests/features/chat/
-```
-
-Test files cover: `acmgChatProvider`, `ChatActionBubble`, `ChatMarkdown`, `localSessions`, `messageHistory`, `messageRequests`, `messageStore`, `sse`, `useChatSessions`.
+后端 AI 代理可发出的操作信号：
+- `confirm-pipeline` — 确认启动流水线
+- `search-evidence` — 搜索证据
+- `classify-variant` — 变异分类
+- `interpret-evidence` — 解读证据
+- `review-changes` — 审阅变更
+- `check-pipeline-status` — 检查流水线状态

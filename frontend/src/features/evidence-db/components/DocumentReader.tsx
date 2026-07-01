@@ -5,7 +5,7 @@ import type { ContentBlock } from "@/features/evidence-search/types/evidenceSear
 import { HighlightedText, type ReviewContextMap } from "./HighlightedText";
 import { StructuredBlockRenderer, type BlockHighlight } from "./StructuredBlockRenderer";
 import { MarkdownDocumentViewer } from "@/features/evidence-search/components/MarkdownDocumentViewer";
-import { AnnotationLayer } from "@/features/evidence-search/components/annotationLayer";
+import { AnnotationLayer, type FieldTypeOption } from "@/features/evidence-search/components/annotationLayer";
 import type { AnnotationTrack, UserAnnotation } from "@/features/evidence-search/types/annotations";
 import { useI18n } from "@/lib/i18n";
 
@@ -42,7 +42,6 @@ export function DocumentReader({
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
-  onReviewed,
   onAssignField,
   fieldTypes,
 }: {
@@ -57,9 +56,8 @@ export function DocumentReader({
   reviewContexts?: ReviewContextMap;
   scrollContainerRef?: MutableRefObject<HTMLDivElement | null>;
   onContainerScroll?: (e: UIEvent<HTMLDivElement>) => void;
-  onReviewed?: () => void;
   onAssignField?: (selectedText: string, fieldType: string) => void;
-  fieldTypes?: string[];
+  fieldTypes?: FieldTypeOption[];
 } & AnnotationHandlers) {
   const { t } = useI18n();
   const contentRef = useRef<HTMLDivElement | null>(null);
@@ -151,7 +149,7 @@ export function DocumentReader({
                     {t("evidenceDb.doc.page", { page: String(para.page) })}
                   </span>
                 )}
-                <HighlightedText paragraph={para} reviewContexts={reviewContexts} onReviewed={onReviewed} />
+                <HighlightedText paragraph={para} reviewContexts={reviewContexts} />
               </div>
             ))}
           </div>

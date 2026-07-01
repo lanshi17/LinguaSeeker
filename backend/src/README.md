@@ -1,132 +1,106 @@
-# src
+# Src
 
-> Python business logic root for the LinguaSeeker backend. All application code (except the FastAPI entry point) lives here, organized into five top-level packages following the Orchestrated Vertical Slice Architecture.
+> 后端核心源码——包含配置管理、业务逻辑、API 路由、数据访问和工具函数。
 
-## Package Map
+## Overview
+
+`src/` 是 Lingua Seeker 后端的核心代码包，按职责分为 5 个子包：配置管理（`core/`）、管线编排（`agents/`）、HTTP API（`api/`）、数据访问（`dao/`）和通用工具（`utils/`）。
+
+## Structure
 
 ```
 src/
-├── agents/       # Orchestrator: LangGraph topology, GraphState, phase adapters, runner
-├── api/          # FastAPI routes and dependency injection
-│   ├── auth.py              # API key authentication
-│   ├── body_size_limit.py   # Request body size middleware
-│   ├── deps.py              # FastAPI dependency injection
-│   ├── rate_limit.py        # Rate limiting setup
-│   ├── wiring.py            # Dependency wiring at startup
-│   └── v1/                  # Versioned route handlers
-│       ├── router.py        #   V1 router aggregator
-│       ├── pipeline.py      #   Pipeline CRUD
-│       ├── evidence.py      #   Evidence search/detail
-│       ├── chat.py          #   Chat sessions
-│       ├── delta_audit.py   #   Delta audit trail
-│       ├── source_link.py   #   Source linking
-│       ├── annotations.py   #   Document annotations
-│       └── auth.py          #   Auth endpoints
-├── core/         # Vertical feature slices (Phase 1-4 business logic)
-│   ├── config.py                # Pydantic Settings singleton
-│   ├── config_loader.py         # Layered YAML loader
-│   ├── ingest_and_digitize_data/           # Phase 1
-│   ├── cross_lingual_process_and_extract_evidence/  # Phase 2
-│   ├── standardize_entities_and_align_knowledge/    # Phase 3
-│   └── visualize_evidence_with_expert_in_loop/      # Phase 4
-├── dao/          # Persistence boundary: PostgreSQL, Redis, Neo4j, MinIO
-│   ├── postgresql/     # SQLAlchemy models, connection, repos
-│   ├── redis/          # Redis connection and cache repo
-│   ├── neo4j/          # Neo4j (placeholder)
-│   └── minio/          # MinIO (placeholder)
-└── utils/        # Shared cross-cutting utilities
-    ├── exceptions.py          # ACMGException hierarchy
-    ├── health.py              # Startup health checks
-    ├── llm_adapter.py         # LLM client adapter
-    ├── llm_params.py          # LLM parameter helpers
-    ├── logger.py              # loguru setup
-    ├── markdown_helpers.py    # Markdown processing
-    ├── middleware.py           # Request monitoring middleware
-    ├── observability.py       # Observability utilities
-    ├── parsing.py             # General parsing utilities
-    ├── rust_io.py             # Rust native extension adapter
-    ├── security_headers.py    # Security header middleware
-    ├── text.py                # Text utilities
-    └── text_normalize.py      # Text normalization
+├── core/                # 核心业务逻辑和配置管理
+│   ├── config.py                # Settings 单例（Pydantic Settings）
+│   ├── config_loader.py         # 分层 YAML 配置加载（兼容性 shim）
+│   ├── ingest_and_digitize_data/          # Phase 1: 文献采集和文档解析
+│   ├── cross_lingual_process_and_extract_evidence/  # Phase 2: 翻译和证据提取
+│   ├── standardize_entities_and_align_knowledge/    # Phase 3: 实体标准化
+│   └── visualize_evidence_with_expert_in_loop/      # Phase 4: 专家审核反馈
+├── agents/              # 管线编排和任务调度
+│   ├── orchestrator.py          # LangGraph 管线编排器
+│   ├── runner.py                # 后台管线运行器
+│   ├── dispatcher.py            # 单任务作业调度器
+│   ├── contracts.py             # 状态模型、错误层次、状态转换守卫
+│   ├── state_persistence.py     # PostgreSQL 状态持久化
+│   ├── processing_cache.py      # 两级缓存（L1 Redis + L2 PostgreSQL）
+│   ├── content_hash.py          # 内容哈希去重
+│   ├── concurrency.py           # 信号量和重试执行器
+│   └── phase_*_adapter.py       # Phase 1-3 适配器
+├── api/                 # HTTP API 层
+│   ├── wiring.py                # 依赖注入和服务组装
+│   ├── auth.py                  # API Key 和会话认证
+│   ├── deps.py                  # FastAPI 依赖项
+│   ├── body_size_limit.py       # 请求体大小限制中间件
+│   ├── rate_limit.py            # Redis 限流
+│   └── v1/                      # V1 API 路由
+├── dao/                 # 数据访问层
+│   ├── postgresql/              # SQLAlchemy ORM 和仓储
+│   ├── redis/                   # Redis 缓存操作
+│   ├── neo4j/                   # 图数据库（预留）
+│   └── minio/                   # 对象存储（预留）
+└── utils/               # 通用工具函数
+    ├── logger.py                # 日志配置（loguru）
+    ├── llm_adapter.py           # LLM 客户端适配器（密钥池轮转）
+    ├── exceptions.py            # 统一异常层次
+    ├── health.py                # 启动健康检查
+    ├── middleware.py             # 请求监控中间件
+    ├── security_headers.py      # 安全头中间件
+    └── text.py                  # 文本处理工具
 ```
 
-## Architecture
+## Key Components
+
+### 依赖关系图
 
 ```
-                    +-------------------------+
-                    |     api/ (FastAPI)        |  <-- HTTP boundary
-                    |  deps.py  wiring.py       |
-                    +--------+----------------+
-                             |
-                    +--------v----------------+
-                    |   agents/ (Orchestrator)  |  <-- Pipeline topology
-                    |  PipelineOrchestrator     |
-                    |  Phase1/2/3Adapter        |
-                    |  PipelineRunner           |
-                    +--------+----------------+
-                             |
-          +------------------+------------------+
-          v                  v                  v
-   +-------------+  +--------------+  +--------------+
-   |  Phase 1     |  |  Phase 2     |  |  Phase 3     |
-   |  Ingest &    |  |  Cross-lingual|  |  Standardize |
-   |  Digitize    |  |  & Extract   |  |  & Align     |
-   +------+------+  +------+-------+  +------+-------+
-          |                |                  |
-          +----------------+------------------+
-                           v
-                    +--------------+
-                    |    dao/       |  <-- Persistence
-                    |    utils/     |  <-- Shared infra
-                    +--------------+
+app.main → src.api.wiring → src.agents.* → src.core.*
+                ↓
+           src.dao.* (PostgreSQL / Redis)
+                ↓
+           src.utils.* (日志、LLM 适配器、异常)
 ```
 
-**Design rules:**
+### 管线架构（Phase 1-4）
 
-- `agents/` owns workflow topology and orchestration metadata only -- zero business rules.
-- `core/<feature>/` owns complete business loops: `api.py` (orchestrator-facing), `core.py` (pure logic), `providers.py` (LLM/DB/external I/O), `contracts.py` (typed contracts).
-- `dao/` is the sole persistence boundary. Feature slices never import SQLAlchemy directly.
-- `utils/` contains only helpers with 2+ consumers. Single-use helpers stay in their feature package.
+| Phase | 模块 | 职责 |
+|-------|------|------|
+| Phase 1 | `core/ingest_and_digitize_data/` | 文献采集 + MinerU 文档解析 |
+| Phase 2 | `core/cross_lingual_process_and_extract_evidence/` | 跨语言翻译 + 双轨证据提取 |
+| Phase 3 | `core/standardize_entities_and_align_knowledge/` | 实体标准化 + 术语知识对齐 |
+| Phase 4 | `core/visualize_evidence_with_expert_in_loop/` | 专家审核、聊天、审计、溯源 |
 
-## Quick Start
+Phase 1-3 由 `agents/orchestrator.py`（LangGraph）编排为有向图，Phase 4 是独立的请求-响应式交互服务。
+
+## Usage / Patterns
+
+### 获取配置
 
 ```python
 from src.core.config import get_config
-from src.agents.orchestrator import PipelineOrchestrator
-from src.agents.runner import PipelineRunner
-
 cfg = get_config()
 ```
 
-## Key Entry Points
+### 导入异常
 
-| Module | Import | Purpose |
-|--------|--------|---------|
-| `src.core.config` | `from src.core.config import get_config` | Singleton settings from layered YAML |
-| `src.agents.orchestrator` | `from src.agents.orchestrator import PipelineOrchestrator` | LangGraph pipeline execution |
-| `src.agents.runner` | `from src.agents.runner import PipelineRunner` | Background task management |
-| `src.api.wiring` | `from src.api.wiring import wire_dependencies` | DI assembly at startup |
-| `src.api.v1.router` | `from src.api.v1.router import router` | FastAPI v1 route tree |
-
-## Testing
-
-```bash
-cd backend
-uv run pytest tests/ -v
+```python
+from src.utils.exceptions import NotFoundException, ValidationException
 ```
 
-Tests mirror source structure under `backend/tests/`.
+### 创建 LLM 客户端
+
+```python
+from src.utils.llm_adapter import create_llm_client
+client = create_llm_client(model="gpt-5", api_keys=["sk-1", "sk-2"], base_url="...")
+```
 
 ## Dependencies
 
-All dependencies are declared in `backend/pyproject.toml`. Key frameworks:
-
-| Dependency | Purpose |
-|------------|---------|
-| `fastapi` | REST API framework |
-| `langgraph` | Pipeline orchestration state machine |
-| `langchain-openai` | LLM client abstraction |
-| `sqlalchemy[asyncio]` | ORM with async support |
-| `pydantic` / `pydantic-settings` | Type-safe models and config |
-| `loguru` | Structured logging |
-| `pgvector` | Vector similarity search |
+| 依赖 | 用途 |
+|------|------|
+| FastAPI | HTTP 框架 |
+| SQLAlchemy 2.0 | 异步 ORM |
+| LangGraph | 管线编排 |
+| LangChain | LLM 客户端抽象 |
+| loguru | 结构化日志 |
+| Pydantic | 数据验证和 Settings |

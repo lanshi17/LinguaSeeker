@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
 import type { EvidenceDocumentParagraph } from "@/features/evidence-search/utils/evidenceDocument";
-import { FieldReviewPopover } from "@/features/evidence-search/components/FieldReviewPopover";
+import { openFieldReviewMenu } from "@/features/evidence-search/components/FieldReviewPopover";
 import type { FieldReviewInfo } from "@/features/evidence-search/components/FieldReviewPopover";
 
 /* ── Style helpers (replace Tailwind-based categoryMarkStyle / categoryChipStyle) ── */
@@ -30,13 +30,11 @@ export type ReviewContextMap = Map<string, FieldReviewInfo>;
 
 interface HighlightedTextProps {
   paragraph: EvidenceDocumentParagraph;
-  /** If provided, <mark> elements get hover-to-review popovers. */
+  /** If provided, <mark> elements get click-to-review handlers. */
   reviewContexts?: ReviewContextMap;
-  /** Called after a successful inline review to refresh data. */
-  onReviewed?: () => void;
 }
 
-export function HighlightedText({ paragraph, reviewContexts, onReviewed }: HighlightedTextProps) {
+export function HighlightedText({ paragraph, reviewContexts }: HighlightedTextProps) {
   const sorted = useMemo(
     () => [...paragraph.highlights].sort((a, b) => a.start - b.start),
     [paragraph.highlights],
@@ -72,25 +70,20 @@ export function HighlightedText({ paragraph, reviewContexts, onReviewed }: Highl
     }
 
     const reviewInfo = reviewContexts?.get(hl.evidenceId);
-    const markEl = (
+    const markStyle = {
+      ...markInlineStyle(hl.category, hl.selected),
+      ...(reviewInfo ? { cursor: "pointer" as const } : {}),
+    };
+    segments.push(
       <mark
         key={`hl-${hl.evidenceId}-${start}`}
-        style={markInlineStyle(hl.category, hl.selected)}
+        data-reviewable={reviewInfo ? "true" : undefined}
+        style={markStyle}
+        onClick={reviewInfo ? (e) => openFieldReviewMenu(e, reviewInfo) : undefined}
+        onContextMenu={reviewInfo ? (e) => openFieldReviewMenu(e, reviewInfo) : undefined}
       >
         {paragraph.text.slice(start, end)}
-      </mark>
-    );
-
-    segments.push(
-      reviewInfo ? (
-        <FieldReviewPopover
-          key={`hl-${hl.evidenceId}-${start}`}
-          info={reviewInfo}
-          onReviewed={onReviewed}
-        >
-          {markEl}
-        </FieldReviewPopover>
-      ) : markEl,
+      </mark>,
     );
     cursor = end;
   }

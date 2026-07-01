@@ -1,138 +1,89 @@
 # Documentation Index
 
-Project documentation organized by lifecycle status.
+> 项目文档，按生命周期状态组织。
+
+## 概述
+
+本目录是 Lingua Seeker 所有项目文档的索引和组织中心。文档按生命周期分类：活跃（active/）、计划中（planned/）、归档（archive/），以及模板和图表。
+
+## 目录结构
 
 ```text
 docs/
-├── active/           # In-progress plans & living reference docs
-├── planned/          # Planned work that has not started
-├── codereview/       # Active code reviews (.gitkeep)
-├── diagrams/         # Mermaid flowcharts (phase1-phase4)
+├── active/           # 进行中的计划和活跃参考文档
+├── planned/          # 尚未开始的计划工作
+├── codereview/       # 活跃代码审查（.gitkeep）
+├── diagrams/         # Mermaid 流程图（phase1-phase4）
 ├── archive/
-│   ├── plans/        # Completed or superseded plans
-│   ├── codereview/   # Completed code reviews
-│   └── deprecated-modules/  # READMEs from removed modules
-└── templates/        # plan.md, codereview.md templates
+│   ├── plans/        # 已完成或被取代的计划
+│   ├── codereview/   # 已完成的代码审查
+│   └── deprecated-modules/  # 已移除模块的 README
+└── templates/        # plan.md、codereview.md 模板
 ```
 
-## Classification Rules
+## 分类规则
 
-- `active/` -- In-progress implementation plans and living reference documents.
-- `planned/` -- Planned work that has not started (`YYYY-MM-DD-<topic>.md`).
-- `codereview/` -- Active code review reports.
-- `diagrams/` -- Mermaid flowcharts (`.mmd`) for the four pipeline phases.
-- `archive/plans/` -- Completed or superseded plans (everything that ships, lands, or is dropped goes here).
-- `archive/codereview/` -- Completed code reviews.
-- `archive/deprecated-modules/` -- READMEs preserved from modules that have since been removed.
-- `templates/` -- Reusable documentation templates.
+- `active/` — 进行中的实施计划和活跃参考文档
+- `planned/` — 尚未开始的计划工作（`YYYY-MM-DD-<topic>.md`）
+- `codereview/` — 活跃代码审查报告
+- `diagrams/` — 四个管线阶段的 Mermaid 流程图（`.mmd`）
+- `archive/plans/` — 已完成或被取代的计划
+- `archive/codereview/` — 已完成的代码审查
+- `archive/deprecated-modules/` — 已移除模块保留的 README
+- `templates/` — 可复用文档模板
 
-### When to Move Documents
+### 文档迁移时机
 
-| Trigger | From | To |
-|---------|------|----|
-| Work starts on a plan | `planned/` | `active/` |
-| Plan completed / merged / superseded | `active/` (or `planned/`) | `archive/plans/` |
-| Code review resolved | `codereview/` | `archive/codereview/` |
+| 触发条件 | 从 | 到 |
+|---------|-----|-----|
+| 开始实施计划 | `planned/` | `active/` |
+| 计划完成/合并/被取代 | `active/`（或 `planned/`） | `archive/plans/` |
+| 代码审查解决 | `codereview/` | `archive/codereview/` |
 
-## Naming Convention
+## 命名规范
 
-Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
+新文档使用 `YYYY-MM-DD-<kebab-case-description>.md` 格式。
 
-## Active Plans & References
+## 活跃计划和参考
 
-| Date | Title | Status |
-|------|-------|--------|
-| 2026-06-29 | [Evidence DB Field Model Implementation Plan](active/2026-06-29-evidence-db-field-model-plan.md) | in-progress (Tasks 1-6 and 8-9 complete; Task 7 product-gated) |
-| 2026-06-27 | [Backend Host Deployment Guide](active/2026-06-27-backend-host-deployment-guide.md) | reference |
-| 2026-06-25 | [Lingua Seeker v1.0.0 Release Checklist](active/2026-06-25-v1-release-checklist.md) | in-progress |
-| 2026-06-23 | [Environment Consistency Standard](active/2026-06-23-environment-consistency.md) | reference |
-| 2026-06-23 | [Log Data Mining Report (drain3)](active/2026-06-23-log-data-mining-report.md) | reference |
-| 2026-06-21 | [BIBM Main Paper TeX](active/2026-06-15-bibm-main-paper-tex/) | in-progress |
-| 2026-06-21 | [BIBM Main Paper Manuscript Draft](active/2026-06-15-bibm-main-paper-manuscript-draft.md) | in-progress |
-| 2026-06-20 | [BIBM Main Paper Outline](active/2026-06-15-bibm-main-paper-outline.md) | in-progress |
-| 2026-06-20 | [BIBM Main Paper Limitations](active/2026-06-15-bibm-main-paper-limitations.md) | in-progress |
-| 2026-06-20 | [Main Paper Tables Developer Guide](active/2026-06-15-main-paper-tables-guide.md) | in-progress |
-| 2026-06-20 | [ClinGen + ClinVar Fused Benchmark Dataset Plan](active/2026-06-15-clingen-clinvar-fused-benchmark-dataset-plan.md) | in-progress (Phase 1+2 complete) |
-| 2026-06-20 | [BIBM Main Paper Detailed Execution Plan](active/2026-06-14-bibm-main-paper-detailed-execution-plan.md) | in-progress |
-| 2026-06-20 | [BIBM Main Paper Roadmap](active/2026-06-14-bibm-main-paper-roadmap.md) | in-progress |
-| 2026-06-20 | [BIBM Main Paper Effect Improvement Plan](active/2026-06-14-bibm-main-paper-effect-improvement-plan.md) | in-progress |
-| 2026-06-20 | [BIBM Main Paper G3 Semantic Boundary Repair Plan](active/2026-06-14-bibm-main-paper-g3-semantic-boundary-repair-plan.md) | in-progress |
-| 2026-06-18 | [Multilingual Agent Acquisition Plan](active/2026-06-18-multilingual-agent-acquisition-plan.md) | substantially-implemented |
-| 2026-06-15 | [BIBM Main Paper Rescue](active/2026-06-14-bibm-main-paper-rescue.md) | in-progress |
-| 2026-06-14 | [Traceability Metrics Developer Guide](active/2026-06-14-traceability-metrics-guide.md) | in-progress |
-| 2026-06-13 | [BIBM G1 Decision Memo](active/2026-06-13-bibm-g1-decision.md) | in-progress |
-| 2026-06-12 | [BIBM Novelty Diagnosis](active/2026-06-12-bibm-novelty.md) | in-progress |
-| -- | [Methods -- Literature Filtering](active/methods_literature_filtering.md) | reference |
-| 2026-05-13 | [Phase Workflow Overview](active/phase_workflow_overview.md) | reference |
-| 2026-05-09 | [PRD](active/PRD.md) | reference |
-| 2026-05-09 | [Application Flow](active/APP_FLOW.md) | reference |
-| 2026-05-09 | [Technology Stack](active/TECH_STACK.md) | reference |
-| 2026-05-09 | [Frontend Guidelines](active/FRONTEND_GUIDELINES.md) | reference |
-| 2026-05-09 | [Backend Structure](active/BACKEND_STRUCTURE.md) | reference |
-| 2026-05-09 | [Implementation Plan](active/IMPLEMENTATION_PLAN.md) | reference |
+| 日期 | 标题 | 状态 |
+|------|------|------|
+| 2026-06-29 | Evidence DB Field Model Implementation Plan | in-progress |
+| 2026-06-27 | Backend Host Deployment Guide | reference |
+| 2026-06-25 | Lingua Seeker v1.0.0 Release Checklist | in-progress |
+| 2026-06-23 | Environment Consistency Standard | reference |
+| 2026-06-21 | BIBM Main Paper TeX | in-progress |
+| 2026-06-21 | BIBM Main Paper Manuscript Draft | in-progress |
+| 2026-06-15 | ClinGen + ClinVar Fused Benchmark Dataset Plan | in-progress |
+| 2026-05-13 | Phase Workflow Overview | reference |
+| 2026-05-09 | PRD / APP_FLOW / TECH_STACK / BACKEND_STRUCTURE | reference |
 
-## Planned Work
+完整列表见本目录源文件。
 
-| Date | Title | Status |
-|------|-------|--------|
-| 2026-06-29 | [BIBM N=50 Comparison and Ablation Experiment Design](planned/2026-06-29-bibm-n50-comparison-ablation-design.md) | planned |
-| 2026-06-24 | [BIBM Dataset D Pipeline Optimization Design](planned/2026-06-24-bibm-dataset-d-pipeline-optimization-design.md) | proposed |
-| 2026-06-20 | [Variant ID Guarantee -- Fix Unknown Variant IDs](planned/2026-06-20-variant-id-guarantee-plan.md) | planned |
+## 计划中工作
 
-## Diagrams
+| 日期 | 标题 | 状态 |
+|------|------|------|
+| 2026-06-29 | BIBM N=50 Comparison and Ablation Experiment Design | planned |
+| 2026-06-24 | BIBM Dataset D Pipeline Optimization Design | proposed |
+| 2026-06-20 | Variant ID Guarantee Plan | planned |
 
-| File | Content |
-|------|---------|
-| [phase1.mmd](diagrams/phase1.mmd) | Phase 1: literature acquisition, parsing |
-| [phase2.mmd](diagrams/phase2.mmd) | Phase 2: translation, dual evidence extraction |
-| [phase3.mmd](diagrams/phase3.mmd) | Phase 3: entity standardization, knowledge alignment |
-| [phase4.mmd](diagrams/phase4.mmd) | Phase 4: evidence visualization, expert feedback |
+## 图表
 
-## Recently Archived
+| 文件 | 内容 |
+|------|------|
+| [phase1.mmd](diagrams/phase1.mmd) | Phase 1：文献获取、解析 |
+| [phase2.mmd](diagrams/phase2.mmd) | Phase 2：翻译、双轨证据提取 |
+| [phase3.mmd](diagrams/phase3.mmd) | Phase 3：实体标准化、知识对齐 |
+| [phase4.mmd](diagrams/phase4.mmd) | Phase 4：证据可视化、专家反馈 |
 
-| Date | Title | Status |
-|------|-------|--------|
-| 2026-06-29 | [Chat Quick Actions Implementation Plan](archive/plans/2026-06-29-chat-quick-actions-design.md) | completed |
-| 2026-06-25 | [Main Review Track Baseline Guide](archive/plans/2026-06-25-main-review-track-baseline-guide.md) | completed |
-| 2026-06-25 | [Backend Container Production Branch Plan](archive/plans/2026-06-25-backend-container-prod-branch-plan.md) | completed |
-| 2026-06-25 | [Backend Container Production Branch Design](archive/plans/2026-06-25-backend-container-prod-branch-design.md) | completed |
-| 2026-06-25 | [Pipeline Job Queue Design](archive/plans/2026-06-25-pipeline-job-queue.md) | completed |
-| 2026-06-24 | [Three-Channel Evidence Extraction Design](archive/plans/2026-06-24-three-channel-evidence-extraction-design.md) | completed |
-| 2026-06-23 | [Log Mining Remediation Plan](archive/plans/2026-06-23-log-mining-remediation-plan.md) | completed |
-| 2026-06-22 | [Parkinson Literature XLSX Dataset Implementation Plan](archive/plans/2026-06-22-parkinson-literature-xlsx-dataset-plan.md) | completed |
-| 2026-06-21 | [Model Server Docker Decouple](archive/plans/2026-06-21-model-server-docker-decouple.md) | completed |
-| 2026-06-21 | [Fused-75 Candidate-Absent Source-Visible Optimization Implementation Plan](archive/plans/2026-06-21-fused75-candidate-absent-source-visible-plan.md) | completed |
-| 2026-06-20 | [Fused-75 Candidate Recovery Source Validation Plan](archive/plans/2026-06-20-fused75-candidate-recovery-source-validation-plan.md) | superseded |
-| 2026-06-20 | [Fused-75 Candidate Recovery Source Validation Design](archive/plans/2026-06-20-fused75-candidate-recovery-source-validation-design.md) | superseded |
-| 2026-06-20 | [Target-Aware Source-Visible Extraction Results](archive/plans/2026-06-20-target-aware-source-visible-extraction-results.md) | completed |
-| 2026-06-20 | [Target-Aware Source-Visible Extraction Implementation Plan](archive/plans/2026-06-20-target-aware-source-visible-extraction-plan.md) | completed |
-| 2026-06-20 | [Target-Aware Source-Visible Extraction Design](archive/plans/2026-06-20-target-aware-source-visible-extraction-design.md) | completed |
-| 2026-06-19 | [Fused-75 F1 Optimization Results](archive/plans/2026-06-19-fused75-f1-optimization-results.md) | completed |
-| 2026-06-19 | [Fused-75 F1 Dynamic Pipeline Optimization Implementation Plan](archive/plans/2026-06-19-fused75-f1-dynamic-pipeline-optimization-plan.md) | completed |
-| 2026-06-19 | [Fused-75 F1 Dynamic Pipeline Optimization Design](archive/plans/2026-06-19-fused75-f1-dynamic-pipeline-optimization-design.md) | completed |
-| 2026-06-19 | [Evidence Extraction Pipeline Revision](archive/plans/2026-06-19-evidence-extraction-pipeline-revision.md) | completed |
-| 2026-06-18 | [Benchmark Framework Refactor Plan](archive/plans/2026-06-18-benchmark-framework-refactor-plan.md) | completed (Phase 6 pending) |
-| 2026-06-17 | [Worktree Merge Plan](archive/plans/2026-06-17-worktree-merge-plan.md) | executed |
-| 2026-06-16 | [MinerU Local SDK Migration](archive/plans/2026-06-16-mineru-local-sdk-migration.md) | completed |
-| 2026-06-16 | [Benchmark B Completion Plan](archive/plans/2026-06-16-benchmark-b-completion-plan.md) | done-with-partial-pilot |
-| 2026-06-16 | [Plan A -- Drop 4 Free-Text `_notes` Fields](archive/plans/2026-06-16-plan-a-drop-notes-fields.md) | completed |
-| 2026-06-16 | [Sparse Evidence Output Plan](archive/plans/2026-06-16-sparse-evidence-output-superseded.md) | superseded |
-| 2026-06-15 | [Learned Arbitrator Gate A Report](archive/plans/2026-06-15-learned-arbitrator-gate-a-report.md) | negative ablation |
-| 2026-06-15 | [BIBM Main Paper Pipeline Optimization & Benchmark Plan](archive/plans/2026-06-15-bibm-main-paper-pipeline-optimization-and-benchmark-plan.md) | completed |
-| 2026-06-15 | [BIBM Main Paper Claim Matrix](archive/plans/2026-06-15-bibm-main-paper-claim-matrix.md) | completed |
-| 2026-06-15 | [BIBM Benchmark A/B Readiness Plan](archive/plans/2026-06-15-bibm-benchmark-a-b-readiness-plan.md) | completed |
-| 2026-06-15 | [BIBM Benchmark Expansion Phase C Implementation Plan](archive/plans/2026-06-15-bibm-benchmark-expansion-phase-c-plan.md) | completed |
+## 模块 README 索引
 
-The `archive/plans/` directory contains 109 completed/superseded plans. The `archive/codereview/` directory contains 24 resolved code reviews. See individual directories for full listings.
+每个 `backend/` 模块都有自己的 `README.md` 开发者指南。关键模块：
 
-## Module README Index
-
-Every `backend/` module has its own `README.md` developer guide. Key modules:
-
-- **[backend/app/](../backend/app/README.md)** -- FastAPI application entry point
-- **[backend/src/agents/](../backend/src/agents/README.md)** -- Pipeline orchestrator (LangGraph)
-- **[backend/src/api/](../backend/src/api/README.md)** -- HTTP boundary, dependency injection
-- **[backend/src/core/](../backend/src/core/README.md)** -- Vertical feature slices
-- **[backend/src/dao/](../backend/src/dao/README.md)** -- Persistence layer
-- **[backend/libs/](../backend/libs/README.md)** -- Rust native extensions (rust-io, net-io, files-io)
-- **[services/model-server/](../services/model-server/README.md)** -- Embedding/Rerank/LLM server
+- **[backend/app/](../backend/app/README.md)** — FastAPI 应用入口
+- **[backend/src/agents/](../backend/src/agents/README.md)** — 管线编排器（LangGraph）
+- **[backend/src/api/](../backend/src/api/README.md)** — HTTP 边界、依赖注入
+- **[backend/src/core/](../backend/src/core/README.md)** — 垂直功能切片
+- **[backend/src/dao/](../backend/src/dao/README.md)** — 持久化层
+- **[backend/libs/](../backend/libs/README.md)** — Rust 原生扩展

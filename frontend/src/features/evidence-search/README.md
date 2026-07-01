@@ -1,185 +1,128 @@
-# Evidence Search Feature
+# Evidence Search 证据搜索功能
 
-> Literature-level search and review for extracted evidence. Queries evidence groups by gene/variant/disease, aggregates results into literature rows, and provides bilingual full-document highlighting with annotation support.
+> 多维度证据搜索、双语对比查看和证据修正审阅
 
-## Structure
+## 概述
+
+Evidence Search 模块提供 ACMG/ClinGen 证据的全文搜索、结构化展示和审阅修正功能。支持按基因、变异、疾病、PMID/DOI 多维筛选，提供双语对比视图（原文/翻译）、证据高亮、文献概览、导出报告和文档标注。
+
+## 文件结构
 
 ```
-features/evidence-search/
-|-- index.ts                              # Barrel exports
-|-- components/
-|   |-- EvidenceSearchView.tsx            # Page-level orchestrator: form + results table
-|   |-- EvidenceSearchForm.tsx            # Gene, variant, disease, PMID/DOI filter inputs
-|   |-- EvidenceResultsTable.tsx          # Literature-row result cards with pagination
-|   |-- EvidenceDetailView.tsx            # Literature overview + compare mode
-|   |-- EvidenceAuditHistory.tsx          # Audit history for a specific evidence item
-|   |-- EvidenceCorrectionForm.tsx        # Form for correcting evidence field values
-|   |-- EvidenceHighlightText.tsx         # Reusable single-span text highlighter
-|   |-- EvidenceDetailSkeleton.tsx        # Loading skeleton for detail view
-|   |-- EvidenceTableSkeleton.tsx         # Loading skeleton for results table
-|   |-- evidenceTableColumns.tsx          # Column definitions for the results table
-|   |-- LiteratureOverview.tsx            # Literature document overview card
-|   |-- BilingualComparison.tsx           # Original/translated value-anchored snippet panel
-|   |-- BilingualCompareView.tsx          # Full bilingual compare view (document reader)
-|   |-- MarkdownDocumentViewer.tsx        # Markdown-based document viewer with highlights
-|   +-- annotationLayer.tsx              # User annotation overlay for document paragraphs
-|-- hooks/
-|   |-- useEvidenceSearch.ts              # Paginated search query state
-|   +-- useEvidenceGroupDetail.ts         # Group detail query state
-|-- services/
-|   |-- evidenceSearch.ts                 # Re-exports from @/api/evidence
-|   +-- evidenceCorrection.ts             # patchEvidence(), listAuditEvents()
-|-- types/
-|   |-- evidenceSearch.ts                 # All API boundary types (see below)
-|   +-- annotations.ts                    # UserAnnotation, AnnotationCreateRequest, etc.
-+-- utils/
-    |-- evidenceDocument.ts               # Full-document builder, highlight helpers, category colors
-    |-- literatureRows.ts                 # Literature-row aggregation, compare href builder
-    +-- categoryStyles.ts                 # Category chip/mark/label style utilities
+evidence-search/
+├── index.ts                              # 模块导出
+├── evidence-search.css                   # 样式
+├── components/
+│   ├── EvidenceSearchView.tsx            # 搜索页面主视图
+│   ├── EvidenceSearchForm.tsx            # 搜索表单
+│   ├── EvidenceResultsTable.tsx          # 搜索结果表格
+│   ├── EvidenceHighlightText.tsx         # 证据高亮文本
+│   ├── EvidenceDetailView.tsx            # 证据详情视图
+│   ├── BilingualComparison.tsx           # 双语对比视图
+│   ├── BilingualCompareView.tsx          # 双语对比完整视图
+│   ├── LiteratureOverview.tsx            # 文献概览面板
+│   ├── MarkdownDocumentViewer.tsx        # Markdown 文档查看器
+│   ├── EvidenceAuditHistory.tsx          # 证据审阅历史
+│   ├── EvidenceCorrectionForm.tsx        # 证据修正表单
+│   ├── ExportReportDrawer.tsx            # 报告导出抽屉
+│   ├── FieldReviewPopover.tsx            # 字段审阅弹窗
+│   ├── evidenceTableColumns.tsx          # 表格列定义
+│   ├── annotationLayer.tsx               # 文本标注层
+│   └── annotationPopover.tsx             # 标注弹窗
+├── hooks/
+│   ├── useEvidenceSearch.ts             # 搜索 hook（分页、筛选）
+│   └── useEvidenceGroupDetail.ts        # 证据组详情 hook
+├── services/
+│   ├── evidenceSearch.ts                # 搜索 + 详情 API
+│   ├── evidenceCorrection.ts            # 证据修正 + 审阅事件 API
+│   └── annotations.ts                   # 文档标注 CRUD API
+├── types/
+│   ├── evidenceSearch.ts                # 搜索/结果/详情类型
+│   └── annotations.ts                   # 标注类型定义
+├── utils/
+│   ├── evidenceDocument.ts              # 证据文档构建 + 高亮映射
+│   ├── literatureRows.ts                # 文献行聚合
+│   ├── evidenceReport.ts                # 报告导出逻辑
+│   ├── categoryStyles.ts                # 分类样式映射
+│   └── evidenceDocument.ts              # 证据文档构建（含多语言别名匹配）
+└── README.md
 ```
 
-## Usage
+## 关键组件
 
-```tsx
-import { EvidenceSearchView, EvidenceDetailView, BilingualComparison } from "@/features/evidence-search";
+### `EvidenceSearchView`
 
-// Search page
-<EvidenceSearchView />
+搜索页面主视图，组合搜索表单和结果表格。
 
-// Detail page (via route: /evidence/detail?groupId=...)
-<EvidenceDetailView />
+### `EvidenceSearchForm`
 
-// Hook usage
-const { results, filters, updateFilter, setPage } = useEvidenceSearch();
-```
+搜索表单，支持基因、变异、疾病、PMID、DOI 多维筛选。
 
-## Key Components
+### `EvidenceResultsTable`
 
-| Component | Description |
-|-----------|-------------|
-| `EvidenceSearchView` | Top-level orchestrator: search form + results table. Navigates to `/evidence/detail?groupId=...` on row click. |
-| `EvidenceSearchForm` | Gene, variant, disease, PMID/DOI inputs with search and clear buttons. |
-| `EvidenceResultsTable` | Literature-row cards with pagination. Groups evidence by source document. |
-| `EvidenceDetailView` | Literature overview + evidence detail with bilingual compare mode. |
-| `BilingualComparison` | Side-by-side original/translated value-anchored snippet panel. |
-| `BilingualCompareView` | Full bilingual document reader with highlight rendering. |
-| `EvidenceHighlightText` | Reusable component that renders a single text span with a highlight mark. |
-| `MarkdownDocumentViewer` | Renders full document text as Markdown with evidence highlight overlays. |
-| `annotationLayer.tsx` | User annotation overlay for document paragraphs (create, edit, delete annotations). |
-| `LiteratureOverview` | Card showing literature metadata (title, PMID, DOI, gene, variant). |
-| `EvidenceCorrectionForm` | Form for submitting evidence field corrections. |
+搜索结果分页表格，展示证据摘要信息。
+
+### `BilingualComparison` / `BilingualCompareView`
+
+双语证据对比视图，支持原文/翻译并排显示、证据高亮和同步滚动。
+
+### `LiteratureOverview`
+
+文献概览面板，展示按来源文档分组的证据摘要。
+
+### `ExportReportDrawer`
+
+报告导出抽屉，支持生成结构化报告。
+
+### `EvidenceCorrectionForm`
+
+证据修正表单，支持编辑字段值、选择审阅状态（批准/修正/拒绝）并提交变更原因。
+
+### `annotationLayer` / `FieldReviewPopover`
+
+文档文本标注功能，支持在原文/翻译段落上创建、编辑、删除高亮标注。
 
 ## Hooks
 
-| Hook | Signature | Description |
-|------|-----------|-------------|
-| `useEvidenceSearch` | `() => { results, total, page, pageSize, isLoading, isFetching, error, filters, updateFilter, applyFilters, clearFilters, setPage }` | Paginated search query state. Default page size 50. Uses `keepPreviousData`. |
-| `useEvidenceGroupDetail` | `(groupId?, sourceDocumentId?) => { detail, isLoading, isFetching, error, refetch }` | Single evidence group detail query. |
+### `useEvidenceSearch()`
 
-## Key Utilities
+搜索数据管理 hook。
 
-### `evidenceDocument.ts`
+- 维护筛选状态（基因、变异、疾病、PMID、DOI、分页）
+- 使用 `keepPreviousData` 避免翻页闪烁
+- **返回**: `{ results, total, page, pageSize, filters, updateFilter, applyFilters, clearFilters, setPage }`
 
-| Export | Description |
-|--------|-------------|
-| `buildEvidenceDocument(detail, track, enabledTones?, selectedId?, enabledCategories?)` | Constructs `EvidenceDocument` with paragraphs and highlight ranges from traces. Supports original/translated tracks, tone filtering, category filtering, and selected-evidence focus. |
-| `CATEGORY_COLORS` | Per-category color palette (A-J) with `chip`, `mark`, `label`, and `hex` values. |
-| `EVIDENCE_CATEGORIES` | Ordered list of category keys: `["A", "B", ..., "J"]` |
-| `countEvidenceCategories(items)` | Counts evidence items per category letter. |
-| `evidenceToneForItem(item)` | Maps field to highlight tone: `gene`, `variant`, `disease`, `classification`, `functional`, `neutral`. |
-| `hasTranslatedDocumentText(detail)` | Returns true if translated document text or translated traces exist. |
+### `useEvidenceGroupDetail(groupId?, sourceDocumentId?)`
 
-### `literatureRows.ts`
+证据组详情查询 hook。
 
-| Export | Description |
-|--------|-------------|
-| `buildLiteratureRows(results)` | Groups `EvidenceSearchResult[]` by `source_document_id`. Aggregates genes, variants, diseases, classifications, confidence, and review status. |
-| `findInitialEvidenceId(detail, requestedId?)` | Finds the best initial evidence ID for navigation (requested > traceable > first). |
-| `buildBilingualCompareHref(groupId, evidenceId?)` | Builds compare-mode detail URL: `/evidence/detail?groupId=...&view=compare`. |
+## API 端点
 
-### `categoryStyles.ts`
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/evidence/search` | 搜索证据 |
+| GET | `/evidence/groups/detail` | 证据组详情 |
+| PATCH | `/evidence/{id}` | 修正证据 |
+| GET | `/delta-audit/` | 审阅事件列表 |
+| GET | `/documents/{id}/annotations` | 列出标注 |
+| POST | `/documents/{id}/annotations` | 创建标注 |
+| PATCH | `/documents/{id}/annotations/{id}` | 更新标注 |
+| DELETE | `/documents/{id}/annotations/{id}` | 删除标注 |
 
-| Export | Description |
-|--------|-------------|
-| `categoryChipStyle(category?)` | Returns Tailwind chip class string for a category letter. |
-| `categoryMarkStyle(category?)` | Returns Tailwind mark/highlight class string. |
-| `categoryLabel(category?)` | Returns human-readable label for a category letter. |
+## 核心工具
 
-## Types
+### `buildEvidenceDocument`
 
-### Search and Results
+将证据组详情构建为可渲染的文档结构，支持：
+- 原文/翻译双轨道
+- 按类别（A–J）着色高亮
+- 多语言别名匹配（支持非英文源文本中的证据值定位）
+- HGVS 表示法的灵活空格匹配
 
-| Type | Description |
-|------|-------------|
-| `EvidenceSearchQuery` | Query params: gene, variant, disease, pmid, doi, page, page_size |
-| `EvidenceSearchResult` | Single result: group_id, source_document_id, title, pmid, doi, gene, variant, disease, classification, field_count, avg_confidence, review_status, canonical_evidence_id |
-| `EvidenceSearchResponse` | Paginated response: items, total, page, page_size |
+### `buildLiteratureRows`
 
-### Group Detail
+将搜索结果按来源文档聚合为文献行，计算基因、变异、疾病、分类列表和审阅状态。
 
-| Type | Description |
-|------|-------------|
-| `EvidenceGroupDetailResponse` | Full group: group_id, source_document_id, title, pmid, doi, original/translated_document_text, original/translated_blocks, gene, variant, disease, classification, item_count, avg_confidence, distribution, items, traces |
-| `EvidenceGroupItem` | Single field: canonical_evidence_id, field_id, field_name, category, value, review_status, confidence, track, page |
-| `EvidenceFieldDistribution` | Aggregated counts: by_category, by_field, by_status, by_track |
-| `ContentBlock` | MinerU structured block: type, page_idx, bbox, text, table_body, img_path, list_items, code_body, etc. |
+### `ANNOTATION_COLORS`
 
-### Traces and Highlights
-
-| Type | Description |
-|------|-------------|
-| `EvidenceTrackTrace` | Trace: canonical_evidence_id, field_id, original/translated highlight spans, alignment_confidence |
-| `EvidenceChainHighlight` | Highlight span: text, highlight_start, highlight_end, page, source_span |
-| `EvidenceHighlightTone` | `"classification" \| "disease" \| "functional" \| "gene" \| "neutral" \| "variant"` |
-| `EvidenceDocument` | Built document: track + paragraphs with highlights |
-| `EvidenceDocumentParagraph` | Paragraph: id, page, text, highlights[] |
-| `EvidenceDocumentHighlight` | Located highlight: evidenceId, fieldId, label, tone, category, start, end, selected |
-
-### Corrections and Audit
-
-| Type | Description |
-|------|-------------|
-| `EvidencePatchRequest` | PATCH body: fields, change_reason?, new_status? |
-| `PatchResultResponse` | PATCH result: canonical_evidence_id, old/new_status, deltas, field_deltas |
-| `ReviewStatusValue` | `"provisional" \| "approved" \| "corrected" \| "rejected"` |
-| `ReviewAuditEventResponse` | Audit event: review_event_id, canonical_evidence_id, reviewer_id, target_type, old/new_status, field_deltas, change_reason, created_at |
-
-### Annotations
-
-| Type | Description |
-|------|-------------|
-| `UserAnnotation` | Annotation: id, source_document_id, track, paragraph_id, start/end_offset, color, note, author, created_at, updated_at |
-| `AnnotationCreateRequest` | Create body: track, paragraph_id, start/end_offset, color?, note?, author? |
-| `AnnotationUpdateRequest` | Update body: color?, note? |
-| `AnnotationListResponse` | Response: items[] |
-| `ANNOTATION_COLORS` | Default palette: 6 colors (amber, blue, green, pink, violet, orange) |
-
-## API Endpoints
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/v1/evidence/search` | GET | Search evidence groups with filters and pagination |
-| `/api/v1/evidence/groups/detail` | GET | Fetch full detail for a single evidence group |
-| `/api/v1/evidence/{canonical_evidence_id}` | PATCH | Correct evidence fields and/or change review status |
-| `/api/v1/delta-audit/` | GET | List review audit events |
-
-## Testing
-
-```bash
-cd frontend
-bun run test tests/evidence-search/
-```
-
-Test files: `BilingualComparison.test.tsx`, `EvidenceHighlightText.test.tsx`, `literatureRows.test.ts`
-
-## Dependencies
-
-| Dependency | Purpose |
-|------------|---------|
-| `@tanstack/react-query` | Data fetching, caching, polling |
-| `react-router-dom` | URL params, navigation, Link |
-| `react-markdown` + `remark-gfm` | Markdown rendering for document viewer |
-| `lucide-react` | Icons |
-| `antd` | Table, Card, Input, Button, Tag, Typography |
-| `@/lib/api/client` | Axios instance for API calls |
-| `@/components/ui` | Badge, Skeleton, ErrorBoundary |
+标注颜色调色板：琥珀、蓝、绿、粉、紫、橙（6色）。

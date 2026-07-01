@@ -1,8 +1,93 @@
-# Similarity Match Module
+# Similarity Match — 语义相似度匹配
 
-> Phase 3 submodule -- semantic terminology matching via pgvector embedding retrieval + cross-encoder reranking, with inference service integration and embedding index management.
+> 通过 pgvector 嵌入检索和 rerank 评分，为精确匹配未命中的实体提及提供语义回退匹配。
 
-## Quick Start
+## 概述
+
+`similarity_match` 子模块实现了 Phase 3 的第二层匹配策略。当精确匹配返回 `UNMAPPED` 时，此模块通过嵌入模型将候选文本向量化，在 pgvector 索引中检索最近邻术语条目，再经 rerank 模型评分后选择最佳匹配。
+
+### 关键特性
+
+- **两阶段检索**：pgvector 余弦距离初筛 → rerank 模型精排
+- **多 API 风格**：支持 `simple`（`/embed`）和 OpenAI 兼容（`/v1/embeddings`）两种嵌入端点
+- **本地/远程回退**：`FallbackEmbeddingProvider` 和 `FallbackRerankProvider` 支持本地优先、远程回退策略
+- **SAVEPOINT 事务**：向量查询失败不会中止外层事务
+- **阈值过滤**：rerank 分数低于阈值或 margin 不足时返回 `UNMAPPED`
+
+## 目录结构
+
+```
+similarity_match/
+├── __init__.py       # 包声明
+├── contracts.py      # 嵌入和 rerank 的类型化契约
+├── core.py           # SimilarityTerminologyMatcher 主匹配逻辑
+├── providers.py      # HTTP 嵌入和 rerank 提供者（含本地/远程回退）
+├── indexer.py        # TerminologyEmbeddingIndexer：构建和持久化术语嵌入
+└── repositories.py   # PgvectorTerminologyRepository：pgvector 向量检索
+```
+
+## 核心组件
+
+### SimilarityTerminologyMatcher（`core.py`）
+
+主匹配类，协调嵌入、检索和 rerank。
+
+**配置（`SimilarityMatchConfig`）：**
+- `embedding_model` — 嵌入模型名称
+- `rerank_top_k` — 初筛返回的最大候选数
+- `rerank_score_threshold` — rerank 分数最低阈值
+- `min_rerank_margin` — 第一名与第二名的最小分差
+
+**匹配流程：**
+1. 嵌入候选文本 → 获取查询向量
+2. pgvector 余弦检索 → 获取 top-k 最近邻
+3. rerank 评分 → 精排候选
+4. 阈值和 margin 检查 → 判定 `STANDARDIZED` 或 `UNMAPPED`
+
+### EmbeddingHttpProvider / RerankHttpProvider（`providers.py`）
+
+HTTP 客户端，支持：
+- Round-robin API key 轮换
+- `simple` / OpenAI 兼容两种 API 风格
+- 嵌入和 rerank 批量请求
+
+### FallbackEmbeddingProvider / FallbackRerankProvider（`providers.py`）
+
+本地优先回退策略：先尝试本地服务，失败或未配置时回退到远程 HTTP 提供者。
+
+### TerminologyEmbeddingIndexer（`indexer.py`）
+
+构建术语嵌入索引：
+1. 查询已导入的 `TerminologyEntry` 记录
+2. 构建确定性嵌入文本（display_name + aliases + external_id + source_db）
+3. 通过嵌入服务批量向量化
+4. 清理过期嵌入 → 批量 upsert 新嵌入
+
+### PgvectorTerminologyRepository（`repositories.py`）
+
+pgvector 向量检索仓储：
+- `find_nearest()` — 按余弦距离检索最近邻，使用 SAVEPOINT 保护事务
+- 返回 `SimilarityCandidate` 列表（包含 `TerminologyCandidate` + 向量距离 + 嵌入文本）
+
+## 数据流
+
+```
+StandardizationCandidate (UNMAPPED from precise match)
+        │
+        ▼
+   EmbeddingHttpProvider.embed_texts() → 查询向量
+        │
+        ▼
+   PgvectorTerminologyRepository.find_nearest() → top-k 最近邻
+        │
+        ▼
+   RerankHttpProvider.rerank() → 精排评分
+        │
+        ▼
+   阈值/margin 检查 → EntityMatch (STANDARDIZED / UNMAPPED)
+```
+
+## 使用方式
 
 ```python
 from src.core.standardize_entities_and_align_knowledge.similarity_match.core import (
@@ -12,304 +97,20 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.core imp
 from src.core.standardize_entities_and_align_knowledge.similarity_match.providers import (
     FallbackEmbeddingProvider,
     FallbackRerankProvider,
-    EmbeddingHttpProvider,
-    RerankHttpProvider,
-)
-from src.core.standardize_entities_and_align_knowledge.similarity_match.repositories import (
-    PgvectorTerminologyRepository,
 )
 
 config = SimilarityMatchConfig(
-    embedding_model="BAAI/bge-m3",
+    embedding_model="text-embedding-3-small",
     rerank_top_k=10,
     rerank_score_threshold=0.5,
 )
 
-# Local-first with remote fallback
-local_emb = EmbeddingHttpProvider(base_url="http://localhost:8002", model="BAAI/bge-m3")
-remote_emb = EmbeddingHttpProvider(base_url="https://api.siliconflow.cn", model="BAAI/bge-m3")
-local_rerank = RerankHttpProvider(base_url="http://localhost:8003", model="BAAI/bge-reranker-v2-m3")
-remote_rerank = RerankHttpProvider(base_url="https://api.siliconflow.cn", model="BAAI/bge-reranker-v2-m3")
-
 matcher = SimilarityTerminologyMatcher(
-    embedding_provider=FallbackEmbeddingProvider(local_emb, remote_emb),
-    rerank_provider=FallbackRerankProvider(local_rerank, remote_rerank),
-    repository=PgvectorTerminologyRepository(session),
+    embedding_provider=embedding_provider,
+    rerank_provider=rerank_provider,
+    repository=pgvector_repo,
     config=config,
 )
+
 result = await matcher.match(candidate)
 ```
-
-## Architecture
-
-```text
-SimilarityTerminologyMatcher [core.py]
-|
-+-- embed_texts()          -> inference service  POST /v1/embeddings
-+-- find_nearest()         -> pgvector      cosine similarity search
-+-- rerank()               -> inference service  POST /v1/rerank
-+-- _merge_rerank_scores() -> sort by relevance_score desc
-|
-+-- Decision logic:
-    top_score < threshold    -> UNMAPPED
-    top - second < margin    -> AMBIGUOUS (too close to call)
-    otherwise                -> STANDARDIZED
-```
-
-### Supporting modules
-
-| Module | Purpose |
-|--------|---------|
-| `providers.py` | HTTP clients for embedding + rerank inference service APIs, plus local-first remote-fallback wrappers |
-| `repositories.py` | pgvector cosine similarity queries via `PgvectorTerminologyRepository` |
-| `indexer.py` | Batch embedding generation and upsert for terminology entries via `TerminologyEmbeddingIndexer` |
-| `contracts.py` | Frozen dataclasses for provider responses (`EmbeddingBatchResult`, `RerankItem`, `RerankBatchResult`) |
-
-## Public API
-
-### `SimilarityTerminologyMatcher`
-
-```python
-class SimilarityTerminologyMatcher:
-    def __init__(self, *, embedding_provider, rerank_provider, repository, config: SimilarityMatchConfig)
-    async def match(self, candidate: StandardizationCandidate) -> EntityMatch
-```
-
-### `SimilarityMatchConfig`
-
-```python
-@dataclass(frozen=True)
-class SimilarityMatchConfig:
-    embedding_model: str          # model name for embeddings (e.g. "BAAI/bge-m3")
-    rerank_top_k: int             # max candidates to retrieve + rerank
-    rerank_score_threshold: float # minimum score for STANDARDIZED
-    min_rerank_margin: float = 0.05  # gap between top and second for unambiguous
-```
-
-### `EmbeddingHttpProvider`
-
-```python
-class EmbeddingHttpProvider:
-    def __init__(self, *, base_url: str, model: str, client=None, timeout=60.0, api_key=None)
-    async def embed_texts(self, texts: str | Sequence[str]) -> EmbeddingBatchResult
-```
-
-Routes through `{base_url}/v1/embeddings` (OpenAI-compatible). Auto-appends `/v1` if not present.
-
-### `RerankHttpProvider`
-
-```python
-class RerankHttpProvider:
-    def __init__(self, *, base_url: str, model: str, client=None, timeout=60.0, api_key=None)
-    async def rerank(self, query: str, documents: str | Sequence[str], *, top_k: int | None) -> RerankBatchResult
-```
-
-Routes through `{base_url}/v1/rerank`. Returns scored, sorted results.
-
-### `FallbackEmbeddingProvider`
-
-```python
-class FallbackEmbeddingProvider:
-    def __init__(self, local: EmbeddingHttpProvider, remote: EmbeddingHttpProvider | None = None)
-    async def embed_texts(self, texts: str | Sequence[str]) -> EmbeddingBatchResult
-```
-
-Local-first, remote-fallback wrapper. Tries the local provider; on any failure (connection error, timeout, HTTP error), falls back to the remote provider with a warning log. If no remote is configured, re-raises the original exception.
-
-### `FallbackRerankProvider`
-
-```python
-class FallbackRerankProvider:
-    def __init__(self, local: RerankHttpProvider, remote: RerankHttpProvider | None = None)
-    async def rerank(self, query: str, documents: str | Sequence[str], *, top_k: int | None) -> RerankBatchResult
-```
-
-Same local-first, remote-fallback pattern as `FallbackEmbeddingProvider`.
-
-### `TerminologyEmbeddingIndexer`
-
-```python
-class TerminologyEmbeddingIndexer:
-    def __init__(self, session, embedding_provider)
-    async def build(self, *, embedding_model: str, batch_size: int,
-                    entity_types: set[EntityType] | None = None,
-                    source_dbs: set[str] | None = None) -> int
-```
-
-Generates embeddings for all imported terminology entries. Deletes stale embeddings before re-generating, batches writes with flush + commit per batch. Returns the count of embeddings written.
-
-### `PgvectorTerminologyRepository`
-
-```python
-class PgvectorTerminologyRepository:
-    def __init__(self, session)
-    async def find_nearest(self, *, entity_type, query_vector, embedding_model, limit) -> tuple[SimilarityCandidate, ...]
-```
-
-Retrieves nearest terminology entries by cosine distance. Uses a SAVEPOINT so a failed vector query does not abort the outer transaction.
-
-### `build_embedding_text(entry: TerminologyEntry) -> str`
-
-Builds deterministic embedding text from `display_name + aliases + external_id + source_db`, deduplicated and newline-joined.
-
-### Data Types (contracts)
-
-| Type | Description |
-|------|-------------|
-| `EmbeddingBatchResult` | Model name, vectors as `tuple[tuple[float, ...], ...]` |
-| `RerankItem` | Index, document text, relevance_score |
-| `RerankBatchResult` | Model name, results as `tuple[RerankItem, ...]` |
-
-## Internal Design
-
-### Two-stage retrieval + rerank
-
-1. **Retrieval**: pgvector cosine similarity returns top-K candidates
-2. **Rerank**: cross-encoder (inference service) re-scores candidates against the query
-3. **Decision**: score threshold + margin check for confidence
-
-### Error handling
-
-| Exception | Scenario | Handling |
-|-----------|----------|----------|
-| `NoSemanticMatchFound` | No nearest neighbors found | Returns `UNMAPPED` (normal) |
-| `SemanticMatchServiceError` | Network/inference service/DB failure | Raised; hybrid matcher downgrades to precise-only |
-| Generic `Exception` | Embedding/rerank infrastructure | Wrapped in `SemanticMatchServiceError` |
-
-`FallbackEmbeddingProvider` and `FallbackRerankProvider` catch all exceptions from the local provider and transparently retry against the remote provider. Only if both fail (or no remote is configured) does the exception propagate to the hybrid matcher's degradation handler.
-
-### Embedding index management
-
-`TerminologyEmbeddingIndexer.build()`:
-1. Queries `TerminologyEntry` filtered by `entity_types` and `source_dbs`
-2. Deletes stale embeddings for those entries (batched 5000 at a time)
-3. Generates embeddings via inference service in batches
-4. Upserts into `TerminologyEmbedding` table using PostgreSQL `INSERT ... ON CONFLICT`
-5. Commits after each batch (resumable on failure)
-
-## Usage Patterns
-
-### Matching with threshold tuning
-
-```python
-config = SimilarityMatchConfig(
-    embedding_model="BAAI/bge-m3",
-    rerank_top_k=20,           # wider retrieval for higher recall
-    rerank_score_threshold=0.6, # stricter threshold
-    min_rerank_margin=0.1,      # wider margin for unambiguous
-)
-matcher = SimilarityTerminologyMatcher(
-    embedding_provider=...,
-    rerank_provider=...,
-    repository=...,
-    config=config,
-)
-```
-
-### Building embeddings after terminology import
-
-```python
-from src.core.standardize_entities_and_align_knowledge.api import (
-    build_terminology_embeddings,
-)
-
-count = await build_terminology_embeddings(
-    cfg=config,
-    entity_types={EntityType.GENE, EntityType.DISEASE},
-    source_dbs={"HGNC", "OMIM"},
-)
-print(f"Generated {count} embeddings")
-```
-
-### Custom HTTP client (connection reuse)
-
-```python
-import httpx
-async with httpx.AsyncClient(timeout=30.0) as client:
-    emb = EmbeddingHttpProvider(
-        base_url="http://localhost:8002", model="BAAI/bge-m3", client=client,
-    )
-    rerank = RerankHttpProvider(
-        base_url="http://localhost:8003", model="BAAI/bge-reranker-v2-m3", client=client,
-    )
-    # Both providers share the same connection pool
-```
-
-### Local-first with remote fallback
-
-```python
-from src.core.standardize_entities_and_align_knowledge.similarity_match.providers import (
-    FallbackEmbeddingProvider,
-    EmbeddingHttpProvider,
-    RerankHttpProvider,
-)
-
-local_emb = EmbeddingHttpProvider(base_url="http://localhost:8002", model="BAAI/bge-m3")
-remote_emb = EmbeddingHttpProvider(base_url="https://api.siliconflow.cn", model="BAAI/bge-m3", api_key="sk-...")
-embedding = FallbackEmbeddingProvider(local_emb, remote_emb)
-
-# If remote is not configured, pass None -- local failures propagate directly
-embedding = FallbackEmbeddingProvider(local_emb, None)
-```
-
-> **Important:** The remote embedding model **must** match the local model. Persisted pgvector vectors are model-specific -- a different model produces incompatible vectors and meaningless cosine similarity scores. A warning is logged at init time and a CRITICAL error at fallback time if models differ. Rerank has no such constraint (stateless scoring).
-
-The `EntityStandardizationService` and `build_terminology_embeddings` automatically construct fallback providers from config when `embedding.remote_base_url` / `rerank.remote_base_url` are set.
-
-## Extension Guide
-
-### Adding a new embedding provider
-
-Implement the interface (duck-typed):
-
-```python
-class MyEmbeddingProvider:
-    async def embed_texts(self, texts: str | Sequence[str]) -> EmbeddingBatchResult:
-        ...
-```
-
-### Adding a new rerank provider
-
-Same pattern:
-
-```python
-class MyRerankProvider:
-    async def rerank(self, query, documents, *, top_k) -> RerankBatchResult:
-        ...
-```
-
-### Custom vector store
-
-Implement the repository interface used by `find_nearest()`:
-
-```python
-class MyVectorRepository:
-    async def find_nearest(self, *, entity_type, query_vector, embedding_model, limit) -> tuple[SimilarityCandidate, ...]:
-        ...
-```
-
-## Performance Notes
-
-- pgvector cosine search with HNSW index (m=16, ef_construction=200) provides fast approximate nearest neighbor search
-- Embedding generation is batched (configurable batch_size)
-- `httpx.AsyncClient` supports connection reuse via `client=` parameter
-- The `PgvectorTerminologyRepository` uses SAVEPOINTs so failed vector queries do not abort the outer transaction
-
-## Dependencies
-
-| Dependency | Purpose |
-|------------|---------|
-| `httpx` | Async HTTP client for inference service |
-| `sqlalchemy` | pgvector queries, embedding upsert |
-| `hashlib` | Embedding text hash for idempotent upsert |
-| Parent contracts (`...contracts`) | EntityMatch, SimilarityCandidate, StandardizationCandidate |
-| `src.dao.postgresql.models` | TerminologyEntry, TerminologyEmbedding ORM |
-
-## Testing
-
-```bash
-cd backend
-uv run pytest tests/core/standardize_entities_and_align_knowledge/ -k "similarity_match" -v
-```
-
-Tests cover: matcher decision logic, provider HTTP mocking, indexer batch operations, embedding text construction, and pgvector repository queries.

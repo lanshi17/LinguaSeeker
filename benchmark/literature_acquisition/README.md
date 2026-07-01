@@ -1,137 +1,81 @@
 # Literature Acquisition Benchmark
 
-> **Status: DEPRECATED SHIM.** This package (`benchmark/literature_acquisition/`) contains only
-> backward-compatible import shims after the 2026-06-18 framework refactor.
-> All runner code now lives in `benchmark.runners.*`. The shims will be removed
-> in Phase 6 of the refactor.
+> **状态：已弃用垫片。** 本包（`benchmark/literature_acquisition/`）仅包含 2026-06-18 框架重构后的向后兼容导入垫片。所有运行器代码已移至 `benchmark.runners.*`。垫片将在重构 Phase 6 移除。
 
-Multilingual literature download benchmark for the LinguaSeeker online acquisition pipeline. Evaluates provider coverage, download success rates, and literature type classification across 7 languages.
+## 概述
 
-## Files
+多语言文献下载基准测试，评估 LinguaSeeker 在线获取管线的提供商覆盖、下载成功率和文献类型分类，覆盖 7 种语言。
 
-| File | Description |
-|------|-------------|
-| `__init__.py` | Deprecated shim with `__getattr__` redirect to `benchmark.runners.*` |
-| `downloads/` | Downloaded PDFs (per-language subdirs) + report JSONs |
+## 文件
 
-## New Module Locations
+| 文件 | 描述 |
+|------|------|
+| `__init__.py` | 已弃用垫片，`__getattr__` 重定向到 `benchmark.runners.*` |
+| `downloads/` | 下载的 PDF（按语言子目录）+ 报告 JSON |
 
-| Old path | New path | Purpose |
-|----------|----------|---------|
-| `benchmark.literature_acquisition.benchmark` | `benchmark.runners.literature_acquisition` | General cancer/genomics benchmark |
-| `benchmark.literature_acquisition.rett_download` | `benchmark.runners.literature_rett` | Disease-specific (Rett/MECP2) benchmark |
+## 新模块位置
 
-The actual runner code lives under `benchmark/runners/`:
+| 旧路径 | 新路径 | 用途 |
+|--------|--------|------|
+| `benchmark.literature_acquisition.benchmark` | `benchmark.runners.literature_acquisition` | 通用癌症/基因组学基准 |
+| `benchmark.literature_acquisition.rett_download` | `benchmark.runners.literature_rett` | 疾病特定（Rett/MECP2）基准 |
 
-| File | Description |
-|------|-------------|
-| `benchmark/runners/literature_acquisition.py` | General benchmark: 7 languages, query-driven, download + analyze + multilingual |
-| `benchmark/runners/literature_rett.py` | Rett/MECP2 benchmark: config-driven queries, cleanup, rename, multilingual |
+实际运行器代码位于 `benchmark/runners/`：
 
-## Quick Start
+| 文件 | 描述 |
+|------|------|
+| `benchmark/runners/literature_acquisition.py` | 通用基准：7 种语言、查询驱动、下载+分析+多语言 |
+| `benchmark/runners/literature_rett.py` | Rett/MECP2 基准：配置驱动查询、清理、重命名、多语言 |
+
+## 快速开始
 
 ```bash
 cd backend
 
-# General benchmark: download PDFs per language
+# 通用基准：按语言下载 PDF
 uv run python -m benchmark.runners.literature_acquisition download
 
-# Single language
+# 单语言
 uv run python -m benchmark.runners.literature_acquisition download --lang zh
 
-# Analyze results
+# 分析结果
 uv run python -m benchmark.runners.literature_acquisition analyze
 uv run python -m benchmark.runners.literature_acquisition analyze --llm-classify
 
-# Multilingual acquisition workflow
-uv run python -m benchmark.runners.literature_acquisition multilingual --query "BRCA1 breast cancer"
-
-# Rett syndrome / MECP2 (config-driven)
+# Rett 综合征 / MECP2（配置驱动）
 uv run python -m benchmark.runners.literature_rett download --config rett_config_02.json
 
-# Rett: seed query generation
+# Rett：种子查询生成
 uv run python -m benchmark.runners.literature_rett seed-queries
 
-# Rett: dry run
+# Rett：干运行
 uv run python -m benchmark.runners.literature_rett download --config rett_config_02.json --dry-run
 
-# Rett: cleanup + rename
+# Rett：清理 + 重命名
 uv run python -m benchmark.runners.literature_rett cleanup --dry-run
 uv run python -m benchmark.runners.literature_rett rename --dry-run
-
-# Rett: multilingual benchmark
-uv run python -m benchmark.runners.literature_rett multilingual --query "Rett syndrome MECP2"
 ```
 
-## Architecture
+## 语言覆盖
 
-Both runners delegate acquisition logic to `online_acquisition_workflow` or `multilingual_acquisition_workflow` from the backend's online acquisition module. The benchmark layer handles iteration, statistics, analysis, and post-processing.
+通用基准覆盖 7 种语言，使用母语查询：
 
-```
-benchmark.runners.literature_acquisition     benchmark.runners.literature_rett
-  |-- cmd_download()                           |-- cmd_seed_queries()
-  |     +-- Multi-provider search              |-- cmd_download() / cmd_cleanup() / cmd_rename()
-  |     +-- Download PDFs                      |     +-- Config-driven per-language search
-  |-- cmd_analyze()                            |     +-- Download PDFs (relevance_gate=False)
-  |     +-- SHA256 dedup                       |-- cmd_analyze()
-  |     +-- Validation                         |     +-- Per-source / per-query stats
-  |     +-- Language x Type breakdown          |     +-- Literature type distribution
-  |     +-- LLM domain classification          |-- cmd_multilingual()
-  |-- cmd_multilingual()                             +-- multilingual_acquisition_workflow
-        +-- multilingual_acquisition_workflow
-```
+| 语言 | 查询类别 |
+|------|---------|
+| zh（中文） | 队列研究、功能实验、遗传/癌症、技术、遗传性癌症家系 |
+| ja（日文） | 队列研究、功能实验、遗传/癌症、技术、遗传性癌症家系 |
+| ko（韩文） | 队列研究、功能实验、遗传/癌症、技术、遗传性癌症家系 |
+| en（英文） | 队列研究、功能实验、遗传/癌症、技术、遗传性癌症家系 |
+| es（西班牙文） | 队列研究、功能实验、遗传/癌症、技术、遗传性癌症家系 |
+| pt（葡萄牙文） | 队列研究、功能实验、遗传/癌症、技术、遗传性癌症家系 |
+| ru（俄文） | 队列研究、功能实验、遗传/癌症、技术、遗传性癌症家系 |
 
-## Language Coverage
+## 提供商覆盖
 
-The general benchmark covers 7 languages with native-language queries:
-
-| Language | Query categories |
-|----------|-----------------|
-| zh (Chinese) | Cohort studies, functional experiments, genetics/cancer, techniques, hereditary cancer families |
-| ja (Japanese) | Cohort studies, functional experiments, genetics/cancer, techniques, hereditary cancer families |
-| ko (Korean) | Cohort studies, functional experiments, genetics/cancer, techniques, hereditary cancer families |
-| en (English) | Cohort studies, functional experiments, genetics/cancer, techniques, hereditary cancer families |
-| es (Spanish) | Cohort studies, functional experiments, genetics/cancer, techniques, hereditary cancer families |
-| pt (Portuguese) | Cohort studies, functional experiments, genetics/cancer, techniques, hereditary cancer families |
-| ru (Russian) | Cohort studies, functional experiments, genetics/cancer, techniques, hereditary cancer families |
-
-## Provider Coverage
-
-| Language | Providers |
-|----------|-----------|
-| zh | crossref, unpaywall, doaj, pmc |
-| ja | jstage, cinii, crossref, unpaywall, doaj, pmc |
-| ko | crossref, unpaywall, doaj |
-| es, pt | scielo, crossref, unpaywall |
-| en | pmc, crossref, arxiv, biorxiv, medrxiv, openaire, base, core, unpaywall, doaj |
-
-## CLI Reference
-
-### benchmark.runners.literature_acquisition
-
-```
-download [--lang LANG]
-analyze [PATH] [--llm-classify] [--llm-max-pages N] [--llm-max-chars N] [--llm-timeout N] [--llm-force]
-multilingual [--query QUERY] [--query-file PATH] [--download-dir DIR] [--limit N] [--dry-run]
-```
-
-### benchmark.runners.literature_rett
-
-```
-seed-queries [--force]
-download [--config PATH] [--query-file PATH] [--download-dir DIR] [--dry-run]
-analyze [PATH] [--llm-classify]
-cleanup [--download-dir DIR] [--dry-run] [--concurrency N]
-rename [--download-dir DIR] [--dry-run] [--concurrency N]
-multilingual [--query QUERY] [--query-file PATH] [--download-dir DIR] [--limit N] [--dry-run]
-```
-
-## Dependencies
-
-| Dependency | Purpose |
-|------------|---------|
-| `fitz` (PyMuPDF) | PDF text extraction |
-| `httpx` / `openai` | LLM API calls |
-| `loguru` | Logging with rotation |
-| `src.core...online_acquisition.workflow` | Core search + download pipeline |
-| `src.core...online_acquisition.relevance_gate` | LLM relevance filtering |
+| 语言 | 提供商 |
+|------|--------|
+| zh | crossref、unpaywall、doaj、pmc |
+| ja | jstage、cinii、crossref、unpaywall、doaj、pmc |
+| ko | crossref、unpaywall、doaj |
+| es、pt | scielo、crossref、unpaywall |
+| en | pmc、crossref、arxiv、biorxiv、medrxiv、openaire、base、core、unpaywall、doaj |

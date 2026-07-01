@@ -1,278 +1,162 @@
 # Tests
 
-> Test suite for the LinguaSeeker backend. Uses `pytest` with `pytest-asyncio` for async test support. Tests mirror the `backend/src/` source structure.
+> 后端测试套件——单元测试、集成测试、基准测试和端到端脚本测试。
 
-## Quick Start
+## Overview
 
-```bash
-cd backend
+`tests/` 包含 Lingua Seeker 后端的完整测试套件。使用 pytest + pytest-asyncio，单元测试使用 SQLite 内存数据库（快速、无外部依赖），集成测试使用 PostgreSQL 测试数据库。
 
-# Run all tests
-uv run pytest
-
-# Run with verbose output
-uv run pytest -v
-
-# Run a specific test file
-uv run pytest tests/agents/test_orchestrator.py -v
-
-# Run a single test function
-uv run pytest tests/agents/test_orchestrator.py::test_full_pipeline -v
-
-# Run tests by marker
-uv run pytest -m "not e2e" -v  # Skip end-to-end tests
-uv run pytest -m "integration" -v  # Run integration tests only
-```
-
-## Directory Map
+## Structure
 
 ```
 tests/
-├── conftest.py                              # Shared fixtures
-├── agents/                                  # Orchestrator, runner, adapters, state persistence
-│   ├── test_orchestrator.py                 # PipelineOrchestrator graph construction and routing
-│   ├── test_runner.py                       # PipelineRunner lifecycle
-│   ├── test_concurrency.py                  # PipelineSemaphore, RetryablePhaseExecutor
-│   ├── test_contracts.py                    # Agent contract validation
-│   ├── test_state_persistence*.py           # State persistence layer tests
-│   ├── test_state_transition_guard.py       # Transition guard logic
-│   ├── test_processing_cache.py             # Processing cache
-│   ├── test_phase_1_adapter.py              # Phase 1 adapter
-│   ├── test_phase_1_pre_parsed_handoff.py   # Pre-parsed markdown handoff
-│   ├── test_phase_2_adapter.py              # Phase 2 adapter
-│   ├── test_phase2_retry.py                 # Phase 2 retry logic
-│   ├── test_phase_3_adapter.py              # Phase 3 adapter
-│   └── test_phase_4_factory.py              # Phase 4 factory
-├── api/                                     # API route and middleware tests
-│   ├── conftest.py                          # Test client and mock fixtures
-│   ├── test_annotations_api.py              # Document annotation CRUD endpoints
-│   ├── test_auth.py                         # API key authentication
-│   ├── test_body_size_limit.py              # Body size middleware
-│   ├── test_rate_limiting.py                # Rate limiter behavior
-│   ├── test_pipeline_api.py                 # Pipeline CRUD endpoints
-│   ├── test_pipeline_auth.py                # Pipeline auth enforcement
-│   ├── test_pipeline_path_traversal.py      # Upload path traversal prevention
-│   ├── test_pipeline_upload_limit.py        # Upload size limit enforcement
-│   ├── test_evidence_api.py                 # Evidence search and detail endpoints
-│   ├── test_chat_api.py                     # Chat session and message endpoints
-│   ├── test_delta_audit_api.py              # Delta audit endpoints
-│   ├── test_source_link_api.py              # Source link endpoints
-│   ├── test_literature_profile_api.py       # Literature profile endpoints
-│   ├── test_deps_session.py                 # DB session dependency
-│   ├── test_error_handlers.py               # Global error handler
-│   ├── test_error_response_type.py          # Error response structure
-│   ├── test_health_endpoint.py              # Health check endpoint
-│   ├── test_response_models.py              # Response model validation
-│   └── test_wiring_config.py                # Wiring configuration
-├── core/                                    # Business logic tests
-│   ├── cross_lingual_process_and_extract_evidence/   # Phase 2
-│   │   ├── extract_evidence/                           # Evidence extraction
-│   │   │   ├── reconcile/                              # Reconciliation sub-package
-│   │   │   ├── verify/                                 # Verification sub-package
-│   │   │   ├── test_catalog.py                         # Catalog extraction
-│   │   │   ├── test_chain_builder.py                   # Chain builder
-│   │   │   ├── test_chunking.py                        # Text chunking
-│   │   │   ├── test_contracts.py                       # Contract validation
-│   │   │   ├── test_group_assignment.py                # Group assignment
-│   │   │   ├── test_normalization.py                   # Value normalization
-│   │   │   ├── test_prompts.py                         # Prompt templates
-│   │   │   ├── test_providers.py                       # LLM providers
-│   │   │   ├── test_quality_validation.py              # Quality checks
-│   │   │   ├── test_role_routing.py                    # Role routing
-│   │   │   ├── test_source_grounding.py                # Source grounding
-│   │   │   ├── test_target_guard.py                    # Target guard
-│   │   │   ├── test_target_span_recovery.py            # Target span recovery
-│   │   │   ├── test_field_eligibility.py               # Field eligibility
-│   │   │   ├── test_block_selection.py                 # Block selection
-│   │   │   ├── test_stages.py / test_stages_async.py   # Pipeline stages
-│   │   │   ├── test_workflow.py / test_workflow_async.py # Workflow orchestration
-│   │   │   └── test_e2e_*.py                           # E2E extraction tests
-│   │   ├── test_translator.py                          # Translation service
-│   │   ├── test_segmenter.py                           # Text segmentation
-│   │   ├── test_language_detector.py                   # Language detection
-│   │   ├── test_router.py                              # Translation router
-│   │   ├── test_formatter.py                           # Output formatting
-│   │   ├── test_validator.py                           # Translation validation
-│   │   ├── test_drift_tracking.py                      # Drift tracking
-│   │   ├── test_persistence.py                         # Persistence layer
-│   │   └── test_e2e_*.py                               # E2E translation tests
-│   ├── ingest_and_digitize_data/                      # Phase 1
-│   │   ├── document_acquisition/                       # Acquisition service
-│   │   │   ├── local_upload/                           # Local file upload
-│   │   │   └── online_acquisition/                     # Online search/download
-│   │   ├── parse_document/                             # Document parsing
-│   │   │   ├── test_mineru_parser.py                   # MinerU remote parser
-│   │   │   ├── test_mineru_local_parser.py             # MinerU local parser
-│   │   │   ├── test_orchestrator.py                    # Parse orchestrator
-│   │   │   └── test_e2e_*.py                           # E2E parsing tests
-│   │   └── test_rust_io_facade.py                      # Rust I/O facade
-│   ├── standardize_entities_and_align_knowledge/       # Phase 3
-│   │   ├── context_pack/                               # Context pack
-│   │   ├── precise_match/                              # Precise matching (tested via parent)
-│   │   ├── similarity_match/                           # Similarity matching (tested via parent)
-│   │   ├── test_matchers.py                            # Entity matching
-│   │   ├── test_normalizers.py                         # Entity normalization
-│   │   ├── test_importers.py                           # Terminology importers
-│   │   ├── test_hgvs_normalizer.py                     # HGVS normalization
-│   │   ├── test_variant_id.py                          # Variant ID handling
-│   │   ├── test_cross_lingual_disease.py               # Cross-lingual disease names
-│   │   ├── test_acmg_projection.py                     # ACMG projection
-│   │   ├── test_similarity_*.py                        # Similarity search and indexing
-│   │   └── test_literature_profile_refresh.py          # Profile refresh
-│   ├── visualize_evidence_with_expert_in_loop/         # Phase 4
-│   │   ├── test_feedback_service.py                    # Feedback service
-│   │   ├── test_chat_service.py                        # Chat service
-│   │   ├── test_chat_ai.py                             # Chat AI integration
-│   │   ├── test_chat_sse.py                            # SSE streaming
-│   │   ├── test_delta_audit.py                         # Delta audit
-│   │   ├── test_source_linker.py                       # Source linker
-│   │   ├── test_search_service.py                      # Search service
-│   │   └── test_contracts*.py                          # Contract validation
-│   ├── test_config.py                                  # Config loading
-│   ├── test_config_loader.py                           # Layered config loader
-│   ├── test_database_config.py                         # Database config
-│   ├── test_grounding.py                               # Grounding utilities
-│   ├── test_formatter.py                               # Shared formatter
-│   └── test_search_service.py                          # Shared search service
-├── dao/
-│   ├── postgresql/                          # ORM, connection, repo tests
-│   │   ├── test_models.py                   # Model validation
-│   │   ├── test_connection.py               # Engine and session lifecycle
-│   │   ├── test_literature_profile_repo.py  # Literature profile repo
-│   │   ├── test_literature_profile_model.py # Literature profile model
-│   │   ├── test_literature_profile_created_at.py  # Created-at field
-│   │   ├── test_search_index_repo.py        # Search index repo
-│   │   ├── test_alembic_migration.py        # Migration integrity
-│   │   ├── test_pgvector_migration.py       # pgvector migration
-│   │   └── test_type_contract_compliance.py # Type contract compliance
+├── conftest.py                      # 共享测试夹具（SQLite/PG 会话、清理）
+├── test_download_phase.py           # 下载阶段测试
+├── test_health.py                   # 健康检查测试
+├── test_startup_lock.py             # 启动 advisory lock 测试
+├── test_web_search_adapter.py       # 网络搜索适配器测试
+├── test_workflow_refactored.py      # 工作流重构测试
+├── agents/                          # 管线编排器测试
+│   ├── test_state_persistence_layer.py
+│   ├── test_phase2_retry.py
+│   ├── test_phase_2_adapter.py
+│   ├── test_processing_cache.py
+│   ├── test_state_transition_guard.py
+│   ├── test_concurrency.py
+│   ├── test_contracts.py
+│   ├── test_integration.py
+│   ├── test_job_queue.py
+│   └── ...
+├── api/                             # API 路由测试
+│   ├── conftest.py                  #   API 测试夹具（TestClient）
+│   ├── test_pipeline_api.py
+│   ├── test_annotations_api.py
+│   ├── test_auth.py
+│   ├── test_body_size_limit.py
+│   ├── test_chat_api.py
+│   ├── test_delta_audit_api.py
+│   ├── test_wiring_config.py
+│   └── ...
+├── core/                            # 核心业务逻辑测试
+│   ├── test_config.py
+│   ├── test_config_loader.py
+│   ├── test_contracts.py
+│   ├── test_database_config.py
+│   ├── test_formatter.py
+│   ├── test_grounding.py
+│   ├── test_search_service.py
+│   ├── test_parse_document_config.py
+│   ├── cross_lingual_process_and_extract_evidence/  # Phase 2 子模块测试
+│   └── standardize_entities_and_align_knowledge/    # Phase 3 子模块测试
+├── benchmark/                       # 基准和评估测试
+│   ├── test_build_unified_dataset.py
+│   ├── test_case_studies.py
+│   ├── test_diagnose_grounding.py
+│   ├── test_field_normalize.py
+│   ├── test_gold_standard_filter.py
+│   ├── test_statistical_significance.py
+│   └── ...
+├── dao/                             # 数据访问层测试
+│   ├── postgresql/
 │   ├── redis/
-│   │   ├── test_connection.py               # Redis connection
-│   │   └── test_cache_repo.py               # Cache repository
-│   └── test_chat_message_fk.py              # Chat message foreign key
-├── benchmark/                               # Evaluation and benchmark tests
-│   ├── layer3/                              # Layer 3 benchmark suite
-│   │   ├── clinvar_fused/                   # ClinVar fused evaluation
-│   │   ├── test_evaluate_matching.py        # Matching evaluation
-│   │   ├── test_baseline_runner.py          # Baseline runner
-│   │   ├── test_diagnose_*.py               # Diagnostic tests
-│   │   ├── test_reconcile_*.py              # Reconciliation evaluation
-│   │   ├── test_prompt_model_*.py           # Prompt/model sweep
-│   │   ├── test_main_paper_*.py             # Paper table generators
-│   │   └── test_*.py                        # Various benchmark tests
-│   ├── optimization/                        # Fused75 optimization tests
-│   └── test_*.py                            # Top-level benchmark tests
-├── integration/                             # Full integration tests
-│   ├── test_app_startup.py                  # App startup sequence
-│   └── test_literature_profile_e2e.py       # Literature profile E2E
-├── online_acquisition/                      # Online acquisition E2E tests
-│   ├── test_e2e_multilingual.py             # Multilingual acquisition
-│   ├── test_e2e_providers.py                # Provider E2E
-│   ├── test_e2e_workflow.py                 # Workflow E2E
-│   ├── test_literature_type_classifier.py   # Literature type classification
-│   ├── test_parallel_search.py              # Parallel search
-│   ├── test_ranking.py                      # Result ranking
-│   └── test_provider_health.py              # Provider health checks
-├── scripts/                                 # Script smoke tests
-│   ├── test_e2e_extract_evidence.py         # Extract evidence script
-│   └── test_e2e_standardize_entities.py     # Standardize entities script
-├── unit/                                    # Standalone unit tests
-│   ├── test_batch_parse_downloads.py        # Batch parse downloads
-│   ├── test_query_translator.py             # Query translation
-│   └── test_relevance_gate_parsed.py        # Relevance gate
-└── utils/                                   # Utility tests
-    ├── test_exceptions.py                   # Exception hierarchy
-    ├── test_health.py                       # Health check utilities
-    ├── test_logger.py                       # Logger setup
-    ├── test_middleware.py                    # Request monitoring middleware
-    ├── test_observability.py                # Observability utilities
-    └── test_text.py                         # Text utilities
+│   └── test_chat_message_fk.py
+├── integration/                     # 集成测试
+│   ├── test_app_startup.py
+│   └── test_literature_profile_e2e.py
+├── online_acquisition/              # 文献采集测试
+│   ├── test_e2e_multilingual.py
+│   ├── test_e2e_providers.py
+│   ├── test_e2e_workflow.py
+│   ├── test_literature_type_classifier.py
+│   └── ...
+├── scripts/                         # 端到端脚本测试
+│   ├── test_e2e_extract_evidence.py
+│   └── test_e2e_standardize_entities.py
+├── services/                        # 服务层测试（预留）
+├── unit/                            # 纯单元测试
+│   ├── test_batch_parse_downloads.py
+│   ├── test_query_translator.py
+│   └── test_relevance_gate_parsed.py
+├── utils/                           # 工具函数测试
+│   ├── test_exceptions.py
+│   ├── test_health.py
+│   ├── test_logger.py
+│   ├── test_middleware.py
+│   ├── test_observability.py
+│   └── test_text.py
+└── output/                          # 测试输出目录（git-ignored）
 ```
 
-## Test Strategy
+## Key Components
 
-### Unit Tests
+### `conftest.py` — 共享夹具
 
-Most tests are unit tests with mocked external dependencies:
-- LLM calls are mocked via `unittest.mock` -- no real API calls
-- Database tests use in-memory SQLite or test fixtures
-- Rust native extension tests mock `rust_io` when unavailable
+| 夹具 | 说明 |
+|------|------|
+| `db_session` | SQLite 内存数据库会话（每个测试独立创建和销毁） |
+| `postgresql_db_session` | PostgreSQL 测试数据库会话（需要预创建 `lingua_seeker_test` 数据库） |
+| `_cleanup_test_artifacts` | 会话级自动清理 `data/pipeline/` 测试产物 |
+| `event_loop` | pytest-asyncio 事件循环 |
 
-### Integration Tests
+SQLite 夹具自动将 `JSONB` 列替换为 `JSON` 类型，测试结束后恢复原始类型。
 
-Integration tests require live external services (PostgreSQL, Redis, LLM endpoints):
-- Marked with `@pytest.mark.integration` or `@pytest.mark.e2e`
-- Skipped by default in CI
-- Run manually: `uv run pytest -m integration -v`
+### 测试分类
 
-### E2E Tests
+| 目录 | 类型 | 外部依赖 |
+|------|------|----------|
+| `unit/` | 纯单元测试 | 无 |
+| `agents/` | 管线编排器测试 | SQLite（内存） |
+| `api/` | API 路由测试 | SQLite + TestClient |
+| `core/` | 核心业务逻辑测试 | 视具体模块 |
+| `utils/` | 工具函数测试 | 无 |
+| `dao/` | 数据访问层测试 | SQLite/PostgreSQL |
+| `integration/` | 集成测试 | PostgreSQL |
+| `benchmark/` | 基准/评估测试 | 视具体测试 |
+| `online_acquisition/` | 文献采集测试 | 外部 API |
+| `scripts/` | 脚本端到端测试 | PostgreSQL + 外部服务 |
 
-End-to-end tests exercise the full pipeline with real services:
-- Located in `core/*/test_e2e_*.py` and `online_acquisition/test_e2e_*.py`
-- Require configured service endpoints
-- Run manually: `uv run pytest -m e2e -v`
+## Usage / Patterns
 
-### Benchmark Tests
+### 运行全部测试
 
-Benchmark and evaluation tests in `benchmark/layer3/` and `benchmark/optimization/`:
-- Evaluate extraction quality, reconciliation accuracy, and prompt/model baselines
-- Generate report tables and diagnostic artifacts
-- Require populated database and test datasets
-
-## Writing Tests
-
-### Fixtures
-
-Shared fixtures are in `conftest.py` at each directory level. Key fixtures:
-
-```python
-# Example: mock config fixture
-@pytest.fixture
-def mock_config(monkeypatch):
-    monkeypatch.setenv("LLM_API_KEY", "test-key")
-    monkeypatch.setenv("LLM_BASE_URL", "http://localhost:8001")
-    ...
+```bash
+cd backend
+uv run pytest tests/ -v
 ```
 
-### Async Tests
+### 运行特定目录
 
-Use `pytest.mark.asyncio` for async test functions:
-
-```python
-import pytest
-
-@pytest.mark.asyncio
-async def test_translation_service():
-    service = TranslationService(cfg=mock_config)
-    result = await service.run(pages=[...])
-    assert result.source_language == "zh"
+```bash
+uv run pytest tests/agents/ -v
+uv run pytest tests/api/ -v
+uv run pytest tests/utils/ -v
 ```
 
-### Naming Convention
+### 运行集成测试
 
-- Test files: `test_<module>.py`
-- Test functions: `test_<behavior>`
-- Test classes: `Test<ClassName>` (optional, for grouping)
+```bash
+# 需要运行中的 PostgreSQL
+uv run pytest tests/integration/ -v
+```
 
-## Coverage Gaps
+### 跳过需要外部服务的测试
 
-| Area | Status | Notes |
-|------|--------|-------|
-| Agent orchestrator | Good | Unit tests for graph construction, routing, state persistence |
-| API routes | Good | Request validation, error responses, auth, rate limiting, annotations |
-| Phase 1 (acquisition) | Good | Facade, local upload, gateway, normalizers, parsers |
-| Phase 2 (extraction) | Good | Catalog, chunking, prompts, providers, reconciliation, workflow |
-| Phase 2 (translation) | Good | Translator, formatter, validator, prompts, drift tracking |
-| Phase 3 (standardization) | Good | Matching, alignment, similarity, importers, context pack, HGVS |
-| Phase 4 (review/feedback) | Good | Feedback, chat, audit, source linking, search |
-| DAO | Good | Models, connection, repos, migrations, type compliance |
-| Benchmark | Good | Layer 3 evaluation suite + optimization tests |
-| Rust integration | Partial | Tests mock `rust_io`; no GPU/hardware tests |
-| Web scrapers | Partial | Dispatcher tested; individual scrapers need live sites |
+```bash
+uv run pytest tests/ -v -m "not integration"
+```
+
+### 运行基准测试
+
+```bash
+uv run pytest tests/benchmark/ -v
+```
 
 ## Dependencies
 
-| Dependency | Purpose |
-|------------|---------|
-| `pytest` | Test framework |
-| `pytest-asyncio` | Async test support |
-| `unittest.mock` | Mocking (stdlib) |
+| 依赖 | 用途 |
+|------|------|
+| pytest | 测试框架 |
+| pytest-asyncio | 异步测试支持 |
+| aiosqlite | SQLite 异步驱动（单元测试） |
+| httpx | HTTP 测试客户端 |
+| SQLAlchemy | 测试数据库管理 |

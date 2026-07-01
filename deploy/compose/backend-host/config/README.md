@@ -1,38 +1,42 @@
-# backend-host/config -- Backend Configuration for Compose
+# backend-host/config — 后端容器配置
 
-This directory holds the configuration files mounted into the backend container at runtime.
+> Docker Compose 跨主机部署中后端容器的运行时配置文件。
 
-## Files
+## 概述
 
-| File | Container Path | Purpose |
-|------|---------------|---------|
-| `production.yaml` | `/app/config/environments/production.yaml` (read-only) | Environment-specific app config (LLM endpoints, database host, CORS, etc.) |
-| `vault/production.yaml` | `/app/config/vault/production.yaml` (read-only) | Secrets (API keys, database passwords) |
+本目录存放挂载到后端容器的配置文件，通过 Docker Compose 的 `volumes` 以只读方式注入容器。配置通过 `acmg-config-loader` 库加载，按优先级从低到高合并。
 
-## Setup
+## 文件列表
+
+| 文件 | 容器路径 | 用途 |
+|------|---------|------|
+| `production.yaml` | `/app/config/environments/production.yaml`（只读） | 环境特定应用配置（LLM 端点、数据库主机、CORS 等） |
+| `vault/production.yaml` | `/app/config/vault/production.yaml`（只读） | 密钥（API 密钥、数据库密码） |
+
+## 设置
 
 ```bash
 cd deploy/compose/backend-host
 
-# Create config from templates
+# 从模板创建配置
 cp ../../../backend/config/environments/production.yaml.example config/production.yaml
 cp ../../../backend/config/vault/production.yaml.example config/vault/production.yaml
 chmod 600 config/vault/production.yaml
 ```
 
-Edit `config/production.yaml` to set environment-specific values (CORS origins, inference service URLs, etc.). Edit `config/vault/production.yaml` with real secrets (database passwords, LLM API keys).
+编辑 `config/production.yaml` 设置环境特定值（CORS 来源、推理服务 URL 等）。编辑 `config/vault/production.yaml` 填入真实密钥（数据库密码、LLM API 密钥）。
 
-## Git Ignore
+## 配置加载顺序
 
-- `config/production.yaml` -- git-ignored (local overrides)
-- `config/vault/*.yaml` -- git-ignored (secrets)
-- `config/vault/README.md` -- committed (this file is exempt)
+后端按以下优先级加载配置（最高优先级在后）：
 
-## Config Loading Order
+1. `backend/config/defaults/main.yaml`（应用默认值）
+2. `config/environments/production.yaml`（环境覆盖，此处挂载）
+3. `config/vault/production.yaml`（密钥，此处挂载）
+4. `docker-compose.yml` 中的环境变量（最高优先级）
 
-The backend loads configuration in this priority (highest last):
+## Git 忽略
 
-1. `backend/config/defaults/main.yaml` (app defaults)
-2. `config/environments/production.yaml` (environment overrides, mounted here)
-3. `config/vault/production.yaml` (secrets, mounted here)
-4. Environment variables from `docker-compose.yml` (highest priority)
+- `config/production.yaml` — git 忽略（本地覆盖）
+- `config/vault/*.yaml` — git 忽略（密钥）
+- `config/vault/README.md` — 已提交（此文件豁免）

@@ -1,181 +1,136 @@
-# benchmark/config -- Centralized Configuration for the Benchmark Suite
+# benchmark/config — 基准测试集中配置
 
-Single home for benchmark configuration. Two complementary mechanisms:
-**Ansible** renders tunable/secret config files into their consumer locations,
-and **`defaults.py`** is the canonical source for runtime code constants
-previously duplicated across runners.
+> 基准测试套件的集中配置管理。Ansible 渲染可调/密钥配置文件，`defaults.py` 是运行时代码常量的单一来源。
 
-## Quick Start
+## 概述
+
+本目录提供两种互补的配置机制：Ansible 渲染文件配置（模板+密钥）到消费者位置，以及 Python 运行时常量（`defaults.py`）供运行器代码导入。所有路径从 `BENCHMARK_ROOT` 解析，确保无论运行器 CWD 如何都正确。
+
+## 快速开始
 
 ```bash
-# 1. Install ansible-core
+# 1. 安装 ansible-core
 uv tool install ansible-core
 
-# 2. Bootstrap secrets + vault password (first checkout only)
+# 2. 初始化密钥和 vault 密码（仅首次）
 cd benchmark/config
 openssl rand -base64 48 > .vault_pass && chmod 600 .vault_pass
 cp vault/secrets.example.yml vault/secrets.yml
-#   ...edit vault/secrets.yml with real values...
+# ...编辑 vault/secrets.yml 填入真实值...
 ansible-vault encrypt vault/secrets.yml
 
-# 3. Render all managed config files into their consumer locations
+# 3. 渲染所有管理的配置文件到消费者位置
 ansible-playbook playbooks/deploy-config.yml
-# -> benchmark/datasets/rett_annotation/{config.yaml, .env}
-# -> benchmark/data/inputs/literature_acquisition/{rett_config.json, rett_config_02.json}
 ```
 
-Re-running the playbook reports `changed=0` when nothing changed -- it is idempotent.
+重新运行 playbook 时，如果没有变更会报告 `changed=0`（幂等操作）。
 
-Runtime constants need no rendering -- just import them:
+运行时常量无需渲染——直接导入：
 
 ```python
 from benchmark.config.defaults import DEFAULT_PIPELINE_BASE_URL, RETT_CONFIG_PATH
 ```
 
-## Layout
+## 目录结构
 
 ```
 benchmark/config/
-├── __init__.py                       # Package marker + scope docstring
-├── defaults.py                       # Runtime code constants (single source)
-├── ansible.cfg                       # Inventory, roles_path, vault pass
+├── __init__.py                       # 包标记 + 范围文档
+├── defaults.py                       # 运行时代码常量（单一来源）
+├── ansible.cfg                       # Inventory、roles_path、vault pass
 ├── inventories/local/
-│   ├── hosts.yml                     # localhost in the `benchmark` group
-│   └── group_vars/benchmark.yml      # Non-secret vars for rendered file configs
-├── playbooks/deploy-config.yml       # Renders all file configs
+│   ├── hosts.yml                     # localhost 在 `benchmark` 分组
+│   └── group_vars/benchmark.yml      # 渲染文件配置的非密钥变量
+├── playbooks/deploy-config.yml       # 渲染所有文件配置
 ├── roles/
-│   ├── rett_annotation_config/       # Renders config.yaml + .env (secrets via vault)
+│   ├── rett_annotation_config/       # 渲染 config.yaml + .env（密钥通过 vault）
 │   │   ├── tasks/main.yml
 │   │   └── templates/{config.yaml.j2, .env.j2}
-│   └── rett_acquisition_config/      # Deploys static rett_config*.json (copy, not template)
+│   └── rett_acquisition_config/      # 部署静态 rett_config*.json（复制，非模板）
 │       ├── tasks/main.yml
 │       └── files/literature_acquisition/{rett_config.json, rett_config_02.json}
 └── vault/
-    ├── secrets.example.yml           # Placeholder (committed)
-    └── secrets.yml                   # Real secrets, ansible-vault encrypted (gitignored)
+    ├── secrets.example.yml           # 占位符（已提交）
+    └── secrets.yml                   # 真实密钥，ansible-vault 加密（git 忽略）
 ```
 
-## Architecture
+## 架构
 
-### Flow 1: Ansible-rendered file configs
+### 流程 1：Ansible 渲染文件配置
 
 ```
-group_vars/benchmark.yml (non-secret)   vault/secrets.yml (encrypted)
+group_vars/benchmark.yml（非密钥）   vault/secrets.yml（加密）
         rett_annotation_*                       rett_annotation_secrets
                 |                                      |
-        +-------+--------+                         (only for .env)
+        +-------+--------+                         （仅 .env）
         | deploy-config.yml |
         |  roles:           |
         |   rett_annotation_config   -> template -> config.yaml (0644) + .env (0600)
         |   rett_acquisition_config  -> copy     -> rett_config.json + rett_config_02.json
         +-----------+-------+
                     v
-   benchmark/datasets/rett_annotation/         <- read by src/config.py
-   benchmark/data/inputs/literature_acquisition/  <- read by runners/literature_rett.py
+   benchmark/datasets/rett_annotation/         <- 由 src/config.py 读取
+   benchmark/data/inputs/literature_acquisition/  <- 由 runners/literature_rett.py 读取
 ```
 
-### Flow 2: Runtime code constants (`defaults.py`)
+### 流程 2：运行时代码常量（`defaults.py`）
 
 ```python
 from benchmark.config.defaults import (
     DEFAULT_PIPELINE_BASE_URL,   # "http://localhost:8000"
     PHASE2_TERMINAL_STATUSES,    # {"completed", "failed", "skipped"}
     FILTER_TIER1_KEEP_THRESHOLD, # 3
-    DEFAULT_SEED_QUERIES,        # 25 Rett/MECP2 queries
+    DEFAULT_SEED_QUERIES,        # 25 个 Rett/MECP2 查询
     RETT_CONFIG_PATH,            # data/inputs/literature_acquisition/rett_config.json
 )
 ```
 
-Constants are imported by runners (`phase2_batch`, `benchmark_b_phase2_sample`, `filter_variant_evidence`, `literature_rett`). Paths resolve from `BENCHMARK_ROOT` so they are correct regardless of runner CWD.
+## 管理的配置
 
-## What is Managed
+### 文件配置（Ansible 渲染）
 
-### File configs (Ansible-rendered)
+| 渲染文件 | 机制 | 消费者 |
+|---------|------|--------|
+| `benchmark/datasets/rett_annotation/config.yaml` | 模板 (0644) | `rett_annotation/src/config.py` |
+| `benchmark/datasets/rett_annotation/.env` | 模板 (0600, no_log) | `rett_annotation/src/config.py` |
+| `benchmark/data/inputs/literature_acquisition/rett_config.json` | 复制 (0644) | `runners/literature_rett.py` |
+| `benchmark/data/inputs/literature_acquisition/rett_config_02.json` | 复制 (0644) | `runners/literature_rett.py` |
 
-| Rendered file | Mechanism | Consumer |
-| --- | --- | --- |
-| `benchmark/datasets/rett_annotation/config.yaml` | template (0644) | `rett_annotation/src/config.py` |
-| `benchmark/datasets/rett_annotation/.env` | template (0600, no_log) | `rett_annotation/src/config.py` |
-| `benchmark/data/inputs/literature_acquisition/rett_config.json` | copy (0644) | `runners/literature_rett.py` |
-| `benchmark/data/inputs/literature_acquisition/rett_config_02.json` | copy (0644) | `runners/literature_rett.py` |
+### 运行时常量（`defaults.py`）
 
-### Runtime constants (`defaults.py`)
+| 常量 | 值 | 描述 |
+|------|-----|------|
+| `DEFAULT_PIPELINE_BASE_URL` | `http://localhost:8000` | 后端 API 端点 |
+| `PHASE2_TERMINAL_STATUSES` | `{completed, failed, skipped}` | 终态集合 |
+| `FILTER_TIER1_KEEP_THRESHOLD` | `3` | 变异过滤保留阈值 |
+| `DEFAULT_SEED_QUERIES` | 25 个 Rett/MECP2 查询 | 文献获取种子查询 |
+| `RETT_CONFIG_PATH` | `data/inputs/literature_acquisition/rett_config.json` | 规范配置路径 |
 
-| Constant | Value | Description |
-| --- | --- | --- |
-| `DEFAULT_PIPELINE_BASE_URL` | `http://localhost:8000` | Backend API endpoint |
-| `PHASE2_ARTIFACT_RELATIVE_PATH` | `phase_2/extraction_result.json` | Phase 2 result location |
-| `PHASE2_TERMINAL_STATUSES` | `{completed, failed, skipped}` | Terminal statuses |
-| `PIPELINE_FAILURE_STATUSES` | `{failed}` | Failure-only subset |
-| `FILTER_TIER1_KEEP_THRESHOLD` | `3` | Variant filter keep threshold |
-| `FILTER_TIER1_REJECT_THRESHOLD` | `0` | Variant filter reject threshold |
-| `DEFAULT_SEED_QUERIES` | 25 Rett/MECP2 queries | Seed query list for literature_rett |
-| `RETT_CONFIG_PATH` / `RETT_CONFIG_02_PATH` | `data/inputs/literature_acquisition/rett_config*.json` | Canonical config paths |
-
-### Deliberately NOT moved here
-
-| Item | Home | Reason |
-| --- | --- | --- |
-| `POLL_INTERVAL_S` / `MAX_POLL_ATTEMPTS` / `TERMINAL_STATUSES` | `benchmark/core/pipeline_client.py` | Bound to `submit_and_poll` + test monkeypatch contract |
-| `BENCHMARK_ROOT` / `GROUND_TRUTH_ROOT` / `REPORTS_ROOT` | `benchmark/core/paths.py` | Already centralized |
-| `benchmark/data/inputs/pipeline/manifest.json` | `data/inputs/pipeline/` | Input data manifest, not tunable config |
-| `benchmark/datasets/rett_annotation/ground_truth/manifest.json` | `rett_annotation/ground_truth/` | Ground-truth data (800+ entries), not config |
-
-## Usage Patterns
-
-### Change the LLM model / endpoint (rett_annotation)
+## 使用模式
 
 ```bash
-# edit inventories/local/group_vars/benchmark.yml: rett_annotation_llm.model
+# 更改 LLM 模型/端点
+# 编辑 inventories/local/group_vars/benchmark.yml: rett_annotation_llm.model
 ansible-playbook playbooks/deploy-config.yml
-```
 
-### Edit the multilingual acquisition config
+# 调整过滤阈值或管线 URL
+# 直接编辑 benchmark/config/defaults.py——无需 playbook
 
-```bash
-# edit benchmark/config/roles/rett_acquisition_config/files/literature_acquisition/rett_config.json
-ansible-playbook playbooks/deploy-config.yml
-```
-
-### Tune a filter threshold or pipeline base URL
-
-Edit `benchmark/config/defaults.py` directly -- no playbook needed. Runners pick it up on next import.
-
-### Rotate a secret
-
-```bash
+# 轮换密钥
 ansible-vault edit vault/secrets.yml
 ansible-playbook playbooks/deploy-config.yml
 ```
 
-### Verify a fresh checkout
+## 测试
 
 ```bash
-ansible-playbook playbooks/deploy-config.yml          # changed=4
-ansible-playbook playbooks/deploy-config.yml | tail -1 # changed=0 (idempotent)
-```
-
-## Dependencies
-
-| Dependency | Version | Purpose |
-|------------|---------|---------|
-| ansible-core | 2.19.11 | Playbook engine, `template`/`copy`/`file`, `ansible-vault` |
-| Jinja2 | (bundled) | Template rendering |
-| PyYAML | (bundled) | YAML vars + vault parsing |
-| benchmark.core.paths | (internal) | `BENCHMARK_ROOT` for path resolution |
-
-Install via `uv tool install ansible-core`.
-
-## Testing
-
-```bash
-# 1. Playbook syntax
+# Playbook 语法检查
 ansible-playbook playbooks/deploy-config.yml --syntax-check
 
-# 2. Render + idempotency
+# 渲染 + 幂等性验证
 ansible-playbook playbooks/deploy-config.yml
 ansible-playbook playbooks/deploy-config.yml | tail -1   # changed=0
 
-# 3. Full benchmark test suite
+# 完整基准测试套件
 cd backend && uv run pytest tests/benchmark/ -q
 ```

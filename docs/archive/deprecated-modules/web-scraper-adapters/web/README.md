@@ -1,96 +1,64 @@
 # Web Scrapers
 
-> Browser-based web scrapers for academic sites that lack public APIs or require JavaScript rendering. Each scraper implements search and download for a specific regional academic publisher.
+> 缺少公共 API 或需要 JavaScript 渲染的学术网站的基于浏览器的网页抓取器。每个抓取器实现特定区域学术出版商的搜索和下载功能。
 >
-> **Status:** Deprecated (archived 2026-06-16). Replaced by Rust-based `net_io` HTTP providers.
+> **状态：** 已弃用（2026-06-16 归档）。已被 Rust 实现的 `net_io` HTTP 提供商替代。
 
-## Quick Start
+## 概述
 
-```python
-from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.web_providers import call_web_provider
+本模块为 6 个区域学术平台提供浏览器自动化抓取能力。采用双层策略：优先尝试直接 HTTP（httpx，最快），失败时回退到浏览器自动化（crawl4ai）。
 
-# Search via a specific web provider
-result = await call_web_provider("pubscholar", "search", {
-    "query": "BRCA1 variant",
-    "limit": 10,
-})
-```
-
-## Architecture
+## 架构
 
 ```
 web/
-├── base.py           # Shared utilities: crawl4ai_search, download_pdf_from_candidates,
-│                     #   extract_pdf_links_from_html, scrape_html_elements, safe_json_loads
-├── locators.py       # XPath/CSS selectors for each site's UI elements
-├── pubscholar.py     # PubScholar (Chinese, CNIC/CAS)
-├── chinaxiv.py       # ChinaXiv (Chinese preprints)
-├── hans_publishers.py # Hans Publishers (Chinese journals)
-├── cyberleninka.py   # CyberLeninka (Russian open access)
-├── koreascience.py   # KoreaScience (Korean journals)
-├── redalyc.py        # Redalyc / La Referencia (Spanish/Portuguese)
+├── base.py           # 共享工具：crawl4ai_search、download_pdf_from_candidates、
+│                     #   extract_pdf_links_from_html、scrape_html_elements、safe_json_loads
+├── locators.py       # 每个站点 UI 元素的 XPath/CSS 选择器
+├── pubscholar.py     # PubScholar（中文，CNIC/CAS）
+├── chinaxiv.py       # ChinaXiv（中文预印本）
+├── hans_publishers.py # Hans Publishers（中文期刊）
+├── cyberleninka.py   # CyberLeninka（俄文开放获取）
+├── koreascience.py   # KoreaScience（韩文期刊）
+├── redalyc.py        # Redalyc / La Referencia（西/葡文）
 └── __init__.py
 ```
 
-**Two-tier strategy per scraper:**
+## 公共 API
 
-1. **Direct HTTP** (httpx): Try public APIs or static HTML parsing first (fastest)
-2. **Browser automation** (crawl4ai): Fallback for JS-rendered sites
+### `base.py` — 共享工具
 
-## Public API
+| 函数 | 描述 |
+|------|------|
+| `safe_json_loads` | 解析 JSON，从混合内容中提取 |
+| `extract_pdf_links_from_html` | 在 `<a href>` 和 `<meta citation_pdf_url>` 中查找 PDF URL |
+| `scrape_html_elements` | 按 CSS 选择器提取元素 |
+| `download_pdf_from_candidates` | 尝试候选 URL，验证 `%PDF` 魔术字节，保存首个有效 PDF |
 
-### `base.py` -- Shared Utilities
+### 提供商函数
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `safe_json_loads` | `(text: str) -> Any` | Parse JSON, extracting from mixed content if needed |
-| `extract_pdf_links_from_html` | `(html, base_url) -> List[str]` | Find PDF URLs in `<a href>` and `<meta citation_pdf_url>`. Uses Rust parser when available, falls back to selectolax. |
-| `scrape_html_elements` | `(html, css_selector) -> List[Dict]` | Extract elements by CSS selector. Rust when available, selectolax fallback. |
-| `download_pdf_from_candidates` | `(urls, download_path, title_stem) -> Optional[str]` | Try candidate URLs, validate `%PDF` magic bytes, save first valid PDF |
+每个提供商模块导出 `_search()` 和可选的 `_download()` 函数：
 
-### Provider Functions
+| 模块 | 提供商 | 语言 |
+|------|--------|------|
+| `pubscholar.py` | PubScholar | 中文 |
+| `chinaxiv.py` | ChinaXiv | 中文 |
+| `hans_publishers.py` | Hans Publishers | 中文 |
+| `cyberleninka.py` | CyberLeninka | 俄文 |
+| `koreascience.py` | KoreaScience | 韩文 |
+| `redalyc.py` | Redalyc | 西/葡文 |
 
-Each provider module exports `_search()` and optionally `_download()` functions:
+## 内部设计
 
-| Module | Provider | Language | Notes |
-|--------|----------|----------|-------|
-| `pubscholar.py` | PubScholar | Chinese | CAS/CNIC open access |
-| `chinaxiv.py` | ChinaXiv | Chinese | Preprint server |
-| `hans_publishers.py` | Hans Publishers | Chinese | Open access journals |
-| `cyberleninka.py` | CyberLeninka | Russian | Open access repository |
-| `koreascience.py` | KoreaScience | Korean | KISTI journal platform |
-| `redalyc.py` | Redalyc | Spanish/Portuguese | Latin American journals |
+- **Rust 优先 I/O**：所有 HTTP 调用优先通过 `rust_io.net`（连接池、异步 I/O），缺失时回退到 `httpx`
+- **PDF 验证**：写入磁盘前检查 `%PDF` 魔术字节，无效下载静默跳过
+- **Crawl4ai 集成**：对 JS 渲染站点，启动无头浏览器渲染页面后使用 `LLMExtractionStrategy` 提取结构化数据
 
-### `locators.py` -- Site Selectors
+## 依赖
 
-CSS selectors and XPath expressions for each site's search results, article pages, and PDF links.
-
-## Internal Design
-
-### Rust-first I/O
-
-All HTTP calls go through `rust_io.net` when available (connection pooling, async I/O). Falls back to `httpx` when Rust extension is missing.
-
-### PDF Validation
-
-All downloaded PDFs validated by checking `%PDF` magic bytes before writing to disk. Invalid downloads are skipped silently.
-
-### Crawl4ai Integration
-
-For JS-rendered sites, `crawl4ai_search()` launches a headless browser, renders the page, then uses `LLMExtractionStrategy` to extract structured data from the rendered HTML.
-
-## Dependencies
-
-| Dependency | Purpose |
-|------------|---------|
-| `httpx` | Async HTTP fallback |
-| `selectolax` | Fast HTML parsing (fallback) |
-| `crawl4ai` | Headless browser automation for JS-rendered sites |
-| `rust_io.net` | Primary HTTP I/O (Rust/PyO3) |
-
-## Testing
-
-```bash
-cd backend
-uv run pytest tests/core/ingest_and_digitize_data/document_acquisition/ -v -k web
-```
+| 依赖 | 用途 |
+|------|------|
+| `httpx` | 异步 HTTP 备选 |
+| `selectolax` | 快速 HTML 解析（备选） |
+| `crawl4ai` | JS 渲染站点的无头浏览器自动化 |
+| `rust_io.net` | 主 HTTP I/O（Rust/PyO3） |

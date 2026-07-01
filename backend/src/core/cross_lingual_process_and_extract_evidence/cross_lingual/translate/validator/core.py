@@ -8,6 +8,47 @@ from lingua import Language
 
 from ..language_detector import _CJK_RE, _DETECTOR, _looks_english
 
+_MIN_DOCUMENT_COMPLETENESS_SOURCE_CHARS = 500
+_MIN_SEGMENT_COMPLETENESS_SOURCE_CHARS = 220
+_MIN_DOCUMENT_TRANSLATED_SOURCE_RATIO = 0.35
+_MIN_SEGMENT_TRANSLATED_SOURCE_RATIO = 0.30
+
+
+def _source_requires_completeness_check(source: str, min_source_chars: int) -> bool:
+    """Return whether a source text is long and non-English enough for length coverage checks."""
+    if len(source) < min_source_chars:
+        return False
+    if _looks_english(source):
+        return False
+
+    cjk_count = len(_CJK_RE.findall(source))
+    if cjk_count / max(len(source), 1) >= 0.05:
+        return True
+
+    detected = _DETECTOR.detect_language_of(source[:4000])
+    return detected is not None and detected != Language.ENGLISH
+
+
+def _validate_translation_completeness(
+    source: str,
+    translated: str,
+    *,
+    min_source_chars: int,
+    min_ratio: float,
+    error_prefix: str,
+) -> None:
+    """Reject long non-English sources that were compressed into a short English summary."""
+    if not _source_requires_completeness_check(source, min_source_chars):
+        return
+
+    translated_ratio = len(translated) / max(len(source), 1)
+    if translated_ratio < min_ratio:
+        raise ValueError(
+            f"{error_prefix}: incomplete_translation — "
+            f"translated/source length ratio {translated_ratio:.0%} "
+            f"below {min_ratio:.0%} for {len(source)} source chars"
+        )
+
 
 def validate_translation_output(source_text: str, translated_text: str) -> None:
     """Validate translated output quality.
@@ -45,6 +86,14 @@ def validate_translation_output(source_text: str, translated_text: str) -> None:
         ratio = SequenceMatcher(None, source.lower(), translated.lower()).ratio()
         if ratio >= 0.85 and not _looks_english(source):
             raise ValueError("translation_validation_failed: unchanged")
+
+    _validate_translation_completeness(
+        source,
+        translated,
+        min_source_chars=_MIN_DOCUMENT_COMPLETENESS_SOURCE_CHARS,
+        min_ratio=_MIN_DOCUMENT_TRANSLATED_SOURCE_RATIO,
+        error_prefix="translation_validation_failed",
+    )
 
     # Check detected language of output.
     # The lingua detector misclassifies text heavy in gene mutation notation
@@ -101,6 +150,14 @@ def validate_segment(source: str, translated: str) -> None:
         headings = re.findall(r"^#{1,6}\s+.+", translated, re.MULTILINE)
         if len(set(headings)) < len(headings):
             raise ValueError("segment_validation_failed: repetition_loop")
+
+    _validate_translation_completeness(
+        source,
+        translated,
+        min_source_chars=_MIN_SEGMENT_COMPLETENESS_SOURCE_CHARS,
+        min_ratio=_MIN_SEGMENT_TRANSLATED_SOURCE_RATIO,
+        error_prefix="segment_validation_failed",
+    )
 
 
 _IMAGE_REF_RE = re.compile(r"!\[.*?\]\((.*?)\)")

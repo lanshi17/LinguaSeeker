@@ -1,39 +1,35 @@
 # Pipeline Benchmark
 
-> **Status: DEPRECATED SHIM.** This package (`benchmark/pipeline/`) contains only
-> backward-compatible import shims after the 2026-06-18 framework refactor.
-> The runner now lives at `benchmark.runners.pipeline_e2e` and evidence metrics
-> at `benchmark.core.evidence_metrics`. The shims will be removed in Phase 6
-> of the refactor.
+> **状态：已弃用垫片。** 本包（`benchmark/pipeline/`）仅包含 2026-06-18 框架重构后的向后兼容导入垫片。运行器已移至 `benchmark.runners.pipeline_e2e`，证据指标已移至 `benchmark.core.evidence_metrics`。垫片将在重构 Phase 6 移除。
 
-Full pipeline benchmark (Phases 1-3) that submits case-report PDFs through the HTTP API as if they were frontend uploads. Measures per-phase timing, success rates, evidence quality metrics, and reliability across multiple languages.
+## 概述
 
-Phase 4 is not exercised -- the pipeline stops at `COMPLETED`.
+完整管线基准测试（Phase 1-3），通过 HTTP API 提交病例报告 PDF，模拟前端上传流程。测量每阶段计时、成功率、证据质量指标和跨语言可靠性。Phase 4 不参与测试——管线在 `COMPLETED` 状态停止。
 
-## Files
+## 文件
 
-| File | Purpose |
-|------|---------|
-| `benchmark.py` | Deprecated shim -> `benchmark.runners.pipeline_e2e` |
-| `evidence_metrics.py` | Deprecated shim -> `benchmark.core.evidence_metrics` |
-| `__init__.py` | Deprecated shim with `__getattr__` redirect |
-| `manifest.json.bak` | Backup of legacy manifest (no longer primary input source) |
-| `input/` | Test PDFs organized by language and literature type |
-| `reports/` | Timestamped JSON reports (tracked in git) |
+| 文件 | 用途 |
+|------|------|
+| `benchmark.py` | 已弃用垫片 → `benchmark.runners.pipeline_e2e` |
+| `evidence_metrics.py` | 已弃用垫片 → `benchmark.core.evidence_metrics` |
+| `__init__.py` | 已弃用垫片，`__getattr__` 重定向 |
+| `manifest.json.bak` | 遗留清单备份（不再是主要输入源） |
+| `input/` | 按语言和文献类型组织的测试 PDF |
+| `reports/` | 带时间戳的 JSON 报告（纳入 git） |
 
-## New Module Locations
+## 新模块位置
 
-| Old path | New path | Purpose |
-|----------|----------|---------|
-| `benchmark.pipeline.benchmark` | `benchmark.runners.pipeline_e2e` | Pipeline benchmark HTTP client + orchestrator |
-| `benchmark.pipeline.evidence_metrics` | `benchmark.core.evidence_metrics` | PG evidence metrics collection |
+| 旧路径 | 新路径 | 用途 |
+|--------|--------|------|
+| `benchmark.pipeline.benchmark` | `benchmark.runners.pipeline_e2e` | 管线基准 HTTP 客户端 + 编排器 |
+| `benchmark.pipeline.evidence_metrics` | `benchmark.core.evidence_metrics` | PG 证据指标采集 |
 
-## Input Languages
+## 输入语言
 
-The `input/` directory contains language subdirectories, each with literature type folders:
+`input/` 目录包含语言子目录，每种语言有文献类型文件夹：
 
-| Language | Path |
-|----------|------|
+| 语言 | 路径 |
+|------|------|
 | English | `input/en/` |
 | Chinese | `input/zh/` |
 | Japanese | `input/ja/` |
@@ -44,137 +40,87 @@ The `input/` directory contains language subdirectories, each with literature ty
 | French | `input/fr/` |
 | German | `input/de/` |
 
-Each language directory contains: `case_report/`, `functional/`, `sequencing/`, `unclassified/`.
+每种语言目录包含：`case_report/`、`functional/`、`sequencing/`、`unclassified/`。
 
-A `ground_truth/` subdirectory under `input/` holds per-language case report PDFs generated from benchmark datasets.
+## 前置条件
 
-## Canonical Runner
+以下服务必须运行：
 
-The actual runner code lives at `benchmark/runners/pipeline_e2e.py` and provides:
+| 服务 | 用途 |
+|------|------|
+| FastAPI server | HTTP API |
+| PostgreSQL + pgvector | Phase 1 状态、Phase 3 术语 |
+| Redis | 缓存层 |
+| MinerU Cloud API | Phase 1 PDF 解析 |
+| LLM（OpenAI 兼容） | Phase 2 翻译 + 提取 |
+| Model Server（本地） | Phase 3 嵌入 + 重排序 |
 
-- `scan_input_dir()` -- discovers PDFs from `benchmark/pipeline/input/{lang}/{type}/*.pdf`
-- `load_manifest()` -- loads PDFs from a manifest file
-- `submit_run()` / `poll_status()` -- HTTP submission and polling
-- `process_one_pdf()` -- per-PDF orchestration
-- `generate_report()` -- aggregated JSON report generation
-- `run_benchmark()` -- top-level orchestrator
-
-## Prerequisites
-
-All of the following services must be running:
-
-| Service | Purpose |
-|---------|---------|
-| FastAPI server | HTTP API (`--base-url`) |
-| PostgreSQL + pgvector | Phase 1 state, Phase 3 terminology |
-| Redis | Caching layer |
-| MinerU Cloud API | Phase 1 PDF parsing |
-| LLM (OpenAI-compatible) | Phase 2 translation + extraction |
-| Model Server (local) | Phase 3 embedding + reranking |
-
-**Not required:** Neo4j, MinIO.
-
-## Quick Start
+## 快速开始
 
 ```bash
 cd backend
 
-# Dry run -- list input PDFs without running
+# 干运行——列出输入 PDF 不执行
 uv run python -m benchmark.runners.pipeline_e2e --dry-run
 
-# Run all input PDFs (default concurrency: 2)
+# 运行所有输入 PDF（默认并发：2）
 uv run python -m benchmark.runners.pipeline_e2e
 
-# Custom settings
+# 自定义设置
 uv run python -m benchmark.runners.pipeline_e2e --base-url http://localhost:8000 --concurrency 1
 
-# Filter by language
+# 按语言过滤
 uv run python -m benchmark.runners.pipeline_e2e --lang en
 
-# Limit to first N PDFs
+# 限制前 N 个 PDF
 uv run python -m benchmark.runners.pipeline_e2e --limit 3
 
-# Use manifest.json instead of input/ directory scan
+# 使用 manifest.json
 uv run python -m benchmark.runners.pipeline_e2e --source manifest
 
-# Resume: skip PDFs that already passed in the most recent report
+# 恢复：跳过最近报告中已通过的 PDF
 uv run python -m benchmark.runners.pipeline_e2e --resume
 ```
 
-## CLI Flags
+## CLI 参数
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--base-url` | `http://localhost:8000` | Backend API base URL |
-| `--concurrency` | `2` | Max concurrent pipeline runs (1-10) |
-| `--dry-run` | off | Show PDF list without running |
-| `--resume` | off | Skip PDFs that already passed in the most recent report |
-| `--limit N` | all | Only process first N PDFs |
-| `--source` | `input` | PDF source: `input` scans `benchmark/pipeline/input/`, `manifest` uses `manifest.json` |
-| `--lang` | all | Filter to single language (e.g. `en`, `zh`, `ja`) |
+| 参数 | 默认值 | 描述 |
+|------|--------|------|
+| `--base-url` | `http://localhost:8000` | 后端 API 基础 URL |
+| `--concurrency` | `2` | 最大并发管线运行数（1-10） |
+| `--dry-run` | 关闭 | 仅显示 PDF 列表 |
+| `--resume` | 关闭 | 跳过最近报告中已通过的 PDF |
+| `--limit N` | 全部 | 仅处理前 N 个 PDF |
+| `--source` | `input` | PDF 来源：`input` 或 `manifest` |
+| `--lang` | 全部 | 过滤到单语言 |
 
-## Report Schema
+## 报告结构
 
-Reports are written to `reports/report_{timestamp}.json` with the following structure:
+报告写入 `reports/report_{timestamp}.json`，包含：
 
-```json
-{
-  "benchmark_run_id": "uuid",
-  "timestamp": "ISO-8601",
-  "config": { "concurrency": 2, "total_pdfs": 7, "base_url": "...", "source": "input" },
-  "summary": {
-    "total": 7, "passed": 7, "failed": 0, "skipped": 0,
-    "total_duration_s": 420.5, "avg_duration_s": 60.1
-  },
-  "by_language": { "en": { "passed": 1, "failed": 0, "skipped": 0, "avg_duration_s": 55.2 } },
-  "by_phase": {
-    "phase_1": { "avg_duration_s": 12.3, "failures": 0 },
-    "phase_2": { "avg_duration_s": 30.1, "failures": 0 },
-    "phase_3": { "avg_duration_s": 17.8, "failures": 0 }
-  },
-  "by_evidence": {
-    "total_run_evidence": 42, "total_canonical_evidence": 38,
-    "total_entity_bindings": 15, "avg_evidence_per_pdf": 6.0,
-    "avg_confidence": 0.8521, "total_field_coverage": 25,
-    "pdfs_with_evidence": 7, "avg_found_rate": 0.7143,
-    "avg_grounding_rate": 0.8571,
-    "key_field_rates": { "A.gene_symbol": 1.0, "B.disease_diagnosis": 0.8571 }
-  },
-  "results": [ /* per-PDF detail */ ]
-}
-```
+- `config`：运行配置
+- `summary`：总计、通过、失败、跳过、耗时
+- `by_language`：按语言统计
+- `by_phase`：按阶段统计（phase_1/2/3 平均耗时和失败数）
+- `by_evidence`：证据质量指标（数量和质量两层）
+- `results`：每 PDF 详细结果
 
-## Evidence Quality Metrics
+## 证据质量指标
 
-Two layers of evidence metrics collected from PostgreSQL after each run:
+### 层 1：数量
 
-### Layer 1: Quantity
+| 指标 | 描述 |
+|------|------|
+| `run_evidence_count` | `run_evidence_items` 中的总证据项 |
+| `canonical_evidence_count` | 关联到本次运行的去重规范证据 |
+| `avg_confidence` | 所有证据项的平均置信度 |
+| `field_coverage` | 有证据的不同字段 ID 数 |
 
-| Metric | Description |
-|--------|-------------|
-| `run_evidence_count` | Total evidence items in `run_evidence_items` |
-| `canonical_evidence_count` | Distinct canonical evidence items linked to this run |
-| `entity_binding_count` | Entity bindings in `evidence_entity_bindings` |
-| `avg_confidence` | Average confidence across all evidence items |
-| `field_coverage` | Distinct field IDs with evidence |
-| `track_breakdown` | Per-track (original/translated) counts and confidence |
-| `status_breakdown` | Per-status (found/not_found) counts |
+### 层 2：质量
 
-### Layer 2: Quality
-
-| Metric | Description |
-|--------|-------------|
-| `found_rate` | found / total evidence items |
-| `source_grounding` | Distribution of source_precision: exact / corrected / ambiguous / no_source |
-| `category_coverage` | Per-category (A-J) field coverage from the evidence catalog |
-| `key_field_found` | Whether critical fields (A.gene_symbol, A.variant_hgvs_c/p, B.disease_diagnosis, B.diagnosis_sufficiency, D.allele_frequency) were found |
-
-## Adding PDFs
-
-1. Place the PDF in the appropriate `input/{lang}/{type}/` directory.
-2. Run `--dry-run` to verify the PDF is discovered.
-3. Or add an entry to a manifest file and use `--source manifest`.
-
-## Report Git Strategy
-
-Reports in `reports/` are tracked in git. Each run produces a timestamped report file.
+| 指标 | 描述 |
+|------|------|
+| `found_rate` | found / 总证据项 |
+| `source_grounding` | source_precision 分布：exact / corrected / ambiguous / no_source |
+| `category_coverage` | 按类别（A-J）的字段覆盖 |
+| `key_field_found` | 关键字段是否找到 |

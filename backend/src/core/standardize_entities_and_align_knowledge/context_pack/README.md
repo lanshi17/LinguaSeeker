@@ -1,111 +1,78 @@
-# Context Pack
+# Context Pack — 目标安全上下文包
 
-> Builds target-safe gene and disease context for evidence verification and contextual reconciliation.
+> 从基准或运行时元数据构建无泄漏的目标上下文包，为证据验证和一致性检查提供安全的基因/疾病/遗传模式上下文。
 
-## Quick Start
+## 概述
+
+`context_pack` 子模块负责构建 **TargetContextPack**——一个不包含待提取信息的安全上下文对象。它用于：
+- 基准测试中防止数据泄漏（benchmark target context）
+- 运行时为证据提取提供目标基因、疾病和遗传模式的先验知识
+
+上下文包从两个来源构建：
+1. **ClinGen expected.json** — 基准测试场景的标准答案文件
+2. **运行时元数据** — 生产环境中从 `ExtractionTarget` 构建
+
+## 目录结构
+
+```
+context_pack/
+├── __init__.py     # 导出 TargetContextPack、GeneContext、DiseaseContext 及构建函数
+├── contracts.py    # 类型化数据契约
+└── core.py         # 上下文包构建逻辑
+```
+
+## 核心组件
+
+### 数据契约（`contracts.py`）
+
+- **`GeneContext`** — 目标基因上下文：`symbol`、`hgnc_id`、`aliases`
+- **`DiseaseContext`** — 目标疾病上下文：`label`、`mondo_id`、`aliases`、`ancestor_labels`
+- **`TargetContextPack`** — 完整上下文包：`entry_id`、`gene`、`disease`、`moi`（遗传模式）、`source_pmid`、`source_pmc`
+
+### 构建函数（`core.py`）
+
+- **`build_context_pack_from_expected_json(path)`** — 从 ClinGen `expected.json` 构建无泄漏上下文包
+- **`build_context_pack_from_runtime_target(target, pmid, pmc)`** — 从生产运行时 `ExtractionTarget` 构建上下文包
+
+### 辅助功能
+
+- **疾病别名扩展** — 通过缩写提取、括号展开、stopword 过滤生成疾病名称的同义词
+- **MONDO 层级缓存** — 从本地 MONDO 缓存文件加载祖先标签，扩展疾病上下文
+- **源文本感知** — 从 `source.md` 提取观察到的缩写和短语匹配，增强别名覆盖
+- **防泄漏措施** — stopword 过滤、最小 token 长度检查、括号内容剥离
+
+## 数据流
+
+```
+ClinGen expected.json / ExtractionTarget
+        │
+        ▼
+   _disease_aliases() ──→ 基础别名（括号展开、缩写提取）
+        │
+        ▼
+   _source_aware_disease_aliases() ──→ 源文本观察别名
+        │
+        ▼
+   _source_observed_mondo_aliases() ──→ MONDO 层级祖先标签
+        │
+        ▼
+   TargetContextPack (gene + disease + moi)
+```
+
+## 使用方式
 
 ```python
-from pathlib import Path
-
 from src.core.standardize_entities_and_align_knowledge.context_pack import (
     build_context_pack_from_expected_json,
     build_context_pack_from_runtime_target,
+    TargetContextPack,
 )
 
-benchmark_pack = build_context_pack_from_expected_json(
-    Path("benchmark/layer3/ground_truth/clingen_010/expected.json")
+# 基准测试：从 expected.json 构建
+pack = build_context_pack_from_expected_json(Path("clingen/expected.json"))
+
+# 生产运行时：从 ExtractionTarget 构建
+pack = build_context_pack_from_runtime_target(
+    target=extraction_target, source_pmid="12345678", source_pmc="PMC123456"
 )
-runtime_pack = build_context_pack_from_runtime_target(
-    entry_id="clingen_010",
-    gene_symbol="AP1G1",
-    disease_label="complex neurodevelopmental disorder",
-)
-print(benchmark_pack.gene.symbol)
-print(runtime_pack.disease.aliases)
-```
-
-## Architecture
-
-```text
-expected.json
-  -> build_context_pack_from_expected_json()
-      -> safe target fields only
-      -> deterministic disease aliases
-      -> source-observed abbreviation aliases
-      -> source-observed MONDO disease aliases
-  -> TargetContextPack
-      -> contextual reconcile verifier
-
-ExtractionTarget/document metadata
-  -> build_context_pack_from_runtime_target()
-      -> safe runtime target fields only
-      -> deterministic disease aliases
-  -> TargetContextPack
-      -> production dual-track contextual reconcile
-```
-
-The module is intentionally read-only. It does not call an LLM and does not use benchmark answer labels at runtime.
-
-## Module Layout
-
-- `__init__.py`: exports `GeneContext`, `DiseaseContext`, `TargetContextPack`, `build_context_pack_from_expected_json`, `build_context_pack_from_runtime_target`
-- `contracts.py`: frozen dataclasses for `GeneContext`, `DiseaseContext`, `TargetContextPack`
-- `core.py`: builder functions and all alias expansion logic
-
-## Public API
-
-| API | Signature | Description |
-| --- | --- | --- |
-| `build_context_pack_from_expected_json` | `(path: Path) -> TargetContextPack` | Builds a no-leakage context pack from safe ClinGen benchmark metadata plus adjacent `source.md` text when available. |
-| `build_context_pack_from_runtime_target` | `(*, entry_id: str, gene_symbol: str, disease_label: str, hgnc_id: str \| None = None, mondo_id: str \| None = None, moi: str = "", source_pmid: str \| None = None, source_pmc: str \| None = None) -> TargetContextPack` | Builds a production-safe context pack from runtime target metadata without reading benchmark ground truth. |
-| `GeneContext` | `(symbol: str, hgnc_id: str \| None, aliases: tuple[str, ...])` | Target gene context. |
-| `DiseaseContext` | `(label: str, mondo_id: str \| None, aliases: tuple[str, ...], ancestor_labels: tuple[str, ...])` | Target disease context and aliases. |
-| `TargetContextPack` | `(entry_id: str, gene: GeneContext, disease: DiseaseContext, moi: str, source_pmid: str \| None, source_pmc: str \| None)` | Immutable context passed into verifier/reconciliation logic. |
-
-## Internal Design
-
-The builder reads only these safe fields from `expected.json`: `entry_id`, `gene_symbol`, `hgnc_id`, `disease_label`, `mondo_id`, `moi`, `source_pmid`, and `source_pmc`.
-
-The runtime builder accepts the same safe field classes as explicit arguments. It is used by the production dual extraction facade after `ExtractionTarget` is already known. It does not read `expected.json`, benchmark labels, or evaluator output.
-
-Disease aliasing has three layers:
-
-1. Deterministic aliases from the disease label, including case-folded and parenthetical-stripped variants.
-2. Source-aware abbreviations from `source.md` when the source section contains the target disease stem.
-3. Source-observed MONDO disease aliases from `database/terminology_database/mondo/mondo_hierarchy_cache.json`.
-
-The MONDO layer is conservative. A candidate label must be a non-obsolete disease/disorder/syndrome label, must appear in `source.md`, and must occur near the target gene plus a target disease cue. Prefix aliases from comma-separated MONDO labels are accepted only if the prefix still looks like a disease/disorder/syndrome label. This prevents symptoms such as `epilepsy` or `developmental delay` from becoming target aliases.
-
-Dash normalization handles Unicode dash variants (en-dash, em-dash, etc.) via `str.maketrans` to ensure consistent matching across typographic sources.
-
-## No-Leakage Rules
-
-Do not add fields that reveal benchmark answers or ClinGen validity outcomes. In particular, the context pack must not expose:
-
-- `classification`
-- `expected_evidence`
-- evaluator matches
-- derived gold relationship labels
-
-Ontology and source text can expand aliases only when they are target-safe and source-observed.
-
-## Extension Guide
-
-When adding an alias source, keep it deterministic and add a regression test that proves both the positive alias and a nearby false positive. For relationship-sensitive work, prefer adding tests under `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/verify/` instead of expanding context pack semantics.
-
-## Performance Notes
-
-The MONDO cache is loaded with `lru_cache(maxsize=1)`. Source text is normalized once before scanning, and full regex matching runs only after a normalized substring prefilter.
-
-## Testing
-
-```bash
-PYTHONPATH=.:backend uv run --project backend --no-sync pytest \
-  backend/tests/core/standardize_entities_and_align_knowledge/context_pack/test_core.py \
-  backend/tests/core/standardize_entities_and_align_knowledge/context_pack/test_contracts.py \
-  -q
-
-PYTHONPATH=.:backend uv run --project backend --no-sync ruff check \
-  backend/src/core/standardize_entities_and_align_knowledge/context_pack \
-  backend/tests/core/standardize_entities_and_align_knowledge/context_pack
 ```

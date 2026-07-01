@@ -1,36 +1,39 @@
 # Benchmark Framework
 
-Benchmark suite for the Lingua Seeker evidence extraction pipeline. Covers literature acquisition, cross-lingual evidence extraction, entity standardization, and pipeline end-to-end evaluation.
+> Lingua Seeker 证据提取管线的基准测试套件。覆盖文献获取、跨语言证据提取、实体标准化和端到端管线评估。
 
-## Directory Layout
+## 概述
+
+本目录是 Lingua Seeker 的统一基准测试框架，包含共享原语（contracts、matching、aggregate、paths）、数据集组装器、实验运行器、离线分析工具和配置管理。2026-06-18 重构后，所有代码通过 `benchmark.core`、`benchmark.datasets`、`benchmark.runners`、`benchmark.analysis` 四个规范包访问。
+
+## 目录结构
 
 ```
 benchmark/
-├── core/              Shared primitives: contracts, matching, aggregate, paths, pdf,
-│                      pipeline_client, evidence_metrics, field_normalize, mondo_hierarchy
-├── config/            Centralized configuration: Ansible-managed file configs + runtime defaults
-├── datasets/          Dataset-specific assembly + evaluators
-│   ├── clingen/       ClinGen entries + Rett curation
-│   ├── clinvar_fused/ ClinVar-fused variants (Dataset 2)
-│   ├── parkinson_literature/  Parkinson XLSX workbook curation + PDF fetching
-│   └── rett_annotation/       MinerU-driven annotation toolkit (independent uv project)
-├── runners/           Experiment entry points that hit pipelines / providers / LLMs
-├── analysis/          Offline reporters organized by theme
-│   ├── reconcile/     Ablation, case studies, oracle bound, contextual diagnosis
-│   ├── traceability/  Citation validity / span boundary / traceable F1
-│   ├── baselines/     B0..B10 LLM baselines + prompt-only sweeps + summary tables
-│   ├── arbitrator/    Arbitrator dataset + policy evaluator
-│   ├── benchmark_b/   Multilingual pilot selection + Phase 2 metrics
-│   ├── dataset_curation/  Readiness, source inventory, expansion, alignment, leakage
-│   ├── paper_artifacts/   Paper-specific tables (G1/G2/main paper/rescue)
-│   └── diagnostics/   Grounding, native gain, extraction, baselines, block recall, reconcile errors
-├── layer3/            DEPRECATED SHIM: redirects to core/datasets/runners/analysis (Phase 6 removal)
-├── literature_acquisition/  DEPRECATED SHIM: redirects to runners (Phase 6 removal)
-├── pipeline/          DEPRECATED SHIM + test PDFs + reports (runner moved to runners/)
-├── annotation/        Legacy annotation data (source PDFs + markdown)
-├── optimization/      Prompt optimization experiments (fused75 ablations, adjudication)
-├── scripts/           Benchmark utility scripts
-├── data/              All artifacts (gitignored where appropriate)
+├── core/              共享原语：contracts、matching、aggregate、paths、pdf、pipeline_client、evidence_metrics、field_normalize、mondo_hierarchy
+├── config/            集中配置：Ansible 管理的文件配置 + 运行时默认值
+├── datasets/          数据集特定组装器和评估器
+│   ├── clingen/       ClinGen 条目 + Rett 审查
+│   ├── clinvar_fused/ ClinVar 融合变异（数据集 2）
+│   ├── parkinson_literature/  帕金森 XLSX 工作簿管理 + PDF 获取
+│   └── rett_annotation/       MinerU 驱动的标注工具（独立 uv 项目）
+├── runners/           实验入口点（调用管线/提供商/LLM）
+├── analysis/          按主题组织的离线报告生成器
+│   ├── reconcile/     消融实验、案例研究、Oracle 上界、上下文诊断
+│   ├── traceability/  引用有效性 / 跨度边界 / 可追溯 F1
+│   ├── baselines/     B0..B10 LLM 基线 + prompt-only 扫描 + 汇总表
+│   ├── arbitrator/    仲裁器数据集 + 策略评估器
+│   ├── benchmark_b/   多语言试点选择 + Phase 2 指标
+│   ├── dataset_curation/  就绪度、来源清单、扩展、对齐、泄露检测
+│   ├── paper_artifacts/   论文专用表格（G1/G2/main paper/rescue）
+│   └── diagnostics/   Grounding、native gain、extraction、baselines、block recall、reconcile errors
+├── layer3/            已弃用垫片：重定向到 core/datasets/runners/analysis（Phase 6 移除）
+├── literature_acquisition/  已弃用垫片：重定向到 runners（Phase 6 移除）
+├── pipeline/          已弃用垫片 + 测试 PDF + 报告（运行器已移至 runners/）
+├── annotation/        遗留标注数据（源 PDF + markdown）
+├── optimization/      Prompt 优化实验（fused75 消融、裁决）
+├── scripts/           基准工具脚本
+├── data/              所有数据产物（适当位置 git 忽略）
 │   ├── ground_truth/  {unified, clingen, clinvar_fused, rett, parkinson}
 │   ├── inputs/        {pipeline, literature_acquisition}
 │   └── reports/       {eval, reconcile, traceability, baseline, benchmark_b,
@@ -38,9 +41,9 @@ benchmark/
 └── README.md
 ```
 
-## Stable Imports
+## 规范导入
 
-Cross-cutting primitives live in `benchmark.core`:
+跨切面原语位于 `benchmark.core`：
 
 ```python
 from benchmark.core import (
@@ -53,187 +56,74 @@ from benchmark.core import (
 )
 ```
 
-`GROUND_TRUTH_ROOT` points to the **unified** dataset (150 entries) by default.
-Legacy dataset roots (`GROUND_TRUTH_CLINGEN_ROOT`, etc.) remain available for
-dataset-specific analysis tools.
+`GROUND_TRUTH_ROOT` 默认指向**统一**数据集（150 条目）。
 
-## Common Entry Points
+## 常用入口点
 
-| Goal | Command |
-|------|---------|
-| Run unified benchmark (default) | `python -m benchmark.layer3.evaluate --help` |
-| Run unified benchmark (shard) | `python -m benchmark.layer3.evaluate --shard-index 0 --shard-size 10` |
-| Run unified benchmark (subset) | `python -m benchmark.layer3.evaluate --entries gs_000 gs_001 gs_002` |
-| Run legacy ClinGen eval | `python -m benchmark.layer3.evaluate --ground-truth-root benchmark/data/ground_truth/clingen` |
-| Run pipeline benchmark | `python -m benchmark.runners.pipeline_e2e --help` |
-| Download literature | `python -m benchmark.runners.literature_acquisition download --help` |
-| Rett literature pipeline | `python -m benchmark.runners.literature_rett --help` |
-| ClinVar fused selection | `python -m benchmark.datasets.clinvar_fused.select_fused_entries` |
-| ClinVar fused evaluation | `python -m benchmark.datasets.clinvar_fused.evaluate_fused --write` |
-| Build paper tables | `python -m benchmark.analysis.paper_artifacts.main_paper_tables --help` |
-| Pilot selection | `python -m benchmark.analysis.benchmark_b.pilot_selection --help` |
-| Grounding diagnostics | `python -m benchmark.analysis.diagnostics.grounding` |
+| 目标 | 命令 |
+|------|------|
+| 运行统一基准（默认） | `python -m benchmark.layer3.evaluate --help` |
+| 运行分片 | `python -m benchmark.layer3.evaluate --shard-index 0 --shard-size 10` |
+| 运行子集 | `python -m benchmark.layer3.evaluate --entries gs_000 gs_001` |
+| 运行管线基准 | `python -m benchmark.runners.pipeline_e2e --help` |
+| 下载文献 | `python -m benchmark.runners.literature_acquisition download --help` |
+| Rett 文献管线 | `python -m benchmark.runners.literature_rett --help` |
+| ClinVar 融合评估 | `python -m benchmark.datasets.clinvar_fused.evaluate_fused --write` |
+| 构建论文表格 | `python -m benchmark.analysis.paper_artifacts.main_paper_tables --help` |
 
-## Configuration
+## 统一金标准数据集（默认）
 
-Two complementary mechanisms in `benchmark/config/`:
+**2026-06-25 起的默认基准数据集。** 四个来源数据集的 schema 统一超集，150 条目位于 `benchmark/data/ground_truth/unified/gs_NNN/`。
 
-- **Ansible** renders tunable/secret config files into consumer locations (Rett annotation config, acquisition configs)
-- **`defaults.py`** is the canonical source for runtime code constants (pipeline URL, status sets, filter thresholds, seed queries)
+每个 `gs_NNN/` 目录完全自包含：`expected.json`（统一 schema）、`source.md`（+ 多语言 `source_*.md`）、`source.pdf`。所有条目共享一个扁平、字段完整的 schema。
 
-See `benchmark/config/README.md` for full documentation.
+### 来源溯源
 
-## Deprecation Shims
+每个统一条目携带到原始数据集的溯源信息。权威来源为 `unified/manifest.json`（schema 版本 1.1.0）。
 
-The 2026-06-18 refactor preserved every legacy dotted path while the codebase caught up. Imports under these prefixes still resolve but emit `DeprecationWarning`:
+### 分层评估
 
-| Legacy prefix | New location |
-|---------------|-------------|
-| `benchmark.layer3.evaluate` | `benchmark.core` |
-| `benchmark.layer3.mondo_hierarchy` | `benchmark.core.mondo_hierarchy` |
-| `benchmark.layer3.analysis.<x>` | `benchmark.analysis.<group>.<module>` |
-| `benchmark.layer3.baselines.<x>` | `benchmark.analysis.baselines.<x>` |
-| `benchmark.layer3.{select_entries,fetch_literature,...}` | `benchmark.datasets.clingen.*` / `benchmark.runners.clingen_preprocess` |
-| `benchmark.layer3.clinvar_fused.<x>` | `benchmark.datasets.clinvar_fused.<x>` |
-| `benchmark.pipeline.benchmark` | `benchmark.runners.pipeline_e2e` |
-| `benchmark.pipeline.evidence_metrics` | `benchmark.core.evidence_metrics` |
-| `benchmark.literature_acquisition.{benchmark,rett_download}` | `benchmark.runners.{literature_acquisition,literature_rett}` |
-| `benchmark.annotation.<x>` | `benchmark.datasets.rett_annotation.<x>` |
+报告统一数据集的基准指标时，**按 `source_dataset` 分层**。聚合数字会掩盖每个数据集的性能差异。
 
-All shims are scheduled for removal in Phase 6.
-
-## Datasets
-
-### Unified Gold-Standard Dataset (Default)
-
-**The default benchmark dataset since 2026-06-25.** Schema-unified superset of all four source datasets. 150 entries under `benchmark/data/ground_truth/unified/gs_NNN/`. `GROUND_TRUTH_ROOT` points here by default.
-
-Schema-unified superset of the four source datasets, materialized under
-`benchmark/data/ground_truth/unified/gs_NNN/` by
-`benchmark.analysis.dataset_curation.build_unified_dataset`. Built from
-`gold_standard_selection.json` (the 151-entry output of
-`gold_standard_filter.py`). Each `gs_NNN/` directory is **fully
-self-contained**: `expected.json` (unified schema), `source.md`
-(+ multilingual `source_*.md`), and `source.pdf` (+ multilingual
-`source_*.pdf` for clingen/clinvar_fused). Every entry shares one flat,
-field-complete schema: gene/disease/mondo/moi identifiers, ClinGen
-classification metadata, locatable source (PMID/DOI/PMC/PDF), language,
-fidelity-unified `variants[]`, and a dynamically generated
-`evaluation_config`. Missing fields are back-filled from the HGNC
-terminology file, the ClinGen Gene-Disease Summary CSV (with
-approved-symbol fallback), `meta.json`, materialized local PDFs, and
-EuropePMC (doi/journal/year by PMID, cached). `gold_source` tags each
-entry as `database` (clingen/clinvar_fused) or `article`
-(rett/parkinson); `annotation_provenance` records the curation origin;
-`backfilled` records each supplemented field's source. A top-level
-`manifest.json` indexes all entries. Original source datasets are never
-modified.
-
-#### Source Provenance
-
-Every unified entry carries provenance back to its original dataset. The
-authoritative source is `unified/manifest.json` (schema version 1.1.0).
-Each manifest entry includes:
-
-| Field | Description |
-|-------|-------------|
-| `unified_id` / `entry_id` | `gs_NNN` identifier |
-| `source_dataset` | Origin dataset: `clingen`, `clinvar_fused`, `rett`, `parkinson` |
-| `original_entry_id` / `source_entry_id` | Original ID before unification (e.g. `rett_001`) |
-| `source_path` | Original ground-truth directory path |
-| `gene_symbol`, `disease_name` | Gene and disease identifiers |
-| `classification` | ClinGen classification or curation label |
-| `moi` | Mode of inheritance |
-| `language` | Source article language |
-| `has_multilingual_sources` | Whether multilingual PDFs/MDs are present |
-
-`expected.json` inside each `gs_NNN/` also carries `source_dataset` and
-`original_entry_id` for convenience, but the manifest is authoritative.
-
-#### Stratified Evaluation
-
-When reporting benchmark metrics on the unified dataset, **stratify
-results by `source_dataset`**. Aggregate numbers alone obscure
-per-dataset performance differences (e.g. clingen gene-disease entries
-vs. rett variant-heavy entries). Use the manifest to group entries and
-compute per-stratum precision, recall, and F1.
-
-#### Validation
-
-Run the manifest integrity check before any evaluation:
+### 批量/分片执行
 
 ```bash
-python benchmark/scripts/validate_manifest.py
-```
-
-This verifies: every `gs_NNN` directory has a manifest entry, every
-manifest entry points to an existing `expected.json`, no duplicate IDs,
-and required provenance fields are non-empty.
-
-#### Batch / Shard Execution
-
-The unified dataset supports batch execution for incremental evaluation:
-
-```bash
-# Run the full unified dataset (150 entries)
+# 完整数据集（150 条目）
 cd backend && uv run python -m benchmark.layer3.evaluate
 
-# Run a single shard (10 entries per shard)
+# 单个分片（每分片 10 条目）
 uv run python -m benchmark.layer3.evaluate --shard-index 0 --shard-size 10
 
-# Run specific entries
-uv run python -m benchmark.layer3.evaluate --entries gs_000 gs_001 gs_002 gs_003 gs_004
+# 特定条目
+uv run python -m benchmark.layer3.evaluate --entries gs_000 gs_001 gs_002
 
-# Resume from a failed shard — re-run only the failed entries
-uv run python -m benchmark.layer3.evaluate --entries gs_007 gs_015
-
-# Run with concurrency
+# 带并发
 uv run python -m benchmark.layer3.evaluate --shard-index 0 --shard-size 20 --concurrency 4
 ```
 
-Each shard produces an independent report file (`eval_unified_<ts>_shardN.json`),
-so completed shards are never overwritten. Results include `by_source_dataset`
-stratification and full provenance (`source_dataset`, `original_entry_id`).
+## 配置
 
-#### Queued Task Handling
+`benchmark/config/` 中的两种互补机制：
 
-The pipeline client treats `queued` as a normal waiting state (PostgreSQL
-single-task queue). Tasks transition `queued` → `running` → `completed/failed`
-automatically; the poll loop logs progress every 60 seconds while queued.
+- **Ansible** 渲染可调/密钥配置文件到消费者位置
+- **`defaults.py`** 是运行时代码常量的规范来源
 
-### Legacy Datasets (Deprecated)
+详见 `benchmark/config/README.md`。
 
-The following datasets are retained for backward compatibility but are **no
-longer the default**. Use them by passing `--ground-truth-root` explicitly:
+## 弃用垫片
 
-```bash
-# ClinGen-30 (3 entries, 3 expected fields)
-uv run python -m benchmark.layer3.evaluate \
-    --ground-truth-root benchmark/data/ground_truth/clingen
+2026-06-18 重构保留了所有遗留点分路径。以下前缀的导入仍然有效但会发出 `DeprecationWarning`，计划在 Phase 6 移除：
 
-# ClinVar Fused (76 entries, 8 expected fields)
-uv run python -m benchmark.layer3.evaluate \
-    --ground-truth-root benchmark/data/ground_truth/clinvar_fused
-```
+| 遗留前缀 | 新位置 |
+|----------|--------|
+| `benchmark.layer3.evaluate` | `benchmark.core` |
+| `benchmark.layer3.mondo_hierarchy` | `benchmark.core.mondo_hierarchy` |
+| `benchmark.layer3.analysis.<x>` | `benchmark.analysis.<group>.<module>` |
+| `benchmark.pipeline.benchmark` | `benchmark.runners.pipeline_e2e` |
+| `benchmark.literature_acquisition.*` | `benchmark.runners.*` |
 
-| Dataset | Path | Entries | Status |
-|---------|------|---------|--------|
-| ClinGen-30 (Benchmark A) | `ground_truth/clingen/` | 34 | **Deprecated** — use unified |
-| ClinVar Fused | `ground_truth/clinvar_fused/` | 76 | **Deprecated** — use unified |
-| Rett Syndrome / MECP2 | `ground_truth/rett/` | 54 | **Deprecated** — use unified |
-| Parkinson Literature | `ground_truth/parkinson/` | 21 | **Deprecated** — use unified |
-| Merged 73 | `ground_truth/merged_73/` | 73 | **Deprecated** — use unified |
-
-## Testing
+## 测试
 
 ```bash
-# Full benchmark test suite
 cd backend && uv run pytest tests/benchmark/ -q
 ```
-
-## See Also
-
-- Plan: `docs/active/2026-06-18-benchmark-framework-refactor-plan.md`
-- Migration script: `scripts/refactor_benchmark_imports.py`
-- Reports bucketing: `scripts/refactor_benchmark_reports.py`
-- Per-bucket README in each subpackage
