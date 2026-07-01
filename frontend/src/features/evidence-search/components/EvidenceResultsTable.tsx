@@ -24,6 +24,7 @@ import {
   TokenList,
   StatBadge,
   LiteratureCell,
+  LiteratureIdentifiers,
   EvidenceFocusCell,
   DiseaseCell,
   ClassificationCell,
@@ -240,33 +241,13 @@ export function EvidenceResultsTable({
                   >
                     {literatureTitle(row, t)}
                   </p>
-                  <p
-                    style={{
-                      marginTop: 4,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      fontFamily: "monospace",
-                      fontSize: 12,
-                      color: "var(--color-text-muted)",
-                    }}
-                  >
-                    {row.documentId.slice(0, 8)}...
-                  </p>
+                  <LiteratureIdentifiers row={row} />
                 </div>
                 <Badge variant={STATUS_VARIANT[row.reviewStatus as keyof typeof STATUS_VARIANT] ?? "info"}>
                   {row.reviewStatus}
                 </Badge>
               </div>
               <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 12, color: "var(--color-text-secondary)" }}>
-                  <span style={{ borderRadius: 4, backgroundColor: "var(--color-bg-muted)", padding: "2px 6px" }}>
-                    PMID {row.pmid ?? "\u2014"}
-                  </span>
-                  <span style={{ borderRadius: 4, backgroundColor: "var(--color-bg-muted)", padding: "2px 6px" }}>
-                    DOI {row.doi ?? "\u2014"}
-                  </span>
-                </div>
                 <TokenList values={row.genes} tone="primary" />
                 <TokenList values={row.variants} tone="success" />
                 <p className="edb-line-clamp-2" style={{ fontSize: 14, color: "var(--color-text-strong)" }}>
@@ -295,14 +276,15 @@ export function EvidenceResultsTable({
         <div
           className="edb-desktop-table"
           style={{
-            overflow: "hidden",
+            overflowX: "auto",
+            overflowY: "hidden",
             borderRadius: 12,
             border: "1px solid var(--color-border)",
             backgroundColor: "var(--color-surface)",
             boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
           }}
         >
-          <table style={{ width: "100%", tableLayout: "fixed", fontSize: 14, borderCollapse: "collapse" }}>
+          <table style={{ width: "100%", minWidth: 1180, tableLayout: "fixed", fontSize: 14, borderCollapse: "collapse" }}>
             <thead>
               <tr
                 style={{
@@ -310,25 +292,25 @@ export function EvidenceResultsTable({
                   background: "linear-gradient(to right, var(--color-bg), var(--color-bg), var(--color-subtle-bg))",
                 }}
               >
-                <th style={{ width: "20%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
+                <th style={{ width: "34%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
                   {t("evidence.results.colLiterature")}
                 </th>
                 <th style={{ width: "18%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
                   {t("evidence.results.colFocus")}
                 </th>
-                <th style={{ width: "16%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
+                <th style={{ width: "15%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
                   {t("evidence.results.colDisease")}
                 </th>
-                <th style={{ width: "14%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
+                <th style={{ width: "12%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
                   {t("evidence.results.colClass")}
                 </th>
-                <th style={{ width: "10%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
+                <th style={{ width: "9%", padding: "14px 12px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
                   {t("evidence.results.colCreated")}
                 </th>
-                <th style={{ width: "10%", padding: "14px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
+                <th style={{ width: "8%", padding: "14px 12px", textAlign: "left", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
                   {t("evidence.results.colReview")}
                 </th>
-                <th style={{ width: "8%", padding: "14px 16px", textAlign: "right", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
+                <th style={{ width: "4%", padding: "14px 12px", textAlign: "right", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
                   {t("evidence.results.colFields")}
                 </th>
               </tr>
