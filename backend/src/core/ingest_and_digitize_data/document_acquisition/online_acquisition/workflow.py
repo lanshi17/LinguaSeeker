@@ -185,44 +185,49 @@ async def _acquire_links_web_search(
     if ws.tavily_api_key:
         from .web_search.tavily_adapter import TavilyAdapter
 
-        adapter_specs.append((
-            "tavily",
-            TavilyAdapter(
-                api_key=ws.tavily_api_key,
-                search_depth=ws.tavily_search_depth,
-                max_results=ws.max_results,
-            ),
-        ))
+        adapter_specs.append(
+            (
+                "tavily",
+                TavilyAdapter(
+                    api_key=ws.tavily_api_key,
+                    search_depth=ws.tavily_search_depth,
+                    max_results=ws.max_results,
+                ),
+            )
+        )
 
     if ws.serpapi_api_key:
         from .web_search.serpapi_adapter import SerpApiAdapter
 
-        adapter_specs.append((
-            "serpapi",
-            SerpApiAdapter(
-                api_key=ws.serpapi_api_key,
-                engine=ws.serpapi_engine,
-                max_results=ws.max_results,
-            ),
-        ))
+        adapter_specs.append(
+            (
+                "serpapi",
+                SerpApiAdapter(
+                    api_key=ws.serpapi_api_key,
+                    engine=ws.serpapi_engine,
+                    max_results=ws.max_results,
+                ),
+            )
+        )
 
     if ws.firecrawl_api_key:
         from .web_search.firecrawl_adapter import FirecrawlAdapter
 
-        adapter_specs.append((
-            "firecrawl",
-            FirecrawlAdapter(
-                api_key=ws.firecrawl_api_key,
-                base_url=ws.base_url,
-                timeout=ws.timeout,
-                max_results=ws.max_results,
-            ),
-        ))
+        adapter_specs.append(
+            (
+                "firecrawl",
+                FirecrawlAdapter(
+                    api_key=ws.firecrawl_api_key,
+                    base_url=ws.base_url,
+                    timeout=ws.timeout,
+                    max_results=ws.max_results,
+                ),
+            )
+        )
 
     if not adapter_specs:
         logger.info(
-            "web search skipped: no TAVILY_API_KEY, SERPAPI_API_KEY, or "
-            "WEB_SEARCH_FIRECRAWL_API_KEY configured"
+            "web search skipped: no TAVILY_API_KEY, SERPAPI_API_KEY, or WEB_SEARCH_FIRECRAWL_API_KEY configured"
         )
         return []
 

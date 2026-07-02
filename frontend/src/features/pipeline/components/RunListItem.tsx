@@ -52,7 +52,7 @@ const progressBarBg = (
   isLive: boolean,
   status: ProcessingStatus,
 ): string => {
-  if (isLive) return "linear-gradient(to right, #7dd3fc, var(--color-primary-600, #0891b2))";
+  if (isLive) return "var(--color-primary-600, #0891b2)";
   if (status === "completed") return "var(--color-success-500, #22c55e)";
   if (status === "failed") return "var(--color-error-text)";
   return "var(--color-text-muted)";

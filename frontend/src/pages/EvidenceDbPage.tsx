@@ -29,35 +29,37 @@ export function EvidenceDbPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Page Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: 48,
-            height: 48,
+            width: 36,
+            height: 36,
             flexShrink: 0,
-            borderRadius: 12,
-            background: "linear-gradient(to bottom right, var(--color-primary-500), var(--color-primary-700))",
-            boxShadow: "0 4px 6px -1px rgba(6, 182, 212, 0.2)",
+            borderRadius: 6,
+            border: "1px solid var(--color-border)",
+            color: "var(--color-primary-600)",
           }}
         >
-          <Database size={24} color="var(--color-surface)" />
+          <Database size={18} />
         </div>
         <div>
-          <Typography.Title
-            level={3}
+          <Typography.Text
             style={{
-              margin: 0,
-              fontFamily: "var(--font-display)",
+              fontSize: 10,
               fontWeight: 600,
-              letterSpacing: "-0.025em",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--color-text-secondary)",
+              display: "block",
+              marginBottom: 2,
             }}
           >
             {t("evidenceDb.title")}
-          </Typography.Title>
-          <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+          </Typography.Text>
+          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
             {t("evidenceDb.description")}
           </Typography.Text>
         </div>

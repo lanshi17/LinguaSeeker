@@ -3,10 +3,7 @@
 
 /* ── Dark mode: evidence component overrides ── */
 [data-theme="dark"] .edb-hero {
-  background:
-    radial-gradient(ellipse 600px 300px at 15% -5%, rgba(8, 145, 178, 0.1) 0%, transparent 60%),
-    radial-gradient(ellipse 500px 250px at 90% 10%, rgba(34, 197, 94, 0.05) 0%, transparent 50%),
-    #0c1a2e;
+  background: var(--color-surface);
 }
 [data-theme="dark"] .edb-card {
   background: var(--color-surface);
@@ -14,11 +11,9 @@
 }
 [data-theme="dark"] .edb-card:hover {
   border-color: #3e3e50;
-  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.3);
 }
 [data-theme="dark"] .edb-card-clickable:hover {
   border-color: var(--color-primary-600);
-  box-shadow: 0 4px 16px -4px rgba(8, 145, 178, 0.2);
 }
 [data-theme="dark"] .edb-ring {
   --ring-bg: #2e2e3e;
@@ -32,10 +27,7 @@
 
 /* ── Evidence DB: Unified medical-teal light theme ── */
 .edb-hero {
-  background:
-    radial-gradient(ellipse 600px 300px at 15% -5%, rgba(8, 145, 178, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 500px 250px at 90% 10%, rgba(34, 197, 94, 0.03) 0%, transparent 50%),
-    #f0fdfa;
+  background: var(--color-surface);
 }
 .edb-card {
   background: #ffffff;
@@ -44,15 +36,12 @@
 }
 .edb-card:hover {
   border-color: var(--color-text-muted);
-  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.08);
 }
 .edb-card-clickable {
   cursor: pointer;
 }
 .edb-card-clickable:hover {
-  border-color: #0891b2;
-  box-shadow: 0 4px 16px -4px rgba(8, 145, 178, 0.12);
-  transform: translateY(-1px);
+  border-color: var(--color-primary-600);
 }
 .edb-cat-strip {
   display: flex;

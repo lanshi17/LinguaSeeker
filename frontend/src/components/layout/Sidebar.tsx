@@ -73,8 +73,14 @@ export function Sidebar({ mobile, onNavigate, onGuideOpen }: SidebarProps) {
         />
         {!effectiveCollapsed && (
           <Typography.Text
-            strong
-            style={{ fontSize: 18, color: "var(--color-primary-700)", marginLeft: 10 }}
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "var(--color-text)",
+              marginLeft: 10,
+            }}
           >
             Lingua Seeker
           </Typography.Text>

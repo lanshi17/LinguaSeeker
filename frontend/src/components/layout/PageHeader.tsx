@@ -17,11 +17,21 @@ export function PageHeader({
   return (
     <Flex align="center" justify="space-between" className={className}>
       <div>
-        <Typography.Title level={3} style={{ margin: 0 }}>
+        <Typography.Text
+          style={{
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            color: "var(--color-text-secondary)",
+            display: "block",
+            marginBottom: 2,
+          }}
+        >
           {title}
-        </Typography.Title>
+        </Typography.Text>
         {description && (
-          <Typography.Text type="secondary" style={{ marginTop: 4, display: "block", fontSize: 14 }}>
+          <Typography.Text type="secondary" style={{ display: "block", fontSize: 13 }}>
             {description}
           </Typography.Text>
         )}

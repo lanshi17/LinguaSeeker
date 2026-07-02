@@ -21,34 +21,40 @@ export function EvidenceDetailPage() {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    width: 48,
-    height: 48,
+    width: 36,
+    height: 36,
     flexShrink: 0,
-    borderRadius: 12,
-    background: isCompareView
-      ? "linear-gradient(to bottom right, #a855f7, #7e22ce)"
-      : "linear-gradient(to bottom right, var(--color-primary-500), var(--color-primary-700))",
-    boxShadow: isCompareView
-      ? "0 4px 6px -1px rgba(168, 85, 247, 0.25)"
-      : "0 4px 6px -1px rgba(6, 182, 212, 0.25)",
+    borderRadius: 6,
+    border: "1px solid var(--color-border)",
+    color: "var(--color-primary-600)",
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Page header with icon */}
-      <div className="no-print" style={{ display: "flex", alignItems: "center", gap: 16 }}>
+      <div className="no-print" style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div style={iconStyle}>
           {isCompareView ? (
-            <Columns2 size={24} color="var(--color-surface)" />
+            <Columns2 size={18} />
           ) : (
-            <BookOpen size={24} color="var(--color-surface)" />
+            <BookOpen size={18} />
           )}
         </div>
         <div>
-          <Typography.Title level={3} style={{ margin: 0 }}>
+          <Typography.Text
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--color-text-secondary)",
+              display: "block",
+              marginBottom: 2,
+            }}
+          >
             {isCompareView ? t("evidenceDetail.compareTitle") : t("evidenceDetail.title")}
-          </Typography.Title>
-          <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+          </Typography.Text>
+          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
             {isCompareView ? t("evidenceDetail.compareDescription") : t("evidenceDetail.description")}
           </Typography.Text>
         </div>

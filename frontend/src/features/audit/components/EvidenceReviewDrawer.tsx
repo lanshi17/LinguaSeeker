@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Drawer,
@@ -50,6 +50,11 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
   const [variant, setVariant] = useState("");
   const [disease, setDisease] = useState("");
   const [searchTriggered, setSearchTriggered] = useState(false);
+
+  // Auto-load all evidence when drawer opens
+  useEffect(() => {
+    if (open) setSearchTriggered(true);
+  }, [open]);
 
   // Selected item state
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
@@ -201,12 +206,10 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
           </div>
 
           <Button
-            type="primary"
             icon={<Search style={{ width: 14, height: 14 }} />}
             onClick={handleSearch}
             loading={isSearching}
             style={{ marginTop: 10, width: "100%" }}
-            disabled={!gene && !variant && !disease}
           >
             {t("audit.review.searchBtn")}
           </Button>

@@ -331,7 +331,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
               className="cv-tq-btn"
               style={
                 taskQueueOpen
-                  ? { backgroundColor: "var(--color-text)", color: "var(--color-surface)", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }
+                  ? { borderColor: "var(--color-primary-600)", color: "var(--color-primary-600)" }
                   : { color: "var(--color-text-secondary)" }
               }
               onMouseEnter={(e) => {

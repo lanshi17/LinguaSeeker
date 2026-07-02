@@ -26,54 +26,42 @@ export function EvidenceSearchForm({
 
   return (
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* Header with accent */}
+        {/* Header */}
         <div
           style={{
-            position: "relative",
-            overflow: "hidden",
-            borderRadius: 8,
-            background: "linear-gradient(to right, var(--color-primary-50, var(--color-primary-50)), var(--color-primary-50, var(--color-primary-50)) 50%, transparent)",
-            padding: "16px 20px",
+            borderRadius: 6,
+            border: "1px solid var(--color-border)",
+            padding: "14px 18px",
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              height: "100%",
-              width: 4,
-              background: "linear-gradient(to bottom, var(--color-primary-400, var(--color-primary-400)), var(--color-primary-600))",
-            }}
-          />
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
               <div
                 style={{
                   display: "flex",
-                  height: 40,
-                  width: 40,
+                  height: 36,
+                  width: 36,
                   flexShrink: 0,
                   alignItems: "center",
                   justifyContent: "center",
-                  borderRadius: 8,
-                  backgroundColor: "var(--color-primary-100, var(--color-primary-100))",
-                  color: "var(--color-primary-700, var(--color-primary-700))",
+                  borderRadius: 6,
+                  border: "1px solid var(--color-border)",
+                  color: "var(--color-primary-600)",
                 }}
               >
-                <Search style={{ width: 20, height: 20 }} />
+                <Search style={{ width: 16, height: 16 }} />
               </div>
               <div>
-                <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
+                <h2 style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-secondary)", margin: 0 }}>
                   {t("evidence.search.heading")}
                 </h2>
-                <p style={{ marginTop: 2, fontSize: 14, color: "var(--color-text-strong)" }}>
+                <p style={{ marginTop: 4, fontSize: 13, color: "var(--color-text-strong)" }}>
                   {t("evidence.search.description")}
                 </p>
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Button htmlType="submit" loading={isSearching} style={{ boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+              <Button htmlType="submit" loading={isSearching}>
                 <Search style={{ width: 16, height: 16, marginRight: 8 }} />
                 {t("evidence.search.btn")}
               </Button>
