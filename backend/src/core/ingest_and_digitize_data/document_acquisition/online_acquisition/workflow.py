@@ -36,7 +36,7 @@ from .normalizers import DOI_PATTERN, normalize_items
 from .query_translator import TARGET_LANGUAGES, translate_query
 from .relevance_gate import run_relevance_gate
 from .search_service import build_provider_plan, dedupe_candidates, rank_candidates, search_parallel
-from .web_search import SearchLink
+from .web_search import SearchLink, WebSearchResult
 
 PMCID_PATTERN = re.compile(r"\bPMC\d+\b", re.IGNORECASE)
 PMID_PATTERN = re.compile(r"PMID[:\s]*([0-9]{5,9})", re.IGNORECASE)
@@ -169,76 +169,100 @@ async def _acquire_links_web_search(
     query: str,
     language: Optional[str] = None,
 ) -> List[SearchLink]:
-    """Phase 1b: Search via web search adapter (Tavily preferred, Firecrawl fallback)."""
+    """Phase 1b: Search via all configured web search adapters in parallel.
+
+    Runs Tavily, SerpApi, and Firecrawl concurrently when their API keys are
+    configured, then merges and deduplicates results by URL.  Tavily and
+    Firecrawl also scrape their top 5 results for additional PDF links.
+    """
     from src.core.config import get_config
 
     cfg = get_config()
     ws = cfg.web_search
 
-    # Tavily takes priority if configured
+    adapter_specs: List[tuple[str, Any]] = []
+
     if ws.tavily_api_key:
         from .web_search.tavily_adapter import TavilyAdapter
 
-        adapter = TavilyAdapter(
-            api_key=ws.tavily_api_key,
-            search_depth=ws.tavily_search_depth,
-            max_results=ws.max_results,
-        )
-        result = await adapter.search(query, language=language)
-        if result.warnings:
-            for w in result.warnings:
-                logger.warning("tavily: {}", w)
+        adapter_specs.append((
+            "tavily",
+            TavilyAdapter(
+                api_key=ws.tavily_api_key,
+                search_depth=ws.tavily_search_depth,
+                max_results=ws.max_results,
+            ),
+        ))
 
-        all_links = list(result.links)
-        # Tavily results already include content — light scrape on top 5
-        scrape_tasks = [adapter.scrape_links(link.url) for link in result.links[:5]]
-        scrape_results = await asyncio.gather(*scrape_tasks, return_exceptions=True)
-        for sr in scrape_results:
-            if isinstance(sr, list):
-                all_links.extend(sr)
-        return all_links
-
-    # SerpApi (second priority)
     if ws.serpapi_api_key:
         from .web_search.serpapi_adapter import SerpApiAdapter
 
-        adapter = SerpApiAdapter(
-            api_key=ws.serpapi_api_key,
-            engine=ws.serpapi_engine,
-            max_results=ws.max_results,
-        )
-        result = await adapter.search(query, language=language)
-        if result.warnings:
-            for w in result.warnings:
-                logger.warning("serpapi: {}", w)
+        adapter_specs.append((
+            "serpapi",
+            SerpApiAdapter(
+                api_key=ws.serpapi_api_key,
+                engine=ws.serpapi_engine,
+                max_results=ws.max_results,
+            ),
+        ))
 
-        return list(result.links)
-
-    # Fallback to Firecrawl
     if ws.firecrawl_api_key:
         from .web_search.firecrawl_adapter import FirecrawlAdapter
 
-        adapter = FirecrawlAdapter(
-            api_key=ws.firecrawl_api_key,
-            base_url=ws.base_url,
-            timeout=ws.timeout,
-            max_results=ws.max_results,
+        adapter_specs.append((
+            "firecrawl",
+            FirecrawlAdapter(
+                api_key=ws.firecrawl_api_key,
+                base_url=ws.base_url,
+                timeout=ws.timeout,
+                max_results=ws.max_results,
+            ),
+        ))
+
+    if not adapter_specs:
+        logger.info(
+            "web search skipped: no TAVILY_API_KEY, SERPAPI_API_KEY, or "
+            "WEB_SEARCH_FIRECRAWL_API_KEY configured"
         )
-        result = await adapter.search(query, language=language)
+        return []
+
+    async def _search_one(name: str, adapter: Any) -> WebSearchResult:
+        try:
+            return await adapter.search(query, language=language)
+        except Exception as exc:
+            logger.warning("{} search failed: {}", name, exc)
+            return WebSearchResult(links=[], query=query, provider=name, warnings=[str(exc)])
+
+    results = await asyncio.gather(*[_search_one(n, a) for n, a in adapter_specs])
+
+    all_links: List[SearchLink] = []
+    seen_urls: set[str] = set()
+
+    # Collect search results and launch scrape tasks for providers that support it
+    scrape_tasks: List[Any] = []
+    for (name, adapter), result in zip(adapter_specs, results):
         if result.warnings:
             for w in result.warnings:
-                logger.warning("firecrawl: {}", w)
+                logger.warning("{}: {}", name, w)
+        for link in result.links:
+            if link.url and link.url not in seen_urls:
+                seen_urls.add(link.url)
+                all_links.append(link)
+        # Tavily and Firecrawl support scrape_links; SerpApi does not
+        if name in ("tavily", "firecrawl") and result.links:
+            top5 = [link for link in result.links[:5] if link.url]
+            scrape_tasks.extend(adapter.scrape_links(link.url) for link in top5)
 
-        all_links = list(result.links)
-        scrape_tasks = [adapter.scrape_links(link.url) for link in result.links[:5]]
+    if scrape_tasks:
         scrape_results = await asyncio.gather(*scrape_tasks, return_exceptions=True)
         for sr in scrape_results:
             if isinstance(sr, list):
-                all_links.extend(sr)
-        return all_links
+                for link in sr:
+                    if link.url and link.url not in seen_urls:
+                        seen_urls.add(link.url)
+                        all_links.append(link)
 
-    logger.info("web search skipped: no TAVILY_API_KEY, SERPAPI_API_KEY, or WEB_SEARCH_FIRECRAWL_API_KEY configured")
-    return []
+    return all_links
 
 
 def _source_trace_entry(
@@ -528,18 +552,18 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
             firecrawl_links = await _acquire_links_web_search(query=query, language=language)
             source_trace.append(
                 _source_trace_entry(
-                    provider="firecrawl",
+                    provider="web_search",
                     success=bool(firecrawl_links),
                     items_count=len(firecrawl_links),
                 )
             )
         except Exception as exc:
-            logger.warning("firecrawl acquisition failed: {}", exc)
-            warning = f"firecrawl acquisition failed: {exc}"
+            logger.warning("web search acquisition failed: {}", exc)
+            warning = f"web search acquisition failed: {exc}"
             warnings.append(warning)
             source_trace.append(
                 _source_trace_entry(
-                    provider="firecrawl",
+                    provider="web_search",
                     success=False,
                     warnings=[warning],
                     error=str(exc),
@@ -636,12 +660,12 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
                     )
                 )
             if isinstance(firecrawl_result, Exception):
-                logger.warning("firecrawl acquisition failed: {}", firecrawl_result)
-                warning = f"firecrawl acquisition failed: {firecrawl_result}"
+                logger.warning("web search acquisition failed: {}", firecrawl_result)
+                warning = f"web search acquisition failed: {firecrawl_result}"
                 warnings.append(warning)
                 source_trace.append(
                     _source_trace_entry(
-                        provider="firecrawl",
+                        provider="web_search",
                         success=False,
                         warnings=[warning],
                         error=str(firecrawl_result),
@@ -651,7 +675,7 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
                 firecrawl_links = firecrawl_result
                 source_trace.append(
                     _source_trace_entry(
-                        provider="firecrawl",
+                        provider="web_search",
                         success=bool(firecrawl_links),
                         items_count=len(firecrawl_links),
                     )
@@ -677,6 +701,8 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
         provider = item.get("_source_provider", "unknown")
         try:
             normalized = normalize_items(provider, [item])
+            if not normalized and item.get("_candidate_type") == "firecrawl":
+                normalized = normalize_items("firecrawl", [item])
             normalized_items.extend(normalized)
         except Exception:
             try:

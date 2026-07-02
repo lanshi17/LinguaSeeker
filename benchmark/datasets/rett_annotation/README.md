@@ -27,6 +27,7 @@ src/
   annotator.py           # LLM 驱动的标注生成（langchain-core + langchain-openai）
   catalog_annotation.py  # 目录感知的 prompt 构建和 expected.json 构造
   manifest.py            # 状态跟踪清单
+  variant_manifest.py    # 受控 MECP2 变异标注候选 manifest 构建
   review.py              # 审查工作流逻辑
   utils.py               # HGVS / MECP2 变异 / HPO 常量
 ```
@@ -96,6 +97,21 @@ uv run python cli/review_status.py --promote-all             # 批量提升
 | `cli/filter_entries.py` | 按条件过滤条目 |
 | `cli/review_backfill.py` | 回填审查元数据 |
 | `cli/catalog_reannotate.py` | 使用当前字段目录重新标注 |
+| `benchmark.analysis.dataset_curation.build_rett_variant_annotation_manifest` | 基于 `ground_truth/` 构建受控变异标注候选清单 |
+
+### 4. 受控变异标注候选清单
+
+```bash
+PYTHONPATH=. uv run python -m benchmark.analysis.dataset_curation.build_rett_variant_annotation_manifest
+```
+
+该命令复用本目录的 `ground_truth/manifest.json`、`source.md`、`expected.json` 和 `meta.json`，输出到：
+
+```text
+benchmark/data/manifests/rett_multilingual_variant_annotation_candidates.json
+```
+
+清单用于 Rett/MECP2 的 variant-centered 人工标注优先级排序：合并蛋白/核苷酸别名到 biological variant unit，连接 unified benchmark 的 `original_entry_id`，并标记 CJK/table-heavy 文献的 `CRITICAL_MANUAL` 优先级。它不是最终 gold；最终证据仍需人工裁决。
 
 ## Schema 兼容性
 
