@@ -47,7 +47,31 @@ CONFIG_FILE = RETT_CONFIG_PATH  # Ansible-deployed to benchmark/data/inputs/lite
 QUERY_FILE = MODULE_DIR / "rett_syndrome_queries.txt"
 OUTPUT_FILE = MODULE_DIR / "downloads" / "rett_syndrome_candidates.jsonl"
 REPORT_FILE = MODULE_DIR / "downloads" / "rett_syndrome_report.json"
+WEB_SEARCH_REPORT_FILE = MODULE_DIR / "downloads" / "rett_web_search_report.json"
 LOG_DIR = MODULE_DIR / "log"
+
+# Multilingual case-report queries for the three-provider web search path.
+# Each tuple is (query_text, language_code).
+WEB_SEARCH_QUERIES: List[tuple[str, str]] = [
+    ("Rett syndrome MECP2 case report", "en"),
+    ("MECP2 novel variant case report Rett", "en"),
+    ("atypical Rett syndrome MECP2 case report", "en"),
+    ("MECP2 duplication syndrome male case report", "en"),
+    ("Rett syndrome de novo MECP2 mutation case report", "en"),
+    ("Rett综合征 MECP2 病例报告", "zh"),
+    ("MECP2 基因突变 女童 病例报告", "zh"),
+    ("非典型Rett综合征 MECP2 病例报告", "zh"),
+    ("レット症候群 MECP2 症例報告", "ja"),
+    ("MECP2 遺伝子変異 女児 症例報告", "ja"),
+    ("레트 증후군 MECP2 증례 보고", "ko"),
+    ("Rett-Syndrom MECP2 Fallbericht", "de"),
+    ("syndrome de Rett MECP2 rapport de cas", "fr"),
+    ("sindrome de Rett MECP2 reporte de caso", "es"),
+    ("Rett sendromu MECP2 olgu sunumu", "tr"),
+    ("синдром Ретта MECP2 клинический случай", "ru"),
+    ("sindrome de Rett MECP2 relato de caso", "pt"),
+    ("sindrome di Rett MECP2 case report", "it"),
+]
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 logger.add(str(LOG_DIR / "rett_download.log"), rotation="5 MB", retention=3, encoding="utf-8")
 
@@ -228,6 +252,7 @@ async def _run_one_query(
     limit: int = 10,
     language: str = "auto",
     literature_types: Optional[List[str]] = None,
+    prefer: str = "auto",
 ) -> Dict[str, Any]:
     """Run a single query through the module's workflow."""
     action = "search" if dry_run else "download"
@@ -237,6 +262,7 @@ async def _run_one_query(
         "limit": limit,
         "language": language,
         "download_path": download_path,
+        "prefer": prefer,
         # Disable LLM relevance gate — metadata classifier + candidate
         # filtering already provide sufficient type/quality control.
         # The gate was rejecting valid case reports because the LLM
@@ -382,6 +408,120 @@ async def cmd_download(
     with open(REPORT_FILE, "w", encoding="utf-8") as rf:
         json.dump(asdict(stats), rf, indent=2, ensure_ascii=False)
     logger.info(f"Report: {REPORT_FILE}")
+    logger.info(f"Candidates: {stats.total_candidates}, Downloaded: {stats.total_downloaded}, Deduped: {stats.total_deduped}")
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Web search — three-provider parallel search (Tavily + SerpApi + Firecrawl)
+# ═══════════════════════════════════════════════════════════════════
+
+async def cmd_web_search(
+    *,
+    dry_run: bool = False,
+    download_dir: Optional[str] = None,
+    target_count: int = 100,
+    limit: int = 15,
+) -> None:
+    """Run multilingual case-report queries through all three web search providers.
+
+    Delegates to ``online_acquisition_workflow`` with ``prefer="web"`` so the
+    updated ``_acquire_links_web_search`` runs Tavily, SerpApi, and Firecrawl
+    in parallel.  Cross-query dedup uses DOI + content hash.
+    """
+    setup_logging()
+    stats = DownloadStats()
+    stats.total_queries = len(WEB_SEARCH_QUERIES)
+    dedup = DedupTracker()
+
+    out_dir = Path(download_dir) if download_dir else (MODULE_DIR / "downloads" / "rett_web_search")
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    logger.info("Starting Rett web-search benchmark (3 providers in parallel)")
+    logger.info(f"Queries: {len(WEB_SEARCH_QUERIES)}, target: {target_count}, dir: {out_dir}")
+
+    with open(OUTPUT_FILE, "a", encoding="utf-8") as out_f:
+        for i, (query, lang_code) in enumerate(WEB_SEARCH_QUERIES, 1):
+            if stats.total_downloaded >= target_count:
+                logger.info(f"Target {target_count} reached, stopping early.")
+                break
+
+            logger.info(f"[{i}/{len(WEB_SEARCH_QUERIES)}] [{lang_code}] {query}")
+            entry = await _run_one_query(
+                query,
+                str(out_dir),
+                dry_run=dry_run,
+                limit=limit,
+                language=lang_code,
+                prefer="web",
+            )
+
+            candidates = entry.get("candidate_links", [])
+            items = entry.get("items", [])
+            downloads_list = entry.get("downloads", [])
+            route_info = entry.get("route", {})
+            success = entry.get("success", False)
+
+            stats.total_candidates += len(candidates)
+
+            if dry_run:
+                for cand in candidates:
+                    cand["query"] = query
+                    out_f.write(json.dumps(cand, ensure_ascii=False) + "\n")
+                stats.records.append(entry)
+                if success:
+                    logger.info(f"  Found {len(candidates)} candidates via {route_info.get('used', '?')}")
+                else:
+                    logger.info(f"  No candidates: {entry.get('warnings', [])}")
+            else:
+                for dl in downloads_list:
+                    fp = dl.get("file_path") or ""
+                    if not fp or not Path(fp).exists():
+                        continue
+                    dest = Path(fp)
+                    dl_doi = (dl.get("doi") or "").strip()
+                    title = ""
+                    doi = ""
+                    for item in items:
+                        item_doi = (item.get("doi") or "").strip()
+                        if item_doi and item_doi == dl_doi:
+                            title = item.get("title") or ""
+                            doi = item_doi
+                            break
+                    if not title and items:
+                        title = items[0].get("title") or ""
+                    if not doi:
+                        doi = dl_doi
+
+                    source = dl.get("source", route_info.get("used", "web"))
+                    if dedup.is_duplicate(doi, dest):
+                        stats.total_deduped += 1
+                        logger.info(f"  Dedup: skipping {doi or dest.name}")
+                        try:
+                            dest.unlink()
+                        except OSError:
+                            pass
+                        continue
+                    dedup.record(doi, dest)
+
+                    rec = DownloadRecord(
+                        query=query, source=source, title=title, doi=doi,
+                        url=dl.get("url") or "", success=True,
+                        file_path=str(dest), file_size=dest.stat().st_size,
+                    )
+                    stats.records.append(asdict(rec))
+                    stats.total_downloaded += 1
+                    stats.by_source[source] = stats.by_source.get(source, 0) + 1
+                    logger.info(f"  Downloaded [{stats.total_downloaded}/{target_count}]: {title[:60]} [{source}] {dest.stat().st_size // 1024}KB")
+
+                if not downloads_list:
+                    logger.info(f"  No downloads: {entry.get('warnings', [])}")
+                    stats.records.append(entry)
+
+    stats.elapsed_sec = round(time.monotonic(), 1)
+
+    with open(WEB_SEARCH_REPORT_FILE, "w", encoding="utf-8") as rf:
+        json.dump(asdict(stats), rf, indent=2, ensure_ascii=False)
+    logger.info(f"Report: {WEB_SEARCH_REPORT_FILE}")
     logger.info(f"Candidates: {stats.total_candidates}, Downloaded: {stats.total_downloaded}, Deduped: {stats.total_deduped}")
 
 
@@ -1035,6 +1175,19 @@ def main() -> None:
     p_ml.add_argument("--literature-types", type=str, default=None,
                       help="Comma-separated literature_type filter (e.g. case_report,sequencing)")
 
+    p_ws = sub.add_parser(
+        "web-search",
+        help="Three-provider web search (Tavily+SerpApi+Firecrawl) for Rett case reports",
+    )
+    p_ws.add_argument("--dry-run", action="store_true",
+                      help="Search only, do not download files")
+    p_ws.add_argument("--download-dir", type=str, default=None,
+                      help="Override download directory (default: downloads/rett_web_search)")
+    p_ws.add_argument("--target", type=int, default=100,
+                      help="Stop after this many PDFs downloaded (default: 100)")
+    p_ws.add_argument("--limit", type=int, default=15,
+                      help="Per-provider candidate limit (default: 15)")
+
     args = parser.parse_args()
 
     if args.cmd == "seed-queries":
@@ -1118,6 +1271,13 @@ def main() -> None:
             dry_run=args.dry_run,
             relevance_gate=not args.no_relevance_gate,
             literature_types=lit_types,
+        ))
+    elif args.cmd == "web-search":
+        asyncio.run(cmd_web_search(
+            dry_run=args.dry_run,
+            download_dir=args.download_dir,
+            target_count=args.target,
+            limit=args.limit,
         ))
 
 
