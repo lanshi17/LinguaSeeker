@@ -1,0 +1,97 @@
+{
+  "stats": {
+    "total": 89,
+    "relevant": 70,
+    "irrelevant": 16,
+    "errors": 3,
+    "deleted": 0,
+    "dedup_removed": 9,
+    "by_lang": {
+      "de": {
+        "relevant": 1,
+        "irrelevant": 4,
+        "errors": 0
+      },
+      "en": {
+        "relevant": 16,
+        "irrelevant": 0,
+        "errors": 0
+      },
+      "es": {
+        "relevant": 10,
+        "irrelevant": 1,
+        "errors": 0
+      },
+      "fr": {
+        "relevant": 5,
+        "irrelevant": 0,
+        "errors": 0
+      },
+      "it": {
+        "relevant": 3,
+        "irrelevant": 0,
+        "errors": 0
+      },
+      "ja": {
+        "relevant": 12,
+        "irrelevant": 5,
+        "errors": 0
+      },
+      "ko": {
+        "relevant": 3,
+        "irrelevant": 2,
+        "errors": 3
+      },
+      "pt": {
+        "relevant": 7,
+        "irrelevant": 0,
+        "errors": 0
+      },
+      "ru": {
+        "relevant": 4,
+        "irrelevant": 0,
+        "errors": 0
+      },
+      "tr": {
+        "relevant": 9,
+        "irrelevant": 2,
+        "errors": 0
+      },
+      "zh": {
+        "relevant": 0,
+        "irrelevant": 2,
+        "errors": 0
+      }
+    },
+    "by_doc_type": {}
+  },
+  "removed_paths": [
+    "benchmark/runners/downloads/rett_web_search/ko/五遲_五軟_五硬과_관련된_현대의학의_질병_e5e36a3c.pdf",
+    "benchmark/runners/downloads/rett_web_search/tr/Rett_Sendromu_Nedir__Rett_Sendromu_Belirtileri__Evreleri_ve_Tedavisi_66be762f.pdf",
+    "benchmark/runners/downloads/rett_web_search/ja/PRRT2_遺伝子異常があり乳幼児期に多彩なてんかん発作を認めた_1_女児例_7e53112b.pdf",
+    "benchmark/runners/downloads/rett_web_search/es/untitled_7938129f.pdf",
+    "benchmark/runners/downloads/rett_web_search/zh/untitled_3af31e58.pdf",
+    "benchmark/runners/downloads/rett_web_search/ja/てんかん発作群発と軽度知的障害を呈し__新規_SMC1A_遺伝子変異を認めた女児例_2743d0f3.pdf",
+    "benchmark/runners/downloads/rett_web_search/zh/股价大跌_基因治疗雷特综合征停止高剂量研究_-_罕见病信息网_44ef4260.pdf",
+    "benchmark/runners/downloads/rett_web_search/ja/新規_CYFIP2_変異により難治性てんかんと知的発達症を呈した_1_女児例_71f9ad4b.pdf",
+    "benchmark/runners/downloads/rett_web_search/ja/第_62_回日本小児神経学会東海地方会_da972674.pdf",
+    "benchmark/runners/downloads/rett_web_search/de/Ketogene_Diät_zur_Behandlung_von_pharmakoresistenten_Epilepsien_und_St_cfb33704.pdf",
+    "benchmark/runners/downloads/rett_web_search/ja/第_68_回日本小児神経学会関東地方会_9c732a62.pdf",
+    "benchmark/runners/downloads/rett_web_search/de/DGKJ-PO-603_Eine_seltene_Ursache_von_Kopfschmerzen_b142f247.pdf",
+    "benchmark/runners/downloads/rett_web_search/tr/Lizensefali_ve_Otizm__Olgu_Sunumu_6de6b3ab.pdf",
+    "benchmark/runners/downloads/rett_web_search/de/A_promising_potential_therapeutic_strategy_for_Rett_syndrome___BCM_fdb256ed.pdf",
+    "benchmark/runners/downloads/rett_web_search/de/Molekulargenetische_Untersuchungen_bei_schizophrenen_Störungen_60581ccf.pdf",
+    "benchmark/runners/downloads/rett_web_search/ko/RETT_SYNDROME__CASE_REPORT_df0a3edf.pdf"
+  ],
+  "dedup_removed_paths": [
+    "benchmark/runners/downloads/rett_web_search/pt/Síndrome_de_Rett_Revisión_de_la_literatura_y_presentación_de_seis_____426c0c1d.pdf",
+    "benchmark/runners/downloads/rett_web_search/pt/Síndrome_de_Rett_Revisión_de_la_literatura_y_presentación_de_seis_____c619ed7f.pdf",
+    "benchmark/runners/downloads/rett_web_search/pt/Síndrome_de_Rett_Revisión_de_la_literatura_y_presentación_de_seis_caso_044c9f04.pdf",
+    "benchmark/runners/downloads/rett_web_search/pt/_PDF__CURACION_DEl_SÍNDROME_DE_RETT_8040c5fa.pdf",
+    "benchmark/runners/downloads/rett_web_search/pt/_PDF__Redalyc_SINDROME_DE_RETT__INFORME_DE_UN_CASO_067890cc.pdf",
+    "benchmark/runners/downloads/rett_web_search/pt/_PDF__Síndrome_de_Rett_c0e5f61d.pdf",
+    "benchmark/runners/downloads/rett_web_search/tr/Rett_Sendromu_Nedir__Rett_Sendromu_Belirtileri__Evreleri_ve_Tedavisi_e7762b17.pdf",
+    "benchmark/runners/downloads/rett_web_search/tr/_PDF__Tanı_Karmaşasına_Yol_Açan_İki_Olgu__Rett_Sendromu_-_DergiPark_bb4572ee.pdf",
+    "benchmark/runners/downloads/rett_web_search/tr/untitled_1f0a67b1.pdf"
+  ]
+}

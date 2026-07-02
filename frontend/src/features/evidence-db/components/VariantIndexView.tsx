@@ -1,5 +1,5 @@
 import "../evidence-db.css";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Dna,
@@ -14,8 +14,9 @@ import {
   Calendar,
   ArrowUp,
   ArrowDown,
+  Download,
 } from "lucide-react";
-import { AutoComplete, Checkbox, Input } from "antd";
+import { AutoComplete, Checkbox, Input, Select, message } from "antd";
 import { StatCard } from "./StatCard";
 import { CategoryDistributionBar } from "./CategoryDistributionBar";
 import { Spinner } from "@/components/ui/Spinner";
@@ -26,6 +27,8 @@ import type {
   ClassificationLevel,
   SortBy,
   SortOrder,
+  ReviewStatusFilter,
+  VariantIndexEntry,
 } from "../types/variantDb";
 import type { EvidenceDbViewPrefs } from "../hooks/useEvidenceDbViewPrefs";
 import {
@@ -87,11 +90,109 @@ function hasQualityColumn(prefs: EvidenceDbViewPrefs): boolean {
   return prefs.showCategories || prefs.showReviewProgress;
 }
 
-function variantGridTemplateColumns(prefs: EvidenceDbViewPrefs): string {
-  const columns = ["2fr", "1.5fr", "120px", "100px", "100px", "100px"];
+function variantGridTemplateColumns(prefs: EvidenceDbViewPrefs, hasSelection: boolean): string {
+  const columns: string[] = [];
+  if (hasSelection) columns.push("36px");
+  columns.push("2fr", "1.5fr", "120px", "100px", "100px", "100px");
   if (hasQualityColumn(prefs)) columns.push("120px");
   if (prefs.showUpdated) columns.push("90px");
   return columns.join(" ");
+}
+
+/* ── Sort options ────────────────────────────────────────── */
+
+function getSortOptions(t: (key: string) => string): { value: SortBy; label: string }[] {
+  return [
+    { value: "gene", label: t("evidenceDb.sort.gene") },
+    { value: "variant", label: t("evidenceDb.sort.variant") },
+    { value: "disease", label: t("evidenceDb.sort.disease") },
+    { value: "classification", label: t("evidenceDb.sort.classification") },
+    { value: "evidence", label: t("evidenceDb.sort.evidence") },
+    { value: "refs", label: t("evidenceDb.sort.refs") },
+    { value: "confidence", label: t("evidenceDb.sort.confidence") },
+    { value: "updated", label: t("evidenceDb.sort.updated") },
+  ];
+}
+
+function getReviewStatusOptions(t: (key: string) => string) {
+  return [
+    { value: "provisional" as ReviewStatusFilter, label: t("evidenceDb.review.provisional") },
+    { value: "approved" as ReviewStatusFilter, label: t("evidenceDb.review.approved") },
+    { value: "corrected" as ReviewStatusFilter, label: t("evidenceDb.review.corrected") },
+    { value: "rejected" as ReviewStatusFilter, label: t("evidenceDb.review.rejected") },
+  ];
+}
+
+/* ── Batch export helpers ────────────────────────────────── */
+
+function csvEscape(value: unknown): string {
+  const str = value == null ? "" : String(value);
+  if (str.includes('"') || str.includes(",") || str.includes("\n") || str.includes("\r")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function buildExportCsv(entries: VariantIndexEntry[]): string {
+  const headers = [
+    "gene", "variant", "disease", "classification",
+    "evidence_groups", "literature_refs", "avg_confidence",
+    "review_status", "created_at", "title", "pmid", "doi",
+  ];
+  const rows = entries.map((e) => [
+    e.gene, e.variant, e.disease, e.classification,
+    String(e.evidenceGroupCount), String(e.literatureCount),
+    e.avgConfidence.toFixed(2), e.reviewStatus, e.createdAt ?? "",
+    e.representative.title ?? "", e.representative.pmid ?? "", e.representative.doi ?? "",
+  ]);
+  return [headers.join(","), ...rows.map((r) => r.map(csvEscape).join(","))].join("\n");
+}
+
+function buildExportJson(entries: VariantIndexEntry[]): string {
+  const payload = entries.map((e) => ({
+    gene: e.gene,
+    variant: e.variant,
+    disease: e.disease,
+    classification: e.classification,
+    evidence_groups: e.evidenceGroupCount,
+    literature_refs: e.literatureCount,
+    avg_confidence: Number(e.avgConfidence.toFixed(3)),
+    review_status: e.reviewStatus,
+    created_at: e.createdAt ?? null,
+    title: e.representative.title ?? null,
+    pmid: e.representative.pmid ?? null,
+    doi: e.representative.doi ?? null,
+  }));
+  return JSON.stringify({ variants: payload, exported_at: new Date().toISOString() }, null, 2);
+}
+
+function triggerDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportVariants(
+  entries: VariantIndexEntry[],
+  format: "csv" | "json",
+): void {
+  const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  if (format === "csv") {
+    triggerDownload(
+      new Blob(["\uFEFF" + buildExportCsv(entries)], { type: "text/csv;charset=utf-8" }),
+      `evidence-db-${ts}.csv`,
+    );
+  } else {
+    triggerDownload(
+      new Blob([buildExportJson(entries)], { type: "application/json;charset=utf-8" }),
+      `evidence-db-${ts}.json`,
+    );
+  }
 }
 
 
@@ -101,6 +202,8 @@ export function VariantIndexView() {
   const { t } = useI18n();
   const labels = getEvidenceDbLabels(t);
   const classificationOptions = getClassificationOptions(t);
+  const sortOptions = useMemo(() => getSortOptions(t), [t]);
+  const reviewStatusOptions = useMemo(() => getReviewStatusOptions(t), [t]);
   const {
     items,
     total,
@@ -136,26 +239,91 @@ export function VariantIndexView() {
     }
   }, [jumpValue, totalPages, goTo]);
 
-  // Sort toggle for "Updated" column
-  const toggleSort = useCallback(() => {
-    const currentSortBy = filters.sortBy;
-    const currentOrder = filters.sortOrder ?? "desc";
-    if (currentSortBy !== "updated") {
-      updateFilter("sortBy", "updated" as SortBy);
-      updateFilter("sortOrder", "desc" as SortOrder);
-    } else {
-      // Cycle: desc → asc → clear
-      if (currentOrder === "desc") {
-        updateFilter("sortOrder", "asc" as SortOrder);
-      } else {
+  // ── Selection state ──────────────────────────────────────
+  const [selectedSlugs, setSelectedSlugs] = useState<Set<string>>(new Set());
+
+  // Reset selection when the visible items change (page / filter / sort)
+  const itemSlugsKey = useMemo(() => items.map((i) => i.variantSlug).join("\0"), [items]);
+  useEffect(() => {
+    setSelectedSlugs(new Set());
+  }, [itemSlugsKey]);
+
+  const toggleSelectOne = useCallback((slug: string) => {
+    setSelectedSlugs((prev) => {
+      const next = new Set(prev);
+      if (next.has(slug)) next.delete(slug);
+      else next.add(slug);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelectedSlugs((prev) => {
+      if (prev.size === items.length) return new Set();
+      return new Set(items.map((i) => i.variantSlug));
+    });
+  }, [items]);
+
+  const selectedEntries = useMemo(
+    () => items.filter((i) => selectedSlugs.has(i.variantSlug)),
+    [items, selectedSlugs],
+  );
+
+  const handleExport = useCallback(
+    (format: "csv" | "json", scope: "selected" | "filtered") => {
+      const entries = scope === "selected" ? selectedEntries : items;
+      if (entries.length === 0) {
+        void message.warning(t("evidenceDb.export.empty"));
+        return;
+      }
+      try {
+        exportVariants(entries, format);
+        void message.success(
+          t("evidenceDb.export.success", { count: String(entries.length) }),
+        );
+      } catch {
+        void message.error(t("evidenceDb.export.error"));
+      }
+    },
+    [selectedEntries, items, t],
+  );
+
+  // ── Sort dropdown handler ────────────────────────────────
+  const handleSortChange = useCallback(
+    (value: SortBy | "__clear__") => {
+      if (value === "__clear__") {
         updateFilter("sortBy", undefined as unknown as SortBy);
         updateFilter("sortOrder", undefined as unknown as SortOrder);
+        return;
       }
-    }
-  }, [filters.sortBy, filters.sortOrder, updateFilter]);
+      // Toggle order if already active; default to asc for textual, desc for numeric
+      if (filters.sortBy === value) {
+        updateFilter(
+          "sortOrder",
+          (filters.sortOrder === "asc" ? "desc" : "asc") as SortOrder,
+        );
+        return;
+      }
+      const defaultOrder: SortOrder =
+        value === "evidence" || value === "refs" || value === "confidence" || value === "updated"
+          ? "desc"
+          : "asc";
+      updateFilter("sortBy", value);
+      updateFilter("sortOrder", defaultOrder);
+    },
+    [filters.sortBy, filters.sortOrder, updateFilter],
+  );
 
   const searchText = filters.gene ?? filters.variant ?? "";
-  const hasAnyFilter = !!(filters.gene || filters.variant || filters.disease || filters.classification);
+  const hasAnyFilter = !!(
+    filters.gene ||
+    filters.variant ||
+    filters.disease ||
+    filters.classification ||
+    filters.reviewStatus
+  );
+  const allPageSelected = items.length > 0 && selectedSlugs.size === items.length;
+  const anySelected = selectedSlugs.size > 0;
 
   // Build candidate lists from all data for autocomplete
   const { geneCandidates, variantCandidates, diseaseCandidates } = useMemo(() => {
@@ -361,6 +529,88 @@ export function VariantIndexView() {
               );
             })}
           </div>
+
+          {/* Sort + review status row */}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: 12,
+              marginTop: 12,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+              <span style={{ fontWeight: 500, color: "var(--color-text-secondary)" }}>
+                {t("evidenceDb.sort.label")}
+              </span>
+              <Select
+                size="small"
+                value={filters.sortBy ?? "__clear__"}
+                onChange={(v) => handleSortChange(v as SortBy | "__clear__")}
+                style={{ minWidth: 160 }}
+                popupMatchSelectWidth={false}
+                options={[
+                  { value: "__clear__", label: t("evidenceDb.sort.default") },
+                  ...sortOptions,
+                ]}
+              />
+              {filters.sortBy && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateFilter(
+                      "sortOrder",
+                      (filters.sortOrder === "asc" ? "desc" : "asc") as SortOrder,
+                    )
+                  }
+                  title={
+                    filters.sortOrder === "asc"
+                      ? t("evidenceDb.sort.orderAsc")
+                      : t("evidenceDb.sort.orderDesc")
+                  }
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    cursor: "pointer",
+                    borderRadius: 6,
+                    border: "1px solid var(--color-border)",
+                    backgroundColor: "var(--color-surface)",
+                    color: "var(--color-text-strong)",
+                    padding: "2px 8px",
+                    fontSize: 12,
+                    fontWeight: 500,
+                  }}
+                >
+                  {filters.sortOrder === "asc" ? (
+                    <ArrowUp style={{ width: 12, height: 12 }} />
+                  ) : (
+                    <ArrowDown style={{ width: 12, height: 12 }} />
+                  )}
+                  {filters.sortOrder === "asc"
+                    ? t("evidenceDb.sort.orderAsc")
+                    : t("evidenceDb.sort.orderDesc")}
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+              <span style={{ fontWeight: 500, color: "var(--color-text-secondary)" }}>
+                {t("evidenceDb.review.label")}
+              </span>
+              <Select
+                size="small"
+                allowClear
+                placeholder={t("evidenceDb.review.all")}
+                value={filters.reviewStatus}
+                onChange={(v) => updateFilter("reviewStatus", v as ReviewStatusFilter | undefined)}
+                style={{ minWidth: 140 }}
+                popupMatchSelectWidth={false}
+                options={reviewStatusOptions}
+              />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -450,12 +700,159 @@ export function VariantIndexView() {
             </div>
           </div>
 
+          {/* Batch actions bar */}
+          {anySelected && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                flexWrap: "wrap",
+                marginTop: 12,
+                padding: "10px 14px",
+                borderRadius: 10,
+                border: "1px solid var(--color-primary-400, #60a5fa)",
+                backgroundColor: "var(--color-primary-50, #eff6ff)",
+              }}
+            >
+              <span style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-strong)" }}>
+                {t("evidenceDb.export.selected", { count: String(selectedSlugs.size) })}
+              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => handleExport("csv", "selected")}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    cursor: "pointer",
+                    borderRadius: 6,
+                    border: "1px solid var(--color-border)",
+                    backgroundColor: "var(--color-surface)",
+                    color: "var(--color-text-strong)",
+                    padding: "4px 10px",
+                    fontSize: 12,
+                    fontWeight: 500,
+                  }}
+                >
+                  <Download style={{ width: 12, height: 12 }} />
+                  {t("evidenceDb.export.csv")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleExport("json", "selected")}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    cursor: "pointer",
+                    borderRadius: 6,
+                    border: "1px solid var(--color-border)",
+                    backgroundColor: "var(--color-surface)",
+                    color: "var(--color-text-strong)",
+                    padding: "4px 10px",
+                    fontSize: 12,
+                    fontWeight: 500,
+                  }}
+                >
+                  <Download style={{ width: 12, height: 12 }} />
+                  {t("evidenceDb.export.json")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSlugs(new Set())}
+                  style={{
+                    cursor: "pointer",
+                    borderRadius: 6,
+                    border: "1px solid var(--color-border)",
+                    backgroundColor: "var(--color-surface)",
+                    color: "var(--color-text-secondary)",
+                    padding: "4px 10px",
+                    fontSize: 12,
+                    fontWeight: 500,
+                  }}
+                >
+                  {t("evidenceDb.export.clearSelection")}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!anySelected && items.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: 8,
+                marginTop: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>
+                {t("evidenceDb.export.downloadPage")}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleExport("csv", "filtered")}
+                disabled={items.length === 0}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  cursor: "pointer",
+                  borderRadius: 6,
+                  border: "1px solid var(--color-border)",
+                  backgroundColor: "var(--color-surface)",
+                  color: "var(--color-text-strong)",
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  fontWeight: 500,
+                }}
+              >
+                <Download style={{ width: 12, height: 12 }} />
+                {t("evidenceDb.export.csv")}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleExport("json", "filtered")}
+                disabled={items.length === 0}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  cursor: "pointer",
+                  borderRadius: 6,
+                  border: "1px solid var(--color-border)",
+                  backgroundColor: "var(--color-surface)",
+                  color: "var(--color-text-strong)",
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  fontWeight: 500,
+                }}
+              >
+                <Download style={{ width: 12, height: 12 }} />
+                {t("evidenceDb.export.json")}
+              </button>
+            </div>
+          )}
+
           {/* Variant List */}
           <div className="viv-variant-list" style={{ marginTop: 16 }}>
             <div
               className="viv-list-header"
-              style={{ gridTemplateColumns: variantGridTemplateColumns(viewPrefs) }}
+              style={{ gridTemplateColumns: variantGridTemplateColumns(viewPrefs, true) }}
             >
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <Checkbox
+                  checked={allPageSelected}
+                  indeterminate={anySelected && !allPageSelected}
+                  onChange={toggleSelectAll}
+                  aria-label={t("evidenceDb.export.selectAll")}
+                />
+              </div>
               <span>{t("evidenceDb.listGene")} / {t("evidenceDb.listVariant")}</span>
               <span>{t("evidenceDb.listDisease")}</span>
               <span>{t("evidenceDb.listClass")}</span>
@@ -468,46 +865,46 @@ export function VariantIndexView() {
                 </span>
               )}
               {viewPrefs.showUpdated && (
-                <button
-                  type="button"
-                  className="viv-sort-header"
-                  onClick={toggleSort}
-                  title={labels.updated}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                    font: "inherit",
-                    color: filters.sortBy === "updated" ? "var(--color-text)" : "var(--color-text-secondary)",
-                  }}
-                >
-                  {labels.updated}
-                  {filters.sortBy === "updated" && (
-                    filters.sortOrder === "asc"
-                      ? <ArrowUp style={{ width: 12, height: 12 }} />
-                      : <ArrowDown style={{ width: 12, height: 12 }} />
-                  )}
-                </button>
+                <span>{labels.updated}</span>
               )}
             </div>
-            {items.map((entry, i) => (
-              <div
-                key={entry.variantSlug}
-                className="edb-stagger"
-                style={{ animationDelay: `${Math.min(i * 25, 250)}ms` }}
-              >
-                <Link
-                  to={`/evidence-db/${encodeURIComponent(entry.variantSlug)}`}
-                  state={{ variantEntry: entry }}
-                  className="viv-row"
-                  style={{ gridTemplateColumns: variantGridTemplateColumns(viewPrefs) }}
+            {items.map((entry, i) => {
+              const isSelected = selectedSlugs.has(entry.variantSlug);
+              return (
+                <div
+                  key={entry.variantSlug}
+                  className="edb-stagger"
+                  style={{ animationDelay: `${Math.min(i * 25, 250)}ms` }}
                 >
-                  {/* Gene + Variant (primary column) */}
-                  <div style={{ minWidth: 0, display: "flex", alignItems: "baseline", flexWrap: "nowrap" }} title={`${entry.gene || t("evidenceDb.unknownGene")} · ${entry.variant || t("evidenceDb.unknownVariant")}`}>
-                    <span className="viv-row-gene">{entry.gene || t("evidenceDb.unknownGene")}</span>
-                    <span style={{ margin: "0 6px", color: "var(--color-text-muted)", flexShrink: 0 }}>·</span>
-                    <span className="viv-row-variant">{entry.variant || t("evidenceDb.unknownVariant")}</span>
-                  </div>
+                  <Link
+                    to={`/evidence-db/${encodeURIComponent(entry.variantSlug)}`}
+                    state={{ variantEntry: entry }}
+                    className="viv-row"
+                    style={{
+                      gridTemplateColumns: variantGridTemplateColumns(viewPrefs, true),
+                      backgroundColor: isSelected ? "var(--color-primary-50, #eff6ff)" : undefined,
+                    }}
+                  >
+                    {/* Selection checkbox */}
+                    <div
+                      style={{ display: "flex", alignItems: "center", justifyContent: "flex-start" }}
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onChange={() => toggleSelectOne(entry.variantSlug)}
+                        aria-label={t("evidenceDb.export.selectRow", {
+                          variant: `${entry.gene || "?"} ${entry.variant || "?"}`.trim(),
+                        })}
+                      />
+                    </div>
+                    {/* Gene + Variant (primary column) */}
+                    <div style={{ minWidth: 0, display: "flex", alignItems: "baseline", flexWrap: "nowrap" }} title={`${entry.gene || t("evidenceDb.unknownGene")} · ${entry.variant || t("evidenceDb.unknownVariant")}`}>
+                      <span className="viv-row-gene">{entry.gene || t("evidenceDb.unknownGene")}</span>
+                      <span style={{ margin: "0 6px", color: "var(--color-text-muted)", flexShrink: 0 }}>·</span>
+                      <span className="viv-row-variant">{entry.variant || t("evidenceDb.unknownVariant")}</span>
+                    </div>
                   {/* Classification shown inline on mobile */}
                   <div className="viv-row-mobile-stats" style={{ marginTop: 4 }}>
                     <span title={entry.classification || undefined}>{entry.classification || t("evidenceDb.noClass")}</span>
@@ -596,7 +993,8 @@ export function VariantIndexView() {
                   </div>
                 </Link>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Pagination */}

@@ -1,0 +1,64 @@
+{
+  "total": 8,
+  "relevant": 4,
+  "irrelevant": 4,
+  "errors": 0,
+  "judgments": [
+    {
+      "file": "_PDF__应对图雷特综合症_af5f3f65.pdf",
+      "relevant": false,
+      "doc_type": "",
+      "reason": "The document is a guide about Tourette syndrome (图雷特综合症) and its comorbidities; it does not discuss Rett syndrome, MECP2, CDKL5, or FOXG1 and is not about the query topic.",
+      "error": ""
+    },
+    {
+      "file": "_PDF__MeCP2与神经发育性疾病_-_生命科学_e7cb3712.pdf",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "The article is a review focused on MeCP2 and its role in neurodevelopmental disorders, explicitly discussing Rett syndrome (雷特综合征) and MeCP2 mutations, so it directly matches the query topic.",
+      "error": ""
+    },
+    {
+      "file": "認識沉默的搓手天使-雷特氏症_Rett_syndrome__a6ee0541.pdf",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary topic is Rett syndrome (雷特氏症) in Chinese and the excerpt discusses MECP2 mutations and mentions FOXG1 and CDKL5, with clinical features and diagnostics — directly matches the query.",
+      "error": ""
+    },
+    {
+      "file": "文献1__调控MECP2_可变剪接是雷特综合征的潜在治疗策略_c5c3a9b1.pdf",
+      "relevant": false,
+      "doc_type": "",
+      "reason": "The PDF excerpt is a guideline on natural history studies for rare disease drug development and does not contain substantive discussion of Rett syndrome, MECP2, CDKL5, or FOXG1 in the shown pages; the primary subject differs from the query.",
+      "error": ""
+    },
+    {
+      "file": "雷特氏症_-_香港罕見疾病聯盟_bd095294.pdf",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary subject is Rett syndrome (雷特综合征) and the excerpt includes substantive discussion of diagnostic criteria and MECP2 mutations, matching the query about Rett and related genes.",
+      "error": ""
+    },
+    {
+      "file": "_PDF__Rett_综合征1_例_-_大连医科大学学报_07495761.pdf",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Chinese case report of Rett syndrome describing clinical features, EEG and WES identifying an MECP2 c.502C>T (p.R168X) pathogenic mutation — directly matches Rett/MECP2 topic.",
+      "error": ""
+    },
+    {
+      "file": "untitled_3af31e58.pdf",
+      "relevant": false,
+      "doc_type": "",
+      "reason": "The excerpt is an NICHD program categories/contact list (general research topics) and does not discuss Rett syndrome, MECP2, CDKL5, or FOXG1; it is not a study/case report about the query topic.",
+      "error": ""
+    },
+    {
+      "file": "認識沉默的搓手天使-雷特氏症_Rett_syndrome__c8b40310.pdf",
+      "relevant": false,
+      "doc_type": "",
+      "reason": "Excerpt shows content about atopic dermatitis (異位性皮膚炎) from a hospital newsletter and contains no substantive discussion of Rett syndrome or MECP2/CDKL5/FOXG1; primary subject does not match the query.",
+      "error": ""
+    }
+  ]
+}

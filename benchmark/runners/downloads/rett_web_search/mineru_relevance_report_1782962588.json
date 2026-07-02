@@ -1,0 +1,334 @@
+{
+  "total": 38,
+  "relevant": 37,
+  "irrelevant": 1,
+  "errors": 0,
+  "by_lang": {
+    "en": {
+      "relevant": 16,
+      "irrelevant": 0,
+      "errors": 0
+    },
+    "ja": {
+      "relevant": 12,
+      "irrelevant": 0,
+      "errors": 0
+    },
+    "ko": {
+      "relevant": 5,
+      "irrelevant": 1,
+      "errors": 0
+    },
+    "zh": {
+      "relevant": 4,
+      "irrelevant": 0,
+      "errors": 0
+    }
+  },
+  "judgments": [
+    {
+      "file": "A_case_report_of_Chinese_brothers_with_inherited_MECP2-containing_____b2a89e49.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary focus is MECP2 gene alterations (MECP2-containing duplication) and discusses Rett syndrome/MECP2-related phenotypes; directly relevant to the query about Rett syndrome and MECP2 mutations.",
+      "error": ""
+    },
+    {
+      "file": "MECP2_重複症候群患者に対する歯科治療の一例_8c54ab3f.pdf",
+      "lang": "ja",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "This is a case report focused on MECP2 duplication syndrome (a MECP2-related neurodevelopmental disorder). It provides substantive clinical discussion relevant to MECP2-associated conditions related to Rett syndrome and the queried genes.",
+      "error": ""
+    },
+    {
+      "file": "KR20170070068A_-_레트_증후군의_치료_-_Google_Patents_83c30d9d.pdf",
+      "lang": "ko",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "The document is a Korean patent on treating Rett syndrome that explicitly focuses on MECP2 gene mutations (testing, kits, and therapeutic PTP1B inhibitors), so it directly addresses Rett/MECP2 topics in the query.",
+      "error": ""
+    },
+    {
+      "file": "_PDF__MECP2_Gene_Analysis_in_Rett_Syndrome_and_Other_____-_GeneDx_a1dab2c2.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "The document is specifically about MECP2 gene analysis in Rett syndrome, covering clinical features, genetics, and testing methods, so it directly addresses the MECP2 aspect of the query (even though CDKL5/FOXG1 are not shown in the excerpt).",
+      "error": ""
+    },
+    {
+      "file": "레트_증후군의_MECP2_유전자_돌연변이와_다형성_-_한국학술지인용색인_00104d12.pdf",
+      "lang": "ko",
+      "relevant": false,
+      "doc_type": "",
+      "reason": "Excerpt contains only KCI metadata/export instructions and field mappings, with no substantive text about Rett syndrome, MECP2, CDKL5, or FOXG1; content does not match the query topic.",
+      "error": ""
+    },
+    {
+      "file": "MECP2_Duplication_Syndrome_-_GeneReviews__-_NCBI_Bookshelf_896a86d8.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "This GeneReviews chapter is a detailed clinical and genetic review of MECP2-related disease (MECP2 duplication syndrome). It directly addresses MECP2 mutations, which are central to Rett syndrome genetics, so it is relevant to the query (though it focuses on MECP2 duplication rather than CDKL5 or FOXG1).",
+      "error": ""
+    },
+    {
+      "file": "レット症候群における病態分子機構_35b35f35.pdf",
+      "lang": "ja",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Review article on molecular mechanisms of Rett syndrome with detailed discussion of MECP2 function and mutations; directly relevant to MECP2-related Rett research (even if CDKL5/FOXG1 are not shown in the excerpt).",
+      "error": ""
+    },
+    {
+      "file": "Duplication_within_two_regions_distal_to_MECP2__clinical_similarity_wi_506ed9db.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "The paper focuses on MECP2-related Xq28 duplications and clinical features similar to MECP2 duplication syndrome, directly addressing MECP2 pathology relevant to Rett syndrome genetics (even though it does not focus on CDKL5 or FOXG1).",
+      "error": ""
+    },
+    {
+      "file": "Rett_syndrome_in_males__a_case_report_and_review_of_literature_ba8948fc.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary subject is Rett syndrome (case report and literature review) with focus on genetics in males; contains substantive discussion of Rett genetics (likely MECP2 and related genes) and is directly on-topic.",
+      "error": ""
+    },
+    {
+      "file": "__trajectory_and_treatment_approaches_in_a_case_of_a_complex_neurodeve_3a052d4f.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "This is a case report focused on Rett syndrome and a pathogenic MECP2 variant (p.R133C), directly addressing MECP2-related Rett; therefore it is relevant to a query about Rett/MECP2 (even if it does not center on CDKL5 or FOXG1).",
+      "error": ""
+    },
+    {
+      "file": "_PDF__Rett_syndrome_환자의_제증상에_관한_증례보고_b7165e25.pdf",
+      "lang": "ko",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary focus is Rett syndrome (case report) and the text discusses the MECP2 genetic cause; therefore directly relevant to Rett syndrome and MECP2-related literature.",
+      "error": ""
+    },
+    {
+      "file": "A_rare_case_of_a_male_child_with_post-zygotic_de_novo_mosaic_variant___0ed28122.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary subject is Rett syndrome with a pathogenic MECP2 mutation (case report of a male with post‑zygotic mosaic c.538C>T); contains substantive clinical and genetic analysis relevant to MECP2-related RTT (though CDKL5/FOXG1 are not highlighted in the excerpt).",
+      "error": ""
+    },
+    {
+      "file": "MECP2重複症候群とは_MECP2_Duplication_Syndrome__00e57fa0.pdf",
+      "lang": "ja",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary focus is MECP2 duplication syndrome (a MECP2 mutation disorder) and it explicitly discusses MECP2 and its relation to Rett syndrome, matching the query about Rett/MECP2-related genes.",
+      "error": ""
+    },
+    {
+      "file": "_PDF__MeCP2与神经发育性疾病_-_生命科学_e7cb3712.pdf",
+      "lang": "zh",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "This Chinese review focuses on MeCP2 and its role in neurodevelopmental disorders including Rett syndrome, providing substantive discussion of MeCP2 mutations and related biology — directly relevant to Rett/MECP2 (though it may not specifically cover CDKL5 or FOXG1).",
+      "error": ""
+    },
+    {
+      "file": "Increased_MECP2_gene_copy_number_as_the_result_of_genomic_duplication__74d78dd8.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "The paper’s primary subject is MECP2 and its role in Rett syndrome/neurodevelopmental disorders (MECP2 duplications/triplications), directly matching the query on Rett syndrome and MECP2 mutations.",
+      "error": ""
+    },
+    {
+      "file": "Ten_novel_insertion_deletion_variants_in_MECP2_identified_in_____-_Nat_28ef4f13.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary research reporting novel MECP2 insertion/deletion variants in Rett syndrome patients; directly addresses MECP2 mutations and references related RTT genes CDKL5 and FOXG1.",
+      "error": ""
+    },
+    {
+      "file": "レット症候群モデルマウスにおける無呼吸に対する延髄_GABA_神経系の関与_d2d6e58d.pdf",
+      "lang": "ja",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "The document is a study of Rett syndrome model mice with Mecp2 (MECP2) defects, presenting experimental data on respiratory abnormalities, GABAergic neurons and molecular analyses (GAD1 mRNA, methylation) — directly addressing MECP2-related Rett syndrome.",
+      "error": ""
+    },
+    {
+      "file": "A_brief_history_of_MECP2_duplication_syndrome__20-years_of_clinical_un_a416508d.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "The review focuses on MECP2-related disorder (MECP2 duplication syndrome) and explicitly discusses MECP2 in the context of Rett syndrome; this directly matches the query about Rett syndrome and MECP2 mutations (related genes like CDKL5/FOXG1 are part of the broader Rett/atypical Rett gene group).",
+      "error": ""
+    },
+    {
+      "file": "_PDF__Rett_综合征1_例_-_大连医科大学学报_07495761.pdf",
+      "lang": "zh",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Case report is directly about Rett syndrome and reports a pathogenic MECP2 mutation (c.502C>T p.R168X) with clinical, EEG and WES data—matches the query about Rett/MECP2 (though CDKL5/FOXG1 are not discussed).",
+      "error": ""
+    },
+    {
+      "file": "An_insertion_mutation_of_the_MECP2_gene_in_severe_neonatal_encephalopa_74645706.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary focus is a MECP2 pathogenic insertion and its clinical phenotype (Rett-related severe encephalopathy); substantive case data and discussion directly match the query about MECP2/Rett (even if CDKL5/FOXG1 are not the focus).",
+      "error": ""
+    },
+    {
+      "file": "_PDF__Rett_증후군_34례의_MECP2_유전자_변이에_관한_연구_3b10acf0.pdf",
+      "lang": "ko",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary focus is Rett syndrome and detailed mutational analysis of the MECP2 gene in 34 patients, providing substantive data directly relevant to the query; it does not appear to address CDKL5 or FOXG1 but is highly relevant for MECP2-related Rett research.",
+      "error": ""
+    },
+    {
+      "file": "Rett症候群の病態解明とバイオマーカー確立の基礎的_臨床的研究_019231a7.pdf",
+      "lang": "ja",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary focus is Rett syndrome; the report discusses MECP2 as the main causative gene and explicitly mentions CDKL5 and FOXG1, and contains substantive clinical and basic research on RTT (models, biomarkers, clinical measures).",
+      "error": ""
+    },
+    {
+      "file": "_PDF__레트_증후군의_이해_2aa612b1.pdf",
+      "lang": "ko",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Document is a focused review on Rett syndrome in Korean and explicitly discusses MECP2 mutations and clinical features; it directly addresses the primary topic even if CDKL5/FOXG1 are not in the excerpt.",
+      "error": ""
+    },
+    {
+      "file": "A35_Rett_症候群遺伝子検査はエキソン_1_を含む総合的な解析が必要である_cca3440d.pdf",
+      "lang": "ja",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "本文はRett症候群を主要テーマとし、MECP2のエキソン1変異を同定した症例報告と遺伝子解析の考察を含んでおり、検索語（Rett syndrome, MECP2）に直接関連するため。",
+      "error": ""
+    },
+    {
+      "file": "MECP2_Disorders_-_GeneReviews__-_NCBI_Bookshelf_d550425e.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "The document is a GeneReviews chapter specifically on MECP2-related disorders and Rett syndrome, covering clinical features and genetic testing for MECP2 mutations (directly matches the query topic).",
+      "error": ""
+    },
+    {
+      "file": "第_28_回日本小児神経学会中国_四国地方会_e88600f4.pdf",
+      "lang": "ja",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Contains a case report explicitly about Rett syndrome with a MeCP2-e1 gene mutation (MeCP2), matching the query topic.",
+      "error": ""
+    },
+    {
+      "file": "Understanding_Rett__Genetics_101_267af0a0.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "This paper is directly about Rett syndrome and provides a comprehensive catalogue and analysis of 863 MECP2 mutations, matching the MECP2 aspect of the query and offering substantive data relevant to Rett genetics.",
+      "error": ""
+    },
+    {
+      "file": "B08_レット症候群と酸化ストレス_6f8299be.pdf",
+      "lang": "ja",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary subject is Rett syndrome with confirmed MECP2 mutations; includes substantive data on MECP2-mutant cases (urinary oxidative stress markers), directly relevant to the query (Rett syndrome/MECP2).",
+      "error": ""
+    },
+    {
+      "file": "_PDF__レット症候群の早期診断と治療をめざした統合的研究_0a5f7f1b.pdf",
+      "lang": "ja",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "The report is a comprehensive study on Rett syndrome and explicitly discusses MECP2 mutations, CDKL5, and FOXG1 (including clinical genetics, biological analyses, and mouse models), matching the query topics.",
+      "error": ""
+    },
+    {
+      "file": "認識沉默的搓手天使-雷特氏症_Rett_syndrome__a6ee0541.pdf",
+      "lang": "zh",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary focus is Rett syndrome and the excerpt explicitly discusses causative genes including MECP2, FOXG1, and CDKL5 with clinical detail, matching the query.",
+      "error": ""
+    },
+    {
+      "file": "De_novo_deletion_in_MECP2_in_a_monozygotic_twin_pair__a_case_report_59b73610.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary subject is Rett syndrome with detailed genetic analysis of a de novo MECP2 deletion in monozygotic twins, directly relevant to MECP2 mutations (part of the query).",
+      "error": ""
+    },
+    {
+      "file": "遺伝子解析__変異部位と臨床徴候の相関_48b39249.pdf",
+      "lang": "ja",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary subject is Rett syndrome with substantive data and analysis of MECP2 mutations (mutation frequencies, genotype–phenotype correlations), directly relevant to the query about Rett and its genetic causes.",
+      "error": ""
+    },
+    {
+      "file": "레트_증후군_환아의_제증상에_관한_증례보고_81bef200.pdf",
+      "lang": "ko",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary subject is Rett syndrome (case reports of clinical and oral symptoms). Although the excerpt does not discuss MECP2/CDKL5/FOXG1 mutations, the document is directly about Rett syndrome and is therefore relevant to the query topic.",
+      "error": ""
+    },
+    {
+      "file": "雷特氏症_-_香港罕見疾病聯盟_bd095294.pdf",
+      "lang": "zh",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary subject is Rett syndrome (diagnostic criteria) and discusses MECP2 mutations; this key review/study is directly relevant to Rett and associated genes (CDKL5, FOXG1) and differential/atypical forms.",
+      "error": ""
+    },
+    {
+      "file": "Unraveling_MECP2_structural_variants_in_previously_elusive_Rett_syndro_6879faa2.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "The paper directly addresses Rett syndrome and MECP2 mutations, reporting novel MECP2 structural variants in previously unresolved cases—clearly substantive and on-topic for queries about Rett/MECP2 (even if it does not focus on CDKL5 or FOXG1).",
+      "error": ""
+    },
+    {
+      "file": "untitled_50b63021.pdf",
+      "lang": "ja",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "The document is a comprehensive Japanese research report on Rett syndrome and explicitly discusses MECP2 mutations and the non‑typical RTT genes CDKL5 and FOXG1, including clinical genetics, biological analyses, and animal models.",
+      "error": ""
+    },
+    {
+      "file": "De_novo_mutations_in_SCN1A_are_associated_with_classic_Rett_syndrome___311ae63b.pdf",
+      "lang": "en",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "This is a case report focused on classic Rett syndrome genetics: it discusses MECP2, reports pathogenic de novo SCN1A mutations in MECP2-negative RTT patients, and addresses alternative genetic causes of RTT (relevant to queries about MECP2 and related genes such as CDKL5/FOXG1, though the paper specifically studies SCN1A).",
+      "error": ""
+    },
+    {
+      "file": "MECP2_重複症候群の脳梁離断術における麻酔経験_ccb4c8cf.pdf",
+      "lang": "ja",
+      "relevant": true,
+      "doc_type": "",
+      "reason": "Primary focus is an MECP2-related disorder (MECP2 duplication syndrome) with detailed clinical/anesthetic case discussion; directly relevant to MECP2/Rett-related topics even though CDKL5/FOXG1 are not addressed.",
+      "error": ""
+    }
+  ]
+}

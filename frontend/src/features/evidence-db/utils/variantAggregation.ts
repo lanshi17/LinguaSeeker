@@ -212,14 +212,42 @@ export function filterAndPaginateVariants(
   if (filters.classification) {
     filtered = filtered.filter((e) => e.classificationLevel === filters.classification);
   }
+  if (filters.reviewStatus) {
+    filtered = filtered.filter((e) => e.reviewStatus === filters.reviewStatus);
+  }
 
-  // Apply user-controlled sort (overrides the default aggregateVariants order)
-  if (filters.sortBy === "updated") {
+  // Apply user-controlled sort (overrides the default aggregateVariants order).
+  // For textual keys we sort lexicographically; for numeric keys we use the
+  // aggregated metric; "updated" uses createdAt timestamp.
+  if (filters.sortBy) {
     const order: SortOrder = filters.sortOrder ?? "desc";
+    const mul = order === "asc" ? 1 : -1;
+    const cmpStr = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: "base" });
+
     filtered = [...filtered].sort((a, b) => {
-      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return order === "asc" ? aTime - bTime : bTime - aTime;
+      switch (filters.sortBy) {
+        case "gene":
+          return mul * cmpStr(a.gene || "", b.gene || "");
+        case "variant":
+          return mul * cmpStr(a.variant || "", b.variant || "");
+        case "disease":
+          return mul * cmpStr(a.disease || "", b.disease || "");
+        case "classification":
+          return mul * (severityRank(a.classificationLevel) - severityRank(b.classificationLevel));
+        case "evidence":
+          return mul * (a.evidenceGroupCount - b.evidenceGroupCount);
+        case "refs":
+          return mul * (a.literatureCount - b.literatureCount);
+        case "confidence":
+          return mul * (a.avgConfidence - b.avgConfidence);
+        case "updated": {
+          const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return mul * (aTime - bTime);
+        }
+        default:
+          return 0;
+      }
     });
   }
 
