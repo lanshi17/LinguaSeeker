@@ -112,7 +112,6 @@ export function AuditView() {
           )}
         </Flex>
         <Button
-          type="primary"
           icon={<ClipboardCheck style={{ width: 14, height: 14 }} />}
           onClick={() => setReviewDrawerOpen(true)}
         >

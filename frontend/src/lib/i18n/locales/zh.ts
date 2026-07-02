@@ -434,6 +434,7 @@ const zh: Record<EnKeys, string> = {
   "audit.metric.corrected": "已修正",
   "audit.metric.rejected": "已驳回",
   "audit.filter.all": "全部",
+  "audit.filter.provisional": "待审核",
   "audit.filter.approved": "已批准",
   "audit.filter.corrected": "已修正",
   "audit.filter.rejected": "已驳回",
@@ -466,11 +467,11 @@ const zh: Record<EnKeys, string> = {
 
   // ── 审计 — EvidenceReviewDrawer ──
   "audit.review.title": "审核证据",
-  "audit.review.instruction": "选择证据条目以审核其字段并更改审核状态。",
+  "audit.review.instruction": "下方展示所有证据条目。使用上方字段缩小范围，然后选择条目进行审核。",
   "audit.review.genePh": "基因",
   "audit.review.variantPh": "变异",
   "audit.review.diseasePh": "疾病",
-  "audit.review.searchBtn": "搜索证据",
+  "audit.review.searchBtn": "筛选",
   "audit.review.resultsFound": "找到 {count} 条结果",
   "audit.review.noResults": "未找到匹配的证据",
   "audit.review.backToResults": "返回结果列表",

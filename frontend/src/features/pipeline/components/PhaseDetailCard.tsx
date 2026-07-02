@@ -17,12 +17,12 @@ interface PhaseDetailCardProps {
 }
 
 const PHASE_ICON_COLOR: Record<string, React.CSSProperties> = {
-  phase_1: { color: "var(--color-blue-700)", backgroundColor: "var(--color-blue-50)", borderBottom: "1px solid var(--color-running-border)" },
-  phase_2: { color: "var(--color-primary-700, #0e7490)", backgroundColor: "var(--color-highlight)", borderBottom: "1px solid var(--color-running-border)" },
-  phase_3: { color: "var(--color-purple-700)", backgroundColor: "var(--color-purple-50)", borderBottom: "1px solid var(--color-purple-700)" },
+  phase_1: { color: "var(--color-text-secondary)", borderBottom: "1px solid var(--color-border)" },
+  phase_2: { color: "var(--color-text-secondary)", borderBottom: "1px solid var(--color-border)" },
+  phase_3: { color: "var(--color-text-secondary)", borderBottom: "1px solid var(--color-border)" },
 };
 
-const DEFAULT_HEADER_STYLE: React.CSSProperties = { backgroundColor: "var(--color-bg)" };
+const DEFAULT_HEADER_STYLE: React.CSSProperties = { borderBottom: "1px solid var(--color-border)" };
 
 const nodeBorderColorBg = (status: ProcessingStatus): React.CSSProperties => {
   switch (status) {
@@ -42,7 +42,7 @@ const nodeBorderColorBg = (status: ProcessingStatus): React.CSSProperties => {
 };
 
 const progressBarBg = (status: ProcessingStatus): string => {
-  if (status === "running") return "linear-gradient(to right, #7dd3fc, var(--color-primary-600, #0891b2))";
+  if (status === "running") return "var(--color-primary-600, #0891b2)";
   if (status === "completed") return "var(--color-success-500, #22c55e)";
   return "var(--color-text-muted)";
 };
@@ -98,10 +98,11 @@ export function PhaseDetailCard({ phaseId, phase, index = 0 }: PhaseDetailCardPr
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
-                fontSize: 13,
+                fontSize: 10,
                 fontWeight: 600,
-                letterSpacing: "-0.025em",
-                color: "var(--color-text)",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--color-text-secondary)",
               }}
             >
               {title}

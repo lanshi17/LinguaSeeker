@@ -103,16 +103,15 @@ export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
               flex: "none",
               alignItems: "center",
               justifyContent: "center",
-              borderRadius: 12,
-              background: "var(--color-primary-600, var(--color-primary-600))",
-              color: "var(--color-surface)",
-              boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+              borderRadius: 6,
+              border: "1px solid var(--color-border)",
+              color: "var(--color-primary-600)",
             }}
           >
             <Sparkles style={{ width: 16, height: 16 }} aria-hidden="true" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, letterSpacing: 0, color: "var(--color-text)" }}>
+            <h2 style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-secondary)", margin: 0 }}>
               {t("chat.welcome.heading")}
             </h2>
             <p style={{ fontSize: 13.5, lineHeight: 1.625, color: "var(--color-text-strong)" }}>
@@ -140,8 +139,8 @@ export function WelcomeBlock({ onPick }: WelcomeBlockProps) {
                     flex: "none",
                     alignItems: "center",
                     justifyContent: "center",
-                    borderRadius: 8,
-                    backgroundColor: chip.accentBg,
+                    borderRadius: 6,
+                    border: "1px solid var(--color-border)",
                     color: chip.accentColor,
                   }}
                 >

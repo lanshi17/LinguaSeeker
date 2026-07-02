@@ -142,7 +142,6 @@ export function MetadataToken({
         padding: "4px 10px",
         fontSize: 12,
         color: "var(--color-primary-900, var(--color-primary-900))",
-        boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
       }}
     >
       {Icon && <Icon style={{ width: 12, height: 12, flexShrink: 0, color: "var(--color-primary-500, var(--color-primary-500))" }} />}
@@ -209,21 +208,7 @@ function EvidenceItemSummary({
 
   return (
     <article className="edb-evidence-card">
-      <div
-        className="edb-evidence-card-accent"
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          height: "100%",
-          width: 4,
-          background: "linear-gradient(to bottom, var(--color-primary-400, var(--color-primary-400)), var(--color-primary-600))",
-          opacity: 0,
-          transition: "opacity 0.15s",
-        }}
-      />
-
-      <div style={{ padding: 20 }}>
+      <div style={{ padding: 16 }}>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
@@ -279,14 +264,14 @@ function EvidenceItemSummary({
                 height: 36,
                 cursor: "pointer",
                 alignItems: "center",
-                gap: 8,
+                gap: 6,
                 borderRadius: 6,
-                border: "1px solid var(--color-primary-200, var(--color-primary-200))",
-                backgroundColor: "var(--color-primary-50, var(--color-primary-50))",
-                padding: "0 12px",
-                fontSize: 14,
+                border: "1px solid var(--color-primary-600)",
+                backgroundColor: "transparent",
+                padding: "0 10px",
+                fontSize: 13,
                 fontWeight: 500,
-                color: "var(--color-primary-800, var(--color-primary-800))",
+                color: "var(--color-primary-600)",
                 textDecoration: "none",
                 transition: "background-color 0.15s",
               }}
@@ -373,25 +358,13 @@ export function LiteratureOverview({
         {t("evidence.lit.back")}
       </Link>
 
-      <section style={{ overflow: "hidden", borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+      <section style={{ overflow: "hidden", borderRadius: 8, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)" }}>
         <div
           style={{
-            position: "relative",
-            borderBottom: "1px solid var(--color-primary-100, var(--color-primary-100))",
-            background: "linear-gradient(to right, var(--color-highlight), transparent)",
-            padding: "20px 24px",
+            borderBottom: "1px solid var(--color-border)",
+            padding: "16px 20px",
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              height: "100%",
-              width: 4,
-              background: "linear-gradient(to bottom, var(--color-primary-400, var(--color-primary-400)), var(--color-primary-600))",
-            }}
-          />
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
             <div style={{ minWidth: 0 }}>
               <p
@@ -399,21 +372,21 @@ export function LiteratureOverview({
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  fontSize: 12,
+                  fontSize: 10,
                   fontWeight: 600,
                   textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  color: "var(--color-primary-800, var(--color-primary-800))",
+                  letterSpacing: "0.1em",
+                  color: "var(--color-text-secondary)",
                   margin: 0,
                 }}
               >
-                <BookOpen style={{ width: 16, height: 16 }} />
+                <BookOpen style={{ width: 14, height: 14 }} />
                 {t("evidence.lit.recordLabel")}
               </p>
-              <h2 style={{ marginTop: 8, maxWidth: 896, fontSize: 20, fontWeight: 600, lineHeight: "28px", color: "var(--color-text)" }}>
+              <h2 style={{ marginTop: 6, maxWidth: 896, fontSize: 16, fontWeight: 600, lineHeight: "24px", color: "var(--color-text)" }}>
                 {detailTitle(detail)}
               </h2>
-              <div style={{ marginTop: 12, display: "flex", maxWidth: 896, flexWrap: "wrap", gap: 8 }}>
+              <div style={{ marginTop: 10, display: "flex", maxWidth: 896, flexWrap: "wrap", gap: 8 }}>
                 <MetadataToken label={t("evidence.lit.uuid")} value={detail.source_document_id} icon={Hash} />
                 <MetadataToken label={t("evidence.lit.pmid")} value={detail.pmid} icon={FileText} />
                 <MetadataToken label={t("evidence.lit.doi")} value={detail.doi} icon={Link2} />
@@ -422,7 +395,6 @@ export function LiteratureOverview({
             <div className="edb-overview-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <Badge variant={STATUS_VARIANT.approved}>{t("evidence.lit.traceable")}</Badge>
               <Button
-                type="primary"
                 className="no-print"
                 icon={<Download style={{ width: 16, height: 16 }} />}
                 onClick={() => setExportOpen(true)}
@@ -448,18 +420,18 @@ export function LiteratureOverview({
                   display: "flex",
                   alignItems: "center",
                   gap: 6,
-                  fontSize: 12,
+                  fontSize: 10,
                   fontWeight: 600,
                   textTransform: "uppercase",
-                  letterSpacing: "0.05em",
+                  letterSpacing: "0.1em",
                   color: "var(--color-text-muted)",
                   margin: 0,
                 }}
               >
-                <Icon style={{ width: 14, height: 14 }} />
+                <Icon style={{ width: 12, height: 12 }} />
                 {label}
               </p>
-              <p className="edb-line-clamp-3" style={{ marginTop: 8, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>
+              <p className="edb-line-clamp-3" style={{ marginTop: 6, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>
                 {value ?? "\u2014"}
               </p>
             </div>
@@ -469,10 +441,10 @@ export function LiteratureOverview({
 
       <div className="edb-overview-layout">
         <aside style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <section style={{ borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
-            <div style={{ borderBottom: "1px solid var(--color-bg-muted)", padding: "12px 20px" }}>
-              <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
-                <ListChecks style={{ width: 16, height: 16, color: "var(--color-primary-700, var(--color-primary-700))" }} />
+          <section style={{ borderRadius: 8, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)" }}>
+            <div style={{ borderBottom: "1px solid var(--color-border)", padding: "10px 16px" }}>
+              <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-secondary)", margin: 0 }}>
+                <ListChecks style={{ width: 14, height: 14, color: "var(--color-primary-600)" }} />
                 {t("evidence.lit.coverage")}
               </h3>
             </div>
@@ -488,7 +460,7 @@ export function LiteratureOverview({
                     <stat.icon style={{ width: 14, height: 14, color: "var(--color-text-muted)" }} />
                     <p style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", margin: 0 }}>{stat.label}</p>
                   </div>
-                  <p style={{ marginTop: 6, fontSize: 20, fontWeight: 700, color: "var(--color-text)" }}>
+                  <p style={{ marginTop: 4, fontSize: 16, fontWeight: 600, fontFamily: "var(--font-mono, monospace)", fontVariantNumeric: "tabular-nums", color: "var(--color-text)" }}>
                     {stat.value}
                   </p>
                 </div>
@@ -496,9 +468,9 @@ export function LiteratureOverview({
             </div>
           </section>
 
-          <section style={{ borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
-            <div style={{ borderBottom: "1px solid var(--color-bg-muted)", padding: "12px 20px" }}>
-              <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
+          <section style={{ borderRadius: 8, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)" }}>
+            <div style={{ borderBottom: "1px solid var(--color-border)", padding: "10px 16px" }}>
+              <h3 style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-secondary)", margin: 0 }}>
                 {t("evidence.lit.categories")}
               </h3>
             </div>
@@ -514,7 +486,6 @@ export function LiteratureOverview({
                     fontSize: 12,
                     fontWeight: 500,
                     color: "var(--color-text-strong)",
-                    boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
                   }}
                 >
                   {categoryLabel(key)} · {count}
@@ -523,9 +494,9 @@ export function LiteratureOverview({
             </div>
           </section>
 
-          <section style={{ borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
-            <div style={{ borderBottom: "1px solid var(--color-bg-muted)", padding: "12px 20px" }}>
-              <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
+          <section style={{ borderRadius: 8, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)" }}>
+            <div style={{ borderBottom: "1px solid var(--color-border)", padding: "10px 16px" }}>
+              <h3 style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-secondary)", margin: 0 }}>
                 {t("evidence.lit.reviewStatus")}
               </h3>
             </div>
@@ -549,32 +520,32 @@ export function LiteratureOverview({
               alignItems: "center",
               justifyContent: "space-between",
               gap: 12,
-              borderRadius: 12,
+              borderRadius: 8,
               border: "1px solid var(--color-border)",
               backgroundColor: "var(--color-surface)",
-              padding: "16px 20px",
-              boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+              padding: "12px 16px",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div
                 style={{
                   display: "flex",
-                  height: 40,
-                  width: 40,
+                  height: 36,
+                  width: 36,
                   alignItems: "center",
                   justifyContent: "center",
-                  borderRadius: 8,
-                  backgroundColor: "var(--color-primary-50, var(--color-primary-50))",
+                  borderRadius: 6,
+                  border: "1px solid var(--color-border)",
+                  color: "var(--color-primary-600)",
                 }}
               >
-                <ListChecks style={{ width: 20, height: 20, color: "var(--color-primary-600, var(--color-primary-600))" }} />
+                <ListChecks style={{ width: 16, height: 16 }} />
               </div>
               <div>
-                <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
+                <h2 style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-secondary)", margin: 0 }}>
                   {t("evidence.lit.extractedFields")}
                 </h2>
-                <p style={{ marginTop: 2, fontSize: 14, color: "var(--color-text-secondary)" }}>
+                <p style={{ marginTop: 2, fontSize: 13, color: "var(--color-text-secondary)" }}>
                   {t("evidence.lit.fieldCount", { count: detail.items.length })}
                 </p>
               </div>
@@ -585,21 +556,22 @@ export function LiteratureOverview({
                 className="edb-focusable-link no-print"
                 style={{
                   display: "inline-flex",
-                  height: 40,
+                  height: 36,
                   cursor: "pointer",
                   alignItems: "center",
-                  gap: 8,
+                  gap: 6,
                   borderRadius: 6,
-                  backgroundColor: "var(--color-primary-700, var(--color-primary-700))",
+                  border: "1px solid var(--color-primary-600)",
+                  backgroundColor: "transparent",
                   padding: "0 12px",
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: 500,
-                  color: "var(--color-surface)",
+                  color: "var(--color-primary-600)",
                   textDecoration: "none",
                   transition: "background-color 0.15s",
                 }}
               >
-                <Languages style={{ width: 16, height: 16 }} />
+                <Languages style={{ width: 14, height: 14 }} />
                 {t("evidence.lit.compare")}
               </Link>
             )}

@@ -595,7 +595,7 @@ export function VariantDetailView({
       <section
         className="edb-hero"
         style={{
-          borderRadius: 16,
+          borderRadius: 8,
           border: "1px solid var(--color-border)",
           borderLeftColor: borderColor,
           borderLeftWidth: 4,

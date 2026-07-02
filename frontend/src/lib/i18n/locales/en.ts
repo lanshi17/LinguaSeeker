@@ -430,6 +430,7 @@ const en = {
   "audit.metric.corrected": "Corrected",
   "audit.metric.rejected": "Rejected",
   "audit.filter.all": "All",
+  "audit.filter.provisional": "Provisional",
   "audit.filter.approved": "Approved",
   "audit.filter.corrected": "Corrected",
   "audit.filter.rejected": "Rejected",
@@ -462,11 +463,11 @@ const en = {
 
   // ── Audit — EvidenceReviewDrawer ──
   "audit.review.title": "Review Evidence",
-  "audit.review.instruction": "Select an evidence item to review its fields and change review status.",
+  "audit.review.instruction": "All evidence items are shown below. Use the fields above to narrow results, then select an item to review.",
   "audit.review.genePh": "Gene",
   "audit.review.variantPh": "Variant",
   "audit.review.diseasePh": "Disease",
-  "audit.review.searchBtn": "Search evidence",
+  "audit.review.searchBtn": "Apply filter",
   "audit.review.resultsFound": "{count} result(s) found",
   "audit.review.noResults": "No evidence found with those filters",
   "audit.review.backToResults": "Back to results",

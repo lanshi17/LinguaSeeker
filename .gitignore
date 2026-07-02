@@ -122,6 +122,7 @@ benchmark/data/inputs/literature_acquisition/rett_config*.json
 benchmark/datasets/rett_annotation/config.yaml
 benchmark/datasets/rett_annotation/.venv/
 benchmark/data/reports/_unmapped/
+benchmark/data/reports/paper/
 benchmark/annotation/**/*.md
 benchmark/annotation/**/images
 benchmark/config/.vault_pass

@@ -8,27 +8,37 @@ export function EvidencePage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Page header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: 48,
-            height: 48,
+            width: 36,
+            height: 36,
             flexShrink: 0,
-            borderRadius: 12,
-            background: "linear-gradient(to bottom right, var(--color-primary-500), var(--color-primary-700))",
-            boxShadow: "0 4px 6px -1px rgba(6, 182, 212, 0.25)",
+            borderRadius: 6,
+            border: "1px solid var(--color-border)",
+            color: "var(--color-primary-600)",
           }}
         >
-          <BookOpen size={24} color="var(--color-surface)" />
+          <BookOpen size={18} />
         </div>
         <div>
-          <Typography.Title level={3} style={{ margin: 0 }}>
+          <Typography.Text
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--color-text-secondary)",
+              display: "block",
+              marginBottom: 2,
+            }}
+          >
             {t("evidence.title")}
-          </Typography.Title>
-          <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+          </Typography.Text>
+          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
             {t("evidence.description")}
           </Typography.Text>
         </div>

@@ -17,7 +17,6 @@ import {
   Download,
 } from "lucide-react";
 import { AutoComplete, Checkbox, Input, Select, message } from "antd";
-import { StatCard } from "./StatCard";
 import { CategoryDistributionBar } from "./CategoryDistributionBar";
 import { Spinner } from "@/components/ui/Spinner";
 import { useVariantIndex } from "../hooks/useVariantIndex";
@@ -366,97 +365,301 @@ export function VariantIndexView() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-      {/* Hero Stats Section */}
-      <section className="edb-hero" style={{ borderRadius: 16, border: "1px solid var(--color-border)", padding: 24 }}>
-        <div className="viv-stats-grid">
-          <StatCard
-            icon={Dna}
-            value={stats.totalVariants}
-            label={labels.uniqueVariants}
-            accent="#8B5CF6"
-          />
-          <StatCard
-            icon={FileText}
-            value={stats.totalEvidenceGroups}
-            label={labels.evidenceGroups}
-            accent="#0891B2"
-          />
-          <StatCard
-            icon={BookOpen}
-            value={stats.totalLiterature}
-            label={labels.literatureSources}
-            accent="#F59E0B"
-          />
-          <StatCard
-            icon={TrendingUp}
-            value={formatConfidencePercent(stats.avgConfidence)}
-            label={labels.avgConfidence}
-            accent="#0F766E"
-          />
-        </div>
+      {/* Dataset at a glance — research-panel aesthetic */}
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          border: "1px solid var(--color-border)",
+          borderRadius: 10,
+          backgroundColor: "var(--color-surface)",
+          overflow: "hidden",
+        }}
+      >
+        {[
+          { label: labels.uniqueVariants, value: String(stats.totalVariants) },
+          { label: labels.evidenceGroups, value: String(stats.totalEvidenceGroups) },
+          { label: labels.literatureSources, value: String(stats.totalLiterature) },
+          { label: labels.avgConfidence, value: formatConfidencePercent(stats.avgConfidence) },
+        ].map((s, i) => (
+          <div
+            key={s.label}
+            style={{
+              padding: "14px 18px",
+              borderRight: i < 3 ? "1px solid var(--color-border)" : "none",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--color-text-secondary)",
+                marginBottom: 6,
+              }}
+            >
+              {s.label}
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 20,
+                fontWeight: 500,
+                color: "var(--color-text)",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {s.value}
+            </div>
+          </div>
+        ))}
       </section>
 
-      {/* Search & Filter Bar */}
-      <section style={{ borderRadius: 12, border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", padding: 16 }}>
-        <div className="viv-search-bar">
-          {/* Text search — gene or variant autocomplete */}
-          <div style={{ flex: 1 }}>
-            <AutoComplete
-              style={{ width: "100%" }}
-              options={searchCandidates}
-              value={searchText}
-              onChange={(val) => {
-                updateFilter("gene", val || undefined);
-                if (val) updateFilter("variant", undefined);
-              }}
-              popupMatchSelectWidth={true}
-            >
-              <Input
-                placeholder={t("evidenceDb.searchGenePh")}
-                prefix={<Search style={{ width: 16, height: 16, color: "var(--color-text-muted)" }} />}
-                suffix={
-                  searchText ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        updateFilter("gene", undefined);
-                        updateFilter("variant", undefined);
-                      }}
-                      style={{
-                        cursor: "pointer",
-                        border: "none",
-                        background: "none",
-                        padding: 2,
-                        color: "var(--color-text-muted)",
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      <X style={{ width: 14, height: 14 }} />
-                    </button>
-                  ) : undefined
-                }
-                allowClear={false}
-              />
-            </AutoComplete>
-          </div>
-
-          {/* Disease filter — autocomplete */}
-          <div className="viv-disease-filter">
-            <AutoComplete
-              style={{ width: "100%" }}
-              options={diseaseCandidates}
-              value={filters.disease ?? ""}
-              onChange={(val) =>
-                updateFilter("disease", val || undefined)
+      {/* Search & filter — compact research-tool layout */}
+      <section
+        style={{
+          borderRadius: 10,
+          border: "1px solid var(--color-border)",
+          backgroundColor: "var(--color-surface)",
+          overflow: "hidden",
+        }}
+      >
+        {/* Primary search row */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 240px 180px",
+            gap: 12,
+            padding: "10px 12px",
+            alignItems: "center",
+          }}
+        >
+          <AutoComplete
+            style={{ width: "100%" }}
+            options={searchCandidates}
+            value={searchText}
+            onChange={(val) => {
+              updateFilter("gene", val || undefined);
+              if (val) updateFilter("variant", undefined);
+            }}
+            popupMatchSelectWidth={true}
+          >
+            <Input
+              placeholder={t("evidenceDb.searchGenePh")}
+              variant="borderless"
+              prefix={<Search style={{ width: 14, height: 14, color: "var(--color-text-muted)" }} />}
+              suffix={
+                searchText ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFilter("gene", undefined);
+                      updateFilter("variant", undefined);
+                    }}
+                    style={{
+                      cursor: "pointer",
+                      border: "none",
+                      background: "none",
+                      padding: 0,
+                      color: "var(--color-text-muted)",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                    aria-label={t("evidenceDb.clearAll")}
+                  >
+                    <X style={{ width: 13, height: 13 }} />
+                  </button>
+                ) : undefined
               }
-              popupMatchSelectWidth={true}
+              allowClear={false}
+            />
+          </AutoComplete>
+
+          <AutoComplete
+            style={{ width: "100%" }}
+            options={diseaseCandidates}
+            value={filters.disease ?? ""}
+            onChange={(val) => updateFilter("disease", val || undefined)}
+            popupMatchSelectWidth={true}
+          >
+            <Input
+              placeholder={t("evidenceDb.filterDiseasePh")}
+              variant="borderless"
+            />
+          </AutoComplete>
+
+          <Select
+            size="small"
+            allowClear
+            placeholder={t("evidenceDb.review.label")}
+            value={filters.reviewStatus}
+            onChange={(v) => updateFilter("reviewStatus", v as ReviewStatusFilter | undefined)}
+            style={{ width: "100%" }}
+            popupMatchSelectWidth={false}
+            options={reviewStatusOptions}
+          />
+        </div>
+
+        {/* Classification + sort strip */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 8,
+            padding: "8px 12px",
+            borderTop: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-bg)",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--color-text-secondary)",
+              marginRight: 2,
+            }}
+          >
+            {t("evidenceDb.listClass")}
+          </span>
+          <button
+            type="button"
+            onClick={() => updateFilter("classification", undefined)}
+            className="viv-filter-pill"
+            style={{
+              cursor: "pointer",
+              borderRadius: 9999,
+              border: !filters.classification
+                ? "1px solid var(--color-text)"
+                : "1px solid var(--color-border)",
+              backgroundColor: !filters.classification ? "var(--color-text)" : "transparent",
+              color: !filters.classification ? "var(--color-surface)" : "var(--color-text-strong)",
+              padding: "3px 9px",
+              fontSize: 11,
+              fontWeight: 500,
+              transition: "all 0.15s",
+            }}
+          >
+            {t("evidenceDb.class.all")}
+          </button>
+          {classificationOptions.map((opt) => {
+            const hex = classificationColor(opt.value);
+            const isActive = filters.classification === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() =>
+                  updateFilter(
+                    "classification",
+                    filters.classification === opt.value ? undefined : opt.value,
+                  )
+                }
+                className="viv-filter-pill"
+                style={{
+                  cursor: "pointer",
+                  borderRadius: 9999,
+                  border: isActive ? `1px solid ${hex}` : "1px solid var(--color-border)",
+                  backgroundColor: isActive ? `${hex}1a` : "transparent",
+                  color: isActive ? hex : "var(--color-text-strong)",
+                  padding: "3px 9px",
+                  fontSize: 11,
+                  fontWeight: 500,
+                  transition: "all 0.15s",
+                }}
+              >
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    backgroundColor: hex,
+                    marginRight: 6,
+                    verticalAlign: "middle",
+                  }}
+                />
+                {opt.label}
+              </button>
+            );
+          })}
+
+          <span
+            aria-hidden
+            style={{
+              width: 1,
+              height: 14,
+              backgroundColor: "var(--color-border)",
+              margin: "0 4px",
+            }}
+          />
+
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--color-text-secondary)",
+              }}
             >
-              <Input placeholder={t("evidenceDb.filterDiseasePh")} />
-            </AutoComplete>
+              {t("evidenceDb.sort.label")}
+            </span>
+            <Select
+              size="small"
+              value={filters.sortBy ?? "__clear__"}
+              onChange={(v) => handleSortChange(v as SortBy | "__clear__")}
+              style={{ minWidth: 150 }}
+              popupMatchSelectWidth={false}
+              options={[
+                { value: "__clear__", label: t("evidenceDb.sort.default") },
+                ...sortOptions,
+              ]}
+            />
+            {filters.sortBy && (
+              <button
+                type="button"
+                onClick={() =>
+                  updateFilter(
+                    "sortOrder",
+                    (filters.sortOrder === "asc" ? "desc" : "asc") as SortOrder,
+                  )
+                }
+                title={
+                  filters.sortOrder === "asc"
+                    ? t("evidenceDb.sort.orderAsc")
+                    : t("evidenceDb.sort.orderDesc")
+                }
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  cursor: "pointer",
+                  borderRadius: 6,
+                  border: "1px solid var(--color-border)",
+                  backgroundColor: "var(--color-surface)",
+                  color: "var(--color-text-strong)",
+                  padding: "3px 8px",
+                  fontSize: 11,
+                  fontWeight: 500,
+                }}
+              >
+                {filters.sortOrder === "asc" ? (
+                  <ArrowUp style={{ width: 11, height: 11 }} />
+                ) : (
+                  <ArrowDown style={{ width: 11, height: 11 }} />
+                )}
+                {filters.sortOrder === "asc"
+                  ? t("evidenceDb.sort.orderAsc")
+                  : t("evidenceDb.sort.orderDesc")}
+              </button>
+            )}
           </div>
 
-          {/* Clear all */}
           {hasAnyFilter && (
             <button
               type="button"
@@ -464,153 +667,20 @@ export function VariantIndexView() {
               className="viv-clear-btn"
               style={{
                 cursor: "pointer",
-                flexShrink: 0,
-                borderRadius: 8,
-                border: "1px solid var(--color-border)",
-                padding: "4px 12px",
-                fontSize: 12,
+                marginLeft: "auto",
+                borderRadius: 6,
+                border: "none",
+                padding: "3px 8px",
+                fontSize: 11,
                 fontWeight: 500,
-                color: "var(--color-text-strong)",
-                backgroundColor: "var(--color-surface)",
-                transition: "background-color 0.15s",
+                color: "var(--color-text-secondary)",
+                backgroundColor: "transparent",
+                transition: "color 0.15s",
               }}
             >
               {t("evidenceDb.clearAll")}
             </button>
           )}
-        </div>
-
-        {/* Classification filter pills */}
-        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--color-bg-muted)" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
-            <button
-              type="button"
-              onClick={() => updateFilter("classification", undefined)}
-              className="viv-filter-pill"
-              style={{
-                cursor: "pointer",
-                borderRadius: 9999,
-                border: !filters.classification ? "1px solid var(--color-text)" : "1px solid var(--color-border)",
-                backgroundColor: !filters.classification ? "var(--color-text)" : "var(--color-surface)",
-                color: !filters.classification ? "var(--color-surface)" : "var(--color-text-strong)",
-                padding: "4px 10px",
-                fontSize: 12,
-                fontWeight: 500,
-                transition: "all 0.15s",
-              }}
-            >
-              {t("evidenceDb.class.all")}
-            </button>
-            {classificationOptions.map((opt) => {
-              const hex = classificationColor(opt.value);
-              const isActive = filters.classification === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() =>
-                    updateFilter("classification", filters.classification === opt.value ? undefined : opt.value)
-                  }
-                  className="viv-filter-pill"
-                  style={{
-                    cursor: "pointer",
-                    borderRadius: 9999,
-                    border: isActive ? "1px solid transparent" : "1px solid var(--color-border)",
-                    backgroundColor: isActive ? hex : "var(--color-surface)",
-                    color: isActive ? "var(--color-surface)" : "var(--color-text-strong)",
-                    padding: "4px 10px",
-                    fontSize: 12,
-                    fontWeight: 500,
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Sort + review status row */}
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              gap: 12,
-              marginTop: 12,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-              <span style={{ fontWeight: 500, color: "var(--color-text-secondary)" }}>
-                {t("evidenceDb.sort.label")}
-              </span>
-              <Select
-                size="small"
-                value={filters.sortBy ?? "__clear__"}
-                onChange={(v) => handleSortChange(v as SortBy | "__clear__")}
-                style={{ minWidth: 160 }}
-                popupMatchSelectWidth={false}
-                options={[
-                  { value: "__clear__", label: t("evidenceDb.sort.default") },
-                  ...sortOptions,
-                ]}
-              />
-              {filters.sortBy && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateFilter(
-                      "sortOrder",
-                      (filters.sortOrder === "asc" ? "desc" : "asc") as SortOrder,
-                    )
-                  }
-                  title={
-                    filters.sortOrder === "asc"
-                      ? t("evidenceDb.sort.orderAsc")
-                      : t("evidenceDb.sort.orderDesc")
-                  }
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4,
-                    cursor: "pointer",
-                    borderRadius: 6,
-                    border: "1px solid var(--color-border)",
-                    backgroundColor: "var(--color-surface)",
-                    color: "var(--color-text-strong)",
-                    padding: "2px 8px",
-                    fontSize: 12,
-                    fontWeight: 500,
-                  }}
-                >
-                  {filters.sortOrder === "asc" ? (
-                    <ArrowUp style={{ width: 12, height: 12 }} />
-                  ) : (
-                    <ArrowDown style={{ width: 12, height: 12 }} />
-                  )}
-                  {filters.sortOrder === "asc"
-                    ? t("evidenceDb.sort.orderAsc")
-                    : t("evidenceDb.sort.orderDesc")}
-                </button>
-              )}
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-              <span style={{ fontWeight: 500, color: "var(--color-text-secondary)" }}>
-                {t("evidenceDb.review.label")}
-              </span>
-              <Select
-                size="small"
-                allowClear
-                placeholder={t("evidenceDb.review.all")}
-                value={filters.reviewStatus}
-                onChange={(v) => updateFilter("reviewStatus", v as ReviewStatusFilter | undefined)}
-                style={{ minWidth: 140 }}
-                popupMatchSelectWidth={false}
-                options={reviewStatusOptions}
-              />
-            </div>
-          </div>
         </div>
       </section>
 
@@ -653,50 +723,84 @@ export function VariantIndexView() {
         </div>
       ) : (
         <div className="content-fade-in">
-          {/* Result count */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-            <p style={{ fontSize: 14, color: "var(--color-text-strong)", margin: 0 }}>
-              <span style={{ fontWeight: 500, color: "var(--color-text)" }}>{total}</span>{" "}
-              {t("evidenceDb.variantsFound")}
-              {isFetching && (
-                <span style={{ marginLeft: 8, display: "inline-block" }}>
-                  <Spinner size="sm" />
-                </span>
-              )}
-            </p>
-            <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>
-              {t("evidenceDb.pageInfo", { current: String(page), total: String(totalPages || 1) })}
-            </p>
+          {/* Status hairline */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "auto 1fr auto",
+              alignItems: "center",
+              gap: 16,
+              padding: "6px 4px",
+              borderBottom: "1px solid var(--color-border)",
+              marginBottom: 12,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 12,
+                color: "var(--color-text-strong)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <span style={{ fontWeight: 600 }}>{total}</span>
+              <span style={{ color: "var(--color-text-secondary)", fontWeight: 400 }}>
+                {t("evidenceDb.variantsFound")}
+              </span>
+              {isFetching && <Spinner size="sm" />}
+            </div>
+
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 12,
+                justifyContent: "center",
+                gap: 10,
+                fontSize: 11,
+                color: "var(--color-text-secondary)",
                 flexWrap: "wrap",
-                fontSize: 12,
-                color: "var(--color-text-strong)",
               }}
-              aria-label={t("evidenceDb.label.evidenceFields")}
             >
-              <span style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)" }}>{t("evidenceDb.label.evidenceFields")}</span>
-              <Checkbox
-                checked={viewPrefs.showUpdated}
-                onChange={(e) => setPreference("showUpdated", e.target.checked)}
-              >
-                {labels.updated}
-              </Checkbox>
-              <Checkbox
-                checked={viewPrefs.showCategories}
-                onChange={(e) => setPreference("showCategories", e.target.checked)}
-              >
-                {labels.categories}
-              </Checkbox>
-              <Checkbox
-                checked={viewPrefs.showReviewProgress}
-                onChange={(e) => setPreference("showReviewProgress", e.target.checked)}
-              >
-                {labels.reviewProgress}
-              </Checkbox>
+              <span style={{ fontWeight: 500, letterSpacing: "0.05em" }}>
+                {t("evidenceDb.label.evidenceFields")}
+              </span>
+              {[
+                { key: "showUpdated" as const, label: labels.updated },
+                { key: "showCategories" as const, label: labels.categories },
+                { key: "showReviewProgress" as const, label: labels.reviewProgress },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => setPreference(opt.key, !viewPrefs[opt.key])}
+                  style={{
+                    cursor: "pointer",
+                    borderRadius: 9999,
+                    border: `1px solid ${viewPrefs[opt.key] ? "var(--color-text)" : "var(--color-border)"}`,
+                    backgroundColor: viewPrefs[opt.key] ? "var(--color-text)" : "transparent",
+                    color: viewPrefs[opt.key] ? "var(--color-surface)" : "var(--color-text-secondary)",
+                    padding: "2px 8px",
+                    fontSize: 10,
+                    fontWeight: 500,
+                    letterSpacing: "0.02em",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            <div
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                color: "var(--color-text-secondary)",
+              }}
+            >
+              {t("evidenceDb.pageInfo", { current: String(page), total: String(totalPages || 1) })}
             </div>
           </div>
 
@@ -709,17 +813,24 @@ export function VariantIndexView() {
                 justifyContent: "space-between",
                 gap: 12,
                 flexWrap: "wrap",
-                marginTop: 12,
-                padding: "10px 14px",
-                borderRadius: 10,
-                border: "1px solid var(--color-primary-400, #60a5fa)",
-                backgroundColor: "var(--color-primary-50, #eff6ff)",
+                marginBottom: 12,
+                padding: "8px 12px",
+                borderRadius: 8,
+                border: "1px solid var(--color-text)",
+                backgroundColor: "var(--color-surface)",
               }}
             >
-              <span style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-strong)" }}>
+              <span
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: "var(--color-text-strong)",
+                }}
+              >
                 {t("evidenceDb.export.selected", { count: String(selectedSlugs.size) })}
               </span>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <button
                   type="button"
                   onClick={() => handleExport("csv", "selected")}
@@ -732,12 +843,12 @@ export function VariantIndexView() {
                     border: "1px solid var(--color-border)",
                     backgroundColor: "var(--color-surface)",
                     color: "var(--color-text-strong)",
-                    padding: "4px 10px",
-                    fontSize: 12,
+                    padding: "3px 10px",
+                    fontSize: 11,
                     fontWeight: 500,
                   }}
                 >
-                  <Download style={{ width: 12, height: 12 }} />
+                  <Download style={{ width: 11, height: 11 }} />
                   {t("evidenceDb.export.csv")}
                 </button>
                 <button
@@ -752,12 +863,12 @@ export function VariantIndexView() {
                     border: "1px solid var(--color-border)",
                     backgroundColor: "var(--color-surface)",
                     color: "var(--color-text-strong)",
-                    padding: "4px 10px",
-                    fontSize: 12,
+                    padding: "3px 10px",
+                    fontSize: 11,
                     fontWeight: 500,
                   }}
                 >
-                  <Download style={{ width: 12, height: 12 }} />
+                  <Download style={{ width: 11, height: 11 }} />
                   {t("evidenceDb.export.json")}
                 </button>
                 <button
@@ -766,11 +877,11 @@ export function VariantIndexView() {
                   style={{
                     cursor: "pointer",
                     borderRadius: 6,
-                    border: "1px solid var(--color-border)",
-                    backgroundColor: "var(--color-surface)",
+                    border: "none",
+                    backgroundColor: "transparent",
                     color: "var(--color-text-secondary)",
-                    padding: "4px 10px",
-                    fontSize: 12,
+                    padding: "3px 8px",
+                    fontSize: 11,
                     fontWeight: 500,
                   }}
                 >
@@ -786,12 +897,12 @@ export function VariantIndexView() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "flex-end",
-                gap: 8,
-                marginTop: 12,
+                gap: 6,
+                marginBottom: 12,
                 flexWrap: "wrap",
               }}
             >
-              <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>
+              <span style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>
                 {t("evidenceDb.export.downloadPage")}
               </span>
               <button
@@ -801,18 +912,18 @@ export function VariantIndexView() {
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 6,
+                  gap: 5,
                   cursor: "pointer",
                   borderRadius: 6,
                   border: "1px solid var(--color-border)",
                   backgroundColor: "var(--color-surface)",
                   color: "var(--color-text-strong)",
-                  padding: "4px 10px",
-                  fontSize: 12,
+                  padding: "3px 9px",
+                  fontSize: 11,
                   fontWeight: 500,
                 }}
               >
-                <Download style={{ width: 12, height: 12 }} />
+                <Download style={{ width: 11, height: 11 }} />
                 {t("evidenceDb.export.csv")}
               </button>
               <button
@@ -822,18 +933,18 @@ export function VariantIndexView() {
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 6,
+                  gap: 5,
                   cursor: "pointer",
                   borderRadius: 6,
                   border: "1px solid var(--color-border)",
                   backgroundColor: "var(--color-surface)",
                   color: "var(--color-text-strong)",
-                  padding: "4px 10px",
-                  fontSize: 12,
+                  padding: "3px 9px",
+                  fontSize: 11,
                   fontWeight: 500,
                 }}
               >
-                <Download style={{ width: 12, height: 12 }} />
+                <Download style={{ width: 11, height: 11 }} />
                 {t("evidenceDb.export.json")}
               </button>
             </div>
