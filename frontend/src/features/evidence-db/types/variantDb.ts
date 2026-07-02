@@ -96,7 +96,18 @@ export interface LiteratureReference extends LiteratureQualitySummary {
 export type SortOrder = "asc" | "desc";
 
 /** Sortable column keys */
-export type SortBy = "updated";
+export type SortBy =
+  | "gene"
+  | "variant"
+  | "disease"
+  | "classification"
+  | "evidence"
+  | "refs"
+  | "confidence"
+  | "updated";
+
+/** Review-status filter values */
+export type ReviewStatusFilter = "provisional" | "approved" | "corrected" | "rejected";
 
 /** Search/filter state for the variant index */
 export interface VariantIndexFilters {
@@ -104,6 +115,7 @@ export interface VariantIndexFilters {
   variant?: string;
   disease?: string;
   classification?: ClassificationLevel;
+  reviewStatus?: ReviewStatusFilter;
   page: number;
   pageSize: number;
   sortBy?: SortBy;

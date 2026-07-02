@@ -1,0 +1,35 @@
+{
+  "stats": {
+    "total": 38,
+    "relevant": 35,
+    "irrelevant": 0,
+    "errors": 3,
+    "deleted": 0,
+    "dedup_removed": 0,
+    "by_lang": {
+      "en": {
+        "relevant": 16,
+        "irrelevant": 0,
+        "errors": 0
+      },
+      "ja": {
+        "relevant": 12,
+        "irrelevant": 0,
+        "errors": 0
+      },
+      "ko": {
+        "relevant": 3,
+        "irrelevant": 0,
+        "errors": 3
+      },
+      "zh": {
+        "relevant": 4,
+        "irrelevant": 0,
+        "errors": 0
+      }
+    },
+    "by_doc_type": {}
+  },
+  "removed_paths": [],
+  "dedup_removed_paths": []
+}
