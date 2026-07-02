@@ -46,23 +46,6 @@ docs/
 
 ## 活跃计划和参考
 
-### BIBM 主论文
-
-| 日期 | 标题 | 状态 |
-|------|------|------|
-| 2026-06-15 | [BIBM Main Paper TeX](active/2026-06-15-bibm-main-paper-tex/) | in-progress |
-| 2026-06-15 | [BIBM Main Paper Manuscript Draft](active/2026-06-15-bibm-main-paper-manuscript-draft.md) | in-progress |
-| 2026-06-15 | [BIBM Main Paper Outline](active/2026-06-15-bibm-main-paper-outline.md) | in-progress |
-| 2026-06-15 | [BIBM Main Paper Limitations](active/2026-06-15-bibm-main-paper-limitations.md) | in-progress |
-| 2026-06-15 | [BIBM Main Paper Tables Guide](active/2026-06-15-main-paper-tables-guide.md) | in-progress |
-| 2026-06-14 | [BIBM Main Paper Detailed Execution Plan](active/2026-06-14-bibm-main-paper-detailed-execution-plan.md) | in-progress |
-| 2026-06-14 | [BIBM Main Paper Effect Improvement Plan](active/2026-06-14-bibm-main-paper-effect-improvement-plan.md) | in-progress |
-| 2026-06-14 | [BIBM Main Paper G3 Semantic Boundary Repair](active/2026-06-14-bibm-main-paper-g3-semantic-boundary-repair-plan.md) | in-progress |
-| 2026-06-14 | [BIBM Main Paper Rescue Plan](active/2026-06-14-bibm-main-paper-rescue.md) | in-progress |
-| 2026-06-14 | [BIBM Main Paper Roadmap](active/2026-06-14-bibm-main-paper-roadmap.md) | in-progress |
-| 2026-06-13 | [BIBM G1 Decision Memo](active/2026-06-13-bibm-g1-decision.md) | in-progress |
-| 2026-06-12 | [BIBM Novelty Plan](active/2026-06-12-bibm-novelty.md) | in-progress |
-
 ### 基准测试与数据
 
 | 日期 | 标题 | 状态 |
@@ -105,6 +88,17 @@ docs/
 
 | 日期 | 标题 | 状态 |
 |------|------|------|
+| 2026-06-15 | [BIBM Main Paper Manuscript Draft](archive/plans/2026-06-15-bibm-main-paper-manuscript-draft.md) | completed |
+| 2026-06-15 | [BIBM Main Paper Outline](archive/plans/2026-06-15-bibm-main-paper-outline.md) | completed |
+| 2026-06-15 | [BIBM Main Paper Limitations](archive/plans/2026-06-15-bibm-main-paper-limitations.md) | completed |
+| 2026-06-15 | [BIBM Main Paper Tables Guide](archive/plans/2026-06-15-main-paper-tables-guide.md) | completed |
+| 2026-06-14 | [BIBM Main Paper Detailed Execution Plan](archive/plans/2026-06-14-bibm-main-paper-detailed-execution-plan.md) | completed |
+| 2026-06-14 | [BIBM Main Paper Effect Improvement Plan](archive/plans/2026-06-14-bibm-main-paper-effect-improvement-plan.md) | completed |
+| 2026-06-14 | [BIBM Main Paper G3 Semantic Boundary Repair](archive/plans/2026-06-14-bibm-main-paper-g3-semantic-boundary-repair-plan.md) | completed |
+| 2026-06-14 | [BIBM Main Paper Rescue Plan](archive/plans/2026-06-14-bibm-main-paper-rescue.md) | completed |
+| 2026-06-14 | [BIBM Main Paper Roadmap](archive/plans/2026-06-14-bibm-main-paper-roadmap.md) | completed |
+| 2026-06-13 | [BIBM G1 Decision Memo](archive/plans/2026-06-13-bibm-g1-decision.md) | completed |
+| 2026-06-12 | [BIBM Novelty Plan](archive/plans/2026-06-12-bibm-novelty.md) | completed |
 | 2026-07-01 | [Semantic Word Alignment Design](archive/plans/2026-07-01-semantic-word-alignment-design.md) | completed |
 | 2026-07-01 | [Semantic Word Alignment Implementation Plan](archive/plans/2026-07-01-semantic-word-alignment-plan.md) | completed |
 | — | [PRD — LinguaSeeker](archive/plans/PRD.md) | completed |
