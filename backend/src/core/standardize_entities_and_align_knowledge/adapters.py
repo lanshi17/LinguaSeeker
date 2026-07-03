@@ -18,6 +18,7 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     StandardizationInput,
 )
 from src.core.standardize_entities_and_align_knowledge.normalizers import normalize_lookup_text
+from src.utils.text import parse_gene_from_group_id
 
 
 ROLE_BY_ENTITY_TYPE = {
@@ -61,13 +62,17 @@ class DualResultAdapter:
     ) -> StandardizationInput:
         """Project a dual extraction result into Phase 3 candidate input."""
         candidates: list[StandardizationCandidate] = []
+        evidence_items: list[EvidenceItem] = []
         seen: set[tuple[EntityType, str, str]] = set()
         primary_results = self._primary_results(result)
 
         for track_result in primary_results:
-            self._add_chain_candidates(track_result, candidates, seen)
-            self._add_phenotype_candidates(track_result, candidates, seen)
-            self._add_phenotype_evidence_candidates(track_result, candidates, seen)
+            gene_values_by_group = self._gene_values_by_group(track_result)
+            gene_linked_group_ids = set(gene_values_by_group)
+            self._add_chain_candidates(track_result, candidates, seen, gene_values_by_group)
+            self._add_phenotype_candidates(track_result, candidates, seen, gene_linked_group_ids)
+            self._add_phenotype_evidence_candidates(track_result, candidates, seen, gene_linked_group_ids)
+            evidence_items.extend(self._filter_gene_linked_evidence_items(track_result.evidence_items, gene_linked_group_ids))
 
         extraction_target = (
             primary_results[0].extraction_target
@@ -80,7 +85,7 @@ class DualResultAdapter:
             source_document_id=source_document_id,
             processing_run_id=processing_run_id,
             candidates=tuple(candidates),
-            evidence_items=tuple(item for track_result in primary_results for item in track_result.evidence_items),
+            evidence_items=tuple(evidence_items),
             track_payloads=self._track_payloads(result),
             extraction_target=extraction_target,
         )
@@ -115,14 +120,18 @@ class DualResultAdapter:
         result: EvidenceExtractionResult,
         candidates: list[StandardizationCandidate],
         seen: set[tuple[EntityType, str, str]],
+        gene_values_by_group: dict[str, str],
     ) -> None:
         """Extract gene, disease, and variant candidates from evidence chains."""
         for chain in result.evidence_chains:
+            gene_text = gene_values_by_group.get(chain.chain_id, chain.gene_text).strip()
+            if not gene_text:
+                continue
             self._append_candidate(
                 candidates,
                 seen,
                 entity_type=EntityType.GENE,
-                raw_text=chain.gene_text,
+                raw_text=gene_text,
                 chain_id=chain.chain_id,
                 track=result.track.value,
             )
@@ -141,7 +150,7 @@ class DualResultAdapter:
                 raw_text=chain.variant_text,
                 chain_id=chain.chain_id,
                 track=result.track.value,
-                metadata={"gene_symbol": chain.gene_text.strip()},
+                metadata={"gene_symbol": gene_text},
             )
 
     def _add_phenotype_candidates(
@@ -149,10 +158,15 @@ class DualResultAdapter:
         result: EvidenceExtractionResult,
         candidates: list[StandardizationCandidate],
         seen: set[tuple[EntityType, str, str]],
+        gene_linked_group_ids: set[str],
     ) -> None:
         """Extract phenotype candidates from supported phenotype evidence fields."""
         for item in result.evidence_items:
-            if item.status != EvidenceStatus.FOUND or item.field_id not in PHENOTYPE_FIELD_IDS:
+            if (
+                item.status != EvidenceStatus.FOUND
+                or item.field_id not in PHENOTYPE_FIELD_IDS
+                or not self._is_gene_linked_item(item, gene_linked_group_ids)
+            ):
                 continue
             for raw_text in self._extract_field_values(item):
                 self._append_candidate(
@@ -170,10 +184,11 @@ class DualResultAdapter:
         result: EvidenceExtractionResult,
         candidates: list[StandardizationCandidate],
         seen: set[tuple[EntityType, str, str]],
+        gene_linked_group_ids: set[str],
     ) -> None:
         """Extract phenotype candidates from explicit phenotype_evidence items."""
         for item in result.phenotype_evidence:
-            if item.status != EvidenceStatus.FOUND:
+            if item.status != EvidenceStatus.FOUND or not self._is_gene_linked_item(item, gene_linked_group_ids):
                 continue
             for raw_text in self._extract_field_values(item):
                 self._append_candidate(
@@ -218,6 +233,43 @@ class DualResultAdapter:
                 metadata=dict(metadata or {}),
             ),
         )
+
+    def _gene_values_by_group(self, result: EvidenceExtractionResult) -> dict[str, str]:
+        """Collect one non-empty gene value for each group visible to Phase 3."""
+        values_by_group: dict[str, str] = {}
+        for chain in result.evidence_chains:
+            gene_text = chain.gene_text.strip()
+            if gene_text and chain.chain_id:
+                values_by_group[chain.chain_id] = gene_text
+        for item in result.evidence_items:
+            if item.status != EvidenceStatus.FOUND or item.field_id != "A.gene_symbol" or not item.group_id:
+                continue
+            gene_values = self._extract_field_values(item)
+            if gene_values and item.group_id not in values_by_group:
+                values_by_group[item.group_id] = gene_values[0]
+        for item in [*result.evidence_items, *result.phenotype_evidence]:
+            if not item.group_id or item.group_id in values_by_group:
+                continue
+            gene_text = parse_gene_from_group_id(item.group_id)
+            if gene_text:
+                values_by_group[item.group_id] = gene_text
+        return values_by_group
+
+    def _filter_gene_linked_evidence_items(
+        self,
+        items: list[EvidenceItem],
+        gene_linked_group_ids: set[str],
+    ) -> list[EvidenceItem]:
+        """Keep ungrouped items and grouped items that belong to a non-empty gene chain."""
+        return [item for item in items if self._is_gene_linked_item(item, gene_linked_group_ids)]
+
+    def _is_gene_linked_item(
+        self,
+        item: EvidenceItem,
+        gene_linked_group_ids: set[str],
+    ) -> bool:
+        """Return whether an evidence item belongs to a gene-linked group."""
+        return not item.group_id or item.group_id in gene_linked_group_ids
 
     def _extract_field_values(self, item: EvidenceItem) -> list[str]:
         """Flatten supported evidence item value shapes into text candidates."""
