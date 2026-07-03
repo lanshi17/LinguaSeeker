@@ -25,7 +25,7 @@ export const roles = {
   assistant: {
     placement: "start" as const,
     avatar: (
-      <Avatar src="/images/chatbot.png" style={{ backgroundColor: "var(--color-primary-600, var(--color-primary-600))" }} />
+      <Avatar src="https://acmg-bucket.oss-cn-shenzhen.aliyuncs.com/chatbot.jpg" style={{ backgroundColor: "var(--color-primary-600, var(--color-primary-600))" }} />
     ),
   },
   user: {
