@@ -23,7 +23,6 @@ import { useVariantIndex } from "../hooks/useVariantIndex";
 import { useEvidenceDbViewPrefs } from "../hooks/useEvidenceDbViewPrefs";
 import { VariantIndexSkeleton } from "./VariantIndexSkeleton";
 import type {
-  ClassificationLevel,
   SortBy,
   SortOrder,
   ReviewStatusFilter,
@@ -32,8 +31,10 @@ import type {
 import type { EvidenceDbViewPrefs } from "../hooks/useEvidenceDbViewPrefs";
 import {
   classificationColor,
+  classificationLabel,
   classificationShortLabel,
 } from "../utils/pathogenicity";
+import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
 import {
   getEvidenceDbLabels,
   formatConfidencePercent,
@@ -41,34 +42,6 @@ import {
 } from "../utils/fieldLabels";
 import { useI18n } from "@/lib/i18n";
 import { usePagination } from "@/lib/hooks/usePagination";
-
-function getClassificationOptions(t: (key: string) => string) {
-  return [
-    { value: "pathogenic" as ClassificationLevel, label: t("evidenceDb.class.pathogenic") },
-    { value: "likely_pathogenic" as ClassificationLevel, label: t("evidenceDb.class.likelyPathogenic") },
-    { value: "uncertain" as ClassificationLevel, label: t("evidenceDb.class.vus") },
-    { value: "likely_benign" as ClassificationLevel, label: t("evidenceDb.class.likelyBenign") },
-    { value: "benign" as ClassificationLevel, label: t("evidenceDb.class.benign") },
-  ];
-}
-
-/* ── Badge style helper (replaces classificationBadgeClasses Tailwind output) ── */
-
-function badgeInlineStyle(level: ClassificationLevel): React.CSSProperties {
-  const color = classificationColor(level);
-  return {
-    display: "inline-flex",
-    alignItems: "center",
-    borderRadius: 6,
-    border: `1px solid ${color}40`,
-    padding: "2px 8px",
-    fontSize: 12,
-    fontWeight: 500,
-    fontFamily: "var(--font-mono)",
-    backgroundColor: `${color}18`,
-    color: color,
-  };
-}
 
 /* ── Date formatter ─────────────────────────────────────── */
 
@@ -90,12 +63,24 @@ function hasQualityColumn(prefs: EvidenceDbViewPrefs): boolean {
 }
 
 function variantGridTemplateColumns(prefs: EvidenceDbViewPrefs, hasSelection: boolean): string {
-  const columns: string[] = [];
+  const columns: string[] = ["4px"];
   if (hasSelection) columns.push("36px");
-  columns.push("2fr", "1.5fr", "120px", "100px", "100px", "100px");
+  columns.push("2fr", "1.5fr", "100px", "100px", "100px");
   if (hasQualityColumn(prefs)) columns.push("120px");
+  if (prefs.showFieldCount) columns.push("70px");
+  if (prefs.showPmid) columns.push("110px");
   if (prefs.showUpdated) columns.push("90px");
   return columns.join(" ");
+}
+
+/** Color for review status indicators */
+function reviewStatusColor(status: string): string {
+  switch (status) {
+    case "approved": return "#16A34A";
+    case "corrected": return "#D97706";
+    case "rejected": return "#DC2626";
+    default: return "#6B7280";
+  }
 }
 
 /* ── Sort options ────────────────────────────────────────── */
@@ -105,7 +90,6 @@ function getSortOptions(t: (key: string) => string): { value: SortBy; label: str
     { value: "gene", label: t("evidenceDb.sort.gene") },
     { value: "variant", label: t("evidenceDb.sort.variant") },
     { value: "disease", label: t("evidenceDb.sort.disease") },
-    { value: "classification", label: t("evidenceDb.sort.classification") },
     { value: "evidence", label: t("evidenceDb.sort.evidence") },
     { value: "refs", label: t("evidenceDb.sort.refs") },
     { value: "confidence", label: t("evidenceDb.sort.confidence") },
@@ -135,12 +119,12 @@ function csvEscape(value: unknown): string {
 function buildExportCsv(entries: VariantIndexEntry[]): string {
   const headers = [
     "gene", "variant", "disease", "classification",
-    "evidence_groups", "literature_refs", "avg_confidence",
+    "evidence_groups", "field_count", "literature_refs", "avg_confidence",
     "review_status", "created_at", "title", "pmid", "doi",
   ];
   const rows = entries.map((e) => [
     e.gene, e.variant, e.disease, e.classification,
-    String(e.evidenceGroupCount), String(e.literatureCount),
+    String(e.evidenceGroupCount), String(e.fieldCount), String(e.literatureCount),
     e.avgConfidence.toFixed(2), e.reviewStatus, e.createdAt ?? "",
     e.representative.title ?? "", e.representative.pmid ?? "", e.representative.doi ?? "",
   ]);
@@ -154,6 +138,7 @@ function buildExportJson(entries: VariantIndexEntry[]): string {
     disease: e.disease,
     classification: e.classification,
     evidence_groups: e.evidenceGroupCount,
+    field_count: e.fieldCount,
     literature_refs: e.literatureCount,
     avg_confidence: Number(e.avgConfidence.toFixed(3)),
     review_status: e.reviewStatus,
@@ -200,7 +185,6 @@ function exportVariants(
 export function VariantIndexView() {
   const { t } = useI18n();
   const labels = getEvidenceDbLabels(t);
-  const classificationOptions = getClassificationOptions(t);
   const sortOptions = useMemo(() => getSortOptions(t), [t]);
   const reviewStatusOptions = useMemo(() => getReviewStatusOptions(t), [t]);
   const {
@@ -501,7 +485,7 @@ export function VariantIndexView() {
           />
         </div>
 
-        {/* Classification + sort strip */}
+        {/* Sort strip */}
         <div
           style={{
             display: "flex",
@@ -513,90 +497,6 @@ export function VariantIndexView() {
             backgroundColor: "var(--color-bg)",
           }}
         >
-          <span
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "var(--color-text-secondary)",
-              marginRight: 2,
-            }}
-          >
-            {t("evidenceDb.listClass")}
-          </span>
-          <button
-            type="button"
-            onClick={() => updateFilter("classification", undefined)}
-            className="viv-filter-pill"
-            style={{
-              cursor: "pointer",
-              borderRadius: 9999,
-              border: !filters.classification
-                ? "1px solid var(--color-text)"
-                : "1px solid var(--color-border)",
-              backgroundColor: !filters.classification ? "var(--color-text)" : "transparent",
-              color: !filters.classification ? "var(--color-surface)" : "var(--color-text-strong)",
-              padding: "3px 9px",
-              fontSize: 11,
-              fontWeight: 500,
-              transition: "all 0.15s",
-            }}
-          >
-            {t("evidenceDb.class.all")}
-          </button>
-          {classificationOptions.map((opt) => {
-            const hex = classificationColor(opt.value);
-            const isActive = filters.classification === opt.value;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() =>
-                  updateFilter(
-                    "classification",
-                    filters.classification === opt.value ? undefined : opt.value,
-                  )
-                }
-                className="viv-filter-pill"
-                style={{
-                  cursor: "pointer",
-                  borderRadius: 9999,
-                  border: isActive ? `1px solid ${hex}` : "1px solid var(--color-border)",
-                  backgroundColor: isActive ? `${hex}1a` : "transparent",
-                  color: isActive ? hex : "var(--color-text-strong)",
-                  padding: "3px 9px",
-                  fontSize: 11,
-                  fontWeight: 500,
-                  transition: "all 0.15s",
-                }}
-              >
-                <span
-                  style={{
-                    display: "inline-block",
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    backgroundColor: hex,
-                    marginRight: 6,
-                    verticalAlign: "middle",
-                  }}
-                />
-                {opt.label}
-              </button>
-            );
-          })}
-
-          <span
-            aria-hidden
-            style={{
-              width: 1,
-              height: 14,
-              backgroundColor: "var(--color-border)",
-              margin: "0 4px",
-            }}
-          />
-
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
             <span
               style={{
@@ -767,9 +667,11 @@ export function VariantIndexView() {
                 {t("evidenceDb.label.evidenceFields")}
               </span>
               {[
-                { key: "showUpdated" as const, label: labels.updated },
+                { key: "showFieldCount" as const, label: labels.fieldCount },
+                { key: "showPmid" as const, label: labels.pmid },
                 { key: "showCategories" as const, label: labels.categories },
                 { key: "showReviewProgress" as const, label: labels.reviewProgress },
+                { key: "showUpdated" as const, label: labels.updated },
               ].map((opt) => (
                 <button
                   key={opt.key}
@@ -956,6 +858,7 @@ export function VariantIndexView() {
               className="viv-list-header"
               style={{ gridTemplateColumns: variantGridTemplateColumns(viewPrefs, true) }}
             >
+              <span aria-hidden />
               <div style={{ display: "flex", alignItems: "center" }}>
                 <Checkbox
                   checked={allPageSelected}
@@ -966,7 +869,6 @@ export function VariantIndexView() {
               </div>
               <span>{t("evidenceDb.listGene")} / {t("evidenceDb.listVariant")}</span>
               <span>{t("evidenceDb.listDisease")}</span>
-              <span>{t("evidenceDb.listClass")}</span>
               <span>{t("evidenceDb.listEvidence")}</span>
               <span>{t("evidenceDb.listRefs")}</span>
               <span>{t("evidenceDb.listConf")}</span>
@@ -974,6 +876,12 @@ export function VariantIndexView() {
                 <span>
                   {viewPrefs.showCategories ? labels.categories : labels.reviewed}
                 </span>
+              )}
+              {viewPrefs.showFieldCount && (
+                <span>{t("evidenceDb.listFields")}</span>
+              )}
+              {viewPrefs.showPmid && (
+                <span>{t("evidenceDb.listPmid")}</span>
               )}
               {viewPrefs.showUpdated && (
                 <span>{labels.updated}</span>
@@ -996,6 +904,16 @@ export function VariantIndexView() {
                       backgroundColor: isSelected ? "var(--color-primary-50, #eff6ff)" : undefined,
                     }}
                   >
+                    {/* Classification color indicator */}
+                    <div
+                      style={{
+                        width: 4,
+                        alignSelf: "stretch",
+                        borderRadius: 2,
+                        backgroundColor: classificationColor(entry.classificationLevel),
+                      }}
+                      title={entry.classification || classificationShortLabel(entry.classificationLevel)}
+                    />
                     {/* Selection checkbox */}
                     <div
                       style={{ display: "flex", alignItems: "center", justifyContent: "flex-start" }}
@@ -1010,47 +928,169 @@ export function VariantIndexView() {
                         })}
                       />
                     </div>
-                    {/* Gene + Variant (primary column) */}
-                    <div style={{ minWidth: 0, display: "flex", alignItems: "baseline", flexWrap: "nowrap" }} title={`${entry.gene || t("evidenceDb.unknownGene")} · ${entry.variant || t("evidenceDb.unknownVariant")}`}>
-                      <span className="viv-row-gene">{entry.gene || t("evidenceDb.unknownGene")}</span>
-                      <span style={{ margin: "0 6px", color: "var(--color-text-muted)", flexShrink: 0 }}>·</span>
+                    {/* Gene + Variant (primary column) with classification badge */}
+                    <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span className="viv-row-gene">{entry.gene || t("evidenceDb.unknownGene")}</span>
+                        {entry.classification && entry.classificationLevel !== "uncertain" && (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              height: 16,
+                              padding: "0 5px",
+                              borderRadius: 3,
+                              fontSize: 9,
+                              fontWeight: 700,
+                              letterSpacing: "0.03em",
+                              backgroundColor: `${classificationColor(entry.classificationLevel)}18`,
+                              color: classificationColor(entry.classificationLevel),
+                              border: `1px solid ${classificationColor(entry.classificationLevel)}30`,
+                              flexShrink: 0,
+                              lineHeight: 1,
+                            }}
+                            title={classificationLabel(entry.classificationLevel, t)}
+                          >
+                            {classificationShortLabel(entry.classificationLevel)}
+                          </span>
+                        )}
+                      </div>
                       <span className="viv-row-variant">{entry.variant || t("evidenceDb.unknownVariant")}</span>
                     </div>
-                  {/* Classification shown inline on mobile */}
-                  <div className="viv-row-mobile-stats" style={{ marginTop: 4 }}>
-                    <span title={entry.classification || undefined}>{entry.classification || t("evidenceDb.noClass")}</span>
+                  {/* Disease with review status */}
+                  <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+                    <div className="viv-row-disease" title={entry.disease || undefined}>
+                      {entry.disease || "—"}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <span
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "50%",
+                          backgroundColor: reviewStatusColor(entry.reviewStatus),
+                          flexShrink: 0,
+                        }}
+                      />
+                      <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>
+                        {t(`evidenceDb.review.${entry.reviewStatus}`)}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Disease */}
-                  <div className="viv-row-disease" title={entry.disease || undefined}>
-                    {entry.disease || "—"}
-                  </div>
-
-                  {/* Classification badge */}
-                  <div>
-                    <span style={badgeInlineStyle(entry.classificationLevel)}>
-                      {classificationShortLabel(entry.classificationLevel)}
+                  {/* Evidence categories with inline review progress */}
+                  <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 3 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 3, flexWrap: "wrap" }}>
+                      {(() => {
+                        const cats = Object.entries(entry.categoryDistribution)
+                          .filter(([, c]) => c > 0)
+                          .sort(([a], [b]) => a.localeCompare(b));
+                        if (cats.length === 0) return <span style={{ color: "var(--color-text-muted)", fontSize: 12 }}>—</span>;
+                        const max = 6;
+                        return (
+                          <>
+                            {cats.slice(0, max).map(([cat, count]) => {
+                              const color = CATEGORY_COLORS[cat]?.hex ?? "#64748B";
+                              return (
+                                <span
+                                  key={cat}
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: 18,
+                                    height: 18,
+                                    borderRadius: 4,
+                                    border: `1px solid ${color}40`,
+                                    backgroundColor: `${color}18`,
+                                    color: color,
+                                    fontSize: 10,
+                                    fontWeight: 600,
+                                    fontFamily: "var(--font-mono)",
+                                  }}
+                                  title={`${CATEGORY_COLORS[cat]?.label ?? `Cat. ${cat}`}: ${count}`}
+                                >
+                                  {cat}
+                                </span>
+                              );
+                            })}
+                            {cats.length > max && (
+                              <span style={{ fontSize: 10, color: "var(--color-text-muted)", fontFamily: "var(--font-mono)" }}>
+                                +{cats.length - max}
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                    <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>
+                      {formatReviewedCount(entry.reviewProgress)}
                     </span>
                   </div>
 
-                  {/* Evidence groups */}
-                  <div className="viv-row-stat">
-                    <FileText style={{ width: 14, height: 14, flexShrink: 0 }} />
-                    <span className="viv-row-stat-val">{entry.evidenceGroupCount}</span>
-                    <span>{t("evidenceDb.statGroups")}</span>
+                  {/* Literature with inline PMID */}
+                  <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+                    <div className="viv-row-stat">
+                      <BookOpen style={{ width: 14, height: 14, flexShrink: 0 }} />
+                      <span className="viv-row-stat-val">{entry.literatureCount}</span>
+                      <span>{t("evidenceDb.statRefs")}</span>
+                    </div>
+                    {entry.representative.pmid && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontFamily: "var(--font-mono)",
+                          color: "var(--color-primary-600)",
+                          cursor: "pointer",
+                          textDecoration: "none",
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          window.open(`https://pubmed.ncbi.nlm.nih.gov/${entry.representative.pmid}`, "_blank", "noopener,noreferrer");
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            window.open(`https://pubmed.ncbi.nlm.nih.gov/${entry.representative.pmid}`, "_blank", "noopener,noreferrer");
+                          }
+                        }}
+                        title={`PMID: ${entry.representative.pmid}`}
+                      >
+                        PMID:{entry.representative.pmid}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Literature */}
-                  <div className="viv-row-stat">
-                    <BookOpen style={{ width: 14, height: 14, flexShrink: 0 }} />
-                    <span className="viv-row-stat-val">{entry.literatureCount}</span>
-                    <span>{t("evidenceDb.statRefs")}</span>
-                  </div>
-
-                  {/* Confidence */}
-                  <div className="viv-row-stat">
-                    <TrendingUp style={{ width: 14, height: 14, flexShrink: 0 }} />
-                    <span className="viv-row-stat-val">{formatConfidencePercent(entry.avgConfidence)}</span>
+                  {/* Confidence with review status */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <div className="viv-row-stat">
+                      <span className="viv-row-stat-val">{formatConfidencePercent(entry.avgConfidence)}</span>
+                    </div>
+                    <div style={{ width: "100%", height: 3, borderRadius: 2, backgroundColor: "var(--color-border)" }}>
+                      <div
+                        style={{
+                          width: `${Math.round((entry.avgConfidence ?? 0) * 100)}%`,
+                          height: 3,
+                          borderRadius: 2,
+                          backgroundColor: (entry.avgConfidence ?? 0) >= 0.7
+                            ? "var(--color-success-600, #16a34a)"
+                            : (entry.avgConfidence ?? 0) >= 0.4
+                              ? "var(--color-warning-600, #d97706)"
+                              : "var(--color-error-600, #dc2626)",
+                        }}
+                      />
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 500,
+                        color: reviewStatusColor(entry.reviewStatus),
+                      }}
+                    >
+                      {t(`evidenceDb.review.${entry.reviewStatus}`)}
+                    </span>
                   </div>
 
                   {hasQualityColumn(viewPrefs) && (
@@ -1062,6 +1102,47 @@ export function VariantIndexView() {
                         <span style={{ marginTop: viewPrefs.showCategories ? 4 : 0, display: "block", fontSize: 11, color: "var(--color-text-secondary)" }}>
                           {formatReviewedCount(entry.reviewProgress)}
                         </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Field count */}
+                  {viewPrefs.showFieldCount && (
+                    <div className="viv-row-stat">
+                      <FileText style={{ width: 12, height: 12, flexShrink: 0 }} />
+                      <span className="viv-row-stat-val">{entry.fieldCount}</span>
+                    </div>
+                  )}
+
+                  {/* PMID standalone column */}
+                  {viewPrefs.showPmid && (
+                    <div style={{ minWidth: 0 }}>
+                      {entry.representative.pmid ? (
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontFamily: "var(--font-mono)",
+                            color: "var(--color-primary-600)",
+                            cursor: "pointer",
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            window.open(`https://pubmed.ncbi.nlm.nih.gov/${entry.representative.pmid}`, "_blank", "noopener,noreferrer");
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              window.open(`https://pubmed.ncbi.nlm.nih.gov/${entry.representative.pmid}`, "_blank", "noopener,noreferrer");
+                            }
+                          }}
+                          title={`PMID: ${entry.representative.pmid}`}
+                        >
+                          {entry.representative.pmid}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>—</span>
                       )}
                     </div>
                   )}
@@ -1088,9 +1169,23 @@ export function VariantIndexView() {
                       <TrendingUp style={{ width: 12, height: 12 }} />
                       <span className="viv-row-stat-val">{formatConfidencePercent(entry.avgConfidence)}</span>
                     </span>
-                    <span style={badgeInlineStyle(entry.classificationLevel)}>
-                      {classificationShortLabel(entry.classificationLevel)}
-                    </span>
+                    {entry.classification && entry.classificationLevel !== "uncertain" && (
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          height: 14,
+                          padding: "0 4px",
+                          borderRadius: 3,
+                          fontSize: 9,
+                          fontWeight: 700,
+                          backgroundColor: `${classificationColor(entry.classificationLevel)}18`,
+                          color: classificationColor(entry.classificationLevel),
+                        }}
+                      >
+                        {classificationShortLabel(entry.classificationLevel)}
+                      </span>
+                    )}
                     {viewPrefs.showUpdated && (
                       <span style={{ color: "var(--color-text-muted)", fontSize: 11 }}>
                         {formatDate(entry.createdAt)}

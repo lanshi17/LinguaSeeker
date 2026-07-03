@@ -18,6 +18,8 @@ describe("useEvidenceDbViewPrefs", () => {
       showUpdated: true,
       showCategories: true,
       showReviewProgress: true,
+      showPmid: true,
+      showFieldCount: true,
     });
   });
 
@@ -36,6 +38,8 @@ describe("useEvidenceDbViewPrefs", () => {
       showUpdated: false,
       showCategories: true,
       showReviewProgress: false,
+      showPmid: true,
+      showFieldCount: true,
     });
   });
 

@@ -6,12 +6,16 @@ export interface EvidenceDbViewPrefs {
   showUpdated: boolean;
   showCategories: boolean;
   showReviewProgress: boolean;
+  showPmid: boolean;
+  showFieldCount: boolean;
 }
 
 export const DEFAULT_EVIDENCE_DB_VIEW_PREFS: EvidenceDbViewPrefs = {
   showUpdated: true,
   showCategories: true,
   showReviewProgress: true,
+  showPmid: true,
+  showFieldCount: true,
 };
 
 function normalizePrefs(value: unknown): EvidenceDbViewPrefs {
@@ -32,6 +36,14 @@ function normalizePrefs(value: unknown): EvidenceDbViewPrefs {
       typeof candidate.showReviewProgress === "boolean"
         ? candidate.showReviewProgress
         : DEFAULT_EVIDENCE_DB_VIEW_PREFS.showReviewProgress,
+    showPmid:
+      typeof candidate.showPmid === "boolean"
+        ? candidate.showPmid
+        : DEFAULT_EVIDENCE_DB_VIEW_PREFS.showPmid,
+    showFieldCount:
+      typeof candidate.showFieldCount === "boolean"
+        ? candidate.showFieldCount
+        : DEFAULT_EVIDENCE_DB_VIEW_PREFS.showFieldCount,
   };
 }
 

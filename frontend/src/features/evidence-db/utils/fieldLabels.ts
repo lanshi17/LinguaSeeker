@@ -8,8 +8,10 @@ export interface EvidenceDbLabels {
   evidenceFields: string;
   evidenceGroups: string;
   exportReport: string;
+  fieldCount: string;
   literature: string;
   literatureSources: string;
+  pmid: string;
   reviewProgress: string;
   reviewed: string;
   updated: string;
@@ -25,8 +27,10 @@ export function getEvidenceDbLabels(t: TFunction): EvidenceDbLabels {
     evidenceFields: t("evidenceDb.label.evidenceFields"),
     evidenceGroups: t("evidenceDb.label.evidenceGroups"),
     exportReport: t("evidenceDb.label.exportReport"),
+    fieldCount: t("evidenceDb.label.fieldCount"),
     literature: t("evidenceDb.label.literature"),
     literatureSources: t("evidenceDb.label.litSources"),
+    pmid: t("evidenceDb.label.pmid"),
     reviewProgress: t("evidenceDb.label.reviewProgress"),
     reviewed: t("evidenceDb.label.reviewed"),
     updated: t("evidenceDb.label.updated"),

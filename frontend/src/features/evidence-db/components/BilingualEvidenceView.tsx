@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   AlertCircle,
   ChevronRight,
+  CircleHelp,
 } from "lucide-react";
 import { Switch, Tooltip } from "antd";
 import { useEvidenceGroupDetail } from "@/features/evidence-search/hooks/useEvidenceGroupDetail";
@@ -30,6 +31,7 @@ import { ActiveEvidenceCard } from "./ActiveEvidenceCard";
 import { LiteratureHeader } from "./LiteratureHeader";
 import { BilingualSidebar } from "./BilingualSidebar";
 import { bevEmbeddedCSS } from "./bevStyles";
+import { PageGuide, type GuideSection } from "@/components/ui/PageGuide";
 import { ExportReportDrawer } from "@/features/evidence-search/components/ExportReportDrawer";
 import { computeLiteratureQuality } from "../utils/fieldModel";
 import {
@@ -104,6 +106,7 @@ export function BilingualEvidenceView({
     string | undefined
   >(undefined);
   const [exportOpen, setExportOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const [hoveredAlignmentPairId, setHoveredAlignmentPairId] = useState<string | null>(null);
   const [pinnedAlignmentPairId, setPinnedAlignmentPairId] = useState<string | null>(null);
 
@@ -232,6 +235,29 @@ export function BilingualEvidenceView({
     })),
     [],
   );
+
+  const guideSections: GuideSection[] = useMemo(() => [
+    { title: t("pageGuide.bilingual.s1.title"), items: [
+      t("pageGuide.bilingual.s1.i1"), t("pageGuide.bilingual.s1.i2"),
+      t("pageGuide.bilingual.s1.i3"),
+    ]},
+    { title: t("pageGuide.bilingual.s2.title"), items: [
+      t("pageGuide.bilingual.s2.i1"), t("pageGuide.bilingual.s2.i2"),
+      t("pageGuide.bilingual.s2.i3"),
+    ]},
+    { title: t("pageGuide.bilingual.s3.title"), items: [
+      t("pageGuide.bilingual.s3.i1"), t("pageGuide.bilingual.s3.i2"),
+      t("pageGuide.bilingual.s3.i3"),
+    ]},
+    { title: t("pageGuide.bilingual.s4.title"), items: [
+      t("pageGuide.bilingual.s4.i1"), t("pageGuide.bilingual.s4.i2"),
+      t("pageGuide.bilingual.s4.i3"),
+    ]},
+    { title: t("pageGuide.bilingual.s5.title"), items: [
+      t("pageGuide.bilingual.s5.i1"), t("pageGuide.bilingual.s5.i2"),
+      t("pageGuide.bilingual.s5.i3"), t("pageGuide.bilingual.s5.i4"),
+    ]},
+  ], [t]);
 
   const originalAnnotations = allAnnotations.filter((a) => a.track === "original");
   const translatedAnnotations = allAnnotations.filter((a) => a.track === "translated");
@@ -470,6 +496,7 @@ export function BilingualEvidenceView({
         </Link>
         <ChevronRight style={{ width: 14, height: 14 }} />
         <span style={{
+          flex: 1,
           color: "var(--color-text-muted)",
           overflow: "hidden",
           textOverflow: "ellipsis",
@@ -478,6 +505,20 @@ export function BilingualEvidenceView({
         }}>
           {groupDetail.title ?? t("evidenceDb.bilingual.litFallback")}
         </span>
+        <button
+          onClick={() => setGuideOpen(true)}
+          aria-label={t("pageGuide.openGuide")}
+          style={{
+            display: "flex", alignItems: "center", gap: 4, flexShrink: 0,
+            background: "none", border: "1px solid var(--color-border)",
+            borderRadius: 6, padding: "3px 8px", cursor: "pointer",
+            color: "var(--color-text-secondary)", fontSize: 12,
+            transition: "color 0.15s, border-color 0.15s",
+          }}
+        >
+          <CircleHelp size={14} />
+          {t("pageGuide.help")}
+        </button>
       </nav>
 
       {/* Literature Header */}
@@ -592,6 +633,13 @@ export function BilingualEvidenceView({
         detail={groupDetail}
         open={exportOpen}
         onClose={() => setExportOpen(false)}
+      />
+
+      <PageGuide
+        open={guideOpen}
+        onClose={() => setGuideOpen(false)}
+        title={t("pageGuide.bilingual.title")}
+        sections={guideSections}
       />
     </div>
   );

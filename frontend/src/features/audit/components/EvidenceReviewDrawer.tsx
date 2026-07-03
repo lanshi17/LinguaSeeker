@@ -206,6 +206,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
           </div>
 
           <Button
+            aria-label={t("audit.review.searchBtn")}
             icon={<Search style={{ width: 14, height: 14 }} />}
             onClick={handleSearch}
             loading={isSearching}
