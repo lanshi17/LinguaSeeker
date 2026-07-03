@@ -142,6 +142,100 @@ def test_dual_result_adapter_deduplicates_same_chain_across_tracks() -> None:
     assert gene_candidates[0].track == "original"
 
 
+def test_dual_result_adapter_filters_out_evidence_without_gene_link() -> None:
+    """Phase 3 keeps only evidence and candidates that belong to a non-empty gene chain."""
+    result = DualEvidenceExtractionResult(
+        document_id="doc-gene-filter",
+        original_result=EvidenceExtractionResult(
+            status=EvidenceExtractionStatus.COMPLETED,
+            document_id="doc-gene-filter",
+            track=Track.ORIGINAL,
+            evidence_chains=[
+                EvidenceChain(
+                    chain_id="chain-with-gene",
+                    gene_text="BRCA1",
+                    disease_text="Breast cancer",
+                    variant_text="NM_007294.4:c.5266dup",
+                ),
+                EvidenceChain(
+                    chain_id="chain-without-gene",
+                    gene_text="",
+                    disease_text="Breast cancer",
+                    variant_text="NM_007294.4:c.68_69del",
+                ),
+            ],
+            evidence_items=[
+                EvidenceItem(
+                    field_id="A.gene_symbol",
+                    category="A",
+                    field_name="Gene symbol",
+                    status=EvidenceStatus.FOUND,
+                    value="BRCA1",
+                    confidence=0.99,
+                    group_id="chain-with-gene",
+                ),
+                EvidenceItem(
+                    field_id="B.clinical_phenotypes",
+                    category="B",
+                    field_name="Clinical phenotypes",
+                    status=EvidenceStatus.FOUND,
+                    value="Seizure",
+                    confidence=0.95,
+                    group_id="chain-with-gene",
+                ),
+                EvidenceItem(
+                    field_id="B.clinical_phenotypes",
+                    category="B",
+                    field_name="Clinical phenotypes",
+                    status=EvidenceStatus.FOUND,
+                    value="Ataxia",
+                    confidence=0.9,
+                    group_id="chain-without-gene",
+                ),
+                EvidenceItem(
+                    field_id="B.disease_diagnosis",
+                    category="B",
+                    field_name="Disease diagnosis",
+                    status=EvidenceStatus.FOUND,
+                    value="Breast cancer",
+                    confidence=0.88,
+                    group_id="chain-without-gene",
+                ),
+            ],
+            phenotype_evidence=[
+                EvidenceItem(
+                    field_id="B.clinical_phenotypes",
+                    category="B",
+                    field_name="Clinical phenotypes",
+                    status=EvidenceStatus.FOUND,
+                    value="Migraine",
+                    confidence=0.85,
+                    group_id="chain-without-gene",
+                )
+            ],
+        ),
+        translated_result=EvidenceExtractionResult(
+            status=EvidenceExtractionStatus.COMPLETED,
+            document_id="doc-gene-filter",
+            track=Track.TRANSLATED,
+        ),
+    )
+
+    output = DualResultAdapter().to_standardization_input(
+        result,
+        source_document_id="source-gene-filter",
+        processing_run_id="run-gene-filter",
+    )
+
+    assert [item.value for item in output.evidence_items] == ["BRCA1", "Seizure"]
+    assert [candidate.raw_text for candidate in output.candidates] == [
+        "BRCA1",
+        "Breast cancer",
+        "NM_007294.4:c.5266dup",
+        "Seizure",
+    ]
+
+
 def test_dual_result_adapter_splits_chinese_compound_phenotypes() -> None:
     """The adapter splits 顿号-separated Chinese phenotype strings into individual candidates."""
     result = DualEvidenceExtractionResult(
