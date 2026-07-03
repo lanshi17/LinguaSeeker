@@ -1,10 +1,26 @@
+import { useState, useMemo } from "react";
 import { Typography } from "antd";
 import { EvidenceSearchView } from "@/features/evidence-search";
-import { BookOpen } from "lucide-react";
+import { BookOpen, CircleHelp } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { PageGuide, type GuideSection } from "@/components/ui/PageGuide";
 
 export function EvidencePage() {
   const { t } = useI18n();
+  const [guideOpen, setGuideOpen] = useState(false);
+
+  const guideSections: GuideSection[] = useMemo(() => [
+    { title: t("pageGuide.evidence.s1.title"), items: [
+      t("pageGuide.evidence.s1.i1"), t("pageGuide.evidence.s1.i2"),
+      t("pageGuide.evidence.s1.i3"), t("pageGuide.evidence.s1.i4"),
+    ]},
+    { title: t("pageGuide.evidence.s2.title"), items: [
+      t("pageGuide.evidence.s2.i1"), t("pageGuide.evidence.s2.i2"),
+      t("pageGuide.evidence.s2.i3"), t("pageGuide.evidence.s2.i4"),
+      t("pageGuide.evidence.s2.i5"), t("pageGuide.evidence.s2.i6"),
+      t("pageGuide.evidence.s2.i7"), t("pageGuide.evidence.s2.i8"),
+    ]},
+  ], [t]);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Page header */}
@@ -24,7 +40,7 @@ export function EvidencePage() {
         >
           <BookOpen size={18} />
         </div>
-        <div>
+        <div style={{ flex: 1 }}>
           <Typography.Text
             style={{
               fontSize: 10,
@@ -42,9 +58,30 @@ export function EvidencePage() {
             {t("evidence.description")}
           </Typography.Text>
         </div>
+        <button
+          onClick={() => setGuideOpen(true)}
+          aria-label={t("pageGuide.openGuide")}
+          style={{
+            display: "flex", alignItems: "center", gap: 4, flexShrink: 0,
+            background: "none", border: "1px solid var(--color-border)",
+            borderRadius: 6, padding: "4px 10px", cursor: "pointer",
+            color: "var(--color-text-secondary)", fontSize: 12,
+            transition: "color 0.15s, border-color 0.15s",
+          }}
+        >
+          <CircleHelp size={14} />
+          {t("pageGuide.help")}
+        </button>
       </div>
 
       <EvidenceSearchView />
+
+      <PageGuide
+        open={guideOpen}
+        onClose={() => setGuideOpen(false)}
+        title={t("pageGuide.evidence.title")}
+        sections={guideSections}
+      />
     </div>
   );
 }

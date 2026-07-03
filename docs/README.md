@@ -74,6 +74,12 @@ docs/
 | — | [Phase Workflow Overview](active/phase_workflow_overview.md) | reference |
 | — | [TECH_STACK](active/TECH_STACK.md) | reference |
 
+### 用户指南
+
+| 日期 | 标题 | 状态 |
+|------|------|------|
+| 2026-07-02 | [Evidence DB 与审核标注使用指南](active/2026-07-02-evidence-db-and-audit-user-guide.md) | reference |
+
 完整列表见本目录源文件。
 
 ## 计划中工作

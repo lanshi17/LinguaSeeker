@@ -83,7 +83,7 @@ describe("EvidenceReviewDrawer", () => {
     fireEvent.change(screen.getByPlaceholderText("Gene"), {
       target: { value: "GLA" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Search evidence" }));
+    fireEvent.click(screen.getByRole("button", { name: "Apply filter" }));
 
     await screen.findByText("GLA / c.1A>G");
     fireEvent.click(screen.getByText("GLA / c.1A>G"));
