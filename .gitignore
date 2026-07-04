@@ -145,3 +145,4 @@ artifacts/
 # ── Data exports (manual pipeline dumps) ─────────────────────────────────
 exports/
 benchmark/data/processed/filtered_pdf_markdown_corpus/markdown/*/*.md
+**/paper/*

@@ -22,6 +22,10 @@ __all__ = [
     "REPORTS_ROOT",
     "INPUTS_ROOT",
     "RAW_PDF_ROOT",
+    "PAPER_ROOT",
+    "PAPER_MANIFESTS_ROOT",
+    "PAPER_REPORTS_ROOT",
+    "PAPER_GROUND_TRUTH_ROOT",
 ]
 
 
@@ -87,3 +91,19 @@ Subdirs:
 
 RAW_PDF_ROOT: Path = INPUTS_ROOT / "literature_acquisition" / "downloads"
 """Raw downloaded PDFs directory used by literature acquisition runners."""
+
+PAPER_ROOT: Path = BENCHMARK_ROOT / "paper"
+"""Consolidated paper artifacts root.
+
+Single source of truth for all BIBM paper-related data:
+manifests, reports, ground truth, and analysis scripts.
+"""
+
+PAPER_MANIFESTS_ROOT: Path = PAPER_ROOT / "manifests"
+"""Rett manifests (JSON, CSV, JSONL) for paper experiments."""
+
+PAPER_REPORTS_ROOT: Path = PAPER_ROOT / "reports"
+"""Timestamped paper reports and figure packs."""
+
+PAPER_GROUND_TRUTH_ROOT: Path = PAPER_ROOT / "ground_truth"
+"""Rett ground truth entries for paper evaluation."""
