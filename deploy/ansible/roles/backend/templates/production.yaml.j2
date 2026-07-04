@@ -59,6 +59,10 @@ redis:
   db: {{ redis_db }}
   max_connections: {{ redis_max_connections }}
 
+pipeline:
+  cache_enabled: {{ pipeline_cache_enabled | lower }}
+  dedup_enabled: {{ pipeline_dedup_enabled | lower }}
+
 # ── Literature Acquisition ───────────────────────────────────────────────
 # Unpaywall requires a contact email (not secret).
 # API keys (pubmed/base/core) are in vault-production.yaml.

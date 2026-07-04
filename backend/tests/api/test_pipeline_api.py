@@ -427,6 +427,65 @@ async def test_post_pipeline_run_duplicate_prevention(async_client: AsyncClient)
 
 
 @pytest.mark.asyncio
+async def test_post_pipeline_run_skips_cache_and_dedup_when_switches_disabled(async_client: AsyncClient):
+    """Disabled runtime switches skip content-hash cache and active-run dedup."""
+    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        mock_runner = MagicMock()
+        mock_runner.processing_cache_enabled = False
+        mock_runner.duplicate_run_prevention_enabled = False
+        mock_runner.start = AsyncMock(return_value=MagicMock())
+        mock_runner.is_running_for_source = AsyncMock(return_value=True)
+        mock_runner.compute_initial_content_hash = AsyncMock(return_value="abc123")
+        mock_runner.check_processing_cache = AsyncMock(return_value=None)
+        mock_get_runner.return_value = mock_runner
+
+        response = await async_client.post(
+            "/api/v1/pipeline/run",
+            json={
+                "source_type": "local",
+                "filename": "same.md",
+                "pre_parsed_markdown": "biomedical source text",
+                "mode": "full",
+            },
+        )
+
+    assert response.status_code == 202
+    mock_runner.compute_initial_content_hash.assert_not_awaited()
+    mock_runner.check_processing_cache.assert_not_awaited()
+    mock_runner.is_running_for_source.assert_not_awaited()
+    mock_runner.start.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_post_pipeline_run_cache_disabled_dedup_enabled_still_hashes_source(async_client: AsyncClient):
+    """Dedup can use content hash without checking completed-result cache."""
+    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        mock_runner = MagicMock()
+        mock_runner.processing_cache_enabled = False
+        mock_runner.duplicate_run_prevention_enabled = True
+        mock_runner.start = AsyncMock(return_value=MagicMock())
+        mock_runner.is_running_for_source = AsyncMock(return_value=False)
+        mock_runner.compute_initial_content_hash = AsyncMock(return_value="abc123")
+        mock_runner.check_processing_cache = AsyncMock(return_value=None)
+        mock_get_runner.return_value = mock_runner
+
+        response = await async_client.post(
+            "/api/v1/pipeline/run",
+            json={
+                "source_type": "local",
+                "filename": "same.md",
+                "pre_parsed_markdown": "biomedical source text",
+                "mode": "full",
+            },
+        )
+
+    assert response.status_code == 202
+    mock_runner.compute_initial_content_hash.assert_awaited_once()
+    mock_runner.check_processing_cache.assert_not_awaited()
+    mock_runner.is_running_for_source.assert_awaited_once_with("content:abc123")
+
+
+@pytest.mark.asyncio
 async def test_post_pipeline_run_same_filename_different_hash_not_blocked(async_client: AsyncClient):
     """Same filename should not block active runs when content hash differs."""
     with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:

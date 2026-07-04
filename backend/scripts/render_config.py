@@ -99,7 +99,7 @@ def render_config_template(config_data: ConfigData, environment: str) -> str:
     )
 
     template = env.get_template("config.yaml.j2")
-    return template.render(environment=environment, **config_data)
+    return template.render(**{**config_data, "environment": environment})
 
 
 def main() -> None:

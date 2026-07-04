@@ -282,8 +282,7 @@ async def start_pipeline_run(
     online_action = "download" if body.source_type == "online" else None
     source_key = _build_source_key(body)
 
-    # Compute content hash for L1/L2 processing cache deduplication.
-    # Build a temporary state just for hash computation.
+    # Build a temporary state for optional content-hash based cache/dedup.
     temp_state = PipelineGraphState(
         processing_run_id=processing_run_id,
         source_document_id=source_document_id,
@@ -308,12 +307,15 @@ async def start_pipeline_run(
         review_reject_policy=body.review_reject_policy,
         extraction_track_mode=body.extraction_track_mode,
     )
-    content_hash = await runner.compute_initial_content_hash(temp_state)
+    content_hash = None
+    hash_required = runner.processing_cache_enabled or runner.duplicate_run_prevention_enabled
+    if hash_required:
+        content_hash = await runner.compute_initial_content_hash(temp_state)
     if content_hash:
         temp_state.content_hash = content_hash
         temp_state.source_key = _build_source_key(body, content_hash)
         source_key = temp_state.source_key
-        cached_state = await runner.check_processing_cache(content_hash)
+        cached_state = await runner.check_processing_cache(content_hash) if runner.processing_cache_enabled else None
         if cached_state is not None and cached_state.pipeline_status == PipelineStatus.COMPLETED:
             logger.info(
                 "Processing cache hit for content_hash={}, returning cached run={}",
@@ -330,7 +332,7 @@ async def start_pipeline_run(
             )
 
     # N3: Duplicate run prevention
-    if source_key and await runner.is_running_for_source(source_key):
+    if runner.duplicate_run_prevention_enabled and source_key and await runner.is_running_for_source(source_key):
         if upload_file_path:
             Path(upload_file_path).unlink(missing_ok=True)
         raise HTTPException(

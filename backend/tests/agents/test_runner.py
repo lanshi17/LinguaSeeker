@@ -620,3 +620,22 @@ async def test_is_running_for_source_checks_persistence_when_cache_misses(
 
     assert await runner.is_running_for_source("pmid:123") is True
     mock_persistence.has_active_source_key.assert_awaited_once_with("pmid:123")
+
+
+@pytest.mark.asyncio
+async def test_is_running_for_source_returns_false_when_dedup_disabled(
+    mock_orchestrator, mock_semaphore, mock_persistence
+):
+    """Disabled duplicate-run prevention does not query persistence."""
+    mock_persistence.has_active_source_key = AsyncMock(return_value=True)
+    runner = PipelineRunner(
+        mock_orchestrator,
+        mock_semaphore,
+        mock_persistence,
+        duplicate_run_prevention_enabled=False,
+        worker_id="worker-a",
+        heartbeat_interval_seconds=0.01,
+    )
+
+    assert await runner.is_running_for_source("pmid:123") is False
+    mock_persistence.has_active_source_key.assert_not_awaited()

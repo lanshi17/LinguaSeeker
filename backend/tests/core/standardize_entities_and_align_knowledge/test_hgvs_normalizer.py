@@ -75,6 +75,22 @@ def test_stop_codon_x_alias_maps_to_star() -> None:
     assert "p.R243*" in expand_hgvs_aliases("p.R243X")
 
 
+def test_bare_one_letter_stop_alias_maps_to_prefixed_star() -> None:
+    """Clinical tables often omit the p. prefix for protein stop variants."""
+    aliases = expand_hgvs_aliases("R168X")
+
+    assert "R168X" in aliases
+    assert "p.R168*" in aliases
+
+
+def test_bare_three_letter_stop_alias_maps_to_one_letter_star() -> None:
+    """Bare three-letter protein stop variants are collapsed for lookup."""
+    aliases = expand_hgvs_aliases("Arg168Ter")
+
+    assert "Arg168Ter" in aliases
+    assert "p.R168*" in aliases
+
+
 def test_stop_word_alt_derives_star_alias() -> None:
     """p.Arg75stop derives the p.R75* one-letter alias."""
     aliases = expand_hgvs_aliases("p.Arg75stop")

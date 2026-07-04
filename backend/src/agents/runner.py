@@ -35,6 +35,8 @@ class PipelineRunner:
         semaphore: PipelineSemaphore,
         state_persistence: SessionBoundStatePersistence,
         processing_cache: DocumentProcessingCacheService | None = None,
+        processing_cache_enabled: bool = True,
+        duplicate_run_prevention_enabled: bool = True,
         worker_id: str | None = None,
         heartbeat_interval_seconds: float = 15.0,
     ):
@@ -42,10 +44,22 @@ class PipelineRunner:
         self._semaphore = semaphore
         self._persistence = state_persistence
         self._processing_cache = processing_cache
+        self._processing_cache_enabled = processing_cache_enabled
+        self._duplicate_run_prevention_enabled = duplicate_run_prevention_enabled
         self._active_tasks: dict[str, asyncio.Task] = {}
         self._last_states: OrderedDict[str, PipelineGraphState] = OrderedDict()
         self._worker_id = worker_id or f"{socket.gethostname()}:{os.getpid()}:{id(self)}"
         self._heartbeat_interval = heartbeat_interval_seconds
+
+    @property
+    def processing_cache_enabled(self) -> bool:
+        """Return whether completed pipeline result caching is enabled."""
+        return self._processing_cache_enabled
+
+    @property
+    def duplicate_run_prevention_enabled(self) -> bool:
+        """Return whether active source-key deduplication is enabled."""
+        return self._duplicate_run_prevention_enabled
 
     def remember_state(self, run_id: str, state: PipelineGraphState) -> None:
         """Store a state in the cache, evicting the oldest if over limit."""
@@ -118,7 +132,7 @@ class PipelineRunner:
                 self.remember_state(run_id, result)
                 logger.info("Pipeline execution completed: run={}", run_id)
                 # Cache completed result for dedup on identical future submissions
-                if self._processing_cache is not None and initial_state.content_hash:
+                if self._processing_cache_enabled and self._processing_cache is not None and initial_state.content_hash:
                     try:
                         await self._processing_cache.cache_result(initial_state.content_hash, result)
                     except Exception:
@@ -277,6 +291,8 @@ class PipelineRunner:
         user-visible identifiers.  Falls back to persistence for
         cross-worker dedup when the in-memory cache misses.
         """
+        if not self._duplicate_run_prevention_enabled:
+            return False
         for run_id, state in self._last_states.items():
             if (
                 state.source_key == source_key
@@ -294,7 +310,7 @@ class PipelineRunner:
         The caller (API route) uses this to short-circuit re-processing of
         identical document content.
         """
-        if self._processing_cache is None or not content_hash:
+        if not self._processing_cache_enabled or self._processing_cache is None or not content_hash:
             return None
         result = await self._processing_cache.get_cached_result(content_hash)
         if result is None:

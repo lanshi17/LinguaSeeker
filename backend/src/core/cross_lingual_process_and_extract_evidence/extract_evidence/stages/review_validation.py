@@ -20,7 +20,7 @@ from ..contracts import (
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 
 ReviewRejectPolicy = Literal["hard_veto", "soft_veto", "tristate_review"]
-DEFAULT_REVIEW_REJECT_POLICY: ReviewRejectPolicy = "hard_veto"
+DEFAULT_REVIEW_REJECT_POLICY: ReviewRejectPolicy = "tristate_review"
 
 
 def resolve_review_reject_policy(raw: str) -> ReviewRejectPolicy:
