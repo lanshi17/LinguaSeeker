@@ -268,6 +268,7 @@ class EvidenceSearchResult(BaseModel):
     title: str | None = None
     pmid: str | None = None
     doi: str | None = None
+    source_language: str | None = None
     original_document_text: str | None = None
     translated_document_text: str | None = None
     gene: str | None = None

@@ -18,6 +18,7 @@ export interface EvidenceSearchResult {
   title?: string | null;
   pmid?: string | null;
   doi?: string | null;
+  source_language?: string | null;
   gene?: string | null;
   variant?: string | null;
   disease?: string | null;

@@ -129,6 +129,15 @@ describe("aggregateVariants — one row per variant site", () => {
     expect(entries[0].representative.has_full_text).toBe(true);
     expect(entries[0].representative.has_translation).toBe(true);
   });
+
+  it("aggregates source languages from grouped search rows", () => {
+    const entries = aggregateVariants([
+      makeResult({ source_document_id: "doc-a", source_language: "zh" }),
+      makeResult({ source_document_id: "doc-b", source_language: "en" }),
+    ]);
+
+    expect(entries[0].sourceLanguages).toEqual(["en", "zh"]);
+  });
 });
 
 describe("filterAndPaginateVariants — stats not inflated by split rows", () => {
@@ -155,6 +164,32 @@ describe("filterAndPaginateVariants — stats not inflated by split rows", () =>
     expect(data.items).toHaveLength(1);
     expect(data.items[0].variant).toBe("c.502C>T");
     expect(data.total).toBe(1);
+  });
+
+  it("filters by source language", () => {
+    const entries = aggregateVariants([
+      makeResult({
+        group_id: "group-zh",
+        source_document_id: "doc-zh",
+        source_language: "zh",
+        variant: "c.316C>T",
+      }),
+      makeResult({
+        group_id: "group-en",
+        source_document_id: "doc-en",
+        source_language: "en",
+        variant: "c.502C>T",
+      }),
+    ]);
+
+    const data = filterAndPaginateVariants(entries, {
+      page: 1,
+      pageSize: 50,
+      sourceLanguage: "zh",
+    });
+
+    expect(data.items).toHaveLength(1);
+    expect(data.items[0].sourceLanguages).toEqual(["zh"]);
   });
 });
 

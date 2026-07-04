@@ -17,6 +17,29 @@ function computeReviewStatus(statuses: string[]): string {
   return "provisional";
 }
 
+function normalizeSourceLanguage(value?: string | null): string | null {
+  const normalized = value?.trim().toLowerCase().replace("_", "-");
+  if (!normalized) return null;
+  const aliases: Record<string, string> = {
+    chinese: "zh",
+    deu: "de",
+    eng: "en",
+    english: "en",
+    fra: "fr",
+    fre: "fr",
+    french: "fr",
+    german: "de",
+    japanese: "ja",
+    jpn: "ja",
+    rus: "ru",
+    russian: "ru",
+    zho: "zh",
+    "zh-cn": "zh",
+    "zh-tw": "zh",
+  };
+  return aliases[normalized] ?? normalized;
+}
+
 /**
  * Expand a search result whose `variant` field lists multiple variant sites
  * separated by ';' into one result per variant site.  Each expanded copy
@@ -70,6 +93,13 @@ export function aggregateVariants(results: EvidenceSearchResult[]): VariantIndex
 
     const groupIds = [...new Set(items.map((r) => r.group_id))];
     const sourceDocumentIds = [...new Set(items.map((r) => r.source_document_id))];
+    const sourceLanguages = [
+      ...new Set(
+        items
+          .map((r) => normalizeSourceLanguage(r.source_language))
+          .filter((value): value is string => Boolean(value)),
+      ),
+    ].sort();
     const groupDocumentPairs = buildVariantGroupDocumentPairs(items, slug);
 
     // Weighted average confidence
@@ -125,6 +155,7 @@ export function aggregateVariants(results: EvidenceSearchResult[]): VariantIndex
       createdAt,
       groupIds,
       sourceDocumentIds,
+      sourceLanguages,
       groupDocumentPairs,
       representative: first,
     });
@@ -214,6 +245,10 @@ export function filterAndPaginateVariants(
   }
   if (filters.reviewStatus) {
     filtered = filtered.filter((e) => e.reviewStatus === filters.reviewStatus);
+  }
+  if (filters.sourceLanguage) {
+    const language = filters.sourceLanguage;
+    filtered = filtered.filter((e) => e.sourceLanguages.includes(language));
   }
 
   // Apply user-controlled sort (overrides the default aggregateVariants order).

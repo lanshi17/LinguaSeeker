@@ -92,8 +92,8 @@ class _FakeSession:
 
 
 @pytest.mark.asyncio
-async def test_search_evidence_includes_document_title():
-    """Search result rows include literature title from source metadata."""
+async def test_search_evidence_includes_document_title_and_source_language():
+    """Search result rows include title and source language from persisted state."""
     source_document_id = uuid4()
     evidence_id = uuid4()
     group_id = "gene=['BRCA1']"
@@ -136,6 +136,12 @@ async def test_search_evidence_includes_document_title():
             raw_metadata={"title": "BRCA1 evidence paper"},
         ),
     ]
+    run_states = [
+        _cei(
+            source_document_id=source_document_id,
+            state_json={"phase_2_output": {"source_language": "ZH"}},
+        ),
+    ]
 
     service = SearchService(
         _FakeSession(
@@ -145,6 +151,7 @@ async def test_search_evidence_includes_document_title():
                 _FakeResult(rows=[detail_row]),  # Pass 2 detail rows
                 _FakeResult(scalars=identifiers),  # SourceDocumentIdentifier
                 _FakeResult(rows=metadata),  # SourceDocument metadata
+                _FakeResult(rows=run_states),  # PipelineRunState language fallback
             ]
         )
     )
@@ -153,6 +160,7 @@ async def test_search_evidence_includes_document_title():
 
     assert response.total == 1
     assert response.items[0].title == "BRCA1 evidence paper"
+    assert response.items[0].source_language == "zh"
     assert response.items[0].pmid == "12345678"
     assert response.items[0].created_at is not None
 
@@ -205,6 +213,7 @@ async def test_search_evidence_includes_source_availability_flags():
                 _FakeResult(rows=[detail_row]),
                 _FakeResult(scalars=[]),
                 _FakeResult(rows=metadata),
+                _FakeResult(rows=[]),
             ]
         )
     )
@@ -253,6 +262,7 @@ async def test_search_evidence_includes_created_at():
                 _FakeResult(rows=[detail_row]),  # Pass 2 detail rows
                 _FakeResult(scalars=[]),  # SourceDocumentIdentifier (empty)
                 _FakeResult(rows=[]),  # SourceDocument metadata (empty)
+                _FakeResult(rows=[]),  # PipelineRunState language fallback
             ]
         )
     )
