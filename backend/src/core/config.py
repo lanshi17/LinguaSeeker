@@ -100,10 +100,29 @@ class TranslationLLMConfig(_BaseProviderConfig):
 
     base_url: str = ""
     model: str = "tencent/Hunyuan-MT-7B"
+    local_base_url: str = ""
+    local_target_lang: str = "en"
+    local_timeout: float = 60.0
+    remote_base_url: str = ""
+    remote_api_key: str = ""
+    remote_api_keys: list[str] = Field(default_factory=list)
+    remote_model: str = ""
     max_tokens: int = 8192
     timeout: int = 60
     temperature: float | None = 0.0
     max_retries: int = 0
+
+    @property
+    def remote_all_api_keys(self) -> list[str]:
+        """Return all available remote API keys (deduplicated, preserving order)."""
+        seen: set[str] = set()
+        keys: list[str] = []
+        for k in [*self.remote_api_keys, self.remote_api_key]:
+            k = k.strip()
+            if k and k not in seen:
+                seen.add(k)
+                keys.append(k)
+        return keys
 
 
 class EmbeddingConfig(_BaseProviderConfig):
@@ -317,6 +336,13 @@ class Settings(BaseSettings):
     translation_llm_api_keys: list[str] = Field(default_factory=list)
     translation_llm_model: str = "tencent/Hunyuan-MT-7B"
     translation_llm_base_url: str = ""
+    translation_llm_local_base_url: str = ""
+    translation_llm_local_target_lang: str = "en"
+    translation_llm_local_timeout: float = 60.0
+    translation_llm_remote_base_url: str = ""
+    translation_llm_remote_api_key: str = ""
+    translation_llm_remote_api_keys: list[str] = Field(default_factory=list)
+    translation_llm_remote_model: str = ""
     translation_llm_max_tokens: int = 8192
     translation_llm_timeout: int = 60
     translation_llm_temperature: float | None = None
@@ -465,6 +491,13 @@ class Settings(BaseSettings):
             api_keys=self.translation_llm_api_keys,
             base_url=self.translation_llm_base_url,
             model=self.translation_llm_model,
+            local_base_url=self.translation_llm_local_base_url,
+            local_target_lang=self.translation_llm_local_target_lang,
+            local_timeout=self.translation_llm_local_timeout,
+            remote_base_url=self.translation_llm_remote_base_url,
+            remote_api_key=self.translation_llm_remote_api_key,
+            remote_api_keys=self.translation_llm_remote_api_keys,
+            remote_model=self.translation_llm_remote_model,
             max_tokens=self.translation_llm_max_tokens,
             timeout=self.translation_llm_timeout,
             temperature=self.translation_llm_temperature,

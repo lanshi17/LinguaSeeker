@@ -16,7 +16,7 @@ translate/
 ├── postprocess.py         # 翻译后处理（映射、去重、漂移）
 ├── blocks.py              # 块级标记/合并/拆分操作
 ├── language_detector.py   # 语言检测与跳过逻辑
-├── providers.py           # LLM 客户端工厂与重试
+├── providers.py           # 本地 TranslateGemma + 远程 LLM 客户端工厂与重试
 ├── exceptions.py          # TranslationError
 ├── prompts/               # LLM 提示模板
 └── validator/             # 翻译质量验证
@@ -80,10 +80,44 @@ class BaseTranslator(ABC):
 
 ### LLM 提供者 (`providers.py`)
 
-- `create_llm` / `create_json_llm` — 创建 LLM 客户端适配器，支持密钥池轮换
+- `LocalTranslateGemmaClient` — 调用本地 TranslateGemma 非流式 `POST /translate`
+- `LocalFirstTranslationAdapter` — 翻译 stage 优先调用本地模型，失败后回退远程 LLM
+- `create_llm` / `create_json_llm` — 创建 LLM 客户端适配器，支持密钥池轮换和本地翻译优先
 - `invoke_with_retry` / `invoke_json_with_retry` — 指数退避重试（30s 基础，最多 3 次）
 - 全局并发信号量（默认 5）防止上游限流
 - 处理 transient 异常（httpx、openai、连接错误等）
+
+本地 TranslateGemma 只用于纯翻译 stage（如 `translate/full`、`translate/1`、`translate/prefix/1`）。术语抽取、动态 system prompt、自审、辅助 JSON 批量翻译仍走远程 OpenAI-compatible LLM，因为本地 `/translate` 不是通用结构化推理接口。
+
+## 配置
+
+翻译配置来自 `translation_llm`。`local_base_url` 设置后启用本地优先；远程回退使用 `base_url` / `model` / `api_key`，也可用 `remote_*` 覆盖。
+
+```yaml
+translation_llm:
+  local_base_url: "http://localhost:59062/api"
+  local_target_lang: "en"
+  local_timeout: 60
+  base_url: "https://api.siliconflow.cn"
+  model: "tencent/Hunyuan-MT-7B"
+```
+
+`local_base_url` 可填写服务根路径或完整翻译路径：
+
+| 配置值 | 实际调用 |
+|--------|----------|
+| `http://localhost:8022` | `http://localhost:8022/translate` |
+| `http://localhost:59062/api` | `http://localhost:59062/api/translate` |
+| `http://localhost:8022/translate` | `http://localhost:8022/translate` |
+
+远程回退独立配置示例：
+
+```yaml
+translation_llm:
+  local_base_url: "http://localhost:59062/api"
+  remote_base_url: "https://api.siliconflow.cn"
+  remote_model: "tencent/Hunyuan-MT-7B"
+```
 
 ## 数据流
 
@@ -100,6 +134,8 @@ FormattedDocument
     │
     ▼
 翻译阶段
+    ├── 本地 TranslateGemma 可用 → POST /translate
+    ├── 本地不可用 → 远程 OpenAI-compatible LLM 回退
     ├── 全段模式 → get_full_document_translate_prompt
     └── 分段模式 → segment_text + get_translate_prompt (每段)
     │  → translated_text

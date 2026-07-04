@@ -21,6 +21,9 @@ chat_llm:
   base_url: "https://api.siliconflow.cn"
 
 translation_llm:
+  local_base_url: "http://localhost:59062/api"
+  local_target_lang: "en"
+  local_timeout: 60
   base_url: "https://api.siliconflow.cn"
 
 # ── Inference Services (Production) ──────────────────────────────────────

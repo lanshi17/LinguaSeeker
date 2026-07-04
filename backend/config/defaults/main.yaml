@@ -41,13 +41,18 @@ chat_llm:
   temperature: 0.7
 
 # ── Translation LLM (dedicated cross-lingual translation) ─────────────────
-# Uses a specialized translation model (e.g. tencent/Hunyuan-MT-7B).
-# base_url / api_key: same as fast_llm if using same endpoint.
+# Uses local TranslateGemma first when local_base_url is set, then falls back
+# to the OpenAI-compatible remote endpoint.
 translation_llm:
+  local_base_url: ""
+  local_target_lang: "en"
+  local_timeout: 60
   model: "tencent/Hunyuan-MT-7B"
   timeout: 60
   max_tokens: 8192
   temperature: 0.0
+  remote_base_url: ""
+  remote_model: ""
 
 # ── Embedding Model ───────────────────────────────────────────────────────
 # base_url: per-service container URL.

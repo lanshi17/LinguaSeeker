@@ -49,11 +49,53 @@ def test_service_has_router(mock_config):
 
 
 def test_config_context_from_config(mock_config):
+    mock_config.translation.model = "translation-model"
+    mock_config.translation.api_key = "translation-key"
+    mock_config.translation.all_api_keys = ["translation-key"]
+    mock_config.translation.base_url = "https://remote.example/v1"
+    mock_config.translation.local_base_url = "http://localhost:59062/api"
+    mock_config.translation.local_target_lang = "en"
+    mock_config.translation.local_timeout = 30
+    mock_config.translation.remote_base_url = ""
+    mock_config.translation.remote_model = ""
+    mock_config.translation.remote_api_key = ""
+    mock_config.translation.remote_all_api_keys = []
+    mock_config.translation.temperature = 0.0
+    mock_config.translation.max_tokens = 1024
+    mock_config.translation.timeout = 1
+
     ctx = TranslationConfigContext.from_config(mock_config)
-    assert ctx.model == "test-model"
-    assert ctx.api_key == "test-key"
-    assert ctx.base_url == "http://localhost:8001/v1"
+    assert ctx.model == "translation-model"
+    assert ctx.api_key == "translation-key"
+    assert ctx.base_url == "https://remote.example/v1"
+    assert ctx.local_base_url == "http://localhost:59062/api"
     assert ctx.temperature == 0.0
+
+
+def test_config_context_prefers_remote_override_for_fallback():
+    cfg = MagicMock()
+    cfg.translation.model = "local-default-model"
+    cfg.translation.api_key = "default-key"
+    cfg.translation.all_api_keys = ["default-key"]
+    cfg.translation.base_url = "https://default.example/v1"
+    cfg.translation.local_base_url = "http://localhost:59062/api"
+    cfg.translation.local_target_lang = "en"
+    cfg.translation.local_timeout = 30
+    cfg.translation.remote_base_url = "https://remote.example/v1"
+    cfg.translation.remote_model = "remote-model"
+    cfg.translation.remote_api_key = "remote-key"
+    cfg.translation.remote_all_api_keys = ["remote-key"]
+    cfg.translation.temperature = 0.0
+    cfg.translation.max_tokens = 1024
+    cfg.translation.timeout = 1
+
+    ctx = TranslationConfigContext.from_config(cfg)
+
+    assert ctx.model == "remote-model"
+    assert ctx.api_key == "remote-key"
+    assert ctx.api_keys == ["remote-key"]
+    assert ctx.base_url == "https://remote.example/v1"
+    assert ctx.local_base_url == "http://localhost:59062/api"
 
 
 def test_config_context_from_config_default_temperature():

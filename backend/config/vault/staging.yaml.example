@@ -20,6 +20,8 @@ chat_llm:
 
 translation_llm:
   api_key: "your-staging-translation-llm-api-key"
+  # Optional when translation_llm.remote_base_url is set.
+  remote_api_key: "your-staging-translation-remote-api-key"
 
 # -- MinerU API Tokens -------------------------------------------------------
 mineru:
