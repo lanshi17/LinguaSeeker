@@ -32,6 +32,8 @@ chat_llm:
 
 translation_llm:
   api_key: "your-translation-llm-api-key"
+  # Optional when translation_llm.remote_base_url is set.
+  remote_api_key: "your-translation-remote-api-key"
 
 # -- MinerU API Tokens -------------------------------------------------------
 # Flattens to MINERU_API_TOKEN, MINERU_API_TOKEN_BACKUP, MINERU_REMOTE_API_TOKEN

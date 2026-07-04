@@ -10,7 +10,10 @@ from src.core.cross_lingual_process_and_extract_evidence.contracts import (
 from src.core.cross_lingual_process_and_extract_evidence.config_context import TranslationConfigContext
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.blocks import _BLOCK_SEP
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers import (
+    LocalFirstTranslationAdapter,
+    LocalTranslateGemmaClient,
     _to_text,
+    invoke_json_with_retry,
     invoke_with_retry,
 )
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.postprocess import (
@@ -136,6 +139,53 @@ def test_providers_create_json_llm():
 
     llm = create_json_llm(model="test-model", api_key="test-key", base_url="http://localhost:8001/v1", temperature=0.0)
     assert llm is not None
+
+
+def test_local_translate_gemma_endpoint_normalization():
+    client = LocalTranslateGemmaClient(base_url="http://localhost:59062/api")
+    assert client.endpoint == "http://localhost:59062/api/translate"
+
+    full_endpoint = LocalTranslateGemmaClient(base_url="http://localhost:8022/translate")
+    assert full_endpoint.endpoint == "http://localhost:8022/translate"
+
+
+@pytest.mark.asyncio
+async def test_invoke_json_with_retry_uses_local_translation_first():
+    class FakeLocalClient:
+        async def translate(self, text):
+            assert text == "你好,世界"
+            return "Hello, world"
+
+    remote_llm = AsyncMock()
+    adapter = LocalFirstTranslationAdapter(remote_llm=remote_llm, local_client=FakeLocalClient())
+
+    raw = await invoke_json_with_retry(
+        adapter,
+        '[TRANSLATE THIS SEGMENT]\n你好,世界\n\nReturn a JSON object with key "translation" containing the translated text.',
+        "translate/1",
+    )
+
+    assert raw == '{"translation": "Hello, world"}'
+    remote_llm.ainvoke.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_invoke_with_retry_falls_back_to_remote_when_local_fails():
+    class FakeLocalClient:
+        async def translate(self, text):
+            raise RuntimeError("local service unavailable")
+
+    class FakeResponse:
+        content = "remote translation"
+
+    remote_llm = AsyncMock()
+    remote_llm.ainvoke.return_value = FakeResponse()
+    adapter = LocalFirstTranslationAdapter(remote_llm=remote_llm, local_client=FakeLocalClient())
+
+    result = await invoke_with_retry(adapter, "[DOCUMENT]\n你好,世界", "translate/full")
+
+    assert result == "remote translation"
+    remote_llm.ainvoke.assert_awaited_once()
 
 
 def test_to_text_none():
