@@ -26,6 +26,7 @@ import type {
   SortBy,
   SortOrder,
   ReviewStatusFilter,
+  SourceLanguageFilter,
   VariantIndexEntry,
 } from "../types/variantDb";
 import type { EvidenceDbViewPrefs } from "../hooks/useEvidenceDbViewPrefs";
@@ -68,6 +69,7 @@ function variantGridTemplateColumns(prefs: EvidenceDbViewPrefs, hasSelection: bo
   columns.push("2fr", "1.5fr", "100px", "100px", "100px");
   if (hasQualityColumn(prefs)) columns.push("120px");
   if (prefs.showFieldCount) columns.push("70px");
+  if (prefs.showSourceLanguage) columns.push("96px");
   if (prefs.showPmid) columns.push("110px");
   if (prefs.showUpdated) columns.push("90px");
   return columns.join(" ");
@@ -106,6 +108,31 @@ function getReviewStatusOptions(t: (key: string) => string) {
   ];
 }
 
+function getSourceLanguageOptions(t: (key: string) => string) {
+  return [
+    { value: "en" as SourceLanguageFilter, label: t("evidenceDb.language.en") },
+    { value: "zh" as SourceLanguageFilter, label: t("evidenceDb.language.zh") },
+    { value: "ja" as SourceLanguageFilter, label: t("evidenceDb.language.ja") },
+    { value: "de" as SourceLanguageFilter, label: t("evidenceDb.language.de") },
+    { value: "fr" as SourceLanguageFilter, label: t("evidenceDb.language.fr") },
+    { value: "ru" as SourceLanguageFilter, label: t("evidenceDb.language.ru") },
+  ];
+}
+
+function sourceLanguageLabel(code: string | undefined, t: (key: string) => string): string {
+  if (!code) return t("evidenceDb.language.unknown");
+  const key = `evidenceDb.language.${code}`;
+  const label = t(key);
+  return label === key ? code.toUpperCase() : label;
+}
+
+function sourceLanguageSummary(entry: VariantIndexEntry, t: (key: string) => string): string {
+  if (entry.sourceLanguages.length === 0) {
+    return sourceLanguageLabel(undefined, t);
+  }
+  return entry.sourceLanguages.map((code) => sourceLanguageLabel(code, t)).join(" / ");
+}
+
 /* ── Batch export helpers ────────────────────────────────── */
 
 function csvEscape(value: unknown): string {
@@ -120,12 +147,12 @@ function buildExportCsv(entries: VariantIndexEntry[]): string {
   const headers = [
     "gene", "variant", "disease", "classification",
     "evidence_groups", "field_count", "literature_refs", "avg_confidence",
-    "review_status", "created_at", "title", "pmid", "doi",
+    "review_status", "source_language", "created_at", "title", "pmid", "doi",
   ];
   const rows = entries.map((e) => [
     e.gene, e.variant, e.disease, e.classification,
     String(e.evidenceGroupCount), String(e.fieldCount), String(e.literatureCount),
-    e.avgConfidence.toFixed(2), e.reviewStatus, e.createdAt ?? "",
+    e.avgConfidence.toFixed(2), e.reviewStatus, e.sourceLanguages.join(";"), e.createdAt ?? "",
     e.representative.title ?? "", e.representative.pmid ?? "", e.representative.doi ?? "",
   ]);
   return [headers.join(","), ...rows.map((r) => r.map(csvEscape).join(","))].join("\n");
@@ -142,6 +169,7 @@ function buildExportJson(entries: VariantIndexEntry[]): string {
     literature_refs: e.literatureCount,
     avg_confidence: Number(e.avgConfidence.toFixed(3)),
     review_status: e.reviewStatus,
+    source_language: e.sourceLanguages,
     created_at: e.createdAt ?? null,
     title: e.representative.title ?? null,
     pmid: e.representative.pmid ?? null,
@@ -187,6 +215,7 @@ export function VariantIndexView() {
   const labels = getEvidenceDbLabels(t);
   const sortOptions = useMemo(() => getSortOptions(t), [t]);
   const reviewStatusOptions = useMemo(() => getReviewStatusOptions(t), [t]);
+  const sourceLanguageOptions = useMemo(() => getSourceLanguageOptions(t), [t]);
   const {
     items,
     total,
@@ -303,7 +332,8 @@ export function VariantIndexView() {
     filters.variant ||
     filters.disease ||
     filters.classification ||
-    filters.reviewStatus
+    filters.reviewStatus ||
+    filters.sourceLanguage
   );
   const allPageSelected = items.length > 0 && selectedSlugs.size === items.length;
   const anySelected = selectedSlugs.size > 0;
@@ -413,7 +443,7 @@ export function VariantIndexView() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 240px 180px",
+            gridTemplateColumns: "1fr 220px 170px 180px",
             gap: 12,
             padding: "10px 12px",
             alignItems: "center",
@@ -472,6 +502,17 @@ export function VariantIndexView() {
               variant="borderless"
             />
           </AutoComplete>
+
+          <Select
+            size="small"
+            allowClear
+            placeholder={t("evidenceDb.language.label")}
+            value={filters.sourceLanguage}
+            onChange={(v) => updateFilter("sourceLanguage", v as SourceLanguageFilter | undefined)}
+            style={{ width: "100%" }}
+            popupMatchSelectWidth={false}
+            options={sourceLanguageOptions}
+          />
 
           <Select
             size="small"
@@ -668,6 +709,7 @@ export function VariantIndexView() {
               </span>
               {[
                 { key: "showFieldCount" as const, label: labels.fieldCount },
+                { key: "showSourceLanguage" as const, label: t("evidenceDb.language.label") },
                 { key: "showPmid" as const, label: labels.pmid },
                 { key: "showCategories" as const, label: labels.categories },
                 { key: "showReviewProgress" as const, label: labels.reviewProgress },
@@ -879,6 +921,9 @@ export function VariantIndexView() {
               )}
               {viewPrefs.showFieldCount && (
                 <span>{t("evidenceDb.listFields")}</span>
+              )}
+              {viewPrefs.showSourceLanguage && (
+                <span>{t("evidenceDb.language.label")}</span>
               )}
               {viewPrefs.showPmid && (
                 <span>{t("evidenceDb.listPmid")}</span>
@@ -1114,6 +1159,18 @@ export function VariantIndexView() {
                     </div>
                   )}
 
+                  {/* Source language */}
+                  {viewPrefs.showSourceLanguage && (
+                    <div style={{ minWidth: 0 }}>
+                      <span
+                        className="viv-source-language-chip"
+                        title={t("evidenceDb.language.label")}
+                      >
+                        {sourceLanguageSummary(entry, t)}
+                      </span>
+                    </div>
+                  )}
+
                   {/* PMID standalone column */}
                   {viewPrefs.showPmid && (
                     <div style={{ minWidth: 0 }}>
@@ -1194,6 +1251,11 @@ export function VariantIndexView() {
                     {viewPrefs.showReviewProgress && (
                       <span style={{ color: "var(--color-text-secondary)", fontSize: 11 }}>
                         {formatReviewedCount(entry.reviewProgress)}
+                      </span>
+                    )}
+                    {viewPrefs.showSourceLanguage && (
+                      <span className="viv-source-language-chip">
+                        {sourceLanguageSummary(entry, t)}
                       </span>
                     )}
                   </div>

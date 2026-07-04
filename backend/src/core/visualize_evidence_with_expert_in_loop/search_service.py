@@ -20,6 +20,7 @@ from src.utils.text_normalize import block_text_from_dict, concat_document_text
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     TranslationAlignmentChunk,
 )
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.language_detector import detect_language
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     EvidenceChainHighlight,
     EvidenceFieldDistribution,
@@ -77,6 +78,77 @@ def _coerce_str(value: Any) -> str | None:
     if isinstance(value, list):
         return ", ".join(str(v) for v in value)
     return str(value)
+
+
+def _normalize_language_code(value: Any) -> str | None:
+    """Normalize a language value to the short code used by Evidence DB filters."""
+    language_aliases = {
+        "chinese": "zh",
+        "deu": "de",
+        "eng": "en",
+        "english": "en",
+        "fra": "fr",
+        "fre": "fr",
+        "french": "fr",
+        "german": "de",
+        "japanese": "ja",
+        "jpn": "ja",
+        "rus": "ru",
+        "russian": "ru",
+        "zho": "zh",
+        "zh-cn": "zh",
+        "zh-tw": "zh",
+    }
+    text = _coerce_str(value)
+    if not text or not text.strip():
+        return None
+    normalized = text.strip().lower().replace("_", "-")
+    if normalized == "unknown":
+        return None
+    return language_aliases.get(normalized, normalized)
+
+
+def _extract_source_language(raw_metadata: Any) -> str | None:
+    """Return the persisted source-language code from document metadata."""
+    if not isinstance(raw_metadata, dict):
+        return None
+    for key in ("source_language", "article_language", "language"):
+        language = _normalize_language_code(raw_metadata.get(key))
+        if language:
+            return language
+    return None
+
+
+def _extract_source_language_from_state(state_json: Any) -> str | None:
+    """Return source language from persisted pipeline state JSON."""
+    if not isinstance(state_json, dict):
+        return None
+    candidate_paths = (
+        ("phase_2_output", "source_language"),
+        ("phase_2_status", "summary", "source_language"),
+        ("source_language",),
+    )
+    for path in candidate_paths:
+        value: Any = state_json
+        for key in path:
+            if not isinstance(value, dict):
+                value = None
+                break
+            value = value.get(key)
+        language = _normalize_language_code(value)
+        if language:
+            return language
+    return None
+
+
+def _detect_source_language_from_text(text: str | None) -> str | None:
+    """Infer source language from persisted original document text as a fallback."""
+    if not text or not text.strip():
+        return None
+    language = _normalize_language_code(detect_language(text))
+    if language:
+        return language
+    return None
 
 
 def _matches_any(patterns: tuple[str, ...], text: str) -> bool:
@@ -866,6 +938,8 @@ class SearchService:
         doc_ids = {g["source_document_id"] for g in groups.values()}
         ident_map: dict[str, dict[str, str]] = {}
         title_map: dict[str, str] = {}
+        language_map: dict[str, str] = {}
+        original_text_map: dict[str, str] = {}
         availability_map: dict[str, dict[str, bool]] = {}
         if doc_ids:
             ident_stmt = select(SourceDocumentIdentifier).where(
@@ -890,6 +964,12 @@ class SearchService:
                 title = _coerce_str(raw_metadata.get("title")) if isinstance(raw_metadata, dict) else None
                 if title:
                     title_map[str(row.source_document_id)] = title
+                source_language = _extract_source_language(raw_metadata)
+                if source_language:
+                    language_map[str(row.source_document_id)] = source_language
+                original_text = getattr(row, "original_text", None)
+                if isinstance(original_text, str) and original_text.strip():
+                    original_text_map[str(row.source_document_id)] = original_text
                 availability_map[str(row.source_document_id)] = {
                     "has_full_text": _has_text_or_blocks(
                         getattr(row, "original_text", None),
@@ -900,6 +980,33 @@ class SearchService:
                         getattr(row, "translated_blocks", None),
                     ),
                 }
+
+            missing_language_doc_ids = [doc_id for doc_id in doc_ids if str(doc_id) not in language_map]
+            if missing_language_doc_ids:
+                run_state_stmt = (
+                    select(
+                        PipelineRunState.source_document_id,
+                        PipelineRunState.state_json,
+                    )
+                    .where(PipelineRunState.source_document_id.in_(missing_language_doc_ids))
+                    .order_by(PipelineRunState.created_at.desc())
+                )
+                run_state_result = await self._session.execute(run_state_stmt)
+                for row in run_state_result.all():
+                    doc_key = str(row.source_document_id)
+                    if doc_key in language_map:
+                        continue
+                    source_language = _extract_source_language_from_state(row.state_json)
+                    if source_language:
+                        language_map[doc_key] = source_language
+
+            for doc_id in doc_ids:
+                doc_key = str(doc_id)
+                if doc_key in language_map:
+                    continue
+                source_language = _detect_source_language_from_text(original_text_map.get(doc_key))
+                if source_language:
+                    language_map[doc_key] = source_language
 
         # Build results (apply PMID/DOI post-filters)
         items: list[EvidenceSearchResult] = []
@@ -925,6 +1032,7 @@ class SearchService:
                     title=title_map.get(str(g["source_document_id"])),
                     pmid=doc_ident.get("pmid"),
                     doi=doc_ident.get("doi"),
+                    source_language=language_map.get(str(g["source_document_id"])),
                     gene=g["gene"],
                     variant=g["variant"],
                     disease=g["disease"],

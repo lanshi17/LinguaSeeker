@@ -9,6 +9,9 @@ import type {
 /** Classification severity level for pathogenicity ordering */
 export type ClassificationLevel = "pathogenic" | "likely_pathogenic" | "uncertain" | "likely_benign" | "benign";
 
+/** Source-language filter values, using ISO 639-1 language codes. */
+export type SourceLanguageFilter = "en" | "zh" | "ja" | "de" | "fr" | "ru";
+
 /** L1: Aggregated variant entry — one row in the variant index */
 export interface VariantIndexEntry {
   /** Composite key: "GENE:VARIANT" or "GENE:VARIANT:DISEASE" */
@@ -38,6 +41,8 @@ export interface VariantIndexEntry {
   groupIds: string[];
   /** All unique source_document_ids */
   sourceDocumentIds: string[];
+  /** Source-language codes represented by this variant row. */
+  sourceLanguages: string[];
   /** Exact group/document pairs represented by this row. */
   groupDocumentPairs: Array<{ groupId: string; sourceDocumentId: string }>;
   /** Representative search result (for navigation) */
@@ -116,6 +121,7 @@ export interface VariantIndexFilters {
   disease?: string;
   classification?: ClassificationLevel;
   reviewStatus?: ReviewStatusFilter;
+  sourceLanguage?: SourceLanguageFilter;
   page: number;
   pageSize: number;
   sortBy?: SortBy;

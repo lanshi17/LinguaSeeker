@@ -116,6 +116,22 @@
   font-weight: 500;
   color: var(--color-text-strong);
 }
+.viv-source-language-chip {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: center;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  padding: 1px 5px;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .viv-row-mobile-stats {
   display: flex;
   align-items: center;
