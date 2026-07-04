@@ -102,6 +102,30 @@ def test_de_novo_status_is_normalized_to_enum_value() -> None:
     assert len(value_issues) == 3
 
 
+def test_de_novo_status_unknown_is_completed_explicitly() -> None:
+    inputs = [
+        _item("C.de_novo_status", "unknown").model_copy(update={"group_id": "g1"}),
+        _item("C.de_novo_status", "not reported").model_copy(update={"group_id": "g2"}),
+    ]
+
+    items, _ = AcmgEvidenceValueNormalizer().normalize(inputs)
+
+    assert [item.value for item in items] == ["unknown_not_reported", "unknown_not_reported"]
+
+
+def test_protein_variant_alias_is_normalized_for_deduplication() -> None:
+    inputs = [
+        _item("A.variant_hgvs_p", "p.Arg168Ter").model_copy(update={"group_id": "g1"}),
+        _item("A.variant_hgvs_p", "R168X").model_copy(update={"group_id": "g1"}),
+    ]
+
+    items, issues = AcmgEvidenceValueNormalizer().normalize(inputs)
+
+    assert len(items) == 1
+    assert items[0].value == "p.R168*"
+    assert any(issue.issue_type.value == "duplicate_merged" for issue in issues)
+
+
 def test_consanguinity_preserves_detail_and_normalizes_status() -> None:
     items, _ = AcmgEvidenceValueNormalizer().normalize(
         [

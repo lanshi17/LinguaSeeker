@@ -76,6 +76,11 @@ redis:
   db: {{ redis.db }}
   max_connections: {{ redis.max_connections }}
 
+# ── Pipeline Runtime ────────────────────────────────────────────────────
+pipeline:
+  cache_enabled: {{ pipeline.cache_enabled | default(false) | lower }}
+  dedup_enabled: {{ pipeline.dedup_enabled | default(false) | lower }}
+
 # ── PostgreSQL ──────────────────────────────────────────────────────────
 postgres:
   host: {{ postgres.host | default('127.0.0.1') }}

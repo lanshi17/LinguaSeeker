@@ -34,6 +34,11 @@ _LIST_ITEM_RE = re.compile(r"['\"]([^'\"]+)['\"]")
 # Literature often uses `X` for stop; ClinVar aliases use `*`, so emit the canonical `*` form.
 _PROTEIN_1LETTER_STOP_RE = re.compile(r"p\.([A-Z])(\d+)X")
 
+# Bare protein variants commonly appear in clinical tables without the `p.`
+# prefix, e.g. `R168X` or `Arg168Ter`.
+_BARE_PROTEIN_1LETTER_RE = re.compile(r"^([A-Z])(\d+)([A-Z*]|X)$")
+_BARE_PROTEIN_3LETTER_RE = re.compile(r"^([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|Ter|\*|stop|X|fs|del|dup|ins)$")
+
 
 def normalize_hgvs_for_lookup(value: str) -> str:
     """Normalize an HGVS string for lookup: NFKC fold then strip all whitespace."""
@@ -75,6 +80,19 @@ def _convert_protein_1letter_stop(text: str) -> str | None:
     return f"p.{match.group(1)}{match.group(2)}*"
 
 
+def _convert_bare_protein(text: str) -> str | None:
+    """Convert a bare protein variant into a prefixed one-letter HGVS alias."""
+    one_letter = _BARE_PROTEIN_1LETTER_RE.fullmatch(text)
+    if one_letter is not None:
+        ref, position, alt = one_letter.group(1), one_letter.group(2), one_letter.group(3)
+        return f"p.{ref}{position}{'*' if alt == 'X' else alt}"
+
+    three_letter = _BARE_PROTEIN_3LETTER_RE.fullmatch(text)
+    if three_letter is None:
+        return None
+    return _convert_protein_3letter(f"p.{text}")
+
+
 def _expand_one(text: str) -> list[str]:
     """Expand a single normalized HGVS string into its alias forms."""
     aliases: list[str] = []
@@ -104,6 +122,10 @@ def _expand_one(text: str) -> list[str]:
     stop_converted = _convert_protein_1letter_stop(text)
     if stop_converted is not None:
         _add(stop_converted)
+
+    bare_converted = _convert_bare_protein(text)
+    if bare_converted is not None:
+        _add(bare_converted)
 
     return aliases
 

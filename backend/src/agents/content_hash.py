@@ -21,6 +21,9 @@ from src.agents.contracts import PipelineGraphState
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import (
     DEFAULT_EXTRACTION_WORKFLOW_MODE,
 )
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.review_validation import (
+    DEFAULT_REVIEW_REJECT_POLICY,
+)
 
 
 def normalize_identifier(identifier: str) -> str:
@@ -122,7 +125,7 @@ def _get_scope_key(state: PipelineGraphState) -> str | None:
         parts.append(f"profile={state.extraction_profile}")
     if state.extraction_mode and state.extraction_mode != DEFAULT_EXTRACTION_WORKFLOW_MODE:
         parts.append(f"mode={state.extraction_mode}")
-    if state.review_reject_policy and state.review_reject_policy != "hard_veto":
+    if state.review_reject_policy and state.review_reject_policy != DEFAULT_REVIEW_REJECT_POLICY:
         parts.append(f"review_policy={state.review_reject_policy}")
     if state.extraction_track_mode and state.extraction_track_mode != "dual":
         parts.append(f"track_mode={state.extraction_track_mode}")

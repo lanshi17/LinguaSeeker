@@ -3,6 +3,45 @@
 from src.core.config import Settings
 
 
+def test_pipeline_runtime_defaults_disabled_for_development(monkeypatch) -> None:
+    """Development disables pipeline cache and duplicate-run prevention by default."""
+    monkeypatch.delenv("PIPELINE_CACHE_ENABLED", raising=False)
+    monkeypatch.delenv("PIPELINE_DEDUP_ENABLED", raising=False)
+
+    settings = Settings(environment="development")
+
+    assert settings.pipeline.cache_enabled is False
+    assert settings.pipeline.dedup_enabled is False
+
+
+def test_pipeline_runtime_defaults_enabled_for_production_like(monkeypatch) -> None:
+    """Production-like environments enable pipeline cache and dedup by default."""
+    monkeypatch.delenv("PIPELINE_CACHE_ENABLED", raising=False)
+    monkeypatch.delenv("PIPELINE_DEDUP_ENABLED", raising=False)
+
+    settings = Settings(environment="production", api_key="secret", redis_password="redis-secret")
+
+    assert settings.pipeline.cache_enabled is True
+    assert settings.pipeline.dedup_enabled is True
+
+
+def test_pipeline_runtime_explicit_overrides_win(monkeypatch) -> None:
+    """Explicit pipeline switches override environment-derived defaults."""
+    monkeypatch.delenv("PIPELINE_CACHE_ENABLED", raising=False)
+    monkeypatch.delenv("PIPELINE_DEDUP_ENABLED", raising=False)
+
+    settings = Settings(
+        environment="production",
+        api_key="secret",
+        redis_password="redis-secret",
+        pipeline_cache_enabled=False,
+        pipeline_dedup_enabled=False,
+    )
+
+    assert settings.pipeline.cache_enabled is False
+    assert settings.pipeline.dedup_enabled is False
+
+
 def test_inference_api_key_field_exists():
     """inference_api_key field exists on Settings with a string default."""
     settings = Settings()

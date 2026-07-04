@@ -315,14 +315,14 @@ def test_service_run_catalog_override_uses_catalog_workflow(mock_config):
 
 
 def test_service_review_reject_policy_override_uses_fresh_workflow(mock_config):
-    """service.run(..., review_reject_policy='tristate_review') overrides default hard veto."""
+    """service.run(..., review_reject_policy='hard_veto') overrides default tri-state review."""
     service = EvidenceExtractionService(cfg=mock_config)
 
-    wf = service._workflow_for(None, review_reject_policy="tristate_review")
+    wf = service._workflow_for(None, review_reject_policy="hard_veto")
 
-    assert wf._review_reject_policy == "tristate_review"
-    assert wf._review_validation._review_reject_policy == "tristate_review"
-    assert service._workflow_for(None, review_reject_policy=None)._review_reject_policy == "hard_veto"
+    assert wf._review_reject_policy == "hard_veto"
+    assert wf._review_validation._review_reject_policy == "hard_veto"
+    assert service._workflow_for(None, review_reject_policy=None)._review_reject_policy == "tristate_review"
 
 
 def test_backward_compat_alias_b8_to_broad(mock_config):

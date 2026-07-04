@@ -50,6 +50,14 @@ def _get_status_by_field(items: list[EvidenceItem], field_id: str) -> EvidenceSt
     raise ValueError(f"Field {field_id} not found in items")
 
 
+def _get_item_by_field(items: list[EvidenceItem], field_id: str) -> EvidenceItem:
+    """Get a specific field item from a list of evidence items."""
+    for item in items:
+        if item.field_id == field_id:
+            return item
+    raise ValueError(f"Field {field_id} not found in items")
+
+
 def _base_item() -> EvidenceItem:
     """Create a base item to trigger group normalization."""
     return _make_item("A.gene_symbol", EvidenceStatus.FOUND, "GLA")
@@ -114,6 +122,28 @@ def test_unknown_channel_keeps_field_as_not_found():
     assert _get_status_by_field(normalized, "F.assay_type") == EvidenceStatus.NOT_FOUND
     assert _get_status_by_field(normalized, "A.gene_symbol") == EvidenceStatus.FOUND
     assert _get_status_by_field(normalized, "D.allele_frequency") == EvidenceStatus.NOT_FOUND
+
+
+def test_missing_de_novo_status_is_completed_when_case_context_exists():
+    """In-scope variant/case groups preserve unknown de novo status explicitly."""
+    normalizer = EvidenceItemNormalizer()
+    items = [_make_item("A.variant_hgvs_p", EvidenceStatus.FOUND, "p.R168X")]
+
+    normalized = normalizer.normalize_grouped(items)
+    de_novo = _get_item_by_field(normalized, "C.de_novo_status")
+
+    assert de_novo.status == EvidenceStatus.FOUND
+    assert de_novo.value == "unknown_not_reported"
+    assert "not reported" in de_novo.notes
+
+
+def test_missing_de_novo_status_stays_not_found_without_case_context():
+    """Gene-only groups are not upgraded into case-level unknown facts."""
+    normalizer = EvidenceItemNormalizer()
+
+    normalized = normalizer.normalize_grouped([_base_item()])
+
+    assert _get_status_by_field(normalized, "C.de_novo_status") == EvidenceStatus.NOT_FOUND
 
 
 # ---------------------------------------------------------------------------

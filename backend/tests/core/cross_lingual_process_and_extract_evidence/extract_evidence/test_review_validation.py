@@ -174,11 +174,11 @@ def test_review_validation_soft_veto_preserves_existing_candidate() -> None:
     assert "review_soft_reject" in reviewed[0].inference_basis
 
 
-def test_review_validation_default_uses_binary_review_schema() -> None:
+def test_review_validation_default_uses_tristate_review_schema() -> None:
     provider = StaticReviewProvider(
-        EvidenceReviewResponse(
+        EvidenceTriStateReviewResponse(
             decisions=[
-                EvidenceReviewDecision(
+                EvidenceTriStateReviewDecision(
                     candidate_index=0,
                     field_id="A.gene_symbol",
                     action="approve",
@@ -190,8 +190,8 @@ def test_review_validation_default_uses_binary_review_schema() -> None:
 
     ReviewValidationStage(provider).run(_document(), [_item("A.gene_symbol", "MECP2")])
 
-    assert provider.output_schemas == [EvidenceReviewResponse]
-    assert "uncertain_keep_for_review" not in provider.prompts[0]
+    assert provider.output_schemas == [EvidenceTriStateReviewResponse]
+    assert "uncertain_keep_for_review" in provider.prompts[0]
 
 
 def test_review_validation_tristate_preserves_uncertain_candidate_for_review() -> None:

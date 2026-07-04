@@ -28,6 +28,19 @@ def make_group_id(gene: object, variant: object) -> str:
 class EvidenceItemNormalizer:
     """Normalizes model evidence output to the static field catalog."""
 
+    _UNKNOWN_NOT_REPORTED_FIELDS = frozenset({"C.de_novo_status"})
+    _CASE_CONTEXT_FIELDS = frozenset(
+        {
+            "A.variant_hgvs_c",
+            "A.variant_hgvs_p",
+            "A.variant_hgvs_g",
+            "A.variant_legacy_name",
+            "B.case_count",
+            "B.proband_status",
+            "B.sex",
+        }
+    )
+
     def __init__(self, catalog: tuple[EvidenceFieldSpec, ...] = EVIDENCE_FIELD_SPECS):
         self._catalog = catalog
 
@@ -76,6 +89,8 @@ class EvidenceItemNormalizer:
                         item = self._not_applicable_item(spec).model_copy(update={"group_id": group_id})
                     elif spec.field_id in target_excluded_field_ids:
                         item = self._not_attempted_item(spec).model_copy(update={"group_id": group_id})
+                    elif spec.field_id in self._UNKNOWN_NOT_REPORTED_FIELDS and self._has_case_context(group_items):
+                        item = self._unknown_not_reported_item(spec).model_copy(update={"group_id": group_id})
                     else:
                         item = self._not_found_item(spec).model_copy(update={"group_id": group_id})
                 elif not item.group_id:
@@ -145,6 +160,23 @@ class EvidenceItemNormalizer:
             value=None,
             confidence=0.0,
             notes="Field not attempted due to target/source eligibility or other constraints.",
+        )
+
+    def _unknown_not_reported_item(self, spec: EvidenceFieldSpec) -> EvidenceItem:
+        return EvidenceItem(
+            field_id=spec.field_id,
+            category=spec.category_id,
+            field_name=spec.field_name,
+            status=EvidenceStatus.FOUND,
+            value="unknown_not_reported",
+            confidence=0.0,
+            notes="Field completed as unknown_not_reported because the case is in scope but this fact was not reported.",
+        )
+
+    def _has_case_context(self, items: list[EvidenceItem]) -> bool:
+        return any(
+            item.status == EvidenceStatus.FOUND and item.field_id in self._CASE_CONTEXT_FIELDS
+            for item in items
         )
 
     @staticmethod

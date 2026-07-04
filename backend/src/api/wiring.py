@@ -191,6 +191,8 @@ def wire_dependencies() -> None:
         semaphore=semaphore,
         state_persistence=persistence,
         processing_cache=processing_cache,
+        processing_cache_enabled=cfg.pipeline.cache_enabled,
+        duplicate_run_prevention_enabled=cfg.pipeline.dedup_enabled,
     )
     # Let the orchestrator push intermediate state updates to the runner's
     # in-memory cache so the status endpoint reflects phase progress in

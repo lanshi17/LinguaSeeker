@@ -141,3 +141,7 @@ benchmark/config/vault/secrets.yml
 docker-artifacts/
 artifacts/
 *.tar
+
+# ── Data exports (manual pipeline dumps) ─────────────────────────────────
+exports/
+benchmark/data/processed/filtered_pdf_markdown_corpus/markdown/*/*.md

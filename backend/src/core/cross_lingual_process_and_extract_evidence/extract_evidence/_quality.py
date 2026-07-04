@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 
+from src.core.standardize_entities_and_align_knowledge.hgvs_normalizer import expand_hgvs_aliases
 
 from .catalog import EVIDENCE_FIELD_SPECS, EvidenceFieldSpec
 from .contracts import (
@@ -21,7 +22,8 @@ from .contracts import (
 class TargetEntityGuard:
     """Validates primary entity fields against the extraction target."""
 
-    _GUARDED_FIELDS: tuple[str, ...] = ("A.gene_symbol",)
+    _GENE_FIELD = "A.gene_symbol"
+    _TARGET_VARIANT_FIELDS: tuple[str, ...] = ("A.variant_hgvs_p",)
 
     def apply(
         self,
@@ -33,8 +35,15 @@ class TargetEntityGuard:
         return [self._guard_one(item, extraction_target) for item in items]
 
     def _guard_one(self, item: EvidenceItem, target: ExtractionTarget) -> EvidenceItem:
-        if item.status != EvidenceStatus.FOUND or item.field_id not in self._GUARDED_FIELDS:
+        if item.status != EvidenceStatus.FOUND:
             return item
+        if item.field_id == self._GENE_FIELD:
+            return self._guard_gene(item, target)
+        if item.field_id in self._TARGET_VARIANT_FIELDS and target.variant_hgvs_p:
+            return self._guard_variant(item, target)
+        return item
+
+    def _guard_gene(self, item: EvidenceItem, target: ExtractionTarget) -> EvidenceItem:
         values = self._extract_gene_values(item.value)
         if len(values) > 1:
             if target.gene_symbol in values:
@@ -55,6 +64,24 @@ class TargetEntityGuard:
                 f"extracted {actual}, expected {target.gene_symbol}",
             )
         return item.model_copy(update={"value": target.gene_symbol})
+
+    def _guard_variant(self, item: EvidenceItem, target: ExtractionTarget) -> EvidenceItem:
+        target_aliases = self._variant_aliases(target.variant_hgvs_p)
+        if not target_aliases:
+            return item
+        values = self._extract_string_values(item.value)
+        for value in values:
+            if self._variant_aliases(value) & target_aliases:
+                return item.model_copy(
+                    update={
+                        "value": target.variant_hgvs_p,
+                        "notes": self._append_note(item.notes, "target_guard:variant_to_target"),
+                    }
+                )
+        return self._contaminated(
+            item,
+            f"extracted variant {values or [item.value]}, expected {target.variant_hgvs_p}",
+        )
 
     @staticmethod
     def _contaminated(item: EvidenceItem, reason: str) -> EvidenceItem:
@@ -80,6 +107,24 @@ class TargetEntityGuard:
             if isinstance(parsed, list):
                 return [str(entry).strip().upper() for entry in parsed if str(entry).strip()]
         return [text.upper()] if text else []
+
+    @staticmethod
+    def _extract_string_values(value: object) -> list[str]:
+        if isinstance(value, list):
+            return [str(entry).strip() for entry in value if str(entry).strip()]
+        text = str(value or "").strip()
+        if text.startswith("["):
+            try:
+                parsed = ast.literal_eval(text)
+            except (SyntaxError, ValueError):
+                return [text] if text else []
+            if isinstance(parsed, list):
+                return [str(entry).strip() for entry in parsed if str(entry).strip()]
+        return [text] if text else []
+
+    @staticmethod
+    def _variant_aliases(value: str) -> set[str]:
+        return {alias.casefold() for alias in expand_hgvs_aliases(value)}
 
     @staticmethod
     def _append_note(existing: str, note: str) -> str:

@@ -503,7 +503,7 @@ class PipelineGraphState(BaseModel):
     ablation_disable_review: bool = False
     ablation_disable_target_guard: bool = False
     ablation_original_only: bool = False
-    review_reject_policy: str = "hard_veto"
+    review_reject_policy: str = "tristate_review"
     extraction_track_mode: str = "dual"
 
     @classmethod
@@ -533,6 +533,6 @@ class PipelineGraphState(BaseModel):
             ablation_disable_review=rd.get("ablation_disable_review", False),
             ablation_disable_target_guard=rd.get("ablation_disable_target_guard", False),
             ablation_original_only=rd.get("ablation_original_only", False),
-            review_reject_policy=rd.get("review_reject_policy", "hard_veto"),
+            review_reject_policy=rd.get("review_reject_policy", "tristate_review"),
             extraction_track_mode=rd.get("extraction_track_mode", "dual"),
         )

@@ -50,6 +50,10 @@ postgres:
 redis:
   host: "localhost"
 
+pipeline:
+  cache_enabled: false
+  dedup_enabled: false
+
 # ── Literature Acquisition (Development) ──────────────────────────────────
 # Unpaywall requires a contact email; set your institutional address here.
 # API keys (pubmed/base/core) go in vault/development.yaml.

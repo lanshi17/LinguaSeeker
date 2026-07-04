@@ -46,6 +46,10 @@ postgres:
 redis:
   host: "redis-server"
 
+pipeline:
+  cache_enabled: true
+  dedup_enabled: true
+
 # -- Literature Acquisition ---------------------------------------------------
 unpaywall:
   email: "[redacted-email]"

@@ -1,0 +1,48 @@
+{
+  "total_scanned": 1602,
+  "rett_matches": 4,
+  "by_lang": {
+    "ja": 1,
+    "pt": 1,
+    "ru": 2
+  },
+  "candidates": [
+    {
+      "lang": "ja",
+      "file": "A_Critical_Review_of_the_Impact_of_Candidate_Copy_Number_Variants_on_A_3161417e.pdf",
+      "match_count": 2,
+      "keywords": [
+        "mecp2",
+        "rett"
+      ]
+    },
+    {
+      "lang": "pt",
+      "file": "_PDF__Metilação_de_DNA_e_Câncer_-_Revista_Brasileira_de_Cancerologia_4be129ce.pdf",
+      "match_count": 3,
+      "keywords": [
+        "mecp2",
+        "rett"
+      ]
+    },
+    {
+      "lang": "ru",
+      "file": "A_Critical_Review_of_the_Impact_of_Candidate_Copy_Number_Variants_on_A_3161417e.pdf",
+      "match_count": 2,
+      "keywords": [
+        "mecp2",
+        "rett"
+      ]
+    },
+    {
+      "lang": "ru",
+      "file": "Достижения_молекулярно-генетической_диагностики_в_Институте_Матери_и_Р_d8b8bae5.pdf",
+      "match_count": 5,
+      "keywords": [
+        "синдром ретта",
+        "mecp2",
+        "rett"
+      ]
+    }
+  ]
+}

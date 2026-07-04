@@ -295,7 +295,7 @@ class TestContentHash:
 
     @pytest.mark.asyncio
     async def test_non_default_review_policy_adds_scope_suffix(self):
-        """Experimental review policies get distinct cache scope from C2-hard."""
+        """Non-default review policies get distinct cache scope from tri-state production."""
         base = PipelineGraphState(
             processing_run_id="run-1",
             source_document_id="doc-1",
@@ -311,12 +311,12 @@ class TestContentHash:
         assert h_default != h_soft
         assert h_soft == compute_hash_from_text("content", scope_key="review_policy=soft_veto")
 
-        tristate = base.model_copy(update={"review_reject_policy": "tristate_review"})
-        h_tristate = await compute_content_hash(tristate)
+        hard = base.model_copy(update={"review_reject_policy": "hard_veto"})
+        h_hard = await compute_content_hash(hard)
 
-        assert h_tristate != h_default
-        assert h_tristate != h_soft
-        assert h_tristate == compute_hash_from_text("content", scope_key="review_policy=tristate_review")
+        assert h_hard != h_default
+        assert h_hard != h_soft
+        assert h_hard == compute_hash_from_text("content", scope_key="review_policy=hard_veto")
 
 
 # ── Cache service tests ──────────────────────────────────────────────────
@@ -470,6 +470,25 @@ class TestRunnerCacheIntegration:
             processing_cache=mock_cache,
         )
         result = await runner.check_processing_cache("")
+        assert result is None
+        mock_cache.get_cached_result.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_check_processing_cache_returns_none_when_disabled(self, sample_state):
+        """Runner does not query processing cache when the switch is disabled."""
+        from src.agents.runner import PipelineRunner
+
+        mock_cache = MagicMock()
+        mock_cache.get_cached_result = AsyncMock()
+
+        runner = PipelineRunner(
+            orchestrator=MagicMock(),
+            semaphore=MagicMock(),
+            state_persistence=MagicMock(),
+            processing_cache=mock_cache,
+            processing_cache_enabled=False,
+        )
+        result = await runner.check_processing_cache("abc123")
         assert result is None
         mock_cache.get_cached_result.assert_not_awaited()
 

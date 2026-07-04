@@ -65,6 +65,10 @@ redis_port: 6379
 redis_db: 0
 redis_max_connections: 10
 
+# -- Pipeline Runtime --------------------------------------------------------
+pipeline_cache_enabled: true
+pipeline_dedup_enabled: true
+
 # -- Web Search --------------------------------------------------------------
 web_search_base_url: "https://api.firecrawl.dev"
 web_search_timeout: 30

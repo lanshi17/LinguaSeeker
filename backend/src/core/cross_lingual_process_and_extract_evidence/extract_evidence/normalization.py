@@ -5,6 +5,8 @@ from __future__ import annotations
 import re
 import unicodedata
 
+from src.core.standardize_entities_and_align_knowledge.hgvs_normalizer import expand_hgvs_aliases
+
 from .contracts import (
     EvidenceItem,
     EvidenceNormalizationIssue,
@@ -24,6 +26,7 @@ _HGVS_G_RE = re.compile(
     r"[0-9]+_[0-9]+inv"
     r")$"
 )
+_VALUE_KEY_UNSET = object()
 
 
 class AcmgEvidenceValueNormalizer:
@@ -54,6 +57,7 @@ class AcmgEvidenceValueNormalizer:
         "prediction tools",
         "computational tools",
     }
+    _HGVS_ALIAS_FIELDS = frozenset({"A.variant_hgvs_p"})
 
     def normalize(
         self,
@@ -104,6 +108,8 @@ class AcmgEvidenceValueNormalizer:
             )
         if item.field_id in self._GENE_SYMBOL_FIELDS:
             return self._normalize_gene_symbol(item)
+        if item.field_id in self._HGVS_ALIAS_FIELDS:
+            return self._normalize_hgvs_alias(item)
         if item.field_id == "C.de_novo_status":
             return self._normalize_de_novo(item)
         if item.field_id == "B.consanguinity":
@@ -146,9 +152,18 @@ class AcmgEvidenceValueNormalizer:
             return self._with_value_issue(item, "not_de_novo")
         if item.value is True or text in {"1", "true", "de novo", "denovo"}:
             return self._with_value_issue(item, "de_novo")
-        if text in {"unknown", "not reported", "not_reported"}:
-            return self._with_value_issue(item, "unknown")
+        if text in {"unknown", "not reported", "not_reported", "unknown_not_reported"}:
+            return self._with_value_issue(item, "unknown_not_reported")
         return item, []
+
+    def _normalize_hgvs_alias(
+        self,
+        item: EvidenceItem,
+    ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
+        canonical = self._canonical_hgvs_alias(item.value)
+        if not canonical or canonical == item.value:
+            return item, []
+        return self._with_value_issue(item, canonical)
 
     def _normalize_consanguinity(
         self,
@@ -308,7 +323,7 @@ class AcmgEvidenceValueNormalizer:
         order: list[tuple[str, str, str, str]] = []
         issues: list[EvidenceNormalizationIssue] = []
         for item in items:
-            base_key = (item.group_id, item.field_id, self._normalized_value_key(item.value))
+            base_key = (item.group_id, item.field_id, self._normalized_value_key(item.field_id, item.value))
             key = self._dedupe_key(base_key, item, by_key)
             existing = by_key.get(key)
             if existing is None:
@@ -359,13 +374,35 @@ class AcmgEvidenceValueNormalizer:
             return none_key
         return exact_key
 
-    def _normalized_value_key(self, value: object) -> str:
+    def _normalized_value_key(self, field_id: str | object, value: object = _VALUE_KEY_UNSET) -> str:
+        if value is _VALUE_KEY_UNSET:
+            value = field_id
+            field_id = ""
+        if field_id in self._HGVS_ALIAS_FIELDS:
+            canonical = self._canonical_hgvs_alias(value)
+            if canonical:
+                return f"hgvs:{canonical.casefold()}"
         if isinstance(value, list):
             return "list:" + "|".join(sorted(str(entry).strip().lower() for entry in value))
         if value is None:
             return "none:"
         normalized_text = re.sub(r"\s+", " ", str(value).strip().lower())
         return f"{type(value).__name__}:{normalized_text}"
+
+    @staticmethod
+    def _canonical_hgvs_alias(value: object) -> str:
+        raw_values = value if isinstance(value, list) else [value]
+        aliases: list[str] = []
+        for raw_value in raw_values:
+            aliases.extend(expand_hgvs_aliases(str(raw_value or "")))
+        if not aliases:
+            return ""
+        preferred = [
+            alias
+            for alias in aliases
+            if re.fullmatch(r"p\.[A-Z]\d+(?:[A-Z*]|fs|del|dup|ins)", alias)
+        ]
+        return sorted(preferred or aliases, key=lambda alias: (len(alias), alias))[0]
 
     def _source_signature(self, item: EvidenceItem) -> str:
         source = item.raw_source or item.source

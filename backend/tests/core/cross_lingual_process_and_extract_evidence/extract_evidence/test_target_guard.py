@@ -23,6 +23,17 @@ def _gene_item(value: object) -> EvidenceItem:
     )
 
 
+def _variant_item(value: object) -> EvidenceItem:
+    return EvidenceItem(
+        field_id="A.variant_hgvs_p",
+        category="A",
+        field_name="HGVS protein variant",
+        status=EvidenceStatus.FOUND,
+        value=value,
+        confidence=0.91,
+    )
+
+
 def test_target_guard_corrects_gene_list_string_when_target_present() -> None:
     target = ExtractionTarget(gene_symbol="ABCA3", disease_name="ABCA3 deficiency")
 
@@ -85,3 +96,30 @@ def test_target_guard_ignores_non_gene_symbol_fields() -> None:
 
     assert guarded[0] is item
     assert guarded[0].status == EvidenceStatus.FOUND
+
+
+def test_target_guard_collapses_variant_alias_to_target_variant() -> None:
+    target = ExtractionTarget(
+        gene_symbol="MECP2",
+        disease_name="Rett syndrome",
+        variant_hgvs_p="p.R168X",
+    )
+
+    guarded = TargetEntityGuard().apply([_variant_item("Arg168Ter")], target)
+
+    assert guarded[0].status == EvidenceStatus.FOUND
+    assert guarded[0].value == "p.R168X"
+    assert "variant_to_target" in guarded[0].notes
+
+
+def test_target_guard_marks_wrong_variant_as_context_contamination() -> None:
+    target = ExtractionTarget(
+        gene_symbol="MECP2",
+        disease_name="Rett syndrome",
+        variant_hgvs_p="p.R168X",
+    )
+
+    guarded = TargetEntityGuard().apply([_variant_item("p.T158M")], target)
+
+    assert guarded[0].status == EvidenceStatus.CONTEXT_CONTAMINATION
+    assert "expected p.R168X" in guarded[0].notes

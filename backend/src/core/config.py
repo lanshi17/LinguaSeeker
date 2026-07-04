@@ -212,6 +212,13 @@ class RedisConfig(BaseModel):
     max_connections: int = 20
 
 
+class PipelineConfig(BaseModel):
+    """Pipeline runtime behavior switches."""
+
+    cache_enabled: bool = False
+    dedup_enabled: bool = False
+
+
 class PostgreSQLConfig(BaseModel):
     """PostgreSQL connection."""
 
@@ -398,6 +405,11 @@ class Settings(BaseSettings):
     redis_db: int = 0
     redis_max_connections: int = 20
 
+    # ── Pipeline runtime behavior flat fields (PIPELINE_*) ───────────────
+
+    pipeline_cache_enabled: bool | None = None
+    pipeline_dedup_enabled: bool | None = None
+
     # ── PostgreSQL flat fields (POSTGRES_*) ──────────────────────────────
 
     postgres_host: str = "127.0.0.1"
@@ -439,6 +451,7 @@ class Settings(BaseSettings):
     mineru: MinerUConfig = Field(default_factory=MinerUConfig, exclude=True)
     parse_document: ParseDocumentConfig = Field(default_factory=ParseDocumentConfig, exclude=True)
     redis: RedisConfig = Field(default_factory=RedisConfig, exclude=True)
+    pipeline: PipelineConfig = Field(default_factory=PipelineConfig, exclude=True)
     postgresql: PostgreSQLConfig = Field(default_factory=PostgreSQLConfig, exclude=True)
     web_search: WebSearchConfig = Field(default_factory=WebSearchConfig, exclude=True)
     network: NetworkConfig = Field(default_factory=NetworkConfig, exclude=True)
@@ -546,6 +559,11 @@ class Settings(BaseSettings):
             password=self.redis_password,
             db=self.redis_db,
             max_connections=self.redis_max_connections,
+        )
+        production_like = not self.is_development
+        self.pipeline = PipelineConfig(
+            cache_enabled=production_like if self.pipeline_cache_enabled is None else self.pipeline_cache_enabled,
+            dedup_enabled=production_like if self.pipeline_dedup_enabled is None else self.pipeline_dedup_enabled,
         )
         self.postgresql = PostgreSQLConfig(
             host=self.postgres_host,
