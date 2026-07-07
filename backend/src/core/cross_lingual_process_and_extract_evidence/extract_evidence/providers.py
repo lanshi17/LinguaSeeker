@@ -124,7 +124,11 @@ class LangChainEvidenceProvider:
                 logger.warning("Stage {} transient failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
             except Exception as exc:
                 last_exc = exc
-                if self._is_unsupported_response_format(exc) or isinstance(exc, TypeError):
+                if (
+                    self._is_unsupported_response_format(exc)
+                    or self._is_structured_output_bad_request(exc)
+                    or isinstance(exc, TypeError)
+                ):
                     logger.warning(
                         "Stage {} structured output error ({}), falling back to JSON text: {}",
                         stage,
@@ -177,7 +181,11 @@ class LangChainEvidenceProvider:
                 logger.warning("Stage {} transient failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
             except Exception as exc:
                 last_exc = exc
-                if self._is_unsupported_response_format(exc) or isinstance(exc, (TypeError, AttributeError)):
+                if (
+                    self._is_unsupported_response_format(exc)
+                    or self._is_structured_output_bad_request(exc)
+                    or isinstance(exc, (TypeError, AttributeError))
+                ):
                     logger.warning(
                         "Stage {} structured output error ({}), falling back to JSON text: {}",
                         stage,
@@ -308,7 +316,23 @@ class LangChainEvidenceProvider:
     def _is_unsupported_response_format(exc: Exception) -> bool:
         text = str(exc).lower()
         return "response_format" in text and (
-            "unavailable" in text or "unsupported" in text or "invalid_request_error" in text
+            "unavailable" in text
+            or "unsupported" in text
+            or "not supported" in text
+            or "invalid_request_error" in text
+        )
+
+    @staticmethod
+    def _is_structured_output_bad_request(exc: Exception) -> bool:
+        """Return True for provider 400s during structured-output calls."""
+        response = getattr(exc, "response", None)
+        status_code = getattr(response, "status_code", None)
+        text = str(exc).lower()
+        return (
+            isinstance(exc, openai.BadRequestError)
+            or status_code == 400
+            or "error code: 400" in text
+            or "400 bad request" in text
         )
 
     @staticmethod

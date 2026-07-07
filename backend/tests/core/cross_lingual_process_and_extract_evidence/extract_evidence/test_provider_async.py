@@ -159,6 +159,44 @@ async def test_ainvoke_structured_falls_back_to_json_text_on_response_format_429
 
 
 @pytest.mark.asyncio
+async def test_ainvoke_structured_falls_back_to_json_text_on_structured_output_400(
+    provider: LangChainEvidenceProvider,
+) -> None:
+    """Provider 400s for JSON schema mode should route to JSON-text fallback."""
+    response = MagicMock()
+    response.status_code = 400
+
+    class StructuredOutputBadRequest(Exception):
+        pass
+
+    bad_request = StructuredOutputBadRequest(
+        "Error code: 400 - {'error': {'message': 'json_schema is not supported by this model', "
+        "'type': 'invalid_request_error'}}"
+    )
+    bad_request.response = response
+
+    mock_structured = MagicMock()
+    mock_structured.ainvoke = AsyncMock(side_effect=bad_request)
+
+    mock_llm = MagicMock()
+    mock_llm.with_structured_output = MagicMock(return_value=mock_structured)
+    mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content='{"value": "json-text"}'))
+
+    with patch.object(provider, "_client_for_tier", return_value=mock_llm):
+        result = await provider.ainvoke_structured(
+            prompt="extract evidence",
+            output_schema=_SampleOutput,
+            tier=EvidenceModelTier.FAST,
+            stage="relevance_scan/1",
+            response_method="json_mode",
+        )
+
+    assert result == _SampleOutput(value="json-text")
+    assert mock_structured.ainvoke.await_count == 1
+    mock_llm.ainvoke.assert_awaited_once()
+
+
+@pytest.mark.asyncio
 async def test_ainvoke_structured_retries_genuine_rate_limit_without_response_format() -> None:
     """A plain rate-limit 429 (no response_format incompatibility) still retries."""
     import openai
