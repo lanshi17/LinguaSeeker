@@ -16,6 +16,7 @@ export function useSessionUIState(activeConversationKey: string | undefined) {
     : createEmptySessionUI();
   const { activeForm, activeFormSlots, dispatchedActions, pipelineStatus } =
     activeUI;
+  const activeUploadFile = activeUI.activeUploadFile;
 
   const updateActiveUI = useCallback(
     (updater: (prev: PerSessionUIState) => PerSessionUIState) => {
@@ -31,13 +32,39 @@ export function useSessionUIState(activeConversationKey: string | undefined) {
 
   const setActiveForm = useCallback(
     (intent: ChatActionIntent | null) =>
-      updateActiveUI((p) => ({ ...p, activeForm: intent })),
+      updateActiveUI((p) => ({
+        ...p,
+        activeForm: intent,
+        ...(intent ? {} : { activeUploadFile: null }),
+      })),
     [updateActiveUI],
   );
   const setActiveFormSlots = useCallback(
     (slots: ChatAction["slots"] | null) =>
       updateActiveUI((p) => ({ ...p, activeFormSlots: slots })),
     [updateActiveUI],
+  );
+  const setActiveUploadFile = useCallback(
+    (file: File | null) =>
+      updateActiveUI((p) => ({ ...p, activeUploadFile: file })),
+    [updateActiveUI],
+  );
+  const openUploadFormForSession = useCallback(
+    (sessionId: string, slots: ChatAction["slots"] | null, file: File | null) => {
+      setSessionUI((prev) => {
+        const current = prev[sessionId] ?? createEmptySessionUI();
+        return {
+          ...prev,
+          [sessionId]: {
+            ...current,
+            activeForm: "upload-pdf",
+            activeFormSlots: slots,
+            activeUploadFile: file,
+          },
+        };
+      });
+    },
+    [],
   );
   const setPipelineStatus = useCallback(
     (
@@ -75,10 +102,13 @@ export function useSessionUIState(activeConversationKey: string | undefined) {
   return {
     activeForm,
     activeFormSlots,
+    activeUploadFile,
     dispatchedActions,
     pipelineStatus,
     setActiveForm,
     setActiveFormSlots,
+    setActiveUploadFile,
+    openUploadFormForSession,
     setPipelineStatus,
     setDispatchedActions,
     clearSessionUI,

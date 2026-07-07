@@ -12,6 +12,7 @@ import type { ChatSessionResponse } from "../../../src/features/chat/types/chat"
 
 vi.mock("../../../src/features/chat/services/chat", () => ({
   createSession: vi.fn(),
+  getSession: vi.fn(),
   listSessions: vi.fn(),
 }));
 
@@ -155,6 +156,29 @@ describe("useChatSessions — standalone (no processingRunId)", () => {
     expect(stored).toHaveLength(1);
     expect(stored[0].session_id).toBe("s2");
   });
+
+  it("refreshSession updates a standalone session title from the backend", async () => {
+    const existing = session("s1");
+    const refreshed = { ...existing, title: "BRCA1 upload plan", message_count: 1 };
+    window.localStorage.setItem(CHAT_SESSIONS_KEY, JSON.stringify([existing]));
+    vi.mocked(chatServices.getSession).mockResolvedValue(refreshed);
+
+    const { result } = renderHook(() => useChatSessions(), {
+      wrapper: makeWrapper(),
+    });
+
+    await act(async () => {
+      await result.current.refreshSession("s1");
+    });
+
+    expect(chatServices.getSession).toHaveBeenCalledWith("s1");
+    expect(result.current.sessions[0].title).toBe("BRCA1 upload plan");
+
+    const stored = JSON.parse(
+      window.localStorage.getItem(CHAT_SESSIONS_KEY) ?? "[]",
+    );
+    expect(stored[0].title).toBe("BRCA1 upload plan");
+  });
 });
 
 describe("useChatSessions — run-scoped (with processingRunId)", () => {
@@ -243,5 +267,33 @@ describe("useChatSessions — run-scoped (with processingRunId)", () => {
 
     // No change - sessions still come from the query
     expect(chatServices.listSessions).toHaveBeenCalled();
+  });
+
+  it("refreshSession patches a run-scoped session in the query cache", async () => {
+    const existingSessions = [session("s1", "run-1")];
+    const refreshed = {
+      ...existingSessions[0],
+      title: "MECP2 review",
+      message_count: 3,
+    };
+    vi.mocked(chatServices.listSessions).mockResolvedValue(existingSessions);
+    vi.mocked(chatServices.getSession).mockResolvedValue(refreshed);
+
+    const { result } = renderHook(() => useChatSessions("run-1"), {
+      wrapper: makeWrapper(),
+    });
+
+    await vi.waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.refreshSession("s1");
+    });
+
+    await vi.waitFor(() => {
+      expect(result.current.sessions[0].title).toBe("MECP2 review");
+    });
+    expect(result.current.sessions[0].message_count).toBe(3);
   });
 });

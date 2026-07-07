@@ -534,6 +534,9 @@ const en = {
   "chat.thinking.retrieving": "Retrieving relevant literature",
   "chat.thinking.reasoning": "Reasoning over the evidence",
   "chat.thinking.drafting": "Drafting a grounded reply",
+  "chat.thinking.connectingLabel": "Connecting",
+  "chat.thinking.saving": "Saving your turn",
+  "chat.thinking.openingStream": "Opening the live response stream",
 
   // ── Chat — ChatActionBubble ──
   "chat.action.startPipeline": "Start pipeline",
@@ -554,12 +557,26 @@ const en = {
   "chat.summary.identifiers": "Identifiers",
   "chat.summary.searchQuery": "Search Query",
   "chat.summary.document": "Document",
-  "chat.summary.uploadHint": "Upload via /pipeline after confirmation",
+  "chat.summary.uploadHint": "The PDF upload card opens in chat after confirmation",
   "chat.summary.extractionTarget": "Extraction Target",
   "chat.summary.gene": "Gene:",
   "chat.summary.disease": "Disease:",
   "chat.summary.confirm": "Confirm & Start",
   "chat.summary.modify": "Modify via chat",
+
+  // ── Chat — UploadTaskCard ──
+  "chat.upload.open": "Upload PDF",
+  "chat.upload.heading": "Upload PDF source paper",
+  "chat.upload.description": "Create a bilingual evidence extraction task from this chat.",
+  "chat.upload.dropText": "Click or drag a PDF file here",
+  "chat.upload.targetHeading": "Optional extraction target",
+  "chat.upload.gene": "Gene",
+  "chat.upload.disease": "Disease",
+  "chat.upload.variant": "Variant",
+  "chat.upload.submit": "Submit task",
+  "chat.upload.cancel": "Close upload task",
+  "chat.upload.fileRequired": "Select a PDF before submitting.",
+  "chat.upload.ready": "Ready to submit from chat.",
 
   // ── Chat — PipelineStatusCard ──
   "chat.status.queued": "Queued",

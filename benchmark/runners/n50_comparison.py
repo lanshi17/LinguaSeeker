@@ -227,6 +227,7 @@ async def _run_pipeline_condition(
     ablation_disable_target_guard = bool(
         config.get("ablation_disable_target_guard", False)
     )
+    ablation_disable_grounding = bool(config.get("ablation_disable_grounding", False))
     ablation_original_only = bool(config.get("ablation_original_only", False))
     force_reextract = bool(config.get("force_reextract", True))
     extraction_profile = config.get("extraction_profile", "none")
@@ -235,12 +236,13 @@ async def _run_pipeline_condition(
 
     logger.info(
         "Running condition '{}' | mode={} | track_mode={} | review={} target_guard={} "
-        "original_only={} | entries={} | concurrency={}",
+        "grounding={} original_only={} | entries={} | concurrency={}",
         condition_id,
         extraction_mode,
         extraction_track_mode,
         not ablation_disable_review,
         not ablation_disable_target_guard,
+        not ablation_disable_grounding,
         ablation_original_only,
         len(entry_ids),
         concurrency,
@@ -257,6 +259,7 @@ async def _run_pipeline_condition(
             extraction_mode=extraction_mode,
             ablation_disable_review=ablation_disable_review,
             ablation_disable_target_guard=ablation_disable_target_guard,
+            ablation_disable_grounding=ablation_disable_grounding,
             ablation_original_only=ablation_original_only,
             review_reject_policy=review_reject_policy,
             extraction_track_mode=extraction_track_mode,

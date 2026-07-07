@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ChatSessionResponse } from "../types/chat";
 import {
   createSession as createBackendSession,
+  getSession,
   listSessions,
 } from "../services/chat";
 import {
@@ -52,6 +53,33 @@ export function useChatSessions(processingRunId?: string | null) {
     }
   }, [standalone]);
 
+  const refreshSession = useCallback(
+    async (sessionId: string): Promise<ChatSessionResponse> => {
+      const session = await getSession(sessionId);
+
+      if (standalone) {
+        const next = upsertLocalChatSession(undefined, session);
+        setLocalSessions(next);
+        return session;
+      }
+
+      queryClient.setQueryData<ChatSessionResponse[]>(
+        ["chat", "sessions", processingRunId],
+        (previous) => {
+          if (!previous) return previous;
+          if (!previous.some((item) => item.session_id === sessionId)) {
+            return previous;
+          }
+          return previous.map((item) =>
+            item.session_id === sessionId ? session : item,
+          );
+        },
+      );
+      return session;
+    },
+    [processingRunId, queryClient, standalone],
+  );
+
   const sessions = useMemo(
     () => (standalone ? localSessions : sessionsQuery.data ?? []),
     [localSessions, sessionsQuery.data, standalone],
@@ -63,5 +91,6 @@ export function useChatSessions(processingRunId?: string | null) {
     createSession: create.mutateAsync,
     isCreating: create.isPending,
     removeSession: remove,
+    refreshSession,
   };
 }

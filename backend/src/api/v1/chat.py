@@ -52,10 +52,12 @@ async def create_session(
     """Create a new chat session."""
     factory = get_phase4_factory()
     service = factory.create_chat_service(session)
-    return await service.create_session(
+    chat_session = await service.create_session(
         processing_run_id=body.processing_run_id,
         user_id=body.user_id,
     )
+    await session.commit()
+    return chat_session
 
 
 @router.get("/sessions/{processing_run_id}", response_model=list[ChatSessionResponse])
@@ -68,6 +70,18 @@ async def list_sessions(
     factory = get_phase4_factory()
     service = factory.create_chat_service(session)
     return await service.list_sessions(processing_run_id=processing_run_id)
+
+
+@router.get("/session-details/{session_id}", response_model=ChatSessionResponse)
+async def get_session(
+    session_id: UUID,
+    session: AsyncSession = Depends(get_db_session),
+    _api_key: str | None = Depends(require_api_key),
+) -> ChatSessionResponse:
+    """Fetch a single chat session by id."""
+    factory = get_phase4_factory()
+    service = factory.create_chat_service(session)
+    return await service.get_session(session_id=session_id)
 
 
 @router.get("/sessions/{session_id}/messages", response_model=list[ChatMessageResponse])
@@ -118,6 +132,12 @@ async def append_message(
                 entity_id=body.entity_id,
             )
 
+    await session.commit()
+    if body.role == "user":
+        factory.schedule_session_title_generation(
+            session_id=session_id,
+            user_message=body.content,
+        )
     return msg
 
 

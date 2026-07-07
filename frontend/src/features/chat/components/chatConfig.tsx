@@ -2,9 +2,6 @@ import { Avatar } from "antd";
 import { User } from "lucide-react";
 import type { ChatAction, ChatActionIntent } from "../types/actions";
 
-/** Max words of the first user message used as the session title. */
-export const SESSION_TITLE_WORDS = 5;
-
 /** localStorage key for the task-queue panel visibility preference. */
 export const TASK_QUEUE_STORAGE_KEY = "chat.taskQueueOpen";
 
@@ -41,6 +38,7 @@ export const roles = {
 export interface PerSessionUIState {
   activeForm: ChatActionIntent | null;
   activeFormSlots: ChatAction["slots"] | null;
+  activeUploadFile: File | null;
   dispatchedActions: Set<string>;
   pipelineStatus: {
     runId: string;
@@ -58,6 +56,7 @@ export function createEmptySessionUI(): PerSessionUIState {
   return {
     activeForm: null,
     activeFormSlots: null,
+    activeUploadFile: null,
     dispatchedActions: new Set<string>(),
     pipelineStatus: null,
   };

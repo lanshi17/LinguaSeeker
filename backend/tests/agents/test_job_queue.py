@@ -283,7 +283,7 @@ async def test_dispatcher_only_one_running_at_a_time(mock_runner, mock_job_queue
 
 @pytest.mark.asyncio
 async def test_dispatcher_cleans_up_temp_file(mock_runner, mock_job_queue):
-    """Upload temp files are cleaned up after job execution."""
+    """Upload temp files are cleaned up after successful job execution."""
     mock_job_queue.claim_next = AsyncMock(
         side_effect=[
             _make_job(
@@ -325,6 +325,52 @@ async def test_dispatcher_cleans_up_temp_file(mock_runner, mock_job_queue):
 
         # Temp file unlink was attempted
         mock_path.unlink.assert_called_once_with(missing_ok=True)
+
+
+@pytest.mark.asyncio
+async def test_dispatcher_keeps_temp_file_when_job_fails(mock_runner, mock_job_queue):
+    """Failed local-upload jobs keep temp files available for retry."""
+    mock_job_queue.claim_next = AsyncMock(
+        side_effect=[
+            _make_job(
+                "job-1",
+                "run-1",
+                request_data={
+                    "mode": "full",
+                    "source_type": "local",
+                    "upload_file_path": "/tmp/fake_upload.pdf",
+                    "created_at": "2026-06-25T00:00:00",
+                },
+            ),
+            None,
+        ]
+    )
+    failed = _failed_state()
+    task = asyncio.get_running_loop().create_future()
+    task.set_result(failed)
+    mock_runner.start = AsyncMock(return_value=task)
+
+    dispatcher = SingleJobDispatcher(
+        runner=mock_runner,
+        job_queue=mock_job_queue,
+        poll_interval=0.01,
+    )
+    dispatcher._stopping = False
+
+    with patch("src.agents.dispatcher.Path") as mock_path_cls:
+        mock_path = MagicMock()
+        mock_path_cls.return_value = mock_path
+        loop_task = asyncio.create_task(dispatcher._loop())
+        await asyncio.sleep(0.1)
+        dispatcher._stopping = True
+        loop_task.cancel()
+        try:
+            await loop_task
+        except asyncio.CancelledError:
+            pass
+
+        mock_job_queue.fail.assert_awaited_once_with("job-1", "Something went wrong")
+        mock_path.unlink.assert_not_called()
 
 
 @pytest.mark.asyncio

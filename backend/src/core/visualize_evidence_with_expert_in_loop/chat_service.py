@@ -34,6 +34,13 @@ if TYPE_CHECKING:
     )
 
 _KEEPALIVE_INTERVAL = 10  # seconds between SSE keepalive events
+_SESSION_TITLE_MAX_CHARS = 80
+_SESSION_TITLE_SYSTEM_PROMPT = (
+    "Generate a concise chat session title for Lingua Seeker. "
+    "Use the same language as the user message. Return only the title, "
+    "without quotes, markdown, trailing punctuation, or explanation. "
+    "Keep it under 8 words."
+)
 
 CHAT_AGENT_CAPABILITIES_PROMPT = (
     "You are the Lingua Seeker orchestration assistant. You help clinical "
@@ -41,11 +48,23 @@ CHAT_AGENT_CAPABILITIES_PROMPT = (
     "existing evidence, classify variants, interpret evidence cards, and "
     "review pending changes. You ALWAYS reply in the same language as the "
     "user. Do NOT provide a clinical diagnosis.\n\n"
-    "You have seven dispatchable capabilities. Each requires specific slots "
+    "You have six dispatchable capabilities. Each requires specific slots "
     "before it can run. While slots are missing, ask one focused follow-up "
-    "question and keep `action` null. Once every required slot is gathered, "
+    "question and keep `action` null. After all required slots are gathered, "
+    "do NOT dispatch immediately. First show a short human-readable summary "
+    "of the route/request and ask for final confirmation, keeping `action` "
+    "null. Only after the user's next message explicitly confirms should you "
     "set `action.intent` to the matching value and put the slots in "
     "`action.slots`. Keep the reply natural — do not echo JSON.\n\n"
+    "GLOBAL ROUTING RULES:\n"
+    "- Never tell the user to navigate to another page, click a sidebar item, "
+    "or manually open Task Management/Evidence DB/Audit. If routing is needed, "
+    "the structured action will route the request after confirmation.\n"
+    "- Never emit a structured action in the same turn where the user first "
+    "states a request. Gather missing information and/or ask for final "
+    "confirmation first.\n"
+    "- If the user changes any slot during confirmation, update the summary "
+    "and keep `action` null until they confirm the updated plan.\n\n"
     "Capabilities:\n"
     "1. confirm-pipeline — submit the four-phase evidence pipeline after a "
     "conversational Q&A. This is the ONLY intent that starts a pipeline. "
@@ -55,11 +74,12 @@ CHAT_AGENT_CAPABILITIES_PROMPT = (
     "   Gathering rules for confirm-pipeline:\n"
     "   a. Decide source_type first. If the user's first message names a "
     "PMID, DOI, PMCID, or keyword search, set source_type='online'. If the "
-    "user says 'upload a PDF' or similar, set source_type='local' and guide "
-    'them to the Task Management page where they can click "New Task" to '
-    "upload a PDF or enter search terms directly.\n"
-    "   c. For source_type='local': after the user creates a task on the "
-    "Task Management page, tell them to check its progress there.\n"
+    "user says 'upload a PDF' or similar, set source_type='local'. Do not "
+    "tell them how to navigate. After final confirmation, the frontend will "
+    "show an in-chat PDF upload control and submit the task from there.\n"
+    "   c. For source_type='local': ask whether they want to narrow the "
+    "extraction target before the in-chat upload step. If they provide a filename, "
+    "capture it in filename; otherwise filename is optional.\n"
     "   d. OPTIONAL target slots: after the source is settled, ask ONCE "
     "whether the user wants to narrow extraction to a specific gene, "
     "disease, or variant (e.g. 'Want to target a gene, disease, or "
@@ -83,16 +103,16 @@ CHAT_AGENT_CAPABILITIES_PROMPT = (
     "acknowledge and reply with action=null.\n"
     "   h. NEVER emit the legacy intents 'start-pipeline' or 'upload-pdf' "
     "— they are deprecated and the frontend will reject them.\n"
-    "2. search-evidence — search the existing evidence database.\n"
+    "2. search-evidence — search the existing evidence database after final confirmation.\n"
     "   slots: { gene?, variant?, disease?, pmid?, doi? }. Need at least one.\n"
-    "3. classify-variant — propose ACMG classification (placeholder).\n"
+    "3. classify-variant — propose ACMG classification after final confirmation (placeholder).\n"
     "   slots: { variant: str, gene?, disease? }. Need variant.\n"
-    "4. interpret-evidence — summarise an evidence card.\n"
+    "4. interpret-evidence — summarise an evidence card after final confirmation.\n"
     "   slots: { evidence_id?: uuid, gene?, variant? }.\n"
-    "5. review-changes — list pending review items.\n"
+    "5. review-changes — list pending review items after final confirmation.\n"
     "   slots: { filter?: 'all' }. Default filter is 'all'.\n"
     "6. check-pipeline-status — check pipeline run status or navigate to "
-    "task management.\n"
+    "task management after final confirmation.\n"
     "   slots: { run_id?: str }. No slots required (navigates to task list). "
     "If the user provides a run ID, include it.\n\n"
     "Identity questions ('who are you?', '你是谁') get a direct answer with "
@@ -170,17 +190,39 @@ class ChatService:
             chat_session_id=session.chat_session_id,
             processing_run_id=session.processing_run_id,
             user_id=session.user_id,
+            title=session.title,
             created_at=session.created_at,
             message_count=0,
         )
 
     async def _require_session(self, *, session_id: UUID) -> ChatSession:
         """Fetch a chat session or raise NotFoundException if it doesn't exist."""
-        result = await self._session.execute(select(ChatSession).where(ChatSession.chat_session_id == session_id))
+        result = await self._session.execute(
+            select(ChatSession).where(ChatSession.chat_session_id == session_id)
+        )
         session = result.scalar_one_or_none()
         if session is None:
             raise NotFoundException("ChatSession", str(session_id))
         return session
+
+    async def get_session(self, *, session_id: UUID) -> ChatSessionResponse:
+        """Fetch one chat session with its message count."""
+        session = await self._require_session(session_id=session_id)
+        count_stmt = (
+            select(func.count())
+            .select_from(ChatMessage)
+            .where(ChatMessage.chat_session_id == session_id)
+        )
+        count_result = await self._session.execute(count_stmt)
+        message_count = int(count_result.scalar_one())
+        return ChatSessionResponse(
+            chat_session_id=session.chat_session_id,
+            processing_run_id=session.processing_run_id,
+            user_id=session.user_id,
+            title=session.title,
+            created_at=session.created_at,
+            message_count=message_count,
+        )
 
     async def append_message(
         self,
@@ -206,6 +248,22 @@ class ChatService:
         await self._session.flush()
 
         return self._to_message_response(message)
+
+    async def generate_session_title(
+        self,
+        *,
+        session_id: UUID,
+        user_message: str,
+    ) -> None:
+        """Generate a title for a session that does not already have one."""
+        chat_session = await self._require_session(session_id=session_id)
+        if chat_session.title:
+            return
+
+        await self._maybe_generate_session_title(
+            session=chat_session,
+            user_message=user_message,
+        )
 
     async def list_messages(
         self,
@@ -258,11 +316,55 @@ class ChatService:
                 chat_session_id=session.chat_session_id,
                 processing_run_id=session.processing_run_id,
                 user_id=session.user_id,
+                title=session.title,
                 created_at=session.created_at,
                 message_count=msg_count,
             )
             for session, msg_count in rows
         ]
+
+    async def _maybe_generate_session_title(
+        self,
+        *,
+        session: ChatSession,
+        user_message: str,
+    ) -> None:
+        """Generate and persist an LLM title without blocking chat on failure."""
+        provider = self._chat_provider
+        if provider is None:
+            logger.warning(
+                "ChatService session title generation skipped without injected provider. "
+                "Fix: inject via Phase4ServiceFactory.create_chat_service()"
+            )
+            return
+
+        try:
+            raw_title = await provider.generate(
+                system_prompt=_SESSION_TITLE_SYSTEM_PROMPT,
+                user_message=user_message[:1000],
+            )
+        except Exception as exc:
+            logger.warning("Chat session title generation failed: {}", exc)
+            return
+
+        title = self._clean_session_title(raw_title)
+        if not title:
+            return
+
+        session.title = title
+        await self._session.flush()
+
+    @staticmethod
+    def _clean_session_title(raw_title: str) -> str:
+        """Normalize an LLM-generated session title for sidebar display."""
+        title = raw_title.strip()
+        title = re.sub(r"^#+\s*", "", title)
+        title = re.sub(r"^(title|标题)\s*[:：]\s*", "", title, flags=re.IGNORECASE)
+        title = title.strip(" \t\r\n\"'`“”‘’。.!！")
+        title = re.sub(r"\s+", " ", title)
+        if len(title) > _SESSION_TITLE_MAX_CHARS:
+            title = title[:_SESSION_TITLE_MAX_CHARS].rstrip()
+        return title
 
     @staticmethod
     def _to_message_response(message: ChatMessage) -> ChatMessageResponse:
@@ -640,7 +742,10 @@ class ChatService:
         system_prompt: str,
         user_message: str,
     ):
-        history = await self._load_router_history(session_id=session_id)
+        history = await self._load_router_history(
+            session_id=session_id,
+            exclude_latest_user_message=user_message,
+        )
 
         reply: str = ""
         action: ChatAction | None = None
@@ -712,6 +817,7 @@ class ChatService:
         *,
         session_id: UUID,
         limit: int = 10,
+        exclude_latest_user_message: str | None = None,
     ) -> list[dict[str, str]]:
         stmt = (
             select(ChatMessage)
@@ -722,4 +828,12 @@ class ChatService:
         result = await self._session.execute(stmt)
         rows = list(result.scalars().all())
         rows.reverse()
-        return [{"role": m.role, "content": m.content} for m in rows if m.content]
+        history = [{"role": m.role, "content": m.content} for m in rows if m.content]
+        if (
+            exclude_latest_user_message
+            and history
+            and history[-1]["role"] == "user"
+            and history[-1]["content"].strip() == exclude_latest_user_message.strip()
+        ):
+            history.pop()
+        return history

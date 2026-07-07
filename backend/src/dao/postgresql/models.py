@@ -582,6 +582,7 @@ class ChatSession(Base, TimestampMixin):
         ForeignKey("users.user_id"),
         nullable=True,
     )
+    title: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class ChatMessage(Base):

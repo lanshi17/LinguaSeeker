@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import uuid
 from typing import Any
 
@@ -681,7 +682,7 @@ async def test_insert_run_evidence_items_normalizes_enum_payload_values_from_ada
                         "status": "EvidenceStatus.FOUND",
                         "value": "Phenotype A",
                         "confidence": 0.9,
-                        "source": {},
+                        "source": {"text_snippet": "Phenotype A was observed."},
                     },
                 ],
             },
@@ -709,6 +710,150 @@ async def test_insert_run_evidence_items_normalizes_enum_payload_values_from_ada
     assert run_rows[0].status == "found"
     assert len(binding_rows) == 1
     assert len(canonical_rows) == 1
+
+
+@pytest.mark.asyncio
+async def test_insert_run_evidence_items_sanitizes_jsonb_null_bytes() -> None:
+    """Repository persistence removes null bytes before PostgreSQL JSONB inserts."""
+    session = FakeSession()
+    repo = StandardizationRepository(session)
+    input_data = StandardizationInput(
+        document_id="doc-null-byte",
+        source_document_id=str(uuid.uuid4()),
+        processing_run_id=str(uuid.uuid4()),
+        candidates=(
+            StandardizationCandidate(
+                candidate_id="chain-1:phenotype",
+                entity_type=EntityType.PHENOTYPE,
+                role=BindingRole.CONTEXT,
+                raw_text="Phenotype A",
+                chain_id="chain-1",
+                track="original",
+                field_id="B.clinical_phenotypes",
+            ),
+        ),
+        evidence_items=(),
+        track_payloads={
+            "original": {
+                "track": "original",
+                "evidence_items": [
+                    {
+                        "field_id": "B.clinical_phenotypes",
+                        "group_id": "chain-1",
+                        "status": "found",
+                        "value": "Phenotype\x00 A",
+                        "confidence": 0.9,
+                        "source": {"text_snippet": "Phenotype\x00 A was observed."},
+                    },
+                ],
+            },
+        },
+    )
+    matches = (
+        EntityMatch(
+            candidate=input_data.candidates[0],
+            status=MatchStatus.STANDARDIZED,
+            external_id="HP:0000001",
+            display_name="Phenotype A",
+            rationale="exact match",
+        ),
+    )
+
+    await repo.insert_run_evidence_items(input_data, matches)
+
+    run_rows = [value for value in session.added if value.__class__.__name__ == "RunEvidenceItem"]
+    assert "\x00" not in json.dumps(run_rows[0].value)
+    assert "\x00" not in json.dumps(run_rows[0].source_span)
+    assert "\x00" not in json.dumps(run_rows[0].raw_payload)
+
+
+@pytest.mark.asyncio
+async def test_db_ready_gate_blocks_track_payload_without_source_support() -> None:
+    """Business track payloads need recoverable source support before canonical export."""
+    session = _CanonicalPayloadSession()
+    repo = StandardizationRepository(session)
+    match = _make_gene_match()
+
+    entity_id = await repo.upsert_normalized_entity(match)
+    input_data = StandardizationInput(
+        document_id="doc-db-ready-source",
+        source_document_id=str(uuid.uuid4()),
+        processing_run_id=str(uuid.uuid4()),
+        candidates=(match.candidate,),
+        evidence_items=(),
+        track_payloads={
+            "original": {
+                "track": "original",
+                "evidence_items": [
+                    {
+                        "field_id": "A.gene_symbol",
+                        "group_id": "chain-1",
+                        "status": "found",
+                        "value": "BRCA1",
+                        "confidence": 0.9,
+                        "source": {},
+                    },
+                ],
+            },
+        },
+    )
+
+    await repo.insert_run_evidence_items(input_data, (match,))
+    await repo.upsert_canonical_evidence(input_data, (match,), (entity_id,))
+
+    canonical_rows = [value for value in session.added if value.__class__.__name__ == "CanonicalEvidenceItem"]
+    assert canonical_rows == []
+    assert repo.db_ready_gate_report is not None
+    assert repo.db_ready_gate_report.rejected_count == 1
+
+
+@pytest.mark.asyncio
+async def test_db_ready_gate_blocks_variant_payload_without_variant_binding() -> None:
+    """Variant-scoped fields stay out of canonical export until a variant binding exists."""
+    session = _CanonicalPayloadSession()
+    repo = StandardizationRepository(session)
+    match = _make_gene_match()
+
+    entity_id = await repo.upsert_normalized_entity(match)
+    input_data = StandardizationInput(
+        document_id="doc-db-ready-variant",
+        source_document_id=str(uuid.uuid4()),
+        processing_run_id=str(uuid.uuid4()),
+        candidates=(match.candidate,),
+        evidence_items=(),
+        track_payloads={
+            "original": {
+                "track": "original",
+                "evidence_items": [
+                    {
+                        "field_id": "A.gene_symbol",
+                        "group_id": "chain-1",
+                        "status": "found",
+                        "value": "BRCA1",
+                        "confidence": 0.9,
+                        "source": {"text_snippet": "BRCA1 variant c.4748T>G was observed."},
+                    },
+                    {
+                        "field_id": "A.variant_hgvs_c",
+                        "group_id": "chain-1",
+                        "status": "found",
+                        "value": "c.4748T>G",
+                        "confidence": 0.9,
+                        "source": {"text_snippet": "BRCA1 variant c.4748T>G was observed."},
+                    },
+                ],
+            },
+        },
+    )
+
+    await repo.insert_run_evidence_items(input_data, (match,))
+    await repo.upsert_canonical_evidence(input_data, (match,), (entity_id,))
+
+    canonical_rows = [value for value in session.added if value.__class__.__name__ == "CanonicalEvidenceItem"]
+    assert [row.field_id for row in canonical_rows] == ["A.gene_symbol"]
+    assert repo.db_ready_gate_report is not None
+    assert repo.db_ready_gate_report.accepted_count == 1
+    assert repo.db_ready_gate_report.rejected_count == 1
 
 
 @pytest.mark.asyncio

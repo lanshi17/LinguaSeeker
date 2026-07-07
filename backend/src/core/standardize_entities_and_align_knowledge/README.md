@@ -32,6 +32,7 @@ standardize_entities_and_align_knowledge/
 ├── hgvs_normalizer.py       # HGVS 变异规范化与别名扩展
 ├── acmg_projection.py       # AcmgReadyProjector：标准化实体 → ACMG-ready 证据事实
 ├── cross_lingual_disease.py # CrossLingualDiseaseResolver：非英文疾病名 token 模糊匹配
+├── db_ready_gate/           # DB-ready 候选证据准入门控（纯函数 + 审计原因）
 ├── precise_match/           # 精确术语匹配子模块
 ├── similarity_match/        # 语义相似度匹配子模块
 └── context_pack/            # 目标安全上下文包子模块
@@ -71,6 +72,15 @@ standardize_entities_and_align_knowledge/
 - 提取已标准化的 HPO 表型 ID
 - 关联原始证据值和置信度
 
+### DB-ready Gate（`db_ready_gate/`）
+候选准入层，用于判断证据是否具备进入 DB-ready/export 边界的最低条件：
+- 检查 run/document/field/group 基础边界
+- 检查 source span 或显式 expert override
+- 按字段要求 gene/variant/disease 标准化绑定
+- 输出 `DbReadyRejectReason` 聚合，供后续审计报告使用
+
+`db_ready_gate` 本身保持纯函数；`repositories.py` 在 `upsert_canonical_evidence()` 前将 `RunItemSpec`、`EntityMatch` 和 normalized entity 外部 ID 适配为 `DbReadyCandidate`，只把通过 gate 的业务 track row 写入 canonical evidence。兼容性的 match fallback row 仍保留旧行为。
+
 ## 数据流
 
 ```
@@ -93,6 +103,7 @@ Phase 2 DualEvidenceExtractionResult
         │                ├─ upsert_normalized_entity
         │                ├─ persist_run_evidence
         │                ├─ persist_bindings
+        │                ├─ DB-ready gate
         │                ├─ upsert_canonical_evidence
         │                ├─ refresh_literature_profile
         │                └─ refresh_search_index

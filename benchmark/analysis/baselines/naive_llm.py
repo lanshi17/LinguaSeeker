@@ -20,7 +20,7 @@ BASELINE_NAME = "Naive single-prompt LLM"
 
 
 async def extract(entry: BaselineEntry, source_text: str) -> list[BaselineEvidenceItem]:
-    extractor = make_extractor("naive")
+    extractor = make_extractor("naive", model_override=CANONICAL_GPT5_PROMPT_CITE.model)
     return await extractor.extract(entry, source_text)
 
 

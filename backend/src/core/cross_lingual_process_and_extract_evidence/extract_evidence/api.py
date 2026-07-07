@@ -90,6 +90,7 @@ class EvidenceExtractionService:
         extraction_mode: str = DEFAULT_EXTRACTION_WORKFLOW_MODE,
         enable_review_validation: bool = True,
         enable_target_guard: bool = True,
+        enable_source_grounding: bool = True,
         review_reject_policy: str = DEFAULT_REVIEW_REJECT_POLICY,
     ):
         self._ctx = EvidenceExtractionConfigContext.from_config(cfg)
@@ -97,6 +98,7 @@ class EvidenceExtractionService:
         self._extraction_mode = resolve_extraction_mode(extraction_mode)
         self._enable_review_validation = enable_review_validation
         self._enable_target_guard = enable_target_guard
+        self._enable_source_grounding = enable_source_grounding
         self._review_reject_policy = resolve_review_reject_policy(review_reject_policy)
         profile_fields = resolve_profile_fields(extraction_profile)
         self._workflow = EvidenceExtractionWorkflow(
@@ -105,6 +107,7 @@ class EvidenceExtractionService:
             extraction_mode=extraction_mode,
             enable_review_validation=enable_review_validation,
             enable_target_guard=enable_target_guard,
+            enable_source_grounding=enable_source_grounding,
             review_reject_policy=self._review_reject_policy,
         )
         self._reconcile_service = CrossTrackReconcileService()
@@ -116,6 +119,7 @@ class EvidenceExtractionService:
         extraction_mode: str | None = None,
         enable_review_validation: bool | None = None,
         enable_target_guard: bool | None = None,
+        enable_source_grounding: bool | None = None,
         review_reject_policy: str | None = None,
     ) -> EvidenceExtractionResult:
         workflow = self._workflow_for(
@@ -123,6 +127,7 @@ class EvidenceExtractionService:
             extraction_mode=extraction_mode,
             enable_review_validation=enable_review_validation,
             enable_target_guard=enable_target_guard,
+            enable_source_grounding=enable_source_grounding,
             review_reject_policy=review_reject_policy,
         )
         state = await workflow.run_async(document)
@@ -163,6 +168,7 @@ class EvidenceExtractionService:
         original_only: bool = False,
         enable_review_validation: bool | None = None,
         enable_target_guard: bool | None = None,
+        enable_source_grounding: bool | None = None,
         review_reject_policy: str | None = None,
         extraction_track_mode: str = "dual",
     ) -> DualEvidenceExtractionResult:
@@ -176,6 +182,7 @@ class EvidenceExtractionService:
                 extraction_mode=extraction_mode,
                 enable_review_validation=enable_review_validation,
                 enable_target_guard=enable_target_guard,
+                enable_source_grounding=enable_source_grounding,
                 review_reject_policy=review_reject_policy,
             )
             translated_result = _empty_not_relevant_result(documents.translated)
@@ -187,6 +194,7 @@ class EvidenceExtractionService:
                 extraction_mode=extraction_mode,
                 enable_review_validation=enable_review_validation,
                 enable_target_guard=enable_target_guard,
+                enable_source_grounding=enable_source_grounding,
                 review_reject_policy=review_reject_policy,
             )
             translated_result = apply_translation_traceback(
@@ -202,6 +210,7 @@ class EvidenceExtractionService:
                     extraction_mode=extraction_mode,
                     enable_review_validation=enable_review_validation,
                     enable_target_guard=enable_target_guard,
+                    enable_source_grounding=enable_source_grounding,
                     review_reject_policy=review_reject_policy,
                 ),
                 self.run(
@@ -210,6 +219,7 @@ class EvidenceExtractionService:
                     extraction_mode=extraction_mode,
                     enable_review_validation=enable_review_validation,
                     enable_target_guard=enable_target_guard,
+                    enable_source_grounding=enable_source_grounding,
                     review_reject_policy=review_reject_policy,
                 ),
             )
@@ -247,6 +257,7 @@ class EvidenceExtractionService:
         extraction_mode: str | None = None,
         enable_review_validation: bool | None = None,
         enable_target_guard: bool | None = None,
+        enable_source_grounding: bool | None = None,
         review_reject_policy: str | None = None,
     ) -> EvidenceExtractionWorkflow:
         """Return the workflow for the given profile/mode/ablation override.
@@ -257,6 +268,7 @@ class EvidenceExtractionService:
         mode = extraction_mode or self._extraction_mode
         erv = self._enable_review_validation if enable_review_validation is None else enable_review_validation
         etg = self._enable_target_guard if enable_target_guard is None else enable_target_guard
+        esg = self._enable_source_grounding if enable_source_grounding is None else enable_source_grounding
         rrp = (
             self._review_reject_policy
             if review_reject_policy is None
@@ -267,6 +279,7 @@ class EvidenceExtractionService:
             and mode == self._extraction_mode
             and erv == self._enable_review_validation
             and etg == self._enable_target_guard
+            and esg == self._enable_source_grounding
             and rrp == self._review_reject_policy
         ):
             return self._workflow
@@ -277,6 +290,7 @@ class EvidenceExtractionService:
             extraction_mode=mode,
             enable_review_validation=erv,
             enable_target_guard=etg,
+            enable_source_grounding=esg,
             review_reject_policy=rrp,
         )
 

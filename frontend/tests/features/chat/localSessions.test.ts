@@ -71,6 +71,18 @@ describe("local chat sessions", () => {
     assert.equal(saved[0].message_count, 2);
   });
 
+  it("preserves generated titles when loading sessions", () => {
+    const storage = new MemoryStorage();
+    storage.setItem(
+      CHAT_SESSIONS_KEY,
+      JSON.stringify([{ ...session("titled"), title: "BRCA1 upload plan" }]),
+    );
+
+    const saved = loadLocalChatSessions(storage);
+
+    assert.equal(saved[0].title, "BRCA1 upload plan");
+  });
+
   it("remembers the active session id", () => {
     const storage = new MemoryStorage();
 

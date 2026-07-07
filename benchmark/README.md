@@ -32,6 +32,7 @@ benchmark/
 ├── pipeline/          已弃用垫片 + 测试 PDF + 报告（运行器已移至 runners/）
 ├── annotation/        遗留标注数据（源 PDF + markdown）
 ├── optimization/      Prompt 优化实验（fused75 消融、裁决）
+├── paper/             论文面向的 consolidated artifacts：Rett registry、figure pack、baseline matrix、minimal package
 ├── scripts/           基准工具脚本
 ├── data/              所有数据产物（适当位置 git 忽略）
 │   ├── ground_truth/  {unified, clingen, clinvar_fused, rett, parkinson}
@@ -70,6 +71,8 @@ from benchmark.core import (
 | Rett 文献管线 | `python -m benchmark.runners.literature_rett --help` |
 | ClinVar 融合评估 | `python -m benchmark.datasets.clinvar_fused.evaluate_fused --write` |
 | 构建论文表格 | `python -m benchmark.analysis.paper_artifacts.main_paper_tables --help` |
+| 构建 Rett 论文 registry | `python -m benchmark.analysis.dataset_curation.rett_benchmark_organizer --help` |
+| 构建 150 条目 baseline matrix（含 B0/B1/B2） | `python -m benchmark.analysis.baselines.main_benchmark_baseline_matrix --help` |
 
 ## 统一金标准数据集（默认）
 
@@ -89,16 +92,16 @@ from benchmark.core import (
 
 ```bash
 # 完整数据集（150 条目）
-cd backend && uv run python -m benchmark.layer3.evaluate
+PYTHONPATH=. uv --project backend run python -m benchmark.layer3.evaluate
 
 # 单个分片（每分片 10 条目）
-uv run python -m benchmark.layer3.evaluate --shard-index 0 --shard-size 10
+PYTHONPATH=. uv --project backend run python -m benchmark.layer3.evaluate --shard-index 0 --shard-size 10
 
 # 特定条目
-uv run python -m benchmark.layer3.evaluate --entries gs_000 gs_001 gs_002
+PYTHONPATH=. uv --project backend run python -m benchmark.layer3.evaluate --entries gs_000 gs_001 gs_002
 
 # 带并发
-uv run python -m benchmark.layer3.evaluate --shard-index 0 --shard-size 20 --concurrency 4
+PYTHONPATH=. uv --project backend run python -m benchmark.layer3.evaluate --shard-index 0 --shard-size 20 --concurrency 4
 ```
 
 ## 配置
@@ -125,5 +128,5 @@ uv run python -m benchmark.layer3.evaluate --shard-index 0 --shard-size 20 --con
 ## 测试
 
 ```bash
-cd backend && uv run pytest tests/benchmark/ -q
+PYTHONPATH=. uv --project backend run pytest backend/tests/benchmark/ -q
 ```

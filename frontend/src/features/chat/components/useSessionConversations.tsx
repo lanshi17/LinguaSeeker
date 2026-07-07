@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 import { useXConversations } from "@ant-design/x-sdk";
 import { Trash2 } from "lucide-react";
@@ -10,7 +10,6 @@ import {
   upsertLocalChatSession,
 } from "../utils/localSessions";
 import { clearCachedMessageStore } from "../utils/messageStore";
-import { SESSION_TITLE_WORDS } from "./chatConfig";
 
 /**
  * Manages chat sessions, conversation sidebar, session CRUD, and
@@ -25,14 +24,11 @@ export function useSessionConversations(
   processingRunId: string | undefined,
   onSessionDeletedRef?: MutableRefObject<(id: string) => void>,
 ) {
-  const { sessions, createSession, isCreating, removeSession } =
+  const { sessions, createSession, isCreating, removeSession, refreshSession } =
     useChatSessions(processingRunId);
   const { message, modal } = App.useApp();
-  // Per-session title overrides: first user message's first
-  // SESSION_TITLE_WORDS words. Default label used until then.
-  const [sessionLabels, setSessionLabels] = useState<Record<string, string>>(
-    {},
-  );
+  const unavailableTitleSessionIdsRef = useRef(new Set<string>());
+  const refreshingTitleSessionIdsRef = useRef(new Set<string>());
   const [optimisticConversationItems, setOptimisticConversationItems] =
     useState<Array<{ key: string; label: string }>>([]);
   const [controlledActiveKey, setControlledActiveKey] = useState<string>(() => {
@@ -44,9 +40,9 @@ export function useSessionConversations(
     () =>
       sessions.map((s) => ({
         key: s.session_id,
-        label: sessionLabels[s.session_id] ?? `Session ${s.session_id.slice(0, 8)}`,
+        label: s.title?.trim() || `Session ${s.session_id.slice(0, 8)}`,
       })),
-    [sessions, sessionLabels],
+    [sessions],
   );
 
   const conversationItems = useMemo(() => {
@@ -70,16 +66,34 @@ export function useSessionConversations(
 
   const activeConversationKey = controlledActiveKey;
 
-  const captureFirstMessageLabel = useCallback(
-    (sessionKey: string, content: string) => {
-      setSessionLabels((prev) => {
-        if (prev[sessionKey]) return prev;
-        const trimmed = content.trim();
-        if (!trimmed) return prev;
-        return { ...prev, [sessionKey]: trimmed.split(/\s+/).slice(0, SESSION_TITLE_WORDS).join(" ") };
-      });
+  const refreshSessionTitle = useCallback(
+    async (sessionKey: string) => {
+      if (
+        unavailableTitleSessionIdsRef.current.has(sessionKey) ||
+        refreshingTitleSessionIdsRef.current.has(sessionKey)
+      ) {
+        return;
+      }
+
+      refreshingTitleSessionIdsRef.current.add(sessionKey);
+      try {
+        await refreshSession(sessionKey);
+      } catch (err) {
+        if (
+          err &&
+          typeof err === "object" &&
+          "status" in err &&
+          Number((err as { status: unknown }).status) === 404
+        ) {
+          unavailableTitleSessionIdsRef.current.add(sessionKey);
+        }
+        // Title refresh is non-critical; message sending already surfaced
+        // its own failure state.
+      } finally {
+        refreshingTitleSessionIdsRef.current.delete(sessionKey);
+      }
     },
-    [],
+    [refreshSession],
   );
 
   const handleActiveConversationChange = useCallback(
@@ -235,7 +249,7 @@ export function useSessionConversations(
     setActiveConversationKey: handleActiveConversationChange,
     handleActiveConversationChange,
     createAndActivateSession,
-    captureFirstMessageLabel,
+    refreshSessionTitle,
     handleCreateSession,
     handleDeleteSession,
     conversationsMenu,

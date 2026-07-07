@@ -116,12 +116,14 @@ async def test_post_pipeline_run_injects_review_reject_policy_to_state(
                 "filename": "test.md",
                 "pre_parsed_markdown": "biomedical source text",
                 "mode": "full",
+                "ablation_disable_grounding": True,
                 "review_reject_policy": "tristate_review",
             },
         )
 
     assert response.status_code == 202
     initial_state = mock_runner.start.call_args.args[0]
+    assert initial_state.ablation_disable_grounding is True
     assert initial_state.review_reject_policy == "tristate_review"
 
 

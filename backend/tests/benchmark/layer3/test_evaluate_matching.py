@@ -297,6 +297,23 @@ async def test_submit_and_poll_sends_review_reject_policy(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
+async def test_submit_and_poll_sends_grounding_ablation_flag(monkeypatch) -> None:
+    monkeypatch.setattr("benchmark.core.pipeline_client.POLL_INTERVAL_S", 0)
+    client = FakePipelineClient()
+
+    await submit_and_poll(
+        client,
+        "http://test",
+        pdf_bytes=None,
+        filename="gs_002.md",
+        pre_parsed_markdown="ABCA3 text",
+        ablation_disable_grounding=True,
+    )
+
+    assert client.post_payloads[0]["ablation_disable_grounding"] is True
+
+
+@pytest.mark.asyncio
 async def test_submit_and_poll_sends_extraction_track_mode(monkeypatch) -> None:
     monkeypatch.setattr("benchmark.core.pipeline_client.POLL_INTERVAL_S", 0)
     client = FakePipelineClient()

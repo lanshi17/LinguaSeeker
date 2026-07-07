@@ -201,6 +201,7 @@ async def submit_and_poll(
     extraction_mode: str = "broad",
     ablation_disable_review: bool = False,
     ablation_disable_target_guard: bool = False,
+    ablation_disable_grounding: bool = False,
     ablation_original_only: bool = False,
     review_reject_policy: str = "hard_veto",
     extraction_track_mode: str = "dual",
@@ -224,6 +225,7 @@ async def submit_and_poll(
         "extraction_mode": extraction_mode,
         "ablation_disable_review": ablation_disable_review,
         "ablation_disable_target_guard": ablation_disable_target_guard,
+        "ablation_disable_grounding": ablation_disable_grounding,
         "ablation_original_only": ablation_original_only,
         "review_reject_policy": review_reject_policy,
         "extraction_track_mode": extraction_track_mode,
@@ -352,6 +354,7 @@ async def evaluate_one(
     extraction_mode: str = "broad",
     ablation_disable_review: bool = False,
     ablation_disable_target_guard: bool = False,
+    ablation_disable_grounding: bool = False,
     ablation_original_only: bool = False,
     review_reject_policy: str = "hard_veto",
     extraction_track_mode: str = "dual",
@@ -484,6 +487,7 @@ async def evaluate_one(
                 extraction_mode=extraction_mode,
                 ablation_disable_review=ablation_disable_review,
                 ablation_disable_target_guard=ablation_disable_target_guard,
+                ablation_disable_grounding=ablation_disable_grounding,
                 ablation_original_only=ablation_original_only,
                 review_reject_policy=review_reject_policy,
                 extraction_track_mode=extraction_track_mode,
@@ -694,6 +698,7 @@ async def run_evaluation(
     shard_size: int | None = None,
     ablation_disable_review: bool = False,
     ablation_disable_target_guard: bool = False,
+    ablation_disable_grounding: bool = False,
     ablation_original_only: bool = False,
     review_reject_policy: str = "hard_veto",
     extraction_track_mode: str = "dual",
@@ -753,7 +758,7 @@ async def run_evaluation(
     if api_key:
         client_kwargs["headers"] = {"X-API-Key": api_key}
     async with httpx.AsyncClient(**client_kwargs) as client:
-        for entry in entries:
+        async def evaluate_and_log(entry: dict) -> EntryMetrics:
             m = await evaluate_one(
                 client,
                 base_url,
@@ -767,6 +772,7 @@ async def run_evaluation(
                 extraction_mode=extraction_mode,
                 ablation_disable_review=ablation_disable_review,
                 ablation_disable_target_guard=ablation_disable_target_guard,
+                ablation_disable_grounding=ablation_disable_grounding,
                 ablation_original_only=ablation_original_only,
                 review_reject_policy=review_reject_policy,
                 extraction_track_mode=extraction_track_mode,
@@ -780,6 +786,9 @@ async def run_evaluation(
             logger.info("[{}] {} | {} | {}/{} fields | {} {} | {:.0f}s",
                         m.entry_id, status_icon, m.pipeline_status, tp, total,
                         entity_str, track_str, m.duration_s)
+            return m
+
+        all_metrics = list(await asyncio.gather(*(evaluate_and_log(entry) for entry in entries)))
 
     elapsed = time.time() - t0
 
@@ -807,6 +816,7 @@ async def run_evaluation(
             "extraction_mode": extraction_mode,
             "ablation_disable_review": ablation_disable_review,
             "ablation_disable_target_guard": ablation_disable_target_guard,
+            "ablation_disable_grounding": ablation_disable_grounding,
             "ablation_original_only": ablation_original_only,
             "review_reject_policy": review_reject_policy,
             "extraction_track_mode": extraction_track_mode,

@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import uuid
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.visualize_evidence_with_expert_in_loop.chat_service import (
+    CHAT_AGENT_CAPABILITIES_PROMPT,
     ChatService,
 )
 from src.core.visualize_evidence_with_expert_in_loop.contracts import ChatAction
@@ -61,6 +62,19 @@ class TestTryParseAction:
 
     def test_invalid_action_fields_returns_none(self) -> None:
         assert _try_parse_action('{"foo": "bar"}') is None
+
+
+class TestChatAgentPrompt:
+    def test_prompt_routes_after_slot_gathering_and_final_confirmation(self) -> None:
+        assert "ask for final confirmation" in CHAT_AGENT_CAPABILITIES_PROMPT
+        assert "Only after the user's next message explicitly confirms" in CHAT_AGENT_CAPABILITIES_PROMPT
+        assert "Never emit a structured action in the same turn" in CHAT_AGENT_CAPABILITIES_PROMPT
+
+    def test_prompt_does_not_instruct_manual_navigation_for_pdf_upload(self) -> None:
+        assert "Task Management page" not in CHAT_AGENT_CAPABILITIES_PROMPT
+        assert "click \"New Task\"" not in CHAT_AGENT_CAPABILITIES_PROMPT
+        assert "manually open" in CHAT_AGENT_CAPABILITIES_PROMPT
+        assert "in-chat PDF upload control" in CHAT_AGENT_CAPABILITIES_PROMPT
 
 
 @pytest.mark.asyncio
@@ -201,12 +215,12 @@ class TestChatRouterEnvelope:
         assert types == ["text", "done"]
         assert events[0]["content"] == "Could you share the PMID or PDF?"
 
-    async def test_emits_action_event_when_slots_complete(self, db_session: AsyncSession) -> None:
+    async def test_emits_action_event_after_final_confirmation(self, db_session: AsyncSession) -> None:
         async def mock_stream(*args, **kwargs):
             yield (
                 "Starting the pipeline now.",
                 ChatAction(
-                    intent="start-pipeline",
+                    intent="confirm-pipeline",
                     slots={"source_type": "online", "query": "PMID:34521984"},
                 ),
             )
@@ -228,14 +242,14 @@ class TestChatRouterEnvelope:
         assert types == ["text", "action", "done"], events
 
         action_event = events[1]
-        assert action_event["intent"] == "start-pipeline"
+        assert action_event["intent"] == "confirm-pipeline"
         assert action_event["slots"]["query"] == "PMID:34521984"
 
     async def test_persists_action_alongside_message(self, db_session: AsyncSession) -> None:
         async def mock_stream(*args, **kwargs):
             yield (
-                "Opening the upload form.",
-                ChatAction(intent="upload-pdf", slots={}),
+                "Showing the in-chat PDF upload control.",
+                ChatAction(intent="confirm-pipeline", slots={"source_type": "local"}),
             )
 
         provider = MagicMock()
@@ -254,7 +268,8 @@ class TestChatRouterEnvelope:
         assistant_msgs = [m for m in messages if m.role == "assistant"]
         assert len(assistant_msgs) == 1
         assert assistant_msgs[0].action is not None
-        assert assistant_msgs[0].action.intent == "upload-pdf"
+        assert assistant_msgs[0].action.intent == "confirm-pipeline"
+        assert assistant_msgs[0].action.slots["source_type"] == "local"
 
     async def test_increments_text_chunks_before_action(self, db_session: AsyncSession) -> None:
         """Text chunks are forwarded as SSE events before the final tuple."""
@@ -320,3 +335,46 @@ class TestChatRouterEnvelope:
         assert assistant_msgs[0].content == "Searching for BRCA1 evidence."
         assert assistant_msgs[0].action is not None
         assert assistant_msgs[0].action.intent == "search-evidence"
+
+    async def test_router_history_excludes_current_posted_user_message(self, db_session: AsyncSession) -> None:
+        """The current POSTed user turn is passed as user_message, not duplicated in history."""
+        captured: dict[str, object] = {}
+
+        async def mock_stream(*args, **kwargs):
+            captured.update(kwargs)
+            yield ("Ready to review the upload target.", None)
+
+        provider = MagicMock()
+        provider.generate = AsyncMock(return_value="Upload request")
+        provider.route_intent_stream = mock_stream
+        service = ChatService(db_session, chat_provider=provider)
+        session = await service.create_session(processing_run_id=None, user_id=None)
+
+        await service.append_message(
+            session_id=session.chat_session_id,
+            role="user",
+            content="Hello",
+        )
+        await service.append_message(
+            session_id=session.chat_session_id,
+            role="assistant",
+            content="Hi, how can I help?",
+        )
+        await service.append_message(
+            session_id=session.chat_session_id,
+            role="user",
+            content="I want to upload a PDF",
+        )
+
+        async for _ in service.stream_reply(
+            session_id=session.chat_session_id,
+            user_message="I want to upload a PDF",
+            evidence_id=None,
+        ):
+            pass
+
+        assert captured["user_message"] == "I want to upload a PDF"
+        assert captured["history"] == [
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi, how can I help?"},
+        ]

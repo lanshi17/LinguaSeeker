@@ -325,6 +325,61 @@ def test_service_review_reject_policy_override_uses_fresh_workflow(mock_config):
     assert service._workflow_for(None, review_reject_policy=None)._review_reject_policy == "tristate_review"
 
 
+def test_service_source_grounding_override_uses_fresh_workflow(mock_config):
+    """service.run(..., enable_source_grounding=False) overrides the default workflow."""
+    service = EvidenceExtractionService(cfg=mock_config)
+
+    wf = service._workflow_for(None, enable_source_grounding=False)
+
+    assert wf._enable_source_grounding is False
+    assert service._workflow_for(None, enable_source_grounding=None)._enable_source_grounding is True
+
+
+def test_workflow_disable_source_grounding_skips_graph_node(mock_config):
+    """enable_source_grounding=False routes target_span_recovery directly to chain_assembly."""
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+        EvidenceExtractionState,
+        Track,
+        TrackDocument,
+    )
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import (
+        EvidenceExtractionWorkflow,
+    )
+
+    service = EvidenceExtractionService(cfg=mock_config)
+    workflow = EvidenceExtractionWorkflow(
+        provider=service._provider,
+        enable_review_validation=False,
+        enable_source_grounding=False,
+    )
+    visited: list[str] = []
+
+    def record(name: str):
+        def node(state: EvidenceExtractionState) -> EvidenceExtractionState:
+            visited.append(name)
+            return state
+
+        return node
+
+    graph = workflow._build_graph_with(
+        {name: record(name) for name in workflow._node_functions(async_mode=False)}
+    )
+    graph.invoke(
+        EvidenceExtractionState(
+            document=TrackDocument(
+                document_id="doc-1",
+                track=Track.ORIGINAL,
+                formatted_text="source text",
+                page_spans=[],
+            )
+        )
+    )
+
+    assert "target_span_recovery" in visited
+    assert "source_grounding" not in visited
+    assert "chain_assembly" in visited
+
+
 def test_backward_compat_alias_b8_to_broad(mock_config):
     """extraction_mode='b8' (old name) resolves to 'broad'."""
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import resolve_extraction_mode

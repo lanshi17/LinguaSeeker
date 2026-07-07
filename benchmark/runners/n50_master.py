@@ -94,13 +94,14 @@ async def run_condition(
     entry_ids = _load_manifest_entry_ids(sample_limit=sample_limit, sample_seed=sample_seed)
 
     logger.info(
-        "=== Starting condition: {} ({} entries, mode={}, track_mode={}, flags: review={} guard={} orig_only={}) ===",
+        "=== Starting condition: {} ({} entries, mode={}, track_mode={}, flags: review={} guard={} grounding={} orig_only={}) ===",
         condition_id,
         len(entry_ids),
         config["extraction_mode"],
         config.get("extraction_track_mode", "dual"),
         config["ablation_disable_review"],
         config["ablation_disable_target_guard"],
+        config.get("ablation_disable_grounding", False),
         config["ablation_original_only"],
     )
 
@@ -115,6 +116,7 @@ async def run_condition(
         extraction_mode=config["extraction_mode"],
         ablation_disable_review=config["ablation_disable_review"],
         ablation_disable_target_guard=config["ablation_disable_target_guard"],
+        ablation_disable_grounding=config.get("ablation_disable_grounding", False),
         ablation_original_only=config["ablation_original_only"],
         review_reject_policy=config.get("review_reject_policy", "hard_veto"),
         extraction_track_mode=config.get("extraction_track_mode", "dual"),

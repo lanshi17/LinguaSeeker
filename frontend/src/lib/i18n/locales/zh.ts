@@ -538,6 +538,9 @@ const zh: Record<EnKeys, string> = {
   "chat.thinking.retrieving": "正在检索相关文献",
   "chat.thinking.reasoning": "正在推理证据",
   "chat.thinking.drafting": "正在撰写回复",
+  "chat.thinking.connectingLabel": "连接中",
+  "chat.thinking.saving": "正在保存您的消息",
+  "chat.thinking.openingStream": "正在打开实时回复",
 
   // ── 对话 — ChatActionBubble ──
   "chat.action.startPipeline": "启动流水线",
@@ -558,12 +561,26 @@ const zh: Record<EnKeys, string> = {
   "chat.summary.identifiers": "标识符",
   "chat.summary.searchQuery": "检索词",
   "chat.summary.document": "文档",
-  "chat.summary.uploadHint": "确认后通过 /pipeline 上传",
+  "chat.summary.uploadHint": "确认后将在对话中打开 PDF 上传卡片",
   "chat.summary.extractionTarget": "提取目标",
   "chat.summary.gene": "基因：",
   "chat.summary.disease": "疾病：",
   "chat.summary.confirm": "确认并启动",
   "chat.summary.modify": "通过对话修改",
+
+  // ── 对话 — UploadTaskCard ──
+  "chat.upload.open": "上传 PDF",
+  "chat.upload.heading": "上传 PDF 源文献",
+  "chat.upload.description": "直接在当前对话中创建双语证据提取任务。",
+  "chat.upload.dropText": "点击或拖拽 PDF 文件到这里",
+  "chat.upload.targetHeading": "可选提取目标",
+  "chat.upload.gene": "基因",
+  "chat.upload.disease": "疾病",
+  "chat.upload.variant": "变异",
+  "chat.upload.submit": "提交任务",
+  "chat.upload.cancel": "关闭上传任务",
+  "chat.upload.fileRequired": "提交前请选择 PDF 文件。",
+  "chat.upload.ready": "可从对话中提交。",
 
   // ── 对话 — PipelineStatusCard ──
   "chat.status.queued": "排队中",

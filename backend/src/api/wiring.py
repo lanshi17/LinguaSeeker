@@ -201,7 +201,7 @@ def wire_dependencies() -> None:
 
     # ── Phase 4 factory ──
 
-    phase4_factory = Phase4ServiceFactory(cfg=cfg)
+    phase4_factory = Phase4ServiceFactory(cfg=cfg, session_factory=session_factory)
 
     # ── Job queue + dispatcher ──
 

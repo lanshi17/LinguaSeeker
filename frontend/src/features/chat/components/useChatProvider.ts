@@ -52,6 +52,8 @@ export function useChatProvider(activeConversationKey: string | undefined) {
   const isRequesting = xChat?.isRequesting ?? false;
   const abort = xChat?.abort;
   const setMessages = xChat?.setMessages;
+  const setMessagesRef = useRef(setMessages);
+  setMessagesRef.current = setMessages;
 
   // Explicit, deterministic message hydration on session switch.
   // Runs on every `activeConversationKey` change — including the *second*
@@ -76,27 +78,27 @@ export function useChatProvider(activeConversationKey: string | undefined) {
     }
 
     if (!activeConversationKey) {
-      setMessages?.([]);
+      setMessagesRef.current?.([]);
       prevProviderRef.current = null;
       return;
     }
 
     // Clear the visible list synchronously so no previous-session bubble
     // can flash while the network call is in flight.
-    setMessages?.([]);
+    setMessagesRef.current?.([]);
 
     listMessages(activeConversationKey)
       .then((history) => {
         if (cancelled) return;
         // toXChatDefaultMessages always provides `id`; cast past the
         // optional-id stub that DefaultMessageInfo uses.
-        setMessages?.(
+        setMessagesRef.current?.(
           toXChatDefaultMessages(history) as MessageInfo<ChatBubbleMessage>[],
         );
       })
       .catch(() => {
         if (cancelled) return;
-        setMessages?.([]);
+        setMessagesRef.current?.([]);
       });
 
     // Remember the current provider as the "previous" for the next switch.
@@ -108,7 +110,7 @@ export function useChatProvider(activeConversationKey: string | undefined) {
     // activeProvider is derived from activeConversationKey + a stable cache
     // and is included so prevProviderRef is updated correctly when the
     // provider reference changes (e.g. after cache miss → create).
-  }, [activeConversationKey, activeProvider, setMessages]);
+  }, [activeConversationKey, activeProvider]);
 
   // Abort any in-flight stream when the component using this hook unmounts
   // entirely (e.g. user navigates away from the chat page).

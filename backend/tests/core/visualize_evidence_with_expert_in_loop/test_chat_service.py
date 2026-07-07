@@ -63,6 +63,88 @@ class TestChatService:
         assert msg.role == "user"
         assert msg.content == "What is the gene?"
 
+    async def test_append_first_user_message_does_not_wait_for_session_title(self, db_session: AsyncSession) -> None:
+        """Appending a user message is persist-only and does not wait for title LLM."""
+        provider = MagicMock()
+        provider.generate = AsyncMock(return_value='"BRCA1 upload plan."')
+        service = ChatService(db_session, chat_provider=provider)
+        session = await service.create_session(processing_run_id=None, user_id=None)
+
+        await service.append_message(
+            session_id=session.chat_session_id,
+            role="user",
+            content="I want to upload a BRCA1 PDF for bilingual evidence extraction.",
+            evidence_id=None,
+            entity_id=None,
+        )
+
+        detail = await service.get_session(session_id=session.chat_session_id)
+
+        assert detail.title is None
+        assert detail.message_count == 1
+        provider.generate.assert_not_awaited()
+
+    async def test_generate_session_title_persists_llm_title(self, db_session: AsyncSession) -> None:
+        """The background title path asks ChatLLM for a persisted session title."""
+        provider = MagicMock()
+        provider.generate = AsyncMock(return_value='"BRCA1 upload plan."')
+        service = ChatService(db_session, chat_provider=provider)
+        session = await service.create_session(processing_run_id=None, user_id=None)
+
+        await service.append_message(
+            session_id=session.chat_session_id,
+            role="user",
+            content="I want to upload a BRCA1 PDF for bilingual evidence extraction.",
+            evidence_id=None,
+            entity_id=None,
+        )
+        await service.generate_session_title(
+            session_id=session.chat_session_id,
+            user_message="I want to upload a BRCA1 PDF for bilingual evidence extraction.",
+        )
+
+        detail = await service.get_session(session_id=session.chat_session_id)
+
+        assert detail.title == "BRCA1 upload plan"
+        assert detail.message_count == 1
+        provider.generate.assert_awaited_once()
+
+    async def test_session_title_is_not_overwritten_by_later_messages(self, db_session: AsyncSession) -> None:
+        """Once a ChatLLM title exists, later user turns keep it stable."""
+        provider = MagicMock()
+        provider.generate = AsyncMock(return_value="Initial BRCA1 task")
+        service = ChatService(db_session, chat_provider=provider)
+        session = await service.create_session(processing_run_id=None, user_id=None)
+
+        await service.append_message(
+            session_id=session.chat_session_id,
+            role="user",
+            content="Start a BRCA1 evidence task.",
+            evidence_id=None,
+            entity_id=None,
+        )
+        await service.generate_session_title(
+            session_id=session.chat_session_id,
+            user_message="Start a BRCA1 evidence task.",
+        )
+        await service.append_message(
+            session_id=session.chat_session_id,
+            role="user",
+            content="Actually target HBOC too.",
+            evidence_id=None,
+            entity_id=None,
+        )
+        await service.generate_session_title(
+            session_id=session.chat_session_id,
+            user_message="Actually target HBOC too.",
+        )
+
+        detail = await service.get_session(session_id=session.chat_session_id)
+
+        assert detail.title == "Initial BRCA1 task"
+        assert detail.message_count == 2
+        provider.generate.assert_awaited_once()
+
     async def test_append_message_nonexistent_session_raises_not_found(self, db_session: AsyncSession) -> None:
         """Appending to a non-existent session raises NotFoundException (404)."""
         service = ChatService(db_session)

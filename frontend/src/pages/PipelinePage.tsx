@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { FileUp, Search, Plus } from "lucide-react";
 import {
   App,
@@ -25,8 +26,10 @@ interface FilterTab {
 }
 
 export function PipelinePage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filter, setFilter] = useState<FilterValue>("all");
   const [modalOpen, setModalOpen] = useState(false);
+  const [activeTaskTab, setActiveTaskTab] = useState("upload");
   const [submitting, setSubmitting] = useState(false);
   const { message } = App.useApp();
   const { t } = useI18n();
@@ -45,10 +48,38 @@ export function PipelinePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchIdentifiers, setSearchIdentifiers] = useState("");
 
+  useEffect(() => {
+    const requestedTask = searchParams.get("new_task");
+    if (requestedTask === "upload" || requestedTask === "search") {
+      setActiveTaskTab(requestedTask);
+      setModalOpen(true);
+    }
+  }, [searchParams]);
+
+  const buildTargetFromRoute = () => {
+    const target = {
+      gene_symbol: searchParams.get("target_gene") || undefined,
+      disease_name: searchParams.get("target_disease") || undefined,
+      variant_hgvs_p: searchParams.get("target_variant") || undefined,
+    };
+    return target.gene_symbol || target.disease_name || target.variant_hgvs_p
+      ? target
+      : undefined;
+  };
+
   const resetForm = () => {
     setPdfFile(null);
     setSearchQuery("");
     setSearchIdentifiers("");
+  };
+
+  const clearTaskRouteParams = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("new_task");
+    next.delete("target_gene");
+    next.delete("target_disease");
+    next.delete("target_variant");
+    setSearchParams(next, { replace: true });
   };
 
   const handleSubmit = async () => {
@@ -72,6 +103,7 @@ export function PipelinePage() {
           mode: "full",
           filename: pdfFile.name,
           content_base64: base64,
+          target: buildTargetFromRoute(),
         });
 
         void message.success(t("pipeline.success.pdfStarted", { name: pdfFile.name }));
@@ -94,6 +126,7 @@ export function PipelinePage() {
           mode: "full",
           query: trimmedQuery || undefined,
           identifiers: ids,
+          target: buildTargetFromRoute(),
         });
 
         void message.success(
@@ -105,6 +138,7 @@ export function PipelinePage() {
 
       setModalOpen(false);
       resetForm();
+      clearTaskRouteParams();
     } catch (err) {
       const msg = err instanceof Error ? err.message : t("pipeline.error.startFailed");
       void message.error(msg);
@@ -196,7 +230,10 @@ export function PipelinePage() {
           <Button
             type="primary"
             icon={<Plus size={16} />}
-            onClick={() => setModalOpen(true)}
+            onClick={() => {
+              setActiveTaskTab("upload");
+              setModalOpen(true);
+            }}
           >
             {t("pipeline.newTask")}
           </Button>
@@ -217,6 +254,7 @@ export function PipelinePage() {
         onCancel={() => {
           setModalOpen(false);
           resetForm();
+          clearTaskRouteParams();
         }}
         footer={[
           <Button
@@ -224,6 +262,7 @@ export function PipelinePage() {
             onClick={() => {
               setModalOpen(false);
               resetForm();
+              clearTaskRouteParams();
             }}
           >
             {t("pipeline.cancel")}
@@ -242,8 +281,12 @@ export function PipelinePage() {
         destroyOnHidden
       >
         <Tabs
+          activeKey={activeTaskTab}
           items={tabItems}
-          onChange={() => resetForm()}
+          onChange={(key) => {
+            setActiveTaskTab(key);
+            resetForm();
+          }}
           style={{ marginTop: -8 }}
         />
       </Modal>

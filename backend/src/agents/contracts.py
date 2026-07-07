@@ -502,6 +502,7 @@ class PipelineGraphState(BaseModel):
     # See docs/active/2026-06-29-bibm-n50-comparison-ablation-design.md.
     ablation_disable_review: bool = False
     ablation_disable_target_guard: bool = False
+    ablation_disable_grounding: bool = False
     ablation_original_only: bool = False
     review_reject_policy: str = "tristate_review"
     extraction_track_mode: str = "dual"
@@ -532,6 +533,7 @@ class PipelineGraphState(BaseModel):
             extraction_mode=rd.get("extraction_mode", "broad"),
             ablation_disable_review=rd.get("ablation_disable_review", False),
             ablation_disable_target_guard=rd.get("ablation_disable_target_guard", False),
+            ablation_disable_grounding=rd.get("ablation_disable_grounding", False),
             ablation_original_only=rd.get("ablation_original_only", False),
             review_reject_policy=rd.get("review_reject_policy", "tristate_review"),
             extraction_track_mode=rd.get("extraction_track_mode", "dual"),
