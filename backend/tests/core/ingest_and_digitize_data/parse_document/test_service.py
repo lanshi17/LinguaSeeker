@@ -129,6 +129,7 @@ class TestParseDocumentService:
 
     @pytest.mark.asyncio
     async def test_save_serializes_metadata_contract_without_doi(self, service, tmp_path):
+        blocks = [{"type": "text", "text": "Content", "page_idx": 0}]
         result = ParseResult(
             metadata=DocumentMetadata(
                 total_pages=1,
@@ -138,6 +139,7 @@ class TestParseDocumentService:
             ),
             pages=[PageContent(page_number=1, markdown="Content")],
             parser_used="mineru-remote",
+            content_blocks=blocks,
         )
 
         saved = await service.save(result, str(tmp_path))
@@ -151,6 +153,19 @@ class TestParseDocumentService:
             "authors": ["A. Author"],
             "abstract_text": "Abstract",
         }
+        assert metadata["total_pages"] == 1
+        assert metadata["title"] == "Paper"
+        assert metadata["authors"] == ["A. Author"]
+        assert metadata["abstract_text"] == "Abstract"
+        assert metadata["pages"] == [
+            {
+                "page_number": 1,
+                "markdown": "Content",
+                "figures": [],
+                "tables": [],
+            }
+        ]
+        assert metadata["content_blocks"] == blocks
         assert "doi" not in metadata["metadata"]
 
     @pytest.mark.asyncio

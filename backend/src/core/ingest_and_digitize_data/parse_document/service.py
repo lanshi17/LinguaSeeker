@@ -84,10 +84,17 @@ class ParseDocumentService:
         md_path = out / "output.md"
         md_path.write_text(result.full_markdown, encoding="utf-8")
 
+        metadata = result.metadata.model_dump(mode="json")
         meta = {
             "parser_used": result.parser_used,
             "page_count": len(result.pages),
-            "metadata": result.metadata.model_dump(),
+            "total_pages": metadata["total_pages"],
+            "title": metadata["title"],
+            "authors": metadata["authors"],
+            "abstract_text": metadata["abstract_text"],
+            "pages": [page.model_dump(mode="json") for page in result.pages],
+            "content_blocks": result.content_blocks,
+            "metadata": metadata,
             "saved_at": created_at.isoformat(),
         }
         meta_path = out / "metadata.json"

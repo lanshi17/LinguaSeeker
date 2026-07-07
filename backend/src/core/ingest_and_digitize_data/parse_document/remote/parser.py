@@ -385,8 +385,7 @@ class MinerURemoteParser(ParserStrategy):
 
         # Priority 1: *_content_list.json (new MinerU format with structured blocks)
         content_list_files = [f for f in extract_dir.rglob("*_content_list.json")]
-        full_md_path = extract_dir / "full.md"
-        full_markdown = full_md_path.read_text(encoding="utf-8") if full_md_path.exists() else ""
+        full_markdown = self._read_markdown_fallback(md_files)
 
         if content_list_files:
             try:
@@ -436,6 +435,20 @@ class MinerURemoteParser(ParserStrategy):
             )
 
         raise MinerUAPIError(f"No parseable content found in zip. Files: {list(extract_dir.rglob('*'))}")
+
+    def _read_markdown_fallback(self, md_files: list[Path]) -> str:
+        """Read MinerU markdown output from nested zip layouts."""
+        if not md_files:
+            return ""
+
+        full_md_files = sorted(path for path in md_files if path.name == "full.md")
+        selected_files = full_md_files if full_md_files else sorted(md_files)
+        parts = []
+        for md_file in selected_files:
+            content = md_file.read_text(encoding="utf-8").strip()
+            if content:
+                parts.append(content)
+        return "\n\n".join(parts)
 
     def _parse_content_json(self, data: dict, md_files: list[Path]) -> _MinerURawResult:
         """Parse MinerU content_list.json format."""
@@ -585,6 +598,12 @@ class MinerURemoteParser(ParserStrategy):
             )
 
         combined_markdown = "\n\n".join(full_parts)
+        if not combined_markdown.strip() and full_markdown.strip():
+            combined_markdown = full_markdown
+            if pages:
+                pages[0]["markdown"] = full_markdown
+            else:
+                pages.append(_MinerUPageData(page_number=1, markdown=full_markdown, figures=[], tables=[]))
         abstract = extract_abstract_from_markdown(combined_markdown)
         if not abstract and full_markdown:
             abstract = extract_abstract_from_markdown(full_markdown)

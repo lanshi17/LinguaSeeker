@@ -281,6 +281,28 @@ class TestMinerURemoteParser:
         assert "images/fig1.png" in result["images"]
         assert result["images"]["images/fig1.png"] == fake_png
 
+    def test_parse_extracted_content_uses_nested_full_markdown_when_content_list_is_empty_text(self, parser):
+        """Regression: nested full.md must survive content_list-first parsing."""
+        with tempfile.TemporaryDirectory() as tmp:
+            content_dir = Path(tmp) / "extract"
+            nested_root = content_dir / "some-root"
+            nested_root.mkdir(parents=True)
+
+            markdown = "# Nested Title\n\nRecovered markdown body"
+            (nested_root / "full.md").write_text(markdown, encoding="utf-8")
+            content_list = [{"type": "unknown_block", "page_idx": 0}]
+            (nested_root / "test_content_list.json").write_text(
+                json.dumps(content_list, ensure_ascii=False), encoding="utf-8"
+            )
+
+            result = parser._parse_extracted_content(content_dir)
+
+        assert result["state"] == "done"
+        assert result["total_pages"] == 1
+        assert result["full_markdown"] == markdown
+        assert result["pages"][0]["markdown"] == markdown
+        assert result["raw_blocks"] == content_list
+
     def test_parse_extracted_content_figure_has_img_path(self, parser):
         """Verify figure data includes img_path."""
         with tempfile.TemporaryDirectory() as tmp:
