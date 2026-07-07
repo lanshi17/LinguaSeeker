@@ -41,13 +41,24 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       # ── Inference / LLM endpoints (point at GPU host) ───────────
-      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL}
-      RERANK_BASE_URL: ${RERANK_BASE_URL}
+      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-http://host.docker.internal:32949}
+      RERANK_BASE_URL: ${RERANK_BASE_URL:-http://host.docker.internal:35001}
+      MINERU_LOCAL_PARSE_URL: ${MINERU_LOCAL_PARSE_URL:-http://host.docker.internal:44321}
       FAST_LLM_BASE_URL: ${FAST_LLM_BASE_URL}
       REASONING_LLM_BASE_URL: ${REASONING_LLM_BASE_URL}
+      TRANSLATION_LLM_LOCAL_BASE_URL: ${TRANSLATION_LLM_LOCAL_BASE_URL:-http://host.docker.internal:59062/api}
+      TRANSLATION_LLM_LOCAL_TARGET_LANG: ${TRANSLATION_LLM_LOCAL_TARGET_LANG:-en}
+      TRANSLATION_LLM_LOCAL_TIMEOUT: ${TRANSLATION_LLM_LOCAL_TIMEOUT:-120}
+      # Keep Python and legacy file paths on the writable backend data mount.
+      TMPDIR: /app/data/tmp
+      TEMP: /app/data/tmp
+      TMP: /app/data/tmp
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./logs:/logs
       - ./data:/app/data
+      - ./data:/data
       - ./downloads:/app/downloads
       - ./output:/app/output
       # Vault 配置文件保持只读
