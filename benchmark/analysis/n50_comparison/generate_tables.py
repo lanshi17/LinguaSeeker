@@ -171,7 +171,7 @@ def main() -> None:
 
     output = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "design_doc": "docs/active/2026-06-29-bibm-n50-comparison-ablation-design.md",
+        "design_doc": "docs/active/2026-06-29-n50-comparison-ablation-design.md",
         "main_comparison": main_table,
         "ablation": ablation_table,
     }

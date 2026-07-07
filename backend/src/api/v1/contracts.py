@@ -42,7 +42,7 @@ class PipelineRunRequest(BaseModel):
     # Extraction workflow mode: "broad" (default) or "catalog" (rollback baseline).
     extraction_mode: str = "broad"
 
-    # Ablation switches for BIBM comparison experiment.
+    # Ablation switches for benchmarking experiments.
     ablation_disable_review: bool = False
     ablation_disable_target_guard: bool = False
     ablation_disable_grounding: bool = False

@@ -87,25 +87,12 @@ docs/
 
 | 日期 | 标题 | 状态 |
 |------|------|------|
-| 2026-06-29 | [BIBM N=50 Comparison and Ablation Experiment Design](planned/2026-06-29-bibm-n50-comparison-ablation-design.md) | planned |
-| 2026-06-24 | [BIBM Dataset D Pipeline Optimization Design](planned/2026-06-24-bibm-dataset-d-pipeline-optimization-design.md) | proposed |
 
 ## 归档计划
 
 | 日期 | 标题 | 状态 |
 |------|------|------|
-| 2026-06-15 | [BIBM Main Paper Manuscript Draft](archive/plans/2026-06-15-bibm-main-paper-manuscript-draft.md) | completed |
-| 2026-06-15 | [BIBM Main Paper Outline](archive/plans/2026-06-15-bibm-main-paper-outline.md) | completed |
-| 2026-06-15 | [BIBM Main Paper Limitations](archive/plans/2026-06-15-bibm-main-paper-limitations.md) | completed |
-| 2026-06-15 | [BIBM Main Paper Tables Guide](archive/plans/2026-06-15-main-paper-tables-guide.md) | completed |
-| 2026-06-14 | [BIBM Main Paper Detailed Execution Plan](archive/plans/2026-06-14-bibm-main-paper-detailed-execution-plan.md) | completed |
-| 2026-06-14 | [BIBM Main Paper Effect Improvement Plan](archive/plans/2026-06-14-bibm-main-paper-effect-improvement-plan.md) | completed |
-| 2026-06-14 | [BIBM Main Paper G3 Semantic Boundary Repair](archive/plans/2026-06-14-bibm-main-paper-g3-semantic-boundary-repair-plan.md) | completed |
-| 2026-06-14 | [BIBM Main Paper Rescue Plan](archive/plans/2026-06-14-bibm-main-paper-rescue.md) | completed |
-| 2026-06-14 | [BIBM Main Paper Roadmap](archive/plans/2026-06-14-bibm-main-paper-roadmap.md) | completed |
 | 2026-06-20 | [Variant ID Guarantee Plan](archive/plans/2026-06-20-variant-id-guarantee-plan.md) | completed |
-| 2026-06-13 | [BIBM G1 Decision Memo](archive/plans/2026-06-13-bibm-g1-decision.md) | completed |
-| 2026-06-12 | [BIBM Novelty Plan](archive/plans/2026-06-12-bibm-novelty.md) | completed |
 | 2026-07-01 | [Semantic Word Alignment Design](archive/plans/2026-07-01-semantic-word-alignment-design.md) | completed |
 | 2026-07-01 | [Semantic Word Alignment Implementation Plan](archive/plans/2026-07-01-semantic-word-alignment-plan.md) | completed |
 | — | [PRD — LinguaSeeker](archive/plans/PRD.md) | completed |

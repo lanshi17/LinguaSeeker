@@ -489,7 +489,6 @@ class PipelineGraphState(BaseModel):
 
     # Extraction field profile name (passed through to EvidenceExtractionService).
     # ``"none"`` = all non-curation fields (production default).
-    # ``"dataset_d_publication"`` = 20-field BIBM evaluation profile.
     extraction_profile: str = "none"
 
     # Extraction workflow mode (passed through to EvidenceExtractionWorkflow).
@@ -497,9 +496,8 @@ class PipelineGraphState(BaseModel):
     # ``"catalog"`` = rollback / historical baseline (catalog_extraction -> special_evidence -> ...).
     extraction_mode: str = "broad"
 
-    # Ablation switches for BIBM N=50 comparison experiment.
+    # Ablation switches for benchmarking experiments.
     # When True, the corresponding workflow node is skipped.
-    # See docs/active/2026-06-29-bibm-n50-comparison-ablation-design.md.
     ablation_disable_review: bool = False
     ablation_disable_target_guard: bool = False
     ablation_disable_grounding: bool = False

@@ -1,4 +1,4 @@
-"""Generate case studies for BIBM main paper.
+"""Generate case studies for main paper.
 
 Selects 4 cases demonstrating SYSTEM strengths and limitations vs B0.
 Read-only — uses existing reports and source.md files.
@@ -291,7 +291,7 @@ def main() -> None:
 
 def _format_markdown(payload: dict[str, Any]) -> str:
     lines = [
-        "# Case Studies for BIBM Main Paper",
+        "# Case Studies for Main Paper",
         "",
         f"Generated: {payload['timestamp']}",
         "",

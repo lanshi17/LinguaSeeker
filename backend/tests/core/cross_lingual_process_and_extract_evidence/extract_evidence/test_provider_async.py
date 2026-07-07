@@ -6,8 +6,9 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pydantic import BaseModel
+from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import AIMessage
+from pydantic import BaseModel
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.config_context import (
     EvidenceExtractionConfigContext,
@@ -192,6 +193,31 @@ async def test_ainvoke_structured_falls_back_to_json_text_on_structured_output_4
         )
 
     assert result == _SampleOutput(value="json-text")
+    assert mock_structured.ainvoke.await_count == 1
+    mock_llm.ainvoke.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_ainvoke_structured_falls_back_to_json_text_on_parser_error(
+    provider: LangChainEvidenceProvider,
+) -> None:
+    """HTTP 200 structured responses that fail LangChain parsing should fall back."""
+    mock_structured = MagicMock()
+    mock_structured.ainvoke = AsyncMock(side_effect=OutputParserException("Invalid json output: not json"))
+
+    mock_llm = MagicMock()
+    mock_llm.with_structured_output = MagicMock(return_value=mock_structured)
+    mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content='{"value": "parsed"}'))
+
+    with patch.object(provider, "_client_for_tier", return_value=mock_llm):
+        result = await provider.ainvoke_structured(
+            prompt="extract evidence",
+            output_schema=_SampleOutput,
+            tier=EvidenceModelTier.STRONG,
+            stage="primary_broad_extraction",
+        )
+
+    assert result == _SampleOutput(value="parsed")
     assert mock_structured.ainvoke.await_count == 1
     mock_llm.ainvoke.assert_awaited_once()
 

@@ -138,6 +138,28 @@ describe("aggregateVariants — one row per variant site", () => {
 
     expect(entries[0].sourceLanguages).toEqual(["en", "zh"]);
   });
+
+  it("keeps gene-only evidence as an unknown-variant row", () => {
+    const entries = aggregateVariants([
+      makeResult({
+        group_id: "gene=MECP2|variant=__missing__",
+        gene: "MECP2",
+        variant: null,
+        disease: "Rett syndrome",
+      }),
+    ]);
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0].variantSlug).toBe("MECP2:unknown:Rett syndrome");
+    expect(entries[0].gene).toBe("MECP2");
+    expect(entries[0].variant).toBe("");
+    expect(entries[0].groupDocumentPairs).toEqual([
+      {
+        groupId: "gene=MECP2|variant=__missing__",
+        sourceDocumentId: "doc-1",
+      },
+    ]);
+  });
 });
 
 describe("filterAndPaginateVariants — stats not inflated by split rows", () => {
@@ -199,6 +221,14 @@ describe("variant detail query helpers", () => {
       gene: "FLCN",
       variant: "c.1177-5_-3delCTC",
       disease: "Birt-Hogg-Dube syndrome",
+    });
+  });
+
+  it("does not send the unknown variant placeholder as a backend filter", () => {
+    expect(parseVariantSlug("MECP2:unknown:Rett syndrome")).toEqual({
+      gene: "MECP2",
+      disease: "Rett syndrome",
+      variant: undefined,
     });
   });
 

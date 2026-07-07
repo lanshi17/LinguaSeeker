@@ -1,7 +1,7 @@
 """Bootstrap confidence intervals and paired significance tests for benchmark.
 
 Computes entry-level paired bootstrap CIs and permutation tests for
-SYSTEM vs B0 comparison. Designed for BIBM paper reporting.
+SYSTEM vs B0 comparison. Designed for paper reporting.
 
 Usage:
     python statistical_significance.py [--write] [--n-bootstrap 5000] [--seed 42]

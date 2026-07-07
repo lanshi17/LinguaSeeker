@@ -11,10 +11,10 @@ from typing import TypeVar
 
 import httpx
 import openai
+from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import HumanMessage
 from loguru import logger
-from pydantic import ValidationError
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from src.utils.llm_adapter import LLMPoolAdapter, create_llm_client
 from src.utils.text import strip_json_fences
@@ -127,6 +127,7 @@ class LangChainEvidenceProvider:
                 if (
                     self._is_unsupported_response_format(exc)
                     or self._is_structured_output_bad_request(exc)
+                    or self._is_structured_output_parse_error(exc)
                     or isinstance(exc, TypeError)
                 ):
                     logger.warning(
@@ -184,6 +185,7 @@ class LangChainEvidenceProvider:
                 if (
                     self._is_unsupported_response_format(exc)
                     or self._is_structured_output_bad_request(exc)
+                    or self._is_structured_output_parse_error(exc)
                     or isinstance(exc, (TypeError, AttributeError))
                 ):
                     logger.warning(
@@ -333,6 +335,26 @@ class LangChainEvidenceProvider:
             or status_code == 400
             or "error code: 400" in text
             or "400 bad request" in text
+        )
+
+    @staticmethod
+    def _is_structured_output_parse_error(exc: Exception) -> bool:
+        """Return True when LangChain received a response but could not parse it."""
+        if isinstance(exc, (OutputParserException, ValidationError)):
+            return True
+        text = str(exc).lower()
+        return any(
+            marker in text
+            for marker in (
+                "could not parse",
+                "failed to parse",
+                "invalid json output",
+                "output parser",
+                "parsing_error",
+                "tool arguments must be specified as a dict",
+                "unknown tool type",
+                "validation error",
+            )
         )
 
     @staticmethod

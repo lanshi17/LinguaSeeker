@@ -1,4 +1,4 @@
-"""Formal traceability metrics for BIBM Main Paper experiments."""
+"""Formal traceability metrics for benchmark experiments."""
 from __future__ import annotations
 
 import argparse

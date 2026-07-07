@@ -1,4 +1,4 @@
-"""Diagnose reconcile strategy errors for BIBM Main Paper rescue."""
+"""Diagnose reconcile strategy errors for main paper rescue."""
 from __future__ import annotations
 
 import argparse

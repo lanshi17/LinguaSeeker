@@ -9,7 +9,7 @@
 
 ## Quick Start
 
-Run candidate traceability on the frozen BIBM ablation report:
+Run candidate traceability on a frozen ablation report:
 
 ```bash
 PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.layer3.analysis.traceability_metrics \
