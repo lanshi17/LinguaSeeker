@@ -51,14 +51,15 @@ async def test_service_save(sample_result, tmp_path):
     """Test service save method."""
     service = ParseDocumentService(orchestrator=AsyncMock())
 
-    with patch("src.core.ingest_and_digitize_data.parse_document.service.files_io") as mock_files:
+    with patch("src.core.ingest_and_digitize_data.parse_document.service.files_io"):
         saved = await service.save(sample_result, str(tmp_path))
 
         assert saved.md_path == tmp_path / "output.md"
         assert saved.metadata_path == tmp_path / "metadata.json"
         assert saved.output_dir == tmp_path
         assert isinstance(saved.created_at, datetime)
-        mock_files.File.assert_called()
+        assert saved.md_path.read_text(encoding="utf-8") == "test content"
+        assert saved.metadata_path.exists()
 
 
 @pytest.mark.asyncio

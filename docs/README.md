@@ -50,6 +50,7 @@ docs/
 
 | 日期 | 标题 | 状态 |
 |------|------|------|
+| 2026-07-04 | [Pipeline Path Exploration](active/2026-07-04-pipeline-path-exploration.md) | in-progress |
 | 2026-06-29 | [Evidence DB Field Model Implementation Plan](active/2026-06-29-evidence-db-field-model-plan.md) | in-progress |
 | 2026-06-15 | [ClinGen + ClinVar Fused Benchmark Dataset Plan](active/2026-06-15-clingen-clinvar-fused-benchmark-dataset-plan.md) | in-progress |
 | 2026-06-14 | [Traceability Metrics Guide](active/2026-06-14-traceability-metrics-guide.md) | reference |

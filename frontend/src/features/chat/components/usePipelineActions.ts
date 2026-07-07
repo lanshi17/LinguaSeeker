@@ -1,10 +1,11 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { App } from "antd";
 import { extractErrorMessage } from "@/lib/api/error";
 import { getPipelineStatus, startPipelineRun } from "@/features/pipeline/services/pipeline";
 import type { PipelineRunRequest } from "@/features/pipeline/types/pipeline";
 import type { createAcmgChatProvider } from "../providers/acmgChatProvider";
 import type { PipelineSummarySlots } from "./forms";
+import { readFileAsBase64 } from "./forms";
 import type { PerSessionUIState } from "./chatConfig";
 import type { ChatActionIntent } from "../types/actions";
 
@@ -16,6 +17,7 @@ interface UsePipelineActionsParams {
       }) => void)
     | undefined;
   setActiveForm: (intent: ChatActionIntent | null) => void;
+  setActiveFormSlots: (slots: PerSessionUIState["activeFormSlots"]) => void;
   setPipelineStatus: (
     status:
       | PerSessionUIState["pipelineStatus"]
@@ -33,9 +35,11 @@ export function usePipelineActions({
   activeProvider,
   onRequest,
   setActiveForm,
+  setActiveFormSlots,
   setPipelineStatus,
 }: UsePipelineActionsParams) {
   const { message } = App.useApp();
+  const [isPipelineSubmitting, setPipelineSubmitting] = useState(false);
   const pollPipelineStatus = useCallback(
     async (runId: string) => {
       const TERMINAL = new Set(["completed", "failed", "cancelled"]);
@@ -73,7 +77,14 @@ export function usePipelineActions({
   const handlePipelineConfirm = useCallback(
     async (slots: PipelineSummarySlots) => {
       setActiveForm(null);
+      if (slots.source_type === "local") {
+        setActiveForm("upload-pdf");
+        setActiveFormSlots(slots);
+        return;
+      }
+
       try {
+        setPipelineSubmitting(true);
         const body: PipelineRunRequest = {
           source_type: (slots.source_type ?? "online") as "online" | "local",
           mode: "full",
@@ -109,6 +120,8 @@ export function usePipelineActions({
         message.error(
           `Failed to start pipeline: ${extractErrorMessage(err)}`,
         );
+      } finally {
+        setPipelineSubmitting(false);
       }
     },
     [
@@ -117,9 +130,58 @@ export function usePipelineActions({
       onRequest,
       pollPipelineStatus,
       setActiveForm,
+      setActiveFormSlots,
       setPipelineStatus,
     ],
   );
 
-  return { pollPipelineStatus, handlePipelineConfirm };
+  const handleLocalUploadSubmit = useCallback(
+    async (slots: PipelineSummarySlots, file: File) => {
+      try {
+        setPipelineSubmitting(true);
+        const body: PipelineRunRequest = {
+          source_type: "local",
+          mode: "full",
+          filename: file.name,
+          content_base64: await readFileAsBase64(file),
+          ...(slots.gene_symbol || slots.disease_name || slots.variant_hgvs_p
+            ? {
+                target: {
+                  gene_symbol: slots.gene_symbol || undefined,
+                  disease_name: slots.disease_name || undefined,
+                  variant_hgvs_p: slots.variant_hgvs_p || undefined,
+                },
+              }
+            : {}),
+        };
+        const response = await startPipelineRun(body);
+        const runId = response.processing_run_id;
+        setActiveForm(null);
+        setActiveFormSlots(null);
+        setPipelineStatus({ runId, status: response.status });
+        message.success(`"${file.name}" — pipeline started`);
+        pollPipelineStatus(runId);
+      } catch (err: unknown) {
+        message.error(
+          `Failed to start pipeline: ${extractErrorMessage(err)}`,
+        );
+      } finally {
+        setPipelineSubmitting(false);
+      }
+    },
+    [
+      message,
+      pollPipelineStatus,
+      setActiveForm,
+      setActiveFormSlots,
+      setPipelineStatus,
+    ],
+  );
+
+  return {
+    pollPipelineStatus,
+    handlePipelineConfirm,
+    handleLocalUploadSubmit,
+    isPipelineSubmitting,
+  };
 }

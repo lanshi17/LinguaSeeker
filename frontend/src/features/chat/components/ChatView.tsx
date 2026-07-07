@@ -1,9 +1,14 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { XProvider, Bubble, Sender, Conversations } from "@ant-design/x";
 import type { SenderRef } from "@ant-design/x/es/sender/interface";
-import { App } from "antd";
-import { ListChecks, ChevronLeft, ChevronRight } from "lucide-react";
+import { App, Button, Tooltip, Upload as AntdUpload } from "antd";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ListChecks,
+  Upload as UploadIcon,
+} from "lucide-react";
 import { TaskQueuePanel } from "@/features/pipeline";
 import { useI18n } from "@/lib/i18n";
 import { extractErrorMessage } from "@/lib/api/error";
@@ -21,6 +26,8 @@ import { useBubbleItems } from "./useBubbleItems";
 import { usePipelineActions } from "./usePipelineActions";
 import { useSessionUIState } from "./useSessionUIState";
 import type { WelcomeAction } from "./WelcomeBlock";
+import type { PipelineSummarySlots } from "./forms";
+import { isPdfFile } from "./forms";
 
 // ─── Main ChatView ─────────────────────────────────────────────────────
 
@@ -41,6 +48,17 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   const [taskQueueOpen, setTaskQueueOpen] = useState<boolean>(
     readInitialQueueOpen,
   );
+  const [isPreparingResponse, setIsPreparingResponse] = useState(false);
+  const titleRefreshTimersRef = useRef<number[]>([]);
+
+  useEffect(() => {
+    return () => {
+      for (const timerId of titleRefreshTimersRef.current) {
+        window.clearTimeout(timerId);
+      }
+      titleRefreshTimersRef.current = [];
+    };
+  }, []);
   const toggleTaskQueue = useCallback(() => {
     setTaskQueueOpen((prev) => {
       const next = !prev;
@@ -86,7 +104,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     activeConversationKey,
     handleActiveConversationChange,
     createAndActivateSession,
-    captureFirstMessageLabel,
+    refreshSessionTitle,
     handleCreateSession,
     conversationsMenu,
   } = useSessionConversations(processingRunId, clearSessionUIRef);
@@ -94,15 +112,20 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   // ── Provider & message hydration ──
   const { activeProvider, messages, onRequest, isRequesting, abort } =
     useChatProvider(activeConversationKey);
+  const onRequestRef = useRef(onRequest);
+  onRequestRef.current = onRequest;
 
   // ── Per-session ephemeral UI state ──
   const {
     activeForm,
     activeFormSlots,
+    activeUploadFile,
     dispatchedActions,
     pipelineStatus,
     setActiveForm,
     setActiveFormSlots,
+    setActiveUploadFile,
+    openUploadFormForSession,
     setPipelineStatus,
     setDispatchedActions,
     clearSessionUI,
@@ -146,18 +169,27 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       }
 
       if (action.intent === "confirm-pipeline") {
+        if (action.slots?.source_type === "local") {
+          setActiveForm("upload-pdf");
+          setActiveFormSlots(action.slots ?? { source_type: "local" });
+          setActiveUploadFile(null);
+          return;
+        }
         setActiveForm("confirm-pipeline");
         setActiveFormSlots(action.slots ?? {});
         return;
       }
 
-      if (action.intent === "start-pipeline" || action.intent === "upload-pdf") {
-        // Legacy intents — the chat no longer opens inline forms. Nudge the
-        // user toward the conversational flow; the LLM will drive slot
-        // gathering from here and eventually dispatch `confirm-pipeline`.
-        message.info(
-          "Describe what you want to run — I'll ask the right questions.",
-        );
+      if (action.intent === "upload-pdf") {
+        setActiveForm("upload-pdf");
+        setActiveFormSlots({ source_type: "local", ...(action.slots ?? {}) });
+        setActiveUploadFile(null);
+        return;
+      }
+
+      if (action.intent === "start-pipeline") {
+        setActiveForm("confirm-pipeline");
+        setActiveFormSlots(action.slots ?? {});
         return;
       }
 
@@ -165,7 +197,28 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         `${action.intent} is recognised but its dedicated form is not implemented yet.`,
       );
     },
-    [message, navigate, setActiveForm, setActiveFormSlots, setDispatchedActions],
+    [
+      message,
+      navigate,
+      setActiveForm,
+      setActiveFormSlots,
+      setActiveUploadFile,
+      setDispatchedActions,
+    ],
+  );
+
+  const scheduleTitleRefresh = useCallback(
+    (sessionKey: string) => {
+      void refreshSessionTitle(sessionKey);
+      const retryDelays = [3000, 10000, 25000];
+      const timerIds = retryDelays.map((delay) =>
+        window.setTimeout(() => {
+          void refreshSessionTitle(sessionKey);
+        }, delay),
+      );
+      titleRefreshTimersRef.current.push(...timerIds);
+    },
+    [refreshSessionTitle],
   );
 
   // ── Send message: create session if needed, POST to persist, then stream AI reply ──
@@ -183,6 +236,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
       setActiveForm(null);
       setActiveFormSlots(null);
+      setIsPreparingResponse(true);
 
       try {
         let sessionKey = activeConversationKey;
@@ -195,32 +249,83 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         }
 
         await sendChatMessage(sessionKey, trimmed);
-        captureFirstMessageLabel(sessionKey, trimmed);
-        onRequest?.({ messages: [{ role: "user" as const, content: trimmed }] });
+        scheduleTitleRefresh(sessionKey);
+        onRequestRef.current?.({
+          messages: [{ role: "user" as const, content: trimmed }],
+        });
       } catch (err) {
         message.error(extractErrorMessage(err, "Failed to send message"));
+      } finally {
+        setIsPreparingResponse(false);
       }
     },
     [
       activeConversationKey,
-      captureFirstMessageLabel,
       createAndActivateSession,
       message,
-      onRequest,
+      scheduleTitleRefresh,
       setActiveForm,
       setActiveFormSlots,
     ],
   );
 
-  const handleWelcomeAction = useCallback(
-    (action: WelcomeAction) => {
-      if (action.kind === "navigate") {
-        navigate(action.to);
+  const handleOpenUploadTask = useCallback(
+    async (
+      file: File | null = null,
+      slots: PipelineSummarySlots = { source_type: "local" },
+    ) => {
+      try {
+        let sessionKey = activeConversationKey;
+        if (!sessionKey) {
+          sessionKey = await createAndActivateSession();
+        }
+        const nextSlots: PipelineSummarySlots = {
+          source_type: "local",
+          ...slots,
+          ...(file ? { filename: file.name } : {}),
+        };
+        openUploadFormForSession(sessionKey, nextSlots, file);
+      } catch (err) {
+        message.error(extractErrorMessage(err, "Failed to open upload task"));
+      }
+    },
+    [
+      activeConversationKey,
+      createAndActivateSession,
+      message,
+      openUploadFormForSession,
+    ],
+  );
+
+  const handleSenderPdfUpload = useCallback(
+    (file: File) => {
+      if (!isPdfFile(file)) {
+        void message.error(t("pipeline.error.pdfOnly"));
+        return AntdUpload.LIST_IGNORE;
+      }
+      void handleOpenUploadTask(file);
+      return false;
+    },
+    [handleOpenUploadTask, message, t],
+  );
+
+  const handlePasteFile = useCallback(
+    (files: FileList) => {
+      const file = Array.from(files).find(isPdfFile);
+      if (!file) {
+        void message.error(t("pipeline.error.pdfOnly"));
         return;
       }
+      void handleOpenUploadTask(file);
+    },
+    [handleOpenUploadTask, message, t],
+  );
+
+  const handleWelcomeAction = useCallback(
+    (action: WelcomeAction) => {
       void handleSendMessage(action.message);
     },
-    [handleSendMessage, navigate],
+    [handleSendMessage],
   );
 
   const handleNewChat = useCallback(() => {
@@ -233,10 +338,15 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   }, [clearSessionUI, handleCreateSession]);
 
   // ── Pipeline actions ──
-  const { handlePipelineConfirm } = usePipelineActions({
+  const {
+    handlePipelineConfirm,
+    handleLocalUploadSubmit,
+    isPipelineSubmitting,
+  } = usePipelineActions({
     activeProvider,
     onRequest,
     setActiveForm,
+    setActiveFormSlots,
     setPipelineStatus,
   });
 
@@ -245,11 +355,15 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     messages,
     activeForm,
     activeFormSlots,
+    activeUploadFile,
     pipelineStatus,
     isRequesting,
+    isPreparingResponse,
+    isPipelineSubmitting,
     dispatchedActions,
     handleDispatchAction,
     handlePipelineConfirm,
+    handleLocalUploadSubmit,
     handleWelcomeAction,
     setActiveForm,
     setActiveFormSlots,
@@ -363,7 +477,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
               <Sender
                 ref={senderRef}
                 style={{ borderTop: "1px solid var(--color-bg-muted)", padding: 16 }}
-                loading={isRequesting}
+                loading={isRequesting || isPreparingResponse}
                 onCancel={() => {
                   // Cancel via the provider's own AbortController for
                   // reliable fetch termination. Also try the SDK's
@@ -380,7 +494,27 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
                   }
                 }}
                 onSubmit={handleSubmitAndClear}
+                onPasteFile={handlePasteFile}
                 placeholder={t("chat.agentPlaceholder")}
+                prefix={
+                  <Tooltip title={t("chat.upload.open")}>
+                    <AntdUpload
+                      accept="application/pdf,.pdf"
+                      maxCount={1}
+                      showUploadList={false}
+                      beforeUpload={handleSenderPdfUpload}
+                      disabled={isRequesting || isPreparingResponse || isPipelineSubmitting}
+                    >
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<UploadIcon size={16} />}
+                        aria-label={t("chat.upload.open")}
+                        disabled={isRequesting || isPreparingResponse || isPipelineSubmitting}
+                      />
+                    </AntdUpload>
+                  </Tooltip>
+                }
               />
             </div>
 

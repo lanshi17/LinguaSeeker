@@ -32,6 +32,53 @@ interface ChatRequestParams {
   messages?: ChatBubbleMessage[];
 }
 
+function appendHeaderValue(
+  headers: Headers,
+  key: string,
+  value: unknown,
+): void {
+  if (
+    value === undefined ||
+    value === null ||
+    typeof value === "object" ||
+    typeof value === "function"
+  ) {
+    return;
+  }
+  headers.set(key, String(value));
+}
+
+function appendHeaderSource(headers: Headers, source: unknown): void {
+  if (!source || typeof source !== "object") return;
+
+  if (source instanceof Headers) {
+    source.forEach((value, key) => headers.set(key, value));
+    return;
+  }
+
+  if ("toJSON" in source && typeof source.toJSON === "function") {
+    appendHeaderSource(headers, source.toJSON());
+    return;
+  }
+
+  for (const [key, value] of Object.entries(source)) {
+    if (["common", "delete", "get", "head", "post", "put", "patch"].includes(key)) {
+      continue;
+    }
+    appendHeaderValue(headers, key, value);
+  }
+}
+
+function buildStreamHeaders(sdkHeaders?: HeadersInit): Headers {
+  const headers = new Headers(sdkHeaders);
+  const defaultHeaders = apiClient.defaults.headers;
+  if (defaultHeaders && typeof defaultHeaders === "object") {
+    appendHeaderSource(headers, "common" in defaultHeaders ? defaultHeaders.common : null);
+    appendHeaderSource(headers, defaultHeaders);
+  }
+  return headers;
+}
+
 /**
  * Custom provider that binds to the Lingua Seeker backend's chat agent.
  *
@@ -108,7 +155,8 @@ class AcmgChatProvider extends AbstractChatProvider<
 
         const doFetch = fetch(streamUrl, {
           method: "GET",
-          headers: options.headers,
+          headers: buildStreamHeaders(options.headers),
+          credentials: "include",
           signal: combinedSignal,
         });
 

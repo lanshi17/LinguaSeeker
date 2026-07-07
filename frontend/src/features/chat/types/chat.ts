@@ -5,6 +5,7 @@ export type ChatRole = "user" | "assistant" | "system";
 export interface ChatSessionResponse {
   session_id: string;
   processing_run_id: string | null;
+  title?: string | null;
   created_at: string;
   message_count: number;
 }
@@ -13,6 +14,7 @@ export interface ChatSessionResponse {
 export interface BackendChatSessionResponse {
   chat_session_id: string;
   processing_run_id: string | null;
+  title?: string | null;
   created_at: string;
   message_count: number;
 }

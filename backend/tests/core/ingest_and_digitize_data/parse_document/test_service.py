@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -125,6 +126,32 @@ class TestParseDocumentService:
             saved = await service.save(result, str(tmp_path))
 
         assert saved.images_dir is None
+
+    @pytest.mark.asyncio
+    async def test_save_serializes_metadata_contract_without_doi(self, service, tmp_path):
+        result = ParseResult(
+            metadata=DocumentMetadata(
+                total_pages=1,
+                title="Paper",
+                authors=["A. Author"],
+                abstract_text="Abstract",
+            ),
+            pages=[PageContent(page_number=1, markdown="Content")],
+            parser_used="mineru-remote",
+        )
+
+        saved = await service.save(result, str(tmp_path))
+
+        metadata = json.loads(saved.metadata_path.read_text(encoding="utf-8"))
+        assert metadata["parser_used"] == "mineru-remote"
+        assert metadata["page_count"] == 1
+        assert metadata["metadata"] == {
+            "total_pages": 1,
+            "title": "Paper",
+            "authors": ["A. Author"],
+            "abstract_text": "Abstract",
+        }
+        assert "doi" not in metadata["metadata"]
 
     @pytest.mark.asyncio
     async def test_dedup(self, service):

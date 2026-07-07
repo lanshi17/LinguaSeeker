@@ -8,7 +8,13 @@ import { apiClient } from "@/lib/api/client";
 
 vi.mock("@/lib/api/client", () => ({
   apiClient: {
-    defaults: { baseURL: "/api/v1" },
+    defaults: {
+      baseURL: "/api/v1",
+      headers: {
+        common: { "X-API-Key": "test-secret" },
+        "Content-Type": "application/json",
+      },
+    },
     post: vi.fn(),
   },
 }));
@@ -138,6 +144,29 @@ describe("AcmgChatProvider — abort behaviour", () => {
     expect(fetchedUrl).toContain("/api/v1/chat/sessions/session-url-test/stream");
     // URLSearchParams encodes spaces as '+' (application/x-www-form-urlencoded)
     expect(fetchedUrl).toContain("user_message=Hello+there");
+  });
+
+  it("sends the API key header when opening the SSE stream", async () => {
+    let capturedHeaders: Headers | undefined;
+
+    vi.spyOn(globalThis, "fetch").mockImplementation((_url, options) => {
+      capturedHeaders = new Headers(options?.headers);
+      return Promise.resolve(
+        new Response("data: {\"type\": \"done\"}\n\n", {
+          headers: { "Content-Type": "text/event-stream" },
+        }),
+      );
+    });
+
+    const provider = createAcmgChatProvider("session-auth-test");
+
+    triggerRequest(provider, {
+      messages: [{ role: "user", content: "Hello" }],
+    });
+
+    await Promise.resolve();
+
+    expect(capturedHeaders?.get("X-API-Key")).toBe("test-secret");
   });
 
   it("combines SDK signal with own AbortController signal (both can abort)", async () => {

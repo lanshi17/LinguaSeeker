@@ -15,6 +15,7 @@ import {
 /** Slot schema mirrors the backend-emitted `action.slots` for
  *  `confirm-pipeline`. Keys are snake_case to avoid a mapping layer. */
 export interface PipelineSummarySlots {
+  [key: string]: string | undefined;
   source_type?: string;
   query?: string;
   identifiers?: string;

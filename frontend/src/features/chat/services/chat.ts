@@ -12,6 +12,7 @@ function normalizeSession(session: BackendChatSessionResponse): ChatSessionRespo
   return {
     session_id: session.chat_session_id,
     processing_run_id: session.processing_run_id,
+    title: session.title ?? null,
     created_at: session.created_at,
     message_count: session.message_count,
   };
@@ -35,6 +36,13 @@ export async function listSessions(
     `/chat/sessions/${processingRunId}`,
   );
   return data.map(normalizeSession);
+}
+
+export async function getSession(sessionId: string): Promise<ChatSessionResponse> {
+  const { data } = await apiClient.get<BackendChatSessionResponse>(
+    `/chat/session-details/${sessionId}`,
+  );
+  return normalizeSession(data);
 }
 
 export async function listMessages(

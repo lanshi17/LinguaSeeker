@@ -111,16 +111,19 @@ class SingleJobDispatcher:
 
             if result.pipeline_status == PipelineStatus.COMPLETED:
                 await self._job_queue.complete(job.job_id)
+                self._cleanup_upload_file(rd)
             else:
                 error_msg = result.error_message or "Pipeline ended in non-completed state"
                 await self._job_queue.fail(job.job_id, error_msg)
         except Exception as exc:
             logger.exception("Job execution failed: job_id={}", job.job_id)
             await self._job_queue.fail(job.job_id, str(exc))
-        finally:
-            upload_path = rd.get("upload_file_path")
-            if upload_path:
-                try:
-                    Path(upload_path).unlink(missing_ok=True)
-                except OSError:
-                    pass
+
+    def _cleanup_upload_file(self, request_data: dict[str, Any]) -> None:
+        """Remove local upload temp file after a successful job."""
+        upload_path = request_data.get("upload_file_path")
+        if upload_path:
+            try:
+                Path(upload_path).unlink(missing_ok=True)
+            except OSError:
+                pass

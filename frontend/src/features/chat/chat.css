@@ -81,6 +81,12 @@
   outline-offset: 2px;
 }
 
+@media (min-width: 720px) {
+  .chat-upload-target-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 /* ── ChatMarkdown ── */
 .chat-markdown-list { list-style-type: disc; padding-left: 24px; }
 .chat-markdown-list li::marker { color: var(--color-text-muted); }

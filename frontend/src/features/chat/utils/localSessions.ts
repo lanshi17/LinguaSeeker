@@ -21,6 +21,9 @@ function isChatSessionResponse(value: unknown): value is ChatSessionResponse {
     (typeof item.processing_run_id === "string" ||
       item.processing_run_id === null ||
       item.processing_run_id === undefined) &&
+    (typeof item.title === "string" ||
+      item.title === null ||
+      item.title === undefined) &&
     typeof item.created_at === "string" &&
     typeof item.message_count === "number"
   );
@@ -42,6 +45,7 @@ export function loadLocalChatSessions(
     return parsed.filter(isChatSessionResponse).map((item) => ({
       ...item,
       processing_run_id: item.processing_run_id ?? null,
+      title: item.title ?? null,
     }));
   } catch {
     return [];

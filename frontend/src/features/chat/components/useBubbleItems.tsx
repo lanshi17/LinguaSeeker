@@ -1,13 +1,18 @@
 import { useMemo } from "react";
 import type { BubbleItemType } from "@ant-design/x";
 import type { MessageInfo } from "@ant-design/x-sdk/es/x-chat";
+import { useI18n } from "@/lib/i18n";
 import type { ChatAction } from "../types/actions";
 import type { ChatBubbleMessage } from "../utils/messageHistory";
 import { toUniqueChatMessageKeys } from "../utils/messageHistory";
 import { ChatMarkdown } from "../utils/markdown";
 import { ChatActionBubble } from "./ChatActionBubble";
 import { ThinkingIndicator } from "./ThinkingIndicator";
-import { PipelineSummaryCard, PipelineStatusCard } from "./forms";
+import {
+  ChatUploadTaskCard,
+  PipelineSummaryCard,
+  PipelineStatusCard,
+} from "./forms";
 import type { PipelineSummarySlots } from "./forms";
 import type { PerSessionUIState } from "./chatConfig";
 import { WelcomeBlock, type WelcomeAction } from "./WelcomeBlock";
@@ -16,11 +21,15 @@ interface UseBubbleItemsParams {
   messages: MessageInfo<ChatBubbleMessage>[];
   activeForm: PerSessionUIState["activeForm"];
   activeFormSlots: PerSessionUIState["activeFormSlots"];
+  activeUploadFile: PerSessionUIState["activeUploadFile"];
   pipelineStatus: PerSessionUIState["pipelineStatus"];
   isRequesting: boolean;
+  isPreparingResponse: boolean;
+  isPipelineSubmitting: boolean;
   dispatchedActions: Set<string>;
   handleDispatchAction: (action: ChatAction, key?: string) => void;
   handlePipelineConfirm: (slots: PipelineSummarySlots) => void;
+  handleLocalUploadSubmit: (slots: PipelineSummarySlots, file: File) => void;
   handleWelcomeAction: (action: WelcomeAction) => void;
   setActiveForm: (intent: PerSessionUIState["activeForm"]) => void;
   setActiveFormSlots: (slots: PerSessionUIState["activeFormSlots"]) => void;
@@ -33,15 +42,20 @@ interface UseBubbleItemsParams {
  * pipeline confirm form, pipeline status card, and welcome block.
  */
 export function useBubbleItems(params: UseBubbleItemsParams): BubbleItemType[] {
+  const { t } = useI18n();
   const {
     messages,
     activeForm,
     activeFormSlots,
+    activeUploadFile,
     pipelineStatus,
     isRequesting,
+    isPreparingResponse,
+    isPipelineSubmitting,
     dispatchedActions,
     handleDispatchAction,
     handlePipelineConfirm,
+    handleLocalUploadSubmit,
     handleWelcomeAction,
     setActiveForm,
     setActiveFormSlots,
@@ -103,6 +117,23 @@ export function useBubbleItems(params: UseBubbleItemsParams): BubbleItemType[] {
       };
     });
 
+    if (isPreparingResponse && !isRequesting) {
+      items.push({
+        key: "__preparing_response__",
+        role: "assistant",
+        content: "",
+        contentRender: () => (
+          <ThinkingIndicator
+            label={t("chat.thinking.connectingLabel")}
+            hints={[
+              t("chat.thinking.saving"),
+              t("chat.thinking.openingStream"),
+            ]}
+          />
+        ),
+      });
+    }
+
     if (activeForm === "confirm-pipeline") {
       items.push({
         key: "__confirm__",
@@ -118,7 +149,29 @@ export function useBubbleItems(params: UseBubbleItemsParams): BubbleItemType[] {
               setActiveForm(null);
               setActiveFormSlots(null);
             }}
-            isSubmitting={isRequesting}
+            isSubmitting={isRequesting || isPipelineSubmitting}
+          />
+        ),
+      });
+    }
+
+    if (activeForm === "upload-pdf") {
+      items.push({
+        key: "__upload__",
+        role: "assistant",
+        content: "",
+        variant: "borderless" as const,
+        contentRender: () => (
+          <ChatUploadTaskCard
+            key={`upload:${activeUploadFile?.name ?? "empty"}:${JSON.stringify(activeFormSlots)}`}
+            slots={(activeFormSlots ?? { source_type: "local" }) as PipelineSummarySlots}
+            initialFile={activeUploadFile}
+            onSubmit={handleLocalUploadSubmit}
+            onCancel={() => {
+              setActiveForm(null);
+              setActiveFormSlots(null);
+            }}
+            isSubmitting={isPipelineSubmitting}
           />
         ),
       });
@@ -157,9 +210,14 @@ export function useBubbleItems(params: UseBubbleItemsParams): BubbleItemType[] {
     messages,
     activeForm,
     activeFormSlots,
+    activeUploadFile,
     pipelineStatus,
     isRequesting,
+    isPreparingResponse,
+    isPipelineSubmitting,
+    t,
     handlePipelineConfirm,
+    handleLocalUploadSubmit,
     handleWelcomeAction,
     dispatchedActions,
     handleDispatchAction,

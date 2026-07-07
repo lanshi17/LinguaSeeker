@@ -2,11 +2,52 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
-from httpx import AsyncClient
+import pytest_asyncio
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.utils.health import HealthResult
+
+
+@pytest_asyncio.fixture
+async def async_client() -> AsyncGenerator[AsyncClient, None]:
+    """Create an API client with chat route DB dependency overridden."""
+    from app.main import create_app
+    from src.api.deps import get_db_session
+    from src.core.config import Settings
+
+    db_session = AsyncMock(spec=AsyncSession)
+
+    async def override_session() -> AsyncGenerator[AsyncSession, None]:
+        yield db_session
+
+    mock_settings = Settings(api_key="")
+    with (
+        patch("src.core.config.get_config") as mock_cfg,
+        patch("src.api.auth.get_config", mock_cfg),
+        patch(
+            "src.utils.health.check_all_connections",
+            new_callable=AsyncMock,
+            return_value=HealthResult(postgres=True, redis=True),
+        ),
+    ):
+        mock_cfg.return_value = mock_settings
+        app = create_app()
+        app.state.test_db_session = db_session
+        app.dependency_overrides[get_db_session] = override_session
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            yield client
+
+
+def _test_db_session(client: AsyncClient) -> AsyncMock:
+    """Return the mock DB session attached to this test app."""
+    return client._transport.app.state.test_db_session
 
 
 @pytest.mark.asyncio
@@ -35,6 +76,7 @@ async def test_create_session(async_client: AsyncClient):
         )
         assert response.status_code == 200
         assert response.json()["chat_session_id"] == str(session_id)
+        _test_db_session(async_client).commit.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -61,10 +103,41 @@ async def test_create_standalone_session_api(async_client: AsyncClient):
     assert response.status_code == 200
     assert response.json()["chat_session_id"] == str(session_id)
     assert response.json()["processing_run_id"] is None
+    _test_db_session(async_client).commit.assert_awaited_once()
     mock_service.create_session.assert_awaited_once_with(
         processing_run_id=None,
         user_id=None,
     )
+
+
+@pytest.mark.asyncio
+async def test_get_session_details(async_client: AsyncClient):
+    """GET /api/v1/chat/session-details/{id} returns one session with title."""
+    from src.core.visualize_evidence_with_expert_in_loop.contracts import ChatSessionResponse
+
+    session_id = uuid4()
+    mock_response = ChatSessionResponse(
+        chat_session_id=session_id,
+        processing_run_id=None,
+        user_id=None,
+        title="BRCA1 upload plan",
+        created_at="2026-06-11T00:00:00Z",
+        message_count=1,
+    )
+
+    with patch("src.api.v1.chat.get_phase4_factory") as mock_factory:
+        mock_service = MagicMock()
+        mock_service.get_session = AsyncMock(return_value=mock_response)
+        mock_factory.return_value.create_chat_service.return_value = mock_service
+
+        response = await async_client.get(
+            f"/api/v1/chat/session-details/{session_id}",
+        )
+
+    assert response.status_code == 200
+    assert response.json()["chat_session_id"] == str(session_id)
+    assert response.json()["title"] == "BRCA1 upload plan"
+    mock_service.get_session.assert_awaited_once_with(session_id=session_id)
 
 
 @pytest.mark.asyncio
@@ -85,10 +158,19 @@ async def test_append_message(async_client: AsyncClient):
     )
 
     with patch("src.api.v1.chat.get_phase4_factory") as mock_factory:
+        events: list[str] = []
+
+        async def commit_side_effect() -> None:
+            events.append("commit")
+
+        _test_db_session(async_client).commit.side_effect = commit_side_effect
         mock_service = MagicMock()
         mock_service.append_message = AsyncMock(return_value=mock_response)
         mock_service.generate_reply = AsyncMock(return_value=None)
         mock_factory.return_value.create_chat_service.return_value = mock_service
+        mock_factory.return_value.schedule_session_title_generation.side_effect = (
+            lambda **_: events.append("schedule")
+        )
 
         response = await async_client.post(
             f"/api/v1/chat/sessions/{session_id}/messages",
@@ -97,6 +179,12 @@ async def test_append_message(async_client: AsyncClient):
 
     assert response.status_code == 200
     assert response.json()["content"] == "What is the gene?"
+    _test_db_session(async_client).commit.assert_awaited_once()
+    mock_factory.return_value.schedule_session_title_generation.assert_called_once_with(
+        session_id=session_id,
+        user_message="What is the gene?",
+    )
+    assert events == ["commit", "schedule"]
 
 
 @pytest.mark.asyncio

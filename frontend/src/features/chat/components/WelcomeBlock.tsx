@@ -17,16 +17,10 @@ interface SuggestionChip {
   accentColor: string;
 }
 
-export type WelcomeAction =
-  | {
-      kind: "send-message";
-      message: string;
-    }
-  | {
-      kind: "navigate";
-      to: string;
-      fallbackMessage: string;
-    };
+export interface WelcomeAction {
+  kind: "send-message";
+  message: string;
+}
 
 function getSuggestions(t: (key: string) => string): SuggestionChip[] {
   return [
@@ -47,10 +41,9 @@ function getSuggestions(t: (key: string) => string): SuggestionChip[] {
       title: t("chat.welcome.upload.title"),
       description: t("chat.welcome.upload.desc"),
       action: {
-        kind: "navigate",
-        to: "/pipeline",
-        fallbackMessage:
-          "Open the pipeline page so I can upload a PDF for bilingual evidence extraction.",
+        kind: "send-message",
+        message:
+          "I want to upload a PDF source paper for bilingual evidence extraction. Please collect any needed target details and ask for final confirmation before showing the in-chat upload control.",
       },
       accentBg: "var(--color-highlight-purple)",
       accentColor: "var(--color-purple-700)",
@@ -60,10 +53,9 @@ function getSuggestions(t: (key: string) => string): SuggestionChip[] {
       title: t("chat.welcome.search.title"),
       description: t("chat.welcome.search.desc"),
       action: {
-        kind: "navigate",
-        to: "/evidence",
-        fallbackMessage:
-          "Open the evidence database so I can search by gene, variant, disease, PMID, or DOI.",
+        kind: "send-message",
+        message:
+          "Help me search the evidence base by gene, variant, disease, PMID, or DOI.",
       },
       accentBg: "var(--color-highlight-green)",
       accentColor: "var(--color-success-600)",
@@ -73,10 +65,9 @@ function getSuggestions(t: (key: string) => string): SuggestionChip[] {
       title: t("chat.welcome.review.title"),
       description: t("chat.welcome.review.desc"),
       action: {
-        kind: "navigate",
-        to: "/evidence?review_status=pending",
-        fallbackMessage:
-          "Show evidence items that need expert review and help prepare an evidence summary report.",
+        kind: "send-message",
+        message:
+          "Help me review evidence items that need expert review and prepare an evidence summary report.",
       },
       accentBg: "var(--color-highlight-amber)",
       accentColor: "var(--color-warning-text)",

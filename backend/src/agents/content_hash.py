@@ -129,6 +129,14 @@ def _get_scope_key(state: PipelineGraphState) -> str | None:
         parts.append(f"review_policy={state.review_reject_policy}")
     if state.extraction_track_mode and state.extraction_track_mode != "dual":
         parts.append(f"track_mode={state.extraction_track_mode}")
+    if state.ablation_disable_review:
+        parts.append("ablation=disable_review")
+    if state.ablation_disable_target_guard:
+        parts.append("ablation=disable_target_guard")
+    if state.ablation_disable_grounding:
+        parts.append("ablation=disable_grounding")
+    if state.ablation_original_only:
+        parts.append("ablation=original_only")
     return "|".join(parts) if parts else None
 
 

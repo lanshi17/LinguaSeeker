@@ -155,7 +155,12 @@ async def test_phase_2_adapter_passes_review_reject_policy(
         TrackDocument,
     )
 
-    state = sample_state.model_copy(update={"review_reject_policy": "tristate_review"})
+    state = sample_state.model_copy(
+        update={
+            "ablation_disable_grounding": True,
+            "review_reject_policy": "tristate_review",
+        }
+    )
     mock_translation = MagicMock()
     mock_translation.run = AsyncMock(
         return_value=TranslationResult(
@@ -224,6 +229,7 @@ async def test_phase_2_adapter_passes_review_reject_policy(
         await adapter.run(state)
 
     assert mock_extraction_service.run_dual.call_args.kwargs["review_reject_policy"] == "tristate_review"
+    assert mock_extraction_service.run_dual.call_args.kwargs["enable_source_grounding"] is False
 
 
 @pytest.mark.asyncio

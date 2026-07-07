@@ -60,6 +60,7 @@ class ParseDocumentService:
             saved[name] = await self.save(result, output_dir)
         return MinerULocalBatchSaveResult(
             batch_id=batch.batch_id,
+            parse_result=batch,
             saved_files=saved,
         )
 
@@ -78,19 +79,16 @@ class ParseDocumentService:
         out = Path(output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        md_path = out / "content.md"
+        created_at = datetime.now(timezone.utc)
+
+        md_path = out / "output.md"
         md_path.write_text(result.full_markdown, encoding="utf-8")
 
         meta = {
             "parser_used": result.parser_used,
             "page_count": len(result.pages),
-            "metadata": {
-                "title": result.metadata.title,
-                "authors": result.metadata.authors,
-                "doi": result.metadata.doi,
-                "abstract_text": result.metadata.abstract_text,
-            },
-            "saved_at": datetime.now(timezone.utc).isoformat(),
+            "metadata": result.metadata.model_dump(),
+            "saved_at": created_at.isoformat(),
         }
         meta_path = out / "metadata.json"
         meta_path.write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -105,42 +103,52 @@ class ParseDocumentService:
                         import base64
 
                         data = base64.b64decode(data.split(",", 1)[-1])
-                    img_path = images_dir / name
+                    img_path = images_dir / Path(name).name
                     img_path.write_bytes(data)
                 except Exception as exc:
                     logger.warning(f"Failed to decode image {name}: {exc}")
 
         return SavedFiles(
-            markdown_path=str(md_path),
-            metadata_path=str(meta_path),
+            md_path=md_path,
+            metadata_path=meta_path,
+            output_dir=out,
+            created_at=created_at,
             images_dir=images_dir,
         )
 
     async def dedup(
         self,
         file_paths: list[str],
+        known_hashes: list[str] | None = None,
     ) -> list[DedupResult]:
         """Check if files are duplicates based on content hash.
 
         Args:
             file_paths: List of file paths to check.
+            known_hashes: Optional hashes to treat as already seen.
 
         Returns:
             List of DedupResult with hash and duplicate status.
         """
-        seen_hashes: dict[str, int] = {}
+        known = set(known_hashes or [])
+        seen_hashes: set[str] = set()
         results: list[DedupResult] = []
         for fp in file_paths:
             try:
-                sha = files_io.sha256_file(fp)
-                is_dup = sha in seen_hashes
-                if not is_dup:
-                    seen_hashes[sha] = 0
-                seen_hashes[sha] += 1
-                results.append(DedupResult(file_path=fp, sha256=sha, is_duplicate=is_dup))
+                checker = getattr(files_io, "check_duplicate", None)
+                if checker is not None and known_hashes is not None:
+                    duplicate = checker(fp, list(known | seen_hashes))
+                    sha = duplicate.get("hash", "")
+                    is_dup = duplicate.get("is_duplicate", sha in known or sha in seen_hashes)
+                else:
+                    sha = files_io.sha256_file(fp)
+                    is_dup = sha in known or sha in seen_hashes
+                if sha:
+                    seen_hashes.add(sha)
+                results.append(DedupResult(file_path=fp, hash=sha, is_duplicate=is_dup))
             except Exception as exc:
                 logger.warning(f"Dedup hash failed for {fp}: {exc}")
-                results.append(DedupResult(file_path=fp, sha256="", is_duplicate=False))
+                results.append(DedupResult(file_path=fp, hash="", is_duplicate=False))
         return results
 
     async def parse_and_save(

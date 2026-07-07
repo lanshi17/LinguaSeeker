@@ -79,6 +79,7 @@ describe("useSessionConversations", () => {
       createSession: vi.fn().mockResolvedValue(createdSession),
       isCreating: false,
       removeSession: vi.fn(),
+      refreshSession: vi.fn(),
     });
 
     const { result } = renderHook(
@@ -98,5 +99,80 @@ describe("useSessionConversations", () => {
         expect.objectContaining({ key: "new-session" }),
       ]),
     );
+  });
+
+  it("uses backend ChatLLM session titles in the conversation list", () => {
+    vi.mocked(useChatSessions).mockReturnValue({
+      sessions: [{ ...session("s1"), title: "BRCA1 upload plan" }],
+      isLoading: false,
+      createSession: vi.fn(),
+      isCreating: false,
+      removeSession: vi.fn(),
+      refreshSession: vi.fn(),
+    });
+
+    const { result } = renderHook(() => useSessionConversations(undefined), {
+      wrapper: Wrapper,
+    });
+
+    expect(result.current.conversations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "s1",
+          label: "BRCA1 upload plan",
+        }),
+      ]),
+    );
+  });
+
+  it("refreshSessionTitle delegates to backend session refresh", async () => {
+    const refreshSession = vi.fn().mockResolvedValue({
+      ...session("s1"),
+      title: "Generated title",
+    });
+    vi.mocked(useChatSessions).mockReturnValue({
+      sessions: [session("s1")],
+      isLoading: false,
+      createSession: vi.fn(),
+      isCreating: false,
+      removeSession: vi.fn(),
+      refreshSession,
+    });
+
+    const { result } = renderHook(() => useSessionConversations(undefined), {
+      wrapper: Wrapper,
+    });
+
+    await act(async () => {
+      await result.current.refreshSessionTitle("s1");
+    });
+
+    expect(refreshSession).toHaveBeenCalledWith("s1");
+  });
+
+  it("stops retrying title refresh for a session after a 404", async () => {
+    const refreshSession = vi.fn().mockRejectedValue(
+      Object.assign(new Error("Not found"), { status: 404 }),
+    );
+    vi.mocked(useChatSessions).mockReturnValue({
+      sessions: [session("s1")],
+      isLoading: false,
+      createSession: vi.fn(),
+      isCreating: false,
+      removeSession: vi.fn(),
+      refreshSession,
+    });
+
+    const { result } = renderHook(() => useSessionConversations(undefined), {
+      wrapper: Wrapper,
+    });
+
+    await act(async () => {
+      await result.current.refreshSessionTitle("s1");
+      await result.current.refreshSessionTitle("s1");
+      await result.current.refreshSessionTitle("s1");
+    });
+
+    expect(refreshSession).toHaveBeenCalledTimes(1);
   });
 });

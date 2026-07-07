@@ -77,11 +77,13 @@ class EvidenceExtractionWorkflow:
         extraction_mode: str = DEFAULT_EXTRACTION_WORKFLOW_MODE,
         enable_review_validation: bool = True,
         enable_target_guard: bool = True,
+        enable_source_grounding: bool = True,
         review_reject_policy: str = DEFAULT_REVIEW_REJECT_POLICY,
     ):
         self._extraction_mode = resolve_extraction_mode(extraction_mode)
         self._enable_review_validation = enable_review_validation
         self._enable_target_guard = enable_target_guard
+        self._enable_source_grounding = enable_source_grounding
         self._review_reject_policy: ReviewRejectPolicy = resolve_review_reject_policy(review_reject_policy)
         self._relevance_scan = RelevanceScanStage(provider, input_budget_tokens=input_budget_tokens)
         self._catalog_extraction = CatalogExtractionStage(
@@ -376,8 +378,11 @@ class EvidenceExtractionWorkflow:
             graph.add_edge("target_guard", "target_span_recovery")
         else:
             graph.add_edge("value_normalization", "target_span_recovery")
-        graph.add_edge("target_span_recovery", "source_grounding")
-        graph.add_edge("source_grounding", "chain_assembly")
+        if self._enable_source_grounding:
+            graph.add_edge("target_span_recovery", "source_grounding")
+            graph.add_edge("source_grounding", "chain_assembly")
+        else:
+            graph.add_edge("target_span_recovery", "chain_assembly")
         graph.add_edge("chain_assembly", "quality_gate")
         graph.add_edge("quality_gate", "catalog_backfill")
         graph.add_edge("catalog_backfill", END)

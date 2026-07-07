@@ -21,6 +21,14 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     StandardizationInput,
     TerminologyCandidate,
 )
+from src.core.standardize_entities_and_align_knowledge.db_ready_gate import (
+    DEFAULT_DB_READY_GATE_POLICY,
+    DbReadyCandidate,
+    DbReadyDecision,
+    DbReadyGatePolicy,
+    DbReadyGateReport,
+    evaluate_db_ready_candidates,
+)
 from src.core.standardize_entities_and_align_knowledge.importers import ImportBatch
 from src.core.standardize_entities_and_align_knowledge.normalizers import (
     make_entity_scope_hash,
@@ -82,6 +90,20 @@ RELATIONSHIP_OBJECT_TYPE = {
 }
 
 
+def _sanitize_jsonb_value(value: Any) -> Any:
+    """Remove characters PostgreSQL JSONB cannot store from nested payloads."""
+    if isinstance(value, str):
+        return value.replace("\x00", "")
+    if isinstance(value, dict):
+        return {
+            _sanitize_jsonb_value(str(key)): _sanitize_jsonb_value(nested_value)
+            for key, nested_value in value.items()
+        }
+    if isinstance(value, (list, tuple)):
+        return [_sanitize_jsonb_value(item) for item in value]
+    return value
+
+
 @dataclass(frozen=True)
 class RunItemSpec:
     """Internal repository contract for staging one run-evidence row."""
@@ -100,12 +122,32 @@ class RunItemSpec:
     raw_payload: dict[str, Any]
 
 
+@dataclass(frozen=True)
+class RunItemEntityBindings:
+    """Resolved normalized entity bindings for one run evidence row."""
+
+    primary_entity_id: str | None
+    primary_external_id: str | None
+    primary_entity_tuple: tuple[str | None, str, str] | None
+    external_ids: tuple[str, ...]
+    gene_ids: tuple[str, ...]
+    variant_ids: tuple[str, ...]
+    disease_ids: tuple[str, ...]
+    normalized_entity_ids: tuple[str, ...]
+
+
 class StandardizationRepository:
     """SQLAlchemy-backed repository for deterministic standardization state."""
 
     def __init__(self, session: Any) -> None:
         self.session = session
         self._run_item_rows: list[tuple[RunEvidenceItem, RunItemSpec]] = []
+        self._db_ready_gate_report: DbReadyGateReport | None = None
+
+    @property
+    def db_ready_gate_report(self) -> DbReadyGateReport | None:
+        """Return the latest DB-ready gate audit report for this repository instance."""
+        return self._db_ready_gate_report
 
     async def find_alias_candidates(
         self,
@@ -899,13 +941,13 @@ class StandardizationRepository:
                 track=spec.track,
                 field_id=spec.field_id,
                 status=spec.status,
-                value=spec.value,
+                value=_sanitize_jsonb_value(spec.value),
                 confidence=spec.confidence,
                 position_hash=spec.position_hash,
                 text_hash=spec.text_hash,
-                source_span=spec.source_span,
+                source_span=_sanitize_jsonb_value(spec.source_span),
                 entity_scope_hash=spec.entity_scope_hash,
-                raw_payload=spec.raw_payload,
+                raw_payload=_sanitize_jsonb_value(spec.raw_payload),
             )
             self.session.add(run_item)
             run_items.append(run_item)
@@ -1024,9 +1066,21 @@ class StandardizationRepository:
                     entity.display_name,
                 )
 
-        for row, spec in self._run_item_rows:
-            if row.status not in CANONICAL_ELIGIBLE_STATUSES:
-                continue
+        eligible_run_item_rows = tuple(
+            (row, spec) for row, spec in self._run_item_rows if row.status in CANONICAL_ELIGIBLE_STATUSES
+        )
+        if input_data.track_payloads:
+            eligible_run_item_rows = self._filter_db_ready_run_item_rows(
+                input_data=input_data,
+                run_item_rows=eligible_run_item_rows,
+                matches=matches,
+                entity_ids=entity_ids,
+                entity_externals_by_id=entity_externals_by_id,
+            )
+        else:
+            self._db_ready_gate_report = None
+
+        for row, spec in eligible_run_item_rows:
             existing = existing_lookup.get(
                 self._canonical_identity_key(
                     row.source_document_id,
@@ -1035,15 +1089,18 @@ class StandardizationRepository:
                     row.entity_scope_hash,
                 )
             )
-            entity_id = entity_ids_by_candidate_id.get(spec.candidate_id)
-            entity_tuple = entity_externals_by_id.get(entity_id)
-            if entity_tuple is not None:
-                external_id, entity_type, _display_name = entity_tuple
-            else:
-                external_id, entity_type, _display_name = None, "", ""
-            variant_ids = [external_id] if entity_type == EntityType.VARIANT.value and external_id else []
-            gene_ids = [external_id] if entity_type == EntityType.GENE.value and external_id else []
-            entity_ids_list = [external_id] if external_id else []
+            bindings = self._run_item_entity_bindings(
+                spec,
+                matches,
+                entity_ids,
+                entity_externals_by_id,
+            )
+            entity_id = bindings.primary_entity_id
+            external_id = bindings.primary_external_id
+            entity_tuple = bindings.primary_entity_tuple
+            variant_ids = list(bindings.variant_ids)
+            gene_ids = list(bindings.gene_ids)
+            entity_ids_list = list(bindings.external_ids)
             search_text = self._build_search_text(row, external_id, entity_tuple)
             payload = {
                 **row.raw_payload,
@@ -1098,6 +1155,167 @@ class StandardizationRepository:
                 existing.conflict_flag = True
 
         await self.session.flush()
+
+    def _filter_db_ready_run_item_rows(
+        self,
+        *,
+        input_data: StandardizationInput,
+        run_item_rows: tuple[tuple[RunEvidenceItem, RunItemSpec], ...],
+        matches: tuple[EntityMatch, ...],
+        entity_ids: tuple[str, ...],
+        entity_externals_by_id: dict[str, tuple[str | None, str, str]],
+        policy: DbReadyGatePolicy = DEFAULT_DB_READY_GATE_POLICY,
+    ) -> tuple[tuple[RunEvidenceItem, RunItemSpec], ...]:
+        """Filter canonical candidates through the DB-ready gate."""
+        candidates: list[DbReadyCandidate] = []
+        for row, spec in run_item_rows:
+            bindings = self._run_item_entity_bindings(
+                spec,
+                matches,
+                entity_ids,
+                entity_externals_by_id,
+            )
+            candidates.append(self._db_ready_candidate_from_run_item(input_data, row, spec, bindings))
+
+        report = evaluate_db_ready_candidates(candidates, policy)
+        self._db_ready_gate_report = report
+        if report.rejected_count:
+            reason_summary = ", ".join(f"{entry.reason.value}={entry.count}" for entry in report.rejection_counts)
+            logger.info(
+                "DB-ready gate accepted {} and rejected {} canonical candidate(s) for document={} reasons=[{}]",
+                report.accepted_count,
+                report.rejected_count,
+                input_data.document_id,
+                reason_summary,
+            )
+
+        return tuple(
+            pair
+            for pair, result in zip(run_item_rows, report.results, strict=False)
+            if result.decision == DbReadyDecision.ACCEPTED
+        )
+
+    def _db_ready_candidate_from_run_item(
+        self,
+        input_data: StandardizationInput,
+        row: RunEvidenceItem,
+        spec: RunItemSpec,
+        bindings: RunItemEntityBindings,
+    ) -> DbReadyCandidate:
+        """Adapt one staged run item into the pure DB-ready gate contract."""
+        raw_payload = spec.raw_payload
+        return DbReadyCandidate(
+            candidate_id=spec.candidate_id or self._hash_payload(
+                {
+                    "track": spec.track,
+                    "field_id": spec.field_id,
+                    "group_id": spec.group_id,
+                    "position_hash": spec.position_hash,
+                },
+            ),
+            source_document_id=input_data.source_document_id,
+            processing_run_id=input_data.processing_run_id,
+            field_id=spec.field_id,
+            group_id=spec.group_id,
+            status=row.status,
+            track=row.track,
+            value_text=self._run_item_value_text(spec.value),
+            source_span=spec.source_span or None,
+            gene_id=bindings.gene_ids[0] if bindings.gene_ids else None,
+            variant_id=bindings.variant_ids[0] if bindings.variant_ids else None,
+            disease_id=bindings.disease_ids[0] if bindings.disease_ids else None,
+            normalized_entity_ids=bindings.normalized_entity_ids,
+            review_status=self._raw_review_status(raw_payload),
+            expert_override=raw_payload.get("expert_override") is True,
+        )
+
+    def _run_item_entity_bindings(
+        self,
+        spec: RunItemSpec,
+        matches: tuple[EntityMatch, ...],
+        entity_ids: tuple[str, ...],
+        entity_externals_by_id: dict[str, tuple[str | None, str, str]],
+    ) -> RunItemEntityBindings:
+        """Resolve normalized bindings related to one run item spec."""
+        primary_entity_id: str | None = None
+        primary_external_id: str | None = None
+        primary_entity_tuple: tuple[str | None, str, str] | None = None
+        external_ids: list[str] = []
+        gene_ids: list[str] = []
+        variant_ids: list[str] = []
+        disease_ids: list[str] = []
+        normalized_entity_ids: list[str] = []
+
+        for match, entity_id in zip(matches, entity_ids, strict=False):
+            if not entity_id or not self._spec_related_to_match(spec, match):
+                continue
+            entity_tuple = entity_externals_by_id.get(str(entity_id))
+            if entity_tuple is None:
+                entity_tuple = (match.external_id, match.candidate.entity_type.value, match.display_name)
+            external_id, entity_type, _display_name = entity_tuple
+
+            self._append_unique(normalized_entity_ids, str(entity_id))
+            if external_id:
+                self._append_unique(external_ids, external_id)
+                if entity_type == EntityType.GENE.value:
+                    self._append_unique(gene_ids, external_id)
+                elif entity_type == EntityType.VARIANT.value:
+                    self._append_unique(variant_ids, external_id)
+                elif entity_type == EntityType.DISEASE.value:
+                    self._append_unique(disease_ids, external_id)
+
+            if primary_entity_id is None or spec.candidate_id == match.candidate.candidate_id:
+                primary_entity_id = str(entity_id)
+                primary_external_id = external_id
+                primary_entity_tuple = entity_tuple
+
+        return RunItemEntityBindings(
+            primary_entity_id=primary_entity_id,
+            primary_external_id=primary_external_id,
+            primary_entity_tuple=primary_entity_tuple,
+            external_ids=tuple(external_ids),
+            gene_ids=tuple(gene_ids),
+            variant_ids=tuple(variant_ids),
+            disease_ids=tuple(disease_ids),
+            normalized_entity_ids=tuple(normalized_entity_ids),
+        )
+
+    @staticmethod
+    def _spec_related_to_match(spec: RunItemSpec, match: EntityMatch) -> bool:
+        """Return whether a run item spec and entity match share the same evidence chain."""
+        return spec.track == match.candidate.track and (
+            spec.candidate_id == match.candidate.candidate_id
+            or spec.group_id == match.candidate.chain_id
+            or bool(
+                match.candidate.field_id
+                and spec.group_id == match.candidate.chain_id
+                and spec.field_id == match.candidate.field_id,
+            )
+        )
+
+    @staticmethod
+    def _append_unique(values: list[str], value: str) -> None:
+        """Append a non-empty value once while preserving order."""
+        if value and value not in values:
+            values.append(value)
+
+    @staticmethod
+    def _run_item_value_text(value: dict[str, Any]) -> str | None:
+        """Extract a compact text value from a run item value payload."""
+        for key in ("value", "text", "display_name"):
+            entry = value.get(key)
+            if entry not in (None, ""):
+                return str(entry)
+        return None
+
+    @staticmethod
+    def _raw_review_status(raw_payload: dict[str, Any]) -> str | None:
+        """Extract review status from known raw payload keys."""
+        for key in ("review_status", "human_review_status", "expert_review_status"):
+            value = raw_payload.get(key)
+            if isinstance(value, str) and value.strip():
+                return value
+        return None
 
     def _build_search_text(
         self,

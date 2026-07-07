@@ -318,6 +318,26 @@ class TestContentHash:
         assert h_hard != h_soft
         assert h_hard == compute_hash_from_text("content", scope_key="review_policy=hard_veto")
 
+    @pytest.mark.asyncio
+    async def test_ablation_flags_add_scope_suffix(self):
+        """Ablation runs get distinct cache scopes from production runs."""
+        base = PipelineGraphState(
+            processing_run_id="run-1",
+            source_document_id="doc-1",
+            mode=PipelineMode.FULL,
+            source_type=SourceType.LOCAL,
+            pre_parsed_markdown="content",
+        )
+        no_grounding = base.model_copy(update={"ablation_disable_grounding": True})
+        h_default = await compute_content_hash(base)
+        h_no_grounding = await compute_content_hash(no_grounding)
+
+        assert h_default != h_no_grounding
+        assert h_no_grounding == compute_hash_from_text(
+            "content",
+            scope_key="ablation=disable_grounding",
+        )
+
 
 # ── Cache service tests ──────────────────────────────────────────────────
 
