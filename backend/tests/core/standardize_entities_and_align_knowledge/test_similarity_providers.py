@@ -115,6 +115,53 @@ async def test_embedding_provider_does_not_duplicate_v1_prefix() -> None:
 
 
 @pytest.mark.asyncio
+async def test_simple_embedding_provider_retries_alternate_payload_schema_after_422() -> None:
+    """Simple local embedding services may use inputs instead of texts."""
+    import json
+
+    captured_keys: list[str] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        captured_keys.extend(body.keys())
+        if "texts" in body:
+            return httpx.Response(422, json={"detail": "texts is not a valid field"})
+        return httpx.Response(200, json={"model": "BAAI/bge-m3", "embeddings": [[0.1, 0.2]]})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        provider = EmbeddingHttpProvider(
+            base_url="http://embedding-service",
+            model="BAAI/bge-m3",
+            client=client,
+            api_style="simple",
+        )
+        result = await provider.embed_texts("BRCA1")
+
+    assert captured_keys == ["texts", "inputs"]
+    assert result.vectors == ((0.1, 0.2),)
+
+
+@pytest.mark.asyncio
+async def test_simple_embedding_provider_accepts_embeddings_response_field() -> None:
+    """Simple embedding services may return embeddings directly."""
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"model": "BAAI/bge-m3", "embeddings": [[0.1, 0.2], [0.3, 0.4]]})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        provider = EmbeddingHttpProvider(
+            base_url="http://embedding-service",
+            model="BAAI/bge-m3",
+            client=client,
+            api_style="simple",
+        )
+        result = await provider.embed_texts(("BRCA1", "Fabry disease"))
+
+    assert result.model == "BAAI/bge-m3"
+    assert result.vectors == ((0.1, 0.2), (0.3, 0.4))
+
+
+@pytest.mark.asyncio
 async def test_rerank_provider_returns_ranked_scores() -> None:
     """Rerank provider maps inference service rerank results into typed scores."""
 

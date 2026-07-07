@@ -95,7 +95,7 @@ RAW_PDF_ROOT: Path = INPUTS_ROOT / "literature_acquisition" / "downloads"
 PAPER_ROOT: Path = BENCHMARK_ROOT / "paper"
 """Consolidated paper artifacts root.
 
-Single source of truth for all BIBM paper-related data:
+Single source of truth for all benchmark paper-related data:
 manifests, reports, ground truth, and analysis scripts.
 """
 

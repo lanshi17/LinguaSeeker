@@ -4,8 +4,10 @@ import type { VariantIndexEntry, VariantIndexData, VariantIndexFilters, Classifi
 import { computeReviewProgress } from "./fieldModel";
 import { classifyLevel, severityRank } from "./pathogenicity";
 
+const UNKNOWN_SLUG_VALUE = "unknown";
+
 function makeVariantSlug(gene: string, variant: string, disease: string): string {
-  const parts = [gene || "unknown", variant || "unknown"];
+  const parts = [gene || UNKNOWN_SLUG_VALUE, variant || UNKNOWN_SLUG_VALUE];
   if (disease) parts.push(disease);
   return parts.join(":");
 }
@@ -174,9 +176,13 @@ export function aggregateVariants(results: EvidenceSearchResult[]): VariantIndex
 export function parseVariantSlug(variantSlug: string): EvidenceSearchQuery {
   const [gene = "", variant = "", ...diseaseParts] = variantSlug.split(":");
   const disease = diseaseParts.join(":");
+  const normalizedVariant = variant.trim();
   return {
     gene: gene || undefined,
-    variant: variant || undefined,
+    variant:
+      normalizedVariant && normalizedVariant !== UNKNOWN_SLUG_VALUE
+        ? normalizedVariant
+        : undefined,
     disease: disease || undefined,
   };
 }

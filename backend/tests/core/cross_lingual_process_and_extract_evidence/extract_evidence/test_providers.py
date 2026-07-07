@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
+from langchain_core.exceptions import OutputParserException
 from pydantic import BaseModel
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.config_context import (
@@ -118,6 +119,42 @@ def test_provider_falls_back_to_plain_json_when_response_format_is_unsupported()
             output_schema=DemoSchema,
             tier=EvidenceModelTier.STRONG,
             stage="demo",
+        )
+
+    assert result.answer == "ok"
+    structured.invoke.assert_called_once()
+    client.invoke.assert_called_once()
+
+
+def test_provider_falls_back_to_plain_json_when_structured_parser_fails():
+    ctx = EvidenceExtractionConfigContext(
+        api_key="key",
+        base_url="http://localhost:8001/v1",
+        max_tokens=8192,
+        reasoning_api_key="reasoning-key",
+        reasoning_base_url="http://localhost:8001/v1",
+        fast_model="fast",
+        standard_model="standard",
+        strong_model="strong",
+    )
+
+    client = MagicMock()
+    structured = MagicMock()
+    structured.invoke.side_effect = OutputParserException("Invalid json output: not json")
+    fallback_message = MagicMock()
+    fallback_message.content = '{"answer": "ok"}'
+    client.invoke.return_value = fallback_message
+    client.with_structured_output.return_value = structured
+    with patch(
+        "src.core.cross_lingual_process_and_extract_evidence.extract_evidence.providers.create_llm_client",
+        return_value=client,
+    ):
+        provider = LangChainEvidenceProvider(ctx)
+        result = provider.invoke_structured(
+            prompt="Return JSON.",
+            output_schema=DemoSchema,
+            tier=EvidenceModelTier.STRONG,
+            stage="primary_broad_extraction",
         )
 
     assert result.answer == "ok"

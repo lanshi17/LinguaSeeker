@@ -69,32 +69,71 @@ class EmbeddingHttpProvider:
         """Embed texts through the service."""
         if isinstance(texts, str):
             texts = (texts,)
+        text_list = list(texts)
         if self._api_style == self._SIMPLE:
-            payload: dict[str, object] = {"texts": list(texts)}
+            payload: dict[str, object] = {"texts": text_list}
         else:
-            payload = {"input": list(texts), "model": self._model}
+            payload = {"input": text_list, "model": self._model}
         if self._client is not None:
-            result = await self._post_embeddings(self._client, payload)
+            result = (
+                await self._post_simple_embeddings(self._client, text_list)
+                if self._api_style == self._SIMPLE
+                else await self._post_embeddings(self._client, payload, len(text_list))
+            )
         else:
             async with httpx.AsyncClient(timeout=self._timeout) as client:
-                result = await self._post_embeddings(client, payload)
+                result = (
+                    await self._post_simple_embeddings(client, text_list)
+                    if self._api_style == self._SIMPLE
+                    else await self._post_embeddings(client, payload, len(text_list))
+                )
         self._rotate_key()
         return result
+
+    async def _post_simple_embeddings(
+        self,
+        client: httpx.AsyncClient,
+        texts: list[str],
+    ) -> EmbeddingBatchResult:
+        payloads: tuple[dict[str, object], ...] = (
+            {"texts": texts},
+            {"inputs": texts},
+            {"input": texts},
+            {"sentences": texts},
+        )
+        last_exc: httpx.HTTPStatusError | None = None
+        for payload in payloads:
+            try:
+                return await self._post_embeddings(client, payload, len(texts))
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code != 422:
+                    raise
+                last_exc = exc
+                logger.debug(
+                    "Simple embedding payload rejected with 422; retrying alternate schema: keys={}",
+                    list(payload.keys()),
+                )
+        if last_exc is not None:
+            raise last_exc
+        raise RuntimeError("No simple embedding payloads configured")
 
     async def _post_embeddings(
         self,
         client: httpx.AsyncClient,
         payload: dict[str, object],
+        expected_count: int,
     ) -> EmbeddingBatchResult:
         endpoint = "embed" if self._api_style == self._SIMPLE else "embeddings"
         response = await client.post(f"{self._api_root()}/{endpoint}", json=payload, headers=self._current_headers())
         response.raise_for_status()
         body = response.json()
         if self._api_style == self._SIMPLE:
-            vectors = tuple(tuple(float(value) for value in item["embedding"]) for item in body.get("results", []))
+            vectors = _parse_simple_embedding_vectors(body)
         else:
             data = sorted(body.get("data", []), key=lambda item: item.get("index", 0))
             vectors = tuple(tuple(float(value) for value in item["embedding"]) for item in data)
+        if len(vectors) != expected_count:
+            raise ValueError(f"Embedding service returned {len(vectors)} vectors for {expected_count} input texts")
         return EmbeddingBatchResult(model=str(body.get("model") or self._model), vectors=vectors)
 
     def _api_root(self) -> str:
@@ -235,7 +274,7 @@ class FallbackEmbeddingProvider:
         except Exception as e:
             if self._remote is None:
                 raise
-            logger.warning("Local embedding failed ({}), falling back to remote", e)
+            logger.warning("Local embedding failed ({}: {!r}), falling back to remote", type(e).__name__, e)
             result = await self._remote.embed_texts(texts)
             if self._local._model != self._remote._model:
                 logger.error(
@@ -269,5 +308,38 @@ class FallbackRerankProvider:
         except Exception as e:
             if self._remote is None:
                 raise
-            logger.warning("Local rerank failed ({}), falling back to remote", e)
+            logger.warning("Local rerank failed ({}: {!r}), falling back to remote", type(e).__name__, e)
             return await self._remote.rerank(query, documents, top_k=top_k)
+
+
+def _parse_simple_embedding_vectors(body: object) -> tuple[tuple[float, ...], ...]:
+    if not isinstance(body, dict):
+        raise ValueError("Embedding service response must be a JSON object")
+
+    results = body.get("results")
+    if isinstance(results, list):
+        return tuple(_coerce_embedding_vector(item.get("embedding") if isinstance(item, dict) else item) for item in results)
+
+    for key in ("embeddings", "vectors"):
+        value = body.get(key)
+        if isinstance(value, list):
+            return tuple(_coerce_embedding_vector(item) for item in value)
+
+    embedding = body.get("embedding")
+    if isinstance(embedding, list):
+        return (_coerce_embedding_vector(embedding),)
+
+    data = body.get("data")
+    if isinstance(data, list):
+        sorted_data = sorted(data, key=lambda item: item.get("index", 0) if isinstance(item, dict) else 0)
+        return tuple(
+            _coerce_embedding_vector(item.get("embedding") if isinstance(item, dict) else item) for item in sorted_data
+        )
+
+    raise ValueError(f"Embedding service response does not contain vectors; keys={list(body.keys())}")
+
+
+def _coerce_embedding_vector(values: object) -> tuple[float, ...]:
+    if not isinstance(values, list):
+        raise ValueError("Embedding vector must be a JSON array")
+    return tuple(float(value) for value in values)

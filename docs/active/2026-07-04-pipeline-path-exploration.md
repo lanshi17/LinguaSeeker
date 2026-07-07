@@ -37,7 +37,7 @@ The older Dataset D optimization plan showed that broader extraction without val
 - profile restriction that became too aggressive and produced all-missing entries;
 - Phase 3 gene-variant coexistence gate dropping identity fields until it was relaxed.
 
-Relevant document: `docs/planned/2026-06-24-bibm-dataset-d-pipeline-optimization-design.md`.
+Relevant document: Dataset D pipeline optimization design (archived).
 
 ### What Did Work Better
 
@@ -52,8 +52,6 @@ The 53-document Rett/MECP2 benchmark supports a governance-first path:
 Relevant artifacts:
 
 - `benchmark/paper/reports/final_benchmark_registry/rett_benchmark_registry_20260704_172954.md`
-- `benchmark/paper/reports/final_paper_materials_minimal/01_core_results/rett_bibm_main_results_packet.md`
-- `benchmark/paper/reports/final_paper_materials_minimal/03_audit/rett_bibm_claim_audit.md`
 
 ## Candidate Paths
 

@@ -28,7 +28,7 @@ class ExtractionProfile(str, Enum):
 
     ``NONE`` is the production default: extract all non-curation fields.
     ``DATASET_D_PUBLICATION`` restricts to the 20 fields scored or needed
-    for the merged_73 BIBM evaluation.
+    for the merged_73 evaluation.
     """
 
     NONE = "none"
