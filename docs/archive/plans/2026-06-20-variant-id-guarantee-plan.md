@@ -1,5 +1,10 @@
 # Variant ID Guarantee — Fix Unknown Variant IDs in Evidence DB
 
+**Status:** completed
+**Created:** 2026-06-20
+**Completed:** 2026-06-20
+**PR:** merged
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Guarantee every variant-scoped evidence record carries a resolvable, stable `variant_id` (ClinVar `external_id` preferred; deterministic internal fallback otherwise), and propagate it end-to-end through `normalized_entities` → `canonical_evidence_items.active_payload` → `frontend_search_index.variant_ids`.
