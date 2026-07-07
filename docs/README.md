@@ -89,7 +89,6 @@ docs/
 |------|------|------|
 | 2026-06-29 | [BIBM N=50 Comparison and Ablation Experiment Design](planned/2026-06-29-bibm-n50-comparison-ablation-design.md) | planned |
 | 2026-06-24 | [BIBM Dataset D Pipeline Optimization Design](planned/2026-06-24-bibm-dataset-d-pipeline-optimization-design.md) | proposed |
-| 2026-06-20 | [Variant ID Guarantee Plan](planned/2026-06-20-variant-id-guarantee-plan.md) | planned |
 
 ## 归档计划
 
@@ -104,6 +103,7 @@ docs/
 | 2026-06-14 | [BIBM Main Paper G3 Semantic Boundary Repair](archive/plans/2026-06-14-bibm-main-paper-g3-semantic-boundary-repair-plan.md) | completed |
 | 2026-06-14 | [BIBM Main Paper Rescue Plan](archive/plans/2026-06-14-bibm-main-paper-rescue.md) | completed |
 | 2026-06-14 | [BIBM Main Paper Roadmap](archive/plans/2026-06-14-bibm-main-paper-roadmap.md) | completed |
+| 2026-06-20 | [Variant ID Guarantee Plan](archive/plans/2026-06-20-variant-id-guarantee-plan.md) | completed |
 | 2026-06-13 | [BIBM G1 Decision Memo](archive/plans/2026-06-13-bibm-g1-decision.md) | completed |
 | 2026-06-12 | [BIBM Novelty Plan](archive/plans/2026-06-12-bibm-novelty.md) | completed |
 | 2026-07-01 | [Semantic Word Alignment Design](archive/plans/2026-07-01-semantic-word-alignment-design.md) | completed |
