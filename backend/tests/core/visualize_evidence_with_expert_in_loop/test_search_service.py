@@ -362,6 +362,77 @@ async def test_get_group_detail_pivots_distribution_and_traces():
 
 
 @pytest.mark.asyncio
+async def test_get_group_detail_ignores_stale_untranslated_db_render_payload(tmp_path):
+    """Detail view should not display source-language DB cache as translated English."""
+    source_document_id = uuid4()
+    evidence_id = uuid4()
+    group_id = "gene=['MECP2']"
+    stale_chinese_text = "雷特氏症是一種複雜性神經發展疾病，常見於小女孩。"
+    english_text = "Rett syndrome is a complex neurodevelopmental disorder, commonly seen in girls."
+    output_dir = tmp_path / "phase_2" / str(source_document_id)
+    output_dir.mkdir(parents=True)
+    (output_dir / "translated.json").write_text(
+        json.dumps(
+            {
+                "blocks": [{"type": "text", "text": english_text, "page_idx": 0}],
+                "formatted_text": english_text,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    rows = [
+        _cei(
+            canonical_evidence_id=evidence_id,
+            source_document_id=source_document_id,
+            field_id="A.gene_symbol",
+            review_status="provisional",
+            current_best_confidence=Decimal("0.9500"),
+            active_payload={
+                "group_id": group_id,
+                "field_name": "Gene symbol",
+                "category": "A",
+                "value": "MECP2",
+                "track": "translated",
+                "source": {
+                    "text_snippet": english_text,
+                    "start_offset": 0,
+                    "end_offset": 5,
+                    "page": 1,
+                },
+            },
+        )
+    ]
+
+    service = SearchService(
+        _FakeSession(
+            [
+                _FakeResult(rows=rows),
+                _FakeResult(scalars=[]),
+                _FakeResult(
+                    rows=[
+                        (
+                            {"title": "Rett syndrome guide", "source_language": "zh"},
+                            stale_chinese_text,
+                            stale_chinese_text,
+                            [{"type": "text", "text": stale_chinese_text, "page_idx": 0}],
+                            [{"type": "text", "text": stale_chinese_text, "page_idx": 0}],
+                        )
+                    ]
+                ),
+                _FakeResult(scalar={"phase_2_output": {"output_dir": str(output_dir), "source_language": "zh"}}),
+            ]
+        )
+    )
+
+    detail = await service.get_group_detail(group_id=group_id)
+
+    assert detail.original_document_text == stale_chinese_text
+    assert detail.translated_document_text == english_text
+    assert detail.translated_blocks == [{"type": "text", "text": english_text, "page_idx": 0}]
+
+
+@pytest.mark.asyncio
 async def test_get_group_detail_includes_translation_alignment_span_pairs(tmp_path):
     """Group detail includes persisted translation span-pair alignment."""
     source_document_id = uuid4()

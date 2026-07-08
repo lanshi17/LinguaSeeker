@@ -16,6 +16,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.utils.parsing import parse_gene_from_group_id, parse_variant_from_group_id
 from src.utils.text_normalize import block_text_from_dict, concat_document_text
+from src.utils.translation_render_quality import (
+    is_likely_untranslated_render_blocks,
+    is_likely_untranslated_render_payload,
+)
 
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     TranslationAlignmentChunk,
@@ -1134,6 +1138,7 @@ class SearchService:
         db_original_blocks: list[dict] | None = metadata_row[3] if metadata_row else None
         db_translated_blocks: list[dict] | None = metadata_row[4] if metadata_row else None
         title = _coerce_str(raw_metadata.get("title")) if isinstance(raw_metadata, dict) else None
+        source_language = _extract_source_language(raw_metadata)
 
         # Look up phase_2 output_dir from persisted pipeline state
         phase2_output_dir: str | None = None
@@ -1149,6 +1154,7 @@ class SearchService:
             p2_output = state_json.get("phase_2_output")
             if isinstance(p2_output, dict):
                 phase2_output_dir = p2_output.get("output_dir")
+            source_language = source_language or _extract_source_language_from_state(state_json)
 
         distribution = EvidenceFieldDistribution()
         detail_items: list[EvidenceGroupItem] = []
@@ -1313,7 +1319,17 @@ class SearchService:
             identifiers=identifiers,
             known_output_dir=phase2_output_dir,
         )
-        loaded_translated_text = db_translated_text or _load_full_document_text(
+        if source_language is None:
+            source_language = _detect_source_language_from_text(loaded_original_text)
+
+        usable_db_translated_text = None
+        if db_translated_text and not is_likely_untranslated_render_payload(
+            source_language=source_language,
+            original_text=loaded_original_text,
+            translated_text=db_translated_text,
+        ):
+            usable_db_translated_text = db_translated_text
+        loaded_translated_text = usable_db_translated_text or _load_full_document_text(
             source_document_id,
             track="translated",
             identifiers=identifiers,
@@ -1325,12 +1341,31 @@ class SearchService:
             identifiers=identifiers,
             known_output_dir=phase2_output_dir,
         )
-        loaded_translated_blocks = db_translated_blocks or _load_full_document_blocks(
+        usable_db_translated_blocks = None
+        if db_translated_blocks and not is_likely_untranslated_render_blocks(
+            source_language=source_language,
+            original_blocks=loaded_original_blocks,
+            translated_blocks=db_translated_blocks,
+        ):
+            usable_db_translated_blocks = db_translated_blocks
+        loaded_translated_blocks = usable_db_translated_blocks or _load_full_document_blocks(
             source_document_id,
             track="translated",
             identifiers=identifiers,
             known_output_dir=phase2_output_dir,
         )
+        if is_likely_untranslated_render_payload(
+            source_language=source_language,
+            original_text=loaded_original_text,
+            translated_text=loaded_translated_text,
+        ):
+            loaded_translated_text = None
+        if is_likely_untranslated_render_blocks(
+            source_language=source_language,
+            original_blocks=loaded_original_blocks,
+            translated_blocks=loaded_translated_blocks,
+        ):
+            loaded_translated_blocks = None
         original_document_text = _filter_body_text(loaded_original_text)
         translated_document_text = _filter_body_text(loaded_translated_text)
         original_blocks = _filter_body_blocks(loaded_original_blocks, original_document_text)

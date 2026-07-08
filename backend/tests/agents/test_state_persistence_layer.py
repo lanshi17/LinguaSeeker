@@ -429,3 +429,62 @@ async def test_direct_persistence_phase2_rerun_refreshes_document_text_and_block
     assert sd.translated_text == "new translated"
     assert sd.original_blocks == [{"text": "new original"}]
     assert sd.translated_blocks == [{"text": "new translated"}]
+
+
+@pytest.mark.asyncio
+async def test_direct_persistence_full_run_refreshes_untranslated_translation_cache(
+    db_session: AsyncSession,
+):
+    """A normal full run should replace stale source-language translated render payloads."""
+    from src.dao.postgresql.models import SourceDocument
+
+    sd_id = uuid.uuid4()
+    stale_chinese_text = "雷特氏症是一種複雜性神經發展疾病，常見於小女孩。"
+    db_session.add(
+        SourceDocument(
+            source_document_id=sd_id,
+            raw_metadata={},
+            original_text=stale_chinese_text,
+            translated_text=stale_chinese_text,
+            original_blocks=[{"type": "text", "text": stale_chinese_text}],
+            translated_blocks=[{"type": "text", "text": stale_chinese_text}],
+        )
+    )
+    await db_session.commit()
+
+    state = PipelineGraphState(
+        processing_run_id=str(uuid.uuid4()),
+        source_document_id=str(sd_id),
+        mode=PipelineMode.FULL,
+        source_type=SourceType.LOCAL,
+        pipeline_status=PipelineStatus.RUNNING,
+        phase_2_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
+        phase_2_output=Phase2Output(
+            output_dir="/tmp/phase_2",
+            original_json_path="/tmp/phase_2/original.json",
+            translated_json_path="/tmp/phase_2/translated.json",
+            source_language="zh",
+            extraction_result_path="/tmp/phase_2/extraction_result.json",
+            original_text=stale_chinese_text,
+            translated_text="Rett syndrome is a complex neurodevelopmental disorder, commonly seen in girls.",
+            original_blocks=[{"type": "text", "text": stale_chinese_text}],
+            translated_blocks=[
+                {
+                    "type": "text",
+                    "text": "Rett syndrome is a complex neurodevelopmental disorder, commonly seen in girls.",
+                }
+            ],
+        ),
+    )
+
+    await DirectStatePersistence(db_session).save(state)
+
+    sd = await db_session.get(SourceDocument, sd_id)
+    assert sd is not None
+    assert sd.translated_text == "Rett syndrome is a complex neurodevelopmental disorder, commonly seen in girls."
+    assert sd.translated_blocks == [
+        {
+            "type": "text",
+            "text": "Rett syndrome is a complex neurodevelopmental disorder, commonly seen in girls.",
+        }
+    ]

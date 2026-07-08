@@ -36,6 +36,10 @@ from src.dao.postgresql.models import (
     SourceDocument,
 )
 from src.utils.text_normalize import concat_document_text
+from src.utils.translation_render_quality import (
+    is_likely_untranslated_render_blocks,
+    is_likely_untranslated_render_payload,
+)
 
 
 @dataclass
@@ -152,11 +156,22 @@ async def _persist_phase2_document_text(
     sd = await session.get(SourceDocument, sd_id)
     if sd is None:
         return
+    p2 = state.phase_2_output
     replace_existing = _is_phase2_rerun(state)
+    source_language = p2.source_language if p2 is not None else None
+    existing_translated_is_stale = is_likely_untranslated_render_payload(
+        source_language=source_language,
+        original_text=sd.original_text or (p2.original_text if p2 is not None else None),
+        translated_text=sd.translated_text,
+    )
+    existing_translated_blocks_are_stale = is_likely_untranslated_render_blocks(
+        source_language=source_language,
+        original_blocks=sd.original_blocks or (p2.original_blocks if p2 is not None else None),
+        translated_blocks=sd.translated_blocks,
+    )
     needs_original = replace_existing or not sd.original_text
-    needs_translated = replace_existing or not sd.translated_text
+    needs_translated = replace_existing or not sd.translated_text or existing_translated_is_stale
     if needs_original or needs_translated:
-        p2 = state.phase_2_output
         original_text = p2.original_text
         translated_text = p2.translated_text
         if original_text is None and translated_text is None:
@@ -165,11 +180,11 @@ async def _persist_phase2_document_text(
             sd.original_text = original_text
         if needs_translated and translated_text:
             sd.translated_text = translated_text
-    # Persist structured blocks for document rendering
-    p2 = state.phase_2_output
     if p2.original_blocks and (replace_existing or not sd.original_blocks):
         sd.original_blocks = p2.original_blocks
-    if p2.translated_blocks and (replace_existing or not sd.translated_blocks):
+    if p2.translated_blocks and (
+        replace_existing or not sd.translated_blocks or existing_translated_blocks_are_stale
+    ):
         sd.translated_blocks = p2.translated_blocks
 
 

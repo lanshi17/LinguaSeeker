@@ -213,9 +213,16 @@ const en = {
   "evidence.correct.approve": "Approve",
   "evidence.correct.reject": "Reject",
   "evidence.correct.footer": "Field: {field} · Current status: {status}",
+  "evidence.correct.status.provisional": "Provisional",
   "evidence.correct.status.approved": "Approved",
   "evidence.correct.status.corrected": "Corrected",
   "evidence.correct.status.rejected": "Rejected",
+  "evidence.review.success": "Evidence marked {status}",
+  "evidence.review.error": "Failed to update review status",
+  "evidence.review.action.provisional": "Reset",
+  "evidence.review.action.approved": "Approve",
+  "evidence.review.action.corrected": "Correct",
+  "evidence.review.action.rejected": "Reject",
 
   // ── Evidence Search — ExportReportDrawer ──
   "evidence.export.title": "Export Evidence Report",
@@ -403,6 +410,7 @@ const en = {
   "evidenceDb.card.page": "Page {num}",
   "evidenceDb.card.sourceSpan": "Source span",
   "evidenceDb.card.noSourceSpan": "No source span",
+  "evidenceDb.card.reviewDecision": "Review decision",
 
   // ── Evidence DB — BilingualSidebar ──
   "evidenceDb.sidebar.layers": "Evidence Layers",
