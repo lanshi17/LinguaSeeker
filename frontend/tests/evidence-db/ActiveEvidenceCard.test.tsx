@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 import { ActiveEvidenceCard } from "../../src/features/evidence-db/components/ActiveEvidenceCard";
 import type { EvidenceGroupItem } from "../../src/features/evidence-search/types/evidenceSearch";
@@ -30,5 +30,20 @@ describe("ActiveEvidenceCard", () => {
     render(<ActiveEvidenceCard item={baseItem} />);
 
     expect(screen.getByText("No source span")).toBeInTheDocument();
+  });
+
+  it("emits direct review decisions from the active evidence card", () => {
+    const onReviewStatusChange = vi.fn();
+
+    render(
+      <ActiveEvidenceCard
+        item={{ ...baseItem, review_status: "provisional" }}
+        onReviewStatusChange={onReviewStatusChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Approve/i }));
+
+    expect(onReviewStatusChange).toHaveBeenCalledWith("approved");
   });
 });

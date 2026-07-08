@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { App, Button } from "antd";
 import { Badge } from "@/components/ui/Badge";
-import { CheckCircle2, XCircle, Pencil } from "lucide-react";
+import { CheckCircle2, Clock3, XCircle, Pencil } from "lucide-react";
 import { patchEvidence } from "../services/evidenceCorrection";
 import type { ReviewStatusValue } from "@/lib/types/evidence";
 import { useI18n } from "@/lib/i18n";
@@ -29,6 +29,7 @@ const QUICK_ACTIONS: { status: ReviewStatusValue; icon: typeof CheckCircle2; ton
   { status: "approved", icon: CheckCircle2, tone: "var(--color-success-text, #16a34a)" },
   { status: "corrected", icon: Pencil, tone: "var(--color-warning-text, #d97706)" },
   { status: "rejected", icon: XCircle, tone: "var(--color-error-text, #dc2626)" },
+  { status: "provisional", icon: Clock3, tone: "var(--color-text-secondary, #64748b)" },
 ];
 
 // ── Shared ref — allows openFieldReviewMenu to reach the menu's setState ──
@@ -42,8 +43,15 @@ export function openFieldReviewMenu(e: React.MouseEvent, info: FieldReviewInfo) 
   _menuRef.current?.({ x: e.clientX, y: e.clientY, info });
 }
 
+interface FieldReviewMenuProps {
+  onReviewed?: (
+    evidenceId: string,
+    status: ReviewStatusValue,
+  ) => void | Promise<void>;
+}
+
 /** Standalone menu component — render once per page. */
-export function FieldReviewMenu() {
+export function FieldReviewMenu({ onReviewed }: FieldReviewMenuProps = {}) {
   const { t } = useI18n();
   const { message } = App.useApp();
   const [pos, setPos] = useState<PosState>(null);
@@ -62,7 +70,8 @@ export function FieldReviewMenu() {
       setSubmitting(status);
       try {
         await patchEvidence(pos.info.evidenceId, { fields: {}, new_status: status });
-        message.success(t("evidence.review.success", { status }));
+        await onReviewed?.(pos.info.evidenceId, status);
+        message.success(t("evidence.review.success", { status: t(`evidenceDb.review.${status}`) }));
         setPos(null);
       } catch {
         message.error(t("evidence.review.error"));
@@ -70,7 +79,7 @@ export function FieldReviewMenu() {
         setSubmitting(null);
       }
     },
-    [pos, message, t],
+    [onReviewed, pos, message, t],
   );
 
   // Close on click outside (delayed to avoid closing on the same click that opened)

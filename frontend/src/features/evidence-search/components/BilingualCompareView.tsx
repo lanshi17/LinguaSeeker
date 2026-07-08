@@ -754,6 +754,13 @@ export function BilingualCompareView({
   const showTranslatedDocument = hasTranslatedDocumentText(detail);
   const sourceDocumentId = detail.source_document_id;
   const queryClient = useQueryClient();
+  const refreshEvidenceReviewData = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["evidence", "group-detail"] }),
+      queryClient.invalidateQueries({ queryKey: ["evidence", "search"] }),
+      queryClient.invalidateQueries({ queryKey: ["evidence-db"] }),
+    ]);
+  }, [queryClient]);
   const annotationsQuery = useQuery({
     queryKey: ["annotations", sourceDocumentId],
     queryFn: () => listAnnotations(sourceDocumentId),
@@ -811,7 +818,7 @@ export function BilingualCompareView({
         fields: { [fieldType]: selectedText },
         change_reason: `Text selection assignment to ${fieldType}`,
       });
-      void queryClient.invalidateQueries({ queryKey: ["evidence-group-detail", groupId] });
+      await refreshEvidenceReviewData();
     } catch {
       // error handled by caller
     }
@@ -861,7 +868,7 @@ export function BilingualCompareView({
 
   return (
       <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <FieldReviewMenu />
+        <FieldReviewMenu onReviewed={refreshEvidenceReviewData} />
         <Link
           to={`/evidence/detail?groupId=${encodeURIComponent(groupId)}`}
           className="edb-back-link"

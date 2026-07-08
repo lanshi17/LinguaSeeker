@@ -20,6 +20,7 @@ describe("useEvidenceDbViewPrefs", () => {
       showReviewProgress: true,
       showPmid: true,
       showFieldCount: true,
+      showSourceLanguage: true,
     });
   });
 
@@ -40,6 +41,7 @@ describe("useEvidenceDbViewPrefs", () => {
       showReviewProgress: false,
       showPmid: true,
       showFieldCount: true,
+      showSourceLanguage: true,
     });
   });
 

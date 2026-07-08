@@ -217,9 +217,16 @@ const zh: Record<EnKeys, string> = {
   "evidence.correct.approve": "批准",
   "evidence.correct.reject": "驳回",
   "evidence.correct.footer": "字段：{field} · 当前状态：{status}",
+  "evidence.correct.status.provisional": "待审核",
   "evidence.correct.status.approved": "已批准",
   "evidence.correct.status.corrected": "已修正",
   "evidence.correct.status.rejected": "已驳回",
+  "evidence.review.success": "证据已标记为{status}",
+  "evidence.review.error": "更新审核状态失败",
+  "evidence.review.action.provisional": "重置",
+  "evidence.review.action.approved": "批准",
+  "evidence.review.action.corrected": "修正",
+  "evidence.review.action.rejected": "驳回",
 
   // ── 证据检索 — 导出报告 ──
   "evidence.export.title": "导出证据报告",
@@ -407,6 +414,7 @@ const zh: Record<EnKeys, string> = {
   "evidenceDb.card.page": "第 {num} 页",
   "evidenceDb.card.sourceSpan": "源文本段",
   "evidenceDb.card.noSourceSpan": "无源文本段",
+  "evidenceDb.card.reviewDecision": "审核结论",
 
   // ── 证据数据库 — BilingualSidebar ──
   "evidenceDb.sidebar.layers": "证据层",

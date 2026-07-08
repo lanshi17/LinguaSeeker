@@ -105,6 +105,8 @@ export function BilingualEvidenceView({
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<
     string | undefined
   >(undefined);
+  const [reviewSubmittingStatus, setReviewSubmittingStatus] =
+    useState<ReviewStatusValue | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [hoveredAlignmentPairId, setHoveredAlignmentPairId] = useState<string | null>(null);
@@ -160,6 +162,15 @@ export function BilingualEvidenceView({
     error,
   } = useEvidenceGroupDetail(undefined, sourceDocumentId);
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
+  const refreshEvidenceReviewData = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["evidence", "group-detail"] }),
+      queryClient.invalidateQueries({ queryKey: ["evidence", "search"] }),
+      queryClient.invalidateQueries({ queryKey: ["evidence-db"] }),
+    ]);
+  }, [queryClient]);
+
   const annotationsQuery = useQuery({
     queryKey: ["annotations", sourceDocumentId],
     queryFn: () => listAnnotations(sourceDocumentId),
@@ -206,7 +217,38 @@ export function BilingualEvidenceView({
     payload: { color?: string | null; note?: string | null },
   ) => void updateMutation.mutate({ id, payload });
   const handleDeleteAnnotation = (id: string) => void deleteMutation.mutate(id);
-  const { message } = App.useApp();
+
+  useEffect(() => {
+    if (!groupDetail?.items.length) {
+      return;
+    }
+    if (
+      selectedEvidenceId &&
+      groupDetail.items.some((item) => item.canonical_evidence_id === selectedEvidenceId)
+    ) {
+      return;
+    }
+    const firstReviewTarget =
+      groupDetail.items.find((item) => item.review_status === "provisional") ??
+      groupDetail.items[0];
+    setSelectedEvidenceId(firstReviewTarget.canonical_evidence_id);
+  }, [groupDetail, selectedEvidenceId]);
+
+  const handleReviewStatusChange = useCallback(async (
+    evidenceId: string,
+    status: ReviewStatusValue,
+  ) => {
+    setReviewSubmittingStatus(status);
+    try {
+      await patchEvidence(evidenceId, { fields: {}, new_status: status });
+      await refreshEvidenceReviewData();
+      message.success(t("evidence.review.success", { status: t(`evidenceDb.review.${status}`) }));
+    } catch {
+      message.error(t("evidence.review.error"));
+    } finally {
+      setReviewSubmittingStatus(null);
+    }
+  }, [message, refreshEvidenceReviewData, t]);
 
   const handleAssignField = useCallback(async (selectedText: string, fieldType: string) => {
     if (!groupDetail) return;
@@ -220,12 +262,12 @@ export function BilingualEvidenceView({
         fields: { [fieldType]: selectedText },
         change_reason: `Text selection assignment to ${fieldType}`,
       });
+      await refreshEvidenceReviewData();
       message.success(t("evidence.fieldAssign.success", { field: fieldType }));
-      void queryClient.invalidateQueries({ queryKey: ["evidence-group-detail", undefined, sourceDocumentId] });
     } catch {
       message.error(t("evidence.fieldAssign.error"));
     }
-  }, [groupDetail, message, queryClient, sourceDocumentId, t]);
+  }, [groupDetail, message, refreshEvidenceReviewData, t]);
 
   const fieldTypes = useMemo<FieldTypeOption[]>(
     () => EVIDENCE_FIELD_SPECS.map((spec) => ({
@@ -373,6 +415,14 @@ export function BilingualEvidenceView({
     [groupDetail],
   );
 
+  const selectedItem = useMemo(
+    () =>
+      groupDetail?.items.find(
+        (item) => item.canonical_evidence_id === selectedEvidenceId,
+      ) ?? groupDetail?.items[0],
+    [groupDetail, selectedEvidenceId],
+  );
+
   const selectedTrace = useMemo(
     () =>
       groupDetail?.traces.find(
@@ -475,7 +525,7 @@ export function BilingualEvidenceView({
   return (
     <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <style>{bevEmbeddedCSS}</style>
-      <FieldReviewMenu />
+      <FieldReviewMenu onReviewed={refreshEvidenceReviewData} />
 
       {/* Breadcrumb */}
       <nav style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "var(--color-text-muted)" }}>
@@ -548,14 +598,14 @@ export function BilingualEvidenceView({
         {/* Main: bilingual document readers */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Active evidence card */}
-          {selectedEvidenceId && (
+          {selectedItem && (
             <ActiveEvidenceCard
-              item={
-                groupDetail.items.find(
-                  (i) => i.canonical_evidence_id === selectedEvidenceId,
-                ) ?? groupDetail.items[0]
-              }
+              item={selectedItem}
               sourceSpanAvailable={traceHasSourceSpan(selectedTrace)}
+              onReviewStatusChange={(status) => {
+                void handleReviewStatusChange(selectedItem.canonical_evidence_id, status);
+              }}
+              reviewSubmittingStatus={reviewSubmittingStatus}
             />
           )}
           {/* Sync control + bilingual panels */}
