@@ -182,8 +182,8 @@ def test_head_revision_points_to_terminology_schema() -> None:
     assert base.down_revision is None
 
 
-def test_head_revision_points_to_variant_internal_id_index() -> None:
-    """The Alembic head is the document annotations migration."""
+def test_head_revision_points_to_account_scopes() -> None:
+    """The Alembic head includes account-scoped task and evidence isolation."""
     backend_str = str(BACKEND_DIR)
     if backend_str not in sys.path:
         sys.path.insert(0, backend_str)
@@ -198,8 +198,8 @@ def test_head_revision_points_to_variant_internal_id_index() -> None:
     head = script.get_revision("head")
 
     assert head is not None
-    assert head.revision == "pipeline_jobs_20260625"
-    assert head.down_revision == "doc_ann_20260623"
+    assert head.revision == "account_scopes_20260709"
+    assert head.down_revision == "chat_session_title_20260705"
 
 
 def test_pipeline_run_leases_migration_chain() -> None:

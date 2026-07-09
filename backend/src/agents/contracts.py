@@ -434,6 +434,7 @@ class PipelineGraphState(BaseModel):
     # Run identity (UUID strings)
     processing_run_id: str
     source_document_id: str
+    owner_user_id: str | None = None
 
     # Execution mode
     mode: PipelineMode
@@ -514,6 +515,7 @@ class PipelineGraphState(BaseModel):
         return cls(
             processing_run_id=rd["processing_run_id"],
             source_document_id=rd["source_document_id"],
+            owner_user_id=rd.get("owner_user_id"),
             mode=PipelineMode(rd.get("mode", "full")),
             source_type=SourceType(rd.get("source_type", "local")),
             target_phase=rd.get("target_phase"),

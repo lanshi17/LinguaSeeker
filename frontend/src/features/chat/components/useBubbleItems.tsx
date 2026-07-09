@@ -15,8 +15,13 @@ import {
 } from "./forms";
 import type { PipelineSummarySlots } from "./forms";
 import type { PerSessionUIState } from "./chatConfig";
-import { FollowUpSuggestions } from "./FollowUpSuggestions";
 import { WelcomeBlock, type WelcomeAction } from "./WelcomeBlock";
+
+/** State for rendering follow-up suggestions outside the bubble list. */
+export interface FollowUpState {
+  show: boolean;
+  lastAssistantContent: string;
+}
 
 interface UseBubbleItemsParams {
   messages: MessageInfo<ChatBubbleMessage>[];
@@ -41,8 +46,11 @@ interface UseBubbleItemsParams {
  * contentRender for assistant messages (markdown, action bubbles,
  * thinking indicator, streaming cursor) and synthetic items for
  * pipeline confirm form, pipeline status card, and welcome block.
+ *
+ * Also returns follow-up state so the caller can render
+ * {@link FollowUpSuggestions} above the input sender.
  */
-export function useBubbleItems(params: UseBubbleItemsParams): BubbleItemType[] {
+export function useBubbleItems(params: UseBubbleItemsParams): { items: BubbleItemType[]; followUp: FollowUpState } {
   const { t } = useI18n();
   const {
     messages,
@@ -134,24 +142,6 @@ export function useBubbleItems(params: UseBubbleItemsParams): BubbleItemType[] {
       };
     });
 
-    if (shouldShowFollowUps) {
-      items.push({
-        key: "__followups__",
-        role: "assistant",
-        content: "",
-        variant: "borderless" as const,
-        className: "cv-followups-bubble",
-        avatar: null,
-        contentRender: () => (
-          <FollowUpSuggestions
-            content={messages[lastCompletedAssistantIndex].message.content}
-            disabled={isPipelineSubmitting}
-            onPick={handleWelcomeAction}
-          />
-        ),
-      });
-    }
-
     if (isPreparingResponse && !isRequesting) {
       items.push({
         key: "__preparing_response__",
@@ -240,7 +230,15 @@ export function useBubbleItems(params: UseBubbleItemsParams): BubbleItemType[] {
       });
     }
 
-    return items;
+    const followUp: FollowUpState = {
+      show: shouldShowFollowUps,
+      lastAssistantContent:
+        shouldShowFollowUps && lastCompletedAssistantIndex >= 0
+          ? messages[lastCompletedAssistantIndex].message.content
+          : "",
+    };
+
+    return { items, followUp };
   }, [
     messages,
     activeForm,

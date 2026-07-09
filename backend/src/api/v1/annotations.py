@@ -19,8 +19,9 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.auth import require_api_key
+from src.api.auth import get_current_account
 from src.api.deps import get_db_session
+from src.core.auth.contracts import AuthContext
 from src.dao.postgresql import document_annotation_repo as repo
 
 # Candidate image root directories (project-relative). MinerU extracts
@@ -112,10 +113,10 @@ async def list_annotations(
     source_document_id: UUID,
     track: str | None = Query(default=None, description="Filter by track (original|translated)"),
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> AnnotationListResponse:
     """List annotations for a document, optionally filtered by track."""
-    rows = await repo.list_annotations(session, source_document_id, track=track)
+    rows = await repo.list_annotations(session, source_document_id, track=track, owner_user_id=account.owner_user_id)
     return AnnotationListResponse(items=[AnnotationResponse.model_validate(r) for r in rows])
 
 
@@ -128,7 +129,7 @@ async def create_annotation(
     source_document_id: UUID,
     body: AnnotationCreateRequest,
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> AnnotationResponse:
     """Create a new annotation on a document paragraph."""
     annotation = await repo.create_annotation(
@@ -141,6 +142,7 @@ async def create_annotation(
         color=body.color,
         note=body.note,
         author=body.author,
+        owner_user_id=account.owner_user_id,
     )
     return AnnotationResponse.model_validate(annotation)
 
@@ -154,13 +156,13 @@ async def update_annotation(
     annotation_id: UUID,
     body: AnnotationUpdateRequest,
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> AnnotationResponse:
     """Patch mutable fields (color, note) of an annotation.
 
     Returns 404 when the annotation does not belong to the given document.
     """
-    existing = await repo.get_annotation(session, annotation_id)
+    existing = await repo.get_annotation(session, annotation_id, owner_user_id=account.owner_user_id)
     if existing is None or existing.source_document_id != source_document_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Annotation not found")
     annotation = await repo.update_annotation(
@@ -170,6 +172,7 @@ async def update_annotation(
         note=body.note,
         update_color="color" in body.model_fields_set,
         update_note="note" in body.model_fields_set,
+        owner_user_id=account.owner_user_id,
     )
     return AnnotationResponse.model_validate(annotation)
 
@@ -182,13 +185,13 @@ async def delete_annotation(
     source_document_id: UUID,
     annotation_id: UUID,
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> None:
     """Delete an annotation. Returns 404 if it does not belong to the document."""
-    annotation = await repo.get_annotation(session, annotation_id)
+    annotation = await repo.get_annotation(session, annotation_id, owner_user_id=account.owner_user_id)
     if annotation is None or annotation.source_document_id != source_document_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Annotation not found")
-    await repo.delete_annotation(session, annotation_id)
+    await repo.delete_annotation(session, annotation_id, owner_user_id=account.owner_user_id)
 
 
 # ── Document image serving ───────────────────────────────────────────────────
@@ -218,7 +221,7 @@ def _resolve_document_image(image_name: str) -> Path | None:
 async def get_document_image(
     source_document_id: UUID,
     image_name: str,
-    _api_key: str | None = Depends(require_api_key),
+    _account: AuthContext = Depends(get_current_account),
 ) -> FileResponse:
     """Serve an extracted document image by filename.
 

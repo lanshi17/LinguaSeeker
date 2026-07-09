@@ -81,49 +81,23 @@
   outline-offset: 2px;
 }
 
-.cv-followups-bubble {
-  margin-top: -2px;
-  padding-left: 48px;
-}
-.cv-followups-bubble .ant-bubble-content {
-  min-height: 0;
-  padding: 0;
-  background: transparent;
-}
-.cv-followups-bubble .ant-bubble-body {
-  align-items: center;
-}
-
 .cv-followups {
   display: flex;
-  flex-direction: column;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 6px;
-  width: fit-content;
-  max-width: min(92%, 560px);
-  margin: 0 auto;
-  border: 1px solid color-mix(in srgb, var(--color-border) 64%, transparent);
-  border-radius: 6px;
-  background-color: color-mix(in srgb, var(--color-surface) 86%, transparent);
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
-  opacity: 0.88;
-  padding: 6px 8px 7px;
-  backdrop-filter: blur(8px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  padding: 0 16px;
+  -ms-overflow-style: none;
 }
-.cv-followups-label {
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1.2;
-  color: var(--color-text-muted);
-}
-.cv-followups-list {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
+.cv-followups::-webkit-scrollbar {
+  display: none;
 }
 .cv-followup-chip {
-  max-width: min(100%, 300px);
+  flex-shrink: 0;
+  white-space: nowrap;
   border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
   border-radius: 6px;
   background-color: color-mix(in srgb, var(--color-bg) 78%, transparent);

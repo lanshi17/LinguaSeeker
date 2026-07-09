@@ -162,6 +162,23 @@ class TestFeedbackService:
                 reviewer_id=None,
             )
 
+    async def test_patch_evidence_respects_owner_scope(self, db_session: AsyncSession) -> None:
+        """A personal account cannot patch a public evidence row by id."""
+        from uuid import uuid4
+
+        from sqlalchemy.exc import NoResultFound
+
+        evidence_id = await self._create_test_evidence(db_session)
+        patch = EvidencePatchRequest(fields={"phenotype": "Fabry 病"})
+        service = FeedbackService(db_session)
+
+        with pytest.raises(NoResultFound):
+            await service.patch_evidence(
+                canonical_evidence_id=evidence_id,
+                patch=patch,
+                owner_user_id=uuid4(),
+            )
+
     async def test_patch_preserves_field_level_active_payload_keys(self, db_session: AsyncSession) -> None:
         """Patching must preserve field-level keys (group_id, source, track, entity_id)."""
         from unittest.mock import AsyncMock, patch as mock_patch

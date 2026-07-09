@@ -186,7 +186,11 @@ class LiteratureProfileRepository:
 
     # ── Refresh ───────────────────────────────────────────────────────────
 
-    async def refresh_for_document(self, source_document_id: uuid.UUID) -> None:
+    async def refresh_for_document(
+        self,
+        source_document_id: uuid.UUID,
+        owner_user_id: str | uuid.UUID | None = None,
+    ) -> None:
         """Rebuild the literature profile for one document.
 
         Steps:
@@ -198,6 +202,12 @@ class LiteratureProfileRepository:
             6. Upsert via ON CONFLICT DO UPDATE.
             7. Commit.
         """
+        owner_id = uuid.UUID(str(owner_user_id)) if owner_user_id else None
+        owner_filter = (
+            CanonicalEvidenceItem.owner_user_id.is_(None)
+            if owner_id is None
+            else CanonicalEvidenceItem.owner_user_id == owner_id
+        )
         # 1. Identifiers (pmid, doi).
         id_result = await self._session.execute(
             select(
@@ -236,7 +246,10 @@ class LiteratureProfileRepository:
         # 3. Canonical evidence items (ORM objects).
         cei_result = await self._session.execute(
             select(CanonicalEvidenceItem)
-            .where(CanonicalEvidenceItem.source_document_id == source_document_id)
+            .where(
+                CanonicalEvidenceItem.source_document_id == source_document_id,
+                owner_filter,
+            )
             .order_by(
                 CanonicalEvidenceItem.active_payload["group_id"],
                 CanonicalEvidenceItem.field_id,
@@ -267,6 +280,7 @@ class LiteratureProfileRepository:
         stmt = pg_insert(LiteratureProfile).values(
             literature_profile_id=uuid.uuid4(),
             source_document_id=source_document_id,
+            owner_user_id=owner_id,
             pmid=pmid,
             doi=doi,
             title=title,
@@ -282,7 +296,7 @@ class LiteratureProfileRepository:
             latest_processing_run_id=latest_run_id,
         )
         stmt = stmt.on_conflict_do_update(
-            index_elements=[LiteratureProfile.source_document_id],
+            constraint="uq_literature_profiles_document_owner",
             set_={
                 "pmid": stmt.excluded.pmid,
                 "doi": stmt.excluded.doi,
@@ -304,11 +318,22 @@ class LiteratureProfileRepository:
 
     # ── Queries ───────────────────────────────────────────────────────────
 
-    async def get_by_document(self, source_document_id: uuid.UUID) -> LiteratureProfileRow | None:
+    async def get_by_document(
+        self,
+        source_document_id: uuid.UUID,
+        owner_user_id: str | uuid.UUID | None = None,
+    ) -> LiteratureProfileRow | None:
         """Return the literature profile as a typed contract, or None if not found."""
+        owner_id = uuid.UUID(str(owner_user_id)) if owner_user_id else None
+        owner_filter = (
+            LiteratureProfile.owner_user_id.is_(None)
+            if owner_id is None
+            else LiteratureProfile.owner_user_id == owner_id
+        )
         result = await self._session.execute(
             select(LiteratureProfile).where(
                 LiteratureProfile.source_document_id == source_document_id,
+                owner_filter,
             )
         )
         row = result.scalar_one_or_none()
@@ -345,6 +370,7 @@ class LiteratureProfileRepository:
         doi: str | None = None,
         page: int = 1,
         page_size: int = 50,
+        owner_user_id: str | uuid.UUID | None = None,
     ) -> tuple[list[LiteratureProfileSearchItem], int]:
         """Search literature profiles with optional filters.
 
@@ -367,7 +393,13 @@ class LiteratureProfileRepository:
         if disease:
             conditions.append(LiteratureProfile.evidence_groups.contains([{"summary": {"disease": disease}}]))
 
-        base_stmt = select(LiteratureProfile)
+        owner_id = uuid.UUID(str(owner_user_id)) if owner_user_id else None
+        owner_filter = (
+            LiteratureProfile.owner_user_id.is_(None)
+            if owner_id is None
+            else LiteratureProfile.owner_user_id == owner_id
+        )
+        base_stmt = select(LiteratureProfile).where(owner_filter)
         if conditions:
             base_stmt = base_stmt.where(or_(*conditions))
 

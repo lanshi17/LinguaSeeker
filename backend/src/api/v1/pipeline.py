@@ -14,7 +14,7 @@ from loguru import logger
 from fastapi import APIRouter, Depends, HTTPException
 from starlette.requests import Request
 
-from src.api.auth import require_api_key
+from src.api.auth import get_current_account
 from src.api.rate_limit import limiter
 from src.api.v1.contracts import (
     PhaseErrorResponse,
@@ -28,6 +28,7 @@ from src.api.v1.contracts import (
     PipelineStatusResponse,
 )
 from src.core.config import get_config
+from src.core.auth.contracts import AuthContext
 
 from src.agents.contracts import (
     PhaseStatus,
@@ -202,7 +203,9 @@ def _prepare_phase_rerun_state(
 @router.post("/run", response_model=PipelineRunResponse, status_code=202)
 @limiter.limit("10/minute")
 async def start_pipeline_run(
-    request: Request, body: PipelineRunRequest, _api_key: str | None = Depends(require_api_key)
+    request: Request,
+    body: PipelineRunRequest,
+    account: AuthContext = Depends(get_current_account),
 ):
     """Enqueue a new pipeline run job.
 
@@ -211,11 +214,12 @@ async def start_pipeline_run(
     """
     runner = get_pipeline_runner()
     jq = get_job_queue()
+    owner_user_id = str(account.owner_user_id) if account.owner_user_id else None
 
     # Phase re-run: resume from existing state for target_phase 2/3
     if body.mode == "phase" and body.processing_run_id:
         existing_state = await runner.get_last_state(body.processing_run_id)
-        if existing_state is None:
+        if existing_state is None or existing_state.owner_user_id != owner_user_id:
             raise HTTPException(
                 status_code=404,
                 detail=f"Pipeline run {body.processing_run_id} not found",
@@ -231,6 +235,7 @@ async def start_pipeline_run(
             "source_type": body.source_type,
             "target_phase": body.target_phase,
             "processing_run_id_ref": body.processing_run_id,
+            "owner_user_id": owner_user_id,
         }
 
         if jq is not None:
@@ -239,6 +244,7 @@ async def start_pipeline_run(
                 job_id=job_id,
                 processing_run_id=uuid.UUID(existing_state.processing_run_id),
                 source_document_id=uuid.UUID(existing_state.source_document_id),
+                owner_user_id=account.owner_user_id,
                 request_data=request_data,
             )
         else:
@@ -286,6 +292,7 @@ async def start_pipeline_run(
     temp_state = PipelineGraphState(
         processing_run_id=processing_run_id,
         source_document_id=source_document_id,
+        owner_user_id=owner_user_id,
         mode=PipelineMode(body.mode),
         source_type=SourceType(body.source_type),
         target_phase=body.target_phase,
@@ -316,7 +323,11 @@ async def start_pipeline_run(
         temp_state.content_hash = content_hash
         temp_state.source_key = _build_source_key(body, content_hash)
         source_key = temp_state.source_key
-        cached_state = await runner.check_processing_cache(content_hash) if runner.processing_cache_enabled else None
+        cached_state = (
+            await runner.check_processing_cache(content_hash, owner_user_id=owner_user_id)
+            if runner.processing_cache_enabled
+            else None
+        )
         if cached_state is not None and cached_state.pipeline_status == PipelineStatus.COMPLETED:
             logger.info(
                 "Processing cache hit for content_hash={}, returning cached run={}",
@@ -333,7 +344,11 @@ async def start_pipeline_run(
             )
 
     # N3: Duplicate run prevention
-    if runner.duplicate_run_prevention_enabled and source_key and await runner.is_running_for_source(source_key):
+    if (
+        runner.duplicate_run_prevention_enabled
+        and source_key
+        and await runner.is_running_for_source(source_key, owner_user_id=owner_user_id)
+    ):
         if upload_file_path:
             Path(upload_file_path).unlink(missing_ok=True)
         raise HTTPException(
@@ -346,6 +361,7 @@ async def start_pipeline_run(
         "mode": body.mode,
         "source_type": body.source_type,
         "target_phase": body.target_phase,
+        "owner_user_id": owner_user_id,
         "source_key": source_key,
         "upload_file_path": upload_file_path,
         "pre_parsed_markdown": body.pre_parsed_markdown,
@@ -373,6 +389,7 @@ async def start_pipeline_run(
             job_id=job_id,
             processing_run_id=uuid.UUID(processing_run_id),
             source_document_id=uuid.UUID(source_document_id),
+            owner_user_id=account.owner_user_id,
             request_data=request_data,
         )
     else:
@@ -403,7 +420,7 @@ async def list_pipeline_runs(
     offset: int = 0,
     status: str | None = None,
     search: str | None = None,
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ):
     """List all pipeline runs as compact summaries (newest first).
 
@@ -412,11 +429,13 @@ async def list_pipeline_runs(
         search: Case-insensitive substring match on title / identifiers / source_key.
     """
     runner = get_pipeline_runner()
+    owner_user_id = str(account.owner_user_id) if account.owner_user_id else None
     rows, total = await runner.list_runs(
         limit=limit,
         offset=offset,
         status=status,
         search=search,
+        owner_user_id=owner_user_id,
     )
 
     items = []
@@ -440,7 +459,10 @@ async def list_pipeline_runs(
 
 
 @router.get("/runs/{processing_run_id}/status", response_model=PipelineStatusResponse)
-async def get_pipeline_status(processing_run_id: str, _api_key: str | None = Depends(require_api_key)):
+async def get_pipeline_status(
+    processing_run_id: str,
+    account: AuthContext = Depends(get_current_account),
+):
     """Get the current status of a pipeline run.
 
     Checks job queue first (for queued/running jobs), then falls back to
@@ -448,10 +470,11 @@ async def get_pipeline_status(processing_run_id: str, _api_key: str | None = Dep
     """
     runner = get_pipeline_runner()
     jq = get_job_queue()
+    owner_user_id = str(account.owner_user_id) if account.owner_user_id else None
 
     # Check job queue first — a queued job may not have pipeline state yet
     if jq is not None:
-        job_status = await jq.get_status(processing_run_id)
+        job_status = await jq.get_status(processing_run_id, owner_user_id=account.owner_user_id)
         if job_status == "queued":
             _empty_phases = PipelinePhasesResponse(
                 phase_1=PhaseStatusResponse(status="pending"),
@@ -467,7 +490,7 @@ async def get_pipeline_status(processing_run_id: str, _api_key: str | None = Dep
 
     state = await runner.get_last_state(processing_run_id)
 
-    if state is None:
+    if state is None or state.owner_user_id != owner_user_id:
         raise HTTPException(
             status_code=404,
             detail=f"Pipeline run {processing_run_id} not found",

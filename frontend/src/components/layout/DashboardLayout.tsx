@@ -9,6 +9,7 @@ import { hasSeenGuide } from "@/components/ui/userGuideState";
 import { useI18n } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { AccountControl } from "@/features/auth";
 import "./layout.css";
 const { Content } = Layout;
 
@@ -114,6 +115,7 @@ export function DashboardLayout() {
             />
 
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <AccountControl />
               <ThemeToggle />
               <LanguageSwitcher />
             </div>

@@ -24,20 +24,17 @@ export function FollowUpSuggestions({
 
   return (
     <div className="cv-followups" aria-label={t("chat.followUps.label")}>
-      <span className="cv-followups-label">{t("chat.followUps.label")}</span>
-      <div className="cv-followups-list">
-        {questions.map((question) => (
-          <button
-            key={question}
-            type="button"
-            className="cv-followup-chip"
-            disabled={disabled}
-            onClick={() => onPick({ kind: "send-message", message: question })}
-          >
-            {question}
-          </button>
-        ))}
-      </div>
+      {questions.map((question) => (
+        <button
+          key={question}
+          type="button"
+          className="cv-followup-chip"
+          disabled={disabled}
+          onClick={() => onPick({ kind: "send-message", message: question })}
+        >
+          {question}
+        </button>
+      ))}
     </div>
   );
 }

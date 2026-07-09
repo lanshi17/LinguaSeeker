@@ -10,9 +10,10 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
-from src.api.auth import require_api_key
+from src.api.auth import get_current_account
 from src.api.deps import get_db_session, get_phase4_factory
 from src.api.rate_limit import limiter
+from src.core.auth.contracts import AuthContext
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     EvidenceGroupDetailResponse,
     EvidenceGroupSummary,
@@ -26,7 +27,7 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
 )
 from src.core.visualize_evidence_with_expert_in_loop.search_service import SearchService
 from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
-from src.dao.postgresql.models import SourceDocument
+from src.dao.postgresql.models import CanonicalEvidenceItem
 
 router = APIRouter()
 
@@ -36,7 +37,7 @@ async def get_evidence_group_detail(
     group_id: str | None = Query(None, description="Evidence group identifier"),
     source_document_id: UUID | None = Query(None, description="Source document UUID to scope results"),
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> EvidenceGroupDetailResponse:
     """Return grouped evidence detail with distribution and traceability.
 
@@ -54,6 +55,7 @@ async def get_evidence_group_detail(
         return await service.get_group_detail(
             group_id=group_id,
             source_document_id=str(source_document_id) if source_document_id else None,
+            owner_user_id=account.owner_user_id,
         )
     except NoResultFound:
         raise HTTPException(status_code=404, detail="Evidence group not found")
@@ -66,19 +68,17 @@ async def patch_evidence(
     canonical_evidence_id: UUID,
     body: EvidencePatchRequest,
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> PatchResultResponse:
     """Apply a patch to an evidence card and record audit event."""
     factory = get_phase4_factory()
     service = factory.create_feedback_service(session)
     try:
-        # TODO: resolve _api_key to a reviewer UUID via a token→user mapping.
-        # Currently reviewer_id stays None because API key is a string,
-        # not a UUID, and no identity table exists yet.
         result = await service.patch_evidence(
             canonical_evidence_id=canonical_evidence_id,
             patch=body,
-            reviewer_id=None,
+            reviewer_id=account.owner_user_id,
+            owner_user_id=account.owner_user_id,
         )
         return PatchResultResponse(
             canonical_evidence_id=result.canonical_evidence_id,
@@ -94,7 +94,7 @@ async def patch_evidence(
 @router.get("/search", response_model=EvidenceSearchResponse)
 async def search_evidence(
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
     gene: str | None = Query(None, description="Filter by gene (partial match on A.gene_symbol)"),
     variant: str | None = Query(None, description="Filter by variant (partial match on HGVS fields)"),
     disease: str | None = Query(None, description="Filter by disease (partial match on diagnosis fields)"),
@@ -117,13 +117,14 @@ async def search_evidence(
         doi=doi,
         page=page,
         page_size=page_size,
+        owner_user_id=account.owner_user_id,
     )
 
 
 @router.get("/literature/search", response_model=LiteratureSearchResponse)
 async def search_literature(
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
     gene: str | None = Query(None, description="Filter by gene name"),
     variant: str | None = Query(None, description="Filter by variant"),
     disease: str | None = Query(None, description="Filter by disease"),
@@ -142,6 +143,7 @@ async def search_literature(
         doi=doi,
         page=page,
         page_size=page_size,
+        owner_user_id=account.owner_user_id,
     )
     return LiteratureSearchResponse(
         items=[LiteratureProfileSummary(**vars(item)) for item in items],
@@ -158,11 +160,11 @@ async def search_literature(
 async def get_literature_detail(
     source_document_id: UUID,
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> LiteratureProfileDetailResponse:
     """Return full literature profile with all evidence groups."""
     repo = LiteratureProfileRepository(session)
-    profile = await repo.get_by_document(source_document_id)
+    profile = await repo.get_by_document(source_document_id, owner_user_id=account.owner_user_id)
     if profile is None:
         raise HTTPException(status_code=404, detail="Literature profile not found")
 
@@ -190,17 +192,22 @@ async def get_literature_detail(
 async def refresh_literature_profiles(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> LiteratureRefreshResponse:
     """Refresh all literature profiles from canonical evidence. Admin endpoint."""
-    stmt = select(SourceDocument.source_document_id)
+    owner_filter = (
+        CanonicalEvidenceItem.owner_user_id.is_(None)
+        if account.owner_user_id is None
+        else CanonicalEvidenceItem.owner_user_id == account.owner_user_id
+    )
+    stmt = select(CanonicalEvidenceItem.source_document_id).where(owner_filter).distinct()
     result = await session.execute(stmt)
     doc_ids = [row[0] for row in result.all()]
 
     repo = LiteratureProfileRepository(session)
     refreshed = 0
     for doc_id in doc_ids:
-        await repo.refresh_for_document(doc_id)
+        await repo.refresh_for_document(doc_id, owner_user_id=account.owner_user_id)
         refreshed += 1
 
     return LiteratureRefreshResponse(refreshed=refreshed, total_documents=len(doc_ids))

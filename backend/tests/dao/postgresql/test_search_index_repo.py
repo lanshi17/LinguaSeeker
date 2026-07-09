@@ -41,6 +41,7 @@ def test_search_index_table_has_required_columns() -> None:
 
     required = {
         "canonical_evidence_id",
+        "owner_user_id",
         "pmid",
         "doi",
         "gene_ids",
@@ -229,6 +230,18 @@ def test_search_variant_ids_uses_jsonb_overlap_operator() -> None:
     source = inspect.getsource(SearchIndexRepository.search)
     assert "variant_ids" in source
     assert '.op("?|")' in source
+
+
+def test_search_applies_owner_scope_outside_filter_or_clause() -> None:
+    """Owner filtering must be ANDed with user search filters."""
+    import inspect
+
+    from src.dao.postgresql.search_index_repo import SearchIndexRepository
+
+    source = inspect.getsource(SearchIndexRepository.search)
+    assert "owner_condition = frontend_search_index.c.owner_user_id.is_(None)" in source
+    assert "stmt = select(frontend_search_index).where(owner_condition)" in source
+    assert "stmt = stmt.where(or_(*filter_conditions))" in source
 
 
 @pytest.mark.asyncio

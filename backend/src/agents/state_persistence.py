@@ -47,6 +47,7 @@ class PipelineRunSummaryRow:
     """Lightweight summary for listing pipeline runs (avoids full state deserialization)."""
 
     processing_run_id: str
+    owner_user_id: str | None
     pipeline_status: str
     source_key: str | None
     started_at: str | None
@@ -204,11 +205,23 @@ async def _reset_phase_rerun_artifacts(
     *,
     processing_run_id: str,
     source_document_id: str,
+    owner_user_id: str | None = None,
     target_phase: int,
 ) -> None:
     """Clear stale DB artifacts before re-running a phase in-place."""
     run_id = UUID(processing_run_id)
     doc_id = UUID(source_document_id)
+    owner_id = UUID(owner_user_id) if owner_user_id else None
+    canonical_owner_filter = (
+        CanonicalEvidenceItem.owner_user_id.is_(None)
+        if owner_id is None
+        else CanonicalEvidenceItem.owner_user_id == owner_id
+    )
+    profile_owner_filter = (
+        LiteratureProfile.owner_user_id.is_(None)
+        if owner_id is None
+        else LiteratureProfile.owner_user_id == owner_id
+    )
 
     if target_phase <= 2:
         source_document = await session.get(SourceDocument, doc_id)
@@ -223,7 +236,8 @@ async def _reset_phase_rerun_artifacts(
             from src.dao.postgresql.search_index_repo import frontend_search_index
 
             canonical_ids = select(CanonicalEvidenceItem.canonical_evidence_id).where(
-                CanonicalEvidenceItem.source_document_id == doc_id
+                CanonicalEvidenceItem.source_document_id == doc_id,
+                canonical_owner_filter,
             )
             await session.execute(
                 delete(frontend_search_index).where(frontend_search_index.c.canonical_evidence_id.in_(canonical_ids))
@@ -247,10 +261,16 @@ async def _reset_phase_rerun_artifacts(
         await session.execute(
             delete(CanonicalEvidenceItem).where(
                 CanonicalEvidenceItem.source_document_id == doc_id,
+                canonical_owner_filter,
                 CanonicalEvidenceItem.review_status == "provisional",
             )
         )
-        await session.execute(delete(LiteratureProfile).where(LiteratureProfile.source_document_id == doc_id))
+        await session.execute(
+            delete(LiteratureProfile).where(
+                LiteratureProfile.source_document_id == doc_id,
+                profile_owner_filter,
+            )
+        )
 
 
 _TERMINAL_PHASE_STATUSES = frozenset({"completed", "skipped"})
@@ -341,9 +361,11 @@ class DirectStatePersistence:
         # ── End state transition guard ──
 
         state_json = _state_json_without_inline_phase2_data(state)
+        owner_id = UUID(state.owner_user_id) if state.owner_user_id else None
         if existing:
             existing.state_json = state_json
             existing.pipeline_status = state.pipeline_status.value
+            existing.owner_user_id = owner_id
             if state.source_key is not None:
                 existing.source_key = state.source_key
             if owner_worker_id is not None:
@@ -357,6 +379,7 @@ class DirectStatePersistence:
                 state_json=state_json,
                 pipeline_status=state.pipeline_status.value,
                 source_key=state.source_key,
+                owner_user_id=owner_id,
                 owner_worker_id=owner_worker_id,
                 heartbeat_at=heartbeat_at,
             )
@@ -368,6 +391,7 @@ class DirectStatePersistence:
         *,
         processing_run_id: str,
         source_document_id: str,
+        owner_user_id: str | None = None,
         target_phase: int,
     ) -> None:
         """Clear stale downstream artifacts before an in-place phase rerun."""
@@ -375,6 +399,7 @@ class DirectStatePersistence:
             self._session,
             processing_run_id=processing_run_id,
             source_document_id=source_document_id,
+            owner_user_id=owner_user_id,
             target_phase=target_phase,
         )
         await self._session.commit()
@@ -399,8 +424,9 @@ class DirectStatePersistence:
             "use SessionBoundStatePersistence for heartbeat refresh."
         )
 
-    async def has_active_source_key(self, source_key: str) -> bool:
+    async def has_active_source_key(self, source_key: str, owner_user_id: str | None = None) -> bool:
         """Not supported in unit-test persistence — raises on misuse."""
+        del owner_user_id
         raise NotImplementedError(
             "has_active_source_key is not available in DirectStatePersistence; "
             "use SessionBoundStatePersistence for source dedup."
@@ -468,10 +494,12 @@ class SessionBoundStatePersistence:
             # ── End state transition guard ──
 
             state_json = _state_json_without_inline_phase2_data(state)
+            owner_id = UUID(state.owner_user_id) if state.owner_user_id else None
             upsert_set: dict[str, object] = {
                 "state_json": state_json,
                 "pipeline_status": state.pipeline_status.value,
                 "updated_at": func.now(),
+                "owner_user_id": owner_id,
             }
             if state.source_key is not None:
                 upsert_set["source_key"] = state.source_key
@@ -488,6 +516,7 @@ class SessionBoundStatePersistence:
                     state_json=state_json,
                     pipeline_status=state.pipeline_status.value,
                     source_key=state.source_key,
+                    owner_user_id=owner_id,
                     owner_worker_id=owner_worker_id,
                     heartbeat_at=heartbeat_at,
                 )
@@ -504,6 +533,7 @@ class SessionBoundStatePersistence:
         *,
         processing_run_id: str,
         source_document_id: str,
+        owner_user_id: str | None = None,
         target_phase: int,
     ) -> None:
         """Clear stale downstream artifacts before an in-place phase rerun."""
@@ -512,6 +542,7 @@ class SessionBoundStatePersistence:
                 session,
                 processing_run_id=processing_run_id,
                 source_document_id=source_document_id,
+                owner_user_id=owner_user_id,
                 target_phase=target_phase,
             )
             await session.commit()
@@ -580,13 +611,20 @@ class SessionBoundStatePersistence:
             await session.commit()
             return result.rowcount > 0
 
-    async def has_active_source_key(self, source_key: str) -> bool:
+    async def has_active_source_key(self, source_key: str, owner_user_id: str | None = None) -> bool:
         """Return True when any pending/running run owns this source key."""
+        owner_id = UUID(owner_user_id) if owner_user_id else None
+        owner_filter = (
+            PipelineRunState.owner_user_id.is_(None)
+            if owner_id is None
+            else PipelineRunState.owner_user_id == owner_id
+        )
         async with self._session_factory() as session:
             result = await session.execute(
                 select(PipelineRunState.processing_run_id)
                 .where(
                     PipelineRunState.source_key == source_key,
+                    owner_filter,
                     PipelineRunState.pipeline_status.in_(("pending", "running")),
                 )
                 .limit(1)
@@ -600,6 +638,7 @@ class SessionBoundStatePersistence:
         offset: int = 0,
         status: str | None = None,
         search: str | None = None,
+        owner_user_id: str | None = None,
     ) -> tuple[list[PipelineRunSummaryRow], int]:
         """List pipeline run summaries ordered by creation time (newest first).
 
@@ -612,8 +651,14 @@ class SessionBoundStatePersistence:
         """
         from sqlalchemy import String, cast
 
+        owner_id = UUID(owner_user_id) if owner_user_id else None
+        owner_filter = (
+            PipelineRunState.owner_user_id.is_(None)
+            if owner_id is None
+            else PipelineRunState.owner_user_id == owner_id
+        )
         async with self._session_factory() as session:
-            base = select(PipelineRunState)
+            base = select(PipelineRunState).where(owner_filter)
             if status:
                 base = base.where(PipelineRunState.pipeline_status == status)
             if search:
@@ -642,6 +687,7 @@ class SessionBoundStatePersistence:
                 items.append(
                     PipelineRunSummaryRow(
                         processing_run_id=str(record.processing_run_id),
+                        owner_user_id=str(record.owner_user_id) if record.owner_user_id else None,
                         pipeline_status=record.pipeline_status,
                         source_key=record.source_key,
                         started_at=sj.get("started_at"),

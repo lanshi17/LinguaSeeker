@@ -93,11 +93,11 @@ def _decode_session(token: str, secret: str) -> SessionClaims | None:
         except ValueError:
             return None
 
-    email = data.get("email")
+    username = data.get("username")
     return SessionClaims(
         expires_at=exp,
         user_id=user_id,
-        email=str(email) if email else None,
+        username=str(username) if username else None,
     )
 
 
@@ -111,7 +111,7 @@ def sign_session_token(
     duration_sec: int = SESSION_DURATION_SEC,
     *,
     user_id: UUID | str | None = None,
-    email: str | None = None,
+    username: str | None = None,
 ) -> str:
     """Create an HMAC-SHA256 signed session token.
 
@@ -119,7 +119,7 @@ def sign_session_token(
         secret: The signing key.
         duration_sec: Token lifetime in seconds.
         user_id: Optional authenticated user id.
-        email: Optional authenticated user email.
+        username: Optional authenticated username.
 
     Returns:
         A token string in ``payload.signature`` format.
@@ -128,8 +128,8 @@ def sign_session_token(
     payload_data: dict[str, str | int] = {"exp": expires_at}
     if user_id is not None:
         payload_data["user_id"] = str(user_id)
-    if email:
-        payload_data["email"] = email
+    if username:
+        payload_data["username"] = username
     payload = _b64url_encode(json.dumps(payload_data).encode("utf-8"))
     signature = _b64url_encode(
         hmac.new(
@@ -155,7 +155,7 @@ async def get_current_account(
                 authenticated=True,
                 account_type="public",
                 user_id=None,
-                email=None,
+                username=None,
                 display_name="Public account",
                 method="api_key",
             )
@@ -172,7 +172,7 @@ async def get_current_account(
             authenticated=True,
             account_type="public",
             user_id=None,
-            email=claims.email,
+            username=claims.username,
             display_name="Public account",
             method="session",
         )
@@ -186,7 +186,7 @@ async def get_current_account(
         authenticated=True,
         account_type="user",
         user_id=user.user_id,
-        email=user.email,
+        username=user.username,
         display_name=user.display_name,
         method="session",
     )

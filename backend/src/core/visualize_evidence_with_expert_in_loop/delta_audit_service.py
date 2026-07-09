@@ -75,15 +75,22 @@ class DeltaAuditService:
         canonical_evidence_id: UUID | None = None,
         source_document_id: UUID | None = None,
         reviewer_id: UUID | None = None,
+        owner_user_id: UUID | str | None = None,
         limit: int = 100,
     ) -> list[ReviewAuditEvent]:
         """Query review audit events with optional filters."""
-        stmt = select(ReviewAuditEvent)
+        stmt = select(ReviewAuditEvent).join(
+            CanonicalEvidenceItem,
+            CanonicalEvidenceItem.canonical_evidence_id == ReviewAuditEvent.canonical_evidence_id,
+        )
+        owner_id = UUID(str(owner_user_id)) if owner_user_id else None
         if source_document_id:
-            stmt = stmt.join(
-                CanonicalEvidenceItem,
-                CanonicalEvidenceItem.canonical_evidence_id == ReviewAuditEvent.canonical_evidence_id,
-            ).where(CanonicalEvidenceItem.source_document_id == source_document_id)
+            stmt = stmt.where(CanonicalEvidenceItem.source_document_id == source_document_id)
+        stmt = stmt.where(
+            CanonicalEvidenceItem.owner_user_id.is_(None)
+            if owner_id is None
+            else CanonicalEvidenceItem.owner_user_id == owner_id
+        )
         if canonical_evidence_id:
             stmt = stmt.where(ReviewAuditEvent.canonical_evidence_id == canonical_evidence_id)
         if reviewer_id:

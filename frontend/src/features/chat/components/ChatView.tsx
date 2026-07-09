@@ -23,6 +23,7 @@ import { SingleSessionChat } from "./SingleSessionChat";
 import { useChatProvider } from "./useChatProvider";
 import { useSessionConversations } from "./useSessionConversations";
 import { useBubbleItems } from "./useBubbleItems";
+import { FollowUpSuggestions } from "./FollowUpSuggestions";
 import { usePipelineActions } from "./usePipelineActions";
 import { useSessionUIState } from "./useSessionUIState";
 import type { WelcomeAction } from "./WelcomeBlock";
@@ -337,7 +338,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   });
 
   // ── Build bubble items ──
-  const bubbleItems = useBubbleItems({
+  const { items: bubbleItems, followUp } = useBubbleItems({
     messages,
     activeForm,
     activeFormSlots,
@@ -477,6 +478,13 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
                 role={roles}
                 autoScroll
               />
+              {followUp.show && (
+                <FollowUpSuggestions
+                  content={followUp.lastAssistantContent}
+                  disabled={isRequesting || isPreparingResponse || isPipelineSubmitting}
+                  onPick={handleWelcomeAction}
+                />
+              )}
               <Sender
                 ref={senderRef}
                 style={{ borderTop: "1px solid var(--color-bg-muted)", padding: 16 }}

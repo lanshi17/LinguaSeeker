@@ -112,6 +112,7 @@ class Phase3Adapter:
                     dual_result,
                     source_document_id=state.source_document_id,
                     processing_run_id=state.processing_run_id,
+                    owner_user_id=state.owner_user_id,
                 )
                 await session.commit()
 

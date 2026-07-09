@@ -128,6 +128,8 @@ describe("response cache adapter", () => {
       { gene: "BRCA1" },
       { items: [] },
       { items: [{ id: "annotation-1" }] },
+      { account_type: "public" },
+      { account_type: "user" },
     ]);
     const client = axios.create({
       baseURL: "/api/v1",
@@ -161,6 +163,12 @@ describe("response cache adapter", () => {
     await expect(client.get("/documents/doc-1/annotations")).resolves.toMatchObject({
       data: { items: [{ id: "annotation-1" }] },
     });
-    expect(network.calls()).toBe(6);
+    await expect(client.get("/auth/me")).resolves.toMatchObject({
+      data: { account_type: "public" },
+    });
+    await expect(client.get("/auth/me")).resolves.toMatchObject({
+      data: { account_type: "user" },
+    });
+    expect(network.calls()).toBe(8);
   });
 });

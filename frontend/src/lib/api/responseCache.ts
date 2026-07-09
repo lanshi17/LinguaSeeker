@@ -50,6 +50,7 @@ const INDEX_STORAGE_KEY = `${CACHE_PREFIX}:index`;
 const ENTRY_STORAGE_PREFIX = `${CACHE_PREFIX}:entry`;
 
 const DEFAULT_UNCACHED_PATH_PATTERNS = [
+  /^\/?auth(?:\/|$)/,
   /^\/?pipeline(?:\/|$)/,
   /^\/?chat(?:\/|$)/,
   /^\/?delta-audit(?:\/|$)/,

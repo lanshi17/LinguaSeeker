@@ -185,20 +185,6 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
 
   const bubbleItems = useMemo(() => {
     const messageKeys = toUniqueChatMessageKeys(messages);
-    const lastMessageIndex = messages.length - 1;
-    const lastMessage = messages[lastMessageIndex];
-    const lastCompletedAssistantIndex =
-      lastMessage?.message.role === "assistant" &&
-      lastMessage.message.content.trim() &&
-      lastMessage.status !== "loading" &&
-      lastMessage.status !== "updating"
-        ? lastMessageIndex
-        : -1;
-    const shouldShowFollowUps =
-      lastCompletedAssistantIndex >= 0 &&
-      !isRequesting &&
-      !isPreparingResponse &&
-      !uploadSlots;
 
     const items: BubbleItemType[] = messages.map(({ message, status }, index) => {
       const isLoadingEmpty =
@@ -231,26 +217,6 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
           : {}),
       };
     });
-
-    if (shouldShowFollowUps) {
-      items.push({
-        key: "__followups__",
-        role: "assistant",
-        content: "",
-        streaming: false,
-        loading: false,
-        variant: "borderless",
-        className: "cv-followups-bubble",
-        avatar: null,
-        contentRender: () => (
-          <FollowUpSuggestions
-            content={messages[lastCompletedAssistantIndex].message.content}
-            disabled={uploadSubmitting}
-            onPick={handleQuickAction}
-          />
-        ),
-      });
-    }
 
     if (uploadSlots) {
       items.push({
@@ -319,6 +285,30 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
     uploadSubmitting,
   ]);
 
+  const followUp = useMemo(() => {
+    const lastMessageIndex = messages.length - 1;
+    const lastMessage = messages[lastMessageIndex];
+    const lastCompletedAssistantIndex =
+      lastMessage?.message.role === "assistant" &&
+      lastMessage.message.content.trim() &&
+      lastMessage.status !== "loading" &&
+      lastMessage.status !== "updating"
+        ? lastMessageIndex
+        : -1;
+    const show =
+      lastCompletedAssistantIndex >= 0 &&
+      !isRequesting &&
+      !isPreparingResponse &&
+      !uploadSlots;
+    return {
+      show,
+      lastAssistantContent:
+        show && lastCompletedAssistantIndex >= 0
+          ? messages[lastCompletedAssistantIndex].message.content
+          : "",
+    };
+  }, [isRequesting, isPreparingResponse, messages, uploadSlots]);
+
   const senderRef = useRef<SenderRef>(null);
   const handleSingleSessionSubmit = useCallback(
     (val: string) => {
@@ -356,6 +346,14 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
           role={roles}
           autoScroll
         />
+
+        {followUp.show && (
+          <FollowUpSuggestions
+            content={followUp.lastAssistantContent}
+            disabled={isRequesting || isPreparingResponse || uploadSubmitting}
+            onPick={handleQuickAction}
+          />
+        )}
 
         <Sender
           ref={senderRef}

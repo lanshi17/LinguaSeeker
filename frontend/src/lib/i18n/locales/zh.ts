@@ -714,6 +714,26 @@ const zh: Record<EnKeys, string> = {
   "pageGuide.bilingual.s5.i3": "右键点击选中文本可将其分配到特定的 ACMG 证据字段。",
   "pageGuide.bilingual.s5.i4": "使用文献标题栏中的「导出报告」按钮下载结构化证据报告。",
 
+  // ── 账户 ──
+  "auth.accountMenu": "账户菜单",
+  "auth.publicAccount": "公共账户",
+  "auth.personalAccount": "个人账户",
+  "auth.publicScope": "共享公共工作区",
+  "auth.personalScope": "输入用户名和密码。新用户名会自动创建账户。",
+  "auth.loginOrCreate": "登录/创建",
+  "auth.logout": "退出登录",
+  "auth.loginOrCreateTitle": "登录或创建账户",
+  "auth.username": "用户名",
+  "auth.usernamePlaceholder": "用户名",
+  "auth.password": "密码",
+  "auth.usernameRequired": "请输入用户名",
+  "auth.passwordRequired": "请输入密码",
+  "auth.loginOrCreateSubmit": "登录/创建",
+  "auth.loginSuccess": "已登录",
+  "auth.logoutSuccess": "已切换为公共账户",
+  "auth.loginFailed": "登录失败",
+  "auth.logoutFailed": "退出登录失败",
+
   // ── 语言切换 ──
   "lang.switchToEn": "Switch to English",
   "lang.switchToZh": "切换为中文",

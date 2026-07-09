@@ -117,6 +117,7 @@ class StandardizationInput:
     processing_run_id: str
     candidates: tuple[StandardizationCandidate, ...]
     evidence_items: tuple[Any, ...]
+    owner_user_id: str | None = None
     track_payloads: dict[str, Any] = field(default_factory=dict)
     extraction_target: ExtractionTarget | None = None
 

@@ -886,13 +886,14 @@ export function BilingualCompareView({
   const createMutation = useMutation({
     mutationFn: (payload: AnnotationCreateRequest) =>
       createAnnotation(sourceDocumentId, payload),
-    onSuccess: (annotation) => {
+    onSuccess: async (annotation) => {
+      await queryClient.cancelQueries({ queryKey: annotationQueryKey });
       queryClient.setQueryData<UserAnnotation[]>(
         annotationQueryKey,
         (current) => upsertAnnotation(current, annotation),
       );
       void message.success(t("annotation.created"));
-      void queryClient.invalidateQueries({ queryKey: annotationQueryKey });
+      void queryClient.invalidateQueries({ queryKey: annotationQueryKey, refetchType: "none" });
     },
     onError: (error) => {
       void message.error(extractErrorMessage(error, t("annotation.createFailed")));
@@ -901,13 +902,14 @@ export function BilingualCompareView({
   const updateMutation = useMutation({
     mutationFn: (vars: { id: string; payload: AnnotationUpdateRequest }) =>
       updateAnnotation(sourceDocumentId, vars.id, vars.payload),
-    onSuccess: (annotation) => {
+    onSuccess: async (annotation) => {
+      await queryClient.cancelQueries({ queryKey: annotationQueryKey });
       queryClient.setQueryData<UserAnnotation[]>(
         annotationQueryKey,
         (current) => upsertAnnotation(current, annotation),
       );
       void message.success(t("annotation.saved"));
-      void queryClient.invalidateQueries({ queryKey: annotationQueryKey });
+      void queryClient.invalidateQueries({ queryKey: annotationQueryKey, refetchType: "none" });
     },
     onError: (error) => {
       void message.error(extractErrorMessage(error, t("annotation.saveFailed")));
@@ -915,13 +917,14 @@ export function BilingualCompareView({
   });
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteAnnotation(sourceDocumentId, id),
-    onSuccess: (_result, id) => {
+    onSuccess: async (_result, id) => {
+      await queryClient.cancelQueries({ queryKey: annotationQueryKey });
       queryClient.setQueryData<UserAnnotation[]>(
         annotationQueryKey,
         (current) => removeAnnotation(current, id),
       );
       void message.success(t("annotation.deleted"));
-      void queryClient.invalidateQueries({ queryKey: annotationQueryKey });
+      void queryClient.invalidateQueries({ queryKey: annotationQueryKey, refetchType: "none" });
     },
     onError: (error) => {
       void message.error(extractErrorMessage(error, t("annotation.deleteFailed")));

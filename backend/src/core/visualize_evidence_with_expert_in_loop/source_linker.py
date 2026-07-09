@@ -25,6 +25,7 @@ class SourceLinker:
         *,
         canonical_evidence_id: UUID,
         track: str,
+        owner_user_id: UUID | str | None = None,
     ) -> TrackSpan | None:
         """Retrieve source span for one track (original or translated).
 
@@ -33,9 +34,22 @@ class SourceLinker:
         2. If the best run matches the requested track, use it directly.
         3. Otherwise, find a run item by identity tuple + track.
         """
+        owner_id = UUID(str(owner_user_id)) if owner_user_id else None
+        canonical_owner_filter = (
+            CanonicalEvidenceItem.owner_user_id.is_(None)
+            if owner_id is None
+            else CanonicalEvidenceItem.owner_user_id == owner_id
+        )
+        run_item_owner_filter = (
+            RunEvidenceItem.owner_user_id.is_(None)
+            if owner_id is None
+            else RunEvidenceItem.owner_user_id == owner_id
+        )
+
         # Step 1: load canonical item
         canonical_stmt = select(CanonicalEvidenceItem).where(
             CanonicalEvidenceItem.canonical_evidence_id == canonical_evidence_id,
+            canonical_owner_filter,
         )
         canonical_result = await self._session.execute(canonical_stmt)
         canonical = canonical_result.scalar_one_or_none()
@@ -48,6 +62,7 @@ class SourceLinker:
         if canonical.current_best_run_evidence_id is not None:
             best_stmt = select(RunEvidenceItem).where(
                 RunEvidenceItem.run_evidence_item_id == canonical.current_best_run_evidence_id,
+                run_item_owner_filter,
             )
             best_result = await self._session.execute(best_stmt)
             best_item = best_result.scalar_one_or_none()
@@ -64,6 +79,7 @@ class SourceLinker:
                     RunEvidenceItem.position_hash == canonical.position_hash,
                     RunEvidenceItem.entity_scope_hash == canonical.entity_scope_hash,
                     RunEvidenceItem.track == track,
+                    run_item_owner_filter,
                 )
                 .limit(1)
             )
@@ -91,6 +107,7 @@ class SourceLinker:
         self,
         *,
         canonical_evidence_id: UUID,
+        owner_user_id: UUID | str | None = None,
     ) -> BilingualSpan:
         """Retrieve both original and translated spans for bilingual traceability.
 
@@ -99,10 +116,12 @@ class SourceLinker:
         original = await self.get_track_span(
             canonical_evidence_id=canonical_evidence_id,
             track="original",
+            owner_user_id=owner_user_id,
         )
         translated = await self.get_track_span(
             canonical_evidence_id=canonical_evidence_id,
             track="translated",
+            owner_user_id=owner_user_id,
         )
 
         return BilingualSpan(
