@@ -746,6 +746,7 @@ class SearchService:
         doi: str | None = None,
         page: int = 1,
         page_size: int = 50,
+        owner_user_id: str | UUID | None = None,
     ) -> EvidenceSearchResponse:
         """Search evidence with optional filters and DB-level pagination.
 
@@ -759,6 +760,12 @@ class SearchService:
         from sqlalchemy.dialects.postgresql.ext import aggregate_order_by
 
         group_id_expr = CanonicalEvidenceItem.active_payload["group_id"].astext
+        owner_id = UUID(str(owner_user_id)) if owner_user_id else None
+        owner_filter = (
+            CanonicalEvidenceItem.owner_user_id.is_(None)
+            if owner_id is None
+            else CanonicalEvidenceItem.owner_user_id == owner_id
+        )
 
         # Build per-filter group_id sets, then intersect (AND across filters).
         # Each filter targets a disjoint field_id domain (gene vs variant vs disease),
@@ -790,7 +797,7 @@ class SearchService:
         if per_filter_clauses:
             matching_group_ids: set[str] | None = None
             for clause in per_filter_clauses:
-                filter_stmt = select(group_id_expr).where(clause).group_by(group_id_expr)
+                filter_stmt = select(group_id_expr).where(owner_filter, clause).group_by(group_id_expr)
                 result = await self._session.execute(filter_stmt)
                 ids = {row[0] for row in result.all() if row[0]}
                 if matching_group_ids is None:
@@ -833,6 +840,7 @@ class SearchService:
                 ).label("review_statuses"),
                 sa_func.max(CanonicalEvidenceItem.created_at).label("created_at"),
             )
+            .where(owner_filter)
             .group_by(
                 group_id_expr,
                 CanonicalEvidenceItem.source_document_id,
@@ -895,7 +903,7 @@ class SearchService:
                 CanonicalEvidenceItem.active_payload,
                 CanonicalEvidenceItem.created_at,
             )
-            .where(group_id_expr.in_(page_group_ids))
+            .where(owner_filter, group_id_expr.in_(page_group_ids))
             .order_by(group_id_expr, CanonicalEvidenceItem.field_id)
         )
         detail_result = await self._session.execute(detail_stmt)
@@ -992,7 +1000,12 @@ class SearchService:
                         PipelineRunState.source_document_id,
                         PipelineRunState.state_json,
                     )
-                    .where(PipelineRunState.source_document_id.in_(missing_language_doc_ids))
+                    .where(
+                        PipelineRunState.source_document_id.in_(missing_language_doc_ids),
+                        PipelineRunState.owner_user_id.is_(None)
+                        if owner_id is None
+                        else PipelineRunState.owner_user_id == owner_id,
+                    )
                     .order_by(PipelineRunState.created_at.desc())
                 )
                 run_state_result = await self._session.execute(run_state_stmt)
@@ -1063,6 +1076,7 @@ class SearchService:
         *,
         group_id: str | None = None,
         source_document_id: str | None = None,
+        owner_user_id: str | UUID | None = None,
     ) -> EvidenceGroupDetailResponse:
         """Return detail payload for one grouped evidence row.
 
@@ -1074,6 +1088,12 @@ class SearchService:
         papers.
         """
         conditions: list = []
+        owner_id = UUID(str(owner_user_id)) if owner_user_id else None
+        conditions.append(
+            CanonicalEvidenceItem.owner_user_id.is_(None)
+            if owner_id is None
+            else CanonicalEvidenceItem.owner_user_id == owner_id
+        )
         if group_id:
             conditions.append(
                 CanonicalEvidenceItem.active_payload["group_id"].astext == group_id,
@@ -1144,7 +1164,12 @@ class SearchService:
         phase2_output_dir: str | None = None
         run_state_stmt = (
             select(PipelineRunState.state_json)
-            .where(PipelineRunState.source_document_id == source_document_id)
+            .where(
+                PipelineRunState.source_document_id == source_document_id,
+                PipelineRunState.owner_user_id.is_(None)
+                if owner_id is None
+                else PipelineRunState.owner_user_id == owner_id,
+            )
             .order_by(PipelineRunState.created_at.desc())
             .limit(1)
         )

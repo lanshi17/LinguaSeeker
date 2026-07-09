@@ -27,6 +27,7 @@ class StandardizationService:
         await self._repository.ensure_run_parents(
             source_document_id=input_data.source_document_id,
             processing_run_id=input_data.processing_run_id,
+            owner_user_id=input_data.owner_user_id,
         )
         matches_list = []
         for candidate in input_data.candidates:
@@ -40,7 +41,10 @@ class StandardizationService:
         await self._repository.persist_run_evidence(input_data, matches)
         await self._repository.persist_bindings(input_data, matches, entity_ids)
         await self._repository.upsert_canonical_evidence(input_data, matches, entity_ids)
-        await self._repository.refresh_literature_profile(input_data.source_document_id)
+        await self._repository.refresh_literature_profile(
+            input_data.source_document_id,
+            owner_user_id=input_data.owner_user_id,
+        )
         await self._repository.refresh_search_index()
         acmg_ready = self._acmg_projector.project(input_data, matches)
         return StandardizationResult(

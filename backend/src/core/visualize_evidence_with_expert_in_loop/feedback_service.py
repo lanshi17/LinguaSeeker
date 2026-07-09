@@ -46,6 +46,7 @@ class FeedbackService:
         canonical_evidence_id: UUID,
         patch: EvidencePatchRequest,
         reviewer_id: UUID | None = None,
+        owner_user_id: UUID | str | None = None,
     ) -> PatchResult:
         """Apply a patch to an evidence card and record audit event.
 
@@ -60,7 +61,16 @@ class FeedbackService:
         5. If deltas > 0: INSERT review_audit_event
         6. Return PatchResult
         """
-        stmt = select(CanonicalEvidenceItem).where(CanonicalEvidenceItem.canonical_evidence_id == canonical_evidence_id)
+        owner_id = UUID(str(owner_user_id)) if owner_user_id else None
+        owner_filter = (
+            CanonicalEvidenceItem.owner_user_id.is_(None)
+            if owner_id is None
+            else CanonicalEvidenceItem.owner_user_id == owner_id
+        )
+        stmt = select(CanonicalEvidenceItem).where(
+            CanonicalEvidenceItem.canonical_evidence_id == canonical_evidence_id,
+            owner_filter,
+        )
         result = await self._session.execute(stmt)
         evidence = result.scalar_one()
 
@@ -107,7 +117,7 @@ class FeedbackService:
                 field_deltas=field_deltas,
                 change_reason=patch.change_reason,
             )
-            await self._refresh_literature_profile(evidence.source_document_id)
+            await self._refresh_literature_profile(evidence.source_document_id, owner_user_id=owner_id)
             await self._refresh_search_index()
 
         return PatchResult(
@@ -118,7 +128,12 @@ class FeedbackService:
             field_deltas=field_deltas,
         )
 
-    async def _refresh_literature_profile(self, source_document_id: UUID) -> None:
+    async def _refresh_literature_profile(
+        self,
+        source_document_id: UUID,
+        *,
+        owner_user_id: UUID | None,
+    ) -> None:
         """Rebuild the literature profile for the given source document.
 
         Lazy-imports LiteratureProfileRepository to avoid circular imports.
@@ -128,7 +143,7 @@ class FeedbackService:
         )
 
         repo = LiteratureProfileRepository(self._session)
-        await repo.refresh_for_document(source_document_id)
+        await repo.refresh_for_document(source_document_id, owner_user_id=owner_user_id)
 
     async def _refresh_search_index(self) -> None:
         """Rebuild the frontend search index after evidence changes.

@@ -20,6 +20,7 @@ async def list_annotations(
     session: AsyncSession,
     source_document_id: uuid.UUID,
     track: str | None = None,
+    owner_user_id: uuid.UUID | None = None,
 ) -> Sequence[DocumentAnnotation]:
     """Return annotations for a document, optionally filtered by track.
 
@@ -31,7 +32,15 @@ async def list_annotations(
     Returns:
         Sequence of ``DocumentAnnotation`` ORM rows ordered by creation time.
     """
-    stmt = select(DocumentAnnotation).where(DocumentAnnotation.source_document_id == source_document_id)
+    owner_filter = (
+        DocumentAnnotation.owner_user_id.is_(None)
+        if owner_user_id is None
+        else DocumentAnnotation.owner_user_id == owner_user_id
+    )
+    stmt = select(DocumentAnnotation).where(
+        DocumentAnnotation.source_document_id == source_document_id,
+        owner_filter,
+    )
     if track is not None:
         stmt = stmt.where(DocumentAnnotation.track == track)
     stmt = stmt.order_by(DocumentAnnotation.created_at, DocumentAnnotation.id)
@@ -39,9 +48,18 @@ async def list_annotations(
     return result.scalars().all()
 
 
-async def get_annotation(session: AsyncSession, annotation_id: uuid.UUID) -> DocumentAnnotation | None:
+async def get_annotation(
+    session: AsyncSession,
+    annotation_id: uuid.UUID,
+    owner_user_id: uuid.UUID | None = None,
+) -> DocumentAnnotation | None:
     """Fetch a single annotation by id, or None if not found."""
-    stmt = select(DocumentAnnotation).where(DocumentAnnotation.id == annotation_id)
+    owner_filter = (
+        DocumentAnnotation.owner_user_id.is_(None)
+        if owner_user_id is None
+        else DocumentAnnotation.owner_user_id == owner_user_id
+    )
+    stmt = select(DocumentAnnotation).where(DocumentAnnotation.id == annotation_id, owner_filter)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
@@ -57,6 +75,7 @@ async def create_annotation(
     color: str | None = None,
     note: str | None = None,
     author: str | None = None,
+    owner_user_id: uuid.UUID | None = None,
 ) -> DocumentAnnotation:
     """Insert a new annotation and return the persisted ORM row.
 
@@ -76,6 +95,7 @@ async def create_annotation(
     """
     annotation = DocumentAnnotation(
         source_document_id=source_document_id,
+        owner_user_id=owner_user_id,
         track=track,
         paragraph_id=paragraph_id,
         start_offset=start_offset,
@@ -98,6 +118,7 @@ async def update_annotation(
     note: str | None = None,
     update_color: bool = False,
     update_note: bool = False,
+    owner_user_id: uuid.UUID | None = None,
 ) -> DocumentAnnotation | None:
     """Patch mutable fields (color, note) of an annotation.
 
@@ -115,7 +136,12 @@ async def update_annotation(
     Returns:
         Updated ``DocumentAnnotation`` or ``None`` if not found.
     """
-    stmt = select(DocumentAnnotation).where(DocumentAnnotation.id == annotation_id)
+    owner_filter = (
+        DocumentAnnotation.owner_user_id.is_(None)
+        if owner_user_id is None
+        else DocumentAnnotation.owner_user_id == owner_user_id
+    )
+    stmt = select(DocumentAnnotation).where(DocumentAnnotation.id == annotation_id, owner_filter)
     result = await session.execute(stmt)
     annotation = result.scalar_one_or_none()
     if annotation is None:
@@ -129,7 +155,11 @@ async def update_annotation(
     return annotation
 
 
-async def delete_annotation(session: AsyncSession, annotation_id: uuid.UUID) -> bool:
+async def delete_annotation(
+    session: AsyncSession,
+    annotation_id: uuid.UUID,
+    owner_user_id: uuid.UUID | None = None,
+) -> bool:
     """Delete an annotation by id.
 
     Args:
@@ -139,6 +169,11 @@ async def delete_annotation(session: AsyncSession, annotation_id: uuid.UUID) -> 
     Returns:
         True if a row was deleted, False if no matching annotation existed.
     """
-    stmt = delete(DocumentAnnotation).where(DocumentAnnotation.id == annotation_id)
+    owner_filter = (
+        DocumentAnnotation.owner_user_id.is_(None)
+        if owner_user_id is None
+        else DocumentAnnotation.owner_user_id == owner_user_id
+    )
+    stmt = delete(DocumentAnnotation).where(DocumentAnnotation.id == annotation_id, owner_filter)
     result = await session.execute(stmt)
     return (result.rowcount or 0) > 0

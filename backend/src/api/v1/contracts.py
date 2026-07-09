@@ -178,53 +178,26 @@ class PipelineRunListResponse(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    """Login request body.
+    """Login-or-create request body.
 
-    ``email`` is optional to preserve the legacy password-only API-key login.
-    New personal accounts must submit both email and password.
+    ``username`` is optional only for legacy password-only API-key login.
+    Personal account requests submit username and password; missing users are
+    created by the login endpoint.
     """
 
-    email: str | None = None
+    username: str | None = Field(default=None, max_length=320)
     password: str
 
-    @field_validator("email")
+    @field_validator("username")
     @classmethod
-    def normalize_email(cls, email: str | None) -> str | None:
-        """Normalize an email address for local account lookup."""
-        if email is None:
+    def normalize_username(cls, username: str | None) -> str | None:
+        """Normalize an optional username for local account lookup."""
+        if username is None:
             return None
-        normalized = email.strip().lower()
+        normalized = username.strip().lower()
         if not normalized:
-            return None
-        if "@" not in normalized or "." not in normalized.rsplit("@", 1)[-1]:
-            raise ValueError("Enter a valid email address")
+            raise ValueError("Enter a username")
         return normalized
-
-
-class RegisterRequest(BaseModel):
-    """Register request body for local email accounts."""
-
-    email: str
-    password: str = Field(min_length=8)
-    display_name: str | None = Field(default=None, max_length=255)
-
-    @field_validator("email")
-    @classmethod
-    def normalize_email(cls, email: str) -> str:
-        """Normalize and validate an email address."""
-        normalized = email.strip().lower()
-        if "@" not in normalized or "." not in normalized.rsplit("@", 1)[-1]:
-            raise ValueError("Enter a valid email address")
-        return normalized
-
-    @field_validator("display_name")
-    @classmethod
-    def normalize_display_name(cls, display_name: str | None) -> str | None:
-        """Trim optional display names."""
-        if display_name is None:
-            return None
-        stripped = display_name.strip()
-        return stripped or None
 
 
 class LogoutResponse(BaseModel):
@@ -239,12 +212,12 @@ class AuthMeResponse(BaseModel):
     authenticated: bool
     account_type: Literal["public", "user"]
     user_id: UUID | None = None
-    email: str | None = None
+    username: str | None = None
     display_name: str | None = None
 
 
 class AuthResponse(BaseModel):
-    """Login/register success response."""
+    """Authentication success response."""
 
     success: bool
     account: AuthMeResponse

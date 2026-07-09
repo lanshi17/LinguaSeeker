@@ -24,6 +24,7 @@ class JobRow:
     job_id: str
     processing_run_id: str
     source_document_id: str
+    owner_user_id: str | None
     request_data: dict[str, object]
 
 
@@ -44,6 +45,7 @@ class JobQueueRepository:
         processing_run_id: uuid.UUID,
         source_document_id: uuid.UUID,
         request_data: dict[str, object],
+        owner_user_id: uuid.UUID | None = None,
         priority: int = 0,
     ) -> None:
         """Insert a new job in queued status."""
@@ -53,6 +55,7 @@ class JobQueueRepository:
                     job_id=job_id,
                     processing_run_id=processing_run_id,
                     source_document_id=source_document_id,
+                    owner_user_id=owner_user_id,
                     status="queued",
                     priority=priority,
                     request_data=request_data,
@@ -96,6 +99,7 @@ class JobQueueRepository:
                     PipelineJob.job_id,
                     PipelineJob.processing_run_id,
                     PipelineJob.source_document_id,
+                    PipelineJob.owner_user_id,
                     PipelineJob.request_data,
                 )
             )
@@ -110,7 +114,8 @@ class JobQueueRepository:
                 job_id=str(row[0]),
                 processing_run_id=str(row[1]),
                 source_document_id=str(row[2]),
-                request_data=row[3] if row[3] else {},
+                owner_user_id=str(row[3]) if row[3] else None,
+                request_data=row[4] if row[4] else {},
             )
 
     async def complete(self, job_id: str) -> None:
@@ -144,12 +149,20 @@ class JobQueueRepository:
             await session.commit()
         logger.warning("Job failed: job_id={}, error={}", job_id, error_message)
 
-    async def get_status(self, processing_run_id: str) -> str | None:
+    async def get_status(self, processing_run_id: str, owner_user_id: uuid.UUID | None = None) -> str | None:
         """Return the most recent job status for a processing_run_id."""
         async with self._session_factory() as session:
+            owner_filter = (
+                PipelineJob.owner_user_id.is_(None)
+                if owner_user_id is None
+                else PipelineJob.owner_user_id == owner_user_id
+            )
             result = await session.execute(
                 select(PipelineJob.status)
-                .where(PipelineJob.processing_run_id == uuid.UUID(processing_run_id))
+                .where(
+                    PipelineJob.processing_run_id == uuid.UUID(processing_run_id),
+                    owner_filter,
+                )
                 .order_by(PipelineJob.created_at.desc())
                 .limit(1)
             )

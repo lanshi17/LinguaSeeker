@@ -100,8 +100,15 @@ class LiteratureProfile(Base, TimestampMixin):
 
     __tablename__ = "literature_profiles"
     __table_args__ = (
+        UniqueConstraint(
+            "source_document_id",
+            "owner_user_id",
+            name="uq_literature_profiles_document_owner",
+            postgresql_nulls_not_distinct=True,
+        ),
         Index("ix_literature_profiles_pmid", "pmid"),
         Index("ix_literature_profiles_doi", "doi"),
+        Index("ix_literature_profiles_owner_updated", "owner_user_id", text("updated_at DESC")),
         Index(
             "ix_literature_profiles_evidence_groups_gin",
             "evidence_groups",
@@ -115,7 +122,11 @@ class LiteratureProfile(Base, TimestampMixin):
         UUID(as_uuid=True),
         ForeignKey("source_documents.source_document_id"),
         nullable=False,
-        unique=True,
+    )
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.user_id"),
+        nullable=True,
     )
     pmid: Mapped[str | None] = mapped_column(Text, nullable=True)
     doi: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -166,10 +177,10 @@ class User(Base, TimestampMixin):
     """Minimal auth user used for login and review ownership."""
 
     __tablename__ = "users"
-    __table_args__ = (UniqueConstraint("email", name="uq_users_email"),)
+    __table_args__ = (UniqueConstraint("username", name="uq_users_username"),)
 
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    email: Mapped[str] = mapped_column(String(320), nullable=False)
+    username: Mapped[str] = mapped_column(String(320), nullable=False)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
     display_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
@@ -179,13 +190,21 @@ class ProcessingRun(Base):
     """Reproducibility boundary for one pipeline execution."""
 
     __tablename__ = "processing_runs"
-    __table_args__ = (Index("ix_processing_runs_source_document_id", "source_document_id"),)
+    __table_args__ = (
+        Index("ix_processing_runs_source_document_id", "source_document_id"),
+        Index("ix_processing_runs_owner_created", "owner_user_id", text("created_at DESC")),
+    )
 
     processing_run_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     source_document_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("source_documents.source_document_id"),
         nullable=False,
+    )
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.user_id"),
+        nullable=True,
     )
     parser_version: Mapped[str | None] = mapped_column(String(128), nullable=True)
     translation_version: Mapped[str | None] = mapped_column(String(128), nullable=True)
@@ -284,6 +303,7 @@ class RunEvidenceItem(Base, TimestampMixin):
         CheckConstraint("confidence >= 0 AND confidence <= 1", name="ck_run_evidence_items_confidence_range"),
         Index("ix_run_evidence_items_processing_run_id", "processing_run_id"),
         Index("ix_run_evidence_items_source_document_id", "source_document_id"),
+        Index("ix_run_evidence_items_owner_document", "owner_user_id", "source_document_id"),
     )
 
     run_evidence_item_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -296,6 +316,11 @@ class RunEvidenceItem(Base, TimestampMixin):
         UUID(as_uuid=True),
         ForeignKey("source_documents.source_document_id"),
         nullable=False,
+    )
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.user_id"),
+        nullable=True,
     )
     track: Mapped[str] = mapped_column(String(32), nullable=False)
     field_id: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -350,12 +375,15 @@ class CanonicalEvidenceItem(Base, TimestampMixin):
         ),
         UniqueConstraint(
             "source_document_id",
+            "owner_user_id",
             "field_id",
             "position_hash",
             "entity_scope_hash",
             name="uq_canonical_evidence_items_identity",
+            postgresql_nulls_not_distinct=True,
         ),
         Index("ix_canonical_evidence_items_source_document_id", "source_document_id"),
+        Index("ix_canonical_evidence_items_owner_document", "owner_user_id", "source_document_id"),
         Index("ix_canonical_evidence_items_current_best_run_evidence_id", "current_best_run_evidence_id"),
         Index(
             "ix_canonical_evidence_items_group_id",
@@ -369,6 +397,11 @@ class CanonicalEvidenceItem(Base, TimestampMixin):
         UUID(as_uuid=True),
         ForeignKey("source_documents.source_document_id"),
         nullable=False,
+    )
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.user_id"),
+        nullable=True,
     )
     field_id: Mapped[str] = mapped_column(String(128), nullable=False)
     position_hash: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -635,11 +668,14 @@ class PipelineRunState(Base):
     __table_args__ = (
         Index("ix_pipeline_run_states_source_document_id", "source_document_id"),
         Index("ix_pipeline_run_states_pipeline_status", "pipeline_status"),
+        Index("ix_pipeline_run_states_owner_created", "owner_user_id", text("created_at DESC")),
         Index("ix_pipeline_run_states_owner_heartbeat", "owner_worker_id", "heartbeat_at"),
         Index(
             "ux_pipeline_run_states_active_source_key",
+            "owner_user_id",
             "source_key",
             unique=True,
+            postgresql_nulls_not_distinct=True,
             postgresql_where=text("source_key IS NOT NULL AND pipeline_status IN ('pending', 'running')"),
         ),
     )
@@ -653,6 +689,11 @@ class PipelineRunState(Base):
         UUID(as_uuid=True),
         ForeignKey("source_documents.source_document_id"),
         nullable=False,
+    )
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.user_id"),
+        nullable=True,
     )
     state_json: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
     pipeline_status: Mapped[str] = mapped_column(
@@ -691,6 +732,7 @@ class PipelineJob(Base):
     __table_args__ = (
         Index("ix_pipeline_jobs_status_priority", "status", "priority", "created_at"),
         Index("ix_pipeline_jobs_processing_run_id", "processing_run_id"),
+        Index("ix_pipeline_jobs_owner_status", "owner_user_id", "status", "created_at"),
         CheckConstraint(
             "status IN ('queued', 'running', 'completed', 'failed')",
             name="ck_pipeline_jobs_status",
@@ -700,6 +742,11 @@ class PipelineJob(Base):
     job_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     processing_run_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     source_document_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.user_id"),
+        nullable=True,
+    )
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="queued", server_default=text("'queued'"))
     priority: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
@@ -751,6 +798,7 @@ class DocumentAnnotation(Base, TimestampMixin):
             name="ck_document_annotations_offsets_valid",
         ),
         Index("ix_document_annotations_doc_track", "source_document_id", "track"),
+        Index("ix_document_annotations_owner_doc_track", "owner_user_id", "source_document_id", "track"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -758,6 +806,11 @@ class DocumentAnnotation(Base, TimestampMixin):
         UUID(as_uuid=True),
         ForeignKey("source_documents.source_document_id"),
         nullable=False,
+    )
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.user_id"),
+        nullable=True,
     )
     track: Mapped[str] = mapped_column(String(16), nullable=False)
     paragraph_id: Mapped[str] = mapped_column(String(128), nullable=False)

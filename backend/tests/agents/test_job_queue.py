@@ -44,12 +44,14 @@ def _make_job(
     job_id: str = "job-1",
     processing_run_id: str = "run-1",
     source_document_id: str = "doc-1",
+    owner_user_id: str | None = None,
     request_data: dict | None = None,
 ) -> JobRow:
     return JobRow(
         job_id=job_id,
         processing_run_id=processing_run_id,
         source_document_id=source_document_id,
+        owner_user_id=owner_user_id,
         request_data=request_data
         or {
             "mode": "full",

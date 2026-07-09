@@ -1,0 +1,59 @@
+.auth-account-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: min(220px, 42vw);
+  color: var(--color-text-secondary);
+}
+
+.auth-account-button .ant-btn-icon {
+  display: inline-flex;
+}
+
+.auth-account-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-account-chevron {
+  flex: 0 0 auto;
+  color: var(--color-text-tertiary);
+}
+
+.auth-menu-identity {
+  display: flex;
+  min-width: 190px;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.25;
+}
+
+.auth-menu-identity small {
+  color: var(--color-text-tertiary);
+  font-size: 12px;
+}
+
+.auth-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-scope-note {
+  display: block;
+  margin-top: -6px;
+}
+
+@media (max-width: 520px) {
+  .auth-account-button {
+    max-width: 44px;
+    padding-inline: 8px;
+  }
+
+  .auth-account-label,
+  .auth-account-chevron {
+    display: none;
+  }
+}

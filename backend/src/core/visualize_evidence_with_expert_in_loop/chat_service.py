@@ -195,19 +195,33 @@ class ChatService:
             message_count=0,
         )
 
-    async def _require_session(self, *, session_id: UUID) -> ChatSession:
+    async def _require_session(
+        self,
+        *,
+        session_id: UUID,
+        owner_user_id: UUID | None = None,
+    ) -> ChatSession:
         """Fetch a chat session or raise NotFoundException if it doesn't exist."""
+        owner_filter = ChatSession.user_id.is_(None) if owner_user_id is None else ChatSession.user_id == owner_user_id
         result = await self._session.execute(
-            select(ChatSession).where(ChatSession.chat_session_id == session_id)
+            select(ChatSession).where(
+                ChatSession.chat_session_id == session_id,
+                owner_filter,
+            )
         )
         session = result.scalar_one_or_none()
         if session is None:
             raise NotFoundException("ChatSession", str(session_id))
         return session
 
-    async def get_session(self, *, session_id: UUID) -> ChatSessionResponse:
+    async def get_session(
+        self,
+        *,
+        session_id: UUID,
+        owner_user_id: UUID | None = None,
+    ) -> ChatSessionResponse:
         """Fetch one chat session with its message count."""
-        session = await self._require_session(session_id=session_id)
+        session = await self._require_session(session_id=session_id, owner_user_id=owner_user_id)
         count_stmt = (
             select(func.count())
             .select_from(ChatMessage)
@@ -233,9 +247,10 @@ class ChatService:
         evidence_id: UUID | None = None,
         entity_id: UUID | None = None,
         action: ChatAction | None = None,
+        owner_user_id: UUID | None = None,
     ) -> ChatMessageResponse:
         """Append a message to a chat session."""
-        await self._require_session(session_id=session_id)
+        await self._require_session(session_id=session_id, owner_user_id=owner_user_id)
         message = ChatMessage(
             chat_session_id=session_id,
             role=role,
@@ -270,9 +285,10 @@ class ChatService:
         *,
         session_id: UUID,
         limit: int = 100,
+        owner_user_id: UUID | None = None,
     ) -> list[ChatMessageResponse]:
         """List messages in a session, ordered chronologically."""
-        await self._require_session(session_id=session_id)
+        await self._require_session(session_id=session_id, owner_user_id=owner_user_id)
         stmt = (
             select(ChatMessage)
             .where(ChatMessage.chat_session_id == session_id)
@@ -288,8 +304,10 @@ class ChatService:
         self,
         *,
         processing_run_id: UUID,
+        owner_user_id: UUID | None = None,
     ) -> list[ChatSessionResponse]:
         """List all chat sessions for a processing run."""
+        owner_filter = ChatSession.user_id.is_(None) if owner_user_id is None else ChatSession.user_id == owner_user_id
         count_subq = (
             select(
                 ChatMessage.chat_session_id,
@@ -306,6 +324,7 @@ class ChatService:
                 ChatSession.chat_session_id == count_subq.c.chat_session_id,
             )
             .where(ChatSession.processing_run_id == processing_run_id)
+            .where(owner_filter)
             .order_by(ChatSession.created_at.desc())
         )
         result = await self._session.execute(stmt)
@@ -392,6 +411,7 @@ class ChatService:
         self,
         *,
         canonical_evidence_id: UUID,
+        owner_user_id: UUID | None = None,
     ) -> str:
         """Build evidence context block for LLM (~4000 tokens).
 
@@ -400,7 +420,15 @@ class ChatService:
         - Associated entities (via bindings)
         - Source span snippet
         """
-        stmt = select(CanonicalEvidenceItem).where(CanonicalEvidenceItem.canonical_evidence_id == canonical_evidence_id)
+        owner_filter = (
+            CanonicalEvidenceItem.owner_user_id.is_(None)
+            if owner_user_id is None
+            else CanonicalEvidenceItem.owner_user_id == owner_user_id
+        )
+        stmt = select(CanonicalEvidenceItem).where(
+            CanonicalEvidenceItem.canonical_evidence_id == canonical_evidence_id,
+            owner_filter,
+        )
         result = await self._session.execute(stmt)
         evidence = result.scalar_one_or_none()
 
@@ -452,6 +480,9 @@ class ChatService:
             # Source snippet from the best run item
             stmt = select(RunEvidenceItem).where(
                 RunEvidenceItem.run_evidence_item_id == best_run_id,
+                RunEvidenceItem.owner_user_id.is_(None)
+                if owner_user_id is None
+                else RunEvidenceItem.owner_user_id == owner_user_id,
             )
             result = await self._session.execute(stmt)
             run_item = result.scalar_one_or_none()
@@ -522,6 +553,8 @@ class ChatService:
         *,
         evidence_id: UUID,
         user_message: str,
+        reviewer_id: UUID | None = None,
+        owner_user_id: UUID | None = None,
     ) -> str:
         """Parse the user message and apply correction via FeedbackService."""
         from src.core.visualize_evidence_with_expert_in_loop.feedback_service import (
@@ -549,6 +582,8 @@ class ChatService:
             result = await service.patch_evidence(
                 canonical_evidence_id=evidence_id,
                 patch=patch,
+                reviewer_id=reviewer_id,
+                owner_user_id=owner_user_id,
             )
             await self._session.commit()
         except Exception as exc:
@@ -605,12 +640,15 @@ class ChatService:
         session_id: UUID,
         user_message: str,
         evidence_id: UUID | None = None,
+        owner_user_id: UUID | None = None,
+        reviewer_id: UUID | None = None,
     ) -> str | None:
         """Generate AI reply based on intent and evidence context.
 
         Returns:
             Reply text for questions/corrections, None for notes.
         """
+        await self._require_session(session_id=session_id, owner_user_id=owner_user_id)
         intent = self._detect_intent(user_message)
 
         if intent == "note":
@@ -620,12 +658,17 @@ class ChatService:
             result = await self._apply_correction(
                 evidence_id=evidence_id,
                 user_message=user_message,
+                reviewer_id=reviewer_id,
+                owner_user_id=owner_user_id,
             )
             return result
 
         context = ""
         if evidence_id:
-            context = await self._build_evidence_context(canonical_evidence_id=evidence_id)
+            context = await self._build_evidence_context(
+                canonical_evidence_id=evidence_id,
+                owner_user_id=owner_user_id,
+            )
 
         system_prompt = self._system_prompt(has_evidence_context=bool(context))
 
@@ -656,6 +699,8 @@ class ChatService:
         session_id: UUID,
         user_message: str,
         evidence_id: UUID | None = None,
+        owner_user_id: UUID | None = None,
+        reviewer_id: UUID | None = None,
     ):
         """Stream AI reply as SSE events.
 
@@ -665,13 +710,15 @@ class ChatService:
             {"type": "done"} on completion
             {"type": "error", "message": "..."} on failure
         """
-        await self._require_session(session_id=session_id)
+        await self._require_session(session_id=session_id, owner_user_id=owner_user_id)
         intent = self._detect_intent(user_message)
 
         if intent == "correction" and evidence_id:
             result = await self._apply_correction(
                 evidence_id=evidence_id,
                 user_message=user_message,
+                reviewer_id=reviewer_id,
+                owner_user_id=owner_user_id,
             )
             yield {"type": "text", "content": result}
             yield {"type": "done"}
@@ -679,7 +726,10 @@ class ChatService:
 
         context = ""
         if evidence_id:
-            context = await self._build_evidence_context(canonical_evidence_id=evidence_id)
+            context = await self._build_evidence_context(
+                canonical_evidence_id=evidence_id,
+                owner_user_id=owner_user_id,
+            )
 
         system_prompt = self._system_prompt(has_evidence_context=bool(context))
 
@@ -702,6 +752,7 @@ class ChatService:
                 session_id=session_id,
                 system_prompt=system_prompt,
                 user_message=user_message,
+                owner_user_id=owner_user_id,
             ):
                 yield event
             return
@@ -732,6 +783,7 @@ class ChatService:
                 role="assistant",
                 content=complete_reply,
                 evidence_id=evidence_id,
+                owner_user_id=owner_user_id,
             )
 
     async def _stream_router_envelope(
@@ -741,6 +793,7 @@ class ChatService:
         session_id: UUID,
         system_prompt: str,
         user_message: str,
+        owner_user_id: UUID | None = None,
     ):
         history = await self._load_router_history(
             session_id=session_id,
@@ -787,6 +840,7 @@ class ChatService:
                 role="assistant",
                 content=reply or "",
                 action=action,
+                owner_user_id=owner_user_id,
             )
 
     @staticmethod

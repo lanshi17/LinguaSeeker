@@ -98,6 +98,7 @@ class SingleJobDispatcher:
         rd = job.request_data
         rd["processing_run_id"] = job.processing_run_id
         rd["source_document_id"] = job.source_document_id
+        rd["owner_user_id"] = job.owner_user_id
         try:
             initial_state = PipelineGraphState.from_request_data(rd)
         except Exception as exc:

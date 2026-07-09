@@ -68,9 +68,10 @@ def test_source_identifier_uniqueness_constraint() -> None:
 
 
 def test_canonical_evidence_identity_uniqueness_constraint() -> None:
-    """Canonical evidence identity is source document plus field, position, and entity scope."""
+    """Canonical evidence identity is scoped by account plus field, position, and entity scope."""
     assert (
         "source_document_id",
+        "owner_user_id",
         "field_id",
         "position_hash",
         "entity_scope_hash",
@@ -318,7 +319,25 @@ def test_pipeline_run_state_has_active_source_index() -> None:
     from src.dao.postgresql.models import PipelineRunState
 
     table = PipelineRunState.__table__
-    index_names = {idx.name for idx in table.indexes}
+    indexes = {idx.name: idx for idx in table.indexes}
 
-    assert "ix_pipeline_run_states_owner_heartbeat" in index_names
-    assert "ux_pipeline_run_states_active_source_key" in index_names
+    assert "ix_pipeline_run_states_owner_heartbeat" in indexes
+    active_source_index = indexes["ux_pipeline_run_states_active_source_key"]
+    assert {column.name for column in active_source_index.columns} == {"owner_user_id", "source_key"}
+    assert active_source_index.unique is True
+
+
+def test_pipeline_job_has_owner_scope() -> None:
+    """Pipeline jobs carry account ownership used by the dispatcher claim query."""
+    from src.dao.postgresql.models import PipelineJob
+
+    table = PipelineJob.__table__
+    column_names = {column.name for column in table.columns}
+    indexes = {idx.name: idx for idx in table.indexes}
+
+    assert "owner_user_id" in column_names
+    assert tuple(column.name for column in indexes["ix_pipeline_jobs_owner_status"].columns) == (
+        "owner_user_id",
+        "status",
+        "created_at",
+    )

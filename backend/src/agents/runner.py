@@ -106,6 +106,7 @@ class PipelineRunner:
             await self._persistence.reset_phase_rerun_artifacts(
                 processing_run_id=initial_state.processing_run_id,
                 source_document_id=initial_state.source_document_id,
+                owner_user_id=initial_state.owner_user_id,
                 target_phase=initial_state.target_phase,
             )
 
@@ -226,6 +227,7 @@ class PipelineRunner:
         offset: int = 0,
         status: str | None = None,
         search: str | None = None,
+        owner_user_id: str | None = None,
     ) -> tuple[list[PipelineRunSummaryRow], int]:
         """List pipeline run summaries (newest first)."""
         return await self._persistence.list_runs(
@@ -233,6 +235,7 @@ class PipelineRunner:
             offset=offset,
             status=status,
             search=search,
+            owner_user_id=owner_user_id,
         )
 
     async def shutdown(self, timeout: float = 60.0) -> None:
@@ -283,7 +286,7 @@ class PipelineRunner:
                 if task in pending and not task.done():
                     logger.error("Pipeline run {} could not be cancelled before shutdown", rid)
 
-    async def is_running_for_source(self, source_key: str) -> bool:
+    async def is_running_for_source(self, source_key: str, owner_user_id: str | None = None) -> bool:
         """Check if any active run is processing this source key (N3 fix).
 
         Compares against state.source_key (filename or query), not
@@ -296,14 +299,19 @@ class PipelineRunner:
         for run_id, state in self._last_states.items():
             if (
                 state.source_key == source_key
+                and state.owner_user_id == owner_user_id
                 and state.pipeline_status in self._ACTIVE_STATUSES
                 and self.is_running(run_id)
             ):
                 return True
         # Cross-worker dedup: check persistence for active source keys
-        return await self._persistence.has_active_source_key(source_key)
+        return await self._persistence.has_active_source_key(source_key, owner_user_id=owner_user_id)
 
-    async def check_processing_cache(self, content_hash: str) -> PipelineGraphState | None:
+    async def check_processing_cache(
+        self,
+        content_hash: str,
+        owner_user_id: str | None = None,
+    ) -> PipelineGraphState | None:
         """Check the L1/L2 processing cache for a previously completed result.
 
         Returns the cached PipelineGraphState if found, or None on miss.
@@ -314,6 +322,8 @@ class PipelineRunner:
             return None
         result = await self._processing_cache.get_cached_result(content_hash)
         if result is None:
+            return None
+        if result.state.owner_user_id != owner_user_id:
             return None
         return result.state
 

@@ -8,7 +8,7 @@
 
 - name: Sync frontend source code
   synchronize:
-    src: "{{ playbook_dir }}/../../frontend/"
+    src: "{{ playbook_dir }}/../../../frontend/"
     dest: "{{ frontend_root }}/"
     delete: yes
     rsync_opts:

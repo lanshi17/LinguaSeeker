@@ -1,4 +1,4 @@
-"""Password hashing helpers for local email accounts."""
+"""Password hashing helpers for local username accounts."""
 
 from __future__ import annotations
 
@@ -40,4 +40,3 @@ def verify_password(password: str, stored_hash: str) -> bool:
 
     actual = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
     return hmac.compare_digest(actual, expected)
-

@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { App as AntdApp } from "antd";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -263,6 +263,38 @@ describe("BilingualCompareView annotations", () => {
       expect(createAnnotation).toHaveBeenCalledTimes(1);
       expect(screen.getByTestId(countId)).toHaveTextContent("annotations:1");
     });
+  });
+
+  it("keeps a confirmed created annotation visible when a stale annotation list resolves later", async () => {
+    const created = makeAnnotation();
+    let resolveInitialList!: (items: UserAnnotation[]) => void;
+    const initialListRequest = new Promise<UserAnnotation[]>((resolve) => {
+      resolveInitialList = resolve;
+    });
+    vi.mocked(listAnnotations)
+      .mockReturnValueOnce(initialListRequest)
+      .mockResolvedValue([]);
+    vi.mocked(createAnnotation).mockResolvedValue(created);
+
+    renderCompare(makeDetail());
+    const countId = "annotation-layer-original-original-full-text-count";
+    const createId = "annotation-layer-original-original-full-text-create";
+
+    await screen.findByTestId(createId);
+    fireEvent.click(screen.getByTestId(createId));
+
+    await waitFor(() => {
+      expect(createAnnotation).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId(countId)).toHaveTextContent("annotations:1");
+    });
+
+    await act(async () => {
+      resolveInitialList([]);
+      await initialListRequest;
+    });
+
+    expect(listAnnotations).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId(countId)).toHaveTextContent("annotations:1");
   });
 
   it("mirrors a created annotation into the translated reader", async () => {

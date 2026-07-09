@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hmac
 
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi import APIRouter, HTTPException, Request, Response
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
@@ -15,7 +15,7 @@ from src.api.auth import (
     _get_signing_key,
     sign_session_token,
 )
-from src.api.v1.contracts import AuthMeResponse, AuthResponse, LoginRequest, LogoutResponse, RegisterRequest
+from src.api.v1.contracts import AuthMeResponse, AuthResponse, LoginRequest, LogoutResponse
 from src.api.wiring import get_session_factory
 from src.core.auth.passwords import hash_password, verify_password
 from src.core.config import get_config
@@ -24,13 +24,13 @@ from src.dao.postgresql.models import User
 router = APIRouter()
 
 
-def _public_account_response(*, authenticated: bool = False, email: str | None = None) -> AuthMeResponse:
+def _public_account_response(*, authenticated: bool = False, username: str | None = None) -> AuthMeResponse:
     """Return the public account API response."""
     return AuthMeResponse(
         authenticated=authenticated,
         account_type="public",
         user_id=None,
-        email=email,
+        username=username,
         display_name="Public account",
     )
 
@@ -41,7 +41,7 @@ def _user_account_response(user: User) -> AuthMeResponse:
         authenticated=True,
         account_type="user",
         user_id=user.user_id,
-        email=user.email,
+        username=user.username,
         display_name=user.display_name,
     )
 
@@ -62,10 +62,11 @@ def _set_session_cookie(response: Response, token: str) -> None:
 
 @router.post("/login", response_model=AuthResponse)
 async def login(body: LoginRequest, response: Response) -> AuthResponse:
-    """Validate credentials and set a signed session cookie.
+    """Login with username/password, creating the user when missing.
 
-    Email + password uses persisted ``users`` rows. Password-only login keeps
-    the legacy API-key session behavior for existing deployments and tests.
+    Username + password uses persisted ``users`` rows. If the username does
+    not exist, a new active user is created and signed in. Password-only login
+    keeps the legacy API-key session behavior for existing deployments/tests.
     """
     cfg = get_config()
 
@@ -73,7 +74,7 @@ async def login(body: LoginRequest, response: Response) -> AuthResponse:
         raise HTTPException(status_code=400, detail="Password is required")
 
     signing_key = _get_signing_key()
-    if body.email is None:
+    if body.username is None:
         secret = cfg.api_key
         if not secret:
             raise HTTPException(status_code=500, detail="Authentication not configured")
@@ -85,40 +86,31 @@ async def login(body: LoginRequest, response: Response) -> AuthResponse:
 
     session_factory = get_session_factory()
     async with session_factory() as session:
-        result = await session.execute(select(User).where(User.email == body.email))
+        result = await session.execute(select(User).where(User.username == body.username))
         user = result.scalar_one_or_none()
-        if user is None or user.status != "active" or not verify_password(body.password, user.password_hash):
-            raise HTTPException(status_code=401, detail="Invalid credentials")
+        if user is not None:
+            if user.status != "active" or not verify_password(body.password, user.password_hash):
+                raise HTTPException(status_code=401, detail="Invalid credentials")
 
-        token = sign_session_token(signing_key, user_id=user.user_id, email=user.email)
-        _set_session_cookie(response, token)
-        return AuthResponse(success=True, account=_user_account_response(user))
-
-
-@router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
-async def register(body: RegisterRequest, response: Response) -> AuthResponse:
-    """Create a local email account and set a signed session cookie."""
-    session_factory = get_session_factory()
-    async with session_factory() as session:
-        existing_result = await session.execute(select(User.user_id).where(User.email == body.email))
-        if existing_result.scalar_one_or_none() is not None:
-            raise HTTPException(status_code=409, detail="Email is already registered")
+            token = sign_session_token(signing_key, user_id=user.user_id, username=user.username)
+            _set_session_cookie(response, token)
+            return AuthResponse(success=True, account=_user_account_response(user))
 
         user = User(
-            email=body.email,
+            username=body.username,
             password_hash=hash_password(body.password),
-            display_name=body.display_name,
+            display_name=body.username,
             status="active",
         )
         session.add(user)
         try:
             await session.flush()
-            token = sign_session_token(_get_signing_key(), user_id=user.user_id, email=user.email)
+            token = sign_session_token(signing_key, user_id=user.user_id, username=user.username)
             _set_session_cookie(response, token)
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
-            raise HTTPException(status_code=409, detail="Email is already registered") from exc
+            raise HTTPException(status_code=401, detail="Invalid credentials") from exc
 
         return AuthResponse(success=True, account=_user_account_response(user))
 
@@ -148,7 +140,7 @@ async def me(request: Request) -> AuthMeResponse:
         return _public_account_response(authenticated=False)
 
     if claims.user_id is None:
-        return _public_account_response(authenticated=True, email=claims.email)
+        return _public_account_response(authenticated=True, username=claims.username)
 
     try:
         session_factory = get_session_factory()

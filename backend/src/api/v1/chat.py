@@ -15,10 +15,11 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
-from src.api.auth import require_api_key
+from src.api.auth import get_current_account
 from src.api.deps import get_db_session, get_phase4_factory
 from src.api.rate_limit import limiter
 from src.api.wiring import get_local_parser
+from src.core.auth.contracts import AuthContext
 from src.core.config import get_config
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     ChatMessageResponse,
@@ -47,14 +48,14 @@ async def create_session(
     request: Request,
     body: CreateSessionRequest,
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> ChatSessionResponse:
     """Create a new chat session."""
     factory = get_phase4_factory()
     service = factory.create_chat_service(session)
     chat_session = await service.create_session(
         processing_run_id=body.processing_run_id,
-        user_id=body.user_id,
+        user_id=account.owner_user_id,
     )
     await session.commit()
     return chat_session
@@ -64,24 +65,24 @@ async def create_session(
 async def list_sessions(
     processing_run_id: UUID,
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> list[ChatSessionResponse]:
     """List all chat sessions for a processing run."""
     factory = get_phase4_factory()
     service = factory.create_chat_service(session)
-    return await service.list_sessions(processing_run_id=processing_run_id)
+    return await service.list_sessions(processing_run_id=processing_run_id, owner_user_id=account.owner_user_id)
 
 
 @router.get("/session-details/{session_id}", response_model=ChatSessionResponse)
 async def get_session(
     session_id: UUID,
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> ChatSessionResponse:
     """Fetch a single chat session by id."""
     factory = get_phase4_factory()
     service = factory.create_chat_service(session)
-    return await service.get_session(session_id=session_id)
+    return await service.get_session(session_id=session_id, owner_user_id=account.owner_user_id)
 
 
 @router.get("/sessions/{session_id}/messages", response_model=list[ChatMessageResponse])
@@ -89,12 +90,12 @@ async def list_messages(
     session_id: UUID,
     limit: int = 100,
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> list[ChatMessageResponse]:
     """List messages in a chat session."""
     factory = get_phase4_factory()
     service = factory.create_chat_service(session)
-    return await service.list_messages(session_id=session_id, limit=limit)
+    return await service.list_messages(session_id=session_id, limit=limit, owner_user_id=account.owner_user_id)
 
 
 @router.post("/sessions/{session_id}/messages", response_model=ChatMessageResponse)
@@ -104,7 +105,7 @@ async def append_message(
     session_id: UUID,
     body: AppendMessageRequest,
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> ChatMessageResponse:
     """Append a message to a chat session."""
     factory = get_phase4_factory()
@@ -115,6 +116,7 @@ async def append_message(
         content=body.content,
         evidence_id=body.evidence_id,
         entity_id=body.entity_id,
+        owner_user_id=account.owner_user_id,
     )
 
     if body.role == "user" and body.auto_reply:
@@ -122,6 +124,8 @@ async def append_message(
             session_id=session_id,
             user_message=body.content,
             evidence_id=body.evidence_id,
+            owner_user_id=account.owner_user_id,
+            reviewer_id=account.owner_user_id,
         )
         if reply:
             await service.append_message(
@@ -130,6 +134,7 @@ async def append_message(
                 content=reply,
                 evidence_id=body.evidence_id,
                 entity_id=body.entity_id,
+                owner_user_id=account.owner_user_id,
             )
 
     await session.commit()
@@ -149,7 +154,7 @@ async def stream_reply(
     user_message: str,
     evidence_id: UUID | None = None,
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> StreamingResponse:
     """Stream AI reply as SSE events with 15-second keepalive heartbeat.
 
@@ -166,6 +171,8 @@ async def stream_reply(
             session_id=session_id,
             user_message=user_message,
             evidence_id=evidence_id,
+            owner_user_id=account.owner_user_id,
+            reviewer_id=account.owner_user_id,
         ):
             yield f"data: {json.dumps(event)}\n\n"
 
@@ -194,7 +201,7 @@ _MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
 async def parse_chat_file(
     request: Request,
     file: UploadFile = File(...),
-    _api_key: str | None = Depends(require_api_key),
+    _account: AuthContext = Depends(get_current_account),
 ) -> ChatFileParseResponse:
     """Parse an uploaded PDF for chat context.
 

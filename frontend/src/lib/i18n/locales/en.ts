@@ -710,6 +710,26 @@ const en = {
   "pageGuide.bilingual.s5.i3": "Right-click selected text to assign it to a specific ACMG evidence field.",
   "pageGuide.bilingual.s5.i4": "Use the Export Report button in the literature header to download a structured evidence report.",
 
+  // ── Account ──
+  "auth.accountMenu": "Account menu",
+  "auth.publicAccount": "Public",
+  "auth.personalAccount": "Personal account",
+  "auth.publicScope": "Shared public workspace",
+  "auth.personalScope": "Enter a username and password. New usernames are created automatically.",
+  "auth.loginOrCreate": "Log in / create",
+  "auth.logout": "Log out",
+  "auth.loginOrCreateTitle": "Log in or create account",
+  "auth.username": "Username",
+  "auth.usernamePlaceholder": "username",
+  "auth.password": "Password",
+  "auth.usernameRequired": "Enter your username",
+  "auth.passwordRequired": "Enter your password",
+  "auth.loginOrCreateSubmit": "Log in / create",
+  "auth.loginSuccess": "Logged in",
+  "auth.logoutSuccess": "Using public account",
+  "auth.loginFailed": "Login failed",
+  "auth.logoutFailed": "Logout failed",
+
   // ── Language switcher ──
   "lang.switchToEn": "Switch to English",
   "lang.switchToZh": "切换为中文",

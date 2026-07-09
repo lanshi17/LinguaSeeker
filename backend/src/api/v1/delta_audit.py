@@ -8,8 +8,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.auth import require_api_key
+from src.api.auth import get_current_account
 from src.api.deps import get_db_session, get_phase4_factory
+from src.core.auth.contracts import AuthContext
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     DeltaEntry,
     ReviewAuditEventResponse,
@@ -31,7 +32,7 @@ async def list_audit_events(
     reviewer_id: UUID | None = None,
     limit: int = Query(100, ge=1, le=1000),
     session: AsyncSession = Depends(get_db_session),
-    _api_key: str | None = Depends(require_api_key),
+    account: AuthContext = Depends(get_current_account),
 ) -> list[ReviewAuditEventResponse]:
     """List review audit events with optional filters."""
     service = get_phase4_factory().delta_audit
@@ -40,6 +41,7 @@ async def list_audit_events(
         canonical_evidence_id=canonical_evidence_id,
         source_document_id=source_document_id,
         reviewer_id=reviewer_id,
+        owner_user_id=account.owner_user_id,
         limit=limit,
     )
     return [_to_response(e) for e in events]

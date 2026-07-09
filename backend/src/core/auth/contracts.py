@@ -22,7 +22,7 @@ class AuthContext:
     authenticated: bool
     account_type: AuthAccountType
     user_id: UUID | None
-    email: str | None
+    username: str | None
     display_name: str | None
     method: AuthMethod
 
@@ -38,15 +38,14 @@ class SessionClaims:
 
     expires_at: int
     user_id: UUID | None = None
-    email: str | None = None
+    username: str | None = None
 
 
 PUBLIC_AUTH_CONTEXT = AuthContext(
     authenticated=False,
     account_type="public",
     user_id=None,
-    email=None,
+    username=None,
     display_name="Public account",
     method="anonymous",
 )
-

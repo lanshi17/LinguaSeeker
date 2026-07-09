@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import inspect
 import time
+from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -119,6 +120,7 @@ class EntityStandardizationService:
         *,
         source_document_id: str,
         processing_run_id: str,
+        owner_user_id: str | None = None,
     ) -> StandardizationResult:
         """Standardize one dual-track evidence extraction result."""
         repository = StandardizationRepository(session)
@@ -178,6 +180,7 @@ class EntityStandardizationService:
             source_document_id=source_document_id,
             processing_run_id=processing_run_id,
         )
+        input_data = replace(input_data, owner_user_id=owner_user_id)
         return await StandardizationService(matcher, repository).run(input_data)
 
 

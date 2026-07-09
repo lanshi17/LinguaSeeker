@@ -69,7 +69,7 @@ _CLINVAR_AUTHORITY_RE = re.compile(
     re.IGNORECASE,
 )
 
-CanonicalIdentityKey = tuple[str, str, str, str]
+CanonicalIdentityKey = tuple[str, str, str, str, str]
 
 RELATIONSHIP_SUBJECT_TYPE = {
     "gene_associated_with_disease": EntityType.GENE,
@@ -895,8 +895,10 @@ class StandardizationRepository:
         *,
         source_document_id: str,
         processing_run_id: str,
+        owner_user_id: str | None = None,
     ) -> None:
         """Ensure source document and processing run parent rows exist for FK-safe E2E persistence."""
+        owner_id = UUID(owner_user_id) if owner_user_id else None
         source_document = await self.session.get(SourceDocument, source_document_id)
         if source_document is None:
             source_document = SourceDocument(
@@ -912,6 +914,7 @@ class StandardizationRepository:
             processing_run = ProcessingRun(
                 processing_run_id=processing_run_id,
                 source_document_id=source_document_id,
+                owner_user_id=owner_id,
                 standardization_version="phase3_e2e",
                 input_artifacts={"source": "standardize_entities_e2e"},
                 output_artifacts={},
@@ -919,6 +922,8 @@ class StandardizationRepository:
             )
             self.session.add(processing_run)
             await self.session.flush()
+        elif processing_run.owner_user_id != owner_id:
+            processing_run.owner_user_id = owner_id
 
         if source_document.latest_processing_run_id != processing_run.processing_run_id:
             source_document.latest_processing_run_id = processing_run.processing_run_id
@@ -933,11 +938,13 @@ class StandardizationRepository:
         scope_hashes = self._build_chain_scope_hashes(input_data, matches)
         record_specs = self._build_run_item_specs(input_data, matches, scope_hashes)
         run_items: list[RunEvidenceItem] = []
+        owner_id = UUID(input_data.owner_user_id) if input_data.owner_user_id else None
 
         for spec in record_specs:
             run_item = RunEvidenceItem(
                 processing_run_id=input_data.processing_run_id,
                 source_document_id=input_data.source_document_id,
+                owner_user_id=owner_id,
                 track=spec.track,
                 field_id=spec.field_id,
                 status=spec.status,
@@ -978,12 +985,12 @@ class StandardizationRepository:
                 )
         await self.session.flush()
 
-    async def refresh_literature_profile(self, source_document_id: str) -> None:
+    async def refresh_literature_profile(self, source_document_id: str, owner_user_id: str | None = None) -> None:
         """Refresh the literature_profiles read model for a document."""
         from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
 
         profile_repo = LiteratureProfileRepository(self.session)
-        await profile_repo.refresh_for_document(UUID(source_document_id))
+        await profile_repo.refresh_for_document(UUID(source_document_id), owner_user_id=owner_user_id)
 
     async def refresh_search_index(self) -> None:
         """Refresh the frontend_search_index read model."""
@@ -995,6 +1002,7 @@ class StandardizationRepository:
     @staticmethod
     def _canonical_identity_key(
         source_document_id: object,
+        owner_user_id: object,
         field_id: str,
         position_hash: str,
         entity_scope_hash: str,
@@ -1002,6 +1010,7 @@ class StandardizationRepository:
         """Normalize canonical identity values for in-memory lookup keys."""
         return (
             str(source_document_id),
+            str(owner_user_id) if owner_user_id else "",
             field_id,
             position_hash,
             entity_scope_hash,
@@ -1024,6 +1033,12 @@ class StandardizationRepository:
         _BATCH_SIZE = 5000
         eligible_rows = [row for row, _ in self._run_item_rows if row.status in CANONICAL_ELIGIBLE_STATUSES]
         existing_lookup: dict[tuple, CanonicalEvidenceItem] = {}
+        owner_id = UUID(input_data.owner_user_id) if input_data.owner_user_id else None
+        owner_filter = (
+            CanonicalEvidenceItem.owner_user_id.is_(None)
+            if owner_id is None
+            else CanonicalEvidenceItem.owner_user_id == owner_id
+        )
         if eligible_rows:
             identity_tuples = [
                 (row.source_document_id, row.field_id, row.position_hash, row.entity_scope_hash)
@@ -1032,18 +1047,20 @@ class StandardizationRepository:
             for start in range(0, len(identity_tuples), _BATCH_SIZE):
                 chunk = identity_tuples[start : start + _BATCH_SIZE]
                 batch_stmt = select(CanonicalEvidenceItem).where(
+                    owner_filter,
                     tuple_(
                         CanonicalEvidenceItem.source_document_id,
                         CanonicalEvidenceItem.field_id,
                         CanonicalEvidenceItem.position_hash,
                         CanonicalEvidenceItem.entity_scope_hash,
-                    ).in_(chunk)
+                    ).in_(chunk),
                 )
                 batch_result = await self.session.execute(batch_stmt)
                 for item in batch_result.scalars().all():
                     existing_lookup[
                         self._canonical_identity_key(
                             item.source_document_id,
+                            item.owner_user_id,
                             item.field_id,
                             item.position_hash,
                             item.entity_scope_hash,
@@ -1084,6 +1101,7 @@ class StandardizationRepository:
             existing = existing_lookup.get(
                 self._canonical_identity_key(
                     row.source_document_id,
+                    row.owner_user_id,
                     row.field_id,
                     row.position_hash,
                     row.entity_scope_hash,
@@ -1115,6 +1133,7 @@ class StandardizationRepository:
             if existing is None:
                 new_item = CanonicalEvidenceItem(
                     source_document_id=row.source_document_id,
+                    owner_user_id=row.owner_user_id,
                     field_id=row.field_id,
                     position_hash=row.position_hash,
                     text_hash=row.text_hash,
@@ -1132,6 +1151,7 @@ class StandardizationRepository:
                 existing_lookup[
                     self._canonical_identity_key(
                         row.source_document_id,
+                        row.owner_user_id,
                         row.field_id,
                         row.position_hash,
                         row.entity_scope_hash,

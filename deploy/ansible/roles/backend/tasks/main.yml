@@ -7,7 +7,7 @@
 
 - name: Sync backend source code
   synchronize:
-    src: "{{ playbook_dir }}/../../backend/"
+    src: "{{ playbook_dir }}/../../../backend/"
     dest: "{{ backend_root }}/"
     delete: yes
     rsync_opts:
@@ -17,6 +17,15 @@
       - "--exclude=*.pyc"
       - "--exclude=logs/"
   notify: Restart backend
+
+- name: Sync database migrations
+  synchronize:
+    src: "{{ playbook_dir }}/../../../database/"
+    dest: "{{ project_root }}/database/"
+    delete: yes
+    rsync_opts:
+      - "--exclude=__pycache__"
+      - "--exclude=*.pyc"
 
 - name: Deploy production environment config
   template:
@@ -43,13 +52,13 @@
   notify: Restart backend
 
 - name: Run database migrations
-  command: uv run alembic upgrade head
+  command: uv run python -m alembic -c ../database/alembic.ini upgrade head
   args:
     chdir: "{{ backend_root }}"
   environment:
     ENVIRONMENT: production
   register: migration_result
-  changed_when: "'Running upgrade' in migration_result.stdout"
+  changed_when: "'Running upgrade' in (migration_result.stdout + migration_result.stderr)"
 
 - name: Deploy backend systemd service
   template:

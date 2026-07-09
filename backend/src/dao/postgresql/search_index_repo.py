@@ -43,6 +43,7 @@ frontend_search_index = Table(
     search_index_metadata,
     Column("id", Integer, primary_key=True),
     Column("canonical_evidence_id", UUID(as_uuid=True), nullable=False),
+    Column("owner_user_id", UUID(as_uuid=True), nullable=True),
     Column("pmid", Text, nullable=True),
     Column("doi", Text, nullable=True),
     Column("gene_ids", JSONB, nullable=False, server_default=text("'[]'")),
@@ -64,6 +65,7 @@ frontend_search_index = Table(
         "canonical_evidence_id",
         unique=True,
     ),
+    Index("ix_frontend_search_index_owner_pmid", "owner_user_id", "pmid"),
     Index("ix_frontend_search_index_pmid", "pmid"),
     Index("ix_frontend_search_index_doi", "doi"),
     Index("ix_frontend_search_index_gene_ids", "gene_ids", postgresql_using="gin"),
@@ -102,6 +104,7 @@ class SearchIndexRepository:
         doi: str | None = None,
         pmid: str | None = None,
         field_id: str | None = None,
+        owner_user_id: str | None = None,
         limit: int = 50,
     ) -> list[dict[str, object]]:  # noqa  # dict-return: unstructured projection rows.
         """Return rows matching any of the provided search criteria.
@@ -111,38 +114,46 @@ class SearchIndexRepository:
 
         When no filters are supplied, returns all rows (default list view).
         """
-        conditions: list = []
+        filter_conditions: list = []
+        if owner_user_id is None:
+            owner_condition = frontend_search_index.c.owner_user_id.is_(None)
+        else:
+            owner_condition = frontend_search_index.c.owner_user_id == owner_user_id
 
         if gene:
             # Text search on active_payload->>'gene' (case-insensitive).
-            conditions.append(cast(frontend_search_index.c.active_payload["gene"], Text).ilike(f"%{gene}%"))
+            filter_conditions.append(cast(frontend_search_index.c.active_payload["gene"], Text).ilike(f"%{gene}%"))
 
         if variant:
-            conditions.append(cast(frontend_search_index.c.active_payload["variant"], Text).ilike(f"%{variant}%"))
+            filter_conditions.append(
+                cast(frontend_search_index.c.active_payload["variant"], Text).ilike(f"%{variant}%")
+            )
 
         if disease:
-            conditions.append(cast(frontend_search_index.c.active_payload["disease"], Text).ilike(f"%{disease}%"))
+            filter_conditions.append(
+                cast(frontend_search_index.c.active_payload["disease"], Text).ilike(f"%{disease}%")
+            )
 
         if gene_ids:
             # gene_ids is a JSONB array; use ?| overlap operator.
-            conditions.append(frontend_search_index.c.gene_ids.op("?|")(gene_ids))
+            filter_conditions.append(frontend_search_index.c.gene_ids.op("?|")(gene_ids))
 
         if variant_ids:
-            conditions.append(frontend_search_index.c.variant_ids.op("?|")(variant_ids))
+            filter_conditions.append(frontend_search_index.c.variant_ids.op("?|")(variant_ids))
 
         if doi is not None:
-            conditions.append(frontend_search_index.c.doi == doi)
+            filter_conditions.append(frontend_search_index.c.doi == doi)
 
         if pmid is not None:
-            conditions.append(frontend_search_index.c.pmid == pmid)
+            filter_conditions.append(frontend_search_index.c.pmid == pmid)
 
         if field_id is not None:
-            conditions.append(frontend_search_index.c.field_id == field_id)
+            filter_conditions.append(frontend_search_index.c.field_id == field_id)
 
         # When no filters are supplied, return all rows (default list view).
-        stmt = select(frontend_search_index)
-        if conditions:
-            stmt = stmt.where(or_(*conditions))
+        stmt = select(frontend_search_index).where(owner_condition)
+        if filter_conditions:
+            stmt = stmt.where(or_(*filter_conditions))
         query = stmt.order_by(frontend_search_index.c.pmid).limit(limit)
 
         result = await self._session.execute(query)
@@ -168,6 +179,7 @@ class SearchIndexRepository:
             text(f"""
                 INSERT INTO frontend_search_index (
                     canonical_evidence_id,
+                    owner_user_id,
                     pmid,
                     doi,
                     gene_ids,
@@ -182,6 +194,7 @@ class SearchIndexRepository:
                 )
                 SELECT
                     cei.canonical_evidence_id,
+                    cei.owner_user_id,
                     sdi_pmid.identifier_value AS pmid,
                     sdi_doi.identifier_value AS doi,
                     COALESCE(
