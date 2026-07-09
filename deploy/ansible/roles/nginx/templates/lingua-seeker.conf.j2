@@ -71,8 +71,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         # Trust token — shared secret, only nginx knows it; browser never sees it.
         proxy_set_header X-API-Key {{ api_key }};
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+        proxy_set_header Connection "";
         proxy_read_timeout 300s;
         proxy_send_timeout 300s;
         proxy_buffering off;
