@@ -7,11 +7,17 @@ import hashlib
 import hmac
 import json
 import time
+from uuid import UUID
 
-from fastapi import HTTPException, Request, Security
+from fastapi import Depends, HTTPException, Request, Security
 from fastapi.security import APIKeyHeader
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.api.deps import get_db_session
 from src.core.config import get_config
+from src.core.auth.contracts import AuthContext, PUBLIC_AUTH_CONTEXT, SessionClaims
+from src.dao.postgresql.models import User
 
 _api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
@@ -36,26 +42,27 @@ def _b64url_decode(data: str) -> bytes:
     return base64.urlsafe_b64decode(data + padding)
 
 
-def _validate_session(token: str, secret: str) -> bool:
-    """Validate an HMAC-SHA256 signed session token.
+def _decode_session(token: str, secret: str) -> SessionClaims | None:
+    """Decode and validate an HMAC-SHA256 signed session token.
 
     Token format: ``payload.signature`` where payload is base64url JSON
-    ``{"exp": <unix_ts>}`` and signature is base64url HMAC-SHA256 of the
-    payload string keyed by ``secret``.
+    with at least ``{"exp": <unix_ts>}`` and signature is base64url
+    HMAC-SHA256 of the payload string keyed by ``secret``.
 
     Args:
         token: The session cookie value.
         secret: The shared secret used to sign the token.
 
     Returns:
-        True if the signature matches and the token has not expired.
+        Decoded claims if the signature matches and the token has not
+        expired, otherwise None.
     """
     if not token or not secret:
-        return False
+        return None
 
     parts = token.split(".")
     if len(parts) != 2:
-        return False
+        return None
     payload, signature = parts
 
     expected_sig = _b64url_encode(
@@ -67,29 +74,63 @@ def _validate_session(token: str, secret: str) -> bool:
     )
 
     if not hmac.compare_digest(signature, expected_sig):
-        return False
+        return None
 
     try:
         data = json.loads(_b64url_decode(payload))
         exp = int(data["exp"])
     except (ValueError, KeyError, TypeError):
-        return False
+        return None
 
-    return exp > int(time.time())
+    if exp <= int(time.time()):
+        return None
+
+    user_id = None
+    raw_user_id = data.get("user_id")
+    if raw_user_id:
+        try:
+            user_id = UUID(str(raw_user_id))
+        except ValueError:
+            return None
+
+    email = data.get("email")
+    return SessionClaims(
+        expires_at=exp,
+        user_id=user_id,
+        email=str(email) if email else None,
+    )
 
 
-def sign_session_token(secret: str, duration_sec: int = SESSION_DURATION_SEC) -> str:
+def _validate_session(token: str, secret: str) -> bool:
+    """Validate an HMAC-SHA256 signed session token."""
+    return _decode_session(token, secret) is not None
+
+
+def sign_session_token(
+    secret: str,
+    duration_sec: int = SESSION_DURATION_SEC,
+    *,
+    user_id: UUID | str | None = None,
+    email: str | None = None,
+) -> str:
     """Create an HMAC-SHA256 signed session token.
 
     Args:
         secret: The signing key.
         duration_sec: Token lifetime in seconds.
+        user_id: Optional authenticated user id.
+        email: Optional authenticated user email.
 
     Returns:
         A token string in ``payload.signature`` format.
     """
     expires_at = int(time.time()) + duration_sec
-    payload = _b64url_encode(json.dumps({"exp": expires_at}).encode("utf-8"))
+    payload_data: dict[str, str | int] = {"exp": expires_at}
+    if user_id is not None:
+        payload_data["user_id"] = str(user_id)
+    if email:
+        payload_data["email"] = email
+    payload = _b64url_encode(json.dumps(payload_data).encode("utf-8"))
     signature = _b64url_encode(
         hmac.new(
             secret.encode("utf-8"),
@@ -98,6 +139,57 @@ def sign_session_token(secret: str, duration_sec: int = SESSION_DURATION_SEC) ->
         ).digest()
     )
     return f"{payload}.{signature}"
+
+
+async def get_current_account(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+    api_key: str | None = Security(_api_key_header),
+) -> AuthContext:
+    """Return the current account context, defaulting to the public account."""
+    cfg = get_config()
+
+    if api_key is not None:
+        if cfg.api_key and hmac.compare_digest(api_key, cfg.api_key):
+            return AuthContext(
+                authenticated=True,
+                account_type="public",
+                user_id=None,
+                email=None,
+                display_name="Public account",
+                method="api_key",
+            )
+        if cfg.api_key:
+            raise HTTPException(status_code=401, detail="Invalid API key")
+
+    token = request.cookies.get(SESSION_COOKIE)
+    claims = _decode_session(token, _get_signing_key()) if token else None
+    if claims is None:
+        return PUBLIC_AUTH_CONTEXT
+
+    if claims.user_id is None:
+        return AuthContext(
+            authenticated=True,
+            account_type="public",
+            user_id=None,
+            email=claims.email,
+            display_name="Public account",
+            method="session",
+        )
+
+    result = await session.execute(select(User).where(User.user_id == claims.user_id))
+    user = result.scalar_one_or_none()
+    if user is None or user.status != "active":
+        return PUBLIC_AUTH_CONTEXT
+
+    return AuthContext(
+        authenticated=True,
+        account_type="user",
+        user_id=user.user_id,
+        email=user.email,
+        display_name=user.display_name,
+        method="session",
+    )
 
 
 async def require_api_key(

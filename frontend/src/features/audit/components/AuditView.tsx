@@ -2,7 +2,6 @@ import { useMemo, useState, useCallback } from "react";
 import { Button, Input, Segmented, Flex, Typography, App } from "antd";
 import { Search, ClipboardCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MetricTile } from "@/components/ui/MetricTile";
 import { useI18n } from "@/lib/i18n";
 import { useAuditEvents } from "../hooks/useAuditEvents";
 import { AuditEventTable } from "./AuditEventTable";
@@ -197,49 +196,112 @@ export function AuditView() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Summary stats */}
-      <div
+      {/* Filters */}
+      <section
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 12,
+          borderRadius: 12,
+          border: "1px solid var(--color-primary-300)",
+          borderLeft: "4px solid var(--color-primary-600)",
+          backgroundColor: "var(--color-surface)",
+          boxShadow: "0 8px 24px rgba(8, 145, 178, 0.08)",
+          overflow: "hidden",
         }}
       >
-        <MetricTile label={t("audit.metric.total")} value={stats.total} tone="primary" />
-        <MetricTile label={t("audit.metric.approved")} value={stats.approved} tone="success" />
-        <MetricTile label={t("audit.metric.corrected")} value={stats.corrected} tone="warning" />
-        <MetricTile label={t("audit.metric.rejected")} value={stats.rejected} tone="error" />
-      </div>
-
-      {/* Filters */}
-      <Flex gap={12} align="center" wrap="wrap" justify="space-between">
-        <Flex gap={12} align="center" wrap="wrap">
-          <Segmented
-            value={statusFilter}
-            onChange={(val) => setStatusFilter(val as StatusFilter)}
-            options={STATUS_FILTERS}
-          />
-          <Input
-            placeholder={t("audit.searchPh")}
-            prefix={<Search style={{ width: 14, height: 14, color: "var(--color-text-muted)" }} />}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ maxWidth: 320 }}
-            allowClear
-          />
-          {filtered.length < effectiveEvents.length && (
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              {t("audit.showing", { count: filtered.length, total: effectiveEvents.length })}
-            </Typography.Text>
-          )}
-        </Flex>
-        <Button
-          icon={<ClipboardCheck style={{ width: 14, height: 14 }} />}
-          onClick={() => setReviewDrawerOpen(true)}
+        <div
+          style={{
+            padding: "16px 18px 0",
+            color: "var(--color-text-strong)",
+            fontSize: 18,
+            fontWeight: 700,
+          }}
         >
-          {t("audit.reviewEvidence")}
-        </Button>
-      </Flex>
+          {t("audit.filters.title")}
+        </div>
+
+        <Flex
+          gap={12}
+          align="center"
+          wrap="wrap"
+          justify="space-between"
+          style={{ padding: "14px 18px 16px" }}
+        >
+          <Flex gap={12} align="center" wrap="wrap" style={{ flex: 1, minWidth: 320 }}>
+            <Segmented
+              size="large"
+              value={statusFilter}
+              onChange={(val) => setStatusFilter(val as StatusFilter)}
+              options={STATUS_FILTERS}
+            />
+            <Input
+              size="large"
+              placeholder={t("audit.searchPh")}
+              prefix={<Search style={{ width: 16, height: 16, color: "var(--color-text-muted)" }} />}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ flex: "1 1 320px", maxWidth: 460, minWidth: 260 }}
+              allowClear
+            />
+            {filtered.length < effectiveEvents.length && (
+              <Typography.Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
+                {t("audit.showing", { count: filtered.length, total: effectiveEvents.length })}
+              </Typography.Text>
+            )}
+          </Flex>
+          <Button
+            size="large"
+            icon={<ClipboardCheck style={{ width: 16, height: 16 }} />}
+            onClick={() => setReviewDrawerOpen(true)}
+          >
+            {t("audit.reviewEvidence")}
+          </Button>
+        </Flex>
+      </section>
+
+      {/* Summary stats */}
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+          gap: 0,
+          border: "1px solid var(--color-border)",
+          borderRadius: 8,
+          backgroundColor: "var(--color-bg)",
+          padding: "8px 10px",
+        }}
+      >
+        {[
+          { label: t("audit.metric.total"), value: stats.total },
+          { label: t("audit.metric.approved"), value: stats.approved },
+          { label: t("audit.metric.corrected"), value: stats.corrected },
+          { label: t("audit.metric.rejected"), value: stats.rejected },
+        ].map((item, index) => (
+          <div
+            key={item.label}
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              gap: 10,
+              padding: "6px 10px",
+              borderRight: index < 3 ? "1px solid var(--color-border)" : "none",
+            }}
+          >
+            <span style={{ color: "var(--color-text-secondary)", fontSize: 12, fontWeight: 500 }}>
+              {item.label}
+            </span>
+            <span
+              style={{
+                color: "var(--color-text-secondary)",
+                fontFamily: "var(--font-mono)",
+                fontSize: 14,
+                fontWeight: 500,
+              }}
+            >
+              {item.value}
+            </span>
+          </div>
+        ))}
+      </section>
 
       {/* Table */}
       <AuditEventTable

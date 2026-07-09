@@ -163,11 +163,13 @@ export function aggregateVariants(results: EvidenceSearchResult[]): VariantIndex
     });
   }
 
-  // Sort: pathogenic first, then by evidence count descending
+  // Sort: multi-literature support first, then most recent evidence.
   entries.sort((a, b) => {
-    const rankDiff = severityRank(a.classificationLevel) - severityRank(b.classificationLevel);
-    if (rankDiff !== 0) return rankDiff;
-    return b.evidenceGroupCount - a.evidenceGroupCount;
+    const literatureDiff = b.literatureCount - a.literatureCount;
+    if (literatureDiff !== 0) return literatureDiff;
+    const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return bTime - aTime;
   });
 
   return entries;

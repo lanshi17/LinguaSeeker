@@ -1,23 +1,6 @@
 import { Tour, type TourProps } from "antd";
 import { useI18n } from "@/lib/i18n";
-
-const GUIDE_COOKIE = "ls_guide_seen";
-const GUIDE_MAX_AGE = 365 * 24 * 60 * 60; // 1 year in seconds
-
-function getCookie(name: string): string | null {
-  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-/** Check if the user has completed the guide before. */
-export function hasSeenGuide(): boolean {
-  return getCookie(GUIDE_COOKIE) === "1";
-}
-
-/** Reset guide state so it shows again on next visit. */
-export function resetGuide(): void {
-  document.cookie = `${GUIDE_COOKIE}=; Max-Age=0; Path=/`;
-}
+import { markGuideSeen } from "./userGuideState";
 
 /* ── Step keys (i18n) ─────────────────────────────────────────── */
 
@@ -25,18 +8,18 @@ type StepKey = { titleKey: string; descKey: string };
 
 const STEP_KEYS: StepKey[] = [
   { titleKey: "guide.welcome", descKey: "guide.welcomeDesc" },
+  { titleKey: "guide.evidenceDb", descKey: "guide.evidenceDbDesc" },
   { titleKey: "guide.chat", descKey: "guide.chatDesc" },
   { titleKey: "guide.tasks", descKey: "guide.tasksDesc" },
-  { titleKey: "guide.evidenceDb", descKey: "guide.evidenceDbDesc" },
   { titleKey: "guide.audit", descKey: "guide.auditDesc" },
   { titleKey: "guide.getStarted", descKey: "guide.getStartedDesc" },
 ];
 
 const TARGETS = [
   '[data-tour="brand"]',
+  '[data-tour="nav-evidence-db"]',
   '[data-tour="nav-chat"]',
   '[data-tour="nav-pipeline"]',
-  '[data-tour="nav-evidence-db"]',
   '[data-tour="nav-audit"]',
   '[data-tour="help-btn"]',
 ] as const;
@@ -61,7 +44,7 @@ export function UserGuide({ open, onClose }: UserGuideProps) {
   const { t } = useI18n();
 
   const handleComplete = () => {
-    document.cookie = `${GUIDE_COOKIE}=1; Max-Age=${GUIDE_MAX_AGE}; Path=/; SameSite=Lax`;
+    markGuideSeen();
     onClose();
   };
 
@@ -69,6 +52,7 @@ export function UserGuide({ open, onClose }: UserGuideProps) {
     <Tour
       open={open}
       onClose={handleComplete}
+      mask={false}
       steps={buildSteps(t)}
       indicatorsRender={(current, total) => (
         <span style={{ color: "var(--color-primary-600)", fontWeight: 600, fontSize: 13 }}>

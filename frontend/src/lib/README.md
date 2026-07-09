@@ -11,7 +11,8 @@
 ```
 lib/
 ├── api/
-│   ├── client.ts             # Axios 实例（baseURL、API Key、错误拦截器）
+│   ├── client.ts             # Axios 实例（baseURL、API Key、响应缓存、错误拦截器）
+│   ├── responseCache.ts      # Axios adapter 级 GET 响应缓存（内存 + localStorage）
 │   └── error.ts              # ApiError 类 + 错误标准化/提取工具
 ├── constants/
 │   ├── evidenceFields.ts     # ACMG 证据字段目录（166 字段，10 类别 A–K）
@@ -43,7 +44,55 @@ lib/
 - **Base URL**: `VITE_API_BASE_URL` 或 `${BASE_URL}api/v1`（跟随 SPA 挂载点）
 - **认证**: `X-API-Key` 头（来自 `VITE_API_KEY`）
 - **超时**: `VITE_API_TIMEOUT`（默认 30s）
+- **响应缓存**: 通过 `createResponseCacheAdapter(axios.getAdapter(...))` 包装默认网络 adapter
 - **错误拦截**: 自动将 AxiosError 标准化为 `ApiError`
+
+#### `responseCache.ts`
+
+`createResponseCacheAdapter(networkAdapter, options): AxiosAdapter` 为共享 API 客户端提供响应缓存层：
+
+```typescript
+export function createResponseCacheAdapter(
+  networkAdapter: AxiosAdapter,
+  options: ApiResponseCacheOptions = {},
+): AxiosAdapter
+```
+
+数据流：
+
+```text
+React Query memory cache
+  -> apiClient Axios adapter
+    -> browser localStorage response cache
+    -> in-memory response cache
+    -> backend /api/v1
+```
+
+缓存策略：
+
+- 只缓存成功的 `GET` / `HEAD` JSON 或 text 响应。
+- 默认 TTL 为 5 分钟，最多保留 80 条，每条最大 512 KiB。
+- 缓存 key 由 HTTP method、baseURL、URL 和稳定序列化后的 query params 组成。
+- `PATCH` / `POST` / `DELETE` 等写操作成功后清空内存和 `localStorage` 响应缓存。
+- `pipeline`、`chat`、`delta-audit` 和 `annotations` 路径默认跳过缓存，避免轮询状态、聊天流和审阅记录读到旧数据。
+- 请求头包含 `Cache-Control: no-store` 时跳过缓存。
+
+三级缓存含义：
+
+| 层级 | 实现 | 生命周期 | 作用 |
+|------|------|----------|------|
+| 浏览器本地 | `localStorage` | 页面刷新后保留，受 TTL 限制 | 复用后端已返回的稳定响应 |
+| 前端运行时 | React Query + adapter 内存 Map | 当前页面会话 | 避免同页面重复解析和重复请求 |
+| 后端 | 后端 Redis / PostgreSQL 等缓存 | 服务端配置决定 | 当前端缓存 miss 时继续复用服务端缓存 |
+
+测试：
+
+```bash
+cd frontend
+bunx vitest run tests/api/responseCache.test.tsx
+```
+
+覆盖内容包括浏览器本地命中、TTL 过期刷新、写操作失效，以及实时路径绕过缓存。
 
 #### `error.ts`
 

@@ -27,9 +27,9 @@ export function Sidebar({ mobile, onNavigate, onGuideOpen }: SidebarProps) {
   const logoFilter = mode === "dark" ? "invert(1) hue-rotate(180deg)" : undefined;
 
   const NAV_ITEMS = [
+    { label: t("nav.evidenceDb"), href: "/evidence-db", icon: Database },
     { label: t("nav.chat"), href: "/chat", icon: MessageSquare },
     { label: t("nav.tasks"), href: "/pipeline", icon: ClipboardList },
-    { label: t("nav.evidenceDb"), href: "/evidence-db", icon: Database },
     { label: t("nav.audit"), href: "/audit", icon: ShieldCheck },
   ] as const;
 

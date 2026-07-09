@@ -17,7 +17,7 @@
 # Architecture:
 #   nginx (host) → backend:8000 → postgres:5432 + redis:6379
 #                                   ↓
-#   embedding:8002, rerank:8003, doc-parse:44321 (GPU)
+#   host-published inference ports (GPU): embedding/rerank/doc-parse
 # ============================================================================
 services:
   # ── Backend ──────────────────────────────────────────────────────────────
@@ -49,10 +49,14 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       # ── External Inference Service endpoints ──
-      EMBEDDING_BASE_URL: http://model-embedding:8002/v1
-      RERANK_BASE_URL: http://model-rerank:8003/v1
+      # Defaults target same-host simple FastAPI containers via host-published ports.
+      # Override to http://model-embedding:8002/v1 + openai if services share a Docker network.
+      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-http://host.docker.internal:32949}
+      EMBEDDING_API_STYLE: ${EMBEDDING_API_STYLE:-simple}
+      RERANK_BASE_URL: ${RERANK_BASE_URL:-http://host.docker.internal:35001}
+      RERANK_API_STYLE: ${RERANK_API_STYLE:-simple}
       # Doc-parse: MinerU native PDF parsing via /file_parse
-      MINERU_LOCAL_PARSE_URL: http://model-doc-parse:44321
+      MINERU_LOCAL_PARSE_URL: ${MINERU_LOCAL_PARSE_URL:-http://host.docker.internal:44321}
       # ── LLM endpoints ──
       FAST_LLM_BASE_URL: ${FAST_LLM_BASE_URL}
       FAST_LLM_API_KEY: ${FAST_LLM_API_KEY}
@@ -62,6 +66,9 @@ services:
       CHAT_LLM_API_KEY: ${CHAT_LLM_API_KEY}
       TRANSLATION_LLM_BASE_URL: ${TRANSLATION_LLM_BASE_URL}
       TRANSLATION_LLM_API_KEY: ${TRANSLATION_LLM_API_KEY}
+      TRANSLATION_LLM_LOCAL_BASE_URL: ${TRANSLATION_LLM_LOCAL_BASE_URL:-http://host.docker.internal:59062/api}
+      TRANSLATION_LLM_LOCAL_TARGET_LANG: ${TRANSLATION_LLM_LOCAL_TARGET_LANG:-en}
+      TRANSLATION_LLM_LOCAL_TIMEOUT: ${TRANSLATION_LLM_LOCAL_TIMEOUT:-120}
       # ── Inference Service auth ──
       INFERENCE_API_KEY: ${INFERENCE_API_KEY:-}
       # ── Literature acquisition ──
@@ -69,6 +76,8 @@ services:
       PUBMED_API_KEY: ${PUBMED_API_KEY:-}
       # ── MinerU ──
       MINERU_API_TOKEN: ${MINERU_API_TOKEN:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - backend_logs:/app/logs
       - backend_data:/app/data

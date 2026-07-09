@@ -1,5 +1,4 @@
 import { STATUS_VARIANT } from "@/lib/constants/statusVariant";
-export { STATUS_VARIANT };
 import {
   FileText,
   BarChart3,
@@ -8,40 +7,12 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import type { LiteratureEvidenceRow } from "../utils/literatureRows";
 import { useI18n } from "@/lib/i18n";
-
-export function formatPercent(value?: number | null) {
-  if (value == null) {
-    return "\u2014";
-  }
-  return `${(value * 100).toFixed(0)}%`;
-}
-
-export function formatDate(isoString?: string | null) {
-  if (!isoString) {
-    return "\u2014";
-  }
-  try {
-    const date = new Date(isoString);
-    if (Number.isNaN(date.getTime())) {
-      return "\u2014";
-    }
-    return date.toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  } catch {
-    return "\u2014";
-  }
-}
-
-export function joinedLabel(values: string[]) {
-  return values.length > 0 ? values.join(", ") : "\u2014";
-}
-
-export function literatureTitle(row: LiteratureEvidenceRow, t: (key: string) => string) {
-  return row.title?.trim() || t("evidence.col.untitled");
-}
+import {
+  formatEvidenceDate,
+  formatEvidencePercent,
+  joinedLabel,
+  literatureTitle,
+} from "../utils/literatureDisplay";
 
 const TONE_STYLES: Record<string, React.CSSProperties> = {
   primary: {
@@ -282,7 +253,7 @@ export function CreatedCell({ row }: { row: LiteratureEvidenceRow }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap", fontSize: 12, color: "var(--color-text-secondary)" }}>
       <Calendar style={{ width: 14, height: 14, color: "var(--color-text-muted)" }} />
-      {formatDate(row.createdAt)}
+      {formatEvidenceDate(row.createdAt)}
     </div>
   );
 }
@@ -296,7 +267,7 @@ export function ReviewCell({ row }: { row: LiteratureEvidenceRow }) {
       </Badge>
       <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap", fontSize: 12, color: "var(--color-text-secondary)" }}>
         <BarChart3 style={{ width: 12, height: 12 }} />
-        {formatPercent(row.avgConfidence)}
+        {formatEvidencePercent(row.avgConfidence)}
       </div>
     </>
   );

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useI18n } from "@/lib/i18n";
+import { formatTime } from "@/lib/utils/format";
 import { usePipelineRuns } from "../hooks/usePipelineRuns";
 import { TaskQueueRow } from "./TaskQueueRow";
 import type { PipelineRunSummary } from "../types/pipeline";
@@ -75,14 +76,7 @@ export function TaskQueuePanel({ onClose }: TaskQueuePanelProps) {
         ? t("pipeline.queue.emptyFailed")
         : t("pipeline.queue.emptyRecent");
 
-  const updatedAt = dataUpdatedAt
-    ? new Date(dataUpdatedAt).toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      })
-    : null;
+  const updatedAt = dataUpdatedAt ? formatTime(dataUpdatedAt) : null;
 
   return (
     <aside

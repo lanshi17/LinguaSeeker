@@ -34,12 +34,14 @@ embedding_base_url: "http://{{ hostvars[groups['app'][0]]['ansible_host'] }}:800
 embedding_model: "BAAI/bge-m3"
 embedding_dimension: 1024
 embedding_batch_size: 10
+embedding_api_style: "openai"
 
 # -- Rerank ------------------------------------------------------------------
 rerank_base_url: "http://{{ hostvars[groups['app'][0]]['ansible_host'] }}:8003/v1"
 rerank_model: "BAAI/bge-reranker-v2-m3"
 rerank_top_k: 10
 rerank_score_threshold: 0.7
+rerank_api_style: "openai"
 
 # -- MinerU Document Parsing -------------------------------------------------
 mineru_max_file_size_mb: 100

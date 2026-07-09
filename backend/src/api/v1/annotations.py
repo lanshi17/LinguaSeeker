@@ -168,6 +168,8 @@ async def update_annotation(
         annotation_id,
         color=body.color,
         note=body.note,
+        update_color="color" in body.model_fields_set,
+        update_note="note" in body.model_fields_set,
     )
     return AnnotationResponse.model_validate(annotation)
 

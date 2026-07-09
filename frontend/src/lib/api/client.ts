@@ -13,6 +13,7 @@
 import axios from "axios";
 import type { AxiosResponse } from "axios";
 import { normalizeError } from "./error";
+import { createResponseCacheAdapter } from "./responseCache";
 
 const baseURL =
   import.meta.env.VITE_API_BASE_URL || `${import.meta.env.BASE_URL}api/v1`;
@@ -21,6 +22,7 @@ const timeout = Number(import.meta.env.VITE_API_TIMEOUT) || 30_000;
 export const apiClient = axios.create({
   baseURL,
   timeout,
+  adapter: createResponseCacheAdapter(axios.getAdapter(axios.defaults.adapter)),
   headers: {
     "Content-Type": "application/json",
     ...(import.meta.env.VITE_API_KEY ? { "X-API-Key": import.meta.env.VITE_API_KEY } : {}),

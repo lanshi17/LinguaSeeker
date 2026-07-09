@@ -20,6 +20,7 @@ import {
   type ChatBubbleMessage,
 } from "../utils/messageHistory";
 import { ChatMarkdown } from "../utils/markdown";
+import { FollowUpSuggestions } from "./FollowUpSuggestions";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { WelcomeBlock, type WelcomeAction } from "./WelcomeBlock";
 import { roles } from "./chatConfig";
@@ -184,6 +185,21 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
 
   const bubbleItems = useMemo(() => {
     const messageKeys = toUniqueChatMessageKeys(messages);
+    const lastMessageIndex = messages.length - 1;
+    const lastMessage = messages[lastMessageIndex];
+    const lastCompletedAssistantIndex =
+      lastMessage?.message.role === "assistant" &&
+      lastMessage.message.content.trim() &&
+      lastMessage.status !== "loading" &&
+      lastMessage.status !== "updating"
+        ? lastMessageIndex
+        : -1;
+    const shouldShowFollowUps =
+      lastCompletedAssistantIndex >= 0 &&
+      !isRequesting &&
+      !isPreparingResponse &&
+      !uploadSlots;
+
     const items: BubbleItemType[] = messages.map(({ message, status }, index) => {
       const isLoadingEmpty =
         (status === "loading" || status === "updating") && !message.content;
@@ -204,8 +220,9 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
                 if (isLoadingEmpty) {
                   return <ThinkingIndicator />;
                 }
+
                 return (
-                  <div className={isStreaming ? "chat-streaming-cursor" : ""}>
+                  <div className={isStreaming ? "chat-streaming-cursor" : undefined}>
                     <ChatMarkdown source={content} />
                   </div>
                 );
@@ -214,6 +231,26 @@ export function SingleSessionChat({ sessionId }: { sessionId: string }) {
           : {}),
       };
     });
+
+    if (shouldShowFollowUps) {
+      items.push({
+        key: "__followups__",
+        role: "assistant",
+        content: "",
+        streaming: false,
+        loading: false,
+        variant: "borderless",
+        className: "cv-followups-bubble",
+        avatar: null,
+        contentRender: () => (
+          <FollowUpSuggestions
+            content={messages[lastCompletedAssistantIndex].message.content}
+            disabled={uploadSubmitting}
+            onPick={handleQuickAction}
+          />
+        ),
+      });
+    }
 
     if (uploadSlots) {
       items.push({

@@ -139,6 +139,41 @@ describe("aggregateVariants — one row per variant site", () => {
     expect(entries[0].sourceLanguages).toEqual(["en", "zh"]);
   });
 
+  it("defaults to multi-literature support first, then newest evidence", () => {
+    const entries = aggregateVariants([
+      makeResult({
+        group_id: "group-old-single",
+        source_document_id: "doc-old-single",
+        variant: "c.100A>G",
+        created_at: "2026-01-01T00:00:00Z",
+      }),
+      makeResult({
+        group_id: "group-new-single",
+        source_document_id: "doc-new-single",
+        variant: "c.200A>G",
+        created_at: "2026-02-01T00:00:00Z",
+      }),
+      makeResult({
+        group_id: "group-multi-a",
+        source_document_id: "doc-multi-a",
+        variant: "c.300A>G",
+        created_at: "2026-01-15T00:00:00Z",
+      }),
+      makeResult({
+        group_id: "group-multi-b",
+        source_document_id: "doc-multi-b",
+        variant: "c.300A>G",
+        created_at: "2026-01-16T00:00:00Z",
+      }),
+    ]);
+
+    expect(entries.map((entry) => entry.variant)).toEqual([
+      "c.300A>G",
+      "c.200A>G",
+      "c.100A>G",
+    ]);
+  });
+
   it("keeps gene-only evidence as an unknown-variant row", () => {
     const entries = aggregateVariants([
       makeResult({

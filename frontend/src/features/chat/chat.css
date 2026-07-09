@@ -81,6 +81,76 @@
   outline-offset: 2px;
 }
 
+.cv-followups-bubble {
+  margin-top: -2px;
+  padding-left: 48px;
+}
+.cv-followups-bubble .ant-bubble-content {
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+}
+.cv-followups-bubble .ant-bubble-body {
+  align-items: center;
+}
+
+.cv-followups {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: min(92%, 560px);
+  margin: 0 auto;
+  border: 1px solid color-mix(in srgb, var(--color-border) 64%, transparent);
+  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--color-surface) 86%, transparent);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+  opacity: 0.88;
+  padding: 6px 8px 7px;
+  backdrop-filter: blur(8px);
+}
+.cv-followups-label {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-text-muted);
+}
+.cv-followups-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+.cv-followup-chip {
+  max-width: min(100%, 300px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--color-bg) 78%, transparent);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.35;
+  padding: 4px 8px;
+  text-align: center;
+  transition: color 150ms, background-color 150ms, border-color 150ms, transform 150ms;
+}
+.cv-followup-chip:hover:not(:disabled) {
+  border-color: var(--color-primary-600);
+  background-color: var(--color-highlight);
+  color: var(--color-text-strong);
+  transform: translateY(-1px);
+}
+.cv-followup-chip:focus-visible {
+  outline: 2px solid var(--color-primary-600, #0891b2);
+  outline-offset: 2px;
+}
+.cv-followup-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 @media (min-width: 720px) {
   .chat-upload-target-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -145,6 +215,12 @@
 }
 [data-theme="dark"] .cv-tq-btn {
   color: var(--color-text-secondary);
+}
+[data-theme="dark"] .cv-followup-chip {
+  background-color: var(--color-surface);
+}
+[data-theme="dark"] .cv-followup-chip:hover:not(:disabled) {
+  background-color: var(--color-surface-hover);
 }
 [data-theme="dark"] .chat-markdown-list li::marker {
   color: var(--color-text-muted);

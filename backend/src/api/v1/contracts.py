@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from typing import Literal
+from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     ExtractionTarget,
@@ -174,3 +175,76 @@ class PipelineRunListResponse(BaseModel):
 
     items: list[PipelineRunSummaryResponse]
     total: int
+
+
+class LoginRequest(BaseModel):
+    """Login request body.
+
+    ``email`` is optional to preserve the legacy password-only API-key login.
+    New personal accounts must submit both email and password.
+    """
+
+    email: str | None = None
+    password: str
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, email: str | None) -> str | None:
+        """Normalize an email address for local account lookup."""
+        if email is None:
+            return None
+        normalized = email.strip().lower()
+        if not normalized:
+            return None
+        if "@" not in normalized or "." not in normalized.rsplit("@", 1)[-1]:
+            raise ValueError("Enter a valid email address")
+        return normalized
+
+
+class RegisterRequest(BaseModel):
+    """Register request body for local email accounts."""
+
+    email: str
+    password: str = Field(min_length=8)
+    display_name: str | None = Field(default=None, max_length=255)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, email: str) -> str:
+        """Normalize and validate an email address."""
+        normalized = email.strip().lower()
+        if "@" not in normalized or "." not in normalized.rsplit("@", 1)[-1]:
+            raise ValueError("Enter a valid email address")
+        return normalized
+
+    @field_validator("display_name")
+    @classmethod
+    def normalize_display_name(cls, display_name: str | None) -> str | None:
+        """Trim optional display names."""
+        if display_name is None:
+            return None
+        stripped = display_name.strip()
+        return stripped or None
+
+
+class LogoutResponse(BaseModel):
+    """Logout success response."""
+
+    success: bool
+
+
+class AuthMeResponse(BaseModel):
+    """Current authentication status."""
+
+    authenticated: bool
+    account_type: Literal["public", "user"]
+    user_id: UUID | None = None
+    email: str | None = None
+    display_name: str | None = None
+
+
+class AuthResponse(BaseModel):
+    """Login/register success response."""
+
+    success: bool
+    account: AuthMeResponse

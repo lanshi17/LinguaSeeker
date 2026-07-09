@@ -23,9 +23,11 @@ import {
 import { BilingualEvidenceSkeleton } from "./BilingualEvidenceSkeleton";
 import { DocumentReader } from "./DocumentReader";
 import type { FieldTypeOption } from "@/features/evidence-search/components/annotationLayer";
-import type { ReviewContextMap } from "./HighlightedText";
 import { FieldReviewMenu } from "@/features/evidence-search/components/FieldReviewPopover";
-import type { FieldReviewInfo } from "@/features/evidence-search/components/FieldReviewPopover";
+import type {
+  FieldReviewInfo,
+  ReviewContextMap,
+} from "@/features/evidence-search/components/fieldReviewMenuBus";
 import type { BlockHighlight } from "./StructuredBlockRenderer";
 import { ActiveEvidenceCard } from "./ActiveEvidenceCard";
 import { LiteratureHeader } from "./LiteratureHeader";
@@ -54,6 +56,7 @@ import type {
 } from "@/features/evidence-search/types/annotations";
 import type {
   EvidenceChainHighlight,
+  EvidenceGroupDetailResponse,
   EvidenceGroupItem,
   EvidenceTrackTrace,
   ReviewStatusValue,
@@ -61,7 +64,19 @@ import type {
 import { patchEvidence } from "@/features/evidence-search/services/evidenceCorrection";
 import { App } from "antd";
 import { useI18n } from "@/lib/i18n";
+import { extractErrorMessage } from "@/lib/api/error";
 import { EVIDENCE_FIELD_SPECS } from "@/lib/constants/evidenceFields";
+import {
+  applyFieldAssignmentToDetail,
+  applyReviewStatusToDetail,
+  buildAssignableFieldTypes,
+  buildFieldAssignmentPatch,
+  type FieldAssignmentPatch,
+} from "@/features/evidence-search/utils/fieldAssignment";
+import {
+  buildSynchronizedAnnotations,
+  sourceAnnotationIdForMutation,
+} from "@/features/evidence-search/utils/annotationSync";
 
 const REVIEW_STATUSES: ReviewStatusValue[] = [
   "provisional",
@@ -80,6 +95,32 @@ function hasSourceSpan(highlight?: EvidenceChainHighlight | null): boolean {
       Object.keys(highlight.source_span ?? {}).length > 0 &&
       highlight.highlight_end > highlight.highlight_start,
   );
+}
+
+function sortAnnotations(items: UserAnnotation[]) {
+  return [...items].sort(
+    (left, right) =>
+      left.created_at.localeCompare(right.created_at) ||
+      left.id.localeCompare(right.id),
+  );
+}
+
+function upsertAnnotation(
+  current: UserAnnotation[] | undefined,
+  annotation: UserAnnotation,
+) {
+  const next = [...(current ?? [])];
+  const index = next.findIndex((item) => item.id === annotation.id);
+  if (index >= 0) {
+    next[index] = annotation;
+  } else {
+    next.push(annotation);
+  }
+  return sortAnnotations(next);
+}
+
+function removeAnnotation(current: UserAnnotation[] | undefined, annotationId: string) {
+  return (current ?? []).filter((annotation) => annotation.id !== annotationId);
 }
 
 function traceHasSourceSpan(trace?: EvidenceTrackTrace): boolean {
@@ -157,51 +198,126 @@ export function BilingualEvidenceView({
   );
 
   const {
-    detail: groupDetail,
+    detail: serverGroupDetail,
     isLoading,
     error,
   } = useEvidenceGroupDetail(undefined, sourceDocumentId);
+  const [localGroupDetail, setLocalGroupDetail] = useState<EvidenceGroupDetailResponse | null>(null);
+  useEffect(() => {
+    setLocalGroupDetail(null);
+  }, [sourceDocumentId, serverGroupDetail?.group_id]);
+  const groupDetail = localGroupDetail ?? serverGroupDetail;
   const queryClient = useQueryClient();
   const { message } = App.useApp();
-  const refreshEvidenceReviewData = useCallback(async () => {
+  const annotationQueryKey = useMemo(
+    () => ["annotations", sourceDocumentId] as const,
+    [sourceDocumentId],
+  );
+  const refreshEvidenceReviewData = useCallback(async (
+    options: { refetchGroupDetail?: boolean } = {},
+  ) => {
+    const refetchGroupDetail = options.refetchGroupDetail ?? true;
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["evidence", "group-detail"] }),
+      queryClient.invalidateQueries({
+        queryKey: ["evidence", "group-detail"],
+        refetchType: refetchGroupDetail ? "active" : "none",
+      }),
       queryClient.invalidateQueries({ queryKey: ["evidence", "search"] }),
       queryClient.invalidateQueries({ queryKey: ["evidence-db"] }),
     ]);
   }, [queryClient]);
+  const applyReviewStatusToCache = useCallback(
+    (evidenceId: string, status: ReviewStatusValue) => {
+      queryClient.setQueriesData<EvidenceGroupDetailResponse>(
+        { queryKey: ["evidence", "group-detail"] },
+        (current) => applyReviewStatusToDetail(current, evidenceId, status),
+      );
+    },
+    [queryClient],
+  );
+  const applyFieldAssignmentToCache = useCallback(
+    (
+      assignment: FieldAssignmentPatch,
+      selectedText: string,
+      newStatus?: ReviewStatusValue,
+    ) => {
+      queryClient.setQueriesData<EvidenceGroupDetailResponse>(
+        { queryKey: ["evidence", "group-detail"] },
+        (current) => applyFieldAssignmentToDetail(
+          current,
+          assignment,
+          selectedText,
+          newStatus,
+        ),
+      );
+    },
+    [queryClient],
+  );
+  const handleInlineReviewed = useCallback(
+    async (evidenceId: string, status: ReviewStatusValue) => {
+      if (groupDetail) {
+        setLocalGroupDetail(
+          (current) =>
+            applyReviewStatusToDetail(current ?? groupDetail, evidenceId, status) ?? current,
+        );
+      }
+      applyReviewStatusToCache(evidenceId, status);
+      await refreshEvidenceReviewData({ refetchGroupDetail: false });
+    },
+    [applyReviewStatusToCache, groupDetail, refreshEvidenceReviewData],
+  );
 
   const annotationsQuery = useQuery({
-    queryKey: ["annotations", sourceDocumentId],
+    queryKey: annotationQueryKey,
     queryFn: () => listAnnotations(sourceDocumentId),
     enabled: Boolean(sourceDocumentId),
   });
-  const allAnnotations: UserAnnotation[] = annotationsQuery.data ?? [];
+  const allAnnotations: UserAnnotation[] = useMemo(
+    () => annotationsQuery.data ?? [],
+    [annotationsQuery.data],
+  );
 
   const createMutation = useMutation({
     mutationFn: (payload: AnnotationCreateRequest) => createAnnotation(sourceDocumentId, payload),
     onSuccess: (created) => {
-      queryClient.setQueryData<UserAnnotation[]>(["annotations", sourceDocumentId], (prev) => [
-        ...(prev ?? []),
-        created,
-      ]);
+      queryClient.setQueryData<UserAnnotation[]>(
+        annotationQueryKey,
+        (current) => upsertAnnotation(current, created),
+      );
+      void message.success(t("annotation.created"));
+      void queryClient.invalidateQueries({ queryKey: annotationQueryKey });
+    },
+    onError: (error) => {
+      void message.error(extractErrorMessage(error, t("annotation.createFailed")));
     },
   });
   const updateMutation = useMutation({
     mutationFn: (vars: { id: string; payload: AnnotationUpdateRequest }) =>
       updateAnnotation(sourceDocumentId, vars.id, vars.payload),
     onSuccess: (updated) => {
-      queryClient.setQueryData<UserAnnotation[]>(["annotations", sourceDocumentId], (prev) =>
-        (prev ?? []).map((a) => (a.id === updated.id ? updated : a)),
+      queryClient.setQueryData<UserAnnotation[]>(
+        annotationQueryKey,
+        (current) => upsertAnnotation(current, updated),
       );
+      void message.success(t("annotation.saved"));
+      void queryClient.invalidateQueries({ queryKey: annotationQueryKey });
+    },
+    onError: (error) => {
+      void message.error(extractErrorMessage(error, t("annotation.saveFailed")));
     },
   });
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteAnnotation(sourceDocumentId, id),
     onSuccess: (_void, deletedId) => {
-      queryClient.setQueryData<UserAnnotation[]>(["annotations", sourceDocumentId], (prev) =>
-        (prev ?? []).filter((a) => a.id !== deletedId),
+      queryClient.setQueryData<UserAnnotation[]>(
+        annotationQueryKey,
+        (current) => removeAnnotation(current, deletedId),
       );
+      void message.success(t("annotation.deleted"));
+      void queryClient.invalidateQueries({ queryKey: annotationQueryKey });
+    },
+    onError: (error) => {
+      void message.error(extractErrorMessage(error, t("annotation.deleteFailed")));
     },
   });
 
@@ -211,12 +327,16 @@ export function BilingualEvidenceView({
     start_offset: number;
     end_offset: number;
     color: string;
-  }) => void createMutation.mutate(payload);
+  }) => createMutation.mutateAsync(payload).then(() => undefined);
   const handleUpdateAnnotation = (
     id: string,
     payload: { color?: string | null; note?: string | null },
-  ) => void updateMutation.mutate({ id, payload });
-  const handleDeleteAnnotation = (id: string) => void deleteMutation.mutate(id);
+  ) => updateMutation
+    .mutateAsync({ id: sourceAnnotationIdForMutation(id), payload })
+    .then(() => undefined);
+  const handleDeleteAnnotation = (id: string) => deleteMutation
+    .mutateAsync(sourceAnnotationIdForMutation(id))
+    .then(() => undefined);
 
   useEffect(() => {
     if (!groupDetail?.items.length) {
@@ -241,41 +361,52 @@ export function BilingualEvidenceView({
     setReviewSubmittingStatus(status);
     try {
       await patchEvidence(evidenceId, { fields: {}, new_status: status });
-      await refreshEvidenceReviewData();
+      if (groupDetail) {
+        setLocalGroupDetail(
+          (current) =>
+            applyReviewStatusToDetail(current ?? groupDetail, evidenceId, status) ?? current,
+        );
+      }
+      applyReviewStatusToCache(evidenceId, status);
+      void refreshEvidenceReviewData({ refetchGroupDetail: false });
       message.success(t("evidence.review.success", { status: t(`evidenceDb.review.${status}`) }));
     } catch {
       message.error(t("evidence.review.error"));
     } finally {
       setReviewSubmittingStatus(null);
     }
-  }, [message, refreshEvidenceReviewData, t]);
+  }, [applyReviewStatusToCache, groupDetail, message, refreshEvidenceReviewData, t]);
 
   const handleAssignField = useCallback(async (selectedText: string, fieldType: string) => {
     if (!groupDetail) return;
-    // Find an existing item for this field type, or use the first item
-    const targetItem = groupDetail.items.find(
-      (item) => item.field_id === fieldType || item.category === fieldType,
-    ) ?? groupDetail.items[0];
-    if (!targetItem) return;
-    try {
-      await patchEvidence(targetItem.canonical_evidence_id, {
-        fields: { [fieldType]: selectedText },
-        change_reason: `Text selection assignment to ${fieldType}`,
-      });
-      await refreshEvidenceReviewData();
-      message.success(t("evidence.fieldAssign.success", { field: fieldType }));
-    } catch {
-      message.error(t("evidence.fieldAssign.error"));
+    const assignment = buildFieldAssignmentPatch(groupDetail.items, selectedText, fieldType);
+    if (!assignment) {
+      message.warning(t("evidence.fieldAssign.unsupported"));
+      throw new Error(`Unsupported field assignment: ${fieldType}`);
     }
-  }, [groupDetail, message, refreshEvidenceReviewData, t]);
+    try {
+      const result = await patchEvidence(assignment.canonicalEvidenceId, assignment.body);
+      setLocalGroupDetail(
+        (current) =>
+          applyFieldAssignmentToDetail(
+            current ?? groupDetail,
+            assignment,
+            selectedText,
+            result.new_status,
+          ) ?? current,
+      );
+      applyFieldAssignmentToCache(assignment, selectedText, result.new_status);
+      void refreshEvidenceReviewData({ refetchGroupDetail: false });
+      message.success(t("evidence.fieldAssign.success", { field: fieldType }));
+    } catch (error) {
+      message.error(extractErrorMessage(error, t("evidence.fieldAssign.error")));
+      throw error;
+    }
+  }, [applyFieldAssignmentToCache, groupDetail, message, refreshEvidenceReviewData, t]);
 
   const fieldTypes = useMemo<FieldTypeOption[]>(
-    () => EVIDENCE_FIELD_SPECS.map((spec) => ({
-      fieldId: spec.fieldId,
-      label: spec.fieldName,
-      category: spec.categoryId,
-    })),
-    [],
+    () => buildAssignableFieldTypes(groupDetail?.items ?? [], EVIDENCE_FIELD_SPECS),
+    [groupDetail?.items],
   );
 
   const guideSections: GuideSection[] = useMemo(() => [
@@ -301,8 +432,14 @@ export function BilingualEvidenceView({
     ]},
   ], [t]);
 
-  const originalAnnotations = allAnnotations.filter((a) => a.track === "original");
-  const translatedAnnotations = allAnnotations.filter((a) => a.track === "translated");
+  const synchronizedAnnotations = useMemo(
+    () => groupDetail
+      ? buildSynchronizedAnnotations(groupDetail, allAnnotations)
+      : allAnnotations,
+    [allAnnotations, groupDetail],
+  );
+  const originalAnnotations = synchronizedAnnotations.filter((a) => a.track === "original");
+  const translatedAnnotations = synchronizedAnnotations.filter((a) => a.track === "translated");
 
 
   const originalDoc = useMemo(
@@ -525,7 +662,7 @@ export function BilingualEvidenceView({
   return (
     <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <style>{bevEmbeddedCSS}</style>
-      <FieldReviewMenu onReviewed={refreshEvidenceReviewData} />
+      <FieldReviewMenu onReviewed={handleInlineReviewed} />
 
       {/* Breadcrumb */}
       <nav style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "var(--color-text-muted)" }}>

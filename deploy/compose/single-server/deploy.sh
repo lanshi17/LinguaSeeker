@@ -81,13 +81,21 @@ chat_llm:
   base_url: "https://api.siliconflow.cn"
 
 translation_llm:
+  local_base_url: "http://host.docker.internal:59062/api"
+  local_target_lang: "en"
+  local_timeout: 120
   base_url: "https://api.siliconflow.cn"
 
 embedding:
-  base_url: "http://model-embedding:8002/v1"
+  base_url: "http://host.docker.internal:32949"
+  api_style: "simple"
 
 rerank:
-  base_url: "http://model-rerank:8003/v1"
+  base_url: "http://host.docker.internal:35001"
+  api_style: "simple"
+
+mineru:
+  local_parse_url: "http://host.docker.internal:44321"
 
 postgres:
   host: "postgres"

@@ -2,7 +2,7 @@ const en = {
   // ── Navigation ──
   "nav.chat": "AI Chat",
   "nav.tasks": "Tasks",
-  "nav.evidenceDb": "Evidence DB",
+  "nav.evidenceDb": "Evidence Database",
   "nav.audit": "Audit",
   "nav.help": "Help Guide",
 
@@ -187,8 +187,14 @@ const en = {
   "evidence.bilingual.fullDoc": "Full document with {count} aligned paragraph(s)",
   "evidence.bilingual.docText": "Document text",
   "evidence.bilingual.page": "Page {num}",
+  "evidence.bilingual.originalDocument": "Original document",
+  "evidence.bilingual.translatedDocument": "English translation",
+  "evidence.bilingual.annotationCount": "{count} annotation(s)",
   "evidence.bilingual.selectItem": "Select evidence item",
   "evidence.bilingual.backDetail": "Back to literature detail",
+  "evidence.fieldAssign.success": "Assigned selected text to {field}",
+  "evidence.fieldAssign.error": "Failed to assign field",
+  "evidence.fieldAssign.unsupported": "This field does not support selection assignment yet",
 
   // ── Evidence Search — BilingualComparison ──
   "evidence.compare.noTraces": "No bilingual traces for this evidence group",
@@ -293,6 +299,7 @@ const en = {
   "evidenceDb.class.likelyBenign": "Likely Benign",
   "evidenceDb.class.benign": "Benign",
   "evidenceDb.class.all": "All",
+  "evidenceDb.filters.title": "Filters",
   "evidenceDb.searchGenePh": "Search by gene or variant…",
   "evidenceDb.filterDiseasePh": "Filter by disease…",
   "evidenceDb.language.label": "Source language",
@@ -317,8 +324,15 @@ const en = {
   "evidenceDb.listEvidence": "Evidence",
   "evidenceDb.listRefs": "Refs",
   "evidenceDb.listConf": "Conf.",
-  "evidenceDb.listPmid": "PMID",
   "evidenceDb.listFields": "Fields",
+  "evidenceDb.columnHelp.geneVariant": "Canonical gene symbol and variant notation for this evidence row.",
+  "evidenceDb.columnHelp.disease": "Disease or phenotype associated with the variant evidence.",
+  "evidenceDb.columnHelp.evidence": "ACMG evidence categories found for this variant and their review progress.",
+  "evidenceDb.columnHelp.refs": "Number of unique literature sources supporting this evidence item.",
+  "evidenceDb.columnHelp.confidence": "Weighted average confidence across extracted evidence fields.",
+  "evidenceDb.columnHelp.fields": "Number of extracted evidence fields included in this row.",
+  "evidenceDb.columnHelp.sourceLanguage": "Original source-document languages represented by this row.",
+  "evidenceDb.columnHelp.updated": "Most recent evidence timestamp for this variant row.",
   "evidenceDb.statGroups": "groups",
   "evidenceDb.statRefs": "refs",
   "evidenceDb.unknownGene": "Unknown Gene",
@@ -436,7 +450,6 @@ const en = {
   "evidenceDb.label.reviewProgress": "Review progress",
   "evidenceDb.label.reviewed": "Reviewed",
   "evidenceDb.label.updated": "Updated",
-  "evidenceDb.label.pmid": "PMID",
   "evidenceDb.label.fieldCount": "Fields",
   "evidenceDb.label.uniqueVariants": "Unique Variants",
 
@@ -449,6 +462,7 @@ const en = {
   "audit.metric.approved": "Approved",
   "audit.metric.corrected": "Corrected",
   "audit.metric.rejected": "Rejected",
+  "audit.filters.title": "Filters",
   "audit.filter.all": "All",
   "audit.filter.provisional": "Provisional",
   "audit.filter.approved": "Approved",
@@ -535,6 +549,14 @@ const en = {
   "chat.showTaskQueue": "Show task queue",
   "chat.expandConversations": "Expand conversations",
   "chat.collapseConversations": "Collapse conversations",
+
+  // ── Chat — Follow-up suggestions ──
+  "chat.followUps.label": "Suggested next questions",
+  "chat.followUps.nextStep": "What should I do next?",
+  "chat.followUps.pipelineStatus": "Check the task status for me",
+  "chat.followUps.evidenceGaps": "Which evidence gaps should I resolve next?",
+  "chat.followUps.summarize": "Summarize the key points in 3 bullets",
+  "chat.followUps.verifyEvidence": "Which evidence should I verify manually?",
 
   // ── Chat — ThinkingIndicator ──
   "chat.thinking.label": "Thinking",
@@ -728,6 +750,9 @@ const en = {
   "annotation.edit": "Edit annotation",
   "annotation.saved": "Saved",
   "annotation.deleted": "Deleted",
+  "annotation.createFailed": "Failed to create annotation",
+  "annotation.saveFailed": "Failed to save annotation",
+  "annotation.deleteFailed": "Failed to delete annotation",
   "annotation.pickColor": "Pick color {color}",
   "annotation.notePlaceholder": "Note…",
 } as const;

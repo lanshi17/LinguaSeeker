@@ -2,10 +2,11 @@ import { useRef, type MutableRefObject, type UIEvent } from "react";
 import { Languages, BookOpen } from "lucide-react";
 import type { EvidenceDocument } from "@/features/evidence-search/utils/evidenceDocument";
 import type { ContentBlock } from "@/features/evidence-search/types/evidenceSearch";
-import { HighlightedText, type ReviewContextMap } from "./HighlightedText";
+import { HighlightedText } from "./HighlightedText";
 import { StructuredBlockRenderer, type BlockHighlight } from "./StructuredBlockRenderer";
 import { MarkdownDocumentViewer } from "@/features/evidence-search/components/MarkdownDocumentViewer";
 import { AnnotationLayer, type FieldTypeOption } from "@/features/evidence-search/components/annotationLayer";
+import type { ReviewContextMap } from "@/features/evidence-search/components/fieldReviewMenuBus";
 import type { AnnotationTrack, UserAnnotation } from "@/features/evidence-search/types/annotations";
 import type {
   AlignmentHighlightMap,
@@ -21,12 +22,12 @@ interface AnnotationHandlers {
     start_offset: number;
     end_offset: number;
     color: string;
-  }) => void;
+  }) => void | Promise<void>;
   onUpdateAnnotation?: (
     id: string,
     payload: { color?: string | null; note?: string | null },
-  ) => void;
-  onDeleteAnnotation?: (id: string) => void;
+  ) => void | Promise<void>;
+  onDeleteAnnotation?: (id: string) => void | Promise<void>;
 }
 
 /* ── Document Reader Panel ──────────────────────────────── */
@@ -70,14 +71,16 @@ export function DocumentReader({
   onAlignmentHover?: (pairId: string) => void;
   onAlignmentLeave?: () => void;
   onAlignmentToggle?: (pairId: string) => void;
-  onAssignField?: (selectedText: string, fieldType: string) => void;
+  onAssignField?: (selectedText: string, fieldType: string) => void | Promise<void>;
   fieldTypes?: FieldTypeOption[];
 } & AnnotationHandlers) {
   const { t } = useI18n();
   const contentRef = useRef<HTMLDivElement | null>(null);
   const hasBlocks = blocks && blocks.length > 0;
   const paragraphId = `${track}-document`;
-  const docAnnotations = annotations.filter((a) => a.paragraph_id === paragraphId);
+  const annotationsForParagraph = (id: string) =>
+    annotations.filter((a) => a.paragraph_id === id);
+  const docAnnotations = annotationsForParagraph(paragraphId);
   const fullTextPara = document.paragraphs.find((p) => p.id.endsWith("-full-text"));
   const snippetParas = fullTextPara
     ? document.paragraphs.filter((p) => p !== fullTextPara)
@@ -127,6 +130,7 @@ export function DocumentReader({
             blocks={blocks}
             highlights={blockHighlights ?? []}
             alignmentHighlights={blockAlignmentHighlights}
+            reviewContexts={reviewContexts}
             onAlignmentHover={onAlignmentHover}
             onAlignmentLeave={onAlignmentLeave}
             onAlignmentToggle={onAlignmentToggle}
@@ -154,10 +158,17 @@ export function DocumentReader({
                 paragraphId={fullTextPara.id}
                 track={track}
                 sourceDocumentId={sourceDocumentId}
+                annotations={annotationsForParagraph(fullTextPara.id)}
+                reviewContexts={reviewContexts}
                 alignmentHighlights={alignmentHighlightsByParagraph[fullTextPara.id] ?? []}
                 onAlignmentHover={onAlignmentHover}
                 onAlignmentLeave={onAlignmentLeave}
                 onAlignmentToggle={onAlignmentToggle}
+                onCreateAnnotation={onCreateAnnotation}
+                onUpdateAnnotation={onUpdateAnnotation}
+                onDeleteAnnotation={onDeleteAnnotation}
+                onAssignField={onAssignField}
+                fieldTypes={fieldTypes}
               />
             )}
             {snippetParas.map((para) => (

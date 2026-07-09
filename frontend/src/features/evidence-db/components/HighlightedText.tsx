@@ -2,12 +2,12 @@ import { useMemo } from "react";
 import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
 import type { EvidenceDocumentParagraph } from "@/features/evidence-search/utils/evidenceDocument";
 import type { AlignmentTextHighlight } from "@/features/evidence-search/utils/translationAlignment";
-import { openFieldReviewMenu } from "@/features/evidence-search/components/FieldReviewPopover";
-import type { FieldReviewInfo } from "@/features/evidence-search/components/FieldReviewPopover";
+import { openFieldReviewMenu } from "@/features/evidence-search/components/fieldReviewMenuBus";
+import type { ReviewContextMap } from "@/features/evidence-search/components/fieldReviewMenuBus";
 
 /* ── Style helpers (replace Tailwind-based categoryMarkStyle / categoryChipStyle) ── */
 
-export function markInlineStyle(category?: string | null, selected?: boolean): React.CSSProperties {
+function markInlineStyle(category?: string | null, selected?: boolean): React.CSSProperties {
   const hex = category && CATEGORY_COLORS[category]
     ? CATEGORY_COLORS[category].hex
     : "var(--color-text-muted)";
@@ -25,9 +25,6 @@ export function markInlineStyle(category?: string | null, selected?: boolean): R
   }
   return base;
 }
-
-/** Map from canonical_evidence_id → review info, used to enable hover-to-review. */
-export type ReviewContextMap = Map<string, FieldReviewInfo>;
 
 interface HighlightedTextProps {
   paragraph: EvidenceDocumentParagraph;

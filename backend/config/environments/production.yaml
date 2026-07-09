@@ -12,16 +12,16 @@ cors_origins: "https://furong.genemed.tech/linguaseeker"
 
 # ── LLM Endpoints (Production) ──────────────────────────────────────────
 fast_llm:
-  model: "mimo-v2.5" #gpt-5-mini
+  model: "gpt-5-mini" #gpt-5-mini
   timeout: 60
   max_tokens: 16384
-  base_url: "https://token-plan-cn.xiaomimimo.com/v1"
+  base_url: "https://linxi.chat/v1"
 
 reasoning_llm:
-  model: "mimo-v2.5-pro"
+  model: "gpt-5"
   timeout: 300
   max_tokens: 32768
-  base_url: "https://token-plan-cn.xiaomimimo.com/v1"
+  base_url: "https://linxi.chat/v1"
 
 chat_llm:
   model: "Qwen/Qwen3.5-35B-A3B"
@@ -39,11 +39,13 @@ translation_llm:
 # ── Inference Services (Production) ──────────────────────────────────────
 embedding:
   base_url: "http://localhost:32949"
+  api_style: "simple"
   remote_base_url: "https://api.siliconflow.cn"
   remote_model: "BAAI/bge-m3"
 
 rerank:
   base_url: "http://localhost:35001"
+  api_style: "simple"
   remote_base_url: "https://api.siliconflow.cn"
   remote_model: "BAAI/bge-reranker-v2-m3"
 

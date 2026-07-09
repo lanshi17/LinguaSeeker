@@ -1,0 +1,2 @@
+"""Authentication contracts and helpers."""
+

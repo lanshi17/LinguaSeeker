@@ -395,6 +395,13 @@ class LiteratureSearchResponse(BaseModel):
     page_size: int = 50
 
 
+class LiteratureRefreshResponse(BaseModel):
+    """Response for POST /api/v1/literature/refresh."""
+
+    refreshed: int
+    total_documents: int
+
+
 class EvidenceFieldItem(BaseModel):
     """One evidence field within a group."""
 

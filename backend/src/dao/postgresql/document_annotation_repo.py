@@ -96,18 +96,21 @@ async def update_annotation(
     *,
     color: str | None = None,
     note: str | None = None,
+    update_color: bool = False,
+    update_note: bool = False,
 ) -> DocumentAnnotation | None:
     """Patch mutable fields (color, note) of an annotation.
 
-    Only provided (non-None) fields are mutated. ``None`` means "leave
-    unchanged", so passing ``note=None`` does NOT clear an existing note —
-    callers that want to clear must pass an empty string.
+    Only fields marked with their ``update_*`` flag are mutated. This lets the
+    API distinguish omitted fields from explicit JSON ``null`` values.
 
     Args:
         session: Async SQLAlchemy session.
         annotation_id: UUID of the annotation to patch.
         color: New color value, or None to leave unchanged.
         note: New note value, or None to leave unchanged.
+        update_color: Whether to persist the color value.
+        update_note: Whether to persist the note value.
 
     Returns:
         Updated ``DocumentAnnotation`` or ``None`` if not found.
@@ -117,9 +120,9 @@ async def update_annotation(
     annotation = result.scalar_one_or_none()
     if annotation is None:
         return None
-    if color is not None:
+    if update_color:
         annotation.color = color
-    if note is not None:
+    if update_note:
         annotation.note = note
     await session.flush()
     await session.refresh(annotation)

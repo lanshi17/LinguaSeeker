@@ -145,7 +145,7 @@ export function EvidenceReviewDrawer({ open, onClose }: EvidenceReviewDrawerProp
     } finally {
       setIsSubmitting(false);
     }
-  }, [detail, editedFields, changeReason, newStatus, message, onClose, queryClient]);
+  }, [detail, editedFields, changeReason, newStatus, message, onClose, queryClient, t]);
 
   const handleClose = useCallback(() => {
     setSelectedGroupId(null);

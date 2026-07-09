@@ -35,10 +35,12 @@ import type {
 import { CATEGORY_COLORS } from "../utils/evidenceDocument";
 import { categoryLabel } from "../utils/categoryStyles";
 import { buildBilingualCompareHref } from "../utils/literatureRows";
+import { cardFieldForFieldId } from "../utils/fieldAssignment";
+import { formatTimestamp } from "@/lib/utils/format";
 
 /* ---- Inline style helpers ---- */
 
-export function chipInlineStyle(hex?: string): React.CSSProperties {
+function chipInlineStyle(hex?: string): React.CSSProperties {
   if (!hex) return { borderColor: "var(--color-border)", backgroundColor: "var(--color-bg)", color: "var(--color-text-strong)" };
   return { borderColor: hex + "60", backgroundColor: hex + "15", color: hex };
 }
@@ -47,14 +49,14 @@ export function chipInlineStyle(hex?: string): React.CSSProperties {
 
 /* ---- Utility functions ---- */
 
-export function formatPercent(value?: number | null) {
+function formatPercent(value?: number | null) {
   if (value == null) {
     return "\u2014";
   }
   return `${(value * 100).toFixed(0)}%`;
 }
 
-export function categoryFromItem(item?: EvidenceGroupItem | null) {
+function categoryFromItem(item?: EvidenceGroupItem | null) {
   if (!item) {
     return null;
   }
@@ -64,7 +66,7 @@ export function categoryFromItem(item?: EvidenceGroupItem | null) {
   return item.field_id.includes(".") ? item.field_id.split(".", 1)[0] : null;
 }
 
-export function itemLabel(item: EvidenceGroupItem) {
+function itemLabel(item: EvidenceGroupItem) {
   return item.field_name ?? item.field_id;
 }
 
@@ -72,22 +74,9 @@ function countEntries(record: Record<string, number>) {
   return Object.entries(record).sort(([a], [b]) => a.localeCompare(b));
 }
 
-export function detailTitle(detail: EvidenceGroupDetailResponse) {
+function detailTitle(detail: EvidenceGroupDetailResponse) {
   const title = detail.title?.trim();
   return title || "Untitled literature record";
-}
-
-const FIELD_ID_TO_CARD_FIELD: Record<string, string> = {
-  "A.gene_symbol": "gene",
-  "B.disease_diagnosis": "disease",
-  "B.clinical_diagnosis": "disease",
-  "J.authority_classification": "classification",
-};
-
-function cardFieldForFieldId(fieldId: string): string | null {
-  if (FIELD_ID_TO_CARD_FIELD[fieldId]) return FIELD_ID_TO_CARD_FIELD[fieldId];
-  if (fieldId.startsWith("A.variant_hgvs_")) return "variant";
-  return null;
 }
 
 /* ---- Sub-components ---- */
@@ -120,7 +109,7 @@ function StatBadge({
   );
 }
 
-export function MetadataToken({
+function MetadataToken({
   label,
   value,
   icon: Icon,
@@ -160,7 +149,7 @@ export function MetadataToken({
   );
 }
 
-export function EvidenceTonePill({ item }: { item: EvidenceGroupItem }) {
+function EvidenceTonePill({ item }: { item: EvidenceGroupItem }) {
   const cat = categoryFromItem(item);
   const hex = cat && CATEGORY_COLORS[cat] ? CATEGORY_COLORS[cat].hex : undefined;
   return (
@@ -336,7 +325,7 @@ export function LiteratureOverview({
           {detail.doi && `DOI: ${detail.doi}`}
         </p>
         <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "4px 0 0" }}>
-          {t("evidence.lit.generated")} {new Date().toLocaleString()}
+          {t("evidence.lit.generated")} {formatTimestamp(new Date())}
         </p>
         <hr style={{ margin: "16px 0", border: "none", borderTop: "1px solid var(--color-border)" }} />
       </div>

@@ -52,7 +52,7 @@ React 错误边界，捕获子组件渲染错误。
 
 - **Props**: `open: boolean`, `onClose: () => void`
 - **功能**: Cookie 持久化引导状态（1年有效期），6步引导流程
-- **导出**: `hasSeenGuide()` / `resetGuide()` 工具函数
+- **状态工具**: `userGuideState.ts` 导出 `hasSeenGuide()` / `resetGuide()`
 
 ### `ThemeToggle`
 
