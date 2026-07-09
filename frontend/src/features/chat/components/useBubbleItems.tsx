@@ -15,6 +15,7 @@ import {
 } from "./forms";
 import type { PipelineSummarySlots } from "./forms";
 import type { PerSessionUIState } from "./chatConfig";
+import { FollowUpSuggestions } from "./FollowUpSuggestions";
 import { WelcomeBlock, type WelcomeAction } from "./WelcomeBlock";
 
 interface UseBubbleItemsParams {
@@ -63,6 +64,22 @@ export function useBubbleItems(params: UseBubbleItemsParams): BubbleItemType[] {
 
   return useMemo(() => {
     const messageKeys = toUniqueChatMessageKeys(messages);
+    const lastMessageIndex = messages.length - 1;
+    const lastMessage = messages[lastMessageIndex];
+    const lastCompletedAssistantIndex =
+      lastMessage?.message.role === "assistant" &&
+      lastMessage.message.content.trim() &&
+      lastMessage.status !== "loading" &&
+      lastMessage.status !== "updating"
+        ? lastMessageIndex
+        : -1;
+    const shouldShowFollowUps =
+      lastCompletedAssistantIndex >= 0 &&
+      !activeForm &&
+      !pipelineStatus &&
+      !isRequesting &&
+      !isPreparingResponse;
+
     const items: BubbleItemType[] = messages.map(({ id, message, status }, index) => {
       const messageKey = messageKeys[index];
       const action = (message as { action?: ChatAction }).action;
@@ -90,7 +107,7 @@ export function useBubbleItems(params: UseBubbleItemsParams): BubbleItemType[] {
         }
 
         return (
-          <div className={isStreaming ? "chat-streaming-cursor" : ""}>
+          <div className={isStreaming ? "chat-streaming-cursor" : undefined}>
             <ChatMarkdown source={content} />
             {action ? (
               <ChatActionBubble
@@ -116,6 +133,24 @@ export function useBubbleItems(params: UseBubbleItemsParams): BubbleItemType[] {
           : {}),
       };
     });
+
+    if (shouldShowFollowUps) {
+      items.push({
+        key: "__followups__",
+        role: "assistant",
+        content: "",
+        variant: "borderless" as const,
+        className: "cv-followups-bubble",
+        avatar: null,
+        contentRender: () => (
+          <FollowUpSuggestions
+            content={messages[lastCompletedAssistantIndex].message.content}
+            disabled={isPipelineSubmitting}
+            onPick={handleWelcomeAction}
+          />
+        ),
+      });
+    }
 
     if (isPreparingResponse && !isRequesting) {
       items.push({

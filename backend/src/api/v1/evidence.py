@@ -19,6 +19,7 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     EvidencePatchRequest,
     EvidenceSearchResponse,
     LiteratureProfileDetailResponse,
+    LiteratureRefreshResponse,
     LiteratureProfileSummary,
     LiteratureSearchResponse,
     PatchResultResponse,
@@ -184,13 +185,13 @@ async def get_literature_detail(
     )
 
 
-@router.post("/literature/refresh")
+@router.post("/literature/refresh", response_model=LiteratureRefreshResponse)
 @limiter.limit("5/minute")
 async def refresh_literature_profiles(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
     _api_key: str | None = Depends(require_api_key),
-) -> dict:  # noqa: dict-return — simple admin status response
+) -> LiteratureRefreshResponse:
     """Refresh all literature profiles from canonical evidence. Admin endpoint."""
     stmt = select(SourceDocument.source_document_id)
     result = await session.execute(stmt)
@@ -202,4 +203,4 @@ async def refresh_literature_profiles(
         await repo.refresh_for_document(doc_id)
         refreshed += 1
 
-    return {"refreshed": refreshed, "total_documents": len(doc_ids)}
+    return LiteratureRefreshResponse(refreshed=refreshed, total_documents=len(doc_ids))

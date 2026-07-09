@@ -74,23 +74,9 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     });
   }, []);
 
-  const [convCollapsed, setConvCollapsed] = useState<boolean>(() => {
-    try {
-      return window.localStorage.getItem("chat.convCollapsed") === "1";
-    } catch {
-      return false;
-    }
-  });
+  const [convCollapsed, setConvCollapsed] = useState(false);
   const toggleConv = useCallback(() => {
-    setConvCollapsed((prev) => {
-      const next = !prev;
-      try {
-        window.localStorage.setItem("chat.convCollapsed", next ? "1" : "0");
-      } catch {
-        // noop
-      }
-      return next;
-    });
+    setConvCollapsed((prev) => !prev);
   }, []);
 
   // ── Session & conversation management ──
@@ -410,15 +396,32 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         </div>
 
         {/* Toggle — flex item, never clipped */}
-        <button
-          type="button"
-          onClick={toggleConv}
-          aria-label={convCollapsed ? t("chat.expandConversations") : t("chat.collapseConversations")}
-          className="cv-conv-toggle"
-          data-collapsed={convCollapsed}
+        <Tooltip
+          title={
+            convCollapsed
+              ? t("chat.expandConversations")
+              : t("chat.collapseConversations")
+          }
+          placement="right"
         >
-          {convCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-        </button>
+          <button
+            type="button"
+            onClick={toggleConv}
+            aria-label={
+              convCollapsed
+                ? t("chat.expandConversations")
+                : t("chat.collapseConversations")
+            }
+            className="cv-conv-toggle"
+            data-collapsed={convCollapsed}
+          >
+            {convCollapsed ? (
+              <ChevronRight size={14} />
+            ) : (
+              <ChevronLeft size={14} />
+            )}
+          </button>
+        </Tooltip>
 
         {/* Main chat area */}
         <div style={{ display: "flex", minWidth: 0, flex: 1, flexDirection: "column" }}>

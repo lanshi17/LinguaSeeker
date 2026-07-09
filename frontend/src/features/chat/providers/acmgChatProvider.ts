@@ -93,7 +93,6 @@ class AcmgChatProvider extends AbstractChatProvider<
   unknown,
   SSEOutput
 > {
-  private sessionId: string;
   /** Abort the in-flight SSE stream, if any. Safe to call at any time. */
   abort: () => void;
   /** Whether a stream request is currently in flight. */
@@ -171,7 +170,6 @@ class AcmgChatProvider extends AbstractChatProvider<
     });
 
     super({ request });
-    this.sessionId = sessionId;
 
     // Define instance-level abort method and isStreaming getter,
     // both backed by the closure variables above.

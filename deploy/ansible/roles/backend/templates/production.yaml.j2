@@ -27,12 +27,14 @@ embedding:
   model: "{{ embedding_model }}"
   dimension: {{ embedding_dimension }}
   batch_size: {{ embedding_batch_size }}
+  api_style: "{{ embedding_api_style }}"
 
 rerank:
   base_url: "{{ rerank_base_url }}"
   model: "{{ rerank_model }}"
   top_k: {{ rerank_top_k }}
   score_threshold: {{ rerank_score_threshold }}
+  api_style: "{{ rerank_api_style }}"
 
 # ── MinerU ───────────────────────────────────────────────────────────────
 mineru:

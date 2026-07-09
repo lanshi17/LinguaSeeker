@@ -143,6 +143,18 @@ async def test_create_list_update_delete_flow():
         resp = await client.get(base)
         assert resp.json()["items"][0]["note"] == "updated note"
 
+        # Explicit JSON null clears nullable fields instead of being ignored.
+        resp = await client.patch(f"{base}/{ann_id}", json={"color": None, "note": None})
+        assert resp.status_code == 200, resp.text
+        cleared = resp.json()
+        assert cleared["color"] is None
+        assert cleared["note"] is None
+
+        resp = await client.get(base)
+        listed = resp.json()["items"][0]
+        assert listed["color"] is None
+        assert listed["note"] is None
+
         # Delete.
         resp = await client.delete(f"{base}/{ann_id}")
         assert resp.status_code == 204

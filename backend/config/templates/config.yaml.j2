@@ -39,6 +39,22 @@ chat_llm:
   model: {{ chat_llm.model }}
   timeout: {{ chat_llm.timeout }}
 
+# ── Translation LLM (local first, remote fallback) ────────────────────────
+translation_llm:
+  api_key: {{ translation_llm.api_key | default('') }}
+  api_keys: {{ translation_llm.api_keys | default([]) }}
+  base_url: {{ translation_llm.base_url | default('') }}
+  model: {{ translation_llm.model }}
+  local_base_url: {{ translation_llm.local_base_url | default('') }}
+  local_target_lang: {{ translation_llm.local_target_lang | default('en') }}
+  local_timeout: {{ translation_llm.local_timeout | default(60) }}
+  remote_base_url: {{ translation_llm.remote_base_url | default('') }}
+  remote_api_key: {{ translation_llm.remote_api_key | default('') }}
+  remote_api_keys: {{ translation_llm.remote_api_keys | default([]) }}
+  remote_model: {{ translation_llm.remote_model | default('') }}
+  timeout: {{ translation_llm.timeout }}
+  max_tokens: {{ translation_llm.max_tokens }}
+  temperature: {{ translation_llm.temperature | default(0.0) }}
 
 # ── Embedding (external inference service) ─────────────────────────────
 embedding:
@@ -46,6 +62,7 @@ embedding:
   model: {{ embedding.model }}
   dimension: {{ embedding.dimension }}
   batch_size: {{ embedding.batch_size }}
+  api_style: {{ embedding.api_style | default('openai') }}
 
 # ── Rerank (external inference service) ────────────────────────────────
 rerank:
@@ -53,6 +70,7 @@ rerank:
   model: {{ rerank.model }}
   top_k: {{ rerank.top_k }}
   score_threshold: {{ rerank.score_threshold }}
+  api_style: {{ rerank.api_style | default('openai') }}
 
 # ── MinerU document parsing ─────────────────────────────────────────────
 mineru:

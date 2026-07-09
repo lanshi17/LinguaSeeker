@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import type { ContentBlock } from "@/features/evidence-search/types/evidenceSearch";
 import { CATEGORY_COLORS } from "@/features/evidence-search/utils/evidenceDocument";
 import type { AlignmentTextHighlight } from "@/features/evidence-search/utils/translationAlignment";
+import { openFieldReviewMenu } from "@/features/evidence-search/components/fieldReviewMenuBus";
+import type { ReviewContextMap } from "@/features/evidence-search/components/fieldReviewMenuBus";
 
 /* ── Types ──────────────────────────────────────────────── */
 
@@ -29,6 +31,10 @@ interface AlignmentHandlers {
   onAlignmentHover?: (pairId: string) => void;
   onAlignmentLeave?: () => void;
   onAlignmentToggle?: (pairId: string) => void;
+}
+
+interface HighlightInteractionHandlers extends AlignmentHandlers {
+  reviewContexts?: ReviewContextMap;
 }
 
 /* ── Text extraction from blocks ────────────────────────── */
@@ -82,6 +88,7 @@ function HighlightedSegment({
   globalStart,
   highlights,
   alignmentHighlights = [],
+  reviewContexts,
   onAlignmentHover,
   onAlignmentLeave,
   onAlignmentToggle,
@@ -90,10 +97,7 @@ function HighlightedSegment({
   globalStart: number;
   highlights: BlockHighlight[];
   alignmentHighlights?: AlignmentTextHighlight[];
-  onAlignmentHover?: (pairId: string) => void;
-  onAlignmentLeave?: () => void;
-  onAlignmentToggle?: (pairId: string) => void;
-}) {
+} & HighlightInteractionHandlers) {
   const localHighlights = useMemo(() => {
     return highlights
       .map((h) => {
@@ -172,21 +176,31 @@ function HighlightedSegment({
     const hex = evidence.category && CATEGORY_COLORS[evidence.category]
       ? CATEGORY_COLORS[evidence.category].hex
       : "var(--color-text-muted)";
+    const reviewInfo = reviewContexts?.get(evidence.evidenceId);
     segments.push(
       <mark
         key={`h-${evidence.evidenceId}-${start}`}
+        data-reviewable={reviewInfo ? "true" : undefined}
         data-alignment-pair-id={alignment?.pairId}
         data-alignment-active={alignment?.active ? "true" : undefined}
         onMouseEnter={alignment ? () => onAlignmentHover?.(alignment.pairId) : undefined}
         onMouseLeave={alignment ? () => onAlignmentLeave?.() : undefined}
-        onClick={alignment ? () => onAlignmentToggle?.(alignment.pairId) : undefined}
+        onClick={(event) => {
+          if (alignment) {
+            onAlignmentToggle?.(alignment.pairId);
+          }
+          if (reviewInfo) {
+            openFieldReviewMenu(event, reviewInfo);
+          }
+        }}
+        onContextMenu={reviewInfo ? (event) => openFieldReviewMenu(event, reviewInfo) : undefined}
         style={{
           backgroundColor: `${hex}50`,
           color: `${hex}f0`,
           boxShadow: `0 0 0 1px ${hex}60`,
           borderRadius: 2,
           padding: "0 2px",
-          cursor: "help",
+          cursor: reviewInfo ? "pointer" : "help",
           ...alignmentSegmentStyle(alignment, true),
         }}
         title={`${evidence.label} (${evidence.fieldId})`}
@@ -229,6 +243,7 @@ function HeadingBlock({
   globalStart,
   highlights,
   alignmentHighlights,
+  reviewContexts,
   onAlignmentHover,
   onAlignmentLeave,
   onAlignmentToggle,
@@ -238,7 +253,7 @@ function HeadingBlock({
   globalStart: number;
   highlights: BlockHighlight[];
   alignmentHighlights: AlignmentTextHighlight[];
-} & AlignmentHandlers) {
+} & HighlightInteractionHandlers) {
   const level = block.text_level ?? 2;
   const Tag = `h${Math.min(Math.max(level, 1), 6)}` as keyof React.JSX.IntrinsicElements;
   const sizes: Record<number, { fontSize: number; fontWeight: number }> = {
@@ -255,6 +270,7 @@ function HeadingBlock({
         globalStart={globalStart}
         highlights={highlights}
         alignmentHighlights={alignmentHighlights}
+        reviewContexts={reviewContexts}
         onAlignmentHover={onAlignmentHover}
         onAlignmentLeave={onAlignmentLeave}
         onAlignmentToggle={onAlignmentToggle}
@@ -268,6 +284,7 @@ function TextBlock({
   globalStart,
   highlights,
   alignmentHighlights,
+  reviewContexts,
   onAlignmentHover,
   onAlignmentLeave,
   onAlignmentToggle,
@@ -276,7 +293,7 @@ function TextBlock({
   globalStart: number;
   highlights: BlockHighlight[];
   alignmentHighlights: AlignmentTextHighlight[];
-} & AlignmentHandlers) {
+} & HighlightInteractionHandlers) {
   return (
     <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--color-text-strong)", margin: 0, whiteSpace: "pre-wrap" }}>
       <HighlightedSegment
@@ -284,6 +301,7 @@ function TextBlock({
         globalStart={globalStart}
         highlights={highlights}
         alignmentHighlights={alignmentHighlights}
+        reviewContexts={reviewContexts}
         onAlignmentHover={onAlignmentHover}
         onAlignmentLeave={onAlignmentLeave}
         onAlignmentToggle={onAlignmentToggle}
@@ -298,6 +316,7 @@ function TableBlock({
   globalStart,
   highlights,
   alignmentHighlights,
+  reviewContexts,
   onAlignmentHover,
   onAlignmentLeave,
   onAlignmentToggle,
@@ -307,7 +326,7 @@ function TableBlock({
   globalStart: number;
   highlights: BlockHighlight[];
   alignmentHighlights: AlignmentTextHighlight[];
-} & AlignmentHandlers) {
+} & HighlightInteractionHandlers) {
   return (
     <div style={{ overflowX: "auto" }}>
       {block.table_caption && block.table_caption.length > 0 && (
@@ -338,6 +357,7 @@ function TableBlock({
             globalStart={globalStart}
             highlights={highlights}
             alignmentHighlights={alignmentHighlights}
+            reviewContexts={reviewContexts}
             onAlignmentHover={onAlignmentHover}
             onAlignmentLeave={onAlignmentLeave}
             onAlignmentToggle={onAlignmentToggle}
@@ -358,6 +378,7 @@ function ListBlock({
   globalStart,
   highlights,
   alignmentHighlights,
+  reviewContexts,
   onAlignmentHover,
   onAlignmentLeave,
   onAlignmentToggle,
@@ -366,7 +387,7 @@ function ListBlock({
   globalStart: number;
   highlights: BlockHighlight[];
   alignmentHighlights: AlignmentTextHighlight[];
-} & AlignmentHandlers) {
+} & HighlightInteractionHandlers) {
   const items = block.list_items ?? [];
   let offset = globalStart;
   return (
@@ -381,6 +402,7 @@ function ListBlock({
               globalStart={itemStart}
               highlights={highlights}
               alignmentHighlights={alignmentHighlights}
+              reviewContexts={reviewContexts}
               onAlignmentHover={onAlignmentHover}
               onAlignmentLeave={onAlignmentLeave}
               onAlignmentToggle={onAlignmentToggle}
@@ -397,6 +419,7 @@ function FigureBlock({
   globalStart,
   highlights,
   alignmentHighlights,
+  reviewContexts,
   onAlignmentHover,
   onAlignmentLeave,
   onAlignmentToggle,
@@ -405,7 +428,7 @@ function FigureBlock({
   globalStart: number;
   highlights: BlockHighlight[];
   alignmentHighlights: AlignmentTextHighlight[];
-} & AlignmentHandlers) {
+} & HighlightInteractionHandlers) {
   const captions = block.image_caption ?? block.chart_caption ?? [];
   return (
     <figure style={{ margin: 0 }}>
@@ -434,6 +457,7 @@ function FigureBlock({
             globalStart={globalStart}
             highlights={highlights}
             alignmentHighlights={alignmentHighlights}
+            reviewContexts={reviewContexts}
             onAlignmentHover={onAlignmentHover}
             onAlignmentLeave={onAlignmentLeave}
             onAlignmentToggle={onAlignmentToggle}
@@ -503,6 +527,7 @@ export function StructuredBlockRenderer({
   blocks,
   highlights,
   alignmentHighlights = [],
+  reviewContexts,
   onAlignmentHover,
   onAlignmentLeave,
   onAlignmentToggle,
@@ -510,7 +535,7 @@ export function StructuredBlockRenderer({
   blocks: ContentBlock[];
   highlights: BlockHighlight[];
   alignmentHighlights?: AlignmentTextHighlight[];
-} & AlignmentHandlers) {
+} & HighlightInteractionHandlers) {
   const blockRanges = useMemo(() => buildBlockRanges(blocks), [blocks]);
 
   return (
@@ -533,6 +558,7 @@ export function StructuredBlockRenderer({
           globalStart: globalOffset,
           highlights: blockHighlights,
           alignmentHighlights: blockAlignmentHighlights,
+          reviewContexts,
           onAlignmentHover,
           onAlignmentLeave,
           onAlignmentToggle,

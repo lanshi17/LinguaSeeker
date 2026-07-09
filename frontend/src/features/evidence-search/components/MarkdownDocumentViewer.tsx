@@ -8,8 +8,12 @@ import "katex/dist/katex.min.css";
 import { categoryLabel } from "../utils/categoryStyles";
 import { CATEGORY_COLORS, type EvidenceDocumentHighlight } from "../utils/evidenceDocument";
 import type { AlignmentTextHighlight } from "../utils/translationAlignment";
-import { AnnotationLayer } from "./annotationLayer";
+import { AnnotationLayer, type FieldTypeOption } from "./annotationLayer";
+import { openFieldReviewMenu } from "./fieldReviewMenuBus";
+import type { ReviewContextMap } from "./fieldReviewMenuBus";
 import type { AnnotationTrack, UserAnnotation } from "../types/annotations";
+
+type AnnotationOperation = void | Promise<void>;
 
 interface MarkdownDocumentViewerProps {
   markdown: string;
@@ -22,6 +26,7 @@ interface MarkdownDocumentViewerProps {
   sourceDocumentId?: string;
   /** User-authored annotations anchored to this paragraph's visible text. */
   annotations?: UserAnnotation[];
+  reviewContexts?: ReviewContextMap;
   alignmentHighlights?: AlignmentTextHighlight[];
   onAlignmentHover?: (pairId: string) => void;
   onAlignmentLeave?: () => void;
@@ -32,12 +37,14 @@ interface MarkdownDocumentViewerProps {
     start_offset: number;
     end_offset: number;
     color: string;
-  }) => void;
+  }) => AnnotationOperation;
   onUpdateAnnotation?: (
     id: string,
     payload: { color?: string | null; note?: string | null },
-  ) => void;
-  onDeleteAnnotation?: (id: string) => void;
+  ) => AnnotationOperation;
+  onDeleteAnnotation?: (id: string) => AnnotationOperation;
+  onAssignField?: (selectedText: string, fieldType: string) => AnnotationOperation;
+  fieldTypes?: FieldTypeOption[];
 }
 
 /** Rewrite a relative image src (e.g. "images/xxx.jpg") to the document
@@ -117,6 +124,7 @@ export function MarkdownDocumentViewer({
   track,
   sourceDocumentId,
   annotations = [],
+  reviewContexts,
   alignmentHighlights = [],
   onAlignmentHover,
   onAlignmentLeave,
@@ -124,6 +132,8 @@ export function MarkdownDocumentViewer({
   onCreateAnnotation,
   onUpdateAnnotation,
   onDeleteAnnotation,
+  onAssignField,
+  fieldTypes,
 }: MarkdownDocumentViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -238,12 +248,23 @@ export function MarkdownDocumentViewer({
           : document.createElement("span");
         if (evidenceCover) {
           const hl = highlights[evidenceCover.hlIndex];
+          const reviewInfo = reviewContexts?.get(hl.evidenceId);
           applyMarkStyle(element, hl.category, hl.selected);
           element.setAttribute(
             "aria-label",
             `${categoryLabel(hl.category)} evidence: ${hl.label}`,
           );
           element.dataset.evidenceId = hl.evidenceId;
+          if (reviewInfo) {
+            element.dataset.reviewable = "true";
+            element.style.cursor = "pointer";
+            element.addEventListener("click", (event) => {
+              openFieldReviewMenu(event, reviewInfo);
+            });
+            element.addEventListener("contextmenu", (event) => {
+              openFieldReviewMenu(event, reviewInfo);
+            });
+          }
         }
         if (alignmentCover) {
           applyAlignmentStyle(
@@ -273,6 +294,7 @@ export function MarkdownDocumentViewer({
   }, [
     markdown,
     highlights,
+    reviewContexts,
     alignmentHighlights,
     onAlignmentHover,
     onAlignmentLeave,
@@ -317,6 +339,8 @@ export function MarkdownDocumentViewer({
         onCreateAnnotation={onCreateAnnotation}
         onUpdateAnnotation={onUpdateAnnotation}
         onDeleteAnnotation={onDeleteAnnotation}
+        onAssignField={onAssignField}
+        fieldTypes={fieldTypes}
       />
     </div>
   );

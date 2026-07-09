@@ -25,4 +25,15 @@ describe("Sidebar", () => {
       screen.getByText(`Lingua Seeker v${envAppVersion}`),
     ).toBeInTheDocument();
   });
+
+  it("puts Evidence Database first in the navigation menu", () => {
+    render(
+      <MemoryRouter initialEntries={["/evidence-db"]}>
+        <Sidebar />
+      </MemoryRouter>,
+    );
+
+    const menuItems = screen.getAllByRole("menuitem");
+    expect(menuItems[0]).toHaveTextContent("Evidence Database");
+  });
 });

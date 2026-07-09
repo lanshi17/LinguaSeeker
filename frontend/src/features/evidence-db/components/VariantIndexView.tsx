@@ -15,8 +15,9 @@ import {
   ArrowUp,
   ArrowDown,
   Download,
+  CircleHelp,
 } from "lucide-react";
-import { AutoComplete, Checkbox, Input, Select, message } from "antd";
+import { AutoComplete, Checkbox, Input, Select, Tooltip, message } from "antd";
 import { CategoryDistributionBar } from "./CategoryDistributionBar";
 import { Spinner } from "@/components/ui/Spinner";
 import { useVariantIndex } from "../hooks/useVariantIndex";
@@ -42,21 +43,15 @@ import {
   formatReviewedCount,
 } from "../utils/fieldLabels";
 import { useI18n } from "@/lib/i18n";
+import {
+  formatAppIsoTimestamp,
+  formatDate as formatAppDate,
+  formatFilenameTimestamp,
+} from "@/lib/utils/format";
 import { usePagination } from "@/lib/hooks/usePagination";
 
-/* ── Date formatter ─────────────────────────────────────── */
-
 function formatDate(isoString?: string | null): string {
-  if (!isoString) return "—";
-  try {
-    return new Date(isoString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return "—";
-  }
+  return formatAppDate(isoString, "en-US", { month: "short", day: "numeric" });
 }
 
 function hasQualityColumn(prefs: EvidenceDbViewPrefs): boolean {
@@ -70,9 +65,31 @@ function variantGridTemplateColumns(prefs: EvidenceDbViewPrefs, hasSelection: bo
   if (hasQualityColumn(prefs)) columns.push("120px");
   if (prefs.showFieldCount) columns.push("70px");
   if (prefs.showSourceLanguage) columns.push("96px");
-  if (prefs.showPmid) columns.push("110px");
   if (prefs.showUpdated) columns.push("90px");
   return columns.join(" ");
+}
+
+function ColumnHeader({ label, help }: { label: string; help: string }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, minWidth: 0 }}>
+      <span>{label}</span>
+      <Tooltip title={help}>
+        <span
+          aria-label={help}
+          role="img"
+          tabIndex={0}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            color: "var(--color-text-muted)",
+            lineHeight: 1,
+          }}
+        >
+          <CircleHelp size={12} />
+        </span>
+      </Tooltip>
+    </span>
+  );
 }
 
 /** Color for review status indicators */
@@ -147,13 +164,13 @@ function buildExportCsv(entries: VariantIndexEntry[]): string {
   const headers = [
     "gene", "variant", "disease", "classification",
     "evidence_groups", "field_count", "literature_refs", "avg_confidence",
-    "review_status", "source_language", "created_at", "title", "pmid", "doi",
+    "review_status", "source_language", "created_at", "title", "doi",
   ];
   const rows = entries.map((e) => [
     e.gene, e.variant, e.disease, e.classification,
     String(e.evidenceGroupCount), String(e.fieldCount), String(e.literatureCount),
     e.avgConfidence.toFixed(2), e.reviewStatus, e.sourceLanguages.join(";"), e.createdAt ?? "",
-    e.representative.title ?? "", e.representative.pmid ?? "", e.representative.doi ?? "",
+    e.representative.title ?? "", e.representative.doi ?? "",
   ]);
   return [headers.join(","), ...rows.map((r) => r.map(csvEscape).join(","))].join("\n");
 }
@@ -172,10 +189,9 @@ function buildExportJson(entries: VariantIndexEntry[]): string {
     source_language: e.sourceLanguages,
     created_at: e.createdAt ?? null,
     title: e.representative.title ?? null,
-    pmid: e.representative.pmid ?? null,
     doi: e.representative.doi ?? null,
   }));
-  return JSON.stringify({ variants: payload, exported_at: new Date().toISOString() }, null, 2);
+  return JSON.stringify({ variants: payload, exported_at: formatAppIsoTimestamp() }, null, 2);
 }
 
 function triggerDownload(blob: Blob, filename: string): void {
@@ -193,7 +209,7 @@ function exportVariants(
   entries: VariantIndexEntry[],
   format: "csv" | "json",
 ): void {
-  const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  const ts = formatFilenameTimestamp();
   if (format === "csv") {
     triggerDownload(
       new Blob(["\uFEFF" + buildExportCsv(entries)], { type: "text/csv;charset=utf-8" }),
@@ -379,73 +395,64 @@ export function VariantIndexView() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-      {/* Dataset at a glance — research-panel aesthetic */}
+      {/* Search & filter — primary research-tool layout */}
       <section
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          border: "1px solid var(--color-border)",
-          borderRadius: 10,
+          borderRadius: 12,
+          border: "1px solid var(--color-primary-300)",
+          borderLeft: "4px solid var(--color-primary-600)",
           backgroundColor: "var(--color-surface)",
+          boxShadow: "0 8px 24px rgba(8, 145, 178, 0.08)",
           overflow: "hidden",
         }}
       >
-        {[
-          { label: labels.uniqueVariants, value: String(stats.totalVariants) },
-          { label: labels.evidenceGroups, value: String(stats.totalEvidenceGroups) },
-          { label: labels.literatureSources, value: String(stats.totalLiterature) },
-          { label: labels.avgConfidence, value: formatConfidencePercent(stats.avgConfidence) },
-        ].map((s, i) => (
-          <div
-            key={s.label}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            padding: "16px 18px 0",
+          }}
+        >
+          <span
             style={{
-              padding: "14px 18px",
-              borderRight: i < 3 ? "1px solid var(--color-border)" : "none",
+              color: "var(--color-text-strong)",
+              fontSize: 18,
+              fontWeight: 700,
             }}
           >
-            <div
+            {t("evidenceDb.filters.title")}
+          </span>
+          {hasAnyFilter && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="viv-clear-btn"
               style={{
-                fontSize: 10,
+                cursor: "pointer",
+                borderRadius: 6,
+                border: "1px solid var(--color-border)",
+                padding: "5px 10px",
+                fontSize: 12,
                 fontWeight: 600,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
                 color: "var(--color-text-secondary)",
-                marginBottom: 6,
+                backgroundColor: "var(--color-bg)",
+                transition: "color 0.15s",
               }}
             >
-              {s.label}
-            </div>
-            <div
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 20,
-                fontWeight: 500,
-                color: "var(--color-text)",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              {s.value}
-            </div>
-          </div>
-        ))}
-      </section>
+              {t("evidenceDb.clearAll")}
+            </button>
+          )}
+        </div>
 
-      {/* Search & filter — compact research-tool layout */}
-      <section
-        style={{
-          borderRadius: 10,
-          border: "1px solid var(--color-border)",
-          backgroundColor: "var(--color-surface)",
-          overflow: "hidden",
-        }}
-      >
         {/* Primary search row */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 220px 170px 180px",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
             gap: 12,
-            padding: "10px 12px",
+            padding: "14px 18px 16px",
             alignItems: "center",
           }}
         >
@@ -460,9 +467,9 @@ export function VariantIndexView() {
             popupMatchSelectWidth={true}
           >
             <Input
+              size="large"
               placeholder={t("evidenceDb.searchGenePh")}
-              variant="borderless"
-              prefix={<Search style={{ width: 14, height: 14, color: "var(--color-text-muted)" }} />}
+              prefix={<Search style={{ width: 16, height: 16, color: "var(--color-text-muted)" }} />}
               suffix={
                 searchText ? (
                   <button
@@ -498,13 +505,13 @@ export function VariantIndexView() {
             popupMatchSelectWidth={true}
           >
             <Input
+              size="large"
               placeholder={t("evidenceDb.filterDiseasePh")}
-              variant="borderless"
             />
           </AutoComplete>
 
           <Select
-            size="small"
+            size="large"
             allowClear
             placeholder={t("evidenceDb.language.label")}
             value={filters.sourceLanguage}
@@ -515,7 +522,7 @@ export function VariantIndexView() {
           />
 
           <Select
-            size="small"
+            size="large"
             allowClear
             placeholder={t("evidenceDb.review.label")}
             value={filters.reviewStatus}
@@ -533,7 +540,7 @@ export function VariantIndexView() {
             flexWrap: "wrap",
             alignItems: "center",
             gap: 8,
-            padding: "8px 12px",
+            padding: "12px 18px",
             borderTop: "1px solid var(--color-border)",
             backgroundColor: "var(--color-bg)",
           }}
@@ -601,28 +608,59 @@ export function VariantIndexView() {
             )}
           </div>
 
-          {hasAnyFilter && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="viv-clear-btn"
+        </div>
+      </section>
+
+      {/* Dataset summary — subdued secondary context */}
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: 0,
+          border: "1px solid var(--color-border)",
+          borderRadius: 8,
+          backgroundColor: "var(--color-bg)",
+          padding: "8px 10px",
+        }}
+      >
+        {[
+          { label: labels.uniqueVariants, value: String(stats.totalVariants) },
+          { label: labels.evidenceGroups, value: String(stats.totalEvidenceGroups) },
+          { label: labels.literatureSources, value: String(stats.totalLiterature) },
+          { label: labels.avgConfidence, value: formatConfidencePercent(stats.avgConfidence) },
+        ].map((s, i) => (
+          <div
+            key={s.label}
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              gap: 10,
+              padding: "6px 10px",
+              borderRight: i < 3 ? "1px solid var(--color-border)" : "none",
+            }}
+          >
+            <span
               style={{
-                cursor: "pointer",
-                marginLeft: "auto",
-                borderRadius: 6,
-                border: "none",
-                padding: "3px 8px",
-                fontSize: 11,
-                fontWeight: 500,
                 color: "var(--color-text-secondary)",
-                backgroundColor: "transparent",
-                transition: "color 0.15s",
+                fontSize: 12,
+                fontWeight: 500,
               }}
             >
-              {t("evidenceDb.clearAll")}
-            </button>
-          )}
-        </div>
+              {s.label}
+            </span>
+            <span
+              style={{
+                color: "var(--color-text-secondary)",
+                fontFamily: "var(--font-mono)",
+                fontSize: 14,
+                fontWeight: 500,
+              }}
+            >
+              {s.value}
+            </span>
+          </div>
+        ))}
       </section>
 
       {/* Results */}
@@ -699,18 +737,17 @@ export function VariantIndexView() {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 10,
-                fontSize: 11,
+                fontSize: 13,
                 color: "var(--color-text-secondary)",
                 flexWrap: "wrap",
               }}
             >
-              <span style={{ fontWeight: 500, letterSpacing: "0.05em" }}>
+              <span style={{ fontWeight: 700, letterSpacing: "0.04em" }}>
                 {t("evidenceDb.label.evidenceFields")}
               </span>
               {[
                 { key: "showFieldCount" as const, label: labels.fieldCount },
                 { key: "showSourceLanguage" as const, label: t("evidenceDb.language.label") },
-                { key: "showPmid" as const, label: labels.pmid },
                 { key: "showCategories" as const, label: labels.categories },
                 { key: "showReviewProgress" as const, label: labels.reviewProgress },
                 { key: "showUpdated" as const, label: labels.updated },
@@ -725,9 +762,9 @@ export function VariantIndexView() {
                     border: `1px solid ${viewPrefs[opt.key] ? "var(--color-text)" : "var(--color-border)"}`,
                     backgroundColor: viewPrefs[opt.key] ? "var(--color-text)" : "transparent",
                     color: viewPrefs[opt.key] ? "var(--color-surface)" : "var(--color-text-secondary)",
-                    padding: "2px 8px",
-                    fontSize: 10,
-                    fontWeight: 500,
+                    padding: "4px 10px",
+                    fontSize: 12,
+                    fontWeight: 600,
                     letterSpacing: "0.02em",
                     transition: "all 0.15s",
                   }}
@@ -909,27 +946,48 @@ export function VariantIndexView() {
                   aria-label={t("evidenceDb.export.selectAll")}
                 />
               </div>
-              <span>{t("evidenceDb.listGene")} / {t("evidenceDb.listVariant")}</span>
-              <span>{t("evidenceDb.listDisease")}</span>
-              <span>{t("evidenceDb.listEvidence")}</span>
-              <span>{t("evidenceDb.listRefs")}</span>
-              <span>{t("evidenceDb.listConf")}</span>
+              <ColumnHeader
+                label={`${t("evidenceDb.listGene")} / ${t("evidenceDb.listVariant")}`}
+                help={t("evidenceDb.columnHelp.geneVariant")}
+              />
+              <ColumnHeader
+                label={t("evidenceDb.listDisease")}
+                help={t("evidenceDb.columnHelp.disease")}
+              />
+              <ColumnHeader
+                label={t("evidenceDb.listEvidence")}
+                help={t("evidenceDb.columnHelp.evidence")}
+              />
+              <ColumnHeader
+                label={t("evidenceDb.listRefs")}
+                help={t("evidenceDb.columnHelp.refs")}
+              />
+              <ColumnHeader
+                label={t("evidenceDb.listConf")}
+                help={t("evidenceDb.columnHelp.confidence")}
+              />
               {hasQualityColumn(viewPrefs) && (
                 <span>
                   {viewPrefs.showCategories ? labels.categories : labels.reviewed}
                 </span>
               )}
               {viewPrefs.showFieldCount && (
-                <span>{t("evidenceDb.listFields")}</span>
+                <ColumnHeader
+                  label={t("evidenceDb.listFields")}
+                  help={t("evidenceDb.columnHelp.fields")}
+                />
               )}
               {viewPrefs.showSourceLanguage && (
-                <span>{t("evidenceDb.language.label")}</span>
-              )}
-              {viewPrefs.showPmid && (
-                <span>{t("evidenceDb.listPmid")}</span>
+                <ColumnHeader
+                  label={t("evidenceDb.language.label")}
+                  help={t("evidenceDb.columnHelp.sourceLanguage")}
+                />
               )}
               {viewPrefs.showUpdated && (
-                <span>{labels.updated}</span>
+                <ColumnHeader
+                  label={labels.updated}
+                  help={t("evidenceDb.columnHelp.updated")}
+                />
               )}
             </div>
             {items.map((entry, i) => {
@@ -946,7 +1004,7 @@ export function VariantIndexView() {
                     className="viv-row"
                     style={{
                       gridTemplateColumns: variantGridTemplateColumns(viewPrefs, true),
-                      backgroundColor: isSelected ? "var(--color-primary-50, #eff6ff)" : undefined,
+                      backgroundColor: isSelected ? "var(--color-blue-50)" : undefined,
                     }}
                   >
                     {/* Classification color indicator */}
@@ -1073,39 +1131,13 @@ export function VariantIndexView() {
                     </span>
                   </div>
 
-                  {/* Literature with inline PMID */}
+                  {/* Literature */}
                   <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
                     <div className="viv-row-stat">
                       <BookOpen style={{ width: 14, height: 14, flexShrink: 0 }} />
                       <span className="viv-row-stat-val">{entry.literatureCount}</span>
                       <span>{t("evidenceDb.statRefs")}</span>
                     </div>
-                    {entry.representative.pmid && (
-                      <span
-                        style={{
-                          fontSize: 10,
-                          fontFamily: "var(--font-mono)",
-                          color: "var(--color-primary-600)",
-                          cursor: "pointer",
-                          textDecoration: "none",
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          window.open(`https://pubmed.ncbi.nlm.nih.gov/${entry.representative.pmid}`, "_blank", "noopener,noreferrer");
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            window.open(`https://pubmed.ncbi.nlm.nih.gov/${entry.representative.pmid}`, "_blank", "noopener,noreferrer");
-                          }
-                        }}
-                        title={`PMID: ${entry.representative.pmid}`}
-                      >
-                        PMID:{entry.representative.pmid}
-                      </span>
-                    )}
                   </div>
 
                   {/* Confidence with review status */}
@@ -1120,10 +1152,10 @@ export function VariantIndexView() {
                           height: 3,
                           borderRadius: 2,
                           backgroundColor: (entry.avgConfidence ?? 0) >= 0.7
-                            ? "var(--color-success-600, #16a34a)"
+                            ? "var(--color-success-600)"
                             : (entry.avgConfidence ?? 0) >= 0.4
-                              ? "var(--color-warning-600, #d97706)"
-                              : "var(--color-error-600, #dc2626)",
+                              ? "var(--color-warning-text)"
+                              : "var(--color-error-500)",
                         }}
                       />
                     </div>
@@ -1168,39 +1200,6 @@ export function VariantIndexView() {
                       >
                         {sourceLanguageSummary(entry, t)}
                       </span>
-                    </div>
-                  )}
-
-                  {/* PMID standalone column */}
-                  {viewPrefs.showPmid && (
-                    <div style={{ minWidth: 0 }}>
-                      {entry.representative.pmid ? (
-                        <span
-                          style={{
-                            fontSize: 11,
-                            fontFamily: "var(--font-mono)",
-                            color: "var(--color-primary-600)",
-                            cursor: "pointer",
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            window.open(`https://pubmed.ncbi.nlm.nih.gov/${entry.representative.pmid}`, "_blank", "noopener,noreferrer");
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              window.open(`https://pubmed.ncbi.nlm.nih.gov/${entry.representative.pmid}`, "_blank", "noopener,noreferrer");
-                            }
-                          }}
-                          title={`PMID: ${entry.representative.pmid}`}
-                        >
-                          {entry.representative.pmid}
-                        </span>
-                      ) : (
-                        <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>—</span>
-                      )}
                     </div>
                   )}
 

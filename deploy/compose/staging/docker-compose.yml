@@ -43,7 +43,9 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       # -- Inference / LLM endpoints (point at GPU host) --
       EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL}
+      EMBEDDING_API_STYLE: ${EMBEDDING_API_STYLE:-openai}
       RERANK_BASE_URL: ${RERANK_BASE_URL}
+      RERANK_API_STYLE: ${RERANK_API_STYLE:-openai}
       FAST_LLM_BASE_URL: ${FAST_LLM_BASE_URL}
       REASONING_LLM_BASE_URL: ${REASONING_LLM_BASE_URL}
     volumes:

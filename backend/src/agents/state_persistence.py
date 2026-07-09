@@ -188,7 +188,7 @@ async def _persist_phase2_document_text(
         sd.translated_blocks = p2.translated_blocks
 
 
-def _state_json_without_inline_phase2_data(state: PipelineGraphState) -> dict[str, object]:  # noqa: dict-return
+def _state_json_without_inline_phase2_data(state: PipelineGraphState) -> dict[str, object]:  # noqa  # dict-return: PipelineGraphState JSONB snapshot.
     """Serialize state for JSONB without mutating the live pipeline state."""
     persisted_state = state.model_copy(deep=True)
     if persisted_state.phase_2_output is not None:

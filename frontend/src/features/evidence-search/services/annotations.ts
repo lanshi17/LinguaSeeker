@@ -24,7 +24,7 @@ export async function listAnnotations(
   if (track) params.track = track;
   const { data } = await apiClient.get<AnnotationListResponse>(
     `/documents/${encodeURIComponent(sourceDocumentId)}/annotations`,
-    { params },
+    { params, headers: { "Cache-Control": "no-store" } },
   );
   return data.items;
 }

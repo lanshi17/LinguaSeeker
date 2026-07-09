@@ -4,9 +4,9 @@
  * Architecture:
  *  - <FieldReviewMenu /> renders once per page (portal to body).
  *  - Each <mark> gets onClick/onContextMenu that calls openFieldReviewMenu(e, info).
- *  - The menu uses simple React state — no module-level globals.
+ *  - fieldReviewMenuBus keeps the cross-component open handler outside this component file.
  */
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { App, Button } from "antd";
 import { Badge } from "@/components/ui/Badge";
@@ -14,16 +14,10 @@ import { CheckCircle2, Clock3, XCircle, Pencil } from "lucide-react";
 import { patchEvidence } from "../services/evidenceCorrection";
 import type { ReviewStatusValue } from "@/lib/types/evidence";
 import { useI18n } from "@/lib/i18n";
-
-export interface FieldReviewInfo {
-  evidenceId: string;
-  fieldId: string;
-  label: string;
-  category?: string | null;
-  currentStatus: string;
-  value?: string | null;
-  groupId: string;
-}
+import {
+  setFieldReviewMenuHandler,
+  type FieldReviewMenuState,
+} from "./fieldReviewMenuBus";
 
 const QUICK_ACTIONS: { status: ReviewStatusValue; icon: typeof CheckCircle2; tone: string }[] = [
   { status: "approved", icon: CheckCircle2, tone: "var(--color-success-text, #16a34a)" },
@@ -32,15 +26,14 @@ const QUICK_ACTIONS: { status: ReviewStatusValue; icon: typeof CheckCircle2; ton
   { status: "provisional", icon: Clock3, tone: "var(--color-text-secondary, #64748b)" },
 ];
 
-// ── Shared ref — allows openFieldReviewMenu to reach the menu's setState ──
-type PosState = { x: number; y: number; info: FieldReviewInfo } | null;
-const _menuRef: { current: ((s: PosState) => void) | null } = { current: null };
-
-/** Call from any <mark>'s onClick to open the review menu. */
-export function openFieldReviewMenu(e: React.MouseEvent, info: FieldReviewInfo) {
-  e.preventDefault();
-  e.stopPropagation();
-  _menuRef.current?.({ x: e.clientX, y: e.clientY, info });
+function targetElement(target: EventTarget | null): Element | null {
+  if (!target) {
+    return null;
+  }
+  if (target instanceof Element) {
+    return target;
+  }
+  return target instanceof Node ? target.parentElement : null;
 }
 
 interface FieldReviewMenuProps {
@@ -54,14 +47,18 @@ interface FieldReviewMenuProps {
 export function FieldReviewMenu({ onReviewed }: FieldReviewMenuProps = {}) {
   const { t } = useI18n();
   const { message } = App.useApp();
-  const [pos, setPos] = useState<PosState>(null);
+  const [pos, setPos] = useState<FieldReviewMenuState>(null);
   const [submitting, setSubmitting] = useState<ReviewStatusValue | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const openedAtRef = useRef(0);
 
   // Register this instance's setState so openFieldReviewMenu can call it
   useEffect(() => {
-    _menuRef.current = setPos;
-    return () => { _menuRef.current = null; };
+    setFieldReviewMenuHandler((nextPos) => {
+      openedAtRef.current = performance.now();
+      setPos(nextPos);
+    });
+    return () => setFieldReviewMenuHandler(null);
   }, []);
 
   const handleReview = useCallback(
@@ -82,16 +79,25 @@ export function FieldReviewMenu({ onReviewed }: FieldReviewMenuProps = {}) {
     [onReviewed, pos, message, t],
   );
 
-  // Close on click outside (delayed to avoid closing on the same click that opened)
+  // Close on click outside. Ignore reviewable marks so switching between
+  // evidence highlights does not close the menu before the new mark opens it.
   useEffect(() => {
     if (!pos) return;
     const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setPos(null);
+      const target = targetElement(e.target);
+      if (performance.now() - openedAtRef.current < 120) {
+        return;
       }
+      if (target && menuRef.current?.contains(target)) {
+        return;
+      }
+      if (target?.closest("[data-reviewable='true']")) {
+        return;
+      }
+      setPos(null);
     };
-    const id = setTimeout(() => document.addEventListener("mousedown", handler), 10);
-    return () => { clearTimeout(id); document.removeEventListener("mousedown", handler); };
+    document.addEventListener("mousedown", handler, true);
+    return () => document.removeEventListener("mousedown", handler, true);
   }, [pos]);
 
   // Close on Escape
@@ -114,6 +120,7 @@ export function FieldReviewMenu({ onReviewed }: FieldReviewMenuProps = {}) {
   return createPortal(
     <div
       ref={menuRef}
+      data-field-review-menu="true"
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
       style={{

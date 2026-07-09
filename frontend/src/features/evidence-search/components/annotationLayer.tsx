@@ -11,7 +11,7 @@
  * are absolutely positioned divs, so they never conflict with `<mark>` splits.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Input, Button, Popover, Tooltip, Select, message } from "antd";
+import { Input, Button, Popover, Tooltip, Select } from "antd";
 import { useI18n } from "@/lib/i18n";
 import { DeleteOutlined } from "@ant-design/icons";
 import {
@@ -21,6 +21,9 @@ import {
   type UserAnnotation,
 } from "../types/annotations";
 import { CATEGORY_COLORS } from "../utils/evidenceDocument";
+import type { FieldTypeOption } from "../utils/fieldAssignment";
+
+export type { FieldTypeOption } from "../utils/fieldAssignment";
 
 interface TextNodeOffset {
   node: Text;
@@ -148,12 +151,7 @@ function selectionInContainer(container: HTMLElement): SelectionInfo | null {
   };
 }
 
-/** A field type option for the "Assign to field" dropdown. */
-export interface FieldTypeOption {
-  fieldId: string;
-  label: string;
-  category?: string | null;
-}
+type AnnotationOperation = void | Promise<void>;
 
 export interface AnnotationLayerProps {
   /** Ref to the container whose visible text the annotations anchor to. */
@@ -170,18 +168,18 @@ export interface AnnotationLayerProps {
     start_offset: number;
     end_offset: number;
     color: string;
-  }) => void;
+  }) => AnnotationOperation;
   onUpdateAnnotation?: (
     id: string,
     payload: { color?: string | null; note?: string | null },
-  ) => void;
-  onDeleteAnnotation?: (id: string) => void;
+  ) => AnnotationOperation;
+  onDeleteAnnotation?: (id: string) => AnnotationOperation;
   /**
    * When provided, the text-selection popup shows a "Assign to field" button
    * alongside annotation colors. The callback receives the selected text and
    * the target field type chosen by the user.
    */
-  onAssignField?: (selectedText: string, fieldType: string) => void;
+  onAssignField?: (selectedText: string, fieldType: string) => AnnotationOperation;
   /** Available field types for the "Assign to field" dropdown. */
   fieldTypes?: FieldTypeOption[];
 }
@@ -202,6 +200,8 @@ export function AnnotationLayer({
   const [overlays, setOverlays] = useState<OverlayRect[]>([]);
   const [selection, setSelection] = useState<SelectionInfo | null>(null);
   const [activeAnnotationId, setActiveAnnotationId] = useState<string | null>(null);
+  const [creatingColor, setCreatingColor] = useState<string | null>(null);
+  const [assigningField, setAssigningField] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -247,17 +247,33 @@ export function AnnotationLayer({
     : null;
 
   const handleCreate = (color: string) => {
-    if (!selection || !onCreateAnnotation) return;
-    onCreateAnnotation({
+    if (!selection || !onCreateAnnotation || creatingColor) return;
+    setCreatingColor(color);
+    Promise.resolve(onCreateAnnotation({
       paragraph_id: paragraphId,
       track,
       start_offset: selection.start_offset,
       end_offset: selection.end_offset,
       color,
-    });
-    window.getSelection()?.removeAllRanges();
-    setSelection(null);
-    message.success(t("annotation.created"));
+    }))
+      .then(() => {
+        window.getSelection()?.removeAllRanges();
+        setSelection(null);
+      })
+      .catch(() => undefined)
+      .finally(() => setCreatingColor(null));
+  };
+
+  const handleAssignField = (fieldType: string) => {
+    if (!selection || !onAssignField || assigningField) return;
+    setAssigningField(true);
+    Promise.resolve(onAssignField(selection.selectedText, fieldType))
+      .then(() => {
+        window.getSelection()?.removeAllRanges();
+        setSelection(null);
+      })
+      .catch(() => undefined)
+      .finally(() => setAssigningField(false));
   };
 
   return (
@@ -312,6 +328,7 @@ export function AnnotationLayer({
               <button
                 type="button"
                 onClick={() => handleCreate(c)}
+                disabled={creatingColor !== null}
                 style={{
                   width: 22,
                   height: 22,
@@ -319,7 +336,8 @@ export function AnnotationLayer({
                   border: "2px solid var(--color-surface)",
                   boxShadow: "0 0 0 1px var(--color-text-muted)",
                   backgroundColor: c,
-                  cursor: "pointer",
+                  cursor: creatingColor === null ? "pointer" : "wait",
+                  opacity: creatingColor && creatingColor !== c ? 0.45 : 1,
                   padding: 0,
                 }}
                 aria-label={t("annotation.createWithColor", { color: c })}
@@ -335,13 +353,11 @@ export function AnnotationLayer({
               placeholder={t("annotation.addField")}
               size="small"
               style={{ width: 160, fontSize: 11 }}
+              disabled={assigningField}
+              loading={assigningField}
               popupMatchSelectWidth={260}
               optionFilterProp="label"
-              onChange={(value: string) => {
-                onAssignField(selection.selectedText, value);
-                window.getSelection()?.removeAllRanges();
-                setSelection(null);
-              }}
+              onChange={handleAssignField}
               options={fieldTypes.map((ft) => {
                 const hex = ft.category && CATEGORY_COLORS[ft.category]?.hex;
                 return {
@@ -409,17 +425,30 @@ function AnnotationEditor({
   const { t } = useI18n();
   const [note, setNote] = useState(annotation.note ?? "");
   const [color, setColor] = useState(annotation.color ?? DEFAULT_ANNOTATION_COLOR);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    setNote(annotation.note ?? "");
+    setColor(annotation.color ?? DEFAULT_ANNOTATION_COLOR);
+  }, [annotation.id, annotation.color, annotation.note]);
 
   const handleSave = () => {
-    onUpdate?.(annotation.id, { color, note: note.trim() || null });
-    onDone();
-    message.success(t("annotation.saved"));
+    if (!onUpdate || saving || deleting) return;
+    setSaving(true);
+    Promise.resolve(onUpdate(annotation.id, { color, note: note.trim() || null }))
+      .then(onDone)
+      .catch(() => undefined)
+      .finally(() => setSaving(false));
   };
 
   const handleDelete = () => {
-    onDelete?.(annotation.id);
-    onDone();
-    message.success(t("annotation.deleted"));
+    if (!onDelete || saving || deleting) return;
+    setDeleting(true);
+    Promise.resolve(onDelete(annotation.id))
+      .then(onDone)
+      .catch(() => undefined)
+      .finally(() => setDeleting(false));
   };
 
   return (
@@ -456,11 +485,18 @@ function AnnotationEditor({
           size="small"
           icon={<DeleteOutlined />}
           onClick={handleDelete}
-          disabled={!onDelete}
+          loading={deleting}
+          disabled={!onDelete || saving}
         >
           {t("common.delete")}
         </Button>
-        <Button type="primary" size="small" onClick={handleSave} disabled={!onUpdate}>
+        <Button
+          type="primary"
+          size="small"
+          onClick={handleSave}
+          loading={saving}
+          disabled={!onUpdate || deleting}
+        >
           {t("common.save")}
         </Button>
       </div>

@@ -153,6 +153,16 @@ afterEach(() => {
 });
 
 describe("ChatView", () => {
+  it("shows the conversation list by default even with a stale collapse preference", () => {
+    window.localStorage.setItem("chat.convCollapsed", "1");
+
+    render(<ChatView />);
+
+    expect(screen.getByTestId("conversations").parentElement).toHaveStyle({
+      width: "240px",
+    });
+  });
+
   it("starts SSE with the latest onRequest after creating the first session", async () => {
     render(<ChatView />);
 

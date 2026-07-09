@@ -24,7 +24,7 @@ class JobRow:
     job_id: str
     processing_run_id: str
     source_document_id: str
-    request_data: dict  # noqa: dict-return
+    request_data: dict[str, object]
 
 
 class JobQueueRepository:
@@ -43,7 +43,7 @@ class JobQueueRepository:
         job_id: uuid.UUID,
         processing_run_id: uuid.UUID,
         source_document_id: uuid.UUID,
-        request_data: dict,  # noqa: dict-return — external deserialized payload
+        request_data: dict[str, object],
         priority: int = 0,
     ) -> None:
         """Insert a new job in queued status."""

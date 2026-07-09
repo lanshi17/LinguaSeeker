@@ -18,9 +18,11 @@ import {
   type LiteratureEvidenceRow,
 } from "../utils/literatureRows";
 import {
-  formatDate,
   joinedLabel,
   literatureTitle,
+  formatEvidenceDate,
+} from "../utils/literatureDisplay";
+import {
   TokenList,
   StatBadge,
   LiteratureCell,
@@ -266,7 +268,7 @@ export function EvidenceResultsTable({
               >
                 <StatBadge icon={Layers3} value={row.groupCount} label="groups" />
                 <StatBadge icon={BarChart3} value={row.fieldCount} label="fields" />
-                <StatBadge icon={Calendar} value={formatDate(row.createdAt)} label="" />
+                <StatBadge icon={Calendar} value={formatEvidenceDate(row.createdAt)} label="" />
               </div>
             </button>
           ))}

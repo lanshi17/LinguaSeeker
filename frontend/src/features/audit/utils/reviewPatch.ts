@@ -3,6 +3,9 @@ import type {
   EvidencePatchRequest,
   ReviewStatusValue,
 } from "@/features/evidence-search/types/evidenceSearch";
+import { cardFieldForFieldId } from "@/features/evidence-search/utils/fieldAssignment";
+
+export { cardFieldForFieldId } from "@/features/evidence-search/utils/fieldAssignment";
 
 interface BuildReviewPatchOperationsArgs {
   items: EvidenceGroupItem[];
@@ -14,21 +17,6 @@ interface BuildReviewPatchOperationsArgs {
 export interface ReviewPatchOperation {
   canonicalEvidenceId: string;
   body: EvidencePatchRequest;
-}
-
-const FIELD_ID_TO_CARD_FIELD: Record<string, string> = {
-  "A.gene_symbol": "gene",
-  "B.disease_diagnosis": "disease",
-  "B.clinical_diagnosis": "disease",
-  "J.authority_classification": "classification",
-};
-
-export function cardFieldForFieldId(fieldId: string): string | null {
-  if (FIELD_ID_TO_CARD_FIELD[fieldId]) return FIELD_ID_TO_CARD_FIELD[fieldId];
-  if (fieldId.startsWith("A.variant_hgvs_") || fieldId === "A.variant_legacy_name") {
-    return "variant";
-  }
-  return null;
 }
 
 export function buildReviewPatchOperations({

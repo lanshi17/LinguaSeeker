@@ -1,6 +1,7 @@
 import { STATUS_VARIANT } from "@/lib/constants/statusVariant";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { App } from "antd";
 import {
   ArrowLeft,
   Columns2,
@@ -18,6 +19,7 @@ import type {
   EvidenceGroupDetailResponse,
   EvidenceGroupItem,
   EvidenceHighlightTone,
+  ReviewStatusValue,
 } from "../types/evidenceSearch";
 import {
   buildEvidenceDocument,
@@ -45,12 +47,24 @@ import {
 } from "@/features/evidence-search/services/annotations";
 import type { AnnotationCreateRequest, AnnotationTrack, AnnotationUpdateRequest, UserAnnotation } from "../types/annotations";
 import { AnnotationLayer, type FieldTypeOption } from "./annotationLayer";
-import { openFieldReviewMenu, FieldReviewMenu } from "./FieldReviewPopover";
-import type { FieldReviewInfo } from "./FieldReviewPopover";
-import type { ReviewContextMap } from "@/features/evidence-db/components/HighlightedText";
+import { FieldReviewMenu } from "./FieldReviewPopover";
+import { openFieldReviewMenu } from "./fieldReviewMenuBus";
+import type { FieldReviewInfo, ReviewContextMap } from "./fieldReviewMenuBus";
 import { useI18n } from "@/lib/i18n";
+import { extractErrorMessage } from "@/lib/api/error";
 import { patchEvidence } from "../services/evidenceCorrection";
 import { EVIDENCE_FIELD_SPECS } from "@/lib/constants/evidenceFields";
+import {
+  applyFieldAssignmentToDetail,
+  applyReviewStatusToDetail,
+  buildAssignableFieldTypes,
+  buildFieldAssignmentPatch,
+  type FieldAssignmentPatch,
+} from "../utils/fieldAssignment";
+import {
+  buildSynchronizedAnnotations,
+  sourceAnnotationIdForMutation,
+} from "../utils/annotationSync";
 
 /* ---- Constants ---- */
 
@@ -148,6 +162,32 @@ function selectedTraceFor(
 function detailTitle(detail: EvidenceGroupDetailResponse) {
   const title = detail.title?.trim();
   return title || "Untitled literature record";
+}
+
+function sortAnnotations(items: UserAnnotation[]) {
+  return [...items].sort(
+    (left, right) =>
+      left.created_at.localeCompare(right.created_at) ||
+      left.id.localeCompare(right.id),
+  );
+}
+
+function upsertAnnotation(
+  current: UserAnnotation[] | undefined,
+  annotation: UserAnnotation,
+) {
+  const next = [...(current ?? [])];
+  const index = next.findIndex((item) => item.id === annotation.id);
+  if (index >= 0) {
+    next[index] = annotation;
+  } else {
+    next.push(annotation);
+  }
+  return sortAnnotations(next);
+}
+
+function removeAnnotation(current: UserAnnotation[] | undefined, annotationId: string) {
+  return (current ?? []).filter((annotation) => annotation.id !== annotationId);
 }
 
 /* ---- Sub-components ---- */
@@ -256,12 +296,12 @@ interface AnnotationHandlers {
     start_offset: number;
     end_offset: number;
     color: string;
-  }) => void;
+  }) => void | Promise<void>;
   onUpdateAnnotation?: (
     id: string,
     payload: { color?: string | null; note?: string | null },
-  ) => void;
-  onDeleteAnnotation?: (id: string) => void;
+  ) => void | Promise<void>;
+  onDeleteAnnotation?: (id: string) => void | Promise<void>;
 }
 
 function HighlightedParagraph({
@@ -287,9 +327,10 @@ function HighlightedParagraph({
   onAlignmentHover?: (pairId: string) => void;
   onAlignmentLeave?: () => void;
   onAlignmentToggle?: (pairId: string) => void;
-  onAssignField?: (selectedText: string, fieldType: string) => void;
+  onAssignField?: (selectedText: string, fieldType: string) => void | Promise<void>;
   fieldTypes?: FieldTypeOption[];
 } & AnnotationHandlers) {
+  const { t } = useI18n();
   const contentRef = useRef<HTMLDivElement>(null);
   const highlights = normalizedHighlights(paragraph);
   const alignments = [...alignmentHighlights]
@@ -397,9 +438,9 @@ function HighlightedParagraph({
             color: "var(--color-text-strong)",
           }}
         >
-          {paragraph.highlights[0]?.label ?? "Document text"}
+          {paragraph.highlights[0]?.label ?? t("evidence.bilingual.docText")}
         </span>
-        <span>Page {paragraph.page ?? "\u2014"}</span>
+        <span>{t("evidence.bilingual.page", { num: paragraph.page ?? "\u2014" })}</span>
       </div>
       <div ref={contentRef} style={{ position: "relative" }}>
         <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: "28px", color: "var(--color-code-text)" }}>
@@ -437,6 +478,7 @@ function EvidenceDocumentReader({
   onDeleteAnnotation,
   onAssignField,
   fieldTypes,
+  sourceDocumentId,
 }: {
   title: string;
   paragraphs: EvidenceDocumentParagraph[];
@@ -447,14 +489,16 @@ function EvidenceDocumentReader({
   onAlignmentHover?: (pairId: string) => void;
   onAlignmentLeave?: () => void;
   onAlignmentToggle?: (pairId: string) => void;
-  onAssignField?: (selectedText: string, fieldType: string) => void;
+  onAssignField?: (selectedText: string, fieldType: string) => void | Promise<void>;
   fieldTypes?: FieldTypeOption[];
+  sourceDocumentId?: string;
 } & AnnotationHandlers) {
   const { t } = useI18n();
   const fullTextParagraph = paragraphs.find((p) => p.id.endsWith("-full-text"));
   const snippetParagraphs = paragraphs.filter((p) => p !== fullTextParagraph);
   const isFullText = Boolean(fullTextParagraph);
   const subtitle = t("evidence.bilingual.fullDoc", { count: paragraphs.length });
+  const annotationCount = annotations.length;
 
   const annotationsFor = (paraId: string) =>
     annotations.filter((a) => a.paragraph_id === paraId);
@@ -472,66 +516,91 @@ function EvidenceDocumentReader({
           backdropFilter: "blur(4px)",
         }}
       >
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>{title}</h3>
-        <p style={{ marginTop: 2, fontSize: 12, color: "var(--color-text-secondary)" }}>
-          {subtitle}
-        </p>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ minWidth: 0 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>{title}</h3>
+            <p style={{ marginTop: 2, fontSize: 12, color: "var(--color-text-secondary)" }}>
+              {subtitle}
+            </p>
+          </div>
+          <span
+            style={{
+              flexShrink: 0,
+              borderRadius: 999,
+              border: "1px solid var(--color-primary-200)",
+              backgroundColor: "var(--color-surface)",
+              padding: "3px 8px",
+              fontSize: 11,
+              fontWeight: 600,
+              color: "var(--color-primary-800, var(--color-primary-800))",
+            }}
+          >
+            {t("evidence.bilingual.annotationCount", { count: annotationCount })}
+          </span>
+        </div>
       </div>
       <div style={{ maxHeight: 720, overflowY: "auto", padding: "0 20px" }}>
         {paragraphs.length > 0 ? (
           <>
-            {isFullText && fullTextParagraph && (
-              <MarkdownDocumentViewer
-                markdown={fullTextParagraph.text}
-                highlights={fullTextParagraph.highlights}
-                paragraphId={fullTextParagraph.id}
-                track={track}
-                annotations={annotationsFor(fullTextParagraph.id)}
-                alignmentHighlights={alignmentHighlightsByParagraph[fullTextParagraph.id] ?? []}
-                onAlignmentHover={onAlignmentHover}
-                onAlignmentLeave={onAlignmentLeave}
-                onAlignmentToggle={onAlignmentToggle}
-                onCreateAnnotation={onCreateAnnotation}
-                onUpdateAnnotation={onUpdateAnnotation}
-                onDeleteAnnotation={onDeleteAnnotation}
-              />
+            {isFullText && fullTextParagraph ? (
+              <>
+                <MarkdownDocumentViewer
+                  markdown={fullTextParagraph.text}
+                  highlights={fullTextParagraph.highlights}
+                  paragraphId={fullTextParagraph.id}
+                  track={track}
+                  sourceDocumentId={sourceDocumentId}
+                  annotations={annotationsFor(fullTextParagraph.id)}
+                  reviewContexts={reviewContexts}
+                  alignmentHighlights={alignmentHighlightsByParagraph[fullTextParagraph.id] ?? []}
+                  onAlignmentHover={onAlignmentHover}
+                  onAlignmentLeave={onAlignmentLeave}
+                  onAlignmentToggle={onAlignmentToggle}
+                  onCreateAnnotation={onCreateAnnotation}
+                  onUpdateAnnotation={onUpdateAnnotation}
+                  onDeleteAnnotation={onDeleteAnnotation}
+                  onAssignField={onAssignField}
+                  fieldTypes={fieldTypes}
+                />
+                {snippetParagraphs.map((paragraph) => (
+                  <HighlightedParagraph
+                    key={paragraph.id}
+                    paragraph={paragraph}
+                    track={track}
+                    annotations={annotationsFor(paragraph.id)}
+                    reviewContexts={reviewContexts}
+                    alignmentHighlights={alignmentHighlightsByParagraph[paragraph.id] ?? []}
+                    onAlignmentHover={onAlignmentHover}
+                    onAlignmentLeave={onAlignmentLeave}
+                    onAlignmentToggle={onAlignmentToggle}
+                    onCreateAnnotation={onCreateAnnotation}
+                    onUpdateAnnotation={onUpdateAnnotation}
+                    onDeleteAnnotation={onDeleteAnnotation}
+                    onAssignField={onAssignField}
+                    fieldTypes={fieldTypes}
+                  />
+                ))}
+              </>
+            ) : (
+              paragraphs.map((paragraph) => (
+                <HighlightedParagraph
+                  key={paragraph.id}
+                  paragraph={paragraph}
+                  track={track}
+                  annotations={annotationsFor(paragraph.id)}
+                  reviewContexts={reviewContexts}
+                  alignmentHighlights={alignmentHighlightsByParagraph[paragraph.id] ?? []}
+                  onAlignmentHover={onAlignmentHover}
+                  onAlignmentLeave={onAlignmentLeave}
+                  onAlignmentToggle={onAlignmentToggle}
+                  onCreateAnnotation={onCreateAnnotation}
+                  onUpdateAnnotation={onUpdateAnnotation}
+                  onDeleteAnnotation={onDeleteAnnotation}
+                  onAssignField={onAssignField}
+                  fieldTypes={fieldTypes}
+                />
+              ))
             )}
-            {snippetParagraphs.map((paragraph) => (
-              <HighlightedParagraph
-                key={paragraph.id}
-                paragraph={paragraph}
-                track={track}
-                annotations={annotationsFor(paragraph.id)}
-                reviewContexts={reviewContexts}
-                alignmentHighlights={alignmentHighlightsByParagraph[paragraph.id] ?? []}
-                onAlignmentHover={onAlignmentHover}
-                onAlignmentLeave={onAlignmentLeave}
-                onAlignmentToggle={onAlignmentToggle}
-                onCreateAnnotation={onCreateAnnotation}
-                onUpdateAnnotation={onUpdateAnnotation}
-                onDeleteAnnotation={onDeleteAnnotation}
-                onAssignField={onAssignField}
-                fieldTypes={fieldTypes}
-              />
-            ))}
-            {!isFullText && paragraphs.map((paragraph) => (
-              <HighlightedParagraph
-                key={paragraph.id}
-                paragraph={paragraph}
-                track={track}
-                annotations={annotationsFor(paragraph.id)}
-                reviewContexts={reviewContexts}
-                alignmentHighlights={alignmentHighlightsByParagraph[paragraph.id] ?? []}
-                onAlignmentHover={onAlignmentHover}
-                onAlignmentLeave={onAlignmentLeave}
-                onAlignmentToggle={onAlignmentToggle}
-                onCreateAnnotation={onCreateAnnotation}
-                onUpdateAnnotation={onUpdateAnnotation}
-                onDeleteAnnotation={onDeleteAnnotation}
-                onAssignField={onAssignField}
-                fieldTypes={fieldTypes}
-              />
-            ))}
           </>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "48px 8px", textAlign: "center" }}>
@@ -671,7 +740,7 @@ function CategoryLayerToggle({
 /* ---- BilingualCompareView ---- */
 
 export function BilingualCompareView({
-  detail,
+  detail: serverDetail,
   groupId,
   selectedEvidenceId,
   setSelectedEvidenceId,
@@ -687,6 +756,11 @@ export function BilingualCompareView({
   const [enabledCategories, setEnabledCategories] = useState<Set<string>>(
     () => new Set(EVIDENCE_CATEGORIES),
   );
+  const [localDetail, setLocalDetail] = useState<EvidenceGroupDetailResponse | null>(null);
+  useEffect(() => {
+    setLocalDetail(null);
+  }, [serverDetail.group_id, serverDetail.source_document_id]);
+  const detail = localDetail ?? serverDetail;
   const [hoveredAlignmentPairId, setHoveredAlignmentPairId] = useState<string | null>(null);
   const [pinnedAlignmentPairId, setPinnedAlignmentPairId] = useState<string | null>(null);
   const alignmentState = useMemo<AlignmentInteractionState>(
@@ -717,6 +791,7 @@ export function BilingualCompareView({
     null;
   const selectedTrace = selectedTraceFor(detail, selectedEvidenceId);
   const { t } = useI18n();
+  const { message } = App.useApp();
   const categoryCounts = useMemo(
     () => countEvidenceCategories(detail.items),
     [detail.items],
@@ -753,39 +828,103 @@ export function BilingualCompareView({
   );
   const showTranslatedDocument = hasTranslatedDocumentText(detail);
   const sourceDocumentId = detail.source_document_id;
+  const annotationQueryKey = useMemo(
+    () => ["annotations", sourceDocumentId] as const,
+    [sourceDocumentId],
+  );
   const queryClient = useQueryClient();
-  const refreshEvidenceReviewData = useCallback(async () => {
+  const refreshEvidenceReviewData = useCallback(async (
+    options: { refetchGroupDetail?: boolean } = {},
+  ) => {
+    const refetchGroupDetail = options.refetchGroupDetail ?? true;
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["evidence", "group-detail"] }),
+      queryClient.invalidateQueries({
+        queryKey: ["evidence", "group-detail"],
+        refetchType: refetchGroupDetail ? "active" : "none",
+      }),
       queryClient.invalidateQueries({ queryKey: ["evidence", "search"] }),
       queryClient.invalidateQueries({ queryKey: ["evidence-db"] }),
     ]);
   }, [queryClient]);
+  const applyFieldAssignmentToCache = useCallback(
+    (
+      assignment: FieldAssignmentPatch,
+      selectedText: string,
+      newStatus?: ReviewStatusValue,
+    ) => {
+      queryClient.setQueriesData<EvidenceGroupDetailResponse>(
+        { queryKey: ["evidence", "group-detail"] },
+        (current) => applyFieldAssignmentToDetail(
+          current,
+          assignment,
+          selectedText,
+          newStatus,
+        ),
+      );
+    },
+    [queryClient],
+  );
+  const applyReviewStatusToCache = useCallback(
+    (evidenceId: string, status: ReviewStatusValue) => {
+      queryClient.setQueriesData<EvidenceGroupDetailResponse>(
+        { queryKey: ["evidence", "group-detail"] },
+        (current) => applyReviewStatusToDetail(current, evidenceId, status),
+      );
+    },
+    [queryClient],
+  );
   const annotationsQuery = useQuery({
-    queryKey: ["annotations", sourceDocumentId],
+    queryKey: annotationQueryKey,
     queryFn: () => listAnnotations(sourceDocumentId),
     enabled: Boolean(sourceDocumentId),
   });
-  const allAnnotations: UserAnnotation[] = annotationsQuery.data ?? [];
+  const allAnnotations: UserAnnotation[] = useMemo(
+    () => annotationsQuery.data ?? [],
+    [annotationsQuery.data],
+  );
 
   const createMutation = useMutation({
     mutationFn: (payload: AnnotationCreateRequest) =>
       createAnnotation(sourceDocumentId, payload),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["annotations", sourceDocumentId] });
+    onSuccess: (annotation) => {
+      queryClient.setQueryData<UserAnnotation[]>(
+        annotationQueryKey,
+        (current) => upsertAnnotation(current, annotation),
+      );
+      void message.success(t("annotation.created"));
+      void queryClient.invalidateQueries({ queryKey: annotationQueryKey });
+    },
+    onError: (error) => {
+      void message.error(extractErrorMessage(error, t("annotation.createFailed")));
     },
   });
   const updateMutation = useMutation({
     mutationFn: (vars: { id: string; payload: AnnotationUpdateRequest }) =>
       updateAnnotation(sourceDocumentId, vars.id, vars.payload),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["annotations", sourceDocumentId] });
+    onSuccess: (annotation) => {
+      queryClient.setQueryData<UserAnnotation[]>(
+        annotationQueryKey,
+        (current) => upsertAnnotation(current, annotation),
+      );
+      void message.success(t("annotation.saved"));
+      void queryClient.invalidateQueries({ queryKey: annotationQueryKey });
+    },
+    onError: (error) => {
+      void message.error(extractErrorMessage(error, t("annotation.saveFailed")));
     },
   });
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteAnnotation(sourceDocumentId, id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["annotations", sourceDocumentId] });
+    onSuccess: (_result, id) => {
+      queryClient.setQueryData<UserAnnotation[]>(
+        annotationQueryKey,
+        (current) => removeAnnotation(current, id),
+      );
+      void message.success(t("annotation.deleted"));
+      void queryClient.invalidateQueries({ queryKey: annotationQueryKey });
+    },
+    onError: (error) => {
+      void message.error(extractErrorMessage(error, t("annotation.deleteFailed")));
     },
   });
 
@@ -796,44 +935,58 @@ export function BilingualCompareView({
     end_offset: number;
     color: string;
   }) => {
-    void createMutation.mutate(payload);
+    return createMutation.mutateAsync(payload).then(() => undefined);
   };
   const handleUpdateAnnotation = (
     id: string,
     payload: { color?: string | null; note?: string | null },
   ) => {
-    void updateMutation.mutate({ id, payload });
+    return updateMutation
+      .mutateAsync({ id: sourceAnnotationIdForMutation(id), payload })
+      .then(() => undefined);
   };
   const handleDeleteAnnotation = (id: string) => {
-    void deleteMutation.mutate(id);
+    return deleteMutation
+      .mutateAsync(sourceAnnotationIdForMutation(id))
+      .then(() => undefined);
   };
 
   const handleAssignField = async (selectedText: string, fieldType: string) => {
-    const targetItem = detail.items.find(
-      (item) => item.field_id === fieldType || item.category === fieldType,
-    ) ?? detail.items[0];
-    if (!targetItem) return;
+    const assignment = buildFieldAssignmentPatch(detail.items, selectedText, fieldType);
+    if (!assignment) {
+      message.warning(t("evidence.fieldAssign.unsupported"));
+      throw new Error(`Unsupported field assignment: ${fieldType}`);
+    }
     try {
-      await patchEvidence(targetItem.canonical_evidence_id, {
-        fields: { [fieldType]: selectedText },
-        change_reason: `Text selection assignment to ${fieldType}`,
-      });
-      await refreshEvidenceReviewData();
-    } catch {
-      // error handled by caller
+      const result = await patchEvidence(assignment.canonicalEvidenceId, assignment.body);
+      setLocalDetail(
+        (current) =>
+          applyFieldAssignmentToDetail(
+            current ?? detail,
+            assignment,
+            selectedText,
+            result.new_status,
+          ) ?? current,
+      );
+      applyFieldAssignmentToCache(assignment, selectedText, result.new_status);
+      void refreshEvidenceReviewData({ refetchGroupDetail: false });
+      message.success(t("evidence.fieldAssign.success", { field: fieldType }));
+    } catch (error) {
+      message.error(extractErrorMessage(error, t("evidence.fieldAssign.error")));
+      throw error;
     }
   };
   const fieldTypes = useMemo<FieldTypeOption[]>(
-    () => EVIDENCE_FIELD_SPECS.map((spec) => ({
-      fieldId: spec.fieldId,
-      label: spec.fieldName,
-      category: spec.categoryId,
-    })),
-    [],
+    () => buildAssignableFieldTypes(detail.items, EVIDENCE_FIELD_SPECS),
+    [detail.items],
   );
 
-  const originalAnnotations = allAnnotations.filter((a) => a.track === "original");
-  const translatedAnnotations = allAnnotations.filter((a) => a.track === "translated");
+  const synchronizedAnnotations = useMemo(
+    () => buildSynchronizedAnnotations(detail, allAnnotations),
+    [allAnnotations, detail],
+  );
+  const originalAnnotations = synchronizedAnnotations.filter((a) => a.track === "original");
+  const translatedAnnotations = synchronizedAnnotations.filter((a) => a.track === "translated");
 
   // Build review context map for hover-to-review on highlight marks
   const reviewContexts = useMemo<ReviewContextMap>(() => {
@@ -852,6 +1005,18 @@ export function BilingualCompareView({
     return map;
   }, [detail.items, groupId]);
 
+  const handleInlineReviewed = useCallback(async (
+    evidenceId: string,
+    status: ReviewStatusValue,
+  ) => {
+    setLocalDetail(
+      (current) =>
+        applyReviewStatusToDetail(current ?? detail, evidenceId, status) ?? current,
+    );
+    applyReviewStatusToCache(evidenceId, status);
+    await refreshEvidenceReviewData({ refetchGroupDetail: false });
+  }, [applyReviewStatusToCache, detail, refreshEvidenceReviewData]);
+
 
 
   const toggleCategory = (cat: string) => {
@@ -868,7 +1033,7 @@ export function BilingualCompareView({
 
   return (
       <div className="content-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <FieldReviewMenu onReviewed={refreshEvidenceReviewData} />
+        <FieldReviewMenu onReviewed={handleInlineReviewed} />
         <Link
           to={`/evidence/detail?groupId=${encodeURIComponent(groupId)}`}
           className="edb-back-link"
@@ -1123,9 +1288,10 @@ export function BilingualCompareView({
               className={showTranslatedDocument ? "edb-doc-readers-grid edb-doc-readers-two-col" : "edb-doc-readers-grid"}
             >
               <EvidenceDocumentReader
-                title="Original document"
+                title={t("evidence.bilingual.originalDocument")}
                 paragraphs={originalDocument.paragraphs}
                 track="original"
+                sourceDocumentId={sourceDocumentId}
                 annotations={originalAnnotations}
                 reviewContexts={reviewContexts}
                 alignmentHighlightsByParagraph={originalAlignmentHighlights}
@@ -1140,9 +1306,10 @@ export function BilingualCompareView({
               />
               {showTranslatedDocument && (
                 <EvidenceDocumentReader
-                  title="English translation"
+                  title={t("evidence.bilingual.translatedDocument")}
                   paragraphs={translatedDocument.paragraphs}
                   track="translated"
+                  sourceDocumentId={sourceDocumentId}
                   annotations={translatedAnnotations}
                   reviewContexts={reviewContexts}
                   alignmentHighlightsByParagraph={translatedAlignmentHighlights}

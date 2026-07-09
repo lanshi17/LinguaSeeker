@@ -123,8 +123,7 @@ class EmbeddingHttpProvider:
         payload: dict[str, object],
         expected_count: int,
     ) -> EmbeddingBatchResult:
-        endpoint = "embed" if self._api_style == self._SIMPLE else "embeddings"
-        response = await client.post(f"{self._api_root()}/{endpoint}", json=payload, headers=self._current_headers())
+        response = await client.post(self._endpoint_url(), json=payload, headers=self._current_headers())
         response.raise_for_status()
         body = response.json()
         if self._api_style == self._SIMPLE:
@@ -141,6 +140,10 @@ class EmbeddingHttpProvider:
         if self._api_style == self._SIMPLE:
             return self._base_url
         return self._base_url if self._base_url.endswith("/v1") else f"{self._base_url}/v1"
+
+    def _endpoint_url(self) -> str:
+        endpoint = "embed" if self._api_style == self._SIMPLE else "embeddings"
+        return f"{self._api_root()}/{endpoint}"
 
 
 class RerankHttpProvider:
@@ -223,9 +226,7 @@ class RerankHttpProvider:
         payload: dict[str, object],
         doc_list: list[str],
     ) -> RerankBatchResult:
-        endpoint = "rerank"
-        url = f"{self._api_root()}/{endpoint}"
-        response = await client.post(url, json=payload, headers=self._current_headers())
+        response = await client.post(self._endpoint_url(), json=payload, headers=self._current_headers())
         response.raise_for_status()
         body = response.json()
         results = tuple(
@@ -243,6 +244,9 @@ class RerankHttpProvider:
         if self._api_style == self._SIMPLE:
             return self._base_url
         return self._base_url if self._base_url.endswith("/v1") else f"{self._base_url}/v1"
+
+    def _endpoint_url(self) -> str:
+        return f"{self._api_root()}/rerank"
 
 
 class FallbackEmbeddingProvider:
@@ -274,7 +278,12 @@ class FallbackEmbeddingProvider:
         except Exception as e:
             if self._remote is None:
                 raise
-            logger.warning("Local embedding failed ({}: {!r}), falling back to remote", type(e).__name__, e)
+            logger.warning(
+                "Local embedding failed at {} ({}: {!r}), falling back to remote",
+                self._local._endpoint_url(),
+                type(e).__name__,
+                e,
+            )
             result = await self._remote.embed_texts(texts)
             if self._local._model != self._remote._model:
                 logger.error(
@@ -308,7 +317,12 @@ class FallbackRerankProvider:
         except Exception as e:
             if self._remote is None:
                 raise
-            logger.warning("Local rerank failed ({}: {!r}), falling back to remote", type(e).__name__, e)
+            logger.warning(
+                "Local rerank failed at {} ({}: {!r}), falling back to remote",
+                self._local._endpoint_url(),
+                type(e).__name__,
+                e,
+            )
             return await self._remote.rerank(query, documents, top_k=top_k)
 
 

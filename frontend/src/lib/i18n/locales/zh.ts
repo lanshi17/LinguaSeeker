@@ -6,7 +6,7 @@ const zh: Record<EnKeys, string> = {
   // ── 导航 ──
   "nav.chat": "AI 对话",
   "nav.tasks": "任务",
-  "nav.evidenceDb": "证据库",
+  "nav.evidenceDb": "证据数据库",
   "nav.audit": "审计",
   "nav.help": "用户指南",
 
@@ -191,8 +191,14 @@ const zh: Record<EnKeys, string> = {
   "evidence.bilingual.fullDoc": "全文共 {count} 个对齐段落",
   "evidence.bilingual.docText": "文档文本",
   "evidence.bilingual.page": "第 {num} 页",
+  "evidence.bilingual.originalDocument": "原始文档",
+  "evidence.bilingual.translatedDocument": "英文译文",
+  "evidence.bilingual.annotationCount": "{count} 个标注",
   "evidence.bilingual.selectItem": "选择证据条目",
   "evidence.bilingual.backDetail": "返回文献详情",
+  "evidence.fieldAssign.success": "已将选中文本分配到 {field}",
+  "evidence.fieldAssign.error": "字段分配失败",
+  "evidence.fieldAssign.unsupported": "该字段暂不支持划线分配",
 
   // ── 证据检索 — 双语比较 ──
   "evidence.compare.noTraces": "该证据分组暂无双语对照",
@@ -297,6 +303,7 @@ const zh: Record<EnKeys, string> = {
   "evidenceDb.class.likelyBenign": "疑似良性",
   "evidenceDb.class.benign": "良性",
   "evidenceDb.class.all": "全部",
+  "evidenceDb.filters.title": "筛选条件",
   "evidenceDb.searchGenePh": "按基因或变异搜索…",
   "evidenceDb.filterDiseasePh": "按疾病筛选…",
   "evidenceDb.language.label": "原文语种",
@@ -321,8 +328,15 @@ const zh: Record<EnKeys, string> = {
   "evidenceDb.listEvidence": "证据",
   "evidenceDb.listRefs": "文献",
   "evidenceDb.listConf": "置信度",
-  "evidenceDb.listPmid": "PMID",
   "evidenceDb.listFields": "字段数",
+  "evidenceDb.columnHelp.geneVariant": "该证据行对应的标准基因符号和变异描述。",
+  "evidenceDb.columnHelp.disease": "该变异证据关联的疾病或表型。",
+  "evidenceDb.columnHelp.evidence": "该变异命中的 ACMG 证据分类及其审核进度。",
+  "evidenceDb.columnHelp.refs": "支撑该证据项的唯一文献来源数量。",
+  "evidenceDb.columnHelp.confidence": "抽取证据字段的加权平均置信度。",
+  "evidenceDb.columnHelp.fields": "该行包含的已抽取证据字段数量。",
+  "evidenceDb.columnHelp.sourceLanguage": "该行覆盖的原始来源文献语种。",
+  "evidenceDb.columnHelp.updated": "该变异行中最新的证据时间戳。",
   "evidenceDb.statGroups": "分组",
   "evidenceDb.statRefs": "文献",
   "evidenceDb.unknownGene": "未知基因",
@@ -440,7 +454,6 @@ const zh: Record<EnKeys, string> = {
   "evidenceDb.label.reviewProgress": "审核进度",
   "evidenceDb.label.reviewed": "已审核",
   "evidenceDb.label.updated": "更新时间",
-  "evidenceDb.label.pmid": "PMID",
   "evidenceDb.label.fieldCount": "字段数",
   "evidenceDb.label.uniqueVariants": "唯一变异",
 
@@ -453,6 +466,7 @@ const zh: Record<EnKeys, string> = {
   "audit.metric.approved": "已批准",
   "audit.metric.corrected": "已修正",
   "audit.metric.rejected": "已驳回",
+  "audit.filters.title": "筛选条件",
   "audit.filter.all": "全部",
   "audit.filter.provisional": "待审核",
   "audit.filter.approved": "已批准",
@@ -539,6 +553,14 @@ const zh: Record<EnKeys, string> = {
   "chat.showTaskQueue": "显示任务队列",
   "chat.expandConversations": "展开会话列表",
   "chat.collapseConversations": "折叠会话列表",
+
+  // ── 对话 — 候选追问 ──
+  "chat.followUps.label": "可继续追问",
+  "chat.followUps.nextStep": "下一步我应该做什么？",
+  "chat.followUps.pipelineStatus": "帮我查看这个任务的当前状态",
+  "chat.followUps.evidenceGaps": "接下来需要补齐哪些证据缺口？",
+  "chat.followUps.summarize": "请用 3 点总结关键结论",
+  "chat.followUps.verifyEvidence": "哪些证据需要我人工核实？",
 
   // ── 对话 — ThinkingIndicator ──
   "chat.thinking.label": "思考中",
@@ -732,6 +754,9 @@ const zh: Record<EnKeys, string> = {
   "annotation.edit": "编辑标注",
   "annotation.saved": "已保存",
   "annotation.deleted": "已删除",
+  "annotation.createFailed": "标注创建失败",
+  "annotation.saveFailed": "标注保存失败",
+  "annotation.deleteFailed": "标注删除失败",
   "annotation.pickColor": "选择颜色 {color}",
   "annotation.notePlaceholder": "批注…",
 };

@@ -91,7 +91,7 @@ export function ExportReportDrawer({ detail, open, onClose }: ExportReportDrawer
     } finally {
       setExporting(false);
     }
-  }, [detail, selectedFormat, options]);
+  }, [detail, selectedFormat, options, t]);
 
   const FormatIcon = FORMAT_ICONS[selectedFormat];
 
