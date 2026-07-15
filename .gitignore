@@ -23,6 +23,9 @@ Cargo.lock
 
 # ── Frontend build output ─────────────────────────────────────────────────
 dist/
+.vite/
+**/.vite/
+*.tsbuildinfo
 
 # ── Logs ──────────────────────────────────────────────────────────────────
 *.log
@@ -79,11 +82,17 @@ copier_defaults.yaml
 
 # ── Local environment config (may contain credentials) ────────────────────
 .env
+.env.*
 .env.local
 .env.*.local
 **/*/.env
+**/.env
+**/.env.*
 **/*/.env.local
 **/*/.env.*.local
+!**/.env.example
+!**/.env.example.jinja
+!**/.env.j2
 backend/config-dev.yaml
 database/config/.env
 database/config/.env.neo4j
@@ -93,6 +102,28 @@ backend/config/vault/*.yaml
 backend/config/vault/*.yml
 !backend/config/vault/*.example
 !backend/config/vault/README.md
+**/vault/*.yaml
+**/vault/*.yml
+!**/vault/*.example
+!**/vault/*.example.yaml
+!**/vault/*.example.yml
+!**/vault/*.yaml.example
+!**/vault/*.yml.example
+!**/vault/README.md
+
+# ── Private keys and certificates ─────────────────────────────────────────
+**/*.key
+**/*.pem
+**/*.p12
+**/*.pfx
+**/*.der
+**/*.crt
+
+# ── Local progress and debug notes ────────────────────────────────────────
+**/progress.txt
+**/lesson.md
+**/lessons.md
+**/leesons.md
 
 # ── Database ──────────────────────────────────────────────────────────────
 database/config/.env
@@ -100,6 +131,9 @@ database/config/.env
 database/terminology_database/*
 !database/terminology_database/README.md
 database/backups/
+**/database/minio/
+**/database/qdrant/
+**/database/neo4j/
 
 # ── Backend runtime data ──────────────────────────────────────────────────
 backend/output/*
@@ -110,10 +144,19 @@ backend/build-artifacts/
 # ── Project data (runtime artifacts, not source) ──────────────────────────
 data/pipeline/*
 **/*.pdf
+**/*.doc
+**/*.docx
+**/*.xlsx
+knowledges/
+**/knowledge_docs/
 
 # ── Benchmark ─────────────────────────────────────────────────────────────
 benchmark/pipeline/reports/*
 benchmark/pipeline/input/*
+benchmark/data/
+backend/benchmark/data/
+backend/benchmark/**/reports/
+benchmark/**/reports/
 benchmark/data/inputs/literature_acquisition/downloads/rett/report_*.json
 benchmark/data/inputs/literature_acquisition/downloads/*.jsonl
 benchmark/literature_acquisition/downloads/rett/report_*.json
@@ -121,8 +164,22 @@ benchmark/literature_acquisition/downloads/*.jsonl
 benchmark/data/inputs/literature_acquisition/rett_config*.json
 benchmark/datasets/rett_annotation/config.yaml
 benchmark/datasets/rett_annotation/.venv/
+benchmark/datasets/rett_annotation/approved/
+benchmark/datasets/rett_annotation/draft/
+benchmark/datasets/rett_annotation/ground_truth/
+benchmark/datasets/rett_annotation/rejected/
+benchmark/datasets/rett_annotation/reports/
+benchmark/datasets/rett_annotation/test_full_fields_result.json
 benchmark/data/reports/_unmapped/
 benchmark/data/reports/paper/
+benchmark/annotation/approved/
+benchmark/annotation/draft/
+benchmark/annotation/ground_truth/
+benchmark/annotation/rejected/
+benchmark/annotation/archive/
+benchmark/analysis/dataset_curation/
+benchmark/analysis/paper_artifacts/
+benchmark/layer3/analysis/main_paper_*.py
 benchmark/annotation/**/*.md
 benchmark/annotation/**/images
 benchmark/config/.vault_pass
@@ -135,6 +192,14 @@ benchmark/config/vault/secrets.yml
 **/archive/*
 !docs/archive/
 !docs/archive/**
+docs/active/*bibm*
+docs/planned/*bibm*
+docs/archive/plans/*bibm*
+docs/plans/*bibm*
+docs/active/*paper*
+docs/planned/*paper*
+docs/archive/plans/*paper*
+docs/plans/*paper*
 
 # ── Old version reference ─────────────────────────────────────────────────
 .old_version
@@ -146,3 +211,10 @@ artifacts/
 exports/
 benchmark/data/processed/filtered_pdf_markdown_corpus/markdown/*/*.md
 **/paper/*
+**/papers/*
+**/*paper*.json
+**/*paper*.jsonl
+**/*paper*.md
+**/*paper*.csv
+**/*paper*.png
+**/*paper*.html
