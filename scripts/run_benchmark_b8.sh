@@ -13,5 +13,5 @@ exec backend/.venv/bin/python -m benchmark.layer3.evaluate \
     --extraction-mode b8 \
     --extraction-profile none \
     --no-preprocessed \
-    --api-key "[redacted-api-key]" \
+    --api-key "${API_KEY:?Set API_KEY before running benchmark}" \
     "$@"
