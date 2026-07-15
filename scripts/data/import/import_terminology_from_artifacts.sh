@@ -19,16 +19,16 @@
 # Examples:
 #   # Import to local dev database (default)
 #   ./scripts/data/import/import_terminology_from_artifacts.sh \
-#     --password "[redacted-postgres-password]" --db dev_lingua_seeker
+#     --password "$PGPASSWORD" --db dev_lingua_seeker
 #
 #   # Import to production server via SSH tunnel
 #   ssh -L 5433:postgres-server:5432 deploy@your-server
 #   ./scripts/data/import/import_terminology_from_artifacts.sh \
-#     --port 5433 --db lingua_seeker --password "[redacted-password-placeholder]"
+#     --port 5433 --db lingua_seeker --password "$PGPASSWORD"
 #
 #   # Import to remote server directly
 #   ./scripts/data/import/import_terminology_from_artifacts.sh \
-#     --host postgres-server --db lingua_seeker --password "[redacted-password-placeholder]"
+#     --host postgres-server --db lingua_seeker --password "$PGPASSWORD"
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
