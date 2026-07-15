@@ -20,8 +20,7 @@ done
 echo "=== All shards complete at $(date) ==="
 echo ""
 echo "Verifying DB counts:"
-# redacted inline database credential check
-psql -h 127.0.0.1 -U lingua_seeker -d dev_lingua_seeker -c "
+psql -w -h 127.0.0.1 -U lingua_seeker -d dev_lingua_seeker -c "
 SELECT 'source_documents' as tbl, count(*) FROM source_documents
 UNION ALL SELECT 'processing_runs', count(*) FROM processing_runs
 UNION ALL SELECT 'canonical_evidence_items', count(*) FROM canonical_evidence_items
