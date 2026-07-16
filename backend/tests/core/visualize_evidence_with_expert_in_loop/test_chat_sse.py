@@ -72,7 +72,7 @@ class TestChatAgentPrompt:
 
     def test_prompt_does_not_instruct_manual_navigation_for_pdf_upload(self) -> None:
         assert "Task Management page" not in CHAT_AGENT_CAPABILITIES_PROMPT
-        assert "click \"New Task\"" not in CHAT_AGENT_CAPABILITIES_PROMPT
+        assert 'click "New Task"' not in CHAT_AGENT_CAPABILITIES_PROMPT
         assert "manually open" in CHAT_AGENT_CAPABILITIES_PROMPT
         assert "in-chat PDF upload control" in CHAT_AGENT_CAPABILITIES_PROMPT
 

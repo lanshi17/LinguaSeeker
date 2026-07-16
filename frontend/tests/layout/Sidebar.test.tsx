@@ -8,13 +8,12 @@ import { describe, expect, it } from "vitest";
 
 import { Sidebar } from "../../src/components/layout/Sidebar";
 
-const envAppVersion =
-  readFileSync(path.resolve(__dirname, "../../.env"), "utf-8")
-    .match(/^VITE_APP_VERSION=(.+)$/m)?.[1]
-    .trim() ?? "";
+const packageJson = JSON.parse(
+  readFileSync(path.resolve(__dirname, "../../package.json"), "utf-8"),
+) as { version: string };
 
 describe("Sidebar", () => {
-  it("renders the app version from VITE_APP_VERSION", () => {
+  it("renders the app version", () => {
     render(
       <MemoryRouter initialEntries={["/chat"]}>
         <Sidebar />
@@ -22,7 +21,7 @@ describe("Sidebar", () => {
     );
 
     expect(
-      screen.getByText(`Lingua Seeker v${envAppVersion}`),
+      screen.getByText(`Lingua Seeker v${packageJson.version}`),
     ).toBeInTheDocument();
   });
 

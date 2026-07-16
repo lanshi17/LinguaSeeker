@@ -183,9 +183,7 @@ async def _persist_phase2_document_text(
             sd.translated_text = translated_text
     if p2.original_blocks and (replace_existing or not sd.original_blocks):
         sd.original_blocks = p2.original_blocks
-    if p2.translated_blocks and (
-        replace_existing or not sd.translated_blocks or existing_translated_blocks_are_stale
-    ):
+    if p2.translated_blocks and (replace_existing or not sd.translated_blocks or existing_translated_blocks_are_stale):
         sd.translated_blocks = p2.translated_blocks
 
 
@@ -218,9 +216,7 @@ async def _reset_phase_rerun_artifacts(
         else CanonicalEvidenceItem.owner_user_id == owner_id
     )
     profile_owner_filter = (
-        LiteratureProfile.owner_user_id.is_(None)
-        if owner_id is None
-        else LiteratureProfile.owner_user_id == owner_id
+        LiteratureProfile.owner_user_id.is_(None) if owner_id is None else LiteratureProfile.owner_user_id == owner_id
     )
 
     if target_phase <= 2:
@@ -615,9 +611,7 @@ class SessionBoundStatePersistence:
         """Return True when any pending/running run owns this source key."""
         owner_id = UUID(owner_user_id) if owner_user_id else None
         owner_filter = (
-            PipelineRunState.owner_user_id.is_(None)
-            if owner_id is None
-            else PipelineRunState.owner_user_id == owner_id
+            PipelineRunState.owner_user_id.is_(None) if owner_id is None else PipelineRunState.owner_user_id == owner_id
         )
         async with self._session_factory() as session:
             result = await session.execute(
@@ -653,9 +647,7 @@ class SessionBoundStatePersistence:
 
         owner_id = UUID(owner_user_id) if owner_user_id else None
         owner_filter = (
-            PipelineRunState.owner_user_id.is_(None)
-            if owner_id is None
-            else PipelineRunState.owner_user_id == owner_id
+            PipelineRunState.owner_user_id.is_(None) if owner_id is None else PipelineRunState.owner_user_id == owner_id
         )
         async with self._session_factory() as session:
             base = select(PipelineRunState).where(owner_filter)

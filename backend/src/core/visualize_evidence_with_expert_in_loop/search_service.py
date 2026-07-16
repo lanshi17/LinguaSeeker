@@ -24,7 +24,9 @@ from src.utils.translation_render_quality import (
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     TranslationAlignmentChunk,
 )
-from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.language_detector import detect_language
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.language_detector import (
+    detect_language,
+)
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     EvidenceChainHighlight,
     EvidenceFieldDistribution,

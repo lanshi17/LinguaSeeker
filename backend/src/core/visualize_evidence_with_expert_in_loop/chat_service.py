@@ -222,11 +222,7 @@ class ChatService:
     ) -> ChatSessionResponse:
         """Fetch one chat session with its message count."""
         session = await self._require_session(session_id=session_id, owner_user_id=owner_user_id)
-        count_stmt = (
-            select(func.count())
-            .select_from(ChatMessage)
-            .where(ChatMessage.chat_session_id == session_id)
-        )
+        count_stmt = select(func.count()).select_from(ChatMessage).where(ChatMessage.chat_session_id == session_id)
         count_result = await self._session.execute(count_stmt)
         message_count = int(count_result.scalar_one())
         return ChatSessionResponse(

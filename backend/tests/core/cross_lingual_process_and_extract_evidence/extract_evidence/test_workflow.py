@@ -361,9 +361,7 @@ def test_workflow_disable_source_grounding_skips_graph_node(mock_config):
 
         return node
 
-    graph = workflow._build_graph_with(
-        {name: record(name) for name in workflow._node_functions(async_mode=False)}
-    )
+    graph = workflow._build_graph_with({name: record(name) for name in workflow._node_functions(async_mode=False)})
     graph.invoke(
         EvidenceExtractionState(
             document=TrackDocument(

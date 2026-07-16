@@ -48,7 +48,10 @@ vi.mock("../../../src/features/chat/components/usePipelineActions", () => ({
 }));
 
 vi.mock("../../../src/features/chat/components/useBubbleItems", () => ({
-  useBubbleItems: () => [],
+  useBubbleItems: () => ({
+    items: [],
+    followUp: { show: false, lastAssistantContent: "" },
+  }),
 }));
 
 vi.mock("../../../src/features/chat/components/useSessionUIState", () => ({

@@ -168,9 +168,7 @@ async def test_append_message(async_client: AsyncClient):
         mock_service.append_message = AsyncMock(return_value=mock_response)
         mock_service.generate_reply = AsyncMock(return_value=None)
         mock_factory.return_value.create_chat_service.return_value = mock_service
-        mock_factory.return_value.schedule_session_title_generation.side_effect = (
-            lambda **_: events.append("schedule")
-        )
+        mock_factory.return_value.schedule_session_title_generation.side_effect = lambda **_: events.append("schedule")
 
         response = await async_client.post(
             f"/api/v1/chat/sessions/{session_id}/messages",
