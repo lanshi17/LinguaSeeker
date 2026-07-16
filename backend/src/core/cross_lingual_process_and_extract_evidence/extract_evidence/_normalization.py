@@ -174,10 +174,7 @@ class EvidenceItemNormalizer:
         )
 
     def _has_case_context(self, items: list[EvidenceItem]) -> bool:
-        return any(
-            item.status == EvidenceStatus.FOUND and item.field_id in self._CASE_CONTEXT_FIELDS
-            for item in items
-        )
+        return any(item.status == EvidenceStatus.FOUND and item.field_id in self._CASE_CONTEXT_FIELDS for item in items)
 
     @staticmethod
     def _choose_better(current: EvidenceItem, candidate: EvidenceItem) -> EvidenceItem:

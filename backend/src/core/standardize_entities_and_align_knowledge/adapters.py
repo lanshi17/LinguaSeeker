@@ -72,7 +72,9 @@ class DualResultAdapter:
             self._add_chain_candidates(track_result, candidates, seen, gene_values_by_group)
             self._add_phenotype_candidates(track_result, candidates, seen, gene_linked_group_ids)
             self._add_phenotype_evidence_candidates(track_result, candidates, seen, gene_linked_group_ids)
-            evidence_items.extend(self._filter_gene_linked_evidence_items(track_result.evidence_items, gene_linked_group_ids))
+            evidence_items.extend(
+                self._filter_gene_linked_evidence_items(track_result.evidence_items, gene_linked_group_ids)
+            )
 
         extraction_target = (
             primary_results[0].extraction_target

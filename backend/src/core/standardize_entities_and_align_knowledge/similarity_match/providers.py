@@ -332,7 +332,9 @@ def _parse_simple_embedding_vectors(body: object) -> tuple[tuple[float, ...], ..
 
     results = body.get("results")
     if isinstance(results, list):
-        return tuple(_coerce_embedding_vector(item.get("embedding") if isinstance(item, dict) else item) for item in results)
+        return tuple(
+            _coerce_embedding_vector(item.get("embedding") if isinstance(item, dict) else item) for item in results
+        )
 
     for key in ("embeddings", "vectors"):
         value = body.get(key)

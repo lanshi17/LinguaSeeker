@@ -1,9 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 
-import type React from "react";
-import { cleanup, render, renderHook, screen } from "@testing-library/react";
+import { cleanup, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { BubbleItemType } from "@ant-design/x";
 import type { MessageInfo } from "@ant-design/x-sdk/es/x-chat";
 
 import { useBubbleItems } from "../../../src/features/chat/components/useBubbleItems";
@@ -26,16 +24,8 @@ function messageInfo(
   } as MessageInfo<ChatBubbleMessage>;
 }
 
-function renderContent(item: BubbleItemType, content: string) {
-  const renderItemContent = item.contentRender as
-    | ((value: string) => React.ReactNode)
-    | undefined;
-
-  render(<>{renderItemContent?.(content)}</>);
-}
-
 describe("useBubbleItems", () => {
-  it("adds follow-up suggestions to the last completed assistant reply", () => {
+  it("returns follow-up state for the last completed assistant reply", () => {
     const { result } = renderHook(() =>
       useBubbleItems({
         messages: [
@@ -59,25 +49,13 @@ describe("useBubbleItems", () => {
       }),
     );
 
-    expect(result.current[2]).toEqual(
+    expect(result.current.items).toHaveLength(2);
+    expect(result.current.followUp).toEqual(
       expect.objectContaining({
-        key: "__followups__",
-        role: "assistant",
-        variant: "borderless",
-        className: "cv-followups-bubble",
-        avatar: null,
+        show: true,
+        lastAssistantContent: "The evidence summary is ready.",
       }),
     );
-    renderContent(result.current[2], "");
-
-    expect(screen.getByText("Suggested next questions")).toHaveClass(
-      "cv-followups-label",
-    );
-    expect(
-      screen.getByRole("button", {
-        name: "Which evidence gaps should I resolve next?",
-      }),
-    ).toBeInTheDocument();
   });
 
   it("does not add follow-up suggestions while the last assistant reply is streaming", () => {
@@ -104,8 +82,7 @@ describe("useBubbleItems", () => {
       }),
     );
 
-    expect(
-      result.current.some((item) => item.key === "__followups__"),
-    ).toBe(false);
+    expect(result.current.items.some((item) => item.key === "__followups__")).toBe(false);
+    expect(result.current.followUp.show).toBe(false);
   });
 });

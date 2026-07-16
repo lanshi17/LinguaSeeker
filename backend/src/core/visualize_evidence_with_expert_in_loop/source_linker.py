@@ -41,9 +41,7 @@ class SourceLinker:
             else CanonicalEvidenceItem.owner_user_id == owner_id
         )
         run_item_owner_filter = (
-            RunEvidenceItem.owner_user_id.is_(None)
-            if owner_id is None
-            else RunEvidenceItem.owner_user_id == owner_id
+            RunEvidenceItem.owner_user_id.is_(None) if owner_id is None else RunEvidenceItem.owner_user_id == owner_id
         )
 
         # Step 1: load canonical item

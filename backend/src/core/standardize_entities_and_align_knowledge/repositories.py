@@ -96,8 +96,7 @@ def _sanitize_jsonb_value(value: Any) -> Any:
         return value.replace("\x00", "")
     if isinstance(value, dict):
         return {
-            _sanitize_jsonb_value(str(key)): _sanitize_jsonb_value(nested_value)
-            for key, nested_value in value.items()
+            _sanitize_jsonb_value(str(key)): _sanitize_jsonb_value(nested_value) for key, nested_value in value.items()
         }
     if isinstance(value, (list, tuple)):
         return [_sanitize_jsonb_value(item) for item in value]
@@ -1225,7 +1224,8 @@ class StandardizationRepository:
         """Adapt one staged run item into the pure DB-ready gate contract."""
         raw_payload = spec.raw_payload
         return DbReadyCandidate(
-            candidate_id=spec.candidate_id or self._hash_payload(
+            candidate_id=spec.candidate_id
+            or self._hash_payload(
                 {
                     "track": spec.track,
                     "field_id": spec.field_id,

@@ -397,11 +397,7 @@ class AcmgEvidenceValueNormalizer:
             aliases.extend(expand_hgvs_aliases(str(raw_value or "")))
         if not aliases:
             return ""
-        preferred = [
-            alias
-            for alias in aliases
-            if re.fullmatch(r"p\.[A-Z]\d+(?:[A-Z*]|fs|del|dup|ins)", alias)
-        ]
+        preferred = [alias for alias in aliases if re.fullmatch(r"p\.[A-Z]\d+(?:[A-Z*]|fs|del|dup|ins)", alias)]
         return sorted(preferred or aliases, key=lambda alias: (len(alias), alias))[0]
 
     def _source_signature(self, item: EvidenceItem) -> str:

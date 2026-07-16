@@ -318,10 +318,7 @@ class LangChainEvidenceProvider:
     def _is_unsupported_response_format(exc: Exception) -> bool:
         text = str(exc).lower()
         return "response_format" in text and (
-            "unavailable" in text
-            or "unsupported" in text
-            or "not supported" in text
-            or "invalid_request_error" in text
+            "unavailable" in text or "unsupported" in text or "not supported" in text or "invalid_request_error" in text
         )
 
     @staticmethod

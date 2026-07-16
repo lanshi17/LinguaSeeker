@@ -123,7 +123,9 @@ def _extract_local_translation_source(prompt: str) -> str:
     return ""
 
 
-async def _try_local_translation(llm: LLMPoolAdapter | LocalFirstTranslationAdapter, prompt: str, stage: str) -> str | None:
+async def _try_local_translation(
+    llm: LLMPoolAdapter | LocalFirstTranslationAdapter, prompt: str, stage: str
+) -> str | None:
     """Try the local translation path, returning None when remote fallback should run."""
     if not isinstance(llm, LocalFirstTranslationAdapter):
         return None
