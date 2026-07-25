@@ -19,7 +19,7 @@ from src.agents.phase_2_adapter import Phase2Adapter
 def sample_state(tmp_path) -> PipelineGraphState:
     metadata = tmp_path / "metadata.json"
     metadata.write_text(json.dumps({"pages": [], "content_blocks": []}))
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    from src.core.evidence_extraction.contracts import (
         ExtractionTarget,
     )
 
@@ -45,11 +45,11 @@ def sample_state(tmp_path) -> PipelineGraphState:
 @pytest.mark.asyncio
 async def test_phase_2_adapter_success(sample_state: PipelineGraphState):
     """Phase 2 adapter successfully translates and extracts evidence."""
-    from src.core.cross_lingual_process_and_extract_evidence.contracts import (
+    from src.core.cross_lingual_translation.contracts import (
         TranslationResult,
         CrossLingualOutput,
     )
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    from src.core.evidence_extraction.contracts import (
         DualEvidenceExtractionResult,
         DualTrackDocuments,
         EvidenceExtractionResult,
@@ -142,11 +142,11 @@ async def test_phase_2_adapter_passes_review_reject_policy(
     sample_state: PipelineGraphState,
 ):
     """Phase 2 forwards review reject policy to evidence extraction."""
-    from src.core.cross_lingual_process_and_extract_evidence.contracts import (
+    from src.core.cross_lingual_translation.contracts import (
         CrossLingualOutput,
         TranslationResult,
     )
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    from src.core.evidence_extraction.contracts import (
         DualEvidenceExtractionResult,
         DualTrackDocuments,
         EvidenceExtractionResult,
@@ -237,11 +237,11 @@ async def test_phase_2_adapter_passes_extraction_track_mode(
     sample_state: PipelineGraphState,
 ):
     """Phase 2 forwards the English-pivot extraction track mode."""
-    from src.core.cross_lingual_process_and_extract_evidence.contracts import (
+    from src.core.cross_lingual_translation.contracts import (
         CrossLingualOutput,
         TranslationResult,
     )
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    from src.core.evidence_extraction.contracts import (
         DualEvidenceExtractionResult,
         DualTrackDocuments,
         EvidenceExtractionResult,
@@ -326,11 +326,11 @@ async def test_phase_2_adapter_sets_skip_when_not_relevant(
     sample_state: PipelineGraphState,
 ):
     """Phase 2 adapter sets skip_phase_3_reason when both tracks are NOT_RELEVANT."""
-    from src.core.cross_lingual_process_and_extract_evidence.contracts import (
+    from src.core.cross_lingual_translation.contracts import (
         TranslationResult,
         CrossLingualOutput,
     )
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    from src.core.evidence_extraction.contracts import (
         DualEvidenceExtractionResult,
         DualTrackDocuments,
         EvidenceExtractionResult,
@@ -454,11 +454,11 @@ async def test_phase2_adapter_reads_metadata_async(tmp_path, monkeypatch):
         ),
     )
 
-    from src.core.cross_lingual_process_and_extract_evidence.contracts import (
+    from src.core.cross_lingual_translation.contracts import (
         TranslationResult,
         CrossLingualOutput,
     )
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    from src.core.evidence_extraction.contracts import (
         DualEvidenceExtractionResult,
         DualTrackDocuments,
         EvidenceExtractionResult,
@@ -562,7 +562,7 @@ async def test_phase_2_adapter_raises_retryable_on_catalog_extraction_error(
     This is intentional: LLM API timeouts (the primary cause) are transient
     and should be retried by the orchestrator.
     """
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction import (
+    from src.core.evidence_extraction.stages.catalog_extraction import (
         CatalogExtractionError,
     )
 

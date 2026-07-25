@@ -28,7 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.e2e_extract_evidence import run_extract_evidence
 from src.core.config import Settings, get_config
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
 )
 from src.core.standardize_entities_and_align_knowledge.api import (

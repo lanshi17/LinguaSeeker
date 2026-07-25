@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 from benchmark.analysis.arbitrator.dataset import (
     CandidateSample,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.features import (
+from src.core.evidence_extraction.reconcile.features import (
     CandidateFeatureVector,
 )
 

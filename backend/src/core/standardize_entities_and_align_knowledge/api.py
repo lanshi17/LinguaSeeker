@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
 )
 from src.core.standardize_entities_and_align_knowledge.adapters import DualResultAdapter

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     EvidenceItem,
     EvidenceStatus,
 )

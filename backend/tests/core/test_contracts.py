@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 
 def test_source_location_accepts_academic_section_types():
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import SourceLocation
+    from src.core.evidence_extraction.contracts import SourceLocation
 
     for section in ("results", "discussion", "methods", "background", "introduction", "conclusion", "abstract"):
         loc = SourceLocation(context_type=section, context_ref="test", text_snippet="test")
@@ -13,7 +13,7 @@ def test_source_location_accepts_academic_section_types():
 
 
 def test_source_location_rejects_unknown_type():
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import SourceLocation
+    from src.core.evidence_extraction.contracts import SourceLocation
 
     with pytest.raises(ValidationError):
         SourceLocation(context_type="nonexistent_type", context_ref="test", text_snippet="test")

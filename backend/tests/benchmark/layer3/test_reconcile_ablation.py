@@ -11,7 +11,7 @@ from benchmark.analysis.reconcile.ablation import (
     build_extracted_items,
     run_ablation,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
     EvidenceExtractionResult,
     EvidenceExtractionStatus,

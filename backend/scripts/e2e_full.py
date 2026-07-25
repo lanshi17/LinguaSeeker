@@ -51,7 +51,7 @@ from sqlalchemy import select
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.core.config import get_config
-from src.core.cross_lingual_process_and_extract_evidence.workflow import TranslationService
+from src.core.cross_lingual_translation.api import TranslationService
 from src.core.ingest_and_digitize_data.parse_document.remote.parser import MinerURemoteParser
 from src.core.visualize_evidence_with_expert_in_loop.chat_service import ChatService
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (

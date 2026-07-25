@@ -18,10 +18,10 @@ from pathlib import Path
 import aiofiles
 
 from src.agents.contracts import PipelineGraphState
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import (
+from src.core.evidence_extraction.workflow import (
     DEFAULT_EXTRACTION_WORKFLOW_MODE,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.review_validation import (
+from src.core.evidence_extraction.stages.review_validation import (
     DEFAULT_REVIEW_REJECT_POLICY,
 )
 

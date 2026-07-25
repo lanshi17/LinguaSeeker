@@ -10,7 +10,7 @@ from benchmark.analysis.reconcile.oracle_upper_bound import (
     build_oracle_items,
     run_oracle_upper_bound,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
     EvidenceExtractionResult,
     EvidenceExtractionStatus,

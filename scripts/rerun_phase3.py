@@ -23,7 +23,7 @@ from src.core.config import get_config
 from src.core.standardize_entities_and_align_knowledge.api import (
     EntityStandardizationService,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
 )
 from src.dao.postgresql.connection import async_session_factory, build_async_engine

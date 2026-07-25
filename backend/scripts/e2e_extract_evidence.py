@@ -25,8 +25,8 @@ from pydantic import BaseModel
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.core.config import get_config
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import EvidenceExtractionService
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.api import EvidenceExtractionService
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
     DualTrackDocuments,
     EvidenceExtractionResult,
