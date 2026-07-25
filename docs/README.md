@@ -92,9 +92,10 @@ docs/
 
 | 日期 | 标题 | 状态 |
 |------|------|------|
-| 2026-06-20 | [Variant ID Guarantee Plan](archive/plans/2026-06-20-variant-id-guarantee-plan.md) | completed |
+| 2026-07-25 | [GraphRAG 集成方案](archive/plans/2026-07-25-graphrag-integration.md) | completed |
 | 2026-07-01 | [Semantic Word Alignment Design](archive/plans/2026-07-01-semantic-word-alignment-design.md) | completed |
 | 2026-07-01 | [Semantic Word Alignment Implementation Plan](archive/plans/2026-07-01-semantic-word-alignment-plan.md) | completed |
+| 2026-06-20 | [Variant ID Guarantee Plan](archive/plans/2026-06-20-variant-id-guarantee-plan.md) | completed |
 | — | [PRD — LinguaSeeker](archive/plans/PRD.md) | completed |
 
 ## 图表

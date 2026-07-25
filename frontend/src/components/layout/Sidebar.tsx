@@ -1,9 +1,15 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { MessageSquare, Database, ClipboardList, ShieldCheck, HelpCircle } from "lucide-react";
-import { Menu, Typography } from "antd";
-import { useAppStore } from "@/stores/appStore";
 import { useI18n } from "@/lib/i18n";
-
+import { useAppStore } from "@/stores/appStore";
+import { Menu, Typography } from "antd";
+import {
+  ClipboardList,
+  Database,
+  HelpCircle,
+  MessageSquare,
+  Network,
+  ShieldCheck,
+} from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface SidebarProps {
   /** When true, renders as a mobile overlay instead of inline. */
@@ -24,11 +30,13 @@ export function Sidebar({ mobile, onNavigate, onGuideOpen }: SidebarProps) {
 
   // The SVG is always the bright (light) version. In dark mode we invert it
   // so the white background becomes dark and the colours stay reasonable.
-  const logoFilter = mode === "dark" ? "invert(1) hue-rotate(180deg)" : undefined;
+  const logoFilter =
+    mode === "dark" ? "invert(1) hue-rotate(180deg)" : undefined;
 
   const NAV_ITEMS = [
     { label: t("nav.evidenceDb"), href: "/evidence-db", icon: Database },
     { label: t("nav.chat"), href: "/chat", icon: MessageSquare },
+    { label: t("nav.graphRag"), href: "/graphrag", icon: Network },
     { label: t("nav.tasks"), href: "/pipeline", icon: ClipboardList },
     { label: t("nav.audit"), href: "/audit", icon: ShieldCheck },
   ] as const;
@@ -111,7 +119,15 @@ export function Sidebar({ mobile, onNavigate, onGuideOpen }: SidebarProps) {
       </div>
 
       {/* Footer */}
-      <div style={{ borderTop: "1px solid var(--color-border)", padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+      <div
+        style={{
+          borderTop: "1px solid var(--color-border)",
+          padding: 16,
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+        }}
+      >
         {!effectiveCollapsed && (
           <>
             <button
@@ -132,8 +148,12 @@ export function Sidebar({ mobile, onNavigate, onGuideOpen }: SidebarProps) {
                 fontFamily: "inherit",
                 transition: "color 150ms",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-primary-600)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.color = "var(--color-primary-600)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "var(--color-text-secondary)")
+              }
             >
               <HelpCircle size={16} />
               <span>{t("nav.help")}</span>

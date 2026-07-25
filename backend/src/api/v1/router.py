@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from src.api.v1 import annotations, auth, chat, delta_audit, evidence, pipeline, source_link
+from src.api.v1 import annotations, auth, chat, delta_audit, evidence, graph_rag, pipeline, source_link
 
 router = APIRouter(prefix="/api/v1")
 
@@ -17,4 +17,5 @@ router.include_router(delta_audit.router, prefix="/delta-audit", tags=["delta-au
 router.include_router(source_link.router, prefix="/source-link", tags=["source-link"])
 router.include_router(chat.router, prefix="/chat", tags=["chat"])
 router.include_router(auth.router, prefix="/auth", tags=["auth"])
+router.include_router(graph_rag.router, prefix="/graphrag", tags=["graphrag"])
 router.include_router(annotations.router, prefix="/documents", tags=["annotations"])

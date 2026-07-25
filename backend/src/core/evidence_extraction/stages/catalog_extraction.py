@@ -95,6 +95,7 @@ class CatalogExtractionStage:
         document: TrackDocument,
         evidence_map: DocumentEvidenceMap,
         channel_classification: DocumentChannelClassification | None = None,
+        graph_context: str = "",
     ) -> list[EvidenceItem]:
         summary = self._summarize_map(evidence_map)
         overhead = self._max_group_overhead(summary, document.extraction_target)
@@ -122,6 +123,7 @@ class CatalogExtractionStage:
                     evidence_map_summary=chunk_summary,
                     extraction_target=document.extraction_target,
                     channel_classification=channel_classification,
+                    graph_context=graph_context,
                 )
                 stage = self._stage_name(chunk, group_name)
                 items = self._provider.invoke_structured(
@@ -141,6 +143,7 @@ class CatalogExtractionStage:
         document: TrackDocument,
         evidence_map: DocumentEvidenceMap,
         channel_classification: DocumentChannelClassification | None = None,
+        graph_context: str = "",
     ) -> list[EvidenceItem]:
         summary = self._summarize_map(evidence_map)
         overhead = self._max_group_overhead(summary, document.extraction_target)
@@ -169,6 +172,7 @@ class CatalogExtractionStage:
                 evidence_map_summary=chunk_summary,
                 extraction_target=document.extraction_target,
                 channel_classification=channel_classification,
+                graph_context=graph_context,
             )
             stage = self._stage_name(chunk, group_name)
             async with sem:

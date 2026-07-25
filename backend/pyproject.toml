@@ -14,6 +14,7 @@ dependencies = [
     "alembic>=1.13.0",
     "httpx[socks]>=0.27.0",
     "redis>=5.0.0",
+    "neo4j>=5.28.0",
     "celery>=5.4.0",
     "pydantic-settings>=2.3.0",
     "python-dotenv>=1.0.0",

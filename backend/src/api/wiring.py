@@ -9,11 +9,14 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from redis.asyncio import Redis as AsyncRedis
 
 from src.core.config import get_config
+from src.dao.neo4j.connection import build_neo4j_driver
+from src.dao.neo4j.repository import Neo4jRepository
 from src.dao.postgresql.connection import async_session_factory, build_async_engine
 from src.dao.postgresql.job_queue import JobQueueRepository
 from src.dao.redis.connection import build_redis_client
 
 if TYPE_CHECKING:
+    from neo4j import AsyncDriver
     from src.agents.dispatcher import SingleJobDispatcher
     from src.core.ingest_and_digitize_data.parse_document.local.parser import (
         MinerULocalParser,
@@ -24,6 +27,8 @@ _session_factory: async_sessionmaker[AsyncSession] | None = None
 _redis_client: AsyncRedis | None = None
 _local_parser: MinerULocalParser | None = None
 _dispatcher: SingleJobDispatcher | None = None
+_neo4j_driver: AsyncDriver | None = None
+_neo4j_repository: Neo4jRepository | None = None
 
 
 def get_session_factory() -> async_sessionmaker[AsyncSession]:
@@ -64,6 +69,26 @@ async def dispose_redis() -> None:
         _redis_client = None
 
 
+def get_neo4j_driver() -> AsyncDriver | None:
+    """Return the singleton Neo4j driver (or None if not yet initialized)."""
+    return _neo4j_driver
+
+
+def get_neo4j_repository() -> Neo4jRepository | None:
+    """Return the singleton Neo4j repository (or None if not yet initialized)."""
+    return _neo4j_repository
+
+
+async def dispose_neo4j() -> None:
+    """Teardown the Neo4j driver (called from lifespan shutdown)."""
+    global _neo4j_driver, _neo4j_repository
+    if _neo4j_repository is not None:
+        _neo4j_repository = None
+    if _neo4j_driver is not None:
+        await _neo4j_driver.close()
+        _neo4j_driver = None
+
+
 def get_local_parser() -> MinerULocalParser | None:
     """Return the singleton MinerU local parser (or None if not yet initialized)."""
     return _local_parser
@@ -88,7 +113,7 @@ def wire_dependencies() -> None:
     from src.agents.phase_4_factory import Phase4ServiceFactory
     from src.agents.runner import PipelineRunner
     from src.agents.state_persistence import SessionBoundStatePersistence
-    from src.api.deps import set_phase4_factory
+    from src.api.deps import set_neo4j_repository, set_phase4_factory
     from src.api.v1.pipeline import set_pipeline_runner
     from src.core.evidence_extraction.api import (
         EvidenceExtractionService,
@@ -111,6 +136,7 @@ def wire_dependencies() -> None:
     from src.core.ingest_and_digitize_data.parse_document.remote.parser import (
         MinerURemoteParser,
     )
+    from src.core.graph_rag.api import GraphRagService
     from src.core.ingest_and_digitize_data.parse_document.service import (
         ParseDocumentService,
     )
@@ -118,7 +144,7 @@ def wire_dependencies() -> None:
         EntityStandardizationService,
     )
 
-    global _engine, _session_factory, _redis_client, _local_parser, _dispatcher
+    global _engine, _session_factory, _redis_client, _local_parser, _dispatcher, _neo4j_driver, _neo4j_repository
 
     cfg = get_config()
 
@@ -130,6 +156,11 @@ def wire_dependencies() -> None:
 
     # ── Redis client singleton ───────────────────────────────────────
     _redis_client = build_redis_client(cfg)
+
+    # ── Neo4j driver/repository singleton ────────────────────────────
+    if _neo4j_driver is None:
+        _neo4j_driver = build_neo4j_driver(cfg)
+        _neo4j_repository = Neo4jRepository(_neo4j_driver)
 
     # ── Document processing cache (L1 Redis + L2 PostgreSQL) ──────────
     from src.agents.processing_cache import DocumentProcessingCacheService
@@ -160,11 +191,16 @@ def wire_dependencies() -> None:
     parse_orchestrator = DocumentParseOrchestrator(remote=remote_parser, local=_local_parser)
     parse_service = ParseDocumentService(parse_orchestrator)
     translation_service = TranslationService(cfg=cfg)
+    graph_rag_service = GraphRagService(_neo4j_repository) if _neo4j_repository is not None else None
     extraction_service = EvidenceExtractionService(
         cfg=cfg,
         extraction_profile=ExtractionProfile.NONE,
+        graph_rag_service=graph_rag_service,
     )
-    standardization_service = EntityStandardizationService(cfg=cfg)
+    standardization_service = EntityStandardizationService(
+        cfg=cfg,
+        graph_rag_service=graph_rag_service,
+    )
 
     # ── Phase adapters ──
 
@@ -220,3 +256,5 @@ def wire_dependencies() -> None:
     set_pipeline_runner(runner)
     set_phase4_factory(phase4_factory)
     set_job_queue(job_queue)
+    if _neo4j_repository is not None:
+        set_neo4j_repository(_neo4j_repository)

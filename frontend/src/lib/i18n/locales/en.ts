@@ -14,7 +14,8 @@ const en = {
 
   // ── Pipeline page ──
   "pipeline.title": "Task Pipeline",
-  "pipeline.description": "Create and manage literature processing tasks — from acquisition to evidence extraction.",
+  "pipeline.description":
+    "Create and manage literature processing tasks — from acquisition to evidence extraction.",
   "pipeline.filter.all": "All",
   "pipeline.filter.running": "Running",
   "pipeline.filter.pending": "Pending",
@@ -24,15 +25,18 @@ const en = {
   "pipeline.upload.dragText": "Click or drag a PDF file to this area",
   "pipeline.upload.hint": "Supports single PDF upload",
   "pipeline.search.title": "Online Search",
-  "pipeline.search.queryPlaceholder": "Search query (e.g. BRCA1 pathogenic variant)",
-  "pipeline.search.identifiersPlaceholder": "Identifiers — one per line (PMID, DOI, or URL)",
+  "pipeline.search.queryPlaceholder":
+    "Search query (e.g. BRCA1 pathogenic variant)",
+  "pipeline.search.identifiersPlaceholder":
+    "Identifiers — one per line (PMID, DOI, or URL)",
   "pipeline.submit": "Submit",
   "pipeline.cancel": "Cancel",
   "pipeline.newTask": "New Task",
-  "pipeline.success.pdfStarted": "\"{name}\" — pipeline started",
-  "pipeline.success.queryStarted": "\"{query}\" — pipeline started",
+  "pipeline.success.pdfStarted": '"{name}" — pipeline started',
+  "pipeline.success.queryStarted": '"{query}" — pipeline started',
   "pipeline.success.idsStarted": "Search by identifiers — pipeline started",
-  "pipeline.warning.enterQueryOrIds": "Enter a search query or identifiers (DOI/PMID/PMCID)",
+  "pipeline.warning.enterQueryOrIds":
+    "Enter a search query or identifiers (DOI/PMID/PMCID)",
   "pipeline.error.readFailed": "Failed to read file",
   "pipeline.error.startFailed": "Failed to start pipeline",
   "pipeline.error.pdfOnly": "Only PDF files are supported",
@@ -76,18 +80,21 @@ const en = {
   "pipeline.history.title": "Pipeline Runs",
   "pipeline.history.refresh": "Refresh",
   "pipeline.history.refreshAria": "Refresh runs",
-  "pipeline.history.searchPlaceholder": "Search by title, identifier, or source key…",
+  "pipeline.history.searchPlaceholder":
+    "Search by title, identifier, or source key…",
   "pipeline.history.pageInfo": "Page {current} of {total}",
   "pipeline.history.jumpToPage": "Jump to page",
   "pipeline.history.jumpToPageTitle": "Jump to page (1–{total})",
   "pipeline.history.loadingAria": "Loading runs",
   "pipeline.history.noMatch": "No matching runs",
   "pipeline.history.noRuns": "No runs yet",
-  "pipeline.history.filterEmpty": "No runs with status \"{status}\"",
+  "pipeline.history.filterEmpty": 'No runs with status "{status}"',
   "pipeline.history.chatLink": "AI Chat",
-  "pipeline.history.guidance": "Start a pipeline from the AI Chat or upload a PDF to begin processing literature.",
+  "pipeline.history.guidance":
+    "Start a pipeline from the AI Chat or upload a PDF to begin processing literature.",
   "pipeline.history.loadError": "Failed to load runs",
-  "pipeline.history.loadErrorHint": "We could not reach the pipeline service. Check that the backend is running.",
+  "pipeline.history.loadErrorHint":
+    "We could not reach the pipeline service. Check that the backend is running.",
   "pipeline.history.retry": "Retry",
 
   // ── Pipeline — PipelineStatusView ──
@@ -109,7 +116,8 @@ const en = {
   "pipeline.phase.extraction": "Evidence Extraction",
   "pipeline.phase.extractionDesc": "Extract and translate evidence fields",
   "pipeline.phase.standardization": "Entity Standardization",
-  "pipeline.phase.standardizationDesc": "Normalize genes, variants, and diseases",
+  "pipeline.phase.standardizationDesc":
+    "Normalize genes, variants, and diseases",
   "pipeline.phase.running": "Running",
   "pipeline.phase.completed": "Completed",
   "pipeline.phase.failed": "Failed",
@@ -127,17 +135,21 @@ const en = {
 
   // ── Evidence page ──
   "evidence.title": "Literature Evidence",
-  "evidence.description": "Search and explore literature-level evidence by gene, variant, disease, or PMID.",
+  "evidence.description":
+    "Search and explore literature-level evidence by gene, variant, disease, or PMID.",
 
   // ── Evidence detail ──
   "evidenceDetail.title": "Literature Detail",
-  "evidenceDetail.description": "Review literature metadata, evidence distribution, and extracted fields.",
+  "evidenceDetail.description":
+    "Review literature metadata, evidence distribution, and extracted fields.",
   "evidenceDetail.compareTitle": "Bilingual Evidence",
-  "evidenceDetail.compareDescription": "Read original and English full-text evidence side by side with category highlight controls.",
+  "evidenceDetail.compareDescription":
+    "Read original and English full-text evidence side by side with category highlight controls.",
 
   // ── Evidence Search — Form ──
   "evidence.search.heading": "Literature Evidence Search",
-  "evidence.search.description": "Search by gene, variant, disease, or PMID to find literature evidence.",
+  "evidence.search.description":
+    "Search by gene, variant, disease, or PMID to find literature evidence.",
   "evidence.search.btn": "Search",
   "evidence.search.clear": "Clear",
   "evidence.search.gene": "Gene",
@@ -151,7 +163,8 @@ const en = {
 
   // ── Evidence Search — Results ──
   "evidence.results.empty": "No literature matched this search",
-  "evidence.results.guidance": "Try a broader gene name, variant notation, or disease term.",
+  "evidence.results.guidance":
+    "Try a broader gene name, variant notation, or disease term.",
   "evidence.results.rows": "literature row(s)",
   "evidence.results.groups": "evidence group(s) total",
   "evidence.results.showing": "Showing {from}–{to}",
@@ -183,8 +196,10 @@ const en = {
   "evidence.bilingual.navigator": "Evidence navigator",
   "evidence.bilingual.activeEvidence": "Active evidence",
   "evidence.bilingual.noSelected": "No evidence selected",
-  "evidence.bilingual.noDocText": "No document text is available for this track",
-  "evidence.bilingual.fullDoc": "Full document with {count} aligned paragraph(s)",
+  "evidence.bilingual.noDocText":
+    "No document text is available for this track",
+  "evidence.bilingual.fullDoc":
+    "Full document with {count} aligned paragraph(s)",
   "evidence.bilingual.docText": "Document text",
   "evidence.bilingual.page": "Page {num}",
   "evidence.bilingual.originalDocument": "Original document",
@@ -194,7 +209,8 @@ const en = {
   "evidence.bilingual.backDetail": "Back to literature detail",
   "evidence.fieldAssign.success": "Assigned selected text to {field}",
   "evidence.fieldAssign.error": "Failed to assign field",
-  "evidence.fieldAssign.unsupported": "This field does not support selection assignment yet",
+  "evidence.fieldAssign.unsupported":
+    "This field does not support selection assignment yet",
 
   // ── Evidence Search — BilingualComparison ──
   "evidence.compare.noTraces": "No bilingual traces for this evidence group",
@@ -290,7 +306,8 @@ const en = {
 
   // ── Evidence DB page ──
   "evidenceDb.title": "Evidence Database",
-  "evidenceDb.description": "Browse variant evidence organized by mutation identifier",
+  "evidenceDb.description":
+    "Browse variant evidence organized by mutation identifier",
 
   // ── Evidence DB — VariantIndexView ──
   "evidenceDb.class.pathogenic": "Pathogenic",
@@ -325,14 +342,22 @@ const en = {
   "evidenceDb.listRefs": "Refs",
   "evidenceDb.listConf": "Conf.",
   "evidenceDb.listFields": "Fields",
-  "evidenceDb.columnHelp.geneVariant": "Canonical gene symbol and variant notation for this evidence row.",
-  "evidenceDb.columnHelp.disease": "Disease or phenotype associated with the variant evidence.",
-  "evidenceDb.columnHelp.evidence": "ACMG evidence categories found for this variant and their review progress.",
-  "evidenceDb.columnHelp.refs": "Number of unique literature sources supporting this evidence item.",
-  "evidenceDb.columnHelp.confidence": "Weighted average confidence across extracted evidence fields.",
-  "evidenceDb.columnHelp.fields": "Number of extracted evidence fields included in this row.",
-  "evidenceDb.columnHelp.sourceLanguage": "Original source-document languages represented by this row.",
-  "evidenceDb.columnHelp.updated": "Most recent evidence timestamp for this variant row.",
+  "evidenceDb.columnHelp.geneVariant":
+    "Canonical gene symbol and variant notation for this evidence row.",
+  "evidenceDb.columnHelp.disease":
+    "Disease or phenotype associated with the variant evidence.",
+  "evidenceDb.columnHelp.evidence":
+    "ACMG evidence categories found for this variant and their review progress.",
+  "evidenceDb.columnHelp.refs":
+    "Number of unique literature sources supporting this evidence item.",
+  "evidenceDb.columnHelp.confidence":
+    "Weighted average confidence across extracted evidence fields.",
+  "evidenceDb.columnHelp.fields":
+    "Number of extracted evidence fields included in this row.",
+  "evidenceDb.columnHelp.sourceLanguage":
+    "Original source-document languages represented by this row.",
+  "evidenceDb.columnHelp.updated":
+    "Most recent evidence timestamp for this variant row.",
   "evidenceDb.statGroups": "groups",
   "evidenceDb.statRefs": "refs",
   "evidenceDb.unknownGene": "Unknown Gene",
@@ -377,7 +402,8 @@ const en = {
   "evidenceDb.detail.literature": "Literature",
   "evidenceDb.detail.coverage": "Coverage",
   "evidenceDb.detail.reviewed": "Reviewed",
-  "evidenceDb.detail.reconciled": "{fields} reconciled fields across {categories} categories",
+  "evidenceDb.detail.reconciled":
+    "{fields} reconciled fields across {categories} categories",
   "evidenceDb.detail.noFields": "No evidence fields found",
   "evidenceDb.detail.references": "References",
   "evidenceDb.detail.sources": "{count} source(s)",
@@ -390,7 +416,8 @@ const en = {
 
   // ── Evidence DB — BilingualEvidenceView ──
   "evidenceDb.bilingual.back": "Back to variant detail",
-  "evidenceDb.bilingual.loadError": "Failed to load evidence data for this literature",
+  "evidenceDb.bilingual.loadError":
+    "Failed to load evidence data for this literature",
   "evidenceDb.bilingual.breadcrumb": "Evidence DB",
   "evidenceDb.bilingual.litFallback": "Literature",
   "evidenceDb.bilingual.originalText": "Original Text",
@@ -455,7 +482,8 @@ const en = {
 
   // ── Audit page ──
   "audit.title": "Audit Trail",
-  "audit.description": "Review all evidence corrections, status changes, and field-level edits.",
+  "audit.description":
+    "Review all evidence corrections, status changes, and field-level edits.",
 
   // ── Audit — AuditView ──
   "audit.metric.total": "Total events",
@@ -497,7 +525,8 @@ const en = {
 
   // ── Audit — EvidenceReviewDrawer ──
   "audit.review.title": "Review Evidence",
-  "audit.review.instruction": "All evidence items are shown below. Use the fields above to narrow results, then select an item to review.",
+  "audit.review.instruction":
+    "All evidence items are shown below. Use the fields above to narrow results, then select an item to review.",
   "audit.review.genePh": "Gene",
   "audit.review.variantPh": "Variant",
   "audit.review.diseasePh": "Disease",
@@ -529,17 +558,24 @@ const en = {
   "chat.agentPlaceholder": "Ask the Lingua Seeker Agent…",
 
   // ── Chat — WelcomeBlock ──
-  "chat.welcome.heading": "Start a traceable evidence workflow in Lingua Seeker",
-  "chat.welcome.description": "Choose a quick action below, or type a question to get started.",
+  "chat.welcome.heading":
+    "Start a traceable evidence workflow in Lingua Seeker",
+  "chat.welcome.description":
+    "Choose a quick action below, or type a question to get started.",
   "chat.welcome.pipeline.title": "Run evidence pipeline",
-  "chat.welcome.pipeline.desc": "Search literature and extract structured evidence for a gene or variant.",
+  "chat.welcome.pipeline.desc":
+    "Search literature and extract structured evidence for a gene or variant.",
   "chat.welcome.upload.title": "Upload source paper",
-  "chat.welcome.upload.desc": "Upload a PDF to extract evidence from a specific publication.",
+  "chat.welcome.upload.desc":
+    "Upload a PDF to extract evidence from a specific publication.",
   "chat.welcome.search.title": "Search evidence base",
-  "chat.welcome.search.desc": "Query existing evidence records by gene, variant, or disease.",
+  "chat.welcome.search.desc":
+    "Query existing evidence records by gene, variant, or disease.",
   "chat.welcome.review.title": "Review and export",
-  "chat.welcome.review.desc": "Review extracted evidence, correct errors, and export reports.",
-  "chat.welcome.disclaimer": "AI-generated content may contain errors. Always verify critical findings against primary literature.",
+  "chat.welcome.review.desc":
+    "Review extracted evidence, correct errors, and export reports.",
+  "chat.welcome.disclaimer":
+    "AI-generated content may contain errors. Always verify critical findings against primary literature.",
 
   // ── Chat — ChatView ──
   "chat.taskQueue": "Task Queue",
@@ -587,7 +623,8 @@ const en = {
   "chat.summary.identifiers": "Identifiers",
   "chat.summary.searchQuery": "Search Query",
   "chat.summary.document": "Document",
-  "chat.summary.uploadHint": "The PDF upload card opens in chat after confirmation",
+  "chat.summary.uploadHint":
+    "The PDF upload card opens in chat after confirmation",
   "chat.summary.extractionTarget": "Extraction Target",
   "chat.summary.gene": "Gene:",
   "chat.summary.disease": "Disease:",
@@ -597,7 +634,8 @@ const en = {
   // ── Chat — UploadTaskCard ──
   "chat.upload.open": "Upload PDF",
   "chat.upload.heading": "Upload PDF source paper",
-  "chat.upload.description": "Create a bilingual evidence extraction task from this chat.",
+  "chat.upload.description":
+    "Create a bilingual evidence extraction task from this chat.",
   "chat.upload.dropText": "Click or drag a PDF file here",
   "chat.upload.targetHeading": "Optional extraction target",
   "chat.upload.gene": "Gene",
@@ -623,24 +661,31 @@ const en = {
   "chat.phase.review": "Review",
   "chat.phase.reviewDesc": "Expert review and feedback",
   "chat.status.allFinished": "All phases finished successfully.",
-  "chat.status.phaseFailedHint": "A phase failed — check the error details below.",
+  "chat.status.phaseFailedHint":
+    "A phase failed — check the error details below.",
   "chat.status.nowPhase": "Now: {desc}",
   "chat.status.preparing": "Preparing the pipeline…",
   "chat.status.phaseRunning": "Phase running",
 
   // ── User Guide ──
   "guide.welcome": "Welcome to Lingua Seeker",
-  "guide.welcomeDesc": "A multi-agent platform for medical genetics literature automation and structured evidence extraction.",
+  "guide.welcomeDesc":
+    "A multi-agent platform for medical genetics literature automation and structured evidence extraction.",
   "guide.chat": "AI Chat",
-  "guide.chatDesc": "Interact with an AI assistant in natural language to search literature, extract evidence, and get answers about genetic variants.",
+  "guide.chatDesc":
+    "Interact with an AI assistant in natural language to search literature, extract evidence, and get answers about genetic variants.",
   "guide.tasks": "Task Pipeline",
-  "guide.tasksDesc": "Create and manage literature processing tasks — from acquisition to evidence extraction.",
+  "guide.tasksDesc":
+    "Create and manage literature processing tasks — from acquisition to evidence extraction.",
   "guide.evidenceDb": "Evidence Database",
-  "guide.evidenceDbDesc": "Browse and search extracted variant evidence organized by mutation identifier.",
+  "guide.evidenceDbDesc":
+    "Browse and search extracted variant evidence organized by mutation identifier.",
   "guide.audit": "Audit Trail",
-  "guide.auditDesc": "Review system operation logs, evidence corrections, and status changes.",
+  "guide.auditDesc":
+    "Review system operation logs, evidence corrections, and status changes.",
   "guide.getStarted": "Get Started",
-  "guide.getStartedDesc": "You're all set! Click the Help button anytime to revisit this guide.",
+  "guide.getStartedDesc":
+    "You're all set! Click the Help button anytime to revisit this guide.",
 
   // ── Page Guide ──
   "pageGuide.help": "Guide",
@@ -648,74 +693,117 @@ const en = {
   "pageGuide.footer": "Click the help button to reopen this guide.",
   "pageGuide.evidenceDb.title": "Evidence Database Guide",
   "pageGuide.evidenceDb.s1.title": "Variant Index (L1)",
-  "pageGuide.evidenceDb.s1.i1": "Browse all extracted variants with gene, HGVS notation, disease, and ACMG classification.",
-  "pageGuide.evidenceDb.s1.i2": "The 4px left-edge color bar indicates classification: red (P), orange (LP), gray (VUS), blue (LB), green (B).",
-  "pageGuide.evidenceDb.s1.i3": "Category chips (A–K) show which ACMG evidence categories have data for each variant.",
-  "pageGuide.evidenceDb.s1.i4": "Use the search bar and filter controls to narrow results by gene, disease, or classification.",
+  "pageGuide.evidenceDb.s1.i1":
+    "Browse all extracted variants with gene, HGVS notation, disease, and ACMG classification.",
+  "pageGuide.evidenceDb.s1.i2":
+    "The 4px left-edge color bar indicates classification: red (P), orange (LP), gray (VUS), blue (LB), green (B).",
+  "pageGuide.evidenceDb.s1.i3":
+    "Category chips (A–K) show which ACMG evidence categories have data for each variant.",
+  "pageGuide.evidenceDb.s1.i4":
+    "Use the search bar and filter controls to narrow results by gene, disease, or classification.",
   "pageGuide.evidenceDb.s2.title": "Variant Detail (L2)",
-  "pageGuide.evidenceDb.s2.i1": "Click any variant row to view its full evidence profile.",
-  "pageGuide.evidenceDb.s2.i2": "Evidence items are grouped by source document with category labels.",
-  "pageGuide.evidenceDb.s2.i3": "Each evidence field shows the extracted value and extraction confidence.",
+  "pageGuide.evidenceDb.s2.i1":
+    "Click any variant row to view its full evidence profile.",
+  "pageGuide.evidenceDb.s2.i2":
+    "Evidence items are grouped by source document with category labels.",
+  "pageGuide.evidenceDb.s2.i3":
+    "Each evidence field shows the extracted value and extraction confidence.",
   "pageGuide.evidenceDb.s3.title": "Bilingual Evidence (L3)",
-  "pageGuide.evidenceDb.s3.i1": "View original-language and translated evidence side by side.",
-  "pageGuide.evidenceDb.s3.i2": "Compare extraction accuracy between source and translation.",
-  "pageGuide.evidenceDb.s3.i3": "Navigate back via breadcrumb links at the top.",
+  "pageGuide.evidenceDb.s3.i1":
+    "View original-language and translated evidence side by side.",
+  "pageGuide.evidenceDb.s3.i2":
+    "Compare extraction accuracy between source and translation.",
+  "pageGuide.evidenceDb.s3.i3":
+    "Navigate back via breadcrumb links at the top.",
   "pageGuide.audit.title": "Audit Trail Guide",
   "pageGuide.audit.s1.title": "Event Log",
-  "pageGuide.audit.s1.i1": "All system operations are recorded: evidence extraction, corrections, status changes.",
-  "pageGuide.audit.s1.i2": "Filter by event type, date range, or keyword to find specific records.",
+  "pageGuide.audit.s1.i1":
+    "All system operations are recorded: evidence extraction, corrections, status changes.",
+  "pageGuide.audit.s1.i2":
+    "Filter by event type, date range, or keyword to find specific records.",
   "pageGuide.audit.s1.i3": "Click any row to open the evidence review drawer.",
   "pageGuide.audit.s2.title": "Evidence Review Drawer",
-  "pageGuide.audit.s2.i1": "All evidence items load automatically when the drawer opens.",
-  "pageGuide.audit.s2.i2": "Use the filter panel to narrow by category, confidence, or status.",
-  "pageGuide.audit.s2.i3": "Each item shows the extracted value, source field, and confidence score.",
-  "pageGuide.audit.s2.i4": "Submit corrections via the annotation controls — changes are tracked in the audit trail.",
+  "pageGuide.audit.s2.i1":
+    "All evidence items load automatically when the drawer opens.",
+  "pageGuide.audit.s2.i2":
+    "Use the filter panel to narrow by category, confidence, or status.",
+  "pageGuide.audit.s2.i3":
+    "Each item shows the extracted value, source field, and confidence score.",
+  "pageGuide.audit.s2.i4":
+    "Submit corrections via the annotation controls — changes are tracked in the audit trail.",
   "pageGuide.evidence.title": "Evidence Search Guide",
   "pageGuide.evidence.s1.title": "Search & Extraction",
-  "pageGuide.evidence.s1.i1": "Enter a natural-language query about a genetic variant, gene, or clinical question.",
-  "pageGuide.evidence.s1.i2": "The system searches indexed literature and extracts structured ACMG/ClinGen evidence.",
-  "pageGuide.evidence.s1.i3": "Results are organized by evidence category (A–K) with confidence scores.",
-  "pageGuide.evidence.s1.i4": "Click any evidence item to view its source document and bilingual comparison.",
+  "pageGuide.evidence.s1.i1":
+    "Enter a natural-language query about a genetic variant, gene, or clinical question.",
+  "pageGuide.evidence.s1.i2":
+    "The system searches indexed literature and extracts structured ACMG/ClinGen evidence.",
+  "pageGuide.evidence.s1.i3":
+    "Results are organized by evidence category (A–K) with confidence scores.",
+  "pageGuide.evidence.s1.i4":
+    "Click any evidence item to view its source document and bilingual comparison.",
   "pageGuide.evidence.s2.title": "Evidence Categories (A–K)",
-  "pageGuide.evidence.s2.i1": "A: Variant Information — gene, HGVS, variant type, domain",
+  "pageGuide.evidence.s2.i1":
+    "A: Variant Information — gene, HGVS, variant type, domain",
   "pageGuide.evidence.s2.i2": "B: Case/Phenotype — proband, disease, HPO terms",
-  "pageGuide.evidence.s2.i3": "C: Segregation/Family — de novo, inheritance, LOD score",
-  "pageGuide.evidence.s2.i4": "D: Population/Frequency — allele frequency, gnomAD",
-  "pageGuide.evidence.s2.i5": "E: Computational — prediction tools, conservation",
-  "pageGuide.evidence.s2.i6": "F: Functional Evidence — assay results, OddsPath",
+  "pageGuide.evidence.s2.i3":
+    "C: Segregation/Family — de novo, inheritance, LOD score",
+  "pageGuide.evidence.s2.i4":
+    "D: Population/Frequency — allele frequency, gnomAD",
+  "pageGuide.evidence.s2.i5":
+    "E: Computational — prediction tools, conservation",
+  "pageGuide.evidence.s2.i6":
+    "F: Functional Evidence — assay results, OddsPath",
   "pageGuide.evidence.s2.i7": "G: Case-Control — OR, p-value, study design",
-  "pageGuide.evidence.s2.i8": "H–K: Contradiction, Classification, Therapeutic, Additional",
+  "pageGuide.evidence.s2.i8":
+    "H–K: Contradiction, Classification, Therapeutic, Additional",
 
   // ── Bilingual Reading Guide ──
   "pageGuide.bilingual.title": "Bilingual Reading Guide",
   "pageGuide.bilingual.s1.title": "Page Layout",
-  "pageGuide.bilingual.s1.i1": "The page shows a bilingual comparison: original-language text on the left and translated text on the right.",
-  "pageGuide.bilingual.s1.i2": "The sidebar on the left provides category filters, status filters, and an evidence navigator.",
-  "pageGuide.bilingual.s1.i3": "The breadcrumb at the top links back to the variant list and variant detail pages.",
+  "pageGuide.bilingual.s1.i1":
+    "The page shows a bilingual comparison: original-language text on the left and translated text on the right.",
+  "pageGuide.bilingual.s1.i2":
+    "The sidebar on the left provides category filters, status filters, and an evidence navigator.",
+  "pageGuide.bilingual.s1.i3":
+    "The breadcrumb at the top links back to the variant list and variant detail pages.",
   "pageGuide.bilingual.s2.title": "Evidence Navigator",
-  "pageGuide.bilingual.s2.i1": "Toggle category checkboxes (A–K) to show or hide specific evidence types in the document.",
-  "pageGuide.bilingual.s2.i2": "Toggle review status filters (approved, provisional, etc.) to focus on items needing attention.",
-  "pageGuide.bilingual.s2.i3": "Click any evidence item in the navigator list to select it — the document scrolls to the relevant passage.",
+  "pageGuide.bilingual.s2.i1":
+    "Toggle category checkboxes (A–K) to show or hide specific evidence types in the document.",
+  "pageGuide.bilingual.s2.i2":
+    "Toggle review status filters (approved, provisional, etc.) to focus on items needing attention.",
+  "pageGuide.bilingual.s2.i3":
+    "Click any evidence item in the navigator list to select it — the document scrolls to the relevant passage.",
   "pageGuide.bilingual.s3.title": "Text Highlighting",
-  "pageGuide.bilingual.s3.i1": "Colored highlights in the document text indicate extracted evidence values.",
-  "pageGuide.bilingual.s3.i2": "Hover over a highlight to see which evidence field it belongs to and its review status.",
-  "pageGuide.bilingual.s3.i3": "Click a highlight to open the field review popover where you can approve, correct, or reject the extraction.",
+  "pageGuide.bilingual.s3.i1":
+    "Colored highlights in the document text indicate extracted evidence values.",
+  "pageGuide.bilingual.s3.i2":
+    "Hover over a highlight to see which evidence field it belongs to and its review status.",
+  "pageGuide.bilingual.s3.i3":
+    "Click a highlight to open the field review popover where you can approve, correct, or reject the extraction.",
   "pageGuide.bilingual.s4.title": "Word Alignment",
-  "pageGuide.bilingual.s4.i1": "Colored arcs between the two panels show word-level alignment between original and translated text.",
-  "pageGuide.bilingual.s4.i2": "Hover over an alignment arc to highlight the corresponding span in the other panel.",
-  "pageGuide.bilingual.s4.i3": "Click an arc to pin it — press Escape to unpin.",
+  "pageGuide.bilingual.s4.i1":
+    "Colored arcs between the two panels show word-level alignment between original and translated text.",
+  "pageGuide.bilingual.s4.i2":
+    "Hover over an alignment arc to highlight the corresponding span in the other panel.",
+  "pageGuide.bilingual.s4.i3":
+    "Click an arc to pin it — press Escape to unpin.",
   "pageGuide.bilingual.s5.title": "Scroll Sync & Annotations",
-  "pageGuide.bilingual.s5.i1": "Enable scroll sync (toggle at top-right) to keep both panels at the same reading position.",
-  "pageGuide.bilingual.s5.i2": "Select text in either panel to create a colored annotation — useful for marking important passages.",
-  "pageGuide.bilingual.s5.i3": "Right-click selected text to assign it to a specific ACMG evidence field.",
-  "pageGuide.bilingual.s5.i4": "Use the Export Report button in the literature header to download a structured evidence report.",
+  "pageGuide.bilingual.s5.i1":
+    "Enable scroll sync (toggle at top-right) to keep both panels at the same reading position.",
+  "pageGuide.bilingual.s5.i2":
+    "Select text in either panel to create a colored annotation — useful for marking important passages.",
+  "pageGuide.bilingual.s5.i3":
+    "Right-click selected text to assign it to a specific ACMG evidence field.",
+  "pageGuide.bilingual.s5.i4":
+    "Use the Export Report button in the literature header to download a structured evidence report.",
 
   // ── Account ──
   "auth.accountMenu": "Account menu",
   "auth.publicAccount": "Public",
   "auth.personalAccount": "Personal account",
   "auth.publicScope": "Shared public workspace",
-  "auth.personalScope": "Enter a username and password. New usernames are created automatically.",
+  "auth.personalScope":
+    "Enter a username and password. New usernames are created automatically.",
   "auth.loginOrCreate": "Log in / create",
   "auth.logout": "Log out",
   "auth.loginOrCreateTitle": "Log in or create account",
@@ -775,6 +863,26 @@ const en = {
   "annotation.deleteFailed": "Failed to delete annotation",
   "annotation.pickColor": "Pick color {color}",
   "annotation.notePlaceholder": "Note…",
+
+  // ── GraphRAG ──
+  "nav.graphRag": "GraphRAG",
+  "graphRag.title": "GraphRAG Knowledge Q&A",
+  "graphRag.description":
+    "Ask natural-language questions against the Neo4j knowledge graph built from terminology baselines and literature evidence.",
+  "graphRag.questionLabel": "Question",
+  "graphRag.questionPlaceholder":
+    "e.g. What is the relationship between GLA and Fabry disease?",
+  "graphRag.questionRequired": "Please enter a question",
+  "graphRag.modeLabel": "Retrieval mode",
+  "graphRag.modeFull": "Full graph",
+  "graphRag.modeTerminology": "Terminology only",
+  "graphRag.askButton": "Ask",
+  "graphRag.thinking":
+    "Retrieving the knowledge graph and generating an answer…",
+  "graphRag.error": "Query failed",
+  "graphRag.answerTitle": "Answer",
+  "graphRag.graphTitle": "Related knowledge graph",
+  "graphRag.sourceCount": "Cited evidence: {count}",
 } as const;
 
 export { en };

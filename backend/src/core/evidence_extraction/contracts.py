@@ -476,3 +476,4 @@ class EvidenceExtractionState(BaseModel):
     status: EvidenceExtractionStatus = EvidenceExtractionStatus.COMPLETED
     phenotype_evidence: list[EvidenceItem] = Field(default_factory=list)
     discarded_evidence: list[EvidenceItem] = Field(default_factory=list)
+    graph_context: str = ""

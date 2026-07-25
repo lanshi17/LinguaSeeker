@@ -232,6 +232,16 @@ class PostgreSQLConfig(BaseModel):
     max_overflow: int = 30
 
 
+class Neo4jConfig(BaseModel):
+    """Neo4j graph database connection."""
+
+    uri: str = "bolt://localhost:7687"
+    user: str = "neo4j"
+    password: str = ""
+    database: str = "neo4j"
+    max_connection_pool_size: int = 10
+
+
 class WebSearchConfig(BaseModel):
     """Web search provider configuration (adapter-based: Firecrawl or Tavily)."""
 
@@ -277,6 +287,14 @@ class NetworkConfig(BaseModel):
             if hostname == domain or hostname.endswith("." + domain):
                 return None
         return self.proxy
+
+
+class GraphRagConfig(BaseModel):
+    """GraphRAG feature flags for extraction context augmentation."""
+
+    enabled: bool = False
+    hops: int = 2
+    mode: str = "full"  # "terminology_only" or "full"
 
 
 # ── Root settings ────────────────────────────────────────────────────────
@@ -422,6 +440,20 @@ class Settings(BaseSettings):
     postgres_max_overflow: int = 30
     pgvector_enabled: bool = True
 
+    # ── Neo4j flat fields (NEO4J_*) ─────────────────────────────────────
+
+    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_user: str = "neo4j"
+    neo4j_password: str = ""
+    neo4j_database: str = "neo4j"
+    neo4j_max_connection_pool_size: int = 10
+
+    # ── GraphRAG flat fields (GRAPHRAG_*) ───────────────────────────────
+
+    graphrag_enabled: bool = False
+    graphrag_hops: int = 2
+    graphrag_mode: str = "full"  # "terminology_only" or "full"
+
     # ── Web Search flat fields (WEB_SEARCH_*) ───────────────────────────
 
     web_search_firecrawl_api_key: str = ""
@@ -453,6 +485,8 @@ class Settings(BaseSettings):
     redis: RedisConfig = Field(default_factory=RedisConfig, exclude=True)
     pipeline: PipelineConfig = Field(default_factory=PipelineConfig, exclude=True)
     postgresql: PostgreSQLConfig = Field(default_factory=PostgreSQLConfig, exclude=True)
+    neo4j: Neo4jConfig = Field(default_factory=Neo4jConfig, exclude=True)
+    graph_rag: GraphRagConfig = Field(default_factory=GraphRagConfig, exclude=True)
     web_search: WebSearchConfig = Field(default_factory=WebSearchConfig, exclude=True)
     network: NetworkConfig = Field(default_factory=NetworkConfig, exclude=True)
 
@@ -574,6 +608,18 @@ class Settings(BaseSettings):
             password=self.postgres_password,
             pool_size=self.postgres_pool_size,
             max_overflow=self.postgres_max_overflow,
+        )
+        self.neo4j = Neo4jConfig(
+            uri=self.neo4j_uri,
+            user=self.neo4j_user,
+            password=self.neo4j_password,
+            database=self.neo4j_database,
+            max_connection_pool_size=self.neo4j_max_connection_pool_size,
+        )
+        self.graph_rag = GraphRagConfig(
+            enabled=self.graphrag_enabled,
+            hops=self.graphrag_hops,
+            mode=self.graphrag_mode,
         )
         self.web_search = WebSearchConfig(
             firecrawl_api_key=self.web_search_firecrawl_api_key,

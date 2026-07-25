@@ -6,7 +6,7 @@ import asyncio
 from pathlib import Path
 from typing import Any
 
-
+from src.core.graph_rag.api import GraphRagService
 
 from .config_context import EvidenceExtractionConfigContext
 from .contracts import (
@@ -23,6 +23,7 @@ from .contracts import (
 from .providers import LangChainEvidenceProvider
 from .reconcile.api import CrossTrackReconcileService
 from .domain.field_profile import ExtractionProfile, resolve_profile_fields
+from .stages.graph_context_retrieval import GraphContextConfig
 from .stages.review_validation import DEFAULT_REVIEW_REJECT_POLICY, resolve_review_reject_policy
 from .postprocess.translation_traceback import apply_translation_traceback
 from .workflow import DEFAULT_EXTRACTION_WORKFLOW_MODE, EvidenceExtractionWorkflow, resolve_extraction_mode
@@ -84,6 +85,7 @@ class EvidenceExtractionService:
         enable_target_guard: bool = True,
         enable_source_grounding: bool = True,
         review_reject_policy: str = DEFAULT_REVIEW_REJECT_POLICY,
+        graph_rag_service: GraphRagService | None = None,
     ):
         self._ctx = EvidenceExtractionConfigContext.from_config(cfg)
         self._provider = LangChainEvidenceProvider(self._ctx)
@@ -92,6 +94,12 @@ class EvidenceExtractionService:
         self._enable_target_guard = enable_target_guard
         self._enable_source_grounding = enable_source_grounding
         self._review_reject_policy = resolve_review_reject_policy(review_reject_policy)
+        self._graph_rag_service = graph_rag_service
+        self._graph_rag_config = GraphContextConfig(
+            enabled=self._ctx.graph_rag_enabled and graph_rag_service is not None,
+            hops=self._ctx.graph_rag_hops,
+            mode=self._ctx.graph_rag_mode,
+        )
         profile_fields = resolve_profile_fields(extraction_profile)
         self._workflow = EvidenceExtractionWorkflow(
             provider=self._provider,
@@ -101,6 +109,8 @@ class EvidenceExtractionService:
             enable_target_guard=enable_target_guard,
             enable_source_grounding=enable_source_grounding,
             review_reject_policy=self._review_reject_policy,
+            graph_rag_service=graph_rag_service,
+            graph_rag_config=self._graph_rag_config,
         )
         self._reconcile_service = CrossTrackReconcileService()
 
@@ -284,6 +294,8 @@ class EvidenceExtractionService:
             enable_target_guard=etg,
             enable_source_grounding=esg,
             review_reject_policy=rrp,
+            graph_rag_service=self._graph_rag_service,
+            graph_rag_config=self._graph_rag_config,
         )
 
     @staticmethod

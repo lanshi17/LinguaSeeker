@@ -8,8 +8,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.agents.phase_4_factory import Phase4ServiceFactory
 from src.api.wiring import get_session_factory
+from src.dao.neo4j.repository import Neo4jRepository
 
 _phase4_factory: Phase4ServiceFactory | None = None
+_neo4j_repository: Neo4jRepository | None = None
+
+
+def set_neo4j_repository(repository: Neo4jRepository) -> None:
+    """Set the global Neo4j repository (called from lifespan startup)."""
+    global _neo4j_repository
+    _neo4j_repository = repository
+
+
+def get_neo4j_repository() -> Neo4jRepository:
+    """Return the global Neo4j repository (raises if not initialized)."""
+    if _neo4j_repository is None:
+        raise RuntimeError("Neo4j repository not initialized")
+    return _neo4j_repository
 
 
 def set_phase4_factory(factory: Phase4ServiceFactory) -> None:
