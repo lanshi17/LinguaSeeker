@@ -11,7 +11,7 @@ def test_short_technical_text_not_flagged_as_unchanged():
     translated. The source must be English (to pass the CJK check) and the
     translation must also be English (to pass the language detection check).
     """
-    from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.validator.core import (
+    from src.core.cross_lingual_translation.translate.validator.core import (
         validate_translation_output,
     )
 
@@ -28,7 +28,7 @@ def test_short_technical_text_not_flagged_as_unchanged():
 
 def test_long_unchanged_text_still_flagged():
     """Long texts that are genuinely unchanged should still be flagged."""
-    from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.validator.core import (
+    from src.core.cross_lingual_translation.translate.validator.core import (
         validate_translation_output,
     )
 

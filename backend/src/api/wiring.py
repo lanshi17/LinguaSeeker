@@ -90,13 +90,13 @@ def wire_dependencies() -> None:
     from src.agents.state_persistence import SessionBoundStatePersistence
     from src.api.deps import set_phase4_factory
     from src.api.v1.pipeline import set_pipeline_runner
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
+    from src.core.evidence_extraction.api import (
         EvidenceExtractionService,
     )
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.field_profile import (
+    from src.core.evidence_extraction.domain.field_profile import (
         ExtractionProfile,
     )
-    from src.core.cross_lingual_process_and_extract_evidence.workflow import (
+    from src.core.cross_lingual_translation.api import (
         TranslationService,
     )
     from src.core.ingest_and_digitize_data.document_acquisition.service import (

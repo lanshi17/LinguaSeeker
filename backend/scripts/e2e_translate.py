@@ -16,7 +16,7 @@ from loguru import logger
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.core.config import get_config
-from src.core.cross_lingual_process_and_extract_evidence.workflow import TranslationService
+from src.core.cross_lingual_translation.api import TranslationService
 
 OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output" / "cross_lingual"
 

@@ -27,19 +27,19 @@ from src.agents.contracts import (
     classify_phase_error,
 )
 from src.agents.state_persistence import load_phase2_text_from_paths
-from src.core.cross_lingual_process_and_extract_evidence.contracts import CrossLingualOutput
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
+from src.core.cross_lingual_translation.contracts import CrossLingualOutput
+from src.core.evidence_extraction.api import (
     EvidenceExtractionService,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     EvidenceExtractionStatus,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction import (
+from src.core.evidence_extraction.stages.catalog_extraction import (
     CatalogExtractionError,
 )
 
 if TYPE_CHECKING:
-    from src.core.cross_lingual_process_and_extract_evidence.workflow import (
+    from src.core.cross_lingual_translation.api import (
         TranslationService,
     )
 

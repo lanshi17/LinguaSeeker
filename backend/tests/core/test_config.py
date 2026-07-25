@@ -119,7 +119,7 @@ def test_evidence_extraction_config_context_reads_from_llm_and_reasoning() -> No
     """EvidenceExtractionConfigContext reads FAST from llm and STRONG from reasoning."""
     from unittest.mock import MagicMock
 
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.config_context import (
+    from src.core.evidence_extraction.config_context import (
         EvidenceExtractionConfigContext,
     )
 

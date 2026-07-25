@@ -7,10 +7,10 @@ from benchmark.analysis.reconcile.contextual_weight_sensitivity import (
     _build_weight_grid,
     _weighted_score,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     Track,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.contracts import (
+from src.core.evidence_extraction.reconcile.contracts import (
     CandidateScore,
 )
 

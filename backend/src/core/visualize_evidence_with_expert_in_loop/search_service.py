@@ -21,10 +21,10 @@ from src.utils.translation_render_quality import (
     is_likely_untranslated_render_payload,
 )
 
-from src.core.cross_lingual_process_and_extract_evidence.contracts import (
+from src.core.cross_lingual_translation.contracts import (
     TranslationAlignmentChunk,
 )
-from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.language_detector import (
+from src.core.cross_lingual_translation.translate.language_detector import (
     detect_language,
 )
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (

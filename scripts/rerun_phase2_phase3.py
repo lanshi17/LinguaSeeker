@@ -23,13 +23,13 @@ from loguru import logger
 from sqlalchemy import text
 
 from src.core.config import get_config
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
+from src.core.evidence_extraction.api import (
     EvidenceExtractionService,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
 )
-from src.core.cross_lingual_process_and_extract_evidence.workflow import TranslationService
+from src.core.cross_lingual_translation.api import TranslationService
 from src.core.standardize_entities_and_align_knowledge.api import (
     EntityStandardizationService,
 )

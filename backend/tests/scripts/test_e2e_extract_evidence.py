@@ -8,7 +8,7 @@ import pytest
 
 import scripts.e2e_extract_evidence as runner
 from scripts.e2e_extract_evidence import run_extract_evidence
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     EvidenceChain,
     DualEvidenceExtractionResult,
     EvidenceExtractionResult,

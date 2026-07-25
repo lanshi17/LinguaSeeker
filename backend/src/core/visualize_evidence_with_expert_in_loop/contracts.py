@@ -10,7 +10,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from src.core.cross_lingual_process_and_extract_evidence.contracts import (
+from src.core.cross_lingual_translation.contracts import (
     TranslationAlignmentChunk,
 )
 

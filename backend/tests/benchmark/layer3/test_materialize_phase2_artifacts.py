@@ -12,7 +12,7 @@ from benchmark.analysis.dataset_curation.materialize_phase2_artifacts import (
     materialize_reconstructed_artifacts,
     materialize_phase2_artifacts,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
     EvidenceExtractionResult,
     EvidenceExtractionStatus,

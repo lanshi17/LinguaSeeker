@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
     EvidenceChain,
     EvidenceExtractionResult,
@@ -310,7 +310,7 @@ def test_dual_result_adapter_splits_english_comma_phenotypes() -> None:
 
 
 def test_dual_result_adapter_carries_target_and_phenotype_evidence() -> None:
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    from src.core.evidence_extraction.contracts import (
         DualEvidenceExtractionResult,
         EvidenceExtractionResult,
         EvidenceExtractionStatus,

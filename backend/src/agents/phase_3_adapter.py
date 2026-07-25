@@ -24,7 +24,7 @@ from src.agents.contracts import (
     build_retryable_errors,
     classify_phase_error,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
 )
 

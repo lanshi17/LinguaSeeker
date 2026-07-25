@@ -97,7 +97,7 @@ def test_normalize_disease_lookup_text_passes_through_unknown_chinese() -> None:
 
 
 def test_target_scope_bindings_change_entity_scope_hash() -> None:
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    from src.core.evidence_extraction.contracts import (
         ExtractionTarget,
     )
 

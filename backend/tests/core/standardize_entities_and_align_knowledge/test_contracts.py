@@ -191,7 +191,7 @@ def test_acmg_ready_contracts_capture_hpo_ids_and_normalized_values() -> None:
 
 
 def test_standardization_input_carries_extraction_target() -> None:
-    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    from src.core.evidence_extraction.contracts import (
         ExtractionTarget,
     )
 
