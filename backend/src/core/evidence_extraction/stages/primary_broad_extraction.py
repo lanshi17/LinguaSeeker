@@ -95,18 +95,18 @@ class PrimaryBroadExtractionStage:
     def __init__(self, provider: LangChainEvidenceProvider):
         self._provider = provider
 
-    def run(self, document: TrackDocument) -> list[EvidenceItem]:
+    def run(self, document: TrackDocument, graph_context: str = "") -> list[EvidenceItem]:
         response = self._provider.invoke_structured(
-            prompt=_build_primary_prompt(document),
+            prompt=_build_primary_prompt(document, graph_context=graph_context),
             output_schema=PrimaryBroadExtractionResponse,
             tier=EvidenceModelTier.STRONG,
             stage="primary_broad_extraction",
         )
         return _normalize_candidates(response.evidence_items, document.formatted_text)
 
-    async def run_async(self, document: TrackDocument) -> list[EvidenceItem]:
+    async def run_async(self, document: TrackDocument, graph_context: str = "") -> list[EvidenceItem]:
         response = await self._provider.ainvoke_structured(
-            prompt=_build_primary_prompt(document),
+            prompt=_build_primary_prompt(document, graph_context=graph_context),
             output_schema=PrimaryBroadExtractionResponse,
             tier=EvidenceModelTier.STRONG,
             stage="primary_broad_extraction",
@@ -114,7 +114,7 @@ class PrimaryBroadExtractionStage:
         return _normalize_candidates(response.evidence_items, document.formatted_text)
 
 
-def _build_primary_prompt(document: TrackDocument) -> str:
+def _build_primary_prompt(document: TrackDocument, graph_context: str = "") -> str:
     target = document.extraction_target
     target_text = (
         "Target hypothesis:\n- Gene: not provided\n- Disease: not provided\n"
@@ -126,6 +126,7 @@ def _build_primary_prompt(document: TrackDocument) -> str:
             f"- Variant protein: {target.variant_hgvs_p or 'not specified'}\n"
         )
     )
+    graph_section = _format_graph_context(graph_context)
     return (
         "You are evaluating ACMG/ClinGen evidence extraction for the business pipeline.\n"
         "Use a single high-recall primary extraction pass. Do not validate or reconcile internally; "
@@ -144,9 +145,21 @@ def _build_primary_prompt(document: TrackDocument) -> str:
         "- A valid test: the source_quote should be locatable with Python's `in` operator on the document text.\n"
         "- Preferably <= 240 characters.\n"
         "- For not_found items, source_quote must be an empty string.\n\n"
+        f"{graph_section}"
         "Return only JSON. Do not add Markdown fences or explanation.\n\n"
         "Document text:\n"
         f"{_truncate_text(document.formatted_text, max_chars=_INPUT_MAX_CHARS)}"
+    )
+
+
+def _format_graph_context(graph_context: str) -> str:
+    """Return a formatted graph context block, or empty string if none."""
+    if not graph_context or not graph_context.strip():
+        return ""
+    return (
+        "Relevant biomedical knowledge graph context (use as background, but ground all "
+        "source_quotes in the document text below):\n\n"
+        f"{graph_context}\n\n"
     )
 
 

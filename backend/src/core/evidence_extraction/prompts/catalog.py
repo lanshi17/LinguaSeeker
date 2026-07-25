@@ -35,6 +35,7 @@ def get_catalog_extraction_prompt(
     evidence_map_summary: str,
     extraction_target: ExtractionTarget | None = None,
     channel_classification: DocumentChannelClassification | None = None,
+    graph_context: str = "",
 ) -> str:
     catalog_text = _catalog_compact_text(catalog)
     target_section = _target_prompt_section(extraction_target)
@@ -42,6 +43,7 @@ def get_catalog_extraction_prompt(
     channel_strategy = get_channel_strategy_guidance(channel_classification)
     boundary_guidance = disease_boundary_guidance()
     expanded_guidance = expanded_field_coverage_guidance()
+    graph_section = _format_graph_context(graph_context)
     return f"""You are extracting structured evidence from a biomedical document for a SPECIFIC target gene-disease pair.
 
 {target_section}
@@ -108,8 +110,20 @@ RULES:
 26. For C.de_novo_status, extract ONLY if the document explicitly confirms de novo status with parental or family testing evidence (e.g. "confirmed de novo", "de novo in the proband", "not inherited from parents"). Do NOT infer de novo from absence of family history alone.
 27. For B.hpo_terms, extract HPO phenotype terms or clinical feature descriptions that correspond to HPO concepts. Use the HPO term name or ID if provided in the document. Multiple terms: separate with semicolons.
 
+{graph_section}
 DOCUMENT BLOCKS:
 {text}
 """
+
+
+def _format_graph_context(graph_context: str) -> str:
+    """Return a formatted graph context block, or empty string if none."""
+    if not graph_context or not graph_context.strip():
+        return ""
+    return (
+        "RELEVANT BIOMEDICAL KNOWLEDGE GRAPH CONTEXT (use as background, "
+        "but ground all source snippets in the document blocks below):\n\n"
+        f"{graph_context}\n"
+    )
 
 

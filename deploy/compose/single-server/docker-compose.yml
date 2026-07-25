@@ -32,6 +32,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      neo4j:
+        condition: service_healthy
     environment:
       ENVIRONMENT: production
       CORS_ORIGINS: ${CORS_ORIGINS}
@@ -48,6 +50,11 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      # ── Neo4j ──
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: ${NEO4J_USER:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-}
+      NEO4J_DATABASE: ${NEO4J_DATABASE:-neo4j}
       # ── External Inference Service endpoints ──
       # Defaults target same-host simple FastAPI containers via host-published ports.
       # Override to http://model-embedding:8002/v1 + openai if services share a Docker network.
@@ -130,9 +137,32 @@ services:
       timeout: 3s
       retries: 10
 
+  # ── Neo4j ────────────────────────────────────────────────────────────────
+  neo4j:
+    image: neo4j:5.26-community
+    container_name: lingua-neo4j
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"
+    environment:
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/lingua_seeker}
+      NEO4J_PLUGINS: '["apoc"]'
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:7474/dbms/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
 volumes:
   postgres_data:
   redis_data:
+  neo4j_data:
+  neo4j_logs:
   backend_logs:
   backend_data:
   backend_downloads:

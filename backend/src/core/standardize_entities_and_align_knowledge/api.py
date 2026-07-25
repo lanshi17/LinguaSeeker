@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
 )
+from src.core.graph_rag.api import GraphRagService
 from src.core.standardize_entities_and_align_knowledge.adapters import DualResultAdapter
 from src.core.standardize_entities_and_align_knowledge.contracts import (
     EntityMatch,
@@ -110,8 +111,13 @@ def build_summary_metadata(
 class EntityStandardizationService:
     """Facade that wires the adapter, matcher, and orchestration service."""
 
-    def __init__(self, cfg: Settings):
+    def __init__(
+        self,
+        cfg: Settings,
+        graph_rag_service: GraphRagService | None = None,
+    ):
         self._cfg = cfg
+        self._graph_rag_service = graph_rag_service
 
     async def run_dual_result(
         self,
@@ -181,7 +187,23 @@ class EntityStandardizationService:
             processing_run_id=processing_run_id,
         )
         input_data = replace(input_data, owner_user_id=owner_user_id)
-        return await StandardizationService(matcher, repository).run(input_data)
+        std_result = await StandardizationService(matcher, repository).run(input_data)
+
+        if self._graph_rag_service is not None:
+            try:
+                await self._graph_rag_service.write_dual_result_graph(
+                    input_data,
+                    std_result.matches,
+                    result,
+                )
+            except Exception as exc:
+                logger.warning(
+                    "Failed to write GraphRAG subgraph for run {}: {}",
+                    processing_run_id,
+                    exc,
+                )
+
+        return std_result
 
 
 async def _maybe_await(value: Any) -> Any:

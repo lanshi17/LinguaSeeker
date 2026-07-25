@@ -54,6 +54,10 @@ postgres:
 redis:
   password: "your-production-redis-password"
 
+# -- Neo4j Credentials -------------------------------------------------------
+neo4j:
+  password: "your-production-neo4j-password"
+
 # -- Inference Service Auth --------------------------------------------------
 inference_api_key: "your-inference-service-api-key"
 

@@ -41,6 +41,7 @@ from .stages.review_validation import (
     resolve_review_reject_policy,
 )
 from .stages.source_grounding import SourceGroundingStage
+from .stages.graph_context_retrieval import GraphContextConfig, GraphContextRetrievalStage
 from .stages.special_evidence import SpecialEvidenceStage
 from .postprocess.target_span_recovery import TargetSpanFieldRecovery
 
@@ -81,6 +82,8 @@ class EvidenceExtractionWorkflow:
         enable_target_guard: bool = True,
         enable_source_grounding: bool = True,
         review_reject_policy: str = DEFAULT_REVIEW_REJECT_POLICY,
+        graph_rag_service: Any | None = None,
+        graph_rag_config: GraphContextConfig | None = None,
     ):
         self._extraction_mode = resolve_extraction_mode(extraction_mode)
         self._enable_review_validation = enable_review_validation
@@ -88,6 +91,10 @@ class EvidenceExtractionWorkflow:
         self._enable_source_grounding = enable_source_grounding
         self._review_reject_policy: ReviewRejectPolicy = resolve_review_reject_policy(review_reject_policy)
         self._relevance_scan = RelevanceScanStage(provider, input_budget_tokens=input_budget_tokens)
+        self._graph_context_retrieval = GraphContextRetrievalStage(
+            service=graph_rag_service,
+            config=graph_rag_config or GraphContextConfig(),
+        )
         self._catalog_extraction = CatalogExtractionStage(
             provider,
             input_budget_tokens=input_budget_tokens,
@@ -120,8 +127,11 @@ class EvidenceExtractionWorkflow:
             state.status = EvidenceExtractionStatus.NOT_RELEVANT
         return state
 
+    def _node_graph_context_retrieval(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        return self._graph_context_retrieval.run(state)
+
     def _node_primary_broad_extraction(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
-        items = self._primary_broad_extraction.run(state.document)
+        items = self._primary_broad_extraction.run(state.document, graph_context=state.graph_context)
         state.evidence_items = items
         return state
 
@@ -130,6 +140,7 @@ class EvidenceExtractionWorkflow:
             state.document,
             state.evidence_map,
             state.channel_classification,
+            graph_context=state.graph_context,
         )
         state.evidence_items = items
         decision = self._catalog_extraction.last_eligibility_decision
@@ -170,8 +181,11 @@ class EvidenceExtractionWorkflow:
             state.status = EvidenceExtractionStatus.NOT_RELEVANT
         return state
 
+    async def _async_node_graph_context_retrieval(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        return await self._graph_context_retrieval.run_async(state)
+
     async def _async_node_primary_broad_extraction(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
-        items = await self._primary_broad_extraction.run_async(state.document)
+        items = await self._primary_broad_extraction.run_async(state.document, graph_context=state.graph_context)
         state.evidence_items = items
         return state
 
@@ -180,6 +194,7 @@ class EvidenceExtractionWorkflow:
             state.document,
             state.evidence_map,
             state.channel_classification,
+            graph_context=state.graph_context,
         )
         state.evidence_items = items
         decision = self._catalog_extraction.last_eligibility_decision
@@ -326,6 +341,7 @@ class EvidenceExtractionWorkflow:
         """Return the node-name → callable mapping for sync or async mode."""
         return {
             "relevance_scan": self._async_node_relevance_scan if async_mode else self._node_relevance_scan,
+            "graph_context_retrieval": self._async_node_graph_context_retrieval if async_mode else self._node_graph_context_retrieval,
             "catalog_extraction": self._async_node_catalog_extraction if async_mode else self._node_catalog_extraction,
             "special_evidence": self._async_node_special_evidence if async_mode else self._node_special_evidence,
             "clinical_context": self._async_node_clinical_context if async_mode else self._node_clinical_context,
@@ -359,9 +375,10 @@ class EvidenceExtractionWorkflow:
         next_extraction_node = self._first_extraction_node()
         graph.add_conditional_edges(
             "relevance_scan",
-            lambda s: "not_relevant" if s.status == EvidenceExtractionStatus.NOT_RELEVANT else next_extraction_node,
-            {"not_relevant": "not_relevant", next_extraction_node: next_extraction_node},
+            lambda s: "not_relevant" if s.status == EvidenceExtractionStatus.NOT_RELEVANT else "graph_context_retrieval",
+            {"not_relevant": "not_relevant", "graph_context_retrieval": "graph_context_retrieval"},
         )
+        graph.add_edge("graph_context_retrieval", next_extraction_node)
         if self._extraction_mode == "broad":
             graph.add_edge("primary_broad_extraction", "language_metadata")
         else:

@@ -33,11 +33,23 @@ class EvidenceExtractionConfigContext:
     temperature: float = 0.0
     timeout: int = 180
     max_retries: int = 1
+    graph_rag_enabled: bool = False
+    graph_rag_hops: int = 2
+    graph_rag_mode: str = "full"
 
     @classmethod
     def from_config(cls, cfg: Any) -> EvidenceExtractionConfigContext:
         llm = cfg.llm
         reasoning = cfg.reasoning
+        # GraphRAG config may live under a dedicated key or fall back to env vars.
+        graph_rag_cfg = getattr(cfg, "graph_rag", None)
+        graph_rag_enabled = False
+        graph_rag_hops = 2
+        graph_rag_mode = "full"
+        if graph_rag_cfg is not None:
+            graph_rag_enabled = bool(getattr(graph_rag_cfg, "enabled", False))
+            graph_rag_hops = int(getattr(graph_rag_cfg, "hops", 2))
+            graph_rag_mode = str(getattr(graph_rag_cfg, "mode", "full"))
         return cls(
             api_key=llm.api_key,
             api_keys=llm.all_api_keys,
@@ -55,4 +67,7 @@ class EvidenceExtractionConfigContext:
             temperature=0.0,
             timeout=reasoning.timeout,
             max_retries=1,
+            graph_rag_enabled=graph_rag_enabled,
+            graph_rag_hops=graph_rag_hops,
+            graph_rag_mode=graph_rag_mode,
         )

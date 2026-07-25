@@ -113,6 +113,22 @@ redis:
   db: 0
   max_connections: 20
 
+# ── Neo4j Graph Database ────────────────────────────────────────────────
+neo4j:
+  uri: "bolt://localhost:7687"
+  user: "neo4j"
+  password: ""
+  database: "neo4j"
+  max_connection_pool_size: 10
+
+# ── GraphRAG Context Augmentation ───────────────────────────────────────
+# Feature flag for injecting Neo4j subgraph context into Phase 2 extraction.
+# enabled: false keeps existing behavior; set to true after seeding Neo4j.
+graph_rag:
+  enabled: false
+  hops: 2
+  mode: "full" # "terminology_only" or "full"
+
 # ── Literature Acquisition Providers ────────────────────────────────────
 # These flatten to the exact env vars read by the Rust net-io providers
 # (std::env::var) and the Python pubmed_service (os.getenv).

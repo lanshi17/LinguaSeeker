@@ -50,6 +50,10 @@ postgres:
 redis:
   host: "localhost"
 
+neo4j:
+  uri: "bolt://localhost:7687"
+  database: "dev_lingua_seeker"
+
 pipeline:
   cache_enabled: false
   dedup_enabled: false

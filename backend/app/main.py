@@ -223,6 +223,10 @@ async def lifespan(app: FastAPI):
         logger.debug("Phase4ServiceFactory close failed during shutdown: {}", exc)
     finally:
         try:
+            await _wiring.dispose_neo4j()
+        except Exception as exc:
+            logger.debug("Neo4j disposal failed during shutdown: {}", exc)
+        try:
             await _wiring.dispose_redis()
         except Exception as exc:
             logger.debug("Redis disposal failed during shutdown: {}", exc)

@@ -29,12 +29,13 @@ const zh: Record<EnKeys, string> = {
   "pipeline.upload.hint": "支持单个 PDF 文件上传",
   "pipeline.search.title": "在线检索",
   "pipeline.search.queryPlaceholder": "检索词（如 BRCA1 致病变异）",
-  "pipeline.search.identifiersPlaceholder": "标识符——每行一个（PMID、DOI 或 URL）",
+  "pipeline.search.identifiersPlaceholder":
+    "标识符——每行一个（PMID、DOI 或 URL）",
   "pipeline.submit": "提交",
   "pipeline.cancel": "取消",
   "pipeline.newTask": "新建任务",
-  "pipeline.success.pdfStarted": "\"{name}\" — 任务已启动",
-  "pipeline.success.queryStarted": "\"{query}\" — 任务已启动",
+  "pipeline.success.pdfStarted": '"{name}" — 任务已启动',
+  "pipeline.success.queryStarted": '"{query}" — 任务已启动',
   "pipeline.success.idsStarted": "按标识符检索 — 任务已启动",
   "pipeline.warning.enterQueryOrIds": "请输入检索词或标识符（DOI/PMID/PMCID）",
   "pipeline.error.readFailed": "文件读取失败",
@@ -87,11 +88,12 @@ const zh: Record<EnKeys, string> = {
   "pipeline.history.loadingAria": "加载运行记录中",
   "pipeline.history.noMatch": "无匹配的运行记录",
   "pipeline.history.noRuns": "暂无运行记录",
-  "pipeline.history.filterEmpty": "无状态为\"{status}\"的运行记录",
+  "pipeline.history.filterEmpty": '无状态为"{status}"的运行记录',
   "pipeline.history.chatLink": "AI 对话",
   "pipeline.history.guidance": "从 AI 对话启动流水线或上传 PDF 开始处理文献。",
   "pipeline.history.loadError": "加载运行记录失败",
-  "pipeline.history.loadErrorHint": "无法连接到流水线服务，请检查后端是否正在运行。",
+  "pipeline.history.loadErrorHint":
+    "无法连接到流水线服务，请检查后端是否正在运行。",
   "pipeline.history.retry": "重试",
 
   // ── 流水线 — PipelineStatusView ──
@@ -137,7 +139,8 @@ const zh: Record<EnKeys, string> = {
   "evidenceDetail.title": "文献详情",
   "evidenceDetail.description": "查看文献元数据、证据分布及提取字段。",
   "evidenceDetail.compareTitle": "双语对照",
-  "evidenceDetail.compareDescription": "并排查看原文与英文全文证据，支持分类高亮控制。",
+  "evidenceDetail.compareDescription":
+    "并排查看原文与英文全文证据，支持分类高亮控制。",
 
   // ── 证据检索 — 表单 ──
   "evidence.search.heading": "文献证据检索",
@@ -381,7 +384,8 @@ const zh: Record<EnKeys, string> = {
   "evidenceDb.detail.literature": "文献",
   "evidenceDb.detail.coverage": "覆盖度",
   "evidenceDb.detail.reviewed": "已审核",
-  "evidenceDb.detail.reconciled": "{categories} 个分类中共 {fields} 个已协调字段",
+  "evidenceDb.detail.reconciled":
+    "{categories} 个分类中共 {fields} 个已协调字段",
   "evidenceDb.detail.noFields": "未找到证据字段",
   "evidenceDb.detail.references": "参考文献",
   "evidenceDb.detail.sources": "{count} 个来源",
@@ -501,7 +505,8 @@ const zh: Record<EnKeys, string> = {
 
   // ── 审计 — EvidenceReviewDrawer ──
   "audit.review.title": "审核证据",
-  "audit.review.instruction": "下方展示所有证据条目。使用上方字段缩小范围，然后选择条目进行审核。",
+  "audit.review.instruction":
+    "下方展示所有证据条目。使用上方字段缩小范围，然后选择条目进行审核。",
   "audit.review.genePh": "基因",
   "audit.review.variantPh": "变异",
   "audit.review.diseasePh": "疾病",
@@ -543,7 +548,8 @@ const zh: Record<EnKeys, string> = {
   "chat.welcome.search.desc": "按基因、变异或疾病查询已有证据记录。",
   "chat.welcome.review.title": "审核与导出",
   "chat.welcome.review.desc": "审核已提取证据、修正错误并导出报告。",
-  "chat.welcome.disclaimer": "AI 生成内容可能存在错误。关键发现请务必对照原始文献核实。",
+  "chat.welcome.disclaimer":
+    "AI 生成内容可能存在错误。关键发现请务必对照原始文献核实。",
 
   // ── 对话 — ChatView ──
   "chat.taskQueue": "任务队列",
@@ -634,9 +640,11 @@ const zh: Record<EnKeys, string> = {
 
   // ── 用户指南 ──
   "guide.welcome": "欢迎使用 Lingua Seeker",
-  "guide.welcomeDesc": "面向医学遗传学文献的多智能体自动化平台，支持结构化证据提取。",
+  "guide.welcomeDesc":
+    "面向医学遗传学文献的多智能体自动化平台，支持结构化证据提取。",
   "guide.chat": "AI 对话",
-  "guide.chatDesc": "以自然语言与 AI 助手交互，检索文献、提取证据、解答遗传变异相关问题。",
+  "guide.chatDesc":
+    "以自然语言与 AI 助手交互，检索文献、提取证据、解答遗传变异相关问题。",
   "guide.tasks": "任务流水线",
   "guide.tasksDesc": "创建和管理文献处理任务——从文献采集到证据提取。",
   "guide.evidenceDb": "证据数据库",
@@ -652,10 +660,14 @@ const zh: Record<EnKeys, string> = {
   "pageGuide.footer": "点击帮助按钮可再次打开本指南。",
   "pageGuide.evidenceDb.title": "证据数据库指南",
   "pageGuide.evidenceDb.s1.title": "变异索引（L1）",
-  "pageGuide.evidenceDb.s1.i1": "浏览所有已提取的变异，包含基因、HGVS 命名、疾病和 ACMG 分级。",
-  "pageGuide.evidenceDb.s1.i2": "左侧 4px 色条表示分级：红色（P）、橙色（LP）、灰色（VUS）、蓝色（LB）、绿色（B）。",
-  "pageGuide.evidenceDb.s1.i3": "分类标签（A–K）显示每个变异涉及哪些 ACMG 证据类别。",
-  "pageGuide.evidenceDb.s1.i4": "使用搜索栏和筛选控件按基因、疾病或分级缩小范围。",
+  "pageGuide.evidenceDb.s1.i1":
+    "浏览所有已提取的变异，包含基因、HGVS 命名、疾病和 ACMG 分级。",
+  "pageGuide.evidenceDb.s1.i2":
+    "左侧 4px 色条表示分级：红色（P）、橙色（LP）、灰色（VUS）、蓝色（LB）、绿色（B）。",
+  "pageGuide.evidenceDb.s1.i3":
+    "分类标签（A–K）显示每个变异涉及哪些 ACMG 证据类别。",
+  "pageGuide.evidenceDb.s1.i4":
+    "使用搜索栏和筛选控件按基因、疾病或分级缩小范围。",
   "pageGuide.evidenceDb.s2.title": "变异详情（L2）",
   "pageGuide.evidenceDb.s2.i1": "点击任意变移行查看完整证据概况。",
   "pageGuide.evidenceDb.s2.i2": "证据条目按来源文档分组，附带类别标签。",
@@ -676,8 +688,10 @@ const zh: Record<EnKeys, string> = {
   "pageGuide.audit.s2.i4": "通过标注控件提交修正——变更将记录在审计追踪中。",
   "pageGuide.evidence.title": "证据搜索指南",
   "pageGuide.evidence.s1.title": "搜索与提取",
-  "pageGuide.evidence.s1.i1": "输入关于遗传变异、基因或临床问题的自然语言查询。",
-  "pageGuide.evidence.s1.i2": "系统检索已索引文献并提取结构化 ACMG/ClinGen 证据。",
+  "pageGuide.evidence.s1.i1":
+    "输入关于遗传变异、基因或临床问题的自然语言查询。",
+  "pageGuide.evidence.s1.i2":
+    "系统检索已索引文献并提取结构化 ACMG/ClinGen 证据。",
   "pageGuide.evidence.s1.i3": "结果按证据类别（A–K）组织，附带置信度分数。",
   "pageGuide.evidence.s1.i4": "点击任意证据条目查看来源文档和双语对比。",
   "pageGuide.evidence.s2.title": "证据类别（A–K）",
@@ -697,22 +711,33 @@ const zh: Record<EnKeys, string> = {
   "pageGuide.bilingual.s1.i2": "左侧边栏提供类别筛选、状态筛选和证据导航器。",
   "pageGuide.bilingual.s1.i3": "顶部面包屑可返回变异列表和变异详情页。",
   "pageGuide.bilingual.s2.title": "证据导航器",
-  "pageGuide.bilingual.s2.i1": "切换类别复选框（A–K）以显示或隐藏文档中的特定证据类型。",
-  "pageGuide.bilingual.s2.i2": "切换审核状态筛选（已审核、待审核等）以聚焦需要关注的条目。",
-  "pageGuide.bilingual.s2.i3": "点击导航列表中的任意证据条目——文档将滚动到相关段落。",
+  "pageGuide.bilingual.s2.i1":
+    "切换类别复选框（A–K）以显示或隐藏文档中的特定证据类型。",
+  "pageGuide.bilingual.s2.i2":
+    "切换审核状态筛选（已审核、待审核等）以聚焦需要关注的条目。",
+  "pageGuide.bilingual.s2.i3":
+    "点击导航列表中的任意证据条目——文档将滚动到相关段落。",
   "pageGuide.bilingual.s3.title": "文本高亮",
   "pageGuide.bilingual.s3.i1": "文档中的彩色高亮表示已提取的证据值。",
-  "pageGuide.bilingual.s3.i2": "将鼠标悬停在高亮上可查看其所属证据字段和审核状态。",
-  "pageGuide.bilingual.s3.i3": "点击高亮打开字段审核弹窗，可批准、修正或拒绝该提取。",
+  "pageGuide.bilingual.s3.i2":
+    "将鼠标悬停在高亮上可查看其所属证据字段和审核状态。",
+  "pageGuide.bilingual.s3.i3":
+    "点击高亮打开字段审核弹窗，可批准、修正或拒绝该提取。",
   "pageGuide.bilingual.s4.title": "词语对齐",
-  "pageGuide.bilingual.s4.i1": "两个面板之间的彩色弧线显示原文与译文之间的词语级对齐。",
-  "pageGuide.bilingual.s4.i2": "悬停在对齐弧线上可在另一面板中高亮对应的文本片段。",
+  "pageGuide.bilingual.s4.i1":
+    "两个面板之间的彩色弧线显示原文与译文之间的词语级对齐。",
+  "pageGuide.bilingual.s4.i2":
+    "悬停在对齐弧线上可在另一面板中高亮对应的文本片段。",
   "pageGuide.bilingual.s4.i3": "点击弧线可固定它——按 Escape 键取消固定。",
   "pageGuide.bilingual.s5.title": "同步滚动与标注",
-  "pageGuide.bilingual.s5.i1": "启用同步滚动（右上角开关）可让两个面板保持相同的阅读位置。",
-  "pageGuide.bilingual.s5.i2": "在任一面板中选中文本即可创建彩色标注——便于标记重要段落。",
-  "pageGuide.bilingual.s5.i3": "右键点击选中文本可将其分配到特定的 ACMG 证据字段。",
-  "pageGuide.bilingual.s5.i4": "使用文献标题栏中的「导出报告」按钮下载结构化证据报告。",
+  "pageGuide.bilingual.s5.i1":
+    "启用同步滚动（右上角开关）可让两个面板保持相同的阅读位置。",
+  "pageGuide.bilingual.s5.i2":
+    "在任一面板中选中文本即可创建彩色标注——便于标记重要段落。",
+  "pageGuide.bilingual.s5.i3":
+    "右键点击选中文本可将其分配到特定的 ACMG 证据字段。",
+  "pageGuide.bilingual.s5.i4":
+    "使用文献标题栏中的「导出报告」按钮下载结构化证据报告。",
 
   // ── 账户 ──
   "auth.accountMenu": "账户菜单",
@@ -779,6 +804,24 @@ const zh: Record<EnKeys, string> = {
   "annotation.deleteFailed": "标注删除失败",
   "annotation.pickColor": "选择颜色 {color}",
   "annotation.notePlaceholder": "批注…",
+
+  // ── GraphRAG ──
+  "nav.graphRag": "GraphRAG",
+  "graphRag.title": "GraphRAG 知识问答",
+  "graphRag.description":
+    "基于 Neo4j 知识图谱，对术语基线与历史文献证据进行自然语言问答。",
+  "graphRag.questionLabel": "问题",
+  "graphRag.questionPlaceholder": "例如：GLA 与 Fabry 病有什么关系？",
+  "graphRag.questionRequired": "请输入问题",
+  "graphRag.modeLabel": "检索模式",
+  "graphRag.modeFull": "完整图谱",
+  "graphRag.modeTerminology": "仅术语基线",
+  "graphRag.askButton": "提问",
+  "graphRag.thinking": "正在检索知识图谱并生成回答…",
+  "graphRag.error": "查询失败",
+  "graphRag.answerTitle": "回答",
+  "graphRag.graphTitle": "相关知识图谱",
+  "graphRag.sourceCount": "引用证据数：{count}",
 };
 
 export { zh };
