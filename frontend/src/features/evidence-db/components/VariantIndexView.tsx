@@ -29,6 +29,7 @@ import type {
   ReviewStatusFilter,
   SourceLanguageFilter,
   VariantIndexEntry,
+  ClassificationLevel,
 } from "../types/variantDb";
 import type { EvidenceDbViewPrefs } from "../hooks/useEvidenceDbViewPrefs";
 import {
@@ -226,7 +227,14 @@ function exportVariants(
 
 /* ── Main View ──────────────────────────────────────────── */
 
-export function VariantIndexView() {
+interface VariantIndexViewProps {
+  /** Optional classification level from the hero bar to filter by */
+  activeClassification?: ClassificationLevel | null;
+  /** Called when the user clears all filters (including hero classification) */
+  onClearClassification?: () => void;
+}
+
+export function VariantIndexView({ activeClassification, onClearClassification }: VariantIndexViewProps = {}) {
   const { t } = useI18n();
   const labels = getEvidenceDbLabels(t);
   const sortOptions = useMemo(() => getSortOptions(t), [t]);
@@ -249,7 +257,16 @@ export function VariantIndexView() {
   } = useVariantIndex();
   const { prefs: viewPrefs, setPreference } = useEvidenceDbViewPrefs();
 
-  const totalPages = Math.ceil(total / pageSize);
+  // Apply hero-level classification filter on top of the hook's own filters
+  const effectiveItems = useMemo(
+    () => activeClassification
+      ? items.filter((e) => e.classificationLevel === activeClassification)
+      : items,
+    [items, activeClassification],
+  );
+  const effectiveTotal = activeClassification ? effectiveItems.length : total;
+
+  const totalPages = Math.ceil(effectiveTotal / pageSize);
 
   const { pageNumbers, canPrev, canNext, goPrev, goNext, goTo } = usePagination({
     page,
@@ -271,7 +288,7 @@ export function VariantIndexView() {
   const [selectedSlugs, setSelectedSlugs] = useState<Set<string>>(new Set());
 
   // Reset selection when the visible items change (page / filter / sort)
-  const itemSlugsKey = useMemo(() => items.map((i) => i.variantSlug).join("\0"), [items]);
+  const itemSlugsKey = useMemo(() => effectiveItems.map((i) => i.variantSlug).join("\0"), [effectiveItems]);
   useEffect(() => {
     setSelectedSlugs(new Set());
   }, [itemSlugsKey]);
@@ -287,19 +304,19 @@ export function VariantIndexView() {
 
   const toggleSelectAll = useCallback(() => {
     setSelectedSlugs((prev) => {
-      if (prev.size === items.length) return new Set();
-      return new Set(items.map((i) => i.variantSlug));
+      if (prev.size === effectiveItems.length) return new Set();
+      return new Set(effectiveItems.map((i) => i.variantSlug));
     });
-  }, [items]);
+  }, [effectiveItems]);
 
   const selectedEntries = useMemo(
-    () => items.filter((i) => selectedSlugs.has(i.variantSlug)),
-    [items, selectedSlugs],
+    () => effectiveItems.filter((i) => selectedSlugs.has(i.variantSlug)),
+    [effectiveItems, selectedSlugs],
   );
 
   const handleExport = useCallback(
     (format: "csv" | "json", scope: "selected" | "filtered") => {
-      const entries = scope === "selected" ? selectedEntries : items;
+      const entries = scope === "selected" ? selectedEntries : effectiveItems;
       if (entries.length === 0) {
         void message.warning(t("evidenceDb.export.empty"));
         return;
@@ -313,7 +330,7 @@ export function VariantIndexView() {
         void message.error(t("evidenceDb.export.error"));
       }
     },
-    [selectedEntries, items, t],
+    [selectedEntries, effectiveItems, t],
   );
 
   // ── Sort dropdown handler ────────────────────────────────
@@ -349,9 +366,10 @@ export function VariantIndexView() {
     filters.disease ||
     filters.classification ||
     filters.reviewStatus ||
-    filters.sourceLanguage
+    filters.sourceLanguage ||
+    activeClassification
   );
-  const allPageSelected = items.length > 0 && selectedSlugs.size === items.length;
+  const allPageSelected = effectiveItems.length > 0 && selectedSlugs.size === effectiveItems.length;
   const anySelected = selectedSlugs.size > 0;
 
   // Build candidate lists from all data for autocomplete
@@ -427,7 +445,7 @@ export function VariantIndexView() {
           {hasAnyFilter && (
             <button
               type="button"
-              onClick={clearFilters}
+              onClick={() => { clearFilters(); onClearClassification?.(); }}
               className="viv-clear-btn"
               style={{
                 cursor: "pointer",
@@ -681,7 +699,7 @@ export function VariantIndexView() {
         </div>
       ) : isLoading ? (
         <VariantIndexSkeleton />
-      ) : items.length === 0 ? (
+      ) : effectiveItems.length === 0 ? (
         <div style={{
           display: "flex",
           flexDirection: "column",
@@ -724,7 +742,7 @@ export function VariantIndexView() {
                 gap: 6,
               }}
             >
-              <span style={{ fontWeight: 600 }}>{total}</span>
+              <span style={{ fontWeight: 600 }}>{effectiveTotal}</span>
               <span style={{ color: "var(--color-text-secondary)", fontWeight: 400 }}>
                 {t("evidenceDb.variantsFound")}
               </span>
@@ -872,7 +890,7 @@ export function VariantIndexView() {
             </div>
           )}
 
-          {!anySelected && items.length > 0 && (
+          {!anySelected && effectiveItems.length > 0 && (
             <div
               style={{
                 display: "flex",
@@ -889,7 +907,7 @@ export function VariantIndexView() {
               <button
                 type="button"
                 onClick={() => handleExport("csv", "filtered")}
-                disabled={items.length === 0}
+                disabled={effectiveItems.length === 0}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -910,7 +928,7 @@ export function VariantIndexView() {
               <button
                 type="button"
                 onClick={() => handleExport("json", "filtered")}
-                disabled={items.length === 0}
+                disabled={effectiveItems.length === 0}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -990,7 +1008,7 @@ export function VariantIndexView() {
                 />
               )}
             </div>
-            {items.map((entry, i) => {
+            {effectiveItems.map((entry, i) => {
               const isSelected = selectedSlugs.has(entry.variantSlug);
               return (
                 <div

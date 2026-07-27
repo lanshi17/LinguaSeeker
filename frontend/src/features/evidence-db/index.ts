@@ -12,3 +12,4 @@ export type {
 export { VariantIndexView } from "./components/VariantIndexView";
 export { VariantDetailView } from "./components/VariantDetailView";
 export { BilingualEvidenceView } from "./components/BilingualEvidenceView";
+export { ClassificationDistributionBar } from "./components/ClassificationDistributionBar";

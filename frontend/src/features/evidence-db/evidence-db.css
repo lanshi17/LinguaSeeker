@@ -183,3 +183,37 @@
 .viv-sort-header:hover {
   color: var(--color-text-strong);
 }
+
+/* ── Hero stats grid responsive ─────────────────────────── */
+.edb-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+  margin: 16px 24px 0;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+  overflow: hidden;
+}
+@media (min-width: 640px) {
+  .edb-hero-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.edb-hero-stat-item {
+  border-bottom: 1px solid var(--color-border);
+}
+.edb-hero-stat-item:nth-child(odd) {
+  border-right: 1px solid var(--color-border);
+}
+@media (min-width: 640px) {
+  .edb-hero-stat-item {
+    border-bottom: none;
+  }
+  .edb-hero-stat-item:nth-child(odd) {
+    border-right: none;
+  }
+  .edb-hero-stat-item:not(:last-child) {
+    border-right: 1px solid var(--color-border);
+  }
+}

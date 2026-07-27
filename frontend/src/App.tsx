@@ -57,7 +57,7 @@ export function App() {
         }
       >
         <Routes>
-          <Route index element={<Navigate to="/chat" replace />} />
+          <Route index element={<Navigate to="/evidence-db" replace />} />
           <Route element={<DashboardLayout />}>
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/chat/:sessionId" element={<ChatSessionPage />} />
@@ -77,7 +77,7 @@ export function App() {
             <Route path="/audit" element={<AuditPage />} />
             <Route path="/graphrag" element={<GraphRagPage />} />
           </Route>
-          <Route path="*" element={<Navigate to="/chat" replace />} />
+          <Route path="*" element={<Navigate to="/evidence-db" replace />} />
         </Routes>
       </Suspense>
     </ErrorBoundary>

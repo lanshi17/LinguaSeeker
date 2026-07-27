@@ -298,6 +298,10 @@ const zh: Record<EnKeys, string> = {
   // ── 证据数据库 ──
   "evidenceDb.title": "证据数据库",
   "evidenceDb.description": "按突变标识符浏览变异证据",
+  "evidenceDb.hero.variants": "变异",
+  "evidenceDb.hero.evidenceGroups": "证据组",
+  "evidenceDb.hero.literature": "文献",
+  "evidenceDb.hero.confidence": "置信度",
 
   // ── 证据数据库 — VariantIndexView ──
   "evidenceDb.class.pathogenic": "致病",

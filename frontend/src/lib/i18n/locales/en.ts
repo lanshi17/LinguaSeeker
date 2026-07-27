@@ -308,6 +308,10 @@ const en = {
   "evidenceDb.title": "Evidence Database",
   "evidenceDb.description":
     "Browse variant evidence organized by mutation identifier",
+  "evidenceDb.hero.variants": "Variants",
+  "evidenceDb.hero.evidenceGroups": "Evidence Groups",
+  "evidenceDb.hero.literature": "Literature",
+  "evidenceDb.hero.confidence": "Confidence",
 
   // ── Evidence DB — VariantIndexView ──
   "evidenceDb.class.pathogenic": "Pathogenic",
