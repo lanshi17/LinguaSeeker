@@ -52,6 +52,11 @@ neo4j:
   uri: "bolt://neo4j:7687"
   database: "staging_lingua_seeker"
 
+graph_rag:
+  enabled: false
+  hops: 2
+  mode: "full"
+
 pipeline:
   cache_enabled: true
   dedup_enabled: true
