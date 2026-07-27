@@ -46,7 +46,7 @@ class Neo4jGraphProvider:
             return
         query = (
             "UNWIND $nodes AS node "
-            "MERGE (n {node_id: node.node_id}) "
+            "MERGE (n:Node {node_id: node.node_id}) "
             "SET n += node.properties "
             "SET n.display_name = node.display_name "
             "WITH n, node "

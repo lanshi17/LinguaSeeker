@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -58,46 +59,49 @@ def _node_id(entity_type: str, external_id: str) -> str:
 
 
 async def _fetch_entry_batches(session: Any, batch_size: int):
-    offset = 0
+    last_entry_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
     while True:
         result = await session.execute(
             select(
+                TerminologyEntry.entry_id,
                 TerminologyEntry.entity_type,
                 TerminologyEntry.external_id,
                 TerminologyEntry.display_name,
                 TerminologyEntry.aliases,
                 TerminologyEntry.source_db,
             )
+            .where(TerminologyEntry.entry_id > last_entry_id)
             .order_by(TerminologyEntry.entry_id)
-            .offset(offset)
             .limit(batch_size)
         )
         rows = result.all()
         if not rows:
             break
         yield rows
-        offset += batch_size
+        last_entry_id = rows[-1][0]
 
 
 async def _fetch_relationship_batches(session: Any, batch_size: int):
-    offset = 0
+    last_rel_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
     while True:
         result = await session.execute(
             select(
+                TerminologyRelationship.relationship_id,
                 TerminologyRelationship.subject_entry_id,
                 TerminologyRelationship.object_entry_id,
                 TerminologyRelationship.relationship_type,
                 TerminologyRelationship.source_db,
                 TerminologyRelationship.evidence_level,
             )
-            .offset(offset)
+            .where(TerminologyRelationship.relationship_id > last_rel_id)
+            .order_by(TerminologyRelationship.relationship_id)
             .limit(batch_size)
         )
         rows = result.all()
         if not rows:
             break
         yield rows
-        offset += batch_size
+        last_rel_id = rows[-1][0]
 
 
 async def _build_and_write_nodes(
@@ -106,9 +110,12 @@ async def _build_and_write_nodes(
     batch_size: int,
 ) -> int:
     total = 0
+    batch_num = 0
     async for rows in _fetch_entry_batches(session, batch_size):
+        batch_num += 1
         batch = LiteratureGraphBatch()
-        for entity_type, external_id, display_name, aliases, source_db in rows:
+        for row in rows:
+            _, entity_type, external_id, display_name, aliases, source_db = row
             graph_type = ENTITY_TYPE_MAP.get(entity_type)
             if graph_type is None:
                 continue
@@ -125,6 +132,8 @@ async def _build_and_write_nodes(
             )
         summary = await provider.write_batch(batch)
         total += summary["nodes_written"]
+        if batch_num % 10 == 0:
+            logger.info("  nodes batch {}: {} written (cumulative {})", batch_num, summary["nodes_written"], total)
     return total
 
 
@@ -143,9 +152,12 @@ async def _build_and_write_edges(
     entry_map = {row[0]: (row[1], row[2]) for row in result.all()}
 
     total = 0
+    batch_num = 0
     async for rows in _fetch_relationship_batches(session, batch_size):
+        batch_num += 1
         batch = LiteratureGraphBatch()
-        for subject_entry_id, object_entry_id, relationship_type, source_db, evidence_level in rows:
+        for row in rows:
+            _, subject_entry_id, object_entry_id, relationship_type, source_db, evidence_level = row
             graph_rel_type = RELATIONSHIP_TYPE_MAP.get(relationship_type)
             if graph_rel_type is None:
                 continue
@@ -179,6 +191,8 @@ async def _build_and_write_edges(
             )
         summary = await provider.write_batch(batch)
         total += summary["edges_written"]
+        if batch_num % 10 == 0:
+            logger.info("  edges batch {}: {} written (cumulative {})", batch_num, summary["edges_written"], total)
     return total
 
 
