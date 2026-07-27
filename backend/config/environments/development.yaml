@@ -54,6 +54,11 @@ neo4j:
   uri: "bolt://localhost:7687"
   database: "dev_lingua_seeker"
 
+graph_rag:
+  enabled: false
+  hops: 2
+  mode: "full"
+
 pipeline:
   cache_enabled: false
   dedup_enabled: false

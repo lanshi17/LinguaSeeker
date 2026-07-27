@@ -1,6 +1,12 @@
 import "@testing-library/jest-dom/vitest";
 
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { GraphRagView } from "../../../src/features/graphrag/components/GraphRagView";
@@ -20,9 +26,12 @@ vi.mock("../../../src/features/graphrag/hooks/useGraphRagQuery", () => ({
   }),
 }));
 
-vi.mock("../../../src/features/graphrag/components/KnowledgeGraphCanvas", () => ({
-  KnowledgeGraphCanvas: () => <div data-testid="knowledge-graph" />,
-}));
+vi.mock(
+  "../../../src/features/graphrag/components/KnowledgeGraphCanvas",
+  () => ({
+    KnowledgeGraphCanvas: () => <div data-testid="knowledge-graph" />,
+  }),
+);
 
 describe("GraphRagView", () => {
   afterEach(() => {
