@@ -14,13 +14,12 @@ scripts/
 │   ├── import/                           数据导入脚本
 │   │   ├── import_benchmark_ground_truth.py   导入基准真值（双轨可追溯性）
 │   │   ├── import_terminology.py              导入术语数据库到 PostgreSQL
-│   │   ├── backfill_variant_ids.py            回填变异标识符
+│   │   ├── import_terminology_docker.sh       容器内导入术语
+│   │   ├── import_terminology_from_artifacts.sh  从 artifacts 导入术语
 │   │   └── reindex_clinvar_aliases.py         重建 ClinVar 别名索引
-│   ├── cleanup/                          数据清理和重构脚本
+│   ├── cleanup/                          数据清理脚本
 │   │   ├── delete_unmapped_entities.py        删除未映射的基因和变异
-│   │   ├── delete_incomplete_gene_variant_groups.py  删除不完整的基因-变异组
-│   │   ├── refactor_benchmark_imports.py      重构基准模块导入
-│   │   └── refactor_benchmark_reports.py      重构基准报告文件路径
+│   │   └── delete_incomplete_gene_variant_groups.py  删除不完整的基因-变异组
 │   ├── analyze/                          日志/数据分析脚本
 │   │   └── analyze_logs.py                   drain3 日志模板聚类挖掘
 │   └── generate/                         数据生成脚本
@@ -30,14 +29,18 @@ scripts/
 │   └── start_frontend_dev.sh               启动 Vite 前端开发服务器
 ├── deploy/                             部署镜像脚本
 │   └── build_push_backend_image.sh        构建、冒烟测试和推送后端 Docker 镜像
-├── reconstruct_phase1_metadata.py        重建 Phase 1 元数据
+├── archive/                            已归档的一次性脚本（见下方"归档脚本"）
+├── backfill_neo4j_literature.py          从 PostgreSQL 回填历史文献证据到 Neo4j
+├── seed_neo4j_terminology.py             播种 Neo4j 术语知识图谱
+├── check_neo4j_indexes.py                检查 Neo4j 索引状态
 ├── refresh_business_read_models.py       刷新业务读模型
-├── rerun_phase2_phase3.py                重跑 Phase 2 + Phase 3
-├── rerun_phase3.py                       重跑 Phase 3
 ├── reset_lingua_seeker_business_results.sql  重置业务结果 SQL
+├── run_document_batch.py                 提交本地文档目录到管线 API（可续跑轮询）
+├── run_filtered_batch.sh                 运行过滤后的文档批处理
 ├── run_all_shards.sh                     运行所有分片
 ├── run_benchmark_b8.sh                   运行 Benchmark B8
 ├── run_benchmark_shard.sh                运行基准分片
+├── sync_dev_to_prod.sh                   dev→prod 增量数据同步（export/import）
 └── README.md
 ```
 
@@ -49,7 +52,6 @@ scripts/
 |------|------|------|
 | `import_benchmark_ground_truth.py` | Python | 导入基准真值，支持双轨可追溯性（原文+译文） |
 | `import_terminology.py` | Python | 导入本地术语文件（hgnc、omim、hpo、clingen、clinvar）到 PostgreSQL |
-| `backfill_variant_ids.py` | Python | 回填已有数据的变异标识符 |
 | `reindex_clinvar_aliases.py` | Python | 重建 ClinVar 别名索引以优化搜索 |
 
 ### 数据清理
@@ -58,8 +60,6 @@ scripts/
 |------|------|------|
 | `delete_unmapped_entities.py` | Python | 删除数据库中未映射的基因和变异 |
 | `delete_incomplete_gene_variant_groups.py` | Python | 删除缺少基因或变异字段的证据项 |
-| `refactor_benchmark_imports.py` | Python | 目录重组后重构基准模块导入 |
-| `refactor_benchmark_reports.py` | Python | 目录重组后重构基准报告路径 |
 
 ### 数据分析
 
@@ -122,18 +122,45 @@ cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --json repor
 ./scripts/deploy/build_push_backend_image.sh --no-push
 ```
 
-### 管线重跑脚本
+### 数据/管线运维脚本
 
 | 脚本 | 用途 |
 |------|------|
-| `reconstruct_phase1_metadata.py` | 重建 Phase 1 元数据 |
 | `refresh_business_read_models.py` | 刷新业务 CQRS 读模型 |
-| `rerun_phase2_phase3.py` | 重跑 Phase 2 + Phase 3 |
-| `rerun_phase3.py` | 仅重跑 Phase 3 |
 | `reset_lingua_seeker_business_results.sql` | 重置业务结果的 SQL 脚本 |
+| `run_document_batch.py` | 提交本地文档目录到管线 API，支持可续跑轮询 |
+| `run_filtered_batch.sh` | 运行过滤后的文档批处理 |
 | `run_all_shards.sh` | 运行所有基准分片 |
 | `run_benchmark_b8.sh` | 运行 Benchmark B8 |
 | `run_benchmark_shard.sh` | 运行单个基准分片 |
+
+### Neo4j 知识图谱脚本
+
+| 脚本 | 用途 |
+|------|------|
+| `backfill_neo4j_literature.py` | 从 PostgreSQL 回填历史文献证据到 Neo4j |
+| `seed_neo4j_terminology.py` | 播种 Neo4j 术语知识图谱 |
+| `check_neo4j_indexes.py` | 检查 Neo4j 索引状态 |
+
+### 数据同步脚本
+
+| 脚本 | 用途 |
+|------|------|
+| `sync_dev_to_prod.sh` | dev→prod 增量数据同步（`export` 导出 CSV bundle，`import` 按 UUID 主键 upsert）。详见脚本头部注释 |
+
+### 归档脚本（`archive/`）
+
+以下一次性任务脚本已完成使命，归档保留以备参考（不再纳入常规维护）：
+
+| 脚本 | 原用途 |
+|------|------|
+| `reconstruct_phase1_metadata.py` | 从 source_documents 表重建 Phase 1 元数据 |
+| `rerun_phase2_phase3.py` | 用重建的元数据重跑 Phase 2 + Phase 3 |
+| `rerun_phase3.py` | 从已有 Phase 2 结果重跑 Phase 3 |
+| `backfill_variant_ids.py` | 回填已有数据的变异标识符 |
+| `backfill_document_blocks.py` | 回填文档 blocks |
+| `refactor_benchmark_imports.py` | 目录重组后重构基准模块导入 |
+| `refactor_benchmark_reports.py` | 目录重组后重构基准报告路径 |
 
 ## 前置条件
 

@@ -57,10 +57,11 @@
 │   └── config/                     # 数据库配置
 ├── deploy/                         # 部署配置
 │   ├── compose/                    # Docker Compose 部署
-│   │   ├── single-server/          # 一体化部署
+│   │   ├── dev-infra/              # 本地开发：仅 Postgres + Redis
 │   │   ├── backend-host/           # 后端 + Postgres + Redis
 │   │   ├── frontend-host/          # Nginx + 预构建 SPA
 │   │   └── staging/                # 预发布环境
+│   ├── archive/                    # 已归档部署变体（single-server、debug-prod）
 │   └── ansible/                    # Ansible 部署自动化
 │       ├── roles/                  # backend、frontend、postgres、redis、nginx
 │       ├── playbooks/              # site.yml、healthcheck.yml
@@ -139,20 +140,17 @@ bun run dev
 | Staging | `staging_lingua_seeker` | `lingua_seeker` | `lingua_seeker` |
 | Production | `lingua_seeker` | `lingua_seeker` | `lingua_seeker` |
 
-### 单机部署
-
-```bash
-cd /opt/lingua-seeker
-cp deploy/compose/single-server/.env.example .env
-docker-compose --env-file .env up -d
-docker exec lingua-backend uv run alembic upgrade head
-```
-
-详见 [deploy/compose/single-server/](deploy/compose/single-server/)。
-
-### 分离前后端
+### 分离前后端（当前生产架构）
 
 前端（nginx + SPA）和后端（FastAPI + Postgres + Redis）部署在独立主机。详见 [deploy/compose/README.md](deploy/compose/README.md)。
+
+```bash
+# 后端主机
+docker compose -f deploy/compose/backend-host/docker-compose.yml \
+               --env-file deploy/compose/backend-host/.env up -d
+```
+
+> 早期的一体化单机（single-server）方案已归档至 [deploy/archive/](deploy/archive/)。
 
 ### Ansible
 

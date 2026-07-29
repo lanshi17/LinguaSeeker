@@ -34,7 +34,7 @@ class SubgraphRetriever:
                   "full" includes both terminology and literature evidence.
             limit: Maximum nodes to return.
         """
-        seed_ids = self._seed_node_ids(target)
+        seed_ids = await self._find_seed_node_ids(target)
         if not seed_ids:
             return SubgraphContext()
 
@@ -59,13 +59,29 @@ class SubgraphRetriever:
 
         return subgraph
 
-    @staticmethod
-    def _seed_node_ids(target: ExtractionTarget) -> list[str]:
+    async def _find_seed_node_ids(self, target: ExtractionTarget) -> list[str]:
+        """Look up Neo4j node IDs by display name for the target entities."""
         seeds: list[str] = []
+
         if target.gene_symbol:
-            seeds.append(f"gene:{target.gene_symbol.upper()}")
+            gene_ids = await self._repository.find_node_ids_by_name(
+                label="Gene",
+                names=[target.gene_symbol, target.gene_symbol.upper()],
+            )
+            seeds.extend(gene_ids)
+
         if target.disease_name:
-            seeds.append(f"disease:{target.disease_name.casefold()}")
+            disease_ids = await self._repository.find_node_ids_by_name(
+                label="Disease",
+                names=[target.disease_name, target.disease_name.casefold()],
+            )
+            seeds.extend(disease_ids)
+
         if target.variant_hgvs_p:
-            seeds.append(f"variant:{target.variant_hgvs_p.strip()}")
-        return seeds
+            variant_ids = await self._repository.find_node_ids_by_name(
+                label="Variant",
+                names=[target.variant_hgvs_p.strip()],
+            )
+            seeds.extend(variant_ids)
+
+        return list(dict.fromkeys(seeds))  # deduplicate preserving order

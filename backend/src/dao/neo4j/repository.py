@@ -121,6 +121,32 @@ class Neo4jRepository:
         ]
         return SubgraphContext(nodes=nodes, edges=edges)
 
+    async def find_node_ids_by_name(
+        self,
+        label: str,
+        names: list[str],
+        limit: int = 50,
+    ) -> list[str]:
+        """Find node IDs by case-insensitive display_name or alias match.
+
+        Args:
+            label: Neo4j node label to filter on (e.g. ``"Gene"``).
+            names: Display names to search for (case-insensitive).
+            limit: Maximum results.
+        """
+        if not names:
+            return []
+        query = (
+            f"MATCH (n:{label}) "
+            "WHERE toLower(n.display_name) IN $names "
+            "OR ANY(a IN n.aliases WHERE toLower(a) IN $names) "
+            "RETURN DISTINCT n.node_id AS node_id "
+            "LIMIT $limit"
+        )
+        lower_names = [n.lower() for n in names]
+        records = await self.execute_read(query, names=lower_names, limit=limit)
+        return [r["node_id"] for r in records]
+
     async def find_nodes(
         self,
         labels: tuple[str, ...] | None = None,

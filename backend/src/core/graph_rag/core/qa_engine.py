@@ -85,7 +85,7 @@ class GraphRagQaEngine:
             return self._empty_response(question)
 
         entities = await self._extract_entities(question)
-        seed_ids = self._seed_ids_from_entities(entities)
+        seed_ids = await self._find_seed_ids(entities)
         if not seed_ids:
             logger.info("No seed entities found in question: {}", question)
             return self._empty_response(question)
@@ -122,7 +122,7 @@ class GraphRagQaEngine:
             "Return only JSON."
         )
         try:
-            return self._provider.ainvoke_structured(
+            return await self._provider.ainvoke_structured(
                 prompt=prompt,
                 output_schema=_ExtractedEntities,
                 tier=EvidenceModelTier.FAST,
@@ -132,19 +132,39 @@ class GraphRagQaEngine:
             logger.warning("Entity extraction failed for GraphRAG query: {}", exc)
             return _ExtractedEntities()
 
-    @staticmethod
-    def _seed_ids_from_entities(entities: _ExtractedEntities) -> list[str]:
-        """Convert extracted entities into canonical Neo4j node IDs."""
+    async def _find_seed_ids(self, entities: _ExtractedEntities) -> list[str]:
+        """Look up Neo4j node IDs by display name for the extracted entities."""
         seeds: list[str] = []
-        for gene in entities.gene_symbols:
-            seeds.append(f"gene:{gene.strip().upper()}")
-        for disease in entities.disease_names:
-            seeds.append(f"disease:{disease.strip().casefold()}")
-        for variant in entities.variants:
-            seeds.append(f"variant:{variant.strip()}")
-        for phenotype in entities.phenotypes:
-            seeds.append(f"phenotype:{phenotype.strip().casefold()}")
-        return seeds
+
+        if entities.gene_symbols:
+            for gene in entities.gene_symbols:
+                ids = await self._repository.find_node_ids_by_name(
+                    label="Gene", names=[gene, gene.upper()],
+                )
+                seeds.extend(ids)
+
+        if entities.disease_names:
+            for disease in entities.disease_names:
+                ids = await self._repository.find_node_ids_by_name(
+                    label="Disease", names=[disease, disease.casefold()],
+                )
+                seeds.extend(ids)
+
+        if entities.variants:
+            for variant in entities.variants:
+                ids = await self._repository.find_node_ids_by_name(
+                    label="Variant", names=[variant.strip()],
+                )
+                seeds.extend(ids)
+
+        if entities.phenotypes:
+            for phenotype in entities.phenotypes:
+                ids = await self._repository.find_node_ids_by_name(
+                    label="Phenotype", names=[phenotype, phenotype.casefold()],
+                )
+                seeds.extend(ids)
+
+        return list(dict.fromkeys(seeds))  # deduplicate preserving order
 
     async def _generate_answer(self, question: str, subgraph: SubgraphContext) -> _GeneratedAnswer:
         """Use the reasoning LLM to generate an answer with citations."""

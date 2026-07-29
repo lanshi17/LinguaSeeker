@@ -4,12 +4,36 @@ from __future__ import annotations
 
 import re
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
 from src.core.cross_lingual_translation.contracts import TranslationAlignmentChunk
 from .domain.channel_contracts import DocumentChannelClassification
+
+
+# ── Shared confidence coercion ───────────────────────────────────────────
+_CONFIDENCE_STR_MAP: dict[str, float] = {
+    "high": 0.9,
+    "medium": 0.5,
+    "low": 0.2,
+    "certain": 1.0,
+    "very_high": 0.95,
+    "very_low": 0.05,
+}
+
+
+def _coerce_confidence_field(data: object) -> object:
+    """Coerce string confidence values to float before Pydantic validation."""
+    if isinstance(data, dict):
+        raw = data.get("confidence")
+        if isinstance(raw, str):
+            key = raw.strip().lower()
+            if key in _CONFIDENCE_STR_MAP:
+                data["confidence"] = _CONFIDENCE_STR_MAP[key]
+            elif not key:
+                data["confidence"] = 0.0
+    return data
 
 
 class Track(str, Enum):
@@ -208,6 +232,13 @@ class EvidenceItem(BaseModel):
     target_variant: str = ""
     evidence_source_language: str = ""
 
+    # ── String confidence mapper (LLM sometimes returns "high"/"medium"/"low") ─
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_confidence(cls, data: Any) -> Any:
+        return _coerce_confidence_field(data)
+
     @model_validator(mode="after")
     def normalize_language_metadata(self) -> EvidenceItem:
         language = self.article_language.strip().lower()
@@ -282,6 +313,11 @@ class RelevanceScanOutput(DocumentEvidenceMap):
     rationale: str = ""
     supporting_block_ids: list[str] = Field(default_factory=list)
 
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_confidence(cls, data: Any) -> Any:
+        return _coerce_confidence_field(data)
+
 
 class SpecialEvidenceRecord(BaseModel):
     record_type: Literal["functional", "case_control", "authority", "contradiction"]
@@ -291,6 +327,11 @@ class SpecialEvidenceRecord(BaseModel):
     source: SourceLocation | None = None
     raw_source: SourceLocation | None = None
     confidence: float = Field(ge=0.0, le=1.0, default=0.5)
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_confidence(cls, data: Any) -> Any:
+        return _coerce_confidence_field(data)
 
 
 class SpecialEvidenceResponse(BaseModel):
@@ -304,6 +345,11 @@ class PrimaryBroadEvidenceCandidate(BaseModel):
     status: EvidenceStatus
     value: str | int | float | bool | list[str] | None = None
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_confidence(cls, data: Any) -> Any:
+        return _coerce_confidence_field(data)
     source_quote: str = ""
     notes: str = ""
 
@@ -322,6 +368,11 @@ class EvidenceReviewDecision(BaseModel):
     action: Literal["approve", "reject", "correct"]
     value: str | int | float | bool | list[str] | None = None
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_confidence(cls, data: Any) -> Any:
+        return _coerce_confidence_field(data)
     source_quote: str = ""
     reason: str = ""
 

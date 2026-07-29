@@ -430,6 +430,18 @@ class MultiStageTranslator(BaseTranslator):
         # Split on markers
         translated_parts = split_by_markers(translated, len(merged_blocks))
 
+        # Safety: if marker count mismatch, pad/truncate to avoid index errors
+        if len(translated_parts) != len(merged_blocks):
+            logger.warning(
+                "Marker mismatch: expected {} parts, got {} — padding with empties",
+                len(merged_blocks),
+                len(translated_parts),
+            )
+            if len(translated_parts) < len(merged_blocks):
+                translated_parts.extend([""] * (len(merged_blocks) - len(translated_parts)))
+            else:
+                translated_parts = translated_parts[:len(merged_blocks)]
+
         # Fix [REDACTED] incorrectly inserted inside English words
         translated_parts = [fix_word_boundary_redacted(p) for p in translated_parts]
 

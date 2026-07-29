@@ -4,7 +4,7 @@
 # 使用 mimo 模型配置通过 pipeline API 处理
 #
 # Usage:
-#   bash scripts/run_filtered_batch.sh [--dry-run] [--concurrency N]
+#   MIMO_API_KEY="..." bash scripts/run_filtered_batch.sh [--dry-run] [--concurrency N]
 # ============================================================================
 
 set -euo pipefail
@@ -16,13 +16,32 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 INPUT_DIR="${PROJECT_ROOT}/benchmark/runners/downloads/filtered"
 STATE_FILE="${PROJECT_ROOT}/data/filtered_batch_state.jsonl"
 LOG_FILE="${PROJECT_ROOT}/logs/filtered_batch_$(date +%Y%m%d_%H%M%S).log"
-VAULT_FILE="${PROJECT_ROOT}/backend/config/vault/batch_mimo.yaml"
+
+# 前端↔后端认证密钥：从 dev vault 读取，与前端 VITE_API_KEY 一致。
+# 不硬编码到脚本（脚本已纳入 git），避免密钥泄露到版本控制。
+DEV_VAULT="${PROJECT_ROOT}/backend/config/vault/development.yaml"
+if [ ! -f "$DEV_VAULT" ]; then
+    echo "ERROR: dev vault not found: $DEV_VAULT" >&2
+    exit 1
+fi
+# 提取顶层 api_key（取首个匹配，去引号）
+FRONTEND_API_KEY="$(grep -E '^api_key:' "$DEV_VAULT" | head -1 | sed -E 's/^api_key:[[:space:]]*"?([^"]*)"?.*/\1/')"
+if [ -z "$FRONTEND_API_KEY" ]; then
+    echo "ERROR: could not read api_key from $DEV_VAULT" >&2
+    exit 1
+fi
+
+# 模型密钥必须从调用环境注入，禁止写入此 Git 跟踪脚本或临时 vault 文件。
+if [ -z "${MIMO_API_KEY:-}" ]; then
+    echo "ERROR: MIMO_API_KEY must be set in the environment." >&2
+    exit 1
+fi
+MIMO_API_KEYS_JSON="$(printf '["%s"]' "$MIMO_API_KEY")"
 
 # 模型配置
-MIMO_BASE_URL="https://token-plan-cn.xiaomimimo.com/v1"
-MIMO_API_KEY="tp-cmltonm3l77iv1h7zkmr679c2ar5p2shpdsyoktpbc5sxguv"
-FAST_MODEL="mimo-v2.5"
-REASON_MODEL="mimo-v2.5-pro"
+MIMO_BASE_URL="https://llm-jkbw4lmh2jpi2979.cn-beijing.maas.aliyuncs.com/compatible-mode/v1"
+FAST_MODEL="qwen3.7-flash"
+REASON_MODEL="qwen3.7-plus"
 
 # 默认参数
 CONCURRENCY=2
@@ -70,60 +89,35 @@ if [ "$PDF_COUNT" -eq 0 ]; then
     exit 0
 fi
 
-# ── 创建临时 vault 配置 ──────────────────────────────────────────────────
-echo "[1/3] Creating temporary vault config: $VAULT_FILE"
-mkdir -p "$(dirname "$VAULT_FILE")"
-
-cat > "$VAULT_FILE" << EOF
-# Temporary vault for batch processing with mimo models
-# Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)
-
-session_signing_key: "batch-temp-key-$(openssl rand -hex 16)"
-
-# LLM API Keys - 使用 mimo 模型
-fast_llm:
-  api_key: "${MIMO_API_KEY}"
-  base_url: "${MIMO_BASE_URL}"
-  model: "${FAST_MODEL}"
-
-reasoning_llm:
-  api_key: "${MIMO_API_KEY}"
-  base_url: "${MIMO_BASE_URL}"
-  model: "${REASON_MODEL}"
-
-chat_llm:
-  api_key: "${MIMO_API_KEY}"
-  base_url: "${MIMO_BASE_URL}"
-  model: "${FAST_MODEL}"
-
-translation_llm:
-  remote_base_url: "${MIMO_BASE_URL}"
-  remote_api_key: "${MIMO_API_KEY}"
-  remote_model: "${FAST_MODEL}"
-
-# 数据库配置 - 使用开发环境数据库
-api_key: "batch-temp-key"
-EOF
-
-echo "  Vault config created."
-
 # ── 创建日志目录 ──────────────────────────────────────────────────────────
 mkdir -p "$(dirname "$LOG_FILE")"
 
 # ── 启动后端 ──────────────────────────────────────────────────────────────
-echo "[2/3] Starting backend with mimo configuration..."
+echo "[1/2] Starting backend with mimo configuration..."
 
 # 设置环境变量
 export ENVIRONMENT="development"
 export FAST_LLM_BASE_URL="${MIMO_BASE_URL}"
 export FAST_LLM_API_KEY="${MIMO_API_KEY}"
+export FAST_LLM_API_KEYS="${MIMO_API_KEYS_JSON}"
 export FAST_LLM_MODEL="${FAST_MODEL}"
 export REASONING_LLM_BASE_URL="${MIMO_BASE_URL}"
 export REASONING_LLM_API_KEY="${MIMO_API_KEY}"
+export REASONING_LLM_API_KEYS="${MIMO_API_KEYS_JSON}"
 export REASONING_LLM_MODEL="${REASON_MODEL}"
 export CHAT_LLM_BASE_URL="${MIMO_BASE_URL}"
 export CHAT_LLM_API_KEY="${MIMO_API_KEY}"
+export CHAT_LLM_API_KEYS="${MIMO_API_KEYS_JSON}"
 export CHAT_LLM_MODEL="${FAST_MODEL}"
+export TRANSLATION_LLM_REMOTE_BASE_URL="${MIMO_BASE_URL}"
+export TRANSLATION_LLM_REMOTE_API_KEY="${MIMO_API_KEY}"
+export TRANSLATION_LLM_REMOTE_API_KEYS="${MIMO_API_KEYS_JSON}"
+export TRANSLATION_LLM_REMOTE_MODEL="${FAST_MODEL}"
+# Lower reasoning effort to prevent thinking-chain from consuming the entire
+# 4096 output-token budget before the JSON extraction payload is emitted.
+export REASONING_LLM_REASONING_EFFORT="low"
+# 前端↔后端认证密钥（必须与 run_document_batch.py 的 --api-key 一致）
+export API_KEY="${FRONTEND_API_KEY}"
 
 # 启动后端（后台运行）
 cd "$PROJECT_ROOT/backend"
@@ -165,7 +159,7 @@ for i in $(seq 1 30); do
 done
 
 # ── 运行批处理 ────────────────────────────────────────────────────────────
-echo "[3/3] Starting batch processing..."
+echo "[2/2] Starting batch processing..."
 echo ""
 
 cd "$PROJECT_ROOT"
@@ -173,7 +167,7 @@ cd "$PROJECT_ROOT"
 uv --project backend run python scripts/run_document_batch.py \
     --input-dir "$INPUT_DIR" \
     --base-url http://127.0.0.1:8000 \
-    --api-key "batch-temp-key" \
+    --api-key "${FRONTEND_API_KEY}" \
     --state "$STATE_FILE" \
     --log-file "$LOG_FILE" \
     --concurrency "$CONCURRENCY" \

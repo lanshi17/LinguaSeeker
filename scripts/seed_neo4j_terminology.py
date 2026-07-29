@@ -53,15 +53,21 @@ ENTITY_TYPE_MAP: dict[str, GraphEntityType] = {
     "phenotype": GraphEntityType.PHENOTYPE,
 }
 
+# By default, skip variants (4M+ rows) to keep the terminology graph focused
+# on gene-disease-phenotype relationships. Pass --include-variants to import all.
+DEFAULT_SKIP_TYPES: frozenset[str] = frozenset({"variant"})
+
 
 def _node_id(entity_type: str, external_id: str) -> str:
     return f"{entity_type}:{external_id}"
 
 
-async def _fetch_entry_batches(session: Any, batch_size: int):
+async def _fetch_entry_batches(
+    session: Any, batch_size: int, skip_types: frozenset[str] | None = None
+):
     last_entry_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
     while True:
-        result = await session.execute(
+        query = (
             select(
                 TerminologyEntry.entry_id,
                 TerminologyEntry.entity_type,
@@ -72,8 +78,10 @@ async def _fetch_entry_batches(session: Any, batch_size: int):
             )
             .where(TerminologyEntry.entry_id > last_entry_id)
             .order_by(TerminologyEntry.entry_id)
-            .limit(batch_size)
         )
+        if skip_types:
+            query = query.where(TerminologyEntry.entity_type.notin_(skip_types))
+        result = await session.execute(query.limit(batch_size))
         rows = result.all()
         if not rows:
             break
@@ -108,10 +116,11 @@ async def _build_and_write_nodes(
     session: Any,
     provider: Neo4jGraphProvider,
     batch_size: int,
+    skip_types: frozenset[str] | None = None,
 ) -> int:
     total = 0
     batch_num = 0
-    async for rows in _fetch_entry_batches(session, batch_size):
+    async for rows in _fetch_entry_batches(session, batch_size, skip_types=skip_types):
         batch_num += 1
         batch = LiteratureGraphBatch()
         for row in rows:
@@ -132,8 +141,7 @@ async def _build_and_write_nodes(
             )
         summary = await provider.write_batch(batch)
         total += summary["nodes_written"]
-        if batch_num % 10 == 0:
-            logger.info("  nodes batch {}: {} written (cumulative {})", batch_num, summary["nodes_written"], total)
+        logger.info("  nodes batch {}: {} written (cumulative {})", batch_num, summary["nodes_written"], total)
     return total
 
 
@@ -141,14 +149,14 @@ async def _build_and_write_edges(
     session: Any,
     provider: Neo4jGraphProvider,
     batch_size: int,
+    skip_types: frozenset[str] | None = None,
 ) -> int:
     # Build an in-memory map from entry_id -> (entity_type, external_id).
-    # This is memory-bound but terminology_entry count is expected to be
-    # in the low hundreds of thousands; for larger deployments, switch to
-    # streaming joins in PostgreSQL.
-    result = await session.execute(
-        select(TerminologyEntry.entry_id, TerminologyEntry.entity_type, TerminologyEntry.external_id)
-    )
+    # Filter out skipped entity types so relationships involving them are dropped.
+    entry_query = select(TerminologyEntry.entry_id, TerminologyEntry.entity_type, TerminologyEntry.external_id)
+    if skip_types:
+        entry_query = entry_query.where(TerminologyEntry.entity_type.notin_(skip_types))
+    result = await session.execute(entry_query)
     entry_map = {row[0]: (row[1], row[2]) for row in result.all()}
 
     total = 0
@@ -191,12 +199,26 @@ async def _build_and_write_edges(
             )
         summary = await provider.write_batch(batch)
         total += summary["edges_written"]
-        if batch_num % 10 == 0:
-            logger.info("  edges batch {}: {} written (cumulative {})", batch_num, summary["edges_written"], total)
+        logger.info("  edges batch {}: {} written (cumulative {})", batch_num, summary["edges_written"], total)
     return total
 
 
 async def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Seed Neo4j terminology baseline from PostgreSQL")
+    parser.add_argument(
+        "--include-variants",
+        action="store_true",
+        help="Include variant entities (4M+ rows, very slow). Skipped by default.",
+    )
+    parser.add_argument("--batch-size", type=int, default=1000, help="Batch size for Neo4j writes")
+    parser.add_argument("--clear", action="store_true", help="Clear existing terminology nodes/edges before seeding")
+    args = parser.parse_args()
+
+    skip_types = None if args.include_variants else DEFAULT_SKIP_TYPES
+    batch_size = args.batch_size
+
     cfg = get_config()
     engine = build_async_engine(cfg)
     session_factory = async_session_factory(engine)
@@ -205,12 +227,29 @@ async def main() -> None:
     repository = Neo4jRepository(driver)
     provider = Neo4jGraphProvider(repository)
 
-    batch_size = 1000
+    if skip_types:
+        logger.info("Skipping entity types: {}", sorted(skip_types))
+
+    # Pre-count entries for progress estimation
+    from sqlalchemy import func
+
+    async with session_factory() as session:
+        count_q = select(func.count()).select_from(TerminologyEntry)
+        if skip_types:
+            count_q = count_q.where(TerminologyEntry.entity_type.notin_(skip_types))
+        total_entries = (await session.execute(count_q)).scalar() or 0
+        logger.info("Total terminology entries to seed: {}", total_entries)
+
+    if args.clear:
+        logger.info("Clearing existing terminology nodes from Neo4j ...")
+        await repository.execute_write("MATCH (n:Node) DETACH DELETE n")
+        logger.info("Cleared.")
+
     async with session_factory() as session:
         logger.info("Seeding Neo4j terminology nodes ...")
-        nodes_written = await _build_and_write_nodes(session, provider, batch_size)
+        nodes_written = await _build_and_write_nodes(session, provider, batch_size, skip_types=skip_types)
         logger.info("Seeding Neo4j terminology edges ...")
-        edges_written = await _build_and_write_edges(session, provider, batch_size)
+        edges_written = await _build_and_write_edges(session, provider, batch_size, skip_types=skip_types)
 
     await repository.close()
     await engine.dispose()

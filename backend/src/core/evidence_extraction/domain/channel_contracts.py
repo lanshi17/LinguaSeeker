@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -130,6 +130,20 @@ class DocumentChannelClassification(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     rationale: str
     supporting_block_ids: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_confidence(cls, data: Any) -> Any:
+        """Coerce string confidence values to float before validation."""
+        if isinstance(data, dict):
+            raw = data.get("confidence")
+            if isinstance(raw, str):
+                key = raw.strip().lower()
+                if key in {"high": 0.9, "medium": 0.5, "low": 0.2, "certain": 1.0}:
+                    data["confidence"] = {"high": 0.9, "medium": 0.5, "low": 0.2, "certain": 1.0}[key]
+                elif not key:
+                    data["confidence"] = 0.0
+        return data
 
     @model_validator(mode="after")
     def _normalize_channels(self) -> DocumentChannelClassification:

@@ -230,8 +230,10 @@ def split_by_markers(marked_text: str, n_expected: int) -> list[str]:
             segments[seq] = content
 
     if not segments:
-        # No markers found — return full text as single element
-        return [marked_text.strip()]
+        # No markers found — return n_expected elements with full text in first
+        result = [""] * n_expected
+        result[0] = marked_text.strip()
+        return result
 
     # Reconstruct in order
     result: list[str] = []

@@ -19,7 +19,6 @@ from src.core.graph_rag.contracts import (
     GraphSubgraphResponse,
 )
 from src.core.graph_rag.core.qa_engine import GraphRagQaEngine, QaEngineConfig
-from src.core.graph_rag.core.retrieval import SubgraphRetriever
 from src.dao.neo4j.contracts import SubgraphContext
 from src.dao.neo4j.repository import Neo4jRepository
 
@@ -78,22 +77,32 @@ async def get_knowledge_graph(
 
     seed_ids: list[str] = []
     if gene_symbol:
-        seed_ids.append(f"gene:{gene_symbol.strip().upper()}")
+        seed_ids.extend(await repository.find_node_ids_by_name(
+            label="Gene", names=[gene_symbol.strip(), gene_symbol.strip().upper()],
+        ))
     if disease_name:
-        seed_ids.append(f"disease:{disease_name.strip().casefold()}")
+        seed_ids.extend(await repository.find_node_ids_by_name(
+            label="Disease", names=[disease_name.strip(), disease_name.strip().casefold()],
+        ))
     if variant_hgvs_p:
-        seed_ids.append(f"variant:{variant_hgvs_p.strip()}")
+        seed_ids.extend(await repository.find_node_ids_by_name(
+            label="Variant", names=[variant_hgvs_p.strip()],
+        ))
     if phenotype:
-        seed_ids.append(f"phenotype:{phenotype.strip().casefold()}")
+        seed_ids.extend(await repository.find_node_ids_by_name(
+            label="Phenotype", names=[phenotype.strip(), phenotype.strip().casefold()],
+        ))
+
+    # Deduplicate preserving order
+    seed_ids = list(dict.fromkeys(seed_ids))
 
     if not seed_ids:
         raise HTTPException(
             status_code=400,
-            detail="Provide at least one of gene_symbol, disease_name, variant_hgvs_p, or phenotype",
+            detail="No matching nodes found for the provided entities",
         )
 
-    retriever = SubgraphRetriever(repository)
-    subgraph = await retriever._repository.get_subgraph(
+    subgraph = await repository.get_subgraph(
         seed_node_ids=seed_ids,
         hops=hops,
         limit=limit,

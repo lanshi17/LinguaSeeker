@@ -20,9 +20,8 @@ deploy/
 │   ├── dev-infra/              # 本地开发：仅 Postgres + Redis
 │   ├── staging/                # 预发布：backend + Postgres + Redis
 │   ├── backend-host/           # 跨主机：backend + Postgres + Redis（后端服务器）
-│   ├── frontend-host/          # 跨主机：nginx + SPA（前端服务器）
-│   ├── single-server/          # 一体化：backend + Postgres + Redis（推理服务外部）
-│   └── debug-prod/             # 生产调试配置
+│   └── frontend-host/          # 跨主机：nginx + SPA（前端服务器）
+├── archive/                    # 已归档变体：single-server、debug-prod
 ├── mineru-api/                 # MinerU 文档解析部署说明
 ├── nginx/                      # Nginx 配置
 │   └── linguaseeker.conf       # 站点配置
@@ -35,9 +34,10 @@ deploy/
 |------|------|------|
 | Ansible 裸机 | `ansible/` | 生产和预发布服务器，systemd 服务管理 |
 | 跨主机 Compose | `compose/backend-host/` + `compose/frontend-host/` | 前后端分离的 Docker 部署 |
-| 单机 Compose | `compose/single-server/` | 一体化 GPU 服务器（CentOS 7.9+） |
 | 预发布 Compose | `compose/staging/` | Docker 预发布验证 |
 | 开发基础设施 | `compose/dev-infra/` | 本地开发（仅 Postgres + Redis，后端在主机运行） |
+
+> 已归档变体见 `archive/`：`single-server/`（一体化 GPU 单机，被跨主机架构取代）、`debug-prod/`（生产配置本地调试）。
 
 ## 部署拓扑
 
@@ -76,11 +76,14 @@ cd deploy/ansible
 ansible-playbook playbooks/site.yml
 ```
 
-**Docker Compose（单机）：**
+**Docker Compose（跨主机）：**
 ```bash
-cd deploy/compose/single-server
-cp .env.example .env  # 编辑真实密钥
-./deploy.sh
+# 后端主机
+docker compose -f deploy/compose/backend-host/docker-compose.yml \
+               --env-file deploy/compose/backend-host/.env up -d
+# 前端主机
+docker compose -f deploy/compose/frontend-host/docker-compose.yml \
+               --env-file deploy/compose/frontend-host/.env up -d
 ```
 
 **仅开发基础设施：**

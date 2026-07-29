@@ -21,15 +21,10 @@ deploy/compose/
 ├── frontend-host/           # 跨主机：nginx + SPA（前端服务器）
 │   ├── docker-compose.yml
 │   └── .env.example
-├── single-server/           # 一体化：backend + Postgres + Redis（推理服务外部）
-│   ├── docker-compose.yml
-│   ├── .env.example
-│   ├── deploy.sh            # 初始部署脚本
-│   ├── update.sh            # 增量代码更新脚本
-│   └── patch-backend.Dockerfile
-├── debug-prod/              # 生产调试配置
 └── README.md
 ```
+
+> 已归档变体见 `deploy/archive/`：`single-server/`（一体化单机方案，被跨主机架构取代）、`debug-prod/`（生产配置本地调试）。
 
 | 变体 | 服务 | 用途 |
 |------|------|------|
@@ -37,7 +32,6 @@ deploy/compose/
 | `staging/` | Backend + Postgres + Redis | 预发布验证，推理服务外部 |
 | `backend-host/` | Backend + Postgres + Redis | 跨主机部署的后端部分 |
 | `frontend-host/` | Nginx + SPA | 跨主机部署的前端部分 |
-| `single-server/` | Backend + Postgres + Redis | 一体化服务器（推理服务外部） |
 
 ## 跨主机部署（backend-host + frontend-host）
 
@@ -71,31 +65,9 @@ Browser
 - **后端暴露** — 后端端口默认绑定 `127.0.0.1`，设置 `BACKEND_BIND=0.0.0.0` 并配置防火墙
 - **配置注入** — `production.yaml` 和 `vault/production.yaml` 以只读方式挂载到后端容器
 
-## 单机部署
+## 单机部署（已归档）
 
-适用于 CentOS 7.9+ 服务器，本地运行 backend、Postgres 和 Redis。推理服务（embedding、rerank、doc-parse）为外部 Docker 容器。
-
-### 前置条件
-
-- Docker CE 20.10+
-- 已加载后端镜像：`lingua-seeker-backend:local`
-- 外部推理服务运行中（embedding :8002、rerank :8003、doc-parse :44321）
-
-### 初始部署
-
-```bash
-cd deploy/compose/single-server
-cp .env.example .env   # 编辑真实密钥
-./deploy.sh            # 检查前置条件、复制文件、启动服务、健康检查
-```
-
-### 增量更新
-
-```bash
-./update.sh backend          # 仅更新后端
-```
-
-使用薄覆盖 Dockerfile（`patch-backend.Dockerfile`），仅复制变更的源文件到现有镜像。
+早期的一体化单机方案（CentOS 7.9+，backend + Postgres + Redis 同机，配 `deploy.sh`/`update.sh`/`patch-backend.Dockerfile`）已被跨主机架构取代，归档至 [`deploy/archive/single-server/`](../archive/single-server/)。如需参考旧部署流程，见该目录。
 
 ## 开发基础设施
 
