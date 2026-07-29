@@ -55,7 +55,7 @@ neo4j:
   database: "dev_lingua_seeker"
 
 graph_rag:
-  enabled: false
+  enabled: true
   hops: 2
   mode: "full"
 

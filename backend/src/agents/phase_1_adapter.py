@@ -155,6 +155,12 @@ class Phase1Adapter:
             )
 
             # Extract parsed output paths (B4 fix: correct field names)
+            if not parse_result.saved_files:
+                raise PermanentPhaseError(
+                    "Phase 1 parsing produced no output files (document may have been "
+                    "rejected by the parser, e.g. page-limit exceeded)",
+                    phase=1,
+                )
             first_file = list(parse_result.saved_files.values())[0]
 
             state.phase_1_output = Phase1Output(

@@ -448,11 +448,11 @@ class Settings(BaseSettings):
     neo4j_database: str = "neo4j"
     neo4j_max_connection_pool_size: int = 10
 
-    # ── GraphRAG flat fields (GRAPHRAG_*) ───────────────────────────────
+    # ── GraphRAG flat fields (GRAPH_RAG_*) ──────────────────────────────
 
-    graphrag_enabled: bool = False
-    graphrag_hops: int = 2
-    graphrag_mode: str = "full"  # "terminology_only" or "full"
+    graph_rag_enabled: bool = False
+    graph_rag_hops: int = 2
+    graph_rag_mode: str = "full"  # "terminology_only" or "full"
 
     # ── Web Search flat fields (WEB_SEARCH_*) ───────────────────────────
 
@@ -617,9 +617,9 @@ class Settings(BaseSettings):
             max_connection_pool_size=self.neo4j_max_connection_pool_size,
         )
         self.graph_rag = GraphRagConfig(
-            enabled=self.graphrag_enabled,
-            hops=self.graphrag_hops,
-            mode=self.graphrag_mode,
+            enabled=self.graph_rag_enabled,
+            hops=self.graph_rag_hops,
+            mode=self.graph_rag_mode,
         )
         self.web_search = WebSearchConfig(
             firecrawl_api_key=self.web_search_firecrawl_api_key,

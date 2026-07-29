@@ -275,14 +275,22 @@ class MinerURemoteParser(ParserStrategy):
         status = await self.poll_batch_until_terminal(upload.batch_id, timeout_ms=timeout_ms, proxy=proxy)
 
         parsed: dict[str, ParseResult] = {}
+        failures: list[str] = []
         for item in status.extract_result:
             if item.state != "done":
                 logger.warning(f"MinerU batch file failed or incomplete: {item.file_name}: {item.err_msg}")
+                failures.append(f"{item.file_name}: {item.err_msg}")
                 continue
             if not item.full_zip_url:
                 raise MinerUAPIError(f"Done batch item has no full_zip_url: {item.file_name}")
             raw = await self._download_and_parse_zip(item.full_zip_url)
             parsed[item.file_name] = self._build_result(raw)
+
+        # If every file failed, surface the real MinerU reason (e.g. page-limit
+        # rejection) instead of returning an empty result that causes a
+        # meaningless "list index out of range" in the caller.
+        if not parsed and file_paths:
+            raise MinerUAPIError(f"MinerU parsed no files; all failed: {'; '.join(failures) or 'unknown reason'}")
 
         return MinerULocalBatchParseResult(batch_id=upload.batch_id, status=status, results=parsed)
 
