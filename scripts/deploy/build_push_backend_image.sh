@@ -4,13 +4,13 @@
 # Run from anywhere inside the repo:
 #   ./scripts/deploy/build_push_backend_image.sh
 #   ./scripts/deploy/build_push_backend_image.sh --tag 20260629
-#   BACKEND_IMAGE=docker.io/[redacted-user]47/lingua-seeker-backend IMAGE_TAG=latest ./scripts/deploy/build_push_backend_image.sh
+#   BACKEND_IMAGE=docker.io/lanshi47/lingua-seeker-backend IMAGE_TAG=latest ./scripts/deploy/build_push_backend_image.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-BACKEND_IMAGE="${BACKEND_IMAGE:-docker.io/[redacted-user]47/lingua-seeker-backend}"
+BACKEND_IMAGE="${BACKEND_IMAGE:-docker.io/lanshi47/lingua-seeker-backend}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 LOCAL_TAG="${LOCAL_TAG:-lingua-seeker-backend:local}"
 PUSH_RETRIES="${PUSH_RETRIES:-3}"
@@ -23,7 +23,7 @@ usage() {
 Usage: scripts/deploy/build_push_backend_image.sh [options]
 
 Options:
-  --image IMAGE       Backend image repository. Default: docker.io/[redacted-user]47/lingua-seeker-backend
+  --image IMAGE       Backend image repository. Default: docker.io/lanshi47/lingua-seeker-backend
   --tag TAG           Image tag. Default: latest
   --local-tag TAG     Local image tag. Default: lingua-seeker-backend:local
   --retries N         Push retry count. Default: 3

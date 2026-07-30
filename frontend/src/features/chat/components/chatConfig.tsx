@@ -1,5 +1,6 @@
 import { Avatar } from "antd";
 import { User } from "lucide-react";
+import type { KnowledgeGraph } from "@/features/graphrag";
 import type { ChatAction, ChatActionIntent } from "../types/actions";
 
 /** localStorage key for the task-queue panel visibility preference. */
@@ -48,6 +49,15 @@ export interface PerSessionUIState {
       { status: string; duration_seconds?: number | null }
     >;
   } | null;
+  /** Inline knowledge-graph Q&A result, auto-dispatched from a graph-qa action. */
+  graphResult: {
+    dispatchKey: string;
+    question: string;
+    status: "loading" | "done" | "error";
+    answer?: string;
+    subgraph?: KnowledgeGraph;
+    error?: string;
+  } | null;
 }
 
 /** Returns a fresh default state object. Uses a factory (not a constant)
@@ -59,5 +69,6 @@ export function createEmptySessionUI(): PerSessionUIState {
     activeUploadFile: null,
     dispatchedActions: new Set<string>(),
     pipelineStatus: null,
+    graphResult: null,
   };
 }

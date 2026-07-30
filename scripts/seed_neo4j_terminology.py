@@ -46,6 +46,18 @@ RELATIONSHIP_TYPE_MAP: dict[str, GraphRelationType] = {
     "gene_has_dosage_sensitivity": GraphRelationType.HAS_DOSAGE_SENSITIVITY,
 }
 
+# Entity types touched by each relationship type. Used to drop relationship
+# families whose endpoints are all skipped (e.g. variant_* when variants are
+# excluded), so the huge variant relationship rows are never streamed.
+RELATIONSHIP_ENTITY_TYPES: dict[str, frozenset[str]] = {
+    "gene_associated_with_disease": frozenset({"gene", "disease"}),
+    "phenotype_associated_with_gene": frozenset({"phenotype", "gene"}),
+    "phenotype_associated_with_disease": frozenset({"phenotype", "disease"}),
+    "variant_associated_with_disease": frozenset({"variant", "disease"}),
+    "variant_has_clinical_significance": frozenset({"variant"}),
+    "gene_has_dosage_sensitivity": frozenset({"gene"}),
+}
+
 ENTITY_TYPE_MAP: dict[str, GraphEntityType] = {
     "gene": GraphEntityType.GENE,
     "variant": GraphEntityType.VARIANT,
@@ -62,25 +74,45 @@ def _node_id(entity_type: str, external_id: str) -> str:
     return f"{entity_type}:{external_id}"
 
 
+def _entry_columns():
+    return (
+        TerminologyEntry.entry_id,
+        TerminologyEntry.entity_type,
+        TerminologyEntry.external_id,
+        TerminologyEntry.display_name,
+        TerminologyEntry.aliases,
+        TerminologyEntry.source_db,
+    )
+
+
 async def _fetch_entry_batches(
     session: Any, batch_size: int, skip_types: frozenset[str] | None = None
 ):
+    if skip_types:
+        # When variants are skipped the remaining set is small (~90K rows) and
+        # is served directly by the (entity_type, ...) index. A single indexed
+        # read then chunked in memory avoids scanning the 4M+ variant rows that
+        # a keyset ``entry_id`` walk with ``NOT IN``/``IN`` would otherwise force
+        # (the primary-key ordering ignores the entity_type index).
+        include_types = [t for t in ENTITY_TYPE_MAP if t not in skip_types]
+        result = await session.execute(
+            select(*_entry_columns()).where(
+                TerminologyEntry.entity_type.in_(include_types)
+            )
+        )
+        rows = result.all()
+        for start in range(0, len(rows), batch_size):
+            yield rows[start : start + batch_size]
+        return
+
+    # Full import (variants included): keyset-paginate by primary key.
     last_entry_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
     while True:
         query = (
-            select(
-                TerminologyEntry.entry_id,
-                TerminologyEntry.entity_type,
-                TerminologyEntry.external_id,
-                TerminologyEntry.display_name,
-                TerminologyEntry.aliases,
-                TerminologyEntry.source_db,
-            )
+            select(*_entry_columns())
             .where(TerminologyEntry.entry_id > last_entry_id)
             .order_by(TerminologyEntry.entry_id)
         )
-        if skip_types:
-            query = query.where(TerminologyEntry.entity_type.notin_(skip_types))
         result = await session.execute(query.limit(batch_size))
         rows = result.all()
         if not rows:
@@ -89,7 +121,17 @@ async def _fetch_entry_batches(
         last_entry_id = rows[-1][0]
 
 
-async def _fetch_relationship_batches(session: Any, batch_size: int):
+async def _fetch_relationship_batches(
+    session: Any, batch_size: int, skip_types: frozenset[str] | None = None
+):
+    # Only stream relationship families whose endpoints survive the type filter.
+    # This drops the 4M+ ``variant_*`` rows up-front instead of fetching and then
+    # discarding them in the edge builder.
+    include_rel_types = [
+        rel_type
+        for rel_type, endpoint_types in RELATIONSHIP_ENTITY_TYPES.items()
+        if not (skip_types and endpoint_types <= skip_types)
+    ]
     last_rel_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
     while True:
         result = await session.execute(
@@ -102,6 +144,7 @@ async def _fetch_relationship_batches(session: Any, batch_size: int):
                 TerminologyRelationship.evidence_level,
             )
             .where(TerminologyRelationship.relationship_id > last_rel_id)
+            .where(TerminologyRelationship.relationship_type.in_(include_rel_types))
             .order_by(TerminologyRelationship.relationship_id)
             .limit(batch_size)
         )
@@ -155,13 +198,14 @@ async def _build_and_write_edges(
     # Filter out skipped entity types so relationships involving them are dropped.
     entry_query = select(TerminologyEntry.entry_id, TerminologyEntry.entity_type, TerminologyEntry.external_id)
     if skip_types:
-        entry_query = entry_query.where(TerminologyEntry.entity_type.notin_(skip_types))
+        include_types = [t for t in ENTITY_TYPE_MAP if t not in skip_types]
+        entry_query = entry_query.where(TerminologyEntry.entity_type.in_(include_types))
     result = await session.execute(entry_query)
     entry_map = {row[0]: (row[1], row[2]) for row in result.all()}
 
     total = 0
     batch_num = 0
-    async for rows in _fetch_relationship_batches(session, batch_size):
+    async for rows in _fetch_relationship_batches(session, batch_size, skip_types=skip_types):
         batch_num += 1
         batch = LiteratureGraphBatch()
         for row in rows:
@@ -236,7 +280,11 @@ async def main() -> None:
     async with session_factory() as session:
         count_q = select(func.count()).select_from(TerminologyEntry)
         if skip_types:
-            count_q = count_q.where(TerminologyEntry.entity_type.notin_(skip_types))
+            count_q = count_q.where(
+                TerminologyEntry.entity_type.in_(
+                    [t for t in ENTITY_TYPE_MAP if t not in skip_types]
+                )
+            )
         total_entries = (await session.execute(count_q)).scalar() or 0
         logger.info("Total terminology entries to seed: {}", total_entries)
 

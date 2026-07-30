@@ -198,6 +198,7 @@ ChatActionIntent = Literal[
     "interpret-evidence",
     "review-changes",
     "check-pipeline-status",
+    "graph-qa",
 ]
 
 

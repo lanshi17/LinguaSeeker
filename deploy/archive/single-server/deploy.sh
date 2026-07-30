@@ -38,7 +38,7 @@ if ! docker info 2>&1 | grep -q "Runtimes.*nvidia"; then
     [[ "$yn" =~ ^[Yy] ]] || exit 1
 fi
 
-echo "  Backend image: ${BACKEND_IMAGE:-docker.io/[redacted-user]47/lingua-seeker-backend}:${IMAGE_TAG:-latest}"
+echo "  Backend image: ${BACKEND_IMAGE:-docker.io/lanshi47/lingua-seeker-backend}:${IMAGE_TAG:-latest}"
 
 # ── 2. Prepare directories ────────────────────────────────────────────────
 echo "[2/5] Preparing directories..."

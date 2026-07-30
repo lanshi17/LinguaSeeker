@@ -616,6 +616,11 @@ const en = {
   "chat.action.interpretEvidence": "Interpret evidence",
   "chat.action.reviewQueue": "Review queue",
   "chat.action.taskManager": "Task manager",
+  "chat.action.graphQa": "Knowledge graph",
+  "chat.graph.title": "Knowledge graph answer",
+  "chat.graph.loading": "Querying the knowledge graph\u2026",
+  "chat.graph.error": "Knowledge graph query failed",
+  "chat.graph.viewInGraph": "View in graph",
   "chat.action.dispatched": "Dispatched",
   "chat.action.processing": "Processing…",
   "chat.action.clickToOpen": "Click to open",
@@ -869,13 +874,15 @@ const en = {
   "annotation.notePlaceholder": "Note…",
 
   // ── GraphRAG ──
-  "nav.graphRag": "GraphRAG",
-  "graphRag.title": "GraphRAG Knowledge Q&A",
+  "nav.graphRag": "Knowledge Graph",
+  "graphRag.title": "Knowledge Graph",
   "graphRag.description":
     "Ask natural-language questions against the Neo4j knowledge graph built from terminology baselines and literature evidence.",
   "graphRag.questionLabel": "Question",
   "graphRag.questionPlaceholder":
-    "e.g. What is the relationship between GLA and Fabry disease?",
+    "e.g. What diseases are associated with the COL2A1 gene?",
+  "graphRag.exampleQuestion":
+    "What diseases are associated with the COL2A1 gene?",
   "graphRag.questionRequired": "Please enter a question",
   "graphRag.modeLabel": "Retrieval mode",
   "graphRag.modeFull": "Full graph",
@@ -887,6 +894,27 @@ const en = {
   "graphRag.answerTitle": "Answer",
   "graphRag.graphTitle": "Related knowledge graph",
   "graphRag.sourceCount": "Cited evidence: {count}",
+  "graphRag.tabQa": "Ask (LLM)",
+  "graphRag.tabExplore": "Explore relations",
+  "graphRag.exploreTitle": "Knowledge Graph",
+  "graphRag.exploreDescription":
+    "Browse the gene\u2013disease\u2013variant triple directly from the knowledge graph. Each relation is bridged by the evidence documents that support it.",
+  "graphRag.geneLabel": "Gene",
+  "graphRag.genePlaceholder": "e.g. COL2A1",
+  "graphRag.diseaseLabel": "Disease",
+  "graphRag.diseasePlaceholder": "e.g. Stickler syndrome",
+  "graphRag.variantLabel": "Variant (HGVS p.)",
+  "graphRag.variantPlaceholder": "e.g. p.Gly triple substitution",
+  "graphRag.phenotypeLabel": "Phenotype",
+  "graphRag.phenotypePlaceholder": "e.g. hearing loss",
+  "graphRag.exploreButton": "Explore",
+  "graphRag.exploreHint": "Enter at least one entity to explore its relations.",
+  "graphRag.exploreLoading": "Loading the knowledge subgraph\u2026",
+  "graphRag.exploreEmpty": "No matching relations found for the given entities.",
+  "graphRag.exploreCounts": "{nodes} nodes \u00b7 {edges} relations",
+  "graphRag.exampleTag": "Example",
+  "graphRag.exampleHint":
+    "Showing an example graph for {gene}. Search any entity above to explore your own.",
 } as const;
 
 export { en };

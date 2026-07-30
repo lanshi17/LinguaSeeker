@@ -1,7 +1,8 @@
+export { EntityGraphExplorer } from "./components/EntityGraphExplorer";
 export { GraphRagView } from "./components/GraphRagView";
 export { KnowledgeGraphCanvas } from "./components/KnowledgeGraphCanvas";
-export { useGraphRagQuery } from "./hooks/useGraphRagQuery";
 export { useKnowledgeGraph } from "./hooks/useKnowledgeGraph";
+export { fetchKnowledgeGraph, queryGraphRag } from "./services/graphRag";
 export type {
   GraphEdge,
   GraphNode,

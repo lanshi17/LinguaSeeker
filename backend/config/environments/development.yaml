@@ -12,10 +12,12 @@ cors_origins: "http://localhost:3000"
 
 # ── LLM Endpoints (Development) ──────────────────────────────────────────
 fast_llm:
-  base_url: "https://linxi.chat/v1"
+  base_url: "https://llm-jkbw4lmh2jpi2979.cn-beijing.maas.aliyuncs.com/compatible-mode/v1"
+  model: "qwen3.7-flash"
 
 reasoning_llm:
-  base_url: "https://linxi.chat/v1"
+  base_url: "https://llm-jkbw4lmh2jpi2979.cn-beijing.maas.aliyuncs.com/compatible-mode/v1"
+  model: "qwen3.7-plus"
 
 chat_llm:
   base_url: "https://api.siliconflow.cn"

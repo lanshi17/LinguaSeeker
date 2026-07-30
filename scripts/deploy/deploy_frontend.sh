@@ -21,37 +21,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# ── Build config (deterministic for production) ──────────────────────────
+# ── Defaults ─────────────────────────────────────────────────────────────
 VITE_BASE_PATH="${VITE_BASE_PATH:-/linguaseeker}"
-
-# ── FTP config — prefer env vars, fall back to shell alias extraction ────
-# The alias defined in ~/.zshrc:
-#   alias deploy='lftp -u ftp,Genemed_ftp_2025# 47.239.135.59 -e "mirror -R ./dist/ /linguaseeker/; bye"'
-if [[ -n "${FTP_HOST:-}" ]]; then
-  DEPLOY_HOST="$FTP_HOST"
-  DEPLOY_USER="${FTP_USER:-ftp}"
-  DEPLOY_PASSWORD="${FTP_PASSWORD:?FTP_PASSWORD must be set when FTP_HOST is provided}"
-elif alias deploy &>/dev/null; then
-  # Parse the alias to extract host, user and password.
-  ALIAS_CMD="$(alias deploy)"
-  # Pattern: lftp -u <user>,<password> <host>
-  if [[ $ALIAS_CMD =~ lftp[[:space:]]+-u[[:space:]]+([^,]+),([^[:space:]]+)[[:space:]]+([^[:space:]]+) ]]; then
-    DEPLOY_USER="${BASH_REMATCH[1]}"
-    DEPLOY_PASSWORD="${BASH_REMATCH[2]}"
-    DEPLOY_HOST="${BASH_REMATCH[3]%%[\"\$]*}"
-  else
-    echo "ERROR: cannot parse deploy alias: $ALIAS_CMD" >&2
-    echo "Set FTP_HOST/FTP_USER/FTP_PASSWORD env vars instead." >&2
-    exit 1
-  fi
-else
-  echo "ERROR: no deploy alias found and FTP_HOST not set." >&2
-  echo "Either:" >&2
-  echo "  1. Set FTP_HOST/FTP_USER/FTP_PASSWORD env vars" >&2
-  echo "  2. Keep the deploy alias in ~/.zshrc" >&2
-  exit 1
-fi
-
 BUILD_ONLY=0
 
 usage() {
@@ -92,6 +63,46 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# ── Resolve FTP credentials (only needed for deploy) ────────────────────
+if [[ "$BUILD_ONLY" -eq 0 ]]; then
+  if [[ -n "${FTP_HOST:-}" ]]; then
+    DEPLOY_HOST="$FTP_HOST"
+    DEPLOY_USER="${FTP_USER:-ftp}"
+    DEPLOY_PASSWORD="${FTP_PASSWORD:?FTP_PASSWORD must be set when FTP_HOST is provided}"
+  else
+    # Try current shell alias first (works in bash/zsh)
+    if alias deploy &>/dev/null; then
+      ALIAS_CMD="$(alias deploy)"
+    else
+      # Parse alias from shell config files directly.
+      # Sourcing .zshrc from bash is fragile — zsh syntax breaks bash.
+      for rc in ~/.zshrc ~/.bashrc ~/.bash_profile ~/.profile; do
+        [[ -f "$rc" ]] || continue
+        ALIAS_CMD="$(grep -m1 -E '^alias deploy=' "$rc" 2>/dev/null)"
+        [[ -n "$ALIAS_CMD" ]] && break
+      done
+    fi
+
+    if [[ -z "${ALIAS_CMD:-}" ]]; then
+      echo "ERROR: no deploy alias found and FTP_HOST not set." >&2
+      echo "Either:" >&2
+      echo "  1. Set FTP_HOST/FTP_USER/FTP_PASSWORD env vars" >&2
+      echo "  2. Define a deploy alias in ~/.zshrc or ~/.bashrc" >&2
+      exit 1
+    fi
+
+    if [[ $ALIAS_CMD =~ lftp[[:space:]]+-u[[:space:]]+([^,]+),([^[:space:]]+)[[:space:]]+([^[:space:]]+) ]]; then
+      DEPLOY_USER="${BASH_REMATCH[1]}"
+      DEPLOY_PASSWORD="${BASH_REMATCH[2]}"
+      DEPLOY_HOST="${BASH_REMATCH[3]%%[\"\$]*}"
+    else
+      echo "ERROR: cannot parse deploy alias: $ALIAS_CMD" >&2
+      echo "Set FTP_HOST/FTP_USER/FTP_PASSWORD env vars instead." >&2
+      exit 1
+    fi
+  fi
+fi
 
 # ── Build ────────────────────────────────────────────────────────────────
 echo "━━━ Building frontend with VITE_BASE_PATH=${VITE_BASE_PATH} ━━━"

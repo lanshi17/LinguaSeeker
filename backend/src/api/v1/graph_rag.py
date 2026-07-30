@@ -19,7 +19,7 @@ from src.core.graph_rag.contracts import (
     GraphSubgraphResponse,
 )
 from src.core.graph_rag.core.qa_engine import GraphRagQaEngine, QaEngineConfig
-from src.dao.neo4j.contracts import SubgraphContext
+from src.dao.neo4j.contracts import GraphNode, SubgraphContext
 from src.dao.neo4j.repository import Neo4jRepository
 
 router = APIRouter()
@@ -96,33 +96,76 @@ async def get_knowledge_graph(
     # Deduplicate preserving order
     seed_ids = list(dict.fromkeys(seed_ids))
 
-    if not seed_ids:
+    subgraph = SubgraphContext()
+    if seed_ids:
+        subgraph = await repository.get_subgraph(
+            seed_node_ids=seed_ids,
+            hops=hops,
+            limit=limit,
+        )
+
+    # In full mode, augment a gene query with the gene→variant→disease
+    # relationships bridged by literature evidence documents. These nodes live
+    # in a separate identifier space from the terminology baseline and are not
+    # reachable via generic multi-hop expansion, so they are merged in here.
+    if mode != "terminology_only" and gene_symbol:
+        bridge = await repository.get_evidence_bridge_subgraph(
+            gene_names=[gene_symbol.strip()],
+        )
+        subgraph = _merge_subgraphs(subgraph, bridge)
+
+    if not subgraph.nodes:
         raise HTTPException(
             status_code=400,
             detail="No matching nodes found for the provided entities",
         )
 
-    subgraph = await repository.get_subgraph(
-        seed_node_ids=seed_ids,
-        hops=hops,
-        limit=limit,
-    )
-    if mode == "terminology_only":
-        from src.core.graph_rag.contracts import GraphEntityType
+    # Restrict the visualization to biomedical entities in every mode. Generic
+    # multi-hop expansion otherwise drags in hundreds of Evidence/Document/
+    # ProcessingRun nodes, which overwhelm the gene–disease–variant triple and
+    # make the graph unreadable. The literature contribution is already captured
+    # by the collapsed bridge edges (evidence_count), so the raw evidence nodes
+    # add noise without insight here.
+    from src.core.graph_rag.contracts import GraphEntityType
 
-        allowed_labels = {
-            GraphEntityType.GENE.value,
-            GraphEntityType.VARIANT.value,
-            GraphEntityType.DISEASE.value,
-            GraphEntityType.PHENOTYPE.value,
-        }
-        subgraph.nodes = [n for n in subgraph.nodes if any(label in allowed_labels for label in n.labels)]
-        allowed_ids = {n.node_id for n in subgraph.nodes}
-        subgraph.edges = [
-            e for e in subgraph.edges if e.source_id in allowed_ids and e.target_id in allowed_ids
-        ]
+    allowed_labels = {
+        GraphEntityType.GENE.value,
+        GraphEntityType.VARIANT.value,
+        GraphEntityType.DISEASE.value,
+        GraphEntityType.PHENOTYPE.value,
+    }
+    subgraph.nodes = [n for n in subgraph.nodes if any(label in allowed_labels for label in n.labels)]
+    allowed_ids = {n.node_id for n in subgraph.nodes}
+    subgraph.edges = [
+        e for e in subgraph.edges if e.source_id in allowed_ids and e.target_id in allowed_ids
+    ]
 
     return _serialize_subgraph(subgraph)
+
+
+def _merge_subgraphs(a: SubgraphContext, b: SubgraphContext) -> SubgraphContext:
+    """Merge two subgraphs, de-duplicating nodes by id and edges by triple."""
+    nodes = {n.node_id: n for n in a.nodes}
+    for n in b.nodes:
+        nodes.setdefault(n.node_id, n)
+    edges = {(e.source_id, e.target_id, e.rel_type): e for e in a.edges}
+    for e in b.edges:
+        edges.setdefault((e.source_id, e.target_id, e.rel_type), e)
+    return SubgraphContext(nodes=list(nodes.values()), edges=list(edges.values()))
+
+
+def _display_name_for(node: GraphNode) -> str:
+    """Resolve a human-readable label across terminology and literature nodes.
+
+    Terminology nodes carry ``display_name``; literature-extracted nodes carry
+    ``name`` (gene/variant) or ``doc_id`` (evidence documents) instead.
+    """
+    props = node.properties
+    for key in ("display_name", "name", "doc_id"):
+        value = props.get(key)
+        if value:
+            return str(value)
+    return node.node_id
 
 
 def _serialize_subgraph(subgraph: SubgraphContext) -> GraphSubgraphResponse:
@@ -131,7 +174,7 @@ def _serialize_subgraph(subgraph: SubgraphContext) -> GraphSubgraphResponse:
         GraphNodeResponse(
             node_id=n.node_id,
             labels=list(n.labels),
-            display_name=str(n.properties.get("display_name", n.node_id)),
+            display_name=_display_name_for(n),
             properties=n.properties,
         )
         for n in subgraph.nodes

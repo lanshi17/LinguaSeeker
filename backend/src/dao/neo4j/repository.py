@@ -82,11 +82,18 @@ class Neo4jRepository:
         hops: int = 2,
         limit: int = 200,
     ) -> SubgraphContext:
-        """Retrieve a multi-hop subgraph around the given seed nodes."""
+        """Retrieve a multi-hop subgraph around the given seed nodes.
+
+        Intended for the terminology baseline (gene/disease/phenotype), whose
+        nodes carry a ``node_id``. Literature evidence nodes are super-high-degree
+        (an ``EvidenceDoc`` binds hundreds of thousands of context entities), so
+        they are reached via the bounded :meth:`get_evidence_bridge_subgraph`
+        instead of generic multi-hop expansion, which would explode.
+        """
         query = (
             "MATCH path = (seed)-[*1.." + str(hops) + "]-(connected) "
             "WHERE seed.node_id IN $seed_ids "
-            "WITH DISTINCT nodes(path) AS ns, relationships(path) AS rels "
+            "WITH DISTINCT nodes(path) AS ns "
             "UNWIND ns AS n "
             "RETURN DISTINCT n.node_id AS node_id, labels(n) AS labels, properties(n) AS props "
             "LIMIT $limit"
@@ -99,7 +106,7 @@ class Neo4jRepository:
             "RETURN DISTINCT a.node_id AS source_id, type(r) AS rel_type, "
             "b.node_id AS target_id, properties(r) AS props"
         )
-        node_ids = [r["node_id"] for r in node_records]
+        node_ids = [r["node_id"] for r in node_records if r["node_id"] is not None]
         rel_records = await self.execute_read(rel_query, node_ids=node_ids)
 
         nodes = [
@@ -109,6 +116,7 @@ class Neo4jRepository:
                 properties=dict(r["props"]),
             )
             for r in node_records
+            if r["node_id"] is not None
         ]
         edges = [
             GraphEdge(
@@ -121,13 +129,109 @@ class Neo4jRepository:
         ]
         return SubgraphContext(nodes=nodes, edges=edges)
 
+    async def get_evidence_bridge_subgraph(
+        self,
+        gene_names: list[str],
+        variant_limit: int = 120,
+    ) -> SubgraphContext:
+        """Retrieve the gene→variant→disease triple bridged by evidence.
+
+        Literature extraction links a gene (subject), a variant (target), and a
+        disease (context) to the same ``Evidence`` node: the gene via a
+        ``SUPPORTS`` edge and the variant/disease via ``MENTIONS`` edges (see
+        ``EvidenceGraphBuilder``). There is no direct gene–variant or
+        variant–disease edge.
+
+        For readability the evidence nodes are **collapsed** here: rather than
+        returning hundreds of intermediary ``Evidence`` nodes (a single gene can
+        bind thousands), the method aggregates them into direct
+        gene→variant, variant→disease, and gene→disease edges, each carrying an
+        ``evidence_count`` property. The result is the compact triple itself
+        instead of a hairball of evidence markers.
+
+        Args:
+            gene_names: Gene symbols to match (case-insensitive, name or
+                display_name).
+            variant_limit: Max distinct gene/variant/disease combinations to
+                aggregate over.
+
+        Returns:
+            A subgraph of Gene/Variant/Disease nodes connected by aggregated
+            ``HAS_REPORTED_VARIANT``/``ASSOCIATED_WITH`` edges. Node identifiers
+            use ``coalesce(node_id, id)``.
+        """
+        if not gene_names:
+            return SubgraphContext()
+
+        query = (
+            "MATCH (e:Evidence)-[:SUPPORTS]->(g:Gene) "
+            "WHERE toLower(g.display_name) IN $names OR toLower(g.name) IN $names "
+            "MATCH (e)-[:MENTIONS]->(v:Variant) "
+            "OPTIONAL MATCH (e)-[:MENTIONS]->(d:Disease) "
+            "WITH DISTINCT g, v, d, e LIMIT $variant_limit "
+            "RETURN "
+            "coalesce(g.node_id, g.id) AS g_id, labels(g) AS g_labels, properties(g) AS g_props, "
+            "coalesce(v.node_id, v.id) AS v_id, labels(v) AS v_labels, properties(v) AS v_props, "
+            "coalesce(d.node_id, d.id) AS d_id, labels(d) AS d_labels, properties(d) AS d_props"
+        )
+        lower_names = [n.lower() for n in gene_names]
+        records = await self.execute_read(
+            query, names=lower_names, variant_limit=variant_limit
+        )
+
+        nodes: dict[str, GraphNode] = {}
+        # Aggregate evidence support per collapsed edge.
+        edge_counts: dict[tuple[str, str, str], int] = {}
+
+        def _add_node(prefix: str, rec: dict[str, Any]) -> str | None:
+            node_id = rec.get(f"{prefix}_id")
+            if node_id is None:
+                return None
+            if node_id not in nodes:
+                nodes[node_id] = GraphNode(
+                    node_id=node_id,
+                    labels=tuple(rec.get(f"{prefix}_labels") or ()),
+                    properties=dict(rec.get(f"{prefix}_props") or {}),
+                )
+            return node_id
+
+        def _count_edge(src: str | None, dst: str | None, rel: str) -> None:
+            if src is None or dst is None:
+                return
+            key = (src, dst, rel)
+            edge_counts[key] = edge_counts.get(key, 0) + 1
+
+        for rec in records:
+            gid = _add_node("g", rec)
+            vid = _add_node("v", rec)
+            did = _add_node("d", rec)
+            _count_edge(gid, vid, "HAS_REPORTED_VARIANT")
+            _count_edge(vid, did, "ASSOCIATED_WITH")
+            _count_edge(gid, did, "ASSOCIATED_WITH")
+
+        edges = [
+            GraphEdge(
+                source_id=src,
+                target_id=dst,
+                rel_type=rel,
+                properties={"evidence_count": count},
+            )
+            for (src, dst, rel), count in edge_counts.items()
+        ]
+
+        return SubgraphContext(nodes=list(nodes.values()), edges=edges)
+
     async def find_node_ids_by_name(
         self,
         label: str,
         names: list[str],
         limit: int = 50,
     ) -> list[str]:
-        """Find node IDs by case-insensitive display_name or alias match.
+        """Find terminology-baseline node IDs by name/alias match.
+
+        Matches the terminology baseline (nodes with ``node_id`` + ``display_name``).
+        Literature-extracted nodes are reached separately via
+        :meth:`get_evidence_bridge_subgraph`, which keys on the gene name.
 
         Args:
             label: Neo4j node label to filter on (e.g. ``"Gene"``).
@@ -145,7 +249,7 @@ class Neo4jRepository:
         )
         lower_names = [n.lower() for n in names]
         records = await self.execute_read(query, names=lower_names, limit=limit)
-        return [r["node_id"] for r in records]
+        return [r["node_id"] for r in records if r["node_id"] is not None]
 
     async def find_nodes(
         self,

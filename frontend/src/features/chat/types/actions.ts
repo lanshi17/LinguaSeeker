@@ -6,6 +6,10 @@
  * Adding a new intent: add the case to ChatActionIntent, add a
  * matching entry to CHAT_PROMPTS, and add a handler in
  * ChatView.handleAction — the three sites must stay in sync.
+ *
+ * "graph-qa" is a read-only intent auto-dispatched on arrival: the frontend
+ * queries the knowledge graph and renders the grounded answer inline instead
+ * of navigating.
  */
 
 export type ChatActionIntent =
@@ -16,7 +20,8 @@ export type ChatActionIntent =
   | "classify-variant"
   | "interpret-evidence"
   | "review-changes"
-  | "check-pipeline-status";
+  | "check-pipeline-status"
+  | "graph-qa";
 
 export interface ChatAction {
   intent: ChatActionIntent;

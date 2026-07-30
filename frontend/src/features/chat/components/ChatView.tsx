@@ -13,6 +13,7 @@ import { TaskQueuePanel } from "@/features/pipeline";
 import { useI18n } from "@/lib/i18n";
 import { extractErrorMessage } from "@/lib/api/error";
 import type { ChatAction } from "../types/actions";
+import { queryGraphRag } from "@/features/graphrag";
 import { sendChatMessage } from "../providers/acmgChatProvider";
 import {
   type ChatViewProps,
@@ -115,8 +116,14 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     openUploadFormForSession,
     setPipelineStatus,
     setDispatchedActions,
+    graphResult,
+    setGraphResult,
     clearSessionUI,
   } = useSessionUIState(activeConversationKey);
+
+  // Tracks message ids whose graph-qa action has been auto-dispatched, so a
+  // read-only knowledge query runs exactly once per assistant message.
+  const autoDispatchedGraphRef = useRef<Set<string>>(new Set());
 
   // Keep the ref in sync so the Modal.confirm onOk always calls the
   // latest clearSessionUI (stable from useState, but good hygiene).
@@ -324,6 +331,60 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     })();
   }, [clearSessionUI, handleCreateSession]);
 
+  // ── Auto-dispatch read-only knowledge-graph questions ──
+  //
+  // Unlike the click-to-run action bubbles, a graph-qa action is answered
+  // automatically: once the assistant message finishes streaming, we call the
+  // GraphRAG engine and render the grounded answer + subgraph inline. The
+  // chat router only signals intent; it never fabricates the answer.
+  const runGraphQuery = useCallback(
+    async (dispatchKey: string, question: string) => {
+      setGraphResult({ dispatchKey, question, status: "loading" });
+      try {
+        const res = await queryGraphRag({ question });
+        setGraphResult({
+          dispatchKey,
+          question,
+          status: "done",
+          answer: res.answer,
+          subgraph: res.subgraph,
+        });
+      } catch (err) {
+        setGraphResult({
+          dispatchKey,
+          question,
+          status: "error",
+          error: extractErrorMessage(err, "Knowledge graph query failed"),
+        });
+      }
+    },
+    [setGraphResult],
+  );
+
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (!last) return;
+    if (last.status === "loading" || last.status === "updating") return;
+
+    const msg = last.message as { role: string; action?: ChatAction };
+    if (msg.role !== "assistant" || msg.action?.intent !== "graph-qa") return;
+
+    const key = String(last.id ?? messages.length - 1);
+    if (autoDispatchedGraphRef.current.has(key)) return;
+    autoDispatchedGraphRef.current.add(key);
+
+    const previousUser = [...messages]
+      .reverse()
+      .find((m) => (m.message as { role: string }).role === "user");
+    const question =
+      msg.action?.slots?.question ||
+      (previousUser?.message as { content?: string })?.content ||
+      "";
+    if (!question) return;
+
+    void runGraphQuery(key, question);
+  }, [messages, runGraphQuery]);
+
   // ── Pipeline actions ──
   const {
     handlePipelineConfirm,
@@ -344,6 +405,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     activeFormSlots,
     activeUploadFile,
     pipelineStatus,
+    graphResult,
     isRequesting,
     isPreparingResponse,
     isPipelineSubmitting,

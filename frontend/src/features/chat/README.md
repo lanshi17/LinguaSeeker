@@ -17,6 +17,7 @@ chat/
 │   ├── SingleSessionChat.tsx         # 单会话对话包装器
 │   ├── WelcomeBlock.tsx              # 欢迎界面/空状态
 │   ├── ChatActionBubble.tsx          # 操作确认气泡（流水线启动等）
+│   ├── ChatGraphResultCard.tsx       # 知识图谱问答内联结果卡（回答 + 子图）
 │   ├── ThinkingIndicator.tsx         # AI 思考中指示器
 │   ├── chatConfig.tsx                # 对话配置（操作意图 → 提示词映射）
 │   ├── useBubbleItems.tsx            # 消息气泡列表构建 hook
@@ -125,6 +126,9 @@ chat/
 - `interpret-evidence` — 解读证据
 - `review-changes` — 审阅变更
 - `check-pipeline-status` — 检查流水线状态
+- `graph-qa` — 知识图谱问答（**只读**，到达即自动分发）。前端调用 `queryGraphRag()`，
+  在对话内联渲染有据回答 + 子图（`ChatGraphResultCard`），并提供「在图谱中查看」深链
+  跳转到 `/graphrag`。此意图不走确认门，也不渲染点击式操作气泡。
 
 ## 上传任务数据流
 

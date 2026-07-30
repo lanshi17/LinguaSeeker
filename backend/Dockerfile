@@ -42,21 +42,84 @@ RUN python3 -m venv /opt/venv \
 
 # Drop pre-built site-packages (includes rust_io + every Python dep).
 # Use BuildKit bind mounts so the multi-GB tarball is not itself stored as
-# an image layer. Extract the heaviest dependency groups separately so Docker
-# Hub does not have to accept one oversized blob.
+# an image layer. Extract the heaviest dependency groups into separate layers
+# so no single layer is a multi-GB blob — some upstream registries / proxies
+# reset the connection on oversized blob uploads. Keep each layer well under
+# ~500 MB compressed.
+# nvidia CUDA libs total ~2.2 GB; cu13/lib alone is ~1.7 GB. Split by library
+# family so each layer stays small enough for proxied blob uploads.
 RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
     tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
-        --owner=deploy --group=deploy --wildcards './nvidia*'
+        --owner=deploy --group=deploy --wildcards './nvidia/cudnn*'
 RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
     tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
-        --owner=deploy --group=deploy --wildcards './torch*'
+        --owner=deploy --group=deploy --wildcards './nvidia/cu13/lib/libcublas*'
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards \
+        './nvidia/cu13/lib/libcufft*' './nvidia/cu13/lib/libcurand*'
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards \
+        './nvidia/cu13/lib/libcusparse*' './nvidia/cu13/lib/libcusolver*'
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards './nvidia/cu13/lib/libnvrtc*'
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards \
+        './nvidia/cu13*' \
+        --exclude='./nvidia/cu13/lib/libcublas*' \
+        --exclude='./nvidia/cu13/lib/libcufft*' --exclude='./nvidia/cu13/lib/libcurand*' \
+        --exclude='./nvidia/cu13/lib/libcusparse*' --exclude='./nvidia/cu13/lib/libcusolver*' \
+        --exclude='./nvidia/cu13/lib/libnvrtc*'
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards \
+        './nvidia*' --exclude='./nvidia/cudnn*' --exclude='./nvidia/cu13*'
+# torch is ~2.8 GB — split its native libs from the rest so no single layer
+# is an oversized blob that proxies reset mid-upload. The two ~430 MB shared
+# objects (libtorch_cuda / libtorch_cpu) each get their own layer.
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards './torch/lib/libtorch_cuda.so'
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards './torch/lib/libtorch_cpu.so'
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards \
+        './torch/lib*' --exclude='./torch/lib/libtorch_cuda.so' \
+        --exclude='./torch/lib/libtorch_cpu.so'
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards './torch/include*'
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards \
+        './torch*' --exclude='./torch/lib*' --exclude='./torch/include*'
 RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
     tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
         --owner=deploy --group=deploy --wildcards './triton*' './cuda*'
+# Split the remaining "everything else" (~2.8 GB uncompressed) into balanced
+# groups so each pushed layer stays small. Only patterns that exist in the
+# production tarball are listed (dev-only deps like scipy/sklearn are absent).
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards \
+        './sympy*' './numpy*'
+RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
+    tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
+        --owner=deploy --group=deploy --wildcards \
+        './matplotlib*' './networkx*' './fontTools*' './openai*'
+# Final catch-all: everything not extracted above.
 RUN --mount=type=bind,source=docker-artifacts/site-packages.tar.gz,target=/tmp/sp.tar.gz,readonly \
     tar xzf /tmp/sp.tar.gz -C /opt/venv/lib/python3.12/site-packages \
         --owner=deploy --group=deploy \
-        --exclude='./nvidia*' --exclude='./torch*' --exclude='./triton*' --exclude='./cuda*'
+        --exclude='./nvidia*' --exclude='./torch*' --exclude='./triton*' --exclude='./cuda*' \
+        --exclude='./sympy*' --exclude='./numpy*' \
+        --exclude='./matplotlib*' --exclude='./networkx*' \
+        --exclude='./fontTools*' --exclude='./openai*'
 # venv-bin is optional — may be empty when no console scripts exist.
 COPY docker-artifacts/venv-bin.tar.gz /tmp/bin.tar.gz
 RUN (tar xzf /tmp/bin.tar.gz -C /opt/venv/bin --owner=deploy --group=deploy 2>/dev/null && chmod +x /opt/venv/bin/* 2>/dev/null) || true \

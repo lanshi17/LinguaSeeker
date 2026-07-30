@@ -14,7 +14,7 @@ export function useSessionUIState(activeConversationKey: string | undefined) {
   const activeUI: PerSessionUIState = activeConversationKey
     ? (sessionUI[activeConversationKey] ?? createEmptySessionUI())
     : createEmptySessionUI();
-  const { activeForm, activeFormSlots, dispatchedActions, pipelineStatus } =
+  const { activeForm, activeFormSlots, dispatchedActions, pipelineStatus, graphResult } =
     activeUI;
   const activeUploadFile = activeUI.activeUploadFile;
 
@@ -91,6 +91,22 @@ export function useSessionUIState(activeConversationKey: string | undefined) {
     [updateActiveUI],
   );
 
+  const setGraphResult = useCallback(
+    (
+      result:
+        | PerSessionUIState["graphResult"]
+        | ((
+            prev: PerSessionUIState["graphResult"],
+          ) => PerSessionUIState["graphResult"]),
+    ) =>
+      updateActiveUI((p) => ({
+        ...p,
+        graphResult:
+          typeof result === "function" ? result(p.graphResult) : result,
+      })),
+    [updateActiveUI],
+  );
+
   const clearSessionUI = useCallback((sessionId: string) => {
     setSessionUI((prev) => {
       const next = { ...prev };
@@ -105,12 +121,14 @@ export function useSessionUIState(activeConversationKey: string | undefined) {
     activeUploadFile,
     dispatchedActions,
     pipelineStatus,
+    graphResult,
     setActiveForm,
     setActiveFormSlots,
     setActiveUploadFile,
     openUploadFormForSession,
     setPipelineStatus,
     setDispatchedActions,
+    setGraphResult,
     clearSessionUI,
   };
 }

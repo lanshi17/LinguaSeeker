@@ -7,6 +7,7 @@ import type { ChatBubbleMessage } from "../utils/messageHistory";
 import { toUniqueChatMessageKeys } from "../utils/messageHistory";
 import { ChatMarkdown } from "../utils/markdown";
 import { ChatActionBubble } from "./ChatActionBubble";
+import { ChatGraphResultCard } from "./ChatGraphResultCard";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import {
   ChatUploadTaskCard,
@@ -29,6 +30,7 @@ interface UseBubbleItemsParams {
   activeFormSlots: PerSessionUIState["activeFormSlots"];
   activeUploadFile: PerSessionUIState["activeUploadFile"];
   pipelineStatus: PerSessionUIState["pipelineStatus"];
+  graphResult: PerSessionUIState["graphResult"];
   isRequesting: boolean;
   isPreparingResponse: boolean;
   isPipelineSubmitting: boolean;
@@ -58,6 +60,7 @@ export function useBubbleItems(params: UseBubbleItemsParams): { items: BubbleIte
     activeFormSlots,
     activeUploadFile,
     pipelineStatus,
+    graphResult,
     isRequesting,
     isPreparingResponse,
     isPipelineSubmitting,
@@ -117,7 +120,7 @@ export function useBubbleItems(params: UseBubbleItemsParams): { items: BubbleIte
         return (
           <div className={isStreaming ? "chat-streaming-cursor" : undefined}>
             <ChatMarkdown source={content} />
-            {action ? (
+            {action && action.intent !== "graph-qa" ? (
               <ChatActionBubble
                 action={action}
                 dispatched={dispatchedActions.has(dispatchKey)}
@@ -218,6 +221,24 @@ export function useBubbleItems(params: UseBubbleItemsParams): { items: BubbleIte
       });
     }
 
+    if (graphResult) {
+      items.push({
+        key: "__graph__",
+        role: "assistant",
+        content: "",
+        variant: "borderless" as const,
+        contentRender: () => (
+          <ChatGraphResultCard
+            question={graphResult.question}
+            status={graphResult.status}
+            answer={graphResult.answer}
+            subgraph={graphResult.subgraph}
+            error={graphResult.error}
+          />
+        ),
+      });
+    }
+
     if (items.length === 0) {
       items.unshift({
         key: "__welcome__",
@@ -245,6 +266,7 @@ export function useBubbleItems(params: UseBubbleItemsParams): { items: BubbleIte
     activeFormSlots,
     activeUploadFile,
     pipelineStatus,
+    graphResult,
     isRequesting,
     isPreparingResponse,
     isPipelineSubmitting,

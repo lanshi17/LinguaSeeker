@@ -13,7 +13,7 @@
 # ============================================================================
 services:
   backend:
-    image: ${BACKEND_IMAGE:-docker.io/[redacted-user]47/lingua-seeker-backend}:${IMAGE_TAG:-latest}
+    image: ${BACKEND_IMAGE:-docker.io/lanshi47/lingua-seeker-backend}:${IMAGE_TAG:-latest}
     restart: unless-stopped
     # Loopback by default — expose to the frontend host via BACKEND_BIND=0.0.0.0
     # when needed. X-API-Key auth is enforced inside FastAPI.

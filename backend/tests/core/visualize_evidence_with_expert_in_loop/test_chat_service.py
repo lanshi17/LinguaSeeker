@@ -23,6 +23,28 @@ def test_detect_intent_uses_module_level_compiled_patterns():
     assert all(hasattr(p, "search") for p in mod._QUESTION_PATTERNS)
 
 
+def test_graph_qa_capability_is_read_only_in_prompt():
+    """The router prompt must expose graph-qa and mark it as no-confirmation."""
+    from src.core.visualize_evidence_with_expert_in_loop.chat_service import (
+        CHAT_AGENT_CAPABILITIES_PROMPT,
+    )
+
+    assert "7. graph-qa" in CHAT_AGENT_CAPABILITIES_PROMPT
+    assert "EXCEPTION (graph-qa)" in CHAT_AGENT_CAPABILITIES_PROMPT
+    assert "READ-ONLY" in CHAT_AGENT_CAPABILITIES_PROMPT
+
+
+def test_chat_action_accepts_graph_qa_intent():
+    """ChatAction should validate the graph-qa intent with a question slot."""
+    from src.core.visualize_evidence_with_expert_in_loop.contracts import ChatAction
+
+    action = ChatAction.model_validate(
+        {"intent": "graph-qa", "slots": {"question": "What diseases relate to COL2A1?"}}
+    )
+    assert action.intent == "graph-qa"
+    assert action.slots["question"].startswith("What diseases")
+
+
 @pytest.mark.asyncio
 class TestChatService:
     """ChatService manages sessions and messages."""

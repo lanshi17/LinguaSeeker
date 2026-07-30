@@ -40,6 +40,7 @@ export function ChatActionBubble({
     "interpret-evidence": t("chat.action.interpretEvidence"),
     "review-changes": t("chat.action.reviewQueue"),
     "check-pipeline-status": t("chat.action.taskManager"),
+    "graph-qa": t("chat.action.graphQa"),
   };
   // Internal loading state flips on the first click so the UI immediately
   // shows a spinner and blocks further clicks, even before the parent's

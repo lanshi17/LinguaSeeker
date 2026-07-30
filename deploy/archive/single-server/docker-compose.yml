@@ -22,7 +22,7 @@
 services:
   # ── Backend ──────────────────────────────────────────────────────────────
   backend:
-    image: ${BACKEND_IMAGE:-docker.io/[redacted-user]47/lingua-seeker-backend}:${IMAGE_TAG:-latest}
+    image: ${BACKEND_IMAGE:-docker.io/lanshi47/lingua-seeker-backend}:${IMAGE_TAG:-latest}
     container_name: lingua-backend
     restart: unless-stopped
     ports:
