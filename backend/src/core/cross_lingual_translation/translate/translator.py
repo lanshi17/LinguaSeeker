@@ -12,7 +12,6 @@ from loguru import logger
 from .exceptions import TranslationError
 
 from .blocks import (
-    _BLOCK_MARKER_RE,
     _BLOCK_SEP,
     join_blocks_with_markers,
     merge_short_keywords,
@@ -537,11 +536,12 @@ class MultiStageTranslator(BaseTranslator):
             )
             return translated_text
 
-        # Check that block markers survived (if present in original)
-        orig_markers = set(_BLOCK_MARKER_RE.findall(translated_text))
-        reviewed_markers = set(_BLOCK_MARKER_RE.findall(reviewed))
-        if orig_markers and not reviewed_markers:
-            logger.warning("Self-review lost block markers, keeping original")
+        # Check that block separators survived (if present in original).
+        # At this pipeline stage the text contains «BLK» separators
+        # (_BLOCK_SEP), not [BLOCK_N] markers which were already consumed
+        # by split_by_markers() in _translate_blocks().
+        if _BLOCK_SEP in translated_text and _BLOCK_SEP not in reviewed:
+            logger.warning("Self-review lost block separators, keeping original")
             return translated_text
 
         logger.info(

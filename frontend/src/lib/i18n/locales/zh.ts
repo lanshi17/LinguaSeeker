@@ -494,6 +494,12 @@ const zh: Record<EnKeys, string> = {
   "audit.statusOnly": "仅状态",
   "audit.events": "{count} 条事件",
   "audit.noEvents": "暂无审计事件。",
+  "audit.col.reviewer": "审核人",
+  "audit.col.actions": "操作",
+  "audit.action.approve": "批准",
+  "audit.action.reject": "驳回",
+  "audit.quickReview.success": "审核状态已更新为 {status}",
+  "audit.quickReview.error": "更新审核状态失败",
 
   // ── 审计 — AuditEventDetailDrawer ──
   "audit.detail.title": "审计事件详情",
@@ -850,8 +856,14 @@ const zh: Record<EnKeys, string> = {
   "graphRag.exploreLoading": "正在加载知识子图…",
   "graphRag.exploreEmpty": "未找到与所给实体匹配的关系。",
   "graphRag.exploreCounts": "{nodes} 个节点 · {edges} 条关系",
-  "graphRag.exampleTag": "示例",
   "graphRag.exampleHint": "当前展示 {gene} 的示例图谱。在上方检索任意实体即可浏览你关心的关系。",
+  "graphRag.detailTitle": "实体详情",
+  "graphRag.detailType": "类型",
+  "graphRag.detailName": "名称",
+  "graphRag.detailId": "节点 ID",
+  "graphRag.detailProperties": "属性",
+  "graphRag.detailNoProperties": "暂无其他属性。",
+  "graphRag.detailHint": "点击图中的节点查看其详情。",
 };
 
 export { zh };

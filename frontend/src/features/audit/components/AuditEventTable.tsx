@@ -63,6 +63,19 @@ function getColumns(
       ),
     },
     {
+      title: t("audit.col.reviewer"),
+      key: "reviewer",
+      width: 130,
+      render: (_, record) =>
+        record.reviewer_id ? (
+          <Typography.Text style={{ fontSize: 12 }}>{record.reviewer_id}</Typography.Text>
+        ) : (
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            {t("audit.detail.system")}
+          </Typography.Text>
+        ),
+    },
+    {
       title: t("audit.col.transition"),
       key: "status",
       width: 220,

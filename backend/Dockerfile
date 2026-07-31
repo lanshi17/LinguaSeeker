@@ -160,16 +160,27 @@ RUN printf '%s\n' \
  && rm /tmp/fix_record.py
 
 WORKDIR /app
-COPY --chown=deploy:deploy backend/ /app/
-# Strip the host venv so the image only ships /opt/venv.
-# Only chown the top-level dirs — tar extraction already set file ownership.
-RUN rm -rf /app/.venv \
- && mkdir -p /app/logs /app/data /app/downloads /app/output \
- && chown deploy:deploy /opt/venv /opt/venv/bin /opt/venv/lib
+# Copy the entire project to preserve the directory structure needed by alembic
+# We need: backend/src, backend/app, database/migrations all under repo root
+COPY --chown=deploy:deploy backend/ /app/backend/
+COPY --chown=deploy:deploy database/ /app/database/
+COPY --chown=deploy:deploy libs/ /app/libs/
+# Strip the host venv and create required directories
+# /app/logs is the directory code resolves to (Path(__file__)/.../.../.../... + "logs")
+# under the new backend/ layout; /app/backend/logs is the canonical data mount point.
+RUN rm -rf /app/backend/.venv \
+ && mkdir -p /app/logs /app/backend/logs /app/backend/data /app/backend/downloads /app/backend/output \
+ && chown deploy:deploy /opt/venv /opt/venv/bin /opt/venv/lib \
+ && chown -R deploy:deploy /app/backend /app/logs \
+ && chmod +x /app/backend/docker-entrypoint.sh
 
 USER deploy
 
+WORKDIR /app/backend
+
 EXPOSE 8000
+
+ENTRYPOINT ["/app/backend/docker-entrypoint.sh"]
 
 CMD ["uvicorn", "app.main:app", \
      "--host", "0.0.0.0", \

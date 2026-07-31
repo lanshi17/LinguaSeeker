@@ -1,3 +1,4 @@
+export { EntityDetailDrawer } from "./components/EntityDetailDrawer";
 export { EntityGraphExplorer } from "./components/EntityGraphExplorer";
 export { GraphRagView } from "./components/GraphRagView";
 export { KnowledgeGraphCanvas } from "./components/KnowledgeGraphCanvas";

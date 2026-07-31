@@ -1,10 +1,12 @@
 import { useI18n } from "@/lib/i18n";
 import { SearchOutlined } from "@ant-design/icons";
-import { Button, Card, Col, Empty, Form, Input, Row, Space, Spin, Tag, Typography } from "antd";
-import { useEffect, useRef, useState } from "react";
+import { Button, Card, Col, Empty, Form, Input, Row, Spin, Typography } from "antd";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useKnowledgeGraph } from "../hooks/useKnowledgeGraph";
 import { KnowledgeGraphCanvas } from "./KnowledgeGraphCanvas";
+import { EntityDetailDrawer } from "./EntityDetailDrawer";
+import type { GraphNode } from "../types/graphRag";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -45,6 +47,7 @@ export function EntityGraphExplorer() {
     geneSymbol: EXAMPLE_GENE,
   });
   const [isExample, setIsExample] = useState(true);
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [searchParams] = useSearchParams();
   const seededFromUrl = useRef(false);
 
@@ -80,6 +83,7 @@ export function EntityGraphExplorer() {
 
   const handleSubmit = (values: ExplorerFormValues) => {
     setIsExample(false);
+    setSelectedNode(null);
     setQuery({
       geneSymbol: values.gene?.trim() || undefined,
       diseaseName: values.disease?.trim() || undefined,
@@ -90,6 +94,14 @@ export function EntityGraphExplorer() {
 
   const nodeCount = data?.nodes.length ?? 0;
   const edgeCount = data?.edges.length ?? 0;
+
+  const graphNodes = data?.nodes;
+  const handleNodeClick = useCallback(
+    (nodeId: string) => {
+      setSelectedNode(graphNodes?.find((n) => n.node_id === nodeId) ?? null);
+    },
+    [graphNodes],
+  );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -167,21 +179,26 @@ export function EntityGraphExplorer() {
 
       {hasQuery && !isFetching && !error && data && nodeCount > 0 && (
         <Card
-          title={
-            <Space>
-              {t("graphRag.graphTitle")}
-              {isExample && <Tag color="blue">{t("graphRag.exampleTag")}</Tag>}
-            </Space>
-          }
+          title={t("graphRag.graphTitle")}
           extra={
             <Text type="secondary">
               {t("graphRag.exploreCounts", { nodes: nodeCount, edges: edgeCount })}
             </Text>
           }
         >
-          <KnowledgeGraphCanvas graph={data} height={560} />
+          <KnowledgeGraphCanvas
+            graph={data}
+            height={560}
+            onNodeClick={handleNodeClick}
+          />
         </Card>
       )}
+
+      <EntityDetailDrawer
+        node={selectedNode}
+        open={selectedNode !== null}
+        onClose={() => setSelectedNode(null)}
+      />
     </div>
   );
 }

@@ -142,6 +142,9 @@ def build_translated_blocks(
             if not new_text.strip():
                 empty_count += 1
                 continue
+            # Safety: strip any residual «BLK» markers that the LLM may have
+            # echoed inside a block's text (not as a structural separator)
+            new_text = new_text.replace("«BLK»", "").strip()
             # Per-block post-processing (placeholders, punctuation, email, OCR)
             new_text = normalize_placeholders(new_text)
             new_text = normalize_cjk_punctuation(new_text)

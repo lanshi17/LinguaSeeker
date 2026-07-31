@@ -41,11 +41,17 @@ _ARTIFACT_PATTERNS = [
 ]
 
 # Inline patterns to strip from any line within a block (not just first line)
+# NOTE: «BLK» is intentionally NOT stripped here. It is a structural block
+# separator (_BLOCK_SEP) that build_translated_blocks() relies on to split
+# the translated text back into per-block translations. Stripping it in
+# run_pipeline()'s normalization step causes build_translated_blocks() to
+# fail the delimiter-based split, dropping most blocks and triggering
+# block_coverage validation failures. Residual «BLK» inside individual
+# block texts is cleaned by build_translated_blocks() via p.replace().
 _INLINE_ARTIFACT_PATTERNS = [
     r"\[SYSTEM\s+INSTRUCTIONS[^\]]*\]",
     r"\[IMPORTANT:[^\]]*\]",
     r"\[TRANSLATION\]",
-    r"«BLK»",
 ]
 _INLINE_ARTIFACT_RE = re.compile(
     "|".join(f"(?:{p})" for p in _INLINE_ARTIFACT_PATTERNS),
@@ -180,10 +186,12 @@ def strip_prompt_artifacts(text: str) -> str:
 
 
 def strip_inline_artifacts(text: str) -> str:
-    """Remove inline prompt injection markers and block delimiters from text.
+    """Remove inline prompt injection markers from text.
 
-    Strips patterns like [SYSTEM INSTRUCTIONS...], [IMPORTANT:...], and «BLK»
-    that the LLM echoed back within translated paragraphs.
+    Strips patterns like [SYSTEM INSTRUCTIONS...], [IMPORTANT:...], and
+    [TRANSLATION] that the LLM echoed back within translated paragraphs.
+    Does NOT strip «BLK» block separators — those are structural delimiters
+    preserved for build_translated_blocks() to split on.
     """
     if not text:
         return text

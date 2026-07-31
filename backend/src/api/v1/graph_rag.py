@@ -12,6 +12,7 @@ from src.api.rate_limit import limiter
 from src.core.auth.contracts import AuthContext
 from src.core.config import get_config
 from src.core.graph_rag.contracts import (
+    GraphEntityType,
     GraphEdgeResponse,
     GraphNodeResponse,
     GraphRagQueryRequest,
@@ -120,25 +121,7 @@ async def get_knowledge_graph(
             detail="No matching nodes found for the provided entities",
         )
 
-    # Restrict the visualization to biomedical entities in every mode. Generic
-    # multi-hop expansion otherwise drags in hundreds of Evidence/Document/
-    # ProcessingRun nodes, which overwhelm the gene–disease–variant triple and
-    # make the graph unreadable. The literature contribution is already captured
-    # by the collapsed bridge edges (evidence_count), so the raw evidence nodes
-    # add noise without insight here.
-    from src.core.graph_rag.contracts import GraphEntityType
-
-    allowed_labels = {
-        GraphEntityType.GENE.value,
-        GraphEntityType.VARIANT.value,
-        GraphEntityType.DISEASE.value,
-        GraphEntityType.PHENOTYPE.value,
-    }
-    subgraph.nodes = [n for n in subgraph.nodes if any(label in allowed_labels for label in n.labels)]
-    allowed_ids = {n.node_id for n in subgraph.nodes}
-    subgraph.edges = [
-        e for e in subgraph.edges if e.source_id in allowed_ids and e.target_id in allowed_ids
-    ]
+    subgraph = _project_visible_biomedical_subgraph(subgraph)
 
     return _serialize_subgraph(subgraph)
 
@@ -154,6 +137,34 @@ def _merge_subgraphs(a: SubgraphContext, b: SubgraphContext) -> SubgraphContext:
     return SubgraphContext(nodes=list(nodes.values()), edges=list(edges.values()))
 
 
+def _project_visible_biomedical_subgraph(subgraph: SubgraphContext) -> SubgraphContext:
+    """Keep biomedical nodes only when they retain a visible relationship.
+
+    Generic expansion can reach a biomedical entity solely through Evidence or
+    Document nodes. Once those intermediary nodes are removed from the visual
+    graph, retaining the entity would create an isolated node. A self-loop is
+    still a visible relationship and therefore keeps its node.
+    """
+    allowed_labels = {
+        GraphEntityType.GENE.value,
+        GraphEntityType.VARIANT.value,
+        GraphEntityType.DISEASE.value,
+        GraphEntityType.PHENOTYPE.value,
+    }
+    biomedical_nodes = [node for node in subgraph.nodes if any(label in allowed_labels for label in node.labels)]
+    biomedical_ids = {node.node_id for node in biomedical_nodes}
+    visible_edges = [
+        edge for edge in subgraph.edges if edge.source_id in biomedical_ids and edge.target_id in biomedical_ids
+    ]
+    connected_ids = {node_id for edge in visible_edges for node_id in (edge.source_id, edge.target_id)}
+    return SubgraphContext(
+        nodes=[node for node in biomedical_nodes if node.node_id in connected_ids],
+        edges=visible_edges,
+        summary_text=subgraph.summary_text,
+        source_evidence_ids=subgraph.source_evidence_ids,
+    )
+
+
 def _display_name_for(node: GraphNode) -> str:
     """Resolve a human-readable label across terminology and literature nodes.
 
@@ -166,6 +177,31 @@ def _display_name_for(node: GraphNode) -> str:
         if value:
             return str(value)
     return node.node_id
+
+
+# Human-readable suffix for an edge's rel_type, derived from its
+# ``source_db`` and ``evidence_level`` properties. Distinguishes a ClinGen
+# "definitive" gene-disease association from a "limited" one and a dosage
+# "haploinsufficiency" from "no evidence" — so the graph carries real
+# semantics instead of collapsing them all to ``ASSOCIATED_WITH``.
+def _edge_rel_type(rel_type: str, properties: dict[str, object]) -> str:
+    source = str(properties.get("source_db") or "").strip()
+    level = str(properties.get("evidence_level") or "").strip()
+    if rel_type == "ASSOCIATED_WITH" and source == "ClinGen" and level:
+        return f"ASSOC_{_slugify_level(level)}"
+    if rel_type == "HAS_DOSAGE_SENSITIVITY" and level:
+        return f"DOSAGE_{_slugify_level(level)}"
+    return rel_type
+
+
+def _slugify_level(level: str) -> str:
+    """Stable, uppercase identifier for a free-text evidence level."""
+    return (
+        level.upper()
+        .replace(" ", "_")
+        .replace("-", "_")
+        .replace("/", "_")
+    )
 
 
 def _serialize_subgraph(subgraph: SubgraphContext) -> GraphSubgraphResponse:
@@ -183,7 +219,7 @@ def _serialize_subgraph(subgraph: SubgraphContext) -> GraphSubgraphResponse:
         GraphEdgeResponse(
             source_id=e.source_id,
             target_id=e.target_id,
-            rel_type=e.rel_type,
+            rel_type=_edge_rel_type(e.rel_type, e.properties),
             properties=e.properties,
         )
         for e in subgraph.edges

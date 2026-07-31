@@ -514,6 +514,12 @@ const en = {
   "audit.statusOnly": "status only",
   "audit.events": "{count} events",
   "audit.noEvents": "No audit events found.",
+  "audit.col.reviewer": "Reviewer",
+  "audit.col.actions": "Actions",
+  "audit.action.approve": "Approve",
+  "audit.action.reject": "Reject",
+  "audit.quickReview.success": "Review status updated to {status}",
+  "audit.quickReview.error": "Failed to update review status",
 
   // ── Audit — AuditEventDetailDrawer ──
   "audit.detail.title": "Audit Event Detail",
@@ -912,9 +918,15 @@ const en = {
   "graphRag.exploreLoading": "Loading the knowledge subgraph\u2026",
   "graphRag.exploreEmpty": "No matching relations found for the given entities.",
   "graphRag.exploreCounts": "{nodes} nodes \u00b7 {edges} relations",
-  "graphRag.exampleTag": "Example",
   "graphRag.exampleHint":
     "Showing an example graph for {gene}. Search any entity above to explore your own.",
+  "graphRag.detailTitle": "Entity details",
+  "graphRag.detailType": "Type",
+  "graphRag.detailName": "Name",
+  "graphRag.detailId": "Node ID",
+  "graphRag.detailProperties": "Properties",
+  "graphRag.detailNoProperties": "No additional properties.",
+  "graphRag.detailHint": "Click a node in the graph to see its details.",
 } as const;
 
 export { en };

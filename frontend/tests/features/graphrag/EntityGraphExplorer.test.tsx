@@ -70,7 +70,6 @@ describe("EntityGraphExplorer", () => {
       }),
     );
     expect(screen.getByTestId("knowledge-graph")).toBeInTheDocument();
-    expect(screen.getByText("graphRag.exampleTag")).toBeInTheDocument();
   });
 
   it("submits entered entities and enables the query", async () => {

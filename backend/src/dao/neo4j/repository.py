@@ -156,23 +156,39 @@ class Neo4jRepository:
                 aggregate over.
 
         Returns:
-            A subgraph of Gene/Variant/Disease nodes connected by aggregated
-            ``HAS_REPORTED_VARIANT``/``ASSOCIATED_WITH`` edges. Node identifiers
-            use ``coalesce(node_id, id)``.
+            A subgraph of Gene/Variant/Disease nodes connected by literature
+            edges with semantically distinct rel types
+            (``HAS_REPORTED_VARIANT``, ``LITERATURE_VARIANT_DISEASE``,
+            ``LITERATURE_GENE_DISEASE``) — kept separate from the ClinGen
+            ``ASSOC_*`` and ``HAS_DOSAGE_SENSITIVITY`` edges that arrive via
+            :meth:`get_subgraph`. Each edge carries ``evidence_count`` plus
+            optional ``classification``, ``significance``, ``role``, and
+            ``source`` for the frontend. Node identifiers use
+            ``coalesce(node_id, id)``.
         """
         if not gene_names:
             return SubgraphContext()
 
+        # Two distinct rel types so literature triples don't get conflated
+        # with the ClinGen ``ASSOCIATED_WITH`` edges that already come through
+        # :meth:`get_subgraph`. ``source`` distinguishes literature from
+        # ClinGen terminology; ``evidence_level`` carries the variant's
+        # clinical significance when present on the underlying evidence.
         query = (
             "MATCH (e:Evidence)-[:SUPPORTS]->(g:Gene) "
             "WHERE toLower(g.display_name) IN $names OR toLower(g.name) IN $names "
-            "MATCH (e)-[:MENTIONS]->(v:Variant) "
-            "OPTIONAL MATCH (e)-[:MENTIONS]->(d:Disease) "
-            "WITH DISTINCT g, v, d, e LIMIT $variant_limit "
+            "MATCH (e)-[mv:MENTIONS]->(v:Variant) "
+            "OPTIONAL MATCH (e)-[md:MENTIONS]->(d:Disease) "
+            "WITH DISTINCT g, v, d, e, mv, md LIMIT $variant_limit "
             "RETURN "
             "coalesce(g.node_id, g.id) AS g_id, labels(g) AS g_labels, properties(g) AS g_props, "
             "coalesce(v.node_id, v.id) AS v_id, labels(v) AS v_labels, properties(v) AS v_props, "
-            "coalesce(d.node_id, d.id) AS d_id, labels(d) AS d_labels, properties(d) AS d_props"
+            "coalesce(d.node_id, d.id) AS d_id, labels(d) AS d_labels, properties(d) AS d_props, "
+            "coalesce(mv.role, '') AS mv_role, "
+            "coalesce(md.role, '') AS md_role, "
+            "coalesce(e.classification, '') AS e_classification, "
+            "coalesce(e.significance, '') AS e_significance, "
+            "coalesce(e.source_db, 'literature') AS e_source_db"
         )
         lower_names = [n.lower() for n in gene_names]
         records = await self.execute_read(
@@ -201,23 +217,58 @@ class Neo4jRepository:
             key = (src, dst, rel)
             edge_counts[key] = edge_counts.get(key, 0) + 1
 
+        # Propagate per-edge semantic metadata so the frontend can label and
+        # style the literature path distinctly from ClinGen terminology edges.
+        edge_payloads: dict[tuple[str, str, str], dict[str, object]] = {}
+
+        def _add_payload(src: str | None, dst: str | None, rel: str, props: dict[str, object]) -> None:
+            if src is None or dst is None:
+                return
+            key = (src, dst, rel)
+            # Count evidence rows backing this collapsed edge.
+            edge_counts[key] = edge_counts.get(key, 0) + 1
+            if key not in edge_payloads:
+                edge_payloads[key] = dict(props)
+            else:
+                # Preserve the first non-empty semantic value seen so labels
+                # don't flicker between runs.
+                for k, v in props.items():
+                    if v and not edge_payloads[key].get(k):
+                        edge_payloads[key][k] = v
+
         for rec in records:
             gid = _add_node("g", rec)
             vid = _add_node("v", rec)
             did = _add_node("d", rec)
-            _count_edge(gid, vid, "HAS_REPORTED_VARIANT")
-            _count_edge(vid, did, "ASSOCIATED_WITH")
-            _count_edge(gid, did, "ASSOCIATED_WITH")
+            mv_role = rec.get("mv_role") or ""
+            md_role = rec.get("md_role") or ""
+            classification = rec.get("e_classification") or ""
+            significance = rec.get("e_significance") or ""
+            source_db = rec.get("e_source_db") or "literature"
+            common_props: dict[str, object] = {"source": source_db}
+            if classification:
+                common_props["classification"] = classification
+            if significance:
+                common_props["significance"] = significance
+            # Gene→Variant: distinct rel type so it doesn't collide with
+            # ClinGen gene→disease terminology edges.
+            _add_payload(gid, vid, "HAS_REPORTED_VARIANT", {**common_props, "role": mv_role or "target"})
+            # Variant→Disease: literature-only, separate from ClinGen ASSOC_*.
+            _add_payload(vid, did, "LITERATURE_VARIANT_DISEASE", {**common_props, "role": md_role or "context"})
+            # Gene→Disease via literature evidence.
+            _add_payload(gid, did, "LITERATURE_GENE_DISEASE", {**common_props, "role": md_role or "context"})
 
-        edges = [
-            GraphEdge(
-                source_id=src,
-                target_id=dst,
-                rel_type=rel,
-                properties={"evidence_count": count},
+        edges = []
+        for (src, dst, rel), count in edge_counts.items():
+            payload = edge_payloads.get((src, dst, rel), {})
+            edges.append(
+                GraphEdge(
+                    source_id=src,
+                    target_id=dst,
+                    rel_type=rel,
+                    properties={**payload, "evidence_count": count},
+                )
             )
-            for (src, dst, rel), count in edge_counts.items()
-        ]
 
         return SubgraphContext(nodes=list(nodes.values()), edges=edges)
 
