@@ -33,6 +33,10 @@ export class ApiError extends Error {
  * Responses without a structured body use the HTTP status text.
  */
 export function normalizeError(error: AxiosError<BackendErrorResponse>): ApiError {
+  if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
+    return new ApiError(0, "Request timed out — please try again.");
+  }
+
   if (!error.response) {
     return new ApiError(0, "Network error — please check your connection.");
   }

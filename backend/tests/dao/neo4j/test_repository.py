@@ -72,3 +72,88 @@ async def test_get_subgraph_returns_context(repository: Neo4jRepository, mock_dr
     assert result.nodes[0].node_id == "gene:GLA"
     assert len(result.edges) == 1
     assert result.edges[0].rel_type == "ASSOCIATED_WITH"
+
+
+@pytest.mark.asyncio
+async def test_get_biomedical_subgraph_uses_bounded_apoc_traversal(
+    repository: Neo4jRepository,
+) -> None:
+    repository.execute_read = AsyncMock(
+        side_effect=[
+            [
+                {
+                    "node_id": "gene:GLA",
+                    "labels": ["Gene"],
+                    "props": {"display_name": "GLA"},
+                },
+                {
+                    "node_id": "disease:fabry-disease",
+                    "labels": ["Disease"],
+                    "props": {"display_name": "Fabry disease"},
+                },
+            ],
+            [
+                {
+                    "source_id": "gene:GLA",
+                    "rel_type": "ASSOCIATED_WITH",
+                    "target_id": "disease:fabry-disease",
+                    "props": {"source_db": "ClinGen"},
+                },
+            ],
+        ]
+    )
+
+    result = await repository.get_biomedical_subgraph(
+        ["gene:GLA", "gene:GLA", "disease:fabry-disease"],
+        hops=2,
+        limit=10,
+    )
+
+    assert isinstance(result, SubgraphContext)
+    assert [node.node_id for node in result.nodes] == ["gene:GLA", "disease:fabry-disease"]
+    assert [(edge.source_id, edge.target_id) for edge in result.edges] == [
+        ("gene:GLA", "disease:fabry-disease"),
+    ]
+
+    node_call, edge_call = repository.execute_read.await_args_list
+    node_query = node_call.args[0]
+    assert "apoc.path.subgraphAll" in node_query
+    assert "MATCH (seed:Node)" in node_query
+    assert "bfs: true" in node_query
+    assert "uniqueness: 'NODE_GLOBAL'" in node_query
+    assert "filterStartNode: true" in node_query
+    assert "labelFilter: $label_filter" in node_query
+    assert "ORDER BY n.node_id" in node_query
+    assert node_call.kwargs == {
+        "seed_ids": ["gene:GLA", "disease:fabry-disease"],
+        "hops": 2,
+        "limit": 10,
+        "per_seed_limit": 5,
+        "label_filter": "+Gene|+Disease|+Variant|+Phenotype",
+    }
+    assert "MATCH (a)-[r]->(b)" in edge_call.args[0]
+    assert "ORDER BY source_id, target_id, rel_type" in edge_call.args[0]
+    assert "LIMIT $edge_limit" in edge_call.args[0]
+    assert edge_call.kwargs == {
+        "node_ids": ["gene:GLA", "disease:fabry-disease"],
+        "edge_limit": 40,
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_biomedical_subgraph_skips_query_without_seeds(repository: Neo4jRepository) -> None:
+    repository.execute_read = AsyncMock()
+
+    result = await repository.get_biomedical_subgraph([])
+
+    assert result == SubgraphContext()
+    repository.execute_read.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_execute_read_uses_configured_database(mock_driver: MagicMock) -> None:
+    repository = Neo4jRepository(mock_driver, database="neo4j")
+
+    await repository.execute_read("RETURN 1")
+
+    mock_driver.session.assert_called_once_with(database="neo4j")

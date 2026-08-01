@@ -54,7 +54,7 @@ redis:
 
 neo4j:
   uri: "bolt://localhost:7687"
-  database: "dev_lingua_seeker"
+  database: "neo4j"
 
 graph_rag:
   enabled: true

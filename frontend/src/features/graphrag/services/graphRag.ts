@@ -8,6 +8,7 @@ import type {
 // GraphRAG queries run two sequential LLM calls (entity extraction + answer
 // generation), so they routinely exceed the global 30s client timeout.
 const GRAPH_RAG_QUERY_TIMEOUT_MS = 120_000;
+const KNOWLEDGE_GRAPH_TIMEOUT_MS = 60_000;
 
 export async function queryGraphRag(
   request: GraphRagQueryRequest,
@@ -30,6 +31,7 @@ export async function fetchKnowledgeGraph(params: {
   limit?: number;
 }): Promise<KnowledgeGraph> {
   const { data } = await apiClient.get<KnowledgeGraph>("/graphrag/graph", {
+    timeout: KNOWLEDGE_GRAPH_TIMEOUT_MS,
     params: {
       gene_symbol: params.geneSymbol,
       disease_name: params.diseaseName,

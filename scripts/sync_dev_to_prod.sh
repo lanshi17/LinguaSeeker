@@ -36,6 +36,10 @@
 #     PGDATABASE=lingua_seeker \
 #       scripts/sync_dev_to_prod.sh import --in ./sync_bundle
 #
+#   Rebuild frontend_search_index on prod (pure SQL, no Python):
+#     bash scripts/sync_dev_to_prod.sh refresh-search-index \
+#       | docker exec -i <prod-postgres> psql -U lingua_seeker -d lingua_seeker
+#
 # On first sync, use the prod-restore dump timestamp as --since. Each export
 # prints the timestamp to pass as --since next time (written into MANIFEST too).
 # ==============================================================================
@@ -125,6 +129,20 @@ cmd_import() {
   [[ -n "$in" ]] || die "--in required (bundle directory)"
   [[ -f "${in}/MANIFEST" ]] || die "no MANIFEST in ${in}; is it a valid bundle?"
 
+  # Read DB connection from PG* env vars (already exported by caller) so psql
+  # uses the right host/port/user/db. Without these it falls back to the
+  # current unix user and `/var/run/postgresql` socket — which fails inside
+  # containers where the role is `root`.
+  : "${PGHOST:?PGHOST required (e.g. 127.0.0.1)}"
+  : "${PGPORT:?PGPORT required (e.g. 5432)}"
+  : "${PGUSER:?PGUSER required (e.g. lingua_seeker)}"
+  : "${PGDATABASE:?PGDATABASE required (e.g. lingua_seeker)}"
+  : "${PGPASSWORD:?PGPASSWORD required}"
+
+  echo "Importing bundle: $in"
+  echo "  → PGHOST=$PGHOST PGPORT=$PGPORT PGUSER=$PGUSER PGDATABASE=$PGDATABASE"
+  psql -tAc "SELECT 1" >/dev/null || die "cannot connect to prod DB (PG* env)"
+
   # Build one transactional psql script: disable FK checks, define a generic
   # upsert helper, then stage+upsert each table's CSV.
   local sql; sql="$(mktemp)"
@@ -185,8 +203,90 @@ PLPGSQL
       [[ -f "${in}/${table}.csv" ]] || { echo "\\echo 'skip ${table} (no csv)'"; continue; }
       echo "CREATE TEMP TABLE _stg_${table} (LIKE ${SCHEMA}.${table} INCLUDING DEFAULTS) ON COMMIT DROP;"
       echo "\\copy _stg_${table} FROM '${in}/${table}.csv' WITH (FORMAT csv, HEADER true)"
+      # normalized_entities has a PARTIAL unique index on
+      # (entity_type, external_id) WHERE external_id IS NOT NULL
+      #   AND standardization_status = 'standardized'
+      # so dev rows that satisfy this predicate collide with prod's existing
+      # rows even when entity_id differs. The generic helper only handles
+      # primary-key upsert, so we de-dupe the staging table and then use a
+      # custom upsert keyed on the partial unique index.
+      if [[ "$table" == "normalized_entities" ]]; then
+        # partial unique index (entity_type, external_id) WHERE external_id IS NOT NULL
+        #   AND standardization_status = 'standardized'
+        # de-dupe staging table: keep the row with the largest (updated_at, entity_id)
+        # for each (entity_type, external_id) under that partial predicate.
+        cat <<'NORMALIZED_DEDUP'
+DELETE FROM _stg_normalized_entities
+WHERE ctid IN (
+  SELECT ctid FROM (
+    SELECT ctid, ROW_NUMBER() OVER (
+      PARTITION BY entity_type, external_id
+      ORDER BY updated_at DESC, entity_id DESC
+    ) AS rn
+    FROM _stg_normalized_entities
+    WHERE external_id IS NOT NULL
+      AND standardization_status = 'standardized'
+  ) t WHERE t.rn > 1
+);
+NORMALIZED_DEDUP
+        # Two-phase merge because the table has BOTH a primary key (entity_id) and
+        # a partial unique index on (entity_type, external_id). A single
+        # ON CONFLICT clause can only target one. We split:
+        #   1. UPDATE rows whose entity_id already exists in prod (dev is fresher).
+        #   2. INSERT the remaining rows, with ON CONFLICT against the partial
+        #      unique index for rows whose (entity_type, external_id) collides
+        #      with a different entity_id in prod (dev's data is absorbed but
+        #      prod's entity_id is preserved to keep FK references intact).
+        echo "\\echo upsert ${table} (phase 1 — update by entity_id):"
+        cat <<'NORMALIZED_P1'
+UPDATE lingua_seeker.normalized_entities t
+SET
+  entity_type            = s.entity_type,
+  external_id            = s.external_id,
+  normalized_raw_text    = s.normalized_raw_text,
+  display_name           = s.display_name,
+  aliases                = s.aliases,
+  standardization_status = s.standardization_status,
+  merged_into_entity_id  = s.merged_into_entity_id,
+  raw_payload            = s.raw_payload,
+  created_at             = s.created_at,
+  updated_at             = s.updated_at
+FROM _stg_normalized_entities s
+WHERE t.entity_id = s.entity_id
+  AND s.updated_at > t.updated_at;
+NORMALIZED_P1
+        echo "\\echo upsert ${table} (phase 2 — insert new + partial-unique):"
+        cat <<'NORMALIZED_P2'
+INSERT INTO lingua_seeker.normalized_entities
+  (entity_id, entity_type, external_id, normalized_raw_text, display_name,
+   aliases, standardization_status, merged_into_entity_id, raw_payload,
+   created_at, updated_at)
+SELECT s.entity_id, s.entity_type, s.external_id, s.normalized_raw_text,
+       s.display_name, s.aliases, s.standardization_status,
+       s.merged_into_entity_id, s.raw_payload, s.created_at, s.updated_at
+FROM _stg_normalized_entities s
+WHERE NOT EXISTS (
+  SELECT 1 FROM lingua_seeker.normalized_entities t WHERE t.entity_id = s.entity_id
+)
+ON CONFLICT (entity_type, external_id)
+  WHERE external_id IS NOT NULL AND standardization_status = 'standardized'
+DO UPDATE SET
+  -- Do NOT overwrite entity_id: prod's entity_id is referenced by
+  -- entity_merge_events / evidence_entity_bindings / chat_messages FKs.
+  normalized_raw_text    = EXCLUDED.normalized_raw_text,
+  display_name           = EXCLUDED.display_name,
+  aliases                = EXCLUDED.aliases,
+  standardization_status = EXCLUDED.standardization_status,
+  merged_into_entity_id  = EXCLUDED.merged_into_entity_id,
+  raw_payload            = EXCLUDED.raw_payload,
+  created_at             = EXCLUDED.created_at,
+  updated_at             = EXCLUDED.updated_at
+WHERE EXCLUDED.updated_at > lingua_seeker.normalized_entities.updated_at;
+NORMALIZED_P2
+        continue
+      fi
       echo "\\echo upsert ${table}:"
-      echo "SELECT _sync_upsert('${SCHEMA}.${table}'::regclass, '_stg_${table}'::regclass) AS rows_written;"
+      echo "SELECT pg_temp._sync_upsert('${SCHEMA}.${table}'::regclass, '_stg_${table}'::regclass) AS rows_written;"
     done
 
     echo "COMMIT;"
@@ -196,15 +296,67 @@ PLPGSQL
   psql -X -f "$sql"
   echo
   echo "Import complete."
-  echo "NOTE: session_replication_role=replica also skipped user triggers. If"
-  echo "      frontend_search_index is trigger-maintained, rebuild it now."
+  echo "NOTE: session_replication_role=replica also skipped user triggers."
+  echo "      After import, rebuild read models:"
+  echo "        1. frontend_search_index (pure SQL, no Python needed):"
+  echo "             bash scripts/sync_dev_to_prod.sh refresh-search-index \\"
+  echo "                 | docker exec -i <prod-postgres> psql -U lingua_seeker -d lingua_seeker"
+  echo "        2. literature_profiles (per-document Python refresh):"
+  echo "             cd backend && uv run python ../scripts/refresh_business_read_models.py"
+  echo "           (requires Python env + access to prod DB)"
+}
+
+# ── refresh-search-index ── print pure-SQL rebuild for frontend_search_index
+# This is the part of the import that does NOT require Python — runnable
+# directly on a `pgvector/pgvector` container via `docker exec ... psql`.
+cmd_refresh_search_index() {
+  cat <<'SQL'
+-- frontend_search_index rebuild (no Python needed)
+-- Run inside the prod postgres container:
+--   docker exec -i <container> psql -U lingua_seeker -d lingua_seeker <<<"$(bash scripts/sync_dev_to_prod.sh refresh-search-index)"
+
+BEGIN;
+DELETE FROM lingua_seeker.frontend_search_index;
+
+INSERT INTO lingua_seeker.frontend_search_index (
+    canonical_evidence_id, owner_user_id, pmid, doi,
+    gene_ids, variant_ids, entity_ids,
+    field_id, review_status, current_best_confidence,
+    search_text, active_payload, created_at
+)
+SELECT
+    cei.canonical_evidence_id,
+    cei.owner_user_id,
+    sdi_pmid.identifier_value AS pmid,
+    sdi_doi.identifier_value AS doi,
+    COALESCE(cei.active_payload -> 'gene_ids',    '[]'::jsonb),
+    COALESCE(cei.active_payload -> 'variant_ids', '[]'::jsonb),
+    COALESCE(cei.active_payload -> 'entity_ids',  '[]'::jsonb),
+    cei.field_id,
+    cei.review_status,
+    cei.current_best_confidence,
+    COALESCE(cei.active_payload ->> 'search_text', '') AS search_text,
+    cei.active_payload,
+    cei.created_at
+FROM lingua_seeker.canonical_evidence_items cei
+LEFT JOIN lingua_seeker.source_document_identifiers sdi_pmid
+    ON  sdi_pmid.source_document_id = cei.source_document_id
+    AND sdi_pmid.identifier_type = 'pmid'
+LEFT JOIN lingua_seeker.source_document_identifiers sdi_doi
+    ON  sdi_doi.source_document_id = cei.source_document_id
+    AND sdi_doi.identifier_type = 'doi';
+
+COMMIT;
+SELECT count(*) AS frontend_search_index_rows FROM lingua_seeker.frontend_search_index;
+SQL
 }
 
 # ── dispatch ──────────────────────────────────────────────────────────────
-[[ $# -ge 1 ]] || die "usage: $0 {export|import} [args]"
+[[ $# -ge 1 ]] || die "usage: $0 {export|import|refresh-search-index} [args]"
 mode="$1"; shift
 case "$mode" in
-  export) cmd_export "$@" ;;
-  import) cmd_import "$@" ;;
-  *) die "unknown mode: $mode (expected export|import)" ;;
+  export)                 cmd_export "$@" ;;
+  import)                 cmd_import "$@" ;;
+  refresh-search-index)   cmd_refresh_search_index ;;
+  *) die "unknown mode: $mode (expected export|import|refresh-search-index)" ;;
 esac

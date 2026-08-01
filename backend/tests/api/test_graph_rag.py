@@ -32,7 +32,7 @@ def test_graph_route_has_get_method() -> None:
 async def test_get_knowledge_graph_serializes_only_nodes_with_visible_edges() -> None:
     repository = MagicMock()
     repository.find_node_ids_by_name = AsyncMock(return_value=["gene:EGFR"])
-    repository.get_subgraph = AsyncMock(
+    repository.get_biomedical_subgraph = AsyncMock(
         return_value=SubgraphContext(
             nodes=[
                 GraphNode(node_id="gene:EGFR", labels=("Gene",)),
@@ -80,6 +80,12 @@ async def test_get_knowledge_graph_serializes_only_nodes_with_visible_edges() ->
 
     returned_node_ids = {node.node_id for node in response.nodes}
     edge_node_ids = {node_id for edge in response.edges for node_id in (edge.source_id, edge.target_id)}
+    repository.get_biomedical_subgraph.assert_awaited_once_with(
+        seed_node_ids=["gene:EGFR"],
+        hops=2,
+        limit=200,
+    )
+    repository.get_subgraph.assert_not_called()
     assert returned_node_ids == {"gene:EGFR", "disease:connected"}
     assert returned_node_ids <= edge_node_ids
     assert any(edge.source_id == edge.target_id == "gene:EGFR" for edge in response.edges)
@@ -89,7 +95,7 @@ async def test_get_knowledge_graph_serializes_only_nodes_with_visible_edges() ->
 async def test_get_knowledge_graph_returns_empty_graph_without_visible_edges() -> None:
     repository = MagicMock()
     repository.find_node_ids_by_name = AsyncMock(return_value=["gene:EGFR"])
-    repository.get_subgraph = AsyncMock(
+    repository.get_biomedical_subgraph = AsyncMock(
         return_value=SubgraphContext(
             nodes=[
                 GraphNode(node_id="gene:EGFR", labels=("Gene",)),
@@ -120,3 +126,9 @@ async def test_get_knowledge_graph_returns_empty_graph_without_visible_edges() -
 
     assert response.nodes == []
     assert response.edges == []
+    repository.get_biomedical_subgraph.assert_awaited_once_with(
+        seed_node_ids=["gene:EGFR"],
+        hops=2,
+        limit=200,
+    )
+    repository.get_subgraph.assert_not_called()

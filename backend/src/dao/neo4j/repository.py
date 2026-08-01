@@ -14,11 +14,15 @@ from neo4j import AsyncDriver
 from src.dao.neo4j.contracts import GraphEdge, GraphNode, SubgraphContext
 
 
+_BIOMEDICAL_LABEL_FILTER = "+Gene|+Disease|+Variant|+Phenotype"
+
+
 class Neo4jRepository:
     """Async repository for Neo4j graph operations."""
 
-    def __init__(self, driver: AsyncDriver) -> None:
+    def __init__(self, driver: AsyncDriver, database: str | None = None) -> None:
         self._driver = driver
+        self._database = database
 
     async def close(self) -> None:
         """Close the underlying driver."""
@@ -26,13 +30,13 @@ class Neo4jRepository:
 
     async def execute_write(self, query: str, **parameters: Any) -> list[dict[str, Any]]:
         """Run a write query and return serialized records."""
-        async with self._driver.session() as session:
+        async with self._driver.session(database=self._database) as session:
             result = await session.execute_write(self._run_query, query, parameters)
             return result
 
     async def execute_read(self, query: str, **parameters: Any) -> list[dict[str, Any]]:
         """Run a read query and return serialized records."""
-        async with self._driver.session() as session:
+        async with self._driver.session(database=self._database) as session:
             result = await session.execute_read(self._run_query, query, parameters)
             return result
 
@@ -126,6 +130,94 @@ class Neo4jRepository:
                 properties=dict(r["props"]),
             )
             for r in rel_records
+        ]
+        return SubgraphContext(nodes=nodes, edges=edges)
+
+    async def get_biomedical_subgraph(
+        self,
+        seed_node_ids: list[str],
+        hops: int = 2,
+        limit: int = 200,
+    ) -> SubgraphContext:
+        """Retrieve a bounded biomedical-only subgraph for visualization.
+
+        Evidence and document nodes can have hundreds of thousands of
+        relationships. They are intentionally excluded from this traversal so
+        a two-hop graph view cannot fan out through them. Literature evidence
+        is represented separately by :meth:`get_evidence_bridge_subgraph`.
+
+        ``apoc.path.subgraphAll`` performs a breadth-first traversal and its
+        ``limit`` counts nodes rather than paths, so the per-seed bound keeps
+        the total work proportional to ``limit`` even when an entity lookup
+        resolves to many seed nodes.
+        """
+        if not seed_node_ids:
+            return SubgraphContext()
+
+        bounded_limit = max(1, limit)
+        bounded_seed_ids = list(dict.fromkeys(seed_node_ids))[:bounded_limit]
+        per_seed_limit = max(1, bounded_limit // len(bounded_seed_ids))
+        node_query = (
+            "MATCH (seed:Node) "
+            "WHERE seed.node_id IN $seed_ids "
+            "CALL apoc.path.subgraphAll(seed, {"
+            "maxLevel: $hops, "
+            "bfs: true, "
+            "uniqueness: 'NODE_GLOBAL', "
+            "filterStartNode: true, "
+            "limit: $per_seed_limit, "
+            "labelFilter: $label_filter"
+            "}) YIELD nodes "
+            "UNWIND nodes AS n "
+            "WITH DISTINCT n "
+            "RETURN n.node_id AS node_id, labels(n) AS labels, properties(n) AS props "
+            "ORDER BY n.node_id "
+            "LIMIT $limit"
+        )
+        node_records = await self.execute_read(
+            node_query,
+            seed_ids=bounded_seed_ids,
+            hops=hops,
+            limit=bounded_limit,
+            per_seed_limit=per_seed_limit,
+            label_filter=_BIOMEDICAL_LABEL_FILTER,
+        )
+        node_ids = [record["node_id"] for record in node_records if record["node_id"] is not None]
+        if not node_ids:
+            return SubgraphContext()
+
+        edge_limit = bounded_limit * 4
+        edge_query = (
+            "MATCH (a)-[r]->(b) "
+            "WHERE a.node_id IN $node_ids AND b.node_id IN $node_ids "
+            "RETURN DISTINCT a.node_id AS source_id, type(r) AS rel_type, "
+            "b.node_id AS target_id, properties(r) AS props "
+            "ORDER BY source_id, target_id, rel_type "
+            "LIMIT $edge_limit"
+        )
+        edge_records = await self.execute_read(
+            edge_query,
+            node_ids=node_ids,
+            edge_limit=edge_limit,
+        )
+
+        nodes = [
+            GraphNode(
+                node_id=record["node_id"],
+                labels=tuple(record["labels"]),
+                properties=dict(record["props"]),
+            )
+            for record in node_records
+            if record["node_id"] is not None
+        ]
+        edges = [
+            GraphEdge(
+                source_id=record["source_id"],
+                target_id=record["target_id"],
+                rel_type=record["rel_type"],
+                properties=dict(record["props"]),
+            )
+            for record in edge_records
         ]
         return SubgraphContext(nodes=nodes, edges=edges)
 

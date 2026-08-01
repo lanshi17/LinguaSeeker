@@ -50,7 +50,7 @@ redis:
 
 neo4j:
   uri: "bolt://neo4j:7687"
-  database: "staging_lingua_seeker"
+  database: "neo4j"
 
 graph_rag:
   enabled: false

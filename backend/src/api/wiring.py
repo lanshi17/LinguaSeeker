@@ -160,7 +160,10 @@ def wire_dependencies() -> None:
     # ── Neo4j driver/repository singleton ────────────────────────────
     if _neo4j_driver is None:
         _neo4j_driver = build_neo4j_driver(cfg)
-        _neo4j_repository = Neo4jRepository(_neo4j_driver)
+        _neo4j_repository = Neo4jRepository(
+            _neo4j_driver,
+            database=cfg.neo4j.database,
+        )
 
     # ── Document processing cache (L1 Redis + L2 PostgreSQL) ──────────
     from src.agents.processing_cache import DocumentProcessingCacheService

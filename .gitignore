@@ -219,3 +219,4 @@ benchmark/data/processed/filtered_pdf_markdown_corpus/markdown/*/*.md
 **/*paper*.png
 **/*paper*.html
 lingua_seeker.dump
+data/*

@@ -99,7 +99,7 @@ async def get_knowledge_graph(
 
     subgraph = SubgraphContext()
     if seed_ids:
-        subgraph = await repository.get_subgraph(
+        subgraph = await repository.get_biomedical_subgraph(
             seed_node_ids=seed_ids,
             hops=hops,
             limit=limit,
