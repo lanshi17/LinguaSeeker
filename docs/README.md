@@ -59,6 +59,7 @@ docs/
 
 | 日期 | 标题 | 状态 |
 |------|------|------|
+| 2026-08-01 | [dev → prod 数据库同步 Runbook](active/2026-08-01-dev-to-prod-sync-runbook.md) | reference |
 | 2026-06-25 | [Lingua Seeker v1.0.0 Release Checklist](active/2026-06-25-v1-release-checklist.md) | in-progress |
 | 2026-06-27 | [Backend Host Deployment Guide](active/2026-06-27-backend-host-deployment-guide.md) | reference |
 | 2026-06-23 | [Environment Consistency Standard](active/2026-06-23-environment-consistency.md) | reference |
