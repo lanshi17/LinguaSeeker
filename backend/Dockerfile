@@ -165,6 +165,9 @@ WORKDIR /app
 COPY --chown=deploy:deploy backend/ /app/backend/
 COPY --chown=deploy:deploy database/ /app/database/
 COPY --chown=deploy:deploy libs/ /app/libs/
+# Operational scripts (ensure_neo4j_indexes, backfill_source_language, etc.)
+# so they can run inside the container via `docker compose run/exec`.
+COPY --chown=deploy:deploy scripts/ /app/scripts/
 # Strip the host venv and create required directories
 # /app/logs is the directory code resolves to (Path(__file__)/.../.../.../... + "logs")
 # under the new backend/ layout; /app/backend/logs is the canonical data mount point.
