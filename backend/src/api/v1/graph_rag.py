@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Awaitable
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from loguru import logger
 from starlette.requests import Request
@@ -76,44 +79,61 @@ async def get_knowledge_graph(
     if repository is None:
         raise HTTPException(status_code=503, detail="Neo4j repository is not available")
 
-    seed_ids: list[str] = []
+    # Fan out the per-entity name lookups in parallel instead of awaiting
+    # each Neo4j round-trip sequentially - the four label lookups are
+    # independent and previously dominated subgraph latency.
+    lookup_tasks: list[Awaitable[list[str]]] = []
     if gene_symbol:
-        seed_ids.extend(await repository.find_node_ids_by_name(
+        lookup_tasks.append(repository.find_node_ids_by_name(
             label="Gene", names=[gene_symbol.strip(), gene_symbol.strip().upper()],
         ))
     if disease_name:
-        seed_ids.extend(await repository.find_node_ids_by_name(
+        lookup_tasks.append(repository.find_node_ids_by_name(
             label="Disease", names=[disease_name.strip(), disease_name.strip().casefold()],
         ))
     if variant_hgvs_p:
-        seed_ids.extend(await repository.find_node_ids_by_name(
+        lookup_tasks.append(repository.find_node_ids_by_name(
             label="Variant", names=[variant_hgvs_p.strip()],
         ))
     if phenotype:
-        seed_ids.extend(await repository.find_node_ids_by_name(
+        lookup_tasks.append(repository.find_node_ids_by_name(
             label="Phenotype", names=[phenotype.strip(), phenotype.strip().casefold()],
         ))
+
+    seed_ids: list[str] = []
+    if lookup_tasks:
+        for ids in await asyncio.gather(*lookup_tasks):
+            seed_ids.extend(ids)
 
     # Deduplicate preserving order
     seed_ids = list(dict.fromkeys(seed_ids))
 
-    subgraph = SubgraphContext()
-    if seed_ids:
-        subgraph = await repository.get_biomedical_subgraph(
-            seed_node_ids=seed_ids,
-            hops=hops,
-            limit=limit,
+    biomedical_task = (
+        repository.get_biomedical_subgraph(
+            seed_node_ids=seed_ids, hops=hops, limit=limit,
         )
+        if seed_ids
+        else None
+    )
+    bridge_task = (
+        repository.get_evidence_bridge_subgraph(gene_names=[gene_symbol.strip()])
+        if mode != "terminology_only" and gene_symbol
+        else None
+    )
 
     # In full mode, augment a gene query with the gene→variant→disease
     # relationships bridged by literature evidence documents. These nodes live
     # in a separate identifier space from the terminology baseline and are not
     # reachable via generic multi-hop expansion, so they are merged in here.
-    if mode != "terminology_only" and gene_symbol:
-        bridge = await repository.get_evidence_bridge_subgraph(
-            gene_names=[gene_symbol.strip()],
-        )
+    if biomedical_task is not None and bridge_task is not None:
+        subgraph, bridge = await asyncio.gather(biomedical_task, bridge_task)
         subgraph = _merge_subgraphs(subgraph, bridge)
+    elif biomedical_task is not None:
+        subgraph = await biomedical_task
+    elif bridge_task is not None:
+        subgraph = await bridge_task
+    else:
+        subgraph = SubgraphContext()
 
     if not subgraph.nodes:
         raise HTTPException(

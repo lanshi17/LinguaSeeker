@@ -28,6 +28,39 @@ class Neo4jRepository:
         """Close the underlying driver."""
         await self._driver.close()
 
+    async def ensure_indexes(self) -> None:
+        """Create read-path indexes and backfill lowercase display-name copies.
+
+        Idempotent: safe to call on every startup or via the
+        ``ensure_neo4j_indexes`` script. ``CREATE INDEX IF NOT EXISTS`` is a
+        schema operation run outside a transaction; the backfill only touches
+        nodes still missing ``display_name_lower`` so it is a no-op once every
+        node has been migrated.
+
+        These indexes back the hot read paths:
+        - ``node_id``: :meth:`get_biomedical_subgraph` / :meth:`get_subgraph`
+          seed lookups (``seed.node_id IN $seed_ids``).
+        - ``display_name_lower``: :meth:`find_node_ids_by_name` and
+          :meth:`get_evidence_bridge_subgraph` name matching, which previously
+          forced full label scans via ``toLower()`` on every request.
+        """
+        async with self._driver.session(database=self._database) as session:
+            for stmt in (
+                "CREATE INDEX node_id_idx IF NOT EXISTS FOR (n:Node) ON (n.node_id)",
+                "CREATE INDEX gene_display_lower_idx IF NOT EXISTS FOR (n:Gene) ON (n.display_name_lower)",
+                "CREATE INDEX disease_display_lower_idx IF NOT EXISTS FOR (n:Disease) ON (n.display_name_lower)",
+                "CREATE INDEX variant_display_lower_idx IF NOT EXISTS FOR (n:Variant) ON (n.display_name_lower)",
+                "CREATE INDEX phenotype_display_lower_idx IF NOT EXISTS FOR (n:Phenotype) ON (n.display_name_lower)",
+            ):
+                result = await session.run(stmt)
+                await result.consume()
+            backfill = await session.run(
+                "MATCH (n) "
+                "WHERE n.display_name IS NOT NULL AND n.display_name_lower IS NULL "
+                "SET n.display_name_lower = toLower(n.display_name)"
+            )
+            await backfill.consume()
+
     async def execute_write(self, query: str, **parameters: Any) -> list[dict[str, Any]]:
         """Run a write query and return serialized records."""
         async with self._driver.session(database=self._database) as session:
@@ -268,7 +301,7 @@ class Neo4jRepository:
         # clinical significance when present on the underlying evidence.
         query = (
             "MATCH (e:Evidence)-[:SUPPORTS]->(g:Gene) "
-            "WHERE toLower(g.display_name) IN $names OR toLower(g.name) IN $names "
+            "WHERE g.display_name_lower IN $names "
             "MATCH (e)-[mv:MENTIONS]->(v:Variant) "
             "OPTIONAL MATCH (e)-[md:MENTIONS]->(d:Disease) "
             "WITH DISTINCT g, v, d, e, mv, md LIMIT $variant_limit "
@@ -385,8 +418,8 @@ class Neo4jRepository:
             return []
         query = (
             f"MATCH (n:{label}) "
-            "WHERE toLower(n.display_name) IN $names "
-            "OR ANY(a IN n.aliases WHERE toLower(a) IN $names) "
+            "WHERE n.display_name_lower IN $names "
+            "OR ANY(a IN n.aliases_lower WHERE a IN $names) "
             "RETURN DISTINCT n.node_id AS node_id "
             "LIMIT $limit"
         )

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Awaitable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -133,37 +135,36 @@ class GraphRagQaEngine:
             return _ExtractedEntities()
 
     async def _find_seed_ids(self, entities: _ExtractedEntities) -> list[str]:
-        """Look up Neo4j node IDs by display name for the extracted entities."""
+        """Look up Neo4j node IDs by display name for the extracted entities.
+
+        Each entity value triggers an independent Neo4j round-trip; fanning
+        them out with ``asyncio.gather`` collapses the serial await chain
+        into a single batch of concurrent lookups.
+        """
+        tasks: list[Awaitable[list[str]]] = []
+        for gene in entities.gene_symbols:
+            tasks.append(self._repository.find_node_ids_by_name(
+                label="Gene", names=[gene, gene.upper()],
+            ))
+        for disease in entities.disease_names:
+            tasks.append(self._repository.find_node_ids_by_name(
+                label="Disease", names=[disease, disease.casefold()],
+            ))
+        for variant in entities.variants:
+            tasks.append(self._repository.find_node_ids_by_name(
+                label="Variant", names=[variant.strip()],
+            ))
+        for phenotype in entities.phenotypes:
+            tasks.append(self._repository.find_node_ids_by_name(
+                label="Phenotype", names=[phenotype, phenotype.casefold()],
+            ))
+
+        if not tasks:
+            return []
+
         seeds: list[str] = []
-
-        if entities.gene_symbols:
-            for gene in entities.gene_symbols:
-                ids = await self._repository.find_node_ids_by_name(
-                    label="Gene", names=[gene, gene.upper()],
-                )
-                seeds.extend(ids)
-
-        if entities.disease_names:
-            for disease in entities.disease_names:
-                ids = await self._repository.find_node_ids_by_name(
-                    label="Disease", names=[disease, disease.casefold()],
-                )
-                seeds.extend(ids)
-
-        if entities.variants:
-            for variant in entities.variants:
-                ids = await self._repository.find_node_ids_by_name(
-                    label="Variant", names=[variant.strip()],
-                )
-                seeds.extend(ids)
-
-        if entities.phenotypes:
-            for phenotype in entities.phenotypes:
-                ids = await self._repository.find_node_ids_by_name(
-                    label="Phenotype", names=[phenotype, phenotype.casefold()],
-                )
-                seeds.extend(ids)
-
+        for ids in await asyncio.gather(*tasks):
+            seeds.extend(ids)
         return list(dict.fromkeys(seeds))  # deduplicate preserving order
 
     async def _generate_answer(self, question: str, subgraph: SubgraphContext) -> _GeneratedAnswer:

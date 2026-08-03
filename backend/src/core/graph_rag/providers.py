@@ -44,27 +44,41 @@ class Neo4jGraphProvider:
     async def _write_nodes(self, nodes: list[LiteratureGraphNode]) -> None:
         if not nodes:
             return
+        # ``display_name_lower`` is persisted alongside ``display_name`` so
+        # read-path lookups (``find_node_ids_by_name``,
+        # ``get_evidence_bridge_subgraph``) can match on a pre-lowercased,
+        # indexed property instead of calling ``toLower()`` per row per
+        # request - the previous form forced a full label scan on every query.
         query = (
             "UNWIND $nodes AS node "
             "MERGE (n:Node {node_id: node.node_id}) "
             "SET n += node.properties "
-            "SET n.display_name = node.display_name "
+            "SET n.display_name = node.display_name, "
+            "    n.display_name_lower = toLower(node.display_name) "
             "WITH n, node "
             "CALL apoc.create.addLabels(n, [node.entity_type]) YIELD node AS labeled "
             "RETURN count(*)"
         )
-        params = {
-            "nodes": [
-                {
-                    "node_id": n.node_id,
-                    "entity_type": n.entity_type.value,
-                    "display_name": n.display_name,
-                    "properties": self._sanitize_properties(n.properties),
-                }
-                for n in nodes
-            ]
-        }
+        params = {"nodes": [self._node_param(n) for n in nodes]}
         await self._repository.execute_write(query, **params)
+
+    def _node_param(self, node: LiteratureGraphNode) -> dict[str, Any]:
+        """Build the parameter dict for one node, including lowercase copies.
+
+        ``aliases_lower`` is precomputed in Python so alias matching in
+        :meth:`Neo4jRepository.find_node_ids_by_name` avoids per-row
+        ``toLower()`` calls over the aliases list.
+        """
+        props = self._sanitize_properties(node.properties)
+        aliases = props.get("aliases")
+        if isinstance(aliases, list):
+            props["aliases_lower"] = [a.lower() for a in aliases if isinstance(a, str)]
+        return {
+            "node_id": node.node_id,
+            "entity_type": node.entity_type.value,
+            "display_name": node.display_name,
+            "properties": props,
+        }
 
     async def _write_edges(self, edges: list[LiteratureGraphEdge]) -> None:
         if not edges:

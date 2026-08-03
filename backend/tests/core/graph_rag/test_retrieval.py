@@ -37,6 +37,7 @@ async def test_retrieve_for_target_filters_terminology_only(mock_repository: Asy
             GraphEdge(source_id="gene:GLA", target_id="evidence:1", rel_type="SUPPORTS", properties={}),
         ],
     )
+    mock_repository.find_node_ids_by_name.return_value = ["gene:GLA"]
     retriever = SubgraphRetriever(mock_repository)
     target = ExtractionTarget(gene_symbol="GLA", disease_name="Fabry disease")
     result = await retriever.retrieve_for_target(target, mode="terminology_only")

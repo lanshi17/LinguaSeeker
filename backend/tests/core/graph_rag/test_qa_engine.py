@@ -51,6 +51,7 @@ async def test_query_generates_answer_from_subgraph(engine: GraphRagQaEngine, mo
             GraphEdge(source_id="gene:GLA", target_id="evidence:1", rel_type="SUPPORTS", properties={}),
         ],
     )
+    mock_repository.find_node_ids_by_name.return_value = ["gene:GLA"]
 
     fake_entities = MagicMock()
     fake_entities.gene_symbols = ["GLA"]
