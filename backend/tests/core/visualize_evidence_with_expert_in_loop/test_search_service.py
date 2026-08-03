@@ -134,6 +134,9 @@ async def test_search_evidence_includes_document_title_and_source_language():
         _cei(
             source_document_id=source_document_id,
             raw_metadata={"title": "BRCA1 evidence paper"},
+            has_full_text=False,
+            has_translation=False,
+            source_language=None,
         ),
     ]
     run_states = [
@@ -198,10 +201,9 @@ async def test_search_evidence_includes_source_availability_flags():
         _cei(
             source_document_id=source_document_id,
             raw_metadata={"title": "BRCA1 evidence paper"},
-            original_text="Original full text",
-            translated_text="Translated full text",
-            original_blocks=None,
-            translated_blocks=None,
+            has_full_text=True,
+            has_translation=True,
+            source_language=None,
         ),
     ]
 

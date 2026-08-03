@@ -10,7 +10,7 @@ from uuid import UUID
 
 from loguru import logger
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -727,11 +727,6 @@ def _load_full_document_text(
     return None
 
 
-def _has_text_or_blocks(text: str | None, blocks: list[dict] | None) -> bool:
-    """Return whether a document has stored text or structured content blocks."""
-    return bool((text and text.strip()) or blocks)
-
-
 class SearchService:
     """Search evidence cards grouped by group_id, pivoting field-level extractions."""
 
@@ -948,12 +943,19 @@ class SearchService:
             if not g["variant"]:
                 g["variant"] = parse_variant_from_group_id(g["group_id"])
 
-        # Batch-load identifiers and titles for current page's documents
+        # Batch-load identifiers and lightweight document metadata for the
+        # current page. Only ``raw_metadata`` plus DB-side availability flags
+        # are fetched here - the large ``original_text`` / ``translated_text``
+        # / ``original_blocks`` / ``translated_blocks`` columns are deliberately
+        # excluded. This endpoint pages through up to 1000 groups per request,
+        # and transferring four large TEXT/JSONB columns per document dominated
+        # response time. Full-text language detection is deferred to the
+        # single-document detail endpoint (``get_group_detail``); the list view
+        # resolves ``source_language`` from persisted metadata only.
         doc_ids = {g["source_document_id"] for g in groups.values()}
         ident_map: dict[str, dict[str, str]] = {}
         title_map: dict[str, str] = {}
         language_map: dict[str, str] = {}
-        original_text_map: dict[str, str] = {}
         availability_map: dict[str, dict[str, bool]] = {}
         if doc_ids:
             ident_stmt = select(SourceDocumentIdentifier).where(
@@ -964,35 +966,38 @@ class SearchService:
                 ident_map.setdefault(str(ident.source_document_id), {})
                 ident_map[str(ident.source_document_id)][ident.identifier_type] = ident.identifier_value
 
+            # DB-side availability flags avoid pulling the large text/blocks
+            # columns into Python just to check for non-emptiness.
+            has_full_text_expr = or_(
+                SourceDocument.original_text.isnot(None),
+                SourceDocument.original_blocks.isnot(None),
+            )
+            has_translation_expr = or_(
+                SourceDocument.translated_text.isnot(None),
+                SourceDocument.translated_blocks.isnot(None),
+            )
             metadata_stmt = select(
                 SourceDocument.source_document_id,
                 SourceDocument.raw_metadata,
-                SourceDocument.original_text,
-                SourceDocument.translated_text,
-                SourceDocument.original_blocks,
-                SourceDocument.translated_blocks,
+                SourceDocument.source_language,
+                has_full_text_expr.label("has_full_text"),
+                has_translation_expr.label("has_translation"),
             ).where(SourceDocument.source_document_id.in_(doc_ids))
             metadata_result = await self._session.execute(metadata_stmt)
             for row in metadata_result.all():
                 raw_metadata = row.raw_metadata or {}
+                doc_key = str(row.source_document_id)
                 title = _coerce_str(raw_metadata.get("title")) if isinstance(raw_metadata, dict) else None
                 if title:
-                    title_map[str(row.source_document_id)] = title
-                source_language = _extract_source_language(raw_metadata)
+                    title_map[doc_key] = title
+                # Prefer the materialized column; fall back to parsing
+                # raw_metadata so documents not yet backfilled still resolve.
+                source_language = row.source_language or _extract_source_language(raw_metadata)
                 if source_language:
-                    language_map[str(row.source_document_id)] = source_language
-                original_text = getattr(row, "original_text", None)
-                if isinstance(original_text, str) and original_text.strip():
-                    original_text_map[str(row.source_document_id)] = original_text
-                availability_map[str(row.source_document_id)] = {
-                    "has_full_text": _has_text_or_blocks(
-                        getattr(row, "original_text", None),
-                        getattr(row, "original_blocks", None),
-                    ),
-                    "has_translation": _has_text_or_blocks(
-                        getattr(row, "translated_text", None),
-                        getattr(row, "translated_blocks", None),
-                    ),
+                    language_map[doc_key] = source_language
+                availability_map[doc_key] = {
+                    "has_full_text": bool(row.has_full_text),
+                    "has_translation": bool(row.has_translation),
                 }
 
             missing_language_doc_ids = [doc_id for doc_id in doc_ids if str(doc_id) not in language_map]
@@ -1018,14 +1023,6 @@ class SearchService:
                     source_language = _extract_source_language_from_state(row.state_json)
                     if source_language:
                         language_map[doc_key] = source_language
-
-            for doc_id in doc_ids:
-                doc_key = str(doc_id)
-                if doc_key in language_map:
-                    continue
-                source_language = _detect_source_language_from_text(original_text_map.get(doc_key))
-                if source_language:
-                    language_map[doc_key] = source_language
 
         # Build results (apply PMID/DOI post-filters)
         items: list[EvidenceSearchResult] = []
