@@ -131,10 +131,12 @@ RUN ln -sf /usr/local/bin/python3 /opt/venv/bin/python3 \
  && ln -sf /usr/local/bin/python3 /opt/venv/bin/python3.12
 
 # Fix shebangs in entry-point scripts (uvicorn, fastapi, alembic, etc.)
-# The tarball may contain host-specific paths like /home/user/.venv/bin/python3
-# that don't exist inside the container.
+# The tarball may contain host-specific interpreter paths that don't exist
+# inside the container — e.g. /home/user/.venv/bin/python3 or a build venv
+# like /tmp/ls-build-venv/bin/python. Match any `bin/python*` shebang rather
+# than only the `.venv` form so the fix is robust to the build venv path.
 RUN find /opt/venv/bin -maxdepth 1 -type f -exec \
-    sed -i '1s|^#!.*\.venv/bin/python[0-9.]*|#!/opt/venv/bin/python3|' {} +
+    sed -i '1s|^#!.*bin/python[0-9.]*$|#!/opt/venv/bin/python3|' {} +
 
 # Editable installs from the host point at non-existent paths inside the
 # container — drop the .pth stubs and install the in-tree deps from source.
