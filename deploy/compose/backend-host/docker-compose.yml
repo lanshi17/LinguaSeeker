@@ -42,6 +42,15 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      # ── Neo4j graph ──────────────────────────────────────────────
+      # The backend reads NEO4J_* from env (env vars win over the layered
+      # YAML config the loader looks up under /app/backend/config, which is
+      # NOT where the deployed /app/config mounts live). Same NEO4J_PASSWORD
+      # var drives both the neo4j container auth and this connection.
+      NEO4J_URI: ${NEO4J_URI:-bolt://neo4j:7687}
+      NEO4J_USER: ${NEO4J_USER:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-}
+      NEO4J_DATABASE: ${NEO4J_DATABASE:-neo4j}
       # ── Inference / LLM endpoints (point at GPU host) ───────────
       EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-http://host.docker.internal:32949}
       EMBEDDING_API_STYLE: ${EMBEDDING_API_STYLE:-simple}
