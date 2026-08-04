@@ -5,7 +5,11 @@ import { Typography } from "antd";
 import { Database, CircleHelp, Dna, BookOpen, FileText, TrendingUp } from "lucide-react";
 import { VariantIndexView, VariantDetailView, BilingualEvidenceView } from "@/features/evidence-db";
 import { ClassificationDistributionBar } from "@/features/evidence-db/components/ClassificationDistributionBar";
-import { fetchAllEvidence } from "@/features/evidence-db/services/variantDb";
+import { useAccountCacheScope } from "@/features/auth/hooks/useAuthAccount";
+import {
+  fetchAllEvidence,
+  readCachedAllEvidence,
+} from "@/features/evidence-db/services/variantDb";
 import { aggregateVariants } from "@/features/evidence-db/utils/variantAggregation";
 import { formatConfidencePercent } from "@/features/evidence-db/utils/fieldLabels";
 import type { ClassificationLevel } from "@/features/evidence-db/types/variantDb";
@@ -25,12 +29,24 @@ export function EvidenceDbPage() {
   const { t } = useI18n();
   const [guideOpen, setGuideOpen] = useState(false);
   const [activeClassification, setActiveClassification] = useState<ClassificationLevel | null>(null);
+  const accountCache = useAccountCacheScope();
+  const queryScope = accountCache.isReady ? accountCache.scope : "auth-pending";
 
   // Share the same React Query cache as VariantIndexView
   const query = useQuery({
-    queryKey: ["evidence-db", "all-evidence"],
-    queryFn: () => fetchAllEvidence({ page: 1, page_size: 1000 }),
-    staleTime: 60_000,
+    queryKey: ["evidence-db", "all-evidence", queryScope],
+    queryFn: () =>
+      fetchAllEvidence(
+        {},
+        { cacheScope: accountCache.scope, refresh: true },
+      ),
+    enabled: accountCache.isReady,
+    initialData: () =>
+      accountCache.isReady
+        ? readCachedAllEvidence({}, accountCache.scope)
+        : undefined,
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const allEntries = useMemo(

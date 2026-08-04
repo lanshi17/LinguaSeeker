@@ -49,23 +49,29 @@ lib/
 
 #### `responseCache.ts`
 
-`createResponseCacheAdapter(networkAdapter, options): AxiosAdapter` 为共享 API 客户端提供响应缓存层：
+`createResponseCacheAdapter(networkAdapter, options): AxiosAdapter` 为共享 API 客户端提供响应缓存层。需要在网络请求前同步读取浏览器快照时，使用 `createResponseCacheController()` 返回的 `read()` 与 `adapter`：
 
 ```typescript
 export function createResponseCacheAdapter(
   networkAdapter: AxiosAdapter,
   options: ApiResponseCacheOptions = {},
 ): AxiosAdapter
+
+export function createResponseCacheController(
+  networkAdapter: AxiosAdapter,
+  options: ApiResponseCacheOptions = {},
+): ResponseCacheController
 ```
 
-数据流：
+Evidence DB 索引与 KG 可视图采用 stale-while-revalidate 数据流：
 
 ```text
-React Query memory cache
-  -> apiClient Axios adapter
-    -> browser localStorage response cache
-    -> in-memory response cache
-    -> backend /api/v1
+browser response cache -> React Query initialData -> immediate render
+                                      |
+                                      +-> Cache-Control: no-cache
+                                            -> backend /api/v1
+                                            -> React Query replaces data
+                                            -> response cache is overwritten
 ```
 
 缓存策略：
@@ -76,6 +82,9 @@ React Query memory cache
 - `PATCH` / `POST` / `DELETE` 等写操作成功后清空内存和 `localStorage` 响应缓存。
 - `pipeline`、`chat`、`delta-audit` 和 `annotations` 路径默认跳过缓存，避免轮询状态、聊天流和审阅记录读到旧数据。
 - 请求头包含 `Cache-Control: no-store` 时跳过缓存。
+- 请求头包含 `Cache-Control: no-cache` 时跳过缓存读取，但成功的后端响应仍写回缓存；用于先展示 `readCachedApiResponse()` 快照、再由 React Query 后台刷新。
+- Evidence DB 只在所有分页响应均存在时恢复缓存视图，避免展示不完整的列表。
+- 持久缓存按已验证的 `public` / `user_id` scope 分区；`/auth/me` 完成前不读取快照，登录与退出成功后清空所有 scope，避免账号间短暂显示旧数据。
 
 三级缓存含义：
 
@@ -92,7 +101,7 @@ cd frontend
 bunx vitest run tests/api/responseCache.test.tsx
 ```
 
-覆盖内容包括浏览器本地命中、TTL 过期刷新、写操作失效，以及实时路径绕过缓存。
+覆盖内容包括浏览器本地命中、同步快照读取、强制回源覆盖、TTL 过期刷新、写操作失效，以及实时路径绕过缓存。Evidence DB 与 KG 的缓存刷新测试位于各自 feature 测试目录。
 
 #### `error.ts`
 

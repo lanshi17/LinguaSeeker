@@ -2,7 +2,10 @@ import axios from "axios";
 import type { AxiosAdapter } from "axios";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { createResponseCacheAdapter } from "../../src/lib/api/responseCache";
+import {
+  createResponseCacheAdapter,
+  createResponseCacheController,
+} from "../../src/lib/api/responseCache";
 
 function createNetworkAdapter(payloads: unknown[]): {
   adapter: AxiosAdapter;
@@ -86,6 +89,84 @@ describe("response cache adapter", () => {
       data: { version: 2 },
     });
     expect(network.calls()).toBe(2);
+  });
+
+  it("reads cached data synchronously before a no-cache request refreshes it", async () => {
+    const initialNetwork = createNetworkAdapter([{ version: 1 }]);
+    const initialController = createResponseCacheController(
+      initialNetwork.adapter,
+      {
+        now: () => 1_000,
+        storage: window.localStorage,
+        uncachedPathPatterns: [],
+      },
+    );
+    const initialClient = axios.create({
+      baseURL: "/api/v1",
+      adapter: initialController.adapter,
+    });
+    await initialClient.get("/graphrag/graph", {
+      params: { gene_symbol: "EGFR" },
+      responseCache: { scope: "user-a" },
+    });
+
+    const refreshNetwork = createNetworkAdapter([{ version: 2 }]);
+    const refreshController = createResponseCacheController(
+      refreshNetwork.adapter,
+      {
+        now: () => 2_000,
+        storage: window.localStorage,
+        uncachedPathPatterns: [],
+      },
+    );
+    const lookup = {
+      baseURL: "/api/v1",
+      url: "/graphrag/graph",
+      params: { gene_symbol: "EGFR" },
+      scope: "user-a",
+    };
+
+    expect(refreshController.read(lookup)).toEqual({ version: 1 });
+    expect(refreshController.read({ ...lookup, scope: "user-b" })).toBeUndefined();
+
+    const refreshClient = axios.create({
+      baseURL: "/api/v1",
+      adapter: refreshController.adapter,
+    });
+    await expect(
+      refreshClient.get("/graphrag/graph", {
+        headers: { "Cache-Control": "no-cache" },
+        params: { gene_symbol: "EGFR" },
+        responseCache: { scope: "user-a" },
+      }),
+    ).resolves.toMatchObject({ data: { version: 2 } });
+
+    expect(refreshNetwork.calls()).toBe(1);
+    expect(refreshController.read(lookup)).toEqual({ version: 2 });
+  });
+
+  it("parses raw browser JSON when reading directly from the adapter cache", async () => {
+    const network = createNetworkAdapter(['{"items":[{"id":"cached"}]}']);
+    const controller = createResponseCacheController(network.adapter, {
+      now: () => 1_000,
+      storage: window.localStorage,
+      uncachedPathPatterns: [],
+    });
+    const client = axios.create({
+      baseURL: "/api/v1",
+      adapter: controller.adapter,
+    });
+    await client.get("/evidence/search", {
+      responseCache: { scope: "public" },
+    });
+
+    expect(
+      controller.read({
+        baseURL: "/api/v1",
+        scope: "public",
+        url: "/evidence/search",
+      }),
+    ).toEqual({ items: [{ id: "cached" }] });
   });
 
   it("invalidates cached GET responses after successful mutations", async () => {

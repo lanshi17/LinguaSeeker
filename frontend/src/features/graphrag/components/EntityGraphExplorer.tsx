@@ -1,7 +1,7 @@
 import { useI18n } from "@/lib/i18n";
 import { SearchOutlined } from "@ant-design/icons";
 import { Button, Card, Col, Empty, Form, Input, Row, Spin, Typography } from "antd";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useKnowledgeGraph } from "../hooks/useKnowledgeGraph";
 import { KnowledgeGraphCanvas } from "./KnowledgeGraphCanvas";
@@ -43,13 +43,24 @@ interface ExplorerQuery {
 export function EntityGraphExplorer() {
   const { t } = useI18n();
   const [form] = Form.useForm<ExplorerFormValues>();
-  const [query, setQuery] = useState<ExplorerQuery>({
-    geneSymbol: EXAMPLE_GENE,
-  });
-  const [isExample, setIsExample] = useState(true);
-  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [searchParams] = useSearchParams();
-  const seededFromUrl = useRef(false);
+  const urlQuery = {
+    geneSymbol: searchParams.get("gene") ?? undefined,
+    diseaseName: searchParams.get("disease") ?? undefined,
+    variantHgvsP: searchParams.get("variant") ?? undefined,
+    phenotype: searchParams.get("phenotype") ?? undefined,
+  };
+  const hasUrlQuery = Boolean(
+    urlQuery.geneSymbol ||
+      urlQuery.diseaseName ||
+      urlQuery.variantHgvsP ||
+      urlQuery.phenotype,
+  );
+  const [query, setQuery] = useState<ExplorerQuery>(() =>
+    hasUrlQuery ? urlQuery : { geneSymbol: EXAMPLE_GENE },
+  );
+  const [isExample, setIsExample] = useState(!hasUrlQuery);
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
 
   // Seed the form + query from URL params so chat's "view in graph" deep-link
   // (e.g. /graphrag?gene=COL2A1) opens directly on the requested entity. This
@@ -60,7 +71,6 @@ export function EntityGraphExplorer() {
     const variant = searchParams.get("variant") ?? undefined;
     const phenotype = searchParams.get("phenotype") ?? undefined;
     if (!gene && !disease && !variant && !phenotype) return;
-    seededFromUrl.current = true;
     setIsExample(false);
     form.setFieldsValue({ gene, disease, variant, phenotype });
     setQuery({
@@ -75,7 +85,7 @@ export function EntityGraphExplorer() {
     query.geneSymbol || query.diseaseName || query.variantHgvsP || query.phenotype,
   );
 
-  const { data, isFetching, error } = useKnowledgeGraph({
+  const { data, isFetching, isPending, error } = useKnowledgeGraph({
     ...query,
     mode: "full",
     enabled: hasQuery,
@@ -94,6 +104,7 @@ export function EntityGraphExplorer() {
 
   const nodeCount = data?.nodes.length ?? 0;
   const edgeCount = data?.edges.length ?? 0;
+  const hasGraph = nodeCount > 0;
 
   const graphNodes = data?.nodes;
   const handleNodeClick = useCallback(
@@ -154,7 +165,7 @@ export function EntityGraphExplorer() {
         </Text>
       )}
 
-      {hasQuery && isFetching && (
+      {hasQuery && (isFetching || isPending) && !error && !hasGraph && (
         <div style={{ textAlign: "center", padding: 24 }}>
           <Spin size="large" />
           <Text type="secondary" style={{ display: "block", marginTop: 12 }}>
@@ -163,7 +174,7 @@ export function EntityGraphExplorer() {
         </div>
       )}
 
-      {hasQuery && error && (
+      {hasQuery && error && !hasGraph && (
         <Card>
           <Text type="danger">
             {t("graphRag.error")}: {error.message}
@@ -171,13 +182,13 @@ export function EntityGraphExplorer() {
         </Card>
       )}
 
-      {hasQuery && !isFetching && !error && nodeCount === 0 && (
+      {hasQuery && !isFetching && !error && !hasGraph && (
         <Card>
           <Empty description={t("graphRag.exploreEmpty")} />
         </Card>
       )}
 
-      {hasQuery && !isFetching && !error && data && nodeCount > 0 && (
+      {hasQuery && data && hasGraph && (
         <Card
           title={t("graphRag.graphTitle")}
           extra={

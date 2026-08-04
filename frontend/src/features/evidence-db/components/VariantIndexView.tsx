@@ -682,7 +682,7 @@ export function VariantIndexView({ activeClassification, onClearClassification }
       </section>
 
       {/* Results */}
-      {error ? (
+      {error && effectiveItems.length === 0 ? (
         <div style={{
           display: "flex",
           alignItems: "center",

@@ -16,9 +16,25 @@ export function useAuthAccount() {
   return useQuery({
     queryKey: authMeQueryKey,
     queryFn: getAuthMe,
-    initialData: PUBLIC_ACCOUNT,
+    placeholderData: PUBLIC_ACCOUNT,
     staleTime: 15_000,
   });
+}
+
+export function useAccountCacheScope(): {
+  error: Error | null;
+  isReady: boolean;
+  scope: string;
+} {
+  const accountQuery = useAuthAccount();
+  return {
+    error: accountQuery.error,
+    isReady:
+      accountQuery.data !== undefined &&
+      !accountQuery.isPlaceholderData &&
+      !accountQuery.isError,
+    scope: accountQuery.data?.user_id ?? "public",
+  };
 }
 
 export function resetAccountScopedQueries(

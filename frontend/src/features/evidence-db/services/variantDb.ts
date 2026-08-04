@@ -4,6 +4,7 @@ import type {
   EvidenceGroupDetailResponse,
 } from "@/features/evidence-search/types/evidenceSearch";
 import {
+  readCachedEvidenceSearch as _readCachedEvidenceSearch,
   searchEvidence as _searchEvidence,
   getEvidenceGroupDetail,
 } from "@/features/evidence-search/services/evidenceSearch";
@@ -16,6 +17,18 @@ import {
 const MAX_PAGE_SIZE = 1000;
 const MAX_PAGES = 50; // Safety cap: 50k groups is well beyond current corpus.
 
+interface FetchAllEvidenceOptions {
+  cacheScope?: string;
+  refresh?: boolean;
+}
+
+function pagedQuery(
+  query: EvidenceSearchQuery,
+  page: number,
+): EvidenceSearchQuery {
+  return { ...query, page, page_size: MAX_PAGE_SIZE };
+}
+
 /**
  * Fetch all evidence search results for aggregation.
  *
@@ -26,19 +39,50 @@ const MAX_PAGES = 50; // Safety cap: 50k groups is well beyond current corpus.
  */
 export async function fetchAllEvidence(
   query: EvidenceSearchQuery = {},
+  options: FetchAllEvidenceOptions = {},
 ): Promise<EvidenceSearchResponse> {
-  const first = await _searchEvidence(query, { page: 1, page_size: MAX_PAGE_SIZE });
+  const first = await _searchEvidence(pagedQuery(query, 1), undefined, options);
   const total = first.total;
   const items = [...first.items];
 
   const totalPages = Math.min(Math.ceil(total / MAX_PAGE_SIZE), MAX_PAGES);
   for (let page = 2; page <= totalPages; page += 1) {
-    const next = await _searchEvidence(query, { page, page_size: MAX_PAGE_SIZE });
+    const next = await _searchEvidence(pagedQuery(query, page), undefined, options);
     items.push(...next.items);
     if (next.items.length === 0) break;
   }
 
   return { items, total, page: 1, page_size: items.length };
+}
+
+/** Rebuild the aggregate response only when every required page is cached. */
+export function readCachedAllEvidence(
+  query: EvidenceSearchQuery = {},
+  cacheScope?: string,
+): EvidenceSearchResponse | undefined {
+  const first = _readCachedEvidenceSearch(
+    pagedQuery(query, 1),
+    undefined,
+    cacheScope,
+  );
+  if (!first) return undefined;
+
+  const items = [...first.items];
+  const totalPages = Math.min(
+    Math.ceil(first.total / MAX_PAGE_SIZE),
+    MAX_PAGES,
+  );
+  for (let page = 2; page <= totalPages; page += 1) {
+    const next = _readCachedEvidenceSearch(
+      pagedQuery(query, page),
+      undefined,
+      cacheScope,
+    );
+    if (!next || next.items.length === 0) return undefined;
+    items.push(...next.items);
+  }
+
+  return { items, total: first.total, page: 1, page_size: items.length };
 }
 
 /**

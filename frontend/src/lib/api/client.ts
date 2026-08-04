@@ -12,21 +12,33 @@
 import axios from "axios";
 import type { AxiosResponse } from "axios";
 import { normalizeError } from "./error";
-import { createResponseCacheAdapter } from "./responseCache";
+import { createResponseCacheController } from "./responseCache";
 
 const baseURL =
   import.meta.env.VITE_API_BASE_URL || `${import.meta.env.BASE_URL}api/v1`;
 const timeout = Number(import.meta.env.VITE_API_TIMEOUT) || 30_000;
+const responseCache = createResponseCacheController(
+  axios.getAdapter(axios.defaults.adapter),
+);
 
 export const apiClient = axios.create({
   baseURL,
   timeout,
   withCredentials: true,
-  adapter: createResponseCacheAdapter(axios.getAdapter(axios.defaults.adapter)),
+  adapter: responseCache.adapter,
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+/** Read a fresh browser-cached GET payload without starting a request. */
+export function readCachedApiResponse<T>(
+  url: string,
+  params?: unknown,
+  scope?: string,
+): T | undefined {
+  return responseCache.read<T>({ baseURL, method: "get", params, scope, url });
+}
 
 // Normalize errors into ApiError for consistent handling downstream.
 apiClient.interceptors.response.use(

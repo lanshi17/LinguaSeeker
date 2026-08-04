@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api/client";
+import { apiClient, readCachedApiResponse } from "@/lib/api/client";
 import type {
   GraphRagQueryRequest,
   GraphRagQueryResponse,
@@ -9,6 +9,33 @@ import type {
 // generation), so they routinely exceed the global 30s client timeout.
 const GRAPH_RAG_QUERY_TIMEOUT_MS = 120_000;
 const KNOWLEDGE_GRAPH_TIMEOUT_MS = 60_000;
+
+export interface KnowledgeGraphParams {
+  geneSymbol?: string;
+  diseaseName?: string;
+  variantHgvsP?: string;
+  phenotype?: string;
+  hops?: number;
+  mode?: string;
+  limit?: number;
+}
+
+interface FetchKnowledgeGraphOptions {
+  cacheScope?: string;
+  refresh?: boolean;
+}
+
+function buildKnowledgeGraphParams(params: KnowledgeGraphParams) {
+  return {
+    gene_symbol: params.geneSymbol,
+    disease_name: params.diseaseName,
+    variant_hgvs_p: params.variantHgvsP,
+    phenotype: params.phenotype,
+    hops: params.hops ?? 2,
+    mode: params.mode ?? "full",
+    limit: params.limit ?? 200,
+  };
+}
 
 export async function queryGraphRag(
   request: GraphRagQueryRequest,
@@ -21,26 +48,26 @@ export async function queryGraphRag(
   return data;
 }
 
-export async function fetchKnowledgeGraph(params: {
-  geneSymbol?: string;
-  diseaseName?: string;
-  variantHgvsP?: string;
-  phenotype?: string;
-  hops?: number;
-  mode?: string;
-  limit?: number;
-}): Promise<KnowledgeGraph> {
+export async function fetchKnowledgeGraph(
+  params: KnowledgeGraphParams,
+  options: FetchKnowledgeGraphOptions = {},
+): Promise<KnowledgeGraph> {
   const { data } = await apiClient.get<KnowledgeGraph>("/graphrag/graph", {
+    headers: options.refresh ? { "Cache-Control": "no-cache" } : undefined,
     timeout: KNOWLEDGE_GRAPH_TIMEOUT_MS,
-    params: {
-      gene_symbol: params.geneSymbol,
-      disease_name: params.diseaseName,
-      variant_hgvs_p: params.variantHgvsP,
-      phenotype: params.phenotype,
-      hops: params.hops ?? 2,
-      mode: params.mode ?? "full",
-      limit: params.limit ?? 200,
-    },
+    params: buildKnowledgeGraphParams(params),
+    responseCache: { scope: options.cacheScope },
   });
   return data;
+}
+
+export function readCachedKnowledgeGraph(
+  params: KnowledgeGraphParams,
+  cacheScope?: string,
+): KnowledgeGraph | undefined {
+  return readCachedApiResponse<KnowledgeGraph>(
+    "/graphrag/graph",
+    buildKnowledgeGraphParams(params),
+    cacheScope,
+  );
 }

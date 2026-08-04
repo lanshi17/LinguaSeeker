@@ -1,5 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchKnowledgeGraph } from "../services/graphRag";
+import { useAccountCacheScope } from "@/features/auth/hooks/useAuthAccount";
+import {
+  fetchKnowledgeGraph,
+  readCachedKnowledgeGraph,
+} from "../services/graphRag";
 import type { KnowledgeGraph } from "../types/graphRag";
 
 export interface UseKnowledgeGraphOptions {
@@ -14,6 +18,7 @@ export interface UseKnowledgeGraphOptions {
 }
 
 export function useKnowledgeGraph(options: UseKnowledgeGraphOptions = {}) {
+  const accountCache = useAccountCacheScope();
   const {
     geneSymbol,
     diseaseName,
@@ -24,8 +29,18 @@ export function useKnowledgeGraph(options: UseKnowledgeGraphOptions = {}) {
     limit = 200,
     enabled = true,
   } = options;
+  const params = {
+    geneSymbol,
+    diseaseName,
+    variantHgvsP,
+    phenotype,
+    hops,
+    mode,
+    limit,
+  };
+  const queryScope = accountCache.isReady ? accountCache.scope : "auth-pending";
 
-  return useQuery<KnowledgeGraph, Error>({
+  const query = useQuery<KnowledgeGraph, Error>({
     queryKey: [
       "knowledgeGraph",
       geneSymbol,
@@ -35,19 +50,27 @@ export function useKnowledgeGraph(options: UseKnowledgeGraphOptions = {}) {
       hops,
       mode,
       limit,
+      queryScope,
     ],
     queryFn: () =>
-      fetchKnowledgeGraph({
-        geneSymbol,
-        diseaseName,
-        variantHgvsP,
-        phenotype,
-        hops,
-        mode,
-        limit,
+      fetchKnowledgeGraph(params, {
+        cacheScope: accountCache.scope,
+        refresh: true,
       }),
+    initialData: () =>
+      accountCache.isReady
+        ? readCachedKnowledgeGraph(params, accountCache.scope)
+        : undefined,
+    refetchOnMount: "always",
+    staleTime: 0,
     enabled:
+      accountCache.isReady &&
       enabled &&
       Boolean(geneSymbol || diseaseName || variantHgvsP || phenotype),
   });
+
+  return {
+    ...query,
+    error: accountCache.error ?? query.error,
+  };
 }

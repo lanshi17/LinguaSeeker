@@ -7,7 +7,14 @@ import type {
 
 export interface ResponseCacheRequestOptions {
   enabled?: boolean;
+  scope?: string;
   ttlMs?: number;
+}
+
+declare module "axios" {
+  interface AxiosRequestConfig {
+    responseCache?: ResponseCacheRequestOptions;
+  }
 }
 
 type ResponseCacheConfig = InternalAxiosRequestConfig & {
@@ -22,6 +29,19 @@ interface ApiResponseCacheOptions {
   now?: () => number;
   storage?: Storage | null;
   uncachedPathPatterns?: RegExp[];
+}
+
+export interface CachedResponseLookup {
+  baseURL?: string;
+  method?: string;
+  params?: unknown;
+  scope?: string;
+  url: string;
+}
+
+export interface ResponseCacheController {
+  adapter: AxiosAdapter;
+  read<T>(lookup: CachedResponseLookup): T | undefined;
 }
 
 interface CachedResponseRecord {
@@ -81,6 +101,7 @@ class ApiResponseCache {
 
   get(config: InternalAxiosRequestConfig): AxiosResponse | null {
     if (!this.isCacheableRequest(config)) return null;
+    if (requestHeaderIncludes(config, "cache-control", "no-cache")) return null;
 
     const key = buildRequestCacheKey(config);
     const storageRecord = this.readFromStorage(key);
@@ -273,9 +294,16 @@ export function createResponseCacheAdapter(
   networkAdapter: AxiosAdapter,
   options: ApiResponseCacheOptions = {},
 ): AxiosAdapter {
+  return createResponseCacheController(networkAdapter, options).adapter;
+}
+
+export function createResponseCacheController(
+  networkAdapter: AxiosAdapter,
+  options: ApiResponseCacheOptions = {},
+): ResponseCacheController {
   const cache = new ApiResponseCache(options);
 
-  return async (config) => {
+  const adapter: AxiosAdapter = async (config) => {
     const cachedResponse = cache.get(config);
     if (cachedResponse) return cachedResponse;
 
@@ -288,6 +316,35 @@ export function createResponseCacheAdapter(
     cache.set(config, response);
     return response;
   };
+
+  return {
+    adapter,
+    read<T>(lookup: CachedResponseLookup): T | undefined {
+      const response = cache.get({
+        baseURL: lookup.baseURL,
+        headers: {},
+        method: lookup.method ?? "get",
+        params: lookup.params,
+        responseCache: { scope: lookup.scope },
+        url: lookup.url,
+      } as ResponseCacheConfig);
+      return response ? (readCachedResponseData(response) as T) : undefined;
+    },
+  };
+}
+
+function readCachedResponseData(response: AxiosResponse): unknown {
+  if (
+    typeof response.data === "string" &&
+    readHeader(response.headers, "content-type").toLowerCase().includes("json")
+  ) {
+    try {
+      return JSON.parse(response.data) as unknown;
+    } catch {
+      return response.data;
+    }
+  }
+  return response.data;
 }
 
 function isSuccessfulResponse(response: AxiosResponse): boolean {
@@ -330,6 +387,7 @@ function buildRequestCacheKey(config: InternalAxiosRequestConfig): string {
     String(config.baseURL ?? ""),
     String(config.url ?? ""),
     stableStringify(normalizeSerializable(config.params)),
+    responseCacheOptions(config)?.scope ?? "",
   ].join(" ");
 }
 

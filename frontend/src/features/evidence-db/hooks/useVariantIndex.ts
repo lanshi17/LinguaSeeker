@@ -1,7 +1,8 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchAllEvidence } from "../services/variantDb";
+import { useAccountCacheScope } from "@/features/auth/hooks/useAuthAccount";
+import { fetchAllEvidence, readCachedAllEvidence } from "../services/variantDb";
 import { aggregateVariants, filterAndPaginateVariants } from "../utils/variantAggregation";
 import type {
   ClassificationLevel,
@@ -135,12 +136,24 @@ function clearSavedFilters(): void {
 
 export function useVariantIndex() {
   const [filters, setFilters] = useState<VariantIndexFilters>(() => loadFilters());
+  const accountCache = useAccountCacheScope();
+  const queryScope = accountCache.isReady ? accountCache.scope : "auth-pending";
 
   // Fetch all evidence — we do client-side aggregation
   const query = useQuery({
-    queryKey: ["evidence-db", "all-evidence"],
-    queryFn: () => fetchAllEvidence({ page: 1, page_size: 1000 }),
-    staleTime: 60_000,
+    queryKey: ["evidence-db", "all-evidence", queryScope],
+    queryFn: () =>
+      fetchAllEvidence(
+        {},
+        { cacheScope: accountCache.scope, refresh: true },
+      ),
+    enabled: accountCache.isReady,
+    initialData: () =>
+      accountCache.isReady
+        ? readCachedAllEvidence({}, accountCache.scope)
+        : undefined,
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   // Aggregate into variant-centric entries
@@ -186,9 +199,9 @@ export function useVariantIndex() {
   return {
     ...variantData,
     allEntries,
-    isLoading: query.isLoading,
+    isLoading: !accountCache.isReady || query.isLoading,
     isFetching: query.isFetching,
-    error: query.error,
+    error: accountCache.error ?? query.error,
     filters,
     updateFilter,
     setPage,
