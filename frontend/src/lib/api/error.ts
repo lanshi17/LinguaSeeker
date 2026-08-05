@@ -11,6 +11,10 @@ import { AxiosError } from "axios";
 interface BackendErrorResponse {
   detail?: string;
   message?: string;
+  error?: {
+    code?: string;
+    message?: string;
+  };
 }
 
 /** Normalized error thrown by the API client interceptors and service functions. */
@@ -43,7 +47,11 @@ export function normalizeError(error: AxiosError<BackendErrorResponse>): ApiErro
 
   const { status, statusText, data } = error.response;
   const backendMessage =
-    data?.detail ?? data?.message ?? statusText ?? "Unknown error";
+    data?.error?.message ??
+    data?.detail ??
+    data?.message ??
+    statusText ??
+    "Unknown error";
 
   return new ApiError(status, `Request failed: ${backendMessage}`, backendMessage);
 }

@@ -263,3 +263,129 @@ import 期间为了批量插入绕过 FK 检查,设了这个 role。它的副作
 | 日期 | 变更 | 作者 |
 |---|---|---|
 | 2026-08-01 | 首次走通;`sync_dev_to_prod.sh` 加 `normalized_entities` 两阶段合并 + `refresh-search-index` 子命令;写本 runbook | AI + maintainer |
+
+## 8. Neo4j 图谱同步（术语基线 + 文献证据）
+
+> **背景**: `sync_dev_to_prod.sh` 只同步 **PostgreSQL**。Neo4j 图谱是衍生数据，
+> 由 `terminology_entries` / `terminology_relationships` / 证据表派生而来，
+> 需要**单独**重建。每次 dev→prod 数据同步后，必须执行本节步骤，
+> 否则知识图谱页面会返回"无匹配节点"（旧版后端 400 / 新版后端空图）。
+
+### 8.1 同步范围
+
+| 层 | 数据源 | 同步脚本 | 备注 |
+|---|---|---|---|
+| **索引** | — | `ensure_neo4j_indexes.py` | 建 `display_name_lower` 等读路径索引，幂等 |
+| **术语基线** | `terminology_entries` + `terminology_relationships` | `seed_neo4j_terminology.py` | ~90K 节点（默认跳过 4M+ variant 行），幂等 MERGE |
+| **文献证据** | `run_evidence_items` + `evidence_entity_bindings` + `normalized_entities` | `backfill_neo4j_literature.py` | 按 processing_run 逐条回填，可选 |
+
+### 8.2 一键脚本 `sync_neo4j.sh`
+
+`scripts/sync_neo4j.sh` 封装了以上三步，推荐使用。
+
+```bash
+# 本地开发环境：仅术语基线（最常用）
+bash scripts/sync_neo4j.sh
+
+# 全量：术语基线 + 文献证据回填
+bash scripts/sync_neo4j.sh --with-literature
+
+# 清空现有节点后重建（首次部署或 schema 变更时）
+bash scripts/sync_neo4j.sh --clear
+
+# 含 variant 实体（4M+ 行，很慢，通常不需要）
+bash scripts/sync_neo4j.sh --include-variants
+
+# 自定义批量大小 + 干跑
+bash scripts/sync_neo4j.sh --batch-size 2000 --dry-run
+```
+
+脚本使用后端的分层配置（`backend/config/` + 环境变量覆盖），
+通过 `ENVIRONMENT` 环境变量选择目标环境。日志写入 `logs/neo4j_sync_*.log`。
+
+### 8.3 生产环境执行步骤
+
+生产环境的 Neo4j 运行在 `backend-host` docker compose 里，
+有两种执行方式：**SSH 隧道从本地跑**（推荐）或 **进容器跑**。
+
+#### 方式 A：SSH 隧道 + 本地 uv（推荐，无需在服务器装 Python）
+
+```bash
+# 开隧道：本地 17687 → 服务器上的 neo4j bolt，5432 → postgres
+ssh -L 17687:127.0.0.1:7687 -L 15432:127.0.0.1:5432 <USER>@<PROD_SERVER>
+
+# 另开终端
+cd /home/yangzs/Projects/01_ACMG_Lingua
+
+# 用生产环境配置 + 隧道端口运行
+NEO4J_URI=bolt://localhost:17687 \
+NEO4J_PASSWORD='<prod-neo4j-password>' \
+POSTGRES_HOST=127.0.0.1 \
+POSTGRES_PORT=15432 \
+POSTGRES_DB=lingua_seeker \
+POSTGRES_USER=lingua_seeker \
+POSTGRES_PASSWORD='<prod-postgres-password>' \
+POSTGRES_SCHEMA=lingua_seeker \
+ENVIRONMENT=production \
+  bash scripts/sync_neo4j.sh
+```
+
+从 `deploy/compose/backend-host/.env` 或 `backend/config/vault/production.yaml` 取密码。
+
+#### 方式 B：在生产服务器的 backend 容器内运行
+
+适用于服务器上已挂载脚本且容器内有 uv 的场景。
+
+```bash
+# 在服务器上
+cd /opt/lingua-seeker  # 或对应部署路径
+docker compose -f deploy/compose/backend-host/docker-compose.yml exec backend \
+  bash -c 'cd /app && uv run python scripts/seed_neo4j_terminology.py'
+```
+
+> 注：如果后端镜像里没有包含 `scripts/` 目录，
+> 推荐用方式 A（SSH 隧道），因为更简单且不需要改镜像。
+
+### 8.4 验证
+
+同步完成后，通过两个方式验证：
+
+```bash
+# 1. 检查索引是否齐全
+cd backend && uv run python ../scripts/check_neo4j_indexes.py
+
+# 2. 调用 API 验证（用生产域名）
+curl -s -H "X-API-Key: <key>" \
+  "https://genemed.tech/linguaseeker/api/v1/graphrag/graph?gene_symbol=EGFR&hops=1&mode=full&limit=10" \
+  | python -m json.tool
+```
+
+成功标志：返回 `200` 且 `nodes` 数组非空（或新版后端返回空数组但非 400）。
+
+### 8.5 与 PostgreSQL 同步的顺序关系
+
+推荐顺序：
+
+```
+PostgreSQL 同步 → Neo4j 术语基线同步 → （可选）文献证据回填
+```
+
+原因：Neo4j 数据完全由 PostgreSQL 派生，PostgreSQL 必须先有数据。
+如果只同步了术语表（`terminology_entries` / `terminology_relationships`），
+跑 `sync_neo4j.sh` 不带 `--with-literature` 即可。
+
+### 8.6 常见问题
+
+| 症状 | 原因 | 解决 |
+|---|---|---|
+| `/graphrag/graph` 返回 400 "No matching nodes" | Neo4j 里没有对应实体节点 | 跑 `sync_neo4j.sh` 重建术语基线 |
+| 只有基因/疾病节点，没有文献证据节点 | 没跑文献回填 | 加 `--with-literature` |
+| `ServiceUnavailable` / `Connection refused` | Neo4j 没起来或端口不对 | 检查容器状态 / 隧道是否建立 |
+| 内存不足（OOM） | 一次性导入太多 | 调小 `--batch-size`（默认 1000） |
+| `uv: command not found` | 运行环境没装 uv | 用 SSH 隧道方式从本地跑 |
+
+## 9. 变更历史
+
+| 日期 | 变更 | 作者 |
+|---|---|---|
+| 2026-08-05 | 新增 §8 Neo4j 图谱同步章节 + `sync_neo4j.sh` 一键脚本 | AI + maintainer |

@@ -71,3 +71,19 @@ export function readCachedKnowledgeGraph(
     cacheScope,
   );
 }
+
+/**
+ * True when the backend reports that no nodes matched the query.
+ *
+ * Older backends return 400 for an empty result set; treat that as an empty
+ * graph so the explorer shows its empty state instead of an error card.
+ */
+export function isKnowledgeGraphNoMatchError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { backendMessage?: unknown; status?: unknown };
+  return (
+    candidate.status === 400 &&
+    typeof candidate.backendMessage === "string" &&
+    /no matching nodes/i.test(candidate.backendMessage)
+  );
+}

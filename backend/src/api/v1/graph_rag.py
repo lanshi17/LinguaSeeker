@@ -135,13 +135,8 @@ async def get_knowledge_graph(
     else:
         subgraph = SubgraphContext()
 
-    if not subgraph.nodes:
-        raise HTTPException(
-            status_code=400,
-            detail="No matching nodes found for the provided entities",
-        )
-
-    subgraph = _project_visible_biomedical_subgraph(subgraph)
+    if subgraph.nodes:
+        subgraph = _project_visible_biomedical_subgraph(subgraph)
 
     return _serialize_subgraph(subgraph)
 

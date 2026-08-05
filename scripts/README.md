@@ -32,6 +32,7 @@ scripts/
 ├── archive/                            已归档的一次性脚本（见下方"归档脚本"）
 ├── backfill_neo4j_literature.py          从 PostgreSQL 回填历史文献证据到 Neo4j
 ├── seed_neo4j_terminology.py             播种 Neo4j 术语知识图谱
+├── sync_neo4j.sh                       一键同步 Neo4j（索引 + 术语基线 + 可选文献回填）
 ├── check_neo4j_indexes.py                检查 Neo4j 索引状态
 ├── refresh_business_read_models.py       刷新业务读模型
 ├── reset_lingua_seeker_business_results.sql  重置业务结果 SQL
@@ -141,6 +142,7 @@ cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --json repor
 | `backfill_neo4j_literature.py` | 从 PostgreSQL 回填历史文献证据到 Neo4j |
 | `seed_neo4j_terminology.py` | 播种 Neo4j 术语知识图谱 |
 | `check_neo4j_indexes.py` | 检查 Neo4j 索引状态 |
+| `sync_neo4j.sh` | 一键同步：建索引 + 术语基线种子 + 可选文献回填（幂等） |
 
 ### 数据同步脚本
 

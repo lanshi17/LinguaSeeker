@@ -308,11 +308,7 @@ const en = {
   "evidenceDb.title": "Evidence Database",
   "evidenceDb.description":
     "Browse variant evidence organized by mutation identifier",
-  "evidenceDb.hero.variants": "Variants",
-  "evidenceDb.hero.evidenceGroups": "Evidence Groups",
-  "evidenceDb.hero.literature": "Literature",
-  "evidenceDb.hero.confidence": "Confidence",
-
+  
   // ── Evidence DB — VariantIndexView ──
   "evidenceDb.class.pathogenic": "Pathogenic",
   "evidenceDb.class.likelyPathogenic": "Likely Pathogenic",
@@ -920,6 +916,8 @@ const en = {
   "graphRag.exploreCounts": "{nodes} nodes \u00b7 {edges} relations",
   "graphRag.exampleHint":
     "Showing an example graph for {gene}. Search any entity above to explore your own.",
+  "graphRag.demoBadge": "Demo data",
+  "graphRag.demoHint": "Sample graph shown while loading or when the backend graph is empty. Real data replaces it automatically.",
   "graphRag.detailTitle": "Entity details",
   "graphRag.detailType": "Type",
   "graphRag.detailName": "Name",

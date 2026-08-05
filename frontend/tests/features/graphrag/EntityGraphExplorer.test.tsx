@@ -140,6 +140,22 @@ describe("EntityGraphExplorer", () => {
     expect(screen.queryByText("graphRag.exploreLoading")).not.toBeInTheDocument();
   });
 
+  it("treats a backend no-match error as an empty graph", () => {
+    useKnowledgeGraph.mockReturnValue({
+      data: undefined,
+      isFetching: false,
+      error: {
+        status: 400,
+        backendMessage: "No matching nodes found for the provided entities",
+      },
+    });
+
+    renderExplorer();
+
+    expect(screen.getByText("graphRag.exploreEmpty")).toBeInTheDocument();
+    expect(screen.queryByText(/^graphRag\.error/)).not.toBeInTheDocument();
+  });
+
   it("uses a deep-link entity on the first query instead of the example", () => {
     useKnowledgeGraph.mockReturnValue({
       data: undefined,

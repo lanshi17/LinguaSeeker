@@ -8,16 +8,22 @@ import {
   fetchKnowledgeGraph,
   readCachedKnowledgeGraph,
 } from "@/features/graphrag/services/graphRag";
+import { demoKnowledgeGraph } from "@/features/graphrag/services/demoGraph";
 import type { KnowledgeGraph } from "@/features/graphrag/types/graphRag";
 
 vi.mock("@/features/auth/hooks/useAuthAccount", () => ({
   useAccountCacheScope: () => ({ isReady: true, scope: "public" }),
 }));
 
-vi.mock("@/features/graphrag/services/graphRag", () => ({
-  fetchKnowledgeGraph: vi.fn(),
-  readCachedKnowledgeGraph: vi.fn(),
-}));
+vi.mock("@/features/graphrag/services/graphRag", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/features/graphrag/services/graphRag")>();
+  return {
+    ...actual,
+    fetchKnowledgeGraph: vi.fn(),
+    readCachedKnowledgeGraph: vi.fn(),
+  };
+});
 
 const mockedFetchKnowledgeGraph = vi.mocked(fetchKnowledgeGraph);
 const mockedReadCachedKnowledgeGraph = vi.mocked(readCachedKnowledgeGraph);
@@ -61,7 +67,9 @@ describe("useKnowledgeGraph", () => {
       { wrapper },
     );
 
+    // Cached data is real (has nodes), so isDemo is false.
     expect(result.current.data?.nodes[0]?.display_name).toBe("EGFR-cached");
+    expect(result.current.isDemo).toBe(false);
     expect(result.current.isFetching).toBe(true);
     expect(mockedFetchKnowledgeGraph).toHaveBeenCalledWith(
       expect.objectContaining({ geneSymbol: "EGFR" }),
@@ -75,6 +83,84 @@ describe("useKnowledgeGraph", () => {
     await waitFor(() => {
       expect(result.current.data?.nodes[0]?.display_name).toBe("EGFR-fresh");
     });
+    expect(result.current.isDemo).toBe(false);
     expect(result.current.isFetching).toBe(false);
+  });
+
+  it("falls back to demo graph when the backend returns an empty graph", async () => {
+    mockedReadCachedKnowledgeGraph.mockReturnValue(undefined);
+    mockedFetchKnowledgeGraph.mockResolvedValue({ nodes: [], edges: [] });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    const { result } = renderHook(
+      () => useKnowledgeGraph({ geneSymbol: "EGFR" }),
+      { wrapper },
+    );
+
+    await waitFor(() => {
+      expect(result.current.isFetching).toBe(false);
+    });
+
+    expect(result.current.isDemo).toBe(true);
+    expect(result.current.data).toBe(demoKnowledgeGraph);
+    expect(result.current.data?.nodes.length).toBeGreaterThan(0);
+  });
+
+  it("falls back to demo graph on a no-match 400 and does not retry", async () => {
+    mockedFetchKnowledgeGraph.mockRejectedValue({
+      status: 400,
+      backendMessage: "No matching nodes found for the provided entities",
+    });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retryDelay: 50 } },
+    });
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    const { result } = renderHook(
+      () => useKnowledgeGraph({ geneSymbol: "EGFR" }),
+      { wrapper },
+    );
+
+    await waitFor(() => {
+      expect(result.current.isPending).toBe(false);
+    });
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    expect(mockedFetchKnowledgeGraph).toHaveBeenCalledTimes(1);
+    expect(result.current.isDemo).toBe(true);
+    expect(result.current.data).toBe(demoKnowledgeGraph);
+    expect(result.current.error).toMatchObject({
+      status: 400,
+      backendMessage: "No matching nodes found for the provided entities",
+    });
+  });
+
+  it("keeps isDemo false when a real (non-empty) backend graph arrives", async () => {
+    mockedFetchKnowledgeGraph.mockResolvedValue(graph("BRCA1"));
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    const { result } = renderHook(
+      () => useKnowledgeGraph({ geneSymbol: "BRCA1" }),
+      { wrapper },
+    );
+
+    await waitFor(() => {
+      expect(result.current.isFetching).toBe(false);
+    });
+
+    expect(result.current.isDemo).toBe(false);
+    expect(result.current.data?.nodes[0]?.display_name).toBe("BRCA1");
   });
 });

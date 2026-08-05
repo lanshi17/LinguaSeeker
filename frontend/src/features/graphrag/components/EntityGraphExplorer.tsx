@@ -1,9 +1,22 @@
 import { useI18n } from "@/lib/i18n";
 import { SearchOutlined } from "@ant-design/icons";
-import { Button, Card, Col, Empty, Form, Input, Row, Spin, Typography } from "antd";
+import {
+  Tag,
+  Button,
+  Card,
+  Col,
+  Empty,
+  Form,
+  Input,
+  Row,
+  Spin,
+  Tooltip,
+  Typography,
+} from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useKnowledgeGraph } from "../hooks/useKnowledgeGraph";
+import { isKnowledgeGraphNoMatchError } from "../services/graphRag";
 import { KnowledgeGraphCanvas } from "./KnowledgeGraphCanvas";
 import { EntityDetailDrawer } from "./EntityDetailDrawer";
 import type { GraphNode } from "../types/graphRag";
@@ -39,6 +52,10 @@ interface ExplorerQuery {
  * subgraph, where each gene-disease-variant relation is bridged by the
  * evidence documents that support it. On first load (no deep-link params) it
  * shows an example graph so the workspace is never empty.
+ *
+ * When the backend hasn't returned yet, returned an empty graph, or hit a
+ * "no matching nodes" 400, the canvas falls back to a built-in demo graph so
+ * the page never looks empty. A "Demo data" badge makes that transparent.
  */
 export function EntityGraphExplorer() {
   const { t } = useI18n();
@@ -85,7 +102,7 @@ export function EntityGraphExplorer() {
     query.geneSymbol || query.diseaseName || query.variantHgvsP || query.phenotype,
   );
 
-  const { data, isFetching, isPending, error } = useKnowledgeGraph({
+  const { data, isDemo, isFetching, isPending, error } = useKnowledgeGraph({
     ...query,
     mode: "full",
     enabled: hasQuery,
@@ -105,6 +122,7 @@ export function EntityGraphExplorer() {
   const nodeCount = data?.nodes.length ?? 0;
   const edgeCount = data?.edges.length ?? 0;
   const hasGraph = nodeCount > 0;
+  const noMatchError = isKnowledgeGraphNoMatchError(error);
 
   const graphNodes = data?.nodes;
   const handleNodeClick = useCallback(
@@ -112,6 +130,19 @@ export function EntityGraphExplorer() {
       setSelectedNode(graphNodes?.find((n) => n.node_id === nodeId) ?? null);
     },
     [graphNodes],
+  );
+
+  const graphTitle = (
+    <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      {t("graphRag.graphTitle")}
+      {isDemo && (
+        <Tooltip title={t("graphRag.demoHint")}>
+          <Tag color="warning" style={{ margin: 0 }}>
+            {t("graphRag.demoBadge")}
+          </Tag>
+        </Tooltip>
+      )}
+    </span>
   );
 
   return (
@@ -174,7 +205,7 @@ export function EntityGraphExplorer() {
         </div>
       )}
 
-      {hasQuery && error && !hasGraph && (
+      {hasQuery && error && !hasGraph && !noMatchError && !isDemo && (
         <Card>
           <Text type="danger">
             {t("graphRag.error")}: {error.message}
@@ -182,7 +213,7 @@ export function EntityGraphExplorer() {
         </Card>
       )}
 
-      {hasQuery && !isFetching && !error && !hasGraph && (
+      {hasQuery && !isFetching && !hasGraph && (noMatchError || !error) && !isDemo && (
         <Card>
           <Empty description={t("graphRag.exploreEmpty")} />
         </Card>
@@ -190,7 +221,7 @@ export function EntityGraphExplorer() {
 
       {hasQuery && data && hasGraph && (
         <Card
-          title={t("graphRag.graphTitle")}
+          title={graphTitle}
           extra={
             <Text type="secondary">
               {t("graphRag.exploreCounts", { nodes: nodeCount, edges: edgeCount })}

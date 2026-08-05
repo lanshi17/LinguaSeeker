@@ -298,11 +298,7 @@ const zh: Record<EnKeys, string> = {
   // ── 证据数据库 ──
   "evidenceDb.title": "证据数据库",
   "evidenceDb.description": "按突变标识符浏览变异证据",
-  "evidenceDb.hero.variants": "变异",
-  "evidenceDb.hero.evidenceGroups": "证据组",
-  "evidenceDb.hero.literature": "文献",
-  "evidenceDb.hero.confidence": "置信度",
-
+  
   // ── 证据数据库 — VariantIndexView ──
   "evidenceDb.class.pathogenic": "致病",
   "evidenceDb.class.likelyPathogenic": "疑似致病",
@@ -857,6 +853,8 @@ const zh: Record<EnKeys, string> = {
   "graphRag.exploreEmpty": "未找到与所给实体匹配的关系。",
   "graphRag.exploreCounts": "{nodes} 个节点 · {edges} 条关系",
   "graphRag.exampleHint": "当前展示 {gene} 的示例图谱。在上方检索任意实体即可浏览你关心的关系。",
+  "graphRag.demoBadge": "示例数据",
+  "graphRag.demoHint": "后端响应前展示示例图谱，真实数据加载完成后将自动替换。",
   "graphRag.detailTitle": "实体详情",
   "graphRag.detailType": "类型",
   "graphRag.detailName": "名称",

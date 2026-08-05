@@ -132,3 +132,31 @@ async def test_get_knowledge_graph_returns_empty_graph_without_visible_edges() -
         limit=200,
     )
     repository.get_subgraph.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_get_knowledge_graph_returns_empty_graph_when_no_seed_nodes_match() -> None:
+    repository = MagicMock()
+    repository.find_node_ids_by_name = AsyncMock(return_value=[])
+    repository.get_evidence_bridge_subgraph = AsyncMock(
+        return_value=SubgraphContext(),
+    )
+
+    response = await get_knowledge_graph(
+        gene_symbol="EGFR",
+        disease_name=None,
+        variant_hgvs_p=None,
+        phenotype=None,
+        hops=2,
+        mode="full",
+        limit=200,
+        repository=repository,
+        account=MagicMock(),
+    )
+
+    assert response.nodes == []
+    assert response.edges == []
+    repository.get_biomedical_subgraph.assert_not_called()
+    repository.get_evidence_bridge_subgraph.assert_awaited_once_with(
+        gene_names=["EGFR"],
+    )

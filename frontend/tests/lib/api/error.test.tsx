@@ -28,4 +28,36 @@ describe("normalizeError", () => {
       expect(normalizedTimeout.message).not.toBe(normalizedNetwork.message);
     },
   );
+
+  it("extracts the message from the structured backend error envelope", () => {
+    const backendError = new AxiosError(
+      "Request failed with status code 400",
+      "ERR_BAD_REQUEST",
+      undefined,
+      undefined,
+      {
+        data: {
+          error: {
+            code: "BAD_REQUEST",
+            message: "No matching nodes found for the provided entities",
+          },
+          request_id: "test-request-id",
+        },
+        status: 400,
+        statusText: "Bad Request",
+        headers: {},
+        config: {},
+      } as never,
+    );
+
+    const normalized = normalizeError(backendError);
+
+    expect(normalized).toMatchObject({
+      status: 400,
+      backendMessage: "No matching nodes found for the provided entities",
+    });
+    expect(normalized.message).toBe(
+      "Request failed: No matching nodes found for the provided entities",
+    );
+  });
 });
