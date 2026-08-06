@@ -246,7 +246,7 @@ export function VariantIndexView({ activeClassification, onClearClassification }
     page,
     pageSize,
     stats,
-    allEntries,
+    candidates,
     isLoading,
     isFetching,
     error,
@@ -372,30 +372,24 @@ export function VariantIndexView({ activeClassification, onClearClassification }
   const allPageSelected = effectiveItems.length > 0 && selectedSlugs.size === effectiveItems.length;
   const anySelected = selectedSlugs.size > 0;
 
-  // Build candidate lists from all data for autocomplete
+  // Build candidate lists from server-provided distinct values for autocomplete.
+  // The backend returns the full pre-filter candidate sets; we filter them
+  // client-side by the current search text (the lists are small enough that
+  // shipping them whole is cheaper than a per-keystroke round-trip).
   const { geneCandidates, variantCandidates, diseaseCandidates } = useMemo(() => {
-    const genes = new Set<string>();
-    const variants = new Set<string>();
-    const diseases = new Set<string>();
-    for (const e of allEntries) {
-      if (e.gene) genes.add(e.gene);
-      if (e.variant) variants.add(e.variant);
-      if (e.disease) diseases.add(e.disease);
-    }
-    const toOptions = (set: Set<string>, filterText: string) => {
+    const toOptions = (values: string[], filterText: string) => {
       const q = filterText.toLowerCase();
-      return [...set]
+      return values
         .filter((v) => v.toLowerCase().includes(q))
-        .sort()
         .slice(0, 20)
         .map((v) => ({ value: v, label: v }));
     };
     return {
-      geneCandidates: toOptions(genes, searchText),
-      variantCandidates: toOptions(variants, searchText),
-      diseaseCandidates: toOptions(diseases, filters.disease ?? ""),
+      geneCandidates: toOptions(candidates.genes, searchText),
+      variantCandidates: toOptions(candidates.variants, searchText),
+      diseaseCandidates: toOptions(candidates.diseases, filters.disease ?? ""),
     };
-  }, [allEntries, searchText, filters.disease]);
+  }, [candidates, searchText, filters.disease]);
 
   // Merge gene + variant candidates for the unified search field
   const searchCandidates = useMemo(() => {
@@ -642,10 +636,10 @@ export function VariantIndexView({ activeClassification, onClearClassification }
         }}
       >
         {[
-          { label: labels.uniqueVariants, value: String(stats.totalVariants) },
-          { label: labels.evidenceGroups, value: String(stats.totalEvidenceGroups) },
-          { label: labels.literatureSources, value: String(stats.totalLiterature) },
-          { label: labels.avgConfidence, value: formatConfidencePercent(stats.avgConfidence) },
+          { label: labels.uniqueVariants, value: String(stats?.totalVariants ?? 0) },
+          { label: labels.evidenceGroups, value: String(stats?.totalEvidenceGroups ?? 0) },
+          { label: labels.literatureSources, value: String(stats?.totalLiterature ?? 0) },
+          { label: labels.avgConfidence, value: formatConfidencePercent(stats?.avgConfidence ?? 0) },
         ].map((s, i) => (
           <div
             key={s.label}

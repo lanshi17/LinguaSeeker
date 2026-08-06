@@ -454,3 +454,85 @@ class LiteratureProfileDetailResponse(BaseModel):
     total_evidence_fields: int = 0
     found_count: int = 0
     not_found_count: int = 0
+
+
+class ReviewProgressResponse(BaseModel):
+    """Aggregate review-progress counts for a variant row."""
+
+    total: int = 0
+    reviewed: int = 0
+    approved: int = 0
+    corrected: int = 0
+    rejected: int = 0
+    provisional: int = 0
+    reviewed_percent: float = 0.0
+
+
+class GroupDocumentPair(BaseModel):
+    """One (group_id, source_document_id) pair backing a variant row."""
+
+    group_id: str
+    source_document_id: str
+
+
+class VariantIndexEntryResponse(BaseModel):
+    """A single variant-centric row in the variant index.
+
+    Server-side aggregation of one or more evidence groups sharing a
+    ``gene:variant[:disease]`` slug. Mirrors the TypeScript
+    ``VariantIndexEntry`` interface.
+    """
+
+    variant_slug: str
+    gene: str
+    variant: str
+    disease: str
+    classification: str
+    classification_level: str
+    evidence_group_count: int
+    literature_count: int
+    avg_confidence: float
+    field_count: int
+    category_distribution: dict[str, int] = Field(default_factory=dict)
+    review_status: str
+    review_progress: ReviewProgressResponse
+    created_at: str | None = None
+    group_ids: list[str] = Field(default_factory=list)
+    source_document_ids: list[str] = Field(default_factory=list)
+    source_languages: list[str] = Field(default_factory=list)
+    group_document_pairs: list[GroupDocumentPair] = Field(default_factory=list)
+    representative: EvidenceSearchResult
+
+
+class VariantSearchStatsResponse(BaseModel):
+    """Aggregate stats across the full (pre-filter) variant set."""
+
+    total_variants: int
+    total_evidence_groups: int
+    total_literature: int
+    avg_confidence: float
+    classification_distribution: dict[str, int]
+
+
+class VariantSearchCandidatesResponse(BaseModel):
+    """Distinct gene/variant/disease values for autocomplete dropdowns."""
+
+    genes: list[str] = Field(default_factory=list)
+    variants: list[str] = Field(default_factory=list)
+    diseases: list[str] = Field(default_factory=list)
+
+
+class VariantSearchResponse(BaseModel):
+    """Response for GET /api/v1/evidence/variants.
+
+    Returns only the current page of variant rows plus pre-filter aggregate
+    stats and autocomplete candidates, so the browser never needs to download
+    the full evidence-group corpus.
+    """
+
+    items: list[VariantIndexEntryResponse]
+    total: int
+    page: int = 1
+    page_size: int = 24
+    stats: VariantSearchStatsResponse
+    candidates: VariantSearchCandidatesResponse

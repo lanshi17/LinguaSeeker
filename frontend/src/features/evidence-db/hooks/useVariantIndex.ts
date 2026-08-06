@@ -1,9 +1,8 @@
 
-import { useState, useCallback, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useCallback } from "react";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useAccountCacheScope } from "@/features/auth/hooks/useAuthAccount";
-import { fetchAllEvidence, readCachedAllEvidence } from "../services/variantDb";
-import { aggregateVariants, filterAndPaginateVariants } from "../utils/variantAggregation";
+import { fetchVariantIndex, readCachedVariantIndex } from "../services/variantDb";
 import type {
   ClassificationLevel,
   ReviewStatusFilter,
@@ -139,34 +138,27 @@ export function useVariantIndex() {
   const accountCache = useAccountCacheScope();
   const queryScope = accountCache.isReady ? accountCache.scope : "auth-pending";
 
-  // Fetch all evidence — we do client-side aggregation
+  // Server-side variant pagination: the backend aggregates evidence groups
+  // into variant rows and returns only the current page, plus pre-filter
+  // stats and autocomplete candidates. The query is keyed by the full filter
+  // state so changing filters/page/sort fetches a fresh page; previous-page
+  // data is kept as a placeholder to avoid a loading flash between pages.
   const query = useQuery({
-    queryKey: ["evidence-db", "all-evidence", queryScope],
+    queryKey: ["evidence-db", "variant-index", queryScope, filters],
     queryFn: () =>
-      fetchAllEvidence(
-        {},
-        { cacheScope: accountCache.scope, refresh: true },
-      ),
+      fetchVariantIndex(filters, { cacheScope: accountCache.scope }),
     enabled: accountCache.isReady,
     initialData: () =>
       accountCache.isReady
-        ? readCachedAllEvidence({}, accountCache.scope)
+        ? readCachedVariantIndex(filters, accountCache.scope)
         : undefined,
-    refetchOnMount: "always",
-    staleTime: 0,
+    placeholderData: keepPreviousData,
+    staleTime: 10 * 60 * 1000,
+    // initialData is treated as fresh by default; mark it stale so the
+    // cached view shown on mount is still background-refreshed from the
+    // backend, while a real response stays fresh for staleTime.
+    initialDataUpdatedAt: 0,
   });
-
-  // Aggregate into variant-centric entries
-  const allEntries = useMemo(
-    () => (query.data?.items ? aggregateVariants(query.data.items) : []),
-    [query.data],
-  );
-
-  // Apply filters and pagination
-  const variantData = useMemo(
-    () => filterAndPaginateVariants(allEntries, filters),
-    [allEntries, filters],
-  );
 
   const updateFilter = useCallback(
     <K extends keyof VariantIndexFilters>(key: K, value: VariantIndexFilters[K]) => {
@@ -197,10 +189,15 @@ export function useVariantIndex() {
   }, []);
 
   return {
-    ...variantData,
-    allEntries,
+    items: query.data?.items ?? [],
+    total: query.data?.total ?? 0,
+    page: query.data?.page ?? filters.page,
+    pageSize: query.data?.pageSize ?? filters.pageSize,
+    stats: query.data?.stats,
+    candidates: query.data?.candidates ?? { genes: [], variants: [], diseases: [] },
     isLoading: !accountCache.isReady || query.isLoading,
     isFetching: query.isFetching,
+    isPlaceholder: query.isPlaceholderData,
     error: accountCache.error ?? query.error,
     filters,
     updateFilter,

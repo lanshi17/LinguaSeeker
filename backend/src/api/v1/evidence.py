@@ -24,6 +24,7 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     LiteratureProfileSummary,
     LiteratureSearchResponse,
     PatchResultResponse,
+    VariantSearchResponse,
 )
 from src.core.visualize_evidence_with_expert_in_loop.search_service import SearchService
 from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
@@ -115,6 +116,56 @@ async def search_evidence(
         disease=disease,
         pmid=pmid,
         doi=doi,
+        page=page,
+        page_size=page_size,
+        owner_user_id=account.owner_user_id,
+    )
+
+
+@router.get("/variants", response_model=VariantSearchResponse)
+async def search_variants(
+    session: AsyncSession = Depends(get_db_session),
+    account: AuthContext = Depends(get_current_account),
+    gene: str | None = Query(None, description="Filter variants by gene (partial, case-insensitive)"),
+    variant: str | None = Query(None, description="Filter variants by variant site (partial, case-insensitive)"),
+    disease: str | None = Query(None, description="Filter variants by disease (partial, case-insensitive)"),
+    classification: str | None = Query(
+        None,
+        description="Filter by classification level (pathogenic|likely_pathogenic|uncertain|likely_benign|benign)",
+    ),
+    review_status: str | None = Query(
+        None,
+        description="Filter by aggregate review status (provisional|approved|corrected|rejected)",
+    ),
+    source_language: str | None = Query(
+        None,
+        description="Filter by source language code (en|zh|ja|de|fr|ru)",
+    ),
+    sort_by: str | None = Query(
+        None,
+        description="Sort key (gene|variant|disease|classification|evidence|refs|confidence|updated)",
+    ),
+    sort_order: str | None = Query(None, description="Sort direction (asc|desc)"),
+    page: int = Query(1, ge=1, description="Page number (1-indexed)"),
+    page_size: int = Query(24, ge=1, le=200, description="Variants per page"),
+) -> VariantSearchResponse:
+    """List variant-centric rows with server-side aggregation and pagination.
+
+    Aggregates evidence groups by ``gene:variant[:disease]`` slug, applies
+    filters/sort, and returns only the current page plus pre-filter aggregate
+    stats and autocomplete candidates. Replaces the previous client-side flow
+    that downloaded the full evidence-group corpus.
+    """
+    service = SearchService(session)
+    return await service.search_variants(
+        gene=gene,
+        variant=variant,
+        disease=disease,
+        classification=classification,
+        review_status=review_status,
+        source_language=source_language,
+        sort_by=sort_by,
+        sort_order=sort_order,
         page=page,
         page_size=page_size,
         owner_user_id=account.owner_user_id,

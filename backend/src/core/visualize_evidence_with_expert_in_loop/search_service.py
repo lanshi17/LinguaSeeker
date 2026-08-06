@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -35,6 +36,17 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     EvidenceSearchResponse,
     EvidenceSearchResult,
     EvidenceTrackTrace,
+    GroupDocumentPair,
+    ReviewProgressResponse,
+    VariantIndexEntryResponse,
+    VariantSearchCandidatesResponse,
+    VariantSearchResponse,
+    VariantSearchStatsResponse,
+)
+from src.core.visualize_evidence_with_expert_in_loop.variant_aggregation import (
+    VariantIndexFilters as _VariantIndexFilters,
+    aggregate_variants,
+    filter_and_paginate_variants,
 )
 from src.dao.postgresql.models import (
     CanonicalEvidenceItem,
@@ -53,6 +65,12 @@ _VARIANT_FIELDS = (
 )
 _DISEASE_FIELDS = ("B.disease_diagnosis", "B.clinical_diagnosis", "B.hpo_terms")
 _CLASSIFICATION_FIELDS = ("J.authority_classification", "J.clinvar_assertion")
+
+# Page size used when fetching the full evidence-group corpus for server-side
+# variant aggregation. The corpus is small (~10^3 groups), so a single pass is
+# cheaper than paging; the value just needs to exceed the group count.
+_VARIANT_AGGREGATE_PAGE_SIZE = 1_000_000
+
 _TOKEN_BOUNDARY_CHARS = r"A-Za-z0-9_"
 _BODY_START_PATTERNS = (
     r"^［?摘要］?",
@@ -727,6 +745,41 @@ def _load_full_document_text(
     return None
 
 
+def _evidence_search_result_from_dict(row: dict[str, Any]) -> EvidenceSearchResult:
+    """Rebuild an ``EvidenceSearchResult`` from the dict shape produced by
+    ``variant_aggregation``. UUIDs and datetimes were serialized to strings
+    during aggregation (so lexicographic sort matches the TypeScript port); we
+    parse them back here for the typed API response."""
+    source_document_id = row.get("source_document_id")
+    canonical_evidence_id = row.get("canonical_evidence_id")
+    created_at_raw = row.get("created_at")
+    created_at: datetime | None = None
+    if created_at_raw:
+        try:
+            created_at = datetime.fromisoformat(str(created_at_raw))
+        except ValueError:
+            created_at = None
+    return EvidenceSearchResult(
+        group_id=row.get("group_id") or "",
+        source_document_id=UUID(str(source_document_id)) if source_document_id else UUID(int=0),
+        title=row.get("title"),
+        pmid=row.get("pmid"),
+        doi=row.get("doi"),
+        source_language=row.get("source_language"),
+        gene=row.get("gene"),
+        variant=row.get("variant"),
+        disease=row.get("disease"),
+        classification=row.get("classification"),
+        field_count=row.get("field_count") or 0,
+        avg_confidence=row.get("avg_confidence"),
+        review_status=row.get("review_status") or "provisional",
+        canonical_evidence_id=UUID(str(canonical_evidence_id)) if canonical_evidence_id else None,
+        created_at=created_at,
+        has_full_text=bool(row.get("has_full_text")),
+        has_translation=bool(row.get("has_translation")),
+    )
+
+
 class SearchService:
     """Search evidence cards grouped by group_id, pivoting field-level extractions."""
 
@@ -1068,6 +1121,113 @@ class SearchService:
             total=filtered_total if (pmid or doi) else total,
             page=page,
             page_size=page_size,
+        )
+
+    async def search_variants(
+        self,
+        *,
+        gene: str | None = None,
+        variant: str | None = None,
+        disease: str | None = None,
+        classification: str | None = None,
+        review_status: str | None = None,
+        source_language: str | None = None,
+        sort_by: str | None = None,
+        sort_order: str | None = None,
+        page: int = 1,
+        page_size: int = 24,
+        owner_user_id: UUID | None = None,
+    ) -> "VariantSearchResponse":
+        """Return a page of variant-centric rows with aggregate stats.
+
+        The variant index groups evidence rows by ``gene:variant[:disease]``
+        slug. Aggregation, filtering, sorting, and pagination all happen
+        server-side so the browser only receives the current page. The full
+        evidence-group corpus is fetched internally (no per-request cap) via
+        ``search_evidence`` and handed to the pure aggregation module.
+        """
+        # Fetch every evidence-group row in one shot. The corpus is small
+        # enough (~10^3 groups) that a single server-side pass is far cheaper
+        # than shipping the full set to the browser. Filters are applied at
+        # the variant level after aggregation, matching the previous
+        # client-side behaviour.
+        all_groups = await self.search_evidence(
+            page=1,
+            page_size=_VARIANT_AGGREGATE_PAGE_SIZE,
+            owner_user_id=owner_user_id,
+        )
+
+        entries = aggregate_variants(all_groups.items)
+        filters = _VariantIndexFilters(
+            gene=gene,
+            variant=variant,
+            disease=disease,
+            classification=classification,
+            review_status=review_status,
+            source_language=source_language,
+            sort_by=sort_by,
+            sort_order=sort_order or "desc",
+            page=max(page, 1),
+            page_size=max(page_size, 1),
+        )
+        data = filter_and_paginate_variants(entries, filters)
+
+        item_models = [
+            VariantIndexEntryResponse(
+                variant_slug=e.variant_slug,
+                gene=e.gene,
+                variant=e.variant,
+                disease=e.disease,
+                classification=e.classification,
+                classification_level=e.classification_level,
+                evidence_group_count=e.evidence_group_count,
+                literature_count=e.literature_count,
+                avg_confidence=e.avg_confidence,
+                field_count=e.field_count,
+                category_distribution=e.category_distribution,
+                review_status=e.review_status,
+                review_progress=ReviewProgressResponse(
+                    total=e.review_progress["total"],
+                    reviewed=e.review_progress["reviewed"],
+                    approved=e.review_progress["approved"],
+                    corrected=e.review_progress["corrected"],
+                    rejected=e.review_progress["rejected"],
+                    provisional=e.review_progress["provisional"],
+                    reviewed_percent=e.review_progress["reviewedPercent"],
+                ),
+                created_at=e.created_at,
+                group_ids=e.group_ids,
+                source_document_ids=e.source_document_ids,
+                source_languages=e.source_languages,
+                group_document_pairs=[
+                    GroupDocumentPair(
+                        group_id=p["groupId"],
+                        source_document_id=p["sourceDocumentId"],
+                    )
+                    for p in e.group_document_pairs
+                ],
+                representative=_evidence_search_result_from_dict(e.representative),
+            )
+            for e in data.items
+        ]
+
+        return VariantSearchResponse(
+            items=item_models,
+            total=data.total,
+            page=data.page,
+            page_size=data.page_size,
+            stats=VariantSearchStatsResponse(
+                total_variants=data.stats.total_variants,
+                total_evidence_groups=data.stats.total_evidence_groups,
+                total_literature=data.stats.total_literature,
+                avg_confidence=data.stats.avg_confidence,
+                classification_distribution=data.stats.classification_distribution,
+            ),
+            candidates=VariantSearchCandidatesResponse(
+                genes=data.candidates.genes,
+                variants=data.candidates.variants,
+                diseases=data.candidates.diseases,
+            ),
         )
 
     async def get_group_detail(

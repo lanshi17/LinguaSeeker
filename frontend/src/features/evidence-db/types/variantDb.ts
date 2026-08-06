@@ -49,19 +49,27 @@ export interface VariantIndexEntry {
   representative: EvidenceSearchResult;
 }
 
-/** L1: Paginated variant index response (client-side computed) */
+/** L1: Paginated variant index response (server-side computed) */
 export interface VariantIndexData {
   items: VariantIndexEntry[];
   total: number;
   page: number;
   pageSize: number;
-  /** Aggregate stats across all variants */
+  /** Aggregate stats across all variants (pre-filter) */
   stats: {
     totalVariants: number;
     totalEvidenceGroups: number;
     totalLiterature: number;
     avgConfidence: number;
     classificationDistribution: Record<ClassificationLevel, number>;
+  };
+  /** Distinct gene/variant/disease values for autocomplete dropdowns.
+   * Present on server-paginated responses; omitted from the legacy
+   * client-side ``filterAndPaginateVariants`` output. */
+  candidates?: {
+    genes: string[];
+    variants: string[];
+    diseases: string[];
   };
 }
 
