@@ -1,6 +1,6 @@
 # Lingua Seeker Manuscript Draft (GIM)
 
-> **Status:** complete draft — all results sections filled with real ablation data
+> **Status:** complete draft — statistics, references verified against Crossref, architecture figure added
 > **Target journal:** Genetics in Medicine (GIM), Original Research Article
 > **Last updated:** 2026-08-12
 
@@ -22,7 +22,7 @@ Working title (alternative): Lingua Seeker: Quantifying the Value of Multilingua
 
 **Methods:** We developed Lingua Seeker, a multi-agent web server implementing a four-phase pipeline (multi-source literature acquisition → cross-lingual dual-track evidence extraction → entity standardization → expert-in-the-loop review). Using a gold-standard dataset of 30 ClinGen/ClinVar-curated variants with paired English articles and system-generated Chinese translations, we ran each entry twice: English-only and dual-track (English + Chinese) evidence extraction. Outcomes were (i) evidence-item yield and (ii) field-level match against the gold-standard ACMG evidence fields.
 
-**Results:** Dual-track processing recovered a union of 17.24 unique evidence items per entry versus 15.9 for the English track alone (+3.62 items, +22.8%), with 86.2% of entries (25/29) gaining at least one evidence item and 44.8% (13/29) yielding fields supported only by the Chinese track. Against the eight-field gold standard, mean matched fields were unchanged (3.57/8 for both modes; 0.0% average improvement), yet 3/30 entries (10%) gained at least one field match (variant type, mode of inheritance, gene symbol), 2/30 lost one, and 1/30 traded one for another.
+**Results:** The Chinese track contributed a mean of 3.62 additional evidence items per entry that were not found by the English track alone (+22.8% over the English-track mean of 15.9 items), with 86.2% of entries (25/29) gaining at least one evidence item and 44.8% (13/29) yielding fields supported only by the Chinese track. Against the eight-field gold standard, mean matched fields were unchanged (3.57/8 for both modes; 0.0% average improvement), yet 3/30 entries (10%) gained at least one field match (variant type, mode of inheritance, gene symbol), 2/30 lost one, and 1/30 traded one for another.
 
 **Conclusion:** Cross-lingual processing contributes complementary, clinically relevant evidence for a substantial minority of variants without degrading accuracy on average, suggesting value for variants whose evidence base includes non-English literature. Field-level benefit is diluted by an English-centric gold standard; evidence-level yield is the more sensitive measure of multilingual contribution.
 
@@ -42,7 +42,7 @@ Large language models (LLMs) with multi-agent orchestration offer a path toward 
 
 ### 2.1 System architecture
 
-Lingua Seeker is a multi-agent web server built on an orchestrated vertical slice architecture. A LangGraph orchestrator coordinates four phases: (1) multi-source literature acquisition from 15+ providers (Crossref, PubMed, OpenAlex, EuropePMC, PMC, DOAJ, J-STAGE, Unpaywall, and web scrapers for CyberLeninka, Hans Publishers, PubScholar, KoreaScience, ChinaXiv, Redalyc) with MinerU document parsing (PDF → markdown with tables, figures, and layout coordinates), accelerated by Rust PyO3 native extensions for HTTP I/O; (2) cross-lingual dual-track evidence extraction (details below); (3) entity standardization against HGNC, OMIM, HPO, and ClinVar using layered exact and vector-similarity matching (BAAI bge-m3 embeddings + pgvector); (4) an expert-in-the-loop review workbench with bidirectional source grounding and a delta audit log. Pipeline state is managed as typed Pydantic contracts; LLM calls are routed to task-appropriate models (general-purpose, reasoning, and multimodal roles) via OpenAI-compatible APIs.
+Lingua Seeker is a multi-agent web server built on an orchestrated vertical slice architecture (**Figure 5**). A LangGraph orchestrator coordinates four phases: (1) multi-source literature acquisition from 15+ providers (Crossref, PubMed, OpenAlex, EuropePMC, PMC, DOAJ, J-STAGE, Unpaywall, and web scrapers for CyberLeninka, Hans Publishers, PubScholar, KoreaScience, ChinaXiv, Redalyc) with MinerU document parsing (PDF → markdown with tables, figures, and layout coordinates), accelerated by Rust PyO3 native extensions for HTTP I/O; (2) cross-lingual dual-track evidence extraction (details below); (3) entity standardization against HGNC, OMIM, HPO, and ClinVar using layered exact and vector-similarity matching (BAAI bge-m3 embeddings + pgvector); (4) an expert-in-the-loop review workbench with bidirectional source grounding and a delta audit log. Pipeline state is managed as typed Pydantic contracts; LLM calls are routed to task-appropriate models (general-purpose, reasoning, and multimodal roles) via OpenAI-compatible APIs.
 
 ### 2.2 Cross-lingual dual-track evidence extraction
 
@@ -64,11 +64,15 @@ All other parameters (models, prompts, field catalog) were identical. Runs execu
 
 Two outcome families were measured:
 
-1. **Evidence-item yield (multilingual contribution).** Within dual-track runs, we compared the English track alone against the union of English + Chinese tracks, counting evidence items with status "found" in the phase-2 extraction results: mean items per entry (EN track vs combined unique), per-entry gain, and the proportion of entries with (a) any gain and (b) at least one field whose evidence exists only in the Chinese track (ZH-only fields).
+1. **Evidence-item yield (multilingual contribution).** Within dual-track runs, we counted evidence items with status "found" in each track's extraction result. Three quantities are reported: (a) **EN-track items** — found items in the English track; (b) **ZH-only items** — items found by the Chinese track for which no equivalent was found by the English track; these are the marginal contribution of cross-lingual processing and are reported both as a mean per entry and relative to the EN-track mean; (c) **combined unique fields** — the size of the field-identifier union across both tracks after deduplication (a field-level count, distinct from item-level counts in a and b).
 
 2. **Field-level match (gold-standard ablation).** For both modes, each of the eight expected fields was scored matched/unmatched against the gold-standard value; the outcome was the count of matched fields per entry (0–8), plus the direction of per-field changes (EN missed/dual found; EN found/dual missed).
 
-### 2.6 LLM configuration
+### 2.7 Statistical analysis
+
+Per-entry ZH-only item gains (29 valid entries; nonnegative by construction, with zero-mass) were tested against zero with a one-sided Wilcoxon signed-rank test; the matched-pairs rank-biserial correlation $r$ is reported as an effect size. Per-entry matched-field counts (30 entries) and final-output evidence-item counts were compared between modes with two-sided Wilcoxon signed-rank tests on the non-zero differences. Discordant field pairs across the 30 entries × 8 fields (fields matched under exactly one mode) were tested with McNemar's exact binomial test. Ninety-five percent confidence intervals (CIs) were computed with the Wilson score method for proportions and with Student's t distribution for mean differences. Analyses used SciPy 1.17 (Python 3.12); analysis script: `benchmark/analysis/gim_statistics.py` (reproducible from the committed reports).
+
+### 2.8 LLM configuration
 
 General-purpose, reasoning, and multimodal LLM roles were configured independently and routed by task (extraction/translation vs. verification vs. figure/pedigree parsing). All models were accessed through OpenAI-compatible endpoints; no model was shared across roles. The specific model identifiers are deployment-configurable and listed in the code repository configuration.
 
@@ -76,15 +80,17 @@ General-purpose, reasoning, and multimodal LLM roles were configured independent
 
 ### 3.1 Evidence-item yield: multilingual processing adds complementary evidence
 
-Across 29 valid dual-track runs (one entry excluded for a transient failure), the Chinese track contributed evidence beyond the English track for the large majority of entries (**Figure 1**, **Figure 3**). The English track found a mean of 15.9 evidence items per entry; the combined unique set was 17.24 items per entry — a mean gain of +3.62 items (+22.8%). Gains occurred in 25/29 entries (86.2%) and were never negative at the union level (the union is by construction a superset of the English track). 13/29 entries (44.8%) had at least one field whose evidence was found **only** in the Chinese track.
+Across 29 valid dual-track runs (one entry excluded for a transient pipeline failure), the Chinese track contributed evidence beyond the English track for the large majority of entries (**Figure 1**, **Figure 3**). The English track found a mean of 15.9 evidence items per entry; the Chinese track contributed a mean of 3.62 additional items per entry that were found by no other track — a +22.8% increase over the English-track mean (one-sided Wilcoxon signed-rank test, p = 5.9 × 10⁻⁶; matched-pairs rank-biserial r = 0.49; 95% CI of the mean gain 2.62–4.62 items). Gains occurred in 25/29 entries (86.2%; 95% CI 69.4–94.5%). After merging, the combined output contained a mean of 17.24 unique evidence fields per entry (field-identifier union across tracks).
 
-**Figure 1.** Paired per-entry comparison of evidence items found by the English-only track vs. the combined multilingual (EN+ZH) union. Green bars: combined unique count; blue bars: English track; red connectors: entries with gain. Mean 15.9 → 17.2 items/entry (+22.8%).
+13/29 entries (44.8%; 95% CI 28.4–62.5%) had at least one field whose evidence was found **only** in the Chinese track.
 
-**Figure 3.** Distribution of per-entry multilingual evidence gain (combined unique minus English track). Positive gains dominate (25/29 entries); no entry lost items in the union.
+**Figure 1.** Paired per-entry comparison of evidence items found by the English-only track vs. the combined multilingual (EN+ZH) union. Green bars: combined unique fields; blue bars: English-track items; red connectors: entries with a ZH-only contribution. Mean EN 15.9 items/entry; mean ZH-only gain 3.62 items/entry (+22.8%).
+
+**Figure 3.** Distribution of per-entry multilingual evidence gain (ZH-only items). Positive gains dominate (25/29 entries); gains are nonnegative by construction (the gain metric counts items found only by the Chinese track).
 
 ### 3.2 Field-level benefit: which ACMG fields gain from the Chinese track
 
-The 25 ZH-only field instances across 13 entries span 14 field types (**Figure 2**). The most frequently affected fields were clinical phenotypes (3 entries), assay type (3), ClinVar assertion (2), HPO terms (2), age of onset (2), disease diagnosis (2), and de novo status (2); singleton gains occurred for mode of inheritance, inheritance source, contradiction type, case count, variant consequence class, functional domain/hotspot, and sex. Category B (disease/phenotype) and category C (clinical evidence) fields dominate, consistent with the hypothesis that Chinese-language clinical descriptions carry details — phenotypes, onset, assay context — that the English track under-extracts.
+The 23 ZH-only field instances across 13 entries span 14 field types (**Figure 2**). The most frequently affected fields were clinical phenotypes (3 entries), assay type (3), ClinVar assertion (2), HPO terms (2), age of onset (2), disease diagnosis (2), and de novo status (2); singleton gains occurred for mode of inheritance, inheritance source, contradiction type, case count, variant consequence class, functional domain/hotspot, and sex. Category B (disease/phenotype) and category C (clinical evidence) fields dominate, consistent with the hypothesis that Chinese-language clinical descriptions carry details — phenotypes, onset, assay context — that the English track under-extracts.
 
 **Figure 2.** Heatmap of entries (rows) × field types (columns); ✓ marks fields with evidence found only in the Chinese track. 13/29 entries show at least one ZH-only field.
 
@@ -92,7 +98,7 @@ The 25 ZH-only field instances across 13 entries span 14 field types (**Figure 2
 
 ### 3.3 Field-match ablation: no average change, occasional rescues
 
-Against the eight-field gold standard, the two modes matched a mean of 3.57 fields per entry identically (**Table 1**). The field-level picture is more informative than the mean: 3/30 entries (10%) gained at least one field match under dual-track processing, 2/30 lost one, and 1/30 swapped one field for another (Table 1, Figure S1).
+Against the eight-field gold standard, the two modes matched a mean of 3.57 fields per entry identically (**Table 1**; mean difference 0.000, 95% CI −0.139 to +0.139; two-sided Wilcoxon signed-rank test on non-zero differences, p = 1.0). Per-field discordance was symmetric: 3 fields were matched under dual-track only and 3 under English-only (McNemar exact test, p = 1.0). The field-level picture is more informative than the mean: 3/30 entries (10%) gained at least one field match under dual-track processing, 2/30 lost one, and 1/30 swapped one field for another (Table 1, Supplementary Table S1).
 
 Gained fields and rescued entries:
 - **fused_005** (ADA): variant type recovered — dual-track extracted "missense" where English-only missed it.
@@ -106,16 +112,16 @@ Lost fields: **fused_022** lost disease diagnosis; **fused_028** lost variant HG
 | Metric | EN-only | Dual-track (EN+ZH) |
 |---|---|---|
 | Valid paired comparisons | — | 30/30 |
-| Mean matched fields / entry (of 8) | 3.57 | 3.57 |
-| Mean evidence items in final output / entry | 109.9 | 99.7 |
+| Mean matched fields / entry (of 8) | 3.57 | 3.57 (diff 0.000; p = 1.0) |
+| Mean evidence items in final output / entry | 109.9 | 99.7 (−10.2; p = 0.27) |
 | Entries with ≥1 field gained | — | 3 (10%) |
 | Entries with ≥1 field lost | — | 2 (6.7%) |
 | Entries with net field gain | — | 2 (6.7%) |
-| Mean evidence items, track level (EN track vs. combined unique) | 15.9 | 17.24 (+22.8%) |
+| Mean evidence items, track level (EN track vs. ZH-only) | 15.9 | 3.62 ZH-only (+22.8%; p = 5.9 × 10⁻⁶) |
 | Entries with track-level evidence gain | — | 25/29 (86.2%) |
 | Entries with ZH-only evidence fields | — | 13/29 (44.8%) |
 
-**Table 1.** Ablation outcomes for 30 ClinGen/ClinVar entries processed in English-only vs. dual-track mode. Track-level items are measured within dual-track runs (English track vs. combined unique); field matches are measured against the eight-field gold standard per mode.
+**Table 1.** Ablation outcomes for 30 ClinGen/ClinVar entries processed in English-only vs. dual-track mode. Track-level items are measured within dual-track runs (English-track items vs. ZH-only items); field matches are measured against the eight-field gold standard per mode.
 
 ## 4. Discussion
 
@@ -125,7 +131,7 @@ Lost fields: **fused_022** lost disease diagnosis; **fused_028** lost variant HG
 
 **Rescued failures.** fused_024 (GP1BA) progressed from a complete failure (0/8) under English-only to 1/8 under dual-track. Complete extraction failures are disproportionately damaging in clinical workflows because they are indistinguishable from "no evidence." In the final dataset, one of two complete English-only failures (fused_024) was rescued by the Chinese track; the other (fused_017) failed under both modes.
 
-**Losses and merge artifacts.** Two entries lost a field under dual-track, and one swapped a field for another. The merge of track outputs is a consolidation step that can drop items; this is an implementation risk rather than a fundamental limit of multilingual processing, and it motivates per-field merge arbitration (currently: first-found-wins with provenance; future: LLM arbitration on conflict).
+**Losses and merge artifacts.** Two entries lost a field under dual-track, and one swapped a field for another; at the item level, dual-track final outputs contained numerically fewer evidence items than English-only outputs (99.7 vs. 109.9 per entry), a difference that was not statistically significant (95% CI −30.6 to +10.3; p = 0.27). The merge of track outputs is a consolidation step that can drop items; this is an implementation risk rather than a fundamental limit of multilingual processing, and it motivates per-field merge arbitration (currently: first-found-wins with provenance; future: LLM arbitration on conflict).
 
 **Fairness implications.** For variants studied primarily in Chinese-language literature — a substantial share of variants in Chinese populations — English-only curation may systematically under-call evidence. Multilingual processing is a practical mitigation that operates on the same article corpus (translation) without requiring new literature discovery.
 
@@ -145,14 +151,18 @@ Lost fields: **fused_022** lost disease diagnosis; **fused_028** lost variant HG
 
 The authors declare no conflict of interest.
 
+## Data and Code Availability
+
+The Lingua Seeker source code is available at https://github.com/lanshi17/LinguaSeeker (branch `feature/nar-web-server-submission`). All ablation reports and per-entry results are committed in the repository (`benchmark/data/reports/nar_ablation/`): `ablation_report.json` (field-match ablation), `multilingual_contribution_report.json` (evidence-item yield), and `en_only_metrics.json`/`dual_track_metrics.json` (per-mode final outputs). The analysis and statistics scripts (`benchmark/analysis/generate_gim_figures.py`, `benchmark/analysis/generate_gim_architecture.py`, `benchmark/analysis/gim_statistics.py`) reproduce all figures and p-values from these reports. The source article corpus and machine-generated Chinese translations are derived from PMC open-access articles (English) plus the system's translation pipeline; the gold-standard annotations were curated from ClinGen and ClinVar public data. External model-inference services (embedding, reranking, document parsing) are separate deployments and are not required to reproduce the reported statistics.
+
 ## References
 
-1. Richards S, et al. Standards and guidelines for the interpretation of sequence variants: a joint consensus recommendation of the American College of Medical Genetics and Genomics and the Association for Molecular Pathology. *Genet Med*. 2015;17(5):405–424.
-2. Rao AN, et al. Mastermind: a comprehensive genomic association search engine for empirical evidence curation and genetic variant interpretation. *bioRxiv*. 2017. doi:10.1101/214155.
-3. Henriksson J, et al. ClinVar Miner: demonstrating utility of NLP to keep pace with the moving target of variant classification. *bioRxiv*. 2017. doi:10.1101/194480.
-4. Allot A, et al. LitVar: a semantic search engine for linking genomic variant data in PubMed and PMC. *Nucleic Acids Res*. 2018;46(W1):W530–W536.
-5. Rehm HL, et al. ClinGen — the Clinical Genome Resource. *N Engl J Med*. 2015;372(23):2235–2242.
-6. Landrum MJ, et al. ClinVar: public archive of interpretations of clinically relevant variants. *Nucleic Acids Res*. 2014;42(D1):D980–D985.
+1. Richards S, et al. Standards and guidelines for the interpretation of sequence variants: a joint consensus recommendation of the American College of Medical Genetics and Genomics and the Association for Molecular Pathology. *Genet Med*. 2015;17(5):405–424. doi:10.1038/gim.2015.30.
+2. Chunn LM, et al. Mastermind: a comprehensive genomic association search engine for empirical evidence curation and genetic variant interpretation. *Front Genet*. 2020;11:577152. doi:10.3389/fgene.2020.577152.
+3. Henrie A, et al. ClinVar Miner: demonstrating utility of a web-based tool for viewing and filtering ClinVar data. *Hum Mutat*. 2018;39(8):1051–1060. doi:10.1002/humu.23555.
+4. Allot A, et al. LitVar: a semantic search engine for linking genomic variant data in PubMed and PMC. *Nucleic Acids Res*. 2018;46(W1):W530–W536. doi:10.1093/nar/gky355.
+5. Rehm HL, et al. ClinGen — the Clinical Genome Resource. *N Engl J Med*. 2015;372(23):2235–2242. doi:10.1056/NEJMsr1406261.
+6. Landrum MJ, et al. ClinVar: public archive of relationships among sequence variation and human phenotype. *Nucleic Acids Res*. 2014;42(D1):D980–D985. doi:10.1093/nar/gkt1113.
 
 ---
 
@@ -160,16 +170,18 @@ The authors declare no conflict of interest.
 
 | # | File | Content |
 |---|------|---------|
-| F1 | `F1_paired_evidence_comparison.png` | Paired per-entry evidence items: EN track vs combined unique (+22.8%) |
+| F1 | `F1_paired_evidence_comparison.png` | Paired per-entry EN-track items vs combined unique fields; ZH-only gain +22.8% |
 | F2 | `F2_field_level_zh_benefit_heatmap.png` | Fields with evidence found only in the Chinese track (13/29 entries) |
-| F3 | `F3_evidence_gain_distribution.png` | Distribution of per-entry multilingual evidence gain |
+| F3 | `F3_evidence_gain_distribution.png` | Distribution of per-entry multilingual evidence gain (ZH-only items) |
 | F4 | `F4_evidence_by_category.png` | Evidence items by ACMG category, English vs Chinese track |
+| F5 | `F5_architecture.png` | Four-phase system architecture with ablation design inset |
 
 ## Drafting Notes
 
 - [x] Results sections filled with real ablation data (reports in `benchmark/data/reports/nar_ablation/`)
 - [x] Figures regenerated from `multilingual_contribution_report.json` (2026-08-12)
-- [ ] Author list, funding, availability URLs
-- [ ] Reference list finalization (Vancouver style, page ranges verified)
-- [ ] Statistical analysis: paired test on field match (McNemar) and evidence gain (Wilcoxon signed-rank); add if reviewers require
-- [ ] Figure 3 panel: add architecture diagram if GIM prefers system overview (currently Methods describes textually)
+- [x] Statistical analysis: Wilcoxon signed-rank (ZH-only gain p = 5.9e-6; field match p = 1.0; final output p = 0.27) and McNemar exact (p = 1.0); Wilson/t CIs — `benchmark/analysis/gim_statistics.py`
+- [x] Reference list finalized: all six DOIs verified against Crossref (2026-08-12); three previously wrong DOIs corrected (Mastermind → Front Genet 2020; ClinVar Miner → Hum Mutat 2018; LitVar → gky355)
+- [x] Architecture diagram added (F5, `generate_gim_architecture.py`)
+- [ ] Author list, funding (journal contact)
+- [ ] Optional: classification-level endpoint (final ACMG category) if reviewers require

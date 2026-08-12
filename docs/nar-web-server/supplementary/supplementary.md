@@ -48,7 +48,7 @@
 | A.functional_domain_or_hotspot | 功能域/热点 | 1 |
 | B.sex | 性别 | 1 |
 
-合计 25 个 ZH-only 字段实例, 分布于 13/29 条目 (44.8%)。
+合计 23 个 ZH-only 字段实例, 分布于 13/29 条目 (44.8%)。
 
 ## Supplementary Note S1: Literature Provider Coverage
 

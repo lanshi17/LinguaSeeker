@@ -53,8 +53,8 @@ def fig1_paired_bar(report: dict) -> None:
     x = np.arange(len(entry_ids))
     width = 0.38
 
-    bars_en = ax.bar(x - width / 2, en_vals, width, label="English-only", color=EN_COLOR, edgecolor="black", linewidth=0.4)
-    bars_combo = ax.bar(x + width / 2, combined_vals, width, label="Multilingual (EN+ZH)", color=COMBINED_COLOR, edgecolor="black", linewidth=0.4)
+    bars_en = ax.bar(x - width / 2, en_vals, width, label="English-only items", color=EN_COLOR, edgecolor="black", linewidth=0.4)
+    bars_combo = ax.bar(x + width / 2, combined_vals, width, label="Combined unique fields (deduplicated)", color=COMBINED_COLOR, edgecolor="black", linewidth=0.4)
 
     # Highlight entries with gain
     for i, g in enumerate(gains):
@@ -70,9 +70,10 @@ def fig1_paired_bar(report: dict) -> None:
     ax.set_xticklabels(entry_ids, rotation=90, fontsize=7)
     ax.set_ylabel("Evidence items (found)", fontsize=11)
     ax.set_title(
-        f"Evidence extraction: English-only vs Multilingual track\n"
-        f"Mean: {avg_en:.1f} → {avg_combo:.1f} items/entry (+{gain_pct:.1f}%)",
-        fontsize=12, fontweight="bold",
+        f"Evidence extraction: English-only vs combined multilingual output\n"
+        f"Mean EN items: {avg_en:.1f}/entry | mean ZH-only gain: +{gain_pct:.1f}% (p < 0.001)\n"
+        f"Combined unique fields: {avg_combo:.1f}/entry",
+        fontsize=11, fontweight="bold",
     )
     ax.legend(loc="upper right", fontsize=9, frameon=True)
     ax.set_ylim(0, max(combined_vals) * 1.15)

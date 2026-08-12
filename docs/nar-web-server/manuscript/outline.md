@@ -1,180 +1,73 @@
-# Lingua Seeker: A Multi-Agent Web Server for Cross-Lingual ACMG Evidence Curation
+# Lingua Seeker GIM 论文大纲
 
-## 论文大纲
-
-> **暂定标题:** Lingua Seeker: A Multi-Agent Web Server for Cross-Lingual Automated Evidence Curation for ACMG Variant Classification
-
----
-
-## Abstract (~200 words)
-
-**要点:**
-- 问题：ACMG 变异分类需要大量人工文献证据搜集，非英语文献尤其被忽视
-- 方案：LLM Multi-Agent 编排式流水线，四阶段自动化（文献获取→跨语言证据提取→实体标准化→专家审查）
-- 创新点：跨语言双轨证据提取与融合；15+ 多源文献获取；Rust 原生 I/O 加速
-- 结果：[Benchmark 数据占位]
-- 可用性：免费公开 web server
+> **暂定标题:** Marginal Contribution of Cross-Lingual Evidence Extraction to ACMG/AMP Variant Classification: An Ablation Study of a Multi-Agent Literature Curation System
+> **目标期刊:** Genetics in Medicine (GIM), Original Research Article
+> **完整稿:** 见 `draft.md`（本文件为结构速览，随稿同步）
 
 ---
+
+## Abstract (~250 words)
+
+- 问题：ACMG/AMP 分类依赖人工文献证据搜集，非英语文献系统性缺失
+- 方案：Lingua Seeker 四阶段多智能体流水线 + 受控 ablation（30 条 ClinGen/ClinVar 条目 × EN-only vs Dual-track）
+- 结果：中文轨贡献 3.62 条/篇独有证据（+22.8% over EN 均值 15.9）；86.2% 条目受益；金标字段匹配 3.57→3.57 不变（p = 1.0）；10% 条目挽救字段
+- 结论：跨语言处理对多数变异提供互补证据、偶尔挽救失败提取，且不降低平均金标表现
 
 ## 1. Introduction
 
-**目标:** ~1 页
-
-### 要点
-1. **背景:** ACMG/AMP 指南定义了变异分类的证据体系，但证据搜集耗时巨大
-2. **痛点:**
-   - 现有工具（Mastermind、Franklin、ClinVar Miner）仅覆盖英文文献
-   - 非英语地区（中文、日文、俄文等）的遗传学文献被系统性忽视
-   - 手工证据提取存在遗漏和主观偏差
-3. **现有方案不足:**
-   - Mastermind: 关键词检索，无语义理解，不支持中文文献
-   - ClinVar Miner: 仅基于 ClinVar 数据库，不覆盖原始文献
-   - LitVar: PubMed 检索为主，无全文证据提取
-4. **Lingua Seeker 方案:**
-   - LLM Multi-Agent 自动化全流程
-   - 跨语言双轨证据提取（原文 + 译文并行）
-   - 端到端流水线：从文献检索到 ACMG 结构化证据
-   - Expert-in-the-loop 审查闭环
-
----
+1. ACMG/AMP 证据框架依赖文献；人工搜集成本高、以英文为主
+2. 现有工具（Mastermind、ClinVar Miner、LitVar）仅搜英文库、无全文语义级证据提取
+3. LLM 多智能体可自动化，但"原文+译文双轨 vs 纯英文"的边际价值未被量化
+4. 贡献：(1) 系统；(2) ablation 方法论（证据条目层 vs 字段匹配层）；(3) 定量证据
 
 ## 2. Materials and Methods
 
-**目标:** ~1.5 页
+- 2.1 系统架构（四阶段流水线，**F5 架构图**）
+- 2.2 跨语言双轨证据提取（语言检测 → 翻译流水线 → 双轨提取 → 合并）
+- 2.3 金标数据集（ClinGen + ClinVar 融合 75 条目，取 30 条；8 字段）
+- 2.4 Ablation 设计（EN-only vs Dual-track，其余参数一致）
+- 2.5 评估指标（EN-track items / ZH-only items / combined unique fields / field match）
+- 2.6（现稿 2.7）统计分析（Wilcoxon / McNemar / Wilson & t CI, `gim_statistics.py`）
+- 2.8 LLM 配置（通用/推理/多模态三角色独立路由）
 
-### 2.1 System Architecture
+## 3. Results
 
-- 编排式垂直切片架构（Orchestrated Vertical Slice Architecture）
-- LangGraph 工作流编排 + Pydantic 状态管理
-- Rust PyO3 原生扩展处理 HTTP I/O
-- Vite + React + Ant Design 前端
+- 3.1 证据条目层：ZH-only 增益 +3.62（+22.8%, p = 5.9e-6）—— **F1, F3**
+- 3.2 字段层：23 实例 / 14 类型 / 13 条目，B/C 类为主 —— **F2, F4**
+- 3.3 金标字段匹配：均值不变（p = 1.0），3 挽救 / 2 丢失 / 1 互换 —— **Table 1**
+- 3.4 汇总表（含最终输出条目 109.9 vs 99.7, p = 0.27）
 
-**Figure 1: 系统架构图**（四阶段流水线 + 技术栈分层）
+## 4. Discussion
 
-### 2.2 Phase 1: Literature Acquisition and Digitization
-
-- 15+ 数据源（Crossref、PubMed、OpenAlex、EuropePMC、PMC、DOAJ、J-STAGE、Unpaywall + 6 国 Web Scrapers）
-- Rust net-io 并行检索 + Python 业务编排
-- MinerU 2.5 Pro 文档解析（PDF→Markdown + 表格 + 图片 + 布局坐标）
-
-### 2.3 Phase 2: Cross-Lingual Dual-Track Evidence Extraction
-
-- 语言检测 + 多阶段翻译（术语保持 → 结构对齐 → 草译 → 审校）
-- 原文与译文双轨并行提取 ACMG 证据字段
-- 多阶段提取流水线：目录提取 → 溯源定位 → 证据映射 → 分组聚合 → 质量审查
-- 证据溯源：每条证据精确回溯到文档位置（页码 + 原文 span）
-
-**Figure 2: 跨语言双轨证据提取流程图**
-
-### 2.4 Phase 3: Entity Standardization and Knowledge Alignment
-
-- 确定性精确匹配（HGNC、OMIM、HPO、ClinVar）
-- 向量相似度匹配（BAAI/bge-m3 embedding + pgvector）
-- 匹配结果分类：唯一匹配 / 多候选消歧 / 未映射
-
-### 2.5 Phase 4: Expert-in-the-Loop Visualization
-
-- 对话式入口（SSE 实时反馈）
-- 证据工作台：左原文 + 右证据卡片对照视图
-- Delta 审计日志：记录所有专家修正
-- 导出：CSV / JSON / ACMG 分类报告
-
-### 2.6 LLM Model Configuration
-
-- 通用任务 LLM（配置化模型选择）
-- 推理/验证 LLM（高精度场景）
-- 多模态 LLM（图表/家系图解析）
-- 模型通过 OpenAI-compatible API 接入
-
----
-
-## 3. Web Server Usage
-
-**目标:** ~1 页
-
-### 要点
-- 访问方式：[URL] 免费使用
-- 核心交互流程：
-  1. 输入（关键词/DOI/PMID/PDF 上传）
-  2. 实时进度反馈（SSE）
-  3. 证据审查与编辑
-  4. 导出结构化报告
-- 支持的文献语言：中文、英文、日文、俄文、韩文、西班牙文、葡萄牙文
-
-**Figure 3: Web Server 界面截图**（聊天入口 + 证据工作台 + 证据库）
-
----
-
-## 4. Results
-
-**目标:** ~1 页
-
-### 4.1 Benchmark Dataset
-
-- 基于 ClinGen + ClinVar 融合金标数据集
-- 30+ 篇文献（中英文混合）
-- 评估字段：gene、disease、variant、inheritance、classification 等 ~10 个字段
-
-### 4.2 Extraction Performance
-
-| 指标 | 定义 | 目标 |
-|------|------|------|
-| Precision | 正确提取的证据 / 系统提取的总证据 | ≥ 0.80 |
-| Recall | 正确提取的证据 / 金标总证据 | ≥ 0.70 |
-| F1 | 调和平均 | ≥ 0.75 |
-| Cohen's κ | 与专家一致性 | ≥ 0.70 |
-
-**Figure 4: Benchmark 结果图**（分字段 P/R/F1 柱状图）
-
-### 4.3 Cross-Lingual Comparison
-
-- 中文文献 vs 英文文献的提取性能对比
-- 双轨融合 vs 单轨提取的性能提升
-- 案例展示：中文文献中独有证据的发现
-
-### 4.4 System Performance
-
-- 端到端处理时间（单篇文献）
-- 多源检索覆盖率
-- 实体标准化匹配率
-
----
-
-## 5. Discussion
-
-**目标:** ~0.5 页
-
-### 要点
-1. **优势:** 跨语言能力填补了非英语遗传学文献的证据空白
-2. **局限:**
-   - LLM 生成结果存在幻觉风险（通过溯源机制缓解）
-   - 当前以证据提取为边界，不做自主分类
-   - Recall 依赖文献获取覆盖度
-3. **与现有工具对比:** [对比表]
-4. **未来方向:** 双轨交叉验证自动化、主动学习反馈闭环、多模态深度整合
-
----
+1. 主要发现：互补证据 + 偶尔挽救，金标口径下无平均退化
+2. 为什么字段级落后于条目级：金标英文中心、匹配集语言不变字段为主
+3. 挽救失败提取（fused_024 GP1BA 0→1）
+4. 合并伪影（最终输出条目数下降趋势, n.s.）
+5. 公平性：中文文献为主的变异会被英文中心流程低估
+6. 局限：英文语料+机翻、8 字段子集、无分类终点、单模型族、样本量小
+7. 结论
 
 ## References
 
-- ACMG/AMP 指引 (Richards et al., 2015)
-- ClinGen (Rehm et al., 2015)
-- ClinVar (Landrum et al., 2014)
-- Mastermind (Rao et al., 2017)
-- LitVar (Allot et al., 2018)
-- LangGraph (GitHub)
-- MinerU (OpenDataLab)
-- BGE embedding / reranker (BAAI)
+- Richards et al. 2015, Genet Med 17(5):405-424, 10.1038/gim.2015.30
+- Chunn et al. 2020 (Mastermind), Front Genet 11:577152, 10.3389/fgene.2020.577152
+- Henrie et al. 2018 (ClinVar Miner), Hum Mutat 39(8):1051-1060, 10.1002/humu.23555
+- Allot et al. 2018 (LitVar), NAR 46(W1):W530-W536, 10.1093/nar/gky355
+- Rehm et al. 2015 (ClinGen), NEJM 372(23):2235-2242, 10.1056/NEJMsr1406261
+- Landrum et al. 2014 (ClinVar), NAR 42(D1):D980-D985, 10.1093/nar/gkt1113
+- 全部 6 条 DOI 已于 2026-08-12 经 Crossref 核验
 
----
+## Figures 清单（`docs/nar-web-server/figures/`）
 
-## Figures 清单
+| 编号 | 文件 | 内容 |
+|------|------|------|
+| F1 | F1_paired_evidence_comparison.png | 逐条目 EN 条目数 vs 合并唯一字段数；ZH-only 增益 +22.8% |
+| F2 | F2_field_level_zh_benefit_heatmap.png | 仅中文轨检出的字段热图（13/29 条目） |
+| F3 | F3_evidence_gain_distribution.png | 逐条目 ZH-only 增益分布（25/29 > 0） |
+| F4 | F4_evidence_by_category.png | 分 ACMG 类别 EN vs 中文轨证据条目数 |
+| F5 | F5_architecture.png | 四阶段架构 + ablation 设计插框 |
 
-| 编号 | 标题 | 类型 | 内容 |
-|------|------|------|------|
-| F1 | System Architecture | 架构图 | 四阶段流水线 + 技术栈分层 |
-| F2 | Cross-Lingual Dual-Track Extraction | 流程图 | 双轨提取与融合机制 |
-| F3 | Web Server Interface | 截图 | 聊天入口 + 证据工作台 + 证据库 |
-| F4 | Benchmark Results | 柱状图 | 分字段 P/R/F1 |
-| F5 (optional) | Case Study | 示例 | 中文文献证据提取全流程案例 |
+## 待办
+
+- [ ] 作者列表、基金声明
+- [ ] （可选）分类级终点（最终 ACMG 类别），视审稿意见

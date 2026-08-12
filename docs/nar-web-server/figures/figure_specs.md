@@ -1,128 +1,73 @@
-# Figure Specifications
+# Figure Specifications (GIM)
 
-> 论文插图规格说明。每张图包含：用途、内容描述、绘制工具、尺寸/分辨率要求。
-
----
-
-## Figure 1: System Architecture
-
-**用途:** 展示 Lingua Seeker 的四阶段流水线与技术栈分层架构
-
-**内容:**
-- 上层：用户交互层（Web UI: Chat / Evidence Workbench / Knowledge Base）
-- 中层：四阶段流水线（Phase 1-4），每阶段标注核心功能
-  - Phase 1: Literature Acquisition (15+ sources, Rust I/O, MinerU parsing)
-  - Phase 2: Cross-Lingual Dual-Track Extraction (Translation + Native + Translated extraction)
-  - Phase 3: Entity Standardization (HGNC, OMIM, HPO, ClinVar + vector similarity)
-  - Phase 4: Expert Review (Evidence cards, Delta audit, Export)
-- 下层：基础设施层（PostgreSQL, Redis, LLM Services, Rust Extensions）
-- 箭头：数据流向（文献输入 -> 结构化证据 -> 标准化 -> ACMG 报告）
-
-**风格:** 简洁矢量图，NAR 风格（白底，蓝色系主色调，灰线分隔）
-**工具:** draw.io / BioRender / Figma
-**尺寸:** 双栏宽度 (~180mm)，高度 ~120mm
-**分辨率:** 300 dpi（矢量优先）
+> 论文插图规格说明。与实际生成的图文件一致（`docs/nar-web-server/figures/`）。
+> 生成脚本：`benchmark/analysis/generate_gim_figures.py`（F1–F4）、`benchmark/analysis/generate_gim_architecture.py`（F5）。
+> 数据源：`benchmark/data/reports/nar_ablation/multilingual_contribution_report.json` 等。
 
 ---
 
-## Figure 2: Cross-Lingual Dual-Track Extraction
+## Figure 1: F1_paired_evidence_comparison.png — 配对证据量对比
 
-**用途:** 详细展示双轨证据提取机制，这是论文核心创新点
+**用途:** 逐条目展示英文轨 vs 合并多语输出的证据量差异
 
 **内容:**
+- X 轴: 30 个条目 (fused_000–fused_029)
+- 蓝色柱: English-only 轨道的 found 条目数（item count）
+- 绿色柱: 合并去重后的唯一字段数（field count，单位与蓝柱不同，图例已注明）
+- 红色连线/标注: 有 ZH-only 贡献的条目 (+N)
+
+**注意:** 单位差异（item vs field）已在图例与稿件 §2.5/§3.1 中说明；核心增益数字为 ZH-only 条目 +22.8%。
+
+---
+
+## Figure 2: F2_field_level_zh_benefit_heatmap.png — 中文轨独有字段热图
+
+**用途:** 展示哪些字段的证据仅由中文轨检出
+
+**内容:**
+- 行: 条目，列: 字段类型
+- ✓: 该条目在该字段上有仅中文轨检出的证据
+- 13/29 条目有至少一个 ZH-only 字段
+
+---
+
+## Figure 3: F3_evidence_gain_distribution.png — 增益分布
+
+**用途:** ZH-only 条目增益的分布
+
+**内容:**
+- X 轴: ZH-only 增益（items/entry）
+- 25/29 条目增益 > 0；增益按构造非负（度量定义为"仅中文轨检出的条目数"）
+
+---
+
+## Figure 4: F4_evidence_by_category.png — 分类别证据量
+
+**用途:** 按 ACMG 类别（A–J）对比英文轨 vs 中文轨检出的证据条目数
+
+**内容:**
+- 分组柱状图：每类别两柱（English track / Chinese track）
+- 中文轨在类别 B（疾病/表型）、A（变异）贡献最明显
+
+---
+
+## Figure 5: F5_architecture.png — 系统架构 + Ablation 设计
+
+**用途:** 展示四阶段流水线及受控 ablation 设计（Methods §2.1 引用）
+
+**内容:**
+- 上排: Phase 1 文献获取与数字化 → Phase 2 跨语言双轨提取 → Phase 3 实体标准化 → Phase 4 专家审查
+- 下排插框: Mode A (EN-only, 3.57/8 字段) vs Mode B (Dual-track, 3.57/8 字段 + ZH-only +22.8%)，含输出指标列表
+
+**风格:** matplotlib 方块图，白底，与 F1–F4 同色系（蓝/橙/绿/红）
+**尺寸:** 11.5 × 5.2 in @ 300 dpi
+
+---
+
+## 生成方式
+
+```bash
+cd <repo-root>
+./backend/.venv/bin/python benchmark/analysis/generate_gim_figures.py   # F1–F4
+./backend/.venv/bin/python benchmark/analysis/generate_gim_architecture.py  # F5
 ```
-Input Document (非英文)
-    │
-    ├─→ Language Detection
-    │       │
-    │       ▼
-    │   Multi-Stage Translation
-    │   (Terminology → Structure → Draft → Review)
-    │       │
-    │       ▼
-    │   Translated Document (English)
-    │
-    ├──────────────────────────┐
-    │                          │
-    ▼                          ▼
-Native Track              Translated Track
-(原文证据提取)             (译文证据提取)
-    │                          │
-    ▼                          ▼
-Native Evidence           Translated Evidence
-    │                          │
-    └─────────┬────────────────┘
-              ▼
-    Evidence Grouping + Source Grounding
-    (每条证据回溯到原文位置)
-              │
-              ▼
-    Quality Review + Evidence Chain
-              │
-              ▼
-    Bilingual Evidence Output
-```
-
-- 右侧标注每步使用的 LLM 角色（Fast LLM / Reasoning LLM）
-- 底部标注溯源机制：每条证据 -> 原文 page + span + translated span
-
-**风格:** 流程图，配色与 Figure 1 一致
-**工具:** draw.io / Mermaid 导出
-**尺寸:** 双栏宽度，高度 ~100mm
-**分辨率:** 300 dpi
-
----
-
-## Figure 3: Web Server Interface
-
-**用途:** 展示实际 web server 的使用界面
-
-**内容（3-panel 截图）:**
-- **Panel A:** Chat 入口 - 用户输入 PMID/DOI，SSE 实时进度反馈
-- **Panel B:** Evidence Workbench - 左侧原文 Markdown + 右侧证据卡片，高亮溯源
-- **Panel C:** Evidence Database - 证据检索结果，按 ACMG 证据维度分组
-
-**风格:** 浏览器截图，裁剪掉地址栏，加 Panel 标注 (A/B/C)
-**工具:** 浏览器截图 + 图像编辑器加标注
-**尺寸:** 双栏宽度，高度 ~150mm
-**分辨率:** 300 dpi
-**注意:** 隐藏敏感数据（患者信息等），使用示例数据
-
----
-
-## Figure 4: Benchmark Results
-
-**用途:** 定量展示系统性能
-
-**内容（2-panel）:**
-- **Panel A:** 分字段 P/R/F1 分组柱状图
-  - X 轴: 字段 (Gene, Disease, Variant, Inheritance, Classification)
-  - Y 轴: Score (0-1)
-  - 每字段 3 根柱子: Precision (蓝), Recall (橙), F1 (绿)
-  - 数值标注在柱顶
-- **Panel B:** 跨语言对比
-  - X 轴: 字段或总体
-  - Y 轴: F1 Score
-  - 3 组: English-only, Chinese-only, Dual-track
-  - 星号标注显著性 (* p<0.05, ** p<0.01)
-
-**风格:** matplotlib / seaborn，白底，error bar
-**工具:** Python matplotlib
-**尺寸:** 双栏宽度，高度 ~100mm
-**分辨率:** 300 dpi
-
----
-
-## Figure 5 (optional): Case Study
-
-**用途:** 用一个完整案例展示端到端流程
-
-**内容:**
-- 选取一篇中文遗传学文献
-- 展示：文献输入 -> 翻译结果 -> 提取的证据卡片 -> 标准化结果 -> ACMG 证据矩阵
-- 4-panel 布局，每 panel 一个阶段
-
-**风格:** 截图 + 标注
-**工具:** 截图 + 图像编辑器
-**尺寸:** 单栏宽度 (~85mm) x 4 panel，或双栏宽度 2x2 布局
-**分辨率:** 300 dpi

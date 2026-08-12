@@ -121,12 +121,41 @@
 | 指标 | 值 |
 |------|-----|
 | EN track 平均条目 | 15.9 / entry |
-| Combined unique 平均 | 17.24 / entry |
-| 增益 | +3.62 (+22.8%) |
-| 受益条目 | 25/29 (86.2%) |
-| 有 ZH-only 字段条目 | 13/29 (44.8%) |
-| ZH-only 字段类型 | 14 种, 25 实例 (top: B.clinical_phenotypes 3, F.assay_type 3, J.clinvar_assertion 2) |
+| Combined unique 平均 (字段数) | 17.24 / entry |
+| ZH-only 平均增益 | +3.62 items (+22.8% of EN 均值) |
+| Wilcoxon (单侧, gain>0) | p = 5.9e-06; r = 0.49; 95% CI [2.62, 4.62] |
+| 受益条目 (有 ZH-only 条目) | 25/29 (86.2%; Wilson 95% CI 69.4–94.5%) |
+| 有 ZH-only 字段条目 | 13/29 (44.8%; Wilson 95% CI 28.4–62.5%) |
+| ZH-only 字段类型 | 14 种, 23 实例 (top: B.clinical_phenotypes 3, F.assay_type 3, J.clinvar_assertion 2) |
 
 ### 结论 (论文口径)
 
 多语种处理对 86% 条目提供互补证据 (+22.8%)，对 10% 条目挽救具体字段 (variant type / MOI / gene symbol)，平均金标字段匹配不变 (3.57→3.57)。金标为英文中心 (ClinGen/ClinVar)，字段级收益被稀释；证据条目级收益是更敏感的多语种贡献度量。
+
+---
+
+## 论文完成度更新 (2026-08-12, 二次修订)
+
+- [x] **统计检验** — `benchmark/analysis/gim_statistics.py` (可复现):
+  - ZH-only 增益: Wilcoxon 单侧 p = 5.9e-06, 秩双列 r = 0.49, 95% CI [2.62, 4.62]
+  - 字段匹配: 均值差 0.000 (95% CI −0.139/+0.139), Wilcoxon p = 1.0; McNemar 精确 b=3, c=3, p = 1.0
+  - 最终输出条目: 109.9 vs 99.7, 差 −10.2 (95% CI −30.6/+10.3), p = 0.27 (n.s.)
+- [x] **参考文献核验** (Crossref, 2026-08-12) — 修正 3 条错误 DOI:
+  - Mastermind: 10.1101/214155(错, 癌症恶病质论文) → 10.3389/fgene.2020.577152 (Chunn, Front Genet 2020;11:577152)
+  - ClinVar Miner: 10.1101/194480(错, 蚂蚁算法论文) → 10.1002/humu.23555 (Henrie, Hum Mutat 2018;39(8):1051–1060)
+  - LitVar: 10.1093/nar/gky310(错, MetaboAnalyst) → 10.1093/nar/gky355 (Allot, NAR 2018;46(W1):W530–W536)
+  - 另修正 ClinVar 2014 标题为 "public archive of relationships among sequence variation and human phenotype"
+- [x] **数字口径修正** (单位混用问题):
+  - multilingual_gain = ZH-only **条目数** (3.62, +22.8% of EN 均值 15.9), 非 combined−EN (1.34)
+  - combined_unique_items = 去重后 **字段数** (17.24), 与 EN 条目数不同单位, 稿件已注明
+  - ZH-only 字段实例数 25 → **23** (报告 field_level_zh_benefit 合计, §3.2/Table S2/工作文件同步修正)
+  - 删除 "并集按构造为超集" 的错误表述 (去重后字段并集对部分条目 < EN 条目数)
+- [x] **架构图 F5** — `benchmark/analysis/generate_gim_architecture.py` → `figures/F5_architecture.png` (4 阶段流水线 + ablation 设计插框), Methods 2.1 引用
+- [x] **Data and Code Availability** 段已加入 (GitHub 仓库 + 报告文件 + 复现脚本)
+- [ ] 待人工: 作者列表、基金声明 (期刊联系信息)
+
+### 稿件文件状态
+
+- `manuscript/draft.md` — 188 行完整稿, 统计/引用/图表全部就绪
+- `supplementary/supplementary.md` — Table S1/S2 数据已修正 (23 实例)
+- `figures/` — F1–F5 (F1 图注已修正单位标注, 2026-08-12 重新生成)

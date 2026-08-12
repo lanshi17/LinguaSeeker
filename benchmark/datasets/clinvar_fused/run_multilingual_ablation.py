@@ -203,8 +203,7 @@ async def run_multilingual_ablation(
     en_found_total = 0
     zh_found_total = 0
     combined_found_total = 0
-    en_only_fields_total: set[str] = set()
-    zh_only_fields_total: set[str] = set()
+    zh_only_items_total = 0
     entries_with_zh_contribution = 0
     entries_with_zh_only_fields = 0
     valid = 0
@@ -218,13 +217,12 @@ async def run_multilingual_ablation(
         en_found = ta.get("original_result", {}).get("found_count", 0)
         zh_found = ta.get("translated_result", {}).get("found_count", 0)
         combined = len(contrib.get("combined_unique_fields", []))
+        zh_only = len(contrib.get("chinese_only_fields", []))
 
         en_found_total += en_found
         zh_found_total += zh_found
         combined_found_total += combined
-
-        en_only_fields_total.update(contrib.get("english_only_fields", []))
-        zh_only_fields_total.update(contrib.get("chinese_only_fields", []))
+        zh_only_items_total += zh_only
 
         if zh_found > 0:
             entries_with_zh_contribution += 1
@@ -234,6 +232,7 @@ async def run_multilingual_ablation(
     avg_en = en_found_total / valid if valid else 0
     avg_zh = zh_found_total / valid if valid else 0
     avg_combined = combined_found_total / valid if valid else 0
+    avg_zh_only = zh_only_items_total / valid if valid else 0
 
     # Per-field analysis: which fields benefit from Chinese track?
     field_zh_benefit: dict[str, int] = {}
@@ -255,13 +254,12 @@ async def run_multilingual_ablation(
             "avg_en_track_found": round(avg_en, 2),
             "avg_zh_track_found": round(avg_zh, 2),
             "avg_combined_unique_found": round(avg_combined, 2),
-            "multilingual_gain_per_entry": round(avg_combined - avg_en, 2),
-            "multilingual_gain_pct": round((avg_combined - avg_en) / avg_en * 100, 1) if avg_en > 0 else 0,
+            "multilingual_gain_items": round(avg_zh_only, 2),
+            "multilingual_gain_pct": round(avg_zh_only / avg_en * 100, 1) if avg_en > 0 else 0,
             "entries_with_zh_contribution": entries_with_zh_contribution,
             "entries_with_zh_only_fields": entries_with_zh_only_fields,
         },
         "field_level_zh_benefit": field_zh_benefit,
-        "per_entry": per_entry_results,
     }
 
     # Save report
@@ -282,9 +280,9 @@ async def run_multilingual_ablation(
     print("-" * 55)
     print(f"{'Avg EN track found items':<45} {avg_en:>10.1f}")
     print(f"{'Avg ZH track found items':<45} {avg_zh:>10.1f}")
-    print(f"{'Avg combined unique found items':<45} {avg_combined:>10.1f}")
-    print(f"{'Multilingual gain per entry':<45} {avg_combined - avg_en:>+10.1f}")
-    print(f"{'Multilingual gain %':<45} {(avg_combined - avg_en) / avg_en * 100 if avg_en > 0 else 0:>+9.1f}%")
+    print(f"{'Avg combined unique fields':<45} {avg_combined:>10.1f}")
+    print(f"{'Multilingual gain (ZH-only items)':<45} {avg_zh_only:>+10.1f}")
+    print(f"{'Multilingual gain % (of EN-track mean)':<45} {avg_zh_only / avg_en * 100 if avg_en > 0 else 0:>+9.1f}%")
     print()
     print(f"Entries with ZH track contribution: {entries_with_zh_contribution}/{valid}")
     print(f"Entries with ZH-only fields: {entries_with_zh_only_fields}/{valid}")
