@@ -1,8 +1,9 @@
 # ClinGen + ClinVar Fused Benchmark Dataset Plan
 
-**Status:** in-progress (Phase 1+2 complete, Phase 3+4 pending)
+**Status:** completed (fused-75 数据集构建+翻译+评估全部完成；原 Phase 3/4 由 GIM ablation 实验取代，见 docs/nar-web-server/gim_working_file.md)
 **Created:** 2026-06-15
-**Updated:** 2026-06-16
+**Updated:** 2026-08-12
+**Completed:** 2026-08-12
 **Scope:** Benchmark Layer 3 — 第二数据集（Dataset 2）
 **Owner:** LinguaSeeker benchmark team
 

@@ -52,7 +52,6 @@ docs/
 |------|------|------|
 | 2026-07-04 | [Pipeline Path Exploration](active/2026-07-04-pipeline-path-exploration.md) | in-progress |
 | 2026-06-29 | [Evidence DB Field Model Implementation Plan](active/2026-06-29-evidence-db-field-model-plan.md) | in-progress |
-| 2026-06-15 | [ClinGen + ClinVar Fused Benchmark Dataset Plan](active/2026-06-15-clingen-clinvar-fused-benchmark-dataset-plan.md) | in-progress |
 | 2026-06-14 | [Traceability Metrics Guide](active/2026-06-14-traceability-metrics-guide.md) | reference |
 
 ### 发布与运维
@@ -94,6 +93,7 @@ docs/
 | 日期 | 标题 | 状态 |
 |------|------|------|
 | 2026-07-25 | [GraphRAG 集成方案](archive/plans/2026-07-25-graphrag-integration.md) | completed |
+| 2026-06-15 | [ClinGen + ClinVar Fused Benchmark Dataset Plan](archive/plans/2026-06-15-clingen-clinvar-fused-benchmark-dataset-plan.md) | completed |
 | 2026-07-01 | [Semantic Word Alignment Design](archive/plans/2026-07-01-semantic-word-alignment-design.md) | completed |
 | 2026-07-01 | [Semantic Word Alignment Implementation Plan](archive/plans/2026-07-01-semantic-word-alignment-plan.md) | completed |
 | 2026-06-20 | [Variant ID Guarantee Plan](archive/plans/2026-06-20-variant-id-guarantee-plan.md) | completed |
@@ -118,3 +118,9 @@ docs/
 - **[backend/src/core/](../backend/src/core/README.md)** — 垂直功能切片
 - **[backend/src/dao/](../backend/src/dao/README.md)** — 持久化层
 - **[backend/libs/](../backend/libs/README.md)** — Rust 原生扩展
+
+## 投稿文档
+
+| 日期 | 标题 | 状态 |
+|------|------|------|
+| 2026-08-09 | [NAR Web Server 投稿工作区](nar-web-server/README.md) | in-progress |

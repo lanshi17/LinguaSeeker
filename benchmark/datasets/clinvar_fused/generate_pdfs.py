@@ -18,7 +18,7 @@ from pathlib import Path
 
 from loguru import logger
 
-GROUND_TRUTH_DIR = Path(__file__).resolve().parent / "ground_truth"
+GROUND_TRUTH_DIR = Path(__file__).resolve().parent.parent.parent.parent / "benchmark" / "data" / "ground_truth" / "clinvar_fused"
 PIPELINE_INPUT_DIR = (
     Path(__file__).resolve().parent.parent.parent
     / "pipeline" / "input" / "ground_truth"

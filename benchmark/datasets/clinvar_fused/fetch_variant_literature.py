@@ -14,7 +14,7 @@ from pathlib import Path
 
 import httpx
 
-GROUND_TRUTH_DIR = Path(__file__).resolve().parent / "ground_truth"
+GROUND_TRUTH_DIR = Path(__file__).resolve().parent.parent.parent.parent / "benchmark" / "data" / "ground_truth" / "clinvar_fused"
 EUROPEPMC_SEARCH = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 _CONCURRENCY = 3
 

@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select, case, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import (
+from src.core.evidence_extraction.domain.catalog import (
     EVIDENCE_FIELD_SPECS,
 )
 from src.dao.postgresql.models import (
