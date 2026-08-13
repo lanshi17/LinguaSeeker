@@ -1,0 +1,391 @@
+{
+  "study": "ablation_dual_vs_en_only",
+  "dataset": "clinvar_fused",
+  "total_entries": 30,
+  "valid_comparisons": 30,
+  "duration_s": 0,
+  "en_only": {
+    "avg_evidence_count": 109.9,
+    "avg_matched_fields": 3.57
+  },
+  "dual_track": {
+    "avg_evidence_count": 99.73,
+    "avg_matched_fields": 3.57
+  },
+  "marginal_contribution": {
+    "avg_evidence_gain": -10.17,
+    "entries_with_evidence_gain": 3,
+    "entries_with_field_improvement": 3,
+    "field_gain_by_type": {
+      "A.variant_type": 1,
+      "B.mode_of_inheritance_reported": 1,
+      "A.gene_symbol": 1
+    },
+    "evidence_gain_pct": -9.3,
+    "field_match_improvement_pct": 0.0
+  },
+  "per_entry": [
+    {
+      "entry_id": "fused_000",
+      "en_evidence_count": 166,
+      "dual_evidence_count": 166,
+      "evidence_gain": 0,
+      "en_matched_fields": 4,
+      "dual_matched_fields": 4,
+      "field_improvements": [],
+      "en_found_rate": 0.0783,
+      "dual_found_rate": 0.0723
+    },
+    {
+      "entry_id": "fused_001",
+      "en_evidence_count": 166,
+      "dual_evidence_count": 164,
+      "evidence_gain": -2,
+      "en_matched_fields": 6,
+      "dual_matched_fields": 6,
+      "field_improvements": [],
+      "en_found_rate": 0.084,
+      "dual_found_rate": 0.0793
+    },
+    {
+      "entry_id": "fused_002",
+      "en_evidence_count": 14,
+      "dual_evidence_count": 14,
+      "evidence_gain": 0,
+      "en_matched_fields": 5,
+      "dual_matched_fields": 5,
+      "field_improvements": [],
+      "en_found_rate": 0.7143,
+      "dual_found_rate": 0.9286
+    },
+    {
+      "entry_id": "fused_003",
+      "en_evidence_count": 166,
+      "dual_evidence_count": 166,
+      "evidence_gain": 0,
+      "en_matched_fields": 5,
+      "dual_matched_fields": 5,
+      "field_improvements": [],
+      "en_found_rate": 0.0904,
+      "dual_found_rate": 0.0964
+    },
+    {
+      "entry_id": "fused_004",
+      "en_evidence_count": 166,
+      "dual_evidence_count": 166,
+      "evidence_gain": 0,
+      "en_matched_fields": 6,
+      "dual_matched_fields": 6,
+      "field_improvements": [],
+      "en_found_rate": 0.0904,
+      "dual_found_rate": 0.0964
+    },
+    {
+      "entry_id": "fused_005",
+      "en_evidence_count": 166,
+      "dual_evidence_count": 165,
+      "evidence_gain": -1,
+      "en_matched_fields": 3,
+      "dual_matched_fields": 4,
+      "field_improvements": [
+        {
+          "field_id": "A.variant_type",
+          "improvement": "en_missed_dual_found",
+          "dual_value": "missense"
+        }
+      ],
+      "en_found_rate": 0.0723,
+      "dual_found_rate": 0.0667
+    },
+    {
+      "entry_id": "fused_006",
+      "en_evidence_count": 166,
+      "dual_evidence_count": 166,
+      "evidence_gain": 0,
+      "en_matched_fields": 5,
+      "dual_matched_fields": 5,
+      "field_improvements": [],
+      "en_found_rate": 0.0723,
+      "dual_found_rate": 0.0723
+    },
+    {
+      "entry_id": "fused_007",
+      "en_evidence_count": 165,
+      "dual_evidence_count": 165,
+      "evidence_gain": 0,
+      "en_matched_fields": 1,
+      "dual_matched_fields": 1,
+      "field_improvements": [],
+      "en_found_rate": 0.0242,
+      "dual_found_rate": 0.0545
+    },
+    {
+      "entry_id": "fused_008",
+      "en_evidence_count": 14,
+      "dual_evidence_count": 14,
+      "evidence_gain": 0,
+      "en_matched_fields": 4,
+      "dual_matched_fields": 4,
+      "field_improvements": [],
+      "en_found_rate": 0.6429,
+      "dual_found_rate": 0.6429
+    },
+    {
+      "entry_id": "fused_009",
+      "en_evidence_count": 163,
+      "dual_evidence_count": 165,
+      "evidence_gain": 2,
+      "en_matched_fields": 2,
+      "dual_matched_fields": 2,
+      "field_improvements": [],
+      "en_found_rate": 0.0675,
+      "dual_found_rate": 0.0788
+    },
+    {
+      "entry_id": "fused_010",
+      "en_evidence_count": 165,
+      "dual_evidence_count": 165,
+      "evidence_gain": 0,
+      "en_matched_fields": 1,
+      "dual_matched_fields": 1,
+      "field_improvements": [],
+      "en_found_rate": 0.0182,
+      "dual_found_rate": 0.0182
+    },
+    {
+      "entry_id": "fused_011",
+      "en_evidence_count": 165,
+      "dual_evidence_count": 166,
+      "evidence_gain": 1,
+      "en_matched_fields": 5,
+      "dual_matched_fields": 5,
+      "field_improvements": [],
+      "en_found_rate": 0.0667,
+      "dual_found_rate": 0.0663
+    },
+    {
+      "entry_id": "fused_012",
+      "en_evidence_count": 14,
+      "dual_evidence_count": 14,
+      "evidence_gain": 0,
+      "en_matched_fields": 4,
+      "dual_matched_fields": 4,
+      "field_improvements": [],
+      "en_found_rate": 0.5714,
+      "dual_found_rate": 0.5714
+    },
+    {
+      "entry_id": "fused_013",
+      "en_evidence_count": 14,
+      "dual_evidence_count": 14,
+      "evidence_gain": 0,
+      "en_matched_fields": 2,
+      "dual_matched_fields": 2,
+      "field_improvements": [],
+      "en_found_rate": 0.2143,
+      "dual_found_rate": 0.2857
+    },
+    {
+      "entry_id": "fused_014",
+      "en_evidence_count": 166,
+      "dual_evidence_count": 166,
+      "evidence_gain": 0,
+      "en_matched_fields": 5,
+      "dual_matched_fields": 5,
+      "field_improvements": [],
+      "en_found_rate": 0.0964,
+      "dual_found_rate": 0.0964
+    },
+    {
+      "entry_id": "fused_015",
+      "en_evidence_count": 166,
+      "dual_evidence_count": 14,
+      "evidence_gain": -152,
+      "en_matched_fields": 4,
+      "dual_matched_fields": 4,
+      "field_improvements": [],
+      "en_found_rate": 0.0843,
+      "dual_found_rate": 0.6429
+    },
+    {
+      "entry_id": "fused_016",
+      "en_evidence_count": 166,
+      "dual_evidence_count": 166,
+      "evidence_gain": 0,
+      "en_matched_fields": 5,
+      "dual_matched_fields": 5,
+      "field_improvements": [
+        {
+          "field_id": "A.gene_disease_relationship",
+          "improvement": "en_found_dual_missed"
+        },
+        {
+          "field_id": "B.mode_of_inheritance_reported",
+          "improvement": "en_missed_dual_found",
+          "dual_value": "autosomal dominant (AD)"
+        }
+      ],
+      "en_found_rate": 0.1024,
+      "dual_found_rate": 0.1145
+    },
+    {
+      "entry_id": "fused_017",
+      "en_evidence_count": 166,
+      "dual_evidence_count": 166,
+      "evidence_gain": 0,
+      "en_matched_fields": 0,
+      "dual_matched_fields": 0,
+      "field_improvements": [],
+      "en_found_rate": 0.0,
+      "dual_found_rate": 0.0
+    },
+    {
+      "entry_id": "fused_018",
+      "en_evidence_count": 14,
+      "dual_evidence_count": 14,
+      "evidence_gain": 0,
+      "en_matched_fields": 4,
+      "dual_matched_fields": 4,
+      "field_improvements": [],
+      "en_found_rate": 0.7857,
+      "dual_found_rate": 0.8571
+    },
+    {
+      "entry_id": "fused_019",
+      "en_evidence_count": 166,
+      "dual_evidence_count": 166,
+      "evidence_gain": 0,
+      "en_matched_fields": 3,
+      "dual_matched_fields": 3,
+      "field_improvements": [],
+      "en_found_rate": 0.0904,
+      "dual_found_rate": 0.0904
+    },
+    {
+      "entry_id": "fused_020",
+      "en_evidence_count": 14,
+      "dual_evidence_count": 14,
+      "evidence_gain": 0,
+      "en_matched_fields": 3,
+      "dual_matched_fields": 3,
+      "field_improvements": [],
+      "en_found_rate": 0.2143,
+      "dual_found_rate": 0.2857
+    },
+    {
+      "entry_id": "fused_021",
+      "en_evidence_count": 14,
+      "dual_evidence_count": 14,
+      "evidence_gain": 0,
+      "en_matched_fields": 6,
+      "dual_matched_fields": 6,
+      "field_improvements": [],
+      "en_found_rate": 0.9286,
+      "dual_found_rate": 0.9286
+    },
+    {
+      "entry_id": "fused_022",
+      "en_evidence_count": 165,
+      "dual_evidence_count": 165,
+      "evidence_gain": 0,
+      "en_matched_fields": 4,
+      "dual_matched_fields": 3,
+      "field_improvements": [
+        {
+          "field_id": "B.disease_diagnosis",
+          "improvement": "en_found_dual_missed"
+        }
+      ],
+      "en_found_rate": 0.0788,
+      "dual_found_rate": 0.0848
+    },
+    {
+      "entry_id": "fused_023",
+      "en_evidence_count": 14,
+      "dual_evidence_count": 14,
+      "evidence_gain": 0,
+      "en_matched_fields": 4,
+      "dual_matched_fields": 4,
+      "field_improvements": [],
+      "en_found_rate": 0.5,
+      "dual_found_rate": 0.5714
+    },
+    {
+      "entry_id": "fused_024",
+      "en_evidence_count": 166,
+      "dual_evidence_count": 14,
+      "evidence_gain": -152,
+      "en_matched_fields": 0,
+      "dual_matched_fields": 1,
+      "field_improvements": [
+        {
+          "field_id": "A.gene_symbol",
+          "improvement": "en_missed_dual_found",
+          "dual_value": "GP1BA"
+        }
+      ],
+      "en_found_rate": 0.0,
+      "dual_found_rate": 0.0714
+    },
+    {
+      "entry_id": "fused_025",
+      "en_evidence_count": 14,
+      "dual_evidence_count": 14,
+      "evidence_gain": 0,
+      "en_matched_fields": 1,
+      "dual_matched_fields": 1,
+      "field_improvements": [],
+      "en_found_rate": 0.0714,
+      "dual_found_rate": 0.1429
+    },
+    {
+      "entry_id": "fused_026",
+      "en_evidence_count": 14,
+      "dual_evidence_count": 163,
+      "evidence_gain": 149,
+      "en_matched_fields": 5,
+      "dual_matched_fields": 5,
+      "field_improvements": [],
+      "en_found_rate": 0.7143,
+      "dual_found_rate": 0.0675
+    },
+    {
+      "entry_id": "fused_027",
+      "en_evidence_count": 166,
+      "dual_evidence_count": 164,
+      "evidence_gain": -2,
+      "en_matched_fields": 4,
+      "dual_matched_fields": 4,
+      "field_improvements": [],
+      "en_found_rate": 0.1024,
+      "dual_found_rate": 0.0915
+    },
+    {
+      "entry_id": "fused_028",
+      "en_evidence_count": 162,
+      "dual_evidence_count": 14,
+      "evidence_gain": -148,
+      "en_matched_fields": 4,
+      "dual_matched_fields": 3,
+      "field_improvements": [
+        {
+          "field_id": "A.variant_hgvs_c",
+          "improvement": "en_found_dual_missed"
+        }
+      ],
+      "en_found_rate": 0.0556,
+      "dual_found_rate": 0.7143
+    },
+    {
+      "entry_id": "fused_029",
+      "en_evidence_count": 14,
+      "dual_evidence_count": 14,
+      "evidence_gain": 0,
+      "en_matched_fields": 2,
+      "dual_matched_fields": 2,
+      "field_improvements": [],
+      "en_found_rate": 0.4286,
+      "dual_found_rate": 0.2857
+    }
+  ]
+}

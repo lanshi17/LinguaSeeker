@@ -1,0 +1,2241 @@
+[
+  {
+    "entry_id": "fused_000",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "7dfb805e-3a04-4a33-a545-9c5ffd805af4",
+    "evidence_count": 166,
+    "found_rate": 0.0783,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "CFTR",
+        "extracted_value": "CFTR",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": true,
+        "expected_value": "cystic fibrosis",
+        "extracted_value": "cystic fibrosis",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "AR",
+        "extracted_value": "AR",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.1521_1523del",
+        "extracted_value": "c.1675 G > A",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Phe508del",
+        "extracted_value": "p.R117H",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "deletion",
+        "extracted_value": "missense",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 1748.7,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_001",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "1b777d69-9354-482d-8126-42f0594042c6",
+    "evidence_count": 166,
+    "found_rate": 0.084,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "ABCA4",
+        "extracted_value": "ABCA4",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "ABCA4-related retinopathy",
+        "extracted_value": "Stargardt disease (STGD1)",
+        "match_type": "partial"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "AR",
+        "extracted_value": "autosomal recessive (AR)",
+        "match_type": "semantic"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": true,
+        "expected_value": "c.5882G>A",
+        "extracted_value": "c.5882G>A",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": true,
+        "expected_value": "p.Gly1961Glu",
+        "extracted_value": "p.G1961E",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": true,
+        "expected_value": "missense",
+        "extracted_value": "missense",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {},
+    "standardization_accuracy": 0.0,
+    "duration_s": 1808.95,
+    "error_message": "Poll timed out"
+  },
+  {
+    "entry_id": "fused_002",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "daadfdf5-46eb-4b99-ae6b-2a4dfe135b5b",
+    "evidence_count": 14,
+    "found_rate": 0.7143,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "ACADVL",
+        "extracted_value": "ACADVL",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": true,
+        "expected_value": "very long chain acyl-CoA dehydrogenase deficiency",
+        "extracted_value": "Very long-chain acyl-CoA dehydrogenase deficiency",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "AR",
+        "extracted_value": "autosomal recessive (AR)",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.1182+1G>A",
+        "extracted_value": "c.1844G>A",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Arg613Trp",
+        "extracted_value": "p.R615Q",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": true,
+        "expected_value": "missense",
+        "extracted_value": "missense",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Likely pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.0,
+    "duration_s": 1044.75,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_003",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "53324ad6-866a-4a0a-b270-880dfa0c009a",
+    "evidence_count": 166,
+    "found_rate": 0.0904,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "ACTA1",
+        "extracted_value": "ACTA1",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "alpha-actinopathy",
+        "extracted_value": "Nemaline myopathy",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "AR",
+        "extracted_value": "de novo",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": true,
+        "expected_value": "c.1075A>C",
+        "extracted_value": "c.1075A>C",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": true,
+        "expected_value": "p.Ile359Leu",
+        "extracted_value": "p.I359L",
+        "match_type": "field_normalized"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": true,
+        "expected_value": "missense",
+        "extracted_value": "missense",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 1286.6,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_004",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "c1a5e7d6-ad49-435c-a1f5-4ade3625ba99",
+    "evidence_count": 166,
+    "found_rate": 0.0904,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "ACTA1",
+        "extracted_value": "ACTA1",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "alpha-actinopathy",
+        "extracted_value": "Nemaline myopathy",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "AD",
+        "extracted_value": "autosomal dominant (OD)",
+        "match_type": "field_normalized"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": true,
+        "expected_value": "c.1075A>C",
+        "extracted_value": "c.1075A>C",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": true,
+        "expected_value": "p.Ile359Leu",
+        "extracted_value": "p.I359L",
+        "match_type": "field_normalized"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": true,
+        "expected_value": "missense",
+        "extracted_value": "missense",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 582.91,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_005",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "49220bdb-5ee4-4ffb-bf01-004a92dfafd8",
+    "evidence_count": 166,
+    "found_rate": 0.0723,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "ADA",
+        "extracted_value": "ADA",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "severe combined immunodeficiency, autosomal recessive, T cell-negative, B cell-negative, NK cell-negative, due to adenosine deaminase deficiency",
+        "extracted_value": "ADA deficiency",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "AR",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.632G>A",
+        "extracted_value": "c.218+2T>G",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": true,
+        "expected_value": "p.Arg211His",
+        "extracted_value": "p.R211H",
+        "match_type": "field_normalized"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "missense",
+        "extracted_value": "splice-site",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.0,
+    "duration_s": 552.46,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_006",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "1cd44d1d-731c-4a24-b988-5a1a2de919e8",
+    "evidence_count": 166,
+    "found_rate": 0.0723,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "APC",
+        "extracted_value": "APC",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": true,
+        "expected_value": "classic or attenuated familial adenomatous polyposis",
+        "extracted_value": "familial adenomatous polyposis",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "AD",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": true,
+        "expected_value": "c.3927_3931del",
+        "extracted_value": "c.3927_3931del",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": true,
+        "expected_value": "p.Glu1309fs",
+        "extracted_value": "p.E1309fs",
+        "match_type": "field_normalized"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "other",
+        "extracted_value": "deletion",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 819.12,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_007",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "0a962cec-9beb-4ee1-b8b6-b9fa317b6378",
+    "evidence_count": 165,
+    "found_rate": 0.0242,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "ATM",
+        "extracted_value": "ATM",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "ataxia telangiectasia",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": false,
+        "expected_value": "causative",
+        "extracted_value": "uncertain",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "AR",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.8575TCT[1]",
+        "extracted_value": "c.5763-1050A>G",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Ser2860del",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "other",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.0,
+    "duration_s": 839.2,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_008",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "3ab7c5ee-bea5-4823-842d-d154d010e73c",
+    "evidence_count": 14,
+    "found_rate": 0.6429,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "BMPR2",
+        "extracted_value": "BMPR2",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": true,
+        "expected_value": "pulmonary arterial hypertension",
+        "extracted_value": "pulmonary arterial hypertension",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "AD",
+        "extracted_value": "autosomal dominant (AD)",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.218C>G",
+        "extracted_value": "c.1472G>A",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Ser73Ter",
+        "extracted_value": "p.R491Q",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "missense",
+        "extracted_value": "splice-site",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 1160.69,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_009",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "ba38a4c5-acac-4c23-bf52-901e133af472",
+    "evidence_count": 163,
+    "found_rate": 0.0675,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "BRCA1",
+        "extracted_value": "BRCA1",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "BRCA1-related cancer predisposition",
+        "extracted_value": "hereditary breast and ovarian cancer syndrome (HBOCS)",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "AD",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.181T>G",
+        "extracted_value": "c.5266dup",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Cys61Gly",
+        "extracted_value": "p.Q1756fs",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "missense",
+        "extracted_value": "frameshift",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.0,
+    "duration_s": 1366.72,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_010",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "4fb5d3bc-f646-4f29-9613-048ea9e9f485",
+    "evidence_count": 165,
+    "found_rate": 0.0182,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "BRCA2",
+        "extracted_value": "BRCA2",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "Fanconi anemia complementation group D1",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": false,
+        "expected_value": "causative",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "AR",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.2808_2811del",
+        "extracted_value": "c.156_157insAlu",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Ala938Profs",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "deletion",
+        "extracted_value": "insertion",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 919.52,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_011",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "7eb2ba3d-8819-4148-96d8-cb2bc775bcad",
+    "evidence_count": 165,
+    "found_rate": 0.0667,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "BRCA2",
+        "extracted_value": "BRCA2",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "BRCA2-related cancer predisposition",
+        "extracted_value": "breast cancer",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "susceptibility",
+        "match_type": "field_normalized"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "AD",
+        "extracted_value": "autosomal dominant (AD)",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": true,
+        "expected_value": "c.6275_6276del",
+        "extracted_value": "c.6275_6276delTT",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Leu2092fs",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": true,
+        "expected_value": "deletion",
+        "extracted_value": "deletion",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.0,
+    "duration_s": 773.7,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_012",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "43f684e4-8ffa-461e-ae64-01cabfde93e4",
+    "evidence_count": 14,
+    "found_rate": 0.5714,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "CDKL5",
+        "extracted_value": "CDKL5",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": true,
+        "expected_value": "CDKL5 disorder",
+        "extracted_value": "CDKL5 deficiency disorder",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "XL",
+        "extracted_value": "X-linked",
+        "match_type": "field_normalized"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.2500C>T",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Gln834Ter",
+        "extracted_value": "p.G632*",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "missense",
+        "extracted_value": "nonsense",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.6666666666666666,
+    "duration_s": 688.34,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_013",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "4e509be0-5dec-4f7c-bdcd-1535dab2e06f",
+    "evidence_count": 14,
+    "found_rate": 0.2143,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "CYP1B1",
+        "extracted_value": "CYP1B1",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "CYP1B1-related glaucoma with or without anterior segment dysgenesis",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": false,
+        "expected_value": "causative",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "AR",
+        "extracted_value": "autosomal recessive (AR)",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.182G>A",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Gly61Glu",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "missense",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 517.49,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_014",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "a3839706-7e78-4310-bbf4-dd753cc8de49",
+    "evidence_count": 166,
+    "found_rate": 0.0964,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "DCLRE1C",
+        "extracted_value": "DCLRE1C",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "severe combined immunodeficiency due to DCLRE1C deficiency",
+        "extracted_value": "autosomal recessive SCID due to DCLRE1C deficiency",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "AR",
+        "extracted_value": "autosomal recessive (AR)",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": true,
+        "expected_value": "c.241C>T",
+        "extracted_value": "c.241C>T",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": true,
+        "expected_value": "p.Arg81Ter",
+        "extracted_value": "p.R81*",
+        "match_type": "field_normalized"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "missense",
+        "extracted_value": "nonsense",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.0,
+    "duration_s": 567.78,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_015",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "840f9e11-79e3-4140-8a3e-0fd10c25e466",
+    "evidence_count": 166,
+    "found_rate": 0.0843,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "DICER1",
+        "extracted_value": "DICER1",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": true,
+        "expected_value": "DICER1-related tumor predisposition",
+        "extracted_value": "DICER1 tumor predisposition syndrome (DTPS)",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "AD",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.4748T>G",
+        "extracted_value": "c.2407G>A",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Leu1583Arg",
+        "extracted_value": "p.G803R",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": true,
+        "expected_value": "missense",
+        "extracted_value": "missense",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Likely pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.0,
+    "duration_s": 713.48,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_016",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "22aaf8ff-84d2-45bf-8eae-172586d781a0",
+    "evidence_count": 166,
+    "found_rate": 0.1024,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "DNM2",
+        "extracted_value": "DNM2",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": true,
+        "expected_value": "autosomal dominant centronuclear myopathy",
+        "extracted_value": "centronuclear myopathy",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "AD",
+        "extracted_value": "monoallelic",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": true,
+        "expected_value": "c.1106G>A",
+        "extracted_value": "c.1726G>A",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Arg369Gln",
+        "extracted_value": "p.E576K",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": true,
+        "expected_value": "missense",
+        "extracted_value": "missense",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": "variant of uncertain significance (VUS) according to ACMG",
+        "match_type": "wrong_value"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 577.74,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_017",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "edf72018-d0a7-4dec-93d6-8a88559e2cac",
+    "evidence_count": 166,
+    "found_rate": 0.0,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": false,
+        "expected_value": "F8",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "hemophilia A",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": false,
+        "expected_value": "causative",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "XL",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.6976C>T",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Arg2326Ter",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "missense",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.0,
+    "duration_s": 396.87,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_018",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "11aa523c-b7f3-41bd-bc59-1e0943e7ac6a",
+    "evidence_count": 14,
+    "found_rate": 0.7857,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "F9",
+        "extracted_value": "F9",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": true,
+        "expected_value": "hemophilia B",
+        "extracted_value": "hemophilia B",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "XL",
+        "extracted_value": "X-linked recessive",
+        "match_type": "field_normalized"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.223C>T",
+        "extracted_value": "c.1314_1314delA",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Arg75Ter",
+        "extracted_value": "p.E63M",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "missense",
+        "extracted_value": "frameshift",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.0,
+    "duration_s": 376.79,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_019",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "b84ef573-7844-4ad6-9fbc-756eaada2173",
+    "evidence_count": 166,
+    "found_rate": 0.0904,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "FOXG1",
+        "extracted_value": "FOXG1",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "FOXG1 disorder",
+        "extracted_value": "FOXG1 syndrome",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "AD",
+        "extracted_value": "de novo",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": true,
+        "expected_value": "c.460dup",
+        "extracted_value": "c.460dup",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Glu154fs",
+        "extracted_value": "p.E154G",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "dup",
+        "extracted_value": "frameshift",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 437.04,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_020",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "7d3ad1b2-bf58-4c57-806d-eb96971d112e",
+    "evidence_count": 14,
+    "found_rate": 0.2143,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "FOXN1",
+        "extracted_value": "FOXN1",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": true,
+        "expected_value": "T-cell immunodeficiency, congenital alopecia, and nail dystrophy",
+        "extracted_value": "severe T cell immunodeficiency, congenital alopecia, and nail dystrophy",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "SD",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.763C>T",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Arg255Ter",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "missense",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 406.98,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_021",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "323b0c6a-d305-4fc6-a591-19cf390eb0dd",
+    "evidence_count": 14,
+    "found_rate": 0.9286,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "GAA",
+        "extracted_value": "GAA",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": true,
+        "expected_value": "glycogen storage disease II",
+        "extracted_value": "Glycogen Storage Disease Type II",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "AR",
+        "extracted_value": "autosomal recessive (AR)",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": true,
+        "expected_value": "c.953T>C",
+        "extracted_value": "c.953T>G",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Met318Thr",
+        "extracted_value": "p.D645E",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": true,
+        "expected_value": "missense",
+        "extracted_value": "missense",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.0,
+    "duration_s": 587.91,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_022",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "a5c9af0d-4845-4b05-b62a-19f1af2c8344",
+    "evidence_count": 165,
+    "found_rate": 0.0788,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "GJB2",
+        "extracted_value": "GJB2",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": true,
+        "expected_value": "nonsyndromic genetic hearing loss",
+        "extracted_value": "hearing loss",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "AR",
+        "extracted_value": "autosomal recessive (AR)",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.101T>C",
+        "extracted_value": "c.109G>A",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Met34Thr",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "missense",
+        "extracted_value": "deletion",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.0,
+    "duration_s": 658.23,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_023",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "a30b595d-dd41-472d-916e-40d10fa58e7a",
+    "evidence_count": 14,
+    "found_rate": 0.5,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "GP1BA",
+        "extracted_value": "GP1BA",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": true,
+        "expected_value": "Bernard-Soulier syndrome",
+        "extracted_value": "Bernard–Soulier syndrome",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "AR",
+        "extracted_value": "AR",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.1077G>A",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Trp359Ter",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "missense",
+        "extracted_value": "deletion",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Likely pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 482.34,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_024",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "7a4db093-53c6-477f-92bb-24006569b886",
+    "evidence_count": 166,
+    "found_rate": 0.0,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": false,
+        "expected_value": "GP1BA",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "platelet-type von Willebrand disease",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": false,
+        "expected_value": "causative",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "AD",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.1620G>A",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Trp540Ter",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "missense",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.0,
+    "duration_s": 427.11,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_025",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "a4cccd34-84bc-4d49-be9a-7aa75a791453",
+    "evidence_count": 14,
+    "found_rate": 0.0714,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "GP1BB",
+        "extracted_value": "GP1BB",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "Bernard-Soulier syndrome",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": false,
+        "expected_value": "causative",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "AR",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.338A>G",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Tyr113Cys",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "missense",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Likely pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 397.03,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_026",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "b61ba8b5-f956-4b45-9c0e-1f370fd5c7c6",
+    "evidence_count": 14,
+    "found_rate": 0.7143,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "GP9",
+        "extracted_value": "GP9",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": true,
+        "expected_value": "Bernard-Soulier syndrome",
+        "extracted_value": "Bernard–Soulier syndrome",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "AR",
+        "extracted_value": "autosomal recessive (AR)",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.182A>G",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Asn61Ser",
+        "extracted_value": "p.C24R",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": true,
+        "expected_value": "missense",
+        "extracted_value": "missense",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 457.32,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_027",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "4c1fac65-5a5a-42f5-b95a-09d7cc3c96ed",
+    "evidence_count": 166,
+    "found_rate": 0.1024,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "GUCY2D",
+        "extracted_value": "GUCY2D",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "GUCY2D-related recessive retinopathy",
+        "extracted_value": "GUCY2D -Associated Leber Congenital Amaurosis",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": true,
+        "expected_value": "AR",
+        "extracted_value": "autosomal recessive (AR)",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.1694T>C",
+        "extracted_value": "c.307G>A",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Phe565Ser",
+        "extracted_value": "p.E103K",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": true,
+        "expected_value": "missense",
+        "extracted_value": "missense",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 522.61,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_028",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "4b75d732-c1a4-4c0c-8ea2-2a0f951c7471",
+    "evidence_count": 162,
+    "found_rate": 0.0556,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "HBB",
+        "extracted_value": "HBB",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "beta-thalassemia HBB/LCRB",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "AR",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": true,
+        "expected_value": "c.82G>T",
+        "extracted_value": "c.[70G>T;79G>A]",
+        "match_type": "fuzzy"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "matched": false,
+        "expected_value": "p.Ala28Ser",
+        "extracted_value": "V23F/E26K",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": true,
+        "expected_value": "missense",
+        "extracted_value": "missense",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.0,
+    "duration_s": 678.39,
+    "error_message": null
+  },
+  {
+    "entry_id": "fused_029",
+    "mode": "en_only",
+    "pipeline_status": "completed",
+    "run_id": "38c2137c-c72b-429e-a163-84afb4e48d7d",
+    "evidence_count": 14,
+    "found_rate": 0.4286,
+    "grounding_rate": 0.0,
+    "field_matches": [
+      {
+        "field_id": "A.gene_symbol",
+        "matched": true,
+        "expected_value": "HBB",
+        "extracted_value": "HBB",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "matched": false,
+        "expected_value": "dominant beta-thalassemia",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "matched": true,
+        "expected_value": "causative",
+        "extracted_value": "causative",
+        "match_type": "exact"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "matched": false,
+        "expected_value": "AD",
+        "extracted_value": null,
+        "match_type": "missing"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "matched": false,
+        "expected_value": "c.92+5G>C",
+        "extracted_value": "c.126_129del",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "A.variant_type",
+        "matched": false,
+        "expected_value": "missense",
+        "extracted_value": "splice-site",
+        "match_type": "wrong_value"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "matched": false,
+        "expected_value": "Pathogenic",
+        "extracted_value": null,
+        "match_type": "missing"
+      }
+    ],
+    "entity_matches": {
+      "gene": true,
+      "disease": true,
+      "variant_candidates": true
+    },
+    "standardization_accuracy": 0.3333333333333333,
+    "duration_s": 989.81,
+    "error_message": null
+  }
+]

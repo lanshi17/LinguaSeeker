@@ -9,7 +9,12 @@ from pathlib import Path
 import numpy as np
 from scipy import stats
 
-BASE = Path(__file__).resolve().parents[2] / "benchmark/data/reports/nar_ablation"
+_ROOT = Path(__file__).resolve().parents[2]
+_REPORT_DIRS = [
+    _ROOT / "benchmark/data/reports/nar_ablation",  # live runner output (symlinked data dir)
+    _ROOT / "docs/gim/supplementary/reports",  # committed copy for reproducibility
+]
+BASE = next(d for d in _REPORT_DIRS if (d / "ablation_report.json").exists())
 
 
 def wilson_ci(k: int, n: int, z: float = 1.96) -> tuple[float, float]:

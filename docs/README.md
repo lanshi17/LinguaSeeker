@@ -18,6 +18,7 @@ docs/
 │   ├── plans/        # 已完成或被取代的计划
 │   ├── codereview/   # 已完成的代码审查
 │   └── deprecated-modules/  # 已移除模块的 README
+├── gim/              # GIM 投稿工作区（manuscript/figures/supplementary）
 └── templates/        # plan.md、codereview.md 模板
 ```
 
@@ -123,4 +124,4 @@ docs/
 
 | 日期 | 标题 | 状态 |
 |------|------|------|
-| 2026-08-09 | [NAR Web Server 投稿工作区](nar-web-server/README.md) | in-progress |
+| 2026-08-09 | [GIM 投稿工作区](gim/README.md) | in-progress |

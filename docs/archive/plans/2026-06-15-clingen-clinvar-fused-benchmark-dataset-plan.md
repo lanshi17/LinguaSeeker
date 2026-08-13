@@ -1,6 +1,6 @@
 # ClinGen + ClinVar Fused Benchmark Dataset Plan
 
-**Status:** completed (fused-75 数据集构建+翻译+评估全部完成；原 Phase 3/4 由 GIM ablation 实验取代，见 docs/nar-web-server/gim_working_file.md)
+**Status:** completed (fused-75 数据集构建+翻译+评估全部完成；原 Phase 3/4 由 GIM ablation 实验取代，见 docs/gim/gim_working_file.md)
 **Created:** 2026-06-15
 **Updated:** 2026-08-12
 **Completed:** 2026-08-12

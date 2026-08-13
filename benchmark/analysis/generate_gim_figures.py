@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Generate GIM paper figures from multilingual contribution report.
 
-Figures:
-  F1: Paired bar chart — per-entry EN-only vs Combined evidence items
-  F2: Field-level benefit heatmap — which ACMG fields gain from Chinese track
+Figures (numbered in order of first citation; F1 architecture is generated
+by generate_gim_architecture.py):
+  F2: Paired bar chart — per-entry EN-only vs Combined evidence items
   F3: Evidence gain distribution (histogram/box)
-  F4: By-field count of evidence items (grouped)
+  F4: Field-level benefit heatmap — which ACMG fields gain from Chinese track
+  S1: By-category count of evidence items (grouped; Supplementary Figure S1)
 """
 from __future__ import annotations
 
@@ -18,8 +19,13 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-REPORT = Path(__file__).resolve().parents[2] / "benchmark" / "data" / "reports" / "nar_ablation" / "multilingual_contribution_report.json"
-OUT_DIR = Path(__file__).resolve().parents[2] / "docs" / "nar-web-server" / "figures"
+_ROOT = Path(__file__).resolve().parents[2]
+_REPORT_DIRS = [
+    _ROOT / "benchmark" / "data" / "reports" / "nar_ablation",  # live runner output (symlinked data dir)
+    _ROOT / "docs" / "gim" / "supplementary" / "reports",  # committed copy for reproducibility
+]
+REPORT = next(d for d in _REPORT_DIRS if (d / "multilingual_contribution_report.json").exists()) / "multilingual_contribution_report.json"
+OUT_DIR = _ROOT / "docs" / "gim" / "figures"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Color palette (NAR-style, white bg, blue family)
@@ -34,8 +40,8 @@ def load_report() -> dict:
         return json.load(f)
 
 
-def fig1_paired_bar(report: dict) -> None:
-    """F1: Per-entry paired bar chart EN vs Combined."""
+def fig2_paired_bar(report: dict) -> None:
+    """F2: Per-entry paired bar chart EN vs Combined."""
     entries = report["per_entry"]
     entries.sort(key=lambda e: e["entry_id"])
 
@@ -82,14 +88,14 @@ def fig1_paired_bar(report: dict) -> None:
     ax.grid(axis="y", alpha=0.3)
 
     fig.tight_layout()
-    out = OUT_DIR / "F1_paired_evidence_comparison.png"
+    out = OUT_DIR / "F2_paired_evidence_comparison.png"
     fig.savefig(out, dpi=300, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved: {out}")
 
 
-def fig2_field_heatmap(report: dict) -> None:
-    """F2: Field-level benefit heatmap."""
+def fig4_field_heatmap(report: dict) -> None:
+    """F4: Field-level benefit heatmap."""
     entries = report["per_entry"]
     entries.sort(key=lambda e: e["entry_id"])
 
@@ -135,7 +141,7 @@ def fig2_field_heatmap(report: dict) -> None:
     ax.spines["right"].set_visible(False)
 
     fig.tight_layout()
-    out = OUT_DIR / "F2_field_level_zh_benefit_heatmap.png"
+    out = OUT_DIR / "F4_field_level_zh_benefit_heatmap.png"
     fig.savefig(out, dpi=300, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved: {out}")
@@ -176,8 +182,8 @@ def fig3_gain_distribution(report: dict) -> None:
     print(f"Saved: {out}")
 
 
-def fig4_field_count_grouped(report: dict) -> None:
-    """F4: Total evidence count by field category (EN vs ZH)."""
+def fig_s1_field_count_grouped(report: dict) -> None:
+    """S1: Total evidence count by field category (EN vs ZH); Supplementary Figure S1."""
     entries = report["per_entry"]
 
     # Load run_ids from dual_track_metrics
@@ -234,7 +240,7 @@ def fig4_field_count_grouped(report: dict) -> None:
     ax.grid(axis="y", alpha=0.3)
 
     fig.tight_layout()
-    out = OUT_DIR / "F4_evidence_by_category.png"
+    out = OUT_DIR / "S1_evidence_by_category.png"
     fig.savefig(out, dpi=300, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved: {out}")
@@ -247,10 +253,10 @@ def main() -> None:
     print(f"Multilingual gain: {report['aggregate']['multilingual_gain_items']} items/entry "
           f"({report['aggregate']['multilingual_gain_pct']}%)")
     print()
-    fig1_paired_bar(report)
-    fig2_field_heatmap(report)
+    fig2_paired_bar(report)
     fig3_gain_distribution(report)
-    fig4_field_count_grouped(report)
+    fig4_field_heatmap(report)
+    fig_s1_field_count_grouped(report)
     print("\nAll figures generated in:", OUT_DIR)
 
 

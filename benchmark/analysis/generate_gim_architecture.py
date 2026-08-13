@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate GIM paper Figure S5: Lingua Seeker four-phase system architecture.
+"""Generate GIM paper Figure 1: Lingua Seeker four-phase system architecture.
 
 Pure matplotlib block diagram, consistent with generate_gim_figures.py palette.
 """
@@ -12,7 +12,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
-OUT_DIR = Path(__file__).resolve().parents[2] / "docs" / "nar-web-server" / "figures"
+OUT_DIR = Path(__file__).resolve().parents[2] / "docs" / "gim" / "figures"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 EN_COLOR = "#4C72B0"
@@ -110,11 +110,11 @@ def main() -> None:
             ha="left", va="center", fontsize=8, color="#222222", linespacing=1.5,
             bbox=dict(boxstyle="round,pad=0.35", facecolor="#FAFAFA", edgecolor="#999999", linewidth=0.8))
 
-    # ZH track indicator inside phase 2
-    ax.text(4.7, 3.22, "ZH track", ha="center", va="bottom", fontsize=7.5,
+    # ZH track indicator below phase 2
+    ax.text(4.7, 3.02, "ZH track", ha="center", va="top", fontsize=7.5,
             color=ZH_COLOR, fontweight="bold", rotation=0)
 
-    out = OUT_DIR / "F5_architecture.png"
+    out = OUT_DIR / "F1_architecture.png"
     fig.savefig(out, bbox_inches="tight", facecolor="white")
     print(f"Saved: {out}")
 

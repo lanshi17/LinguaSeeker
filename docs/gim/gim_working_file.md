@@ -4,7 +4,7 @@
 > 核心论题：跨语言证据提取对 ACMG 变异分类的边际贡献
 
 **创建日期:** 2026-08-09
-**最后更新:** 2026-08-12
+**最后更新:** 2026-08-13
 
 ---
 
@@ -159,3 +159,23 @@
 - `manuscript/draft.md` — 188 行完整稿, 统计/引用/图表全部就绪
 - `supplementary/supplementary.md` — Table S1/S2 数据已修正 (23 实例)
 - `figures/` — F1–F5 (F1 图注已修正单位标注, 2026-08-12 重新生成)
+
+---
+
+## GIM 格式合规修订 (2026-08-13, submission-ready)
+
+对照 GIM Guide for Authors (Elsevier) 完成整改:
+
+- [x] **摘要 297 → 188 词** (GIM 上限 200, 结构化 Purpose/Methods/Results/Conclusion)
+- [x] **Display items 6 → 5** (上限 5): 分类别柱状图移入 Supplementary Figure S1, 保留 Figure 1–4 + Table 1
+- [x] **图按引用顺序重编号** (GIM 要求编号=首次引用顺序): 架构图 F5→Figure 1, 配对图 F1→Figure 2, 分布图 F3 不变, 热图 F2→Figure 4, 类别图 F4→S1; 生成脚本同步改名并重新生成, 旧 PNG 已删除
+- [x] **Methods 编号修正**: 2.5→2.6(统计)→2.7(LLM 配置), 原稿缺 2.6
+- [x] **End matter 按 GIM 顺序**: Data Availability → Acknowledgments → Funding Statement → Author Contributions (CRediT 模板) → Ethics Declaration (纯公开数据无需 IRB) → COI → AI 写作声明 → References → Figure Legends
+- [x] **Table 1 口径统一**: gained/lost 均按 "≥1 字段" 计 (3/3, fused_016 互换计入两侧), 新增净值行 (+2/−2/1 swap); §3.3 文字同步; 补充材料 S1 汇总同步
+- [x] **参考文献 6 → 12 条**: 新增 Tavtigian 2018 / Harrison 2019 / Amano 2016 / Singhal 2023 / MinerU arXiv / M3-Embedding arXiv, 全部经 Crossref / arXiv API 核验 (2026-08-13); 按首次引用顺序重排; Rehm/Landrum 原先未被正文引用, 现在 §2.3 引用
+- [x] **Data Availability 修复**: `benchmark/data` 为仓库外符号链接且被 .gitignore 忽略, 报告文件原本未入库 → 5 个报告文件复制到 `docs/gim/supplementary/reports/` (committed copy), `gim_statistics.py` / `generate_gim_figures.py` 增加回退读取路径, 声明文字改指向 committed copy
+- [x] **统计复现** (2026-08-13): `uv run python benchmark/analysis/gim_statistics.py` 输出与正文全部一致
+- [x] **补充材料英文化**: Fig S1 图注 + Table S1/S2 + Note S1–S5; Note S3 修正为与代码一致的描述 (无 BLEU, 实际为完整性/覆盖率/语言检查); Note S4 用实测耗时替换 TBD (EN-only mean 759.6s / median 623.1s; dual mean 612.6s / median 416.5s, n=30/模式, 附 batch 时段负载注记)
+- [x] **Cover letter 草稿**: `assets/cover_letter.md`
+- [x] **Title page 要素**: running title, 通讯作者占位
+- [ ] 待人工: 作者列表/单位/通讯/CRediT/基金; AI 声明工具名确认; Editorial Manager 上传格式转换
