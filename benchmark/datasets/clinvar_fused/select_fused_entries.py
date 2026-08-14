@@ -25,8 +25,7 @@ from benchmark.datasets.clinvar_fused.hgvs_normalize import (
 # Paths — resolve to main repo root (database/ may not exist in worktrees)
 _HERE = Path(__file__).resolve()
 _REPO_ROOT = _HERE.parent.parent.parent.parent
-_MAIN_REPO = Path("/data/[redacted-user]/Projects/01_ACMG_Lingua")
-_DATABASE_ROOT = _MAIN_REPO / "database" / "terminology_database"
+_DATABASE_ROOT = _REPO_ROOT / "database" / "terminology_database"
 CLINGEN_CSV = _DATABASE_ROOT / "clingen" / "Clingen-Gene-Disease-Summary.csv"
 CLINVAR_TSV = _DATABASE_ROOT / "clinvar" / "variant_summary.txt"
 OUTPUT_DIR = Path(__file__).resolve().parent / "ground_truth"

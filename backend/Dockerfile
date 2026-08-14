@@ -170,13 +170,20 @@ COPY --chown=deploy:deploy libs/ /app/libs/
 # Operational scripts (ensure_neo4j_indexes, backfill_source_language, etc.)
 # so they can run inside the container via `docker compose run/exec`.
 COPY --chown=deploy:deploy scripts/ /app/scripts/
-# Strip the host venv and create required directories
-# /app/logs is the directory code resolves to (Path(__file__)/.../.../.../... + "logs")
-# under the new backend/ layout; /app/backend/logs is the canonical data mount point.
+# Strip the host venv and create required directories.
+# Code resolves runtime dirs relative to the repo root (/app):
+#   data/pipeline/*  → /app/data       (phase outputs, uploads)
+#   logs             → /app/logs
+#   output/*         → /app/output     (legacy cross_lingual)
+#   downloads        → /app/downloads
+# These must exist and be deploy-owned: the container runs as uid 1000
+# (deploy), and named volumes (staging) inherit image ownership on first
+# creation — a root-owned /app/data makes the pipeline fail with
+# "[Errno 13] Permission denied: /app/data/pipeline".
 RUN rm -rf /app/backend/.venv \
- && mkdir -p /app/logs /app/backend/logs /app/backend/data /app/backend/downloads /app/backend/output \
+ && mkdir -p /app/data /app/downloads /app/output /app/logs /app/backend/logs /app/backend/data \
  && chown deploy:deploy /opt/venv /opt/venv/bin /opt/venv/lib \
- && chown -R deploy:deploy /app/backend /app/logs \
+ && chown -R deploy:deploy /app/backend /app/data /app/downloads /app/output /app/logs \
  && chmod +x /app/backend/docker-entrypoint.sh
 
 USER deploy

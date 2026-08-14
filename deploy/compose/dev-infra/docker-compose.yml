@@ -57,7 +57,7 @@ services:
       - dev_neo4j_data:/data
       - dev_neo4j_logs:/logs
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:7474/dbms/ready || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10

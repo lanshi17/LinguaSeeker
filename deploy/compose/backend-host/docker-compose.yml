@@ -10,6 +10,12 @@
 #                  up -d
 #
 # Only the backend port is published; database + redis stay private.
+#
+# ── Volume ownership (required) ─────────────────────────────────────
+# The image runs as non-root uid 1000 (deploy). Bind-mounted host dirs
+# must be writable by uid 1000, or the pipeline fails with
+# "[Errno 13] Permission denied: /app/data/pipeline". One-time setup:
+#   chown -R 1000:1000 ./logs ./data ./downloads ./output
 # ============================================================================
 services:
   backend:
