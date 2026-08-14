@@ -32,7 +32,7 @@ class EvidenceExtractionConfigContext:
     max_tokens: int = 8192
     temperature: float = 0.0
     timeout: int = 180
-    max_retries: int = 1
+    max_retries: int = 3
     graph_rag_enabled: bool = False
     graph_rag_hops: int = 2
     graph_rag_mode: str = "full"
@@ -66,7 +66,7 @@ class EvidenceExtractionConfigContext:
             max_tokens=reasoning.max_tokens,
             temperature=0.0,
             timeout=reasoning.timeout,
-            max_retries=1,
+            max_retries=3,
             graph_rag_enabled=graph_rag_enabled,
             graph_rag_hops=graph_rag_hops,
             graph_rag_mode=graph_rag_mode,

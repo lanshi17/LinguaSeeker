@@ -107,7 +107,7 @@ class EvidenceGraphBuilder:
                     "field_id": item.field_id,
                     "status": item.status.value if isinstance(item.status, EvidenceStatus) else str(item.status),
                     "confidence": item.confidence,
-                    "track": item.track,
+                    "track": getattr(item, "track", ""),
                     "group_id": getattr(item, "group_id", ""),
                 },
             )

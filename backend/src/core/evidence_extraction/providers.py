@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 from enum import Enum
 import json
+import time
 
 from typing import Any
 from typing import Literal
@@ -122,6 +124,10 @@ class LangChainEvidenceProvider:
                     )
                     return self._invoke_json_text(client, prompt, output_schema)
                 logger.warning("Stage {} transient failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
+                if attempt < self._ctx.max_retries:
+                    backoff = 2**attempt
+                    logger.info("Stage {} backing off {}s before retry", stage, backoff)
+                    time.sleep(backoff)
             except Exception as exc:
                 last_exc = exc
                 if (
@@ -142,6 +148,9 @@ class LangChainEvidenceProvider:
                 logger.warning(
                     "Stage {} structured output failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc
                 )
+                backoff = 2**attempt
+                logger.info("Stage {} backing off {}s before retry", stage, backoff)
+                time.sleep(backoff)
         raise RuntimeError(f"Stage {stage} failed structured output") from last_exc
 
     async def ainvoke_structured(
@@ -180,6 +189,10 @@ class LangChainEvidenceProvider:
                     )
                     return await self._ainvoke_json_text(client, prompt, output_schema)
                 logger.warning("Stage {} transient failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
+                if attempt < self._ctx.max_retries:
+                    backoff = 2**attempt
+                    logger.info("Stage {} backing off {}s before retry", stage, backoff)
+                    await asyncio.sleep(backoff)
             except Exception as exc:
                 last_exc = exc
                 if (
@@ -200,6 +213,9 @@ class LangChainEvidenceProvider:
                 logger.warning(
                     "Stage {} structured output failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc
                 )
+                backoff = 2**attempt
+                logger.info("Stage {} backing off {}s before retry", stage, backoff)
+                await asyncio.sleep(backoff)
         raise RuntimeError(f"Stage {stage} failed structured output") from last_exc
 
     async def _ainvoke_json_text(

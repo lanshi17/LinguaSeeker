@@ -6,7 +6,7 @@ description = "High-performance HTTP/web I/O for Lingua Seeker"
 
 [lib]
 name = "net_io"
-crate-type = ["rlib"]
+crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.28.2" }

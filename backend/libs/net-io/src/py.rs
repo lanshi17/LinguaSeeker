@@ -715,3 +715,23 @@ pub fn mineru_upload_local_file<'py>(
         })
     })
 }
+
+// ── Python module entry point ──────────────────────────────────────────
+#[pymodule]
+fn net_io(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(fetch_one, m)?)?;
+    m.add_function(wrap_pyfunction!(fetch_multi, m)?)?;
+    m.add_function(wrap_pyfunction!(scrape_web, m)?)?;
+    m.add_function(wrap_pyfunction!(scrape_html, m)?)?;
+    m.add_function(wrap_pyfunction!(extract_pdf_links, m)?)?;
+    m.add_function(wrap_pyfunction!(download_file, m)?)?;
+    m.add_function(wrap_pyfunction!(mineru_create_task, m)?)?;
+    m.add_function(wrap_pyfunction!(mineru_get_result, m)?)?;
+    m.add_function(wrap_pyfunction!(mineru_batch_submit, m)?)?;
+    m.add_function(wrap_pyfunction!(mineru_batch_result, m)?)?;
+    m.add_function(wrap_pyfunction!(mineru_create_upload_url, m)?)?;
+    m.add_function(wrap_pyfunction!(mineru_create_batch_upload_urls, m)?)?;
+    m.add_function(wrap_pyfunction!(mineru_upload_local_files, m)?)?;
+    m.add_function(wrap_pyfunction!(mineru_upload_local_file, m)?)?;
+    Ok(())
+}
