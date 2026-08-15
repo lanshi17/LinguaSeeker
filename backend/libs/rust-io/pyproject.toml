@@ -23,8 +23,7 @@ classifiers = [
 dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://github.com/[redacted-user]/lingua-seeker"
-Repository = "https://github.com/[redacted-user]/lingua-seeker"
-
+Homepage = "https://github.com/lanshi17/LinguaSeeker"
+Repository = "https://github.com/lanshi17/LinguaSeeker"
 [tool.maturin]
 features = ["pyo3/extension-module"]
