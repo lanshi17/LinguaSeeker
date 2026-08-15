@@ -39,11 +39,13 @@ class SingleJobDispatcher:
         runner: Any,
         job_queue: JobQueueRepository,
         poll_interval: float = 2.0,
+        idle_max_interval: float = 30.0,
         worker_id: str | None = None,
     ):
         self._runner = runner
         self._job_queue = job_queue
         self._poll_interval = poll_interval
+        self._idle_max_interval = idle_max_interval
         self._worker_id = worker_id or f"dispatcher:{uuid.uuid4().hex[:8]}"
         self._task: asyncio.Task | None = None
         self._stopping = False
@@ -74,13 +76,23 @@ class SingleJobDispatcher:
         logger.info("Job dispatcher stopped")
 
     async def _loop(self) -> None:
-        """Main polling loop: claim → execute → repeat."""
+        """Main polling loop: claim → execute → repeat, with idle backoff.
+
+        When the queue is empty, the poll interval grows exponentially from
+        ``poll_interval`` up to ``idle_max_interval``, so an idle dispatcher
+        performs a single cheap claim query per backoff window instead of a
+        fixed-frequency poll.  A successful claim resets the backoff.
+        """
+        idle_streak = 0
         while not self._stopping:
             try:
                 job = await self._job_queue.claim_next(self._worker_id)
                 if job is None:
-                    await asyncio.sleep(self._poll_interval)
+                    idle_streak += 1
+                    delay = min(self._poll_interval * (2 ** (idle_streak - 1)), self._idle_max_interval)
+                    await asyncio.sleep(delay)
                     continue
+                idle_streak = 0
                 await self._execute(job)
             except asyncio.CancelledError:
                 break

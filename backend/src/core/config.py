@@ -439,6 +439,12 @@ class Settings(BaseSettings):
     pipeline_cache_enabled: bool | None = None
     pipeline_dedup_enabled: bool | None = None
 
+    # ── Dispatcher / heartbeat I/O tuning (DISPATCHER_*, PIPELINE_HEARTBEAT_*) ──
+
+    dispatcher_poll_interval: float = 2.0
+    dispatcher_idle_max_interval: float = 30.0
+    pipeline_heartbeat_interval: float = 15.0
+
     # ── PostgreSQL flat fields (POSTGRES_*) ──────────────────────────────
 
     postgres_host: str = "127.0.0.1"

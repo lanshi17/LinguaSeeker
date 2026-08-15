@@ -232,6 +232,7 @@ def wire_dependencies() -> None:
         processing_cache=processing_cache,
         processing_cache_enabled=cfg.pipeline.cache_enabled,
         duplicate_run_prevention_enabled=cfg.pipeline.dedup_enabled,
+        heartbeat_interval_seconds=cfg.pipeline_heartbeat_interval,
     )
     # Let the orchestrator push intermediate state updates to the runner's
     # in-memory cache so the status endpoint reflects phase progress in
@@ -251,7 +252,8 @@ def wire_dependencies() -> None:
     _dispatcher = SingleJobDispatcher(
         runner=runner,
         job_queue=job_queue,
-        poll_interval=2.0,
+        poll_interval=cfg.dispatcher_poll_interval,
+        idle_max_interval=cfg.dispatcher_idle_max_interval,
     )
 
     # ── Inject into global registries (consumed by API routes) ──
