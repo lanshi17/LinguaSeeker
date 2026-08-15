@@ -14,7 +14,7 @@ from loguru import logger
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from src.dao.postgresql.models import PipelineJob
+from src.dao.postgresql.models import PipelineJob, PipelineRunState
 
 
 @dataclass
@@ -176,3 +176,36 @@ class JobQueueRepository:
                 select(func.count()).select_from(PipelineJob).where(PipelineJob.status == "running")
             )
             return result.scalar() or 0
+
+    async def recover_stale_jobs(self) -> int:
+        """Mark orphaned ``running`` jobs as failed after a worker crash.
+
+        A job stuck in ``running`` whose pipeline run already reached a
+        terminal state (``completed``/``failed``) was orphaned by a crash: the
+        worker persisted the run state but died before updating the job.  This
+        mirrors ``recover_orphaned_runs`` for the ``pipeline_jobs`` table,
+        which has no heartbeat of its own.  Jobs whose run is still active
+        (``pending``/``running``) are left untouched.
+        """
+        async with self._session_factory() as session:
+            terminal_runs = select(PipelineRunState.processing_run_id).where(
+                PipelineRunState.pipeline_status.in_(("completed", "failed"))
+            )
+            result = await session.execute(
+                update(PipelineJob)
+                .where(
+                    PipelineJob.status == "running",
+                    PipelineJob.processing_run_id.in_(terminal_runs),
+                )
+                .values(
+                    status="failed",
+                    finished_at=datetime.now(timezone.utc),
+                    error_message="Orphaned job reclaimed after worker crash",
+                )
+                .returning(PipelineJob.job_id)
+            )
+            reclaimed = len(result.all())
+            await session.commit()
+        if reclaimed:
+            logger.warning("Reclaimed {} orphaned running job(s)", reclaimed)
+        return reclaimed

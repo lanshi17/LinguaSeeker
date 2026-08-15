@@ -171,13 +171,16 @@ async def lifespan(app: FastAPI):
         async with engine.begin() as conn:
             await conn.run_sync(search_index_metadata.create_all)
 
-    # Recover pipeline runs interrupted by server restart (only if we hold the lock)
-    from src.api.v1.pipeline import get_pipeline_runner
+    # Recover pipeline runs and jobs interrupted by server restart (only if we hold the lock)
+    from src.api.v1.pipeline import get_job_queue, get_pipeline_runner
 
     if startup_lock_acquired:
         try:
             runner = get_pipeline_runner()
             await runner.recover_orphaned_runs()
+            job_queue = get_job_queue()
+            if job_queue is not None:
+                await job_queue.recover_stale_jobs()
         except Exception as exc:
             logger.warning("Orphaned run recovery failed: {}", exc)
         finally:

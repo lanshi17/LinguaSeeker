@@ -7,9 +7,11 @@ Integration tests with PostgreSQL can be added separately.
 from __future__ import annotations
 
 import asyncio
+import uuid
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from src.agents.contracts import (
     PipelineGraphState,
@@ -19,7 +21,7 @@ from src.agents.contracts import (
 )
 from src.agents.dispatcher import SingleJobDispatcher
 from src.dao.postgresql.job_queue import JobQueueRepository, JobRow
-
+from src.dao.postgresql.models import PipelineJob, PipelineRunState, SourceDocument
 
 # ── Dispatcher tests ────────────────────────────────────────────────────────
 
@@ -462,3 +464,172 @@ async def test_dispatcher_recovery_after_restart(mock_runner, mock_job_queue):
         pass
 
     mock_job_queue.complete.assert_awaited_once_with("job-old")
+
+
+
+@pytest.mark.asyncio
+async def test_dispatcher_idle_backoff_exponential_and_capped(mock_runner, mock_job_queue):
+    """Idle polling backs off exponentially and caps at idle_max_interval."""
+    mock_job_queue.claim_next = AsyncMock(return_value=None)
+    sleep_args: list[float] = []
+    stopper: dict[str, SingleJobDispatcher | None] = {"dispatcher": None}
+
+    async def fake_sleep(delay: float) -> None:
+        sleep_args.append(delay)
+        if len(sleep_args) >= 5:
+            stopper["dispatcher"]._stopping = True  # type: ignore[union-attr]
+
+    dispatcher = SingleJobDispatcher(
+        runner=mock_runner,
+        job_queue=mock_job_queue,
+        poll_interval=1.0,
+        idle_max_interval=4.0,
+    )
+    stopper["dispatcher"] = dispatcher
+    dispatcher._stopping = False
+
+    with patch("asyncio.sleep", new=fake_sleep):
+        await dispatcher._loop()
+
+    # 1.0, 2.0, 4.0, 4.0(capped), 4.0(capped)
+    assert sleep_args == [1.0, 2.0, 4.0, 4.0, 4.0]
+
+
+@pytest.mark.asyncio
+async def test_dispatcher_idle_backoff_resets_after_claim(mock_runner, mock_job_queue):
+    """A successful claim resets the idle backoff to the base interval."""
+    job = _make_job("job-1", "run-1")
+    completed = _completed_state("run-1")
+    task = asyncio.get_running_loop().create_future()
+    task.set_result(completed)
+    mock_runner.start = AsyncMock(return_value=task)
+    mock_job_queue.claim_next = AsyncMock(side_effect=[None, None, job, None, None])
+    sleep_args: list[float] = []
+    stopper: dict[str, SingleJobDispatcher | None] = {"dispatcher": None}
+
+    async def fake_sleep(delay: float) -> None:
+        sleep_args.append(delay)
+        if len(sleep_args) >= 4:
+            stopper["dispatcher"]._stopping = True  # type: ignore[union-attr]
+
+    dispatcher = SingleJobDispatcher(
+        runner=mock_runner,
+        job_queue=mock_job_queue,
+        poll_interval=1.0,
+        idle_max_interval=8.0,
+    )
+    stopper["dispatcher"] = dispatcher
+    dispatcher._stopping = False
+
+    with patch("asyncio.sleep", new=fake_sleep):
+        await dispatcher._loop()
+
+    # idle(1.0), idle(2.0), claim(job-1 → reset), idle(1.0), idle(2.0)
+    assert sleep_args == [1.0, 2.0, 1.0, 2.0]
+    mock_job_queue.complete.assert_awaited_once_with("job-1")
+
+# ── recover_stale_jobs (real SQL, SQLite-safe) ──────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_recover_stale_jobs_marks_orphaned_running_jobs_failed(db_session):
+    """Running jobs whose pipeline run is already terminal are reclaimed."""
+    doc_id = uuid.uuid4()
+    run_id = uuid.uuid4()
+    job_id = uuid.uuid4()
+    db_session.add(SourceDocument(source_document_id=doc_id))
+    db_session.add(
+        PipelineRunState(
+            processing_run_id=run_id,
+            source_document_id=doc_id,
+            pipeline_status="failed",
+            state_json={},
+        )
+    )
+    db_session.add(
+        PipelineJob(
+            job_id=job_id,
+            processing_run_id=run_id,
+            source_document_id=doc_id,
+            status="running",
+        )
+    )
+    await db_session.commit()
+
+    repo = JobQueueRepository(async_sessionmaker(db_session.bind, expire_on_commit=False))
+    reclaimed = await repo.recover_stale_jobs()
+
+    assert reclaimed == 1
+    job = await db_session.get(PipelineJob, job_id)
+    assert job is not None
+    assert job.status == "failed"
+    assert job.finished_at is not None
+    assert "Orphaned job" in (job.error_message or "")
+
+
+@pytest.mark.asyncio
+async def test_recover_stale_jobs_leaves_active_run_job_untouched(db_session):
+    """A running job whose pipeline run is still active is left running."""
+    doc_id = uuid.uuid4()
+    run_id = uuid.uuid4()
+    job_id = uuid.uuid4()
+    db_session.add(SourceDocument(source_document_id=doc_id))
+    db_session.add(
+        PipelineRunState(
+            processing_run_id=run_id,
+            source_document_id=doc_id,
+            pipeline_status="running",
+            state_json={},
+        )
+    )
+    db_session.add(
+        PipelineJob(
+            job_id=job_id,
+            processing_run_id=run_id,
+            source_document_id=doc_id,
+            status="running",
+        )
+    )
+    await db_session.commit()
+
+    repo = JobQueueRepository(async_sessionmaker(db_session.bind, expire_on_commit=False))
+    reclaimed = await repo.recover_stale_jobs()
+
+    assert reclaimed == 0
+    job = await db_session.get(PipelineJob, job_id)
+    assert job is not None
+    assert job.status == "running"
+
+
+@pytest.mark.asyncio
+async def test_recover_stale_jobs_ignores_non_running_jobs(db_session):
+    """Completed jobs are never touched by recovery."""
+    doc_id = uuid.uuid4()
+    run_id = uuid.uuid4()
+    job_id = uuid.uuid4()
+    db_session.add(SourceDocument(source_document_id=doc_id))
+    db_session.add(
+        PipelineRunState(
+            processing_run_id=run_id,
+            source_document_id=doc_id,
+            pipeline_status="failed",
+            state_json={},
+        )
+    )
+    db_session.add(
+        PipelineJob(
+            job_id=job_id,
+            processing_run_id=run_id,
+            source_document_id=doc_id,
+            status="completed",
+        )
+    )
+    await db_session.commit()
+
+    repo = JobQueueRepository(async_sessionmaker(db_session.bind, expire_on_commit=False))
+    reclaimed = await repo.recover_stale_jobs()
+
+    assert reclaimed == 0
+    job = await db_session.get(PipelineJob, job_id)
+    assert job is not None
+    assert job.status == "completed"
