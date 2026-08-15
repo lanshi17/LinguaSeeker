@@ -128,7 +128,11 @@ async def lifespan(app: FastAPI):
         os.environ.pop(var, None)
 
     cfg = get_config()
-    setup_logging(environment=cfg.environment, debug=cfg.debug)
+    setup_logging(
+        environment=cfg.environment,
+        debug=cfg.debug,
+        file_level=cfg.logging.file_level,
+    )
     logger = get_logger()
     logger.info("Starting Lingua Seeker backend (env={})", cfg.environment)
 

@@ -260,6 +260,17 @@ class WebSearchConfig(BaseModel):
 _DEFAULT_NO_PROXY = "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
 
 
+class LoggingConfig(BaseModel):
+    """Logging sink levels.
+
+    file_level: minimum level written to the loguru file sink
+                (backend/logs/YYYY-MM-DD/HHmmss.log). Valid loguru level
+                names: TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL.
+    """
+
+    file_level: str = "WARNING"
+
+
 class NetworkConfig(BaseModel):
     """Outbound HTTP proxy with per-domain bypass.
 
@@ -467,6 +478,10 @@ class Settings(BaseSettings):
     serpapi_api_key: str = ""  # SerpApi API key
     serpapi_engine: str = "google"  # "google", "google_scholar", "bing", etc.
 
+    # ── Logging flat fields (LOGGING_*) ─────────────────────────────────
+
+    logging_file_level: str = "WARNING"
+
     # ── Network / proxy flat fields (NETWORK_*) ─────────────────────────
 
     network_proxy: str = ""
@@ -489,6 +504,7 @@ class Settings(BaseSettings):
     graph_rag: GraphRagConfig = Field(default_factory=GraphRagConfig, exclude=True)
     web_search: WebSearchConfig = Field(default_factory=WebSearchConfig, exclude=True)
     network: NetworkConfig = Field(default_factory=NetworkConfig, exclude=True)
+    logging: LoggingConfig = Field(default_factory=LoggingConfig, exclude=True)
 
     # ── Build nested models from flat fields ─────────────────────────────
 
@@ -593,6 +609,9 @@ class Settings(BaseSettings):
             password=self.redis_password,
             db=self.redis_db,
             max_connections=self.redis_max_connections,
+        )
+        self.logging = LoggingConfig(
+            file_level=self.logging_file_level,
         )
         production_like = not self.is_development
         self.pipeline = PipelineConfig(

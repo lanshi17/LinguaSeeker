@@ -23,12 +23,21 @@ def get_logger():
     return _logger
 
 
-def setup_logging(*, environment: str = "development", debug: bool = False) -> None:
+def setup_logging(
+    *,
+    environment: str = "development",
+    debug: bool = False,
+    file_level: str = "INFO",
+) -> None:
     """Configure loguru sinks and intercept stdlib logging.
 
-    Call once during application startup (lifespan). Both parameters are
+    Call once during application startup (lifespan). All parameters are
     keyword-only with defaults so that callers that don't pass them (e.g.
     external services' ``setup_logging()``) remain backward-compatible.
+
+    ``file_level`` sets the minimum level written to the file sink
+    (backend/logs/YYYY-MM-DD/HHmmss.log). The app passes the configured
+    ``logging.file_level`` from YAML / ``LOGGING_FILE_LEVEL`` env var.
 
     Idempotent: subsequent calls are no-ops. Tests bypass this by calling
     ``_logger.remove()`` directly via the ``_isolate_loguru`` fixture.
@@ -57,7 +66,7 @@ def setup_logging(*, environment: str = "development", debug: bool = False) -> N
         diagnose=debug,
     )
 
-    # File sink — INFO+, daily rotation into date subdirectories, 14-day retention
+    # File sink — WARNING+, daily rotation into date subdirectories, 14-day retention
     # Path uses loguru's {time:...} interpolation evaluated per rotation:
     #   logs/2026-06-30/143000.log
     #   logs/2026-07-01/093000.log
@@ -66,7 +75,7 @@ def setup_logging(*, environment: str = "development", debug: bool = False) -> N
         rotation="1 day",
         retention="14 days",
         compression="gz",
-        level="INFO",
+        level=file_level,
         format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level:<8} | {name}:{function}:{line} | {message}",
         enqueue=True,
     )

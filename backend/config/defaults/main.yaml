@@ -148,6 +148,13 @@ base:
 core:
   api_key: ""
 
+# ── Logging ─────────────────────────────────────────────────────────────
+# file_level: minimum level written to log files (logs/YYYY-MM-DD/HHmmss.log).
+#   Valid loguru levels: TRACE < DEBUG < INFO < SUCCESS < WARNING < ERROR < CRITICAL.
+#   Override per environment in environments/<env>.yaml or via LOGGING_FILE_LEVEL.
+logging:
+  file_level: "WARNING"
+
 # ── Network / Proxy ──────────────────────────────────────────────────────
 network:
   proxy: ""
