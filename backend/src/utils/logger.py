@@ -15,6 +15,11 @@ LOG_DIR = Path(__file__).resolve().parent.parent.parent.parent / "logs"
 
 _configured: bool = False
 
+# Third-party stdlib loggers that emit per-request DEBUG/INFO spam (including
+# full request/response bodies). Raised to WARNING in setup_logging() so the
+# loguru sinks aren't flooded during LLM-heavy pipeline runs.
+_NOISY_LOGGERS = ("openai", "httpcore", "httpx", "neo4j")
+
 # ── Public API ───────────────────────────────────────────────────────────
 
 
@@ -82,6 +87,14 @@ def setup_logging(
 
     # Intercept stdlib logging → loguru
     logging.basicConfig(handlers=[_InterceptHandler()], level=0, force=True)
+
+    # Silence verbose third-party HTTP/driver loggers. With the root logger at
+    # level 0 (above), these libraries emit DEBUG/INFO records for every request
+    # — including full request/response bodies — flooding the sinks and driving
+    # heavy disk I/O during LLM-heavy pipeline runs (e.g. a 108 MB batch log
+    # where ~48% of lines were httpcore/openai/httpx/neo4j DEBUG noise).
+    for _name in _NOISY_LOGGERS:
+        logging.getLogger(_name).setLevel(logging.WARNING)
 
 
 class _InterceptHandler(logging.Handler):

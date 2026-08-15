@@ -45,6 +45,18 @@ def test_setup_logging_intercepts_stdlib():
     assert any(isinstance(h, logging.Handler) for h in root.handlers)
 
 
+def test_setup_logging_silences_noisy_third_party_loggers():
+    """Noisy HTTP/driver loggers are raised to WARNING to avoid log floods."""
+    from src.utils.logger import setup_logging
+
+    setup_logging()
+
+    for name in ("openai", "httpcore", "httpx", "neo4j"):
+        assert logging.getLogger(name).level == logging.WARNING, (
+            f"Expected {name} logger at WARNING, got {logging.getLogger(name).level}"
+        )
+
+
 def test_log_dir_created(tmp_path: Path):
     """setup_logging() should create the logs directory and add a file sink."""
     from src.utils.logger import setup_logging
