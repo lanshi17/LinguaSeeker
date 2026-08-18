@@ -23,7 +23,7 @@ class TargetEntityGuard:
     """Validates primary entity fields against the extraction target."""
 
     _GENE_FIELD = "A.gene_symbol"
-    _TARGET_VARIANT_FIELDS: tuple[str, ...] = ("A.variant_hgvs_p",)
+    _TARGET_VARIANT_FIELDS: tuple[str, ...] = ("A.variant_hgvs_c", "A.variant_hgvs_p")
 
     def apply(
         self,
@@ -39,8 +39,10 @@ class TargetEntityGuard:
             return item
         if item.field_id == self._GENE_FIELD:
             return self._guard_gene(item, target)
-        if item.field_id in self._TARGET_VARIANT_FIELDS and target.variant_hgvs_p:
-            return self._guard_variant(item, target)
+        if item.field_id == "A.variant_hgvs_c" and target.variant_hgvs_c:
+            return self._guard_variant(item, target.variant_hgvs_c)
+        if item.field_id == "A.variant_hgvs_p" and target.variant_hgvs_p:
+            return self._guard_variant(item, target.variant_hgvs_p)
         return item
 
     def _guard_gene(self, item: EvidenceItem, target: ExtractionTarget) -> EvidenceItem:
@@ -65,8 +67,8 @@ class TargetEntityGuard:
             )
         return item.model_copy(update={"value": target.gene_symbol})
 
-    def _guard_variant(self, item: EvidenceItem, target: ExtractionTarget) -> EvidenceItem:
-        target_aliases = self._variant_aliases(target.variant_hgvs_p)
+    def _guard_variant(self, item: EvidenceItem, target_variant: str) -> EvidenceItem:
+        target_aliases = self._variant_aliases(target_variant)
         if not target_aliases:
             return item
         values = self._extract_string_values(item.value)
@@ -74,13 +76,13 @@ class TargetEntityGuard:
             if self._variant_aliases(value) & target_aliases:
                 return item.model_copy(
                     update={
-                        "value": target.variant_hgvs_p,
+                        "value": target_variant,
                         "notes": self._append_note(item.notes, "target_guard:variant_to_target"),
                     }
                 )
         return self._contaminated(
             item,
-            f"extracted variant {values or [item.value]}, expected {target.variant_hgvs_p}",
+            f"extracted variant {values or [item.value]}, expected {target_variant}",
         )
 
     @staticmethod

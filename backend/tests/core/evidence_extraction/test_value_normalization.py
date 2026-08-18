@@ -330,3 +330,47 @@ def test_normalized_value_key_preserves_falsey_values() -> None:
 
     assert normalizer._normalized_value_key(0) != normalizer._normalized_value_key(None)
     assert normalizer._normalized_value_key(False) != normalizer._normalized_value_key(None)
+
+
+def test_found_item_strips_runtime_acmg_codes() -> None:
+    item = _item("C.de_novo_status", "de novo").model_copy(update={"assigned_acmg_codes": ["PS2", "PM6"]})
+
+    items, _issues = AcmgEvidenceValueNormalizer().normalize([item])
+
+    assert items[0].assigned_acmg_codes == []
+    assert "stripped_runtime_codes" in items[0].notes
+    assert items[0].value == "de_novo"
+
+
+def test_maternal_inheritance_is_not_de_novo() -> None:
+    item = _item("C.de_novo_status", "de novo").model_copy(
+        update={
+            "source": SourceLocation(
+                context_type="text",
+                context_ref="case",
+                text_snippet="该变异遗传自母亲",
+            )
+        }
+    )
+
+    items, issues = AcmgEvidenceValueNormalizer().normalize([item])
+
+    assert items[0].value == "not_de_novo"
+    assert "inherited_not_de_novo" in items[0].notes
+    assert issues[0].issue_type.value == "value_normalized"
+
+
+def test_author_acmg_criterion_list_is_not_clinvar_assertion() -> None:
+    items, issues = AcmgEvidenceValueNormalizer().normalize([_item("J.clinvar_assertion", "PS2+PM2+PP3")])
+
+    assert items[0].status == EvidenceStatus.NOT_FOUND
+    assert items[0].value is None
+    assert issues[0].issue_type.value == "semantic_conflict"
+    assert "author_acmg_codes_not_clinvar" in items[0].notes
+
+
+def test_ocr_spaced_coding_hgvs_is_canonicalized() -> None:
+    items, issues = AcmgEvidenceValueNormalizer().normalize([_item("A.variant_hgvs_c", "c.710C&gt;G")])
+
+    assert items[0].value == "c.710C>G"
+    assert issues[0].issue_type.value == "value_normalized"

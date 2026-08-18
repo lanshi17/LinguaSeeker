@@ -57,7 +57,18 @@ class AcmgEvidenceValueNormalizer:
         "prediction tools",
         "computational tools",
     }
-    _HGVS_ALIAS_FIELDS = frozenset({"A.variant_hgvs_p"})
+    _HGVS_ALIAS_FIELDS = frozenset({"A.variant_hgvs_c", "A.variant_hgvs_p"})
+    _ACMG_CRITERION_TOKEN_RE = re.compile(
+        r"\b(?:PVS1|PS[1-4]|PM[1-6]|PP[1-5]|BA1|BS[1-4]|BP[1-7])\b",
+        re.IGNORECASE,
+    )
+    _INHERITED_VARIANT_RE = re.compile(
+        r"maternally inherited|paternally inherited|"
+        r"inherited from (?:the )?(?:mother|father|maternal|paternal)|"
+        r"maternal inheritance|paternal inheritance|"
+        r"遗传自母|遗传自父|母系遗传|父系遗传|来自母亲|来自父亲",
+        re.IGNORECASE,
+    )
 
     def normalize(
         self,
@@ -79,6 +90,7 @@ class AcmgEvidenceValueNormalizer:
     ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
         if item.status != EvidenceStatus.FOUND or item.value is None:
             return item, []
+        item = self._strip_runtime_criterion_codes(item)
         value_text = str(item.value).strip()
         if item.field_id in self._HGVS_OR_REFERENCE_FIELDS and _COORDINATE_ONLY_RE.fullmatch(value_text):
             return (
@@ -112,6 +124,8 @@ class AcmgEvidenceValueNormalizer:
             return self._normalize_hgvs_alias(item)
         if item.field_id == "C.de_novo_status":
             return self._normalize_de_novo(item)
+        if item.field_id == "J.clinvar_assertion":
+            return self._normalize_clinvar_assertion(item)
         if item.field_id == "B.consanguinity":
             return self._normalize_consanguinity(item)
         if item.field_id == "C.obligate_carriers":
@@ -143,10 +157,38 @@ class AcmgEvidenceValueNormalizer:
             ],
         )
 
+    def _strip_runtime_criterion_codes(self, item: EvidenceItem) -> EvidenceItem:
+        """Drop catalog copies and author-claimed ACMG codes from extraction output."""
+        if not item.assigned_acmg_codes and not item.assigned_clingen_modules:
+            return item
+        note = "criterion_claim:stripped_runtime_codes"
+        notes = f"{item.notes}; {note}" if item.notes else note
+        return item.model_copy(
+            update={
+                "assigned_acmg_codes": [],
+                "assigned_clingen_modules": [],
+                "notes": notes,
+            }
+        )
+
+    def _source_text(self, item: EvidenceItem) -> str:
+        """Join the extracted value with grounded snippets for deterministic checks."""
+        parts = [str(item.value or "")]
+        for location in (item.source, item.raw_source):
+            if location is not None and location.text_snippet:
+                parts.append(location.text_snippet)
+        return " ".join(parts)
+
     def _normalize_de_novo(
         self,
         item: EvidenceItem,
     ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
+        evidence_text = self._source_text(item)
+        if self._INHERITED_VARIANT_RE.search(evidence_text):
+            replaced, issues = self._with_value_issue(item, "not_de_novo")
+            note = "criterion_claim:inherited_not_de_novo"
+            notes = f"{replaced.notes}; {note}" if replaced.notes else note
+            return replaced.model_copy(update={"notes": notes}), issues
         text = str(item.value).strip().lower()
         if item.value is False or text in {"0", "false", "not de novo", "not_de_novo", "inherited"}:
             return self._with_value_issue(item, "not_de_novo")
@@ -154,6 +196,32 @@ class AcmgEvidenceValueNormalizer:
             return self._with_value_issue(item, "de_novo")
         if text in {"unknown", "not reported", "not_reported", "unknown_not_reported"}:
             return self._with_value_issue(item, "unknown_not_reported")
+        return item, []
+
+    def _normalize_clinvar_assertion(
+        self,
+        item: EvidenceItem,
+    ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
+        """Reject ACMG criterion lists that were copied into ClinVar assertion."""
+        value_text = str(item.value)
+        tokens = self._ACMG_CRITERION_TOKEN_RE.findall(value_text)
+        significance_terms = ("pathogenic", "benign", "vus", "uncertain")
+        if tokens and not any(term in value_text.casefold() for term in significance_terms):
+            note = "criterion_claim:author_acmg_codes_not_clinvar"
+            notes = f"{item.notes}; {note}" if item.notes else note
+            rejected = self._reject_item(item).model_copy(update={"notes": notes})
+            return (
+                rejected,
+                [
+                    EvidenceNormalizationIssue(
+                        issue_type=EvidenceNormalizationIssueType.SEMANTIC_CONFLICT,
+                        severity=EvidenceNormalizationSeverity.WARNING,
+                        field_id=item.field_id,
+                        message="Author-stated ACMG criterion codes are not a ClinVar assertion.",
+                        original_value=item.value,
+                    )
+                ],
+            )
         return item, []
 
     def _normalize_hgvs_alias(

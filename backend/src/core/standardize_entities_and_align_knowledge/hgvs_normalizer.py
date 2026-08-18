@@ -8,6 +8,7 @@ literals.
 
 from __future__ import annotations
 
+import html
 import re
 import unicodedata
 
@@ -41,8 +42,9 @@ _BARE_PROTEIN_3LETTER_RE = re.compile(r"^([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|Ter|
 
 
 def normalize_hgvs_for_lookup(value: str) -> str:
-    """Normalize an HGVS string for lookup: NFKC fold then strip all whitespace."""
-    return _SPACE_RE.sub("", unicodedata.normalize("NFKC", value or "").strip())
+    """Normalize an HGVS string for lookup: unescape, NFKC fold, then strip whitespace."""
+    unescaped = html.unescape(value or "")
+    return _SPACE_RE.sub("", unicodedata.normalize("NFKC", unescaped).strip())
 
 
 def _convert_protein_3letter(text: str) -> str | None:

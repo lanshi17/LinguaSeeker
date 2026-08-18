@@ -472,7 +472,7 @@ def _stamp_language(
     target = document.extraction_target
     target_gene = target.gene_symbol if target else item.target_gene
     target_disease = target.disease_name if target else item.target_disease
-    target_variant = (target.variant_hgvs_p if target else "") or item.target_variant
+    target_variant = (target.primary_variant if target else "") or item.target_variant
     return item.model_copy(
         update={
             "article_language": article_language,

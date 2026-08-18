@@ -57,10 +57,13 @@ _PRIMARY_FIELD_LIST = (
     "Contextual fields:\n"
     "- B.sex: patient sex (male, female, mixed, unknown)\n"
     "- B.age_of_onset: age of onset as reported (e.g. '2 years', 'infancy', 'adult-onset')\n"
-    "- B.mode_of_inheritance_reported: inheritance pattern.\n"
+    "- B.mode_of_inheritance_reported: Mendelian inheritance pattern of the DISEASE or GENE.\n"
     "  Use standard terms: autosomal dominant (AD), autosomal recessive (AR), X-linked (XL),\n"
-    "  mitochondrial (MT), maternal, de novo, multifactorial.\n"
-    "  If the text says 'maternally inherited' or 'maternal inheritance', use 'MT'.\n"
+    "  mitochondrial (MT), multifactorial.\n"
+    "  MT is only for mitochondrial DNA / mtDNA. A nuclear-gene variant described as maternally or\n"
+    "  paternally inherited is not MT; use XL when the gene is X-linked, otherwise leave not_found\n"
+    "  rather than inventing MT.\n"
+    "  Do not put 'de novo' here; de novo is C.de_novo_status, not a mode of inheritance.\n"
     "  Scan family history, pedigree notes, inheritance section text, title/abstract disease labels, and case\n"
     "  descriptions. If the quote explicitly supports a standard inheritance phrase but the target anchor is weak,\n"
     "  return a low-confidence found candidate instead of leaving the field blank.\n"
@@ -74,17 +77,20 @@ _PRIMARY_FIELD_LIST = (
     "  map to HPO terms (e.g. seizures, developmental delay, tremor) as a semicolon-separated list.\n"
     "  Treat this as a document-level phenotype scan field; do not require the article to use the word HPO.\n"
     "Evidence strength fields:\n"
-    "- C.de_novo_status: whether the variant was confirmed de novo\n"
+    "- C.de_novo_status: de novo only when THIS target variant was tested in both parents and was absent.\n"
+    "  If the variant was inherited from the mother or father, the value is not de novo.\n"
+    "  Author ACMG labels such as PS2, '判读为 PS2', or 'pathogenic per ACMG' are not de novo evidence.\n"
+    "  Parental negativity without maternity/paternity confirmation is still extractable as de novo\n"
+    "  (assumed / PM6-eligible); do not upgrade it to confirmed PS2.\n"
     "- C.g_plus_p_plus_count: segregation evidence (e.g. '3/4 affected family members carry the variant')\n"
     "- F.assay_type: functional assay type (e.g. 'enzyme activity assay', 'protein expression')\n"
     "- B.case_count: number of independent cases or families with the variant\n"
     "- H.contradiction_type: contradictory evidence type (e.g. 'MAF too high', 'non-replicated')\n"
-    "- J.clinvar_assertion: ClinVar assertion or clinical significance classification.\n"
-    "  Extract ONLY when the article explicitly mentions ClinVar, expert panel, ACMG classification,\n"
-    "  clinical significance, or variant interpretation (e.g. 'Pathogenic', 'Likely pathogenic', 'VUS', 'Benign').\n"
-    "  Look for keywords: 'ClinVar', 'classified as', 'clinical significance', 'expert panel',\n"
-    "  'pathogenic', 'likely pathogenic', 'variant of uncertain significance', 'VUS', 'ACMG'.\n"
-    "  If the quote explicitly reports a classification but the variant anchor is ambiguous, keep a low-confidence\n"
+    "- J.clinvar_assertion: ClinVar or equivalent clinical-significance label (Pathogenic, LP, VUS, Benign).\n"
+    "  Extract when the article reports ClinVar, an expert panel, or an explicit Pathogenic/LP/VUS/Benign label.\n"
+    "  Do NOT put ACMG criterion codes here (PS2, PM2, PP3, PVS1, or combinations such as PS2+PM2+PP3).\n"
+    "  Those are author-claimed criteria, not a ClinVar assertion.\n"
+    "  If the quote reports a significance class but the variant anchor is ambiguous, keep a low-confidence\n"
     "  found candidate for downstream review; do not invent classifications that are only inferred.\n"
 )
 
@@ -123,6 +129,7 @@ def _build_primary_prompt(document: TrackDocument, graph_context: str = "") -> s
             "Target hypothesis:\n"
             f"- Gene: {target.gene_symbol}\n"
             f"- Disease: {target.disease_name}\n"
+            f"- Variant coding: {target.variant_hgvs_c or 'not specified'}\n"
             f"- Variant protein: {target.variant_hgvs_p or 'not specified'}\n"
         )
     )
@@ -220,8 +227,8 @@ def _normalize_candidates(
                 field_name=spec.field_name,
                 status=candidate.status,
                 value=candidate.value if candidate.status == EvidenceStatus.FOUND else None,
-                assigned_acmg_codes=list(spec.acmg_codes) if candidate.status == EvidenceStatus.FOUND else [],
-                assigned_clingen_modules=list(spec.clingen_modules) if candidate.status == EvidenceStatus.FOUND else [],
+                assigned_acmg_codes=[],
+                assigned_clingen_modules=[],
                 raw_source=raw_source,
                 confidence=candidate.confidence,
                 notes=candidate.notes,

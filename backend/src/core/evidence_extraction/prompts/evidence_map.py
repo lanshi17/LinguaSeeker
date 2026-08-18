@@ -90,6 +90,7 @@ def _target_prompt_section(extraction_target: ExtractionTarget | None) -> str:
     return (
         f"TARGET GENE: {extraction_target.gene_symbol}\n"
         f"TARGET DISEASE: {extraction_target.disease_name}\n"
+        f"TARGET VARIANT C: {extraction_target.variant_hgvs_c or 'not specified'}\n"
         f"TARGET VARIANT P: {extraction_target.variant_hgvs_p or 'not specified'}\n"
         f"CLINGEN ENTRY: {extraction_target.clingen_entry_id or 'not specified'}"
     )
@@ -192,5 +193,4 @@ Use the eligible catalog as the source of truth. When these field IDs are listed
 - Functional evidence fields: F.assay_type, F.assay_system, F.functional_result, F.quantitative_result, F.assay_controls.
 - Cohort/statistical fields: G.study_design, G.case_count, G.control_count, G.odds_ratio, G.confidence_interval, G.p_value.
 Do not add any field outside the eligible catalog. This guidance expands attention to medium and complex fields without changing the current pipeline, validation, or source-grounding requirements."""
-
 

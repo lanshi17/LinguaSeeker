@@ -50,6 +50,7 @@ class ExtractionTarget(BaseModel):
 
     gene_symbol: str
     disease_name: str
+    variant_hgvs_c: str = ""
     variant_hgvs_p: str = ""
     clingen_entry_id: str = ""
 
@@ -57,6 +58,7 @@ class ExtractionTarget(BaseModel):
     def normalize_target_fields(self) -> ExtractionTarget:
         self.gene_symbol = _SPACE_RE.sub(" ", self.gene_symbol.strip()).upper()
         self.disease_name = _SPACE_RE.sub(" ", self.disease_name.strip())
+        self.variant_hgvs_c = _SPACE_RE.sub(" ", self.variant_hgvs_c.strip())
         self.variant_hgvs_p = _SPACE_RE.sub(" ", self.variant_hgvs_p.strip())
         self.clingen_entry_id = _SPACE_RE.sub(" ", self.clingen_entry_id.strip())
         if not self.gene_symbol:
@@ -66,15 +68,25 @@ class ExtractionTarget(BaseModel):
         return self
 
     @property
+    def primary_variant(self) -> str:
+        """Return protein HGVS when available, otherwise use coding HGVS as a fallback."""
+        return self.variant_hgvs_p or self.variant_hgvs_c
+
+    @property
     def scope_key(self) -> str:
-        return "|".join(
+        parts = [
+            f"gene={self.gene_symbol}",
+            f"disease={self.disease_name.casefold()}",
+        ]
+        if self.variant_hgvs_c:
+            parts.append(f"variant_c={self.variant_hgvs_c}")
+        parts.extend(
             [
-                f"gene={self.gene_symbol}",
-                f"disease={self.disease_name.casefold()}",
                 f"variant_p={self.variant_hgvs_p}",
                 f"clingen={self.clingen_entry_id}",
             ]
         )
+        return "|".join(parts)
 
 
 class EvidenceRole(str, Enum):
@@ -201,10 +213,10 @@ class EvidenceSupportLabel(str, Enum):
 class EvidenceItem(BaseModel):
     """Extracted evidence for a single catalog field.
 
-    ``assigned_acmg_codes`` and ``assigned_clingen_modules`` capture the
-    LLM's runtime assessment of which codes/modules apply to *this specific
-    extraction instance*. They may differ from the canonical catalog values
-    (which are retrievable via ``get_field_spec(field_id)``).
+    ``assigned_acmg_codes`` and ``assigned_clingen_modules`` are reserved for
+    a later adjudicator. Extraction must leave them empty: catalog
+    ``spec.acmg_codes`` is only a field-to-criterion hint, and author-stated
+    criteria (for example ``PS2+PM2+PP3``) are source text, not granted codes.
     """
 
     field_id: str

@@ -230,7 +230,7 @@ class FieldEligibilityPolicy:
         evidence_map: DocumentEvidenceMap | None,
         cue_text: str,
     ) -> bool:
-        if extraction_target.variant_hgvs_p:
+        if extraction_target.primary_variant:
             return True
         if evidence_map is not None and evidence_map.variant_terms:
             return True
@@ -243,7 +243,7 @@ class FieldEligibilityPolicy:
         evidence_map: DocumentEvidenceMap | None,
         selected_text: str,
     ) -> str:
-        parts = [extraction_target.variant_hgvs_p, selected_text]
+        parts = [extraction_target.variant_hgvs_c, extraction_target.variant_hgvs_p, selected_text]
         if evidence_map is not None:
             parts.extend(evidence_map.variant_terms)
             parts.extend(evidence_map.structure_hints)

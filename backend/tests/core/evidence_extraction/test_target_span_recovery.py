@@ -62,6 +62,9 @@ def test_recovery_adds_missing_inheritance_from_target_span() -> None:
 
     values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
     assert values["B.mode_of_inheritance_reported"] == "AR"
+    inheritance = next(item for item in recovered if item.field_id == "B.mode_of_inheritance_reported")
+    assert inheritance.assigned_acmg_codes == []
+    assert inheritance.assigned_clingen_modules == []
 
 
 def test_recovery_adds_missing_gene_disease_relationship_from_causal_target_span() -> None:
@@ -127,3 +130,16 @@ def test_recovery_treats_existing_list_value_as_present() -> None:
 
     assertions = [item.value for item in recovered if item.field_id == "J.clinvar_assertion"]
     assert assertions == [["Pathogenic"]]
+
+
+def test_recovery_does_not_treat_de_novo_as_autosomal_dominant() -> None:
+    text = "The MECP2 variant was de novo in the proband."
+    items = [_item("A.gene_symbol", "MECP2", text, group_id="gene=MECP2|variant=c.509C>T")]
+
+    recovered = TargetSpanFieldRecovery().recover(
+        _doc(text, gene="MECP2", disease="Rett syndrome", variant="c.509C>T"),
+        items,
+    )
+
+    found_ids = {item.field_id for item in recovered if item.status == EvidenceStatus.FOUND}
+    assert "B.mode_of_inheritance_reported" not in found_ids

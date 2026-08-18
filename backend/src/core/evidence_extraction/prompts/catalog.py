@@ -80,9 +80,9 @@ CATALOG SCOPE:
 
 RULES:
 1. For each catalog field, set status="found" with the extracted value, or status="not_found" if absent.
-2. Do not score or classify ACMG/GDV evidence.
+2. Do not score or classify ACMG/GDV evidence. Leave assigned_acmg_codes and assigned_clingen_modules empty.
 3. For "found" items, you MUST provide a source with block_index, context_type, context_ref, and text_snippet.
-4. Extract assigned_acmg_codes and assigned_clingen_modules based on what the document supports.
+4. Author-stated ACMG criterion lists (PS2, PM2, PP3, PVS1, or combinations) are source text only. Do not copy them into assigned_acmg_codes or treat them as granted codes. Record a ClinVar significance class only in J.clinvar_assertion when the document actually reports ClinVar or an explicit Pathogenic/LP/VUS/Benign label.
 5. Set confidence based on extraction certainty (0.0-1.0).
 6. Use status="ocr_gap" only when the document indicates the evidence is in an image/table/figure but the text needed for extraction is unavailable.
 7. Do not invent external database values. If allele frequency or ClinVar-like data is absent, mark it not_found and note that external completion is required.
@@ -107,7 +107,7 @@ RULES:
 23. E.prediction_tools_list requires named tools such as SpliceAI, CADD, REVEL, PolyPhen-2, SIFT, MutationTaster, or MaxEntScan. Generic phrases like "in silico tools" are insufficient and must be not_found.
 24. For B.clinical_phenotypes, extract the patient's observed clinical features, symptoms, and signs — NOT the disease diagnosis name. Examples of valid phenotypes: seizures, developmental regression, ataxia, intellectual disability, loss of acquired hand skills, stereotypic hand movements, tremor, rigidity, bradykinesia, hypotonia, spasticity. Multiple phenotypes should be separated by semicolons. Do NOT use disease names (e.g. "Parkinson disease", "Rett syndrome") as phenotypes.
 25. For B.mode_of_inheritance_reported, extract ONLY if the document explicitly states the inheritance pattern (e.g. "autosomal dominant", "autosomal recessive", "X-linked"). Do NOT infer inheritance from variant zygosity alone. If the document says "heterozygous variant" without stating the inheritance pattern, set not_found.
-26. For C.de_novo_status, extract ONLY if the document explicitly confirms de novo status with parental or family testing evidence (e.g. "confirmed de novo", "de novo in the proband", "not inherited from parents"). Do NOT infer de novo from absence of family history alone.
+26. For C.de_novo_status, extract ONLY if this target variant was tested in the parents. Parental wild-type / not detected supports de novo. Maternal or paternal inheritance is not de novo. Do NOT treat author ACMG labels (PS2, 判读为 PS2) or absence of family history as de novo.
 27. For B.hpo_terms, extract HPO phenotype terms or clinical feature descriptions that correspond to HPO concepts. Use the HPO term name or ID if provided in the document. Multiple terms: separate with semicolons.
 
 {graph_section}
