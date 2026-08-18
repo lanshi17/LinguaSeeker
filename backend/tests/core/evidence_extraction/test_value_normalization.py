@@ -369,6 +369,49 @@ def test_author_acmg_criterion_list_is_not_clinvar_assertion() -> None:
     assert "author_acmg_codes_not_clinvar" in items[0].notes
 
 
+def test_unconfirmed_parental_negativity_notes_are_not_ps2_eligible() -> None:
+    item = _item("C.de_novo_status", "de_novo").model_copy(
+        update={
+            "notes": (
+                "Both parents tested and variant absent; qualifies as de novo (PS2-eligible).; "
+                "review_track: approved: The variant is confirmed de novo. This is PS2-eligible."
+            ),
+            "source": SourceLocation(
+                context_type="text",
+                context_ref="case",
+                text_snippet="变异为新生变异，父母未携带该变异位点",
+            ),
+        }
+    )
+
+    items, _issues = AcmgEvidenceValueNormalizer().normalize([item])
+
+    assert items[0].value == "de_novo"
+    assert "PS2" not in items[0].notes
+    assert "confirmed de novo" not in items[0].notes.casefold()
+    assert "PM6-eligible" in items[0].notes
+    assert "unconfirmed_parentage_not_ps2" in items[0].notes
+
+
+def test_parentage_confirmed_de_novo_notes_keep_ps2_language() -> None:
+    item = _item("C.de_novo_status", "de_novo").model_copy(
+        update={
+            "notes": "Maternity and paternity confirmed; PS2-eligible.",
+            "source": SourceLocation(
+                context_type="text",
+                context_ref="case",
+                text_snippet="The variant was de novo with maternity and paternity confirmation.",
+            ),
+        }
+    )
+
+    items, _issues = AcmgEvidenceValueNormalizer().normalize([item])
+
+    assert items[0].value == "de_novo"
+    assert "PS2-eligible" in items[0].notes
+    assert "unconfirmed_parentage_not_ps2" not in items[0].notes
+
+
 def test_ocr_spaced_coding_hgvs_is_canonicalized() -> None:
     items, issues = AcmgEvidenceValueNormalizer().normalize([_item("A.variant_hgvs_c", "c.710C&gt;G")])
 

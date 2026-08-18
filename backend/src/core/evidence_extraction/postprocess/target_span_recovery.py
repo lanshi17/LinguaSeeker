@@ -17,13 +17,14 @@ class TargetSpanFieldRecovery:
         if target is None:
             return items
         snippets = tuple(_selected_target_snippets(items))
-        if not snippets:
+        windows = _target_variant_windows(document)
+        if not snippets and not windows:
             return items
 
         recovered = list(items)
         group_id = _target_group_id(document, items)
         missing_field_ids = _missing_field_ids(recovered)
-        for field_id, value, snippet in self._candidate_recoveries(document, snippets):
+        for field_id, value, snippet in self._candidate_recoveries(document, snippets, windows):
             if field_id not in missing_field_ids:
                 continue
             recovered.append(_recovered_item(field_id, value, snippet, group_id, document))
@@ -34,6 +35,7 @@ class TargetSpanFieldRecovery:
         self,
         document: TrackDocument,
         snippets: tuple[str, ...],
+        windows: tuple[str, ...] = (),
     ) -> tuple[tuple[str, str, str], ...]:
         candidates: list[tuple[str, str, str]] = []
         for snippet in snippets:
@@ -49,6 +51,11 @@ class TargetSpanFieldRecovery:
             assertion = _clinvar_assertion_value(normalized)
             if assertion:
                 candidates.append(("J.clinvar_assertion", assertion, snippet))
+            if _snippet_mentions_target_variant(document, snippet):
+                candidates.extend(_phasing_recoveries(document, snippet))
+        for window in windows:
+            if _snippet_mentions_target_variant(document, window):
+                candidates.extend(_phasing_recoveries(document, window))
         return tuple(candidates)
 
 
@@ -69,6 +76,9 @@ def _missing_field_ids(items: list[EvidenceItem]) -> set[str]:
         "A.gene_disease_relationship",
         "A.variant_type",
         "B.mode_of_inheritance_reported",
+        "C.in_trans_confirmation",
+        "C.maternal_genotype",
+        "C.paternal_genotype",
         "J.clinvar_assertion",
     } - present
 
@@ -152,6 +162,94 @@ def _clinvar_assertion_value(normalized: str) -> str:
     if "pathogenic" in normalized:
         return "Pathogenic"
     return ""
+
+
+_MATERNAL_GT_RE = re.compile(
+    r"maternal allele.{0,160}|母源[^。]{0,80}|母亲[^。]{0,40}(?:携带|未检测|缺失|del)",
+    re.IGNORECASE,
+)
+_PATERNAL_GT_RE = re.compile(
+    r"paternal allele.{0,160}|父源[^。]{0,80}|父亲[^。]{0,40}(?:携带|未检测|缺失|del)",
+    re.IGNORECASE,
+)
+_VARIANT_WINDOW_RADIUS = 400
+
+
+def _phasing_recoveries(document: TrackDocument, snippet: str) -> tuple[tuple[str, str, str], ...]:
+    """Recover PM3-ready in-trans / parental genotype facts from a target-scoped span."""
+    recovered: list[tuple[str, str, str]] = []
+    in_trans_quote = _in_trans_quote(document, snippet)
+    if in_trans_quote:
+        recovered.append(("C.in_trans_confirmation", "in_trans", in_trans_quote))
+    maternal = _MATERNAL_GT_RE.search(snippet)
+    if maternal:
+        recovered.append(("C.maternal_genotype", _compact(maternal.group(0)), _excerpt(snippet, maternal)))
+    paternal = _PATERNAL_GT_RE.search(snippet)
+    if paternal:
+        recovered.append(("C.paternal_genotype", _compact(paternal.group(0)), _excerpt(snippet, paternal)))
+    return tuple(recovered)
+
+
+def _in_trans_quote(document: TrackDocument, snippet: str) -> str:
+    in_trans = re.search(r"in[\s-]+trans", snippet, re.IGNORECASE)
+    if in_trans:
+        return _excerpt(snippet, in_trans)
+    compound = re.search(r"compound heterozyg|复合杂合", snippet, re.IGNORECASE)
+    if compound is None:
+        return ""
+    local = _excerpt(snippet, compound, radius=200)
+    if _snippet_mentions_target_variant(document, local):
+        return local
+    if _MATERNAL_GT_RE.search(snippet) and _PATERNAL_GT_RE.search(snippet):
+        return _excerpt(snippet, compound)
+    return ""
+
+
+def _target_variant_windows(document: TrackDocument) -> tuple[str, ...]:
+    """Take local windows around the target coding/protein HGVS so phasing facts can be recovered."""
+    target = document.extraction_target
+    if target is None:
+        return ()
+    text = document.formatted_text or ""
+    needles = [value for value in (target.variant_hgvs_c, target.variant_hgvs_p) if value]
+    windows: list[str] = []
+    for needle in needles:
+        for variant in dict.fromkeys((needle, needle.replace(">", "&gt;"))):
+            start = 0
+            while True:
+                index = text.find(variant, start)
+                if index < 0:
+                    break
+                lo = max(0, index - _VARIANT_WINDOW_RADIUS)
+                hi = min(len(text), index + len(variant) + _VARIANT_WINDOW_RADIUS)
+                windows.append(text[lo:hi])
+                start = index + len(variant)
+    return tuple(dict.fromkeys(windows))
+
+
+def _snippet_mentions_target_variant(document: TrackDocument, snippet: str) -> bool:
+    target = document.extraction_target
+    if target is None:
+        return False
+    normalized = _normalize(snippet).replace("&gt;", ">")
+    compact_snippet = normalized.replace(" ", "")
+    for needle in (target.variant_hgvs_c, target.variant_hgvs_p):
+        if not needle:
+            continue
+        compact = _normalize(needle).replace("&gt;", ">").replace(" ", "")
+        if compact and compact in compact_snippet:
+            return True
+    return False
+
+
+def _excerpt(text: str, match: re.Match[str], radius: int = 160) -> str:
+    lo = max(0, match.start() - radius)
+    hi = min(len(text), match.end() + radius)
+    return text[lo:hi].strip()
+
+
+def _compact(value: str) -> str:
+    return " ".join(value.split())
 
 
 def _target_group_id(document: TrackDocument, items: list[EvidenceItem]) -> str:

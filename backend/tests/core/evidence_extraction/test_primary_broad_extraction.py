@@ -83,6 +83,10 @@ def test_primary_broad_stage_prompts_for_b8_fields_and_source_quote() -> None:
     assert "maternally or" in prompt
     assert "not MT" in prompt
     assert "PS2+PM2+PP3" in prompt
+    assert "C.in_trans_confirmation" in prompt
+    assert "C.maternal_genotype" in prompt
+    assert "C.paternal_genotype" in prompt
+    assert "Never write PS2" in prompt
 
 
 @pytest.mark.asyncio
