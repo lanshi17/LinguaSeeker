@@ -151,6 +151,8 @@ def _build_review_prompt(
         "Do not add new field IDs, do not create new candidates, and do not perform a second full extraction.\n"
         "Do not treat author-stated ACMG criterion codes (PS2, PM2, PP3, PVS1, or combinations) as granted codes.\n"
         "Reject C.de_novo_status when the quote shows maternal or paternal inheritance of the target variant.\n"
+        "Do not call parental negativity PS2 or PS2-eligible unless the quote confirms maternity/paternity "
+        "or identity testing. Unconfirmed parental negativity remains assumed de novo / PM6-eligible.\n"
         "Reject J.clinvar_assertion when the value is an ACMG criterion list rather than Pathogenic/LP/VUS/Benign.\n"
         "Do not migrate de novo, segregation, or assay facts from a different gene or patient onto the target.\n\n"
         f"{decision_policy}"

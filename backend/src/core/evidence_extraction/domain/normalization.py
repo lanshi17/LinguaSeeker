@@ -69,6 +69,15 @@ class AcmgEvidenceValueNormalizer:
         r"遗传自母|遗传自父|母系遗传|父系遗传|来自母亲|来自父亲",
         re.IGNORECASE,
     )
+    _PARENTAGE_CONFIRMED_RE = re.compile(
+        r"parentage confirm|maternity.{0,40}paternity|paternity.{0,40}maternity|"
+        r"identity testing|\bSTR(?:s)?\b|亲子鉴定|亲权",
+        re.IGNORECASE,
+    )
+    _UNCONFIRMED_PS2_NOTE_RE = re.compile(
+        r"PS2-eligible|confirmed PS2|\bPS2\b|confirmed de novo",
+        re.IGNORECASE,
+    )
 
     def normalize(
         self,
@@ -193,10 +202,26 @@ class AcmgEvidenceValueNormalizer:
         if item.value is False or text in {"0", "false", "not de novo", "not_de_novo", "inherited"}:
             return self._with_value_issue(item, "not_de_novo")
         if item.value is True or text in {"1", "true", "de novo", "denovo"}:
-            return self._with_value_issue(item, "de_novo")
+            replaced, issues = self._with_value_issue(item, "de_novo")
+            return self._downgrade_unconfirmed_ps2(replaced), issues
+        if text == "de_novo":
+            return self._downgrade_unconfirmed_ps2(item), []
         if text in {"unknown", "not reported", "not_reported", "unknown_not_reported"}:
             return self._with_value_issue(item, "unknown_not_reported")
         return item, []
+
+    def _downgrade_unconfirmed_ps2(self, item: EvidenceItem) -> EvidenceItem:
+        """Keep assumed de novo, but strip PS2 upgrades when parentage was not confirmed."""
+        notes = item.notes or ""
+        if not self._UNCONFIRMED_PS2_NOTE_RE.search(notes):
+            return item
+        if self._PARENTAGE_CONFIRMED_RE.search(self._source_text(item)):
+            return item
+        rewritten = self._UNCONFIRMED_PS2_NOTE_RE.sub("PM6-eligible", notes)
+        tag = "criterion_claim:unconfirmed_parentage_not_ps2"
+        if tag not in rewritten:
+            rewritten = f"{rewritten}; {tag}" if rewritten else tag
+        return item.model_copy(update={"notes": rewritten})
 
     def _normalize_clinvar_assertion(
         self,
