@@ -79,6 +79,10 @@ def test_primary_broad_stage_prompts_for_b8_fields_and_source_quote() -> None:
     assert items[0].raw_source.text_snippet == "BRCA1 c.5266dupC was identified"
     assert items[0].raw_source.context_ref == "primary_broad_extraction"
     assert items[0].raw_source.block_index == -1
+    assert items[0].assigned_acmg_codes == []
+    assert "maternally or" in prompt
+    assert "not MT" in prompt
+    assert "PS2+PM2+PP3" in prompt
 
 
 @pytest.mark.asyncio
@@ -148,6 +152,7 @@ def test_normalize_candidates_maps_alias_to_business_field() -> None:
     assert "C.segregation" not in field_ids
     assert "C.functional_assay" not in field_ids
     assert "C.contradictory_evidence" not in field_ids
+    assert all(item.assigned_acmg_codes == [] for item in items)
 
 
 def test_normalize_candidates_preserves_source_quote_for_mapped_items() -> None:
@@ -342,7 +347,8 @@ def test_prompt_contains_clinvar_assertion_guidance() -> None:
     assert "ClinVar" in prompt
     assert "Pathogenic" in prompt or "pathogenic" in prompt
     assert "expert panel" in prompt.lower()
-    assert "ONLY when" in prompt or "Extract ONLY" in prompt
+    assert "PS2+PM2+PP3" in prompt
+    assert "not a ClinVar assertion" in prompt
 
 
 def test_prompt_contains_high_recall_global_field_guidance() -> None:

@@ -387,6 +387,19 @@ def test_extraction_target_contract_normalizes_scope_identity() -> None:
     )
 
 
+def test_extraction_target_uses_coding_variant_as_primary_identity() -> None:
+    """Coding HGVS remains available when no protein consequence is supplied."""
+    target = ExtractionTarget(
+        gene_symbol="MECP2",
+        disease_name="Rett syndrome",
+        variant_hgvs_c=" c.710C>G ",
+    )
+
+    assert target.variant_hgvs_c == "c.710C>G"
+    assert target.primary_variant == "c.710C>G"
+    assert target.scope_key == "gene=MECP2|disease=rett syndrome|variant_c=c.710C>G|variant_p=|clingen="
+
+
 def test_extraction_target_rejects_blank_gene_or_disease() -> None:
     with pytest.raises(ValidationError):
         ExtractionTarget(gene_symbol="  ", disease_name="x")

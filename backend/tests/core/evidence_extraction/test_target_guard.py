@@ -34,6 +34,17 @@ def _variant_item(value: object) -> EvidenceItem:
     )
 
 
+def _coding_variant_item(value: object) -> EvidenceItem:
+    return EvidenceItem(
+        field_id="A.variant_hgvs_c",
+        category="A",
+        field_name="HGVS coding variant",
+        status=EvidenceStatus.FOUND,
+        value=value,
+        confidence=0.91,
+    )
+
+
 def test_target_guard_corrects_gene_list_string_when_target_present() -> None:
     target = ExtractionTarget(gene_symbol="ABCA3", disease_name="ABCA3 deficiency")
 
@@ -123,3 +134,18 @@ def test_target_guard_marks_wrong_variant_as_context_contamination() -> None:
 
     assert guarded[0].status == EvidenceStatus.CONTEXT_CONTAMINATION
     assert "expected p.R168X" in guarded[0].notes
+
+
+def test_target_guard_applies_coding_variant_target_when_protein_hgvs_is_missing() -> None:
+    """A c.-only target anchors the coding field instead of becoming unscoped."""
+    target = ExtractionTarget(
+        gene_symbol="MECP2",
+        disease_name="Rett syndrome",
+        variant_hgvs_c="c.710C>G",
+    )
+
+    guarded = TargetEntityGuard().apply([_coding_variant_item("c.710C>G")], target)
+
+    assert guarded[0].status == EvidenceStatus.FOUND
+    assert guarded[0].value == "c.710C>G"
+    assert "variant_to_target" in guarded[0].notes

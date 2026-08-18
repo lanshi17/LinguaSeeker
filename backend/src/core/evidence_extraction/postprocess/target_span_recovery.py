@@ -121,14 +121,16 @@ def _inheritance_value(normalized: str) -> str:
         or "homozyg" in normalized
     ):
         return "AR"
-    if "autosomal dominant" in normalized or "de novo" in normalized:
+    if "autosomal dominant" in normalized:
         return "AD"
+    if "x-linked" in normalized or "x linked" in normalized:
+        return "XL"
     return ""
 
 
 def _variant_type_value(document: TrackDocument, normalized: str) -> str:
     target = document.extraction_target
-    variant = target.variant_hgvs_p if target else ""
+    variant = target.primary_variant if target else ""
     if "missense" in normalized:
         return "missense"
     if "nonsense" in normalized:
@@ -159,7 +161,7 @@ def _target_group_id(document: TrackDocument, items: list[EvidenceItem]) -> str:
     target = document.extraction_target
     if target is None:
         return make_group_id("", "")
-    return make_group_id(target.gene_symbol, target.variant_hgvs_p)
+    return make_group_id(target.gene_symbol, target.primary_variant)
 
 
 def _recovered_item(
@@ -177,8 +179,8 @@ def _recovered_item(
         field_name=spec.field_name,
         status=EvidenceStatus.FOUND,
         value=value,
-        assigned_acmg_codes=list(spec.acmg_codes),
-        assigned_clingen_modules=list(spec.clingen_modules),
+        assigned_acmg_codes=[],
+        assigned_clingen_modules=[],
         source=SourceLocation(
             context_type="text",
             context_ref="target_span_recovery",
@@ -190,7 +192,7 @@ def _recovered_item(
         inference_basis=["Recovered deterministically from already selected target span."],
         target_gene=target.gene_symbol if target else "",
         target_disease=target.disease_name if target else "",
-        target_variant=target.variant_hgvs_p if target else "",
+        target_variant=target.primary_variant if target else "",
     )
 
 

@@ -192,6 +192,8 @@ def test_review_validation_default_uses_tristate_review_schema() -> None:
 
     assert provider.output_schemas == [EvidenceTriStateReviewResponse]
     assert "uncertain_keep_for_review" in provider.prompts[0]
+    assert "author-stated ACMG criterion codes" in provider.prompts[0]
+    assert "maternal or paternal inheritance" in provider.prompts[0]
 
 
 def test_review_validation_tristate_preserves_uncertain_candidate_for_review() -> None:

@@ -105,6 +105,8 @@ def test_catalog_prompt_absorbs_expanded_field_guidance_without_baseline_limits(
     lower = prompt.lower()
     assert "do not use tools" not in lower
     assert "do not use" not in lower or "multi-stage pipeline" not in lower
+    assert "Leave assigned_acmg_codes and assigned_clingen_modules empty" in prompt
+    assert "Extract assigned_acmg_codes and assigned_clingen_modules based on what the document supports." not in prompt
 
 
 def test_catalog_prompt_defines_ocr_gap_and_external_completion_boundaries():
@@ -320,6 +322,7 @@ def test_catalog_prompt_declares_target_and_strict_entity_rules() -> None:
     target = ExtractionTarget(
         gene_symbol="ABCA3",
         disease_name="interstitial lung disease due to ABCA3 deficiency",
+        variant_hgvs_c="c.128G>T",
     )
 
     prompt = get_catalog_extraction_prompt(
@@ -333,6 +336,7 @@ def test_catalog_prompt_declares_target_and_strict_entity_rules() -> None:
 
     assert "TARGET GENE: ABCA3" in prompt
     assert "TARGET DISEASE: interstitial lung disease due to ABCA3 deficiency" in prompt
+    assert "TARGET VARIANT C: c.128G>T" in prompt
     assert "Extract evidence ONLY for the target gene-disease pair" in prompt
     assert "Other genes mentioned for comparison" in prompt
     assert "gene_symbol field MUST be a single string" in prompt

@@ -110,6 +110,7 @@ def _build_review_prompt(
         else (
             f"TARGET GENE: {target.gene_symbol}\n"
             f"TARGET DISEASE: {target.disease_name}\n"
+            f"TARGET VARIANT C: {target.variant_hgvs_c or 'not specified'}\n"
             f"TARGET VARIANT P: {target.variant_hgvs_p or 'not specified'}"
         )
     )
@@ -147,7 +148,11 @@ def _build_review_prompt(
     return (
         "You are the review track for ACMG/ClinGen evidence extraction.\n"
         "Review only the primary extraction candidates listed below. "
-        "Do not add new field IDs, do not create new candidates, and do not perform a second full extraction.\n\n"
+        "Do not add new field IDs, do not create new candidates, and do not perform a second full extraction.\n"
+        "Do not treat author-stated ACMG criterion codes (PS2, PM2, PP3, PVS1, or combinations) as granted codes.\n"
+        "Reject C.de_novo_status when the quote shows maternal or paternal inheritance of the target variant.\n"
+        "Reject J.clinvar_assertion when the value is an ACMG criterion list rather than Pathogenic/LP/VUS/Benign.\n"
+        "Do not migrate de novo, segregation, or assay facts from a different gene or patient onto the target.\n\n"
         f"{decision_policy}"
         f"{target_text}\n\n"
         "Primary candidates JSON:\n"

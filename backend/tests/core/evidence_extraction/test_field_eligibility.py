@@ -78,6 +78,18 @@ def test_target_variant_cues_include_variant_fields() -> None:
     assert "cue:variant" in decision.reasons
 
 
+def test_coding_only_target_enables_variant_evidence_fields() -> None:
+    """A c.-only assertion is sufficient to activate variant-sensitive fields."""
+    target = ExtractionTarget(
+        gene_symbol="MECP2",
+        disease_name="Rett syndrome",
+        variant_hgvs_c="c.710C>G",
+    )
+
+    decision = FieldEligibilityPolicy().decide(extraction_target=target, evidence_map=None)
+
+    assert {"A.variant_hgvs_c", "A.variant_hgvs_p", "F.tested_variant"}.issubset(decision.allowed_field_ids)
+    assert "cue:variant" in decision.reasons
 def test_variant_cues_include_variant_evidence_module_fields() -> None:
     target = ExtractionTarget(
         gene_symbol="CFTR",

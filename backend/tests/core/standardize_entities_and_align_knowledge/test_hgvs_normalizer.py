@@ -48,6 +48,8 @@ def test_stop_codon_three_letter_to_one_letter() -> None:
 def test_normalize_strips_whitespace_and_applies_nfkc() -> None:
     """Lookup normalization removes all whitespace and applies Unicode NFKC."""
     assert normalize_hgvs_for_lookup("  p. Arg243*  ") == "p.Arg243*"
+    assert normalize_hgvs_for_lookup("c.710C&gt;G") == "c.710C>G"
+    assert "c.710C>G" in expand_hgvs_aliases("c . 7 1 0 C &gt; G")
 
 
 def test_empty_input_returns_empty() -> None:
