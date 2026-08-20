@@ -1,0 +1,11 @@
+# LaTeX build artifacts (keep .tex, .cls, and final .pdf tracked)
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.toc
+*.spl
+*.bbl
+*.blg
+*.synctex.gz

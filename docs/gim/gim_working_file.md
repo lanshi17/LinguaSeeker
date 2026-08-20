@@ -178,4 +178,5 @@
 - [x] **补充材料英文化**: Fig S1 图注 + Table S1/S2 + Note S1–S5; Note S3 修正为与代码一致的描述 (无 BLEU, 实际为完整性/覆盖率/语言检查); Note S4 用实测耗时替换 TBD (EN-only mean 759.6s / median 623.1s; dual mean 612.6s / median 416.5s, n=30/模式, 附 batch 时段负载注记)
 - [x] **Cover letter 草稿**: `assets/cover_letter.md`
 - [x] **Title page 要素**: running title, 通讯作者占位
-- [ ] 待人工: 作者列表/单位/通讯/CRediT/基金; AI 声明工具名确认; Editorial Manager 上传格式转换
+- [x] **LaTeX 版** (2026-08-13): `manuscript/latex/` — elsarticle (preprint, 12pt, 带页码无行号), `main.tex` → main.pdf 14 页, `supplementary.tex` → supplementary.pdf 7 页 (S 编号: Fig S1 / Table S1-S2 / Note S1-S5); elsarticle.cls 从 CTAN 源生成并 vendored; 参考文献内嵌 thebibliography (numbers,sort&compress); overfull 全部清零; 构建产物已 .gitignore
+- [ ] 待人工: 作者列表/单位/通讯/CRediT/基金 (md 与 tex 两处同步); AI 声明工具名确认; Editorial Manager 上传

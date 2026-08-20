@@ -1,6 +1,7 @@
 # Lingua Seeker Manuscript Draft (GIM)
 
 > **Status:** submission-ready draft — statistics reproduced, references verified against Crossref/arXiv, figures renumbered in citation order, GIM-required statements added
+> **LaTeX version:** `latex/main.tex` + `latex/supplementary.tex` (elsarticle)。2026-08-13 起 `main.tex` 为经英文润色的投稿正文(摘要 198 词,编译 15 页无 overfull);本 markdown 保留为内容/数据参考,后续文字修改以 LaTeX 为准
 > **Target journal:** Genetics in Medicine (GIM), Original Research Article
 > **Format check:** abstract 188 words (limit 200); main text ~2,240 words (limit 4,000); display items 5 (4 figures + 1 table, limit 5); references 12 (limit 40, numerical style)
 > **Last updated:** 2026-08-13
@@ -195,7 +196,7 @@ During the preparation of this work the authors used [name of tool/service — t
 
 | # | File | Content |
 |---|------|---------|
-| Figure 1 | `F1_architecture.png` | Four-phase system architecture with ablation design inset |
+| Figure 1 | `F1_architecture_redesign.png` | Four-phase system architecture, dual-track extraction detail, and controlled ablation |
 | Figure 2 | `F2_paired_evidence_comparison.png` | Paired per-entry EN-track items vs combined unique fields; ZH-only gain +22.8% |
 | Figure 3 | `F3_evidence_gain_distribution.png` | Distribution of per-entry multilingual evidence gain (ZH-only items) |
 | Figure 4 | `F4_field_level_zh_benefit_heatmap.png` | Fields with evidence found only in the Chinese track (13/29 entries) |

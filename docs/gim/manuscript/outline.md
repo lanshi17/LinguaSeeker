@@ -73,7 +73,7 @@ Data Availability → Acknowledgments → Funding Statement① → Author Contri
 
 | 编号 | 文件 | 内容 |
 |------|------|------|
-| Figure 1 | F1_architecture.png | 四阶段架构 + ablation 设计插框 |
+| Figure 1 | F1_architecture_redesign.png | 四阶段架构 + 双轨提取细节 + 受控 ablation |
 | Figure 2 | F2_paired_evidence_comparison.png | 逐条目 EN 条目数 vs 合并唯一字段数；ZH-only 增益 +22.8% |
 | Figure 3 | F3_evidence_gain_distribution.png | 逐条目 ZH-only 增益分布（25/29 > 0） |
 | Figure 4 | F4_field_level_zh_benefit_heatmap.png | 仅中文轨检出的字段热图（13/29 条目） |
