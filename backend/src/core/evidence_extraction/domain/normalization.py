@@ -32,6 +32,17 @@ _VALUE_KEY_UNSET = object()
 class AcmgEvidenceValueNormalizer:
     """Normalize extracted values before catalog backfill and quality gates."""
 
+    _DE_NOVO_TRUE_VALUES = frozenset(
+        {
+            "1",
+            "true",
+            "de novo",
+            "denovo",
+            "assumed de novo",
+            "assumed denovo",
+            "pm6 eligible",
+        }
+    )
     _GENE_SYMBOL_FIELDS = {
         "A.gene_symbol",
         "A.gene_aliases",
@@ -79,6 +90,9 @@ class AcmgEvidenceValueNormalizer:
         re.IGNORECASE,
     )
 
+    _CODING_INDEL_RE = re.compile(r"c\.\d+(?:_\d+)?(?:del|ins)", re.IGNORECASE)
+    _NONSENSE_TYPE_VALUES = frozenset({"nonsense", "无义", "无义突变"})
+
     def normalize(
         self,
         items: list[EvidenceItem],
@@ -89,9 +103,17 @@ class AcmgEvidenceValueNormalizer:
             replacement, item_issues = self._normalize_one(item)
             normalized.append(replacement)
             issues.extend(item_issues)
-        merged, merge_issues = self._merge_duplicates(normalized)
+        aligned, align_issues = self._align_variant_type_to_coding_hgvs(normalized)
+        issues.extend(align_issues)
+        merged, merge_issues = self._merge_duplicates(aligned)
         issues.extend(merge_issues)
         return merged, issues
+
+    @classmethod
+    def has_coding_indel(cls, text: str) -> bool:
+        """True when compact text contains a coding-region del/ins HGVS token."""
+        compact = re.sub(r"\s+", "", (text or "").casefold()).replace("&gt;", ">")
+        return cls._CODING_INDEL_RE.search(compact) is not None
 
     def _normalize_one(
         self,
@@ -133,6 +155,10 @@ class AcmgEvidenceValueNormalizer:
             return self._normalize_hgvs_alias(item)
         if item.field_id == "C.de_novo_status":
             return self._normalize_de_novo(item)
+        if item.field_id == "C.parentage_confirmed":
+            return self._normalize_parentage_confirmed(item)
+        if item.field_id == "A.variant_type":
+            return self._normalize_variant_type(item)
         if item.field_id == "J.clinvar_assertion":
             return self._normalize_clinvar_assertion(item)
         if item.field_id == "B.consanguinity":
@@ -199,13 +225,14 @@ class AcmgEvidenceValueNormalizer:
             notes = f"{replaced.notes}; {note}" if replaced.notes else note
             return replaced.model_copy(update={"notes": notes}), issues
         text = str(item.value).strip().lower()
+        collapsed = re.sub(r"[\s_\-]+", " ", text).strip()
         if item.value is False or text in {"0", "false", "not de novo", "not_de_novo", "inherited"}:
             return self._with_value_issue(item, "not_de_novo")
-        if item.value is True or text in {"1", "true", "de novo", "denovo"}:
-            replaced, issues = self._with_value_issue(item, "de_novo")
-            return self._downgrade_unconfirmed_ps2(replaced), issues
         if text == "de_novo":
             return self._downgrade_unconfirmed_ps2(item), []
+        if item.value is True or collapsed in self._DE_NOVO_TRUE_VALUES:
+            replaced, issues = self._with_value_issue(item, "de_novo")
+            return self._downgrade_unconfirmed_ps2(replaced), issues
         if text in {"unknown", "not reported", "not_reported", "unknown_not_reported"}:
             return self._with_value_issue(item, "unknown_not_reported")
         return item, []
@@ -222,6 +249,77 @@ class AcmgEvidenceValueNormalizer:
         if tag not in rewritten:
             rewritten = f"{rewritten}; {tag}" if rewritten else tag
         return item.model_copy(update={"notes": rewritten})
+
+    def _normalize_parentage_confirmed(
+        self,
+        item: EvidenceItem,
+    ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
+        """Parental negativity is not identity testing; only keep confirmed when the quote says so."""
+        evidence_text = self._source_text(item)
+        text = str(item.value).strip().lower()
+        if self._PARENTAGE_CONFIRMED_RE.search(evidence_text) and text in {
+            "true",
+            "1",
+            "confirmed",
+            "yes",
+            "parentage_confirmed",
+        }:
+            return self._with_value_issue(item, "confirmed")
+        if text in {"false", "0", "absent", "not_confirmed", "unconfirmed", "no", "not confirmed"}:
+            if item.value == "not_confirmed":
+                return item, []
+            return self._with_value_issue(item, "not_confirmed")
+        if text in {"true", "1", "confirmed", "yes", "parentage_confirmed"}:
+            return self._with_value_issue(item, "not_confirmed")
+        return item, []
+
+    def _normalize_variant_type(
+        self,
+        item: EvidenceItem,
+    ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
+        """Prefer coding-indel consequence over a paper's historical nonsense label."""
+        evidence_text = f"{item.target_variant} {self._source_text(item)}"
+        value = str(item.value).strip().lower()
+        if self.has_coding_indel(evidence_text) and value in self._NONSENSE_TYPE_VALUES:
+            return self._with_value_issue(item, "frameshift")
+        if value in {"错义", "错义突变"}:
+            return self._with_value_issue(item, "missense")
+        if value in {"移码", "移码突变"}:
+            return self._with_value_issue(item, "frameshift")
+        if value in {"无义", "无义突变"}:
+            return self._with_value_issue(item, "nonsense")
+        return item, []
+
+    def _align_variant_type_to_coding_hgvs(
+        self,
+        items: list[EvidenceItem],
+    ) -> tuple[list[EvidenceItem], list[EvidenceNormalizationIssue]]:
+        """Use sibling A.variant_hgvs_c in the same group when the type quote omitted the del/ins."""
+        coding_groups = {
+            item.group_id or ""
+            for item in items
+            if item.status == EvidenceStatus.FOUND
+            and (
+                (item.field_id == "A.variant_hgvs_c" and self.has_coding_indel(str(item.value or "")))
+                or self.has_coding_indel(item.target_variant)
+            )
+        }
+        aligned: list[EvidenceItem] = []
+        issues: list[EvidenceNormalizationIssue] = []
+        for item in items:
+            value = str(item.value).strip().lower() if item.value is not None else ""
+            if (
+                item.field_id == "A.variant_type"
+                and item.status == EvidenceStatus.FOUND
+                and value in self._NONSENSE_TYPE_VALUES
+                and (item.group_id or "") in coding_groups
+            ):
+                replacement, item_issues = self._with_value_issue(item, "frameshift")
+                aligned.append(replacement)
+                issues.extend(item_issues)
+                continue
+            aligned.append(item)
+        return aligned, issues
 
     def _normalize_clinvar_assertion(
         self,
@@ -490,7 +588,11 @@ class AcmgEvidenceValueNormalizer:
             aliases.extend(expand_hgvs_aliases(str(raw_value or "")))
         if not aliases:
             return ""
-        preferred = [alias for alias in aliases if re.fullmatch(r"p\.[A-Z]\d+(?:[A-Z*]|fs|del|dup|ins)", alias)]
+        fs_aliases = [alias for alias in aliases if re.search(r"fs", alias, re.IGNORECASE)]
+        if fs_aliases:
+            preferred_fs = [alias for alias in fs_aliases if re.fullmatch(r"p\.[A-Z]\d+fs", alias)]
+            return sorted(preferred_fs or fs_aliases, key=lambda alias: (len(alias), alias))[0]
+        preferred = [alias for alias in aliases if re.fullmatch(r"p\.[A-Z]\d+(?:[A-Z*]|del|dup|ins)", alias)]
         return sorted(preferred or aliases, key=lambda alias: (len(alias), alias))[0]
 
     def _source_signature(self, item: EvidenceItem) -> str:

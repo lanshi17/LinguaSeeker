@@ -60,6 +60,10 @@ def _convert_protein_3letter(text: str) -> str | None:
     ref1 = AA3_TO_1.get(ref3)
     if ref1 is None:
         return None
+    remainder = text[match.end() :]
+    # p.Gly281AlafsTer20: the AA regex consumes Ala as a substitution.
+    if remainder[:2].casefold() == "fs":
+        return f"p.{ref1}{position}fs"
     if alt3 in ("Ter", "*", "stop", "X"):
         alt1 = "*"
     elif alt3 in ("fs", "del", "dup", "ins"):

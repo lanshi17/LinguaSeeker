@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 from ..domain.catalog import get_field_spec
+from ..domain.normalization import AcmgEvidenceValueNormalizer
 from ..contracts import EvidenceItem, EvidenceStatus, SourceLocation, TrackDocument
 from ..core.grouping import make_group_id
 
@@ -19,10 +20,10 @@ class TargetSpanFieldRecovery:
         snippets = tuple(_selected_target_snippets(items))
         windows = _target_variant_windows(document)
         if not snippets and not windows:
-            return items
+            return _rewrite_paper_nonsense_on_coding_indel(document, list(items))
 
-        recovered = list(items)
-        group_id = _target_group_id(document, items)
+        recovered = _rewrite_paper_nonsense_on_coding_indel(document, list(items))
+        group_id = _target_group_id(document, recovered)
         missing_field_ids = _missing_field_ids(recovered)
         for field_id, value, snippet in self._candidate_recoveries(document, snippets, windows):
             if field_id not in missing_field_ids:
@@ -53,9 +54,14 @@ class TargetSpanFieldRecovery:
                 candidates.append(("J.clinvar_assertion", assertion, snippet))
             if _snippet_mentions_target_variant(document, snippet):
                 candidates.extend(_phasing_recoveries(document, snippet))
+            candidates.extend(_family_recoveries(document, snippet))
         for window in windows:
             if _snippet_mentions_target_variant(document, window):
                 candidates.extend(_phasing_recoveries(document, window))
+            if _snippet_mentions_target_variant(document, window):
+                candidates.extend(_family_recoveries(document, window))
+        for family_text in _document_level_joint_parental_texts(document):
+            candidates.extend(_family_recoveries(document, family_text))
         return tuple(candidates)
 
 
@@ -79,6 +85,8 @@ def _missing_field_ids(items: list[EvidenceItem]) -> set[str]:
         "C.in_trans_confirmation",
         "C.maternal_genotype",
         "C.paternal_genotype",
+        "C.de_novo_status",
+        "C.parentage_confirmed",
         "J.clinvar_assertion",
     } - present
 
@@ -140,18 +148,73 @@ def _inheritance_value(normalized: str) -> str:
 
 def _variant_type_value(document: TrackDocument, normalized: str) -> str:
     target = document.extraction_target
-    variant = target.primary_variant if target else ""
-    if "missense" in normalized:
-        return "missense"
-    if "nonsense" in normalized:
-        return "nonsense"
-    if "frameshift" in normalized:
-        return "frameshift"
-    if "deletion" in normalized or " del" in normalized or "del" in variant.casefold():
+    variant = " ".join(
+        value
+        for value in (
+            target.primary_variant if target else "",
+            target.variant_hgvs_c if target else "",
+            target.variant_hgvs_p if target else "",
+        )
+        if value
+    )
+    compact = _normalize(variant).replace("&gt;", ">").replace(" ", "")
+    if _coding_indel_token(compact) or _coding_indel_token(normalized.replace(" ", "")):
+        if "移码" in normalized or "frameshift" in normalized or "提前终止" in normalized or "缺失" in normalized:
+            return "frameshift"
+        if re.search(r"c\.\d+(?:_\d+)?(?:del|ins)", compact + normalized.replace(" ", "")):
+            return "frameshift"
         return "deletion"
-    if "duplication" in normalized or " dup" in normalized or "dup" in variant.casefold():
+    if "missense" in normalized or "错义" in normalized:
+        return "missense"
+    if "nonsense" in normalized or "无义" in normalized:
+        return "nonsense"
+    if "frameshift" in normalized or "移码" in normalized:
+        return "frameshift"
+    if "deletion" in normalized or " del" in normalized or "del" in compact:
+        return "deletion"
+    if "duplication" in normalized or " dup" in normalized or "dup" in compact:
         return "duplication"
     return ""
+
+
+def _coding_indel_token(compact: str) -> bool:
+    return AcmgEvidenceValueNormalizer.has_coding_indel(compact)
+
+
+def _document_has_coding_indel(document: TrackDocument, items: list[EvidenceItem]) -> bool:
+    target = document.extraction_target
+    blobs = [
+        target.variant_hgvs_c if target else "",
+        target.primary_variant if target else "",
+    ]
+    for item in items:
+        if item.field_id == "A.variant_hgvs_c" and item.status == EvidenceStatus.FOUND:
+            blobs.append(str(item.value or ""))
+        blobs.append(item.target_variant)
+    return any(AcmgEvidenceValueNormalizer.has_coding_indel(blob) for blob in blobs)
+
+
+def _rewrite_paper_nonsense_on_coding_indel(
+    document: TrackDocument,
+    items: list[EvidenceItem],
+) -> list[EvidenceItem]:
+    """Overwrite LLM nonsense when the target (or sibling HGVS) is a coding del/ins."""
+    if not _document_has_coding_indel(document, items):
+        return items
+    rewritten: list[EvidenceItem] = []
+    for item in items:
+        value = str(item.value).strip().lower() if item.value is not None else ""
+        if (
+            item.field_id == "A.variant_type"
+            and item.status == EvidenceStatus.FOUND
+            and value in AcmgEvidenceValueNormalizer._NONSENSE_TYPE_VALUES
+        ):
+            note = "target_span_recovery:coding_indel_not_nonsense"
+            notes = f"{item.notes}; {note}" if item.notes else note
+            rewritten.append(item.model_copy(update={"value": "frameshift", "notes": notes}))
+            continue
+        rewritten.append(item)
+    return rewritten
 
 
 def _clinvar_assertion_value(normalized: str) -> str:
@@ -188,6 +251,66 @@ def _phasing_recoveries(document: TrackDocument, snippet: str) -> tuple[tuple[st
     if paternal:
         recovered.append(("C.paternal_genotype", _compact(paternal.group(0)), _excerpt(snippet, paternal)))
     return tuple(recovered)
+
+
+_JOINT_PARENTAL_NEGATIVE_RE = re.compile(
+    r"(?:患儿)?父母.{0,12}(?:均)?(?:未检测(?:到(?:突变)?)?|未携带|该位点均?无(?:异常|变异)?|无异常|无变异)|"
+    r"both parents.{0,80}(?:not (?:found|detected|carrying)|negative|wild[- ]type)|"
+    r"not found in (?:his|her|the) parents|"
+    r"no mutations were detected in (?:their|the) parents|"
+    r"observed only in the patient|"
+    r"환자\s*부모.{0,40}정상",
+    re.IGNORECASE,
+)
+_DE_NOVO_PHRASE_RE = re.compile(
+    r"\bde[\s-]*novo\b|denovo|新发突变|新生变异",
+    re.IGNORECASE,
+)
+
+
+def _family_recoveries(document: TrackDocument, snippet: str) -> tuple[tuple[str, str, str], ...]:
+    """Recover assumed-de-novo / parental-genotype facts from a joint negative quote."""
+    if AcmgEvidenceValueNormalizer._INHERITED_VARIANT_RE.search(snippet):
+        return ()
+    recovered: list[tuple[str, str, str]] = []
+    joint = _JOINT_PARENTAL_NEGATIVE_RE.search(snippet)
+    if joint:
+        quote = _excerpt(snippet, joint)
+        recovered.append(("C.maternal_genotype", "target_absent", quote))
+        recovered.append(("C.paternal_genotype", "target_absent", quote))
+        recovered.append(("C.de_novo_status", "de_novo", quote))
+    elif _DE_NOVO_PHRASE_RE.search(snippet) and (
+        _snippet_mentions_target_variant(document, snippet) or _mentions_both_parents_tested(snippet)
+    ):
+        de_novo = _DE_NOVO_PHRASE_RE.search(snippet)
+        if de_novo:
+            recovered.append(("C.de_novo_status", "de_novo", _excerpt(snippet, de_novo)))
+    if recovered and not _document_has_parentage_confirmation(document):
+        recovered.append(("C.parentage_confirmed", "not_confirmed", recovered[0][2]))
+    return tuple(recovered)
+
+
+def _mentions_both_parents_tested(snippet: str) -> bool:
+    folded = snippet.casefold()
+    return "父母" in snippet or "both parents" in folded or "his parents" in folded or "her parents" in folded
+
+
+def _document_has_parentage_confirmation(document: TrackDocument) -> bool:
+    text = document.formatted_text or ""
+    return AcmgEvidenceValueNormalizer._PARENTAGE_CONFIRMED_RE.search(text) is not None
+
+
+def _document_level_joint_parental_texts(document: TrackDocument) -> tuple[str, ...]:
+    """Use a paper-level joint parental sentence when the target is present and nothing is inherited."""
+    text = document.formatted_text or ""
+    if not text or not _snippet_mentions_target_variant(document, text):
+        return ()
+    if AcmgEvidenceValueNormalizer._INHERITED_VARIANT_RE.search(text):
+        return ()
+    match = _JOINT_PARENTAL_NEGATIVE_RE.search(text)
+    if match is None:
+        return ()
+    return (_excerpt(text, match, radius=80),)
 
 
 def _in_trans_quote(document: TrackDocument, snippet: str) -> str:
@@ -290,7 +413,7 @@ def _recovered_item(
         inference_basis=["Recovered deterministically from already selected target span."],
         target_gene=target.gene_symbol if target else "",
         target_disease=target.disease_name if target else "",
-        target_variant=target.primary_variant if target else "",
+        target_variant=(target.variant_hgvs_c or target.primary_variant) if target else "",
     )
 
 

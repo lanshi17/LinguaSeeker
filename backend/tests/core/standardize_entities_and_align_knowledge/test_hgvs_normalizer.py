@@ -104,5 +104,12 @@ def test_three_letter_fs_alt_derives_one_letter_alias() -> None:
     assert "p.E1309fs" in expand_hgvs_aliases("p.Glu1309fs")
 
 
+def test_extended_frameshift_protein_is_not_converted_to_missense() -> None:
+    """p.Gly281AlafsTer20 must not collapse to the substitution p.G281A."""
+    aliases = expand_hgvs_aliases("p.Gly281AlafsTer20")
+    assert "p.G281fs" in aliases
+    assert "p.G281A" not in aliases
+
+
 def test_three_letter_del_alt_derives_one_letter_alias() -> None:
     """Three-letter deletion p.Phe508del expands to the p.F508del alias."""

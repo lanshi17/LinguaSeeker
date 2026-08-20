@@ -109,7 +109,7 @@ relevance_scan → block_selection → catalog_extraction
 | `normalization.py` | `AcmgEvidenceValueNormalizer` — HGVS 校验、基因符号规范化、等位基因频率约束 |
 | `field_eligibility.py` | `FieldEligibilityPolicy` — 基于提取目标和文档内容决定可提取字段集 |
 | `field_profile.py` | 评估配置文件（`ExtractionProfile`）与文档通道字段资格交叉 |
-| `target_span_recovery.py` | `TargetSpanFieldRecovery` — 从已选目标片段确定性恢复高价值字段 |
+| `target_span_recovery.py` | `TargetSpanFieldRecovery` — 从已选目标片段恢复高价值字段；联合父母阴性拆成 `C.maternal_genotype` / `C.paternal_genotype` / 假定 de novo，并在无亲子鉴定时写 `C.parentage_confirmed=not_confirmed`。编码区 del/ins 不跟论文的“无义”标签走；LLM 已抽出 `nonsense` 时仍按目标/同组 `c.…del/ins` 改成 frameshift。 |
 | `translation_traceback.py` | `apply_translation_traceback` — 将英文轨证据溯源到原文文本位置 |
 | `_grouping.py` | `GroupAssigner` — 基因/变异中心的确定性分组 ID 分配 |
 | `_quality.py` | `QualityValidator` — 规则质量验证；`TargetEntityGuard` — 主实体字段守护；`IntraTrackConflictChecker` — 轨内矛盾检测 |
@@ -135,7 +135,7 @@ EvidenceExtractionWorkflow (每轨独立)
     ├── clinical_context → 表型/性别/年龄/遗传模式补充
     ├── group_assignment → 变异中心分组
     ├── source_grounding → 源文本跨度验证
-    ├── target_span_recovery → 高价值字段恢复
+    ├── target_span_recovery → 高价值字段恢复（联合父母阴性、亲子缺席、编码区 indel；随后再归一化一次）
     ├── normalization → ACMG 值规范化
     ├── quality_gate → 质量门
     │

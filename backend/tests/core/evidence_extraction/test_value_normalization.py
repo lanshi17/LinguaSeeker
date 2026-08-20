@@ -417,3 +417,91 @@ def test_ocr_spaced_coding_hgvs_is_canonicalized() -> None:
 
     assert items[0].value == "c.710C>G"
     assert issues[0].issue_type.value == "value_normalized"
+
+
+def test_nonsense_label_on_coding_deletion_becomes_frameshift() -> None:
+    item = _item("A.variant_type", "nonsense").model_copy(
+        update={
+            "target_variant": "c.194delC",
+            "source": SourceLocation(
+                context_type="text",
+                context_ref="case",
+                text_snippet="c.194delC致病性突变，此为无义突变（p.S65X）",
+            ),
+        }
+    )
+
+    items, issues = AcmgEvidenceValueNormalizer().normalize([item])
+
+    assert items[0].value == "frameshift"
+    assert issues[0].issue_type.value == "value_normalized"
+
+
+def test_sibling_coding_hgvs_corrects_type_when_quote_omits_indel() -> None:
+    """Live rett_084: the type item quotes 无义 only; c.194delC lives on A.variant_hgvs_c."""
+    type_item = _item("A.variant_type", "nonsense").model_copy(
+        update={
+            "group_id": "g1",
+            "source": SourceLocation(
+                context_type="text",
+                context_ref="case",
+                text_snippet="此为无义突变（p.S65X）",
+            ),
+        }
+    )
+    hgvs_item = _item("A.variant_hgvs_c", "c.194delC").model_copy(update={"group_id": "g1"})
+
+    items, issues = AcmgEvidenceValueNormalizer().normalize([type_item, hgvs_item])
+
+    types = [item for item in items if item.field_id == "A.variant_type"]
+    assert types[0].value == "frameshift"
+    assert any(issue.issue_type.value == "value_normalized" for issue in issues)
+
+
+def test_nonsense_type_stays_when_sibling_hgvs_is_a_substitution() -> None:
+    type_item = _item("A.variant_type", "nonsense").model_copy(update={"group_id": "g1"})
+    hgvs_item = _item("A.variant_hgvs_c", "c.538C>T").model_copy(update={"group_id": "g1"})
+
+    items, _issues = AcmgEvidenceValueNormalizer().normalize([type_item, hgvs_item])
+
+    types = [item for item in items if item.field_id == "A.variant_type"]
+    assert types[0].value == "nonsense"
+
+
+def test_frameshift_protein_hgvs_is_not_crushed_to_missense() -> None:
+    items, issues = AcmgEvidenceValueNormalizer().normalize(
+        [_item("A.variant_hgvs_p", "p.Gly281AlafsTer20")]
+    )
+
+    assert items[0].value == "p.G281fs"
+    assert issues[0].issue_type.value == "value_normalized"
+
+
+def test_parentage_confirmed_without_identity_testing_is_not_confirmed() -> None:
+    item = _item("C.parentage_confirmed", "confirmed").model_copy(
+        update={
+            "source": SourceLocation(
+                context_type="text",
+                context_ref="case",
+                text_snippet="患儿父母均未检测到突变",
+            ),
+        }
+    )
+
+    items, _issues = AcmgEvidenceValueNormalizer().normalize([item])
+
+    assert items[0].value == "not_confirmed"
+
+
+def test_assumed_de_novo_value_is_canonicalized() -> None:
+    """B8 tells the model to write assumed de novo in notes; it often lands in value."""
+    items, issues = AcmgEvidenceValueNormalizer().normalize(
+        [
+            _item("C.de_novo_status", "assumed de novo").model_copy(update={"group_id": "g1"}),
+            _item("C.de_novo_status", "assumed_de_novo").model_copy(update={"group_id": "g2"}),
+            _item("C.de_novo_status", "PM6-eligible").model_copy(update={"group_id": "g3"}),
+        ]
+    )
+
+    assert [item.value for item in items] == ["de_novo", "de_novo", "de_novo"]
+    assert all(issue.issue_type.value == "value_normalized" for issue in issues)

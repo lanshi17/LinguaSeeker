@@ -231,3 +231,108 @@ def test_variant_windows_do_not_copy_nearby_gene_inheritance() -> None:
 
     found_ids = {item.field_id for item in recovered if item.status == EvidenceStatus.FOUND}
     assert "B.mode_of_inheritance_reported" not in found_ids
+
+
+def test_recovery_splits_joint_parental_negative_into_pm6_fields() -> None:
+    """A shared 父母均未检测到 quote fills both parental genotypes and assumed de novo."""
+    text = (
+        "对患儿及其父母进行了全外显子检测。病例存在 MECP2 基因突变 c.509C>T（p.Thr170Met）。"
+        "患儿父母均未检测到突变。病例诊断为经典型 RTT。"
+    )
+    document = TrackDocument(
+        document_id="rett-007",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[],
+        extraction_target=ExtractionTarget(
+            gene_symbol="MECP2",
+            disease_name="Rett syndrome",
+            variant_hgvs_c="c.509C>T",
+            variant_hgvs_p="p.Thr170Met",
+        ),
+    )
+    items = [_item("A.gene_symbol", "MECP2", text, group_id="gene=MECP2|variant=c.509C>T")]
+
+    recovered = TargetSpanFieldRecovery().recover(document, items)
+    values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
+
+    assert values["C.de_novo_status"] == "de_novo"
+    assert values["C.maternal_genotype"] == "target_absent"
+    assert values["C.paternal_genotype"] == "target_absent"
+    assert values["C.parentage_confirmed"] == "not_confirmed"
+
+
+def test_recovery_does_not_treat_paper_nonsense_label_as_type_for_coding_deletion() -> None:
+    """c.194delC remains a coding indel even when the paper writes 无义突变 / p.S65X."""
+    text = (
+        "患儿MECP2基因存在c.194delC致病性突变，此为无义突变（p.S65X），"
+        "即核苷酸序列中194位碱基C缺失；患儿父母在该位点均无异常。"
+    )
+    document = TrackDocument(
+        document_id="rett-084",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[],
+        extraction_target=ExtractionTarget(
+            gene_symbol="MECP2",
+            disease_name="Rett syndrome",
+            variant_hgvs_c="c.194delC",
+            variant_hgvs_p="p.S65X",
+        ),
+    )
+    items = [_item("A.gene_symbol", "MECP2", text, group_id="gene=MECP2|variant=c.194delC")]
+
+    recovered = TargetSpanFieldRecovery().recover(document, items)
+    values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
+    assert values["A.variant_type"] == "frameshift"
+    assert values["C.maternal_genotype"] == "target_absent"
+    assert values["C.parentage_confirmed"] == "not_confirmed"
+
+
+def test_recovery_overwrites_llm_nonsense_when_target_is_coding_deletion() -> None:
+    """LLM FOUND nonsense must not block PVS1 on c.194delC."""
+    text = "患儿MECP2基因存在c.194delC致病性突变，此为无义突变（p.S65X）。"
+    document = TrackDocument(
+        document_id="rett-084",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[],
+        extraction_target=ExtractionTarget(
+            gene_symbol="MECP2",
+            disease_name="Rett syndrome",
+            variant_hgvs_c="c.194delC",
+            variant_hgvs_p="p.S65X",
+        ),
+    )
+    items = [
+        _item("A.gene_symbol", "MECP2", text, group_id="gene=MECP2|variant=c.194delC"),
+        _item("A.variant_type", "nonsense", "此为无义突变（p.S65X）", group_id="gene=MECP2|variant=c.194delC"),
+    ]
+
+    recovered = TargetSpanFieldRecovery().recover(document, items)
+    types = [item.value for item in recovered if item.field_id == "A.variant_type"]
+    assert types == ["frameshift"]
+    assert "coding_indel_not_nonsense" in next(
+        item.notes for item in recovered if item.field_id == "A.variant_type"
+    )
+
+
+def test_recovery_does_not_call_maternal_inheritance_de_novo() -> None:
+    text = "该 MECP2 c.509C>T 变异遗传自母亲，父亲未携带该位点。"
+    document = TrackDocument(
+        document_id="rett-081",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[],
+        extraction_target=ExtractionTarget(
+            gene_symbol="MECP2",
+            disease_name="Rett syndrome",
+            variant_hgvs_c="c.509C>T",
+        ),
+    )
+    items = [_item("A.gene_symbol", "MECP2", text, group_id="gene=MECP2|variant=c.509C>T")]
+
+    recovered = TargetSpanFieldRecovery().recover(document, items)
+    values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
+    assert "C.de_novo_status" not in values
+    assert "C.parentage_confirmed" not in values
