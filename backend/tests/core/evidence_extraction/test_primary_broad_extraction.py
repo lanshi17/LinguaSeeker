@@ -86,6 +86,8 @@ def test_primary_broad_stage_prompts_for_b8_fields_and_source_quote() -> None:
     assert "C.in_trans_confirmation" in prompt
     assert "C.maternal_genotype" in prompt
     assert "C.paternal_genotype" in prompt
+    assert "C.parentage_confirmed" in prompt
+    assert "target_absent" in prompt
     assert "Never write PS2" in prompt
 
 

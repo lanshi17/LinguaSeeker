@@ -278,6 +278,12 @@ def test_contentblock_from_mineru_block_text():
     assert block.bbox == [0, 0, 100, 20]
 
 
+def test_contentblock_from_mineru_block_unescapes_html_hgvs():
+    raw = {"type": "text", "text": "c.538C&gt;T", "page_idx": 0}
+    block = ContentBlock.from_mineru_block(raw)
+    assert block.text == "c.538C>T"
+
+
 def test_contentblock_from_mineru_block_image():
     raw = {
         "type": "image",

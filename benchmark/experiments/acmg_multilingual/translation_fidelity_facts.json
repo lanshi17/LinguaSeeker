@@ -1,0 +1,101 @@
+{
+  "study_id": "acmg-multilingual-translation-fidelity",
+  "protocol_version": "v1",
+  "created_on": "2026-08-18",
+  "translation_review_status": "model_reviewed",
+  "provenance": "benchmark/experiments/acmg_multilingual/pilot_model_reviewed.json; benchmark/experiments/acmg_multilingual/source_coverage_facts.json",
+  "scope_note": "Critical facts are the Stage-0 PM6-eligible spans of the two ready sources. Retention here only shows that the English pivot input still carries the fact; it is not a clinical translation review and the English full texts remain model_reviewed, not human_reviewed.",
+  "entries": [
+    {
+      "case_id": "rett_007",
+      "native_relative_path": "rett_007/source.md",
+      "native_sha256": "1b5ba8f293164fac22dfe39bcc94ad596999e4236ed9c8ee47a2250fcaaec94d",
+      "english_relative_path": "rett_007/english_fulltext.md",
+      "english_sha256": "9ca2332d715705ca8972584dd6295723f42387c8358889d008da31ce997a1716",
+      "alignment_relative_path": "rett_007/alignment.json",
+      "alignment_sha256": "a181cec15249a617ca03eb14f689f1b97ab5438c3c867db909687ac5e7ea48ee",
+      "facts": [
+        {
+          "fact_id": "parental_negative",
+          "native_line": 51,
+          "native_quote": "患儿父母均未检测到突变",
+          "required_english_tokens": [
+            "No mutations were detected in the parents"
+          ]
+        },
+        {
+          "fact_id": "case1_variant",
+          "native_line": 55,
+          "native_quote": "c.509C&gt;T",
+          "required_english_tokens": [
+            "c.509C>T",
+            "p.Thr170Met"
+          ]
+        },
+        {
+          "fact_id": "case2_variant",
+          "native_line": 55,
+          "native_quote": "c.538C&gt;T",
+          "required_english_tokens": [
+            "c.538C>T",
+            "p.Arg180Ter"
+          ]
+        },
+        {
+          "fact_id": "case3_variant",
+          "native_line": 55,
+          "native_quote": "c.842delG",
+          "required_english_tokens": [
+            "c.842delG",
+            "p.Gly281AlafsTer20"
+          ]
+        },
+        {
+          "fact_id": "case4_variant",
+          "native_line": 55,
+          "native_quote": "c.844delC",
+          "required_english_tokens": [
+            "c.844delC",
+            "p.Arg282GlufsTer19"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "rett_011",
+      "native_relative_path": "rett_011/source.md",
+      "native_sha256": "9cfcd607a092f09ddc82c08c0dd199467dc2b8ded0716ede5e0904e203cf2dfa",
+      "english_relative_path": "rett_011/english_fulltext.md",
+      "english_sha256": "f8522c276f0cf57c5f8c2c8c37aed68b89c720be383c8dbb409a0ee517d2c938",
+      "alignment_relative_path": "rett_011/alignment.json",
+      "alignment_sha256": "97c9766a8e564b4b80cd8c3d842e84b5f18205dc3663b89c9be746454c638d09",
+      "facts": [
+        {
+          "fact_id": "target_variant",
+          "native_line": 41,
+          "native_quote": "c.710C>G",
+          "required_english_tokens": [
+            "c.710C>G",
+            "p.Pro237Arg"
+          ]
+        },
+        {
+          "fact_id": "de_novo_status",
+          "native_line": 41,
+          "native_quote": "变异为新生变异",
+          "required_english_tokens": [
+            "the variant was de novo"
+          ]
+        },
+        {
+          "fact_id": "parental_negative",
+          "native_line": 41,
+          "native_quote": "父母未携带该变异位点",
+          "required_english_tokens": [
+            "the parents did not carry"
+          ]
+        }
+      ]
+    }
+  ]
+}

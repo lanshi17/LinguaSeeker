@@ -7,6 +7,8 @@ from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
+from src.utils.text_normalize import unescape_mined_text
+
 from ..contracts import (
     ContentBlock,
     FormattedDocument,
@@ -190,6 +192,7 @@ def _format_markdown(
     """
     if not raw_markdown:
         raw_markdown = "\n\n".join(p.get("markdown", "") for p in pages)
+    raw_markdown = unescape_mined_text(raw_markdown)
 
     raw_copy = raw_markdown  # Preserve for drift computation
 

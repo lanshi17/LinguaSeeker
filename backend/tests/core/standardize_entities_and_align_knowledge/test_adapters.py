@@ -429,6 +429,52 @@ def test_dual_result_adapter_prefers_reconciled_result_for_default_input() -> No
     assert "audit_only" not in output.track_payloads["reconciled"]
 
 
+def test_dual_result_adapter_adds_coding_hgvs_when_chain_has_protein_only() -> None:
+    result = DualEvidenceExtractionResult(
+        document_id="doc-hgvs",
+        original_result=EvidenceExtractionResult(
+            status=EvidenceExtractionStatus.COMPLETED,
+            document_id="doc-hgvs",
+            track=Track.ORIGINAL,
+            evidence_chains=[
+                EvidenceChain(
+                    chain_id="chain-1",
+                    gene_text="MECP2",
+                    disease_text="Rett syndrome",
+                    variant_text="p.Arg180Ter",
+                ),
+            ],
+            evidence_items=[
+                EvidenceItem(
+                    field_id="A.variant_hgvs_c",
+                    category="A",
+                    field_name="HGVS c.",
+                    status=EvidenceStatus.FOUND,
+                    value="c.538C&gt;T",
+                    confidence=0.9,
+                    group_id="chain-1",
+                ),
+            ],
+        ),
+        translated_result=EvidenceExtractionResult(
+            status=EvidenceExtractionStatus.COMPLETED,
+            document_id="doc-hgvs",
+            track=Track.TRANSLATED,
+        ),
+    )
+
+    output = DualResultAdapter().to_standardization_input(
+        result,
+        source_document_id="source-hgvs",
+        processing_run_id="run-hgvs",
+    )
+
+    variant_texts = [c.raw_text for c in output.candidates if c.entity_type == EntityType.VARIANT]
+    assert "p.Arg180Ter" in variant_texts
+    assert "c.538C>T" in variant_texts
+
+
+
 def test_dual_result_adapter_preserves_legacy_union_when_reconciled_result_absent() -> None:
     result = DualEvidenceExtractionResult(
         document_id="doc-legacy",

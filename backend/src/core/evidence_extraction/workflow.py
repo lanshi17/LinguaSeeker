@@ -275,10 +275,13 @@ class EvidenceExtractionWorkflow:
         return state
 
     def _node_target_span_recovery(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
-        state.evidence_items = self._target_span_recovery.recover(
+        recovered = self._target_span_recovery.recover(
             state.document,
             state.evidence_items,
         )
+        items, issues = self._value_normalizer.normalize(recovered)
+        state.evidence_items = items
+        state.normalization_issues = [*state.normalization_issues, *issues]
         return state
 
     def _node_source_grounding(self, state: EvidenceExtractionState) -> EvidenceExtractionState:

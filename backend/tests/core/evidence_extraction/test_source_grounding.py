@@ -659,3 +659,97 @@ def test_grounder_uses_matched_block_for_duplicate_snippet_provenance():
     assert grounded.source is not None
     assert grounded.source.block_index == 1
     assert grounded.source.bbox == [9, 9, 10, 10]
+
+
+def test_source_grounding_matches_decoded_hgvs_quote_to_html_entity() -> None:
+    """MinerU/HTML leaves c.538C&gt;T; the model copies c.538C>T. Keep FOUND."""
+    text = "Sanger证实为杂合突变c.538C&gt;T（p.Arg180Ter）。"
+    document = TrackDocument(
+        document_id="rett-007-html-hgvs",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=len(text))],
+    )
+    item = EvidenceItem(
+        field_id="A.variant_hgvs_c",
+        category="A",
+        field_name="HGVS coding variant",
+        status=EvidenceStatus.FOUND,
+        value="c.538C>T",
+        raw_source=SourceLocation(
+            context_type="text",
+            context_ref="primary_broad_extraction",
+            text_snippet="c.538C>T",
+            block_index=-1,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])[0]
+
+    assert grounded.status == EvidenceStatus.FOUND
+    assert grounded.source is not None
+    assert "c.538C" in grounded.source.text_snippet
+    assert grounded.source.text_snippet in text
+
+
+def test_source_grounding_matches_html_entity_inside_chinese_sentence() -> None:
+    """A decoded quote spanning Chinese context still grounds when only '>' is an entity."""
+    text = "病例2存在MECP2基因突变c.538C&gt;T，患儿父母均未检测到突变。"
+    document = TrackDocument(
+        document_id="rett-007-html-sentence",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=len(text))],
+    )
+    item = EvidenceItem(
+        field_id="C.de_novo_status",
+        category="C",
+        field_name="De novo status",
+        status=EvidenceStatus.FOUND,
+        value="de_novo",
+        raw_source=SourceLocation(
+            context_type="text",
+            context_ref="primary_broad_extraction",
+            text_snippet="MECP2基因突变c.538C>T，患儿父母均未检测到突变",
+            block_index=-1,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])[0]
+
+    assert grounded.status == EvidenceStatus.FOUND
+    assert grounded.source is not None
+    assert "父母均未检测到突变" in grounded.source.text_snippet
+
+
+def test_source_grounding_falls_back_to_hgvs_value_when_quote_is_paraphrased() -> None:
+    """If the quote is not verbatim, a coding HGVS value that appears in the paper still grounds."""
+    text = "该先证者携带c.538C&gt;T。"
+    document = TrackDocument(
+        document_id="rett-007-value-fallback",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=len(text))],
+    )
+    item = EvidenceItem(
+        field_id="A.variant_hgvs_c",
+        category="A",
+        field_name="HGVS coding variant",
+        status=EvidenceStatus.FOUND,
+        value="c.538C>T",
+        raw_source=SourceLocation(
+            context_type="text",
+            context_ref="primary_broad_extraction",
+            text_snippet="the heterozygous coding variant was confirmed by Sanger",
+            block_index=-1,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])[0]
+
+    assert grounded.status == EvidenceStatus.FOUND
+    assert grounded.source is not None
+    assert grounded.source.text_snippet in text

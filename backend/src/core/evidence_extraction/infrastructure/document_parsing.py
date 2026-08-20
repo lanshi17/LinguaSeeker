@@ -13,6 +13,15 @@ from typing import Any, Literal
 
 from loguru import logger
 
+from src.core.cross_lingual_translation.contracts import TranslationAlignmentChunk
+from src.core.standardize_entities_and_align_knowledge.context_pack.contracts import (
+    TargetContextPack,
+)
+from src.core.standardize_entities_and_align_knowledge.context_pack.core import (
+    build_context_pack_from_runtime_target,
+)
+from src.utils.text_normalize import unescape_mined_strings, unescape_mined_text
+
 from ..contracts import (
     ContentBlock,
     DualTrackDocuments,
@@ -21,13 +30,6 @@ from ..contracts import (
     PageSpan,
     Track,
     TrackDocument,
-)
-from src.core.cross_lingual_translation.contracts import TranslationAlignmentChunk
-from src.core.standardize_entities_and_align_knowledge.context_pack.contracts import (
-    TargetContextPack,
-)
-from src.core.standardize_entities_and_align_knowledge.context_pack.core import (
-    build_context_pack_from_runtime_target,
 )
 
 
@@ -91,7 +93,7 @@ def _build_track_document_from_json(
 
     # Fallback: when blocks are empty, use persisted formatted_text
     if not formatted_text and data.get("formatted_text"):
-        formatted_text = _filter_evidence_text(str(data["formatted_text"]))
+        formatted_text = _filter_evidence_text(unescape_mined_text(str(data["formatted_text"])))
         page_spans = [
             PageSpan(
                 span_id=f"{track.value}-p1",
@@ -215,15 +217,15 @@ def _parse_content_blocks(blocks: list[dict[str, Any]]) -> list[ContentBlock]:
                 type=str(block.get("type", "text")),
                 page_idx=int(block.get("page_idx", 0)),
                 bbox=list(block.get("bbox", [])),
-                text=str(block.get("text", "")),
-                content=str(block.get("content", "")),
-                table_body=str(block.get("table_body", "")),
+                text=unescape_mined_text(str(block.get("text", ""))),
+                content=unescape_mined_text(str(block.get("content", ""))),
+                table_body=unescape_mined_text(str(block.get("table_body", ""))),
                 img_path=str(block.get("img_path", "")),
-                image_caption=[str(v) for v in block.get("image_caption", [])],
-                table_caption=[str(v) for v in block.get("table_caption", [])],
-                chart_caption=[str(v) for v in block.get("chart_caption", [])],
-                code_body=str(block.get("code_body", "")),
-                list_items=[str(v) for v in block.get("list_items", [])],
+                image_caption=unescape_mined_strings(block.get("image_caption", [])),
+                table_caption=unescape_mined_strings(block.get("table_caption", [])),
+                chart_caption=unescape_mined_strings(block.get("chart_caption", [])),
+                code_body=unescape_mined_text(str(block.get("code_body", ""))),
+                list_items=unescape_mined_strings(block.get("list_items", [])),
             )
         )
     return parsed
@@ -268,8 +270,9 @@ def _block_text(block: dict[str, Any]) -> str:
     for key in ("text", "content", "table_body", "code_body"):
         value = block.get(key)
         if isinstance(value, str) and value.strip():
-            return value.strip()
+            return unescape_mined_text(value.strip())
     list_items = block.get("list_items")
     if isinstance(list_items, list) and list_items:
-        return "\n".join(item for item in list_items if isinstance(item, str) and item.strip())
+        joined = "\n".join(item for item in list_items if isinstance(item, str) and item.strip())
+        return unescape_mined_text(joined) if joined else ""
     return ""

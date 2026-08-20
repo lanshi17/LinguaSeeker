@@ -65,6 +65,19 @@ def test_format_markdown_with_content_blocks():
     assert result.original_blocks[1].text == "Body text."
 
 
+def test_format_markdown_unescapes_html_hgvs() -> None:
+    pages = [{"page_number": 1, "markdown": "The variant is c.538C&gt;T."}]
+    content_blocks = [
+        {"type": "text", "text": "The variant is c.538C&gt;T.", "page_idx": 0},
+    ]
+    result = _format_markdown(pages, content_blocks=content_blocks)
+
+    assert "c.538C>T" in result.formatted_markdown
+    assert "&gt;" not in result.formatted_markdown
+    assert result.original_blocks[0].text == "The variant is c.538C>T."
+
+
+
 def test_markdown_formatter_format_with_content_blocks():
     formatter = MarkdownFormatter()
     pages = [{"page_number": 1, "markdown": "Content."}]

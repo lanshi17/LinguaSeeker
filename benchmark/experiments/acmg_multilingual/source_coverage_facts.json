@@ -1,0 +1,162 @@
+{
+  "study_id": "acmg-multilingual-source-coverage-stage0",
+  "protocol_version": "v1",
+  "corpus_revision": "5b1f7673e7f4ea7922f3ad7efb79f25fdbfedab7",
+  "created_on": "2026-08-15",
+  "criterion_family": "PS2_PM6",
+  "reviewer_id": "project-clinical-audit",
+  "provenance": "docs/active/2026-08-14-acmg-multilingual-evidence-code-audit.md",
+  "review_scope_note": "Stage-0 counts are project clinical review of source facts, not independent blinded ACMG adjudication (reserved for Stage-1). A count of 0 marks a visibility where the positive fact is absent and is recorded as a review note, not a hash-verifiable span.",
+  "sources": [
+    {
+      "case_id": "rett_006",
+      "canonical_source": "赵培伟 等. Rett综合征的临床特点及MECP2基因突变分析. 中国当代儿科杂志 2014;16(4):393-396.",
+      "doi": "10.7499/j.issn.1008-8830.2014.04.017",
+      "native_language": "zh",
+      "source_relative_path": "rett_006/source.md",
+      "source_sha256": "a1f17f1e2302ed8881d6bb939ec8599da83bd9bb87f9672576a5adff4aa79a33",
+      "abstract": {
+        "visibility": "english_abstract",
+        "pm6_eligible_count": 5,
+        "spans": [
+          {
+            "line": 21,
+            "quote": "Heterozygous mutations were identified in 5 out of 9 patients",
+            "language": "en"
+          },
+          {
+            "line": 21,
+            "quote": "No mutations were detected in their parents",
+            "language": "en"
+          }
+        ],
+        "notes": "English abstract names 5 mutations (c.913insT, c.316C>T, c.502C>T, c.808C>T, c.1126C>T) and states parents were not mutated."
+      },
+      "fulltext": {
+        "visibility": "native_fulltext",
+        "pm6_eligible_count": 5,
+        "spans": [
+          {
+            "line": 41,
+            "quote": "所有患儿父母均未检测到突变",
+            "language": "zh"
+          }
+        ],
+        "notes": "Chinese results repeat the same 5 mutations and parental negativity; no increment over the abstract."
+      },
+      "fulltext_increment": 0
+    },
+    {
+      "case_id": "rett_007",
+      "canonical_source": "刘等. RTT样表型5例患儿的临床特点及基因变异分析. 中国优生与遗传杂志 2023.",
+      "doi": "10.13404/j.cnki.cjbhh.2023.04.008",
+      "native_language": "zh",
+      "source_relative_path": "rett_007/source.md",
+      "source_sha256": "1b5ba8f293164fac22dfe39bcc94ad596999e4236ed9c8ee47a2250fcaaec94d",
+      "abstract": {
+        "visibility": "english_abstract",
+        "pm6_eligible_count": 0,
+        "spans": [],
+        "notes": "English abstract (source.md:21) states only that 4 cases were diagnosed as RTT and genetic analysis of children and parents was performed; it names no target variants and gives no per-case parental negativity."
+      },
+      "fulltext": {
+        "visibility": "native_fulltext",
+        "pm6_eligible_count": 4,
+        "spans": [
+          {
+            "line": 51,
+            "quote": "患儿父母均未检测到突变",
+            "language": "zh"
+          },
+          {
+            "line": 55,
+            "quote": "c.509C&gt;T",
+            "language": "zh"
+          },
+          {
+            "line": 55,
+            "quote": "c.538C&gt;T",
+            "language": "zh"
+          },
+          {
+            "line": 55,
+            "quote": "c.842delG",
+            "language": "zh"
+          },
+          {
+            "line": 55,
+            "quote": "c.844delC",
+            "language": "zh"
+          }
+        ],
+        "notes": "Chinese full text gives parent WES with parental negativity (line 51) and a four-case variant table (line 55). The four cases are one family/series cluster, not four independent observations."
+      },
+      "fulltext_increment": 4
+    },
+    {
+      "case_id": "rett_011",
+      "canonical_source": "钟少君 等. MECP2基因变异所致Rett综合征1例临床及遗传学分析. 中国医药导报 2024.",
+      "doi": "10.20047/j.issn1673-7210.2024.05.45",
+      "native_language": "zh",
+      "source_relative_path": "rett_011/source.md",
+      "source_sha256": "9cfcd607a092f09ddc82c08c0dd199467dc2b8ded0716ede5e0904e203cf2dfa",
+      "abstract": {
+        "visibility": "english_abstract",
+        "pm6_eligible_count": 0,
+        "spans": [],
+        "notes": "English abstract (source.md:21) reports a new heterozygous MECP2 missense variant c.710C>G (p.Pro237Arg) but does not state that both parents were tested and negative for the target locus."
+      },
+      "fulltext": {
+        "visibility": "native_fulltext",
+        "pm6_eligible_count": 1,
+        "spans": [
+          {
+            "line": 41,
+            "quote": "父母未携带该变异位点",
+            "language": "zh"
+          },
+          {
+            "line": 41,
+            "quote": "变异为新生变异",
+            "language": "zh"
+          }
+        ],
+        "notes": "Chinese full text gives proband/parent WES, Sanger confirmation, de novo status, and parental negativity at the target locus."
+      },
+      "fulltext_increment": 1
+    },
+    {
+      "case_id": "rett_084",
+      "canonical_source": "葛骏文 等. Report of a boy with Rett syndrome caused by a novel MECP2 mutation and literature review. 上海交通大学医学院附属儿童医院 2018.",
+      "doi": "10.3969/j.issn.1000-3606.2018.11.005",
+      "native_language": "zh",
+      "source_relative_path": "rett_084/source.md",
+      "source_sha256": "b642c536e44d9f0c2d52b12c4c595dd2d5fd550b64f52937be339dbec5984786",
+      "abstract": {
+        "visibility": "english_abstract",
+        "pm6_eligible_count": 1,
+        "spans": [
+          {
+            "line": 13,
+            "quote": "not found in his parents",
+            "language": "en"
+          }
+        ],
+        "notes": "English abstract names c.194delC (p.S65X) and states it was not found in the parents."
+      },
+      "fulltext": {
+        "visibility": "native_fulltext",
+        "pm6_eligible_count": 1,
+        "spans": [
+          {
+            "line": 23,
+            "quote": "患儿父母在该位点均无异常",
+            "language": "zh"
+          }
+        ],
+        "notes": "Chinese full text adds sampling and WES + Sanger details but no increment over the abstract."
+      },
+      "fulltext_increment": 0
+    }
+  ]
+}

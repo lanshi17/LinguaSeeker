@@ -343,6 +343,36 @@ def normalize_jstage(item: Dict[str, Any]) -> OnlineAcquisitionItem:
     )
 
 
+def normalize_pubmed(item: Dict[str, Any]) -> OnlineAcquisitionItem:
+    """Normalize a PubMed esummary candidate (db=pubmed, distinct from PMC)."""
+    pmid = _clean_text(item.get("pmid"))
+    pmcid = _clean_text(item.get("pmcid"))
+    doi = _clean_text(item.get("doi"))
+    url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/" if pmid else ""
+    pmc_pdf = f"https://www.ncbi.nlm.nih.gov/pmc/articles/{pmcid}/pdf/" if pmcid else ""
+    identifiers: Dict[str, Any] = {}
+    if pmid:
+        identifiers["pmid"] = pmid
+    if pmcid:
+        identifiers["pmcid"] = pmcid
+    if doi:
+        identifiers["doi"] = doi
+    return OnlineAcquisitionItem(
+        source="pubmed",
+        title=_clean_text(item.get("title")),
+        authors=[],
+        journal=_clean_text(item.get("journal")),
+        year=_extract_year(item.get("pub_date")),
+        doi=doi,
+        url=url,
+        links=_extract_links([pmc_pdf, url]),
+        language=None,
+        issn=[],
+        identifiers=identifiers,
+        keywords=[],
+    )
+
+
 def normalize_doaj(item: Dict[str, Any]) -> OnlineAcquisitionItem:
     title = _clean_text(item.get("title"))
     journal = _clean_text(item.get("journal_title"))
@@ -667,6 +697,7 @@ NORMALIZER_MAP: Dict[str, Callable[[Dict[str, Any]], OnlineAcquisitionItem]] = {
     "crossref": normalize_crossref,
     "unpaywall": normalize_unpaywall,
     "pmc": normalize_pmc,
+    "pubmed": normalize_pubmed,
     "jstage": normalize_jstage,
     "doaj": normalize_doaj,
     "openalex": normalize_openalex,

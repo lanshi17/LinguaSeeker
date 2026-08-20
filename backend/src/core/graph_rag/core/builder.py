@@ -71,11 +71,11 @@ class EvidenceGraphBuilder:
                     display_name=target.disease_name,
                     external_id=None,
                 )
-            if target.variant_hgvs_p:
+            if target.primary_variant:
                 self._add_entity_node(
-                    node_id=self._variant_node_id(target.variant_hgvs_p),
+                    node_id=self._variant_node_id(target.primary_variant),
                     entity_type=GraphEntityType.VARIANT,
-                    display_name=target.variant_hgvs_p,
+                    display_name=target.primary_variant,
                     external_id=None,
                 )
 

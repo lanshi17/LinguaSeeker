@@ -34,9 +34,10 @@ FIELDS:
 - C.inheritance_source: Whether the variant was inherited or arose de novo
   (e.g. "inherited from mother", "paternal", "maternal", "de novo"). Must have family/
   parental/genotyping evidence.
-- C.de_novo_status: Whether the variant was confirmed as de novo
-  (e.g. "confirmed de novo", "likely de novo", "inherited"). Requires parental testing
-  or family study evidence.
+- C.de_novo_status: de novo when THIS target variant was tested in both parents and absent
+  (e.g. "父母均未检测到", "not found in his parents", "de novo"). Inherited from mother/father
+  is not de novo. Parental negativity without identity testing is still de novo (PM6-eligible).
+  Do not write PS2-eligible unless the quote confirms parentage.
 
 RULES:
 1. Each found item MUST include a source with text_snippet that is a verbatim substring of the document.

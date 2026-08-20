@@ -1,0 +1,188 @@
+{
+  "study_id": "acmg-multilingual-field-bridge",
+  "protocol_version": "v1",
+  "created_on": "2026-08-19",
+  "scope_note": "Source-shadow audit mapping catalog field_ids to the frozen MECP2 rule engine. This is not a live extractor re-run. C.parentage_confirmed is an absence check: the listed phrases must not appear in source.md. Joint parental-negative quotes may fill C.maternal_genotype and C.paternal_genotype together.",
+  "parentage_forbidden_patterns": [
+    "亲子鉴定",
+    "亲权鉴定",
+    "STR分型",
+    "paternity test",
+    "maternity test",
+    "parentage confirmation",
+    "parentage confirmed",
+    "identity testing",
+    "biological parentage",
+    "trio identity"
+  ],
+  "events": [
+    {
+      "event_id": "rett_007_case1_T170M",
+      "fields": [
+        {"field_id": "A.variant_hgvs_c", "presence": "present", "expected_value": "c.509C>T", "spans": [{"line": 55, "quote": "c.509C&gt;T", "language": "zh"}]},
+        {"field_id": "C.de_novo_status", "presence": "present", "expected_value": "de_novo_unconfirmed", "spans": [{"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.maternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.paternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.parentage_confirmed", "presence": "absent"},
+        {"field_id": "B.disease_diagnosis", "presence": "present", "expected_value": "typical Rett syndrome", "spans": [{"line": 167, "quote": "病例 1\\~4 诊断为经典型 RTT", "language": "zh"}]}
+      ]
+    },
+    {
+      "event_id": "rett_007_case2_R180X",
+      "fields": [
+        {"field_id": "A.variant_hgvs_c", "presence": "present", "expected_value": "c.538C>T", "spans": [{"line": 55, "quote": "c.538C&gt;T", "language": "zh"}]},
+        {"field_id": "A.variant_hgvs_p", "presence": "present", "expected_value": "p.Arg180Ter", "spans": [{"line": 55, "quote": "p.Arg180Ter", "language": "zh"}]},
+        {"field_id": "A.variant_type", "presence": "present", "expected_value": "nonsense", "spans": [{"line": 55, "quote": "无义突变", "language": "zh"}]},
+        {"field_id": "C.de_novo_status", "presence": "present", "expected_value": "de_novo_unconfirmed", "spans": [{"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.maternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.paternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.parentage_confirmed", "presence": "absent"},
+        {"field_id": "B.disease_diagnosis", "presence": "present", "expected_value": "typical Rett syndrome", "spans": [{"line": 167, "quote": "病例 1\\~4 诊断为经典型 RTT", "language": "zh"}]}
+      ]
+    },
+    {
+      "event_id": "rett_007_case3_G281fs",
+      "fields": [
+        {"field_id": "A.variant_hgvs_c", "presence": "present", "expected_value": "c.842delG", "spans": [{"line": 55, "quote": "c.842delG", "language": "zh"}]},
+        {"field_id": "A.variant_hgvs_p", "presence": "present", "expected_value": "p.Gly281fs", "spans": [{"line": 55, "quote": "p.Gly281AlafsTer20", "language": "zh"}]},
+        {"field_id": "A.variant_type", "presence": "present", "expected_value": "frameshift", "spans": [{"line": 55, "quote": "移码突变", "language": "zh"}]},
+        {"field_id": "C.de_novo_status", "presence": "present", "expected_value": "de_novo_unconfirmed", "spans": [{"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.maternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.paternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.parentage_confirmed", "presence": "absent"},
+        {"field_id": "B.disease_diagnosis", "presence": "present", "expected_value": "typical Rett syndrome", "spans": [{"line": 167, "quote": "病例 1\\~4 诊断为经典型 RTT", "language": "zh"}]}
+      ]
+    },
+    {
+      "event_id": "rett_007_case4_R282fs",
+      "fields": [
+        {"field_id": "A.variant_hgvs_c", "presence": "present", "expected_value": "c.844delC", "spans": [{"line": 55, "quote": "c.844delC", "language": "zh"}]},
+        {"field_id": "A.variant_hgvs_p", "presence": "present", "expected_value": "p.Arg282fs", "spans": [{"line": 55, "quote": "p.Arg282GlufsTer19", "language": "zh"}]},
+        {"field_id": "A.variant_type", "presence": "present", "expected_value": "frameshift", "spans": [{"line": 55, "quote": "移码突变", "language": "zh"}]},
+        {"field_id": "C.de_novo_status", "presence": "present", "expected_value": "de_novo_unconfirmed", "spans": [{"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.maternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.paternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.parentage_confirmed", "presence": "absent"},
+        {"field_id": "B.disease_diagnosis", "presence": "present", "expected_value": "typical Rett syndrome", "spans": [{"line": 167, "quote": "病例 1\\~4 诊断为经典型 RTT", "language": "zh"}]}
+      ]
+    },
+    {
+      "event_id": "rett_007_case5_Xq28dup",
+      "fields": [
+        {"field_id": "A.variant_hgvs_c", "presence": "present", "expected_value": "Xq28 0.299 Mb dup", "spans": [{"line": 51, "quote": "Xq28区域存在重复变异", "language": "zh"}]},
+        {"field_id": "B.disease_diagnosis", "presence": "present", "expected_value": "MECP2 duplication syndrome", "spans": [{"line": 167, "quote": "诊断为 MECP2 重复综合征", "language": "zh"}]}
+      ]
+    },
+    {
+      "event_id": "rett_011_P237R",
+      "fields": [
+        {"field_id": "A.variant_hgvs_c", "presence": "present", "expected_value": "c.710C>G", "spans": [{"line": 21, "quote": "c.710C ＞G", "language": "en"}]},
+        {"field_id": "C.de_novo_status", "presence": "present", "expected_value": "de_novo_unconfirmed", "spans": [{"line": 41, "quote": "变异为新生变异，父母未携带该变异位点", "language": "zh"}]},
+        {"field_id": "C.maternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 41, "quote": "父母未携带该变异位点", "language": "zh"}]},
+        {"field_id": "C.paternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 41, "quote": "父母未携带该变异位点", "language": "zh"}]},
+        {"field_id": "C.parentage_confirmed", "presence": "absent"},
+        {"field_id": "B.disease_diagnosis", "presence": "present", "expected_value": "Rett syndrome", "spans": [{"line": 41, "quote": "确诊为Rett 综合征", "language": "zh"}]}
+      ]
+    },
+    {
+      "event_id": "rett_006_A_R106W",
+      "fields": [
+        {"field_id": "A.variant_hgvs_c", "presence": "present", "expected_value": "c.316C>T", "spans": [{"line": 75, "quote": "c.316C&gt;T", "language": "zh"}]},
+        {"field_id": "A.functional_domain_or_hotspot", "presence": "present", "expected_value": "MBD", "spans": [{"line": 75, "quote": "R106W</td><td>MBD", "language": "zh"}]},
+        {"field_id": "C.de_novo_status", "presence": "present", "expected_value": "de_novo_unconfirmed", "spans": [{"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.maternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 21, "quote": "No mutations were detected in their parents", "language": "en"}]},
+        {"field_id": "C.paternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.parentage_confirmed", "presence": "absent"},
+        {"field_id": "B.disease_diagnosis", "presence": "present", "expected_value": "Rett syndrome", "spans": [{"line": 33, "quote": "临床诊断符合 2001 年欧洲小儿神经会议制定的国际 RTT 诊断标准", "language": "zh"}]}
+      ]
+    },
+    {
+      "event_id": "rett_006_B_P376S",
+      "fields": [
+        {"field_id": "A.variant_hgvs_c", "presence": "present", "expected_value": "c.1126C>T", "spans": [{"line": 75, "quote": "c.1126C&gt;T", "language": "zh"}]},
+        {"field_id": "C.de_novo_status", "presence": "present", "expected_value": "de_novo_unconfirmed", "spans": [{"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.maternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.paternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.parentage_confirmed", "presence": "absent"},
+        {"field_id": "B.disease_diagnosis", "presence": "present", "expected_value": "Rett syndrome", "spans": [{"line": 41, "quote": "9 例患儿均具有 RTT 的症状", "language": "zh"}]}
+      ]
+    },
+    {
+      "event_id": "rett_006_D_R270X",
+      "fields": [
+        {"field_id": "A.variant_hgvs_c", "presence": "present", "expected_value": "c.808C>T", "spans": [{"line": 75, "quote": "c.808C&gt;T", "language": "zh"}]},
+        {"field_id": "A.variant_hgvs_p", "presence": "present", "expected_value": "p.Arg270Ter", "spans": [{"line": 75, "quote": "R270X", "language": "zh"}]},
+        {"field_id": "A.variant_type", "presence": "present", "expected_value": "nonsense", "spans": [{"line": 75, "quote": "无义突变", "language": "zh"}]},
+        {"field_id": "C.de_novo_status", "presence": "present", "expected_value": "de_novo_unconfirmed", "spans": [{"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.maternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.paternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.parentage_confirmed", "presence": "absent"},
+        {"field_id": "B.disease_diagnosis", "presence": "present", "expected_value": "Rett syndrome", "spans": [{"line": 33, "quote": "国际 RTT 诊断标准", "language": "zh"}]}
+      ]
+    },
+    {
+      "event_id": "rett_006_F_R168X",
+      "fields": [
+        {"field_id": "A.variant_hgvs_c", "presence": "present", "expected_value": "c.502C>T", "spans": [{"line": 75, "quote": "c.502C&gt;T", "language": "zh"}]},
+        {"field_id": "A.variant_hgvs_p", "presence": "present", "expected_value": "p.Arg168Ter", "spans": [{"line": 75, "quote": "R168X", "language": "zh"}]},
+        {"field_id": "A.variant_type", "presence": "present", "expected_value": "nonsense", "spans": [{"line": 75, "quote": "无义突变", "language": "zh"}]},
+        {"field_id": "C.de_novo_status", "presence": "present", "expected_value": "de_novo_unconfirmed", "spans": [{"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.maternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.paternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.parentage_confirmed", "presence": "absent"},
+        {"field_id": "B.disease_diagnosis", "presence": "present", "expected_value": "Rett syndrome", "spans": [{"line": 21, "quote": "Rett syndrome", "language": "en"}]}
+      ]
+    },
+    {
+      "event_id": "rett_006_G_913insT",
+      "fields": [
+        {"field_id": "A.variant_hgvs_c", "presence": "present", "expected_value": "c.913insT", "spans": [{"line": 41, "quote": "移码突变（c.913insT）", "language": "zh"}]},
+        {"field_id": "A.variant_hgvs_p", "presence": "present", "expected_value": "p.Lys305fs", "spans": [{"line": 41, "quote": "从第 305 位氨基酸起序列发生改变，且在第330位氨基酸处提前终止", "language": "zh"}]},
+        {"field_id": "A.variant_type", "presence": "present", "expected_value": "frameshift", "spans": [{"line": 75, "quote": "移码突变", "language": "zh"}]},
+        {"field_id": "C.de_novo_status", "presence": "present", "expected_value": "de_novo_unconfirmed", "spans": [{"line": 21, "quote": "No mutations were detected in their parents", "language": "en"}]},
+        {"field_id": "C.maternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.paternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}]},
+        {"field_id": "C.parentage_confirmed", "presence": "absent"},
+        {"field_id": "B.disease_diagnosis", "presence": "present", "expected_value": "Rett syndrome", "spans": [{"line": 33, "quote": "临床诊断符合 2001 年欧洲小儿神经会议制定的国际 RTT 诊断标准", "language": "zh"}]}
+      ]
+    },
+    {
+      "event_id": "rett_084_194delC",
+      "fields": [
+        {"field_id": "A.variant_hgvs_c", "presence": "present", "expected_value": "c.194delC", "spans": [{"line": 23, "quote": "c.194delC", "language": "zh"}]},
+        {"field_id": "A.variant_hgvs_p", "presence": "present", "expected_value": "p.Ser65fs", "spans": [{"line": 23, "quote": "无义突变（p.S65X）", "language": "zh"}], "notes": "Paper names a stop; Sanger shows a deleted C. Engine treats residue 65 as frameshift."},
+        {"field_id": "A.variant_type", "presence": "present", "expected_value": "frameshift", "spans": [{"line": 23, "quote": "194位碱基“C”缺失", "language": "zh"}, {"line": 31, "quote": "AGACAT-AGAAGG", "language": "zh"}]},
+        {"field_id": "C.de_novo_status", "presence": "present", "expected_value": "de_novo_unconfirmed", "spans": [{"line": 13, "quote": "not found in his parents", "language": "en"}]},
+        {"field_id": "C.maternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 23, "quote": "患儿父母在该位点均无异常", "language": "zh"}]},
+        {"field_id": "C.paternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 23, "quote": "患儿父母在该位点均无异常", "language": "zh"}]},
+        {"field_id": "C.parentage_confirmed", "presence": "absent"},
+        {"field_id": "B.disease_diagnosis", "presence": "present", "expected_value": "congenital Rett syndrome", "spans": [{"line": 23, "quote": "最终确诊为先天型Rett综合征", "language": "zh"}]}
+      ]
+    },
+    {
+      "event_id": "rett_004_R168X",
+      "fields": [
+        {"field_id": "A.variant_hgvs_c", "presence": "present", "expected_value": "c.502C>T", "spans": [{"line": 52, "quote": "c.502C>T（p.R168X）", "language": "zh"}]},
+        {"field_id": "A.variant_hgvs_p", "presence": "present", "expected_value": "p.Arg168Ter", "spans": [{"line": 52, "quote": "p.R168X", "language": "zh"}]},
+        {"field_id": "A.variant_type", "presence": "present", "expected_value": "nonsense", "spans": [{"line": 31, "quote": "此为无义突变", "language": "zh"}]},
+        {"field_id": "C.de_novo_status", "presence": "present", "expected_value": "de_novo_unconfirmed", "spans": [{"line": 31, "quote": "患儿父母在该位点均无异常，故患儿为新发突变", "language": "zh"}]},
+        {"field_id": "C.maternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 31, "quote": "患儿父母在该位点均无异常", "language": "zh"}]},
+        {"field_id": "C.paternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 48, "quote": "患儿父亲20C204776 | 无变异", "language": "zh"}]},
+        {"field_id": "C.parentage_confirmed", "presence": "absent"},
+        {"field_id": "B.disease_diagnosis", "presence": "present", "expected_value": "typical Rett syndrome", "spans": [{"line": 31, "quote": "诊断为典型 Rett 综合征", "language": "zh"}]}
+      ]
+    },
+    {
+      "event_id": "rett_066_P152R",
+      "fields": [
+        {"field_id": "A.variant_hgvs_c", "presence": "present", "expected_value": "c.455C>G", "spans": [{"line": 41, "quote": "c.455C>G", "language": "ko"}]},
+        {"field_id": "A.functional_domain_or_hotspot", "presence": "present", "expected_value": "MBD", "spans": [{"line": 41, "quote": "methyl binding domain", "language": "ko"}]},
+        {"field_id": "C.de_novo_status", "presence": "present", "expected_value": "de_novo_unconfirmed", "spans": [{"line": 41, "quote": "denovo", "language": "ko"}]},
+        {"field_id": "C.maternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 69, "quote": "observed only in the patient", "language": "en"}]},
+        {"field_id": "C.paternal_genotype", "presence": "present", "expected_value": "target_absent", "spans": [{"line": 69, "quote": "observed only in the patient", "language": "en"}]},
+        {"field_id": "C.parentage_confirmed", "presence": "absent"},
+        {"field_id": "B.disease_diagnosis", "presence": "present", "expected_value": "Rett syndrome", "spans": [{"line": 13, "quote": "we diagnosed a case of Rett syndrome", "language": "en"}]}
+      ]
+    }
+  ]
+}

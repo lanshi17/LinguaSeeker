@@ -73,6 +73,8 @@ def make_target_scope_bindings(target: ExtractionTarget | None) -> list[tuple[st
         ("target_gene", normalize_gene_symbol(target.gene_symbol)),
         ("target_disease", normalize_disease_lookup_text(target.disease_name)),
     ]
+    if target.variant_hgvs_c:
+        bindings.append(("target_variant_c", target.variant_hgvs_c))
     if target.variant_hgvs_p:
         bindings.append(("target_variant_p", target.variant_hgvs_p))
     if target.clingen_entry_id:

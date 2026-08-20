@@ -370,15 +370,72 @@ async def _search_jstage_via_pyjstage(
         return _failure_result("jstage", exc, "search")
 
 
+async def _search_pubmed_via_service(
+    request: OnlineAcquisitionGatewayRequest,
+) -> OnlineAcquisitionGatewayResult:
+    """Search PubMed (db=pubmed); the Rust pmc provider only covers db=pmc."""
+    start = _time.monotonic()
+    try:
+        from .pubmed_service import get_pubmed_service
+
+        query = (request.query or "").strip()
+        if not query:
+            return _failure_result("pubmed", ValueError("empty query"), "search")
+
+        candidates = await get_pubmed_service().search_candidates(
+            query,
+            candidate_limit=min(request.limit or 15, 15),
+        )
+        items: list[dict[str, Any]] = [
+            {
+                "pmid": candidate.pmid,
+                "pmcid": candidate.pmcid,
+                "doi": candidate.doi,
+                "title": candidate.title,
+                "journal": candidate.journal,
+                "pub_date": candidate.pub_date,
+            }
+            for candidate in candidates
+        ]
+
+        elapsed = (_time.monotonic() - start) * 1000
+        get_health_tracker().record("pubmed", success=True, latency_ms=elapsed)
+        trace = OnlineAcquisitionSourceTraceEntry(
+            provider="pubmed",
+            attempt=1,
+            action="search",
+            success=True,
+            items_count=len(items),
+            downloads_count=0,
+            warnings=[],
+        )
+        return OnlineAcquisitionGatewayResult(
+            provider="pubmed",
+            success=True,
+            items=items,
+            downloads=[],
+            warnings=[],
+            source_trace=[trace],
+        )
+    except Exception as exc:
+        elapsed = (_time.monotonic() - start) * 1000
+        get_health_tracker().record("pubmed", success=False, latency_ms=elapsed)
+        logger.warning("PubMed search failed: {}", exc)
+        return _failure_result("pubmed", exc, "search")
+
+
 async def call_provider(request: OnlineAcquisitionGatewayRequest) -> OnlineAcquisitionGatewayResult:
     """Call a single provider via net_io.fetch_one.
 
     J-STAGE search is routed through pyjstage-py312 in Python because the
     Rust provider hits a broken HTML endpoint.  Download still goes through
-    Rust (pdf_candidates logic is correct).
+    Rust (pdf_candidates logic is correct).  PubMed search is Python-only
+    because no Rust provider covers db=pubmed.
     """
     if request.provider == "jstage" and request.action == "search":
         return await _search_jstage_via_pyjstage(request)
+    if request.provider == "pubmed" and request.action == "search":
+        return await _search_pubmed_via_service(request)
 
     start = _time.monotonic()
     if net_io is None:

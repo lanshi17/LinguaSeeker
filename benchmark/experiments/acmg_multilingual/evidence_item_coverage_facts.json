@@ -1,0 +1,262 @@
+{
+  "study_id": "acmg-multilingual-evidence-item-coverage-stage0c",
+  "protocol_version": "v1",
+  "created_on": "2026-08-20",
+  "scope_note": "Catalog field_id presence by visibility layer inside one PDF. Unit is source family × field_id, not a case-series event and not an ACMG code. english_visible = author English abstract/title/keywords plus English figure/table captions in the same file. Native full text must contain every English-visible field because the PDF includes those pages. This table is not a live extractor run.",
+  "sources": [
+    {
+      "case_id": "rett_006",
+      "source_cluster_id": "rett_006",
+      "native_language": "zh",
+      "increment_kind": "none",
+      "source_relative_path": "rett_006/source.md",
+      "source_sha256": "a1f17f1e2302ed8881d6bb939ec8599da83bd9bb87f9672576a5adff4aa79a33",
+      "english_abstract": [
+        {"field_id": "A.gene_symbol", "span": {"line": 21, "quote": "MECP2", "language": "en"}},
+        {"field_id": "A.variant_hgvs_c", "span": {"line": 21, "quote": "c.913insT", "language": "en"}},
+        {"field_id": "A.variant_hgvs_p", "span": {"line": 21, "quote": "R106W", "language": "en"}},
+        {"field_id": "A.variant_type", "span": {"line": 21, "quote": "missense mutation", "language": "en"}},
+        {"field_id": "A.functional_domain_or_hotspot", "span": {"line": 21, "quote": "transcriptional repression domain (TRD)", "language": "en"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 21, "quote": "Rett syndrome", "language": "en"}},
+        {"field_id": "C.de_novo_status", "span": {"line": 21, "quote": "No mutations were detected in their parents", "language": "en"}},
+        {"field_id": "C.maternal_genotype", "span": {"line": 21, "quote": "No mutations were detected in their parents", "language": "en"}},
+        {"field_id": "C.paternal_genotype", "span": {"line": 21, "quote": "No mutations were detected in their parents", "language": "en"}}
+      ],
+      "english_visible": [
+        {"field_id": "A.gene_symbol", "span": {"line": 21, "quote": "MECP2", "language": "en"}},
+        {"field_id": "A.variant_hgvs_c", "span": {"line": 21, "quote": "c.913insT", "language": "en"}},
+        {"field_id": "A.variant_hgvs_p", "span": {"line": 21, "quote": "R106W", "language": "en"}},
+        {"field_id": "A.variant_type", "span": {"line": 21, "quote": "missense mutation", "language": "en"}},
+        {"field_id": "A.functional_domain_or_hotspot", "span": {"line": 21, "quote": "transcriptional repression domain (TRD)", "language": "en"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 21, "quote": "Rett syndrome", "language": "en"}},
+        {"field_id": "C.de_novo_status", "span": {"line": 21, "quote": "No mutations were detected in their parents", "language": "en"}},
+        {"field_id": "C.maternal_genotype", "span": {"line": 21, "quote": "No mutations were detected in their parents", "language": "en"}},
+        {"field_id": "C.paternal_genotype", "span": {"line": 21, "quote": "No mutations were detected in their parents", "language": "en"}}
+      ],
+      "native_fulltext": [
+        {"field_id": "A.gene_symbol", "span": {"line": 11, "quote": "MECP2", "language": "zh"}},
+        {"field_id": "A.variant_hgvs_c", "span": {"line": 41, "quote": "c.913insT", "language": "zh"}},
+        {"field_id": "A.variant_hgvs_p", "span": {"line": 41, "quote": "R106W", "language": "zh"}},
+        {"field_id": "A.variant_type", "span": {"line": 41, "quote": "错义突变", "language": "zh"}},
+        {"field_id": "A.functional_domain_or_hotspot", "span": {"line": 43, "quote": "转录抑制区（TRD）", "language": "zh"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 11, "quote": "Rett 综合征", "language": "zh"}},
+        {"field_id": "C.de_novo_status", "span": {"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}},
+        {"field_id": "C.maternal_genotype", "span": {"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}},
+        {"field_id": "C.paternal_genotype", "span": {"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"}}
+      ],
+      "increment_over_abstract": [],
+      "increment_over_english_visible": [],
+      "notes": "Negative control. The author English abstract already names five alleles and parental negativity. Chinese results repeat the same catalog fields. Figures are Chinese-labeled schematics, so english_visible equals the abstract."
+    },
+    {
+      "case_id": "rett_007",
+      "source_cluster_id": "rett_007",
+      "native_language": "zh",
+      "increment_kind": "same_pdf_bilingual",
+      "source_relative_path": "rett_007/source.md",
+      "source_sha256": "1b5ba8f293164fac22dfe39bcc94ad596999e4236ed9c8ee47a2250fcaaec94d",
+      "english_abstract": [
+        {"field_id": "A.gene_symbol", "span": {"line": 23, "quote": "MECP2 gene", "language": "en"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 21, "quote": "4 cases were diagnosed as RTT", "language": "en"}}
+      ],
+      "english_visible": [
+        {"field_id": "A.gene_symbol", "span": {"line": 23, "quote": "MECP2 gene", "language": "en"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 21, "quote": "4 cases were diagnosed as RTT", "language": "en"}}
+      ],
+      "native_fulltext": [
+        {"field_id": "A.gene_symbol", "span": {"line": 51, "quote": "MECP2", "language": "zh"}},
+        {"field_id": "A.variant_hgvs_c", "span": {"line": 55, "quote": "c.509C&gt;T", "language": "zh"}},
+        {"field_id": "A.variant_hgvs_p", "span": {"line": 55, "quote": "p.Thr170Met", "language": "zh"}},
+        {"field_id": "A.variant_type", "span": {"line": 55, "quote": "无义突变", "language": "zh"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 9, "quote": "4 例患儿诊断为 RTT", "language": "zh"}},
+        {"field_id": "C.de_novo_status", "span": {"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}},
+        {"field_id": "C.maternal_genotype", "span": {"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}},
+        {"field_id": "C.paternal_genotype", "span": {"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"}}
+      ],
+      "increment_over_abstract": [
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "C.de_novo_status",
+        "C.maternal_genotype",
+        "C.paternal_genotype"
+      ],
+      "increment_over_english_visible": [
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "C.de_novo_status",
+        "C.maternal_genotype",
+        "C.paternal_genotype"
+      ],
+      "notes": "Cluster, not four papers. English abstract names the RTT count and that parents were sequenced, but not alleles or parental negativity. Figure captions are Chinese chromatograms. Count one field_id once even though Table 1 lists four alleles."
+    },
+    {
+      "case_id": "rett_011",
+      "source_cluster_id": "rett_011",
+      "native_language": "zh",
+      "increment_kind": "same_pdf_bilingual",
+      "source_relative_path": "rett_011/source.md",
+      "source_sha256": "9cfcd607a092f09ddc82c08c0dd199467dc2b8ded0716ede5e0904e203cf2dfa",
+      "english_abstract": [
+        {"field_id": "A.gene_symbol", "span": {"line": 21, "quote": "MECP2 gene", "language": "en"}},
+        {"field_id": "A.variant_hgvs_c", "span": {"line": 21, "quote": "c.710C ＞G", "language": "en"}},
+        {"field_id": "A.variant_hgvs_p", "span": {"line": 21, "quote": "p.ro237Arg", "language": "en"}},
+        {"field_id": "A.variant_type", "span": {"line": 21, "quote": "missense mutation", "language": "en"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 21, "quote": "Rett syndrome", "language": "en"}}
+      ],
+      "english_visible": [
+        {"field_id": "A.gene_symbol", "span": {"line": 21, "quote": "MECP2 gene", "language": "en"}},
+        {"field_id": "A.variant_hgvs_c", "span": {"line": 21, "quote": "c.710C ＞G", "language": "en"}},
+        {"field_id": "A.variant_hgvs_p", "span": {"line": 21, "quote": "p.ro237Arg", "language": "en"}},
+        {"field_id": "A.variant_type", "span": {"line": 21, "quote": "missense mutation", "language": "en"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 21, "quote": "Rett syndrome", "language": "en"}}
+      ],
+      "native_fulltext": [
+        {"field_id": "A.gene_symbol", "span": {"line": 41, "quote": "MECP2", "language": "zh"}},
+        {"field_id": "A.variant_hgvs_c", "span": {"line": 41, "quote": "c.710C>G", "language": "zh"}},
+        {"field_id": "A.variant_hgvs_p", "span": {"line": 41, "quote": "p.Pro237Arg", "language": "zh"}},
+        {"field_id": "A.variant_type", "span": {"line": 41, "quote": "错义变异", "language": "zh"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 41, "quote": "Rett 综合征", "language": "zh"}},
+        {"field_id": "C.de_novo_status", "span": {"line": 41, "quote": "变异为新生变异", "language": "zh"}},
+        {"field_id": "C.maternal_genotype", "span": {"line": 41, "quote": "父母未携带该变异位点", "language": "zh"}},
+        {"field_id": "C.paternal_genotype", "span": {"line": 41, "quote": "父母未携带该变异位点", "language": "zh"}}
+      ],
+      "increment_over_abstract": [
+        "C.de_novo_status",
+        "C.maternal_genotype",
+        "C.paternal_genotype"
+      ],
+      "increment_over_english_visible": [
+        "C.de_novo_status",
+        "C.maternal_genotype",
+        "C.paternal_genotype"
+      ],
+      "notes": "English 'new heterozygous mutation' means novel, not de novo. Parental negativity and 新生变异 are Chinese-body only. Survives dropping rett_007."
+    },
+    {
+      "case_id": "rett_084",
+      "source_cluster_id": "rett_084",
+      "native_language": "zh",
+      "increment_kind": "none",
+      "source_relative_path": "rett_084/source.md",
+      "source_sha256": "b642c536e44d9f0c2d52b12c4c595dd2d5fd550b64f52937be339dbec5984786",
+      "english_abstract": [
+        {"field_id": "A.gene_symbol", "span": {"line": 13, "quote": "MECP2", "language": "en"}},
+        {"field_id": "A.variant_hgvs_c", "span": {"line": 13, "quote": "c.194delC", "language": "en"}},
+        {"field_id": "A.variant_hgvs_p", "span": {"line": 13, "quote": "P.S65X", "language": "en"}},
+        {"field_id": "A.variant_type", "span": {"line": 13, "quote": "P.S65X", "language": "en"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 13, "quote": "Rett syndrome", "language": "en"}},
+        {"field_id": "C.de_novo_status", "span": {"line": 13, "quote": "not found in his parents", "language": "en"}},
+        {"field_id": "C.maternal_genotype", "span": {"line": 13, "quote": "not found in his parents", "language": "en"}},
+        {"field_id": "C.paternal_genotype", "span": {"line": 13, "quote": "not found in his parents", "language": "en"}}
+      ],
+      "english_visible": [
+        {"field_id": "A.gene_symbol", "span": {"line": 13, "quote": "MECP2", "language": "en"}},
+        {"field_id": "A.variant_hgvs_c", "span": {"line": 13, "quote": "c.194delC", "language": "en"}},
+        {"field_id": "A.variant_hgvs_p", "span": {"line": 13, "quote": "P.S65X", "language": "en"}},
+        {"field_id": "A.variant_type", "span": {"line": 13, "quote": "P.S65X", "language": "en"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 13, "quote": "Rett syndrome", "language": "en"}},
+        {"field_id": "C.de_novo_status", "span": {"line": 13, "quote": "not found in his parents", "language": "en"}},
+        {"field_id": "C.maternal_genotype", "span": {"line": 13, "quote": "not found in his parents", "language": "en"}},
+        {"field_id": "C.paternal_genotype", "span": {"line": 13, "quote": "not found in his parents", "language": "en"}}
+      ],
+      "native_fulltext": [
+        {"field_id": "A.gene_symbol", "span": {"line": 23, "quote": "MECP2", "language": "zh"}},
+        {"field_id": "A.variant_hgvs_c", "span": {"line": 23, "quote": "c.194delC", "language": "zh"}},
+        {"field_id": "A.variant_hgvs_p", "span": {"line": 23, "quote": "p.S65X", "language": "zh"}},
+        {"field_id": "A.variant_type", "span": {"line": 23, "quote": "无义突变", "language": "zh"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 23, "quote": "Rett综合征", "language": "zh"}},
+        {"field_id": "C.de_novo_status", "span": {"line": 23, "quote": "患儿父母在该位点均无异常", "language": "zh"}},
+        {"field_id": "C.maternal_genotype", "span": {"line": 23, "quote": "患儿父母在该位点均无异常", "language": "zh"}},
+        {"field_id": "C.paternal_genotype", "span": {"line": 23, "quote": "患儿父母在该位点均无异常", "language": "zh"}}
+      ],
+      "increment_over_abstract": [],
+      "increment_over_english_visible": [],
+      "notes": "Negative control. English abstract already has the allele and parental negativity. Native 无义突变 restates P.S65X; not counted as a new field_id."
+    },
+    {
+      "case_id": "rett_004",
+      "source_cluster_id": "rett_004",
+      "native_language": "zh",
+      "increment_kind": "missing_english_pivot",
+      "source_relative_path": "rett_004/source.md",
+      "source_sha256": "30ec243e42c155cd25f051aab6c54068f622edadb71e6eda8c901038e29ade9c",
+      "english_abstract": [
+        {"field_id": "A.gene_symbol", "span": {"line": 21, "quote": "MECP2", "language": "en"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 15, "quote": "Rett syndrome", "language": "en"}}
+      ],
+      "english_visible": [
+        {"field_id": "A.gene_symbol", "span": {"line": 21, "quote": "MECP2", "language": "en"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 15, "quote": "Rett syndrome", "language": "en"}}
+      ],
+      "native_fulltext": [
+        {"field_id": "A.gene_symbol", "span": {"line": 31, "quote": "MECP2", "language": "zh"}},
+        {"field_id": "A.variant_hgvs_c", "span": {"line": 52, "quote": "c.502C>T", "language": "zh"}},
+        {"field_id": "A.variant_hgvs_p", "span": {"line": 52, "quote": "p.R168X", "language": "zh"}},
+        {"field_id": "A.variant_type", "span": {"line": 31, "quote": "无义突变", "language": "zh"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 31, "quote": "Rett 综合征", "language": "zh"}},
+        {"field_id": "C.de_novo_status", "span": {"line": 31, "quote": "新发突变", "language": "zh"}},
+        {"field_id": "C.maternal_genotype", "span": {"line": 31, "quote": "患儿父母在该位点均无异常", "language": "zh"}},
+        {"field_id": "C.paternal_genotype", "span": {"line": 31, "quote": "患儿父母在该位点均无异常", "language": "zh"}}
+      ],
+      "increment_over_abstract": [
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "C.de_novo_status",
+        "C.maternal_genotype",
+        "C.paternal_genotype"
+      ],
+      "increment_over_english_visible": [
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "C.de_novo_status",
+        "C.maternal_genotype",
+        "C.paternal_genotype"
+      ],
+      "notes": "No English abstract body; English title/keywords only. Fig. 2 English caption is 'Gene test results'; the allele and parental negativity sit in the Chinese caption and results. Kind is missing_english_pivot, not same_pdf_bilingual. Survives dropping rett_007."
+    },
+    {
+      "case_id": "rett_066",
+      "source_cluster_id": "rett_066",
+      "native_language": "ko",
+      "increment_kind": "same_pdf_bilingual",
+      "source_relative_path": "rett_066/source.md",
+      "source_sha256": "76c15b98ebe35daccf45574b751b3cfad87d3d65409279136d0d2bc414b0addd",
+      "english_abstract": [
+        {"field_id": "A.gene_symbol", "span": {"line": 13, "quote": "MECP2 gene", "language": "en"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 13, "quote": "Rett syndrome", "language": "en"}}
+      ],
+      "english_visible": [
+        {"field_id": "A.gene_symbol", "span": {"line": 13, "quote": "MECP2 gene", "language": "en"}},
+        {"field_id": "A.variant_hgvs_c", "span": {"line": 69, "quote": "c.455C>G", "language": "en"}},
+        {"field_id": "A.variant_hgvs_p", "span": {"line": 69, "quote": "P152R", "language": "en"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 13, "quote": "Rett syndrome", "language": "en"}},
+        {"field_id": "C.de_novo_status", "span": {"line": 69, "quote": "observed only in the patient", "language": "en"}}
+      ],
+      "native_fulltext": [
+        {"field_id": "A.gene_symbol", "span": {"line": 41, "quote": "MECP2", "language": "ko"}},
+        {"field_id": "A.variant_hgvs_c", "span": {"line": 41, "quote": "c.455C>G", "language": "ko"}},
+        {"field_id": "A.variant_hgvs_p", "span": {"line": 41, "quote": "P152R", "language": "ko"}},
+        {"field_id": "A.variant_type", "span": {"line": 41, "quote": "missense", "language": "ko"}},
+        {"field_id": "A.functional_domain_or_hotspot", "span": {"line": 41, "quote": "methyl binding domain", "language": "ko"}},
+        {"field_id": "B.disease_diagnosis", "span": {"line": 1, "quote": "Rett 증후군", "language": "ko"}},
+        {"field_id": "C.de_novo_status", "span": {"line": 41, "quote": "de novo", "language": "ko"}}
+      ],
+      "increment_over_abstract": [
+        "A.functional_domain_or_hotspot",
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "C.de_novo_status"
+      ],
+      "increment_over_english_visible": [
+        "A.functional_domain_or_hotspot",
+        "A.variant_type"
+      ],
+      "notes": "Non-Chinese increment. English Fig. 1 legend already has c.455C>G, P152R, and patient-only. Korean body still adds missense class and that this allele sits in the methyl binding domain. Fig. 2 OCR 'MBD' is a diagram label, not counted as english_visible for this patient's domain assertion. Survives dropping rett_007."
+    }
+  ]
+}

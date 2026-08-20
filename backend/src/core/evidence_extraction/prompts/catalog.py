@@ -107,8 +107,10 @@ RULES:
 23. E.prediction_tools_list requires named tools such as SpliceAI, CADD, REVEL, PolyPhen-2, SIFT, MutationTaster, or MaxEntScan. Generic phrases like "in silico tools" are insufficient and must be not_found.
 24. For B.clinical_phenotypes, extract the patient's observed clinical features, symptoms, and signs — NOT the disease diagnosis name. Examples of valid phenotypes: seizures, developmental regression, ataxia, intellectual disability, loss of acquired hand skills, stereotypic hand movements, tremor, rigidity, bradykinesia, hypotonia, spasticity. Multiple phenotypes should be separated by semicolons. Do NOT use disease names (e.g. "Parkinson disease", "Rett syndrome") as phenotypes.
 25. For B.mode_of_inheritance_reported, extract ONLY if the document explicitly states the inheritance pattern (e.g. "autosomal dominant", "autosomal recessive", "X-linked"). Do NOT infer inheritance from variant zygosity alone. If the document says "heterozygous variant" without stating the inheritance pattern, set not_found.
-26. For C.de_novo_status, extract ONLY if this target variant was tested in the parents. Parental wild-type / not detected supports de novo. Maternal or paternal inheritance is not de novo. Do NOT treat author ACMG labels (PS2, 判读为 PS2) or absence of family history as de novo.
-27. For B.hpo_terms, extract HPO phenotype terms or clinical feature descriptions that correspond to HPO concepts. Use the HPO term name or ID if provided in the document. Multiple terms: separate with semicolons.
+26. For C.de_novo_status, extract ONLY if this target variant was tested in the parents. Parental wild-type / not detected supports de novo. Maternal or paternal inheritance is not de novo. Do NOT treat author ACMG labels (PS2, 判读为 PS2) or absence of family history as de novo. Joint quotes such as 患儿父母均未检测到突变 also fill C.maternal_genotype and C.paternal_genotype as target_absent.
+27. For C.parentage_confirmed, use confirmed only when the quote states maternity/paternity confirmation, identity testing, STR typing, or 亲子鉴定. Parental negativity alone is not_confirmed.
+28. For A.variant_type, a coding deletion/insertion (c.194delC, c.913insT) is frameshift or deletion/insertion, not nonsense, even if the paper writes 无义突变 or p.S65X.
+29. For B.hpo_terms, extract HPO phenotype terms or clinical feature descriptions that correspond to HPO concepts. Use the HPO term name or ID if provided in the document. Multiple terms: separate with semicolons.
 
 {graph_section}
 DOCUMENT BLOCKS:

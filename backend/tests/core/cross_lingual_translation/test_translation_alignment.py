@@ -105,6 +105,55 @@ def test_validate_span_pairs_builds_full_document_offsets() -> None:
     assert pairs[1].english_text == "c.194delC"
 
 
+def test_validate_span_pairs_aligns_html_entity_hgvs_to_decoded_english() -> None:
+    original_text = "患儿携带c.538C&gt;T变异。"
+    english_text = "The patient carried c.538C>T."
+    chunk = TranslationAlignmentChunk(
+        chunk_id="c_html",
+        original_text=original_text,
+        english_text=english_text,
+        original_start_offset=0,
+        original_end_offset=len(original_text),
+        english_start_offset=0,
+        english_end_offset=len(english_text),
+    )
+
+    pairs = validate_span_pairs(
+        chunk,
+        [
+            RawAlignmentPair(
+                original_text="c.538C>T",
+                english_text="c.538C>T",
+                confidence=0.96,
+            )
+        ],
+    )
+
+    assert len(pairs) == 1
+    assert pairs[0].original_text == "c.538C&gt;T"
+    assert pairs[0].english_text == "c.538C>T"
+    assert original_text[pairs[0].original_start_offset : pairs[0].original_end_offset] == "c.538C&gt;T"
+
+
+def test_build_fallback_span_pairs_matches_html_entity_hgvs_tokens() -> None:
+    original_text = "MECP2 c.538C&gt;T"
+    english_text = "MECP2 c.538C>T"
+    chunk = TranslationAlignmentChunk(
+        chunk_id="c_html_fb",
+        original_text=original_text,
+        english_text=english_text,
+        original_start_offset=0,
+        original_end_offset=len(original_text),
+        english_start_offset=0,
+        english_end_offset=len(english_text),
+    )
+
+    pairs = build_fallback_span_pairs(chunk)
+
+    assert any(pair.original_text == "c.538C&gt;T" and pair.english_text == "c.538C>T" for pair in pairs)
+
+
+
 def test_validate_span_pairs_drops_missing_and_overlapping_pairs() -> None:
     chunk = TranslationAlignmentChunk(
         chunk_id="c_0002",

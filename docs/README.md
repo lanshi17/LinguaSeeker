@@ -51,6 +51,17 @@ docs/
 
 | 日期 | 标题 | 状态 |
 |------|------|------|
+| 2026-08-20 | [ACMG 多语种分类证据增量（Stage 0c）](active/2026-08-20-multilingual-evidence-item-increment.md) | in-progress |
+| 2026-08-19 | [ACMG 多语种案例分析：抽取字段进规则机](active/2026-08-19-acmg-multilingual-extractor-case-analysis.md) | reference |
+| 2026-08-19 | [ACMG 多语种字段桥与等位基因注册](active/2026-08-19-acmg-multilingual-field-bridge.md) | reference |
+| 2026-08-18 | [ACMG 多语种案例分析（审稿口径）](active/2026-08-18-acmg-multilingual-case-analysis-reviewer.md) | reference |
+| 2026-08-17 | [ACMG 多语种真实案例分析（16 非英语来源）](active/2026-08-17-acmg-multilingual-real-case-analysis.md) | reference |
+| 2026-08-17 | [ACMG 多语种证据码候选台账](active/2026-08-17-acmg-evidence-code-candidate-ledger.md) | reference |
+| 2026-08-17 | [MECP2 ClinVar/ClinGen 原文证据对比](active/2026-08-17-acmg-clinvar-clingen-comparison.md) | reference |
+| 2026-08-17 | [ACMG 多语种案例分析报告](active/2026-08-17-acmg-multilingual-case-analysis-report.md) | reference |
+| 2026-08-15 | [ACMG 多语种四臂实验设计](active/2026-08-15-acmg-multilingual-four-arm-design.md) | in-progress |
+| 2026-08-14 | [ACMG 多语种代码级三臂实验](active/2026-08-14-acmg-multilingual-code-experiment.md) | in-progress |
+| 2026-08-14 | [ACMG 多语种证据代码案例审计](active/2026-08-14-acmg-multilingual-evidence-code-audit.md) | reference |
 | 2026-07-04 | [Pipeline Path Exploration](active/2026-07-04-pipeline-path-exploration.md) | in-progress |
 | 2026-06-29 | [Evidence DB Field Model Implementation Plan](active/2026-06-29-evidence-db-field-model-plan.md) | in-progress |
 | 2026-06-14 | [Traceability Metrics Guide](active/2026-06-14-traceability-metrics-guide.md) | reference |

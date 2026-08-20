@@ -9,7 +9,11 @@ from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.n
     normalize_jstage,
     normalize_openalex,
     normalize_pmc,
+    normalize_pubmed,
     normalize_unpaywall,
+)
+from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.search_service import (
+    build_provider_plan,
 )
 
 
@@ -19,6 +23,7 @@ class TestNormalizerRegistry:
             "crossref",
             "unpaywall",
             "pmc",
+            "pubmed",
             "jstage",
             "doaj",
             "openalex",
@@ -35,6 +40,62 @@ class TestNormalizerRegistry:
 
     def test_normalize_items_empty(self):
         assert normalize_items("crossref", []) == []
+
+
+class TestPubMedNormalizer:
+    def test_record_without_doi_keeps_pmid_identifier(self):
+        """Chinese-journal PubMed records often lack a DOI, so PMID must survive."""
+        item = normalize_pubmed(
+            {
+                "pmid": "24750837",
+                "pmcid": "",
+                "doi": "",
+                "title": "[Clinical features and MECP2 mutations in children with Rett syndrome].",
+                "journal": "Zhongguo dang dai er ke za zhi",
+                "pub_date": "2014 Apr",
+            }
+        )
+        assert item.source == "pubmed"
+        assert item.doi is None
+        assert item.identifiers["pmid"] == "24750837"
+        assert item.url == "https://pubmed.ncbi.nlm.nih.gov/24750837/"
+        assert item.year == "2014"
+
+    def test_pmcid_yields_pdf_link(self):
+        item = normalize_pubmed({"pmid": "1", "pmcid": "PMC123", "doi": "10.1234/x"})
+        assert item.identifiers["pmcid"] == "PMC123"
+        assert "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC123/pdf/" in item.links
+
+
+class TestProviderPlan:
+    def test_pubmed_is_planned_for_english_and_chinese(self):
+        """PubMed (db=pubmed) covers journals the PMC provider (db=pmc) misses."""
+        assert "pubmed" in [item["provider"] for item in build_provider_plan(language="en")]
+        assert "pubmed" in [item["provider"] for item in build_provider_plan(language="zh")]
+
+    def test_preferred_provider_is_unchanged(self):
+        """Adding PubMed must not change which provider ranking treats as preferred."""
+        assert build_provider_plan(language="en")[0]["provider"] == "pmc"
+        assert build_provider_plan(language="zh")[0]["provider"] == "crossref"
+
+
+def test_pubmed_service_uses_configured_network_proxy(monkeypatch) -> None:
+    """PubMed Python I/O must share egress with the Rust providers."""
+    from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.pubmed_service import (
+        OnlineAcquisitionPubMedService,
+    )
+
+    class _Network:
+        proxy = "http://127.0.0.1:7890"
+
+    class _Config:
+        network = _Network()
+
+    monkeypatch.setattr(
+        "src.core.config.get_config",
+        lambda: _Config(),
+    )
+    assert OnlineAcquisitionPubMedService._proxy() == "http://127.0.0.1:7890"
 
 
 class TestCrossrefNormalizer:
