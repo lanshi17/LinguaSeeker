@@ -43,8 +43,8 @@ def test_frozen_field_bridge_matches_on_disk_sources() -> None:
         reviewed_root=repository_root / "benchmark/experiments/acmg_multilingual/reviewed",
     )
     assert report.allele_mismatches == 0
-    assert report.verified_on_disk_events == report.on_disk_events == 14
-    assert len(inference.events) == 18
+    assert report.verified_on_disk_events == report.on_disk_events == 31
+    assert len(inference.events) == 32
 
 
 def test_r168x_aliases_share_one_registry_allele() -> None:

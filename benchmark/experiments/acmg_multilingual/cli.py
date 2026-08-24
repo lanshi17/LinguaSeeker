@@ -60,12 +60,15 @@ from .direct_inference import (
 )
 from .field_bridge import (
     load_and_verify_field_bridge,
+    load_field_bridge_table,
     write_field_bridge_report,
 )
 from .live_extraction_probe import (
     DEFAULT_PROBE_EVENT_IDS,
+    load_live_extraction_probe_report,
     on_disk_probe_event_ids,
     run_live_extraction_probe,
+    score_probe_report,
     write_live_extraction_probe_report,
 )
 from .increment_denominator import (
@@ -261,6 +264,13 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Probe every on-disk direct-inference event instead of the default pair",
     )
+    rescore_parser = subparsers.add_parser(
+        "rescore-probe",
+        help="Rescore saved probe receipts with the current gold matcher",
+    )
+    rescore_parser.add_argument("--baseline", type=Path, required=True)
+    rescore_parser.add_argument("--after", type=Path, required=True)
+    rescore_parser.add_argument("--facts", type=Path, required=True)
 
     verify_parser = subparsers.add_parser(
         "verify-sources",
@@ -504,6 +514,7 @@ def main(argv: Sequence[str] | None = None) -> None:
                 facts_path=args.facts,
                 fast_model=cfg.llm.model,
                 reasoning_model=cfg.reasoning.model,
+                report_path=args.report,
             )
         )
         write_live_extraction_probe_report(report, args.report)
@@ -523,6 +534,25 @@ def main(argv: Sequence[str] | None = None) -> None:
                 f"recovered={recovered} missing={missing} "
                 f"live_engine={live_cls} frozen={frozen_cls}"
             )
+        return
+    if args.command == "rescore-probe":
+        facts = load_field_bridge_table(args.facts)
+        baseline = score_probe_report(load_live_extraction_probe_report(args.baseline), facts)
+        after = score_probe_report(load_live_extraction_probe_report(args.after), facts)
+        print(
+            f"Baseline: FOUND {baseline.found_gates}/{baseline.total_gates} "
+            f"match {baseline.matched_gates}/{baseline.total_gates} "
+            f"events={baseline.event_count} acmg_leaks={baseline.assigned_acmg_code_events}"
+        )
+        print(
+            f"After:    FOUND {after.found_gates}/{after.total_gates} "
+            f"match {after.matched_gates}/{after.total_gates} "
+            f"events={after.event_count} acmg_leaks={after.assigned_acmg_code_events}"
+        )
+        print(
+            f"Delta:    FOUND {after.found_gates - baseline.found_gates:+d} "
+            f"match {after.matched_gates - baseline.matched_gates:+d}"
+        )
         return
     manifest = load_manifest(args.manifest)
     if args.command == "check-manifest":

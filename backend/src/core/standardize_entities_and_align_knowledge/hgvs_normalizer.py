@@ -16,6 +16,16 @@ from src.core.standardize_entities_and_align_knowledge.importers import AA3_TO_1
 
 _SPACE_RE = re.compile(r"\s+")
 
+# Inverse of AA3_TO_1; maps the stop symbol `*` back to the HGVS token `Ter`.
+_AA1_TO_3 = {one: three for three, one in AA3_TO_1.items()}
+
+# Compact one-letter canonical produced by `_convert_protein_3letter`, e.g.
+# `p.R168*`, `p.G281fs`, `p.F508del`, `p.P237R`.
+_ONE_LETTER_CANONICAL_RE = re.compile(r"p\.([A-Z])(\d+)(\*|fs|del|dup|ins|[A-Z])$")
+
+# Effect tokens that stay verbatim instead of expanding to a three-letter code.
+_LITERAL_ALT_TOKENS = frozenset({"fs", "del", "dup", "ins"})
+
 # Three-letter protein variant, optional parentheses around the change.
 # Groups: 1 = reference 3-letter code, 2 = position,
 # 3 = alt 3-letter code, a stop token ("Ter", "*", "stop", "X"),
@@ -134,6 +144,31 @@ def _expand_one(text: str) -> list[str]:
         _add(bare_converted)
 
     return aliases
+
+
+def canonical_protein_hgvs(raw_text: str) -> str | None:
+    """Return the HGVS-preferred three-letter form of a protein variant.
+
+    HGVS recommends the three-letter amino acid code and `Ter` over the
+    deprecated `X` stop symbol, so `R168X`, `p.R168*`, and `p.Arg168Ter` all
+    canonicalize to `p.Arg168Ter`. Extended frameshift descriptions collapse
+    to the position they start at (`p.Gly281AlafsTer20` -> `p.Gly281fs`).
+
+    Returns `None` for coding (`c.`) notation and anything that does not
+    reduce to a single-residue protein change.
+    """
+    for alias in expand_hgvs_aliases(raw_text):
+        match = _ONE_LETTER_CANONICAL_RE.fullmatch(alias)
+        if match is None:
+            continue
+        ref3 = _AA1_TO_3.get(match.group(1))
+        alt = match.group(3)
+        alt3 = alt if alt in _LITERAL_ALT_TOKENS else _AA1_TO_3.get(alt)
+        # `p.R180X` has no amino acid named `X`; its `p.R180*` alias resolves it.
+        if ref3 is None or alt3 is None:
+            continue
+        return f"p.{ref3}{match.group(2)}{alt3}"
+    return None
 
 
 def expand_hgvs_aliases(raw_text: str) -> list[str]:

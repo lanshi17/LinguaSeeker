@@ -46,12 +46,27 @@
       "source_relative_path": "rett_007/source.md",
       "source_sha256": "1b5ba8f293164fac22dfe39bcc94ad596999e4236ed9c8ee47a2250fcaaec94d",
       "spans": [
-        {"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"},
-        {"line": 55, "quote": "c.509C&gt;T", "language": "zh"},
-        {"line": 167, "quote": "病例 1\\~4 诊断为经典型 RTT", "language": "zh"}
+        {
+          "line": 51,
+          "quote": "患儿父母均未检测到突变",
+          "language": "zh"
+        },
+        {
+          "line": 55,
+          "quote": "c.509C&gt;T",
+          "language": "zh"
+        },
+        {
+          "line": 167,
+          "quote": "病例 1\\~4 诊断为经典型 RTT",
+          "language": "zh"
+        }
       ],
       "notes": "One of four events in a single Chinese series. Table mixes e2 T170M with e1 numbering on cases 2-4. Opposite inheritance from rett_081 on the same nucleotide.",
-      "expected_codes": ["PM6", "PP4"],
+      "expected_codes": [
+        "PM6",
+        "PP4"
+      ],
       "expected_classification": "insufficient"
     },
     {
@@ -85,12 +100,28 @@
       "source_relative_path": "rett_007/source.md",
       "source_sha256": "1b5ba8f293164fac22dfe39bcc94ad596999e4236ed9c8ee47a2250fcaaec94d",
       "spans": [
-        {"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"},
-        {"line": 55, "quote": "c.538C&gt;T", "language": "zh"},
-        {"line": 55, "quote": "无义突变", "language": "zh"}
+        {
+          "line": 51,
+          "quote": "患儿父母均未检测到突变",
+          "language": "zh"
+        },
+        {
+          "line": 55,
+          "quote": "c.538C&gt;T",
+          "language": "zh"
+        },
+        {
+          "line": 55,
+          "quote": "无义突变",
+          "language": "zh"
+        }
       ],
       "notes": "e1 p.Arg180Ter maps to e2 p.Arg168Ter. Hotspot; Pathogenic here is concordance, not a ClinVar increment.",
-      "expected_codes": ["PM6", "PVS1", "PP4"],
+      "expected_codes": [
+        "PM6",
+        "PVS1",
+        "PP4"
+      ],
       "expected_classification": "pathogenic"
     },
     {
@@ -124,11 +155,23 @@
       "source_relative_path": "rett_007/source.md",
       "source_sha256": "1b5ba8f293164fac22dfe39bcc94ad596999e4236ed9c8ee47a2250fcaaec94d",
       "spans": [
-        {"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"},
-        {"line": 55, "quote": "c.842delG", "language": "zh"}
+        {
+          "line": 51,
+          "quote": "患儿父母均未检测到突变",
+          "language": "zh"
+        },
+        {
+          "line": 55,
+          "quote": "c.842delG",
+          "language": "zh"
+        }
       ],
       "notes": "Adjacent to case 4 but a different 1-bp deletion. Already Pathogenic in ClinVar.",
-      "expected_codes": ["PM6", "PVS1", "PP4"],
+      "expected_codes": [
+        "PM6",
+        "PVS1",
+        "PP4"
+      ],
       "expected_classification": "pathogenic"
     },
     {
@@ -162,11 +205,23 @@
       "source_relative_path": "rett_007/source.md",
       "source_sha256": "1b5ba8f293164fac22dfe39bcc94ad596999e4236ed9c8ee47a2250fcaaec94d",
       "spans": [
-        {"line": 51, "quote": "患儿父母均未检测到突变", "language": "zh"},
-        {"line": 55, "quote": "c.844delC", "language": "zh"}
+        {
+          "line": 51,
+          "quote": "患儿父母均未检测到突变",
+          "language": "zh"
+        },
+        {
+          "line": 55,
+          "quote": "c.844delC",
+          "language": "zh"
+        }
       ],
       "notes": "Do not confuse frameshift c.844del with nonsense c.844C>T. ClinVar mapping is now exact on MANE Select.",
-      "expected_codes": ["PM6", "PVS1", "PP4"],
+      "expected_codes": [
+        "PM6",
+        "PVS1",
+        "PP4"
+      ],
       "expected_classification": "pathogenic"
     },
     {
@@ -188,7 +243,9 @@
       "parentage_confirmed": false,
       "inheritance": "de_novo_unconfirmed",
       "phenotype_class": "mds",
-      "conflict_flags": ["cnv_not_snv"],
+      "conflict_flags": [
+        "cnv_not_snv"
+      ],
       "visibility": "native_body_only",
       "hero_role": "cnv_branch",
       "materialization_status": "on_disk",
@@ -196,8 +253,16 @@
       "source_relative_path": "rett_007/source.md",
       "source_sha256": "1b5ba8f293164fac22dfe39bcc94ad596999e4236ed9c8ee47a2250fcaaec94d",
       "spans": [
-        {"line": 51, "quote": "Xq28区域存在重复变异", "language": "zh"},
-        {"line": 167, "quote": "诊断为 MECP2 重复综合征", "language": "zh"}
+        {
+          "line": 51,
+          "quote": "Xq28区域存在重复变异",
+          "language": "zh"
+        },
+        {
+          "line": 167,
+          "quote": "诊断为 MECP2 重复综合征",
+          "language": "zh"
+        }
       ],
       "notes": "Same parental-negativity sentence covers cases 1-5. The engine must still exclude the duplication from the point-variant Pathogenic count.",
       "expected_codes": [],
@@ -226,7 +291,11 @@
       "parentage_confirmed": false,
       "inheritance": "de_novo_unconfirmed",
       "phenotype_class": "rett_diagnosed",
-      "author_self_codes": ["PS2", "PM2", "PP3"],
+      "author_self_codes": [
+        "PS2",
+        "PM2",
+        "PP3"
+      ],
       "visibility": "native_body_only",
       "bilingual_increment": 1,
       "hero_role": "self_code_overclaim",
@@ -235,12 +304,27 @@
       "source_relative_path": "rett_011/source.md",
       "source_sha256": "9cfcd607a092f09ddc82c08c0dd199467dc2b8ded0716ede5e0904e203cf2dfa",
       "spans": [
-        {"line": 41, "quote": "变异为新生变异，父母未携带该变异位点", "language": "zh"},
-        {"line": 41, "quote": "判读为 PS2+PM2+PP3", "language": "zh"},
-        {"line": 41, "quote": "NM\\_001110792.2", "language": "zh"}
+        {
+          "line": 41,
+          "quote": "变异为新生变异，父母未携带该变异位点",
+          "language": "zh"
+        },
+        {
+          "line": 41,
+          "quote": "判读为 PS2+PM2+PP3",
+          "language": "zh"
+        },
+        {
+          "line": 41,
+          "quote": "NM\\_001110792.2",
+          "language": "zh"
+        }
       ],
       "notes": "English abstract names the variant but not parental negativity. Residue 225/237 is outside MBD 90-162 and TRD 302-306. Refuse PS2 and the paper's PM2+PP3 string.",
-      "expected_codes": ["PM6", "PP4"],
+      "expected_codes": [
+        "PM6",
+        "PP4"
+      ],
       "expected_classification": "insufficient"
     },
     {
@@ -274,12 +358,28 @@
       "source_relative_path": "rett_006/source.md",
       "source_sha256": "a1f17f1e2302ed8881d6bb939ec8599da83bd9bb87f9672576a5adff4aa79a33",
       "spans": [
-        {"line": 21, "quote": "No mutations were detected in their parents", "language": "en"},
-        {"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"},
-        {"line": 75, "quote": "c.316C&gt;T", "language": "zh"}
+        {
+          "line": 21,
+          "quote": "No mutations were detected in their parents",
+          "language": "en"
+        },
+        {
+          "line": 41,
+          "quote": "所有患儿父母均未检测到突变",
+          "language": "zh"
+        },
+        {
+          "line": 75,
+          "quote": "c.316C&gt;T",
+          "language": "zh"
+        }
       ],
       "notes": "PM1+PM6+PP4 is 2 Moderate + 1 Supporting. Rett VCEP LP needs 2 Moderate + 2 Supporting. Do not call this Pathogenic from paper facts.",
-      "expected_codes": ["PM6", "PP4", "PM1"],
+      "expected_codes": [
+        "PM6",
+        "PP4",
+        "PM1"
+      ],
       "expected_classification": "insufficient"
     },
     {
@@ -305,7 +405,9 @@
       "parentage_confirmed": false,
       "inheritance": "de_novo_unconfirmed",
       "phenotype_class": "rett_diagnosed",
-      "conflict_flags": ["clinvar_benign_expert_panel"],
+      "conflict_flags": [
+        "clinvar_benign_expert_panel"
+      ],
       "visibility": "english_abstract",
       "bilingual_increment": 0,
       "hero_role": "benign_conflict",
@@ -314,11 +416,22 @@
       "source_relative_path": "rett_006/source.md",
       "source_sha256": "a1f17f1e2302ed8881d6bb939ec8599da83bd9bb87f9672576a5adff4aa79a33",
       "spans": [
-        {"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"},
-        {"line": 75, "quote": "c.1126C&gt;T", "language": "zh"}
+        {
+          "line": 41,
+          "quote": "所有患儿父母均未检测到突变",
+          "language": "zh"
+        },
+        {
+          "line": 75,
+          "quote": "c.1126C&gt;T",
+          "language": "zh"
+        }
       ],
       "notes": "Source-fact PM6 remains visible; pathogenic classification is blocked. Residue 376 is in CTS, not PM1 domains.",
-      "expected_codes": ["PM6", "PP4"],
+      "expected_codes": [
+        "PM6",
+        "PP4"
+      ],
       "expected_classification": "blocked_conflict"
     },
     {
@@ -352,11 +465,23 @@
       "source_relative_path": "rett_006/source.md",
       "source_sha256": "a1f17f1e2302ed8881d6bb939ec8599da83bd9bb87f9672576a5adff4aa79a33",
       "spans": [
-        {"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"},
-        {"line": 75, "quote": "c.808C&gt;T", "language": "zh"}
+        {
+          "line": 41,
+          "quote": "所有患儿父母均未检测到突变",
+          "language": "zh"
+        },
+        {
+          "line": 75,
+          "quote": "c.808C&gt;T",
+          "language": "zh"
+        }
       ],
       "notes": "Hotspot Pathogenic concordance. English abstract already lists the variant and parental negativity.",
-      "expected_codes": ["PM6", "PVS1", "PP4"],
+      "expected_codes": [
+        "PM6",
+        "PVS1",
+        "PP4"
+      ],
       "expected_classification": "pathogenic"
     },
     {
@@ -390,11 +515,23 @@
       "source_relative_path": "rett_006/source.md",
       "source_sha256": "a1f17f1e2302ed8881d6bb939ec8599da83bd9bb87f9672576a5adff4aa79a33",
       "spans": [
-        {"line": 41, "quote": "所有患儿父母均未检测到突变", "language": "zh"},
-        {"line": 75, "quote": "c.502C&gt;T", "language": "zh"}
+        {
+          "line": 41,
+          "quote": "所有患儿父母均未检测到突变",
+          "language": "zh"
+        },
+        {
+          "line": 75,
+          "quote": "c.502C&gt;T",
+          "language": "zh"
+        }
       ],
       "notes": "Do not add this ClinVar VCV again when counting unique alleles.",
-      "expected_codes": ["PM6", "PVS1", "PP4"],
+      "expected_codes": [
+        "PM6",
+        "PVS1",
+        "PP4"
+      ],
       "expected_classification": "pathogenic"
     },
     {
@@ -427,13 +564,33 @@
       "source_relative_path": "rett_006/source.md",
       "source_sha256": "a1f17f1e2302ed8881d6bb939ec8599da83bd9bb87f9672576a5adff4aa79a33",
       "spans": [
-        {"line": 21, "quote": "c.913insT", "language": "en"},
-        {"line": 41, "quote": "移码突变（c.913insT）", "language": "zh"},
-        {"line": 41, "quote": "从第 305 位氨基酸起序列发生改变，且在第330位氨基酸处提前终止", "language": "zh"},
-        {"line": 75, "quote": "c.913insT", "language": "zh"}
+        {
+          "line": 21,
+          "quote": "c.913insT",
+          "language": "en"
+        },
+        {
+          "line": 41,
+          "quote": "移码突变（c.913insT）",
+          "language": "zh"
+        },
+        {
+          "line": 41,
+          "quote": "从第 305 位氨基酸起序列发生改变，且在第330位氨基酸处提前终止",
+          "language": "zh"
+        },
+        {
+          "line": 75,
+          "quote": "c.913insT",
+          "language": "zh"
+        }
       ],
       "notes": "Strongest ClinVar-gap example. Bilingual increment is 0 because the English abstract already has the insertion and parental negativity; the increment is versus ClinVar, not versus the abstract.",
-      "expected_codes": ["PM6", "PVS1", "PP4"],
+      "expected_codes": [
+        "PM6",
+        "PVS1",
+        "PP4"
+      ],
       "expected_classification": "pathogenic"
     },
     {
@@ -467,12 +624,28 @@
       "source_relative_path": "rett_084/source.md",
       "source_sha256": "b642c536e44d9f0c2d52b12c4c595dd2d5fd550b64f52937be339dbec5984786",
       "spans": [
-        {"line": 13, "quote": "not found in his parents", "language": "en"},
-        {"line": 23, "quote": "无义突变（p.S65X）", "language": "zh"},
-        {"line": 23, "quote": "患儿父母在该位点均无异常", "language": "zh"}
+        {
+          "line": 13,
+          "quote": "not found in his parents",
+          "language": "en"
+        },
+        {
+          "line": 23,
+          "quote": "无义突变（p.S65X）",
+          "language": "zh"
+        },
+        {
+          "line": 23,
+          "quote": "患儿父母在该位点均无异常",
+          "language": "zh"
+        }
       ],
       "notes": "Zero bilingual increment versus the author English abstract. Allele id is unmatched_c.194delC, not VCV001076185. The increment is structured Rett-coded evidence versus an adjacent thin ClinVar record.",
-      "expected_codes": ["PM6", "PVS1", "PP4"],
+      "expected_codes": [
+        "PM6",
+        "PVS1",
+        "PP4"
+      ],
       "expected_classification": "pathogenic"
     },
     {
@@ -505,11 +678,23 @@
       "source_relative_path": "rett_004/source.md",
       "source_sha256": "30ec243e42c155cd25f051aab6c54068f622edadb71e6eda8c901038e29ade9c",
       "spans": [
-        {"line": 31, "quote": "患儿父母在该位点均无异常", "language": "zh"},
-        {"line": 52, "quote": "c.502C>T（p.R168X）", "language": "zh"}
+        {
+          "line": 31,
+          "quote": "患儿父母在该位点均无异常",
+          "language": "zh"
+        },
+        {
+          "line": 52,
+          "quote": "c.502C>T（p.R168X）",
+          "language": "zh"
+        }
       ],
       "notes": "Outside the Stage-0 bilingual-abstract layer. Still owned native Chinese full text.",
-      "expected_codes": ["PM6", "PVS1", "PP4"],
+      "expected_codes": [
+        "PM6",
+        "PVS1",
+        "PP4"
+      ],
       "expected_classification": "pathogenic"
     },
     {
@@ -543,11 +728,131 @@
       "source_relative_path": "rett_066/source.md",
       "source_sha256": "76c15b98ebe35daccf45574b751b3cfad87d3d65409279136d0d2bc414b0addd",
       "spans": [
-        {"line": 41, "quote": "de novo", "language": "ko"},
-        {"line": 69, "quote": "c.455C>G; P152R) was observed only in the patient", "language": "en"}
+        {
+          "line": 41,
+          "quote": "de novo",
+          "language": "ko"
+        },
+        {
+          "line": 69,
+          "quote": "c.455C>G; P152R) was observed only in the patient",
+          "language": "en"
+        }
       ],
       "notes": "Korean body plus English figure legend. Not a Korean-only increment. Same 2 Moderate + 1 Supporting missense ceiling as R106W.",
-      "expected_codes": ["PM6", "PP4", "PM1"],
+      "expected_codes": [
+        "PM6",
+        "PP4",
+        "PM1"
+      ],
+      "expected_classification": "insufficient"
+    },
+    {
+      "event_id": "rett_069_D156E",
+      "case_id": "rett_069",
+      "source_cluster_id": "rett_069",
+      "paper_hgvs_c": "c.468C>G",
+      "paper_hgvs_p": "p.Asp156Glu",
+      "paper_transcript": "NM_004992",
+      "canonical_allele_id": "VCV000095196",
+      "vcep_hgvs_c": "NM_004992.3:c.468C>G",
+      "vcep_protein_position": 156,
+      "vcep_protein_change": "p.Asp156Glu",
+      "variant_class": "missense",
+      "clinvar_vcv": "VCV000095196",
+      "clinvar_match": "transcript_alias",
+      "clinvar_note": "Same allele as Chinese rett_085 and Russian rett_071. This Russian report does not test parents.",
+      "affected_proband": true,
+      "sex": "female",
+      "zygosity": "heterozygous",
+      "both_parents_tested": false,
+      "parents_negative_at_target": false,
+      "parentage_confirmed": false,
+      "inheritance": "unknown",
+      "phenotype_class": "rett_diagnosed",
+      "visibility": "native_body_only",
+      "bilingual_increment": 1,
+      "hero_role": "russian_hgvs_increment",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
+      "source_relative_path": "rett_069/source.md",
+      "source_sha256": "0bbb587059155aac5fb6447d4945b22efa100f86dcd78f91f349258eb6cea78c",
+      "spans": [
+        {
+          "line": 65,
+          "quote": "с.468C>G (p.D156E)",
+          "language": "ru"
+        },
+        {
+          "line": 65,
+          "quote": "диагноз синдрома Ретта",
+          "language": "ru"
+        },
+        {
+          "line": 31,
+          "quote": "mutation in the X-linked methyl-CpG binding protein 2 (MECP2) gene was revealed",
+          "language": "en"
+        }
+      ],
+      "notes": "English abstract names Rett and a MECP2 mutation but not the HGVS. Native body has Cyrillic с.468C>G p.D156E. Parents untested (publication consent is not genotyping). Engine grants PP4+PM1; class stays insufficient.",
+      "expected_codes": [
+        "PP4",
+        "PM1"
+      ],
+      "expected_classification": "insufficient"
+    },
+    {
+      "event_id": "rett_071_D156E",
+      "case_id": "rett_071",
+      "source_cluster_id": "rett_071",
+      "paper_hgvs_c": "c.468C>G",
+      "paper_hgvs_p": "p.Asp156Glu",
+      "paper_transcript": "NM_004992",
+      "canonical_allele_id": "VCV000095196",
+      "vcep_hgvs_c": "NM_004992.3:c.468C>G",
+      "vcep_protein_position": 156,
+      "vcep_protein_change": "p.Asp156Glu",
+      "variant_class": "missense",
+      "clinvar_vcv": "VCV000095196",
+      "clinvar_match": "transcript_alias",
+      "clinvar_note": "Same allele as rett_069/085. English abstract already names c.468C>G.",
+      "affected_proband": true,
+      "sex": "female",
+      "zygosity": "heterozygous",
+      "both_parents_tested": false,
+      "parents_negative_at_target": false,
+      "parentage_confirmed": false,
+      "inheritance": "unknown",
+      "phenotype_class": "rett_diagnosed",
+      "visibility": "english_abstract",
+      "bilingual_increment": 0,
+      "hero_role": "russian_english_visible_control",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
+      "source_relative_path": "rett_071/source.md",
+      "source_sha256": "758ea5bffb362ff46270ede0169ee28a25e0e9c7200056d0c7ca4bfae27cdc84",
+      "spans": [
+        {
+          "line": 44,
+          "quote": "c.468C>G (p.D156E)",
+          "language": "en"
+        },
+        {
+          "line": 192,
+          "quote": "с. 468C>G (р.Д156Е)",
+          "language": "ru"
+        },
+        {
+          "line": 192,
+          "quote": "диагноз «синдром Ретта»",
+          "language": "ru"
+        }
+      ],
+      "notes": "Russian negative control for extra criteria: the author English abstract already has HGVS and diagnosis. Parents untested. Same PP4+PM1 ceiling as rett_069, but added codes are empty.",
+      "expected_codes": [
+        "PP4",
+        "PM1"
+      ],
       "expected_classification": "insufficient"
     },
     {
@@ -573,15 +878,38 @@
       "parentage_confirmed": false,
       "inheritance": "maternal",
       "phenotype_class": "rett_diagnosed",
-      "conflict_flags": ["maternal_inheritance"],
+      "conflict_flags": [
+        "maternal_inheritance"
+      ],
       "visibility": "native_body_only",
       "hero_role": "maternal_anti_example",
-      "materialization_status": "needs_external_corpus",
-      "source_root_kind": "external_rett",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
       "source_relative_path": "rett_081/source.md",
-      "notes": "Blocks naive de novo claims on T170M. Same variant as rett_007 case 1 can be maternal.",
-      "expected_codes": ["PP4"],
-      "expected_classification": "blocked_conflict"
+      "notes": "Blocks naive de novo claims on T170M. Same variant as rett_007 case 1 can be maternal. OCR uses fullwidth punctuation c．509C. English layer has no HGVS.",
+      "expected_codes": [
+        "PP4"
+      ],
+      "expected_classification": "blocked_conflict",
+      "source_sha256": "ac43d3697b68a275df22fb954a7d020e101e87420d9fa68e1580537de1ae767f",
+      "bilingual_increment": 1,
+      "spans": [
+        {
+          "line": 15,
+          "quote": "c．509C ＞ T（p．Thr170Met）",
+          "language": "zh"
+        },
+        {
+          "line": 17,
+          "quote": "致病突变基因来自母亲",
+          "language": "zh"
+        },
+        {
+          "line": 17,
+          "quote": "其父未发生变异",
+          "language": "zh"
+        }
+      ]
     },
     {
       "event_id": "rett_079_Q208X",
@@ -608,12 +936,39 @@
       "phenotype_class": "rett_diagnosed",
       "visibility": "native_body_only",
       "hero_role": "truncating_without_parents",
-      "materialization_status": "needs_external_corpus",
-      "source_root_kind": "external_rett",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
       "source_relative_path": "rett_079/source.md",
-      "notes": "PVS1+PP4 without a Moderate criterion stays insufficient. OCR risk noted in the increment denominator.",
-      "expected_codes": ["PVS1", "PP4"],
-      "expected_classification": "insufficient"
+      "notes": "PVS1+PP4 without a Moderate criterion stays insufficient. OCR splits the '>' from c.622C>T. Parents untested (不认识父母 is clinical, not genotyping).",
+      "expected_codes": [
+        "PVS1",
+        "PP4"
+      ],
+      "expected_classification": "insufficient",
+      "source_sha256": "487f6c9ee6e036d27721473fec2cea603c720e1b338dbeb44858724348292adf",
+      "bilingual_increment": 1,
+      "spans": [
+        {
+          "line": 19,
+          "quote": "c．622C T",
+          "language": "zh"
+        },
+        {
+          "line": 19,
+          "quote": "p．Q208X",
+          "language": "zh"
+        },
+        {
+          "line": 19,
+          "quote": "无义突变",
+          "language": "zh"
+        },
+        {
+          "line": 1,
+          "quote": "Rett综合征",
+          "language": "zh"
+        }
+      ]
     },
     {
       "event_id": "rett_085_D156E",
@@ -631,7 +986,7 @@
       "clinvar_match": "transcript_alias",
       "clinvar_note": "Cross-language pairing anchor with Russian rett_069/071. Only the Chinese paper has parental data among that trio.",
       "affected_proband": true,
-      "sex": "unknown",
+      "sex": "female",
       "zygosity": "heterozygous",
       "both_parents_tested": true,
       "parents_negative_at_target": true,
@@ -639,12 +994,688 @@
       "inheritance": "de_novo_unconfirmed",
       "phenotype_class": "rett_diagnosed",
       "visibility": "native_body_only",
-      "hero_role": "pm1_still_insufficient",
-      "materialization_status": "needs_external_corpus",
-      "source_root_kind": "external_rett",
+      "hero_role": "chinese_d156e_parents",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
       "source_relative_path": "rett_085/source.md",
-      "notes": "MBD missense: PM1+PM6+PP4 still 2 Moderate + 1 Supporting.",
-      "expected_codes": ["PM6", "PP4", "PM1"],
+      "notes": "Re-digitized from source.pdf; MinerU OCR had stripped numerals. Missense only in the child after family-member sequencing. PM6+PP4+PM1 still insufficient. Same allele as Russian rett_069/071.",
+      "expected_codes": [
+        "PM6",
+        "PP4",
+        "PM1"
+      ],
+      "expected_classification": "insufficient",
+      "bilingual_increment": 1,
+      "source_sha256": "689febae18c84f8d59ba72d6262d9d80b98021f0340485ee1277d30176339f6d",
+      "spans": [
+        {
+          "line": 17,
+          "quote": "错意突变c.468C>G",
+          "language": "zh"
+        },
+        {
+          "line": 27,
+          "quote": "错义突变c.468C>G只在患儿中发现，说明此突变为自发突变",
+          "language": "zh"
+        },
+        {
+          "line": 21,
+          "quote": "抽取家系成员每人外周血",
+          "language": "zh"
+        },
+        {
+          "line": 17,
+          "quote": "诊断为典型RTT",
+          "language": "zh"
+        },
+        {
+          "line": 25,
+          "quote": "p.D156E",
+          "language": "zh"
+        }
+      ]
+    },
+    {
+      "event_id": "rett_078_P302L",
+      "case_id": "rett_078",
+      "source_cluster_id": "rett_078",
+      "paper_hgvs_c": "p.Pro302Leu",
+      "paper_hgvs_p": "p.Pro302Leu",
+      "paper_transcript": "NM_004992 not stated; paper writes protein only",
+      "canonical_allele_id": "VCV000143738",
+      "vcep_hgvs_c": "NM_004992.3:c.905C>T",
+      "vcep_protein_position": 302,
+      "vcep_protein_change": "p.Pro302Leu",
+      "variant_class": "missense",
+      "clinvar_vcv": "VCV000143738",
+      "clinvar_match": "transcript_alias",
+      "clinvar_note": "ClinVar MANE c.941C>T p.Pro314Leu. Residue 302 is the TRD start on NM_004992.",
+      "affected_proband": true,
+      "sex": "female",
+      "zygosity": "heterozygous",
+      "both_parents_tested": false,
+      "parents_negative_at_target": false,
+      "parentage_confirmed": false,
+      "inheritance": "unknown",
+      "phenotype_class": "rett_diagnosed",
+      "visibility": "native_body_only",
+      "bilingual_increment": 1,
+      "hero_role": "turkish_trd_protein_only",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
+      "source_relative_path": "rett_078/source.md",
+      "source_sha256": "f67f86858c02fbf75bd9cffcb3a6cf84af8095014c4a70ddcbecf14a7b09e6a6",
+      "spans": [
+        {
+          "line": 28,
+          "quote": "p.Pro302Leu",
+          "language": "tr"
+        },
+        {
+          "line": 18,
+          "quote": "diagnosed as Rett Syndrome",
+          "language": "en"
+        },
+        {
+          "line": 20,
+          "quote": "MECP2 heterozygous gene mutation",
+          "language": "en"
+        }
+      ],
+      "notes": "Turkish body names p.Pro302Leu; English abstract has Rett and MECP2 mutation but no HGVS. Parents untested. Engine grants PP4+PM1 from TRD residue 302; class stays insufficient.",
+      "expected_codes": [
+        "PP4",
+        "PM1"
+      ],
+      "expected_classification": "insufficient"
+    },
+    {
+      "event_id": "rett_035_G269fs",
+      "case_id": "rett_035",
+      "source_cluster_id": "rett_035",
+      "paper_hgvs_c": "c.806del",
+      "paper_hgvs_p": "p.Gly269AlafsTer20",
+      "paper_transcript": "NM_004992",
+      "canonical_allele_id": "VCV000095202",
+      "vcep_hgvs_c": "NM_004992.3:c.806del",
+      "vcep_protein_position": 269,
+      "vcep_protein_change": "p.Gly269fs",
+      "variant_class": "frameshift",
+      "clinvar_vcv": "VCV000095202",
+      "clinvar_match": "transcript_alias",
+      "clinvar_note": "Same genomic allele as Chinese rett_007 case 3 (c.842del / G281fs). Spanish English abstract already names c.806del.",
+      "affected_proband": true,
+      "sex": "male",
+      "zygosity": "hemizygous",
+      "both_parents_tested": false,
+      "parents_negative_at_target": false,
+      "parentage_confirmed": false,
+      "inheritance": "unknown",
+      "phenotype_class": "rett_diagnosed",
+      "visibility": "english_abstract",
+      "bilingual_increment": 0,
+      "hero_role": "spanish_english_already_scores",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
+      "source_relative_path": "rett_035/source.md",
+      "source_sha256": "29a0f34251d1e1f8ec55f9b6e6c98ce4c35ddf729401347117b48d4f94b2e939",
+      "spans": [
+        {
+          "line": 21,
+          "quote": "c.806del (p.Gly269Alafs\\*20)",
+          "language": "en"
+        },
+        {
+          "line": 21,
+          "quote": "Rett syndrome",
+          "language": "en"
+        },
+        {
+          "line": 105,
+          "quote": "variante patogénica de novo",
+          "language": "es"
+        }
+      ],
+      "notes": "Spanish negative control. English abstract already has HGVS and diagnosis. Native 'de novo' is an author assertion without parental genotypes, so PM6 is not granted. Same allele as rett_007 case 3.",
+      "expected_codes": [
+        "PVS1",
+        "PP4"
+      ],
+      "expected_classification": "insufficient"
+    },
+    {
+      "event_id": "rett_034_R255X",
+      "case_id": "rett_034",
+      "source_cluster_id": "rett_034",
+      "paper_hgvs_c": "c.763C>T",
+      "paper_hgvs_p": "p.Arg255",
+      "paper_transcript": "NM_004992",
+      "canonical_allele_id": "VCV000011829",
+      "vcep_hgvs_c": "NM_004992.3:c.763C>T",
+      "vcep_protein_position": 255,
+      "vcep_protein_change": "p.Arg255Ter",
+      "variant_class": "nonsense",
+      "clinvar_vcv": "VCV000011829",
+      "clinvar_match": "transcript_alias",
+      "clinvar_note": "ClinVar MANE c.799C>T p.Arg267Ter.",
+      "affected_proband": true,
+      "sex": "female",
+      "zygosity": "heterozygous",
+      "both_parents_tested": false,
+      "parents_negative_at_target": false,
+      "parentage_confirmed": false,
+      "inheritance": "unknown",
+      "phenotype_class": "rett_diagnosed",
+      "visibility": "english_abstract",
+      "bilingual_increment": 0,
+      "hero_role": "portuguese_english_already_scores",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
+      "source_relative_path": "rett_034/source.md",
+      "source_sha256": "b9c7cdaa6388aeca13e3bbde70330e00c4eea26842b6550dd04cb195eef5e19e",
+      "spans": [
+        {
+          "line": 25,
+          "quote": "c.763C>T",
+          "language": "en"
+        },
+        {
+          "line": 25,
+          "quote": "p.Arg255",
+          "language": "en"
+        },
+        {
+          "line": 25,
+          "quote": "Rett syndrome",
+          "language": "en"
+        }
+      ],
+      "notes": "Portuguese negative control. English abstract already names c.763C>T and Rett. Family history without similar cases is not parental genotyping. PVS1+PP4 remains insufficient without PM6.",
+      "expected_codes": [
+        "PVS1",
+        "PP4"
+      ],
+      "expected_classification": "insufficient"
+    },
+    {
+      "event_id": "rett_041_R106W",
+      "case_id": "rett_041",
+      "source_cluster_id": "rett_041",
+      "paper_hgvs_c": "c.316 C>t",
+      "paper_hgvs_p": "p.R106W",
+      "paper_transcript": "NM_004992 not stated",
+      "canonical_allele_id": "VCV000011814",
+      "vcep_hgvs_c": "NM_004992.3:c.316C>T",
+      "vcep_protein_position": 106,
+      "vcep_protein_change": "p.Arg106Trp",
+      "variant_class": "missense",
+      "clinvar_vcv": "VCV000011814",
+      "clinvar_match": "transcript_alias",
+      "clinvar_note": "Hotspot R106W. Same allele as Chinese rett_006 case A. French poster has no English abstract.",
+      "affected_proband": true,
+      "sex": "female",
+      "zygosity": "heterozygous",
+      "both_parents_tested": false,
+      "parents_negative_at_target": false,
+      "parentage_confirmed": false,
+      "inheritance": "unknown",
+      "phenotype_class": "rett_diagnosed",
+      "visibility": "native_body_only",
+      "bilingual_increment": 1,
+      "hero_role": "french_no_english_pivot",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
+      "source_relative_path": "rett_041/source.md",
+      "source_sha256": "2e8fd31c6bb7406df7a8eef9798c8ba717d606b23339a4629099010796411ef6",
+      "spans": [
+        {
+          "line": 43,
+          "quote": "c.316 C>t ; p.R106W",
+          "language": "fr"
+        },
+        {
+          "line": 13,
+          "quote": "syndrome de Rett",
+          "language": "fr"
+        },
+        {
+          "line": 141,
+          "quote": "domaine MBD",
+          "language": "fr"
+        }
+      ],
+      "notes": "French-only poster, three unrelated Tunisian patients. No parental genotypes (control vs patient electropherograms only). Engine grants PP4+PM1; class stays insufficient. Same allele as rett_006 A.",
+      "expected_codes": [
+        "PP4",
+        "PM1"
+      ],
+      "expected_classification": "insufficient"
+    },
+    {
+      "event_id": "rett_041_R168X",
+      "case_id": "rett_041",
+      "source_cluster_id": "rett_041",
+      "paper_hgvs_c": "c.502 C>T",
+      "paper_hgvs_p": "p.R168X",
+      "paper_transcript": "NM_004992 not stated",
+      "canonical_allele_id": "VCV000011828",
+      "vcep_hgvs_c": "NM_004992.3:c.502C>T",
+      "vcep_protein_position": 168,
+      "vcep_protein_change": "p.Arg168Ter",
+      "variant_class": "nonsense",
+      "clinvar_vcv": "VCV000011828",
+      "clinvar_match": "transcript_alias",
+      "clinvar_note": "Hotspot R168X. Same allele as rett_004 / rett_006 F / rett_007 case 2.",
+      "affected_proband": true,
+      "sex": "female",
+      "zygosity": "heterozygous",
+      "both_parents_tested": false,
+      "parents_negative_at_target": false,
+      "parentage_confirmed": false,
+      "inheritance": "unknown",
+      "phenotype_class": "rett_diagnosed",
+      "visibility": "native_body_only",
+      "bilingual_increment": 1,
+      "hero_role": "french_no_english_pivot",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
+      "source_relative_path": "rett_041/source.md",
+      "source_sha256": "2e8fd31c6bb7406df7a8eef9798c8ba717d606b23339a4629099010796411ef6",
+      "spans": [
+        {
+          "line": 43,
+          "quote": "c.502 C>T ; p.R168X",
+          "language": "fr"
+        },
+        {
+          "line": 147,
+          "quote": "mutation non-sens",
+          "language": "fr"
+        },
+        {
+          "line": 13,
+          "quote": "syndrome de Rett",
+          "language": "fr"
+        }
+      ],
+      "notes": "Parents untested. PVS1+PP4 remains insufficient. Same allele as Chinese R168X events that already have ClinVar Pathogenic records.",
+      "expected_codes": [
+        "PVS1",
+        "PP4"
+      ],
+      "expected_classification": "insufficient"
+    },
+    {
+      "event_id": "rett_041_R255X",
+      "case_id": "rett_041",
+      "source_cluster_id": "rett_041",
+      "paper_hgvs_c": "c.763 C>T",
+      "paper_hgvs_p": "p.R255X",
+      "paper_transcript": "NM_004992 not stated; one figure caption mistypes c.736 C>T",
+      "canonical_allele_id": "VCV000011829",
+      "vcep_hgvs_c": "NM_004992.3:c.763C>T",
+      "vcep_protein_position": 255,
+      "vcep_protein_change": "p.Arg255Ter",
+      "variant_class": "nonsense",
+      "clinvar_vcv": "VCV000011829",
+      "clinvar_match": "transcript_alias",
+      "clinvar_note": "Hotspot R255X. Same allele as Portuguese rett_034, whose English abstract already scored.",
+      "affected_proband": true,
+      "sex": "female",
+      "zygosity": "heterozygous",
+      "both_parents_tested": false,
+      "parents_negative_at_target": false,
+      "parentage_confirmed": false,
+      "inheritance": "unknown",
+      "phenotype_class": "rett_diagnosed",
+      "visibility": "native_body_only",
+      "bilingual_increment": 1,
+      "hero_role": "french_no_english_pivot",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
+      "source_relative_path": "rett_041/source.md",
+      "source_sha256": "2e8fd31c6bb7406df7a8eef9798c8ba717d606b23339a4629099010796411ef6",
+      "spans": [
+        {
+          "line": 43,
+          "quote": "c.763 C>T ; p.R255X",
+          "language": "fr"
+        },
+        {
+          "line": 153,
+          "quote": "mutation non-sens",
+          "language": "fr"
+        },
+        {
+          "line": 13,
+          "quote": "syndrome de Rett",
+          "language": "fr"
+        }
+      ],
+      "notes": "Results line uses c.763 C>T; a later figure caption writes c.736 C>T for the same p.R255X. Frozen allele is c.763C>T. Parents untested.",
+      "expected_codes": [
+        "PVS1",
+        "PP4"
+      ],
+      "expected_classification": "insufficient"
+    },
+    {
+      "event_id": "rett_067_D156E",
+      "case_id": "rett_067",
+      "source_cluster_id": "rett_067",
+      "paper_hgvs_c": "468 C→G",
+      "paper_hgvs_p": "D 156 E",
+      "paper_transcript": "numbering per GenBank; table uses historical e2",
+      "canonical_allele_id": "VCV000095196",
+      "vcep_hgvs_c": "NM_004992.3:c.468C>G",
+      "vcep_protein_position": 156,
+      "vcep_protein_change": "p.Asp156Glu",
+      "variant_class": "missense",
+      "clinvar_vcv": "VCV000095196",
+      "clinvar_match": "transcript_alias",
+      "clinvar_note": "Fourth language on the D156E allele after Russian rett_069/071 and Chinese rett_085. Korean cohort did not test parents.",
+      "affected_proband": true,
+      "sex": "female",
+      "zygosity": "heterozygous",
+      "both_parents_tested": false,
+      "parents_negative_at_target": false,
+      "parentage_confirmed": false,
+      "inheritance": "unknown",
+      "phenotype_class": "rett_diagnosed",
+      "visibility": "native_body_only",
+      "bilingual_increment": 1,
+      "hero_role": "korean_cohort_table",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
+      "source_relative_path": "rett_067/source.md",
+      "source_sha256": "163390d0063b1bba656c33c47f48dc8b0af851764a9955b359386d81341d073b",
+      "spans": [
+        {
+          "line": 192,
+          "quote": "468 C→G",
+          "language": "ko"
+        },
+        {
+          "line": 192,
+          "quote": "D 156 E",
+          "language": "ko"
+        },
+        {
+          "line": 15,
+          "quote": "Rett syndrome",
+          "language": "en"
+        }
+      ],
+      "notes": "Korean 34-patient cohort. English abstract names mutation counts but not per-allele HGVS. Table 2 is in the PDF body. No parental testing. PP4+PM1, insufficient. Same allele as rett_069/071/085.",
+      "expected_codes": [
+        "PP4",
+        "PM1"
+      ],
+      "expected_classification": "insufficient"
+    },
+    {
+      "event_id": "rett_067_R168X",
+      "case_id": "rett_067",
+      "source_cluster_id": "rett_067",
+      "paper_hgvs_c": "502 C→T",
+      "paper_hgvs_p": "R 168 X",
+      "paper_transcript": "historical e2 table",
+      "canonical_allele_id": "VCV000011828",
+      "vcep_hgvs_c": "NM_004992.3:c.502C>T",
+      "vcep_protein_position": 168,
+      "vcep_protein_change": "p.Arg168Ter",
+      "variant_class": "nonsense",
+      "clinvar_vcv": "VCV000011828",
+      "clinvar_match": "transcript_alias",
+      "clinvar_note": "Same R168X allele as rett_004/006/007/041.",
+      "affected_proband": true,
+      "sex": "female",
+      "zygosity": "heterozygous",
+      "both_parents_tested": false,
+      "parents_negative_at_target": false,
+      "parentage_confirmed": false,
+      "inheritance": "unknown",
+      "phenotype_class": "rett_diagnosed",
+      "visibility": "native_body_only",
+      "bilingual_increment": 1,
+      "hero_role": "korean_cohort_table",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
+      "source_relative_path": "rett_067/source.md",
+      "source_sha256": "163390d0063b1bba656c33c47f48dc8b0af851764a9955b359386d81341d073b",
+      "spans": [
+        {
+          "line": 192,
+          "quote": "502 C→T",
+          "language": "ko"
+        },
+        {
+          "line": 192,
+          "quote": "R 168 X",
+          "language": "ko"
+        },
+        {
+          "line": 200,
+          "quote": "non-sense mutation",
+          "language": "ko"
+        },
+        {
+          "line": 15,
+          "quote": "Rett syndrome",
+          "language": "en"
+        }
+      ],
+      "notes": "Two Korean patients (R5, R7). Parents untested. PVS1+PP4 insufficient.",
+      "expected_codes": [
+        "PVS1",
+        "PP4"
+      ],
+      "expected_classification": "insufficient"
+    },
+    {
+      "event_id": "rett_067_T158M",
+      "case_id": "rett_067",
+      "source_cluster_id": "rett_067",
+      "paper_hgvs_c": "473 C→T",
+      "paper_hgvs_p": "T 158 M",
+      "paper_transcript": "historical e2 table",
+      "canonical_allele_id": "VCV000011813",
+      "vcep_hgvs_c": "NM_004992.3:c.473C>T",
+      "vcep_protein_position": 158,
+      "vcep_protein_change": "p.Thr158Met",
+      "variant_class": "missense",
+      "clinvar_vcv": "VCV000011813",
+      "clinvar_match": "transcript_alias",
+      "clinvar_note": "MBD hotspot T158M. Not the e2 T170M nucleotide VCV000011811.",
+      "affected_proband": true,
+      "sex": "female",
+      "zygosity": "heterozygous",
+      "both_parents_tested": false,
+      "parents_negative_at_target": false,
+      "parentage_confirmed": false,
+      "inheritance": "unknown",
+      "phenotype_class": "rett_diagnosed",
+      "visibility": "native_body_only",
+      "bilingual_increment": 1,
+      "hero_role": "korean_cohort_table",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
+      "source_relative_path": "rett_067/source.md",
+      "source_sha256": "163390d0063b1bba656c33c47f48dc8b0af851764a9955b359386d81341d073b",
+      "spans": [
+        {
+          "line": 192,
+          "quote": "473 C→T",
+          "language": "ko"
+        },
+        {
+          "line": 192,
+          "quote": "T 158 M",
+          "language": "ko"
+        },
+        {
+          "line": 15,
+          "quote": "Rett syndrome",
+          "language": "en"
+        }
+      ],
+      "notes": "Four Korean patients (R6, 11, 12, 19). Residue 158 is inside MBD 90-162. Parents untested. PP4+PM1 insufficient.",
+      "expected_codes": [
+        "PP4",
+        "PM1"
+      ],
+      "expected_classification": "insufficient"
+    },
+    {
+      "event_id": "rett_088_D156E",
+      "case_id": "rett_088",
+      "source_cluster_id": "rett_088",
+      "paper_hgvs_c": "D156E",
+      "paper_hgvs_p": "D156E",
+      "paper_transcript": "NM_004992 not stated; Table 2 is protein-only",
+      "canonical_allele_id": "VCV000095196",
+      "vcep_hgvs_c": "NM_004992.3:c.468C>G",
+      "vcep_protein_position": 156,
+      "vcep_protein_change": "p.Asp156Glu",
+      "variant_class": "missense",
+      "clinvar_vcv": "VCV000095196",
+      "clinvar_match": "transcript_alias",
+      "clinvar_note": "Fifth language on D156E after ru 069/071, zh 085, ko 067. Japanese Table 2 protein-only; English abstract does not name D156E.",
+      "affected_proband": true,
+      "sex": "female",
+      "zygosity": "heterozygous",
+      "both_parents_tested": false,
+      "parents_negative_at_target": false,
+      "parentage_confirmed": false,
+      "inheritance": "unknown",
+      "phenotype_class": "rett_diagnosed",
+      "visibility": "native_body_only",
+      "bilingual_increment": 1,
+      "hero_role": "japanese_cohort_table",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
+      "source_relative_path": "rett_088/source.md",
+      "source_sha256": "7cec8a842e79c43b916ab90d6e8cb5a1cb9672ae001a665dec22498651322c64",
+      "spans": [
+        {
+          "line": 166,
+          "quote": "D156E",
+          "language": "ja"
+        },
+        {
+          "line": 319,
+          "quote": "Rett syndrome",
+          "language": "en"
+        }
+      ],
+      "notes": "Kondo 2002 No To Hattatsu 142-patient Japanese cohort. English abstract names common protein mutations but not D156E and has no c. HGVS. Table 2 lists D156E (1). Cohort-level parental-origin study is not a named-proband genotype, so PM6 is not granted. PP4+PM1, insufficient. Same allele as rett_069/071/085/067.",
+      "expected_codes": [
+        "PP4",
+        "PM1"
+      ],
+      "expected_classification": "insufficient"
+    },
+    {
+      "event_id": "rett_088_R168X",
+      "case_id": "rett_088",
+      "source_cluster_id": "rett_088",
+      "paper_hgvs_c": "R168X",
+      "paper_hgvs_p": "R168X",
+      "paper_transcript": "NM_004992 not stated; Table 2 is protein-only",
+      "canonical_allele_id": "VCV000011828",
+      "vcep_hgvs_c": "NM_004992.3:c.502C>T",
+      "vcep_protein_position": 168,
+      "vcep_protein_change": "p.Arg168Ter",
+      "variant_class": "nonsense",
+      "clinvar_vcv": "VCV000011828",
+      "clinvar_match": "transcript_alias",
+      "clinvar_note": "Same R168X allele as rett_004/006/007/041/067. English abstract names R168X as protein only.",
+      "affected_proband": true,
+      "sex": "female",
+      "zygosity": "heterozygous",
+      "both_parents_tested": false,
+      "parents_negative_at_target": false,
+      "parentage_confirmed": false,
+      "inheritance": "unknown",
+      "phenotype_class": "rett_diagnosed",
+      "visibility": "native_body_only",
+      "bilingual_increment": 1,
+      "hero_role": "japanese_cohort_table",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
+      "source_relative_path": "rett_088/source.md",
+      "source_sha256": "7cec8a842e79c43b916ab90d6e8cb5a1cb9672ae001a665dec22498651322c64",
+      "spans": [
+        {
+          "line": 169,
+          "quote": "R168X",
+          "language": "ja"
+        },
+        {
+          "line": 168,
+          "quote": "nonsensemutations",
+          "language": "en"
+        },
+        {
+          "line": 319,
+          "quote": "Rett syndrome",
+          "language": "en"
+        }
+      ],
+      "notes": "Table 2 lists R168X (12). English abstract names the protein but has no c. HGVS, so A.variant_hgvs_c is native-only. Parents not granted. PVS1+PP4 remains insufficient.",
+      "expected_codes": [
+        "PVS1",
+        "PP4"
+      ],
+      "expected_classification": "insufficient"
+    },
+    {
+      "event_id": "rett_088_T158M",
+      "case_id": "rett_088",
+      "source_cluster_id": "rett_088",
+      "paper_hgvs_c": "T158M",
+      "paper_hgvs_p": "T158M",
+      "paper_transcript": "NM_004992 not stated; Table 2 is protein-only",
+      "canonical_allele_id": "VCV000011813",
+      "vcep_hgvs_c": "NM_004992.3:c.473C>T",
+      "vcep_protein_position": 158,
+      "vcep_protein_change": "p.Thr158Met",
+      "variant_class": "missense",
+      "clinvar_vcv": "VCV000011813",
+      "clinvar_match": "transcript_alias",
+      "clinvar_note": "Hotspot T158M on NM_004992. Distinct from e2 T170M VCV000011811. Same allele as Korean rett_067_T158M.",
+      "affected_proband": true,
+      "sex": "female",
+      "zygosity": "heterozygous",
+      "both_parents_tested": false,
+      "parents_negative_at_target": false,
+      "parentage_confirmed": false,
+      "inheritance": "unknown",
+      "phenotype_class": "rett_diagnosed",
+      "visibility": "native_body_only",
+      "bilingual_increment": 1,
+      "hero_role": "japanese_cohort_table",
+      "materialization_status": "on_disk",
+      "source_root_kind": "reviewed",
+      "source_relative_path": "rett_088/source.md",
+      "source_sha256": "7cec8a842e79c43b916ab90d6e8cb5a1cb9672ae001a665dec22498651322c64",
+      "spans": [
+        {
+          "line": 164,
+          "quote": "T158M",
+          "language": "ja"
+        },
+        {
+          "line": 319,
+          "quote": "Rett syndrome",
+          "language": "en"
+        }
+      ],
+      "notes": "Three representatives from one Japanese cohort, not 40 independent papers. English abstract names T158M as protein; scoring still requires A.variant_hgvs_c. No PM6.",
+      "expected_codes": [
+        "PP4",
+        "PM1"
+      ],
       "expected_classification": "insufficient"
     },
     {
@@ -668,7 +1699,9 @@
       "parentage_confirmed": false,
       "inheritance": "unknown",
       "phenotype_class": "rett_diagnosed",
-      "conflict_flags": ["unmapped_interval"],
+      "conflict_flags": [
+        "unmapped_interval"
+      ],
       "visibility": "native_body_only",
       "hero_role": "unmapped_cnv_branch",
       "materialization_status": "needs_external_corpus",

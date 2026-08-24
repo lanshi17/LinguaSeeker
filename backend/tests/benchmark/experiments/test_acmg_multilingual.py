@@ -2205,9 +2205,9 @@ def test_frozen_increment_denominator_covers_three_tracks() -> None:
         repository_root / "benchmark/experiments/acmg_multilingual/increment_denominator.json"
     )
     summary = summarize_increment_denominator(denominator)
-    assert summary.total_slots == 31
-    assert summary.on_disk == 24
-    assert summary.needs_external_corpus == 4
+    assert summary.total_slots == 35
+    assert summary.on_disk == 31
+    assert summary.needs_external_corpus == 1
     assert summary.needs_workbook_export == 3
     assert dict(summary.family_counts)["PM3"] == 1
     assert dict(summary.family_counts)["PS2_PM6"] >= 14
@@ -2221,7 +2221,7 @@ def test_frozen_increment_denominator_covers_three_tracks() -> None:
         reviewed_root=repository_root / "benchmark/experiments/acmg_multilingual/reviewed",
         clinvar_fused_root=repository_root / "benchmark/data/ground_truth/clinvar_fused",
     )
-    assert report.verified_on_disk_slots == report.on_disk_slots == 24
+    assert report.verified_on_disk_slots == report.on_disk_slots == 31
 
 
 def test_increment_slot_requires_partner_allele_for_pm3() -> None:

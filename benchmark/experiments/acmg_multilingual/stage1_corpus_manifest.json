@@ -308,10 +308,12 @@
     {
       "alias_case_ids": [],
       "candidate_variants": [
-        "c.316C>T"
+        "c.316C>T",
+        "c.502C>T",
+        "c.763C>T"
       ],
       "family_id": "rett_041",
-      "language": "en",
+      "language": "fr",
       "source_relative_path": "rett_041/source.md",
       "source_sha256": "2e8fd31c6bb7406df7a8eef9798c8ba717d606b23339a4629099010796411ef6"
     },
@@ -405,7 +407,11 @@
     },
     {
       "alias_case_ids": [],
-      "candidate_variants": [],
+      "candidate_variants": [
+        "c.468C>G",
+        "c.473C>T",
+        "c.502C>T"
+      ],
       "family_id": "rett_067",
       "language": "ko",
       "source_relative_path": "rett_067/source.md",
@@ -500,11 +506,13 @@
     },
     {
       "alias_case_ids": [],
-      "candidate_variants": [],
+      "candidate_variants": [
+        "c.468C>G"
+      ],
       "family_id": "rett_085",
       "language": "zh",
       "source_relative_path": "rett_085/source.md",
-      "source_sha256": "f36a235dc26b320262a6a5541726d7ff092c775d04f1cd87e5e53ceea58aac5e"
+      "source_sha256": "689febae18c84f8d59ba72d6262d9d80b98021f0340485ee1277d30176339f6d"
     }
   ],
   "pairing_anchors": [

@@ -153,6 +153,28 @@ def test_normalized_parentage_and_hgvs_alias_match() -> None:
     ) is False
 
 
+def test_protein_frameshift_aliases_match_gold() -> None:
+    """Compact and extended frameshift protein forms describe the same change."""
+    fact = FieldFact(
+        field_id="A.variant_hgvs_p",
+        presence="present",
+        expected_value="p.Gly269AlafsTer20",
+        spans=({"line": 1, "quote": "p.Gly269Alafs*20", "language": "es"},),
+    )
+    assert gate_matches_gold(fact, "p.Gly269fs")
+    assert gate_matches_gold(fact, "p.G269fs")
+
+
+def test_chinese_rett_diagnosis_matches_english_gold() -> None:
+    fact = FieldFact(
+        field_id="B.disease_diagnosis",
+        presence="present",
+        expected_value="Rett syndrome",
+        spans=({"line": 1, "quote": "Rett综合征", "language": "zh"},),
+    )
+    assert gate_matches_gold(fact, "Rett综合征")
+
+
 def _case2_and_bridge() -> tuple[DirectInferenceTable, DirectInferenceEvent, FieldBridgeEvent]:
     table = load_direct_inference_table()
     bridge = load_field_bridge_table()
@@ -161,11 +183,17 @@ def _case2_and_bridge() -> tuple[DirectInferenceTable, DirectInferenceEvent, Fie
     return table, event, facts
 
 
-def test_on_disk_probe_event_ids_are_the_fourteen_reviewed_events() -> None:
+def test_on_disk_probe_event_ids_are_the_reviewed_events() -> None:
     table = load_direct_inference_table()
-    assert len(on_disk_probe_event_ids(table)) == 14
+    assert len(on_disk_probe_event_ids(table)) == 31
     assert "rett_007_case2_R180X" in on_disk_probe_event_ids(table)
-    assert "rett_081_T170M_maternal" not in on_disk_probe_event_ids(table)
+    assert "rett_081_T170M_maternal" in on_disk_probe_event_ids(table)
+    assert "rett_085_D156E" in on_disk_probe_event_ids(table)
+    assert "rett_078_P302L" in on_disk_probe_event_ids(table)
+    assert "rett_041_R106W" in on_disk_probe_event_ids(table)
+    assert "rett_067_T158M" in on_disk_probe_event_ids(table)
+    assert "rett_088_D156E" in on_disk_probe_event_ids(table)
+    assert "rett_070_Q406del" not in on_disk_probe_event_ids(table)
 
 
 def test_probe_document_unescapes_markdown_tilde() -> None:
@@ -231,3 +259,39 @@ def test_live_missing_variant_type_drops_pvs1() -> None:
     assert "PVS1" not in comparison.live_codes
     assert "PM6" in comparison.live_codes
     assert "PP4" in comparison.live_codes
+
+
+def test_cli_rescore_probe_parses_paths() -> None:
+    args = _parse_args(
+        (
+            "rescore-probe",
+            "--baseline",
+            "baseline.json",
+            "--after",
+            "after.json",
+            "--facts",
+            "facts.json",
+        )
+    )
+    assert args.command == "rescore-probe"
+    assert args.baseline == Path("baseline.json")
+    assert args.after == Path("after.json")
+    assert args.facts == Path("facts.json")
+
+
+def test_score_probe_report_locks_uncontaminated_baseline() -> None:
+    """The committed baseline receipt is the FOUND/accuracy yardstick."""
+    from benchmark.experiments.acmg_multilingual.live_extraction_probe import (
+        load_live_extraction_probe_report,
+        score_probe_report,
+    )
+
+    repository_root = Path(__file__).resolve().parents[4]
+    report = load_live_extraction_probe_report(repository_root / "logs/opt/baseline_31.json")
+    facts = load_field_bridge_table()
+    score = score_probe_report(report, facts)
+    assert score.event_count == 31
+    assert score.total_gates == 159
+    assert score.found_gates == 138
+    assert score.assigned_acmg_code_events == 0
+    assert score.matched_gates >= 135

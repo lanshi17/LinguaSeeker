@@ -262,6 +262,35 @@ def test_recovery_splits_joint_parental_negative_into_pm6_fields() -> None:
     assert values["C.parentage_confirmed"] == "not_confirmed"
 
 
+def test_recovery_keeps_missense_only_in_child_when_synonymous_is_paternal() -> None:
+    """A benign paternal synonymous change must not block missense-only-in-child de novo."""
+    text = (
+        "患者携带一个同义突变c.426C>T（p.F142F），同时携带一个错义突变c.468C>G（p.D156E）。"
+        "同义突变c.426C>T遗传自患儿的父亲。错义突变c.468C>G只在患儿中发现，说明此突变为自发突变。"
+    )
+    document = TrackDocument(
+        document_id="rett-085",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[],
+        extraction_target=ExtractionTarget(
+            gene_symbol="MECP2",
+            disease_name="Rett syndrome",
+            variant_hgvs_c="c.468C>G",
+            variant_hgvs_p="p.D156E",
+        ),
+    )
+    items = [_item("A.gene_symbol", "MECP2", "c.468C>G", group_id="gene=MECP2|variant=c.468C>G")]
+
+    recovered = TargetSpanFieldRecovery().recover(document, items)
+    values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
+
+    assert values["C.de_novo_status"] == "de_novo"
+    assert values["C.maternal_genotype"] == "target_absent"
+    assert values["C.paternal_genotype"] == "target_absent"
+    assert values["C.parentage_confirmed"] == "not_confirmed"
+
+
 def test_recovery_does_not_treat_paper_nonsense_label_as_type_for_coding_deletion() -> None:
     """c.194delC remains a coding indel even when the paper writes 无义突变 / p.S65X."""
     text = (
@@ -317,6 +346,23 @@ def test_recovery_overwrites_llm_nonsense_when_target_is_coding_deletion() -> No
     )
 
 
+def test_recovery_prefers_child_only_missense_over_paternal_synonymous_carrier() -> None:
+    """A nearby 父亲...携带 about a different variant must not fill paternal genotype."""
+    text = (
+        "患者携带一个同义突变c.426C>T（p.F142F），同时携带一个错义突变c.468C>G（p.D156E）。"
+        "同义突变c.426C>T遗传自患儿的父亲，且患儿的姐姐也同时携带，但患儿的父亲及姐姐表型均正常。"
+        "错义突变c.468C>G只在患儿中发现，说明此突变为自发突变。"
+    )
+    recovered = TargetSpanFieldRecovery().recover(
+        _mecp2_doc(text, variant_c="c.468C>G", variant_p="p.D156E"),
+        [],
+    )
+    values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
+    assert values["C.de_novo_status"] == "de_novo"
+    assert values["C.maternal_genotype"] == "target_absent"
+    assert values["C.paternal_genotype"] == "target_absent"
+
+
 def test_recovery_does_not_call_maternal_inheritance_de_novo() -> None:
     text = "该 MECP2 c.509C>T 变异遗传自母亲，父亲未携带该位点。"
     document = TrackDocument(
@@ -336,3 +382,140 @@ def test_recovery_does_not_call_maternal_inheritance_de_novo() -> None:
     values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
     assert "C.de_novo_status" not in values
     assert "C.parentage_confirmed" not in values
+
+
+def _mecp2_doc(
+    text: str,
+    *,
+    variant_c: str = "",
+    variant_p: str = "",
+    disease: str = "Rett syndrome",
+) -> TrackDocument:
+    return TrackDocument(
+        document_id="mecp2-identity",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[],
+        extraction_target=ExtractionTarget(
+            gene_symbol="MECP2",
+            disease_name=disease,
+            variant_hgvs_c=variant_c,
+            variant_hgvs_p=variant_p,
+        ),
+    )
+
+
+def test_recovery_reads_korean_table_coding_without_c_prefix() -> None:
+    text = "<td>468 C→G</td><td>D 156 E</td>"
+    recovered = TargetSpanFieldRecovery().recover(
+        _mecp2_doc(text, variant_c="468 C→G", variant_p="D 156 E"),
+        [_item("A.gene_symbol", "MECP2", "MECP2", group_id="gene=MECP2|variant=468C>G")],
+    )
+    values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
+    assert values["A.variant_hgvs_c"] == "c.468C>G"
+    assert values["A.functional_domain_or_hotspot"] == "MBD (VCEP 90-162)"
+
+
+def test_recovery_does_not_invent_coding_hgvs_from_protein_only_table() -> None:
+    text = "Table 2 lists D156E without a nucleotide change. Rett syndrome (RTT) is X-linked."
+    recovered = TargetSpanFieldRecovery().recover(
+        _mecp2_doc(text, variant_c="D156E", variant_p="D156E"),
+        [_item("A.gene_symbol", "MECP2", "MECP2", group_id="gene=MECP2|variant=D156E")],
+    )
+    values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
+    assert "A.variant_hgvs_c" not in values
+    assert values["A.functional_domain_or_hotspot"] == "MBD (VCEP 90-162)"
+    assert values["B.disease_diagnosis"] == "Rett syndrome"
+
+
+def test_recovery_keeps_protein_string_in_coding_slot_when_paper_has_no_c_dot() -> None:
+    text = "MECP2 geni 4. ekzonunda p.Pro302Leu mutasyonu heterozigot olarak saptandı."
+    recovered = TargetSpanFieldRecovery().recover(
+        _mecp2_doc(text, variant_c="p.Pro302Leu", variant_p="p.Pro302Leu"),
+        [_item("A.gene_symbol", "MECP2", "MECP2", group_id="gene=MECP2|variant=p.Pro302Leu")],
+    )
+    values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
+    assert values["A.variant_hgvs_c"] == "p.Pro302Leu"
+    assert values["A.functional_domain_or_hotspot"] == "TRD (VCEP 302-306)"
+
+
+def test_recovery_reads_xq28_dup_and_mds_only_for_dup_target() -> None:
+    text = (
+        "探讨 5 例 Rett 综合征（RTT）样表型。"
+        "4 例患儿诊断为 RTT，1 例患儿诊断为 MECP2 重复综合征（MDS）。"
+        "病例 5 发现 Xq28区域存在重复变异，片段大小为 0.299 MB。"
+    )
+    dup = TargetSpanFieldRecovery().recover(
+        _mecp2_doc(text, variant_c="Xq28_0.299Mb_dup"),
+        [_item("A.gene_symbol", "MECP2", "MECP2", group_id="gene=MECP2|variant=Xq28")],
+    )
+    dup_values = {item.field_id: item.value for item in dup if item.status == EvidenceStatus.FOUND}
+    assert dup_values["A.variant_hgvs_c"] == "Xq28 0.299 Mb dup"
+    assert dup_values["B.disease_diagnosis"] == "MECP2 duplication syndrome"
+
+    point = TargetSpanFieldRecovery().recover(
+        _mecp2_doc(text, variant_c="c.509C>T", variant_p="p.Thr170Met"),
+        [_item("A.gene_symbol", "MECP2", "MECP2", group_id="gene=MECP2|variant=c.509C>T")],
+    )
+    point_values = {item.field_id: item.value for item in point if item.status == EvidenceStatus.FOUND}
+    assert point_values["B.disease_diagnosis"] == "Rett syndrome"
+    assert point_values.get("A.variant_hgvs_c") != "Xq28 0.299 Mb dup"
+
+
+def test_recovery_completes_truncated_arg255_and_infers_nonsense() -> None:
+    text = "teste genético positivo para a mutação no gene MECP2 (variante c.763C>T levando a alteração no aminoácido p. Arg255)"
+    recovered = TargetSpanFieldRecovery().recover(
+        _mecp2_doc(text, variant_c="c.763C>T", variant_p="p.Arg255"),
+        [_item("A.gene_symbol", "MECP2", "MECP2", group_id="gene=MECP2|variant=c.763C>T")],
+    )
+    values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
+    assert values["A.variant_hgvs_p"] == "p.Arg255"
+    assert values["A.variant_type"] == "nonsense"
+
+
+def test_recovery_fills_identity_fields_without_prior_spans() -> None:
+    text = "病例 5 诊断为 MECP2 重复综合征。Xq28区域存在重复变异，片段大小为 0.299 MB。"
+    recovered = TargetSpanFieldRecovery().recover(
+        _mecp2_doc(text, variant_c="Xq28_0.299Mb_dup"),
+        [],
+    )
+    values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
+    assert values["A.variant_hgvs_c"] == "Xq28 0.299 Mb dup"
+    assert values["B.disease_diagnosis"] == "MECP2 duplication syndrome"
+
+
+def test_recovery_reads_coding_indel_written_as_hgvs() -> None:
+    text = "患儿MECP2基因存在c.194delC致病性突变，此为无义突变（p.S65X）。"
+    recovered = TargetSpanFieldRecovery().recover(
+        _mecp2_doc(text, variant_c="c.194delC", variant_p="p.S65X"),
+        [],
+    )
+    values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
+    assert values["A.variant_hgvs_c"] == "c.194delC"
+    assert values["A.variant_type"] == "frameshift"
+
+
+def test_recovery_reads_french_rett_and_escaped_frameshift_star() -> None:
+    text = (
+        "trois patientes atteintes du syndrome de Rett. "
+        "variante patogénica c.806del (p.Gly269Alafs\\*20) en MECP2"
+    )
+    recovered = TargetSpanFieldRecovery().recover(
+        _mecp2_doc(text, variant_c="c.806del", variant_p="p.Gly269AlafsTer20"),
+        [],
+    )
+    values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
+    assert values["B.disease_diagnosis"] == "Rett syndrome"
+    assert values["A.variant_hgvs_c"] == "c.806del"
+    assert values["A.variant_hgvs_p"] == "p.Gly269fs"
+
+
+def test_recovery_reads_ocr_coding_without_gt() -> None:
+    text = "基因编码区找到 1 个突变位点 ， c．622C Tp．Q208X（无义突变）。# Rett综合征1例"
+    recovered = TargetSpanFieldRecovery().recover(
+        _mecp2_doc(text, variant_c="c.622C>T", variant_p="p.Q208X"),
+        [_item("A.gene_symbol", "MECP2", "MECP2", group_id="gene=MECP2|variant=c.622C>T")],
+    )
+    values = {item.field_id: item.value for item in recovered if item.status == EvidenceStatus.FOUND}
+    assert values["A.variant_hgvs_c"] == "c.622C>T"
+    assert values["B.disease_diagnosis"] == "Rett syndrome"

@@ -77,15 +77,15 @@ def test_frozen_table_matches_on_disk_sources() -> None:
         reviewed_root=repository_root / "benchmark/experiments/acmg_multilingual/reviewed",
     )
     assert report.missed_spans == ()
-    assert report.verified_sources == report.total_sources == 6
+    assert report.verified_sources == report.total_sources == 17
     assert report.verified_spans == report.total_spans
-    assert summary.total_sources == 6
-    assert summary.languages == ("ko", "zh")
-    assert summary.sources_with_abstract_increment == 4
-    assert summary.sources_with_visible_increment == 4
-    assert summary.abstract_increment_without_rett_007 == 3
-    assert summary.same_pdf_bilingual_sources == 3
-    assert summary.missing_english_pivot_sources == 1
+    assert summary.total_sources == 17
+    assert summary.languages == ("es", "fr", "ja", "ko", "pt", "ru", "tr", "zh")
+    assert summary.sources_with_abstract_increment == 12
+    assert summary.sources_with_visible_increment == 12
+    assert summary.abstract_increment_without_rett_007 == 11
+    assert summary.same_pdf_bilingual_sources == 7
+    assert summary.missing_english_pivot_sources == 5
 
 
 def test_english_visible_must_contain_abstract_fields() -> None:

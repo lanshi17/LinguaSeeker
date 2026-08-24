@@ -20,8 +20,23 @@ def test_unescape_mined_text_decodes_markdown_tilde() -> None:
     assert unescape_mined_text("病例 1\\~4 诊断为经典型 RTT") == "病例 1~4 诊断为经典型 RTT"
 
 
+def test_unescape_mined_text_decodes_markdown_star() -> None:
+    assert unescape_mined_text("p.Gly269Alafs\\*20") == "p.Gly269Alafs*20"
+
+
+def test_unescape_mined_text_leaves_backslash_letters() -> None:
+    assert unescape_mined_text("path\\md\\data") == "path\\md\\data"
+
+
 def test_find_html_aware_matches_markdown_tilde() -> None:
     haystack = "病例 1\\~4 诊断为经典型 RTT"
     start, end = find_html_aware(haystack, "病例 1~4 诊断为经典型 RTT")
 
     assert haystack[start:end] == "病例 1\\~4 诊断为经典型 RTT"
+
+
+def test_find_html_aware_matches_markdown_star() -> None:
+    haystack = "variante patogénica c.806del (p.Gly269Alafs\\*20) en MECP2"
+    start, end = find_html_aware(haystack, "p.Gly269Alafs*20")
+
+    assert haystack[start:end] == "p.Gly269Alafs\\*20"

@@ -45,31 +45,25 @@ e-mail: TBD].}
 Purpose: ACMG/AMP variant classification relies on manual
 evidence curation from a predominantly English-language literature,
 leaving non-English evidence underused. We quantified the marginal
-contribution of cross-lingual (English + Chinese) evidence extraction
-beyond English-only processing in a controlled ablation study.
+contribution of cross-lingual evidence extraction.
 
-Methods: We developed Lingua Seeker, a multi-agent system with a
-four-phase pipeline (acquisition, dual-track extraction, standardization,
-expert review). Thirty ClinGen/ClinVar-curated variant entries, each
-pairing an English article with a system-generated Chinese translation,
-were processed in English-only and dual-track modes and compared in terms
-of evidence-item yield and field-level match against an eight-field gold
-standard.
+Methods: Lingua Seeker, a multi-agent four-phase pipeline, processed
+thirty ClinGen/ClinVar-curated variant entries in English-only and
+dual-track (English plus Chinese translation) modes. A complementary
+series of original-language Rett/\textit{MECP2} reports in eight
+languages compared English-visible text with native full text using a
+frozen ACMG combining rule.
 
 Results: The Chinese track contributed a mean of 3.62 evidence
-items per entry that the English track missed (+22.8\% over the
-English-track mean of 15.9; $p = 5.9 \times 10^{-6}$); 25/29 entries
-(86.2\%) gained items; 13/29 (44.8\%) gained fields supported only by the
-Chinese track. Gold-standard field match was unchanged (mean 3.57/8 in
-both modes; $p = 1.0$): three entries gained $\geq$1 field (variant type,
-mode of inheritance, gene symbol), two showed a net loss, one swapped
-fields.
+items per entry that English missed (+22.8\%; $p = 5.9 \times 10^{-6}$);
+25/29 entries (86.2\%) gained items. Gold-standard field match was
+unchanged (3.57/8; $p = 1.0$). Native full text added ACMG criteria for
+20 of 31 case-series events (11 alleles).
 
-Conclusion: Cross-lingual processing adds complementary,
-clinically relevant evidence for most variants without degrading average
-accuracy. Evidence-level yield is a more sensitive measure of
-multilingual contribution than match against an English-centric gold
-standard.
+Conclusion: Cross-lingual processing adds complementary evidence
+without degrading average field-match accuracy. Extra ACMG criteria from
+original-language full text measure multilingual contribution more
+directly than match against an English-centric gold standard.
 \end{abstract}
 
 \begin{keyword}
@@ -110,9 +104,10 @@ evidence fields.
 We present Lingua Seeker, a multi-agent system for cross-lingual evidence
 curation that covers the workflow from literature acquisition to expert
 review. We evaluate the system with an ablation design that separates
-evidence-item yield from field-level match against a gold standard. This
-evaluation measures the evidence contributed by multilingual processing
-and whether that evidence changes field-level performance.
+evidence-item yield from field-level match against a gold standard, and
+with a complementary case series of original-language Rett/\textit{MECP2}
+reports that asks whether native full text supplies ACMG criteria omitted
+from English abstracts and figure legends.
 
 \section{Materials and Methods}
 
@@ -246,6 +241,39 @@ through OpenAI-compatible endpoints, and no model was shared across
 roles. The specific model identifiers are configurable per deployment and
 are listed in the repository configuration.
 
+\subsection{Original-language Rett/\textit{MECP2} case series}
+\label{sec:case-series}
+
+The ablation corpus uses English PMC articles and machine-generated
+Chinese translations. To test whether original non-English full text
+supplies ACMG criteria that English abstracts omit, we scored seventeen
+published Rett/\textit{MECP2} reports (eight Chinese, two Korean, two
+Russian, one Turkish, one Spanish, one Portuguese, one French, one
+Japanese) that had been digitized into hashed, reviewed source files.
+Thirty-one on-disk variant events from these reports entered the analysis.
+
+For each event we compared two fact sets. The English-visible layer
+comprised the author English abstract and any English figure legends. The
+native layer used the original-language full text. Scoring on the English
+layer required a coding HGVS string in that layer; without it the layer
+was recorded as not scorable. Parental testing and diagnosis were counted
+in the English layer only when the corresponding fields appeared there.
+Variant class and \textit{MECP2} residue position were treated as
+properties of the allele, not of language.
+
+A frozen, deterministic rule then granted PM6, PVS1, PP4, or PM1 from
+those fields and combined them under the ClinGen Rett/Angelman-like
+variant curation specifications~\cite{mcknight2022} and the Richards 2015
+pathogenic and likely-pathogenic combinations~\cite{richards2015}. The
+extractor does not write ACMG codes. Author-reported strings such as
+PS2+PM2+PP3 were not inherited, and PS2 was never granted without
+confirmed parentage. The primary endpoint was extra granted criteria
+(native codes minus English-visible codes). A change in combining class
+is a stronger subset of that endpoint, not a requirement. Reproduction
+uses \path{benchmark/experiments/acmg_multilingual/} and the command
+\texttt{check-allele-class-increment}. Rule details and the event table
+are in Supplementary Note~S6 and Supplementary Table~S3.
+
 \section{Results}
 
 \subsection{Evidence-item yield: multilingual processing adds
@@ -378,6 +406,62 @@ artifacts and are addressed in the Discussion.
   \end{tabular}
 \end{table}
 
+\subsection{Original-language reports: extra ACMG criteria}
+
+Across 31 on-disk events from 17 original-language reports in eight
+languages, native full text granted ACMG criteria that the English-visible
+layer did not for 20 events spanning 11 alleles (Supplementary Table~S3).
+Four of those twenty events came from one Chinese series whose English
+abstract described genetic testing of the children and parents but did
+not list per-case HGVS strings or parental negatives~\cite{liu2023}. After
+excluding that series, sixteen events remained. A missense allele gained
+only PM6 and stayed evidence-insufficient~\cite{zhong2024}. A nonsense
+allele gained PVS1+PM6+PP4 and reached Pathogenic~\cite{han2022}. A
+Russian report whose English abstract named a \textit{MECP2} mutation but
+not the HGVS string gained PP4+PM1 for p.Asp156Glu and stayed
+evidence-insufficient~\cite{kovalenkova2025}. The matching Chinese report
+on that allele supplied parental negatives and gained PM6+PP4+PM1, still
+insufficient~\cite{hu2017}. A Korean cohort table that the English
+abstract did not itemize added the same p.Asp156Glu allele, plus T158M and
+R168X~\cite{park2002}. A Japanese cohort table likewise named D156E,
+T158M, and R168X as protein symbols without coding HGVS~\cite{kondo2002}.
+A French conference poster with no English abstract
+added R106W, R168X, and R255X~\cite{ghorbel2018}. A Turkish report whose
+English abstract omitted HGVS gained PP4+PM1 for
+p.Pro302Leu~\cite{aydin2015}. A truncating allele without parental testing
+gained PVS1+PP4 and also stayed insufficient~\cite{yang2018}. The same
+T170M nucleotide as in the Liu series was maternal in a separate Chinese
+report: the engine granted PP4 from the diagnosis and refused
+PM6~\cite{li2026}. Spanish and Portuguese reports were negative controls:
+their English abstracts already named \texttt{c.806del} and
+\texttt{c.763C}\textgreater\texttt{T}~\cite{cote2023,reiner2021}. A second
+Russian report on p.Asp156Glu was likewise a negative control: its English
+abstract already named \texttt{c.468C}\textgreater\texttt{G}~\cite{burlutskaya2021}.
+
+The missense example counts as a gain on the primary endpoint. The English
+abstract already supported PP4 (Rett diagnosis). The Chinese text stated
+that neither parent carried \texttt{c.710C}\textgreater\texttt{G}. The rule granted PM6 at
+Moderate strength, refused the authors' PS2+PM2+PP3 string, and left the
+combining class as evidence-insufficient because p.Pro237Arg (e2
+p.Pro225Arg) lies outside the VCEP methyl-CpG-binding and transcriptional
+repression residues used for PM1. ClinVar already classifies this allele
+as Pathogenic from other evidence. Extra criterion evidence is therefore
+not the same as a class flip and not the same as a new database
+assertion.
+
+Four events reached Pathogenic from an English-visible layer that was not
+scorable (three truncating alleles in the Liu series and R168X in Han et
+al.). Those alleles already have ClinVar Pathogenic records. Two further
+alleles, \texttt{c.913insT}~\cite{zhao2014} and
+\texttt{c.194delC}~\cite{ge2018}, were Pathogenic from the English abstract
+already (PVS1+PM6+PP4) and have no exact ClinVar VCV; \texttt{c.194delC} is
+adjacent to, not identical with, VCV001076185. No event was both an
+English-visible increment and a ClinVar-gap Pathogenic call. The Korean
+report's English figure legend already recorded patient-only occurrence
+of \texttt{c.455C}\textgreater\texttt{G}, so the native text added no criteria~\cite{kim2002}. One
+ClinVar expert-panel Benign missense (p.Pro376Ser) was blocked despite
+recovered parental negatives.
+
 \section{Discussion}
 
 Processing the Chinese translation alongside the English original added
@@ -387,6 +471,21 @@ or gene symbol for 10\% of entries, while the mean gold-standard field
 match remained unchanged. To our knowledge, this is the first
 quantitative estimate of the marginal contribution of cross-lingual
 evidence extraction to ACMG/AMP variant classification.
+
+The original-language case series asks a different question: whether
+native full text supplies ACMG criteria that the English-visible layer of
+the same PDF omits. In 20 of 31 events it did. The increment is extra
+granted criteria, not a required Pathogenic flip. The Zhong et al.\
+missense, which gained only PM6 and remained evidence-insufficient, is a
+positive result on that endpoint, as are the Russian, Korean, Japanese,
+and French reports that named a coding change only in the native layer. Four events
+did reach Pathogenic once the native text supplied HGVS and parental
+negatives, but those alleles are already Pathogenic in ClinVar. The two
+alleles without an exact ClinVar VCV were already Pathogenic from their
+English abstracts. A maternal T170M report shows why de novo cannot be
+inferred from the nucleotide alone. We did not recover a Pathogenic
+combining class that was missing from both the English-visible layer and
+ClinVar.
 
 The difference between evidence yield and field-level match partly
 reflects the composition of the gold standard. ClinGen/ClinVar assertions
@@ -423,20 +522,33 @@ publications, an English-only workflow may miss relevant reports.
 Processing translated versions of the same articles can reduce this
 language bias without requiring a separate literature search.
 
-This study has several limitations. The source corpus consists of English
-PMC articles paired with machine-generated Chinese translations, rather
-than articles originally written in Chinese. Field-level match was
-measured against only eight fields from the catalog, and the pipeline did
-not produce a final ACMG classification. The evaluation also used one LLM
-family and a sample of 30 entries, so performance may differ with other
-models and the estimated 10\% rescue rate remains uncertain.
+This study has several limitations. The ablation corpus consists of
+English PMC articles paired with machine-generated Chinese translations.
+The original-language case series uses published Rett/\textit{MECP2}
+reports in eight languages rather than translations, but it is still
+small (seventeen reports, 31 events), still dominated by Chinese sources,
+and scored with a frozen Stage-0 combining rule rather than blinded
+laboratory ACMG assignment. A hashed Japanese cohort supplies protein
+symbols without named-proband parental genotypes~\cite{kondo2002}; other
+owned Japanese files are a review or FOXG1/CDKL5 papers. Open-access
+German \textit{MECP2} point-variant case reports that could be hashed
+were not located (the 2002 Leipzig series is paywalled; congress slides
+redacted the variant). Four of the twenty extra-criterion events come from one case series, so event
+counts overstate the number of independent publications. The product extraction pipeline still does not
+write ACMG codes. Field-level match in the ablation was measured against
+only eight fields from the catalog. The evaluation also used one LLM
+family and a sample of 30 ablation entries, so performance may differ
+with other models and the estimated 10\% rescue rate remains uncertain.
 
 Cross-lingual dual-track evidence extraction
 contributes complementary, clinically relevant evidence for most variants
 and occasionally rescues failed extractions, without degrading average
-gold-standard performance. These findings support the use of multilingual
-processing in ACMG evidence curation, particularly when the supporting
-literature includes non-English articles.
+gold-standard performance. In original-language Rett/\textit{MECP2}
+reports, native full text can add ACMG criteria that English abstracts
+and figure legends omit, including a Moderate de novo criterion that does
+not by itself change combining class. These findings support the use of
+multilingual processing in ACMG evidence curation, particularly when the
+supporting literature includes non-English articles.
 
 \section*{Data Availability}
 
@@ -456,9 +568,17 @@ and \path{en_only_metrics.json}/\path{dual_track_metrics.json}
 statistics, Figures~\ref{fig:architecture}--\ref{fig:heatmap}, and
 Supplementary Figure~S1 from these reports; Supplementary Figure~S1
 additionally requires the per-run pipeline outputs, which are available
-from the authors on request because of their size. The source article
-corpus consists of PMC open-access articles, and the Chinese translations
+from the authors on request because of their size. Hashed source files
+and the frozen event table for the original-language Rett/\textit{MECP2}
+case series are in
+\path{benchmark/experiments/acmg_multilingual/reviewed/} and
+\path{benchmark/experiments/acmg_multilingual/direct_inference_cases.json};
+the command \texttt{check-allele-class-increment} reproduces
+Supplementary Table~S3. The source article corpus consists of PMC
+open-access articles, and the Chinese translations
 were machine-generated by the translation pipeline of the system. The
+original-language case reports are previously published journal
+articles. The
 gold-standard annotations were curated from ClinGen and ClinVar public
 data. External model-inference services (embedding, reranking, and
 document parsing) are separate deployments and are not required to
@@ -485,8 +605,10 @@ editing: A.B., C.D., E.F.]
 \section*{Ethics Declaration}
 
 This study analyzed only publicly available data: gene--disease validity
-assertions and variant classifications from ClinGen and ClinVar, and
-open-access articles from PubMed Central. No human participants were
+assertions and variant classifications from ClinGen and ClinVar,
+open-access articles from PubMed Central, and previously published
+original-language Rett/\textit{MECP2} reports in Chinese, Korean,
+Russian, Turkish, Spanish, Portuguese, French, and Japanese. No human participants were
 recruited, and no individual-level or identifiable human data were
 collected or processed. Institutional Review Board or Research Ethics
 Committee review and informed consent were therefore not required.
@@ -504,7 +626,7 @@ and editing the manuscript text. After using this tool/service, the
 authors reviewed and edited the content as needed and take full
 responsibility for the content of the publication.
 
-\begin{thebibliography}{12}
+\begin{thebibliography}{23}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 
@@ -588,6 +710,122 @@ Landrum MJ, et al.
   variation and human phenotype.
 \newblock \emph{Nucleic Acids Res}. 2014;42(D1):D980--D985.
 \newblock doi:10.1093/nar/gkt1113.
+
+\bibitem{mcknight2022}
+McKnight D, et al.
+\newblock Recommendations by the ClinGen Rett/Angelman-like expert panel
+  for gene-specific variant interpretation methods.
+\newblock \emph{Hum Mutat}. 2022;43(8):1097--1113.
+\newblock doi:10.1002/humu.24302.
+
+\bibitem{liu2023}
+Liu W, Jiang X, You Y, Qin Z, Han Q, Yuan Z.
+\newblock Gene mutation analysis of 5 children with Rett syndrome-like
+  phenotype.
+\newblock \emph{Chin J Birth Health Hered}. 2023.
+\newblock doi:10.13404/j.cnki.cjbhh.2023.04.008.
+
+\bibitem{zhong2024}
+Zhong S, Li C, Wang Y, Rong S, Liu L, Lin Y, Ao D.
+\newblock Clinical phenotype and genetic analysis of one child with Rett
+  syndrome caused by \textit{MECP2} gene variants.
+\newblock \emph{China Med Herald}. 2024.
+\newblock doi:10.20047/j.issn1673-7210.2024.05.45.
+
+\bibitem{han2022}
+Han J, Zhou X, Li X, Zhu H, Li J, Xu B.
+\newblock A case report of Rett syndrome.
+\newblock \emph{J Dalian Med Univ}. 2022;44(6):573--576.
+\newblock doi:10.11724/jdmu.2022.06.20.
+
+\bibitem{zhao2014}
+Zhao PW, He XL, Lin J, Wu GF, Yue X, Bi B, Hu JS, Liu ZS.
+\newblock Clinical features and \textit{MECP2} mutations in children with
+  Rett syndrome.
+\newblock \emph{Chin J Contemp Pediatr}. 2014;16(4):393--396.
+\newblock doi:10.7499/j.issn.1008-8830.2014.04.017.
+
+\bibitem{ge2018}
+Ge J, Lan X, Li H, Zhang R, Shen L.
+\newblock Report of a boy with Rett syndrome caused by a novel
+  \textit{MECP2} mutation and literature review.
+\newblock \emph{J Clin Pediatr}. 2018;36(11):824.
+\newblock doi:10.3969/j.issn.1000-3606.2018.11.005.
+
+\bibitem{kim2002}
+Kim JK, Ki CS, Kim JW.
+\newblock A case of Rett syndrome with \textit{MECP2} gene mutation.
+\newblock \emph{J Korean Pediatr Soc}. 2002;45:540--544.
+
+\bibitem{kovalenkova2025}
+Kovalenkova EA, Kovalenkova SA, Krutikov DS.
+\newblock Clinical case of Rett syndrome: the experience of observing an
+older preschooler.
+\newblock \emph{Pediatricheskaya Farmakologiya}. 2025;22(2):184--188.
+\newblock doi:10.15690/pf.v22i2.2872.
+
+\bibitem{burlutskaya2021}
+Burlutskaya AV, Ivanenko AS, Statova AV.
+\newblock Rett syndrome: a clinical case.
+\newblock \emph{Kubanskii Nauchnyi Meditsinskii Vestnik}. 2021;28(1):116--124.
+\newblock doi:10.25207/1608-6228-2021-28-1-116-124.
+
+\bibitem{yang2018}
+Yang ZL, Jin ZY.
+\newblock Rett syndrome: one case.
+\newblock \emph{J Med Sci Yanbian Univ}. 2018.
+\newblock doi:10.16068/j.1000-1824.2018.01.01.
+
+\bibitem{li2026}
+Li WM.
+\newblock A male infant with Rett syndrome caused by an \textit{MECP2}
+missense variant: one case.
+\newblock \emph{J Jilin Med Coll}. 2026.
+\newblock doi:10.3969/j.issn.1673-1492.2026.08.016.
+
+\bibitem{hu2017}
+Hu T, Li BX, Zhang ZH, Liu GS.
+\newblock Rett syndrome: one case and a novel \textit{MECP2} mutation.
+\newblock \emph{Clinical Focus}. 2017;32(11):995--997.
+\newblock doi:10.3969/j.issn.1004-583X.2017.11.020.
+
+\bibitem{aydin2015}
+Ayd{\i}n H, Kabaku\c{s} N, Erko\c{c}o\u{g}lu M.
+\newblock Association of atypical Rett syndrome and autism.
+\newblock \emph{Sakarya Med J}. 2015;5(4):228--231.
+\newblock doi:10.5505/sakaryamedj.2015.08760.
+
+\bibitem{cote2023}
+Cote-Orozco JE, Mart{\'\i}nez-C{\'o}rdoba N, Lince-Rivera I,
+C{\'o}rdoba-Gravini JL.
+\newblock Rett syndrome in a male infant with a pathogenic variant in
+\textit{MECP2}.
+\newblock \emph{Rev Mex Pediatr}. 2023;90(4):156--161.
+\newblock doi:10.35366/114766.
+
+\bibitem{reiner2021}
+Reiner GL, Vignardi D, Klingelfus FS, Nath M, Santos PSO.
+\newblock Rett syndrome --- rare case report.
+\newblock \emph{Arq Catarin Med}. 2021;50(2):363--367.
+\newblock doi:10.63845/c3q7eb11.
+
+\bibitem{ghorbel2018}
+Ghorbel R, Ghorbel R, Rouissi A, Triki C, Keskes Ammar L, Fakhfakh F.
+\newblock Genetic study of Rett syndrome in the Tunisian population:
+identification of three hotspot mutations in \textit{MECP2}.
+\newblock Poster presented at: 35th Congress of the Soci{\'e}t{\'e} Fran{\c{c}}aise
+d'Endocrinologie; 2018 Sep 12--15; Nancy, France.
+
+\bibitem{park2002}
+Park SJ, Hwang TG, Son BH, Kim CM.
+\newblock Mutational analysis of \textit{MECP2} gene in 34 Rett syndrome.
+\newblock \emph{J Korean Pediatr Soc}. 2002;45:1263--1272.
+
+\bibitem{kondo2002}
+Kondo I, Yamagata H.
+\newblock Mutation spectrum and genotype-phenotype correlation of \textit{MECP2}
+in patients with Rett syndrome.
+\newblock \emph{No To Hattatsu}. 2002;34:219--223.
 
 \end{thebibliography}
 

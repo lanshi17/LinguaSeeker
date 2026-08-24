@@ -21,7 +21,8 @@ We are pleased to submit our manuscript, "**Marginal Contribution of Cross-Lingu
 
 - The Chinese track contributed a mean of 3.62 evidence items per entry that the English track missed (+22.8%; p = 5.9 × 10⁻⁶), with 86.2% of entries gaining evidence.
 - Gains concentrated in clinically salient fields — phenotypes, age of onset, assay context — and the Chinese track rescued gold-standard fields (variant type, mode of inheritance, gene symbol) in 10% of entries, including one complete extraction failure.
-- Mean match against an eight-field English-centric gold standard was unchanged (3.57/8 in both modes; p = 1.0), demonstrating that multilingual processing adds evidence without degrading average accuracy, and that evidence-level yield is the more sensitive measure of multilingual value.
+- Mean match against an eight-field English-centric gold standard was unchanged (3.57/8 in both modes; p = 1.0).
+- In a complementary series of original-language Rett/MECP2 reports in eight languages, native full text added ACMG criteria versus the English-visible layer for 20 of 31 events (11 alleles), including a missense that gained only PM6 and remained evidence-insufficient.
 
 These results provide the first quantitative estimate of the marginal value of cross-lingual evidence extraction for variant classification and argue for multilingual processing in curation workflows, particularly for variants studied in non-English-speaking populations.
 

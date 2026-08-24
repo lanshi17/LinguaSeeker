@@ -7,7 +7,7 @@ import re
 
 from loguru import logger
 
-from src.utils.text_normalize import html_entity_aliases
+from src.utils.text_normalize import html_entity_aliases, take_markdown_escape
 
 from ..contracts import (
     ContentBlock,
@@ -29,8 +29,23 @@ _VALUE_GROUNDING_FIELDS = frozenset(
         "A.variant_hgvs_c",
         "A.variant_hgvs_p",
         "A.variant_hgvs_g",
+        "B.disease_diagnosis",
     }
 )
+_DISEASE_VALUE_ALIASES = {
+    "rett syndrome": (
+        "Rett综合征",
+        "Rett 综合征",
+        "синдром Ретта",
+        "syndrome de Rett",
+        "Síndrome de Rett",
+        "síndrome de Rett",
+    ),
+    "rett综合征": ("Rett syndrome", "Rett 综合征"),
+    "rett 综合征": ("Rett syndrome", "Rett综合征"),
+    "mecp2 duplication syndrome": ("MECP2 重复综合征", "MECP2重复综合征"),
+    "mecp2 重复综合征": ("MECP2 duplication syndrome",),
+}
 _MISSING_GROUP_VALUE = "__missing__"
 _FULLWIDTH_TO_HALFWIDTH = {full: half for full, half in zip(range(0xFF01, 0xFF5F), range(0x21, 0x7F))}
 _AA3_TO_1 = {
@@ -113,15 +128,32 @@ def _expand_html_entities(text: str) -> list[tuple[str, int, int]]:
                 parts.extend((char, index, end) for char in decoded)
                 index = end
                 continue
+        escaped = take_markdown_escape(text, index)
+        if escaped is not None:
+            char, next_index = escaped
+            parts.append((char, index, next_index))
+            index = next_index
+            continue
         parts.append((text[index], index, index + 1))
         index += 1
     return parts
 
 
+def _next_non_space(expanded: list[tuple[str, int, int]], index: int) -> str:
+    """Return the next non-space character after ``index``, or empty."""
+    for char, _start, _end in expanded[index + 1 :]:
+        if not char.isspace():
+            return char
+    return ""
+
+
 def _normalized_chars_with_spans(text: str) -> list[tuple[str, int, int]]:
     """Map text to grounding chars: unescape entities, fold fullwidth, lowercase.
 
-    Keep a space only when both neighbours are ASCII. Drop spaces next to CJK.
+    Keep a space only when both neighbours are ASCII. Drop spaces next to CJK,
+    including when a space *run* sits between ASCII and CJK (``threonine      が``).
+    Drop a hyphen that sits between two letters so OCR line-wraps
+    (``иссле-довании``) still match the unwrapped snippet.
     Each output char keeps the original [start, end) span so matches can be
     projected back onto HTML-entity source text.
     """
@@ -130,11 +162,15 @@ def _normalized_chars_with_spans(text: str) -> list[tuple[str, int, int]]:
     previous_kept = ""
     for index, (char, start, end) in enumerate(expanded):
         if char.isspace():
-            next_raw = expanded[index + 1][0] if index + 1 < len(expanded) else ""
+            next_raw = _next_non_space(expanded, index)
             if previous_kept and previous_kept.isascii() and next_raw.isascii():
                 if out and out[-1][0] != " ":
                     out.append((" ", start, end))
                     previous_kept = " "
+            continue
+        if char in {"-", "\u2010", "\u2011", "\u00ad"} and previous_kept.isalpha() and _next_non_space(
+            expanded, index
+        ).isalpha():
             continue
         mapped = chr(_FULLWIDTH_TO_HALFWIDTH.get(ord(char), ord(char))).lower()
         out.append((mapped, start, end))
@@ -481,14 +517,33 @@ class SourceGrounder:
     @classmethod
     def _grounding_aliases(cls, field_id: str, snippet: str) -> list[str]:
         """Return strict source-search aliases for known notation drift."""
-        if field_id != "A.variant_hgvs_p":
-            return []
         aliases: list[str] = []
 
         def _add(value: str) -> None:
             value = value.strip()
             if value and value != snippet and value not in aliases:
                 aliases.append(value)
+
+        if field_id == "A.variant_hgvs_c":
+            # OCR often drops '>' (`c．622C T` for `c.622C>T`).
+            _add(re.sub(r">", " ", snippet))
+            _add(re.sub(r"[\s>]", "", snippet))
+            compact = re.sub(r"\s+", "", snippet)
+            coding = re.fullmatch(r"c\.(\d+)([ACGT])>([ACGT])", compact, flags=re.IGNORECASE)
+            if coding is not None:
+                pos, ref, alt = coding.group(1), coding.group(2), coding.group(3)
+                _add(f"{pos} {ref}→{alt}")
+                _add(f"{pos} {ref}->{alt}")
+                _add(f"{pos} {ref}>{alt}")
+            return aliases
+
+        if field_id == "B.disease_diagnosis":
+            for alias in _DISEASE_VALUE_ALIASES.get(snippet.casefold(), ()):
+                _add(alias)
+            return aliases
+
+        if field_id != "A.variant_hgvs_p":
+            return []
 
         compact_parentheses = re.sub(r"\s*([()])\s*", r"\1", snippet)
         _add(compact_parentheses)

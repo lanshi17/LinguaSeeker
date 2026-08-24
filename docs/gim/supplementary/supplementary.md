@@ -157,3 +157,47 @@ The two modes were executed in separate batches at different times; between-batc
 | `en_only_metrics.json` | Per-entry final-output metrics and durations, EN-only mode |
 | `dual_track_metrics.json` | Per-entry final-output metrics and durations, dual-track mode |
 | `ablation_summary.txt` | Plain-text run summary |
+
+---
+
+## Supplementary Table S3: Original-language Rett/MECP2 events (English-visible vs native ACMG criteria)
+
+Twenty-eight on-disk events from sixteen hashed original-language reports (eight Chinese, two Korean, two Russian, one Turkish, one Spanish, one Portuguese, one French). The English-visible layer is the author English abstract plus English figure legends. Native codes come from a frozen rule over original-language full-text facts (PM6, PVS1, PP4, PM1). The extractor does not write ACMG codes. "n.s." means not scorable: no coding HGVS in the English-visible layer. Reproduction: `check-allele-class-increment`.
+
+| Source | Variant | EN codes | Native codes | Added | Class (EN→native) | ClinVar |
+|--------|---------|----------|--------------|-------|-------------------|---------|
+| rett_007 | c.509C>T | — | PM6+PP4 | PM6+PP4 | n.s.→insufficient | exact |
+| rett_007 | c.538C>T | — | PVS1+PM6+PP4 | PVS1+PM6+PP4 | n.s.→Pathogenic | alias |
+| rett_007 | c.842delG | — | PVS1+PM6+PP4 | PVS1+PM6+PP4 | n.s.→Pathogenic | alias |
+| rett_007 | c.844delC | — | PVS1+PM6+PP4 | PVS1+PM6+PP4 | n.s.→Pathogenic | alias |
+| rett_007 | Xq28 0.299 Mb dup | — | (excluded) | — | n.s.→excluded | n/a |
+| rett_011 | c.710C>G | PP4 | PM6+PP4 | PM6 | insufficient→insufficient | exact |
+| rett_006 | c.316C>T | PM6+PP4+PM1 | PM6+PP4+PM1 | — | insufficient | alias |
+| rett_006 | c.1126C>T | PM6+PP4 | PM6+PP4 | — | blocked | alias |
+| rett_006 | c.808C>T | PVS1+PM6+PP4 | PVS1+PM6+PP4 | — | Pathogenic | alias |
+| rett_006 | c.502C>T | PVS1+PM6+PP4 | PVS1+PM6+PP4 | — | Pathogenic | exact |
+| rett_006 | c.913insT | PVS1+PM6+PP4 | PVS1+PM6+PP4 | — | Pathogenic | unmatched |
+| rett_084 | c.194delC | PVS1+PM6+PP4 | PVS1+PM6+PP4 | — | Pathogenic | near |
+| rett_004 | c.502C>T | — | PVS1+PM6+PP4 | PVS1+PM6+PP4 | n.s.→Pathogenic | exact |
+| rett_066 | c.455C>G | PM6+PP4+PM1 | PM6+PP4+PM1 | — | insufficient | alias |
+| rett_069 | c.468C>G | — | PP4+PM1 | PP4+PM1 | n.s.→insufficient | alias |
+| rett_071 | c.468C>G | PP4+PM1 | PP4+PM1 | — | insufficient | alias |
+| rett_081 | c.509C>T | — | PP4 | PP4 | n.s.→blocked | exact |
+| rett_079 | c.622C>T | — | PVS1+PP4 | PVS1+PP4 | n.s.→insufficient | alias |
+
+**Summary.** Extra criteria in 20/31 events (11 alleles); 16/31 after excluding rett_007. Four events reached Pathogenic from an English-visible layer that was not scorable; those alleles already have ClinVar Pathogenic records. Two ClinVar-gap Pathogenic alleles (c.913insT, c.194delC) were already Pathogenic from the English abstract. No event added criteria *and* filled a ClinVar gap at Pathogenic. rett_011 gained only PM6 and remained evidence-insufficient. Russian rett_069 gained PP4+PM1 because the English abstract omitted HGVS; rett_071 already granted the same codes from its English abstract. Chinese rett_085 added PM6 on that D156E allele. Korean rett_067 Table 2 named D156E, T158M, and R168X after an English abstract that gave only mutation counts. Japanese rett_088 Table 2 named the same three alleles as protein symbols; D156E is absent from the English abstract. French rett_041 is a conference poster with no English abstract. rett_079 gained PVS1+PP4 without parental testing and stayed insufficient. rett_081 (maternal T170M) granted PP4 and refused PM6. p.Pro376Ser was blocked (ClinVar expert-panel Benign) despite recovered parental negatives.
+
+---
+
+## Supplementary Note S6: Frozen Stage-0 combining rule
+
+The original-language case series is Stage-0 analysis, not blinded Stage-1 ACMG assignment. Product extraction continues to leave `assigned_acmg_codes` empty.
+
+1. **Facts, not author codes.** The extractor recovers variant class, parental genotypes, parentage confirmation, diagnosis, and phasing. The rule reads those fields. It does not copy strings such as PS2+PM2+PP3 from the paper.
+2. **Granted codes.** PM6 requires a point variant, an affected proband, both parents tested and negative at the target, unconfirmed parentage, and inheritance that is not maternal or paternal (Moderate; never upgraded to Strong from a single report). PVS1 applies to nonsense or frameshift alleles with e2 protein position ≤ p.Glu472 (Very Strong; distal truncations are PVS1_Moderate and were not observed here). PP4 applies when the diagnosis is Rett syndrome or a compatible neurodevelopmental phenotype (Supporting). PM1 applies to missense residues in the methyl-CpG-binding domain (p.90–162) or the transcriptional repression domain hotspot (p.302–306). PS2 is never granted when parentage is unconfirmed. Population frequency (PM2) is not granted from historical paper annotations.
+3. **Combining.** Pathogenic combinations are tested first. One Very Strong plus one Moderate is Likely Pathogenic, not Pathogenic; adding one Supporting reaches Pathogenic. Missense alleles without PVS1 therefore often remain evidence-insufficient even after PM6 (for example, PM6+PP4, or PM1+PM6+PP4).
+4. **Conflicts.** ClinVar expert-panel Benign, maternal inheritance, and CNV or unmapped intervals block classification. rett_081 is the on-disk maternal anti-example for T170M.
+5. **English-visible masking.** Without `A.variant_hgvs_c` in the English-visible layer, that layer is not scorable. After HGVS is present, variant class and VCEP residue stay on the allele. Parental and diagnosis fields are masked unless they appear in the English-visible layer.
+6. **Transcripts.** MECP2 events were mapped to the Rett VCEP e2 transcript `NM_004992.3`. Paper HGVS on `NM_001110792.2` (e1) was not treated as a separate allele.
+
+Hashed sources: `benchmark/experiments/acmg_multilingual/reviewed/`. Event table: `benchmark/experiments/acmg_multilingual/direct_inference_cases.json`. CLI: `check-allele-class-increment`.

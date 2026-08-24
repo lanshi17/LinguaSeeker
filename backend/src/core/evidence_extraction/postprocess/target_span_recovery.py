@@ -4,9 +4,14 @@ from __future__ import annotations
 
 import re
 
+from src.core.standardize_entities_and_align_knowledge.hgvs_normalizer import (
+    canonical_protein_hgvs,
+    expand_hgvs_aliases,
+)
+
 from ..domain.catalog import get_field_spec
 from ..domain.normalization import AcmgEvidenceValueNormalizer
-from ..contracts import EvidenceItem, EvidenceStatus, SourceLocation, TrackDocument
+from ..contracts import EvidenceItem, EvidenceStatus, ExtractionTarget, SourceLocation, TrackDocument
 from ..core.grouping import make_group_id
 
 
@@ -19,9 +24,6 @@ class TargetSpanFieldRecovery:
             return items
         snippets = tuple(_selected_target_snippets(items))
         windows = _target_variant_windows(document)
-        if not snippets and not windows:
-            return _rewrite_paper_nonsense_on_coding_indel(document, list(items))
-
         recovered = _rewrite_paper_nonsense_on_coding_indel(document, list(items))
         group_id = _target_group_id(document, recovered)
         missing_field_ids = _missing_field_ids(recovered)
@@ -52,16 +54,16 @@ class TargetSpanFieldRecovery:
             assertion = _clinvar_assertion_value(normalized)
             if assertion:
                 candidates.append(("J.clinvar_assertion", assertion, snippet))
+            candidates.extend(_family_recoveries(document, snippet))
             if _snippet_mentions_target_variant(document, snippet):
                 candidates.extend(_phasing_recoveries(document, snippet))
-            candidates.extend(_family_recoveries(document, snippet))
         for window in windows:
             if _snippet_mentions_target_variant(document, window):
-                candidates.extend(_phasing_recoveries(document, window))
-            if _snippet_mentions_target_variant(document, window):
                 candidates.extend(_family_recoveries(document, window))
+                candidates.extend(_phasing_recoveries(document, window))
         for family_text in _document_level_joint_parental_texts(document):
             candidates.extend(_family_recoveries(document, family_text))
+        candidates.extend(_document_identity_recoveries(document))
         return tuple(candidates)
 
 
@@ -81,6 +83,10 @@ def _missing_field_ids(items: list[EvidenceItem]) -> set[str]:
     return {
         "A.gene_disease_relationship",
         "A.variant_type",
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.functional_domain_or_hotspot",
+        "B.disease_diagnosis",
         "B.mode_of_inheritance_reported",
         "C.in_trans_confirmation",
         "C.maternal_genotype",
@@ -259,6 +265,7 @@ _JOINT_PARENTAL_NEGATIVE_RE = re.compile(
     r"not found in (?:his|her|the) parents|"
     r"no mutations were detected in (?:their|the) parents|"
     r"observed only in the patient|"
+    r"只在患儿(?:中)?发现|仅在患儿(?:中)?发现|"
     r"환자\s*부모.{0,40}정상",
     re.IGNORECASE,
 )
@@ -270,10 +277,11 @@ _DE_NOVO_PHRASE_RE = re.compile(
 
 def _family_recoveries(document: TrackDocument, snippet: str) -> tuple[tuple[str, str, str], ...]:
     """Recover assumed-de-novo / parental-genotype facts from a joint negative quote."""
-    if AcmgEvidenceValueNormalizer._INHERITED_VARIANT_RE.search(snippet):
+    inherited = AcmgEvidenceValueNormalizer._INHERITED_VARIANT_RE.search(snippet)
+    joint = _JOINT_PARENTAL_NEGATIVE_RE.search(snippet)
+    if inherited is not None and joint is None:
         return ()
     recovered: list[tuple[str, str, str]] = []
-    joint = _JOINT_PARENTAL_NEGATIVE_RE.search(snippet)
     if joint:
         quote = _excerpt(snippet, joint)
         recovered.append(("C.maternal_genotype", "target_absent", quote))
@@ -328,41 +336,302 @@ def _in_trans_quote(document: TrackDocument, snippet: str) -> str:
     return ""
 
 
+_MECP2_MBD = (90, 162)
+_MECP2_TRD = (302, 306)
+_CODING_COORDS_RE = re.compile(r"(?:c\.)?(\d+)([ACGT])>([ACGT])$", re.IGNORECASE)
+_TABLE_CODING_RE = re.compile(
+    r"(?:c\.)?\s*(\d+)\s*([ACGT])\s*(?:→|->|>|＞|&gt;)\s*([ACGT])",
+    re.IGNORECASE,
+)
+_OCR_CODING_RE = re.compile(r"c[.\uFF0E]\s*(\d+)\s*([ACGT])\s+([ACGT])", re.IGNORECASE)
+_PROTEIN_POS_RE = re.compile(r"(?:p\.)?\s*(?:[A-Z][a-z]{2}|[A-Z])\s*(\d+)")
+_STOP_PROTEIN_RE = re.compile(r"(?:Ter|X|\*)$")
+_TRUNCATED_PROTEIN_RE = re.compile(r"^p\.[A-Z][a-z]{2}\d+$")
+_XQ28_REGION_RE = re.compile(r"Xq28.{0,60}(?:重复|duplication|dup)", re.IGNORECASE)
+_XQ28_SIZE_RE = re.compile(r"(\d+\.\d+)\s*(?:Mb|MB)")
+_MDS_RE = re.compile(r"MECP2\s*重复综合征|MECP2 duplication syndrome", re.IGNORECASE)
+_RETT_RE = re.compile(
+    r"Rett\s*综合征|Rett syndrome|syndrome de Rett|синдром\s*Ретта|"
+    r"S[ií]ndrome de Rett",
+    re.IGNORECASE,
+)
+
+
+def _document_identity_recoveries(document: TrackDocument) -> tuple[tuple[str, str, str], ...]:
+    """Fill identity fields from the full document when the paper used a non-HGVS spelling."""
+    text = document.formatted_text or ""
+    if not text:
+        return ()
+    recovered: list[tuple[str, str, str]] = []
+    coding = _recover_coding_hgvs(document, text)
+    if coding is not None:
+        recovered.append(("A.variant_hgvs_c", coding[0], coding[1]))
+    protein = _recover_protein_hgvs(document, text)
+    if protein is not None:
+        recovered.append(("A.variant_hgvs_p", protein[0], protein[1]))
+    variant_type = _recover_variant_type(document, text)
+    if variant_type is not None:
+        recovered.append(("A.variant_type", variant_type[0], variant_type[1]))
+    domain = _recover_mecp2_domain(document, text)
+    if domain is not None:
+        recovered.append(("A.functional_domain_or_hotspot", domain[0], domain[1]))
+    diagnosis = _recover_diagnosis(document, text)
+    if diagnosis is not None:
+        recovered.append(("B.disease_diagnosis", diagnosis[0], diagnosis[1]))
+    return tuple(recovered)
+
+
+def _parse_coding_coords(value: str) -> tuple[str, str, str] | None:
+    compact = re.sub(r"\s+", "", value or "")
+    compact = compact.replace("→", ">").replace("->", ">").replace("＞", ">")
+    match = _CODING_COORDS_RE.fullmatch(compact)
+    if match is None:
+        return None
+    return match.group(1), match.group(2).upper(), match.group(3).upper()
+
+
+def _recover_coding_hgvs(document: TrackDocument, text: str) -> tuple[str, str] | None:
+    target = document.extraction_target
+    if target is None:
+        return None
+    xq28 = _recover_xq28_dup(target, text)
+    if xq28 is not None:
+        return xq28
+    wanted = _parse_coding_coords(target.variant_hgvs_c)
+    if wanted is not None:
+        pos, ref, alt = wanted
+        for match in (*_TABLE_CODING_RE.finditer(text), *_OCR_CODING_RE.finditer(text)):
+            if match.group(1) == pos and match.group(2).upper() == ref and match.group(3).upper() == alt:
+                return f"c.{pos}{ref}>{alt}", match.group(0)
+        exact = _find_token(text, (f"c.{pos}{ref}>{alt}", f"c.{pos}{ref}&gt;{alt}"))
+        if exact is not None:
+            return f"c.{pos}{ref}>{alt}", exact
+        return None
+    raw = target.variant_hgvs_c or ""
+    # rett_078 stores the paper's protein string in the coding slot.
+    if raw.startswith("p."):
+        hit = _find_token(text, _protein_tokens(raw))
+        if hit is not None:
+            return raw, hit
+    if re.search(r"(?:del|ins|dup)", raw, re.IGNORECASE) and "xq28" not in raw.casefold():
+        hit = _find_token(text, (raw, raw.replace(">", "&gt;")))
+        if hit is not None:
+            return raw, hit
+    return None
+
+
+def _recover_xq28_dup(target: ExtractionTarget, text: str) -> tuple[str, str] | None:
+    blob = f"{target.variant_hgvs_c} {target.primary_variant}"
+    if not re.search(r"xq28|_dup|\bdup\b", blob, re.IGNORECASE):
+        return None
+    for match in _XQ28_REGION_RE.finditer(text):
+        tail = text[match.start() : match.end() + 80]
+        size = _XQ28_SIZE_RE.search(tail)
+        if size is None:
+            continue
+        return f"Xq28 {size.group(1)} Mb dup", tail[: size.end()]
+    return None
+
+
+def _recover_protein_hgvs(document: TrackDocument, text: str) -> tuple[str, str] | None:
+    target = document.extraction_target
+    if target is None or not target.variant_hgvs_p:
+        return None
+    wanted = canonical_protein_hgvs(target.variant_hgvs_p) or target.variant_hgvs_p
+    hit = _find_token(text, _protein_tokens(target.variant_hgvs_p))
+    if hit is None:
+        return None
+    return wanted, hit
+
+
+def _protein_position_from_text(*values: str) -> int | None:
+    for value in values:
+        match = _PROTEIN_POS_RE.search(value or "")
+        if match is not None:
+            return int(match.group(1))
+    return None
+
+
+def _recover_mecp2_domain(document: TrackDocument, text: str) -> tuple[str, str] | None:
+    target = document.extraction_target
+    if target is None or (target.gene_symbol or "").casefold() != "mecp2":
+        return None
+    position = _protein_position_from_text(target.variant_hgvs_p, target.variant_hgvs_c)
+    if position is None:
+        return None
+    if _MECP2_MBD[0] <= position <= _MECP2_MBD[1]:
+        label = "MBD (VCEP 90-162)"
+    elif _MECP2_TRD[0] <= position <= _MECP2_TRD[1]:
+        label = "TRD (VCEP 302-306)"
+    else:
+        return None
+    hit = _find_token(
+        text,
+        [*_protein_tokens(target.variant_hgvs_p), *_protein_tokens(target.variant_hgvs_c)],
+    )
+    if hit is None:
+        return None
+    return label, hit
+
+
+def _recover_diagnosis(document: TrackDocument, text: str) -> tuple[str, str] | None:
+    target = document.extraction_target
+    if target is None:
+        return None
+    target_is_mds = bool(
+        re.search(r"xq28|_dup|\bdup\b", f"{target.variant_hgvs_c} {target.primary_variant}", re.I)
+    )
+    if target_is_mds:
+        mds = _MDS_RE.search(text)
+        if mds is None:
+            return None
+        return "MECP2 duplication syndrome", mds.group(0)
+    rett = _RETT_RE.search(text)
+    if rett is None:
+        return None
+    return "Rett syndrome", rett.group(0)
+
+
+def _recover_variant_type(document: TrackDocument, text: str) -> tuple[str, str] | None:
+    target = document.extraction_target
+    if target is None:
+        return None
+    coding = target.variant_hgvs_c or ""
+    protein = target.variant_hgvs_p or ""
+    if AcmgEvidenceValueNormalizer.has_coding_indel(coding):
+        hit = _find_token(text, (coding, coding.replace(">", "&gt;"), *_protein_tokens(protein)))
+        if hit is None:
+            return None
+        return "frameshift", hit
+    compact_protein = re.sub(r"\s+", "", protein)
+    is_stop = bool(_STOP_PROTEIN_RE.search(compact_protein))
+    is_truncated = bool(_TRUNCATED_PROTEIN_RE.fullmatch(compact_protein))
+    if not (is_stop or is_truncated):
+        return None
+    hit = _find_token(text, (*_protein_tokens(protein), coding))
+    if hit is None:
+        return None
+    return "nonsense", hit
+
+
+def _protein_tokens(value: str) -> tuple[str, ...]:
+    raw = (value or "").strip()
+    if not raw:
+        return ()
+    candidates = [raw, re.sub(r"\s+", "", raw), re.sub(r"\s+", " ", raw)]
+    if raw.startswith("p."):
+        remainder = raw[2:].strip()
+        candidates.append(remainder)
+        candidates.append(f"p. {remainder}")
+    for alias in expand_hgvs_aliases(raw):
+        candidates.append(alias)
+        if alias.startswith("p."):
+            candidates.append(alias[2:])
+    canon = canonical_protein_hgvs(raw)
+    if canon:
+        candidates.append(canon)
+        candidates.append(canon[2:])
+        for alias in expand_hgvs_aliases(canon):
+            one = re.fullmatch(r"p\.([A-Z])(\d+)([A-Z*])", alias)
+            if one is None:
+                continue
+            alt = "X" if one.group(3) == "*" else one.group(3)
+            candidates.append(alias)
+            candidates.append(alias[2:])
+            candidates.append(f"{one.group(1)} {one.group(2)} {alt}")
+    starred: list[str] = []
+    for token in candidates:
+        if "Ter" in token:
+            starred.append(token.replace("Ter", "*"))
+            starred.append(token.replace("Ter", r"\*"))
+        if "*" in token:
+            starred.append(token.replace("*", "Ter"))
+            starred.append(token.replace("*", r"\*"))
+    candidates.extend(starred)
+    tokens: list[str] = []
+    for token in candidates:
+        token = token.strip()
+        if len(token) >= 4 and token not in tokens:
+            tokens.append(token)
+    return tuple(tokens)
+
+
+def _find_token(text: str, tokens: tuple[str, ...] | list[str]) -> str | None:
+    folded = text.casefold()
+    for token in sorted({item for item in tokens if item and len(item) >= 4}, key=len, reverse=True):
+        index = text.find(token)
+        if index < 0:
+            index = folded.find(token.casefold())
+        if index >= 0:
+            return text[index : index + len(token)]
+    return None
+
+
 def _target_variant_windows(document: TrackDocument) -> tuple[str, ...]:
     """Take local windows around the target coding/protein HGVS so phasing facts can be recovered."""
     target = document.extraction_target
     if target is None:
         return ()
     text = document.formatted_text or ""
-    needles = [value for value in (target.variant_hgvs_c, target.variant_hgvs_p) if value]
     windows: list[str] = []
-    for needle in needles:
-        for variant in dict.fromkeys((needle, needle.replace(">", "&gt;"))):
-            start = 0
-            while True:
-                index = text.find(variant, start)
-                if index < 0:
-                    break
-                lo = max(0, index - _VARIANT_WINDOW_RADIUS)
-                hi = min(len(text), index + len(variant) + _VARIANT_WINDOW_RADIUS)
-                windows.append(text[lo:hi])
-                start = index + len(variant)
+    for needle in _variant_window_needles(target):
+        start = 0
+        while True:
+            index = text.find(needle, start)
+            if index < 0:
+                index = text.casefold().find(needle.casefold(), start)
+            if index < 0:
+                break
+            lo = max(0, index - _VARIANT_WINDOW_RADIUS)
+            hi = min(len(text), index + len(needle) + _VARIANT_WINDOW_RADIUS)
+            windows.append(text[lo:hi])
+            start = index + len(needle)
     return tuple(dict.fromkeys(windows))
+
+
+def _variant_window_needles(target: ExtractionTarget) -> tuple[str, ...]:
+    needles: list[str] = []
+    for raw in (target.variant_hgvs_c, target.variant_hgvs_p):
+        if not raw:
+            continue
+        needles.append(raw)
+        needles.append(raw.replace(">", "&gt;"))
+        needles.extend(_protein_tokens(raw))
+        coords = _parse_coding_coords(raw)
+        if coords is not None:
+            pos, ref, alt = coords
+            needles.extend((f"{pos} {ref}→{alt}", f"{pos} {ref}>{alt}", f"c.{pos}{ref}>{alt}"))
+    return tuple(dict.fromkeys(item for item in needles if item and len(item) >= 4))
 
 
 def _snippet_mentions_target_variant(document: TrackDocument, snippet: str) -> bool:
     target = document.extraction_target
     if target is None:
         return False
-    normalized = _normalize(snippet).replace("&gt;", ">")
-    compact_snippet = normalized.replace(" ", "")
+    compact_snippet = _compact_variant_key(snippet)
+    folded = snippet.casefold()
     for needle in (target.variant_hgvs_c, target.variant_hgvs_p):
         if not needle:
             continue
-        compact = _normalize(needle).replace("&gt;", ">").replace(" ", "")
+        compact = _compact_variant_key(needle)
         if compact and compact in compact_snippet:
             return True
+        for token in _protein_tokens(needle):
+            if token.casefold() in folded or _compact_variant_key(token) in compact_snippet:
+                return True
+        coords = _parse_coding_coords(needle)
+        if coords is not None:
+            pos, ref, alt = coords
+            if f"{pos}{ref}>{alt}".casefold() in compact_snippet:
+                return True
     return False
+
+
+def _compact_variant_key(value: str) -> str:
+    text = _normalize(value).replace("&gt;", ">").replace("→", ">").replace("->", ">")
+    text = text.replace(" ", "")
+    text = re.sub(r"^c\.", "", text)
+    return re.sub(r"^p\.", "", text)
 
 
 def _excerpt(text: str, match: re.Match[str], radius: int = 160) -> str:

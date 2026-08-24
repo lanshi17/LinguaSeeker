@@ -3,8 +3,8 @@
 > **Status:** submission-ready draft — statistics reproduced, references verified against Crossref/arXiv, figures renumbered in citation order, GIM-required statements added
 > **LaTeX version:** `latex/main.tex` + `latex/supplementary.tex` (elsarticle)。2026-08-13 起 `main.tex` 为经英文润色的投稿正文(摘要 198 词,编译 15 页无 overfull);本 markdown 保留为内容/数据参考,后续文字修改以 LaTeX 为准
 > **Target journal:** Genetics in Medicine (GIM), Original Research Article
-> **Format check:** abstract 188 words (limit 200); main text ~2,240 words (limit 4,000); display items 5 (4 figures + 1 table, limit 5); references 12 (limit 40, numerical style)
-> **Last updated:** 2026-08-13
+> **Format check:** abstract ≤200 words (limit 200); main text <4,000 words (limit 4,000); display items 5 (4 figures + 1 table, limit 5); references 19 (limit 40, numerical style). Case-series table is Supplementary Table S3.
+> **Last updated:** 2026-08-20
 
 ---
 
@@ -24,13 +24,13 @@ Working title (alternative): Lingua Seeker: Quantifying the Value of Multilingua
 
 ## Abstract
 
-**Purpose:** ACMG/AMP variant classification depends on manual evidence curation from an overwhelmingly English-language literature, leaving non-English evidence underused. We quantified the marginal contribution of cross-lingual (English + Chinese) evidence extraction over English-only processing in a controlled ablation study.
+**Purpose:** ACMG/AMP variant classification relies on manual evidence curation from a predominantly English-language literature, leaving non-English evidence underused. We quantified the marginal contribution of cross-lingual evidence extraction beyond English-only processing.
 
-**Methods:** We developed Lingua Seeker, a multi-agent system with a four-phase pipeline (acquisition, cross-lingual dual-track extraction, standardization, expert review). Thirty ClinGen/ClinVar-curated variant entries, each pairing an English article with a system-generated Chinese translation, were processed in English-only and dual-track modes and compared for evidence-item yield and match against eight gold-standard ACMG evidence fields.
+**Methods:** Lingua Seeker, a multi-agent four-phase pipeline, processed thirty ClinGen/ClinVar-curated variant entries in English-only and dual-track (English plus Chinese translation) modes. A complementary series of original-language Rett/MECP2 reports in eight languages compared English-visible text with native full text using a frozen ACMG combining rule.
 
-**Results:** The Chinese track added a mean of 3.62 evidence items per entry missed by the English track (+22.8% over the English-track mean of 15.9; p = 5.9 × 10⁻⁶); 25/29 entries (86.2%) gained items and 13/29 (44.8%) gained Chinese-track-only fields. Gold-standard field match was unchanged (mean 3.57/8 in both modes; p = 1.0): three entries gained ≥1 field (variant type, mode of inheritance, gene symbol), two had a net loss, one swapped fields.
+**Results:** The Chinese track contributed a mean of 3.62 evidence items per entry that English missed (+22.8%; p = 5.9 × 10⁻⁶); 25/29 entries (86.2%) gained items. Gold-standard field match was unchanged (3.57/8; p = 1.0). Native full text added ACMG criteria for 20 of 31 case-series events (11 alleles).
 
-**Conclusion:** Cross-lingual processing adds complementary, clinically relevant evidence for most variants without degrading average accuracy. Evidence-level yield is more sensitive to multilingual value than English-centric field match.
+**Conclusion:** Cross-lingual processing adds complementary, clinically relevant evidence without degrading average field-match accuracy. Extra ACMG criteria recovered from original-language full text are a more direct measure of multilingual contribution than match against an English-centric gold standard.
 
 **Keywords:** ACMG/AMP classification; variant curation; multilingual NLP; large language models; multi-agent systems
 
@@ -42,7 +42,7 @@ The ACMG/AMP guidelines define a structured evidence framework for variant patho
 
 Large language models (LLMs) with multi-agent orchestration offer a path toward automated, language-agnostic evidence curation.8 However, the clinical value of processing documents in their original language alongside English translations — as opposed to English-only processing — has not been quantified. We addressed this gap with a controlled ablation study: the same 30 variant entries were processed twice, once with English-only evidence extraction and once with dual-track extraction (original English article + machine-translated Chinese version), and the outputs were compared for evidence yield and for match against ClinGen/ClinVar gold-standard ACMG evidence fields.
 
-**Contributions.** (1) A multi-agent, cross-lingual evidence curation system (Lingua Seeker) covering a four-phase pipeline from literature acquisition to expert review; (2) an ablation methodology separating evidence-item yield from gold-standard field match; (3) quantitative evidence that multilingual processing adds complementary evidence for most entries, with occasional field-level classification benefit, and no average degradation.
+**Contributions.** (1) A multi-agent, cross-lingual evidence curation system (Lingua Seeker) covering a four-phase pipeline from literature acquisition to expert review; (2) an ablation methodology separating evidence-item yield from gold-standard field match; (3) a complementary original-language Rett/MECP2 case series scoring extra ACMG criteria versus the English-visible layer of the same PDF.
 
 ## 2. Materials and Methods
 
@@ -81,6 +81,10 @@ Per-entry ZH-only item gains (29 valid entries; nonnegative by construction, wit
 ### 2.7 LLM configuration
 
 General-purpose, reasoning, and multimodal LLM roles were configured independently and routed by task (extraction/translation vs. verification vs. figure/pedigree parsing). All models were accessed through OpenAI-compatible endpoints; no model was shared across roles. The specific model identifiers are deployment-configurable and listed in the code repository configuration.
+
+### 2.8 Original-language Rett/MECP2 case series
+
+The ablation corpus uses English PMC articles and machine-generated Chinese translations. To test whether original non-English full text supplies ACMG criteria that English abstracts omit, we scored sixteen published Rett/MECP2 reports (eight Chinese, two Korean, two Russian, one Turkish, one Spanish, one Portuguese, one French) digitized as hashed reviewed sources. Twenty-eight on-disk events entered the analysis. The English-visible layer is the author English abstract plus English figure legends; the native layer is original-language full text. A frozen rule granted PM6, PVS1, PP4, or PM1 and combined them under Rett/Angelman-like VCEP specifications. The extractor does not write ACMG codes; author self-codes are not inherited; PS2 is never granted without confirmed parentage. The primary endpoint is extra granted criteria (native minus English-visible). See Supplementary Table S3 and Note S6.
 
 ## 3. Results
 
@@ -121,9 +125,15 @@ Lost fields: **fused_022** (GJB2) lost disease diagnosis; **fused_028** (HBB) lo
 
 **Table 1.** Ablation outcomes for 30 ClinGen/ClinVar entries processed in English-only vs. dual-track mode. Track-level items are measured within dual-track runs (English-track items vs. ZH-only items); field matches are measured against the eight-field gold standard per mode. Gain/loss rows count entries with at least one changed field; the swap entry (fused_016) appears in both counts.
 
+### 3.5 Original-language reports: extra ACMG criteria
+
+Across 31 on-disk events from 17 original-language reports in eight languages, native full text granted ACMG criteria that the English-visible layer did not for 20 events (11 alleles; Supplementary Table S3). Four of those twenty events came from one Chinese series (Liu et al.). After excluding that series, sixteen events remained, including Zhong et al. c.710C>G (+PM6, still insufficient), a Russian p.Asp156Glu report whose English abstract omitted HGVS (+PP4+PM1, still insufficient), a Chinese report on the same allele that added PM6, Korean and Japanese cohort tables that named D156E/T158M/R168X after English abstracts that gave protein counts or omitted D156E, a French poster with no English abstract (R106W/R168X/R255X), a truncating allele without parental testing (+PVS1+PP4, still insufficient), and a maternal T170M anti-example (PP4 granted, PM6 refused). Four events reached Pathogenic from an English-visible layer that was not scorable; those alleles already have ClinVar Pathogenic records. Two ClinVar-gap Pathogenic alleles (c.913insT, c.194delC) were already Pathogenic from their English abstracts. No event was both an English-visible increment and a ClinVar-gap Pathogenic call.
+
 ## 4. Discussion
 
-**Principal finding.** Processing the Chinese translation alongside the English original added evidence for 86% of entries (+22.8% unique evidence items on average) and rescued specific ACMG fields — variant type, mode of inheritance, gene symbol — for 10% of entries, with no change in mean gold-standard field match. This is the first quantitative estimate, to our knowledge, of the marginal contribution of cross-lingual evidence extraction to ACMG/AMP variant classification.
+**Principal finding.** Processing the Chinese translation alongside the English original added evidence for 86% of entries (+22.8% unique evidence items on average) and rescued specific ACMG fields (variant type, mode of inheritance, gene symbol) for 10% of entries, with no change in mean gold-standard field match. This is the first quantitative estimate, to our knowledge, of the marginal contribution of cross-lingual evidence extraction to ACMG/AMP variant classification.
+
+**Original-language criteria.** Native full text added ACMG criteria versus the English-visible layer for 20 of 31 events. The increment is extra granted criteria, not a required Pathogenic flip. Zhong et al. (PM6 only, still evidence-insufficient) and reports whose English-visible layer omitted HGVS (Russian D156E, Turkish P302L, Korean Table 2, Japanese Table 2, French poster) are gains on that endpoint. We did not recover a Pathogenic combining class that was missing from both the English-visible layer and ClinVar.
 
 **Why field match lags evidence yield.** The gold standard itself is English-centric: ClinGen/ClinVar assertions and their supporting evidence are derived from English literature. Fields such as clinical phenotypes and age of onset, where the Chinese track contributed most, are not part of the eight-field match set — the match set is dominated by fields (gene symbol, HGVS) that are language-invariant. The evidence-level analysis is therefore the more sensitive measure of multilingual value; field-level benefit in an English-centric gold standard is an underestimate of clinical utility for non-English literature.
 
@@ -133,13 +143,13 @@ Lost fields: **fused_022** (GJB2) lost disease diagnosis; **fused_028** (HBB) lo
 
 **Fairness implications.** For variants studied primarily in Chinese-language literature — a substantial share of variants in Chinese populations — English-only curation may systematically under-call evidence. Multilingual processing is a practical mitigation that operates on the same article corpus (translation) without requiring new literature discovery.
 
-**Limitations.** (1) The source corpus is English PMC articles with machine-generated Chinese translations; we did not test native Chinese articles, where the benefit is expected to be larger. (2) Field match is measured against an eight-field subset of the catalog. (3) No classification-level endpoint (final ACMG category) was evaluated — the pipeline stops at evidence extraction by design. (4) Single-LLM-family evaluation; results may vary across model backends. (5) Sample size (30 entries) is small; the entry-level rescue rate (10%) has wide confidence bounds.
+**Limitations.** (1) The ablation corpus is English PMC articles with machine-generated Chinese translations. (2) The original-language Rett/MECP2 series is small (seventeen reports, 31 events), still Chinese-dominant, and scored with a frozen Stage-0 combining rule rather than blinded laboratory ACMG assignment; 4/20 extra-criterion events come from one series. A hashed Japanese cohort supplies protein symbols without named-proband parental genotypes; open-access German MECP2 point-variant case reports were not hashed. (3) Product extraction still does not write ACMG codes. (4) Field match is measured against only eight fields. (5) Single-LLM-family evaluation and n = 30 ablation entries; the 10% rescue rate has wide confidence bounds.
 
-**Conclusion.** Cross-lingual dual-track evidence extraction contributes complementary, clinically relevant evidence for most variants and occasionally rescues failed extractions, without degrading average gold-standard performance. Multilingual processing deserves a place in ACMG evidence curation workflows, particularly for variants with non-English evidence bases.
+**Conclusion.** Cross-lingual dual-track evidence extraction contributes complementary, clinically relevant evidence for most variants and occasionally rescues failed extractions, without degrading average gold-standard performance. In original-language Rett/MECP2 reports, native full text can add ACMG criteria that English abstracts and figure legends omit, including a Moderate de novo criterion that does not by itself change combining class. Multilingual processing deserves a place in ACMG evidence curation workflows, particularly for variants with non-English evidence bases.
 
 ## Data Availability
 
-The Lingua Seeker source code is available at https://github.com/lanshi17/LinguaSeeker (branch `feature/gim-submission`). All ablation reports and per-entry results underlying the reported statistics are committed in the repository under `docs/gim/supplementary/reports/` (mirrored from the runner output directory `benchmark/data/reports/nar_ablation/`): `ablation_report.json` (field-match ablation), `multilingual_contribution_report.json` (evidence-item yield), and `en_only_metrics.json`/`dual_track_metrics.json` (per-mode final outputs and wall-clock durations). The analysis scripts (`benchmark/analysis/gim_statistics.py`, `benchmark/analysis/generate_gim_figures.py`, `benchmark/analysis/generate_gim_architecture.py`) reproduce all statistics, Figures 1–4, and Supplementary Figure S1 from these reports; Supplementary Figure S1 additionally requires the per-run pipeline outputs, which are available from the authors on request due to size. The source article corpus consists of PMC open-access articles; Chinese translations were machine-generated by the system's translation pipeline. Gold-standard annotations were curated from ClinGen and ClinVar public data. External model-inference services (embedding, reranking, document parsing) are separate deployments and are not required to reproduce the reported statistics.
+The Lingua Seeker source code is available at https://github.com/lanshi17/LinguaSeeker (branch `feature/gim-submission`). All ablation reports and per-entry results underlying the reported statistics are committed in the repository under `docs/gim/supplementary/reports/` (mirrored from the runner output directory `benchmark/data/reports/nar_ablation/`): `ablation_report.json` (field-match ablation), `multilingual_contribution_report.json` (evidence-item yield), and `en_only_metrics.json`/`dual_track_metrics.json` (per-mode final outputs and wall-clock durations). The analysis scripts (`benchmark/analysis/gim_statistics.py`, `benchmark/analysis/generate_gim_figures.py`, `benchmark/analysis/generate_gim_architecture.py`) reproduce all statistics, Figures 1–4, and Supplementary Figure S1 from these reports; Supplementary Figure S1 additionally requires the per-run pipeline outputs, which are available from the authors on request due to size. Hashed sources and the frozen event table for the original-language Rett/MECP2 case series are in `benchmark/experiments/acmg_multilingual/reviewed/` and `benchmark/experiments/acmg_multilingual/direct_inference_cases.json`; `check-allele-class-increment` reproduces Supplementary Table S3. The source article corpus consists of PMC open-access articles; Chinese translations were machine-generated by the system's translation pipeline. The original-language case reports are previously published journal articles. Gold-standard annotations were curated from ClinGen and ClinVar public data. External model-inference services (embedding, reranking, document parsing) are separate deployments and are not required to reproduce the reported statistics.
 
 ## Acknowledgments
 
@@ -155,7 +165,7 @@ The Lingua Seeker source code is available at https://github.com/lanshi17/Lingua
 
 ## Ethics Declaration
 
-This study analyzed only publicly available data: gene–disease validity assertions and variant classifications from ClinGen and ClinVar, and open-access articles from PubMed Central. No human participants were recruited, and no individual-level or identifiable human data were collected or processed. Institutional Review Board (IRB)/Research Ethics Committee review and informed consent were therefore not required.
+This study analyzed only publicly available data: gene–disease validity assertions and variant classifications from ClinGen and ClinVar, open-access articles from PubMed Central, and previously published original-language Rett/MECP2 reports in Chinese, Korean, Russian, Turkish, Spanish, Portuguese, and French. No human participants were recruited, and no individual-level or identifiable human data were collected or processed. Institutional Review Board (IRB)/Research Ethics Committee review and informed consent were therefore not required.
 
 ## Conflict of Interest
 

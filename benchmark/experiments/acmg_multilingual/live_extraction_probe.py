@@ -16,6 +16,8 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.core.standardize_entities_and_align_knowledge.hgvs_normalizer import canonical_protein_hgvs
+
 from .direct_inference import (
     DirectInferenceEvent,
     DirectInferenceTable,
@@ -37,6 +39,11 @@ _ABSENT_PARENTAGE_VALUES = frozenset(
     {"not_confirmed", "false", "absent", "unconfirmed", "no", "not confirmed"}
 )
 _LOF_VARIANT_CLASSES = frozenset({"nonsense", "frameshift"})
+_DISEASE_ALIASES = {
+    "rett综合征": "rettsyndrome",
+    "rett綜合徵": "rettsyndrome",
+    "синдромретта": "rettsyndrome",
+}
 
 
 class FieldOrigin(str, Enum):
@@ -172,7 +179,14 @@ def gate_matches_gold(fact: FieldFact, value: str | None) -> bool:
             or "未携带" in observed
             or "均无" in observed
         )
-    return _compact(expected) in _compact(observed) or _compact(observed) in _compact(expected)
+    if fact.field_id in {"A.variant_hgvs_c", "A.variant_hgvs_p"}:
+        expected_protein = canonical_protein_hgvs(expected)
+        observed_protein = canonical_protein_hgvs(observed)
+        if expected_protein and observed_protein and expected_protein == observed_protein:
+            return True
+    expected_key = _DISEASE_ALIASES.get(_compact(expected), _compact(expected))
+    observed_key = _DISEASE_ALIASES.get(_compact(observed), _compact(observed))
+    return expected_key in observed_key or observed_key in expected_key
 
 
 def collect_assigned_acmg_codes(items: Sequence[object]) -> tuple[str, ...]:
@@ -340,6 +354,55 @@ def write_live_extraction_probe_report(report: LiveExtractionProbeReport, path: 
     path.write_text(report.model_dump_json(indent=2) + "\n", encoding="utf-8")
 
 
+class ProbeScorecard(BaseModel):
+    """Rescored FOUND count and gold-match count for one probe receipt."""
+
+    model_config = ConfigDict(frozen=True)
+
+    event_count: int = Field(ge=0)
+    total_gates: int = Field(ge=0)
+    found_gates: int = Field(ge=0)
+    matched_gates: int = Field(ge=0)
+    assigned_acmg_code_events: int = Field(ge=0)
+
+    @property
+    def found_rate(self) -> float:
+        return self.found_gates / self.total_gates if self.total_gates else 0.0
+
+    @property
+    def match_rate(self) -> float:
+        return self.matched_gates / self.total_gates if self.total_gates else 0.0
+
+
+def load_live_extraction_probe_report(path: Path) -> LiveExtractionProbeReport:
+    """Load a previously written probe receipt."""
+    return LiveExtractionProbeReport.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+def score_probe_report(report: LiveExtractionProbeReport, facts: FieldBridgeTable) -> ProbeScorecard:
+    """Rescore stored final_value fields with the current gold matcher."""
+    facts_by_id = {event.event_id: event for event in facts.events}
+    found = matched = total = leaks = 0
+    for event in report.events:
+        if event.assigned_acmg_codes:
+            leaks += 1
+        bridge = facts_by_id[event.event_id]
+        by_field = {fact.field_id: fact for fact in bridge.fields}
+        for gate in event.gates:
+            total += 1
+            if gate.final_value is not None:
+                found += 1
+            if gate_matches_gold(by_field[gate.field_id], gate.final_value):
+                matched += 1
+    return ProbeScorecard(
+        event_count=len(report.events),
+        total_gates=total,
+        found_gates=found,
+        matched_gates=matched,
+        assigned_acmg_code_events=leaks,
+    )
+
+
 def resolve_probe_events(
     table: DirectInferenceTable,
     bridge: FieldBridgeTable,
@@ -410,6 +473,7 @@ async def run_live_extraction_probe(
     facts_path: Path | None = None,
     fast_model: str = "",
     reasoning_model: str = "",
+    report_path: Path | None = None,
 ) -> LiveExtractionProbeReport:
     """Run production extraction on selected events and score field-bridge gates."""
     table = load_direct_inference_table(cases_path)
@@ -437,6 +501,11 @@ async def run_live_extraction_probe(
                 vcep=table.vcep,
             )
         )
+        if report_path is not None:
+            write_live_extraction_probe_report(
+                build_probe_report(results, fast_model=fast_model, reasoning_model=reasoning_model),
+                report_path,
+            )
     return build_probe_report(
         results,
         fast_model=fast_model,

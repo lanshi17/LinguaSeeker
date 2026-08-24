@@ -8,6 +8,22 @@ from typing import Any
 
 SPACE_RE = re.compile(r"\s+")
 _HTML_ENTITY_RE = re.compile(r"&(?:#(?:[xX][0-9a-fA-F]+|\d+)|[a-zA-Z][a-zA-Z0-9]+);")
+# MinerU/markdown leftover escapes that appear in HGVS and scientific text.
+# Letters after a backslash (`\m`, `\d`) are left alone — they are not markdown.
+_MARKDOWN_ESCAPED_PUNCT = frozenset("*_~.-")
+_MARKDOWN_ESCAPE_RE = re.compile(r"\\([*_~.\-])")
+
+
+def unescape_markdown_punctuation(text: str) -> str:
+    """Decode markdown punctuation escapes such as ``\\*`` and ``\\~``."""
+    return _MARKDOWN_ESCAPE_RE.sub(r"\1", text)
+
+
+def take_markdown_escape(text: str, index: int) -> tuple[str, int] | None:
+    """Return the unescaped punctuation and next index, or None."""
+    if index + 1 < len(text) and text[index] == "\\" and text[index + 1] in _MARKDOWN_ESCAPED_PUNCT:
+        return text[index + 1], index + 2
+    return None
 
 
 def normalize_text(value: str) -> str:
@@ -25,10 +41,10 @@ def normalize_value(value: str | int | float | bool | list[str] | None) -> str:
 
 
 def unescape_mined_text(text: str) -> str:
-    """Decode HTML entities and markdown ``\\~`` left in mined scientific text."""
+    """Decode HTML entities and markdown punctuation leftover in mined text."""
     if not text:
         return text
-    return html.unescape(text).replace("\\~", "~")
+    return unescape_markdown_punctuation(html.unescape(text))
 
 
 def unescape_mined_strings(values: Any) -> list[str]:
@@ -50,13 +66,17 @@ def html_entity_aliases(text: str) -> tuple[str, ...]:
     if encoded not in {text, unescaped}:
         aliases.append(encoded)
     seen = {text, unescaped, *aliases}
-    md_decoded = unescaped.replace("\\~", "~")
+    md_decoded = unescape_markdown_punctuation(unescaped)
     if md_decoded not in seen:
         aliases.append(md_decoded)
         seen.add(md_decoded)
     md_encoded = md_decoded.replace("~", "\\~")
     if md_encoded not in seen:
         aliases.append(md_encoded)
+        seen.add(md_encoded)
+    star_encoded = md_decoded.replace("*", "\\*")
+    if star_encoded not in seen:
+        aliases.append(star_encoded)
     return tuple(aliases)
 
 
@@ -101,9 +121,11 @@ def _expand_html_entities(text: str) -> list[tuple[str, int, int]]:
                 parts.extend((char, index, end) for char in decoded)
                 index = end
                 continue
-        if text.startswith("\\~", index):
-            parts.append(("~", index, index + 2))
-            index += 2
+        escaped = take_markdown_escape(text, index)
+        if escaped is not None:
+            char, next_index = escaped
+            parts.append((char, index, next_index))
+            index = next_index
             continue
         parts.append((text[index], index, index + 1))
         index += 1
@@ -116,7 +138,7 @@ def _find_html_aware_normalized(haystack: str, needle: str, start: int) -> tuple
     if not expanded:
         return (-1, -1)
     decoded = "".join(char for char, _, _ in expanded)
-    decoded_needle = html.unescape(needle).replace("\\~", "~")
+    decoded_needle = unescape_markdown_punctuation(html.unescape(needle))
     decoded_start = 0
     for index, (_, orig_start, _) in enumerate(expanded):
         if orig_start >= start:

@@ -724,6 +724,128 @@ def test_source_grounding_matches_html_entity_inside_chinese_sentence() -> None:
     assert "父母均未检测到突变" in grounded.source.text_snippet
 
 
+def test_source_grounding_matches_ocr_coding_hgvs_without_gt() -> None:
+    """rett_079 writes ``c．622C T``; the model emits standard ``c.622C>T``."""
+    text = "基因编码区找到 1 个突变位点 ， c．622C Tp．Q208X（无义突变）"
+    document = TrackDocument(
+        document_id="rett-079-ocr-gt",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=len(text))],
+    )
+    item = EvidenceItem(
+        field_id="A.variant_hgvs_c",
+        category="A",
+        field_name="HGVS cDNA",
+        status=EvidenceStatus.FOUND,
+        value="c.622C>T",
+        raw_source=SourceLocation(
+            context_type="text",
+            context_ref="primary_broad_extraction",
+            text_snippet="c.622C>T",
+            block_index=-1,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])[0]
+
+    assert grounded.status == EvidenceStatus.FOUND
+    assert grounded.source is not None
+    assert "622" in grounded.source.text_snippet
+
+
+def test_source_grounding_matches_markdown_escaped_stop_codon() -> None:
+    """MinerU leftover ``\\*`` must not drop a frameshift protein quote as SOURCE_INVALID."""
+    text = "variante patogénica c.806del (p.Gly269Alafs\\*20) en MECP2"
+    document = TrackDocument(
+        document_id="rett-035-star",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=len(text))],
+    )
+    item = EvidenceItem(
+        field_id="A.variant_hgvs_p",
+        category="A",
+        field_name="HGVS protein",
+        status=EvidenceStatus.FOUND,
+        value="p.Gly269AlafsTer20",
+        raw_source=SourceLocation(
+            context_type="text",
+            context_ref="primary_broad_extraction",
+            text_snippet="p.Gly269Alafs*20",
+            block_index=-1,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])[0]
+
+    assert grounded.status == EvidenceStatus.FOUND
+    assert grounded.source is not None
+    assert "Gly269" in grounded.source.text_snippet
+
+
+def test_source_grounding_drops_space_run_between_ascii_and_cjk() -> None:
+    """A space run between Latin and CJK must not keep a space the snippet omitted."""
+    text = "酸threonine      が    methionineに置換する"
+    document = TrackDocument(
+        document_id="rett-088-spaces",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=len(text))],
+    )
+    item = EvidenceItem(
+        field_id="A.variant_hgvs_p",
+        category="A",
+        field_name="HGVS protein",
+        status=EvidenceStatus.FOUND,
+        value="p.Thr158Met",
+        raw_source=SourceLocation(
+            context_type="text",
+            context_ref="primary_broad_extraction",
+            text_snippet="threonineがmethionineに置換する",
+            block_index=-1,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])[0]
+
+    assert grounded.status == EvidenceStatus.FOUND
+    assert grounded.source is not None
+
+
+def test_source_grounding_matches_hyphenated_line_wrap() -> None:
+    """OCR line-wrap hyphens inside a word must still match the unwrapped snippet."""
+    text = "молекулярно-генетическомиссле-довании:выявлена"
+    document = TrackDocument(
+        document_id="rett-069-hyphen",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=len(text))],
+    )
+    item = EvidenceItem(
+        field_id="B.disease_diagnosis",
+        category="B",
+        field_name="Disease diagnosis",
+        status=EvidenceStatus.FOUND,
+        value="Rett syndrome",
+        raw_source=SourceLocation(
+            context_type="text",
+            context_ref="primary_broad_extraction",
+            text_snippet="молекулярно-генетическом исследовании",
+            block_index=-1,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])[0]
+
+    assert grounded.status == EvidenceStatus.FOUND
+    assert grounded.source is not None
+
+
 def test_source_grounding_falls_back_to_hgvs_value_when_quote_is_paraphrased() -> None:
     """If the quote is not verbatim, a coding HGVS value that appears in the paper still grounds."""
     text = "该先证者携带c.538C&gt;T。"
@@ -753,3 +875,93 @@ def test_source_grounding_falls_back_to_hgvs_value_when_quote_is_paraphrased() -
     assert grounded.status == EvidenceStatus.FOUND
     assert grounded.source is not None
     assert grounded.source.text_snippet in text
+
+
+def test_source_grounding_matches_chinese_rett_diagnosis_to_english_value() -> None:
+    text = "# Rett综合征1例\n临床诊断为Rett综合征。"
+    document = TrackDocument(
+        document_id="rett-079-dx",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=len(text))],
+    )
+    item = EvidenceItem(
+        field_id="B.disease_diagnosis",
+        category="B",
+        field_name="Disease diagnosis",
+        status=EvidenceStatus.FOUND,
+        value="Rett syndrome",
+        raw_source=SourceLocation(
+            context_type="text",
+            context_ref="primary_broad_extraction",
+            text_snippet="the patient met clinical diagnostic criteria",
+            block_index=-1,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])[0]
+
+    assert grounded.status == EvidenceStatus.FOUND
+    assert grounded.source is not None
+    assert "Rett" in grounded.source.text_snippet
+
+
+def test_source_grounding_matches_french_rett_diagnosis() -> None:
+    text = "trois patientes atteintes du syndrome de Rett dans la population tunisienne."
+    document = TrackDocument(
+        document_id="rett-041-dx",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=len(text))],
+    )
+    item = EvidenceItem(
+        field_id="B.disease_diagnosis",
+        category="B",
+        field_name="Disease diagnosis",
+        status=EvidenceStatus.FOUND,
+        value="Rett syndrome",
+        raw_source=SourceLocation(
+            context_type="text",
+            context_ref="primary_broad_extraction",
+            text_snippet="the patients fulfilled clinical criteria",
+            block_index=-1,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])[0]
+
+    assert grounded.status == EvidenceStatus.FOUND
+    assert grounded.source is not None
+    assert "Rett" in grounded.source.text_snippet
+
+
+def test_source_grounding_matches_korean_table_coding_arrow() -> None:
+    text = "<td>468 C→G</td><td>D 156 E</td>"
+    document = TrackDocument(
+        document_id="rett-067-arrow",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=len(text))],
+    )
+    item = EvidenceItem(
+        field_id="A.variant_hgvs_c",
+        category="A",
+        field_name="HGVS cDNA",
+        status=EvidenceStatus.FOUND,
+        value="c.468C>G",
+        raw_source=SourceLocation(
+            context_type="text",
+            context_ref="primary_broad_extraction",
+            text_snippet="c.468C>G",
+            block_index=-1,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])[0]
+
+    assert grounded.status == EvidenceStatus.FOUND
+    assert grounded.source is not None
+    assert "468" in grounded.source.text_snippet

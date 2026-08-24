@@ -64,10 +64,10 @@ def test_frozen_table_matches_engine_and_on_disk_sources() -> None:
         reviewed_root=repository_root / "benchmark/experiments/acmg_multilingual/reviewed",
     )
     assert report.engine_mismatches == 0
-    assert report.verified_on_disk_events == report.on_disk_events == 14
-    assert summary.total_events == 18
-    assert summary.bilingual_increment == 5
-    assert summary.bilingual_increment_without_rett_007 == 1
+    assert report.verified_on_disk_events == report.on_disk_events == 31
+    assert summary.total_events == 32
+    assert summary.bilingual_increment == 13
+    assert summary.bilingual_increment_without_rett_007 == 9
     assert summary.pathogenic == 8
     assert summary.unique_pathogenic_alleles == 6
     assert summary.pathogenic_clinvar_gap == 2

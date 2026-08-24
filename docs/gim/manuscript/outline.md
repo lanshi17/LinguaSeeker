@@ -3,16 +3,16 @@
 > **暂定标题:** Marginal Contribution of Cross-Lingual Evidence Extraction to ACMG/AMP Variant Classification: An Ablation Study of a Multi-Agent Literature Curation System
 > **目标期刊:** Genetics in Medicine (GIM), Original Research Article
 > **完整稿:** 见 `draft.md`（本文件为结构速览，随稿同步）
-> **格式合规:** 摘要 188 词（≤200）；正文 ~2,240 词（≤4,000）；display items 5 个（Figure 1–4 + Table 1，≤5）；参考文献 12 条（≤40，编号制）
+> **格式合规:** 摘要 ≤200 词；正文 <4,000 词；display items 5 个（Figure 1–4 + Table 1）；参考文献 19 条（≤40，编号制）。案例分析表为 Supplementary Table S3（2026-08-20 加入正文 §2.8/§3.5）。
 
 ---
 
-## Abstract (188 words, 结构化)
+## Abstract (结构化)
 
 - Purpose：ACMG/AMP 分类依赖人工文献证据搜集，非英语文献系统性缺失；量化跨语言提取的边际贡献
-- Methods：Lingua Seeker 四阶段多智能体流水线 + 受控 ablation（30 条 ClinGen/ClinVar 条目 × EN-only vs Dual-track）
-- Results：中文轨贡献 3.62 条/篇独有证据（+22.8% over EN 均值 15.9, p = 5.9e-6）；86.2% 条目受益；金标字段匹配 3.57→3.57 不变（p = 1.0）；3 条目获得字段/2 净丢失/1 互换
-- Conclusion：跨语言处理提供互补证据且不降低平均精度；证据条目层比英文中心金标字段匹配更敏感
+- Methods：Lingua Seeker 四阶段多智能体流水线 + 受控 ablation（30 条 ClinGen/ClinVar 条目 × EN-only vs Dual-track）+ 原文 Rett/MECP2 案例分析（英文可见层 vs 原生全文，冻结规则机）
+- Results：中文轨贡献 3.62 条/篇独有证据（+22.8% over EN 均值 15.9, p = 5.9e-6）；86.2% 条目受益；金标字段匹配 3.57→3.57 不变（p = 1.0）；原文系列 20/31 事件多出 ACMG 准则（11 个等位基因）
+- Conclusion：跨语言处理提供互补证据且不降低平均字段匹配；原文全文多出的准则比英文中心金标更直接
 
 ## 1. Introduction
 
@@ -30,6 +30,7 @@
 - 2.5 评估指标（EN-track items / ZH-only items / combined unique fields / field match）
 - 2.6 统计分析（Wilcoxon / McNemar / Wilson & t CI, `gim_statistics.py`）
 - 2.7 LLM 配置（通用/推理/多模态三角色独立路由）
+- 2.8 原文 Rett/MECP2 案例分析（英文可见层 vs 原生全文；冻结 PM6/PVS1/PP4/PM1；终点是多出的准则）
 
 ## 3. Results
 
@@ -37,6 +38,7 @@
 - 3.2 字段层：23 实例 / 14 类型 / 13 条目，B/C 类为主 —— **Figure 4**；分类别总量 → Supplementary Figure S1
 - 3.3 金标字段匹配：均值不变（p = 1.0），3 获得 / 3 丢失（含 1 互换 fused_016），净 +2/−2 —— **Table 1**
 - 3.4 汇总表（含最终输出条目 109.9 vs 99.7, p = 0.27）
+- 3.5 原文案例分析：20/31 事件多出准则（11 等位基因）；rett_011 只 +PM6、分类仍不足；俄/韩/日/法因英文层无 c. HGVS 而多出准则 —— **Supplementary Table S3**
 
 ## 4. Discussion
 
@@ -45,7 +47,7 @@
 3. 挽救失败提取（fused_024 GP1BA 0→1）
 4. 合并伪影（最终输出条目数下降趋势, n.s.）
 5. 公平性：中文文献为主的变异会被英文中心流程低估
-6. 局限：英文语料+机翻、8 字段子集、无分类终点、单模型族、样本量小
+6. 局限：英文语料+机翻；原文系列小、中文为主、Stage-0 非盲法；产品不写 ACMG 码；8 字段子集；单模型族、样本量小
 7. 结论
 
 ## End matter（GIM 要求顺序）
@@ -54,7 +56,7 @@ Data Availability → Acknowledgments → Funding Statement① → Author Contri
 
 ① 待人工填写/确认
 
-## References（12 条，全部核验 2026-08-13）
+## References（23 条；原 12 条核验 2026-08-13；案例分析含 McKnight 2022、中韩俄原文）
 
 1. Richards 2015, Genet Med, 10.1038/gim.2015.30
 2. Tavtigian 2018, Genet Med, 10.1038/gim.2017.210
@@ -83,4 +85,4 @@ Data Availability → Acknowledgments → Funding Statement① → Author Contri
 
 - [ ] 作者列表、单位、通讯方式、CRediT 贡献、基金声明（人工）
 - [ ] AI 写作声明中工具名确认（或删除该节）
-- [ ] （可选）分类级终点（最终 ACMG 类别），视审稿意见
+- [ ] （已做 Stage-0 原文准则增量；正式盲法分类终点仍待 Stage-1）

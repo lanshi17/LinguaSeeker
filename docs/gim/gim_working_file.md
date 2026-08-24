@@ -4,7 +4,7 @@
 > 核心论题：跨语言证据提取对 ACMG 变异分类的边际贡献
 
 **创建日期:** 2026-08-09
-**最后更新:** 2026-08-13
+**最后更新:** 2026-08-20
 
 ---
 
@@ -178,5 +178,7 @@
 - [x] **补充材料英文化**: Fig S1 图注 + Table S1/S2 + Note S1–S5; Note S3 修正为与代码一致的描述 (无 BLEU, 实际为完整性/覆盖率/语言检查); Note S4 用实测耗时替换 TBD (EN-only mean 759.6s / median 623.1s; dual mean 612.6s / median 416.5s, n=30/模式, 附 batch 时段负载注记)
 - [x] **Cover letter 草稿**: `assets/cover_letter.md`
 - [x] **Title page 要素**: running title, 通讯作者占位
-- [x] **LaTeX 版** (2026-08-13): `manuscript/latex/` — elsarticle (preprint, 12pt, 带页码无行号), `main.tex` → main.pdf 14 页, `supplementary.tex` → supplementary.pdf 7 页 (S 编号: Fig S1 / Table S1-S2 / Note S1-S5); elsarticle.cls 从 CTAN 源生成并 vendored; 参考文献内嵌 thebibliography (numbers,sort&compress); overfull 全部清零; 构建产物已 .gitignore
+- [x] **LaTeX 版** (2026-08-13): `manuscript/latex/` — elsarticle (preprint, 12pt, 带页码无行号); elsarticle.cls 从 CTAN 源生成并 vendored; 参考文献内嵌 thebibliography (numbers,sort&compress); 构建产物已 .gitignore
+- [x] **原文案例分析写入稿** (2026-08-20): §2.8/§3.5 + Supplementary Table S3 / Note S6；终点是 native−english 授予准则，不要求 Pathogenic 翻转；产品不写 ACMG 码；both-hero = 0
+- [x] **扩语种扩事件** (2026-08-21): CLI `added codes 20/31`（11 等位基因；去掉 rett_007 仍 16）；17 篇来源、8 语种（es,fr,ja,ko,pt,ru,tr,zh）；both-hero 仍为 0；日文入仓为近藤 2002 队列三个代表等位基因（无具名先证者 PM6）；德文可哈希点变异病例仍未入仓
 - [ ] 待人工: 作者列表/单位/通讯/CRediT/基金 (md 与 tex 两处同步); AI 声明工具名确认; Editorial Manager 上传
