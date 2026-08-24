@@ -16,7 +16,7 @@ from pathlib import Path
 from loguru import logger
 from benchmark.core.field_normalize import normalize_field_for_matching
 
-GROUND_TRUTH_DIR = Path(__file__).resolve().parent / "ground_truth"
+GROUND_TRUTH_DIR = Path(__file__).resolve().parent.parent.parent.parent / "benchmark" / "data" / "ground_truth" / "clinvar_fused"
 REPORTS_DIR = Path(__file__).resolve().parent / "reports"
 
 # ── Text normalization (reused from evaluate.py) ───────────────────────

@@ -1,0 +1,15 @@
+================================================================================
+ABLATION STUDY RESULTS
+================================================================================
+
+Total entries: 30
+Valid comparisons: 30/30
+
+EN-only avg fields:      3.57/8
+Dual-track avg fields:   3.57/8
+Net field improvement:   +0.0%
+
+Conclusion: Multilingual processing provides complementary extraction
+for specific entries but does not improve average field match rate.
+3/30 entries (10%) benefited from Chinese translation track.
+3/30 entries (10%) had fields only found in English track.

@@ -1,0 +1,378 @@
+{
+  "study_id": "acmg-multilingual-canonical-alleles",
+  "protocol_version": "v1",
+  "created_on": "2026-08-19",
+  "scope_note": "Closed MECP2 allele set used by direct_inference_cases.json. Transcript aliases share one allele_id. not_same_as is a hard split: frameshift c.844del is not nonsense c.844C>T; paper c.194delC is not ClinVar c.195del and not LOVD c.194C>G p.S65X.",
+  "alleles": [
+    {
+      "allele_id": "VCV000011828",
+      "aliases": [
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.502C>T",
+          "hgvs_p": "p.Arg168Ter"
+        },
+        {
+          "transcript": "NM_001110792.2",
+          "hgvs_c": "c.538C>T",
+          "hgvs_p": "p.Arg180Ter"
+        }
+      ],
+      "grch38_spdi": "NC_000023.11:154031325:G:A",
+      "clinvar_vcv": "VCV000011828",
+      "clinvar_match": "transcript_alias",
+      "queried_on": "2026-08-19",
+      "notes": "ClinVar displays MANE Select c.538C>T p.Arg180Ter. Protein aliases include R168* and R180*."
+    },
+    {
+      "allele_id": "VCV000011815",
+      "aliases": [
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.808C>T",
+          "hgvs_p": "p.Arg270Ter"
+        },
+        {
+          "transcript": "NM_001110792.2",
+          "hgvs_c": "c.844C>T",
+          "hgvs_p": "p.Arg282Ter"
+        }
+      ],
+      "clinvar_vcv": "VCV000011815",
+      "clinvar_match": "transcript_alias",
+      "queried_on": "2026-08-18",
+      "not_same_as": [
+        "VCV000143702"
+      ],
+      "notes": "Nonsense at the Arg282/Arg270 codon. Distinct from the 1-bp deletion at the same codon."
+    },
+    {
+      "allele_id": "VCV000143702",
+      "aliases": [
+        {
+          "transcript": "NM_001110792.2",
+          "hgvs_c": "c.844del",
+          "hgvs_p": "p.Arg282fs"
+        },
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.808del",
+          "hgvs_p": "p.Arg270fs"
+        }
+      ],
+      "grch38_spdi": "NC_000023.11:154031019:GG:G",
+      "clinvar_vcv": "VCV000143702",
+      "clinvar_match": "transcript_alias",
+      "queried_on": "2026-08-18",
+      "not_same_as": [
+        "VCV000011815"
+      ],
+      "notes": "Frameshift. Paper writing c.844delC. GRCh38 X:154031020."
+    },
+    {
+      "allele_id": "VCV000095202",
+      "aliases": [
+        {
+          "transcript": "NM_001110792.2",
+          "hgvs_c": "c.842del",
+          "hgvs_p": "p.Gly281fs"
+        },
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.806del",
+          "hgvs_p": "p.Gly269fs"
+        }
+      ],
+      "grch38_spdi": "NC_000023.11:154031021:CCCC:CCC",
+      "clinvar_vcv": "VCV000095202",
+      "clinvar_match": "transcript_alias",
+      "queried_on": "2026-08-18",
+      "notes": "Adjacent to VCV143702 (2 bp) but a different deletion."
+    },
+    {
+      "allele_id": "VCV000011811",
+      "aliases": [
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.509C>T",
+          "hgvs_p": "p.Thr170Met"
+        }
+      ],
+      "clinvar_vcv": "VCV000011811",
+      "clinvar_match": "exact",
+      "queried_on": "2026-08-17",
+      "notes": "Shared by rett_007 case 1 (assumed de novo) and rett_081 (maternal). Same allele, opposite inheritance. Distinct from T158M VCV000011813.",
+      "not_same_as": [
+        "VCV000011813"
+      ]
+    },
+    {
+      "allele_id": "VCV000011814",
+      "aliases": [
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.316C>T",
+          "hgvs_p": "p.Arg106Trp"
+        },
+        {
+          "transcript": "NM_001110792.2",
+          "hgvs_c": "c.352C>T",
+          "hgvs_p": "p.Arg118Trp"
+        }
+      ],
+      "clinvar_vcv": "VCV000011814",
+      "clinvar_match": "transcript_alias",
+      "queried_on": "2026-08-17"
+    },
+    {
+      "allele_id": "VCV000095184",
+      "aliases": [
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.1126C>T",
+          "hgvs_p": "p.Pro376Ser"
+        },
+        {
+          "transcript": "NM_001110792.2",
+          "hgvs_c": "c.1162C>T",
+          "hgvs_p": "p.Pro388Ser"
+        }
+      ],
+      "clinvar_vcv": "VCV000095184",
+      "clinvar_match": "transcript_alias",
+      "queried_on": "2026-08-17",
+      "notes": "ClinVar expert-panel Benign. Conflict block, not a pathogenic increment."
+    },
+    {
+      "allele_id": "VCV000143653",
+      "aliases": [
+        {
+          "transcript": "NM_001110792.2",
+          "hgvs_c": "c.710C>G",
+          "hgvs_p": "p.Pro237Arg"
+        },
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.674C>G",
+          "hgvs_p": "p.Pro225Arg"
+        }
+      ],
+      "clinvar_vcv": "VCV000143653",
+      "clinvar_match": "exact",
+      "queried_on": "2026-08-17"
+    },
+    {
+      "allele_id": "VCV000143579",
+      "aliases": [
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.455C>G",
+          "hgvs_p": "p.Pro152Arg"
+        },
+        {
+          "transcript": "NM_001110792.2",
+          "hgvs_c": "c.491C>G",
+          "hgvs_p": "p.Pro164Arg"
+        }
+      ],
+      "clinvar_vcv": "VCV000143579",
+      "clinvar_match": "transcript_alias",
+      "queried_on": "2026-08-17"
+    },
+    {
+      "allele_id": "VCV000095196",
+      "aliases": [
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.468C>G",
+          "hgvs_p": "p.Asp156Glu"
+        },
+        {
+          "transcript": "NM_001110792.2",
+          "hgvs_c": "c.504C>G",
+          "hgvs_p": "p.Asp168Glu"
+        }
+      ],
+      "clinvar_vcv": "VCV000095196",
+      "clinvar_match": "transcript_alias",
+      "queried_on": "2026-08-17"
+    },
+    {
+      "allele_id": "VCV000143641",
+      "aliases": [
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.622C>T",
+          "hgvs_p": "p.Gln208Ter"
+        },
+        {
+          "transcript": "NM_001110792.2",
+          "hgvs_c": "c.658C>T",
+          "hgvs_p": "p.Gln220Ter"
+        }
+      ],
+      "clinvar_vcv": "VCV000143641",
+      "clinvar_match": "transcript_alias",
+      "queried_on": "2026-08-17"
+    },
+    {
+      "allele_id": "unmatched_c.913insT",
+      "aliases": [
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.913_914insT",
+          "hgvs_p": "p.Lys305fs"
+        },
+        {
+          "transcript": "historical",
+          "hgvs_c": "c.913insT",
+          "hgvs_p": "p.K305fs"
+        }
+      ],
+      "clinvar_match": "unmatched",
+      "queried_on": "2026-08-18",
+      "notes": "No exact ClinVar VCV. Do not accept nearby K305fs large-deletion aliases (c.950_1208del)."
+    },
+    {
+      "allele_id": "unmatched_c.194delC",
+      "aliases": [
+        {
+          "transcript": "historical_paper",
+          "hgvs_c": "c.194delC",
+          "hgvs_p": "p.S65X"
+        },
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.194del",
+          "hgvs_p": "p.Ser65fs"
+        }
+      ],
+      "clinvar_match": "unmatched",
+      "queried_on": "2026-08-19",
+      "not_same_as": [
+        "VCV001076185",
+        "lovd_c.194C>G_S65X"
+      ],
+      "notes": "rett_084 Sanger shows a deleted C (AGACAT-AGAAGG vs parental AGACATCAGAAGG). Protein writing p.S65X is a historical nonsense label for a frameshift. Adjacent to ClinVar c.195del (VCV1076185, GRCh38 154032389), not the same SPDI. Also not the LOVD substitution c.194C>G p.S65X."
+    },
+    {
+      "allele_id": "VCV001076185",
+      "aliases": [
+        {
+          "transcript": "NM_004992.4",
+          "hgvs_c": "c.195del",
+          "hgvs_p": "p.Glu66fs"
+        },
+        {
+          "transcript": "NM_001110792.2",
+          "hgvs_c": "c.231del",
+          "hgvs_p": "p.Glu78fs"
+        }
+      ],
+      "grch38_spdi": "NC_000023.11:154032388:T:",
+      "clinvar_vcv": "VCV001076185",
+      "clinvar_match": "exact",
+      "queried_on": "2026-08-19",
+      "not_same_as": [
+        "unmatched_c.194delC"
+      ],
+      "notes": "1 SCV; condition is neonatal encephalopathy, not Rett. Off-by-one from paper c.194delC."
+    },
+    {
+      "allele_id": "lovd_c.194C>G_S65X",
+      "aliases": [
+        {
+          "transcript": "NM_004992",
+          "hgvs_c": "c.194C>G",
+          "hgvs_p": "p.Ser65Ter"
+        }
+      ],
+      "clinvar_match": "unmatched",
+      "queried_on": "2026-08-19",
+      "not_same_as": [
+        "unmatched_c.194delC"
+      ],
+      "notes": "CCHMC/LOVD substitution that actually produces p.S65X. The Chinese paper deleted a C; do not merge the two."
+    },
+    {
+      "allele_id": "unmatched_c.1217_1445del",
+      "aliases": [
+        {
+          "transcript": "unmapped",
+          "hgvs_c": "c.1217_1445del",
+          "hgvs_p": "p.Gln406Profs*30"
+        }
+      ],
+      "clinvar_match": "unmatched",
+      "queried_on": "2026-08-17",
+      "notes": "Not the nearby 11-bp CTD c.1217_1227del."
+    },
+    {
+      "allele_id": "cnv_rett_007_case5",
+      "aliases": [
+        {
+          "transcript": "CNV",
+          "hgvs_c": "Xq28_0.299Mb_dup",
+          "hgvs_p": ""
+        }
+      ],
+      "clinvar_match": "not_applicable",
+      "notes": "MECP2 duplication branch, not a point-variant allele."
+    },
+    {
+      "allele_id": "VCV000143738",
+      "aliases": [
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.905C>T",
+          "hgvs_p": "p.Pro302Leu"
+        },
+        {
+          "transcript": "NM_001110792.2",
+          "hgvs_c": "c.941C>T",
+          "hgvs_p": "p.Pro314Leu"
+        }
+      ],
+      "clinvar_vcv": "VCV000143738",
+      "clinvar_match": "transcript_alias",
+      "queried_on": "2026-08-20",
+      "notes": "TRD residue 302 on NM_004992. Paper rett_078 writes only p.Pro302Leu."
+    },
+    {
+      "allele_id": "VCV000011829",
+      "aliases": [
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.763C>T",
+          "hgvs_p": "p.Arg255Ter"
+        },
+        {
+          "transcript": "NM_001110792.2",
+          "hgvs_c": "c.799C>T",
+          "hgvs_p": "p.Arg267Ter"
+        }
+      ],
+      "clinvar_vcv": "VCV000011829",
+      "clinvar_match": "transcript_alias",
+      "queried_on": "2026-08-20",
+      "notes": "Hotspot R255X / R267X. Portuguese rett_034 writes p.Arg255 without Ter."
+    },
+    {
+      "allele_id": "VCV000011813",
+      "aliases": [
+        {
+          "transcript": "NM_004992.3",
+          "hgvs_c": "c.473C>T",
+          "hgvs_p": "p.Thr158Met"
+        }
+      ],
+      "clinvar_vcv": "VCV000011813",
+      "clinvar_match": "transcript_alias",
+      "queried_on": "2026-08-20",
+      "notes": "Hotspot T158M on NM_004992. ClinVar MANE writing is NM_001110792 c.509C>T p.Thr170Met; that MANE codon is not the e2 T170M allele VCV000011811 (NM_004992 c.509C>T).",
+      "not_same_as": [
+        "VCV000011811"
+      ]
+    }
+  ]
+}

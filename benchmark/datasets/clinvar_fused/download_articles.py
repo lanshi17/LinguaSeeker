@@ -13,7 +13,7 @@ from xml.etree import ElementTree as ET
 import httpx
 import yaml
 
-GROUND_TRUTH_DIR = Path(__file__).resolve().parent / "ground_truth"
+GROUND_TRUTH_DIR = Path(__file__).resolve().parent.parent.parent.parent / "benchmark" / "data" / "ground_truth" / "clinvar_fused"
 EFETCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 _CONCURRENCY = 2
 _TIMEOUT = 120.0

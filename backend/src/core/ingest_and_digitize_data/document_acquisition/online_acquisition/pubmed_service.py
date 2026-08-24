@@ -47,6 +47,13 @@ class OnlineAcquisitionPubMedService:
         ).rstrip("/")
         self.api_key = api_key or os.getenv("PUBMED_API_KEY", "")
 
+    @staticmethod
+    def _proxy() -> Optional[str]:
+        """Reuse the product network proxy so NCBI is reachable behind the same egress as Rust providers."""
+        from src.core.config import get_config
+
+        return get_config().network.proxy or None
+
     async def search_candidates(
         self,
         query: str,
@@ -67,7 +74,7 @@ class OnlineAcquisitionPubMedService:
         if self.api_key:
             params["api_key"] = self.api_key
 
-        async with httpx.AsyncClient(timeout=15.0) as client:
+        async with httpx.AsyncClient(timeout=15.0, proxy=self._proxy()) as client:
             esearch_resp = await client.get(f"{self.base_url}/esearch.fcgi", params=params)
             esearch_resp.raise_for_status()
             esearch_payload = esearch_resp.json()
@@ -137,7 +144,7 @@ class OnlineAcquisitionPubMedService:
         if self.api_key:
             fetch_params["api_key"] = self.api_key
 
-        async with httpx.AsyncClient(timeout=15.0) as client:
+        async with httpx.AsyncClient(timeout=15.0, proxy=self._proxy()) as client:
             summary_resp = await client.get(f"{self.base_url}/esummary.fcgi", params=summary_params)
             summary_resp.raise_for_status()
             summary_payload = summary_resp.json()

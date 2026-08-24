@@ -1,0 +1,371 @@
+{
+  "study": "multilingual_evidence_contribution",
+  "dataset": "clinvar_fused",
+  "timestamp": "2026-08-12T12:07:22.595863",
+  "total_entries": 30,
+  "valid_entries": 29,
+  "aggregate": {
+    "avg_en_track_found": 15.9,
+    "avg_combined_unique_found": 17.24,
+    "multilingual_gain_items": 3.62,
+    "multilingual_gain_pct": 22.8,
+    "entries_with_gain": 25,
+    "entries_with_gain_pct": 86.2,
+    "entries_with_zh_only_fields": 13,
+    "entries_with_zh_only_fields_pct": 44.8
+  },
+  "field_level_zh_benefit": {
+    "B.clinical_phenotypes": 3,
+    "F.assay_type": 3,
+    "J.clinvar_assertion": 2,
+    "B.hpo_terms": 2,
+    "B.age_of_onset": 2,
+    "B.disease_diagnosis": 2,
+    "C.de_novo_status": 2,
+    "B.mode_of_inheritance_reported": 1,
+    "C.inheritance_source": 1,
+    "H.contradiction_type": 1,
+    "B.case_count": 1,
+    "A.variant_consequence_class": 1,
+    "A.functional_domain_or_hotspot": 1,
+    "B.sex": 1
+  },
+  "per_entry": [
+    {
+      "entry_id": "fused_000",
+      "en_found_items": 21,
+      "zh_found_items": 11,
+      "combined_unique_items": 20,
+      "zh_only_items": 4,
+      "multilingual_gain": 4,
+      "multilingual_gain_pct": 25.0,
+      "zh_only_field_ids": [
+        "J.clinvar_assertion"
+      ]
+    },
+    {
+      "entry_id": "fused_001",
+      "en_found_items": 39,
+      "zh_found_items": 15,
+      "combined_unique_items": 30,
+      "zh_only_items": 3,
+      "multilingual_gain": 3,
+      "multilingual_gain_pct": 11.11111111111111,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_002",
+      "en_found_items": 18,
+      "zh_found_items": 20,
+      "combined_unique_items": 22,
+      "zh_only_items": 7,
+      "multilingual_gain": 7,
+      "multilingual_gain_pct": 46.666666666666664,
+      "zh_only_field_ids": [
+        "B.clinical_phenotypes",
+        "B.mode_of_inheritance_reported",
+        "C.inheritance_source",
+        "H.contradiction_type"
+      ]
+    },
+    {
+      "entry_id": "fused_003",
+      "en_found_items": 17,
+      "zh_found_items": 16,
+      "combined_unique_items": 21,
+      "zh_only_items": 4,
+      "multilingual_gain": 4,
+      "multilingual_gain_pct": 23.52941176470588,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_004",
+      "en_found_items": 17,
+      "zh_found_items": 16,
+      "combined_unique_items": 20,
+      "zh_only_items": 3,
+      "multilingual_gain": 3,
+      "multilingual_gain_pct": 17.647058823529413,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_005",
+      "en_found_items": 14,
+      "zh_found_items": 14,
+      "combined_unique_items": 17,
+      "zh_only_items": 4,
+      "multilingual_gain": 4,
+      "multilingual_gain_pct": 30.76923076923077,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_006",
+      "en_found_items": 10,
+      "zh_found_items": 12,
+      "combined_unique_items": 12,
+      "zh_only_items": 2,
+      "multilingual_gain": 2,
+      "multilingual_gain_pct": 20.0,
+      "zh_only_field_ids": [
+        "B.clinical_phenotypes",
+        "B.hpo_terms"
+      ]
+    },
+    {
+      "entry_id": "fused_007",
+      "en_found_items": 5,
+      "zh_found_items": 10,
+      "combined_unique_items": 10,
+      "zh_only_items": 5,
+      "multilingual_gain": 5,
+      "multilingual_gain_pct": 100.0,
+      "zh_only_field_ids": [
+        "B.age_of_onset",
+        "B.case_count",
+        "B.clinical_phenotypes",
+        "B.disease_diagnosis",
+        "B.hpo_terms"
+      ]
+    },
+    {
+      "entry_id": "fused_008",
+      "en_found_items": 27,
+      "zh_found_items": 26,
+      "combined_unique_items": 22,
+      "zh_only_items": 2,
+      "multilingual_gain": 2,
+      "multilingual_gain_pct": 10.0,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_009",
+      "en_found_items": 36,
+      "zh_found_items": 15,
+      "combined_unique_items": 29,
+      "zh_only_items": 4,
+      "multilingual_gain": 4,
+      "multilingual_gain_pct": 16.0,
+      "zh_only_field_ids": [
+        "B.disease_diagnosis"
+      ]
+    },
+    {
+      "entry_id": "fused_010",
+      "en_found_items": 3,
+      "zh_found_items": 1,
+      "combined_unique_items": 3,
+      "zh_only_items": 0,
+      "multilingual_gain": 0,
+      "multilingual_gain_pct": 0.0,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_011",
+      "en_found_items": 11,
+      "zh_found_items": 11,
+      "combined_unique_items": 12,
+      "zh_only_items": 1,
+      "multilingual_gain": 1,
+      "multilingual_gain_pct": 9.090909090909092,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_012",
+      "en_found_items": 11,
+      "zh_found_items": 13,
+      "combined_unique_items": 17,
+      "zh_only_items": 6,
+      "multilingual_gain": 6,
+      "multilingual_gain_pct": 54.54545454545454,
+      "zh_only_field_ids": [
+        "C.de_novo_status"
+      ]
+    },
+    {
+      "entry_id": "fused_013",
+      "en_found_items": 3,
+      "zh_found_items": 4,
+      "combined_unique_items": 4,
+      "zh_only_items": 1,
+      "multilingual_gain": 1,
+      "multilingual_gain_pct": 33.33333333333333,
+      "zh_only_field_ids": [
+        "C.de_novo_status"
+      ]
+    },
+    {
+      "entry_id": "fused_014",
+      "en_found_items": 17,
+      "zh_found_items": 18,
+      "combined_unique_items": 23,
+      "zh_only_items": 7,
+      "multilingual_gain": 7,
+      "multilingual_gain_pct": 43.75,
+      "zh_only_field_ids": [
+        "F.assay_type"
+      ]
+    },
+    {
+      "entry_id": "fused_015",
+      "en_found_items": 27,
+      "zh_found_items": 39,
+      "combined_unique_items": 30,
+      "zh_only_items": 9,
+      "multilingual_gain": 9,
+      "multilingual_gain_pct": 42.857142857142854,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_016",
+      "en_found_items": 20,
+      "zh_found_items": 18,
+      "combined_unique_items": 26,
+      "zh_only_items": 6,
+      "multilingual_gain": 6,
+      "multilingual_gain_pct": 30.0,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_017",
+      "en_found_items": 0,
+      "zh_found_items": 0,
+      "combined_unique_items": 0,
+      "zh_only_items": 0,
+      "multilingual_gain": 0,
+      "multilingual_gain_pct": 0,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_018",
+      "en_found_items": 32,
+      "zh_found_items": 31,
+      "combined_unique_items": 28,
+      "zh_only_items": 5,
+      "multilingual_gain": 5,
+      "multilingual_gain_pct": 21.73913043478261,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_019",
+      "en_found_items": 20,
+      "zh_found_items": 20,
+      "combined_unique_items": 21,
+      "zh_only_items": 3,
+      "multilingual_gain": 3,
+      "multilingual_gain_pct": 16.666666666666664,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_020",
+      "en_found_items": 6,
+      "zh_found_items": 4,
+      "combined_unique_items": 6,
+      "zh_only_items": 0,
+      "multilingual_gain": 0,
+      "multilingual_gain_pct": 0.0,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_021",
+      "en_found_items": 17,
+      "zh_found_items": 19,
+      "combined_unique_items": 21,
+      "zh_only_items": 5,
+      "multilingual_gain": 5,
+      "multilingual_gain_pct": 31.25,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_022",
+      "en_found_items": 22,
+      "zh_found_items": 22,
+      "combined_unique_items": 26,
+      "zh_only_items": 8,
+      "multilingual_gain": 8,
+      "multilingual_gain_pct": 44.44444444444444,
+      "zh_only_field_ids": [
+        "A.variant_consequence_class",
+        "J.clinvar_assertion"
+      ]
+    },
+    {
+      "entry_id": "fused_023",
+      "en_found_items": 8,
+      "zh_found_items": 10,
+      "combined_unique_items": 11,
+      "zh_only_items": 3,
+      "multilingual_gain": 3,
+      "multilingual_gain_pct": 37.5,
+      "zh_only_field_ids": [
+        "A.functional_domain_or_hotspot",
+        "B.age_of_onset"
+      ]
+    },
+    {
+      "entry_id": "fused_024",
+      "en_found_items": 1,
+      "zh_found_items": 0,
+      "combined_unique_items": 1,
+      "zh_only_items": 0,
+      "multilingual_gain": 0,
+      "multilingual_gain_pct": 0.0,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_025",
+      "en_found_items": 1,
+      "zh_found_items": 2,
+      "combined_unique_items": 2,
+      "zh_only_items": 1,
+      "multilingual_gain": 1,
+      "multilingual_gain_pct": 100.0,
+      "zh_only_field_ids": [
+        "B.sex"
+      ]
+    },
+    {
+      "entry_id": "fused_026",
+      "en_found_items": 15,
+      "zh_found_items": 12,
+      "combined_unique_items": 15,
+      "zh_only_items": 0,
+      "multilingual_gain": 0,
+      "multilingual_gain_pct": 0.0,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_027",
+      "en_found_items": 16,
+      "zh_found_items": 17,
+      "combined_unique_items": 24,
+      "zh_only_items": 8,
+      "multilingual_gain": 8,
+      "multilingual_gain_pct": 50.0,
+      "zh_only_field_ids": [
+        "F.assay_type"
+      ]
+    },
+    {
+      "entry_id": "fused_028",
+      "en_found_items": 22,
+      "zh_found_items": 13,
+      "combined_unique_items": 21,
+      "zh_only_items": 3,
+      "multilingual_gain": 3,
+      "multilingual_gain_pct": 16.666666666666664,
+      "zh_only_field_ids": []
+    },
+    {
+      "entry_id": "fused_029",
+      "en_found_items": 5,
+      "zh_found_items": 2,
+      "combined_unique_items": 6,
+      "zh_only_items": 1,
+      "multilingual_gain": 1,
+      "multilingual_gain_pct": 20.0,
+      "zh_only_field_ids": [
+        "F.assay_type"
+      ]
+    }
+  ]
+}

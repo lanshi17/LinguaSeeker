@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
-import re
+import html
 import json
+import re
 from dataclasses import dataclass
 from typing import Any, Literal, Sequence
 
 from loguru import logger
 
+from src.utils.text_normalize import find_html_aware
+
 from ..contracts import TranslationAlignmentChunk, TranslationSpanPair
 from .providers import invoke_json_with_retry
 
 _TOKEN_RE = re.compile(
-    r"[cp]\.\d+[A-Za-z0-9_>.-]*"
+    r"[cp]\.\d+[A-Za-z0-9_>.&#;-]*"
     r"|[A-Z][A-Z0-9]{1,}(?:[-_][A-Z0-9]+)*"
     r"|[A-Za-z]+(?:[-'][A-Za-z]+)*"
     r"|\d+(?:\.\d+)?"
@@ -56,17 +59,19 @@ def validate_span_pairs(
         if not original_text or not english_text:
             continue
 
-        original_local_start = chunk.original_text.find(original_text, original_cursor)
-        english_local_start = chunk.english_text.find(english_text, english_cursor)
+        original_local_start, original_local_end = find_html_aware(
+            chunk.original_text, original_text, original_cursor
+        )
+        english_local_start, english_local_end = find_html_aware(
+            chunk.english_text, english_text, english_cursor
+        )
         if original_local_start < 0:
-            original_local_start = chunk.original_text.find(original_text)
+            original_local_start, original_local_end = find_html_aware(chunk.original_text, original_text)
         if english_local_start < 0:
-            english_local_start = chunk.english_text.find(english_text)
+            english_local_start, english_local_end = find_html_aware(chunk.english_text, english_text)
         if original_local_start < 0 or english_local_start < 0:
             continue
 
-        original_local_end = original_local_start + len(original_text)
-        english_local_end = english_local_start + len(english_text)
         original_start = chunk.original_start_offset + original_local_start
         original_end = chunk.original_start_offset + original_local_end
         english_start = chunk.english_start_offset + english_local_start
@@ -80,8 +85,8 @@ def validate_span_pairs(
         accepted.append(
             TranslationSpanPair(
                 pair_id=f"{chunk.chunk_id}-p_{pair_index:04d}",
-                original_text=original_text,
-                english_text=english_text,
+                original_text=chunk.original_text[original_local_start:original_local_end],
+                english_text=chunk.english_text[english_local_start:english_local_end],
                 original_start_offset=original_start,
                 original_end_offset=original_end,
                 english_start_offset=english_start,
@@ -264,4 +269,4 @@ def _select_fallback_english_index(
 
 
 def _normalize_token(token: str) -> str:
-    return token.casefold().strip()
+    return html.unescape(token).casefold().strip()

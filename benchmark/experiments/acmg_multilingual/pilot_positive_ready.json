@@ -1,0 +1,92 @@
+{
+  "study_id": "acmg-multilingual-code-pilot-positive-subset",
+  "protocol_version": "v1",
+  "created_on": "2026-08-15",
+  "arms": [
+    "english_pivot",
+    "native_only",
+    "dual_track"
+  ],
+  "entries": [
+    {
+      "case_id": "rett_007",
+      "source_family_id": "rett_007_canonical",
+      "family_cluster_id": "rett_007_series",
+      "native_fulltext": {
+        "relative_path": "reviewed/rett_007/source.md",
+        "sha256": "1b5ba8f293164fac22dfe39bcc94ad596999e4236ed9c8ee47a2250fcaaec94d",
+        "language": "zh"
+      },
+      "translation_review": {
+        "status": "model_reviewed",
+        "english_fulltext": {
+          "relative_path": "reviewed/rett_007/english_fulltext.md",
+          "sha256": "9ca2332d715705ca8972584dd6295723f42387c8358889d008da31ce997a1716",
+          "language": "en"
+        },
+        "alignment_relative_path": "reviewed/rett_007/alignment.json",
+        "alignment_sha256": "a181cec15249a617ca03eb14f689f1b97ab5438c3c867db909687ac5e7ea48ee",
+        "reviewer_ids": [
+          "model-review-20260815"
+        ],
+        "reviewed_on": "2026-08-15",
+        "notes": "Machine-translated and model-reviewed English full text; no human clinician review. Web search could not index this Chinese-journal article, so the translation is grounded on the author-provided English abstract embedded in the native document."
+      },
+      "status": "ready",
+      "alias_case_ids": [
+        "rett_083"
+      ],
+      "notes": "Model-reviewed (not human-reviewed). Index assertion and criterion families are model-proposed and pending clinical confirmation.",
+      "index_assertion": {
+        "assertion_id": "rett_007_mecp2_rett",
+        "gene_symbol": "MECP2",
+        "disease_label": "Rett syndrome",
+        "variant_hgvs_c": "c.509C>T",
+        "variant_hgvs_p": "",
+        "planned_criterion_families": [
+          "PS2_PM6"
+        ]
+      }
+    },
+    {
+      "case_id": "rett_011",
+      "source_family_id": "rett_011_canonical",
+      "family_cluster_id": "rett_011_family",
+      "native_fulltext": {
+        "relative_path": "reviewed/rett_011/source.md",
+        "sha256": "9cfcd607a092f09ddc82c08c0dd199467dc2b8ded0716ede5e0904e203cf2dfa",
+        "language": "zh"
+      },
+      "translation_review": {
+        "status": "model_reviewed",
+        "english_fulltext": {
+          "relative_path": "reviewed/rett_011/english_fulltext.md",
+          "sha256": "f8522c276f0cf57c5f8c2c8c37aed68b89c720be383c8dbb409a0ee517d2c938",
+          "language": "en"
+        },
+        "alignment_relative_path": "reviewed/rett_011/alignment.json",
+        "alignment_sha256": "97c9766a8e564b4b80cd8c3d842e84b5f18205dc3663b89c9be746454c638d09",
+        "reviewer_ids": [
+          "model-review-20260815"
+        ],
+        "reviewed_on": "2026-08-15",
+        "notes": "Machine-translated and model-reviewed English full text; no human clinician review. Web search could not index this Chinese-journal article, so the translation is grounded on the author-provided English abstract embedded in the native document."
+      },
+      "status": "ready",
+      "alias_case_ids": [
+        "rett_087"
+      ],
+      "notes": "Model-reviewed (not human-reviewed). Index assertion and criterion families are model-proposed and pending clinical confirmation.",
+      "index_assertion": {
+        "assertion_id": "rett_011_mecp2_rett",
+        "gene_symbol": "MECP2",
+        "disease_label": "Rett syndrome",
+        "variant_hgvs_c": "c.710C>G",
+        "variant_hgvs_p": "",
+        "planned_criterion_families": [
+          "PS2_PM6"
+        ]
+      }
+    }
+  ]
+}

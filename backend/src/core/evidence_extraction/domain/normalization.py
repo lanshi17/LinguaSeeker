@@ -5,7 +5,10 @@ from __future__ import annotations
 import re
 import unicodedata
 
-from src.core.standardize_entities_and_align_knowledge.hgvs_normalizer import expand_hgvs_aliases
+from src.core.standardize_entities_and_align_knowledge.hgvs_normalizer import (
+    canonical_protein_hgvs,
+    expand_hgvs_aliases,
+)
 
 from ..contracts import (
     EvidenceItem,
@@ -27,6 +30,8 @@ _HGVS_G_RE = re.compile(
     r")$"
 )
 _VALUE_KEY_UNSET = object()
+# Canonical three-letter stop gain, e.g. `p.Ser65Ter`, whose group is a coding indel.
+_PROTEIN_STOP_CANONICAL_RE = re.compile(r"^(p\.[A-Z][a-z]{2}\d+)Ter$")
 
 
 class AcmgEvidenceValueNormalizer:
@@ -42,6 +47,14 @@ class AcmgEvidenceValueNormalizer:
             "assumed denovo",
             "pm6 eligible",
         }
+    )
+    # Longer phrases used as substrings so "assumed de novo (PM6-eligible)" still canonicalizes.
+    _DE_NOVO_TRUE_PHRASES = (
+        "assumed de novo",
+        "assumed denovo",
+        "pm6 eligible",
+        "de novo",
+        "denovo",
     )
     _GENE_SYMBOL_FIELDS = {
         "A.gene_symbol",
@@ -103,7 +116,7 @@ class AcmgEvidenceValueNormalizer:
             replacement, item_issues = self._normalize_one(item)
             normalized.append(replacement)
             issues.extend(item_issues)
-        aligned, align_issues = self._align_variant_type_to_coding_hgvs(normalized)
+        aligned, align_issues = self._align_consequence_to_coding_hgvs(normalized)
         issues.extend(align_issues)
         merged, merge_issues = self._merge_duplicates(aligned)
         issues.extend(merge_issues)
@@ -226,11 +239,17 @@ class AcmgEvidenceValueNormalizer:
             return replaced.model_copy(update={"notes": notes}), issues
         text = str(item.value).strip().lower()
         collapsed = re.sub(r"[\s_\-]+", " ", text).strip()
-        if item.value is False or text in {"0", "false", "not de novo", "not_de_novo", "inherited"}:
+        if (
+            item.value is False
+            or text in {"0", "false", "not de novo", "not_de_novo", "inherited"}
+            or "not de novo" in collapsed
+        ):
             return self._with_value_issue(item, "not_de_novo")
         if text == "de_novo":
             return self._downgrade_unconfirmed_ps2(item), []
-        if item.value is True or collapsed in self._DE_NOVO_TRUE_VALUES:
+        if item.value is True or collapsed in self._DE_NOVO_TRUE_VALUES or any(
+            phrase in collapsed for phrase in self._DE_NOVO_TRUE_PHRASES
+        ):
             replaced, issues = self._with_value_issue(item, "de_novo")
             return self._downgrade_unconfirmed_ps2(replaced), issues
         if text in {"unknown", "not reported", "not_reported", "unknown_not_reported"}:
@@ -290,11 +309,17 @@ class AcmgEvidenceValueNormalizer:
             return self._with_value_issue(item, "nonsense")
         return item, []
 
-    def _align_variant_type_to_coding_hgvs(
+    def _align_consequence_to_coding_hgvs(
         self,
         items: list[EvidenceItem],
     ) -> tuple[list[EvidenceItem], list[EvidenceNormalizationIssue]]:
-        """Use sibling A.variant_hgvs_c in the same group when the type quote omitted the del/ins."""
+        """Use sibling A.variant_hgvs_c in the same group when the type quote omitted the del/ins.
+
+        Papers often label a coding del/ins with the historical nonsense wording
+        and a matching `p.<AA><pos>Ter` protein change. Both describe the same
+        consequence, so they are realigned together; leaving one as frameshift
+        and the other as a stop gain would make the group self-contradictory.
+        """
         coding_groups = {
             item.group_id or ""
             for item in items
@@ -304,20 +329,35 @@ class AcmgEvidenceValueNormalizer:
                 or self.has_coding_indel(item.target_variant)
             )
         }
+        indel_coding_values = {
+            str(item.value)
+            for item in items
+            if item.status == EvidenceStatus.FOUND
+            and item.field_id == "A.variant_hgvs_c"
+            and self.has_coding_indel(str(item.value or ""))
+        }
+        # Live grouping sometimes puts c. and p. on different group_ids; a single
+        # coding indel in the batch is still enough to realign the protein stop.
+        cross_group_indel = len(indel_coding_values) == 1
         aligned: list[EvidenceItem] = []
         issues: list[EvidenceNormalizationIssue] = []
         for item in items:
+            in_coding_group = item.status == EvidenceStatus.FOUND and (
+                (item.group_id or "") in coding_groups or cross_group_indel
+            )
             value = str(item.value).strip().lower() if item.value is not None else ""
-            if (
-                item.field_id == "A.variant_type"
-                and item.status == EvidenceStatus.FOUND
-                and value in self._NONSENSE_TYPE_VALUES
-                and (item.group_id or "") in coding_groups
-            ):
+            if item.field_id == "A.variant_type" and in_coding_group and value in self._NONSENSE_TYPE_VALUES:
                 replacement, item_issues = self._with_value_issue(item, "frameshift")
                 aligned.append(replacement)
                 issues.extend(item_issues)
                 continue
+            if item.field_id == "A.variant_hgvs_p" and in_coding_group:
+                frameshift = _PROTEIN_STOP_CANONICAL_RE.sub(r"\1fs", str(item.value or ""))
+                if frameshift != str(item.value or ""):
+                    replacement, item_issues = self._with_value_issue(item, frameshift)
+                    aligned.append(replacement)
+                    issues.extend(item_issues)
+                    continue
             aligned.append(item)
         return aligned, issues
 
@@ -591,9 +631,12 @@ class AcmgEvidenceValueNormalizer:
         fs_aliases = [alias for alias in aliases if re.search(r"fs", alias, re.IGNORECASE)]
         if fs_aliases:
             preferred_fs = [alias for alias in fs_aliases if re.fullmatch(r"p\.[A-Z]\d+fs", alias)]
-            return sorted(preferred_fs or fs_aliases, key=lambda alias: (len(alias), alias))[0]
-        preferred = [alias for alias in aliases if re.fullmatch(r"p\.[A-Z]\d+(?:[A-Z*]|del|dup|ins)", alias)]
-        return sorted(preferred or aliases, key=lambda alias: (len(alias), alias))[0]
+            compact = sorted(preferred_fs or fs_aliases, key=lambda alias: (len(alias), alias))[0]
+        else:
+            preferred = [alias for alias in aliases if re.fullmatch(r"p\.[A-Z]\d+(?:[A-Z*]|del|dup|ins)", alias)]
+            compact = sorted(preferred or aliases, key=lambda alias: (len(alias), alias))[0]
+        # HGVS prefers the three-letter amino acid code and `Ter` over `X`/`*`.
+        return canonical_protein_hgvs(compact) or compact
 
     def _source_signature(self, item: EvidenceItem) -> str:
         source = item.raw_source or item.source

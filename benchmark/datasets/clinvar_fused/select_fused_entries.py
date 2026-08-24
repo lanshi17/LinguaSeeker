@@ -28,7 +28,7 @@ _REPO_ROOT = _HERE.parent.parent.parent.parent
 _DATABASE_ROOT = _REPO_ROOT / "database" / "terminology_database"
 CLINGEN_CSV = _DATABASE_ROOT / "clingen" / "Clingen-Gene-Disease-Summary.csv"
 CLINVAR_TSV = _DATABASE_ROOT / "clinvar" / "variant_summary.txt"
-OUTPUT_DIR = Path(__file__).resolve().parent / "ground_truth"
+OUTPUT_DIR = _REPO_ROOT / "benchmark" / "data" / "ground_truth" / "clinvar_fused"
 
 # ── ClinGen filtering ──────────────────────────────────────────────────
 

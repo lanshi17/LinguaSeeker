@@ -45,3 +45,24 @@ async def test_retrieve_for_target_filters_terminology_only(mock_repository: Asy
     assert len(result.nodes) == 1
     assert result.nodes[0].node_id == "gene:GLA"
     assert result.edges == []
+
+
+@pytest.mark.asyncio
+async def test_retrieval_uses_coding_variant_as_seed_when_no_protein_hgvs_is_available(
+    mock_repository: AsyncMock,
+) -> None:
+    """GraphRAG keeps c.-only experiment assertions target-specific."""
+    mock_repository.find_node_ids_by_name.return_value = []
+    retriever = SubgraphRetriever(mock_repository)
+    target = ExtractionTarget(
+        gene_symbol="MECP2",
+        disease_name="Rett syndrome",
+        variant_hgvs_c="c.710C>G",
+    )
+
+    await retriever.retrieve_for_target(target)
+
+    assert any(
+        call.kwargs == {"label": "Variant", "names": ["c.710C>G"]}
+        for call in mock_repository.find_node_ids_by_name.call_args_list
+    )

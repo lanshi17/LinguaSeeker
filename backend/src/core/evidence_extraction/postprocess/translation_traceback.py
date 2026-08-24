@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import re
 
+from src.core.cross_lingual_translation.contracts import TranslationAlignmentChunk, TranslationSpanPair
+from src.utils.text_normalize import find_html_aware
+
 from ..contracts import (
     EvidenceExtractionResult,
     EvidenceItem,
@@ -14,7 +17,6 @@ from ..contracts import (
     SpecialEvidenceRecord,
     TrackDocument,
 )
-from src.core.cross_lingual_translation.contracts import TranslationAlignmentChunk, TranslationSpanPair
 
 
 _SPACE_RE = re.compile(r"\s+")
@@ -159,10 +161,10 @@ def _map_identity_source_to_original(
     source: SourceLocation,
 ) -> SourceLocation | None:
     snippet = source.text_snippet
-    start = original_document.formatted_text.find(snippet) if snippet else -1
+    start, end = find_html_aware(original_document.formatted_text, snippet) if snippet else (-1, -1)
     precision = SourcePrecision.EXACT
     if start >= 0:
-        end = start + len(snippet)
+        snippet = original_document.formatted_text[start:end]
     elif 0 <= source.start_offset <= source.end_offset <= len(original_document.formatted_text):
         start = source.start_offset
         end = source.end_offset
@@ -273,7 +275,8 @@ def _find_block_index(
     fallback: int,
 ) -> int:
     for index, block in enumerate(document.blocks):
-        if snippet and snippet in _block_text(block):
+        block_text = _block_text(block)
+        if snippet and find_html_aware(block_text, snippet)[0] >= 0:
             return index
     if 0 <= fallback < len(document.blocks):
         return fallback
