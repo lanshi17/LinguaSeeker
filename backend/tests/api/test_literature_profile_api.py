@@ -7,6 +7,10 @@ from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
+from src.dao.postgresql.contracts import (
+    LiteratureProfileRow,
+    LiteratureProfileSearchItem,
+)
 
 
 @pytest.mark.asyncio
@@ -15,24 +19,25 @@ async def test_search_literature_returns_literature_profiles(async_client: Async
     doc_id = uuid4()
     profile_id = uuid4()
     mock_items = [
-        {
-            "literature_profile_id": str(profile_id),
-            "source_document_id": str(doc_id),
-            "pmid": "12345678",
-            "doi": "10.1234/test",
-            "title": "Test Article",
-            "journal": "Test Journal",
-            "publication_year": 2024,
-            "review_status": "provisional",
-            "overall_confidence": 0.85,
-            "total_evidence_fields": 5,
-            "found_count": 4,
-            "evidence_group_count": 2,
-            "gene": "BRCA1",
-            "variant": "c.68_69delAG",
-            "disease": "Breast cancer",
-            "classification": "Pathogenic",
-        }
+        LiteratureProfileSearchItem(
+            literature_profile_id=str(profile_id),
+            source_document_id=str(doc_id),
+            pmid="12345678",
+            doi="10.1234/test",
+            title="Test Article",
+            journal="Test Journal",
+            publication_year=2024,
+            review_status="provisional",
+            overall_confidence=0.85,
+            total_evidence_fields=5,
+            found_count=4,
+            evidence_group_count=2,
+            gene="BRCA1",
+            variant="c.68_69delAG",
+            disease="Breast cancer",
+            classification="Pathogenic",
+            created_at=None,
+        )
     ]
 
     with patch(
@@ -63,16 +68,16 @@ async def test_get_literature_detail_returns_profile_with_groups(async_client: A
     doc_id = uuid4()
     profile_id = uuid4()
     evidence_id = uuid4()
-    mock_profile = {
-        "literature_profile_id": str(profile_id),
-        "source_document_id": str(doc_id),
-        "pmid": "12345678",
-        "doi": "10.1234/test",
-        "title": "Test Article",
-        "authors": ["Author A", "Author B"],
-        "journal": "Test Journal",
-        "publication_year": 2024,
-        "evidence_groups": [
+    mock_profile = LiteratureProfileRow(
+        literature_profile_id=str(profile_id),
+        source_document_id=str(doc_id),
+        pmid="12345678",
+        doi="10.1234/test",
+        title="Test Article",
+        authors=["Author A", "Author B"],
+        journal="Test Journal",
+        publication_year=2024,
+        evidence_groups=[
             {
                 "group_id": "gene=['BRCA1']|variant=['c.68_69delAG']",
                 "summary": {"gene": "BRCA1", "variant": "c.68_69delAG"},
@@ -93,13 +98,15 @@ async def test_get_literature_detail_returns_profile_with_groups(async_client: A
                 ],
             }
         ],
-        "review_status": "provisional",
-        "review_notes": None,
-        "overall_confidence": 0.88,
-        "total_evidence_fields": 5,
-        "found_count": 4,
-        "not_found_count": 1,
-    }
+        review_status="provisional",
+        review_notes=None,
+        overall_confidence=0.88,
+        total_evidence_fields=5,
+        found_count=4,
+        not_found_count=1,
+        created_at=None,
+        updated_at=None,
+    )
 
     with patch(
         "src.dao.postgresql.literature_profile_repo.LiteratureProfileRepository.get_by_document",

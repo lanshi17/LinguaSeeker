@@ -32,14 +32,11 @@ from openai import AsyncOpenAI
 from benchmark.config.defaults import DEFAULT_SEED_QUERIES, RETT_CONFIG_PATH
 
 from src.core.config import get_config
-from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.relevance_gate import (
+from lit_acquisition import (
     RelevanceGateResult,
-    run_relevance_gate,
-)
-
-from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
     multilingual_acquisition_workflow,
     online_acquisition_workflow,
+    run_relevance_gate,
 )
 
 MODULE_DIR = Path(__file__).resolve().parent

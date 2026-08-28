@@ -46,6 +46,7 @@ dependencies = [
     "fpdf2>=2.8.7",
     "pyjstage2>=0.1.2",
     "python-multipart>=0.0.32",
+    "lit-acquisition>=0.2.1",
 ]
 
 [project.optional-dependencies]
@@ -78,6 +79,7 @@ url = "https://mirrors.aliyun.com/pypi/simple/"
 [tool.uv.sources]
 acmg-config-loader = { path = "../libs/config-loader", editable = true }
 rust-io = { path = "libs/rust-io", editable = true }
+lit-acquisition = { path = "../libs/lit-acquisition", editable = true }
 
 [tool.pytest.ini_options]
 pythonpath = [".."]

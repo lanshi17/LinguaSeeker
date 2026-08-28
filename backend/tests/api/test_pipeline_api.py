@@ -425,7 +425,7 @@ async def test_post_pipeline_run_duplicate_prevention(async_client: AsyncClient)
         )
 
         assert response.status_code == 409
-        mock_runner.is_running_for_source.assert_awaited_once_with("content:abc123")
+        mock_runner.is_running_for_source.assert_awaited_once_with("content:abc123", owner_user_id=None)
 
 
 @pytest.mark.asyncio
@@ -484,7 +484,7 @@ async def test_post_pipeline_run_cache_disabled_dedup_enabled_still_hashes_sourc
     assert response.status_code == 202
     mock_runner.compute_initial_content_hash.assert_awaited_once()
     mock_runner.check_processing_cache.assert_not_awaited()
-    mock_runner.is_running_for_source.assert_awaited_once_with("content:abc123")
+    mock_runner.is_running_for_source.assert_awaited_once_with("content:abc123", owner_user_id=None)
 
 
 @pytest.mark.asyncio
@@ -511,7 +511,7 @@ async def test_post_pipeline_run_same_filename_different_hash_not_blocked(async_
     assert response.status_code == 202
     initial_state = mock_runner.start.call_args[0][0]
     assert initial_state.source_key == "content:different-hash"
-    mock_runner.is_running_for_source.assert_awaited_once_with("content:different-hash")
+    mock_runner.is_running_for_source.assert_awaited_once_with("content:different-hash", owner_user_id=None)
 
 
 @pytest.mark.asyncio

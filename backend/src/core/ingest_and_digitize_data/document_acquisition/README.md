@@ -4,33 +4,23 @@
 
 ## 概述
 
-`document_acquisition` 模块提供文档获取的统一接口。通过 `DocumentAcquisitionService` 门面，调用方无需关心底层来源差异——本地上传走 `local_upload` 子模块（验证→哈希→存储），在线获取走 `online_acquisition` 子模块（多提供商搜索→下载→相关性过滤）。
+`document_acquisition` 模块提供文档获取的统一接口。通过 `DocumentAcquisitionService` 门面，调用方无需关心底层来源差异--本地上传走 `local_upload` 子模块（验证->哈希->存储），在线获取委托外部 **`lit-acquisition` SDK**（`multilingual_acquisition_workflow` / `online_acquisition_workflow`，多提供商搜索->下载->相关性过滤）。
 
 ## 结构
 
 ```
 document_acquisition/
 ├── __init__.py          # 导出 Service、Request、Result、Source 枚举
-├── contracts.py         # 统一数据类型定义
+├── contracts.py         # 统一数据类型定义（Item/RouteInfo 复用 lit_acquisition 模型）
 ├── service.py           # DocumentAcquisitionService 门面
 ├── README.md
-├── local_upload/        # 本地文件上传子模块
-│   ├── contracts.py     # LocalUploadedFile、LocalStoredFile、LocalUploadResult
-│   ├── service.py       # 验证与存储逻辑
-│   └── workflow.py      # upload_document() 入口
-└── online_acquisition/  # 在线文献获取子模块
-    ├── contracts.py     # OnlineAcquisitionRequest/Response/Item 等
-    ├── gateway.py       # 统一 HTTP 网关（调用 net_io）
-    ├── workflow.py       # 三阶段在线获取流水线
-    ├── search_service.py # 多语言搜索编排
-    ├── normalizers.py    # 各提供商数据标准化器
-    ├── pubmed_service.py # PubMed API 集成
-    ├── query_translator.py # 查询多语言翻译
-    ├── relevance_gate.py # LLM 相关性门控
-    ├── literature_type_classifier.py # 文献类型分类
-    ├── provider_health.py # 提供商健康追踪
-    └── web_search/       # Web 搜索适配器（Firecrawl/Tavily/SerpApi）
+└── local_upload/        # 本地文件上传子模块
+    ├── contracts.py     # LocalUploadedFile、LocalStoredFile、LocalUploadResult
+    ├── service.py       # 验证与存储逻辑
+    └── workflow.py      # upload_document() 入口
 ```
+
+在线文献获取（搜索、下载、多语言翻译、相关性门控、提供商健康追踪、Web 搜索适配器）由 **`lit-acquisition` SDK** 提供：本地路径依赖（`../../17_lit-acquisition`，editable，声明于 `backend/pyproject.toml` 的 `[tool.uv.sources]`）。SDK 自身的 LLM / Web 搜索 / 代理配置在应用启动时由 `src/api/wiring.py::_configure_lit_acquisition()` 从后端配置桥接注入；`UNPAYWALL_EMAIL` / `PUBMED_API_KEY` 等提供商密钥经后端 YAML 扁平化为环境变量后由 SDK 自动读取。
 
 ## 核心组件
 
@@ -44,9 +34,9 @@ document_acquisition/
 ### service.py — 门面服务
 
 - **`DocumentAcquisitionService`**：统一入口
-  - `acquire(request)` → 根据 `source` 分发到 `_handle_upload()` 或 `_handle_literature()`
+  - `acquire(request)` -> 根据 `source` 分发到 `_handle_upload()` 或 `_handle_literature()`
   - 本地上传：委托 `local_upload` 模块，支持去重（SHA-256）
-  - 在线获取：委托 `online_acquisition.workflow.online_acquisition_workflow()`，返回文献列表和下载结果
+  - 在线获取：委托 `lit_acquisition.multilingual_acquisition_workflow()`（自由文本 + `language="auto"` 时）或 `lit_acquisition.online_acquisition_workflow()`（单语言 / 标识符驱动），返回文献列表和下载结果
 
 ## 数据流
 
@@ -57,9 +47,9 @@ DocumentAcquisitionService.acquire()
         ├── LOCAL → local_upload.upload_document()
         │           → validate → SHA-256 → store → LocalStoredFile
         │
-        └── ONLINE → online_acquisition_workflow()
-                     → search → download → relevance_gate
-                     → items[] + downloads[]
+        └── ONLINE -> lit_acquisition workflow（SDK）
+                     -> search -> download -> relevance_gate
+                     -> items[] + downloads[]
         ↓
 DocumentAcquisitionResult
 ```

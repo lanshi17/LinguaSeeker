@@ -5,8 +5,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional
 
+from lit_acquisition import OnlineAcquisitionItem, OnlineAcquisitionRouteInfo
+
 from .local_upload.contracts import LocalStoredFile
-from .online_acquisition.contracts import OnlineAcquisitionItem, OnlineAcquisitionRouteInfo
 
 
 class AcquisitionSource(str, Enum):

@@ -23,7 +23,7 @@ from typing import Any, Dict, List, Optional, cast
 import httpx
 import fitz
 
-from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
+from lit_acquisition import (
     multilingual_acquisition_workflow,
     online_acquisition_workflow,
 )

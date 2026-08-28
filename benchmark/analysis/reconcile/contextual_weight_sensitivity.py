@@ -17,21 +17,21 @@ from benchmark.core import (
     compare_evidence,
     compute_aggregate_metrics,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
     EvidenceItem,
     SourceLocation,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.contextual import (
+from src.core.evidence_extraction.reconcile.contextual import (
     _accepted_rationale,
     _annotate_accepted,
     _score_candidate,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.contracts import (
+from src.core.evidence_extraction.reconcile.contracts import (
     CandidateScore,
     ReconcileParams,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.core import (
+from src.core.evidence_extraction.reconcile.core import (
     _Candidate,
     _build_candidates,
     _first_conflicting_score,

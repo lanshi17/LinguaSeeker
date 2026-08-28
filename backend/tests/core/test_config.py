@@ -57,7 +57,7 @@ def test_standardization_similarity_model_defaults_match_inference_service() -> 
     rerank = RerankConfig()
 
     assert embedding.base_url == ""
-    assert embedding.model == "Qwen/Qwen3-Embedding-0.6B"
+    assert embedding.model == "BAAI/bge-m3"
     assert embedding.dimension == 1024
     assert rerank.model == "BAAI/bge-reranker-v2-m3"
 
@@ -152,8 +152,9 @@ def test_production_requires_api_key() -> None:
         Settings(environment="production", api_key="")
 
 
-def test_production_accepts_api_key() -> None:
-    """Settings accepts production with a valid API_KEY."""
+def test_production_accepts_api_key(monkeypatch) -> None:
+    """Settings accepts production with a valid API_KEY and required secrets."""
+    monkeypatch.setenv("REDIS_PASSWORD", "secret-redis")
     settings = Settings(environment="production", api_key="secret")
 
     assert settings.is_production is True

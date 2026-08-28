@@ -15,7 +15,7 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
 )
 from src.core.standardize_entities_and_align_knowledge.matchers import (
     HybridTerminologyMatcher,
-    TerminologyMatcher,
+    PreciseTerminologyMatcher,
 )
 from src.core.standardize_entities_and_align_knowledge.similarity_match.core import (
     SemanticMatchServiceError,
@@ -53,7 +53,7 @@ async def test_unique_gene_alias_match_standardizes() -> None:
         alias_type="primary",
     )
 
-    matcher = TerminologyMatcher(FakeRepository([terminology]))
+    matcher = PreciseTerminologyMatcher(FakeRepository([terminology]))
     match = await matcher.match(candidate)
 
     assert match.status == MatchStatus.STANDARDIZED
@@ -90,7 +90,7 @@ async def test_gene_match_prefers_primary_alias_type_within_hgnc() -> None:
         alias_type="primary",
     )
 
-    match = await TerminologyMatcher(FakeRepository([previous_symbol, primary])).match(candidate)
+    match = await PreciseTerminologyMatcher(FakeRepository([previous_symbol, primary])).match(candidate)
 
     assert match.status == MatchStatus.STANDARDIZED
     assert match.external_id == "HGNC:1100"
@@ -112,7 +112,7 @@ async def test_multiple_candidates_are_ambiguous() -> None:
         TerminologyCandidate("e2", EntityType.DISEASE, "OMIM", "OMIM:2", "Disease B", "mitochondrial disease", "name"),
     ]
 
-    match = await TerminologyMatcher(FakeRepository(choices)).match(candidate)
+    match = await PreciseTerminologyMatcher(FakeRepository(choices)).match(candidate)
 
     assert match.status == MatchStatus.AMBIGUOUS
     assert match.external_id is None
@@ -136,7 +136,7 @@ async def test_disease_match_prefers_omim_over_hpo_and_mondo() -> None:
         "e2", EntityType.DISEASE, "HPO", "HP:0100013", "Breast neoplasm", "breast cancer", "alias"
     )
 
-    match = await TerminologyMatcher(FakeRepository([hpo, omim])).match(candidate)
+    match = await PreciseTerminologyMatcher(FakeRepository([hpo, omim])).match(candidate)
 
     assert match.status == MatchStatus.STANDARDIZED
     assert match.external_id == "OMIM:114480"
@@ -154,7 +154,7 @@ async def test_no_candidates_yields_unmapped() -> None:
         track="original",
     )
 
-    match = await TerminologyMatcher(FakeRepository([])).match(candidate)
+    match = await PreciseTerminologyMatcher(FakeRepository([])).match(candidate)
 
     assert match.status == MatchStatus.UNMAPPED
     assert match.external_id is None
@@ -193,7 +193,7 @@ async def test_variant_match_prefers_candidate_with_matching_gene_symbol_context
         raw_payload={"gene_symbol": "GLA"},
     )
 
-    match = await TerminologyMatcher(FakeRepository([same_alias_other_gene, same_alias_expected_gene])).match(candidate)
+    match = await PreciseTerminologyMatcher(FakeRepository([same_alias_other_gene, same_alias_expected_gene])).match(candidate)
 
     assert match.status == MatchStatus.STANDARDIZED
     assert match.external_id == "ClinVarVariation:10733"
@@ -201,7 +201,7 @@ async def test_variant_match_prefers_candidate_with_matching_gene_symbol_context
 
 def test_rank_raises_for_unsupported_entity_type() -> None:
     """Unsupported entity types fail loudly instead of silently returning no matches."""
-    matcher = TerminologyMatcher(FakeRepository([]))
+    matcher = PreciseTerminologyMatcher(FakeRepository([]))
 
     with pytest.raises(ValueError, match="Unsupported entity type"):
         matcher._rank("protein", ())  # type: ignore[arg-type]

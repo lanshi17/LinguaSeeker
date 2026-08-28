@@ -20,7 +20,7 @@ from src.config import get_config
 def _parse_catalog_fields() -> dict[str, list[dict]]:
     """Parse field definitions directly from catalog.py source."""
     catalog_path = Path(__file__).resolve().parent.parent.parent / \
-        "backend" / "src" / "core" / "cross_lingual_process_and_extract_evidence" / \
+        "backend" / "src" / "core" / "evidence_extraction" / \
         "extract_evidence" / "catalog.py"
     content = catalog_path.read_text(encoding="utf-8")
 

@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator, model_v
 
 from benchmark.analysis.baselines.runner import BaselineEntry, BaselineEvidenceItem
 from src.core.config import get_config
-from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.language_detector import (
+from src.core.cross_lingual_translation.translate.language_detector import (
     should_skip_translation,
 )
 from src.utils.llm_adapter import LLMPoolAdapter, create_llm_client

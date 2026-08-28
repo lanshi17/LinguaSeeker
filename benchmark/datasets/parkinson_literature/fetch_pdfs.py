@@ -10,7 +10,7 @@ from typing import Any, Mapping, Protocol
 
 import httpx
 
-from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.pubmed_service import (
+from lit_acquisition import (
     OnlineAcquisitionPubMedCandidate,
     OnlineAcquisitionPubMedService,
     get_pubmed_service,

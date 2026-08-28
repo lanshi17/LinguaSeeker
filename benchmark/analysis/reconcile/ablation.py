@@ -18,19 +18,19 @@ from benchmark.core import (
     compare_evidence,
     compute_aggregate_metrics,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
     EvidenceItem,
     SourceLocation,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.core import (
+from src.core.evidence_extraction.reconcile.core import (
     reconcile_results,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.contracts import (
+from src.core.evidence_extraction.reconcile.contracts import (
     CandidateScore,
     FieldDecision,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.contextual import (
+from src.core.evidence_extraction.reconcile.contextual import (
     reconcile_with_context,
 )
 from src.core.standardize_entities_and_align_knowledge.context_pack.contracts import (

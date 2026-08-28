@@ -19,7 +19,7 @@ from benchmark.core import (
     compute_aggregate_metrics,
     fuzzy_match_value,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
     EvidenceItem,
 )

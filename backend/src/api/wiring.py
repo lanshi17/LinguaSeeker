@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from redis.asyncio import Redis as AsyncRedis
 
-from src.core.config import get_config
+from src.core.config import Settings, get_config
 from src.dao.neo4j.connection import build_neo4j_driver
 from src.dao.neo4j.repository import Neo4jRepository
 from src.dao.postgresql.connection import async_session_factory, build_async_engine
@@ -99,6 +99,35 @@ def get_dispatcher() -> SingleJobDispatcher | None:
     return _dispatcher
 
 
+def _configure_lit_acquisition(cfg: Settings) -> None:
+    """Bridge backend configuration into the lit-acquisition SDK.
+
+    The SDK keeps its own process-wide config (LLM keys for the relevance
+    gate and query translation, web-search adapter keys, outbound proxy)
+    which it otherwise loads from ``LIT_*`` environment variables.  The
+    backend YAML config is the single source of truth, so mirror the
+    relevant domains into the SDK once at startup.
+    """
+    from lit_acquisition import configure as configure_lit_acquisition
+
+    configure_lit_acquisition(
+        llm_base_url=cfg.llm.base_url,
+        llm_model=cfg.llm.model,
+        llm_api_key=cfg.llm.api_key,
+        llm_api_keys=list(cfg.llm.api_keys),
+        llm_max_tokens=cfg.llm.max_tokens,
+        translation_base_url=cfg.translation.base_url,
+        translation_model=cfg.translation.model,
+        translation_api_key=cfg.translation.api_key,
+        translation_api_keys=list(cfg.translation.api_keys),
+        firecrawl_api_key=cfg.web_search.firecrawl_api_key,
+        tavily_api_key=cfg.web_search.tavily_api_key,
+        serpapi_api_key=cfg.web_search.serpapi_api_key,
+        proxy=cfg.network.proxy,
+        no_proxy=cfg.network.no_proxy,
+    )
+
+
 def wire_dependencies() -> None:
     """Assemble and inject all application dependencies.
 
@@ -147,6 +176,9 @@ def wire_dependencies() -> None:
     global _engine, _session_factory, _redis_client, _local_parser, _dispatcher, _neo4j_driver, _neo4j_repository
 
     cfg = get_config()
+
+    # ── lit-acquisition SDK (online literature acquisition) ──────────
+    _configure_lit_acquisition(cfg)
 
     # ── PostgreSQL engine/session singleton ──────────────────────────
     if _engine is None:

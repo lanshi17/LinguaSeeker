@@ -14,8 +14,7 @@ ingest_and_digitize_data/
 ├── document_acquisition/     # 文档采集子模块
 │   ├── contracts.py          # 统一数据类型（AcquisitionSource、Request/Result）
 │   ├── service.py            # 统一门面服务 DocumentAcquisitionService
-│   ├── local_upload/         # 本地文件上传
-│   └── online_acquisition/   # 在线文献搜索与下载
+│   └── local_upload/         # 本地文件上传（在线获取委托 lit-acquisition SDK）
 └── parse_document/           # 文档解析子模块
     ├── contracts.py          # 解析结果数据类型（ParseResult、PageContent 等）
     ├── base.py               # 解析器抽象基类 ParserStrategy

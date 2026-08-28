@@ -14,25 +14,25 @@ from pathlib import Path
 from typing import Any, cast
 
 from benchmark.core import GROUND_TRUTH_DIR, REPORTS_DIR
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
     EvidenceItem,
     Track,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.contextual import (
+from src.core.evidence_extraction.reconcile.contextual import (
     reconcile_with_context,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.contracts import (
+from src.core.evidence_extraction.reconcile.contracts import (
     CandidateScore,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.core import (
+from src.core.evidence_extraction.reconcile.core import (
     _build_candidates,
     _Candidate,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.contextual import (
+from src.core.evidence_extraction.reconcile.contextual import (
     _score_candidate,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.features import (
+from src.core.evidence_extraction.reconcile.features import (
     CandidateFeatureVector,
     extract_features,
 )

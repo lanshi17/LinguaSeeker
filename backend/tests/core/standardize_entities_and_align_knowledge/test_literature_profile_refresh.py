@@ -60,7 +60,7 @@ async def test_standardization_service_refreshes_literature_profile() -> None:
     await service.run(input_data)
 
     # Verify refresh was called with the source_document_id.
-    repository.refresh_literature_profile.assert_awaited_once_with("sd-1")
+    repository.refresh_literature_profile.assert_awaited_once_with("sd-1", owner_user_id=None)
 
 
 @pytest.mark.asyncio

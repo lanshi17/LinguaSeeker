@@ -27,14 +27,24 @@ def test_short_technical_text_not_flagged_as_unchanged():
 
 
 def test_long_unchanged_text_still_flagged():
-    """Long texts that are genuinely unchanged should still be flagged."""
+    """Long non-English texts that are genuinely unchanged should still be flagged.
+
+    The unchanged check intentionally skips English sources (translating an
+    English document produces similar text by design) and short texts (shared
+    technical terms inflate similarity).  It also skips nothing for length on
+    long inputs, so a long non-English source echoed verbatim must be flagged.
+    A non-CJK language is used because echoed CJK text is rejected earlier by
+    the CJK-ratio check as ``non_english_output`` rather than ``unchanged``.
+    """
     from src.core.cross_lingual_translation.translate.validator.core import (
         validate_translation_output,
     )
 
-    # A long text that is identical (or nearly so) should be caught
+    # A long Spanish text echoed verbatim (no translation performed)
     source = (
-        "The BRCA1 gene is a tumor suppressor gene that produces a protein involved in DNA repair. Mutations in this gene are associated with increased risk of breast and ovarian cancer. "
+        "El gen BRCA1 es un gen supresor de tumores que produce una proteina "
+        "implicada en la reparacion del ADN. Las mutaciones de este gen se "
+        "asocian con un mayor riesgo de cancer de mama y de ovario. "
         * 3
     )
     translated = source  # Exactly the same

@@ -378,29 +378,15 @@ async def test_get_by_document_returns_profile_dict() -> None:
     result = await repo.get_by_document(doc_id)
 
     assert result is not None
-    expected_keys = {
-        "literature_profile_id",
-        "source_document_id",
-        "pmid",
-        "doi",
-        "title",
-        "evidence_groups",
-        "review_status",
-        "overall_confidence",
-        "total_evidence_fields",
-        "found_count",
-        "not_found_count",
-    }
-    assert expected_keys.issubset(result.keys())
-    assert result["literature_profile_id"] == str(profile_id)
-    assert result["source_document_id"] == str(doc_id)
-    assert result["pmid"] == "12345678"
-    assert result["doi"] == "10.1234/test"
-    assert result["title"] == "Test Title"
-    assert result["overall_confidence"] == pytest.approx(0.95)
-    assert result["total_evidence_fields"] == 10
-    assert result["found_count"] == 8
-    assert result["not_found_count"] == 2
+    assert result.literature_profile_id == str(profile_id)
+    assert result.source_document_id == str(doc_id)
+    assert result.pmid == "12345678"
+    assert result.doi == "10.1234/test"
+    assert result.title == "Test Title"
+    assert result.overall_confidence == pytest.approx(0.95)
+    assert result.total_evidence_fields == 10
+    assert result.found_count == 8
+    assert result.not_found_count == 2
 
 
 @pytest.mark.asyncio
@@ -490,10 +476,9 @@ async def test_search_returns_items_and_total() -> None:
         "disease",
         "classification",
     }
-    assert expected_keys.issubset(item.keys())
-    assert item["literature_profile_id"] == str(profile_id)
-    assert item["gene"] == "BRCA1"
-    assert item["variant"] == "c.5266dupC"
-    assert item["disease"] == "Breast cancer"
-    assert item["classification"] == "Pathogenic"
-    assert item["evidence_group_count"] == 1
+    assert item.literature_profile_id == str(profile_id)
+    assert item.gene == "BRCA1"
+    assert item.variant == "c.5266dupC"
+    assert item.disease == "Breast cancer"
+    assert item.classification == "Pathogenic"
+    assert item.evidence_group_count == 1

@@ -124,6 +124,7 @@ async def test_runner_cleans_rerun_artifacts_before_phase_rerun_claim(mock_orche
     mock_persistence.reset_phase_rerun_artifacts.assert_awaited_once_with(
         processing_run_id="run-123",
         source_document_id="doc-456",
+        owner_user_id=None,
         target_phase=2,
     )
     assert calls[:2] == ["reset", "save"]
@@ -619,7 +620,7 @@ async def test_is_running_for_source_checks_persistence_when_cache_misses(
     )
 
     assert await runner.is_running_for_source("pmid:123") is True
-    mock_persistence.has_active_source_key.assert_awaited_once_with("pmid:123")
+    mock_persistence.has_active_source_key.assert_awaited_once_with("pmid:123", owner_user_id=None)
 
 
 @pytest.mark.asyncio

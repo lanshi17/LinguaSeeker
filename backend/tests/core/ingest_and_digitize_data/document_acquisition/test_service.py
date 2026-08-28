@@ -90,12 +90,12 @@ class TestDocumentAcquisitionService:
         }
         with (
             patch(
-                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+                "lit_acquisition.multilingual_acquisition_workflow",
                 new_callable=AsyncMock,
                 return_value=mock_result,
             ) as mock_ml,
             patch(
-                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.online_acquisition_workflow",
+                "lit_acquisition.online_acquisition_workflow",
                 new_callable=AsyncMock,
                 return_value=mock_result,
             ) as mock_single,
@@ -125,7 +125,7 @@ class TestDocumentAcquisitionService:
             "route": None,
         }
         with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+            "lit_acquisition.multilingual_acquisition_workflow",
             new_callable=AsyncMock,
             return_value=mock_result,
         ) as mock_ml:
@@ -153,7 +153,7 @@ class TestDocumentAcquisitionService:
             "route": None,
         }
         with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+            "lit_acquisition.multilingual_acquisition_workflow",
             new_callable=AsyncMock,
             return_value=mock_result,
         ) as mock_ml:
@@ -181,12 +181,12 @@ class TestDocumentAcquisitionService:
         }
         with (
             patch(
-                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+                "lit_acquisition.multilingual_acquisition_workflow",
                 new_callable=AsyncMock,
                 return_value=mock_result,
             ) as mock_ml,
             patch(
-                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.online_acquisition_workflow",
+                "lit_acquisition.online_acquisition_workflow",
                 new_callable=AsyncMock,
                 return_value=mock_result,
             ) as mock_single,
@@ -213,12 +213,12 @@ class TestDocumentAcquisitionService:
         }
         with (
             patch(
-                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+                "lit_acquisition.multilingual_acquisition_workflow",
                 new_callable=AsyncMock,
                 return_value=mock_result,
             ) as mock_ml,
             patch(
-                "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.online_acquisition_workflow",
+                "lit_acquisition.online_acquisition_workflow",
                 new_callable=AsyncMock,
                 return_value=mock_result,
             ) as mock_single,
@@ -355,7 +355,7 @@ class TestDocumentAcquisitionService:
             "route": None,
         }
         with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+            "lit_acquisition.multilingual_acquisition_workflow",
             new_callable=AsyncMock,
             return_value=mock_result,
         ):
@@ -384,7 +384,7 @@ class TestDocumentAcquisitionService:
             "route": None,
         }
         with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.multilingual_acquisition_workflow",
+            "lit_acquisition.multilingual_acquisition_workflow",
             new_callable=AsyncMock,
             return_value=mock_result,
         ):

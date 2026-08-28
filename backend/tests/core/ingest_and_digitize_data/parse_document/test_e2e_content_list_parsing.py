@@ -7,7 +7,7 @@ from src.core.ingest_and_digitize_data.parse_document.common.converters import (
     html_table_to_markdown,
     html_table_to_structured,
 )
-from tests.core.ingest_and_digitize_data.parse_document.test_e2e_mineru import (
+from .test_e2e_mineru import (
     _parse_content_list,
 )
 

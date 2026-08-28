@@ -19,8 +19,8 @@ from src.core.ingest_and_digitize_data.parse_document.exceptions import (
 )
 from src.core.ingest_and_digitize_data.parse_document.orchestrator import (
     DocumentParseOrchestrator,
-    _validate_url_safe,
 )
+from src.utils.ssrf import validate_url_safe as _validate_url_safe
 
 
 @pytest.fixture
@@ -188,7 +188,7 @@ async def test_url_fallback_downloads_to_temp_and_cleans_up(mock_remote, mock_lo
 
     with (
         patch("src.core.ingest_and_digitize_data.parse_document.orchestrator.httpx.AsyncClient") as mock_cls,
-        patch("src.core.ingest_and_digitize_data.parse_document.orchestrator._validate_url_safe"),
+        patch("src.utils.ssrf.validate_url_safe"),
     ):
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
@@ -214,7 +214,7 @@ async def test_url_fallback_rejects_non_pdf_content_type(mock_remote, mock_local
 
     with (
         patch("src.core.ingest_and_digitize_data.parse_document.orchestrator.httpx.AsyncClient") as mock_cls,
-        patch("src.core.ingest_and_digitize_data.parse_document.orchestrator._validate_url_safe"),
+        patch("src.utils.ssrf.validate_url_safe"),
     ):
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
@@ -237,7 +237,7 @@ async def test_url_fallback_rejects_non_pdf_signature(mock_remote, mock_local):
 
     with (
         patch("src.core.ingest_and_digitize_data.parse_document.orchestrator.httpx.AsyncClient") as mock_cls,
-        patch("src.core.ingest_and_digitize_data.parse_document.orchestrator._validate_url_safe"),
+        patch("src.utils.ssrf.validate_url_safe"),
     ):
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
@@ -269,7 +269,7 @@ async def test_url_fallback_rejects_http_error(mock_remote, mock_local):
 
     with (
         patch("src.core.ingest_and_digitize_data.parse_document.orchestrator.httpx.AsyncClient") as mock_cls,
-        patch("src.core.ingest_and_digitize_data.parse_document.orchestrator._validate_url_safe"),
+        patch("src.utils.ssrf.validate_url_safe"),
     ):
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
@@ -283,37 +283,37 @@ async def test_url_fallback_rejects_http_error(mock_remote, mock_local):
 
 
 def test_validate_url_safe_rejects_loopback():
-    with pytest.raises(MinerUAPIError, match="private/reserved"):
+    with pytest.raises(ValueError, match="private/reserved"):
         _validate_url_safe("http://127.0.0.1/admin")
 
 
 def test_validate_url_safe_rejects_private_10():
-    with pytest.raises(MinerUAPIError, match="private/reserved"):
+    with pytest.raises(ValueError, match="private/reserved"):
         _validate_url_safe("http://10.0.0.1/file.pdf")
 
 
 def test_validate_url_safe_rejects_private_192():
-    with pytest.raises(MinerUAPIError, match="private/reserved"):
+    with pytest.raises(ValueError, match="private/reserved"):
         _validate_url_safe("http://192.168.1.1/file.pdf")
 
 
 def test_validate_url_safe_rejects_private_172():
-    with pytest.raises(MinerUAPIError, match="private/reserved"):
+    with pytest.raises(ValueError, match="private/reserved"):
         _validate_url_safe("http://172.16.0.1/file.pdf")
 
 
 def test_validate_url_safe_rejects_link_local():
-    with pytest.raises(MinerUAPIError, match="private/reserved"):
+    with pytest.raises(ValueError, match="private/reserved"):
         _validate_url_safe("http://169.254.169.254/latest/meta-data/")
 
 
 def test_validate_url_safe_rejects_ipv6_loopback():
-    with pytest.raises(MinerUAPIError, match="private/reserved"):
+    with pytest.raises(ValueError, match="private/reserved"):
         _validate_url_safe("http://[::1]/file.pdf")
 
 
 def test_validate_url_safe_rejects_unsupported_scheme():
-    with pytest.raises(MinerUAPIError, match="Unsupported URL scheme"):
+    with pytest.raises(ValueError, match="Unsupported URL scheme"):
         _validate_url_safe("ftp://example.com/file.pdf")
 
 

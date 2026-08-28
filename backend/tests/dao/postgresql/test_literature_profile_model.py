@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from sqlalchemy import UniqueConstraint
 
 def test_literature_profile_model_exists() -> None:
     """LiteratureProfile is importable from models module."""
@@ -43,6 +44,9 @@ def test_literature_profile_unique_source_document() -> None:
     from src.dao.postgresql.models import LiteratureProfile
 
     table = LiteratureProfile.__table__
-    # Check unique=True on the column itself
-    col = table.columns["source_document_id"]
-    assert col.unique is True
+    # The uniqueness is enforced by a table-level UniqueConstraint on
+    # (source_document_id, owner_user_id) rather than a per-column flag.
+    constraint_names = {
+        c.name for c in table.constraints if isinstance(c, UniqueConstraint)
+    }
+    assert "uq_literature_profiles_document_owner" in constraint_names

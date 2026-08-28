@@ -528,6 +528,39 @@ async def test_dispatcher_idle_backoff_resets_after_claim(mock_runner, mock_job_
     assert sleep_args == [1.0, 2.0, 1.0, 2.0]
     mock_job_queue.complete.assert_awaited_once_with("job-1")
 
+
+@pytest.mark.asyncio
+async def test_dispatcher_idle_backoff_never_overflows(mock_runner, mock_job_queue):
+    """Idle backoff must not overflow after thousands of consecutive idle polls."""
+    mock_job_queue.claim_next = AsyncMock(return_value=None)
+    sleep_args: list[float] = []
+    stopper: dict[str, SingleJobDispatcher | None] = {"dispatcher": None}
+
+    async def fake_sleep(delay: float) -> None:
+        sleep_args.append(delay)
+        if len(sleep_args) >= 3000:
+            stopper["dispatcher"]._stopping = True  # type: ignore[union-attr]
+
+    dispatcher = SingleJobDispatcher(
+        runner=mock_runner,
+        job_queue=mock_job_queue,
+        poll_interval=1.0,
+        idle_max_interval=4.0,
+    )
+    stopper["dispatcher"] = dispatcher
+    dispatcher._stopping = False
+
+    with patch("asyncio.sleep", new=fake_sleep):
+        await dispatcher._loop()
+
+    # The old `2 ** idle_streak` computation overflowed at ~1024 idle polls and
+    # fell through to the except handler, which sleeps poll_interval (1.0).
+    # The in-place doubling clamps to idle_max_interval and never falls back.
+    assert len(sleep_args) == 3000
+    assert all(delay <= 4.0 for delay in sleep_args)
+    assert sleep_args[-1] == 4.0
+    assert set(sleep_args) == {1.0, 2.0, 4.0}
+
 # ── recover_stale_jobs (real SQL, SQLite-safe) ──────────────────────────────
 
 

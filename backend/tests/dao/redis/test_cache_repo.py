@@ -113,50 +113,46 @@ async def test_get_entity_cache() -> None:
 
 
 @pytest.mark.asyncio
-async def test_invalidate_document_uses_pipeline() -> None:
-    """Document invalidation deletes all related keys in a single pipeline."""
+async def test_invalidate_document_uses_direct_delete() -> None:
+    """Document invalidation issues a single direct DELETE."""
     from src.dao.redis.cache_repo import CacheRepository
 
     client = _fake_redis_client()
-    pipeline = client.pipeline.return_value.__aenter__.return_value
     repo = CacheRepository(client)
 
     await repo.invalidate_document("doc-1")
 
-    # All deletes must go through the same pipeline.
-    pipeline.delete.assert_any_call("doc:doc-1")
-    # The plan says invalidation must batch namespace deletes together.
-    pipeline.execute.assert_awaited_once()
+    # Single-key invalidation is a direct DELETE.
+    client.delete.assert_awaited_once_with("doc:doc-1")
+    client.pipeline.assert_not_called()
 
 
 @pytest.mark.asyncio
-async def test_invalidate_canonical_uses_pipeline() -> None:
-    """Canonical evidence invalidation uses a single pipeline for deletes."""
+async def test_invalidate_canonical_uses_direct_delete() -> None:
+    """Canonical evidence invalidation issues a single direct DELETE."""
     from src.dao.redis.cache_repo import CacheRepository
 
     client = _fake_redis_client()
-    pipeline = client.pipeline.return_value.__aenter__.return_value
     repo = CacheRepository(client)
 
     await repo.invalidate_canonical_evidence("ce-42")
 
-    pipeline.delete.assert_any_call("canonical:ce-42")
-    pipeline.execute.assert_awaited_once()
+    client.delete.assert_awaited_once_with("canonical:ce-42")
+    client.pipeline.assert_not_called()
 
 
 @pytest.mark.asyncio
-async def test_invalidate_entity_uses_pipeline() -> None:
-    """Entity invalidation uses a single pipeline for deletes."""
+async def test_invalidate_entity_uses_direct_delete() -> None:
+    """Entity invalidation issues a single direct DELETE."""
     from src.dao.redis.cache_repo import CacheRepository
 
     client = _fake_redis_client()
-    pipeline = client.pipeline.return_value.__aenter__.return_value
     repo = CacheRepository(client)
 
     await repo.invalidate_entity("ent-77")
 
-    pipeline.delete.assert_any_call("entity:ent-77")
-    pipeline.execute.assert_awaited_once()
+    client.delete.assert_awaited_once_with("entity:ent-77")
+    client.pipeline.assert_not_called()
 
 
 @pytest.mark.asyncio

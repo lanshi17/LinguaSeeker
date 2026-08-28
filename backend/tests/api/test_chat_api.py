@@ -137,7 +137,7 @@ async def test_get_session_details(async_client: AsyncClient):
     assert response.status_code == 200
     assert response.json()["chat_session_id"] == str(session_id)
     assert response.json()["title"] == "BRCA1 upload plan"
-    mock_service.get_session.assert_awaited_once_with(session_id=session_id)
+    mock_service.get_session.assert_awaited_once_with(session_id=session_id, owner_user_id=None)
 
 
 @pytest.mark.asyncio

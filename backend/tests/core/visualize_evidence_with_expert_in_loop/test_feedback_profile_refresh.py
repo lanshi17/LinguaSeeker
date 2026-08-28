@@ -70,7 +70,7 @@ class TestFeedbackProfileRefresh:
                     patch=patch_req,
                     reviewer_id=None,
                 )
-                mock_refresh.assert_awaited_once_with(doc_id)
+                mock_refresh.assert_awaited_once_with(doc_id, owner_user_id=None)
 
     async def test_patch_calls_refresh_search_index(self) -> None:
         """patch_evidence calls _refresh_search_index after an evidence change."""
@@ -139,10 +139,12 @@ class TestFeedbackProfileRefresh:
             mock_repo.refresh_for_document = AsyncMock()
             mock_repo_cls.return_value = mock_repo
 
-            await service._refresh_literature_profile(doc_id)
+            await service._refresh_literature_profile(doc_id, owner_user_id=None)
 
             mock_repo_cls.assert_called_once_with(session)
-            mock_repo.refresh_for_document.assert_awaited_once_with(doc_id)
+            mock_repo.refresh_for_document.assert_awaited_once_with(
+                doc_id, owner_user_id=None
+            )
 
     async def test_refresh_search_index_delegates_to_search_index_repo(self) -> None:
         """_refresh_search_index creates a SearchIndexRepository and calls refresh."""
@@ -265,7 +267,9 @@ class TestFeedbackProfileRefresh:
             side_effect=tracking_record_audit,
         ):
             with patch.object(service, "_refresh_literature_profile", new_callable=AsyncMock) as mock_refresh:
-                mock_refresh.side_effect = lambda _: call_order.append("refresh")
+                mock_refresh.side_effect = lambda _doc_id, owner_user_id=None: call_order.append(
+                    "refresh"
+                )
 
                 with patch.object(service, "_refresh_search_index", new_callable=AsyncMock) as mock_refresh_index:
                     mock_refresh_index.side_effect = lambda: call_order.append("search_index")

@@ -43,7 +43,7 @@ class FakeRepository:
         self.bindings = []
         self.canonical = []
 
-    async def ensure_run_parents(self, *, source_document_id: str, processing_run_id: str) -> None:
+    async def ensure_run_parents(self, *, source_document_id: str, processing_run_id: str, owner_user_id: str | None = None) -> None:
         self.parents.append((source_document_id, processing_run_id))
 
     async def upsert_normalized_entity(self, match):
@@ -60,7 +60,7 @@ class FakeRepository:
     async def upsert_canonical_evidence(self, input_data, matches, entity_ids):
         self.canonical.append((input_data, matches, entity_ids))
 
-    async def refresh_literature_profile(self, source_document_id: str) -> None:
+    async def refresh_literature_profile(self, source_document_id: str, owner_user_id: str | None = None) -> None:
         self.profile_refreshed = source_document_id
 
     async def refresh_search_index(self) -> None:

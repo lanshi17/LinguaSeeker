@@ -55,7 +55,7 @@ def test_postgresql_dsn_helper_uses_async_sqlalchemy_driver(monkeypatch) -> None
 
     settings = Settings()
 
-    assert settings.postgresql_dsn == "postgresql+asyncpg://db_user:[redacted-email]:55432/acmg_test"
+    assert settings.postgresql_dsn == "postgresql+asyncpg://db_user:p%40ss%20word@db.internal:55432/acmg_test"
 
 
 def test_postgresql_dsn_helper_omits_empty_userinfo() -> None:
@@ -81,7 +81,7 @@ def test_postgresql_dsn_helper_supports_user_without_password() -> None:
         postgres_db="acmg_test",
     )
 
-    assert settings.postgresql_dsn == "postgresql+asyncpg://[redacted-email]:55432/acmg_test"
+    assert settings.postgresql_dsn == "postgresql+asyncpg://db_user@db.internal:55432/acmg_test"
 
 
 def test_postgresql_dsn_helper_escapes_database_name() -> None:
@@ -94,4 +94,4 @@ def test_postgresql_dsn_helper_escapes_database_name() -> None:
         postgres_db="tenant/db",
     )
 
-    assert settings.postgresql_dsn == "postgresql+asyncpg://db_user:[redacted-email]:55432/tenant%2Fdb"
+    assert settings.postgresql_dsn == "postgresql+asyncpg://db_user:db_password@db.internal:55432/tenant%2Fdb"

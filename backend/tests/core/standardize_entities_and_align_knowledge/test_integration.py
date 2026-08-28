@@ -33,7 +33,7 @@ class FakeRepository:
         self.bindings: list[tuple[object, tuple[EntityMatch, ...], tuple[str, ...]]] = []
         self.canonical: list[tuple[object, tuple[EntityMatch, ...], tuple[str, ...]]] = []
 
-    async def ensure_run_parents(self, *, source_document_id: str, processing_run_id: str) -> None:
+    async def ensure_run_parents(self, *, source_document_id: str, processing_run_id: str, owner_user_id: str | None = None) -> None:
         pass
 
     async def find_alias_candidates(self, entity_type, raw_text):
@@ -55,7 +55,7 @@ class FakeRepository:
     async def upsert_canonical_evidence(self, input_data, matches, entity_ids):
         self.canonical.append((input_data, matches, entity_ids))
 
-    async def refresh_literature_profile(self, source_document_id: str) -> None:
+    async def refresh_literature_profile(self, source_document_id: str, owner_user_id: str | None = None) -> None:
         pass
 
     async def refresh_search_index(self) -> None:

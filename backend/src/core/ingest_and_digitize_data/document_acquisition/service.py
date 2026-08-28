@@ -129,7 +129,7 @@ class DocumentAcquisitionService:
         if request.action == "search" and not request.query:
             raise ValueError("query is required for search action")
 
-        from .online_acquisition import (
+        from lit_acquisition import (
             multilingual_acquisition_workflow,
             online_acquisition_workflow,
         )

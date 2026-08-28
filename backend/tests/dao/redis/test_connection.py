@@ -120,5 +120,5 @@ async def test_dispose_redis_closes_client() -> None:
     wiring._redis_client = mock_client
 
     await wiring.dispose_redis()
-    mock_client.aclose.assert_awaited_once()
+    mock_client.close.assert_awaited_once()
     assert wiring._redis_client is None

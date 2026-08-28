@@ -54,5 +54,5 @@ async def test_search_result_dict_contains_created_at():
 
     assert total == 1
     assert len(items) == 1
-    assert "created_at" in items[0]
-    assert items[0]["created_at"] == "2026-06-10T12:00:00+00:00"
+    assert hasattr(items[0], "created_at")
+    assert items[0].created_at == "2026-06-10T12:00:00+00:00"

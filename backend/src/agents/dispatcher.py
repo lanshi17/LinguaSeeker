@@ -78,21 +78,24 @@ class SingleJobDispatcher:
     async def _loop(self) -> None:
         """Main polling loop: claim → execute → repeat, with idle backoff.
 
-        When the queue is empty, the poll interval grows exponentially from
+        When the queue is empty, the poll interval doubles from
         ``poll_interval`` up to ``idle_max_interval``, so an idle dispatcher
         performs a single cheap claim query per backoff window instead of a
         fixed-frequency poll.  A successful claim resets the backoff.
+
+        ``idle_delay`` is doubled in place and clamped each iteration rather
+        than computing ``2 ** idle_streak``, which overflows float conversion
+        after ~1024 consecutive idle polls (idle_streak grows without bound).
         """
-        idle_streak = 0
+        idle_delay = self._poll_interval
         while not self._stopping:
             try:
                 job = await self._job_queue.claim_next(self._worker_id)
                 if job is None:
-                    idle_streak += 1
-                    delay = min(self._poll_interval * (2 ** (idle_streak - 1)), self._idle_max_interval)
-                    await asyncio.sleep(delay)
+                    await asyncio.sleep(idle_delay)
+                    idle_delay = min(idle_delay * 2, self._idle_max_interval)
                     continue
-                idle_streak = 0
+                idle_delay = self._poll_interval
                 await self._execute(job)
             except asyncio.CancelledError:
                 break

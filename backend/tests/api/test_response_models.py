@@ -19,6 +19,17 @@ def test_all_v1_routes_declare_response_model():
         route_key = f"{methods} {route.path}"
         if route_key in STREAMING_ROUTES:
             continue
+        # 204-delete and binary image serving legitimately carry no JSON
+        # response body, so rule-22's response_model requirement does not
+        # apply to them.
+        if getattr(route, "status_code", None) == 204:
+            continue
+        response_class = getattr(route, "response_class", None)
+        # FastAPI wraps a route's response_class in a DefaultPlaceholder;
+        # unwrap it so binary-serving routes (FileResponse) are recognized.
+        response_class = getattr(response_class, "value", response_class)
+        if getattr(response_class, "__name__", None) == "FileResponse":
+            continue
         if getattr(route, "response_model", None) is None:
             routes_without_model.append(route_key)
 

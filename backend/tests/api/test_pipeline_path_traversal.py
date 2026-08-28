@@ -30,14 +30,15 @@ async def test_upload_strips_directory_from_filename():
 
         captured_state = {}
 
-        def capture_start(state):
+        async def capture_start(state):
             captured_state["upload_file_path"] = state.upload_file_path
-            from unittest.mock import MagicMock
-
             return MagicMock(add_done_callback=lambda cb: None)
 
-        mock_runner.return_value.is_running_for_source = MagicMock(return_value=False)
-        mock_runner.return_value.start = capture_start
+        mock_runner = mock_runner.return_value
+        mock_runner.is_running_for_source = AsyncMock(return_value=False)
+        mock_runner.compute_initial_content_hash = AsyncMock(return_value=None)
+        mock_runner.check_processing_cache = AsyncMock(return_value=None)
+        mock_runner.start = capture_start
 
         from app.main import create_app
 
@@ -83,12 +84,15 @@ async def test_upload_strips_windows_directory_from_filename():
 
         captured_state = {}
 
-        def capture_start(state):
+        async def capture_start(state):
             captured_state["upload_file_path"] = state.upload_file_path
             return MagicMock(add_done_callback=lambda cb: None)
 
-        mock_runner.return_value.is_running_for_source = MagicMock(return_value=False)
-        mock_runner.return_value.start = capture_start
+        mock_runner = mock_runner.return_value
+        mock_runner.is_running_for_source = AsyncMock(return_value=False)
+        mock_runner.compute_initial_content_hash = AsyncMock(return_value=None)
+        mock_runner.check_processing_cache = AsyncMock(return_value=None)
+        mock_runner.start = capture_start
 
         from app.main import create_app
 

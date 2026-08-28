@@ -92,10 +92,13 @@ class LiteratureProfileRepository:
             List of group dicts with ``group_id``, ``summary``, ``avg_confidence``,
             ``field_count``, ``review_status``, and ``fields``.
         """
+        def _get(row: Any, name: str) -> Any:
+            return row.get(name) if isinstance(row, dict) else getattr(row, name)
+
         groups: OrderedDict[str, dict] = OrderedDict()
 
         for row in canonical_rows:
-            payload = row.active_payload or {}
+            payload = _get(row, "active_payload") or {}
             group_id = payload.get("group_id", "")
             if not group_id:
                 continue
@@ -116,30 +119,30 @@ class LiteratureProfileRepository:
 
             grp = groups[group_id]
 
-            conf = row.current_best_confidence
+            conf = _get(row, "current_best_confidence")
             if conf is not None:
                 grp["confidences"].append(float(conf))
 
-            row_status = row.review_status
+            row_status = _get(row, "review_status")
             if _REVIEW_SEVERITY.get(row_status, 0) > _REVIEW_SEVERITY.get(grp["review_status"], 0):
                 grp["review_status"] = row_status
 
             grp["fields"].append(
                 {
-                    "canonical_evidence_id": str(row.canonical_evidence_id),
-                    "field_id": payload.get("field_id", row.field_id),
+                    "canonical_evidence_id": str(_get(row, "canonical_evidence_id")),
+                    "field_id": payload.get("field_id", _get(row, "field_id")),
                     "field_name": payload.get("field_name", ""),
                     "category": payload.get("category", ""),
                     "value": _coerce_str(payload.get("value")),
                     "confidence": _coerce_json_number(
-                        payload.get("confidence", row.current_best_confidence),
+                        payload.get("confidence", _get(row, "current_best_confidence")),
                     ),
                     "status": payload.get("status", ""),
                     "track": payload.get("track", ""),
                 }
             )
 
-            field_id = row.field_id
+            field_id = _get(row, "field_id")
             summary = grp["summary"]
 
             if summary["gene"] is None and field_id in _GENE_FIELDS:

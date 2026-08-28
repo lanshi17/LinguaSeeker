@@ -34,14 +34,14 @@ from benchmark.analysis.reconcile.ablation import (
     ExtractedAblationItem,
     _source_to_payload,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+from src.core.evidence_extraction.contracts import (
     DualEvidenceExtractionResult,
     Track,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.contextual import (
+from src.core.evidence_extraction.reconcile.contextual import (
     reconcile_with_context,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.features import (
+from src.core.evidence_extraction.reconcile.features import (
     CandidateFeatureVector,
 )
 from src.core.standardize_entities_and_align_knowledge.context_pack.core import (

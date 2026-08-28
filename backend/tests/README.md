@@ -14,8 +14,7 @@ tests/
 ├── test_download_phase.py           # 下载阶段测试
 ├── test_health.py                   # 健康检查测试
 ├── test_startup_lock.py             # 启动 advisory lock 测试
-├── test_web_search_adapter.py       # 网络搜索适配器测试
-├── test_workflow_refactored.py      # 工作流重构测试
+
 ├── agents/                          # 管线编排器测试
 │   ├── test_state_persistence_layer.py
 │   ├── test_phase2_retry.py
@@ -63,20 +62,10 @@ tests/
 ├── integration/                     # 集成测试
 │   ├── test_app_startup.py
 │   └── test_literature_profile_e2e.py
-├── online_acquisition/              # 文献采集测试
-│   ├── test_e2e_multilingual.py
-│   ├── test_e2e_providers.py
-│   ├── test_e2e_workflow.py
-│   ├── test_literature_type_classifier.py
-│   └── ...
 ├── scripts/                         # 端到端脚本测试
 │   ├── test_e2e_extract_evidence.py
 │   └── test_e2e_standardize_entities.py
 ├── services/                        # 服务层测试（预留）
-├── unit/                            # 纯单元测试
-│   ├── test_batch_parse_downloads.py
-│   ├── test_query_translator.py
-│   └── test_relevance_gate_parsed.py
 ├── utils/                           # 工具函数测试
 │   ├── test_exceptions.py
 │   ├── test_health.py
@@ -104,7 +93,6 @@ SQLite 夹具自动将 `JSONB` 列替换为 `JSON` 类型，测试结束后恢�
 
 | 目录 | 类型 | 外部依赖 |
 |------|------|----------|
-| `unit/` | 纯单元测试 | 无 |
 | `agents/` | 管线编排器测试 | SQLite（内存） |
 | `api/` | API 路由测试 | SQLite + TestClient |
 | `core/` | 核心业务逻辑测试 | 视具体模块 |
@@ -112,7 +100,6 @@ SQLite 夹具自动将 `JSONB` 列替换为 `JSON` 类型，测试结束后恢�
 | `dao/` | 数据访问层测试 | SQLite/PostgreSQL |
 | `integration/` | 集成测试 | PostgreSQL |
 | `benchmark/` | 基准/评估测试 | 视具体测试 |
-| `online_acquisition/` | 文献采集测试 | 外部 API |
 | `scripts/` | 脚本端到端测试 | PostgreSQL + 外部服务 |
 
 ## Usage / Patterns

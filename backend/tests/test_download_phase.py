@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, patch
 
 class TestResolveOaUrl:
     def test_resolve_from_unpaywall_downloads(self):
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway import resolve_oa_url
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
+        from lit_acquisition import resolve_oa_url
+        from lit_acquisition import (
             OnlineAcquisitionGatewayResult,
         )
 
@@ -25,8 +25,8 @@ class TestResolveOaUrl:
         assert url == "https://example.com/paper.pdf"
 
     def test_resolve_from_pmcid(self):
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway import resolve_oa_url
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
+        from lit_acquisition import resolve_oa_url
+        from lit_acquisition import (
             OnlineAcquisitionGatewayResult,
         )
 
@@ -44,8 +44,8 @@ class TestResolveOaUrl:
         assert url == "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1234567/pdf/"
 
     def test_resolve_returns_none_when_no_url(self):
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway import resolve_oa_url
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
+        from lit_acquisition import resolve_oa_url
+        from lit_acquisition import (
             OnlineAcquisitionGatewayResult,
         )
 
@@ -66,12 +66,12 @@ class TestResolveOaUrl:
 class TestDownloadFileFromUrl:
     @pytest.mark.asyncio
     async def test_download_validates_pdf_magic(self, tmp_path):
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway import (
+        from lit_acquisition import (
             download_file_from_url,
         )
 
         with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway.net_io"
+            "lit_acquisition.net.download.net_io"
         ) as mock_net:
             mock_net.download_file = AsyncMock(
                 return_value={
@@ -91,12 +91,12 @@ class TestDownloadFileFromUrl:
     @pytest.mark.asyncio
     async def test_download_rejects_non_pdf(self, tmp_path):
         """Non-PDF, non-HTML content produces a non_pdf_content warning."""
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway import (
+        from lit_acquisition import (
             download_file_from_url,
         )
 
         with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway.net_io"
+            "lit_acquisition.net.download.net_io"
         ) as mock_net:
             mock_net.download_file = AsyncMock(
                 return_value={
@@ -115,13 +115,13 @@ class TestDownloadFileFromUrl:
     @pytest.mark.asyncio
     async def test_download_extracts_pdf_from_html(self, tmp_path):
         """When URL returns HTML with a PDF link, it should follow and download."""
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway import (
+        from lit_acquisition import (
             download_file_from_url,
         )
 
         call_count = 0
 
-        async def mock_download(url, timeout_ms=30000):
+        async def mock_download(url, timeout_ms=30000, proxy=None):
             nonlocal call_count
             call_count += 1
             if call_count == 1:
@@ -138,7 +138,7 @@ class TestDownloadFileFromUrl:
                 }
 
         with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway.net_io"
+            "lit_acquisition.net.download.net_io"
         ) as mock_net:
             mock_net.download_file = AsyncMock(side_effect=mock_download)
             file_path, final_url, warns = await download_file_from_url(
@@ -152,12 +152,12 @@ class TestDownloadFileFromUrl:
     @pytest.mark.asyncio
     async def test_download_returns_none_on_html_without_pdf_link(self, tmp_path):
         """HTML page with no PDF links returns None (no file downloaded)."""
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway import (
+        from lit_acquisition import (
             download_file_from_url,
         )
 
         with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway.net_io"
+            "lit_acquisition.net.download.net_io"
         ) as mock_net:
             mock_net.download_file = AsyncMock(
                 return_value={
@@ -175,12 +175,12 @@ class TestDownloadFileFromUrl:
     @pytest.mark.asyncio
     async def test_download_returns_none_on_http_error(self, tmp_path):
         """HTTP 404 returns None with warning."""
-        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway import (
+        from lit_acquisition import (
             download_file_from_url,
         )
 
         with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway.net_io"
+            "lit_acquisition.net.download.net_io"
         ) as mock_net:
             mock_net.download_file = AsyncMock(
                 return_value={

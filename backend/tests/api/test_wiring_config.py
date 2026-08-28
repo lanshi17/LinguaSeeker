@@ -36,6 +36,8 @@ def _patch_wire_deps(stack: ExitStack):
         "src.api.wiring.build_async_engine",
         "src.api.wiring.async_session_factory",
         "src.api.wiring.build_redis_client",
+        "src.api.wiring.build_neo4j_driver",
+        "src.api.wiring.Neo4jRepository",
     ]:
         stack.enter_context(patch(mod_path))
 

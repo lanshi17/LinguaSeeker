@@ -31,8 +31,10 @@ async def test_pipeline_run_rate_limited():
         mock_cfg.return_value = mock_settings
 
         mock_runner = MagicMock()
-        mock_runner.start = MagicMock(return_value=MagicMock())
-        mock_runner.is_running_for_source = MagicMock(return_value=False)
+        mock_runner.start = AsyncMock(return_value=MagicMock())
+        mock_runner.is_running_for_source = AsyncMock(return_value=False)
+        mock_runner.compute_initial_content_hash = AsyncMock(return_value=None)
+        mock_runner.check_processing_cache = AsyncMock(return_value=None)
         mock_get_runner.return_value = mock_runner
 
         from app.main import create_app

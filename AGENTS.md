@@ -344,7 +344,7 @@
 - 所有发起外部 HTTP 请求的代码**必须**在请求前和重定向后校验目标 URL，拒绝私有/保留 IP 地址。
 - 使用 `_validate_url_safe()` 函数（DNS 解析 + 私有 IP 检查），已实现于：
   - `backend/src/core/ingest_and_digitize_data/parse_document/orchestrator.py`
-  - `backend/src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/gateway.py`
+  - 在线文献获取已委托给 `lit-acquisition` SDK（本地路径依赖 `../17_lit-acquisition`，editable），其 `net` 层内置同等的 SSRF 校验
 - 新增外部 HTTP 请求代码时，**必须**复用上述函数或等效的 SSRF 校验逻辑。
 
 #### 29.3 推理服务安全边界
@@ -383,8 +383,8 @@ src/
 ├── core/
 │   ├── config.py                          # pydantic-settings singleton, all env vars
 │   ├── ingest_and_digitize_data/          # Phase 1 feature slices: acquisition + upload + parsing
-│   │   ├── literature_acquisition/        #   gateway, providers, PubMed, web scrapers
-│   │   └── user_upload/                   #   PDF/DOCX upload handling
+│   │   ├── document_acquisition/          #   facade; online acquisition delegates to lit-acquisition SDK
+│   │   └── parse_document/                #   MinerU parsing (remote-first, local fallback)
 │   ├── cross_lingual_process_and_extract_evidence/  # Phase 2 features: extraction, translation, fusion
 │   ├── standardize_entities_and_align_knowledge/    # Phase 3 features: standardization, alignment
 │   └── visualize_evidence_with_expert_in_loop/      # Phase 4 features: review, feedback, export
@@ -407,7 +407,7 @@ Three PyO3 crates, all using `cdylib` + `rlib` crate types, async via `pyo3-asyn
 | `files-io` | `files_io` | Unified local + S3 file I/O. Dedup, parallel ops, archive (zip/tar/gzip). |
 | `net-io` | `rust_io.net` | Literature search/download via providers + MinerU document parsing API. Same provider set as rust-io, newer architecture. |
 
-All three expose async Python functions via `pyo3_async_runtimes::tokio::future_into_py`. The Python gateway (`src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/gateway.py`) calls `net_io.fetch_one()` for HTTP I/O and handles PDF downloads in Python.
+All three expose async Python functions via `pyo3_async_runtimes::tokio::future_into_py`. Online literature acquisition is delegated to the external `lit-acquisition` SDK (local path dependency `../17_lit-acquisition`, editable; wired in `src/api/wiring.py`); its gateway calls `net_io.fetch_one()` for HTTP I/O when the Rust extension is importable and falls back to pure-Python `httpx` otherwise.
 
 #### External Inference Services (not in this repo)
 
@@ -515,7 +515,7 @@ docker compose up
 
 #### Literature Provider System
 
-The literature acquisition gateway supports multiple providers (Crossref, OpenAlex, EuropePMC, PMC, DOAJ, JStage, Unpaywall, plus web scrapers for CyberLeninka, Hans Publishers, PubScholar). Rust handles HTTP I/O; Python handles business logic, retry, and PDF download orchestration.
+Literature acquisition is delegated to the external `lit-acquisition` SDK (local path dependency `../17_lit-acquisition`, editable): gateway + provider backends (Crossref, OpenAlex, EuropePMC, PMC, DOAJ, J-STAGE, Unpaywall, Semantic Scholar, ...), multilingual query translation, LLM relevance gate, provider health tracking, and web-search adapters (Firecrawl/Tavily/SerpApi). Rust `net_io` handles HTTP I/O when importable; otherwise pure-Python `httpx`. SDK config (LLM keys, web-search keys, proxy) is bridged from backend YAML config in `src/api/wiring.py`.
 
 #### Configuration
 

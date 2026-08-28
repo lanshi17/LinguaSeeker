@@ -182,8 +182,8 @@ def test_head_revision_points_to_terminology_schema() -> None:
     assert base.down_revision is None
 
 
-def test_head_revision_points_to_account_scopes() -> None:
-    """The Alembic head includes account-scoped task and evidence isolation."""
+def test_head_revision_chain_is_current() -> None:
+    """The Alembic head reaches the latest migration (source language column)."""
     backend_str = str(BACKEND_DIR)
     if backend_str not in sys.path:
         sys.path.insert(0, backend_str)
@@ -198,8 +198,8 @@ def test_head_revision_points_to_account_scopes() -> None:
     head = script.get_revision("head")
 
     assert head is not None
-    assert head.revision == "account_scopes_20260709"
-    assert head.down_revision == "chat_session_title_20260705"
+    assert head.revision == "source_language_20260803"
+    assert head.down_revision == "account_scopes_20260709"
 
 
 def test_pipeline_run_leases_migration_chain() -> None:
