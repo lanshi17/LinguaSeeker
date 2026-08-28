@@ -42,7 +42,7 @@ def get_catalog_extraction_prompt(
     relationship_guidance = relationship_decision_guidance()
     channel_strategy = get_channel_strategy_guidance(channel_classification)
     boundary_guidance = disease_boundary_guidance()
-    expanded_guidance = expanded_field_coverage_guidance()
+    expanded_guidance = expanded_field_coverage_guidance({spec.field_id for spec in catalog})
     graph_section = _format_graph_context(graph_context)
     return f"""You are extracting structured evidence from a biomedical document for a SPECIFIC target gene-disease pair.
 
