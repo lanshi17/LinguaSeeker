@@ -14,27 +14,12 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     MatchStatus,
     StandardizationInput,
 )
-from src.core.standardize_entities_and_align_knowledge.hgvs_normalizer import expand_hgvs_aliases
 
 
 class AcmgReadyProjector:
     """Build compact key-value evidence for downstream rules-based ACMG consumers."""
 
     _PROBAND_PHENOTYPE_FIELDS = frozenset({"B.hpo_terms", "B.clinical_phenotypes"})
-    # Closed subset of catalog fields consumed by field-bridge / rules. Do not
-    # grant ACMG codes here; only project FOUND extractor values.
-    _GATE_FIELDS = (
-        "A.variant_hgvs_c",
-        "A.variant_hgvs_p",
-        "A.variant_type",
-        "A.functional_domain_or_hotspot",
-        "B.disease_diagnosis",
-        "C.de_novo_status",
-        "C.maternal_genotype",
-        "C.paternal_genotype",
-        "C.parentage_confirmed",
-    )
-    _HGVS_FIELDS = frozenset({"A.variant_hgvs_c", "A.variant_hgvs_p", "A.variant_hgvs_g"})
 
     def project(
         self,
@@ -61,34 +46,7 @@ class AcmgReadyProjector:
                     ),
                 ),
             )
-        items.extend(self._project_gate_fields(input_data.evidence_items))
         return AcmgReadyEvidenceSet(document_id=input_data.document_id, items=tuple(items))
-
-    def _project_gate_fields(self, evidence_items: tuple[object, ...]) -> list[AcmgReadyEvidenceItem]:
-        """Project FOUND field-bridge gates without assigning ACMG codes."""
-        projected: list[AcmgReadyEvidenceItem] = []
-        for field_id in self._GATE_FIELDS:
-            raw_values = self._raw_values(evidence_items, {field_id})
-            if not raw_values:
-                continue
-            projected.append(
-                AcmgReadyEvidenceItem(
-                    field_id=field_id,
-                    normalized_key=field_id.split(".", 1)[-1],
-                    normalized_value=self._normalized_gate_value(field_id, raw_values),
-                    raw_values=raw_values,
-                    source_field_ids=(field_id,),
-                    confidence=self._max_confidence(evidence_items, {field_id}),
-                ),
-            )
-        return projected
-
-    def _normalized_gate_value(self, field_id: str, raw_values: tuple[str, ...]) -> str:
-        first = raw_values[0]
-        if field_id in self._HGVS_FIELDS:
-            aliases = expand_hgvs_aliases(first)
-            return aliases[0] if aliases else first
-        return first
 
     def _hpo_ids(self, matches: tuple[EntityMatch, ...]) -> list[str]:
         ids: list[str] = []

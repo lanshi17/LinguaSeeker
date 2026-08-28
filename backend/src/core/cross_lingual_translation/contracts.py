@@ -9,8 +9,6 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
-from src.utils.text_normalize import unescape_mined_strings, unescape_mined_text
-
 
 # ── Bbox tracking ────────────────────────────────────────────────────────
 
@@ -160,24 +158,24 @@ class ContentBlock:
             type=block_type,
             page_idx=block.get("page_idx", 0),
             bbox=block.get("bbox", []),
-            text=unescape_mined_text(str(block.get("text", "") or "")),
+            text=block.get("text", ""),
             text_level=block.get("text_level"),
             img_path=block.get("img_path", ""),
-            content=unescape_mined_text(str(block.get("content", "") or "")),
-            image_caption=unescape_mined_strings(block.get("image_caption", [])),
-            image_footnote=unescape_mined_strings(block.get("image_footnote", [])),
+            content=block.get("content", ""),
+            image_caption=block.get("image_caption", []),
+            image_footnote=block.get("image_footnote", []),
             sub_type=block.get("sub_type", "") if block_type in ("image", "chart") else "",
-            table_body=unescape_mined_text(str(block.get("table_body", "") or "")),
-            table_caption=unescape_mined_strings(block.get("table_caption", [])),
-            table_footnote=unescape_mined_strings(block.get("table_footnote", [])),
+            table_body=block.get("table_body", ""),
+            table_caption=block.get("table_caption", []),
+            table_footnote=block.get("table_footnote", []),
             text_format=block.get("text_format", ""),
-            code_body=unescape_mined_text(str(block.get("code_body", "") or "")),
-            code_caption=unescape_mined_strings(block.get("code_caption", [])),
+            code_body=block.get("code_body", ""),
+            code_caption=block.get("code_caption", []),
             code_sub_type=block.get("sub_type", "") if block_type == "code" else "",
             list_sub_type=block.get("sub_type", "") if block_type == "list" else "",
-            list_items=unescape_mined_strings(block.get("list_items", [])),
-            chart_caption=unescape_mined_strings(block.get("chart_caption", [])),
-            chart_footnote=unescape_mined_strings(block.get("chart_footnote", [])),
+            list_items=block.get("list_items", []),
+            chart_caption=block.get("chart_caption", []),
+            chart_footnote=block.get("chart_footnote", []),
         )
 
 

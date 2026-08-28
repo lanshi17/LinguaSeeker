@@ -14,7 +14,6 @@ from src.core.cross_lingual_translation.contracts import (
 )
 from src.core.cross_lingual_translation.persistence import (
     DocumentPersistenceService,
-    _build_translation_alignment,
 )
 
 
@@ -245,31 +244,3 @@ class TestDocumentPersistenceService:
         assert output.translated_english == "Original text content"
         assert output.output_dir == str(saved.output_dir)
         assert output.original_json_path == str(saved.original_json_path)
-
-
-def test_build_translation_alignment_finds_html_entity_hgvs() -> None:
-    result = TranslationResult(
-        formatted_original="患儿携带c.538C&gt;T变异。",
-        translated_english="The patient carried c.538C>T.",
-        source_language="zh",
-        terminology_map={},
-        translation_warnings=[],
-        sentences=[],
-        segments=[
-            TranslationSegment(
-                index=0,
-                source_text="患儿携带c.538C>T变异。",
-                translated_text="The patient carried c.538C>T.",
-            )
-        ],
-    )
-
-    chunks = _build_translation_alignment(result)
-
-    assert len(chunks) == 1
-    assert chunks[0].original_start_offset == 0
-    assert result.formatted_original[chunks[0].original_start_offset : chunks[0].original_end_offset] == (
-        "患儿携带c.538C&gt;T变异。"
-    )
-    assert chunks[0].english_text == "The patient carried c.538C>T."
-

@@ -15,7 +15,6 @@ from src.core.evidence_extraction.contracts import (
     TrackDocument,
 )
 from src.core.evidence_extraction.postprocess.translation_traceback import (
-    _map_identity_source_to_original,
     _map_source_to_original,
 )
 
@@ -82,39 +81,3 @@ def test_map_source_to_original_uses_nested_span_pair_for_precise_traceback() ->
     assert mapped.end_offset == original_pair_start + len("ABCA3缺陷")
     assert mapped.source_precision == SourcePrecision.EXACT
     assert mapped.bbox == [1, 2, 3, 4]
-
-
-def test_identity_traceback_matches_decoded_snippet_to_html_entity_document() -> None:
-    original_text = "Sanger测序显示c.538C&gt;T（p.R180X）。"
-    original_document = TrackDocument(
-        document_id="doc-html",
-        track=Track.ORIGINAL,
-        formatted_text=original_text,
-        page_spans=[
-            PageSpan(
-                span_id="original-p1",
-                page=1,
-                start_offset=0,
-                end_offset=len(original_text),
-            )
-        ],
-        blocks=[ContentBlock(type="text", page_idx=0, text=original_text, bbox=[1, 2, 3, 4])],
-    )
-    english_source = SourceLocation(
-        span_id="translated-p1",
-        page=1,
-        start_offset=0,
-        end_offset=9,
-        context_type="results",
-        context_ref="Results",
-        text_snippet="c.538C>T",
-        block_index=0,
-    )
-
-    mapped = _map_identity_source_to_original(original_document, english_source)
-
-    assert mapped is not None
-    assert mapped.text_snippet == "c.538C&gt;T"
-    assert original_text[mapped.start_offset : mapped.end_offset] == "c.538C&gt;T"
-    assert mapped.bbox == [1, 2, 3, 4]
-

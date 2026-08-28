@@ -128,7 +128,6 @@ backend/config/vault/*.yml
 # ── Database ──────────────────────────────────────────────────────────────
 database/config/.env
 !database/config/.env.example
-database/terminology_database
 database/terminology_database/*
 !database/terminology_database/README.md
 database/backups/
@@ -154,7 +153,6 @@ knowledges/
 # ── Benchmark ─────────────────────────────────────────────────────────────
 benchmark/pipeline/reports/*
 benchmark/pipeline/input/*
-benchmark/data
 benchmark/data/
 backend/benchmark/data/
 backend/benchmark/**/reports/

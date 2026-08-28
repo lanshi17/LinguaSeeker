@@ -108,16 +108,3 @@ def test_target_scope_bindings_change_entity_scope_hash() -> None:
     assert make_entity_scope_hash([*make_target_scope_bindings(abca3), *entity_bindings]) != (
         make_entity_scope_hash([*make_target_scope_bindings(cftr), *entity_bindings])
     )
-
-
-def test_target_scope_bindings_include_coding_variant_when_protein_hgvs_is_absent() -> None:
-    """A c.-only target remains distinct in downstream entity scope hashes."""
-    from src.core.evidence_extraction.contracts import ExtractionTarget
-
-    target = ExtractionTarget(
-        gene_symbol="MECP2",
-        disease_name="Rett syndrome",
-        variant_hgvs_c="c.710C>G",
-    )
-
-    assert ("target_variant_c", "c.710C>G") in make_target_scope_bindings(target)

@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import html
 import re
 
 from loguru import logger
-
-from src.utils.text_normalize import html_entity_aliases, take_markdown_escape
 
 from ..contracts import (
     ContentBlock,
@@ -23,29 +20,6 @@ from ..contracts import (
 _MAX_SNIPPET_MATCHES = 50
 _ELLIPSIS_PATTERN = re.compile(r"\.\.\.|…")
 _MULTISPACE_PATTERN = re.compile(r"\s+")
-_HTML_ENTITY_RE = re.compile(r"&(?:#(?:[xX][0-9a-fA-F]+|\d+)|[a-zA-Z][a-zA-Z0-9]+);")
-_VALUE_GROUNDING_FIELDS = frozenset(
-    {
-        "A.variant_hgvs_c",
-        "A.variant_hgvs_p",
-        "A.variant_hgvs_g",
-        "B.disease_diagnosis",
-    }
-)
-_DISEASE_VALUE_ALIASES = {
-    "rett syndrome": (
-        "Rett综合征",
-        "Rett 综合征",
-        "синдром Ретта",
-        "syndrome de Rett",
-        "Síndrome de Rett",
-        "síndrome de Rett",
-    ),
-    "rett综合征": ("Rett syndrome", "Rett 综合征"),
-    "rett 综合征": ("Rett syndrome", "Rett综合征"),
-    "mecp2 duplication syndrome": ("MECP2 重复综合征", "MECP2重复综合征"),
-    "mecp2 重复综合征": ("MECP2 duplication syndrome",),
-}
 _MISSING_GROUP_VALUE = "__missing__"
 _FULLWIDTH_TO_HALFWIDTH = {full: half for full, half in zip(range(0xFF01, 0xFF5F), range(0x21, 0x7F))}
 _AA3_TO_1 = {
@@ -113,71 +87,6 @@ def _fuzzy_ellipsis_match(snippet: str, doc_text: str) -> bool:
         last_pos = pos
     return True
 
-
-def _expand_html_entities(text: str) -> list[tuple[str, int, int]]:
-    """Expand named/numeric HTML entities, keeping each char's original span."""
-    parts: list[tuple[str, int, int]] = []
-    index = 0
-    while index < len(text):
-        match = _HTML_ENTITY_RE.match(text, index)
-        if match is not None:
-            raw = match.group(0)
-            decoded = html.unescape(raw)
-            if decoded != raw:
-                end = match.end()
-                parts.extend((char, index, end) for char in decoded)
-                index = end
-                continue
-        escaped = take_markdown_escape(text, index)
-        if escaped is not None:
-            char, next_index = escaped
-            parts.append((char, index, next_index))
-            index = next_index
-            continue
-        parts.append((text[index], index, index + 1))
-        index += 1
-    return parts
-
-
-def _next_non_space(expanded: list[tuple[str, int, int]], index: int) -> str:
-    """Return the next non-space character after ``index``, or empty."""
-    for char, _start, _end in expanded[index + 1 :]:
-        if not char.isspace():
-            return char
-    return ""
-
-
-def _normalized_chars_with_spans(text: str) -> list[tuple[str, int, int]]:
-    """Map text to grounding chars: unescape entities, fold fullwidth, lowercase.
-
-    Keep a space only when both neighbours are ASCII. Drop spaces next to CJK,
-    including when a space *run* sits between ASCII and CJK (``threonine      が``).
-    Drop a hyphen that sits between two letters so OCR line-wraps
-    (``иссле-довании``) still match the unwrapped snippet.
-    Each output char keeps the original [start, end) span so matches can be
-    projected back onto HTML-entity source text.
-    """
-    expanded = _expand_html_entities(text)
-    out: list[tuple[str, int, int]] = []
-    previous_kept = ""
-    for index, (char, start, end) in enumerate(expanded):
-        if char.isspace():
-            next_raw = _next_non_space(expanded, index)
-            if previous_kept and previous_kept.isascii() and next_raw.isascii():
-                if out and out[-1][0] != " ":
-                    out.append((" ", start, end))
-                    previous_kept = " "
-            continue
-        if char in {"-", "\u2010", "\u2011", "\u00ad"} and previous_kept.isalpha() and _next_non_space(
-            expanded, index
-        ).isalpha():
-            continue
-        mapped = chr(_FULLWIDTH_TO_HALFWIDTH.get(ord(char), ord(char))).lower()
-        out.append((mapped, start, end))
-        previous_kept = mapped
-    return out
-
-
 class SourceGrounder:
     """Validates and repairs source spans against the document."""
 
@@ -244,12 +153,7 @@ class SourceGrounder:
                     }
                 )
 
-        grounded_source = self._ground_source(
-            document,
-            source,
-            item.field_id,
-            str(item.value or ""),
-        )
+        grounded_source = self._ground_source(document, source, item.field_id)
         if grounded_source is None:
             block = self._block_for_index(document, source.block_index)
             mapped_type = self._map_block_type(block.type) if block is not None else source.block_type
@@ -289,11 +193,7 @@ class SourceGrounder:
         return item.model_copy(update={"source": grounded_source, "raw_source": source})
 
     def _ground_source(
-        self,
-        document: TrackDocument,
-        source: SourceLocation,
-        field_id: str = "",
-        value: str = "",
+        self, document: TrackDocument, source: SourceLocation, field_id: str = ""
     ) -> SourceLocation | None:
         block = self._block_for_index(document, source.block_index)
         if block is not None:
@@ -320,13 +220,6 @@ class SourceGrounder:
             )
 
         corrected = self._search_snippet(document, source, source.text_snippet, field_id)
-        if (
-            corrected is None
-            and field_id in _VALUE_GROUNDING_FIELDS
-            and value
-            and value != source.text_snippet
-        ):
-            corrected = self._search_snippet(document, source, value, field_id)
         if corrected is None:
             return None
         if len(corrected) > 1:
@@ -487,11 +380,6 @@ class SourceGrounder:
         if direct_results:
             return direct_results
 
-        for alias in html_entity_aliases(snippet):
-            alias_results = self._find_snippet_occurrences(text, spans, alias, source)
-            if alias_results:
-                return alias_results
-
         normalized_snippet = self._normalize_snippet_for_search(snippet)
         if normalized_snippet:
             # Run even when the snippet itself is unchanged: the document
@@ -517,33 +405,14 @@ class SourceGrounder:
     @classmethod
     def _grounding_aliases(cls, field_id: str, snippet: str) -> list[str]:
         """Return strict source-search aliases for known notation drift."""
+        if field_id != "A.variant_hgvs_p":
+            return []
         aliases: list[str] = []
 
         def _add(value: str) -> None:
             value = value.strip()
             if value and value != snippet and value not in aliases:
                 aliases.append(value)
-
-        if field_id == "A.variant_hgvs_c":
-            # OCR often drops '>' (`c．622C T` for `c.622C>T`).
-            _add(re.sub(r">", " ", snippet))
-            _add(re.sub(r"[\s>]", "", snippet))
-            compact = re.sub(r"\s+", "", snippet)
-            coding = re.fullmatch(r"c\.(\d+)([ACGT])>([ACGT])", compact, flags=re.IGNORECASE)
-            if coding is not None:
-                pos, ref, alt = coding.group(1), coding.group(2), coding.group(3)
-                _add(f"{pos} {ref}→{alt}")
-                _add(f"{pos} {ref}->{alt}")
-                _add(f"{pos} {ref}>{alt}")
-            return aliases
-
-        if field_id == "B.disease_diagnosis":
-            for alias in _DISEASE_VALUE_ALIASES.get(snippet.casefold(), ()):
-                _add(alias)
-            return aliases
-
-        if field_id != "A.variant_hgvs_p":
-            return []
 
         compact_parentheses = re.sub(r"\s*([()])\s*", r"\1", snippet)
         _add(compact_parentheses)
@@ -677,7 +546,7 @@ class SourceGrounder:
         normalized_snippet: str,
         source: SourceLocation,
     ) -> list[SourceLocation]:
-        normalized_text, start_map, end_map = self._normalize_text_with_index_map(text)
+        normalized_text, index_map = self._normalize_text_with_index_map(text)
         results: list[SourceLocation] = []
         idx = 0
         while True:
@@ -690,8 +559,8 @@ class SourceGrounder:
             if pos == -1:
                 break
             end_pos = pos + len(normalized_snippet)
-            actual_start = start_map[pos]
-            actual_end = end_map[end_pos - 1]
+            actual_start = index_map[pos]
+            actual_end = index_map[end_pos - 1] + 1
             span = self._find_span(spans, actual_start, actual_end)
             if span:
                 results.append(
@@ -736,18 +605,43 @@ class SourceGrounder:
         value = value.replace("...", "")
         value = value.replace("（ ）", "")
         value = value.replace("( )", "")
-        return "".join(char for char, _start, _end in _normalized_chars_with_spans(value))
+        # Mirror _normalize_text_with_index_map exactly: keep a space only
+        # when both neighbours are ASCII (Latin word boundaries) and drop
+        # spaces adjacent to CJK (OCR artefacts).  Apply the same
+        # fullwidth→halfwidth + lowercase mapping per kept character so the
+        # snippet and document normalisations stay byte-consistent.
+        chars: list[str] = []
+        previous_kept = ""
+        for index, char in enumerate(value):
+            if char.isspace():
+                if previous_kept and previous_kept.isascii() and index + 1 < len(value) and value[index + 1].isascii():
+                    if chars and chars[-1] != " ":
+                        chars.append(" ")
+                        previous_kept = " "
+                continue
+            mapped = chr(_FULLWIDTH_TO_HALFWIDTH.get(ord(char), ord(char))).lower()
+            chars.append(mapped)
+            previous_kept = mapped
+        return "".join(chars)
 
     @staticmethod
-    def _normalize_text_with_index_map(text: str) -> tuple[str, list[int], list[int]]:
+    def _normalize_text_with_index_map(text: str) -> tuple[str, list[int]]:
         chars: list[str] = []
-        start_map: list[int] = []
-        end_map: list[int] = []
-        for char, start, end in _normalized_chars_with_spans(text):
-            chars.append(char)
-            start_map.append(start)
-            end_map.append(end)
-        return "".join(chars), start_map, end_map
+        index_map: list[int] = []
+        previous_kept = ""
+        for index, char in enumerate(text):
+            if char.isspace():
+                if previous_kept and previous_kept.isascii() and index + 1 < len(text) and text[index + 1].isascii():
+                    if chars and chars[-1] != " ":
+                        chars.append(" ")
+                        index_map.append(index)
+                        previous_kept = " "
+                continue
+            mapped = chr(_FULLWIDTH_TO_HALFWIDTH.get(ord(char), ord(char))).lower()
+            chars.append(mapped)
+            index_map.append(index)
+            previous_kept = mapped
+        return "".join(chars), index_map
 
     def _find_span(
         self,

@@ -77,10 +77,10 @@ class SubgraphRetriever:
             )
             seeds.extend(disease_ids)
 
-        if target.primary_variant:
+        if target.variant_hgvs_p:
             variant_ids = await self._repository.find_node_ids_by_name(
                 label="Variant",
-                names=[target.primary_variant.strip()],
+                names=[target.variant_hgvs_p.strip()],
             )
             seeds.extend(variant_ids)
 

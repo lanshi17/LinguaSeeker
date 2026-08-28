@@ -2,46 +2,10 @@
 
 from __future__ import annotations
 
-import pytest
-
 from src.core.standardize_entities_and_align_knowledge.hgvs_normalizer import (
-    canonical_protein_hgvs,
     expand_hgvs_aliases,
     normalize_hgvs_for_lookup,
 )
-
-
-@pytest.mark.parametrize(
-    ("raw_text", "expected"),
-    [
-        ("p.Arg180Ter", "p.Arg180Ter"),
-        ("p.R180*", "p.Arg180Ter"),
-        ("p.R180X", "p.Arg180Ter"),
-        ("R168X", "p.Arg168Ter"),
-        ("p.Arg75stop", "p.Arg75Ter"),
-        ("p.(Glu292Val)", "p.Glu292Val"),
-        ("p.Gly281AlafsTer20", "p.Gly281fs"),
-        ("p.Arg282GlufsTer19", "p.Arg282fs"),
-        ("p.K305fs", "p.Lys305fs"),
-        ("p.F508del", "p.Phe508del"),
-    ],
-)
-def test_canonical_protein_hgvs_prefers_three_letter_code(raw_text: str, expected: str) -> None:
-    """HGVS recommends three-letter codes and `Ter` over the deprecated `X`."""
-    assert canonical_protein_hgvs(raw_text) == expected
-
-
-@pytest.mark.parametrize("raw_text", ["c.538C>T", "c.194delC", "BRCA1", "Xq28_0.299Mb_dup", ""])
-def test_canonical_protein_hgvs_ignores_non_protein_notation(raw_text: str) -> None:
-    """Coding, genomic, and non-HGVS values have no protein canonical."""
-    assert canonical_protein_hgvs(raw_text) is None
-
-
-def test_canonical_protein_hgvs_keeps_alias_expansion_richer() -> None:
-    """The three-letter canonical still expands to the one-letter ClinVar alias."""
-    canonical = canonical_protein_hgvs("p.R168X")
-    assert canonical is not None
-    assert set(expand_hgvs_aliases(canonical)) >= {"p.Arg168Ter", "p.R168*"}
 
 
 def test_three_letter_protein_to_one_letter() -> None:

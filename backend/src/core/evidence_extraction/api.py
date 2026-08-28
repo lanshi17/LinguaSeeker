@@ -173,7 +173,6 @@ class EvidenceExtractionService:
         enable_source_grounding: bool | None = None,
         review_reject_policy: str | None = None,
         extraction_track_mode: str = "dual",
-        enable_translation_traceback: bool = True,
     ) -> DualEvidenceExtractionResult:
         track_mode = _resolve_extraction_track_mode(extraction_track_mode)
         if original_only:
@@ -200,12 +199,11 @@ class EvidenceExtractionService:
                 enable_source_grounding=enable_source_grounding,
                 review_reject_policy=review_reject_policy,
             )
-            if enable_translation_traceback:
-                translated_result = apply_translation_traceback(
-                    documents.original,
-                    documents.translated,
-                    translated_result,
-                )
+            translated_result = apply_translation_traceback(
+                documents.original,
+                documents.translated,
+                translated_result,
+            )
         else:
             original_result, translated_result = await asyncio.gather(
                 self.run(
@@ -313,4 +311,5 @@ class EvidenceExtractionService:
             original=original,
             translated=translated,
         )
+
 

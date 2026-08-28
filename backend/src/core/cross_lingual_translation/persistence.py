@@ -10,7 +10,6 @@ from pathlib import Path
 from loguru import logger
 
 from src.utils.rust_io import files_io
-from src.utils.text_normalize import find_html_aware
 
 from .contracts import (
     CrossLingualOutput,
@@ -40,14 +39,14 @@ def _write_json(path: Path, data: str) -> None:
         path.write_text(data, encoding="utf-8")
 
 
-def _find_text_after(text: str, needle: str, cursor: int) -> tuple[int, int]:
-    """Find text at or after cursor, falling back to a global HTML-aware search."""
+def _find_text_after(text: str, needle: str, cursor: int) -> int:
+    """Find text at or after cursor, falling back to a global search."""
     if not needle:
-        return (-1, -1)
-    start, end = find_html_aware(text, needle, max(cursor, 0))
+        return -1
+    start = text.find(needle, max(cursor, 0))
     if start >= 0:
-        return start, end
-    return find_html_aware(text, needle, 0)
+        return start
+    return text.find(needle)
 
 
 def _build_translation_alignment(result: TranslationResult) -> list[TranslationAlignmentChunk]:
@@ -65,17 +64,15 @@ def _build_translation_alignment(result: TranslationResult) -> list[TranslationA
             original_start = segment.source_bbox.start_offset
             original_end = segment.source_bbox.end_offset
         else:
-            original_start, original_end = _find_text_after(
-                result.formatted_original, segment.source_text, source_cursor
-            )
+            original_start = _find_text_after(result.formatted_original, segment.source_text, source_cursor)
+            original_end = original_start + len(segment.source_text) if original_start >= 0 else -1
 
         if segment.translated_start_offset >= 0 and segment.translated_end_offset >= segment.translated_start_offset:
             english_start = segment.translated_start_offset
             english_end = segment.translated_end_offset
         else:
-            english_start, english_end = _find_text_after(
-                result.translated_english, segment.translated_text, english_cursor
-            )
+            english_start = _find_text_after(result.translated_english, segment.translated_text, english_cursor)
+            english_end = english_start + len(segment.translated_text) if english_start >= 0 else -1
 
         if original_end >= 0:
             source_cursor = original_end

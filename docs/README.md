@@ -18,7 +18,6 @@ docs/
 │   ├── plans/        # 已完成或被取代的计划
 │   ├── codereview/   # 已完成的代码审查
 │   └── deprecated-modules/  # 已移除模块的 README
-├── gim/              # GIM 投稿工作区（manuscript/figures/supplementary）
 └── templates/        # plan.md、codereview.md 模板
 ```
 
@@ -51,19 +50,9 @@ docs/
 
 | 日期 | 标题 | 状态 |
 |------|------|------|
-| 2026-08-20 | [ACMG 多语种分类证据增量（Stage 0c）](active/2026-08-20-multilingual-evidence-item-increment.md) | in-progress |
-| 2026-08-19 | [ACMG 多语种案例分析：抽取字段进规则机](active/2026-08-19-acmg-multilingual-extractor-case-analysis.md) | reference |
-| 2026-08-19 | [ACMG 多语种字段桥与等位基因注册](active/2026-08-19-acmg-multilingual-field-bridge.md) | reference |
-| 2026-08-18 | [ACMG 多语种案例分析（审稿口径）](active/2026-08-18-acmg-multilingual-case-analysis-reviewer.md) | reference |
-| 2026-08-17 | [ACMG 多语种真实案例分析（16 非英语来源）](active/2026-08-17-acmg-multilingual-real-case-analysis.md) | reference |
-| 2026-08-17 | [ACMG 多语种证据码候选台账](active/2026-08-17-acmg-evidence-code-candidate-ledger.md) | reference |
-| 2026-08-17 | [MECP2 ClinVar/ClinGen 原文证据对比](active/2026-08-17-acmg-clinvar-clingen-comparison.md) | reference |
-| 2026-08-17 | [ACMG 多语种案例分析报告](active/2026-08-17-acmg-multilingual-case-analysis-report.md) | reference |
-| 2026-08-15 | [ACMG 多语种四臂实验设计](active/2026-08-15-acmg-multilingual-four-arm-design.md) | in-progress |
-| 2026-08-14 | [ACMG 多语种代码级三臂实验](active/2026-08-14-acmg-multilingual-code-experiment.md) | in-progress |
-| 2026-08-14 | [ACMG 多语种证据代码案例审计](active/2026-08-14-acmg-multilingual-evidence-code-audit.md) | reference |
 | 2026-07-04 | [Pipeline Path Exploration](active/2026-07-04-pipeline-path-exploration.md) | in-progress |
 | 2026-06-29 | [Evidence DB Field Model Implementation Plan](active/2026-06-29-evidence-db-field-model-plan.md) | in-progress |
+| 2026-06-15 | [ClinGen + ClinVar Fused Benchmark Dataset Plan](active/2026-06-15-clingen-clinvar-fused-benchmark-dataset-plan.md) | in-progress |
 | 2026-06-14 | [Traceability Metrics Guide](active/2026-06-14-traceability-metrics-guide.md) | reference |
 
 ### 发布与运维
@@ -105,7 +94,6 @@ docs/
 | 日期 | 标题 | 状态 |
 |------|------|------|
 | 2026-07-25 | [GraphRAG 集成方案](archive/plans/2026-07-25-graphrag-integration.md) | completed |
-| 2026-06-15 | [ClinGen + ClinVar Fused Benchmark Dataset Plan](archive/plans/2026-06-15-clingen-clinvar-fused-benchmark-dataset-plan.md) | completed |
 | 2026-07-01 | [Semantic Word Alignment Design](archive/plans/2026-07-01-semantic-word-alignment-design.md) | completed |
 | 2026-07-01 | [Semantic Word Alignment Implementation Plan](archive/plans/2026-07-01-semantic-word-alignment-plan.md) | completed |
 | 2026-06-20 | [Variant ID Guarantee Plan](archive/plans/2026-06-20-variant-id-guarantee-plan.md) | completed |
@@ -130,9 +118,3 @@ docs/
 - **[backend/src/core/](../backend/src/core/README.md)** — 垂直功能切片
 - **[backend/src/dao/](../backend/src/dao/README.md)** — 持久化层
 - **[backend/libs/](../backend/libs/README.md)** — Rust 原生扩展
-
-## 投稿文档
-
-| 日期 | 标题 | 状态 |
-|------|------|------|
-| 2026-08-09 | [GIM 投稿工作区](gim/README.md) | in-progress |

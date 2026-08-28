@@ -17,7 +17,6 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     StandardizationCandidate,
     StandardizationInput,
 )
-from src.core.standardize_entities_and_align_knowledge.hgvs_normalizer import expand_hgvs_aliases
 from src.core.standardize_entities_and_align_knowledge.normalizers import normalize_lookup_text
 from src.utils.text import parse_gene_from_group_id
 
@@ -37,8 +36,6 @@ PHENOTYPE_FIELD_IDS = {
     "I.animal_model_phenotype",
     "I.cell_model_phenotype",
 }
-
-VARIANT_FIELD_IDS = frozenset({"A.variant_hgvs_c", "A.variant_hgvs_p", "A.variant_hgvs_g"})
 
 _PHENOTYPE_SPLIT_RE = re.compile(r"[、,;；]")
 
@@ -73,9 +70,6 @@ class DualResultAdapter:
             gene_values_by_group = self._gene_values_by_group(track_result)
             gene_linked_group_ids = set(gene_values_by_group)
             self._add_chain_candidates(track_result, candidates, seen, gene_values_by_group)
-            self._add_variant_field_candidates(
-                track_result, candidates, seen, gene_values_by_group, gene_linked_group_ids
-            )
             self._add_phenotype_candidates(track_result, candidates, seen, gene_linked_group_ids)
             self._add_phenotype_evidence_candidates(track_result, candidates, seen, gene_linked_group_ids)
             evidence_items.extend(
@@ -160,38 +154,6 @@ class DualResultAdapter:
                 track=result.track.value,
                 metadata={"gene_symbol": gene_text},
             )
-
-    def _add_variant_field_candidates(
-        self,
-        result: EvidenceExtractionResult,
-        candidates: list[StandardizationCandidate],
-        seen: set[tuple[EntityType, str, str]],
-        gene_values_by_group: dict[str, str],
-        gene_linked_group_ids: set[str],
-    ) -> None:
-        """Add coding/protein HGVS candidates that chains may have dropped."""
-        for item in result.evidence_items:
-            if (
-                item.status != EvidenceStatus.FOUND
-                or item.field_id not in VARIANT_FIELD_IDS
-                or not self._is_gene_linked_item(item, gene_linked_group_ids)
-            ):
-                continue
-            gene_text = gene_values_by_group.get(item.group_id or "", "").strip()
-            chain_id = item.group_id or item.field_id
-            for raw_text in self._extract_field_values(item):
-                aliases = expand_hgvs_aliases(raw_text)
-                canonical = aliases[0] if aliases else raw_text
-                self._append_candidate(
-                    candidates,
-                    seen,
-                    entity_type=EntityType.VARIANT,
-                    raw_text=canonical,
-                    chain_id=chain_id,
-                    track=result.track.value,
-                    field_id=item.field_id,
-                    metadata={"gene_symbol": gene_text} if gene_text else None,
-                )
 
     def _add_phenotype_candidates(
         self,

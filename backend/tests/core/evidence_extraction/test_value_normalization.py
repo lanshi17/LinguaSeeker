@@ -122,32 +122,8 @@ def test_protein_variant_alias_is_normalized_for_deduplication() -> None:
     items, issues = AcmgEvidenceValueNormalizer().normalize(inputs)
 
     assert len(items) == 1
-    assert items[0].value == "p.Arg168Ter"
+    assert items[0].value == "p.R168*"
     assert any(issue.issue_type.value == "duplicate_merged" for issue in issues)
-
-
-def test_protein_variant_keeps_hgvs_preferred_three_letter_code() -> None:
-    """HGVS prefers three-letter codes and `Ter`, so the source form is not downgraded."""
-    inputs = [
-        _item("A.variant_hgvs_p", "p.Arg180Ter").model_copy(update={"group_id": "g1"}),
-        _item("A.variant_hgvs_p", "p.Gly281AlafsTer20").model_copy(update={"group_id": "g2"}),
-        _item("A.variant_hgvs_p", "p.K305fs").model_copy(update={"group_id": "g3"}),
-    ]
-
-    items, _ = AcmgEvidenceValueNormalizer().normalize(inputs)
-
-    assert [item.value for item in items] == ["p.Arg180Ter", "p.Gly281fs", "p.Lys305fs"]
-
-
-def test_coding_hgvs_value_is_not_rewritten_as_protein() -> None:
-    """Coding notation has no protein canonical and must survive untouched."""
-    items, _ = AcmgEvidenceValueNormalizer().normalize(
-        [
-            _item("A.variant_hgvs_c", "c.538C>T").model_copy(update={"group_id": "g1"}),
-        ]
-    )
-
-    assert items[0].value == "c.538C>T"
 
 
 def test_consanguinity_preserves_detail_and_normalizes_status() -> None:
@@ -492,47 +468,12 @@ def test_nonsense_type_stays_when_sibling_hgvs_is_a_substitution() -> None:
     assert types[0].value == "nonsense"
 
 
-def test_protein_stop_follows_coding_indel_across_groups() -> None:
-    """Live grouping can put c.194delC and p.S65X on different group ids."""
-    protein_item = _item("A.variant_hgvs_p", "p.S65X").model_copy(update={"group_id": "p"})
-    hgvs_item = _item("A.variant_hgvs_c", "c.194delC").model_copy(update={"group_id": "c"})
-
-    items, _issues = AcmgEvidenceValueNormalizer().normalize([protein_item, hgvs_item])
-
-    by_field = {item.field_id: item.value for item in items}
-    assert by_field["A.variant_hgvs_p"] == "p.Ser65fs"
-
-
-def test_protein_stop_follows_variant_type_to_frameshift_for_coding_indel() -> None:
-    """rett_084: c.194delC makes the paper's p.S65X a frameshift, not a stop gain."""
-    protein_item = _item("A.variant_hgvs_p", "p.S65X").model_copy(update={"group_id": "g1"})
-    type_item = _item("A.variant_type", "nonsense").model_copy(update={"group_id": "g1"})
-    hgvs_item = _item("A.variant_hgvs_c", "c.194delC").model_copy(update={"group_id": "g1"})
-
-    items, _issues = AcmgEvidenceValueNormalizer().normalize([protein_item, type_item, hgvs_item])
-
-    by_field = {item.field_id: item.value for item in items}
-    assert by_field["A.variant_type"] == "frameshift"
-    assert by_field["A.variant_hgvs_p"] == "p.Ser65fs"
-
-
-def test_protein_stop_survives_when_sibling_hgvs_is_a_substitution() -> None:
-    """c.538C>T is a real stop gain, so p.Arg180Ter must not become a frameshift."""
-    protein_item = _item("A.variant_hgvs_p", "p.Arg180Ter").model_copy(update={"group_id": "g1"})
-    hgvs_item = _item("A.variant_hgvs_c", "c.538C>T").model_copy(update={"group_id": "g1"})
-
-    items, _issues = AcmgEvidenceValueNormalizer().normalize([protein_item, hgvs_item])
-
-    by_field = {item.field_id: item.value for item in items}
-    assert by_field["A.variant_hgvs_p"] == "p.Arg180Ter"
-
-
 def test_frameshift_protein_hgvs_is_not_crushed_to_missense() -> None:
     items, issues = AcmgEvidenceValueNormalizer().normalize(
         [_item("A.variant_hgvs_p", "p.Gly281AlafsTer20")]
     )
 
-    assert items[0].value == "p.Gly281fs"
+    assert items[0].value == "p.G281fs"
     assert issues[0].issue_type.value == "value_normalized"
 
 
@@ -564,20 +505,3 @@ def test_assumed_de_novo_value_is_canonicalized() -> None:
 
     assert [item.value for item in items] == ["de_novo", "de_novo", "de_novo"]
     assert all(issue.issue_type.value == "value_normalized" for issue in issues)
-
-
-def test_parenthetical_assumed_de_novo_is_canonicalized() -> None:
-    """Live rett_084 writes the eligibility note into the value itself."""
-    items, _issues = AcmgEvidenceValueNormalizer().normalize(
-        [_item("C.de_novo_status", "assumed de novo (PM6-eligible)")]
-    )
-
-    assert items[0].value == "de_novo"
-
-
-def test_not_de_novo_parenthetical_is_not_flipped() -> None:
-    items, _issues = AcmgEvidenceValueNormalizer().normalize(
-        [_item("C.de_novo_status", "not de novo (maternal)")]
-    )
-
-    assert items[0].value == "not_de_novo"

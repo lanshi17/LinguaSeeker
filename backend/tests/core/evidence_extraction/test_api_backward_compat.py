@@ -56,37 +56,3 @@ def test_block_text_preserves_historical_body_only_behavior():
     }
 
     assert _block_text(block) == "Gene Variant\nBRCA1 c.5266dupC"
-
-
-def test_block_text_unescapes_html_hgvs() -> None:
-    block = {"type": "text", "text": "患儿携带c.538C&gt;T变异。"}
-
-    assert _block_text(block) == "患儿携带c.538C>T变异。"
-
-
-def test_build_track_document_unescapes_html_and_keeps_page_span_length(tmp_path) -> None:
-    path = tmp_path / "original.json"
-    path.write_text(
-        json.dumps(
-            {
-                "metadata": {"doc_id": "rett-html", "source_language": "zh"},
-                "blocks": [
-                    {
-                        "type": "text",
-                        "page_idx": 0,
-                        "bbox": [1, 2, 3, 4],
-                        "text": "Sanger测序显示c.538C&gt;T（p.R180X）。",
-                    }
-                ],
-            }
-        ),
-        encoding="utf-8",
-    )
-
-    doc = _build_track_document_from_json(path, Track.ORIGINAL)
-
-    assert "c.538C>T" in doc.formatted_text
-    assert "&gt;" not in doc.formatted_text
-    assert doc.blocks[0].text == "Sanger测序显示c.538C>T（p.R180X）。"
-    assert doc.page_spans[0].end_offset == len(doc.formatted_text)
-

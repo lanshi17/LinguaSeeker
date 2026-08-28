@@ -19,7 +19,7 @@ from pathlib import Path
 from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 
-GROUND_TRUTH_DIR = Path(__file__).resolve().parent.parent.parent.parent / "benchmark" / "data" / "ground_truth" / "clinvar_fused"
+GROUND_TRUTH_DIR = Path(__file__).resolve().parent / "ground_truth"
 
 TARGET_LANGUAGES = {
     "zh": "简体中文（Simplified Chinese）",

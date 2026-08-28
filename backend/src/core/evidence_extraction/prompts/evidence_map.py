@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Collection
 from typing import TYPE_CHECKING
 
 from ..domain.channel_contracts import DocumentEvidenceChannel
@@ -183,49 +182,15 @@ def get_channel_strategy_guidance(
     return "\n".join(blocks)
 
 
-_FIELD_COVERAGE_CUES: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("Simple factual fields", ("A.gene_symbol", "B.disease_diagnosis", "A.gene_disease_relationship")),
-    (
-        "Variant detail fields",
-        ("A.variant_hgvs_c", "A.variant_hgvs_p", "A.variant_type", "A.variant_consequence_class"),
-    ),
-    (
-        "Contextual patient fields",
-        ("B.sex", "B.age_of_onset", "B.mode_of_inheritance_reported", "B.clinical_phenotypes", "B.hpo_terms"),
-    ),
-    (
-        "Segregation/de novo fields",
-        ("C.inheritance_source", "C.de_novo_status", "C.segregation_observed", "C.segregation_count"),
-    ),
-    (
-        "Functional evidence fields",
-        ("F.assay_type", "F.assay_system", "F.functional_result", "F.quantitative_result", "F.assay_controls"),
-    ),
-    (
-        "Cohort/statistical fields",
-        ("G.study_design", "G.case_count", "G.control_count", "G.odds_ratio", "G.confidence_interval", "G.p_value"),
-    ),
-)
-
-
-def expanded_field_coverage_guidance(eligible_field_ids: Collection[str]) -> str:
-    """Return B7-inspired field coverage guidance scoped to the eligible catalog.
-
-    Naming an ineligible field here contradicts the catalog scope and invites
-    the model to emit items the channel cannot support, so every cue is
-    filtered down to fields the current pass actually asks for. Returns an
-    empty string when no cue field is eligible.
-    """
-    lines = [
-        f"- {label}: {', '.join(scoped)}."
-        for label, field_ids in _FIELD_COVERAGE_CUES
-        if (scoped := [field_id for field_id in field_ids if field_id in eligible_field_ids])
-    ]
-    if not lines:
-        return ""
-    body = "\n".join(lines)
-    return f"""EXPANDED FIELD COVERAGE GUIDANCE:
+def expanded_field_coverage_guidance() -> str:
+    """Return B7-inspired field coverage guidance scoped to the eligible catalog."""
+    return """EXPANDED FIELD COVERAGE GUIDANCE:
 Use the eligible catalog as the source of truth. When these field IDs are listed, apply the following stronger coverage cues:
-{body}
+- Simple factual fields: A.gene_symbol, B.disease_diagnosis, A.gene_disease_relationship.
+- Variant detail fields: A.variant_hgvs_c, A.variant_hgvs_p, A.variant_type, A.variant_consequence_class.
+- Contextual patient fields: B.sex, B.age_of_onset, B.mode_of_inheritance_reported, B.clinical_phenotypes, B.hpo_terms.
+- Segregation/de novo fields: C.inheritance_source, C.de_novo_status, C.segregation_observed, C.segregation_count.
+- Functional evidence fields: F.assay_type, F.assay_system, F.functional_result, F.quantitative_result, F.assay_controls.
+- Cohort/statistical fields: G.study_design, G.case_count, G.control_count, G.odds_ratio, G.confidence_interval, G.p_value.
 Do not add any field outside the eligible catalog. This guidance expands attention to medium and complex fields without changing the current pipeline, validation, or source-grounding requirements."""
 

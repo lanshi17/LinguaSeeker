@@ -256,17 +256,6 @@ async def test_run_dual_english_pivot_maps_english_source_to_original_raw_source
     assert dual.reconciled_result.evidence_items[0].raw_source is not None
     assert dual.reconciled_result.evidence_items[0].raw_source.text_snippet == original_text
 
-    english_only = await service.run_dual(
-        documents,
-        extraction_track_mode="english_pivot",
-        enable_translation_traceback=False,
-    )
-
-    assert english_only.translated_result.evidence_items[0].source.text_snippet == english_text
-    assert english_only.translated_result.evidence_items[0].raw_source is None
-    assert english_only.reconciled_result is not None
-    assert english_only.reconciled_result.evidence_items[0].raw_source is None
-
 
 @pytest.mark.asyncio
 async def test_run_dual_english_pivot_identity_maps_english_original_source() -> None:
