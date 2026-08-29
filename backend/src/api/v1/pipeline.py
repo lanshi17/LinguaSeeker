@@ -118,6 +118,7 @@ def _determine_current_phase(state: PipelineGraphState) -> str | None:
         "phase_1": state.phase_1_status,
         "phase_2": state.phase_2_status,
         "phase_3": state.phase_3_status,
+        "phase_4": state.phase_4_status,
     }
     for name, detail in phase_map.items():
         if detail.status == PhaseStatus.RUNNING:
@@ -189,11 +190,11 @@ def _prepare_phase_rerun_state(
         "error_phase": None,
         "completed_at": None,
     }
-    for phase_num in range(target_phase, 4):
+    for phase_num in range(target_phase, 5):
         updates[f"phase_{phase_num}_status"] = PhaseStatusDetail()
         updates[f"phase_{phase_num}_output"] = None
-    if target_phase <= 2:
-        updates["skip_phase_3_reason"] = None
+    if target_phase <= 3:
+        updates["skip_phase_4_reason"] = None
     return existing_state.model_copy(deep=True, update=updates)
 
 
@@ -216,7 +217,7 @@ async def start_pipeline_run(
     jq = get_job_queue()
     owner_user_id = str(account.owner_user_id) if account.owner_user_id else None
 
-    # Phase re-run: resume from existing state for target_phase 2/3
+    # Phase re-run: resume from existing state for target_phase 2/3/4
     if body.mode == "phase" and body.processing_run_id:
         existing_state = await runner.get_last_state(body.processing_run_id)
         if existing_state is None or existing_state.owner_user_id != owner_user_id:
@@ -480,6 +481,7 @@ async def get_pipeline_status(
                 phase_1=PhaseStatusResponse(status="pending"),
                 phase_2=PhaseStatusResponse(status="pending"),
                 phase_3=PhaseStatusResponse(status="pending"),
+                phase_4=PhaseStatusResponse(status="pending"),
             )
             return PipelineStatusResponse(
                 processing_run_id=processing_run_id,
@@ -500,6 +502,7 @@ async def get_pipeline_status(
         phase_1=_phase_detail_to_response(state.phase_1_status),
         phase_2=_phase_detail_to_response(state.phase_2_status),
         phase_3=_phase_detail_to_response(state.phase_3_status),
+        phase_4=_phase_detail_to_response(state.phase_4_status),
     )
 
     elapsed = _compute_elapsed(state.started_at, state.completed_at)
@@ -510,7 +513,7 @@ async def get_pipeline_status(
         source_document_id=state.source_document_id,
         pipeline_status=state.pipeline_status.value,
         current_phase=_determine_current_phase(state),
-        skip_phase_3_reason=state.skip_phase_3_reason.value if state.skip_phase_3_reason else None,
+        skip_phase_4_reason=state.skip_phase_4_reason.value if state.skip_phase_4_reason else None,
         phases=phases,
         error_message=state.error_message,
         error_phase=state.error_phase,

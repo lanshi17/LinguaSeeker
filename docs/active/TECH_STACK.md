@@ -92,9 +92,10 @@ backend/
 │   │   ├── concurrency.py                                  #   Concurrency controls
 │   │   ├── state_persistence.py                            #   State checkpoint persistence
 │   │   ├── contracts.py                                    #   Orchestrator Pydantic contracts
-│   │   ├── phase_1_adapter.py                              #   Phase 1 node adapter
-│   │   ├── phase_2_adapter.py                              #   Phase 2 node adapter
-│   │   ├── phase_3_adapter.py                              #   Phase 3 node adapter
+│   │   ├── phase_1_adapter.py                              #   Phase 1 node adapter (acquisition)
+│   │   ├── phase_2_adapter.py                              #   Phase 2 node adapter (parsing)
+│   │   ├── phase_3_adapter.py                              #   Phase 3 node adapter (translation + extraction)
+│   │   ├── phase_4_adapter.py                              #   Phase 4 node adapter (standardization)
 │   │   └── phase_4_factory.py                              #   Phase 4 node factory
 │   ├── api/                                                # FastAPI routes
 │   │   ├── auth.py                                         #   JWT auth endpoints

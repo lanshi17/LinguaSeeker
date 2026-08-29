@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
 from src.api.auth import get_current_account
-from src.api.deps import get_db_session, get_phase4_factory
+from src.api.deps import get_db_session, get_phase5_factory
 from src.api.rate_limit import limiter
 from src.api.wiring import get_local_parser
 from src.core.auth.contracts import AuthContext
@@ -51,7 +51,7 @@ async def create_session(
     account: AuthContext = Depends(get_current_account),
 ) -> ChatSessionResponse:
     """Create a new chat session."""
-    factory = get_phase4_factory()
+    factory = get_phase5_factory()
     service = factory.create_chat_service(session)
     chat_session = await service.create_session(
         processing_run_id=body.processing_run_id,
@@ -68,7 +68,7 @@ async def list_sessions(
     account: AuthContext = Depends(get_current_account),
 ) -> list[ChatSessionResponse]:
     """List all chat sessions for a processing run."""
-    factory = get_phase4_factory()
+    factory = get_phase5_factory()
     service = factory.create_chat_service(session)
     return await service.list_sessions(processing_run_id=processing_run_id, owner_user_id=account.owner_user_id)
 
@@ -80,7 +80,7 @@ async def get_session(
     account: AuthContext = Depends(get_current_account),
 ) -> ChatSessionResponse:
     """Fetch a single chat session by id."""
-    factory = get_phase4_factory()
+    factory = get_phase5_factory()
     service = factory.create_chat_service(session)
     return await service.get_session(session_id=session_id, owner_user_id=account.owner_user_id)
 
@@ -93,7 +93,7 @@ async def list_messages(
     account: AuthContext = Depends(get_current_account),
 ) -> list[ChatMessageResponse]:
     """List messages in a chat session."""
-    factory = get_phase4_factory()
+    factory = get_phase5_factory()
     service = factory.create_chat_service(session)
     return await service.list_messages(session_id=session_id, limit=limit, owner_user_id=account.owner_user_id)
 
@@ -108,7 +108,7 @@ async def append_message(
     account: AuthContext = Depends(get_current_account),
 ) -> ChatMessageResponse:
     """Append a message to a chat session."""
-    factory = get_phase4_factory()
+    factory = get_phase5_factory()
     service = factory.create_chat_service(session)
     msg = await service.append_message(
         session_id=session_id,
@@ -163,7 +163,7 @@ async def stream_reply(
     append_message) commits during dependency cleanup, but the assistant
     reply is lost. This is a known FastAPI StreamingResponse limitation.
     """
-    factory = get_phase4_factory()
+    factory = get_phase5_factory()
     service = factory.create_chat_service(session)
 
     async def event_generator():

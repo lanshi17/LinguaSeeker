@@ -111,7 +111,9 @@ const zh: Record<EnKeys, string> = {
 
   // ── 流水线 — PhaseDetailCard ──
   "pipeline.phase.acquisition": "文献采集",
-  "pipeline.phase.acquisitionDesc": "获取并解析源文档",
+  "pipeline.phase.acquisitionDesc": "获取源文献与文档",
+  "pipeline.phase.parsing": "文档解析",
+  "pipeline.phase.parsingDesc": "将文档解析为结构化 Markdown",
   "pipeline.phase.extraction": "证据提取",
   "pipeline.phase.extractionDesc": "提取并翻译证据字段",
   "pipeline.phase.standardization": "实体标准化",
@@ -637,6 +639,8 @@ const zh: Record<EnKeys, string> = {
   "chat.status.cancelled": "已取消",
   "chat.phase.acquisition": "采集",
   "chat.phase.acquisitionDesc": "正在获取源文档",
+  "chat.phase.parsing": "解析",
+  "chat.phase.parsingDesc": "正在解析文档",
   "chat.phase.extraction": "提取",
   "chat.phase.extractionDesc": "正在提取证据字段",
   "chat.phase.standardization": "标准化",

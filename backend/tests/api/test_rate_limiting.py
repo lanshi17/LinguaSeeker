@@ -84,7 +84,7 @@ async def test_stream_endpoint_rate_limited():
             new_callable=AsyncMock,
             return_value=HealthResult(postgres=True, redis=True),
         ),
-        patch("src.api.v1.chat.get_phase4_factory"),
+        patch("src.api.v1.chat.get_phase5_factory"),
     ):
         mock_cfg.return_value = mock_settings
 

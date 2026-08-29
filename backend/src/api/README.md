@@ -12,7 +12,7 @@
 api/
 ├── wiring.py              # 依赖注入和服务组装（应用启动时调用一次）
 ├── auth.py                # API Key + HMAC 会话认证
-├── deps.py                # FastAPI 依赖项（数据库会话、Phase4ServiceFactory）
+├── deps.py                # FastAPI 依赖项（数据库会话、Phase5ServiceFactory）
 ├── body_size_limit.py     # 请求体大小限制 ASGI 中间件
 ├── rate_limit.py          # Redis/内存限流器
 ├── v1/                    # V1 API 路由
@@ -44,7 +44,7 @@ cfg → engine → session_factory
   → SessionBoundStatePersistence
   → PipelineOrchestrator → PipelineRunner
   → SingleJobDispatcher
-  → Phase4ServiceFactory
+  → Phase5ServiceFactory
   → JobQueueRepository
 ```
 
@@ -70,7 +70,7 @@ async def handler(_api_key: str | None = Depends(require_api_key)):
 | 依赖 | 说明 |
 |------|------|
 | `get_db_session()` | 提供异步数据库会话（自动 commit/rollback） |
-| `get_phase4_factory()` | 返回全局 Phase4ServiceFactory 实例 |
+| `get_phase5_factory()` | 返回全局 Phase5ServiceFactory 实例 |
 
 ### `body_size_limit.py` — 请求体限制
 
@@ -118,7 +118,7 @@ async def handler(session: AsyncSession = Depends(get_db_session)):
 
 ```python
 async def handler(session: AsyncSession = Depends(get_db_session)):
-    factory = get_phase4_factory()
+    factory = get_phase5_factory()
     service = factory.create_feedback_service(session)
 ```
 

@@ -8,7 +8,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.agents.contracts import (
-    Phase2Output,
+    ParseOutput,
+    TranslationExtractionOutput,
     PipelineGraphState,
     PhaseStatus,
     PipelineMode,
@@ -146,7 +147,7 @@ async def test_session_bound_save_uses_upsert():
 
 
 @pytest.mark.asyncio
-async def test_session_bound_save_does_not_mutate_inline_phase2_payload():
+async def test_session_bound_save_does_not_mutate_inline_phase3_payload():
     """Persisting state must trim JSONB via a copy, not mutate live state."""
     mock_session = AsyncMock()
     mock_session.execute = AsyncMock()
@@ -164,13 +165,13 @@ async def test_session_bound_save_does_not_mutate_inline_phase2_payload():
         mode=PipelineMode.FULL,
         source_type=SourceType.LOCAL,
         pipeline_status=PipelineStatus.RUNNING,
-        phase_2_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
-        phase_2_output=Phase2Output(
-            output_dir="/tmp/phase_2",
-            original_json_path="/tmp/phase_2/original.json",
-            translated_json_path="/tmp/phase_2/translated.json",
+        phase_3_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
+        phase_3_output=TranslationExtractionOutput(
+            output_dir="/tmp/phase_3",
+            original_json_path="/tmp/phase_3/original.json",
+            translated_json_path="/tmp/phase_3/translated.json",
             source_language="zh",
-            extraction_result_path="/tmp/phase_2/extraction_result.json",
+            extraction_result_path="/tmp/phase_3/extraction_result.json",
             original_text="original text",
             translated_text="translated text",
             original_blocks=[{"type": "text", "text": "original"}],
@@ -180,11 +181,11 @@ async def test_session_bound_save_does_not_mutate_inline_phase2_payload():
 
     await persistence.save(state)
 
-    assert state.phase_2_output is not None
-    assert state.phase_2_output.original_text == "original text"
-    assert state.phase_2_output.translated_text == "translated text"
-    assert state.phase_2_output.original_blocks == [{"type": "text", "text": "original"}]
-    assert state.phase_2_output.translated_blocks == [{"type": "text", "text": "translated"}]
+    assert state.phase_3_output is not None
+    assert state.phase_3_output.original_text == "original text"
+    assert state.phase_3_output.translated_text == "translated text"
+    assert state.phase_3_output.original_blocks == [{"type": "text", "text": "original"}]
+    assert state.phase_3_output.translated_blocks == [{"type": "text", "text": "translated"}]
 
 
 @pytest.mark.asyncio
@@ -242,9 +243,8 @@ async def test_recover_orphaned_runs_fails_stale_heartbeat(db_session: AsyncSess
 
 @pytest.mark.asyncio
 async def test_build_raw_metadata_extracts_title(tmp_path):
-    """_build_raw_metadata reads title/authors/journal from Phase 1 metadata.json."""
+    """_build_raw_metadata reads title/authors/journal from Phase 2 metadata.json."""
     import json
-    from src.agents.contracts import Phase1Output
     from src.agents.state_persistence import _build_raw_metadata
 
     meta_path = tmp_path / "metadata.json"
@@ -259,8 +259,7 @@ async def test_build_raw_metadata_extracts_title(tmp_path):
         mode=PipelineMode.FULL,
         source_type=SourceType.LOCAL,
     )
-    state.phase_1_output = Phase1Output(
-        pdf_path="",
+    state.phase_2_output = ParseOutput(
         md_path=str(tmp_path / "output.md"),
         metadata_path=str(meta_path),
         output_dir=str(tmp_path),
@@ -275,7 +274,6 @@ async def test_build_raw_metadata_extracts_title(tmp_path):
 @pytest.mark.asyncio
 async def test_build_raw_metadata_handles_missing_file(tmp_path):
     """Missing metadata file is handled gracefully — returns empty dict."""
-    from src.agents.contracts import Phase1Output
     from src.agents.state_persistence import _build_raw_metadata
 
     state = PipelineGraphState(
@@ -284,8 +282,7 @@ async def test_build_raw_metadata_handles_missing_file(tmp_path):
         mode=PipelineMode.FULL,
         source_type=SourceType.LOCAL,
     )
-    state.phase_1_output = Phase1Output(
-        pdf_path="",
+    state.phase_2_output = ParseOutput(
         md_path="",
         metadata_path=str(tmp_path / "nonexistent.json"),
         output_dir=str(tmp_path),
@@ -295,8 +292,8 @@ async def test_build_raw_metadata_handles_missing_file(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_build_raw_metadata_no_phase_1_output():
-    """When Phase 1 has not run, raw_metadata is empty (no crash)."""
+async def test_build_raw_metadata_no_phase_2_output():
+    """When Phase 2 has not run, raw_metadata is empty (no crash)."""
     from src.agents.state_persistence import _build_raw_metadata
 
     state = PipelineGraphState(
@@ -310,9 +307,8 @@ async def test_build_raw_metadata_no_phase_1_output():
 
 @pytest.mark.asyncio
 async def test_direct_persistence_persists_title_to_source_document(db_session: AsyncSession, tmp_path):
-    """DirectStatePersistence.save() persists the Phase 1 title to SourceDocument.raw_metadata."""
+    """DirectStatePersistence.save() persists the Phase 2 title to SourceDocument.raw_metadata."""
     import json
-    from src.agents.contracts import Phase1Output
     from src.dao.postgresql.models import SourceDocument
 
     meta_path = tmp_path / "metadata.json"
@@ -326,8 +322,7 @@ async def test_direct_persistence_persists_title_to_source_document(db_session: 
         source_type=SourceType.LOCAL,
         pipeline_status=PipelineStatus.RUNNING,
     )
-    state.phase_1_output = Phase1Output(
-        pdf_path="",
+    state.phase_2_output = ParseOutput(
         md_path=str(tmp_path / "output.md"),
         metadata_path=str(meta_path),
         output_dir=str(tmp_path),
@@ -342,13 +337,12 @@ async def test_direct_persistence_persists_title_to_source_document(db_session: 
 
 @pytest.mark.asyncio
 async def test_direct_persistence_updates_title_on_existing_source_document(db_session: AsyncSession, tmp_path):
-    """When SD already exists, a later save with Phase 1 title updates raw_metadata."""
+    """When SD already exists, a later save with Phase 2 title updates raw_metadata."""
     import json
-    from src.agents.contracts import Phase1Output
     from src.dao.postgresql.models import SourceDocument
 
     sd_id = str(uuid.uuid4())
-    # First save: no Phase 1 output yet — creates SD with empty metadata.
+    # First save: no Phase 2 output yet — creates SD with empty metadata.
     state = PipelineGraphState(
         processing_run_id=str(uuid.uuid4()),
         source_document_id=sd_id,
@@ -362,11 +356,10 @@ async def test_direct_persistence_updates_title_on_existing_source_document(db_s
     assert sd is not None
     assert "title" not in sd.raw_metadata
 
-    # Second save: Phase 1 completed — title should now be merged in.
+    # Second save: Phase 2 completed — title should now be merged in.
     meta_path = tmp_path / "metadata.json"
     meta_path.write_text(json.dumps({"title": "Late Title"}), encoding="utf-8")
-    state.phase_1_output = Phase1Output(
-        pdf_path="",
+    state.phase_2_output = ParseOutput(
         md_path=str(tmp_path / "output.md"),
         metadata_path=str(meta_path),
         output_dir=str(tmp_path),
@@ -378,10 +371,10 @@ async def test_direct_persistence_updates_title_on_existing_source_document(db_s
 
 
 @pytest.mark.asyncio
-async def test_direct_persistence_phase2_rerun_refreshes_document_text_and_blocks(
+async def test_direct_persistence_phase3_rerun_refreshes_document_text_and_blocks(
     db_session: AsyncSession,
 ):
-    """Phase 2 rerun output should replace stale SourceDocument render payloads."""
+    """Phase 3 rerun output should replace stale SourceDocument render payloads."""
     from src.dao.postgresql.models import SourceDocument
 
     sd_id = str(uuid.uuid4())
@@ -391,13 +384,13 @@ async def test_direct_persistence_phase2_rerun_refreshes_document_text_and_block
         mode=PipelineMode.FULL,
         source_type=SourceType.LOCAL,
         pipeline_status=PipelineStatus.RUNNING,
-        phase_2_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
-        phase_2_output=Phase2Output(
-            output_dir="/tmp/phase_2",
-            original_json_path="/tmp/phase_2/original.json",
-            translated_json_path="/tmp/phase_2/translated.json",
+        phase_3_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
+        phase_3_output=TranslationExtractionOutput(
+            output_dir="/tmp/phase_3",
+            original_json_path="/tmp/phase_3/original.json",
+            translated_json_path="/tmp/phase_3/translated.json",
             source_language="zh",
-            extraction_result_path="/tmp/phase_2/extraction_result.json",
+            extraction_result_path="/tmp/phase_3/extraction_result.json",
             original_text="old original",
             translated_text="old translated",
             original_blocks=[{"text": "old original"}],
@@ -408,14 +401,14 @@ async def test_direct_persistence_phase2_rerun_refreshes_document_text_and_block
     await persistence.save(state)
 
     state.mode = PipelineMode.PHASE
-    state.target_phase = 2
+    state.target_phase = 3
     state.pipeline_status = PipelineStatus.RUNNING
-    state.phase_2_output = Phase2Output(
-        output_dir="/tmp/phase_2",
-        original_json_path="/tmp/phase_2/original.json",
-        translated_json_path="/tmp/phase_2/translated.json",
+    state.phase_3_output = TranslationExtractionOutput(
+        output_dir="/tmp/phase_3",
+        original_json_path="/tmp/phase_3/original.json",
+        translated_json_path="/tmp/phase_3/translated.json",
         source_language="zh",
-        extraction_result_path="/tmp/phase_2/extraction_result.json",
+        extraction_result_path="/tmp/phase_3/extraction_result.json",
         original_text="new original",
         translated_text="new translated",
         original_blocks=[{"text": "new original"}],
@@ -458,13 +451,13 @@ async def test_direct_persistence_full_run_refreshes_untranslated_translation_ca
         mode=PipelineMode.FULL,
         source_type=SourceType.LOCAL,
         pipeline_status=PipelineStatus.RUNNING,
-        phase_2_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
-        phase_2_output=Phase2Output(
-            output_dir="/tmp/phase_2",
-            original_json_path="/tmp/phase_2/original.json",
-            translated_json_path="/tmp/phase_2/translated.json",
+        phase_3_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
+        phase_3_output=TranslationExtractionOutput(
+            output_dir="/tmp/phase_3",
+            original_json_path="/tmp/phase_3/original.json",
+            translated_json_path="/tmp/phase_3/translated.json",
             source_language="zh",
-            extraction_result_path="/tmp/phase_2/extraction_result.json",
+            extraction_result_path="/tmp/phase_3/extraction_result.json",
             original_text=stale_chinese_text,
             translated_text="Rett syndrome is a complex neurodevelopmental disorder, commonly seen in girls.",
             original_blocks=[{"type": "text", "text": stale_chinese_text}],

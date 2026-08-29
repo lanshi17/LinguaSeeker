@@ -1,13 +1,10 @@
-"""Phase 2 adapter: translation and dual-track evidence extraction.
+"""Phase 2 adapter: document parsing (MinerU).
 
-Uses TranslationService.run() + .save() for translation.
-Uses EvidenceExtractionService.build_dual_documents_from_output_dir() + .run_dual()
-for dual-track evidence extraction.
+Raises classified errors for orchestrator-level retry decisions.
 """
 
 from __future__ import annotations
 
-import asyncio
 import json
 from datetime import datetime
 from pathlib import Path
@@ -17,75 +14,48 @@ import aiofiles
 from loguru import logger
 
 from src.agents.contracts import (
-    Phase2Output,
+    ParseOutput,
     PhaseStatus,
     PhaseStatusDetail,
     PipelineGraphState,
     PermanentPhaseError,
-    SkipPhase3Reason,
     build_retryable_errors,
     classify_phase_error,
 )
-from src.agents.state_persistence import load_phase2_text_from_paths
-from src.core.cross_lingual_translation.contracts import CrossLingualOutput
-from src.core.evidence_extraction.api import (
-    EvidenceExtractionService,
-)
-from src.core.evidence_extraction.contracts import (
-    EvidenceExtractionStatus,
-)
-from src.core.evidence_extraction.stages.catalog_extraction import (
-    CatalogExtractionError,
-)
 
 if TYPE_CHECKING:
-    from src.core.cross_lingual_translation.api import (
-        TranslationService,
+    from src.core.ingest_and_digitize_data.parse_document.service import (
+        ParseDocumentService,
     )
 
-_RETRYABLE_ERRORS = build_retryable_errors() + (CatalogExtractionError,)
-
-
-def _load_blocks_from_json(json_path: str) -> list[dict] | None:
-    """Load block dicts from a persisted Phase 2 JSON file."""
-    try:
-        with open(json_path, encoding="utf-8") as f:
-            data = json.load(f)
-    except (OSError, json.JSONDecodeError):
-        return None
-    if not isinstance(data, dict):
-        return None
-    blocks = data.get("blocks")
-    return blocks if isinstance(blocks, list) and blocks else None
+_RETRYABLE_ERRORS = build_retryable_errors()
 
 
 class Phase2Adapter:
-    """Thin adapter wrapping TranslationService + EvidenceExtractionService.
+    """Thin adapter wrapping ParseDocumentService.
 
-    Flow:
-    1. Read parsed content from Phase 1 output_dir
-    2. Call TranslationService.run() -> TranslationResult
-    3. Call TranslationService.save() -> CrossLingualOutput
-    4. Call build_dual_documents_from_output_dir() -> DualTrackDocuments
-    5. Call EvidenceExtractionService.run_dual() -> DualEvidenceExtractionResult
+    When ``state.pre_parsed_markdown`` is set (uploaded directly or produced
+    by Phase 1 acquisition), skips MinerU entirely and constructs ParseOutput
+    from the provided markdown text.
     """
 
     def __init__(
         self,
-        translation_service: TranslationService,
-        extraction_service: EvidenceExtractionService,
+        parse_service: ParseDocumentService,
     ):
-        self._translation = translation_service
-        self._extraction = extraction_service
+        self._parse = parse_service
 
     async def run(self, state: PipelineGraphState) -> PipelineGraphState:
-        """Execute Phase 2: translate and extract dual-track evidence.
+        """Execute Phase 2: parse document into markdown + metadata.
 
         Returns updated state with phase_2_output set on success.
-        Sets skip_phase_3_reason if both tracks are NOT_RELEVANT.
         Raises RetryablePhaseError or PermanentPhaseError on failure.
         """
-        logger.info("Phase 2 started: run={}", state.processing_run_id)
+        logger.info(
+            "Phase 2 started: run={}, pre_parsed={}",
+            state.processing_run_id,
+            state.pre_parsed_markdown is not None,
+        )
 
         state.phase_2_status = PhaseStatusDetail(
             status=PhaseStatus.RUNNING,
@@ -93,153 +63,113 @@ class Phase2Adapter:
         )
 
         try:
-            # Load parsed document from Phase 1 output
-            if state.phase_1_output is None:
+            # Fast path: pre-parsed markdown bypasses MinerU entirely
+            if state.pre_parsed_markdown:
+                state = await self._build_from_pre_parsed(state)
+                return state
+
+            if state.phase_1_output is None or not state.phase_1_output.pdf_path:
                 raise PermanentPhaseError(
-                    "Phase 1 output not found in state",
+                    "Phase 1 output with a PDF path not found in state",
                     phase=2,
                 )
+            pdf_path = state.phase_1_output.pdf_path
 
-            # Read from Phase 1 metadata (contains pages and content_blocks)
-            metadata_path = state.phase_1_output.metadata_path
-            async with aiofiles.open(metadata_path, "r") as f:
-                content = await f.read()
-                parse_data = json.loads(content)
-
-            pages = parse_data.get("pages", [])
-            content_blocks = parse_data.get("content_blocks", [])
-
-            # Use absolute path to survive CWD changes
-            from pathlib import Path as _Path
-
-            _backend_root = _Path(__file__).resolve().parent.parent.parent.parent
+            # Parse document — use absolute path to survive CWD changes
+            _backend_root = Path(__file__).resolve().parent.parent.parent.parent
             output_dir = str(_backend_root / "data" / "pipeline" / state.processing_run_id / "phase_2")
-            Path(output_dir).mkdir(parents=True, exist_ok=True)
+            parse_result = await self._parse.parse_local_files_and_save(
+                file_paths=[pdf_path],
+                output_dir=output_dir,
+            )
 
-            # On retry, check if translation output already exists on disk
-            doc_output_dir = Path(output_dir) / state.source_document_id
-            existing_original = doc_output_dir / "original.json"
-            existing_metadata = doc_output_dir / "metadata.json"
-            cross_lingual_output = None
-            translation_result = None
-
-            if existing_original.exists() and existing_metadata.exists():
-                logger.info("Phase 2 retry: translation output already exists, skipping translation")
-                # Read source_language from persisted metadata
-                async with aiofiles.open(existing_metadata, "r") as mf:
-                    meta_content = await mf.read()
-                    meta_data = json.loads(meta_content)
-                source_lang = meta_data.get("source_language", "unknown")
-                cross_lingual_output = CrossLingualOutput(
-                    formatted_original="",
-                    translated_english="",
-                    source_language=source_lang,
-                    terminology_map=meta_data.get("terminology_map", {}),
-                    translation_warnings=meta_data.get("translation_warnings", []),
-                    output_dir=str(doc_output_dir),
-                    original_json_path=str(existing_original),
-                    translated_json_path=str(doc_output_dir / "translated.json"),
-                    image_paths=[],
+            # Extract parsed output paths (B4 fix: correct field names)
+            if not parse_result.saved_files:
+                raise PermanentPhaseError(
+                    "Phase 2 parsing produced no output files (document may have been "
+                    "rejected by the parser, e.g. page-limit exceeded)",
+                    phase=2,
                 )
+            first_file = list(parse_result.saved_files.values())[0]
 
-            if cross_lingual_output is None:
-                # Run translation
-                translation_result = await self._translation.run(
-                    pages=pages,
-                    content_blocks=content_blocks,
-                )
-
-                # Save translation output (creates original.json and translated.json)
-                cross_lingual_output = await asyncio.to_thread(
-                    self._translation.save,
-                    result=translation_result,
-                    output_dir=output_dir,
-                    doc_id=state.source_document_id,
-                )
-
-            # Build dual documents using the service's static method
-            # This reads from cross_lingual_output.output_dir (sync Path.read_text)
-            dual_documents = await asyncio.to_thread(
-                EvidenceExtractionService.build_dual_documents_from_output_dir,
-                cross_lingual_output.output_dir,
-                state.extraction_target,
-            )
-
-            # Run dual-track extraction via the service facade
-            dual_result = await self._extraction.run_dual(
-                dual_documents,
-                extraction_profile=state.extraction_profile,
-                extraction_mode=state.extraction_mode,
-                original_only=state.ablation_original_only,
-                enable_review_validation=not state.ablation_disable_review,
-                enable_target_guard=not state.ablation_disable_target_guard,
-                enable_source_grounding=not state.ablation_disable_grounding,
-                review_reject_policy=state.review_reject_policy,
-                extraction_track_mode=state.extraction_track_mode,
-            )
-
-            # Check if document is relevant
-            both_not_relevant = (
-                dual_result.original_result.status == EvidenceExtractionStatus.NOT_RELEVANT
-                and dual_result.translated_result.status == EvidenceExtractionStatus.NOT_RELEVANT
-            )
-
-            if both_not_relevant:
-                logger.info("Document not relevant, setting skip_phase_3_reason")
-                state.skip_phase_3_reason = SkipPhase3Reason.NOT_RELEVANT
-
-            # Save extraction result for Phase 3 (N7 fix)
-            extraction_result_path = f"{output_dir}/extraction_result.json"
-            async with aiofiles.open(extraction_result_path, "w") as f:
-                await f.write(json.dumps(dual_result.model_dump(mode="json")))
-
-            # Persist document text and structured blocks while files are
-            # guaranteed to exist on disk. Blocks enable structured rendering
-            # (headings, tables, lists) in the evidence detail viewer.
-            original_text, translated_doc_text = await load_phase2_text_from_paths(
-                cross_lingual_output.original_json_path,
-                cross_lingual_output.translated_json_path,
-            )
-
-            # Capture structured blocks from translation result or disk
-            original_blocks_dicts: list[dict] | None = None
-            translated_blocks_dicts: list[dict] | None = None
-            if translation_result is not None:
-                if translation_result.original_blocks:
-                    original_blocks_dicts = [b.to_dict() for b in translation_result.original_blocks]
-                if translation_result.translated_blocks:
-                    translated_blocks_dicts = [b.to_dict() for b in translation_result.translated_blocks]
-            else:
-                # Retry path: load blocks from persisted JSON files
-                original_blocks_dicts = _load_blocks_from_json(cross_lingual_output.original_json_path)
-                translated_blocks_dicts = _load_blocks_from_json(cross_lingual_output.translated_json_path)
-
-            state.phase_2_output = Phase2Output(
-                output_dir=cross_lingual_output.output_dir,
-                original_json_path=cross_lingual_output.original_json_path,
-                translated_json_path=cross_lingual_output.translated_json_path,
-                source_language=cross_lingual_output.source_language,
-                extraction_result_path=extraction_result_path,
-                original_text=original_text,
-                translated_text=translated_doc_text,
-                original_blocks=original_blocks_dicts,
-                translated_blocks=translated_blocks_dicts,
+            state.phase_2_output = ParseOutput(
+                md_path=str(first_file.md_path),
+                metadata_path=str(first_file.metadata_path),
+                output_dir=str(first_file.output_dir),
+                images_dir=str(first_file.images_dir) if first_file.images_dir else None,
             )
 
             state.phase_2_status = PhaseStatusDetail.complete(
                 started_at=state.phase_2_status.started_at,
-                summary={
-                    "relevant": not both_not_relevant,
-                    "source_language": cross_lingual_output.source_language,
-                    "target_gene": state.extraction_target.gene_symbol if state.extraction_target else None,
-                },
             )
-            logger.info(
-                "Phase 2 completed: run={}, skip_phase_3_reason={}",
-                state.processing_run_id,
-                state.skip_phase_3_reason,
-            )
+
+            logger.info("Phase 2 completed: run={}", state.processing_run_id)
             return state
 
         except Exception as e:
             classify_phase_error(2, e, _RETRYABLE_ERRORS)
+
+    async def _build_from_pre_parsed(
+        self,
+        state: PipelineGraphState,
+    ) -> PipelineGraphState:
+        """Construct ParseOutput from pre-parsed markdown, skipping MinerU."""
+        assert state.pre_parsed_markdown is not None  # noqa: S101
+        markdown_text = state.pre_parsed_markdown
+
+        backend_root = Path(__file__).resolve().parent.parent.parent.parent
+        output_dir = backend_root / "data" / "pipeline" / state.processing_run_id / "phase_2"
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        md_path = output_dir / "output.md"
+        meta_path = output_dir / "metadata.json"
+
+        # Write markdown
+        async with aiofiles.open(str(md_path), "w") as f:
+            await f.write(markdown_text)
+
+        # Extract title from first markdown heading (# Title)
+        title: str | None = None
+        for line in markdown_text.split("\n"):
+            line = line.strip()
+            if line.startswith("# "):
+                title = line[2:].strip() or None
+                break
+
+        # Construct metadata JSON compatible with Phase 3 expectations
+        metadata = {
+            "total_pages": 1,
+            "title": title,
+            "authors": [],
+            "abstract_text": None,
+            "pages": [
+                {
+                    "page_number": 1,
+                    "markdown": markdown_text,
+                    "figures": [],
+                    "tables": [],
+                }
+            ],
+            "content_blocks": [],
+        }
+        async with aiofiles.open(str(meta_path), "w") as f:
+            await f.write(json.dumps(metadata, indent=2))
+
+        state.phase_2_output = ParseOutput(
+            md_path=str(md_path),
+            metadata_path=str(meta_path),
+            output_dir=str(output_dir),
+            images_dir=None,
+        )
+
+        state.phase_2_status = PhaseStatusDetail.complete(
+            started_at=state.phase_2_status.started_at,
+            summary={"source": "pre_parsed_markdown"},
+        )
+
+        logger.info(
+            "Phase 2 completed (pre-parsed): run={}, {} chars",
+            state.processing_run_id,
+            len(markdown_text),
+        )
+        return state

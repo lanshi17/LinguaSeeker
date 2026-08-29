@@ -53,7 +53,7 @@ async def test_write_route_defaults_to_public_account_without_api_key(_mock_conf
             new_callable=AsyncMock,
             return_value=MagicMock(failed_services=MagicMock(return_value=[])),
         ),
-        patch("src.api.v1.evidence.get_phase4_factory") as mock_factory,
+        patch("src.api.v1.evidence.get_phase5_factory") as mock_factory,
         patch("src.api.deps.get_session_factory") as mock_sf,
     ):
         mock_sf.return_value = MagicMock(
@@ -109,7 +109,7 @@ async def test_write_route_accepted_with_valid_api_key(_mock_config_with_api_key
             new_callable=AsyncMock,
             return_value=MagicMock(failed_services=MagicMock(return_value=[])),
         ),
-        patch("src.api.v1.evidence.get_phase4_factory") as mock_factory,
+        patch("src.api.v1.evidence.get_phase5_factory") as mock_factory,
         patch("src.api.deps.get_session_factory") as mock_sf,
     ):
         mock_sf.return_value = MagicMock(

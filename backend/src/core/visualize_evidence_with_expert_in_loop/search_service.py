@@ -148,6 +148,9 @@ def _extract_source_language_from_state(state_json: Any) -> str | None:
     if not isinstance(state_json, dict):
         return None
     candidate_paths = (
+        ("phase_3_output", "source_language"),
+        ("phase_3_status", "summary", "source_language"),
+        # Legacy pre-4-phase-split states stored translation output under phase_2
         ("phase_2_output", "source_language"),
         ("phase_2_status", "summary", "source_language"),
         ("source_language",),
@@ -419,10 +422,11 @@ def _load_full_document_blocks(
         for pipeline_dir in pipeline_root.iterdir():
             if not pipeline_dir.is_dir():
                 continue
-            doc_dir = pipeline_dir / "phase_2" / doc_id_str
-            result = _load_blocks_from_dir(doc_dir, track)
-            if result:
-                return result
+            for phase_dir in ("phase_3", "phase_2"):
+                doc_dir = pipeline_dir / phase_dir / doc_id_str
+                result = _load_blocks_from_dir(doc_dir, track)
+                if result:
+                    return result
 
     legacy_root = backend_root / "output" / "cross_lingual"
     if legacy_root.exists():
@@ -655,9 +659,10 @@ def _load_translation_alignment(
         for pipeline_dir in pipeline_root.iterdir():
             if not pipeline_dir.is_dir():
                 continue
-            chunks = _load_translation_alignment_from_dir(pipeline_dir / "phase_2" / doc_id_str)
-            if chunks:
-                return chunks
+            for phase_dir in ("phase_3", "phase_2"):
+                chunks = _load_translation_alignment_from_dir(pipeline_dir / phase_dir / doc_id_str)
+                if chunks:
+                    return chunks
 
     legacy_root = backend_root / "output" / "cross_lingual"
     if legacy_root.exists():
@@ -694,7 +699,7 @@ def _load_full_document_text(
 
     Searches in order:
     1. ``known_output_dir`` — exact path from pipeline_run_states.state_json.
-    2. ``data/pipeline/*/phase_2/{doc_id}/`` — scan current pipeline output.
+    2. ``data/pipeline/*/phase_3/{doc_id}/`` — scan current pipeline output.
     3. ``backend/output/cross_lingual/**/`` — legacy output (by UUID or identifiers).
 
     Returns concatenated text from all blocks, or None if not found.
@@ -708,16 +713,17 @@ def _load_full_document_text(
     backend_root = Path(__file__).resolve().parents[4]
     doc_id_str = str(source_document_id)
 
-    # 2. Current pipeline output: data/pipeline/{run_id}/phase_2/{doc_id}/
+    # 2. Current pipeline output: data/pipeline/{run_id}/phase_3/{doc_id}/
     pipeline_root = backend_root / "data" / "pipeline"
     if pipeline_root.exists():
         for pipeline_dir in pipeline_root.iterdir():
             if not pipeline_dir.is_dir():
                 continue
-            doc_dir = pipeline_dir / "phase_2" / doc_id_str
-            result = _load_from_dir(doc_dir, track)
-            if result:
-                return result
+            for phase_dir in ("phase_3", "phase_2"):
+                doc_dir = pipeline_dir / phase_dir / doc_id_str
+                result = _load_from_dir(doc_dir, track)
+                if result:
+                    return result
 
     # 3. Legacy output: backend/output/cross_lingual/{lang}/{doc_id}/
     legacy_root = backend_root / "output" / "cross_lingual"
@@ -1319,8 +1325,8 @@ class SearchService:
         title = _coerce_str(raw_metadata.get("title")) if isinstance(raw_metadata, dict) else None
         source_language = _extract_source_language(raw_metadata)
 
-        # Look up phase_2 output_dir from persisted pipeline state
-        phase2_output_dir: str | None = None
+        # Look up phase_3 output_dir from persisted pipeline state
+        phase3_output_dir: str | None = None
         run_state_stmt = (
             select(PipelineRunState.state_json)
             .where(
@@ -1335,9 +1341,12 @@ class SearchService:
         run_state_result = await self._session.execute(run_state_stmt)
         state_json = run_state_result.scalar_one_or_none()
         if isinstance(state_json, dict):
-            p2_output = state_json.get("phase_2_output")
-            if isinstance(p2_output, dict):
-                phase2_output_dir = p2_output.get("output_dir")
+            p3_output = state_json.get("phase_3_output")
+            if not isinstance(p3_output, dict):
+                # Legacy pre-4-phase-split states stored translation under phase_2
+                p3_output = state_json.get("phase_2_output")
+            if isinstance(p3_output, dict):
+                phase3_output_dir = p3_output.get("output_dir")
             source_language = source_language or _extract_source_language_from_state(state_json)
 
         distribution = EvidenceFieldDistribution()
@@ -1501,7 +1510,7 @@ class SearchService:
             source_document_id,
             track="original",
             identifiers=identifiers,
-            known_output_dir=phase2_output_dir,
+            known_output_dir=phase3_output_dir,
         )
         if source_language is None:
             source_language = _detect_source_language_from_text(loaded_original_text)
@@ -1517,13 +1526,13 @@ class SearchService:
             source_document_id,
             track="translated",
             identifiers=identifiers,
-            known_output_dir=phase2_output_dir,
+            known_output_dir=phase3_output_dir,
         )
         loaded_original_blocks = db_original_blocks or _load_full_document_blocks(
             source_document_id,
             track="original",
             identifiers=identifiers,
-            known_output_dir=phase2_output_dir,
+            known_output_dir=phase3_output_dir,
         )
         usable_db_translated_blocks = None
         if db_translated_blocks and not is_likely_untranslated_render_blocks(
@@ -1536,7 +1545,7 @@ class SearchService:
             source_document_id,
             track="translated",
             identifiers=identifiers,
-            known_output_dir=phase2_output_dir,
+            known_output_dir=phase3_output_dir,
         )
         if is_likely_untranslated_render_payload(
             source_language=source_language,
@@ -1558,7 +1567,7 @@ class SearchService:
             source_document_id,
             raw_metadata,
             identifiers=identifiers,
-            known_output_dir=phase2_output_dir,
+            known_output_dir=phase3_output_dir,
         )
 
         return EvidenceGroupDetailResponse(

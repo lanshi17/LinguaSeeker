@@ -47,7 +47,7 @@ app/
 **关闭阶段：**
 - 停止作业调度器（`dispatcher.stop()`）
 - 等待活跃管线任务完成（`runner.shutdown()`）
-- 关闭 Phase4ServiceFactory 资源
+- 关闭 Phase5ServiceFactory 资源
 - 释放 Redis 和 PostgreSQL 连接池
 
 ### 错误处理

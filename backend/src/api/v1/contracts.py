@@ -17,14 +17,14 @@ class PipelineRunRequest(BaseModel):
 
     source_type: Literal["local", "online"]
     mode: Literal["full", "phase"] = "full"
-    target_phase: int | None = Field(default=None, ge=1, le=3)
+    target_phase: int | None = Field(default=None, ge=1, le=4)
     processing_run_id: str | None = None
 
     # Local upload fields
     filename: str | None = None
     content_base64: str | None = None
 
-    # Pre-parsed markdown: bypasses Phase 1 MinerU parsing entirely.
+    # Pre-parsed markdown: bypasses acquisition + MinerU parsing entirely.
     pre_parsed_markdown: str | None = None
 
     # Online acquisition fields
@@ -33,7 +33,7 @@ class PipelineRunRequest(BaseModel):
     relevance_gate: bool = True
     literature_types: list[str] | None = None
 
-    # Target gene-disease hypothesis (Phase 2/3 evidence extraction)
+    # Target gene-disease hypothesis (Phase 3/4 evidence extraction)
     extraction_target: ExtractionTarget | None = Field(default=None, alias="target")
 
     # Extraction field profile — controls which catalog fields are sent to the
@@ -128,6 +128,7 @@ class PipelinePhasesResponse(BaseModel):
     phase_1: PhaseStatusResponse
     phase_2: PhaseStatusResponse
     phase_3: PhaseStatusResponse
+    phase_4: PhaseStatusResponse
 
 
 class PipelineRunResponse(BaseModel):
@@ -146,7 +147,7 @@ class PipelineStatusResponse(BaseModel):
     source_document_id: str
     pipeline_status: str
     current_phase: str | None = None
-    skip_phase_3_reason: str | None = None
+    skip_phase_4_reason: str | None = None
     phases: PipelinePhasesResponse
     error_message: str | None = None
     error_phase: int | None = None
@@ -167,7 +168,7 @@ class PipelineRunSummaryResponse(BaseModel):
     elapsed_seconds: float | None = None
     current_phase: str | None = None
     completed_phases: int = 0
-    total_phases: int = 3
+    total_phases: int = 4
 
 
 class PipelineRunListResponse(BaseModel):

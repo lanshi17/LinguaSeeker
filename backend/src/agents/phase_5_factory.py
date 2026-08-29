@@ -1,6 +1,6 @@
-"""Phase 4 service factory — thin delegate between API and core services.
+"""Phase 5 service factory — thin delegate between API and core services.
 
-Phase 4 (evidence review, chat, audit, source linking) is interactive
+Phase 5 (evidence review, chat, audit, source linking) is interactive
 request-response, not a LangGraph pipeline node.  This factory provides
 the agents-layer boundary so API routes never import core services directly.
 """
@@ -30,8 +30,8 @@ if TYPE_CHECKING:
     from src.core.config import Settings
 
 
-class Phase4ServiceFactory:
-    """Creates Phase 4 services with per-request sessions.
+class Phase5ServiceFactory:
+    """Creates Phase 5 services with per-request sessions.
 
     Long-lived dependencies (cfg, providers) are injected at construction time.
     Short-lived dependencies (AsyncSession) are passed per-method-call.

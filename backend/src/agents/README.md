@@ -4,13 +4,13 @@
 
 ## Overview
 
-`agents/` 实现 Lingua Seeker 的管线编排引擎。核心是一个基于 LangGraph 的 3 阶段有向图编排器，配合后台运行器、作业调度器和 PostgreSQL 状态持久化层。Phase 4 不是图节点——它是独立的请求-响应式交互服务，通过 `Phase4ServiceFactory` 在 API 层创建。
+`agents/` 实现 Lingua Seeker 的管线编排引擎。核心是一个基于 LangGraph 的 4 阶段有向图编排器（Phase 1 文献获取 → Phase 2 文档解析 → Phase 3 翻译+证据提取 → Phase 4 实体标准化），配合后台运行器、作业调度器和 PostgreSQL 状态持久化层。Phase 5 不是图节点——它是独立的请求-响应式交互服务（证据审核、对话、审计），通过 `Phase5ServiceFactory` 在 API 层创建。
 
 ## Structure
 
 ```
 agents/
-├── orchestrator.py          # LangGraph 有向图编排器（3 阶段节点）
+├── orchestrator.py          # LangGraph 有向图编排器（4 阶段节点）
 ├── runner.py                # 后台管线运行器（asyncio task + DB fallback）
 ├── dispatcher.py            # 单任务作业调度器（轮询 pipeline_jobs 表）
 ├── contracts.py             # 状态模型、枚举、错误层次、状态转换守卫
@@ -18,10 +18,11 @@ agents/
 ├── processing_cache.py      # 两级文档处理缓存（L1 Redis + L2 PostgreSQL）
 ├── content_hash.py          # 内容哈希计算（SHA-256 去重）
 ├── concurrency.py           # 并发控制（信号量 + 重试执行器）
-├── phase_1_adapter.py       # Phase 1 适配器（文献采集 + 文档解析）
-├── phase_2_adapter.py       # Phase 2 适配器（翻译 + 双轨证据提取）
-├── phase_3_adapter.py       # Phase 3 适配器（实体标准化）
-├── phase_4_factory.py       # Phase 4 服务工厂（API 层边界）
+├── phase_1_adapter.py       # Phase 1 适配器（文献/文档获取）
+├── phase_2_adapter.py       # Phase 2 适配器（文档解析 MinerU）
+├── phase_3_adapter.py       # Phase 3 适配器（翻译 + 双轨证据提取）
+├── phase_4_adapter.py       # Phase 4 适配器（实体标准化）
+├── phase_5_factory.py       # Phase 5 服务工厂（交互审核层，API 层边界）
 └── __init__.py
 ```
 
@@ -29,14 +30,14 @@ agents/
 
 ### `PipelineOrchestrator` (orchestrator.py)
 
-基于 LangGraph 的管线编排器，构建 3 节点有向图：
+基于 LangGraph 的管线编排器，构建 4 节点有向图：
 
 ```
-Phase 1 (采集+解析) → Phase 2 (翻译+提取) → Phase 3 (标准化) → END
+Phase 1 (文献获取) → Phase 2 (文档解析) → Phase 3 (翻译+提取) → Phase 4 (标准化) → END
 ```
 
 - 每个 Phase 完成后状态持久化到 PostgreSQL（崩溃恢复）
-- 单阶段模式支持上游依赖验证（Phase 2 需要 Phase 1，Phase 3 需要 Phase 1+2）
+- 单阶段模式支持上游依赖验证（Phase 2 需要 Phase 1，Phase 3 需要 Phase 1+2，Phase 4 需要 Phase 1+2+3）
 - 适配器抛出分类错误，编排器决定重试或终止
 - 使用 `RetryablePhaseExecutor` 实现指数退避重试
 
@@ -99,9 +100,9 @@ PostgreSQL 状态持久化层：
 - 读路径：L1 → L2（回填 L1）→ miss
 - 写路径：L2 upsert → L1 set
 
-### `Phase4ServiceFactory` (phase_4_factory.py)
+### `Phase5ServiceFactory` (phase_5_factory.py)
 
-Phase 4 服务工厂，作为 API 层和核心服务之间的边界：
+Phase 5 服务工厂（交互审核层），作为 API 层和核心服务之间的边界：
 
 - 长生命周期依赖（config、providers）在构造时注入
 - 短生命周期依赖（AsyncSession）每次方法调用传入

@@ -572,16 +572,11 @@ async def test_get_last_state_does_not_fail_active_db_run_from_another_worker(
 @pytest.mark.asyncio
 async def test_runner_error_state_preserves_latest_phase_outputs(sample_state, mock_semaphore, mock_persistence):
     """Error state must use the latest cached state as model_copy base, not initial_state."""
-    from src.agents.contracts import Phase1Output, PhaseStatus, PhaseStatusDetail
+    from src.agents.contracts import AcquisitionOutput, PhaseStatus, PhaseStatusDetail
 
     latest = sample_state.model_copy(deep=True)
     latest.phase_1_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
-    latest.phase_1_output = Phase1Output(
-        pdf_path="/tmp/a.pdf",
-        md_path="/tmp/a.md",
-        metadata_path="/tmp/a.json",
-        output_dir="/tmp",
-    )
+    latest.phase_1_output = AcquisitionOutput(pdf_path="/tmp/a.pdf")
 
     orch = MagicMock()
     orch.run = AsyncMock(side_effect=RuntimeError("boom"))

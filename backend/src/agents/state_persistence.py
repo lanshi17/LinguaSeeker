@@ -61,10 +61,10 @@ class PipelineRunSummaryRow:
 def _derive_error_phase(state: PipelineGraphState) -> int:
     """Derive the phase number that was running when the pipeline was interrupted.
 
-    Inspects per-phase PhaseStatusDetail fields in order (phase 3 → 1).
+    Inspects per-phase PhaseStatusDetail fields in order (phase 4 → 1).
     Returns 0 when no phase shows RUNNING status.
     """
-    for phase_num in (3, 2, 1):
+    for phase_num in (4, 3, 2, 1):
         detail = getattr(state, f"phase_{phase_num}_status", None)
         if detail is not None and detail.status == PhaseStatus.RUNNING:
             return phase_num
@@ -72,14 +72,14 @@ def _derive_error_phase(state: PipelineGraphState) -> int:
 
 
 async def _build_raw_metadata(state: PipelineGraphState) -> dict[str, object]:
-    """Extract title/authors from Phase 1 metadata.json for SourceDocument.raw_metadata."""
+    """Extract title/authors from Phase 2 metadata.json for SourceDocument.raw_metadata."""
     meta: dict[str, object] = {}
-    if not state.phase_1_output or not state.phase_1_output.metadata_path:
+    if not state.phase_2_output or not state.phase_2_output.metadata_path:
         return meta
     try:
 
         def _read() -> dict:
-            with open(state.phase_1_output.metadata_path, encoding="utf-8") as f:
+            with open(state.phase_2_output.metadata_path, encoding="utf-8") as f:
                 return json.load(f)
 
         phase1_meta = await asyncio.to_thread(_read)
@@ -99,7 +99,7 @@ async def _build_raw_metadata(state: PipelineGraphState) -> dict[str, object]:
 
 
 async def _read_doc_json(path: str) -> str | None:
-    """Read a Phase 2 JSON file and return concatenated document text."""
+    """Read a Phase 3 JSON file and return concatenated document text."""
     try:
 
         def _read() -> dict:
@@ -114,87 +114,87 @@ async def _read_doc_json(path: str) -> str | None:
     return concat_document_text(data)
 
 
-async def load_phase2_text_from_paths(
+async def load_document_text_from_paths(
     original_json_path: str,
     translated_json_path: str,
 ) -> tuple[str | None, str | None]:
     """Load document text from explicit file paths.
 
-    Use this variant when you have the paths directly (e.g. in Phase 2 adapter
-    right after files are written and guaranteed to exist).
+    Use this variant when you have the paths directly (e.g. in the Phase 3
+    adapter right after files are written and guaranteed to exist).
     """
     return await _read_doc_json(original_json_path), await _read_doc_json(translated_json_path)
 
 
-async def _load_phase2_document_text(state: PipelineGraphState) -> tuple[str | None, str | None]:
-    """Read Phase 2 JSON files from state and return (original_text, translated_text).
+async def _load_phase3_document_text(state: PipelineGraphState) -> tuple[str | None, str | None]:
+    """Read Phase 3 JSON files from state and return (original_text, translated_text).
 
-    Returns (None, None) when Phase 2 output is missing or files are unreadable.
+    Returns (None, None) when Phase 3 output is missing or files are unreadable.
     """
-    p2 = state.phase_2_output
-    if p2 is None:
+    p3 = state.phase_3_output
+    if p3 is None:
         return None, None
-    return await load_phase2_text_from_paths(p2.original_json_path, p2.translated_json_path)
+    return await load_document_text_from_paths(p3.original_json_path, p3.translated_json_path)
 
 
-def _is_phase2_rerun(state: PipelineGraphState) -> bool:
-    """Return True when a save belongs to a Phase 2-or-earlier rerun."""
-    return state.mode == PipelineMode.PHASE and state.target_phase is not None and state.target_phase <= 2
+def _is_phase3_rerun(state: PipelineGraphState) -> bool:
+    """Return True when a save belongs to a Phase 3-or-earlier rerun."""
+    return state.mode == PipelineMode.PHASE and state.target_phase is not None and state.target_phase <= 3
 
 
-async def _persist_phase2_document_text(
+async def _persist_phase3_document_text(
     session: AsyncSession,
     state: PipelineGraphState,
     sd_id: UUID,
 ) -> None:
-    """Write Phase 2 document text and structured blocks to SourceDocument.
+    """Write Phase 3 document text and structured blocks to SourceDocument.
 
     Shared by both DirectStatePersistence and SessionBoundStatePersistence.
-    Only writes when Phase 2 is COMPLETED and the DB doesn't already have text.
+    Only writes when Phase 3 is COMPLETED and the DB doesn't already have text.
     """
-    if not (state.phase_2_output and state.phase_2_status.status == PhaseStatus.COMPLETED):
+    if not (state.phase_3_output and state.phase_3_status.status == PhaseStatus.COMPLETED):
         return
     sd = await session.get(SourceDocument, sd_id)
     if sd is None:
         return
-    p2 = state.phase_2_output
-    replace_existing = _is_phase2_rerun(state)
-    source_language = p2.source_language if p2 is not None else None
+    p3 = state.phase_3_output
+    replace_existing = _is_phase3_rerun(state)
+    source_language = p3.source_language if p3 is not None else None
     existing_translated_is_stale = is_likely_untranslated_render_payload(
         source_language=source_language,
-        original_text=sd.original_text or (p2.original_text if p2 is not None else None),
+        original_text=sd.original_text or (p3.original_text if p3 is not None else None),
         translated_text=sd.translated_text,
     )
     existing_translated_blocks_are_stale = is_likely_untranslated_render_blocks(
         source_language=source_language,
-        original_blocks=sd.original_blocks or (p2.original_blocks if p2 is not None else None),
+        original_blocks=sd.original_blocks or (p3.original_blocks if p3 is not None else None),
         translated_blocks=sd.translated_blocks,
     )
     needs_original = replace_existing or not sd.original_text
     needs_translated = replace_existing or not sd.translated_text or existing_translated_is_stale
     if needs_original or needs_translated:
-        original_text = p2.original_text
-        translated_text = p2.translated_text
+        original_text = p3.original_text
+        translated_text = p3.translated_text
         if original_text is None and translated_text is None:
-            original_text, translated_text = await _load_phase2_document_text(state)
+            original_text, translated_text = await _load_phase3_document_text(state)
         if needs_original and original_text:
             sd.original_text = original_text
         if needs_translated and translated_text:
             sd.translated_text = translated_text
-    if p2.original_blocks and (replace_existing or not sd.original_blocks):
-        sd.original_blocks = p2.original_blocks
-    if p2.translated_blocks and (replace_existing or not sd.translated_blocks or existing_translated_blocks_are_stale):
-        sd.translated_blocks = p2.translated_blocks
+    if p3.original_blocks and (replace_existing or not sd.original_blocks):
+        sd.original_blocks = p3.original_blocks
+    if p3.translated_blocks and (replace_existing or not sd.translated_blocks or existing_translated_blocks_are_stale):
+        sd.translated_blocks = p3.translated_blocks
 
 
-def _state_json_without_inline_phase2_data(state: PipelineGraphState) -> dict[str, object]:  # noqa  # dict-return: PipelineGraphState JSONB snapshot.
+def _state_json_without_inline_phase3_data(state: PipelineGraphState) -> dict[str, object]:  # noqa  # dict-return: PipelineGraphState JSONB snapshot.
     """Serialize state for JSONB without mutating the live pipeline state."""
     persisted_state = state.model_copy(deep=True)
-    if persisted_state.phase_2_output is not None:
-        persisted_state.phase_2_output.original_text = None
-        persisted_state.phase_2_output.translated_text = None
-        persisted_state.phase_2_output.original_blocks = None
-        persisted_state.phase_2_output.translated_blocks = None
+    if persisted_state.phase_3_output is not None:
+        persisted_state.phase_3_output.original_text = None
+        persisted_state.phase_3_output.translated_text = None
+        persisted_state.phase_3_output.original_blocks = None
+        persisted_state.phase_3_output.translated_blocks = None
     return persisted_state.model_dump(mode="json")
 
 
@@ -219,7 +219,7 @@ async def _reset_phase_rerun_artifacts(
         LiteratureProfile.owner_user_id.is_(None) if owner_id is None else LiteratureProfile.owner_user_id == owner_id
     )
 
-    if target_phase <= 2:
+    if target_phase <= 3:
         source_document = await session.get(SourceDocument, doc_id)
         if source_document is not None:
             source_document.original_text = None
@@ -227,7 +227,7 @@ async def _reset_phase_rerun_artifacts(
             source_document.original_blocks = None
             source_document.translated_blocks = None
 
-    if target_phase <= 3:
+    if target_phase <= 4:
         try:
             from src.dao.postgresql.search_index_repo import frontend_search_index
 
@@ -270,7 +270,7 @@ async def _reset_phase_rerun_artifacts(
 
 
 _TERMINAL_PHASE_STATUSES = frozenset({"completed", "skipped"})
-_PHASE_KEYS = ("phase_1", "phase_2", "phase_3")
+_PHASE_KEYS = ("phase_1", "phase_2", "phase_3", "phase_4")
 
 
 def _derive_run_title(sj: dict) -> str | None:
@@ -335,13 +335,13 @@ class DirectStatePersistence:
             raw_meta = await _build_raw_metadata(state)
             self._session.add(SourceDocument(source_document_id=sd_id, raw_metadata=raw_meta))
             await self._session.flush()
-        elif state.phase_1_output:
-            # Update metadata if Phase 1 just completed
+        elif state.phase_2_output:
+            # Update metadata if Phase 2 (parsing) just completed
             new_meta = await _build_raw_metadata(state)
             if new_meta.get("title"):
                 existing_sd.raw_metadata = {**existing_sd.raw_metadata, **new_meta}
 
-        await _persist_phase2_document_text(self._session, state, sd_id)
+        await _persist_phase3_document_text(self._session, state, sd_id)
 
         existing = await self._session.get(PipelineRunState, UUID(state.processing_run_id))
         # ── State transition guard ──
@@ -356,7 +356,7 @@ class DirectStatePersistence:
             validate_all_phase_transitions(old_state, state, context=ctx)
         # ── End state transition guard ──
 
-        state_json = _state_json_without_inline_phase2_data(state)
+        state_json = _state_json_without_inline_phase3_data(state)
         owner_id = UUID(state.owner_user_id) if state.owner_user_id else None
         if existing:
             existing.state_json = state_json
@@ -471,7 +471,7 @@ class SessionBoundStatePersistence:
             )
             await session.execute(sd_upsert)
 
-            await _persist_phase2_document_text(session, state, sd_id)
+            await _persist_phase3_document_text(session, state, sd_id)
 
             # ── State transition guard ──
             # Load existing state (if any) to validate the transition is legal.
@@ -489,7 +489,7 @@ class SessionBoundStatePersistence:
                 validate_all_phase_transitions(old_state, state, context=ctx)
             # ── End state transition guard ──
 
-            state_json = _state_json_without_inline_phase2_data(state)
+            state_json = _state_json_without_inline_phase3_data(state)
             owner_id = UUID(state.owner_user_id) if state.owner_user_id else None
             upsert_set: dict[str, object] = {
                 "state_json": state_json,

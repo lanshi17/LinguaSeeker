@@ -82,7 +82,7 @@ export function TaskQueueRow({ run }: TaskQueueRowProps) {
   const liveElapsed = useElapsedSeconds(isLive ? run.started_at : undefined);
 
   const completedPhases = run.completed_phases ?? 0;
-  const totalPhases = run.total_phases ?? 3;
+  const totalPhases = run.total_phases ?? 4;
 
   const elapsed =
     run.elapsed_seconds ??

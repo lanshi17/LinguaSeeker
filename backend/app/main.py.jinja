@@ -100,13 +100,13 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    from src.api.deps import get_phase4_factory
+    from src.api.deps import get_phase5_factory
 
     try:
-        phase4_factory = get_phase4_factory()
-        await phase4_factory.close()
+        phase5_factory = get_phase5_factory()
+        await phase5_factory.close()
     except Exception:
-        logger.warning("Phase4ServiceFactory close failed during shutdown")
+        logger.warning("Phase5ServiceFactory close failed during shutdown")
     finally:
         try:
             await _wiring.dispose_redis()
