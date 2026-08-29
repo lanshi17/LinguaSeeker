@@ -17,6 +17,9 @@ from starlette.requests import Request
 from src.api.auth import get_current_account
 from src.api.rate_limit import limiter
 from src.api.v1.contracts import (
+    AcquireDownloadEntryResponse,
+    AcquireRequest,
+    AcquireResponse,
     PhaseErrorResponse,
     PhaseStatusResponse,
     PhaseSummaryResponse,
@@ -29,6 +32,10 @@ from src.api.v1.contracts import (
 )
 from src.core.config import get_config
 from src.core.auth.contracts import AuthContext
+from src.core.ingest_and_digitize_data.document_acquisition.contracts import (
+    AcquisitionSource,
+    DocumentAcquisitionRequest,
+)
 
 from src.agents.contracts import (
     PhaseStatus,
@@ -199,6 +206,70 @@ def _prepare_phase_rerun_state(
 
 
 # ── Routes ───────────────────────────────────────────────────────────────────
+
+
+@router.post("/acquire", response_model=AcquireResponse)
+@limiter.limit("10/minute")
+async def acquire_literature(
+    request: Request,
+    body: AcquireRequest,
+    account: AuthContext = Depends(get_current_account),
+):
+    """Standalone synchronous literature acquisition (Phase 1 only, no pipeline run).
+
+    Searches providers and/or downloads full-text PDFs for the given query or
+    identifiers, then returns the download results directly. No pipeline run
+    record is created; to continue with parsing/extraction, start a normal
+    pipeline run (or a phase run with target_phase=2 reusing the downloaded
+    file as a local upload).
+
+    Note: this handler blocks until acquisition finishes (provider timeouts
+    apply); prefer `action="search"` for cheap metadata-only lookups.
+    """
+    # Imported here so tests can patch the service class where it is defined.
+    from src.core.ingest_and_digitize_data.document_acquisition.service import (
+        DocumentAcquisitionService,
+    )
+
+    backend_root = Path(__file__).resolve().parents[3]
+    download_path = str(backend_root / "data" / "acquire")
+    Path(download_path).mkdir(parents=True, exist_ok=True)
+
+    service = DocumentAcquisitionService()
+    acquisition_request = DocumentAcquisitionRequest(
+        source=AcquisitionSource.ONLINE,
+        action=body.action,
+        query=body.query,
+        identifiers=body.identifiers,
+        limit=body.limit,
+        download_path=download_path,
+        relevance_gate=body.relevance_gate,
+        literature_types=body.literature_types,
+    )
+
+    try:
+        result = await service.acquire(acquisition_request)
+    except Exception as exc:
+        logger.exception("Standalone acquisition failed: query={}", body.query)
+        raise HTTPException(status_code=502, detail=f"Acquisition failed: {exc}") from exc
+
+    downloads = [
+        AcquireDownloadEntryResponse(
+            file_path=entry.file_path,
+            pdf_url=entry.pdf_url,
+            resolved_url=entry.resolved_url,
+            pre_parsed=entry.pre_parsed_markdown is not None,
+        )
+        for entry in result.downloads
+    ]
+    return AcquireResponse(
+        success=result.success,
+        error=result.error,
+        warnings=list(result.warnings or []),
+        downloads=downloads,
+        items_count=len(result.items),
+        elapsed_seconds=result.elapsed_time,
+    )
 
 
 @router.post("/run", response_model=PipelineRunResponse, status_code=202)

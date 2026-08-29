@@ -140,6 +140,49 @@ class PipelineRunResponse(BaseModel):
     status_url: str
 
 
+class AcquireRequest(BaseModel):
+    """Request body for standalone literature acquisition (no pipeline run).
+
+    Runs Phase 1 (acquisition) only: search and/or download literature PDFs
+    synchronously and return the results without creating a pipeline run.
+    """
+
+    # Online acquisition fields
+    query: str | None = None
+    identifiers: list[str] | None = None
+    action: Literal["search", "download"] = "download"
+    limit: int = Field(default=5, ge=1, le=50)
+    relevance_gate: bool = True
+    literature_types: list[str] | None = None
+
+    @model_validator(mode="after")
+    def validate_acquire_request(self) -> AcquireRequest:
+        """Require a query or identifiers."""
+        if not self.query and not self.identifiers:
+            raise ValueError("query or identifiers is required for acquisition")
+        return self
+
+
+class AcquireDownloadEntryResponse(BaseModel):
+    """A single downloaded file from standalone acquisition."""
+
+    file_path: str | None = None
+    pdf_url: str | None = None
+    resolved_url: str | None = None
+    pre_parsed: bool = False  # True when the PDF was already parsed during acquisition
+
+
+class AcquireResponse(BaseModel):
+    """Response for standalone acquisition."""
+
+    success: bool
+    error: str | None = None
+    warnings: list[str] = Field(default_factory=list)
+    downloads: list[AcquireDownloadEntryResponse] = Field(default_factory=list)
+    items_count: int = 0  # Number of search-result items returned by providers
+    elapsed_seconds: float | None = None
+
+
 class PipelineStatusResponse(BaseModel):
     """Response for pipeline status query with per-phase details."""
 

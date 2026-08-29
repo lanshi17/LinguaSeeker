@@ -41,6 +41,7 @@ router.include_router(annotations.router, prefix="/documents", tags=["annotation
 
 | 端点 | 方法 | 说明 | 限流 |
 |------|------|------|------|
+| `/pipeline/acquire` | POST | 独立同步文献获取（只下载/检索，不建 run 记录） | 10/分钟 |
 | `/pipeline/run` | POST | 提交管线运行任务（入队到 job queue） | 10/分钟 |
 | `/pipeline/runs` | GET | 列出所有运行摘要（分页） | — |
 | `/pipeline/runs/{id}/status` | GET | 查询运行状态和各阶段详情 | — |
