@@ -156,6 +156,10 @@ class AcquireRequest(BaseModel):
     # of results/downloads may exceed this value; the response caps
     # ``downloads`` at this many entries (see AcquireResponse).
     limit: int = Field(default=5, ge=1, le=50)
+    # Total wall-clock budget for the synchronous acquisition in seconds.
+    # On expiry the request is aborted and returns success=false with an
+    # ACQUISITION_TIMEOUT error; files already downloaded remain on disk.
+    timeout_seconds: int = Field(default=300, ge=10, le=900)
     relevance_gate: bool = True
     literature_types: list[str] | None = None
 

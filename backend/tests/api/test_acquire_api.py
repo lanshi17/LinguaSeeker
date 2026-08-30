@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from dataclasses import dataclass
 
 import pytest
@@ -188,3 +190,21 @@ async def test_acquire_truncates_downloads_to_limit(async_client: AsyncClient, m
     assert len(body["downloads"]) == 2
     assert body["downloads"][0]["file_path"] == "/data/acquire/paper_0.pdf"
     assert any(w.startswith("DOWNLOADS_TRUNCATED") for w in body["warnings"])
+
+
+@pytest.mark.asyncio
+async def test_acquire_timeout_returns_504(async_client: AsyncClient, monkeypatch):
+    """A hung acquisition is aborted at the request budget with 504."""
+
+    async def _hang(self, request):
+        await asyncio.sleep(60)
+
+    monkeypatch.setattr(_SERVICE_MOD, _hang)
+
+    resp = await async_client.post(
+        "/api/v1/pipeline/acquire",
+        json={"identifiers": ["10.1234/slow"], "timeout_seconds": 10},
+    )
+    assert resp.status_code == 504
+    body = resp.json()
+    assert "timed out after 10s" in body["error"]["message"]

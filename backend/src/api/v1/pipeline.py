@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import binascii
 import uuid
@@ -248,7 +249,23 @@ async def acquire_literature(
     )
 
     try:
-        result = await service.acquire(acquisition_request)
+        result = await asyncio.wait_for(
+            service.acquire(acquisition_request),
+            timeout=body.timeout_seconds,
+        )
+    except TimeoutError:
+        logger.warning(
+            "Standalone acquisition timed out after {}s: query={}",
+            body.timeout_seconds,
+            body.query,
+        )
+        raise HTTPException(
+            status_code=504,
+            detail=(
+                f"Acquisition timed out after {body.timeout_seconds}s. "
+                f"Files already downloaded remain under data/acquire/."
+            ),
+        ) from None
     except Exception as exc:
         logger.exception("Standalone acquisition failed: query={}", body.query)
         raise HTTPException(status_code=502, detail=f"Acquisition failed: {exc}") from exc
