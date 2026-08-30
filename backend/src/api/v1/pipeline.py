@@ -262,10 +262,19 @@ async def acquire_literature(
         )
         for entry in result.downloads
     ]
+    warnings = list(result.warnings or [])
+    # The SDK's ``limit`` is a per-provider hint; cap the total number of
+    # returned downloads so the response stays predictable. Downloaded files
+    # beyond the cap remain on disk (content-addressed names) for later runs.
+    if body.limit and len(downloads) > body.limit:
+        warnings.append(
+            f"DOWNLOADS_TRUNCATED: returning first {body.limit} of {len(downloads)} downloads"
+        )
+        downloads = downloads[: body.limit]
     return AcquireResponse(
         success=result.success,
         error=result.error,
-        warnings=list(result.warnings or []),
+        warnings=warnings,
         downloads=downloads,
         items_count=len(result.items),
         elapsed_seconds=result.elapsed_time,

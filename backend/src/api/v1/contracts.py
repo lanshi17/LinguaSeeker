@@ -151,6 +151,10 @@ class AcquireRequest(BaseModel):
     query: str | None = None
     identifiers: list[str] | None = None
     action: Literal["search", "download"] = "download"
+    # Per-provider/per-language search hint passed to the acquisition SDK.
+    # Multilingual queries fan out to several providers, so the total number
+    # of results/downloads may exceed this value; the response caps
+    # ``downloads`` at this many entries (see AcquireResponse).
     limit: int = Field(default=5, ge=1, le=50)
     relevance_gate: bool = True
     literature_types: list[str] | None = None

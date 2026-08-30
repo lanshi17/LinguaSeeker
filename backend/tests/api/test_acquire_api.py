@@ -162,3 +162,29 @@ async def test_acquire_unexpected_service_error_returns_502(async_client: AsyncC
         json={"identifiers": ["10.1234/x"]},
     )
     assert resp.status_code == 502
+
+
+@pytest.mark.asyncio
+async def test_acquire_truncates_downloads_to_limit(async_client: AsyncClient, monkeypatch):
+    """More downloads than ``limit`` are truncated, with a warning appended."""
+    result = DocumentAcquisitionResult(
+        success=True,
+        source=AcquisitionSource.ONLINE,
+        items=[_FakeItem() for _ in range(4)],
+        downloads=[
+            DocumentDownloadEntry(file_path=f"/data/acquire/paper_{i}.pdf") for i in range(4)
+        ],
+        elapsed_time=2.0,
+    )
+    capture: dict = {}
+    _make_service_patch(monkeypatch, result, capture)
+
+    resp = await async_client.post(
+        "/api/v1/pipeline/acquire",
+        json={"identifiers": ["10.1234/x"], "limit": 2},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert len(body["downloads"]) == 2
+    assert body["downloads"][0]["file_path"] == "/data/acquire/paper_0.pdf"
+    assert any(w.startswith("DOWNLOADS_TRUNCATED") for w in body["warnings"])

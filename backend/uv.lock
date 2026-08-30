@@ -1735,6 +1735,9 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "ruff" },
 ]
+jstage = [
+    { name = "pyjstage2" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -1778,6 +1781,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.7.0" },
     { name = "pydantic-settings", specifier = ">=2.3.0" },
     { name = "pyjstage2", specifier = ">=0.1.2" },
+    { name = "pyjstage2", marker = "extra == 'jstage'", specifier = ">=0.1.2" },
     { name = "pymupdf", specifier = ">=1.27.2.3" },
     { name = "pysocks", specifier = ">=1.7.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.2.0" },
@@ -1797,7 +1801,7 @@ requires-dist = [
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30.0" },
     { name = "weasyprint", specifier = ">=69.0" },
 ]
-provides-extras = ["dev"]
+provides-extras = ["dev", "jstage"]
 
 [package.metadata.requires-dev]
 dev = [
