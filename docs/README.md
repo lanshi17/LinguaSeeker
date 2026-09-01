@@ -93,6 +93,8 @@ docs/
 
 | 日期 | 标题 | 状态 |
 |------|------|------|
+| 2026-08-31 | [ACMG 多语种案例分析方法快照](archive/plans/2026-08-31-acmg-case-analysis-methodology-superseded.md) | superseded |
+| 2026-08-28 | [GIM 模型面板诊断包概念](archive/plans/2026-08-28-gim-model-panel-diagnostic-archive.md) | completed |
 | 2026-07-25 | [GraphRAG 集成方案](archive/plans/2026-07-25-graphrag-integration.md) | completed |
 | 2026-07-01 | [Semantic Word Alignment Design](archive/plans/2026-07-01-semantic-word-alignment-design.md) | completed |
 | 2026-07-01 | [Semantic Word Alignment Implementation Plan](archive/plans/2026-07-01-semantic-word-alignment-plan.md) | completed |
