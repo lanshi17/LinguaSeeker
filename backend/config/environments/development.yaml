@@ -69,7 +69,7 @@ pipeline:
 # Unpaywall requires a contact email; set your institutional address here.
 # API keys (pubmed/base/core) go in vault/development.yaml.
 unpaywall:
-  email: "[redacted-email]"
+  email: "yhvguk@stu.hunau.edu.cn"
 
 # ── Network / Proxy ──────────────────────────────────────────────────────
 network:
