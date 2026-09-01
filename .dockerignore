@@ -84,3 +84,7 @@ backend/libs/*/target
 # Pre-built backend venv artefacts — only needed by backend/Dockerfile
 docker-artifacts
 !docker-artifacts/*
+
+# Tarball backups (site-packages.tar.gz.bak-*) — never used by the Dockerfile,
+# pure multi-GB context bloat.
+docker-artifacts/*.bak-*

@@ -139,12 +139,13 @@ RUN find /opt/venv/bin -maxdepth 1 -type f -exec \
     sed -i '1s|^#!.*bin/python[0-9.]*$|#!/opt/venv/bin/python3|' {} +
 
 # Editable installs from the host point at non-existent paths inside the
-# container — drop the .pth stubs and install the in-tree deps from source.
+# container — drop the .pth stubs and install the in-tree dep from source.
+# lit-acquisition ships inside the site-packages tarball via the pinned PyPI
+# dependency (lit-acquisition==0.4.1 in backend/pyproject.toml).
 COPY --chown=deploy:deploy libs/config-loader /opt/extras/config-loader
-COPY --chown=deploy:deploy libs/lit-acquisition /opt/extras/lit-acquisition
 RUN rm -f /opt/venv/lib/python3.12/site-packages/_editable_impl_*.pth \
  && /opt/venv/bin/python -m pip install --no-cache-dir --no-deps \
-        /opt/extras/config-loader /opt/extras/lit-acquisition
+        /opt/extras/config-loader
 
 # Repoint any lingering RECORD references from the build host venv to
 # /opt/venv. The host path varies by machine — we replace everything up
