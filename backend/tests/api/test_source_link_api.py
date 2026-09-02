@@ -22,7 +22,7 @@ async def test_get_bilingual_span(async_client: AsyncClient):
         alignment_confidence=None,
     )
 
-    with patch("src.api.v1.source_link.get_phase4_factory") as mock_factory:
+    with patch("src.api.v1.source_link.get_phase5_factory") as mock_factory:
         mock_linker = MagicMock()
         mock_linker.get_bilingual_span = AsyncMock(return_value=mock_response)
         mock_factory.return_value.create_source_linker.return_value = mock_linker
@@ -47,7 +47,7 @@ async def test_get_track_span(async_client: AsyncClient):
         page=1,
     )
 
-    with patch("src.api.v1.source_link.get_phase4_factory") as mock_factory:
+    with patch("src.api.v1.source_link.get_phase5_factory") as mock_factory:
         mock_linker = MagicMock()
         mock_linker.get_track_span = AsyncMock(return_value=mock_response)
         mock_factory.return_value.create_source_linker.return_value = mock_linker
@@ -62,7 +62,7 @@ async def test_get_track_span(async_client: AsyncClient):
 @pytest.mark.asyncio
 async def test_get_track_span_returns_null_for_missing_track(async_client: AsyncClient):
     """GET /api/v1/source-link/{id}/{track} returns null when track has no span."""
-    with patch("src.api.v1.source_link.get_phase4_factory") as mock_factory:
+    with patch("src.api.v1.source_link.get_phase5_factory") as mock_factory:
         mock_linker = MagicMock()
         mock_linker.get_track_span = AsyncMock(return_value=None)
         mock_factory.return_value.create_source_linker.return_value = mock_linker

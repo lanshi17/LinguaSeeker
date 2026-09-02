@@ -57,7 +57,6 @@ dev = [
     "ruff>=0.5.0",
 ]
 
-
 [tool.uv]
 index-url = "http://127.0.0.1:3141/root/pypi/+simple/"
 

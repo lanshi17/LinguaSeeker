@@ -26,7 +26,7 @@ redirected to the login page. The root route (`/`) redirects to `/chat`.
 | `/chat` | `ChatView` | Chat sessions list with conversation sidebar |
 | `/chat/[sessionId]` | `ChatView(sessionId)` | Single session chat with message history |
 | `/pipeline` | `PipelineSubmitForm` | Submit PDF or online search query to start a pipeline |
-| `/pipeline/[runId]` | `PipelineStatusView` | 3-phase timeline + per-phase detail cards |
+| `/pipeline/[runId]` | `PipelineStatusView` | 4-phase timeline + per-phase detail cards |
 | `/evidence` | `EvidenceSearchView` | Search evidence by gene, variant, disease, PMID, DOI |
 | `/evidence/detail` | `EvidenceDetailView` | Literature overview or bilingual full-text comparison |
 
@@ -53,7 +53,7 @@ Page-level orchestration (app/**/page.tsx)
   │
   ├──► Feature slice: Auth (login, register, JWT session)
   ├──► Feature slice: Chat (sessions, messages, SSE streaming, pipeline forms)
-  ├──► Feature slice: Pipeline (submit form, 3-phase status view, timeline)
+  ├──► Feature slice: Pipeline (submit form, 4-phase status view, timeline)
   └──► Feature slice: Evidence Search (search form, results table, detail/compare)
           │
           ▼
@@ -168,7 +168,7 @@ PipelineStartForm submit
   ├── Assistant message injected: "Pipeline started. Run ID: xxxxxxxx..."
   │
   └── PipelineStatusCard rendered as an inline bubble
-        Shows: run ID, overall status badge, 3-phase progress indicators
+        Shows: run ID, overall status badge, 4-phase progress indicators
         Polls GET /api/v1/pipeline/runs/{id}/status every 2 seconds
         until terminal status (completed / failed / cancelled)
 ```
@@ -241,24 +241,24 @@ PipelineStatusView renders:
   ├── Header: "Pipeline Status" + Run ID + overall status Badge
   │     Status values: queued | running | completed | failed | cancelled
   │
-  ├── PhaseTimeline: visual horizontal timeline of 3 phases
+  ├── PhaseTimeline: visual horizontal timeline of 4 phases
   │     ┌────┐         ┌────┐         ┌────┐
   │     │ 1  │─────────│ 2  │─────────│ 3  │
-  │     │Phase 1│      │Phase 2│      │Phase 3│
+  │     │Phase 1│   │Phase 2│   │Phase 3│   │Phase 4│
   │     │ 45.2s │      │ 12.8s │      │  --   │
   │     └────┘         └────┘         └────┘
   │     Each node styled by status:
   │       queued → gray | running → blue pulse | completed → green | failed → red
   │     Connector lines: green when previous phase completed, gray otherwise
   │
-  └── PhaseDetailCards: 3-column grid, one card per phase
+  └── PhaseDetailCards: 4-column grid, one card per phase
         Each card shows: phase name, status badge, started_at, duration, summary, error
   │
   ▼
 Status is polled via usePipelineStatus hook:
   GET /api/v1/pipeline/runs/{runId}/status
   Returns: { processing_run_id, source_document_id, pipeline_status,
-             current_phase, phases: { phase_1, phase_2, phase_3 },
+             current_phase, phases: { phase_1, phase_2, phase_3, phase_4 },
              error_message, error_phase, started_at, completed_at }
 ```
 

@@ -90,6 +90,11 @@ _USER_TEMPLATE = "Translate this biomedical query into 6 languages:\n\n{query}"
 
 _DEFAULT_MAX_TOKENS = 1024
 _DEFAULT_TIMEOUT = 30
+# Query translation is a tiny single-shot prompt; a hung endpoint must not
+# stall the multilingual workflow (the fallback to single-language search is
+# cheap), so the per-attempt timeout is capped well below the general
+# translation timeout and no transport-level retries are used.
+_TRANSLATE_TIMEOUT_CAP = 20
 
 
 # ── Public API ─────────────────────────────────────────────────────────────
@@ -155,8 +160,8 @@ async def translate_query(
             AsyncOpenAI(
                 base_url=resolved_base_url,
                 api_key=key,
-                timeout=cfg.translation.timeout or _DEFAULT_TIMEOUT,
-                max_retries=1,
+                timeout=min(cfg.translation.timeout or _DEFAULT_TIMEOUT, _TRANSLATE_TIMEOUT_CAP),
+                max_retries=0,
             )
             for key in all_keys
         ]

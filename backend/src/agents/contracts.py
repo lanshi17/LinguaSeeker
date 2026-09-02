@@ -6,6 +6,8 @@ import functools
 from datetime import datetime
 
 from enum import Enum
+
+from loguru import logger
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -50,8 +52,8 @@ class PipelineStatus(str, Enum):
     FAILED = "failed"
 
 
-class SkipPhase3Reason(str, Enum):
-    """Reason for skipping Phase 3 (entity standardization)."""
+class SkipPhase4Reason(str, Enum):
+    """Reason for skipping Phase 4 (entity standardization)."""
 
     NOT_RELEVANT = "not_relevant"  # Both tracks returned NOT_RELEVANT
     NO_ENTITIES = "no_entities"  # Evidence exists but no extractable entities
@@ -240,7 +242,7 @@ def validate_all_phase_transitions(
 ) -> None:
     """Validate all per-phase status transitions between two states.
 
-    Checks all three phases and raises on the first invalid transition.
+    Checks all four phases and raises on the first invalid transition.
 
     Args:
         old_state: Previous pipeline state.
@@ -250,7 +252,7 @@ def validate_all_phase_transitions(
     Raises:
         InvalidStateTransitionError: If any phase has an invalid transition.
     """
-    for phase_num in (1, 2, 3):
+    for phase_num in (1, 2, 3, 4):
         old_detail = getattr(old_state, f"phase_{phase_num}_status")
         new_detail = getattr(new_state, f"phase_{phase_num}_status")
         if old_detail.status != new_detail.status:
@@ -340,18 +342,23 @@ def classify_phase_error(
 # ── Phase output models (typed, not bare dict) ─────────────────────────────
 
 
-class Phase1Output(BaseModel):
-    """Typed output from Phase 1: acquisition + parsing."""
+class AcquisitionOutput(BaseModel):
+    """Typed output from Phase 1: literature/document acquisition."""
 
-    pdf_path: str
+    pdf_path: str  # Local path of the acquired full-text PDF ("" when none)
+
+
+class ParseOutput(BaseModel):
+    """Typed output from Phase 2: document parsing (MinerU)."""
+
     md_path: str
     metadata_path: str
     output_dir: str
     images_dir: str | None = None
 
 
-class Phase2Output(BaseModel):
-    """Typed output from Phase 2: translation + evidence extraction."""
+class TranslationExtractionOutput(BaseModel):
+    """Typed output from Phase 3: translation + evidence extraction."""
 
     output_dir: str
     original_json_path: str
@@ -364,8 +371,8 @@ class Phase2Output(BaseModel):
     translated_blocks: list[dict] | None = None
 
 
-class Phase3Output(BaseModel):
-    """Typed output from Phase 3: entity standardization."""
+class StandardizationOutput(BaseModel):
+    """Typed output from Phase 4: entity standardization."""
 
     match_count: int
     standardized_count: int
@@ -453,11 +460,13 @@ class PipelineGraphState(BaseModel):
     phase_1_status: PhaseStatusDetail = Field(default_factory=PhaseStatusDetail)
     phase_2_status: PhaseStatusDetail = Field(default_factory=PhaseStatusDetail)
     phase_3_status: PhaseStatusDetail = Field(default_factory=PhaseStatusDetail)
+    phase_4_status: PhaseStatusDetail = Field(default_factory=PhaseStatusDetail)
 
     # Phase outputs (typed models, not bare dicts)
-    phase_1_output: Phase1Output | None = None
-    phase_2_output: Phase2Output | None = None
-    phase_3_output: Phase3Output | None = None
+    phase_1_output: AcquisitionOutput | None = None
+    phase_2_output: ParseOutput | None = None
+    phase_3_output: TranslationExtractionOutput | None = None
+    phase_4_output: StandardizationOutput | None = None
 
     # Error tracking
     error_message: str | None = None
@@ -469,12 +478,12 @@ class PipelineGraphState(BaseModel):
     completed_at: str | None = None
 
     # Content-based routing flags
-    skip_phase_3_reason: SkipPhase3Reason | None = None
+    skip_phase_4_reason: SkipPhase4Reason | None = None
 
     # Upload content (base64 decoded to temp file)
     upload_file_path: str | None = None
 
-    # Pre-parsed markdown (bypasses Phase 1 MinerU parsing)
+    # Pre-parsed markdown (bypasses acquisition + MinerU parsing)
     pre_parsed_markdown: str | None = None
 
     # Online acquisition fields (passed through to Phase1Adapter)
@@ -485,7 +494,7 @@ class PipelineGraphState(BaseModel):
     relevance_gate: bool = True
     literature_types: list[str] | None = None
 
-    # Target gene-disease hypothesis for evidence extraction (Phase 2/3)
+    # Target gene-disease hypothesis for evidence extraction (Phase 3/4)
     extraction_target: ExtractionTarget | None = None
 
     # Extraction field profile name (passed through to EvidenceExtractionService).
@@ -538,3 +547,59 @@ class PipelineGraphState(BaseModel):
             review_reject_policy=rd.get("review_reject_policy", "tristate_review"),
             extraction_track_mode=rd.get("extraction_track_mode", "dual"),
         )
+
+    @classmethod
+    def model_validate(cls, obj: Any, **kwargs: Any) -> PipelineGraphState:
+        """Validate state JSON, transparently migrating legacy 3-phase states.
+
+        States persisted before the 4-phase split (1=acquire+parse, 2=translate+extract,
+        3=standardize) are migrated on read so old PostgreSQL rows, cached payloads,
+        and transition-guard snapshots keep working. New-format states pass through
+        untouched (they always carry ``phase_4_status`` after a model_dump).
+        """
+        if isinstance(obj, dict):
+            obj = _migrate_legacy_state_json(obj)
+        return super().model_validate(obj, **kwargs)
+
+
+def _migrate_legacy_state_json(data: dict[str, Any]) -> dict[str, Any]:
+    """Migrate a legacy 3-phase state JSON dict to the 4-phase schema.
+
+    Legacy layout: phase 1 = acquisition+parsing, phase 2 = translation+extraction,
+    phase 3 = standardization. New layout: 1 = acquisition, 2 = parsing,
+    3 = translation+extraction, 4 = standardization.
+
+    Idempotent: dicts that already contain ``phase_4_status`` are returned as-is.
+    """
+    if "phase_4_status" in data or "phase_1_status" not in data:
+        return data
+
+    migrated = dict(data)
+
+    # Statuses: shift 3→4 and 2→3; the legacy phase 1 (acquire+parse) maps onto
+    # both new phase 1 (acquire) and phase 2 (parse).
+    migrated["phase_4_status"] = migrated.pop("phase_3_status", {})
+    migrated["phase_3_status"] = migrated.pop("phase_2_status", {})
+    legacy_p1_status = migrated.get("phase_1_status", {})
+    migrated["phase_2_status"] = legacy_p1_status
+    migrated["phase_1_status"] = legacy_p1_status
+
+    # Outputs: shift 3→4 and 2→3 first, then split the legacy phase 1 output
+    # (pdf + parse artifacts) into acquisition (1) and parse (2) outputs.
+    migrated["phase_4_output"] = migrated.pop("phase_3_output", None)
+    migrated["phase_3_output"] = migrated.pop("phase_2_output", None)
+    legacy_p1_output = migrated.pop("phase_1_output", None)
+    if isinstance(legacy_p1_output, dict):
+        migrated["phase_1_output"] = {"pdf_path": legacy_p1_output.get("pdf_path", "")}
+        migrated["phase_2_output"] = {
+            "md_path": legacy_p1_output.get("md_path", ""),
+            "metadata_path": legacy_p1_output.get("metadata_path", ""),
+            "output_dir": legacy_p1_output.get("output_dir", ""),
+            "images_dir": legacy_p1_output.get("images_dir"),
+        }
+
+    if "skip_phase_3_reason" in migrated:
+        migrated["skip_phase_4_reason"] = migrated.pop("skip_phase_3_reason")
+
+    logger.debug("Migrated legacy 3-phase pipeline state to 4-phase schema")
+    return migrated

@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
 from src.api.auth import get_current_account
-from src.api.deps import get_db_session, get_phase4_factory
+from src.api.deps import get_db_session, get_phase5_factory
 from src.api.rate_limit import limiter
 from src.core.auth.contracts import AuthContext
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
@@ -72,7 +72,7 @@ async def patch_evidence(
     account: AuthContext = Depends(get_current_account),
 ) -> PatchResultResponse:
     """Apply a patch to an evidence card and record audit event."""
-    factory = get_phase4_factory()
+    factory = get_phase5_factory()
     service = factory.create_feedback_service(session)
     try:
         result = await service.patch_evidence(

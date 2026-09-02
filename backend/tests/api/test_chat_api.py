@@ -65,7 +65,7 @@ async def test_create_session(async_client: AsyncClient):
         message_count=0,
     )
 
-    with patch("src.api.v1.chat.get_phase4_factory") as mock_factory:
+    with patch("src.api.v1.chat.get_phase5_factory") as mock_factory:
         mock_service = MagicMock()
         mock_service.create_session = AsyncMock(return_value=mock_response)
         mock_factory.return_value.create_chat_service.return_value = mock_service
@@ -93,7 +93,7 @@ async def test_create_standalone_session_api(async_client: AsyncClient):
         message_count=0,
     )
 
-    with patch("src.api.v1.chat.get_phase4_factory") as mock_factory:
+    with patch("src.api.v1.chat.get_phase5_factory") as mock_factory:
         mock_service = MagicMock()
         mock_service.create_session = AsyncMock(return_value=mock_response)
         mock_factory.return_value.create_chat_service.return_value = mock_service
@@ -125,7 +125,7 @@ async def test_get_session_details(async_client: AsyncClient):
         message_count=1,
     )
 
-    with patch("src.api.v1.chat.get_phase4_factory") as mock_factory:
+    with patch("src.api.v1.chat.get_phase5_factory") as mock_factory:
         mock_service = MagicMock()
         mock_service.get_session = AsyncMock(return_value=mock_response)
         mock_factory.return_value.create_chat_service.return_value = mock_service
@@ -157,7 +157,7 @@ async def test_append_message(async_client: AsyncClient):
         created_at="2026-06-01T00:00:00Z",
     )
 
-    with patch("src.api.v1.chat.get_phase4_factory") as mock_factory:
+    with patch("src.api.v1.chat.get_phase5_factory") as mock_factory:
         events: list[str] = []
 
         async def commit_side_effect() -> None:
@@ -204,7 +204,7 @@ async def test_append_message_does_not_generate_reply_by_default(
         created_at="2026-06-11T00:00:00Z",
     )
 
-    with patch("src.api.v1.chat.get_phase4_factory") as mock_factory:
+    with patch("src.api.v1.chat.get_phase5_factory") as mock_factory:
         mock_service = MagicMock()
         mock_service.append_message = AsyncMock(return_value=mock_response)
         mock_service.generate_reply = AsyncMock(return_value="BRCA1 answer")
@@ -248,7 +248,7 @@ async def test_append_message_can_generate_reply_when_requested(
         created_at="2026-06-11T00:00:01Z",
     )
 
-    with patch("src.api.v1.chat.get_phase4_factory") as mock_factory:
+    with patch("src.api.v1.chat.get_phase5_factory") as mock_factory:
         mock_service = MagicMock()
         mock_service.append_message = AsyncMock(side_effect=[user_response, assistant_response])
         mock_service.generate_reply = AsyncMock(return_value="BRCA1 answer")

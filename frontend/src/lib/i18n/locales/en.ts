@@ -112,7 +112,9 @@ const en = {
 
   // ── Pipeline — PhaseDetailCard ──
   "pipeline.phase.acquisition": "Document Acquisition",
-  "pipeline.phase.acquisitionDesc": "Fetch and parse source documents",
+  "pipeline.phase.acquisitionDesc": "Acquire source literature and documents",
+  "pipeline.phase.parsing": "Document Parsing",
+  "pipeline.phase.parsingDesc": "Parse documents into structured markdown",
   "pipeline.phase.extraction": "Evidence Extraction",
   "pipeline.phase.extractionDesc": "Extract and translate evidence fields",
   "pipeline.phase.standardization": "Entity Standardization",
@@ -665,6 +667,8 @@ const en = {
   "chat.status.cancelled": "Cancelled",
   "chat.phase.acquisition": "Acquisition",
   "chat.phase.acquisitionDesc": "Fetching source documents",
+  "chat.phase.parsing": "Parsing",
+  "chat.phase.parsingDesc": "Parsing documents",
   "chat.phase.extraction": "Extraction",
   "chat.phase.extractionDesc": "Extracting evidence fields",
   "chat.phase.standardization": "Standardisation",

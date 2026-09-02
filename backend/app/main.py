@@ -220,14 +220,14 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.debug("Pipeline runner shutdown skipped: {}", exc)
 
-    from src.api.deps import get_phase4_factory
+    from src.api.deps import get_phase5_factory
 
     try:
-        phase4_factory = get_phase4_factory()
-        if phase4_factory is not None:
-            await phase4_factory.close()
+        phase5_factory = get_phase5_factory()
+        if phase5_factory is not None:
+            await phase5_factory.close()
     except Exception as exc:
-        logger.debug("Phase4ServiceFactory close failed during shutdown: {}", exc)
+        logger.debug("Phase5ServiceFactory close failed during shutdown: {}", exc)
     finally:
         try:
             await _wiring.dispose_neo4j()

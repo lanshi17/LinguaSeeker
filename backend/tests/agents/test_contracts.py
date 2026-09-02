@@ -6,15 +6,16 @@ from src.agents.contracts import (
     PipelineMode,
     SourceType,
     PipelineStatus,
-    Phase1Output,
-    Phase2Output,
-    Phase3Output,
+    AcquisitionOutput,
+    ParseOutput,
+    TranslationExtractionOutput,
+    StandardizationOutput,
     PhaseErrorDetail,
     PhaseStatusDetail,
     PhaseError,
     RetryablePhaseError,
     PermanentPhaseError,
-    SkipPhase3Reason,
+    SkipPhase4Reason,
 )
 
 
@@ -31,6 +32,7 @@ def test_pipeline_graph_state_creation():
     assert state.phase_1_status.status == PhaseStatus.PENDING
     assert state.phase_2_status.status == PhaseStatus.PENDING
     assert state.phase_3_status.status == PhaseStatus.PENDING
+    assert state.phase_4_status.status == PhaseStatus.PENDING
     assert state.error_message is None
     assert state.pipeline_status == PipelineStatus.PENDING
 
@@ -87,29 +89,34 @@ def test_pipeline_status_enum():
     assert PipelineStatus.FAILED == "failed"
 
 
-def test_skip_phase_3_reason_enum():
-    """SkipPhase3Reason enum captures all skip conditions."""
-    assert SkipPhase3Reason.NOT_RELEVANT == "not_relevant"
-    assert SkipPhase3Reason.NO_ENTITIES == "no_entities"
-    assert SkipPhase3Reason.NO_CANDIDATES == "no_candidates"
+def test_skip_phase_4_reason_enum():
+    """SkipPhase4Reason enum captures all skip conditions."""
+    assert SkipPhase4Reason.NOT_RELEVANT == "not_relevant"
+    assert SkipPhase4Reason.NO_ENTITIES == "no_entities"
+    assert SkipPhase4Reason.NO_CANDIDATES == "no_candidates"
 
 
 def test_phase1_output_typed():
-    """Phase1Output is a typed model, not a bare dict."""
-    output = Phase1Output(
-        pdf_path="/tmp/test.pdf",
-        md_path="/tmp/test.md",
-        metadata_path="/tmp/test.json",
-        output_dir="/tmp/output",
-        images_dir="/tmp/images",
-    )
+    """AcquisitionOutput (Phase 1) is a typed model, not a bare dict."""
+    output = AcquisitionOutput(pdf_path="/tmp/test.pdf")
     assert output.pdf_path == "/tmp/test.pdf"
 
 
 def test_phase2_output_typed():
-    """Phase2Output is a typed model, not a bare dict."""
-    output = Phase2Output(
-        output_dir="/tmp/phase2",
+    """ParseOutput (Phase 2) is a typed model, not a bare dict."""
+    output = ParseOutput(
+        md_path="/tmp/test.md",
+        metadata_path="/tmp/test.json",
+        output_dir="/tmp/phase_2",
+        images_dir="/tmp/images",
+    )
+    assert output.metadata_path == "/tmp/test.json"
+
+
+def test_phase3_output_typed():
+    """TranslationExtractionOutput (Phase 3) is a typed model, not a bare dict."""
+    output = TranslationExtractionOutput(
+        output_dir="/tmp/phase_3",
         original_json_path="/tmp/original.json",
         translated_json_path="/tmp/translated.json",
         extraction_result_path="/tmp/extraction.json",
@@ -118,9 +125,9 @@ def test_phase2_output_typed():
     assert output.source_language == "zh"
 
 
-def test_phase3_output_typed():
-    """Phase3Output is a typed model, not a bare dict."""
-    output = Phase3Output(
+def test_phase4_output_typed():
+    """StandardizationOutput (Phase 4) is a typed model, not a bare dict."""
+    output = StandardizationOutput(
         match_count=10,
         standardized_count=8,
         ambiguous_count=1,

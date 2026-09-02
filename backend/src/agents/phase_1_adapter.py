@@ -1,11 +1,10 @@
-"""Phase 1 adapter: document acquisition and parsing.
+"""Phase 1 adapter: literature/document acquisition.
 
 Raises classified errors for orchestrator-level retry decisions.
 """
 
 from __future__ import annotations
 
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -14,7 +13,7 @@ import aiofiles
 from loguru import logger
 
 from src.agents.contracts import (
-    Phase1Output,
+    AcquisitionOutput,
     PhaseStatus,
     PhaseStatusDetail,
     PipelineGraphState,
@@ -31,33 +30,28 @@ if TYPE_CHECKING:
     from src.core.ingest_and_digitize_data.document_acquisition.service import (
         DocumentAcquisitionService,
     )
-    from src.core.ingest_and_digitize_data.parse_document.service import (
-        ParseDocumentService,
-    )
 
 _RETRYABLE_ERRORS = build_retryable_errors()
 
 
 class Phase1Adapter:
-    """Thin adapter wrapping DocumentAcquisitionService + ParseDocumentService.
+    """Thin adapter wrapping DocumentAcquisitionService.
 
     Raises RetryablePhaseError for transient failures (timeouts, rate limits).
     Raises PermanentPhaseError for permanent failures (file not found, invalid input).
 
-    When ``state.pre_parsed_markdown`` is set, skips MinerU entirely and
-    constructs Phase1Output directly from the provided markdown text.
+    When ``state.pre_parsed_markdown`` is set, acquisition is unnecessary and
+    the phase is marked SKIPPED; Phase 2 consumes the markdown directly.
     """
 
     def __init__(
         self,
         acquisition_service: DocumentAcquisitionService,
-        parse_service: ParseDocumentService,
     ):
         self._acquisition = acquisition_service
-        self._parse = parse_service
 
     async def run(self, state: PipelineGraphState) -> PipelineGraphState:
-        """Execute Phase 1: acquire and parse document.
+        """Execute Phase 1: acquire document.
 
         Returns updated state with phase_1_output set on success.
         Raises RetryablePhaseError or PermanentPhaseError on failure.
@@ -75,9 +69,16 @@ class Phase1Adapter:
         )
 
         try:
-            # Fast path: pre-parsed markdown bypasses MinerU entirely
+            # Fast path: pre-parsed markdown needs no acquisition at all
             if state.pre_parsed_markdown:
-                state = await self._build_from_pre_parsed(state)
+                state.phase_1_output = AcquisitionOutput(pdf_path="")
+                state.phase_1_status = PhaseStatusDetail(
+                    status=PhaseStatus.SKIPPED,
+                    started_at=state.phase_1_status.started_at,
+                    completed_at=datetime.now().isoformat(),
+                    summary={"reason": "pre_parsed_markdown"},
+                )
+                logger.info("Phase 1 skipped (pre-parsed markdown): run={}", state.processing_run_id)
                 return state
 
             # Read uploaded file bytes if available
@@ -131,48 +132,21 @@ class Phase1Adapter:
                     phase=1,
                 )
 
+            state.phase_1_output = AcquisitionOutput(pdf_path=pdf_path)
+
             # If the acquisition pipeline already parsed the PDF (multilingual
-            # workflow's early MinerU batch), reuse that markdown and bypass
-            # the local re-parse. Falls back to ``_build_from_pre_parsed``
-            # which writes the canonical metadata.json layout Phase 2 expects.
+            # workflow's early MinerU batch), hand the markdown to Phase 2 so
+            # it writes the canonical layout without re-parsing.
             pre_parsed = getattr(entry, "pre_parsed_markdown", None) if entry else None
             if pre_parsed:
                 state.pre_parsed_markdown = pre_parsed
-                state = await self._build_from_pre_parsed(state)
-                # Surface the original PDF for downstream provenance.
-                if state.phase_1_output and pdf_path:
-                    state.phase_1_output.pdf_path = pdf_path
-                return state
 
-            # Parse document — use absolute path to survive CWD changes
-            from pathlib import Path as _Path
-
-            _backend_root = _Path(__file__).resolve().parent.parent.parent.parent
-            output_dir = str(_backend_root / "data" / "pipeline" / state.processing_run_id / "phase_1")
-            parse_result = await self._parse.parse_local_files_and_save(
-                file_paths=[pdf_path],
-                output_dir=output_dir,
-            )
-
-            # Extract parsed output paths (B4 fix: correct field names)
-            if not parse_result.saved_files:
-                raise PermanentPhaseError(
-                    "Phase 1 parsing produced no output files (document may have been "
-                    "rejected by the parser, e.g. page-limit exceeded)",
-                    phase=1,
-                )
-            first_file = list(parse_result.saved_files.values())[0]
-
-            state.phase_1_output = Phase1Output(
-                pdf_path=pdf_path,
-                md_path=str(first_file.md_path),
-                metadata_path=str(first_file.metadata_path),
-                output_dir=str(first_file.output_dir),
-                images_dir=str(first_file.images_dir) if first_file.images_dir else None,
-            )
-
+            summary: dict = {"pdf_path": pdf_path}
+            if pre_parsed:
+                summary["pre_parsed_by_acquisition"] = True
             state.phase_1_status = PhaseStatusDetail.complete(
                 started_at=state.phase_1_status.started_at,
+                summary=summary,
             )
 
             logger.info("Phase 1 completed: run={}", state.processing_run_id)
@@ -180,69 +154,3 @@ class Phase1Adapter:
 
         except Exception as e:
             classify_phase_error(1, e, _RETRYABLE_ERRORS)
-
-    async def _build_from_pre_parsed(
-        self,
-        state: PipelineGraphState,
-    ) -> PipelineGraphState:
-        """Construct Phase1Output from pre-parsed markdown, skipping MinerU."""
-        assert state.pre_parsed_markdown is not None  # noqa: S101
-        markdown_text = state.pre_parsed_markdown
-
-        backend_root = Path(__file__).resolve().parent.parent.parent.parent
-        output_dir = backend_root / "data" / "pipeline" / state.processing_run_id / "phase_1"
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        md_path = output_dir / "output.md"
-        meta_path = output_dir / "metadata.json"
-
-        # Write markdown
-        async with aiofiles.open(str(md_path), "w") as f:
-            await f.write(markdown_text)
-
-        # Extract title from first markdown heading (# Title)
-        title: str | None = None
-        for line in markdown_text.split("\n"):
-            line = line.strip()
-            if line.startswith("# "):
-                title = line[2:].strip() or None
-                break
-
-        # Construct metadata JSON compatible with Phase 2 expectations
-        metadata = {
-            "total_pages": 1,
-            "title": title,
-            "authors": [],
-            "abstract_text": None,
-            "pages": [
-                {
-                    "page_number": 1,
-                    "markdown": markdown_text,
-                    "figures": [],
-                    "tables": [],
-                }
-            ],
-            "content_blocks": [],
-        }
-        async with aiofiles.open(str(meta_path), "w") as f:
-            await f.write(json.dumps(metadata, indent=2))
-
-        state.phase_1_output = Phase1Output(
-            pdf_path="",
-            md_path=str(md_path),
-            metadata_path=str(meta_path),
-            output_dir=str(output_dir),
-            images_dir=None,
-        )
-
-        state.phase_1_status = PhaseStatusDetail.complete(
-            started_at=state.phase_1_status.started_at,
-            summary={"source": "pre_parsed_markdown"},
-        )
-
-        logger.info(
-            "Phase 1 completed (pre-parsed): run={}, {} chars",
-            state.processing_run_id,
-            len(markdown_text),
-        )
-        return state

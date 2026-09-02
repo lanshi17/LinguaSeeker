@@ -364,7 +364,7 @@ class ChatService:
         if provider is None:
             logger.warning(
                 "ChatService session title generation skipped without injected provider. "
-                "Fix: inject via Phase4ServiceFactory.create_chat_service()"
+                "Fix: inject via Phase5ServiceFactory.create_chat_service()"
             )
             return
 
@@ -688,7 +688,7 @@ class ChatService:
             logger.warning(
                 "ChatService.generate_reply called without injected provider — "
                 "creating fallback (leaked httpx client). "
-                "Fix: inject via Phase4ServiceFactory.create_chat_service()"
+                "Fix: inject via Phase5ServiceFactory.create_chat_service()"
             )
             from src.core.visualize_evidence_with_expert_in_loop.providers import (
                 ChatLLMProvider,
@@ -749,7 +749,7 @@ class ChatService:
             logger.warning(
                 "ChatService.stream_reply called without injected provider — "
                 "creating fallback (leaked httpx client). "
-                "Fix: inject via Phase4ServiceFactory.create_chat_service()"
+                "Fix: inject via Phase5ServiceFactory.create_chat_service()"
             )
             from src.core.visualize_evidence_with_expert_in_loop.providers import (
                 ChatLLMProvider,

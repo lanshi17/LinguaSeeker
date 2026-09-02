@@ -14,9 +14,9 @@ export interface PipelineRunRequest {
   /** Online query string for literature search. */
   query?: string;
   identifiers?: string[];
-  /** Target phase number (1-3) when mode is "phase". */
+  /** Target phase number (1-4) when mode is "phase". */
   target_phase?: number;
-  /** Existing run ID for phase 2/3 reruns. */
+  /** Existing run ID for phase 2/3/4 reruns. */
   processing_run_id?: string;
   /** Target gene-disease hypothesis for extraction. */
   target?: {
@@ -74,8 +74,8 @@ export interface PipelineStatusResponse {
   source_document_id: string;
   pipeline_status: ProcessingStatus;
   current_phase?: string | null;
-  skip_phase_3_reason?: string | null;
-  /** Dict keyed by phase_id ("phase_1", "phase_2", "phase_3"). */
+  skip_phase_4_reason?: string | null;
+  /** Dict keyed by phase_id ("phase_1", "phase_2", "phase_3", "phase_4"). */
   phases: Record<string, PhaseStatus>;
   error_message?: string | null;
   error_phase?: number | null;

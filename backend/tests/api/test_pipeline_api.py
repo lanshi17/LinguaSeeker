@@ -5,16 +5,17 @@ from httpx import AsyncClient
 from unittest.mock import AsyncMock, MagicMock, patch
 from src.agents.contracts import (
     PipelineGraphState,
-    Phase1Output,
-    Phase2Output,
-    Phase3Output,
+    AcquisitionOutput,
+    ParseOutput,
+    TranslationExtractionOutput,
+    StandardizationOutput,
     PhaseErrorDetail,
     PhaseStatus,
     PipelineMode,
     SourceType,
     PipelineStatus,
     PhaseStatusDetail,
-    SkipPhase3Reason,
+    SkipPhase4Reason,
 )
 
 
@@ -196,7 +197,7 @@ async def test_get_pipeline_status(async_client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_pipeline_status_shows_skip_reason(async_client: AsyncClient):
-    """Status response includes skip_phase_3_reason when set."""
+    """Status response includes skip_phase_4_reason when set."""
     mock_state = PipelineGraphState(
         processing_run_id="run-123",
         source_document_id="doc-456",
@@ -205,11 +206,12 @@ async def test_get_pipeline_status_shows_skip_reason(async_client: AsyncClient):
         pipeline_status=PipelineStatus.COMPLETED,
         phase_1_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
         phase_2_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
-        phase_3_status=PhaseStatusDetail(
+        phase_3_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
+        phase_4_status=PhaseStatusDetail(
             status=PhaseStatus.SKIPPED,
             summary={"reason": "not_relevant"},
         ),
-        skip_phase_3_reason=SkipPhase3Reason.NOT_RELEVANT,
+        skip_phase_4_reason=SkipPhase4Reason.NOT_RELEVANT,
     )
 
     with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
@@ -221,9 +223,9 @@ async def test_get_pipeline_status_shows_skip_reason(async_client: AsyncClient):
 
         assert response.status_code == 200
         data = response.json()
-        assert data["skip_phase_3_reason"] == "not_relevant"
-        assert data["phases"]["phase_3"]["status"] == "skipped"
-        assert data["phases"]["phase_3"]["summary"]["reason"] == "not_relevant"
+        assert data["skip_phase_4_reason"] == "not_relevant"
+        assert data["phases"]["phase_4"]["status"] == "skipped"
+        assert data["phases"]["phase_4"]["summary"]["reason"] == "not_relevant"
 
 
 @pytest.mark.asyncio
@@ -269,7 +271,8 @@ async def test_post_pipeline_run_phase_rerun_resets_target_phase(async_client: A
         pipeline_status=PipelineStatus.FAILED,
         phase_1_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
         phase_2_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
-        phase_3_status=PhaseStatusDetail(
+        phase_3_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
+        phase_4_status=PhaseStatusDetail(
             status=PhaseStatus.FAILED,
             started_at="2026-06-23T09:00:00",
             completed_at="2026-06-23T09:01:00",
@@ -282,20 +285,20 @@ async def test_post_pipeline_run_phase_rerun_resets_target_phase(async_client: A
             ),
             summary={"matches": 0},
         ),
-        phase_1_output=Phase1Output(
-            pdf_path="/tmp/input.pdf",
+        phase_1_output=AcquisitionOutput(pdf_path="/tmp/input.pdf"),
+        phase_2_output=ParseOutput(
             md_path="/tmp/output.md",
             metadata_path="/tmp/metadata.json",
-            output_dir="/tmp/phase_1",
-        ),
-        phase_2_output=Phase2Output(
             output_dir="/tmp/phase_2",
+        ),
+        phase_3_output=TranslationExtractionOutput(
+            output_dir="/tmp/phase_3",
             original_json_path="/tmp/original.json",
             translated_json_path="/tmp/translated.json",
             source_language="zh",
             extraction_result_path="/tmp/extraction_result.json",
         ),
-        phase_3_output=Phase3Output(
+        phase_4_output=StandardizationOutput(
             match_count=1,
             standardized_count=1,
             ambiguous_count=0,
@@ -328,9 +331,12 @@ async def test_post_pipeline_run_phase_rerun_resets_target_phase(async_client: A
     assert initial_state.phase_1_status.status == PhaseStatus.COMPLETED
     assert initial_state.phase_2_status.status == PhaseStatus.COMPLETED
     assert initial_state.phase_3_status == PhaseStatusDetail()
+    assert initial_state.phase_4_status == PhaseStatusDetail()
     assert initial_state.phase_1_output == existing_state.phase_1_output
     assert initial_state.phase_2_output == existing_state.phase_2_output
     assert initial_state.phase_3_output is None
+    assert initial_state.phase_4_output is None
+    assert initial_state.skip_phase_4_reason is None
     assert initial_state.error_message is None
     assert initial_state.error_phase is None
     assert initial_state.completed_at is None
@@ -386,7 +392,7 @@ async def test_post_pipeline_run_online_requires_query_or_identifiers(async_clie
 
 @pytest.mark.asyncio
 async def test_post_pipeline_run_target_phase_range_validation(async_client: AsyncClient):
-    """POST with target_phase outside 1-3 range is rejected (N2 fix)."""
+    """POST with target_phase outside 1-4 range is rejected (N2 fix)."""
     with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
         mock_runner = MagicMock()
         mock_get_runner.return_value = mock_runner

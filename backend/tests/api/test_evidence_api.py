@@ -24,8 +24,8 @@ async def test_patch_evidence_returns_updated_card(async_client: AsyncClient):
         field_deltas=[],
     )
 
-    # Patch in the route module where get_phase4_factory is bound
-    with patch("src.api.v1.evidence.get_phase4_factory") as mock_factory:
+    # Patch in the route module where get_phase5_factory is bound
+    with patch("src.api.v1.evidence.get_phase5_factory") as mock_factory:
         mock_service = MagicMock()
         mock_service.patch_evidence = AsyncMock(return_value=mock_result)
         mock_factory.return_value.create_feedback_service.return_value = mock_service
@@ -46,7 +46,7 @@ async def test_patch_evidence_404_for_unknown(async_client: AsyncClient):
     """PATCH /api/v1/evidence/{id} returns 404 for unknown evidence."""
     from sqlalchemy.exc import NoResultFound
 
-    with patch("src.api.v1.evidence.get_phase4_factory") as mock_factory:
+    with patch("src.api.v1.evidence.get_phase5_factory") as mock_factory:
         mock_service = MagicMock()
         mock_service.patch_evidence = AsyncMock(side_effect=NoResultFound())
         mock_factory.return_value.create_feedback_service.return_value = mock_service

@@ -17,14 +17,14 @@ class PipelineRunRequest(BaseModel):
 
     source_type: Literal["local", "online"]
     mode: Literal["full", "phase"] = "full"
-    target_phase: int | None = Field(default=None, ge=1, le=3)
+    target_phase: int | None = Field(default=None, ge=1, le=4)
     processing_run_id: str | None = None
 
     # Local upload fields
     filename: str | None = None
     content_base64: str | None = None
 
-    # Pre-parsed markdown: bypasses Phase 1 MinerU parsing entirely.
+    # Pre-parsed markdown: bypasses acquisition + MinerU parsing entirely.
     pre_parsed_markdown: str | None = None
 
     # Online acquisition fields
@@ -33,7 +33,7 @@ class PipelineRunRequest(BaseModel):
     relevance_gate: bool = True
     literature_types: list[str] | None = None
 
-    # Target gene-disease hypothesis (Phase 2/3 evidence extraction)
+    # Target gene-disease hypothesis (Phase 3/4 evidence extraction)
     extraction_target: ExtractionTarget | None = Field(default=None, alias="target")
 
     # Extraction field profile — controls which catalog fields are sent to the
@@ -128,6 +128,7 @@ class PipelinePhasesResponse(BaseModel):
     phase_1: PhaseStatusResponse
     phase_2: PhaseStatusResponse
     phase_3: PhaseStatusResponse
+    phase_4: PhaseStatusResponse
 
 
 class PipelineRunResponse(BaseModel):
@@ -139,6 +140,57 @@ class PipelineRunResponse(BaseModel):
     status_url: str
 
 
+class AcquireRequest(BaseModel):
+    """Request body for standalone literature acquisition (no pipeline run).
+
+    Runs Phase 1 (acquisition) only: search and/or download literature PDFs
+    synchronously and return the results without creating a pipeline run.
+    """
+
+    # Online acquisition fields
+    query: str | None = None
+    identifiers: list[str] | None = None
+    action: Literal["search", "download"] = "download"
+    # Per-provider/per-language search hint passed to the acquisition SDK.
+    # Multilingual queries fan out to several providers, so the total number
+    # of results/downloads may exceed this value; the response caps
+    # ``downloads`` at this many entries (see AcquireResponse).
+    limit: int = Field(default=5, ge=1, le=50)
+    # Total wall-clock budget for the synchronous acquisition in seconds.
+    # On expiry the request is aborted and returns success=false with an
+    # ACQUISITION_TIMEOUT error; files already downloaded remain on disk.
+    timeout_seconds: int = Field(default=300, ge=10, le=900)
+    relevance_gate: bool = True
+    literature_types: list[str] | None = None
+
+    @model_validator(mode="after")
+    def validate_acquire_request(self) -> AcquireRequest:
+        """Require a query or identifiers."""
+        if not self.query and not self.identifiers:
+            raise ValueError("query or identifiers is required for acquisition")
+        return self
+
+
+class AcquireDownloadEntryResponse(BaseModel):
+    """A single downloaded file from standalone acquisition."""
+
+    file_path: str | None = None
+    pdf_url: str | None = None
+    resolved_url: str | None = None
+    pre_parsed: bool = False  # True when the PDF was already parsed during acquisition
+
+
+class AcquireResponse(BaseModel):
+    """Response for standalone acquisition."""
+
+    success: bool
+    error: str | None = None
+    warnings: list[str] = Field(default_factory=list)
+    downloads: list[AcquireDownloadEntryResponse] = Field(default_factory=list)
+    items_count: int = 0  # Number of search-result items returned by providers
+    elapsed_seconds: float | None = None
+
+
 class PipelineStatusResponse(BaseModel):
     """Response for pipeline status query with per-phase details."""
 
@@ -146,7 +198,7 @@ class PipelineStatusResponse(BaseModel):
     source_document_id: str
     pipeline_status: str
     current_phase: str | None = None
-    skip_phase_3_reason: str | None = None
+    skip_phase_4_reason: str | None = None
     phases: PipelinePhasesResponse
     error_message: str | None = None
     error_phase: int | None = None
@@ -167,7 +219,7 @@ class PipelineRunSummaryResponse(BaseModel):
     elapsed_seconds: float | None = None
     current_phase: str | None = None
     completed_phases: int = 0
-    total_phases: int = 3
+    total_phases: int = 4
 
 
 class PipelineRunListResponse(BaseModel):

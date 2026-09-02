@@ -139,10 +139,11 @@ def wire_dependencies() -> None:
     from src.agents.phase_1_adapter import Phase1Adapter
     from src.agents.phase_2_adapter import Phase2Adapter
     from src.agents.phase_3_adapter import Phase3Adapter
-    from src.agents.phase_4_factory import Phase4ServiceFactory
+    from src.agents.phase_4_adapter import Phase4Adapter
+    from src.agents.phase_5_factory import Phase5ServiceFactory
     from src.agents.runner import PipelineRunner
     from src.agents.state_persistence import SessionBoundStatePersistence
-    from src.api.deps import set_neo4j_repository, set_phase4_factory
+    from src.api.deps import set_neo4j_repository, set_phase5_factory
     from src.api.v1.pipeline import set_pipeline_runner
     from src.core.evidence_extraction.api import (
         EvidenceExtractionService,
@@ -207,7 +208,7 @@ def wire_dependencies() -> None:
 
     session_factory = get_session_factory()
 
-    # ── Phase 1-3 services (long-lived, no session in constructor) ──
+    # ── Phase 1-4 services (long-lived, no session in constructor) ──
 
     acquisition_service = DocumentAcquisitionService()
     pd_cfg = cfg.parse_document
@@ -240,9 +241,10 @@ def wire_dependencies() -> None:
     # ── Phase adapters ──
 
     phase_adapters = {
-        "phase_1": Phase1Adapter(acquisition_service, parse_service),
-        "phase_2": Phase2Adapter(translation_service, extraction_service),
-        "phase_3": Phase3Adapter(standardization_service, session_factory),
+        "phase_1": Phase1Adapter(acquisition_service),
+        "phase_2": Phase2Adapter(parse_service),
+        "phase_3": Phase3Adapter(translation_service, extraction_service),
+        "phase_4": Phase4Adapter(standardization_service, session_factory),
     }
 
     # ── Orchestrator + Runner ──
@@ -271,9 +273,9 @@ def wire_dependencies() -> None:
     # real time (not just after the entire pipeline completes).
     orchestrator.on_state_change = runner.remember_state
 
-    # ── Phase 4 factory ──
+    # ── Phase 5 factory (interactive review layer) ──
 
-    phase4_factory = Phase4ServiceFactory(cfg=cfg, session_factory=session_factory)
+    phase5_factory = Phase5ServiceFactory(cfg=cfg, session_factory=session_factory)
 
     # ── Job queue + dispatcher ──
 
@@ -291,7 +293,7 @@ def wire_dependencies() -> None:
     # ── Inject into global registries (consumed by API routes) ──
 
     set_pipeline_runner(runner)
-    set_phase4_factory(phase4_factory)
+    set_phase5_factory(phase5_factory)
     set_job_queue(job_queue)
     if _neo4j_repository is not None:
         set_neo4j_repository(_neo4j_repository)

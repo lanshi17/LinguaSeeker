@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import binascii
 import uuid
@@ -17,6 +18,9 @@ from starlette.requests import Request
 from src.api.auth import get_current_account
 from src.api.rate_limit import limiter
 from src.api.v1.contracts import (
+    AcquireDownloadEntryResponse,
+    AcquireRequest,
+    AcquireResponse,
     PhaseErrorResponse,
     PhaseStatusResponse,
     PhaseSummaryResponse,
@@ -29,6 +33,10 @@ from src.api.v1.contracts import (
 )
 from src.core.config import get_config
 from src.core.auth.contracts import AuthContext
+from src.core.ingest_and_digitize_data.document_acquisition.contracts import (
+    AcquisitionSource,
+    DocumentAcquisitionRequest,
+)
 
 from src.agents.contracts import (
     PhaseStatus,
@@ -118,6 +126,7 @@ def _determine_current_phase(state: PipelineGraphState) -> str | None:
         "phase_1": state.phase_1_status,
         "phase_2": state.phase_2_status,
         "phase_3": state.phase_3_status,
+        "phase_4": state.phase_4_status,
     }
     for name, detail in phase_map.items():
         if detail.status == PhaseStatus.RUNNING:
@@ -189,15 +198,104 @@ def _prepare_phase_rerun_state(
         "error_phase": None,
         "completed_at": None,
     }
-    for phase_num in range(target_phase, 4):
+    for phase_num in range(target_phase, 5):
         updates[f"phase_{phase_num}_status"] = PhaseStatusDetail()
         updates[f"phase_{phase_num}_output"] = None
-    if target_phase <= 2:
-        updates["skip_phase_3_reason"] = None
+    if target_phase <= 3:
+        updates["skip_phase_4_reason"] = None
     return existing_state.model_copy(deep=True, update=updates)
 
 
 # ── Routes ───────────────────────────────────────────────────────────────────
+
+
+@router.post("/acquire", response_model=AcquireResponse)
+@limiter.limit("10/minute")
+async def acquire_literature(
+    request: Request,
+    body: AcquireRequest,
+    account: AuthContext = Depends(get_current_account),
+):
+    """Standalone synchronous literature acquisition (Phase 1 only, no pipeline run).
+
+    Searches providers and/or downloads full-text PDFs for the given query or
+    identifiers, then returns the download results directly. No pipeline run
+    record is created; to continue with parsing/extraction, start a normal
+    pipeline run (or a phase run with target_phase=2 reusing the downloaded
+    file as a local upload).
+
+    Note: this handler blocks until acquisition finishes (provider timeouts
+    apply); prefer `action="search"` for cheap metadata-only lookups.
+    """
+    # Imported here so tests can patch the service class where it is defined.
+    from src.core.ingest_and_digitize_data.document_acquisition.service import (
+        DocumentAcquisitionService,
+    )
+
+    backend_root = Path(__file__).resolve().parents[3]
+    download_path = str(backend_root / "data" / "acquire")
+    Path(download_path).mkdir(parents=True, exist_ok=True)
+
+    service = DocumentAcquisitionService()
+    acquisition_request = DocumentAcquisitionRequest(
+        source=AcquisitionSource.ONLINE,
+        action=body.action,
+        query=body.query,
+        identifiers=body.identifiers,
+        limit=body.limit,
+        download_path=download_path,
+        relevance_gate=body.relevance_gate,
+        literature_types=body.literature_types,
+    )
+
+    try:
+        result = await asyncio.wait_for(
+            service.acquire(acquisition_request),
+            timeout=body.timeout_seconds,
+        )
+    except TimeoutError:
+        logger.warning(
+            "Standalone acquisition timed out after {}s: query={}",
+            body.timeout_seconds,
+            body.query,
+        )
+        raise HTTPException(
+            status_code=504,
+            detail=(
+                f"Acquisition timed out after {body.timeout_seconds}s. "
+                f"Files already downloaded remain under data/acquire/."
+            ),
+        ) from None
+    except Exception as exc:
+        logger.exception("Standalone acquisition failed: query={}", body.query)
+        raise HTTPException(status_code=502, detail=f"Acquisition failed: {exc}") from exc
+
+    downloads = [
+        AcquireDownloadEntryResponse(
+            file_path=entry.file_path,
+            pdf_url=entry.pdf_url,
+            resolved_url=entry.resolved_url,
+            pre_parsed=entry.pre_parsed_markdown is not None,
+        )
+        for entry in result.downloads
+    ]
+    warnings = list(result.warnings or [])
+    # The SDK's ``limit`` is a per-provider hint; cap the total number of
+    # returned downloads so the response stays predictable. Downloaded files
+    # beyond the cap remain on disk (content-addressed names) for later runs.
+    if body.limit and len(downloads) > body.limit:
+        warnings.append(
+            f"DOWNLOADS_TRUNCATED: returning first {body.limit} of {len(downloads)} downloads"
+        )
+        downloads = downloads[: body.limit]
+    return AcquireResponse(
+        success=result.success,
+        error=result.error,
+        warnings=warnings,
+        downloads=downloads,
+        items_count=len(result.items),
+        elapsed_seconds=result.elapsed_time,
+    )
 
 
 @router.post("/run", response_model=PipelineRunResponse, status_code=202)
@@ -216,7 +314,7 @@ async def start_pipeline_run(
     jq = get_job_queue()
     owner_user_id = str(account.owner_user_id) if account.owner_user_id else None
 
-    # Phase re-run: resume from existing state for target_phase 2/3
+    # Phase re-run: resume from existing state for target_phase 2/3/4
     if body.mode == "phase" and body.processing_run_id:
         existing_state = await runner.get_last_state(body.processing_run_id)
         if existing_state is None or existing_state.owner_user_id != owner_user_id:
@@ -480,6 +578,7 @@ async def get_pipeline_status(
                 phase_1=PhaseStatusResponse(status="pending"),
                 phase_2=PhaseStatusResponse(status="pending"),
                 phase_3=PhaseStatusResponse(status="pending"),
+                phase_4=PhaseStatusResponse(status="pending"),
             )
             return PipelineStatusResponse(
                 processing_run_id=processing_run_id,
@@ -500,6 +599,7 @@ async def get_pipeline_status(
         phase_1=_phase_detail_to_response(state.phase_1_status),
         phase_2=_phase_detail_to_response(state.phase_2_status),
         phase_3=_phase_detail_to_response(state.phase_3_status),
+        phase_4=_phase_detail_to_response(state.phase_4_status),
     )
 
     elapsed = _compute_elapsed(state.started_at, state.completed_at)
@@ -510,7 +610,7 @@ async def get_pipeline_status(
         source_document_id=state.source_document_id,
         pipeline_status=state.pipeline_status.value,
         current_phase=_determine_current_phase(state),
-        skip_phase_3_reason=state.skip_phase_3_reason.value if state.skip_phase_3_reason else None,
+        skip_phase_4_reason=state.skip_phase_4_reason.value if state.skip_phase_4_reason else None,
         phases=phases,
         error_message=state.error_message,
         error_phase=state.error_phase,

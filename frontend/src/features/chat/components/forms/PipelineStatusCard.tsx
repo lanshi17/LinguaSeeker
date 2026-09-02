@@ -37,9 +37,10 @@ interface PhaseMeta {
 
 const PHASES: PhaseMeta[] = [
   { id: "phase_1", labelKey: "chat.phase.acquisition", descKey: "chat.phase.acquisitionDesc" },
-  { id: "phase_2", labelKey: "chat.phase.extraction", descKey: "chat.phase.extractionDesc" },
-  { id: "phase_3", labelKey: "chat.phase.standardization", descKey: "chat.phase.standardizationDesc" },
-  { id: "phase_4", labelKey: "chat.phase.review", descKey: "chat.phase.reviewDesc" },
+  { id: "phase_2", labelKey: "chat.phase.parsing", descKey: "chat.phase.parsingDesc" },
+  { id: "phase_3", labelKey: "chat.phase.extraction", descKey: "chat.phase.extractionDesc" },
+  { id: "phase_4", labelKey: "chat.phase.standardization", descKey: "chat.phase.standardizationDesc" },
+  { id: "phase_5", labelKey: "chat.phase.review", descKey: "chat.phase.reviewDesc" },
 ];
 
 const PHASE_STATUS_STYLES: Record<string, CSSProperties> = {

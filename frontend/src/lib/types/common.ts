@@ -10,5 +10,5 @@ export type ProcessingStatus =
   | "failed"
   | "skipped";
 
-/** Phase identifier in the 3-phase pipeline. */
-export type PhaseId = "phase_1" | "phase_2" | "phase_3";
+/** Phase identifier in the 4-phase pipeline. */
+export type PhaseId = "phase_1" | "phase_2" | "phase_3" | "phase_4";

@@ -61,10 +61,11 @@ backend/
 │   │   ├── runner.py                                   # PipelineRunner — background asyncio.Task management
 │   │   ├── concurrency.py                              # PipelineSemaphore, RetryablePhaseExecutor
 │   │   ├── state_persistence.py                        # PostgreSQL state save/load
-│   │   ├── phase_1_adapter.py                          # Phase1Adapter — wraps acquisition + parsing
-│   │   ├── phase_2_adapter.py                          # Phase2Adapter — wraps translation + extraction
-│   │   ├── phase_3_adapter.py                          # Phase3Adapter — wraps entity standardization
-│   │   └── phase_4_factory.py                          # Phase4ServiceFactory — creates Phase 4 services
+│   │   ├── phase_1_adapter.py                          # Phase1Adapter — wraps document acquisition
+│   │   ├── phase_2_adapter.py                          # Phase2Adapter — wraps document parsing (MinerU)
+│   │   ├── phase_3_adapter.py                          # Phase3Adapter — wraps translation + extraction
+│   │   ├── phase_4_adapter.py                          # Phase4Adapter — wraps entity standardization
+│   │   └── phase_5_factory.py                          # Phase5ServiceFactory — creates Phase 5 (interactive review) services
 │   ├── api/
 │   │   ├── auth.py                                     # Authentication logic
 │   │   ├── deps.py                                     # Dependency injection
@@ -126,12 +127,12 @@ backend/
 │   │   │       │   └── helpers.py
 │   │   │       └── remote/
 │   │   │           └── parser.py                       # Remote API parser (MinerU)
-│   │   ├── cross_lingual_process_and_extract_evidence/ # Phase 2
+│   │   ├── cross_lingual_process_and_extract_evidence/ # Phase 3
 │   │   │   ├── contracts.py                            # Dual extraction contracts
-│   │   │   ├── config_context.py                       # Phase 2 config resolution
-│   │   │   ├── workflow.py                             # Phase 2 workflow definition
-│   │   │   ├── router.py                               # Phase 2 internal routing
-│   │   │   ├── persistence.py                          # Phase 2 persistence helpers
+│   │   │   ├── config_context.py                       # Phase 3 config resolution
+│   │   │   ├── workflow.py                             # Phase 3 workflow definition
+│   │   │   ├── router.py                               # Phase 3 internal routing
+│   │   │   ├── persistence.py                          # Phase 3 persistence helpers
 │   │   │   ├── cross_lingual/
 │   │   │   │   ├── format/
 │   │   │   │   │   ├── base.py                         # Base formatter interface
@@ -172,7 +173,7 @@ backend/
 │   │   │           ├── quality_validation.py           # Extraction quality checks
 │   │   │           ├── source_grounding.py             # Source anchor grounding
 │   │   │           └── special_evidence.py             # Special evidence type handling
-│   │   ├── standardize_entities_and_align_knowledge/   # Phase 3
+│   │   ├── standardize_entities_and_align_knowledge/   # Phase 4
 │   │   │   ├── api.py                                  # Orchestrator-facing node adapter
 │   │   │   ├── core.py                                 # Standardization domain logic
 │   │   │   ├── contracts.py                            # Standardization contracts
@@ -190,9 +191,9 @@ backend/
 │   │   │       ├── indexer.py                          # Vector index management
 │   │   │       ├── providers.py                        # Embedding service adapters
 │   │   │       └── repositories.py                     # Similarity data access
-│   │   └── visualize_evidence_with_expert_in_loop/     # Phase 4
-│   │       ├── contracts.py                            # Phase 4 contracts
-│   │       ├── providers.py                            # Phase 4 service adapters
+│   │   └── visualize_evidence_with_expert_in_loop/     # Phase 5
+│   │       ├── contracts.py                            # Phase 5 contracts
+│   │       ├── providers.py                            # Phase 5 service adapters
 │   │       ├── chat_service.py                         # Chat session persistence and SSE streaming
 │   │       ├── search_service.py                       # Evidence/knowledge search
 │   │       ├── feedback_service.py                     # Structured expert feedback
@@ -266,7 +267,7 @@ Runtime behavior:
 - SSE chat streaming and processing progress via FastAPI `StreamingResponse` (no WebSocket dependency, no Vercel AI SDK).
 - Completed metadata/results persist including chat sessions and delta logs.
 
-### 3.3 Phase 1: Acquisition, Upload, and Parsing
+### 3.3 Phases 1-2: Acquisition, Upload, and Parsing
 
 The acquisition layer is split into `document_acquisition/` with two sub-packages:
 
@@ -291,9 +292,9 @@ Parsing requirements:
 - Layout analysis must preserve table rows/cells and figure regions for later evidence highlighting.
 - Long text chunking must preserve source span mapping.
 
-### 3.4 Phase 2: Cross-Lingual Dual Evidence Extraction
+### 3.4 Phase 3: Cross-Lingual Dual Evidence Extraction
 
-Phase 2 is organized into two main sub-packages:
+Phase 3 is organized into two main sub-packages:
 
 **`cross_lingual/`** handles document formatting and translation:
 
@@ -320,9 +321,9 @@ The dual extraction pipeline must output:
 - *(Planned)* Reconciliation status: `agreed`, `native_only`, `translated_only`, `conflict`, or `manually_corrected`.
 - *(Planned)* Reconciliation rationale.
 
-### 3.5 Phase 3: Entity Standardization
+### 3.5 Phase 4: Entity Standardization
 
-Phase 3 follows the vertical slice pattern with `api.py`, `core.py`, `providers.py`, and `contracts.py`.
+Phase 4 follows the vertical slice pattern with `api.py`, `core.py`, `providers.py`, and `contracts.py`.
 
 Key modules:
 
@@ -344,17 +345,17 @@ Matching order:
 
 Supported sources include HGNC, ClinVar, dbSNP, OMIM, HPO, ClinGen, and gnomAD where available. Standardization must preserve original extracted value, translated extracted value, standardized value, source database, match status, and match rationale.
 
-### 3.6 Phase 4: Bilingual Review, Feedback, and Reports
+### 3.6 Phase 5: Bilingual Review, Feedback, and Reports
 
-Phase 4 provides review, search, and feedback services:
+Phase 5 provides review, search, and feedback services:
 
 - `chat_service.py`: Chat session persistence and SSE streaming.
 - `search_service.py`: Evidence/knowledge search across persisted data.
 - `feedback_service.py`: Structured expert feedback capture.
 - `delta_audit_service.py`: Per-task field modification history logging.
 - `source_linker.py`: Original/translated anchor to evidence linking.
-- `contracts.py`: Phase 4 typed contracts.
-- `providers.py`: Phase 4 service adapters (LLM, DB, external).
+- `contracts.py`: Phase 5 typed contracts.
+- `providers.py`: Phase 5 service adapters (LLM, DB, external).
 
 User modifications to evidence cards are silently recorded as delta entries. Current-stage feedback does not directly mutate evidence rows unless a reviewed correction workflow is implemented.
 
@@ -664,7 +665,7 @@ tests/
 │   └── redis/
 ├── utils/
 ├── online_acquisition/                             # Online acquisition integration tests
-├── phase4/                                         # Phase 4 service tests
+├── phase5/                                         # Phase 5 service tests
 ├── scripts/                                        # Script tests
 ├── services/                                       # Service layer tests
 ├── integration/                                    # Cross-module integration tests

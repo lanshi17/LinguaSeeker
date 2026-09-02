@@ -1,15 +1,18 @@
-"""Tests for Phase 2 adapter (translation + evidence extraction)."""
+"""Tests for Phase 2 adapter (document parsing)."""
 
-import asyncio
 import json
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import datetime
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock
 from src.agents.contracts import (
     PipelineGraphState,
     PipelineMode,
     SourceType,
-    Phase1Output,
-    Phase2Output,
+    ParseOutput,
+    PhaseStatus,
+    AcquisitionOutput,
+    PermanentPhaseError,
     RetryablePhaseError,
 )
 from src.agents.phase_2_adapter import Phase2Adapter
@@ -17,566 +20,153 @@ from src.agents.phase_2_adapter import Phase2Adapter
 
 @pytest.fixture
 def sample_state(tmp_path) -> PipelineGraphState:
-    metadata = tmp_path / "metadata.json"
-    metadata.write_text(json.dumps({"pages": [], "content_blocks": []}))
-    from src.core.evidence_extraction.contracts import (
-        ExtractionTarget,
-    )
-
     return PipelineGraphState(
         processing_run_id="run-123",
         source_document_id="doc-456",
         mode=PipelineMode.FULL,
         source_type=SourceType.LOCAL,
-        phase_1_output=Phase1Output(
-            pdf_path=str(tmp_path / "test.pdf"),
-            md_path=str(tmp_path / "test.md"),
-            metadata_path=str(metadata),
-            output_dir=str(tmp_path / "output"),
-            images_dir=str(tmp_path / "images"),
+        phase_1_output=AcquisitionOutput(pdf_path=str(tmp_path / "test.pdf")),
+    )
+
+
+def _make_parse_result():
+    from src.core.ingest_and_digitize_data.parse_document.contracts import (
+        MinerULocalBatchSaveResult,
+        MinerULocalBatchParseResult,
+        MinerUBatchStatus,
+        SavedFiles,
+    )
+
+    return MinerULocalBatchSaveResult(
+        batch_id="batch-1",
+        parse_result=MinerULocalBatchParseResult(
+            batch_id="batch-1",
+            status=MinerUBatchStatus(batch_id="batch-1"),
+            results={},
         ),
-        extraction_target=ExtractionTarget(
-            gene_symbol="ABCA3",
-            disease_name="ABCA3 deficiency",
-        ),
+        saved_files={
+            "test.pdf": SavedFiles(
+                md_path=Path("/tmp/test.md"),
+                metadata_path=Path("/tmp/test.json"),
+                output_dir=Path("/tmp/output"),
+                created_at=datetime.now(),
+                images_dir=Path("/tmp/images"),
+            )
+        },
     )
 
 
 @pytest.mark.asyncio
 async def test_phase_2_adapter_success(sample_state: PipelineGraphState):
-    """Phase 2 adapter successfully translates and extracts evidence."""
-    from src.core.cross_lingual_translation.contracts import (
-        TranslationResult,
-        CrossLingualOutput,
-    )
-    from src.core.evidence_extraction.contracts import (
-        DualEvidenceExtractionResult,
-        DualTrackDocuments,
-        EvidenceExtractionResult,
-        EvidenceExtractionStatus,
-        Track,
-        DocumentEvidenceMap,
-        TrackDocument,
-    )
+    """Phase 2 adapter parses the Phase 1 PDF and writes the phase_2 output dir."""
+    mock_parse = MagicMock()
+    mock_parse.parse_local_files_and_save = AsyncMock(return_value=_make_parse_result())
 
-    mock_translation = MagicMock()
-    mock_translation.run = AsyncMock(
-        return_value=TranslationResult(
-            formatted_original="Original text",
-            translated_english="Translated text",
-            source_language="zh",
-            terminology_map={},
-            translation_warnings=[],
-            sentences=[],
-            segments=[],
-        )
-    )
-    mock_translation.save = MagicMock(
-        return_value=CrossLingualOutput(
-            formatted_original="Original text",
-            translated_english="Translated text",
-            source_language="zh",
-            terminology_map={},
-            translation_warnings=[],
-            output_dir="/tmp/phase2/output",
-            original_json_path="/tmp/phase2/output/original.json",
-            translated_json_path="/tmp/phase2/output/translated.json",
-            image_paths=[],
-        )
-    )
+    adapter = Phase2Adapter(parse_service=mock_parse)
 
-    mock_extraction_service = MagicMock()
-    mock_extraction_service.run_dual = AsyncMock(
-        return_value=DualEvidenceExtractionResult(
-            document_id="doc-456",
-            original_result=EvidenceExtractionResult(
-                status=EvidenceExtractionStatus.COMPLETED,
-                document_id="doc-456",
-                track=Track.ORIGINAL,
-                evidence_map=DocumentEvidenceMap(relevant=True),
-            ),
-            translated_result=EvidenceExtractionResult(
-                status=EvidenceExtractionStatus.COMPLETED,
-                document_id="doc-456",
-                track=Track.TRANSLATED,
-                evidence_map=DocumentEvidenceMap(relevant=True),
-            ),
-        )
-    )
-
-    adapter = Phase2Adapter(
-        translation_service=mock_translation,
-        extraction_service=mock_extraction_service,
-    )
-
-    with patch(
-        "src.agents.phase_2_adapter.EvidenceExtractionService.build_dual_documents_from_output_dir"
-    ) as mock_build:
-        mock_build.return_value = DualTrackDocuments(
-            document_id="doc-456",
-            original=TrackDocument(
-                document_id="doc-456",
-                track=Track.ORIGINAL,
-                formatted_text="original",
-                page_spans=[],
-            ),
-            translated=TrackDocument(
-                document_id="doc-456",
-                track=Track.TRANSLATED,
-                formatted_text="translated",
-                page_spans=[],
-            ),
-        )
-
-        result_state = await adapter.run(sample_state)
+    result_state = await adapter.run(sample_state)
 
     assert result_state.phase_2_output is not None
-    assert result_state.phase_2_output.source_language == "zh"
-    assert isinstance(result_state.phase_2_output, Phase2Output)
-    mock_build.assert_called_once()
-    assert mock_build.call_args.args[1] == sample_state.extraction_target
+    assert isinstance(result_state.phase_2_output, ParseOutput)
+    assert result_state.phase_2_output.md_path == "/tmp/test.md"
+    assert result_state.phase_2_output.metadata_path == "/tmp/test.json"
+    assert result_state.phase_2_output.images_dir == "/tmp/images"
+    assert result_state.phase_2_status.status == PhaseStatus.COMPLETED
+
+    mock_parse.parse_local_files_and_save.assert_awaited_once()
+    kwargs = mock_parse.parse_local_files_and_save.call_args.kwargs
+    assert kwargs["file_paths"] == [sample_state.phase_1_output.pdf_path]
+    assert kwargs["output_dir"].endswith(f"data/pipeline/{sample_state.processing_run_id}/phase_2")
 
 
 @pytest.mark.asyncio
-async def test_phase_2_adapter_passes_review_reject_policy(
-    sample_state: PipelineGraphState,
-):
-    """Phase 2 forwards review reject policy to evidence extraction."""
-    from src.core.cross_lingual_translation.contracts import (
-        CrossLingualOutput,
-        TranslationResult,
-    )
-    from src.core.evidence_extraction.contracts import (
-        DualEvidenceExtractionResult,
-        DualTrackDocuments,
-        EvidenceExtractionResult,
-        EvidenceExtractionStatus,
-        Track,
-        TrackDocument,
-    )
+async def test_phase_2_adapter_raises_permanent_without_phase_1_output(sample_state: PipelineGraphState):
+    """Phase 2 adapter raises PermanentPhaseError when Phase 1 produced no PDF."""
+    state = sample_state.model_copy(update={"phase_1_output": AcquisitionOutput(pdf_path="")})
 
-    state = sample_state.model_copy(
-        update={
-            "ablation_disable_grounding": True,
-            "review_reject_policy": "tristate_review",
-        }
-    )
-    mock_translation = MagicMock()
-    mock_translation.run = AsyncMock(
-        return_value=TranslationResult(
-            formatted_original="Original text",
-            translated_english="Translated text",
-            source_language="en",
-            terminology_map={},
-            translation_warnings=[],
-            sentences=[],
-            segments=[],
-        )
-    )
-    mock_translation.save = MagicMock(
-        return_value=CrossLingualOutput(
-            formatted_original="Original text",
-            translated_english="Translated text",
-            source_language="en",
-            terminology_map={},
-            translation_warnings=[],
-            output_dir="/tmp/phase2/output",
-            original_json_path="/tmp/phase2/output/original.json",
-            translated_json_path="/tmp/phase2/output/translated.json",
-            image_paths=[],
-        )
-    )
-    mock_extraction_service = MagicMock()
-    mock_extraction_service.run_dual = AsyncMock(
-        return_value=DualEvidenceExtractionResult(
-            document_id="doc-456",
-            original_result=EvidenceExtractionResult(
-                status=EvidenceExtractionStatus.COMPLETED,
-                document_id="doc-456",
-                track=Track.ORIGINAL,
-            ),
-            translated_result=EvidenceExtractionResult(
-                status=EvidenceExtractionStatus.COMPLETED,
-                document_id="doc-456",
-                track=Track.TRANSLATED,
-            ),
-        )
-    )
-    adapter = Phase2Adapter(
-        translation_service=mock_translation,
-        extraction_service=mock_extraction_service,
-    )
+    mock_parse = MagicMock()
+    adapter = Phase2Adapter(parse_service=mock_parse)
 
-    with patch(
-        "src.agents.phase_2_adapter.EvidenceExtractionService.build_dual_documents_from_output_dir"
-    ) as mock_build:
-        mock_build.return_value = DualTrackDocuments(
-            document_id="doc-456",
-            original=TrackDocument(
-                document_id="doc-456",
-                track=Track.ORIGINAL,
-                formatted_text="original",
-                page_spans=[],
-            ),
-            translated=TrackDocument(
-                document_id="doc-456",
-                track=Track.TRANSLATED,
-                formatted_text="translated",
-                page_spans=[],
-            ),
-        )
-
+    with pytest.raises(PermanentPhaseError, match="Phase 1 output"):
         await adapter.run(state)
-
-    assert mock_extraction_service.run_dual.call_args.kwargs["review_reject_policy"] == "tristate_review"
-    assert mock_extraction_service.run_dual.call_args.kwargs["enable_source_grounding"] is False
+    mock_parse.parse_local_files_and_save.assert_not_called()
 
 
 @pytest.mark.asyncio
-async def test_phase_2_adapter_passes_extraction_track_mode(
-    sample_state: PipelineGraphState,
-):
-    """Phase 2 forwards the English-pivot extraction track mode."""
-    from src.core.cross_lingual_translation.contracts import (
-        CrossLingualOutput,
-        TranslationResult,
-    )
-    from src.core.evidence_extraction.contracts import (
-        DualEvidenceExtractionResult,
-        DualTrackDocuments,
-        EvidenceExtractionResult,
-        EvidenceExtractionStatus,
-        Track,
-        TrackDocument,
+async def test_phase_2_adapter_raises_permanent_when_no_saved_files(sample_state: PipelineGraphState):
+    """Phase 2 adapter raises PermanentPhaseError when parsing produced no output."""
+    from src.core.ingest_and_digitize_data.parse_document.contracts import (
+        MinerULocalBatchSaveResult,
+        MinerULocalBatchParseResult,
+        MinerUBatchStatus,
     )
 
-    state = sample_state.model_copy(update={"extraction_track_mode": "english_pivot"})
-    mock_translation = MagicMock()
-    mock_translation.run = AsyncMock(
-        return_value=TranslationResult(
-            formatted_original="Original text",
-            translated_english="Translated text",
-            source_language="zh",
-            terminology_map={},
-            translation_warnings=[],
-            sentences=[],
-            segments=[],
-        )
-    )
-    mock_translation.save = MagicMock(
-        return_value=CrossLingualOutput(
-            formatted_original="Original text",
-            translated_english="Translated text",
-            source_language="zh",
-            terminology_map={},
-            translation_warnings=[],
-            output_dir="/tmp/phase2/output",
-            original_json_path="/tmp/phase2/output/original.json",
-            translated_json_path="/tmp/phase2/output/translated.json",
-            image_paths=[],
-        )
-    )
-    mock_extraction_service = MagicMock()
-    mock_extraction_service.run_dual = AsyncMock(
-        return_value=DualEvidenceExtractionResult(
-            document_id="doc-456",
-            original_result=EvidenceExtractionResult(
-                status=EvidenceExtractionStatus.NOT_RELEVANT,
-                document_id="doc-456",
-                track=Track.ORIGINAL,
+    mock_parse = MagicMock()
+    mock_parse.parse_local_files_and_save = AsyncMock(
+        return_value=MinerULocalBatchSaveResult(
+            batch_id="batch-1",
+            parse_result=MinerULocalBatchParseResult(
+                batch_id="batch-1",
+                status=MinerUBatchStatus(batch_id="batch-1"),
+                results={},
             ),
-            translated_result=EvidenceExtractionResult(
-                status=EvidenceExtractionStatus.COMPLETED,
-                document_id="doc-456",
-                track=Track.TRANSLATED,
-            ),
-        )
-    )
-    adapter = Phase2Adapter(
-        translation_service=mock_translation,
-        extraction_service=mock_extraction_service,
-    )
-
-    with patch(
-        "src.agents.phase_2_adapter.EvidenceExtractionService.build_dual_documents_from_output_dir"
-    ) as mock_build:
-        mock_build.return_value = DualTrackDocuments(
-            document_id="doc-456",
-            original=TrackDocument(
-                document_id="doc-456",
-                track=Track.ORIGINAL,
-                formatted_text="original",
-                page_spans=[],
-            ),
-            translated=TrackDocument(
-                document_id="doc-456",
-                track=Track.TRANSLATED,
-                formatted_text="translated",
-                page_spans=[],
-            ),
-        )
-
-        await adapter.run(state)
-
-    assert mock_extraction_service.run_dual.call_args.kwargs["extraction_track_mode"] == "english_pivot"
-
-
-@pytest.mark.asyncio
-async def test_phase_2_adapter_sets_skip_when_not_relevant(
-    sample_state: PipelineGraphState,
-):
-    """Phase 2 adapter sets skip_phase_3_reason when both tracks are NOT_RELEVANT."""
-    from src.core.cross_lingual_translation.contracts import (
-        TranslationResult,
-        CrossLingualOutput,
-    )
-    from src.core.evidence_extraction.contracts import (
-        DualEvidenceExtractionResult,
-        DualTrackDocuments,
-        EvidenceExtractionResult,
-        EvidenceExtractionStatus,
-        Track,
-        TrackDocument,
-    )
-    from src.agents.contracts import SkipPhase3Reason
-
-    mock_translation = MagicMock()
-    mock_translation.run = AsyncMock(
-        return_value=TranslationResult(
-            formatted_original="Original",
-            translated_english="Translated",
-            source_language="en",
-            terminology_map={},
-            translation_warnings=[],
-            sentences=[],
-            segments=[],
-        )
-    )
-    mock_translation.save = MagicMock(
-        return_value=CrossLingualOutput(
-            formatted_original="Original",
-            translated_english="Translated",
-            source_language="en",
-            terminology_map={},
-            translation_warnings=[],
-            output_dir="/tmp/phase2/output",
-            original_json_path="/tmp/phase2/output/original.json",
-            translated_json_path="/tmp/phase2/output/translated.json",
-            image_paths=[],
+            saved_files={},
         )
     )
 
-    mock_extraction_service = MagicMock()
-    mock_extraction_service.run_dual = AsyncMock(
-        return_value=DualEvidenceExtractionResult(
-            document_id="doc-456",
-            original_result=EvidenceExtractionResult(
-                status=EvidenceExtractionStatus.NOT_RELEVANT,
-                document_id="doc-456",
-                track=Track.ORIGINAL,
-            ),
-            translated_result=EvidenceExtractionResult(
-                status=EvidenceExtractionStatus.NOT_RELEVANT,
-                document_id="doc-456",
-                track=Track.TRANSLATED,
-            ),
-        )
-    )
+    adapter = Phase2Adapter(parse_service=mock_parse)
 
-    adapter = Phase2Adapter(
-        translation_service=mock_translation,
-        extraction_service=mock_extraction_service,
-    )
-
-    with patch(
-        "src.agents.phase_2_adapter.EvidenceExtractionService.build_dual_documents_from_output_dir"
-    ) as mock_build:
-        mock_build.return_value = DualTrackDocuments(
-            document_id="doc-456",
-            original=TrackDocument(
-                document_id="doc-456",
-                track=Track.ORIGINAL,
-                formatted_text="original",
-                page_spans=[],
-            ),
-            translated=TrackDocument(
-                document_id="doc-456",
-                track=Track.TRANSLATED,
-                formatted_text="translated",
-                page_spans=[],
-            ),
-        )
-
-        result_state = await adapter.run(sample_state)
-
-    assert result_state.skip_phase_3_reason == SkipPhase3Reason.NOT_RELEVANT
-
-
-@pytest.mark.asyncio
-async def test_phase_2_adapter_raises_retryable_on_api_timeout(
-    sample_state: PipelineGraphState,
-):
-    """Phase 2 adapter raises RetryablePhaseError on OpenAI API timeout."""
-    import openai
-
-    mock_translation = MagicMock()
-    mock_translation.run = AsyncMock(side_effect=openai.APITimeoutError(request=None))
-
-    mock_extraction_service = MagicMock()
-
-    adapter = Phase2Adapter(
-        translation_service=mock_translation,
-        extraction_service=mock_extraction_service,
-    )
-
-    with pytest.raises(RetryablePhaseError):
+    with pytest.raises(PermanentPhaseError, match="no output files"):
         await adapter.run(sample_state)
 
 
 @pytest.mark.asyncio
-async def test_phase2_adapter_reads_metadata_async(tmp_path, monkeypatch):
-    """Phase 2 adapter uses aiofiles to read/write, not sync open()."""
-    import aiofiles
+async def test_phase_2_adapter_raises_retryable_on_mineru_timeout(sample_state: PipelineGraphState):
+    """Phase 2 adapter raises RetryablePhaseError on MinerU timeout."""
+    from src.core.ingest_and_digitize_data.parse_document.exceptions import (
+        MinerUTimeoutError,
+    )
 
-    metadata = tmp_path / "metadata.json"
-    metadata.write_text(json.dumps({"pages": [], "content_blocks": []}))
+    mock_parse = MagicMock()
+    mock_parse.parse_local_files_and_save = AsyncMock(
+        side_effect=MinerUTimeoutError(total_timeout=120.0)
+    )
+
+    adapter = Phase2Adapter(parse_service=mock_parse)
+
+    with pytest.raises(RetryablePhaseError, match="timed out"):
+        await adapter.run(sample_state)
+
+
+@pytest.mark.asyncio
+async def test_phase_2_adapter_writes_pre_parsed_markdown(tmp_path):
+    """Phase 2 adapter writes pre-parsed markdown as output.md + metadata.json."""
+    markdown = "# Rett Syndrome Study\n\nMECP2 c.473C>T pathogenic variant in proband."
     state = PipelineGraphState(
-        processing_run_id="run-123",
-        source_document_id="doc-456",
+        processing_run_id="run-pre-parsed",
+        source_document_id="doc-pre",
         mode=PipelineMode.FULL,
         source_type=SourceType.LOCAL,
-        phase_1_output=Phase1Output(
-            pdf_path=str(tmp_path / "test.pdf"),
-            md_path=str(tmp_path / "test.md"),
-            metadata_path=str(metadata),
-            output_dir=str(tmp_path / "output"),
-            images_dir=str(tmp_path / "images"),
-        ),
+        pre_parsed_markdown=markdown,
     )
 
-    from src.core.cross_lingual_translation.contracts import (
-        TranslationResult,
-        CrossLingualOutput,
-    )
-    from src.core.evidence_extraction.contracts import (
-        DualEvidenceExtractionResult,
-        DualTrackDocuments,
-        EvidenceExtractionResult,
-        EvidenceExtractionStatus,
-        Track,
-        DocumentEvidenceMap,
-        TrackDocument,
-    )
+    mock_parse = MagicMock()
+    mock_parse.parse_local_files_and_save = AsyncMock()
 
-    mock_translation = MagicMock()
-    mock_translation.run = AsyncMock(
-        return_value=TranslationResult(
-            formatted_original="Original",
-            translated_english="Translated",
-            source_language="en",
-            terminology_map={},
-            translation_warnings=[],
-            sentences=[],
-            segments=[],
-        )
-    )
-    mock_translation.save = MagicMock(
-        return_value=CrossLingualOutput(
-            formatted_original="Original",
-            translated_english="Translated",
-            source_language="en",
-            terminology_map={},
-            translation_warnings=[],
-            output_dir="/tmp/phase2/output",
-            original_json_path="/tmp/phase2/output/original.json",
-            translated_json_path="/tmp/phase2/output/translated.json",
-            image_paths=[],
-        )
-    )
+    adapter = Phase2Adapter(parse_service=mock_parse)
 
-    mock_extraction_service = MagicMock()
-    mock_extraction_service.run_dual = AsyncMock(
-        return_value=DualEvidenceExtractionResult(
-            document_id="doc-456",
-            original_result=EvidenceExtractionResult(
-                status=EvidenceExtractionStatus.COMPLETED,
-                document_id="doc-456",
-                track=Track.ORIGINAL,
-                evidence_map=DocumentEvidenceMap(relevant=True),
-            ),
-            translated_result=EvidenceExtractionResult(
-                status=EvidenceExtractionStatus.COMPLETED,
-                document_id="doc-456",
-                track=Track.TRANSLATED,
-                evidence_map=DocumentEvidenceMap(relevant=True),
-            ),
-        )
-    )
+    result = await adapter.run(state)
 
-    adapter = Phase2Adapter(
-        translation_service=mock_translation,
-        extraction_service=mock_extraction_service,
-    )
-
-    # Patch aiofiles.open to verify it's called (not sync open)
-    original_open = aiofiles.open
-    call_log = []
-
-    def spy_open(*a, **kw):
-        call_log.append(a)
-        return original_open(*a, **kw)
-
-    monkeypatch.setattr(aiofiles, "open", spy_open)
-
-    with patch(
-        "src.agents.phase_2_adapter.EvidenceExtractionService.build_dual_documents_from_output_dir"
-    ) as mock_build:
-        mock_build.return_value = DualTrackDocuments(
-            document_id="doc-456",
-            original=TrackDocument(
-                document_id="doc-456",
-                track=Track.ORIGINAL,
-                formatted_text="original",
-                page_spans=[],
-            ),
-            translated=TrackDocument(
-                document_id="doc-456",
-                track=Track.TRANSLATED,
-                formatted_text="translated",
-                page_spans=[],
-            ),
-        )
-
-        result = await asyncio.wait_for(adapter.run(state), timeout=5.0)
+    # MinerU is bypassed entirely for pre-parsed markdown
+    mock_parse.parse_local_files_and_save.assert_not_called()
 
     assert result.phase_2_output is not None
-    assert len(call_log) >= 1, "Expected aiofiles.open to be called"
+    assert result.phase_2_output.md_path.endswith("output.md")
+    assert result.phase_2_status.status == PhaseStatus.COMPLETED
 
+    written = Path(result.phase_2_output.md_path).read_text(encoding="utf-8")
+    assert "MECP2 c.473C>T" in written
 
-@pytest.mark.asyncio
-async def test_phase_2_adapter_raises_retryable_on_catalog_extraction_error(
-    sample_state: PipelineGraphState,
-):
-    """CatalogExtractionError is classified as retryable, not permanent.
-
-    This is intentional: LLM API timeouts (the primary cause) are transient
-    and should be retried by the orchestrator.
-    """
-    from src.core.evidence_extraction.stages.catalog_extraction import (
-        CatalogExtractionError,
-    )
-
-    mock_translation = MagicMock()
-    mock_translation.run = AsyncMock(
-        side_effect=CatalogExtractionError("All 2 extraction chunks failed, last error: timeout")
-    )
-
-    mock_extraction_service = MagicMock()
-
-    adapter = Phase2Adapter(
-        translation_service=mock_translation,
-        extraction_service=mock_extraction_service,
-    )
-
-    with pytest.raises(RetryablePhaseError, match="Phase 2 transient error"):
-        await adapter.run(sample_state)
+    meta = json.loads(Path(result.phase_2_output.metadata_path).read_text(encoding="utf-8"))
+    assert meta["title"] == "Rett Syndrome Study"
+    assert meta["pages"][0]["markdown"] == markdown

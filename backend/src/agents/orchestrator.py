@@ -1,9 +1,10 @@
 """Main pipeline orchestrator using LangGraph.
 
 Architecture:
-- 3 phase adapter nodes (Phase 1, 2, 3)
-- Phase 4 is NOT a graph node — it operates via its own HTTP API
-- After Phase 3 completes, pipeline_status is set to COMPLETED
+- 4 phase adapter nodes (Phase 1 acquisition, 2 parsing, 3 translation+extraction, 4 standardization)
+- The interactive review layer (evidence review, chat, audit) is NOT a graph node —
+  it operates via its own services (phase_5_factory.py)
+- After Phase 4 completes, pipeline_status is set to COMPLETED
 - State persisted to PostgreSQL after each phase for crash recovery
 - Upstream dependency validation for single-phase mode
 - Adapters raise classified errors; orchestrator catches and decides
@@ -39,14 +40,16 @@ REQUIRED_UPSTREAM: dict[int, list[int]] = {
     1: [],
     2: [1],
     3: [1, 2],
+    4: [1, 2, 3],
 }
 
 
 class PipelineOrchestrator:
-    """LangGraph-based orchestrator coordinating 3 phases of evidence processing.
+    """LangGraph-based orchestrator coordinating 4 phases of evidence processing.
 
-    Flow: Phase 1 -> Phase 2 -> (skip Phase 3 if not relevant) -> COMPLETED
-    Phase 4 operates independently via its own HTTP API.
+    Flow: Phase 1 (acquire) -> Phase 2 (parse) -> Phase 3 (translate+extract)
+    -> (skip Phase 4 if not relevant) -> COMPLETED
+    The interactive review layer operates independently via its own services.
     """
 
     def __init__(
@@ -202,16 +205,20 @@ class PipelineOrchestrator:
             )
 
     async def _node_phase_1(self, state: PipelineGraphState) -> PipelineGraphState:
-        """Execute Phase 1: acquisition + parsing."""
+        """Execute Phase 1: literature/document acquisition."""
         return await self._execute_phase(self._adapters["phase_1"], state, "phase_1")
 
     async def _node_phase_2(self, state: PipelineGraphState) -> PipelineGraphState:
-        """Execute Phase 2: translation + evidence extraction."""
+        """Execute Phase 2: document parsing."""
         return await self._execute_phase(self._adapters["phase_2"], state, "phase_2")
 
     async def _node_phase_3(self, state: PipelineGraphState) -> PipelineGraphState:
-        """Execute Phase 3: entity standardization."""
+        """Execute Phase 3: translation + evidence extraction."""
         return await self._execute_phase(self._adapters["phase_3"], state, "phase_3")
+
+    async def _node_phase_4(self, state: PipelineGraphState) -> PipelineGraphState:
+        """Execute Phase 4: entity standardization."""
+        return await self._execute_phase(self._adapters["phase_4"], state, "phase_4")
 
     def _route_entry(self, state: PipelineGraphState) -> str:
         """Route entry point: start at target phase in phase mode, or phase 1 in full mode."""
@@ -219,56 +226,59 @@ class PipelineOrchestrator:
             return f"phase_{state.target_phase}"
         return "phase_1"
 
-    def _route_after_phase_1(self, state: PipelineGraphState) -> str:
-        """Route after Phase 1: continue or stop on failure/target reached."""
-        if state.phase_1_status.status == PhaseStatus.FAILED:
-            logger.error("Phase 1 failed, stopping pipeline")
-            return "end"
-        if state.mode == PipelineMode.PHASE and state.target_phase == 1:
-            return "end"
-        return "phase_2"
+    def _route_after_phase(self, phase: int) -> Callable[[PipelineGraphState], str]:
+        """Build a router for the edge leaving the given phase."""
 
-    def _route_after_phase_2(self, state: PipelineGraphState) -> str:
-        """Route after Phase 2: continue to Phase 3 or stop on failure/target reached."""
-        if state.phase_2_status.status == PhaseStatus.FAILED:
-            logger.error("Phase 2 failed, stopping pipeline")
-            return "end"
-        if state.mode == PipelineMode.PHASE and state.target_phase == 2:
-            return "end"
-        return "phase_3"
+        def _route(state: PipelineGraphState) -> str:
+            detail = getattr(state, f"phase_{phase}_status")
+            if detail.status == PhaseStatus.FAILED:
+                logger.error("Phase {} failed, stopping pipeline", phase)
+                return "end"
+            if state.mode == PipelineMode.PHASE and state.target_phase == phase:
+                return "end"
+            if phase == len(REQUIRED_UPSTREAM):  # last phase
+                return "end"
+            return f"phase_{phase + 1}"
 
-    def _route_after_phase_3(self, state: PipelineGraphState) -> str:
-        """Route after Phase 3: always end (orchestrator finalizes to COMPLETED)."""
-        if state.phase_3_status.status == PhaseStatus.FAILED:
-            logger.error("Phase 3 failed, stopping pipeline")
-        return "end"
+        return _route
 
     def _build_graph(self) -> Any:
-        """Build the LangGraph state machine with 3 phase nodes."""
+        """Build the LangGraph state machine with 4 phase nodes."""
         graph = StateGraph(PipelineGraphState)
 
         graph.add_node("phase_1", self._node_phase_1)
         graph.add_node("phase_2", self._node_phase_2)
         graph.add_node("phase_3", self._node_phase_3)
+        graph.add_node("phase_4", self._node_phase_4)
 
         graph.set_conditional_entry_point(
             self._route_entry,
-            {"phase_1": "phase_1", "phase_2": "phase_2", "phase_3": "phase_3"},
+            {
+                "phase_1": "phase_1",
+                "phase_2": "phase_2",
+                "phase_3": "phase_3",
+                "phase_4": "phase_4",
+            },
         )
 
         graph.add_conditional_edges(
             "phase_1",
-            self._route_after_phase_1,
+            self._route_after_phase(1),
             {"phase_2": "phase_2", "end": END},
         )
         graph.add_conditional_edges(
             "phase_2",
-            self._route_after_phase_2,
+            self._route_after_phase(2),
             {"phase_3": "phase_3", "end": END},
         )
         graph.add_conditional_edges(
             "phase_3",
-            self._route_after_phase_3,
+            self._route_after_phase(3),
+            {"phase_4": "phase_4", "end": END},
+        )
+        graph.add_conditional_edges(
+            "phase_4",
+            self._route_after_phase(4),
             {"end": END},
         )
 
@@ -307,7 +317,7 @@ class PipelineOrchestrator:
 
         For mode=FULL: runs all phases in sequence.
         For mode=PHASE: validates upstream, runs target phase only.
-        After Phase 3 completes (or is skipped), sets pipeline_status=COMPLETED.
+        After Phase 4 completes (or is skipped), sets pipeline_status=COMPLETED.
         """
         logger.info(
             "Pipeline orchestrator started: run={}, mode={}",

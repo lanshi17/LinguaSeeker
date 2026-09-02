@@ -84,6 +84,7 @@ _STATUS_TO_CODE: dict[int, str] = {
     500: "INTERNAL_ERROR",
     502: "BAD_GATEWAY",
     503: "SERVICE_UNAVAILABLE",
+    504: "GATEWAY_TIMEOUT",
 }
 
 # Reverse mapping: domain error codes → HTTP status codes.

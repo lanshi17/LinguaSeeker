@@ -69,7 +69,7 @@ export function RunListItem({ run, index }: RunListItemProps) {
       : null;
 
   const completedPhases = run.completed_phases ?? 0;
-  const totalPhases = run.total_phases ?? 3;
+  const totalPhases = run.total_phases ?? 4;
   const progress = Math.min(100, Math.max(0, (completedPhases / totalPhases) * 100));
 
   const durationSeconds = run.elapsed_seconds ?? (isLive ? liveElapsed : terminalDuration);

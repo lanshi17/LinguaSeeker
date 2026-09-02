@@ -1,0 +1,243 @@
+"""Tests for Phase 4 adapter (entity standardization)."""
+
+import json
+
+import pytest
+from unittest.mock import AsyncMock, MagicMock, patch
+from src.agents.contracts import (
+    PipelineGraphState,
+    PhaseStatus,
+    PipelineMode,
+    SourceType,
+    TranslationExtractionOutput,
+    StandardizationOutput,
+    SkipPhase4Reason,
+)
+from src.agents.phase_4_adapter import Phase4Adapter
+
+
+@pytest.fixture
+def sample_state(tmp_path) -> PipelineGraphState:
+    extraction_file = tmp_path / "extraction.json"
+    extraction_file.write_text(json.dumps({}))
+    return PipelineGraphState(
+        processing_run_id="run-123",
+        source_document_id="doc-456",
+        mode=PipelineMode.FULL,
+        source_type=SourceType.LOCAL,
+        phase_3_output=TranslationExtractionOutput(
+            output_dir="/tmp/phase2/output",
+            original_json_path="/tmp/phase2/output/original.json",
+            translated_json_path="/tmp/phase2/output/translated.json",
+            extraction_result_path=str(extraction_file),
+            source_language="zh",
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_phase_4_adapter_success(sample_state: PipelineGraphState):
+    """Phase 3 adapter successfully standardizes entities."""
+    from src.core.standardize_entities_and_align_knowledge.contracts import (
+        StandardizationResult,
+    )
+
+    mock_standardization = MagicMock()
+    mock_standardization.run_dual_result = AsyncMock(
+        return_value=StandardizationResult(
+            document_id="doc-456",
+            match_count=10,
+            standardized_count=8,
+            ambiguous_count=1,
+            unmapped_count=1,
+            normalized_entity_ids=("entity-1", "entity-2"),
+            matches=(),
+        )
+    )
+
+    mock_session = MagicMock()
+    mock_session.commit = AsyncMock()
+    mock_session_factory = MagicMock()
+    mock_session_factory.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_session_factory.return_value.__aexit__ = AsyncMock(return_value=False)
+
+    adapter = Phase4Adapter(
+        standardization_service=mock_standardization,
+        session_factory=mock_session_factory,
+    )
+
+    with patch(
+        "src.agents.phase_4_adapter.DualEvidenceExtractionResult.model_validate",
+        return_value=MagicMock(),
+    ):
+        result_state = await adapter.run(sample_state)
+
+    mock_session.commit.assert_awaited_once()
+    assert result_state.phase_4_output is not None
+    assert result_state.phase_4_output.match_count == 10
+    assert isinstance(result_state.phase_4_output, StandardizationOutput)
+
+
+@pytest.mark.asyncio
+async def test_phase_4_adapter_skipped_not_relevant(sample_state: PipelineGraphState):
+    """Phase 4 adapter skips when skip_phase_4_reason is NOT_RELEVANT."""
+    sample_state.skip_phase_4_reason = SkipPhase4Reason.NOT_RELEVANT
+
+    mock_standardization = MagicMock()
+    mock_standardization.run_dual_result = AsyncMock()
+
+    mock_session_factory = MagicMock()
+    adapter = Phase4Adapter(
+        standardization_service=mock_standardization,
+        session_factory=mock_session_factory,
+    )
+
+    result_state = await adapter.run(sample_state)
+
+    assert result_state.phase_4_status.status == PhaseStatus.SKIPPED
+    assert result_state.phase_4_status.summary == {"reason": "not_relevant"}
+    mock_standardization.run_dual_result.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_phase_4_adapter_skipped_no_entities(sample_state: PipelineGraphState):
+    """Phase 4 adapter skips when skip_phase_4_reason is NO_ENTITIES."""
+    sample_state.skip_phase_4_reason = SkipPhase4Reason.NO_ENTITIES
+
+    mock_standardization = MagicMock()
+
+    mock_session_factory = MagicMock()
+    adapter = Phase4Adapter(
+        standardization_service=mock_standardization,
+        session_factory=mock_session_factory,
+    )
+
+    result_state = await adapter.run(sample_state)
+
+    assert result_state.phase_4_status.status == PhaseStatus.SKIPPED
+    assert result_state.phase_4_status.summary == {"reason": "no_entities"}
+
+
+@pytest.mark.asyncio
+async def test_phase_4_adapter_skipped_when_zero_standardized(
+    sample_state: PipelineGraphState,
+):
+    """Phase 4 adapter sets skip reason when standardized_count == 0."""
+    from src.core.standardize_entities_and_align_knowledge.contracts import (
+        StandardizationResult,
+    )
+
+    mock_standardization = MagicMock()
+    mock_standardization.run_dual_result = AsyncMock(
+        return_value=StandardizationResult(
+            document_id="doc-456",
+            match_count=0,
+            standardized_count=0,
+            ambiguous_count=0,
+            unmapped_count=0,
+            normalized_entity_ids=(),
+            matches=(),
+        )
+    )
+
+    mock_session = MagicMock()
+    mock_session.commit = AsyncMock()
+    mock_session_factory = MagicMock()
+    mock_session_factory.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_session_factory.return_value.__aexit__ = AsyncMock(return_value=False)
+
+    adapter = Phase4Adapter(
+        standardization_service=mock_standardization,
+        session_factory=mock_session_factory,
+    )
+
+    with patch(
+        "src.agents.phase_4_adapter.DualEvidenceExtractionResult.model_validate",
+        return_value=MagicMock(),
+    ):
+        result_state = await adapter.run(sample_state)
+
+    mock_session.commit.assert_awaited_once()
+    assert result_state.phase_4_status.status == PhaseStatus.COMPLETED
+    assert result_state.skip_phase_4_reason == SkipPhase4Reason.NO_CANDIDATES
+    assert result_state.phase_4_status.summary["skip_reason"] == "no_candidates"
+
+
+@pytest.mark.asyncio
+async def test_phase_4_does_not_skip_when_ambiguous_entities_exist(
+    sample_state: PipelineGraphState,
+):
+    """Phase 4 must not set NO_CANDIDATES when ambiguous entities exist."""
+    result_state = await _run_phase_4_with_counts(
+        sample_state,
+        match_count=1,
+        standardized_count=0,
+        ambiguous_count=1,
+        unmapped_count=0,
+    )
+
+    assert result_state.skip_phase_4_reason is None
+    assert result_state.phase_4_status.status == PhaseStatus.COMPLETED
+    assert result_state.phase_4_status.summary["ambiguous_count"] == 1
+
+
+@pytest.mark.asyncio
+async def test_phase_4_does_not_skip_when_unmapped_entities_exist(
+    sample_state: PipelineGraphState,
+):
+    """Phase 4 must not set NO_CANDIDATES when unmapped entities exist."""
+    result_state = await _run_phase_4_with_counts(
+        sample_state,
+        match_count=1,
+        standardized_count=0,
+        ambiguous_count=0,
+        unmapped_count=1,
+    )
+
+    assert result_state.skip_phase_4_reason is None
+    assert result_state.phase_4_status.status == PhaseStatus.COMPLETED
+    assert result_state.phase_4_status.summary["unmapped_count"] == 1
+
+
+async def _run_phase_4_with_counts(
+    sample_state: PipelineGraphState,
+    *,
+    match_count: int,
+    standardized_count: int,
+    ambiguous_count: int,
+    unmapped_count: int,
+) -> PipelineGraphState:
+    """Helper: run Phase 4 with specific standardization counts."""
+    from src.core.standardize_entities_and_align_knowledge.contracts import (
+        StandardizationResult,
+    )
+
+    mock_standardization = MagicMock()
+    mock_standardization.run_dual_result = AsyncMock(
+        return_value=StandardizationResult(
+            document_id="doc-456",
+            match_count=match_count,
+            standardized_count=standardized_count,
+            ambiguous_count=ambiguous_count,
+            unmapped_count=unmapped_count,
+            normalized_entity_ids=(),
+            matches=(),
+        )
+    )
+
+    mock_session = MagicMock()
+    mock_session.commit = AsyncMock()
+    mock_session_factory = MagicMock()
+    mock_session_factory.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_session_factory.return_value.__aexit__ = AsyncMock(return_value=False)
+
+    adapter = Phase4Adapter(
+        standardization_service=mock_standardization,
+        session_factory=mock_session_factory,
+    )
+
+    with patch(
+        "src.agents.phase_4_adapter.DualEvidenceExtractionResult.model_validate",
+        return_value=MagicMock(),
+    ):
+        return await adapter.run(sample_state)

@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 @pytest.mark.asyncio
 async def test_list_audit_events(async_client: AsyncClient):
     """GET /api/v1/delta-audit/ returns audit events."""
-    with patch("src.api.v1.delta_audit.get_phase4_factory") as mock_factory:
+    with patch("src.api.v1.delta_audit.get_phase5_factory") as mock_factory:
         mock_service = MagicMock()
         mock_service.list_audit_events = AsyncMock(return_value=[])
         mock_factory.return_value.delta_audit = mock_service
@@ -30,7 +30,7 @@ async def test_patch_evidence_event_is_queryable_by_source_document(
 ) -> None:
     """PATCH evidence through API records an audit event queryable by source document."""
     from app.main import create_app
-    from src.agents.phase_4_factory import Phase4ServiceFactory
+    from src.agents.phase_5_factory import Phase5ServiceFactory
     from src.api.deps import get_db_session
     from src.core.config import Settings
     from src.dao.postgresql.models import CanonicalEvidenceItem, SourceDocument
@@ -60,13 +60,13 @@ async def test_patch_evidence_event_is_queryable_by_source_document(
         yield db_session
 
     mock_settings = Settings(api_key="")
-    factory = Phase4ServiceFactory(cfg=MagicMock())
+    factory = Phase5ServiceFactory(cfg=MagicMock())
 
     with (
         patch("src.core.config.get_config", return_value=mock_settings),
         patch("src.api.auth.get_config", return_value=mock_settings),
-        patch("src.api.v1.evidence.get_phase4_factory", return_value=factory),
-        patch("src.api.v1.delta_audit.get_phase4_factory", return_value=factory),
+        patch("src.api.v1.evidence.get_phase5_factory", return_value=factory),
+        patch("src.api.v1.delta_audit.get_phase5_factory", return_value=factory),
         patch(
             "src.core.visualize_evidence_with_expert_in_loop.feedback_service."
             "FeedbackService._refresh_literature_profile",
