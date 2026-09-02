@@ -289,7 +289,7 @@ class Neo4jRepository:
             :meth:`get_subgraph`. Each edge carries ``evidence_count`` plus
             optional ``classification``, ``significance``, ``role``, and
             ``source`` for the frontend. Node identifiers use
-            ``coalesce(node_id, id)``.
+            ``node_id`` (canonical store key).
         """
         if not gene_names:
             return SubgraphContext()
@@ -306,14 +306,12 @@ class Neo4jRepository:
             "OPTIONAL MATCH (e)-[md:MENTIONS]->(d:Disease) "
             "WITH DISTINCT g, v, d, e, mv, md LIMIT $variant_limit "
             "RETURN "
-            "coalesce(g.node_id, g.id) AS g_id, labels(g) AS g_labels, properties(g) AS g_props, "
-            "coalesce(v.node_id, v.id) AS v_id, labels(v) AS v_labels, properties(v) AS v_props, "
-            "coalesce(d.node_id, d.id) AS d_id, labels(d) AS d_labels, properties(d) AS d_props, "
+            "g.node_id AS g_id, labels(g) AS g_labels, properties(g) AS g_props, "
+            "v.node_id AS v_id, labels(v) AS v_labels, properties(v) AS v_props, "
+            "d.node_id AS d_id, labels(d) AS d_labels, properties(d) AS d_props, "
             "coalesce(mv.role, '') AS mv_role, "
             "coalesce(md.role, '') AS md_role, "
-            "coalesce(e.classification, '') AS e_classification, "
-            "coalesce(e.significance, '') AS e_significance, "
-            "coalesce(e.source_db, 'literature') AS e_source_db"
+            "properties(e) AS e_props"
         )
         lower_names = [n.lower() for n in gene_names]
         records = await self.execute_read(
@@ -367,9 +365,10 @@ class Neo4jRepository:
             did = _add_node("d", rec)
             mv_role = rec.get("mv_role") or ""
             md_role = rec.get("md_role") or ""
-            classification = rec.get("e_classification") or ""
-            significance = rec.get("e_significance") or ""
-            source_db = rec.get("e_source_db") or "literature"
+            e_props = rec.get("e_props") or {}
+            classification = e_props.get("classification") or ""
+            significance = e_props.get("significance") or ""
+            source_db = e_props.get("source_db") or "literature"
             common_props: dict[str, object] = {"source": source_db}
             if classification:
                 common_props["classification"] = classification
