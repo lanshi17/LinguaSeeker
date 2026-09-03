@@ -5,6 +5,7 @@
 .env.*.local
 !.env.example
 !.env.example.jinja
+!.env.production
 
 # ─── Next.js ───
 .next/

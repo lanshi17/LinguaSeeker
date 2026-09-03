@@ -28,7 +28,8 @@ scripts/
 │   ├── start_backend_dev.sh                启动 FastAPI 后端（热重载 + 可选基础设施）
 │   └── start_frontend_dev.sh               启动 Vite 前端开发服务器
 ├── deploy/                             部署镜像脚本
-│   └── build_push_backend_image.sh        构建、冒烟测试和推送后端 Docker 镜像
+│   ├── build_push_backend_image.sh        构建、冒烟测试和推送后端 Docker 镜像
+│   └── deploy_frontend.sh                 构建、校验并部署前端 SPA 到生产（FTP mirror + 线上冒烟）
 ├── archive/                            已归档的一次性脚本（见下方"归档脚本"）
 ├── backfill_neo4j_literature.py          从 PostgreSQL 回填历史文献证据到 Neo4j
 ├── seed_neo4j_terminology.py             播种 Neo4j 术语知识图谱
@@ -111,6 +112,7 @@ cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --json repor
 | 脚本 | 语言 | 用途 |
 |------|------|------|
 | `deploy/build_push_backend_image.sh` | Shell | 构建 `backend/Dockerfile`、验证运行时镜像、推送到 Docker Hub |
+| `deploy/deploy_frontend.sh` | Shell | 以 `VITE_BASE_PATH=/linguaseeker` 构建前端，校验 bundle 引用子路径资源（防白屏），LFTP 反向镜像部署到生产，并用浏览器 UA 线上冒烟检查资源可达性 |
 
 ```bash
 # 默认：docker.io/[redacted-user]47/lingua-seeker-backend:latest
@@ -121,6 +123,20 @@ cd backend && uv run python ../scripts/data/analyze/analyze_logs.py --json repor
 
 # 构建和冒烟测试，不推送
 ./scripts/deploy/build_push_backend_image.sh --no-push
+```
+
+```bash
+# 构建并部署（凭证读 shell deploy alias 或 FTP_* 环境变量）
+./scripts/deploy/deploy_frontend.sh
+
+# 仅构建（仍执行 base-path 断言）
+./scripts/deploy/deploy_frontend.sh --build-only
+
+# 跳过部署后的线上冒烟检查
+./scripts/deploy/deploy_frontend.sh --no-smoke
+
+# 自定义冒烟目标 URL
+DEPLOY_URL=https://genemed.tech/linguaseeker/ ./scripts/deploy/deploy_frontend.sh
 ```
 
 ### 数据/管线运维脚本
